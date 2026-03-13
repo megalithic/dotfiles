@@ -174,12 +174,13 @@ in {
   programs.brave-browser-nightly = {
     enable = true;
     package = pkgs.brave-browser-nightly;
-    bundleId = "com.brave.Browser.nightly"; # For Application Support path
+    bundleId = "com.brave.Browser.nightly"; # For defaults/preferences
+    applicationSupportDir = "BraveSoftware/Brave-Browser-Nightly"; # For extensions, dictionaries
     appName = "Brave Browser Nightly.app";
     executableName = "Brave Browser Nightly";
     iconFile = "app.icns";
     dictionaries = [pkgs.hunspellDictsChromium.en_US];
-    # inherit extensions;
+    inherit extensions;
 
     commandLineArgs =
       sharedCommandLineArgs

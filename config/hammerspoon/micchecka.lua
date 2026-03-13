@@ -594,21 +594,73 @@ function M:start()
     { title = "Always-on dictation", fn = function() M.setPTDMode("always-on") end },
   })
 
+  -- Debounce state for PTT/PTD activation
+  -- Prevents accidental triggers when cmd+opt is part of a larger chord (e.g., cmd+opt+space)
+  local DEBOUNCE_MS = 500
+  local debounceTimer = nil
+  local pendingAction = nil  -- "ptt" or "ptd"
+
+  local function cancelDebounce()
+    if debounceTimer then
+      debounceTimer:stop()
+      debounceTimer = nil
+    end
+    pendingAction = nil
+  end
+
+  local function startDebounce(action, callback)
+    cancelDebounce()
+    pendingAction = action
+    debounceTimer = hs.timer.doAfter(DEBOUNCE_MS / 1000, function()
+      debounceTimer = nil
+      if pendingAction == action then
+        pendingAction = nil
+        callback()
+      end
+    end)
+  end
+
+  -- Watch for non-modifier key presses to cancel debounce
+  -- Allowed keys that don't cancel: p (used for mode toggle)
+  S.hotkeys.keyDownTap = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(evt)
+    if not pendingAction then return false end
+
+    local keyCode = evt:getKeyCode()
+    local key = hs.keycodes.map[keyCode]
+
+    -- "p" is allowed (used for mode toggles cmd+opt+p, cmd+opt+shift+p)
+    if key == "p" then return false end
+
+    -- Any other key cancels the pending activation
+    U.log.d(fmt("debounce cancelled by key: %s", key or keyCode))
+    cancelDebounce()
+    return false
+  end)
+  S.hotkeys.keyDownTap:start()
+
   S.hotkeys.modifierTap = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, function(evt)
     local flags = evt:getFlags()
     local cmdOpt = flags.cmd and flags.alt and not flags.shift and not flags.ctrl
     local cmdOptShift = flags.cmd and flags.alt and flags.shift and not flags.ctrl
 
+    -- PTD (push-to-dictate): cmd+opt+shift
     if cmdOptShift and not S.isRecording then
-      onPTDKeyDown()
+      startDebounce("ptd", onPTDKeyDown)
     elseif not cmdOptShift and S.isRecording and S.ptdMode == "push-to-dictate" then
+      cancelDebounce()
       onPTDKeyUp()
+    elseif not cmdOptShift and pendingAction == "ptd" then
+      cancelDebounce()
     end
 
+    -- PTT (push-to-talk): cmd+opt (no shift)
     if cmdOpt and not S.isUnmuted and not S.isRecording then
-      onPTTKeyDown()
+      startDebounce("ptt", onPTTKeyDown)
     elseif not cmdOpt and not cmdOptShift and S.isUnmuted then
+      cancelDebounce()
       onPTTKeyUp()
+    elseif not cmdOpt and pendingAction == "ptt" then
+      cancelDebounce()
     end
 
     return false

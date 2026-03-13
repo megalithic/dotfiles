@@ -77,6 +77,7 @@ M.activeTasks = {}  -- Track running hs.task for cleanup
 M.isModalActive = false
 M.ocrPasteWatcher = nil
 M.clickOutsideWatcher = nil
+M.appWatcher = nil  -- Track app focus changes to exit modal
 M.fullScreenHotkey = nil
 
 -- Configuration
@@ -166,6 +167,34 @@ function M.startClickOutsideWatcher()
   M.clickOutsideWatcher:start()
 end
 
+---Stop the app focus watcher
+function M.stopAppWatcher()
+  if M.appWatcher then
+    M.appWatcher:stop()
+    M.appWatcher = nil
+  end
+end
+
+---Start watching for app focus changes to exit modal
+---When user switches to another app (cmd+tab, click on dock, etc.), exit modal
+function M.startAppWatcher()
+  M.stopAppWatcher()
+  
+  M.appWatcher = hs.application.watcher.new(function(appName, eventType, appObj)
+    if not M.isModalActive then return end
+    
+    -- Exit modal when another app is activated
+    if eventType == hs.application.watcher.activated then
+      -- Hammerspoon itself doesn't count (we're the HUD)
+      if appObj and appObj:bundleID() ~= "org.hammerspoon.Hammerspoon" then
+        U.log.d(fmt("app focus changed to %s, exiting modal", appName or "unknown"))
+        M.exitModal()
+      end
+    end
+  end)
+  M.appWatcher:start()
+end
+
 ---Show the clipper HUD panel and enter modal mode
 function M.showPanel()
   if not M.hasCapture() then return end
@@ -207,8 +236,9 @@ function M.showPanel()
   M.modal:enter()
   M.isModalActive = true
   
-  -- Start watching for clicks outside panel
+  -- Start watching for clicks outside panel and app focus changes
   M.startClickOutsideWatcher()
+  M.startAppWatcher()
 end
 
 ---Generate and update cheatsheet based on current state
@@ -820,6 +850,7 @@ function M.exitModal()
   M.isModalActive = false
   M.stopOcrPasteWatcher()
   M.stopClickOutsideWatcher()
+  M.stopAppWatcher()
   if M.modal then M.modal:exit() end
   M.hidePanel()
   U.log.d("exited modal")
@@ -989,6 +1020,7 @@ function M:stop()
   -- Stop watchers
   M.stopOcrPasteWatcher()
   M.stopClickOutsideWatcher()
+  M.stopAppWatcher()
 
   -- Terminate any running tasks
   for name, task in pairs(M.activeTasks) do

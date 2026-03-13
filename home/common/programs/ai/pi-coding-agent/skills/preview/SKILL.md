@@ -26,7 +26,7 @@ Display content in a preview pane or popup.
 **Options:**
 - `-m, --mode <mode>` - Preview mode: `tmux-split`, `tmux-float`, `auto` (default)
 - `--auto-close-after <seconds>` - Auto-close pane after N seconds
-- `--delta` - Use delta for diff viewing (non-interactive, default is codediff.nvim)
+- `--delta` - Explicit delta flag (delta is now the default)
 - `-h, --help` - Show help
 
 **Modes:**
@@ -37,8 +37,7 @@ Display content in a preview pane or popup.
 **Content Types:**
 - `json` - JSON content (inline or file path)
 - `markdown` - Markdown content (inline or file path)
-- `diff` - jj diff arguments (e.g., "-r @") - uses interactive codediff by default
-- `codediff` - Explicit codediff.nvim mode (e.g., "HEAD~1 HEAD")
+- `diff` - jj diff arguments (e.g., "-r @") - uses delta
 - `log` - jj log arguments (e.g., "-n 5")
 - `bead` - Bead task ID - renders with glow
 - `file` - File path to preview with bat
@@ -54,9 +53,8 @@ Display content in a preview pane or popup.
 /preview json /path/to/data.json
 
 # Preview diffs
-/preview diff -r @                    # Interactive codediff (default)
-/preview --delta diff -r @            # Non-interactive delta view
-/preview codediff HEAD~2 HEAD         # Compare specific revisions
+/preview diff -r @                    # Uses delta for diff viewing
+/preview diff                         # Current working copy changes
 
 # Preview files
 /preview file ~/.config/nvim/init.lua
@@ -101,14 +99,13 @@ The preview extension wraps the existing `preview-ai` bash script which:
 2. **Content rendering:**
    - JSON: Uses `jq` for formatting
    - Markdown: Uses `glow` for rendering
-   - Diffs: Uses `codediff.nvim` (interactive) or `delta` (non-interactive)
+   - Diffs: Uses `delta` for syntax-highlighted diff viewing
    - Images: Uses `chafa` for terminal display or kitty protocol
    - Files: Uses `bat` with syntax highlighting
    - Logs: Uses `jj log` with paging disabled
 
-3. **Interactive vs. non-interactive:**
-   - Interactive modes (codediff.nvim): Waits for you to close the editor
-   - Non-interactive modes: Shows "Press q to close" prompt
+3. **Closing the preview:**
+   - Press `q` or `Escape` to close the preview pane/popup
 
 ## Limitations
 

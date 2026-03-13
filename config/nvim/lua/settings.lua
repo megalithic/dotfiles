@@ -2,6 +2,13 @@
 -- Global settings, variables, and helpers
 -- Loaded first, before all other modules
 
+--------------------------------------------------------------------------------
+-- Embedded context detection (Shade, Firenvim)
+-- Set early so all modules can check these globals
+--------------------------------------------------------------------------------
+vim.g.started_by_shade = vim.env.SHADE == "1"
+-- Note: vim.g.started_by_firenvim is set by firenvim plugin itself
+
 ---@alias theme "megaforest" | "megagrove" | "hyper"
 vim.g.theme = "megagrove"
 

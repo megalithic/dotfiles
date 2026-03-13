@@ -141,10 +141,13 @@ end
 
 --- Reset micchecka state (stop hotkeys, delete menubar, clear hooks)
 function M.resetMicchecka()
-  -- Stop all hotkeys
-  for name, hotkey in pairs(M.micchecka.hotkeys) do
-    if hotkey then
-      pcall(function() hotkey:delete() end)
+  -- Stop all hotkeys and eventtaps
+  for name, binding in pairs(M.micchecka.hotkeys) do
+    if binding then
+      -- Try eventtap stop first (for modifierTap, keyDownTap, etc.)
+      pcall(function() binding:stop() end)
+      -- Then try hotkey delete (for pttToggle, ptdToggle, etc.)
+      pcall(function() binding:delete() end)
       M.micchecka.hotkeys[name] = nil
     end
   end

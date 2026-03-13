@@ -45,11 +45,23 @@
         inherit visible;
         type = types.nullOr types.str;
         default = null;
-        example = "net.imput.helium";
+        example = "com.brave.Browser.nightly";
         description = ''
           The macOS bundle identifier for ${name}.
-          Used to determine the Application Support directory path.
+          Used for defaults/preferences (NSUserKeyEquivalents, etc).
           If not set, defaults to the browser name.
+        '';
+      };
+
+      applicationSupportDir = mkOption {
+        inherit visible;
+        type = types.nullOr types.str;
+        default = null;
+        example = "BraveSoftware/Brave-Browser-Nightly";
+        description = ''
+          The subdirectory under ~/Library/Application Support/ where ${name}
+          stores its profile data. Used for External Extensions, Dictionaries, etc.
+          If not set, falls back to bundleId, then browser name.
         '';
       };
 
@@ -243,12 +255,21 @@
     isProprietaryChrome = lib.hasPrefix "google-chrome" browser;
     browserName = supportedBrowsers.${browser};
 
-    # Use bundleId if provided, otherwise fall back to browser name
+    # Application Support directory path (for extensions, dictionaries, etc.)
+    # Priority: applicationSupportDir > bundleId > browser name
     darwinDir =
-      if cfg.bundleId != null
+      if cfg.applicationSupportDir != null
+      then cfg.applicationSupportDir
+      else if cfg.bundleId != null
       then cfg.bundleId
       else browser;
     linuxDir = browser;
+
+    # Bundle ID for defaults/preferences (separate from Application Support path)
+    effectiveBundleId =
+      if cfg.bundleId != null
+      then cfg.bundleId
+      else browser;
 
     configDir =
       if pkgs.stdenv.isDarwin
@@ -350,8 +371,9 @@
         }
       );
 
+      # Use bundleId for defaults/preferences (not Application Support path)
       targets.darwin.defaults = lib.mkIf pkgs.stdenv.isDarwin {
-        "${darwinDir}" = {
+        "${effectiveBundleId}" = {
           SUAutomaticallyUpdate = false;
           SUEnableAutomaticChecks = false;
         } // lib.optionalAttrs (cfg.keyEquivalents != {}) {
