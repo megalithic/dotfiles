@@ -110,6 +110,52 @@ echo "░ :: -> Running home-manager for the first time for $FLAKE.." &&
   (nix run home-manager/master -- switch --flake "$DOTFILES_DIR" &&
     echo "░ [✓] -> Completed installation of $DOTFILES_DIR home-manager flake..") || echo "░ [x] -> Errored while installing $DOTFILES_DIR home-manager flake.."
 
+# Bootstrap agenix secrets by fetching SSH key from 1Password
+echo "░ :: -> Setting up agenix secrets.."
+SSH_KEY_PATH="$HOME/.ssh/id_ed25519"
+OP_ACCOUNT="my.1password.com"
+OP_VAULT="m2jsiad2fn7s2widtddpmp6jpe"
+OP_ITEM="e4jheo2uyeg2e2tjrj2xucnmti"
+
+if command -v op &>/dev/null; then
+  if [[ ! -f "$SSH_KEY_PATH" ]]; then
+    echo "░ :: -> Fetching SSH key from 1Password for agenix.."
+    echo "░      (biometric auth required)"
+    mkdir -p "$HOME/.ssh"
+    chmod 700 "$HOME/.ssh"
+    
+    if op read "op://$OP_VAULT/$OP_ITEM/private key" --account "$OP_ACCOUNT" > "$SSH_KEY_PATH" 2>/dev/null; then
+      chmod 600 "$SSH_KEY_PATH"
+      echo "░ [✓] -> SSH key written to $SSH_KEY_PATH"
+      
+      # Also fetch public key if available
+      if op read "op://$OP_VAULT/$OP_ITEM/public key" --account "$OP_ACCOUNT" > "${SSH_KEY_PATH}.pub" 2>/dev/null; then
+        chmod 644 "${SSH_KEY_PATH}.pub"
+      fi
+      
+      # Trigger agenix activation
+      echo "░ :: -> Activating agenix secrets.."
+      if launchctl kickstart -k "gui/$(id -u)/org.nix-community.home.activate-agenix" 2>/dev/null; then
+        sleep 2
+        AGENIX_DIR="$(getconf DARWIN_USER_TEMP_DIR)agenix"
+        if [[ -d "$AGENIX_DIR" ]]; then
+          echo "░ [✓] -> Agenix secrets decrypted"
+        fi
+      fi
+    else
+      echo "░ [!] -> Failed to fetch SSH key from 1Password"
+      echo "░      Run 'bootstrap-secrets' manually after signing into 1Password"
+    fi
+  else
+    echo "░ :: -> SSH key already exists, triggering agenix activation.."
+    launchctl kickstart -k "gui/$(id -u)/org.nix-community.home.activate-agenix" 2>/dev/null || true
+  fi
+else
+  echo "░ [!] -> 1Password CLI (op) not found"
+  echo "░      Install with: brew install 1password-cli"
+  echo "░      Then run 'bootstrap-secrets' to set up agenix"
+fi
+
 # echo "░ :: -> Running nix-darwin for the first time for $FLAKE.." &&
 #   nix run nix-darwin -- switch --flake "$DOTFILES_DIR"
 # echo "░ :: -> Running home-manager for the first time for $FLAKE.." &&
