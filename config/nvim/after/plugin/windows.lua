@@ -12,6 +12,12 @@
 
 if not Plugin_enabled() then return end
 
+--------------------------------------------------------------------------------
+-- Skip entirely for embedded nvim contexts (Shade, Firenvim)
+-- These have their own window/lifecycle management
+--------------------------------------------------------------------------------
+if vim.g.started_by_shade or vim.g.started_by_firenvim then return end
+
 local GOLDEN_RATIO = 1.618
 local MIN_WIDTH = 20
 

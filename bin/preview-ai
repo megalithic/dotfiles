@@ -9,7 +9,7 @@ CALLER_PANE="$TMUX_PANE"  # Pane to NEVER touch
 PREVIEW_TITLE="ai-preview"
 SPLIT_PERCENT=45
 AUTO_CLOSE_AFTER=""  # Seconds to auto-close (empty = disabled)
-USE_CODEDIFF="true"  # Always use codediff.nvim for diffs (interactive)
+USE_CODEDIFF=""  # Use delta by default (codediff.nvim removed)
 USE_FLOAT=""         # Use tmux display-popup instead of split
 FLOAT_WIDTH="80%"    # Popup width
 FLOAT_HEIGHT="80%"   # Popup height

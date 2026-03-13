@@ -22,7 +22,7 @@ local shade_ctx_timer_id = nil
 --- Check if running inside Shade panel
 ---@return boolean
 function M.shade.is_active()
-  return vim.env.SHADE == "1"
+  return vim.g.started_by_shade == true
 end
 
 --- Get capture context from Shade
