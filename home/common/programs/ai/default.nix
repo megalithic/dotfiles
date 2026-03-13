@@ -107,7 +107,6 @@ in {
   home.packages = [
     pkgs.llm-agents.opencode
     pkgs.llm-agents.claude-code-acp # DEPRECATED: hash override in overlays/default.nix
-    pkgs.llm-agents.beads
     pkgs.llm-agents.pi # pi-coding-agent (wrappers in ./pi-coding-agent add env/extensions)
     pkgs.tidewave # Tidewave GUI app for web app development (custom)
     pkgs.tidewave-cli # Tidewave MCP CLI (custom)

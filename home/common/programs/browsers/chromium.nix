@@ -208,92 +208,96 @@ in {
   # - Brave:  Library/Application Support/com.brave.Browser.nightly/External Extensions/
 
   # ===========================================================================
-  # Developer Mode & User Scripts Configuration
+  # Developer Mode & User Scripts Configuration (Helium only)
   # ===========================================================================
   # Enable developer mode to allow user scripts (required for SurfingKeys Advanced Mode)
   # This ensures extensions.ui.developer_mode is set in each browser's Secure Preferences
-  home.activation.heliumBrowserEnableDeveloperMode = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    HELIUM_PREFS="${config.home.homeDirectory}/Library/Application Support/net.imput.helium/Default/Secure Preferences"
+  home.activation.heliumBrowserEnableDeveloperMode = lib.mkIf config.programs.helium-browser.enable (
+    lib.hm.dag.entryAfter ["writeBoundary"] ''
+      HELIUM_PREFS="${config.home.homeDirectory}/Library/Application Support/net.imput.helium/Default/Secure Preferences"
 
-    # Only modify if Helium profile exists
-    if [ -f "$HELIUM_PREFS" ]; then
-      # Check if developer_mode is already enabled
-      CURRENT_VALUE=$(${pkgs.jq}/bin/jq -r '.extensions.ui.developer_mode // false' "$HELIUM_PREFS")
+      # Only modify if Helium profile exists
+      if [ -f "$HELIUM_PREFS" ]; then
+        # Check if developer_mode is already enabled
+        CURRENT_VALUE=$(${pkgs.jq}/bin/jq -r '.extensions.ui.developer_mode // false' "$HELIUM_PREFS")
 
-      if [ "$CURRENT_VALUE" != "true" ]; then
-        $DRY_RUN_CMD echo "Enabling developer mode for Helium extensions..."
-        if [ -z "''${DRY_RUN:-}" ]; then
-          # Create backup
-          cp "$HELIUM_PREFS" "$HELIUM_PREFS.backup"
+        if [ "$CURRENT_VALUE" != "true" ]; then
+          $DRY_RUN_CMD echo "Enabling developer mode for Helium extensions..."
+          if [ -z "''${DRY_RUN:-}" ]; then
+            # Create backup
+            cp "$HELIUM_PREFS" "$HELIUM_PREFS.backup"
 
-          # Enable developer mode
-          ${pkgs.jq}/bin/jq '.extensions.ui.developer_mode = true' "$HELIUM_PREFS" > "$HELIUM_PREFS.tmp"
-          mv "$HELIUM_PREFS.tmp" "$HELIUM_PREFS"
+            # Enable developer mode
+            ${pkgs.jq}/bin/jq '.extensions.ui.developer_mode = true' "$HELIUM_PREFS" > "$HELIUM_PREFS.tmp"
+            mv "$HELIUM_PREFS.tmp" "$HELIUM_PREFS"
 
-          $DRY_RUN_CMD echo "✓ Developer mode enabled for Helium"
+            $DRY_RUN_CMD echo "✓ Developer mode enabled for Helium"
+          fi
+        else
+          # $DRY_RUN_CMD echo "✓ Developer mode already enabled for Helium"
+          :
         fi
       else
-        # $DRY_RUN_CMD echo "✓ Developer mode already enabled for Helium"
-        :
+        $DRY_RUN_CMD echo "Helium profile not found - developer mode will be set on first run"
       fi
-    else
-      $DRY_RUN_CMD echo "Helium profile not found - developer mode will be set on first run"
-    fi
-  '';
+    ''
+  );
 
   # ===========================================================================
-  # Widevine DRM Installation (Netflix, Amazon Prime, etc.)
+  # Widevine DRM Installation (Helium only - Netflix, Amazon Prime, etc.)
   # ===========================================================================
   # Copies Widevine to ~/Library/Application Support/net.imput.helium/WidevineCdm
   # instead of modifying the app bundle (which breaks code signature on Sequoia).
   #
   # Helium loads Widevine via --widevine-cdm-path flag in commandLineArgs.
   # This preserves the notarized app signature while enabling DRM playback.
-  home.activation.heliumBrowserInstallWidevine = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    WIDEVINE_DEST="${config.home.homeDirectory}/Library/Application Support/net.imput.helium/WidevineCdm"
-    BRAVE_WIDEVINE_DIR="${config.home.homeDirectory}/Library/Application Support/BraveSoftware/Brave-Browser-Nightly/WidevineCdm"
+  home.activation.heliumBrowserInstallWidevine = lib.mkIf config.programs.helium-browser.enable (
+    lib.hm.dag.entryAfter ["writeBoundary"] ''
+      WIDEVINE_DEST="${config.home.homeDirectory}/Library/Application Support/net.imput.helium/WidevineCdm"
+      BRAVE_WIDEVINE_DIR="${config.home.homeDirectory}/Library/Application Support/BraveSoftware/Brave-Browser-Nightly/WidevineCdm"
 
-    # Check if Widevine already exists at destination
-    if [ -f "$WIDEVINE_DEST/_platform_specific/mac_arm64/libwidevinecdm.dylib" ]; then
-      # $DRY_RUN_CMD echo "✓ Widevine already installed in Application Support"
-      :
-    else
-      # Try to copy from Brave Browser Nightly
-      if [ -d "$BRAVE_WIDEVINE_DIR" ]; then
-        # Find the latest Widevine version directory
-        LATEST_WIDEVINE=$(${pkgs.fd}/bin/fd -d 1 -t d '^[0-9]' "$BRAVE_WIDEVINE_DIR" 2>/dev/null | sort -V | tail -1)
-
-        if [ -n "$LATEST_WIDEVINE" ] && [ -f "$LATEST_WIDEVINE/manifest.json" ]; then
-          $DRY_RUN_CMD echo "Installing Widevine from Brave Nightly to Application Support..."
-          if [ -z "''${DRY_RUN:-}" ]; then
-            mkdir -p "$WIDEVINE_DEST"
-            cp -R "$LATEST_WIDEVINE"/* "$WIDEVINE_DEST/"
-          fi
-          $DRY_RUN_CMD echo "✓ Widevine installed to ~/Library/Application Support/net.imput.helium/"
-        else
-          $DRY_RUN_CMD echo "Brave Nightly found but Widevine not downloaded yet"
-          $DRY_RUN_CMD echo "  → Open Brave Nightly, go to brave://settings/extensions"
-          $DRY_RUN_CMD echo "  → Enable 'Google Widevine' and let it download"
-          $DRY_RUN_CMD echo "  → Then run: just mac"
-        fi
+      # Check if Widevine already exists at destination
+      if [ -f "$WIDEVINE_DEST/_platform_specific/mac_arm64/libwidevinecdm.dylib" ]; then
+        # $DRY_RUN_CMD echo "✓ Widevine already installed in Application Support"
+        :
       else
-        # Fall back to Google Chrome
-        CHROME_WIDEVINE="/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Libraries/WidevineCdm"
+        # Try to copy from Brave Browser Nightly
+        if [ -d "$BRAVE_WIDEVINE_DIR" ]; then
+          # Find the latest Widevine version directory
+          LATEST_WIDEVINE=$(${pkgs.fd}/bin/fd -d 1 -t d '^[0-9]' "$BRAVE_WIDEVINE_DIR" 2>/dev/null | sort -V | tail -1)
 
-        if [ -d "$CHROME_WIDEVINE" ]; then
-          $DRY_RUN_CMD echo "Installing Widevine from Google Chrome to Application Support..."
-          if [ -z "''${DRY_RUN:-}" ]; then
-            mkdir -p "$WIDEVINE_DEST"
-            cp -R "$CHROME_WIDEVINE"/* "$WIDEVINE_DEST/"
+          if [ -n "$LATEST_WIDEVINE" ] && [ -f "$LATEST_WIDEVINE/manifest.json" ]; then
+            $DRY_RUN_CMD echo "Installing Widevine from Brave Nightly to Application Support..."
+            if [ -z "''${DRY_RUN:-}" ]; then
+              mkdir -p "$WIDEVINE_DEST"
+              cp -R "$LATEST_WIDEVINE"/* "$WIDEVINE_DEST/"
+            fi
+            $DRY_RUN_CMD echo "✓ Widevine installed to ~/Library/Application Support/net.imput.helium/"
+          else
+            $DRY_RUN_CMD echo "Brave Nightly found but Widevine not downloaded yet"
+            $DRY_RUN_CMD echo "  → Open Brave Nightly, go to brave://settings/extensions"
+            $DRY_RUN_CMD echo "  → Enable 'Google Widevine' and let it download"
+            $DRY_RUN_CMD echo "  → Then run: just mac"
           fi
-          $DRY_RUN_CMD echo "✓ Widevine installed from Google Chrome"
         else
-          $DRY_RUN_CMD echo "⚠ Widevine not found. To enable DRM content in Helium:"
-          $DRY_RUN_CMD echo "  1. Open Brave Nightly → brave://settings/extensions"
-          $DRY_RUN_CMD echo "  2. Enable 'Google Widevine' and let it download"
-          $DRY_RUN_CMD echo "  3. Run: just mac"
+          # Fall back to Google Chrome
+          CHROME_WIDEVINE="/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Libraries/WidevineCdm"
+
+          if [ -d "$CHROME_WIDEVINE" ]; then
+            $DRY_RUN_CMD echo "Installing Widevine from Google Chrome to Application Support..."
+            if [ -z "''${DRY_RUN:-}" ]; then
+              mkdir -p "$WIDEVINE_DEST"
+              cp -R "$CHROME_WIDEVINE"/* "$WIDEVINE_DEST/"
+            fi
+            $DRY_RUN_CMD echo "✓ Widevine installed from Google Chrome"
+          else
+            $DRY_RUN_CMD echo "⚠ Widevine not found. To enable DRM content in Helium:"
+            $DRY_RUN_CMD echo "  1. Open Brave Nightly → brave://settings/extensions"
+            $DRY_RUN_CMD echo "  2. Enable 'Google Widevine' and let it download"
+            $DRY_RUN_CMD echo "  3. Run: just mac"
+          fi
         fi
       fi
-    fi
-  '';
+    ''
+  );
 }

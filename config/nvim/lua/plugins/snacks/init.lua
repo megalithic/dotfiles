@@ -424,18 +424,6 @@ return {
 
       return {
         -- Pickers: files (<leader>ff handled by fff-snacks.nvim)
-        {
-          "<leader>fa",
-          function()
-            Snacks.picker.files({
-              cmd = "fd",
-              args = { "--color=never", "--hidden", "--type", "f", "--type", "l", "--no-ignore", "--exclude", ".git" },
-            })
-          end,
-          desc = "Find all files",
-        },
-        { "<leader>fr", function() Snacks.picker.recent() end, desc = "Find recent" },
-
         -- Pickers: buffers
         { "<leader><leader>", function() Snacks.picker.buffers() end, desc = "Find buffers" },
         { "<leader>fj", function() Snacks.picker.jumps() end, desc = "Find jumps" },
@@ -471,6 +459,7 @@ return {
         { "<leader>f:", function() Snacks.picker.command_history() end, desc = "Command history" },
         { "<leader>f/", function() Snacks.picker.resume() end, desc = "Resume picker" },
         { "<leader>fu", function() Snacks.picker.undo() end, desc = "Undo history" },
+        { "<leader>fa", function() Snacks.picker.autocmds() end, desc = "Autocmds" },
         { "<leader>fc", function() Snacks.picker.colorschemes() end, desc = "Colorschemes" },
 
         -- Words (reference navigation)

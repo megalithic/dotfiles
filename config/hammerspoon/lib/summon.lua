@@ -9,6 +9,34 @@ local function isBundleID(str)
   return str and str:find("%.") ~= nil
 end
 
+-- Get the aliased bundle ID (for wrapper apps that launch apps with different bundle IDs)
+-- e.g., com.nix.brave-browser-nightly -> com.brave.Browser.nightly
+local function getAliasedBundleID(bundleID)
+  if C and C.bundleIdAliases and C.bundleIdAliases[bundleID] then
+    return C.bundleIdAliases[bundleID]
+  end
+  return nil
+end
+
+-- Find app by bundle ID, checking aliases if needed
+-- Returns the app if found by either the original or aliased bundle ID
+local function findAppWithAlias(appHint)
+  -- First try direct lookup
+  local app = hs.application.find(appHint)
+  if app then return app end
+
+  -- If it's a bundle ID, try the alias
+  if isBundleID(appHint) then
+    local aliasedID = getAliasedBundleID(appHint)
+    if aliasedID then
+      app = hs.application.find(aliasedID)
+      if app then return app end
+    end
+  end
+
+  return nil
+end
+
 -- Launch or focus app using appropriate method based on identifier type
 local function launchOrFocusApp(appHint)
   if isBundleID(appHint) then
@@ -73,7 +101,7 @@ local function showIndicator(win)
 end
 
 function obj.focus(appIdentifier)
-  local app = hs.application.find(appIdentifier)
+  local app = findAppWithAlias(appIdentifier)
   local appBundleID = app and (app:bundleID() or appIdentifier)
 
   if app and appIdentifier and appBundleID then
@@ -93,36 +121,46 @@ local previousApp = ""
 -- REF: https://github.com/jhkuperus/dotfiles/blob/master/hammerspoon/app-management.lua
 -- nicely swaps between target app/window to the previously focused app/window
 -- appHint can be a bundle ID (e.g., "com.apple.Safari") or app name (e.g., "Safari")
+-- Supports bundle ID aliases for wrapper apps (see C.bundleIdAliases)
 function obj.switchToAndFromApp(appHint)
   local focusedWindow = hs.window.focusedWindow()
   local targetBundleID = resolveBundleID(appHint)
+  -- Also check aliased bundle ID for comparison
+  local aliasedBundleID = getAliasedBundleID(appHint)
 
   if focusedWindow == nil then
     launchOrFocusApp(appHint)
-  elseif targetBundleID and focusedWindow:application():bundleID() == targetBundleID then
-    if previousApp == nil then
-      hs.window.switcher.nextWindow()
-    else
-      previousApp:activate()
-    end
   else
-    previousApp = focusedWindow:application()
-    launchOrFocusApp(appHint)
+    local focusedBundleID = focusedWindow:application():bundleID()
+    local isTargetApp = (targetBundleID and focusedBundleID == targetBundleID)
+      or (aliasedBundleID and focusedBundleID == aliasedBundleID)
+
+    if isTargetApp then
+      if previousApp == nil then
+        hs.window.switcher.nextWindow()
+      else
+        previousApp:activate()
+      end
+    else
+      previousApp = focusedWindow:application()
+      launchOrFocusApp(appHint)
+    end
   end
 end
 
 -- REF: https://github.com/octplane/hammerspoon-config/blob/master/init.lua#L105
 -- +--- possibly more robust app toggler
 -- appHint can be a bundle ID (e.g., "com.apple.Safari") or app name (e.g., "Safari")
+-- Supports bundle ID aliases for wrapper apps (see C.bundleIdAliases)
 function obj.toggle(appHint, shouldHide)
-  local app = hs.application.find(appHint)
+  local app = findAppWithAlias(appHint)
 
   if not app then
     if appHint ~= nil then
       launchOrFocusApp(appHint)
       -- Show indicator after app launches
       hs.timer.doAfter(0.3, function()
-        local launchedApp = hs.application.find(appHint)
+        local launchedApp = findAppWithAlias(appHint)
         if launchedApp then
           local win = launchedApp:focusedWindow() or launchedApp:mainWindow()
           showIndicator(win)

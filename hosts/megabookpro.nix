@@ -20,8 +20,13 @@
     # Google Cloud SDK for Vertex AI / Gemini access
     google-cloud-sdk
 
-    # kanata - keyboard remapping daemon (needs system access)
     kanata
+  ];
+
+  # Host-specific homebrew casks (merged with modules/brew.nix)
+  # Add casks only needed on personal laptop here
+  homebrew.casks = [
+    "orcaslicer"
   ];
 
   # Personal laptop specific settings can go here

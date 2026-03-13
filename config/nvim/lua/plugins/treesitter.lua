@@ -153,8 +153,9 @@ return {
       vim.treesitter.language.register("elixir", "eelixir")
       vim.treesitter.language.register("markdown", "mdx")
 
-      -- Install parsers (async)
-      require("nvim-treesitter").install(parsers)
+      -- Install parsers (async) - main branch API
+      local install = require("nvim-treesitter.install")
+      install.install(parsers)
     end,
   },
 
@@ -234,12 +235,7 @@ return {
     branch = "main",
     event = "VeryLazy",
     config = function()
-      require("nvim-treesitter-textobjects").setup({
-        select = {
-          lookahead = true,
-          include_surrounding_whitespace = false,
-        },
-      })
+      -- Main branch: no setup() needed, configure via vim.g or just use keymaps directly
 
       -- Function textobjects
       vim.keymap.set(

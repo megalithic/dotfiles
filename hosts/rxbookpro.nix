@@ -16,6 +16,11 @@
     clippy
     rustfmt
     rust-analyzer
+
+    # Google Cloud SDK for Vertex AI / Gemini access
+    google-cloud-sdk
+
+    kanata
   ];
 
   # Work-specific system settings can go here

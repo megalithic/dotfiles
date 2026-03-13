@@ -22,7 +22,6 @@
       "protonvpn"
       "proton-drive"
       "obs@beta"
-      "orcaslicer"
       # "raycast"
       # "spotify"
       # "thingsmacsandboxhelper"

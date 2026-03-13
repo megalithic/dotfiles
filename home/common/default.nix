@@ -144,9 +144,17 @@
   xdg.configFile."kitty".source = config.lib.mega.linkConfig "kitty";
   xdg.configFile."kitty".force = true;
 
-  # Kanata keyboard configs (main config set by darwin module, these are for profile switching)
+  # Kanata keyboard configs - out-of-store symlinks for dynamic switching
+  # macbook.kbd: normal config with home row mods
+  # macbook-disabled.kbd: blocks internal keyboard when external keyboard connected
+  # kanata.kbd: active config, dynamically switched by Hammerspoon dock watcher
+  #            (defaults to macbook.kbd, dock watcher switches based on external keyboard)
   xdg.configFile."kanata/macbook.kbd".source = config.lib.mega.linkConfig "kanata/macbook.kbd";
   xdg.configFile."kanata/macbook-disabled.kbd".source = config.lib.mega.linkConfig "kanata/macbook-disabled.kbd";
+  xdg.configFile."kanata/kanata.kbd" = {
+    source = config.lib.mega.linkConfig "kanata/macbook.kbd";
+    force = true;
+  };
 
   xdg.configFile."zsh".source = ./zsh;
   xdg.configFile."zsh".force = true;

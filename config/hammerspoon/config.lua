@@ -6,6 +6,13 @@ BROWSER = "com.nix.brave-browser-nightly"
 -- BROWSER = "net.imput.helium"
 TERMINAL = "com.mitchellh.ghostty"
 
+-- Bundle ID aliases: wrapper bundle ID -> actual running app bundle ID
+-- Used by summon.lua to find running apps launched via wrappers
+M.bundleIdAliases = {
+  ["com.nix.brave-browser-nightly"] = "com.brave.Browser.nightly",
+  ["com.nix.helium-wrapper"] = "net.imput.helium",
+}
+
 M.displays = {
   internal = "Built-in Retina Display",
   laptop = "Built-in Retina Display",
@@ -303,7 +310,7 @@ M.quitters = {
   ["com.mitchellh.ghostty"] = { mode = "double" },
   ["net.kovidgoyal.kitty"] = { mode = "double" },
   ["com.github.wez.wezterm"] = { mode = "double" },
-  ["com.raycast.macos"] = { mode = "double" },
+  -- ["com.raycast.macos"] = { mode = "double" },
   ["com.runningwithcrayons.Alfred"] = { mode = "double" },
   ["com.pop.pop.app"] = { mode = "double" },
 }
@@ -334,8 +341,8 @@ M.launchers = {
   { "com.apple.Music", "p", nil },
   { "com.freron.MailMate", "e", nil },
   { "com.flexibits.fantastical2.mac", "y", { "'" } },
-  { "com.raycast.macos", "space", { "c" } },
-  -- { "com.brnbw.Tuna", "space", nil },
+  -- { "com.raycast.macos", "space", { "c" } },
+  { "com.brnbw.Tuna", nil, { "space" } },
   -- { "Tuna", nil, { { { "shift", "cmd" }, "space" } } },
   { "com.superultra.Homerow", nil, { ";" } },
   { "com.tinyspeck.slackmacgap", "s", nil },
@@ -374,8 +381,8 @@ M.dock = {
   },
   kanata = {
     enabled = true,
-    connected = "macbook-disabled.kbd",  -- Disable internal when Leeloo connected
-    disconnected = "macbook.kbd",        -- Normal config when Leeloo disconnected
+    connected = "macbook-disabled.kbd", -- Disable internal when Leeloo connected
+    disconnected = "macbook.kbd", -- Normal config when Leeloo disconnected
     configPath = os.getenv("HOME") .. "/.config/kanata",
     daemonLabel = "org.nixos.kanata",
   },

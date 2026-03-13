@@ -68,7 +68,9 @@ local function switchKanataProfile(profile)
 
   -- Kill kanata - kanata-bar will auto-restart it with the new config
   -- (kanata_bar.autorestart_kanata = true in nix config)
-  U.run("pkill -x kanata", true)
+  -- Note: kanata runs as root via sudo, so we need sudo to kill it
+  -- This uses TouchID authentication via kanata-bar's pam_tid config
+  U.run("sudo pkill -x kanata", true)
 
   -- Wait briefly for kanata-bar to restart kanata
   hs.timer.doAfter(1.5, function()
@@ -108,6 +110,13 @@ function M.isDocked()
   ) ~= nil
 end
 
+function M.isExternalKeyboardConnected()
+  return enum.find(
+    hs.usb.attachedDevices(),
+    function(device) return device.productID == C.dock.keyboard.productID end
+  ) ~= nil
+end
+
 function M:start()
   -- Stop existing watcher first to avoid duplicates
   if M.watcher then
@@ -115,6 +124,7 @@ function M:start()
     M.watcher = nil
   end
 
+  -- Check initial dock state
   if M.isDocked() == true then
     dockChangedState("added")
     M.is_docked = true
@@ -123,6 +133,14 @@ function M:start()
     dockChangedState("removed")
     M.is_docked = false
     U.log.of("%s %s mode active", "💻", "laptop")
+  end
+
+  -- Check initial keyboard state
+  if M.isExternalKeyboardConnected() then
+    keyboardChangedState("added")
+    U.log.of("%s External keyboard connected on startup", "⌨️")
+  else
+    keyboardChangedState("removed")
   end
 
   -- Set up watcher for future dock connects/disconnects

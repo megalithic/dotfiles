@@ -7,11 +7,14 @@
   pkgs,
   inputs,
   self,
+  username,
   ...
 }: {
   services.kanata = {
     enable = true;
-    configSource = "${self}/config/kanata/macbook.kbd";
+    # NOTE: configSource intentionally NOT set - we manage the symlink dynamically
+    # via Hammerspoon dock watcher to switch between macbook.kbd and macbook-disabled.kbd
+    # based on whether external keyboard (Leeloo) is connected
     sudoers = false; # kanata-bar handles privilege escalation via TouchID
 
     kanata-bar = {
@@ -30,4 +33,10 @@
       };
     };
   };
+
+  # Allow passwordless kanata kill for Hammerspoon dock watcher
+  # This enables automatic config switching when external keyboard connects/disconnects
+  environment.etc."sudoers.d/kanata-kill".text = ''
+    ${username} ALL=(root) NOPASSWD: /usr/bin/pkill -x kanata
+  '';
 }
