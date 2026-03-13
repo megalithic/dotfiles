@@ -34,7 +34,7 @@
     (mkExtension {
       id = "gfbliohnnapiefjpjlpjnehglfpaknnc"; # SurfingKeys
       version = "1.17.11";
-      sha256 = "sha256-JO4w4a7ASorWMwITy7YtJgI3if3NcrWBijpABnQAi0c=";
+      sha256 = "sha256-ITHfwWSqRxSwk2ignuHq5Bnl3H8abikOaBqmv/3/xn0=";
     })
     (mkExtension {
       id = "egpjdkipkomnmjhjmdamaniclmdlobbo"; # Firenvim

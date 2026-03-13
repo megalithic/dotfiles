@@ -359,10 +359,13 @@ return {
     url = "https://gitlab.com/HiPhish/rainbow-delimiters.nvim",
     event = { "BufReadPost", "BufNewFile" },
     config = function()
+      local rd = require("rainbow-delimiters")
       vim.g.rainbow_delimiters = {
         strategy = {
-          [""] = "rainbow-delimiters.strategy.global",
-          vim = "rainbow-delimiters.strategy.local",
+          [""] = rd.strategy.global,
+          vim = rd.strategy["local"],
+          -- Disable for filetypes without rainbow-delimiters queries
+          nix = rd.strategy.noop,
         },
         query = {
           [""] = "rainbow-delimiters",

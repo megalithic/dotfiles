@@ -115,6 +115,17 @@ in {
     cp -f "${kanata-bar-config}" "$KANATA_BAR_DIR/config.toml"
     chown ${username}:staff "$KANATA_BAR_DIR/config.toml"
     echo "kanata-bar: config created at $KANATA_BAR_DIR"
+
+    # Restart kanata daemon (killed in kanata-darwin preActivation)
+    # KeepAlive=true doesn't trigger restart after pkill, need explicit kickstart
+    USER_UID=$(id -u ${username})
+    launchctl kickstart -k "gui/$USER_UID/org.kanata.daemon" 2>/dev/null || true
+    echo "kanata: daemon restarted"
+
+    # Restart kanata-bar (KeepAlive=false, needs explicit start)
+    sleep 1  # Give kanata time to start TCP listener on port 5829
+    launchctl kickstart "gui/$USER_UID/com.kanata-bar.ui" 2>/dev/null || true
+    echo "kanata-bar: started"
   '';
 
   # Launch kanata-bar after rebuild (UI-only, connects to daemon)

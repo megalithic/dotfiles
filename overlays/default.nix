@@ -2,7 +2,8 @@
   inputs,
   lib,
 }: [
-  inputs.jujutsu.overlays.default
+  # NOTE: jujutsu overlay removed - nixpkgs has 0.39.0 with binary cache
+  # inputs.jujutsu.overlays.default builds from source (no cache)
   inputs.nur.overlays.default
   inputs.mcp-servers-nix.overlays.default
 
