@@ -54,6 +54,7 @@
       "code/.keep".text = "";
       "src/.keep".text = "";
       "tmp/.keep".text = "";
+      "_screenshots/.keep".text = "";
       ".hushlogin".text = "";
       "bin".source = config.lib.mega.linkBin;
       ".editorconfig".text = ''

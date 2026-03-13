@@ -108,13 +108,13 @@ in {
     ln -sf "${self}/config/kanata/macbook-disabled.kbd" "$KANATA_DIR/macbook-disabled.kbd"
 
     # Set up kanata-bar config for UI-only mode (connects to daemon via TCP)
-    # macOS uses ~/Library/Application Support/kanata-bar/ for config
-    KANATA_BAR_DIR="/Users/${username}/Library/Application Support/kanata-bar"
+    # kanata-bar reads from ~/.config/kanata-bar/ by default
+    KANATA_BAR_DIR="/Users/${username}/.config/kanata-bar"
     mkdir -p "$KANATA_BAR_DIR"
     chown ${username}:staff "$KANATA_BAR_DIR"
     cp -f "${kanata-bar-config}" "$KANATA_BAR_DIR/config.toml"
     chown ${username}:staff "$KANATA_BAR_DIR/config.toml"
-    echo "kanata-bar: UI-only config created at $KANATA_BAR_DIR"
+    echo "kanata-bar: config created at $KANATA_BAR_DIR"
   '';
 
   # Launch kanata-bar after rebuild (UI-only, connects to daemon)
