@@ -1,6 +1,20 @@
 # Kanata keyboard remapper configuration for macOS
 # Uses kanata-darwin module for system integration (Karabiner driver, launchd, etc.)
 # Keyboard config files live in config/kanata/
+#
+# Architecture:
+#   - daemon mode: runs kanata via sudo launchd (bypasses Input Monitoring)
+#   - kanata-bar: runs separately as UI-only (connects to daemon via TCP)
+#
+# Usage:
+#   Logs:    tail -f /tmp/kanata.log /tmp/kanata.err
+#   Restart: launchctl kickstart -k gui/$(id -u)/org.kanata.daemon
+#   Stop:    launchctl stop org.kanata.daemon
+#   Start:   launchctl start org.kanata.daemon
+#
+# Hammerspoon config switching:
+#   The config symlink at ~/.config/kanata/kanata.kbd can be changed by
+#   Hammerspoon, then restart the service to apply.
 {
   config,
   lib,
@@ -9,28 +23,113 @@
   self,
   username,
   ...
-}: {
+}: let
+  kanataConfigDir = "/Users/${username}/.config/kanata";
+
+  # kanata-bar app for UI feedback (runs separately from daemon)
+  kanata-bar-version = "1.1.1";
+  kanata-bar-app = pkgs.stdenv.mkDerivation {
+    pname = "kanata-bar-app";
+    version = kanata-bar-version;
+    src = pkgs.fetchurl {
+      url = "https://github.com/not-in-stock/kanata-bar/releases/download/v${kanata-bar-version}/kanata-bar.app.zip";
+      hash = "sha256-dsfPifT+pOxOE2/UfQzyugwuqSbomKP6D5Deo+wVyew=";
+    };
+    dontUnpack = true;
+    nativeBuildInputs = [ pkgs.unzip ];
+    installPhase = ''
+      mkdir -p "$out/Applications"
+      unzip $src -d "$out/Applications"
+    '';
+  };
+
+  # SF Symbol icons for menu bar (pre-generated, committed to repo)
+  # Icons: base (b.square), nav (n.square), disabled (square.stack.3d.up.slash)
+  kanata-bar-icons = "${self}/config/kanata/icons";
+
+  # kanata-bar config for UI-only mode
+  kanata-bar-config = pkgs.writeText "kanata-bar-config.toml" ''
+    [kanata]
+    path = "${config.services.kanata.package}/bin/kanata"
+    config = "${kanataConfigDir}/kanata.kbd"
+    port = 5829
+
+    [kanata_bar]
+    autostart_kanata = false
+    autorestart_kanata = false
+    icons_dir = "${kanata-bar-icons}"
+  '';
+in {
   services.kanata = {
     enable = true;
-    # NOTE: configSource intentionally NOT set - we manage the symlink dynamically
-    # via Hammerspoon dock watcher to switch between macbook.kbd and macbook-disabled.kbd
-    # based on whether external keyboard (Leeloo) is connected
-    sudoers = false; # kanata-bar handles privilege escalation via TouchID
+    user = username; # Explicit user for sudoers and paths
+    sudoers = true; # Run via sudo NOPASSWD - bypasses Input Monitoring permission
 
-    kanata-bar = {
+    # Use out-of-store symlink so Hammerspoon can switch configs without rebuild
+    # Hammerspoon will manage ~/.config/kanata/kanata.kbd -> macbook.kbd or macbook-disabled.kbd
+    configFile = "${kanataConfigDir}/kanata.kbd";
+
+    # Daemon mode: headless launchd service with logs
+    daemon = {
       enable = true;
-      settings = {
-        kanata.pam_tid = "auto";
-        kanata_bar.autorestart_kanata = true;
-        kanata_bar.autostart_kanata = true;
+      launchd = {
+        # Expose TCP port for kanata-bar and Hammerspoon to connect
+        ProgramArguments = [
+          "/usr/bin/sudo"
+          "${config.services.kanata.package}/bin/kanata"
+          "--cfg"
+          config.services.kanata.configFile
+          "--nodelay"
+          "--port"
+          "5829"
+        ];
       };
-      icons = inputs.kanata-darwin.lib.mkLayerIcons pkgs {
-        font = pkgs.nerd-fonts.jetbrains-mono;
-        labels = {
-          default = "U+F0B34"; # nf-md-format_letter_case (Aa)
-          nav = "U+F062"; # nf-fa-arrow_up (navigation layer)
-        };
-      };
+    };
+  };
+
+  # Install kanata-bar app to /Applications/Nix Apps
+  environment.systemPackages = [ kanata-bar-app ];
+
+  # Ensure config directory and default symlink exist
+  # Also set up kanata-bar config for UI-only mode
+  system.activationScripts.postActivation.text = lib.mkAfter ''
+    KANATA_DIR="${kanataConfigDir}"
+    mkdir -p "$KANATA_DIR"
+    chown ${username}:staff "$KANATA_DIR"
+
+    # Create default symlink if it doesn't exist
+    if [ ! -e "$KANATA_DIR/kanata.kbd" ]; then
+      ln -sf "${self}/config/kanata/macbook.kbd" "$KANATA_DIR/kanata.kbd"
+      echo "kanata: created default config symlink"
+    fi
+
+    # Symlink config files to config dir for Hammerspoon to switch between
+    ln -sf "${self}/config/kanata/macbook.kbd" "$KANATA_DIR/macbook.kbd"
+    ln -sf "${self}/config/kanata/macbook-disabled.kbd" "$KANATA_DIR/macbook-disabled.kbd"
+
+    # Set up kanata-bar config for UI-only mode (connects to daemon via TCP)
+    # macOS uses ~/Library/Application Support/kanata-bar/ for config
+    KANATA_BAR_DIR="/Users/${username}/Library/Application Support/kanata-bar"
+    mkdir -p "$KANATA_BAR_DIR"
+    chown ${username}:staff "$KANATA_BAR_DIR"
+    cp -f "${kanata-bar-config}" "$KANATA_BAR_DIR/config.toml"
+    chown ${username}:staff "$KANATA_BAR_DIR/config.toml"
+    echo "kanata-bar: UI-only config created at $KANATA_BAR_DIR"
+  '';
+
+  # Launch kanata-bar after rebuild (UI-only, connects to daemon)
+  # Config is placed in ~/Library/Application Support/kanata-bar/ (macOS default location)
+  # Use /usr/bin/open to launch as proper macOS GUI app (needed for menu bar visibility)
+  launchd.user.agents.kanata-bar = {
+    serviceConfig = {
+      Label = "com.kanata-bar.ui";
+      ProgramArguments = [
+        "/usr/bin/open"
+        "-a"
+        "${kanata-bar-app}/Applications/Kanata Bar.app"
+      ];
+      RunAtLoad = true;
+      KeepAlive = false; # Don't restart on crash - UI is optional
     };
   };
 

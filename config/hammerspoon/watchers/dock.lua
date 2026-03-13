@@ -63,23 +63,22 @@ local function switchKanataProfile(profile)
   U.log.f("Switching Kanata profile to: %s", profile)
 
   -- Update the main kanata.kbd symlink to point to the new profile
-  -- kanata-bar reads from kanata.kbd, so this is what we need to change
   U.run(fmt("ln -sf %s %s", profilePath, mainConfig), true)
 
-  -- Kill kanata - kanata-bar will auto-restart it with the new config
-  -- (kanata_bar.autorestart_kanata = true in nix config)
-  -- Note: kanata runs as root via sudo, so we need sudo to kill it
-  -- This uses TouchID authentication via kanata-bar's pam_tid config
-  U.run("sudo pkill -x kanata", true)
+  -- Restart kanata daemon via launchctl
+  -- The daemon runs as a user agent with sudo, so we use gui domain
+  local uid = U.run("id -u", true):gsub("%s+", "")
+  U.run(fmt("launchctl kickstart -k gui/%s/org.kanata.daemon", uid), true)
 
-  -- Wait briefly for kanata-bar to restart kanata
-  hs.timer.doAfter(1.5, function()
-    -- Verify kanata restarted
+  -- Wait briefly for kanata to restart, then verify
+  hs.timer.doAfter(2, function()
     local isRunning = U.run("pgrep -x kanata", true)
     if isRunning and isRunning ~= "" then
       U.log.of("Kanata profile switched to %s (PID: %s)", profile, isRunning:gsub("%s+", ""))
     else
-      U.log.wf("Kanata did not restart - check kanata-bar menu")
+      -- Check logs for errors
+      local lastErr = U.run("tail -3 /tmp/kanata.err 2>/dev/null", true)
+      U.log.wf("Kanata did not restart. Last error: %s", lastErr or "no log")
     end
   end)
 end
