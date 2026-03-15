@@ -2,7 +2,6 @@
   config,
   lib,
   pkgs,
-  inputs,
   self,
   ...
 }: let
@@ -16,12 +15,7 @@
   # Wrapper .app builder - extracted to lib/builders/mkWrapperApp.nix
   mkWrapperApp = import "${self}/lib/builders/mkWrapperApp.nix" { inherit pkgs lib; };
 
-  browserModule = browser: name: visible: let
-    isProprietaryChrome = lib.hasPrefix "Google Chrome" name;
-    # Brave needs special handling since it uses a custom mkApp derivation
-    isBrave = lib.hasPrefix "brave" browser;
-  in
-    {
+  browserModule = browser: name: visible: {
       enable = mkOption {
         inherit visible;
         type = types.bool;
@@ -33,10 +27,7 @@
       package = mkOption {
         inherit visible;
         type = types.nullOr types.package;
-        default =
-          if isBrave
-          then null # Brave package must be explicitly provided (pkgs.brave-browser-nightly)
-          else pkgs.${browser} or null;
+        default = pkgs.${browser} or null;
         defaultText = literalExpression "pkgs.${browser}";
         description = "The ${name} package to use.";
       };
@@ -152,9 +143,9 @@
           description = "Bundle identifier for the wrapper application.";
         };
       };
-    }
-    // lib.optionalAttrs (!isProprietaryChrome) {
-      # Extensions do not work with Google Chrome
+
+      # Extensions configuration
+      # NOTE: External extensions don't work with Google Chrome due to policy restrictions
       # see https://github.com/nix-community/home-manager/issues/1383
       extensions = mkOption {
         inherit visible;
@@ -238,6 +229,7 @@
         '';
       };
       nativeMessagingHosts = mkOption {
+        inherit visible;
         type = types.listOf types.package;
         default = [];
         example = literalExpression ''
@@ -252,7 +244,6 @@
     };
 
   browserConfig = browser: cfg: let
-    isProprietaryChrome = lib.hasPrefix "google-chrome" browser;
     browserName = supportedBrowsers.${browser};
 
     # Application Support directory path (for extensions, dictionaries, etc.)
@@ -361,15 +352,14 @@
         ++ lib.optional (cliWrapper != null) cliWrapper
         # macOS wrapper .app - always add if enabled (this is how Finder launches with args)
         ++ lib.optional (pkgs.stdenv.isDarwin && cfg.darwinWrapperApp.enable && cfg.commandLineArgs != []) wrapperApp;
-      home.file = lib.optionalAttrs (!isProprietaryChrome) (
+      home.file =
         lib.listToAttrs ((map extensionJson (cfg.extensions or [])) ++ (map dictionary (cfg.dictionaries or [])))
         // lib.optionalAttrs ((cfg.nativeMessagingHosts or []) != []) {
           "${configDir}/NativeMessagingHosts" = {
             source = "${nativeMessagingHostsJoined}/etc/chromium/native-messaging-hosts";
             recursive = true;
           };
-        }
-      );
+        };
 
       # Use bundleId for defaults/preferences (not Application Support path)
       targets.darwin.defaults = lib.mkIf pkgs.stdenv.isDarwin {

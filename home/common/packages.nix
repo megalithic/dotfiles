@@ -122,7 +122,7 @@
     shfmt
 
     # docker
-    colima
+    # colima  # Disabled: depends on lima-full-1.2.2 which is EOL/insecure
     docker
     docker-compose
     docker-compose-language-service

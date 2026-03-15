@@ -28,11 +28,9 @@
   # NOTE: 1Password (aeblfdkhhhdcdjpifhhbdiojplfjncoa) not available via
   # Chrome Web Store API - install manually in each browser.
   extensions = [
-    (mkExtension {
-      id = "ponfpcnoihfmfllpaingbgckeeldkhle"; # Enhancer for YouTube
-      version = "2.0.131";
-      sha256 = "0mdqa9w1p6cmli6976v4wi0sw9r4p5prkj7lzfd1877wk11c9c73";
-    })
+    # NOTE: "Enhancer for YouTube" (ponfpcnoihfmfllpaingbgckeeldkhle) removed -
+    # Google API returns 204 (no content), extension no longer available via CRX API.
+    # Install manually from Chrome Web Store if needed.
     (mkExtension {
       id = "gfbliohnnapiefjpjlpjnehglfpaknnc"; # SurfingKeys
       version = "1.17.11";
@@ -206,7 +204,7 @@ in {
   # Extension files are managed by mkChromiumBrowser.nix
   # which correctly handles the browser-specific directory paths:
   # - Helium: Library/Application Support/net.imput.helium/External Extensions/
-  # - Brave:  Library/Application Support/com.brave.Browser.nightly/External Extensions/
+  # - Brave:  Library/Application Support/BraveSoftware/Brave-Browser-Nightly/External Extensions/
 
   # ===========================================================================
   # Developer Mode & User Scripts Configuration (Helium only)

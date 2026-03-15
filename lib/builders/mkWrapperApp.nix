@@ -29,9 +29,7 @@
   bundleId ? "com.wrapper.app",  # Bundle identifier
 }:
 
-pkgs.runCommand "${lib.strings.sanitizeDerivationName name}" {
-  nativeBuildInputs = [ pkgs.imagemagick ];
-} ''
+pkgs.runCommand "${lib.strings.sanitizeDerivationName name}" {} ''
   mkdir -p "$out/Applications/${name}.app/Contents/MacOS"
   mkdir -p "$out/Applications/${name}.app/Contents/Resources"
 

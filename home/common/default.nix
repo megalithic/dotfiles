@@ -14,6 +14,7 @@
   imports = [
     ./lib.nix
     ./mac-aliases.nix
+    ./modules/settings-sync.nix
     ./rust.nix
     ./packages.nix
     ./services.nix
