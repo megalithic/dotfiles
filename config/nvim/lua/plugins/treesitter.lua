@@ -176,10 +176,10 @@ return {
     dependencies = { "nvim-treesitter/nvim-treesitter" },
     opts = {
       enable = true,
-      max_lines = 10,
+      max_lines = 3,
       min_window_height = 30,
       line_numbers = true,
-      multiline_threshold = 5,
+      multiline_threshold = 3,
       trim_scope = "outer",
       mode = "cursor",
       separator = nil,
@@ -365,7 +365,7 @@ return {
           [""] = rd.strategy.global,
           vim = rd.strategy["local"],
           -- Disable for filetypes without rainbow-delimiters queries
-          nix = rd.strategy.noop,
+          -- nix = rd.strategy.noop,
         },
         query = {
           [""] = "rainbow-delimiters",
@@ -381,6 +381,20 @@ return {
           "RainbowDelimiterViolet",
           "RainbowDelimiterCyan",
         },
+        -- Skip buffers without treesitter parsers (floating windows, popups, etc.)
+        condition = function(bufnr)
+          -- Skip non-normal buffers (floating windows, popups, etc.)
+          local buftype = vim.bo[bufnr].buftype
+          if buftype ~= "" then return false end
+
+          -- Skip if no filetype
+          local filetype = vim.bo[bufnr].filetype
+          if filetype == "" then return false end
+
+          -- Check if treesitter parser exists for this buffer
+          local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
+          return ok and parser ~= nil
+        end,
       }
     end,
   },

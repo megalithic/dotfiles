@@ -161,6 +161,10 @@ in {
   # Custom settings go in /etc/nix/nix.custom.conf (managed by `just apply-nix-config`)
   # See: ~/.dotfiles/nix.custom.conf
   nix.enable = false;
+  environment.etc."nix/nix.custom.conf".source = ../nix.custom.conf;
+  # environment.etc."nix/nix.custom.conf".text = ''
+  #   !include ${config.sops.secrets.github.path}
+  # '';
 
   programs = {
     zsh.enable = true;

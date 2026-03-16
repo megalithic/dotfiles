@@ -3,7 +3,7 @@
 # Home-manager runs separately via homeConfigurations for true independence
 #
 # Usage:
-#   mkDarwinHost {
+#   mkDarwin {
 #     hostname = "megabookpro";
 #     username = "seth";
 #     system = "aarch64-darwin";  # optional, defaults to aarch64-darwin
@@ -15,8 +15,7 @@
   overlays,
   brew_config,
   version,
-}:
-{
+}: {
   hostname,
   username,
   system ? "aarch64-darwin",
@@ -39,35 +38,20 @@ in
         {nixpkgs.overlays = overlays;}
         {nixpkgs.config.allowUnfree = true;}
         {nixpkgs.config.allowUnfreePredicate = _: true;}
-
-        # Shared darwin configuration (minimal system packages, common settings)
         ../hosts/common.nix
-
-        # Host-specific configuration
         ../hosts/${hostname}.nix
-
-        # System modules
         ../modules/system.nix
         ../modules/darwin/services.nix
-
-        # Kanata keyboard remapper
         inputs.kanata-darwin.darwinModules.default
+        inputs.komorebi-for-mac.darwinModules.default
         ../modules/darwin/kanata.nix
-
-        # Secrets (system-level)
         inputs.agenix.darwinModules.default
-
-        # Homebrew
         inputs.nix-homebrew.darwinModules.nix-homebrew
         (brew_config {inherit username;})
         ({config, ...}: {
           homebrew.taps = map (key: builtins.replaceStrings ["homebrew-"] [""] key) (builtins.attrNames config.nix-homebrew.taps);
         })
         (import ../modules/brew.nix)
-
-        # NOTE: Home-manager is NOT included here.
-        # Use `just home` or `home-manager switch --flake .#user@host` separately.
-        # This allows independent darwin and home-manager rebuilds.
       ]
       ++ extraModules;
   }

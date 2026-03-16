@@ -69,21 +69,6 @@ in {
     homepage = "https://brave.com/download-nightly/";
   };
 
-  helium-browser = mkApp {
-    pname = "helium-browser";
-    version = "0.7.4.1";
-    appName = "Helium.app";
-    src = {
-      url = "https://github.com/imputnet/helium-macos/releases/download/0.7.4.1/helium_0.7.4.1_arm64-macos.dmg";
-      sha256 = "sha256-9EEECuaiALU/LzdkrjllgUN+cHcxkDvPgyc52nouFrw=";
-    };
-    # "wrapper" = mkChromiumBrowser's darwinWrapperApp handles installation
-    # Don't symlink/copy to /Applications - wrapper app in ~/Applications/Home Manager Apps/ is the entry point
-    appLocation = "wrapper";
-    desc = "Privacy-focused web browser based on ungoogled-chromium";
-    homepage = "https://github.com/imputnet/helium-chromium";
-  };
-
   tidewave = mkApp {
     pname = "tidewave";
     version = "latest";

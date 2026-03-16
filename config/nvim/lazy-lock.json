@@ -38,7 +38,7 @@
   "nvim-genghis": { "branch": "main", "commit": "0e9ca5e104edc53110896e00466e3c6a4af1ae7d" },
   "nvim-nio": { "branch": "master", "commit": "21f5324bfac14e22ba26553caf69ec76ae8a7662" },
   "nvim-tree-pairs": { "branch": "main", "commit": "1370b02f62ac49be5c709474520f8f86c7a3504f" },
-  "nvim-treesitter": { "branch": "main", "commit": "2f5d4c3f3c675962242096bcc8e586d76dd72eb2" },
+  "nvim-treesitter": { "branch": "main", "commit": "ebc3201290b8372df2b3a1c23b71b9f007d972ff" },
   "nvim-treesitter-context": { "branch": "master", "commit": "9a8e39993e3b895601bf8227124a48ea8268149e" },
   "nvim-treesitter-textobjects": { "branch": "main", "commit": "4e91b5d0394329a229725b021a8ea217099826ef" },
   "nvim-ts-autotag": { "branch": "main", "commit": "8e1c0a389f20bf7f5b0dd0e00306c1247bda2595" },

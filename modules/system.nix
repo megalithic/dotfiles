@@ -1,8 +1,5 @@
 {
-  pkgs,
-  lib,
   config,
-  inputs,
   username,
   ...
 }:
@@ -51,23 +48,8 @@
 
   system = {
     primaryUser = "${username}";
-    # Used for backwards compatibility, please read the changelog before changing.
-    # Darwin state version 6 - defines system configuration schema/compatibility
-    # See flake.nix for actual package channel selection (stable vs unstable)
-    # Reference: https://github.com/LnL7/nix-darwin/blob/master/modules/system/default.nix
-    # $ darwin-rebuild changelog
     stateVersion = 6;
     startup.chime = false;
-    # power = {
-    #   restartAfterFreeze = true;
-    #   # restartAfterPowerFailure = true;
-    #   sleep = {
-    #     allowSleepByPowerButton = false;
-    #     computer = "never";
-    #     display = 2;
-    #     harddisk = 10;
-    #   };
-    # };
     defaults = {
       # Reduce window resize animation duration.
       NSGlobalDomain.NSWindowResizeTime = 0.001;
@@ -250,6 +232,8 @@
           "Stream Resume Delay" = "0.75";
         };
         "com.apple.print.PrintingPrefs" = {"Quit When Finished" = true;}; # quit printer app once jobs complete
+        "com.apple.finder".NewWindowTargetPath = "file:///Users/${config.username}/";
+        NSGlobalDomain."SLSMenuBarUseBlurredAppearance" = false;
         NSGlobalDomain = {
           # Add a context menu item for showing the Web Inspector in web views
           WebKitDeveloperExtras = true;

@@ -262,7 +262,8 @@ let
       printf "  %-22s" "${p.name}"
       if [[ -d "${dstDir}" ]]; then
         local sz=$(du -sh "${dstDir}" 2>/dev/null | cut -f1)
-        local tm=$(stat -f "%Sm" -t "%Y-%m-%d %H:%M" "${dstDir}" 2>/dev/null || echo "?")
+        # Use macOS native stat for BSD-style flags (-f "%Sm" -t format)
+        local tm=$(/usr/bin/stat -f "%Sm" -t "%Y-%m-%d %H:%M" "${dstDir}" 2>/dev/null || echo "?")
         echo -e "''${GREEN}✓''${NC} $sz  ($tm)"
       else
         echo -e "''${YELLOW}○''${NC} not synced"

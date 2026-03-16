@@ -57,14 +57,17 @@
     expert.url = "github:elixir-lang/expert";
     nur.url = "github:nix-community/nur";
     op-shell-plugins.url = "github:1Password/shell-plugins";
-    jujutsu.url = "github:jj-vcs/jj?tag=v0.39.0";
     devenv.url = "github:cachix/devenv";
     nh.url = "github:nix-community/nh";
     kanata-darwin = {
       url = "github:not-in-stock/kanata-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
+    # REF: https://github.com/wra-bradshaw/.dotfiles/blob/main/darwin/common/komorebi.nix
+    # komorebi-for-mac = {
+    #   url = "github:LGUG2Z/komorebi-for-mac";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
     # FIXME: Shade build broken - GhosttyKit extraction issue (see overlays/default.nix)
     # shade.url = "github:megalithic/shade";
     # shade.inputs.nixpkgs.follows = "nixpkgs";

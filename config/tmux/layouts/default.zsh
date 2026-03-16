@@ -14,13 +14,12 @@
 
 SESSION="${1:-}"
 # SESSION_PATH="${2:$CODE}"
-CODE="${SESSION:~/code}"
+# CODE="${SESSION:"$HOME/code"}"
 CWD="$(zoxide query "$SESSION")"
 
 if [[ -n $SESSION ]]; then
   # CWD="${2:-$CODE}"
   # CWD="$(zoxide query "$SESSION"):-$CODE"
-
 
   export SESSION_ICON="󱃸" # alts: 󱃷  󰲌 󱃸
   export SESSION_FG="#eeeeee"
@@ -30,10 +29,10 @@ if [[ -n $SESSION ]]; then
   # Create the session and the first window. Manually switch to root
   # directory if required to support tmux < 1.9
   # tmux new-session -d -s "$SESSION" -n chats
-tmux -2 new-session -d -s "$SESSION" -n dots
+  tmux -2 new-session -d -s "$SESSION" -n dots
   tmux send-keys -t "$SESSION":1 "cd $CWD" "C-m"
   # tmux send-keys -t "$SESSION":1 C-z "tmux link-window -s mega:chats -t 0 && exit" "C-m"
-tmux -2 send-keys -t "$SESSION":1 C-z "tmux link-window -s mega:dots -t 0 && exit" "C-m"
+  tmux -2 send-keys -t "$SESSION":1 C-z "tmux link-window -s mega:dots -t 0 && exit" "C-m"
 
   # Window "code" - main workspace
   tmux new-window -c "$CWD" -t "$SESSION":2 -n code
