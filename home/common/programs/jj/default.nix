@@ -62,9 +62,9 @@ in {
         "node" = {bold = false;};
       };
 
-      # templates = {
-      #   draft_commit_description = "builtin_draft_commit_description_with_diff";
-      # };
+      templates = {
+        draft_commit_description = "builtin_draft_commit_description_with_diff";
+      };
 
       inherit aliases;
       # inherit (templates) revsets revset-aliases template-aliases templates;

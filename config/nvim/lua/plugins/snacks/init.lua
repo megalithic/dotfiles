@@ -134,8 +134,8 @@ return {
         quickfile = { enabled = true },
         scroll = { enabled = false },
         statuscolumn = { enabled = false },
-        terminal = { enabled = true },
-        words = { enabled = true },
+        terminal = { enabled = false },
+        words = { enabled = false },
 
         -- Input styling
         input = {

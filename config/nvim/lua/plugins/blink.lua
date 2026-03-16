@@ -8,6 +8,7 @@ return {
     event = { "InsertEnter", "CmdlineEnter" },
     dependencies = {
       { "xzbdmw/colorful-menu.nvim", opts = {} },
+      { "Kaiser-Yang/blink-cmp-git", config = false }, -- configured as source below
     },
     opts = {
       keymap = {
@@ -39,8 +40,46 @@ return {
       fuzzy = { implementation = "prefer_rust_with_warning" },
 
       sources = {
-        default = { "lsp", "path", "snippets", "buffer" },
+        default = { "git", "lsp", "path", "snippets", "buffer" },
         providers = {
+          git = {
+            module = "blink-cmp-git",
+            name = "[git]",
+            enabled = function()
+              if vim.bo.filetype == "gitcommit" then return true end
+              return vim.g.started_by_firenvim and vim.api.nvim_buf_get_name(0):match("github%.com") ~= nil
+            end,
+            opts = (function()
+              -- Fix ssh:// URL parsing (upstream doesn't handle this format)
+              -- e.g. ssh://git@github.com/owner/repo -> owner/repo
+              local function get_owner_repo()
+                local utils = require("blink-cmp-git.utils")
+                local url = utils.get_repo_remote_url()
+                url = url:gsub("%.git$", ""):gsub("^ssh://", ""):gsub("^git@", ""):gsub("^https?://", ""):gsub("/$", "")
+                local owner, repo = url:match("[/:]([^/]+)/([^/]+)$")
+                return (owner and repo) and (owner .. "/" .. repo) or utils.get_repo_owner_and_repo()
+              end
+
+              local function make_args(feature, endpoint)
+                return function(command, token)
+                  local args = require("blink-cmp-git.default.github")[feature].get_command_args(command, token)
+                  args[#args] = (command == "curl" and "https://api.github.com/" or "") .. "repos/" .. get_owner_repo() .. "/" .. endpoint
+                  return args
+                end
+              end
+
+              return {
+                commit = { enable = false },
+                git_centers = {
+                  github = {
+                    issue = { enable = true, get_command_args = make_args("issue", "issues") },
+                    pull_request = { enable = true, get_command_args = make_args("pull_request", "pulls") },
+                    mention = { enable = true, get_command_args = make_args("mention", "contributors") },
+                  },
+                },
+              }
+            end)(),
+          },
           path = { name = "[path]" },
           snippets = { name = "[snip]", score_offset = 3 },
           buffer = {
