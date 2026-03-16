@@ -512,7 +512,7 @@ function M.captureWithContext()
 end
 
 --- Open daily note in Shade
---- As of 2026-01-08, Shade handles :ObsidianToday via native nvim RPC.
+--- As of 2026-01-08, Shade handles `Obsidian today` via native nvim RPC.
 --- Hammerspoon just sends the notification and ensures Shade is ready.
 function M.openDailyNote()
   local function triggerDaily()

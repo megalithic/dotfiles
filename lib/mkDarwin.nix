@@ -43,7 +43,6 @@ in
         ../modules/system.nix
         ../modules/darwin/services.nix
         inputs.kanata-darwin.darwinModules.default
-        inputs.komorebi-for-mac.darwinModules.default
         ../modules/darwin/kanata.nix
         inputs.agenix.darwinModules.default
         inputs.nix-homebrew.darwinModules.nix-homebrew

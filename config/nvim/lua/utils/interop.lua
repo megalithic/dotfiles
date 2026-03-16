@@ -147,6 +147,22 @@ function M.shade.toggle()
   return M.shade.request("toggle")
 end
 
+--- Open today's daily note via Shade RPC
+--- Calls Shade's `open_daily_note` method which executes `Obsidian today` in nvim
+---@return any|nil result Path to daily note or nil on failure
+---@return string|nil error
+function M.shade.open_daily_note()
+  return M.shade.request("open_daily_note")
+end
+
+--- Open a new capture note via Shade RPC
+--- Calls Shade's `open_new_capture` method
+---@return any|nil result Path to capture note or nil on failure
+---@return string|nil error
+function M.shade.open_new_capture()
+  return M.shade.request("open_new_capture")
+end
+
 --- Smart toggle: if inside Shade, hide it; otherwise show/focus it
 --- This is the typical "activate or dismiss" pattern
 ---@return any|nil result

@@ -232,7 +232,7 @@
           "Stream Resume Delay" = "0.75";
         };
         "com.apple.print.PrintingPrefs" = {"Quit When Finished" = true;}; # quit printer app once jobs complete
-        "com.apple.finder".NewWindowTargetPath = "file:///Users/${config.username}/";
+        "com.apple.finder".NewWindowTargetPath = "file:///Users/${username}/";
         NSGlobalDomain."SLSMenuBarUseBlurredAppearance" = false;
         NSGlobalDomain = {
           # Add a context menu item for showing the Web Inspector in web views
@@ -246,6 +246,10 @@
           SUEnableAutomaticChecks = false;
           SUHasLaunchedBefore = true;
           SUSendProfileInfo = false;
+        };
+        "com.flexibits.fantastical2.mac" = {
+          SUAutomaticallyUpdate = false;
+          SUEnableAutomaticChecks = false;
         };
         "com.raycast.macos" = {
           # cmd-space

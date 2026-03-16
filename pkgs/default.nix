@@ -33,11 +33,11 @@ in {
 
   fantastical = mkApp {
     pname = "fantastical";
-    version = "4.1.7";
+    version = "3.9.2";
     appName = "Fantastical.app";
     src = {
-      url = "https://cdn.flexibits.com/Fantastical_4.1.7.zip";
-      sha256 = "sha256-w2XE8HQfqmM4gcsyni8qj6tPRcDWZ+HIHCg5K3cGjCA=";
+      url = "https://cdn.flexibits.com/Fantastical_3.9.2.zip";
+      sha256 = "sha256-rnOzSwh3fTEY6qNM8QojO7aUm7jxC3AxV11/Pad0pqI=";
     };
     appLocation = "copy"; # Needs /Applications for code signing
     desc = "Calendar and tasks app";
