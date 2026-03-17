@@ -378,6 +378,33 @@ function buildRules(config: SentinelConfig): Rule[] {
     reason: "⛔ Nix-managed path. Edit ~/.dotfiles/ source instead.",
   });
 
+  // ── HARD: nix build must output to /tmp and clean up ──
+
+  rules.push({
+    name: "nix-build-result",
+    tier: "hard",
+    tools: ["bash"],
+    test: (cmd) => {
+      if (!isCommandPrefix(cmd, "nix", "build")) return false;
+      const tokens = segmentTokens(cmd, "nix", "build");
+      if (!tokens) return false;
+      // Allow if --no-link is present
+      if (tokens.includes("--no-link")) return false;
+      // Allow if -o or --out-link points to /tmp
+      for (let i = 0; i < tokens.length; i++) {
+        if (tokens[i] === "-o" || tokens[i] === "--out-link") {
+          const target = tokens[i + 1];
+          if (target && target.startsWith("/tmp/")) return false;
+        }
+        // Handle --out-link=/tmp/... form
+        if (tokens[i].startsWith("--out-link=/tmp/") || tokens[i].startsWith("-o=/tmp/")) return false;
+      }
+      // Block: would create ./result in current directory
+      return true;
+    },
+    reason: "⛔ `nix build` creates ./result symlink. Use `--no-link` or `-o /tmp/<name>` and clean up after.",
+  });
+
   // ── CONFIRM: destructive jj ──
 
   for (const [sub, reason] of Object.entries({

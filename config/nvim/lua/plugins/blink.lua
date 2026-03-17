@@ -46,7 +46,7 @@ return {
             module = "blink-cmp-git",
             name = "[git]",
             enabled = function()
-              if vim.bo.filetype == "gitcommit" then return true end
+              if vim.bo.filetype == "gitcommit" or vim.bo.filetype == "jjdescription" then return true end
               return vim.g.started_by_firenvim and vim.api.nvim_buf_get_name(0):match("github%.com") ~= nil
             end,
             opts = (function()
@@ -63,7 +63,11 @@ return {
               local function make_args(feature, endpoint)
                 return function(command, token)
                   local args = require("blink-cmp-git.default.github")[feature].get_command_args(command, token)
-                  args[#args] = (command == "curl" and "https://api.github.com/" or "") .. "repos/" .. get_owner_repo() .. "/" .. endpoint
+                  args[#args] = (command == "curl" and "https://api.github.com/" or "")
+                    .. "repos/"
+                    .. get_owner_repo()
+                    .. "/"
+                    .. endpoint
                   return args
                 end
               end

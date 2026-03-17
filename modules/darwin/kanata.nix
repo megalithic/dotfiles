@@ -97,10 +97,21 @@ in {
     mkdir -p "$KANATA_DIR"
     chown ${username}:staff "$KANATA_DIR"
 
-    # Create default symlink if it doesn't exist
+    # Create/fix mutable symlink for Hammerspoon to switch configs
+    # If symlink points to nix store (from old home-manager config), recreate it
+    # Must be owned by user so Hammerspoon can switch it
+    # Use /usr/bin/stat (BSD) not nix stat (GNU) for -f '%Su' format
+    if [ -L "$KANATA_DIR/kanata.kbd" ]; then
+      TARGET=$(readlink "$KANATA_DIR/kanata.kbd")
+      OWNER=$(/usr/bin/stat -f '%Su' "$KANATA_DIR/kanata.kbd")
+      if [[ "$TARGET" == /nix/store/* ]] || [[ "$OWNER" != "${username}" ]]; then
+        rm -f "$KANATA_DIR/kanata.kbd"
+        echo "kanata: removed stale symlink (target=$TARGET, owner=$OWNER)"
+      fi
+    fi
     if [ ! -e "$KANATA_DIR/kanata.kbd" ]; then
-      ln -sf "${self}/config/kanata/macbook.kbd" "$KANATA_DIR/kanata.kbd"
-      echo "kanata: created default config symlink"
+      sudo -u ${username} ln -sf "$KANATA_DIR/macbook.kbd" "$KANATA_DIR/kanata.kbd"
+      echo "kanata: created config symlink (owned by ${username})"
     fi
 
     # Symlink config files to config dir for Hammerspoon to switch between

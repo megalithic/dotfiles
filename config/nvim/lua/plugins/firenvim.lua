@@ -77,20 +77,23 @@ return {
 
     local function setup_buf(bufnr)
       vim.opt_local.signcolumn = "no"
-      vim.opt_local.statuscolumn = "%l "
+      vim.opt_local.statuscolumn = ""
       vim.opt_local.relativenumber = false
-      vim.opt_local.number = true
+      vim.opt_local.number = false
       vim.opt_local.cursorline = true
-      vim.opt_local.cursorlineopt = "screenline,number"
+      vim.opt_local.cursorlineopt = "screenline"
       vim.diagnostic.enable(false, { bufnr = bufnr })
-      pcall(vim.lsp.stop_client, vim.lsp.get_clients({ bufnr = bufnr }))
+      for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
+        pcall(function() client:stop() end)
+      end
 
       local grp = vim.api.nvim_create_augroup("FireNvimBuf_" .. bufnr, { clear = true })
       vim.api.nvim_create_autocmd({ "FocusLost", "TextChanged", "TextChangedI", "InsertLeave" }, {
         buffer = bufnr,
         group = grp,
         callback = function(e)
-          throttle_write(e.event == "TextChanged" or e.event == "TextChangedI" and 1000 or 10, bufnr)
+          local delay = (e.event == "TextChanged" or e.event == "TextChangedI") and 1000 or 10
+          throttle_write(delay, bufnr)
         end,
       })
     end
@@ -129,8 +132,7 @@ return {
         vim.keymap.set("n", "<Esc>", function()
           vim.cmd("silent! wall")
           vim.fn["firenvim#hide_frame"]()
-          vim.fn["firenvim#press_keys"]("<Esc>")
-          vim.fn["firenvim#focus_page"]()
+          vim.fn["firenvim#focus_input"]()
         end)
         vim.keymap.set("n", "<C-z>", function()
           vim.cmd("silent! wall")
@@ -154,8 +156,8 @@ return {
       group = aug,
       callback = function(e)
         if e.file ~= "" then setup_buf(e.buf) end
-        local lines = vim.api.nvim_buf_get_lines(e.buf, 0, -1, false)
-        if #lines <= 1 and (lines[1] or "") == "" then vim.defer_fn(function() vim.cmd("startinsert!") end, 50) end
+        local first_line = vim.api.nvim_buf_get_lines(e.buf, 0, 1, false)[1] or ""
+        if first_line:match("^%s*$") then vim.defer_fn(function() vim.cmd("startinsert!") end, 50) end
       end,
     })
 
