@@ -123,16 +123,16 @@ if command -v op &>/dev/null; then
     echo "░      (biometric auth required)"
     mkdir -p "$HOME/.ssh"
     chmod 700 "$HOME/.ssh"
-    
-    if op read "op://$OP_VAULT/$OP_ITEM/private key" --account "$OP_ACCOUNT" > "$SSH_KEY_PATH" 2>/dev/null; then
+
+    if op read "op://$OP_VAULT/$OP_ITEM/private key" --account "$OP_ACCOUNT" >"$SSH_KEY_PATH" 2>/dev/null; then
       chmod 600 "$SSH_KEY_PATH"
       echo "░ [✓] -> SSH key written to $SSH_KEY_PATH"
-      
+
       # Also fetch public key if available
-      if op read "op://$OP_VAULT/$OP_ITEM/public key" --account "$OP_ACCOUNT" > "${SSH_KEY_PATH}.pub" 2>/dev/null; then
+      if op read "op://$OP_VAULT/$OP_ITEM/public key" --account "$OP_ACCOUNT" >"${SSH_KEY_PATH}.pub" 2>/dev/null; then
         chmod 644 "${SSH_KEY_PATH}.pub"
       fi
-      
+
       # Trigger agenix activation
       echo "░ :: -> Activating agenix secrets.."
       if launchctl kickstart -k "gui/$(id -u)/org.nix-community.home.activate-agenix" 2>/dev/null; then
@@ -155,9 +155,6 @@ else
   echo "░      Install with: brew install 1password-cli"
   echo "░      Then run 'bootstrap-secrets' to set up agenix"
 fi
-
-# echo "░ :: -> Running nix-darwin for the first time for $FLAKE.." &&
-#   nix run nix-darwin -- switch --flake "$DOTFILES_DIR"
 
 echo "░ :: -> Running post-install settings.." &&
   (sudo scutil --set HostName "$FLAKE" &&

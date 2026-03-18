@@ -116,9 +116,11 @@ validate:
   set -euo pipefail
   HOST=$(hostname -s)
   echo ":: Building darwin configuration (no switch)..."
-  darwin-rebuild build --flake ".#$HOST" --no-link
+  darwin-rebuild build --flake ".#$HOST"
+  rm -f result
   echo ":: Building home-manager configuration (no switch)..."
-  nix run home-manager -- build --flake ".#$(whoami)@$HOST" --no-link
+  nix run home-manager -- build --flake ".#$(whoami)@$HOST"
+  rm -f result
   echo ":: ✓ Both configurations build successfully."
 
 # Full rebuild: sync from remote, darwin-rebuild, home-manager switch

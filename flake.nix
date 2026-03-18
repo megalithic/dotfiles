@@ -59,6 +59,7 @@
     op-shell-plugins.url = "github:1Password/shell-plugins";
     devenv.url = "github:cachix/devenv";
     nh.url = "github:nix-community/nh";
+    worktrunk.url = "github:max-sixty/worktrunk";
     kanata-darwin = {
       url = "github:not-in-stock/kanata-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
