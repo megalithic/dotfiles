@@ -9,14 +9,10 @@
 }: {
   programs.worktrunk = {
     enable = true;
-    package = inputs.worktrunk.packages.${pkgs.stdenv.hostPlatform.system}.worktrunk;
+    # Use worktrunk-with-git-wt to install as git-wt subcommand (git wt <command>)
+    package = inputs.worktrunk.packages.${pkgs.stdenv.hostPlatform.system}.worktrunk-with-git-wt;
     enableBashIntegration = true;
     enableZshIntegration = true;
     enableFishIntegration = true;
   };
-
-  # Also install the git-wt variant as an alternative (git wt <command>)
-  home.packages = [
-    inputs.worktrunk.packages.${pkgs.stdenv.hostPlatform.system}.worktrunk-with-git-wt
-  ];
 }

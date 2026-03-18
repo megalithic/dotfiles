@@ -31,7 +31,6 @@
     ./programs/shade.nix
     ./programs/worktrunk.nix
     inputs.op-shell-plugins.hmModules.default
-    inputs.worktrunk.homeModules.default
   ];
 
   home.username = username;
