@@ -28,7 +28,7 @@
     inkscape # migrated from homebrew 2026-02-13
     neovide # Native neovim GUI - potential future use for floating notes window
     obsidian
-    # shade  # FIXME: Disabled - GhosttyKit build failing, see overlays/default.nix
+    shade # Floating terminal panel for macOS (prebuilt from GitHub release v0.1.0)
     slack # migrated from homebrew 2026-02-13
     spotify
     # telegram-desktop

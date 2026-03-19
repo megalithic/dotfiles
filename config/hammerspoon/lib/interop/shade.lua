@@ -62,9 +62,10 @@ M.notifications = {
 }
 
 -- Binary paths by version enum
--- _G.SHADE_VER controls which binary to use: "debug" | "release" | "install" | "/custom/path"
+-- _G.SHADE_VER controls which binary to use: "nix" | "debug" | "release" | "install" | "/custom/path"
 local BINARY_NAME = "shade"
 local BINARY_PATHS = {
+  nix = os.getenv("HOME") .. "/.nix-profile/bin/shade", -- home-manager managed (preferred)
   install = os.getenv("HOME") .. "/.local/bin/shade",
   release = os.getenv("HOME") .. "/code/shade/.build/release/shade",
   debug = os.getenv("HOME") .. "/code/shade/.build/debug/shade",

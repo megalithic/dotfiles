@@ -17,7 +17,7 @@ local SHADE_CONTEXT_PATH = SHADE_STATE_DIR .. "/context.json"
 
 -- Context caching (avoid repeated file reads during template expansion)
 local shade_ctx_cache = nil
-local shade_ctx_timer_id = nil
+local shade_ctx_timer = nil -- vim.uv.new_timer handle from vim.defer_fn
 
 --- Check if running inside Shade panel
 ---@return boolean
@@ -43,12 +43,14 @@ function M.shade.get_context()
   shade_ctx_cache = ctx
 
   -- Clear cache after 1 second (for template expansion batches)
-  if shade_ctx_timer_id then
-    vim.fn.timer_stop(shade_ctx_timer_id)
+  -- vim.defer_fn returns a vim.uv.new_timer handle
+  if shade_ctx_timer then
+    shade_ctx_timer:stop()
+    shade_ctx_timer:close()
   end
-  shade_ctx_timer_id = vim.defer_fn(function()
+  shade_ctx_timer = vim.defer_fn(function()
     shade_ctx_cache = nil
-    shade_ctx_timer_id = nil
+    shade_ctx_timer = nil
   end, 1000)
 
   return ctx
@@ -57,9 +59,10 @@ end
 --- Clear the context cache (for testing or forced refresh)
 function M.shade.clear_cache()
   shade_ctx_cache = nil
-  if shade_ctx_timer_id then
-    vim.fn.timer_stop(shade_ctx_timer_id)
-    shade_ctx_timer_id = nil
+  if shade_ctx_timer then
+    shade_ctx_timer:stop()
+    shade_ctx_timer:close()
+    shade_ctx_timer = nil
   end
 end
 

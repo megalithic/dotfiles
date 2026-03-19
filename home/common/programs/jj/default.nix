@@ -38,7 +38,7 @@ in {
 
       # Auto-update stale workspaces when switching between them
       snapshot.auto-update-stale = true;
-
+      remotes.origin.auto-track-bookmarks = true;
       colors = {
         commit_id = "magenta";
         change_id = "cyan";

@@ -13,6 +13,7 @@
       "colorsnapper"
       "contexts"
       # "figma"
+      "fantastical"
       "hammerspoon"
       "homerow"
       # "karabiner-elements"
