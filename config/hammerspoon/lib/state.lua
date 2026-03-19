@@ -41,10 +41,10 @@ M.notification = {
 M.hypers = {}
 
 --------------------------------------------------------------------------------
--- MICCHECKA STATE (unified PTT + PTD voice control)
+-- MICCHECK STATE (unified PTT + PTD voice control)
 --------------------------------------------------------------------------------
 
-M.micchecka = {
+M.miccheck = {
   -- Mode states
   pttMode = "push-to-talk",  -- "push-to-talk", "push-to-mute", "disabled"
   ptdMode = "push-to-dictate",  -- "push-to-dictate", "always-on", "disabled"
@@ -139,32 +139,32 @@ function M.resetHypers()
   M.hypers = {}
 end
 
---- Reset micchecka state (stop hotkeys, delete menubar, clear hooks)
-function M.resetMicchecka()
+--- Reset miccheck state (stop hotkeys, delete menubar, clear hooks)
+function M.resetMiccheck()
   -- Stop all hotkeys and eventtaps
-  for name, binding in pairs(M.micchecka.hotkeys) do
+  for name, binding in pairs(M.miccheck.hotkeys) do
     if binding then
       -- Try eventtap stop first (for modifierTap, keyDownTap, etc.)
       pcall(function() binding:stop() end)
       -- Then try hotkey delete (for pttToggle, ptdToggle, etc.)
       pcall(function() binding:delete() end)
-      M.micchecka.hotkeys[name] = nil
+      M.miccheck.hotkeys[name] = nil
     end
   end
 
   -- Delete menubar
-  if M.micchecka.menubar then
-    pcall(function() M.micchecka.menubar:delete() end)
-    M.micchecka.menubar = nil
+  if M.miccheck.menubar then
+    pcall(function() M.miccheck.menubar:delete() end)
+    M.miccheck.menubar = nil
   end
 
   -- Reset activity state (keep mode preferences)
-  M.micchecka.isRecording = false
-  M.micchecka.isProcessing = false
-  M.micchecka.isUnmuted = false
+  M.miccheck.isRecording = false
+  M.miccheck.isProcessing = false
+  M.miccheck.isUnmuted = false
 
   -- Clear hooks
-  M.micchecka.hooks = {
+  M.miccheck.hooks = {
     onMuteChange = {},
     onRecordStart = {},
     onRecordEnd = {},
@@ -173,7 +173,7 @@ function M.resetMicchecka()
 end
 
 --- Reset a specific namespace by name
----@param namespace "notification"|"hypers"|"micchecka"|"all" Namespace to reset
+---@param namespace "notification"|"hypers"|"miccheck"|"all" Namespace to reset
 function M.reset(namespace)
   if namespace == "notification" or namespace == "all" then
     M.resetNotification()
@@ -181,8 +181,8 @@ function M.reset(namespace)
   if namespace == "hypers" or namespace == "all" then
     M.resetHypers()
   end
-  if namespace == "micchecka" or namespace == "all" then
-    M.resetMicchecka()
+  if namespace == "miccheck" or namespace == "all" then
+    M.resetMiccheck()
   end
 end
 

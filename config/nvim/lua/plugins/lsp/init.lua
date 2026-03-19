@@ -12,12 +12,12 @@ return {
   {
     "smjonas/inc-rename.nvim",
     opts = {},
-    inti = function()
+    init = function()
       vim.keymap.set(
         { "v", "n" },
         "gn",
         function() return ":IncRename " .. vim.fn.expand("<cword>") end,
-        { expr = true }
+        { expr = true, desc = "LSP: rename symbol" }
       )
     end,
   },

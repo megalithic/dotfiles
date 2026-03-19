@@ -3,6 +3,45 @@
 
 local M = {}
 
+--- Check LSP capabilities for current buffer
+function M.check_capabilities()
+  local clients = vim.lsp.get_clients({ bufnr = 0 })
+  if #clients == 0 then
+    vim.notify("No LSP attached", vim.log.levels.WARN)
+    return
+  end
+
+  local caps = {
+    { "definition", "definitionProvider" },
+    { "declaration", "declarationProvider" },
+    { "implementation", "implementationProvider" },
+    { "typeDefinition", "typeDefinitionProvider" },
+    { "references", "referencesProvider" },
+    { "codeAction", "codeActionProvider" },
+    { "rename", "renameProvider" },
+    { "hover", "hoverProvider" },
+    { "signatureHelp", "signatureHelpProvider" },
+    { "completion", "completionProvider" },
+    { "formatting", "documentFormattingProvider" },
+    { "inlayHint", "inlayHintProvider" },
+  }
+
+  local lines = {}
+  for _, client in ipairs(clients) do
+    table.insert(lines, string.format("**%s**", client.name))
+    for _, cap in ipairs(caps) do
+      local has = client.server_capabilities[cap[2]]
+      local icon = has and "✓" or "✗"
+      table.insert(lines, string.format("  %s %s", icon, cap[1]))
+    end
+    table.insert(lines, "")
+  end
+
+  vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO, { title = "LSP Capabilities" })
+end
+
+vim.api.nvim_create_user_command("LspCapabilities", M.check_capabilities, { desc = "Show LSP capabilities" })
+
 local function get_snacks()
   local ok, snacks = pcall(require, "snacks")
   return ok and snacks or nil
@@ -36,6 +75,16 @@ function M.on_attach(client, bufnr)
       vim.cmd("vsplit")
       vim.lsp.buf.definition()
     end, "Goto definition (vsplit)")
+  end
+
+  if client:supports_method(methods.textDocument_declaration) then
+    map("n", "gI", function()
+      if snacks and snacks.picker.lsp_declarations then
+        snacks.picker.lsp_declarations()
+      else
+        vim.lsp.buf.declaration()
+      end
+    end, "Goto declaration")
   end
 
   if client:supports_method(methods.textDocument_references) then
@@ -82,6 +131,7 @@ function M.on_attach(client, bufnr)
   end
 
   if client:supports_method(methods.textDocument_codeAction) then
+    map({ "n", "v" }, "ga", vim.lsp.buf.code_action, "Code action")
     map({ "n", "v" }, "<leader>la", vim.lsp.buf.code_action, "Code action")
   end
 

@@ -3,26 +3,26 @@
   # ─────────────────────────────────────────────────────────────
   # Basic shortcuts
   # ─────────────────────────────────────────────────────────────
-  s = [ "status" ];
-  l = [ "log" ];
-  ll = [ "log" "-T" "builtin_log_compact_full_description" ];
-  d = [ "diff" ];
-  rb = [ "rebase" ];
-  b = [ "bookmark" ];
-  g = [ "git" ];
+  s = ["status"];
+  l = ["log"];
+  ll = ["log" "-T" "builtin_log_compact_full_description"];
+  d = ["diff"];
+  rb = ["rebase"];
+  b = ["bookmark"];
+  g = ["git"];
 
   # ─────────────────────────────────────────────────────────────
   # Bookmark management
   # ─────────────────────────────────────────────────────────────
-  
+
   # Moves closest bookmark to current working copy
-  here = [ "bookmark" "move" "--from" "closest_bookmark(@)" "--to" "@" ];
-  
+  here = ["bookmark" "move" "--from" "closest_bookmark(@)" "--to" "@"];
+
   # Advances closest bookmark to parent commit
-  tug = [ "bookmark" "move" "--from" "closest_bookmark(@-)" "--to" "@-" ];
-  
+  tug = ["bookmark" "move" "--from" "closest_bookmark(@-)" "--to" "@-"];
+
   # Move main to current
-  main = [ "bookmark" "move" "main" "--to" "@" ];
+  main = ["bookmark" "move" "main" "--to" "@"];
 
   # ─────────────────────────────────────────────────────────────
   # Smart push with guardrails
@@ -32,15 +32,20 @@
   # - --pr flag: push then create PR
   # ─────────────────────────────────────────────────────────────
   push = [
-    "util" "exec" "--" "bash" "-c"
+    "util"
+    "exec"
+    "--"
+    "bash"
+    "-c"
     ''
       set -euo pipefail
 
       # Parse args: extract bookmark and --pr flag
       bookmark=""
       create_pr=false
+      draft_pr=false
       pass_args=()
-      
+
       while [[ $# -gt 0 ]]; do
         case "$1" in
           -b|--bookmark)
@@ -50,6 +55,11 @@
             ;;
           --pr)
             create_pr=true
+            shift
+            ;;
+          --prd)
+            create_pr=true
+            draft_pr=true
             shift
             ;;
           *)
@@ -63,7 +73,7 @@
       if [[ -z "$bookmark" ]]; then
         closest=$(jj log -r 'closest_bookmark(@)' --no-graph \
           -T 'self.bookmarks().map(|b| b.name()).join(",")' 2>/dev/null | head -1)
-        
+
         echo "Error: Must specify bookmark with -b <bookmark>" >&2
         if [[ -n "$closest" && "$closest" != "main" ]]; then
           echo "Did you mean: jj push -b $closest" >&2
@@ -95,8 +105,13 @@
       # Create PR if requested
       if $create_pr; then
         echo ""
-        echo "Creating PR..."
-        gh pr create --head "$bookmark" --base main --fill
+        if $draft_pr; then
+          echo "Creating Draft PR..."
+          gh pr create --head "$bookmark" --base main --fill --draft
+        else
+          echo "Creating PR..."
+          gh pr create --head "$bookmark" --base main --fill
+        fi
       fi
     ''
     ""
@@ -108,7 +123,11 @@
   # jj dm [-b <bookmark>] <message> - with message
   # ─────────────────────────────────────────────────────────────
   dv = [
-    "util" "exec" "--" "bash" "-c"
+    "util"
+    "exec"
+    "--"
+    "bash"
+    "-c"
     ''
       set -euo pipefail
 
@@ -144,7 +163,11 @@
   ];
 
   dm = [
-    "util" "exec" "--" "bash" "-c"
+    "util"
+    "exec"
+    "--"
+    "bash"
+    "-c"
     ''
       set -euo pipefail
 
@@ -192,7 +215,11 @@
 
   # jj up [branch] - Fetch and rebase onto origin (default: main)
   up = [
-    "util" "exec" "--" "bash" "-c"
+    "util"
+    "exec"
+    "--"
+    "bash"
+    "-c"
     ''
       set -euo pipefail
       jj git fetch
@@ -203,14 +230,18 @@
 
   # jj feat [-b <bookmark>] [message] - Create new feature branch from main@origin
   feat = [
-    "util" "exec" "--" "bash" "-c"
+    "util"
+    "exec"
+    "--"
+    "bash"
+    "-c"
     ''
       set -euo pipefail
-      
+
       bookmark=""
       message=""
       args=()
-      
+
       while [[ $# -gt 0 ]]; do
         case "$1" in
           -b|--bookmark)
@@ -224,11 +255,11 @@
             ;;
         esac
       done
-      
+
       if [[ ''${#args[@]} -gt 0 ]]; then
         message="''${args[*]}"
       fi
-      
+
       if [[ -z "$bookmark" && -z "$message" ]]; then
         echo "Usage: jj feat [-b <bookmark>] [message]"
         echo "Examples:"
@@ -237,14 +268,14 @@
         echo "  jj feat \"wip\"                  # Start on main@origin with message (no bookmark)"
         exit 0
       fi
-      
+
       jj git fetch
       jj new main@origin
-      
+
       if [[ -n "$message" ]]; then
         jj describe -m "$message"
       fi
-      
+
       if [[ -n "$bookmark" ]]; then
         # Capture bookmark list to avoid pipefail issues with jj util exec
         bookmark_list=$(jj bookmark list 2>/dev/null || true)
@@ -262,14 +293,18 @@
 
   # jj feat-here [-b <bookmark>] [message] - Create feature branch from current (no fetch)
   feat-here = [
-    "util" "exec" "--" "bash" "-c"
+    "util"
+    "exec"
+    "--"
+    "bash"
+    "-c"
     ''
       set -euo pipefail
-      
+
       bookmark=""
       message=""
       args=()
-      
+
       while [[ $# -gt 0 ]]; do
         case "$1" in
           -b|--bookmark)
@@ -283,11 +318,11 @@
             ;;
         esac
       done
-      
+
       if [[ ''${#args[@]} -gt 0 ]]; then
         message="''${args[*]}"
       fi
-      
+
       if [[ -z "$bookmark" && -z "$message" ]]; then
         echo "Usage: jj feat-here [-b <bookmark>] [message]"
         echo "Examples:"
@@ -295,13 +330,13 @@
         echo "  jj feat-here \"wip\"              # Continue with message (no bookmark)"
         exit 0
       fi
-      
+
       jj new
-      
+
       if [[ -n "$message" ]]; then
         jj describe -m "$message"
       fi
-      
+
       if [[ -n "$bookmark" ]]; then
         # Capture bookmark list to avoid pipefail issues with jj util exec
         bookmark_list=$(jj bookmark list 2>/dev/null || true)
@@ -319,7 +354,11 @@
 
   # jj co <branch> - Smart checkout: fetch, switch to branch (or create if missing)
   co = [
-    "util" "exec" "--" "bash" "-c"
+    "util"
+    "exec"
+    "--"
+    "bash"
+    "-c"
     ''
       set -euo pipefail
       if [[ -z "''${1:-}" ]]; then
@@ -360,12 +399,16 @@
     ''
     ""
   ];
-  checkout = [ "co" ];
-  switch = [ "co" ];
+  checkout = ["co"];
+  switch = ["co"];
 
   # jj pr-fix ["msg"] - New commit on PR branch, describe, push with confirmation
   pr-fix = [
-    "util" "exec" "--" "bash" "-c"
+    "util"
+    "exec"
+    "--"
+    "bash"
+    "-c"
     ''
       set -euo pipefail
 
@@ -409,7 +452,11 @@
 
   # jj fixup - Squash into parent commit on PR branch, push with confirmation
   fixup = [
-    "util" "exec" "--" "bash" "-c"
+    "util"
+    "exec"
+    "--"
+    "bash"
+    "-c"
     ''
       set -euo pipefail
 
@@ -448,7 +495,11 @@
 
   # jj pr [--base <branch>] [gh-args...] - Push bookmark and create GitHub PR
   pr = [
-    "util" "exec" "--" "bash" "-c"
+    "util"
+    "exec"
+    "--"
+    "bash"
+    "-c"
     ''
       set -euo pipefail
 
@@ -498,7 +549,11 @@
 
   # jj done - Clean up after PR merged: delete bookmark, switch to main, fetch & rebase
   done = [
-    "util" "exec" "--" "bash" "-c"
+    "util"
+    "exec"
+    "--"
+    "bash"
+    "-c"
     ''
       set -euo pipefail
 

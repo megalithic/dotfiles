@@ -341,8 +341,8 @@ M.launchers = {
   { "com.apple.Music", "p", nil },
   { "com.freron.MailMate", "e", nil },
   { "com.flexibits.fantastical2.mac", "y", { "'" } },
-  -- { "com.raycast.macos", "space", { "c" } },
-  { "com.brnbw.Tuna", nil, { "space" } },
+  { "com.raycast.macos", "space", { "c" } },
+  -- { "com.brnbw.Tuna", nil, { "space" } },
   -- { "Tuna", nil, { { { "shift", "cmd" }, "space" } } },
   { "com.superultra.Homerow", nil, { ";" } },
   { "com.tinyspeck.slackmacgap", "s", nil },
@@ -526,6 +526,18 @@ M.notifier = {
       },
       action = "dismiss",
       delay = 8,
+      urgency = "low",
+    },
+
+    -- Login Item Added (System Preferences notifies when apps add login items)
+    {
+      name = "Login Item Added",
+      priority = 25,
+      match = {
+        title = "Login Item Added",
+      },
+      action = "dismiss",
+      delay = 5,
       urgency = "low",
     },
   },

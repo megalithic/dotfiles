@@ -117,7 +117,7 @@ local watchers = { "audio", "dock", "app", "notification", "url", "pasteboard", 
 
 req("bindings")
 req("watchers", { watchers = watchers })
-req("micchecka", { model = "large-v3", languages = { "en" } }):start()
+req("miccheck", { model = "large-v3", languages = { "en" } }):start()
 req("quitter"):start()
 req("clipper") -- Auto-inits via req(), starts pasteboard watcher
 
@@ -129,7 +129,7 @@ overrides.setupNotifyOverride(HUD) -- Replace hs.notify with custom HUD
 overrides.setupReloadCleanup({
   stopWatchers = function()
     require("watchers"):stop({ watchers = watchers })
-    require("micchecka"):stop()
+    require("miccheck"):stop()
     require("quitter"):stop()
     require("clipper"):stop()
   end,
@@ -137,7 +137,7 @@ overrides.setupReloadCleanup({
 
 hs.shutdownCallback = function()
   require("watchers"):stop({ watchers = watchers })
-  require("micchecka"):stop()
+  require("miccheck"):stop()
   require("quitter"):stop()
   require("clipper"):stop()
   if N and N.cleanup then N.cleanup() end

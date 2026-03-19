@@ -90,19 +90,29 @@ function stripQuoted(cmd: string): string {
   let result = "";
   let i = 0;
   while (i < cmd.length) {
+    // Heredoc detection: <<, <<-, << 'DELIM', << "DELIM", << DELIM
     if (cmd[i] === "<" && cmd[i + 1] === "<" && cmd[i + 2] !== "<") {
       let j = i + 2;
+      // Handle <<- (strip leading tabs)
       if (cmd[j] === "-") j++;
+      // Skip whitespace between << and delimiter
+      while (j < cmd.length && (cmd[j] === " " || cmd[j] === "\t")) j++;
+      // Check for quoted delimiter
       const quoteChar = cmd[j] === "'" || cmd[j] === '"' ? cmd[j] : null;
       if (quoteChar) j++;
+      // Extract delimiter word
       let delim = "";
       while (j < cmd.length && /\w/.test(cmd[j])) delim += cmd[j++];
       if (quoteChar) j++;
-      result += '<<""';
-      const endPattern = "\n" + delim;
-      const endIdx = cmd.indexOf(endPattern, j);
-      i = endIdx === -1 ? cmd.length : endIdx + endPattern.length;
-      continue;
+      // Skip to end of heredoc if we found a valid delimiter
+      if (delim) {
+        result += '<<""';
+        const endPattern = "\n" + delim;
+        const endIdx = cmd.indexOf(endPattern, j);
+        i = endIdx === -1 ? cmd.length : endIdx + endPattern.length;
+        continue;
+      }
+      // No valid delimiter found, treat as regular text
     }
     if (cmd[i] === "$" && cmd[i + 1] === "'") {
       result += '""';
@@ -651,7 +661,9 @@ const SAFE_UPSTREAM = [
   /^fd\b/,                      // fd file finder
   /^rg\b/,                      // ripgrep
   /^jj\s/,                      // jj commands
-  /^git\s/,                     // git commands
+  /^git\s/,                     // git commands (when used, e.g., in jj git)
+  /^curl\s/,                    // curl always terminates
+  /^wget\s/,                    // wget always terminates
   /^date\b/,                    // date command
   /^pwd\b/,                     // pwd command
   /^env\b/,                     // env command
@@ -667,6 +679,14 @@ const SAFE_UPSTREAM = [
   /^file\b/,                    // file command
   /^timeout\s/,                 // explicit timeout wrapper
   /^gtimeout\s/,                // GNU timeout on macOS
+  /^jq\b/,                      // jq JSON processor
+  /^yq\b/,                      // yq YAML processor
+  /^tr\b/,                      // tr character translator
+  /^cut\b/,                     // cut field extractor
+  /^basename\b/,                // basename path component
+  /^dirname\b/,                 // dirname path component
+  /^realpath\b/,                // realpath resolver
+  /^readlink\b/,                // readlink symlink resolver
 ];
 
 // Commands known to potentially hang when piped (wait for stdin, event loops, etc.)

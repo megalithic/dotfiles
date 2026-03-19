@@ -221,7 +221,7 @@ local function startMeetingMode(appName, reason)
   U.dnd(true, "meeting")
   -- Pause music (Apple Music) when entering meeting
   pcall(function() hs.osascript.applescript('tell application "Music" to pause') end)
-  require("micchecka").setPTTMode("push-to-talk")
+  require("miccheck").setPTTMode("push-to-talk")
 end
 
 local function cameraActive(camera, property)
@@ -281,7 +281,7 @@ end
 local function stopMeetingMode()
   U.log.f("Stopping meeting mode")
   U.dnd(false)
-  require("micchecka").setPTTMode("push-to-talk")
+  require("miccheck").setPTTMode("push-to-talk")
 end
 
 local function cameraInactive(camera, property)

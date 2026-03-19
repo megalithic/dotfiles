@@ -1,6 +1,5 @@
---- === WhisperDictation ===
+--- Whisper - Local speech-to-text transcription module
 ---
---- Toggle local Whisper-based dictation with menubar indicator.
 --- Records from mic via `sox`, transcribes via multiple backends, copies text to clipboard.
 ---
 --- Features:
@@ -9,25 +8,18 @@
 --- • Multiple languages (--language option or server restart)
 --- • Clipboard copy and character count summary
 --- • Multiple transcription backends: whisperkit-cli, whisper-cli, whisper-server
+--- • Real-time transcription progress reporting
 ---
---- Usage:
--- wd = hs.loadSpoon("hs_whisperDictation")
--- wd.languages = {"en", "ja", "es", "fr"}
--- wd:bindHotKeys({
---    toggle = {dmg_all_keys, "l"},
---    nextLang = {dmg_all_keys, ";"},
--- })
--- wd:start()
---
--- Requirements:
---      see readme.org
+--- Originally based on hs_whisperDictation.spoon by Daniel German (dmg)
+--- https://github.com/dmgerman/hs_whisperDictation.spoon
+--- Original license: MIT
 
 local obj = {}
 obj.__index = obj
 
-obj.name = "WhisperDictation"
-obj.version = "1.0"
-obj.author = "dmg"
+obj.name = "whisper"
+obj.version = "2.0"
+obj.author = "seth"
 obj.license = "MIT"
 
 -- === Icons ===
@@ -65,6 +57,8 @@ obj.onRecordingStart = nil   -- function() called when recording starts
 obj.onRecordingEnd = nil     -- function() called when recording ends (before transcription)
 obj.onTranscribeStart = nil  -- function() called when transcription starts
 obj.onTranscribeEnd = nil    -- function(success, text) called when transcription completes
+obj.onTranscribeProgress = nil -- function(pct) called with 0-100 during transcription
+obj.onTranscribeProgress = nil -- function(pct) called with 0-100 percentage during transcription
 
 -- === Cleanup Settings ===
 obj.deleteAfterTranscription = true  -- Delete audio file after successful transcription
@@ -174,13 +168,13 @@ obj.transcriptionMethods = {
         "--model=" .. self.config.model,
         "--audio-path=" .. audioFile,
         "--language=" .. lang,
-        "--verbose",  -- Enable verbose output to capture progress
+        "--verbose",  -- Required for progress tracking; output filtered below
       }
       obj.logger:info("Running: " .. self.config.cmd .. " " .. table.concat(args, " "))
 
-      -- Use streaming callback to capture download progress
       local stdoutBuffer = ""
       local downloadProgressShown = false
+      local lastReportedPct = -1
 
       local task = hs.task.new(self.config.cmd, function(exitCode, stdOut, stdErr)
         -- Completion callback
@@ -192,28 +186,60 @@ obj.transcriptionMethods = {
           return
         end
 
-        -- Extract actual transcription from verbose output
-        -- The transcript is typically the last meaningful line
-        local text = stdoutBuffer
-        if text == "" then
-          text = stdOut or ""
+        local raw = stdoutBuffer
+        if raw == "" then raw = stdOut or "" end
+
+        -- Strip ANSI escape sequences
+        raw = raw:gsub("\27%[[%d;]*[a-zA-Z]", ""):gsub("%[K", "")
+
+        -- Try to extract transcript from structured verbose output
+        -- Format: "Transcription of <filename>: \n\n<text>\n"
+        local transcript = raw:match("Transcription of [^:]+:%s*(.-)%s*$")
+        if transcript and transcript:match("%S") then
+          callback(true, transcript:match("^%s*(.-)%s*$"))
+          return
         end
 
-        -- Clean up verbose output - extract just the transcription
-        -- WhisperKit outputs the transcript after all the loading messages
+        -- Fallback: strip all diagnostic lines
         local lines = {}
-        for line in text:gmatch("[^\n]+") do
-          -- Skip verbose loading/progress lines
-          if not line:match("^%[") and
-             not line:match("Loading") and
-             not line:match("Downloading") and
-             not line:match("%%") and
-             not line:match("^Running") and
-             line:match("%S") then
+        for line in raw:gmatch("[^\n]+") do
+          local skip = line:match("^%[")
+              or line:match("^%s*$")
+              or line:match("^Starting")
+              or line:match("^Resolved")
+              or line:match("^Using")
+              or line:match("^Task:")
+              or line:match("^Initializ")
+              or line:match("^Model")
+              or line:match("^Configur")
+              or line:match("^Transcription")
+              or line:match("^Processing")
+              or line:match("^Running")
+              or line:match("^Loading")
+              or line:match("^Downloading")
+              or line:match("^Encoding")
+              or line:match("^Decoding")
+              or line:match("^Total")
+              or line:match("^Audio")
+              or line:match("^Device")
+              or line:match("^Compil")
+              or line:match("^Prepar")
+              or line:match("^Predicting")
+              or line:match("Real%-time factor")
+              or line:match("Speed factor")
+              or line:match("Tokens per second")
+              or line:match("Elapsed Time")
+              or line:match("Remaining:")
+              or line:match("^%s+%- ")
+              or line:match("^%-%-%-")
+              or line:match("^===")
+              or line:match("%d+%.%d+%s*seconds")
+              or line:match("%d+%s+tokens")
+          if not skip and line:match("%S") then
             table.insert(lines, line)
           end
         end
-        text = table.concat(lines, "\n")
+        local text = table.concat(lines, "\n"):match("^%s*(.-)%s*$") or ""
 
         if text == "" then
           callback(false, "Empty transcript output")
@@ -221,25 +247,39 @@ obj.transcriptionMethods = {
         end
         callback(true, text)
       end, function(task, stdOut, stdErr)
-        -- Streaming callback - capture progress during execution
+        -- Streaming callback
         if stdOut and stdOut ~= "" then
           stdoutBuffer = stdoutBuffer .. stdOut
 
+          -- Parse transcription progress from accumulated buffer
+          -- whisperkit-cli outputs: \27[K[====...] 42% | Elapsed Time: ...
+          -- Strip ANSI escapes before matching, search full buffer for latest %
+          local clean = stdoutBuffer:gsub("\27%[[%d;]*[a-zA-Z]", "")
+          -- Find the LAST percentage match (most recent progress update)
+          local latestPct = nil
+          for p in clean:gmatch("]%s*(%d+)%%%s*|%s*Elapsed") do
+            latestPct = tonumber(p)
+          end
+          if latestPct and latestPct ~= lastReportedPct then
+            lastReportedPct = latestPct
+            if obj.onTranscribeProgress then
+              pcall(obj.onTranscribeProgress, latestPct)
+            end
+          end
+
           -- Detect download progress
-          if stdOut:match("Downloading") or stdOut:match("%%") then
+          if stdOut:match("Downloading") then
             if not downloadProgressShown then
               obj.logger:info("📥 Model download started...")
               downloadProgressShown = true
               self.isDownloading = true
             end
-            -- Log download progress periodically
             local progress = stdOut:match("(%d+%.?%d*)%%")
             if progress then
               obj.logger:info("📥 Download progress: " .. progress .. "%")
             end
           end
 
-          -- Detect when download completes and loading starts
           if stdOut:match("Loading") and self.isDownloading then
             obj.logger:info("✅ Model download complete, loading...")
             hs.alert.show("✅ Model downloaded, loading...", 3)
@@ -251,7 +291,7 @@ obj.transcriptionMethods = {
           obj.logger:info("whisperkit stderr: " .. stdErr)
         end
 
-        return true  -- Continue receiving callbacks
+        return true
       end, args)
 
       if not task then
@@ -438,7 +478,7 @@ function Logger:_log(level, msg, showAlert)
   local formatted = self:_formatMessage(level, msg)
 
   if self.enableConsole then
-    print("[WhisperDictation] " .. formatted)
+    print("[Whisper] " .. formatted)
   end
 
   if self.enableFile then
@@ -1111,8 +1151,8 @@ function obj:transcribeLatestAgain(callback)
 end
 
 function obj:start()
-  obj.logger:info("Starting WhisperDictation")
-  local errorSuffix = " WhisperDictation not started"
+  obj.logger:info("Starting Whisper")
+  local errorSuffix = " Whisper not started"
 
   -- Validate recording command
   if not hs.fs.attributes(obj.recordCmd) then
@@ -1151,11 +1191,11 @@ function obj:start()
   end
 
   resetMenuToIdle()
-  obj.logger:info("WhisperDictation ready using " .. method.displayName .. " (" .. currentLang() .. ")")
+  obj.logger:info("Whisper ready using " .. method.displayName .. " (" .. currentLang() .. ")")
 end
 
 function obj:stop()
-  obj.logger:info("Stopping WhisperDictation")
+  obj.logger:info("Stopping Whisper")
 
   -- Stop the whisper server if running
   obj:stopServer()
@@ -1167,7 +1207,7 @@ function obj:stop()
   for _, hk in pairs(obj.hotkeys) do hk:delete() end
   obj.hotkeys = {}
   stopRecordingSession()
-  obj.logger:info("WhisperDictation stopped")
+  obj.logger:info("Whisper stopped")
 end
 
 function obj:bindHotKeys(mapping)

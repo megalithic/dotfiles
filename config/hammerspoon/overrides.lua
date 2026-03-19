@@ -295,7 +295,7 @@ function M.setupReloadCleanup(opts)
     -- Clean up HUD module
     if _G.HUD and _G.HUD.cleanup then pcall(_G.HUD.cleanup) end
 
-    -- Stop watchers (micchecka, clipper, etc.)
+    -- Stop watchers (miccheck, clipper, etc.)
     if opts.stopWatchers then pcall(opts.stopWatchers) end
 
     if U and U.log then U.log.i("Pre-reload cleanup completed") end

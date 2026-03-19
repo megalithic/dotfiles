@@ -47,18 +47,27 @@ return {
 
         -- Leader subgroups
         { "<leader>f", group = "pick" },
+        { "<leader>a", desc = "pick: live grep" }, -- Part of pick group
+        { "<leader>A", desc = "pick: word grep" }, -- Part of pick group
         { "<leader>t", group = "term" },
         { "<leader>g", group = "git" },
+        { "<leader>h", group = "hunk" },
         { "<leader>l", group = "lsp" },
         { "<leader>p", group = "plugins" },
         { "<leader>u", group = "ui/toggle" },
         { "<leader>x", group = "trouble" },
 
         -- Localleader subgroups
+        { "<localleader>c", group = "conflict" },
+        { "<localleader>d", group = "debug" },
+        { "<localleader>e", group = "eval/lang" },
+        { "<localleader>g", group = "git/jj" },
+        { "<localleader>h", group = "hunk" },
+        { "<localleader>n", group = "notes" },
         { "<localleader>p", group = "pi" },
         { "<localleader>pA", group = "acp" },
-        { "<localleader>t", group = "test" },
         { "<localleader>r", group = "repl" },
+        { "<localleader>t", group = "test" },
 
         -- Goto and motion groups
         { "g", group = "goto" },

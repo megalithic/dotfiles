@@ -5,9 +5,9 @@ return {
   "glacambre/firenvim",
   lazy = false,
   build = ":call firenvim#install(0)",
-  config = function()
-    if not vim.g.started_by_firenvim then return end
 
+  -- Set config in init so it's available immediately for browser extension
+  init = function()
     vim.g.firenvim_config = {
       globalSettings = {
         alt = "all",
@@ -33,7 +33,7 @@ return {
       localSettings = {
         [".*"] = { cmdline = "neovim", content = "text", priority = 0, selector = "textarea", takeover = "never" },
 
-        -- GitHub: exclude PR review modal (causes flicker/lockup), search inputs
+        -- GitHub: exclude PR review modal, search inputs
         ["^https?://github\\.com/"] = {
           takeover = "always",
           priority = 1,
@@ -55,6 +55,11 @@ return {
         ["^https?://linear\\.app/"] = { takeover = "never", priority = 1 },
       },
     }
+  end,
+
+  -- Setup keymaps, autocmds, UI only when actually running in Firenvim
+  config = function()
+    if not vim.g.started_by_firenvim then return end
 
     local timer = nil
     local function throttle_write(delay, bufnr)

@@ -60,11 +60,11 @@
     # shade - Floating terminal panel for macOS (prebuilt from GitHub release)
     shade = prev.stdenv.mkDerivation {
       pname = "shade";
-      version = "0.1.0";
+      version = "0.2.0";
 
       src = prev.fetchurl {
-        url = "https://github.com/megalithic/shade/releases/download/v0.1.0/shade-darwin-arm64.tar.gz";
-        sha256 = "def76fdef142389cc8ba95de2295ddd3b1c9e2050b68e977b3200c554686492a";
+        url = "https://github.com/megalithic/shade/releases/download/v0.2.0/shade-darwin-arm64.tar.gz";
+        sha256 = "0ea3ae15aec865b6ba93aa838ebd856615c64e77bb3dc4ce53c04d9143c89e94";
       };
 
       # tarball contains: shade (binary) + mlx.metallib

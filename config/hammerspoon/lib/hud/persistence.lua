@@ -50,7 +50,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Get saved position for a HUD
----@param hudId string HUD identifier (e.g., "clipper", "micchecka-ptm")
+---@param hudId string HUD identifier (e.g., "clipper", "miccheck-ptm")
 ---@return string|nil Anchor position or nil if not saved
 function M.getPosition(hudId)
   return M.get("position." .. hudId)

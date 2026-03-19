@@ -11,7 +11,7 @@
     fantastical
     # helium-browser
     # tidewave GUI app moved to home/programs/ai/default.nix
-    tuna # Menu bar app that fixes audio in video calls
+    # tuna # Menu bar app that fixes audio in video calls
   ];
 
   # Filter: only apps with appLocation = "home-manager" go to home.packages

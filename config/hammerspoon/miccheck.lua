@@ -1,9 +1,10 @@
---- Micchecka - Unified Voice Control Module
+--- Miccheck - Unified Voice Control Module
 --- Keybindings: cmd+opt (PTT), cmd+opt+shift (PTD), +p to toggle modes
 
+local fmt = string.format
 local M = {}
 M.__index = M
-M.name = "micchecka"
+M.name = "miccheck"
 
 local S = nil
 local whisper = nil
@@ -192,36 +193,110 @@ local function loadProcessingImages()
   return processingImages
 end
 
+local processingCanvas = nil
+local processingCenter = nil
+local processingPct = 0        -- last real progress from whisperkit
+local morphScale = 1           -- current morph scale multiplier (for tween)
+local morphTarget = 1          -- target morph scale
+local morphPendingImg = nil    -- image to swap in at morph midpoint
+local morphSwapped = false     -- whether we've swapped mid-morph
+
+local SYMBOL_BASE_SIZE = 28   -- resting size (large)
+local SYMBOL_MAX_SIZE = 36    -- size at 100%
+local BREATH_RANGE = 6        -- px range of breathing pulse
+
+-- Easing: smooth ease-in-out
+local function easeInOut(t)
+  return t < 0.5
+    and 2 * t * t
+    or 1 - (-2 * t + 2) ^ 2 / 2
+end
+
 local function renderProcessingHUD(hud)
   local images = loadProcessingImages()
   local currentIndex = 1
+  processingPct = 0
+  morphScale = 1
+  morphTarget = 1
+  morphPendingImg = nil
+  morphSwapped = false
   
   hud:setContent(function(canvas, cx, cy)
-    elements.circle(canvas, {
-      id = "bg",
-      x = cx,
-      y = cy,
-      radius = 24,
-      color = { red = 0.1, green = 0.1, blue = 0.12, alpha = 1 },
-    })
-    
     local img = images[PROCESSING_SYMBOLS[1]]
     if img then
-      local sz = img:size()
+      local sz = SYMBOL_BASE_SIZE
       canvas:insertElement({
         id = "symbol",
         type = "image",
         image = img,
-        frame = { x = cx - sz.w / 2, y = cy - sz.h / 2, w = sz.w, h = sz.h },
+        frame = { x = cx - sz / 2, y = cy - sz / 2, w = sz, h = sz },
         imageAlignment = "center",
-        imageScaling = "none",
+        imageScaling = "shrinkToFit",
       })
     end
+    
+    elements.text(canvas, {
+      id = "pct",
+      x = cx - 24,
+      y = cy + 18,
+      width = 48,
+      text = "",
+      fontSize = 10,
+      color = { white = 1, alpha = 0 },
+      alignment = "center",
+    })
+    
+    processingCenter = { x = cx, y = cy }
   end)
   
   local canvas = hud:getCanvas()
+  processingCanvas = canvas
   
-  hud:addTimer("symbolMorph", hs.timer.doEvery(0.4, function()
+  -- Main animation loop: breathing + morph tween at 60fps
+  local phase = 0
+  local MORPH_SPEED = 0.08  -- how fast morphScale moves toward target per tick
+  
+  hud:addTimer("symbolAnimate", hs.timer.doEvery(0.016, function()
+    if not canvas or not canvas["symbol"] or not processingCenter then return end
+    phase = phase + 0.016
+    
+    -- Animate morph scale toward target
+    if morphScale ~= morphTarget then
+      local diff = morphTarget - morphScale
+      local step = diff * MORPH_SPEED / 0.016 * 0.016
+      -- Clamp step to avoid overshooting
+      if math.abs(step) > math.abs(diff) then step = diff end
+      morphScale = morphScale + step
+      
+      -- At the midpoint (scale near 0), swap the image
+      if not morphSwapped and morphScale < 0.15 and morphPendingImg then
+        canvas["symbol"].image = morphPendingImg
+        morphPendingImg = nil
+        morphSwapped = true
+        morphTarget = 1  -- bounce back up
+      end
+    end
+    
+    -- Compute base size from breathing or real progress
+    local cx, cy = processingCenter.x, processingCenter.y
+    local baseSize
+    
+    if processingPct > 0 and processingPct < 100 then
+      local t = processingPct / 100
+      baseSize = SYMBOL_BASE_SIZE + (SYMBOL_MAX_SIZE - SYMBOL_BASE_SIZE) * t
+    else
+      -- Breathing pulse
+      local breath = math.sin(phase * 1.8) * 0.5 + 0.5  -- 0..1, slow
+      baseSize = SYMBOL_BASE_SIZE + breath * BREATH_RANGE
+    end
+    
+    -- Apply morph scale (shrinks to ~0 then grows back)
+    local sz = baseSize * math.max(0.05, morphScale)
+    canvas["symbol"].frame = { x = cx - sz / 2, y = cy - sz / 2, w = sz, h = sz }
+  end))
+  
+  -- Trigger morph to new symbol periodically
+  hud:addTimer("symbolMorph", hs.timer.doEvery(1.8, function()
     if not canvas then return end
     
     local newIndex
@@ -230,13 +305,27 @@ local function renderProcessingHUD(hud)
     until newIndex ~= currentIndex or #PROCESSING_SYMBOLS == 1
     currentIndex = newIndex
     
-    local img = images[PROCESSING_SYMBOLS[currentIndex]]
-    if img and canvas["symbol"] then
-      canvas["symbol"].image = img
-    end
+    -- Queue image swap and start shrink
+    morphPendingImg = images[PROCESSING_SYMBOLS[currentIndex]]
+    morphSwapped = false
+    morphScale = 1
+    morphTarget = 0  -- shrink down; will bounce back after swap
   end))
   
   hud:show()
+end
+
+--- Update the processing HUD with real transcription progress
+---@param pct number 0-100
+local function updateProcessingProgress(pct)
+  processingPct = pct
+  if not processingCanvas or not processingCenter then return end
+  
+  -- Show percentage text when real progress arrives
+  if processingCanvas["pct"] and pct > 0 then
+    processingCanvas["pct"].text = fmt("%d%%", pct)
+    processingCanvas["pct"].textColor = { white = 1, alpha = 0.8 }
+  end
 end
 
 local function renderCompleteHUD(hud)
@@ -298,6 +387,15 @@ local function setHUDState(newState)
   end
   if oldState == HUDState.RECORDING then
     stopLevelMonitoring()
+  end
+  
+  -- Clear processing canvas ref when leaving processing state
+  if oldState == HUDState.PROCESSING then
+    processingCanvas = nil
+  end
+  
+  if oldState == HUDState.PROCESSING then
+    processingCanvas = nil
   end
   
   if newState == HUDState.HIDDEN then
@@ -430,12 +528,12 @@ local function togglePTTMode()
   updateHUD()
 end
 
-local function loadWhisperSpoon()
-  local ok, spoon = pcall(function() return hs.loadSpoon("WhisperDictation") end)
-  if ok and spoon then
-    return spoon
+local function loadWhisper()
+  local ok, mod = pcall(require, "whisper")
+  if ok and mod then
+    return mod
   else
-    U.log.e("Failed to load WhisperDictation spoon")
+    U.log.e("Failed to load whisper module")
     return nil
   end
 end
@@ -513,8 +611,8 @@ end
 ---@param config? {model?: string, languages?: string[]}
 function M:init(config)
   config = config or {}
-  S = _G.S.micchecka
-  whisper = loadWhisperSpoon()
+  S = _G.S.miccheck
+  whisper = loadWhisper()
   if whisper then
     whisper.transcriptionMethod = "whisperkitcli"
     whisper.model = config.model or "large-v3"
@@ -544,6 +642,10 @@ function M:init(config)
       S.isProcessing = true
       updateMenubar()
       updateHUD()
+    end
+
+    whisper.onTranscribeProgress = function(pct)
+      updateProcessingProgress(pct)
     end
 
     whisper.onTranscribeEnd = function(success, text)
@@ -583,8 +685,8 @@ function M:init(config)
 end
 
 function M:start()
-  _G.S.resetMicchecka()
-  S = _G.S.micchecka
+  _G.S.resetMiccheck()
+  S = _G.S.miccheck
   S.menubar = hs.menubar.new()
   S.menubar:setMenu({
     { title = "Push-to-talk", fn = function() M.setPTTMode("push-to-talk") end },
@@ -698,7 +800,7 @@ function M:start()
 
   -- Register for screen changes to reposition notch
   local screenWatcher = require("watchers.screen")
-  screenWatcher.onChange("micchecka", function()
+  screenWatcher.onChange("miccheck", function()
     if notchHUD and notchHUD.reposition then
       -- Skip reposition if HUD is actively showing (avoid interrupting PTT/recording)
       if currentHUDState ~= HUDState.HIDDEN then
@@ -707,7 +809,7 @@ function M:start()
       end
       local ok, err = pcall(function() notchHUD:reposition() end)
       if not ok then
-        U.log.w("notchHUD reposition failed:", tostring(err or "unknown error"))
+        U.log.w("notchHUD reposition failed:", tostring(err) or "unknown error")
       end
     end
   end)
@@ -717,14 +819,14 @@ function M:start()
 end
 
 function M:stop()
-  _G.S.resetMicchecka()
+  _G.S.resetMiccheck()
 
   if whisper then whisper:stop() end
   
   -- Unregister screen change callback
   local ok, screenWatcher = pcall(require, "watchers.screen")
   if ok then
-    screenWatcher.removeCallback("micchecka")
+    screenWatcher.removeCallback("miccheck")
   end
   
   shutdownLevelMonitor()

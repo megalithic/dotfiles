@@ -26,7 +26,7 @@ function obj:start(opts)
       -- hs.spotify.pause() -- DISABLED: Spotify interactions disabled
       -- L.req("lib.menubar.keycastr"):start()
       -- L.req("lib.dnd").on("obs")
-      require("micchecka").setPTTMode("push-to-mute")
+      require("miccheck").setPTTMode("push-to-mute")
 
       -- hs.layout.apply({
       --   { browser:name(), nil, 1, hs.layout.maximized, nil, nil },
@@ -66,7 +66,7 @@ function obj:stop(opts)
   then
     _appObj:kill()
   elseif event == hs.application.watcher.terminated then
-    require("micchecka").setPTTMode("push-to-talk")
+    require("miccheck").setPTTMode("push-to-talk")
     -- L.req("lib.dnd").off()
 
     do

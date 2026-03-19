@@ -154,8 +154,14 @@
   #            (defaults to macbook.kbd, dock watcher switches based on external keyboard)
   # kanata config profiles - kanata.kbd symlink is managed by darwin activation
   # script and switched dynamically by Hammerspoon dock watcher
-  xdg.configFile."kanata/macbook.kbd".source = config.lib.mega.linkConfig "kanata/macbook.kbd";
-  xdg.configFile."kanata/macbook-disabled.kbd".source = config.lib.mega.linkConfig "kanata/macbook-disabled.kbd";
+  xdg.configFile."kanata/macbook.kbd" = {
+    source = config.lib.mega.linkConfig "kanata/macbook.kbd";
+    force = true;
+  };
+  xdg.configFile."kanata/macbook-disabled.kbd" = {
+    source = config.lib.mega.linkConfig "kanata/macbook-disabled.kbd";
+    force = true;
+  };
 
   xdg.configFile."zsh".source = ./zsh;
   xdg.configFile."zsh".force = true;

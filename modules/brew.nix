@@ -23,17 +23,16 @@
       "protonvpn"
       "proton-drive"
       "obs@beta"
-      # "raycast"
+      "raycast"
       # "spotify"
       # "thingsmacsandboxhelper"
-      # "vial"
       "yubico-authenticator"
       "visual-studio-code"
       "zed"
     ];
     masApps = {
       "Xcode" = 497799835;
-      "Things3" = 904280696;
+      # "Things3" = 904280696;
       # "Fantastical" = 975937182;
       # "Fantastical" = 435003921;  # Not available via mas CLI (subscription app with restricted API access)
     };

@@ -785,4 +785,47 @@ if not vim.g.shade_context then
   })
 end
 
+--------------------------------------------------------------------------------
+-- Notes Keymaps (<localleader>n group)
+--------------------------------------------------------------------------------
+
+--- Go to previous daily note
+local function goto_previous_daily()
+  local notes_path = vim.g.notes_path
+  local daily_dir = notes_path .. "/daily"
+  local today = os.date("%Y%m%d")
+
+  -- Find all daily notes, sorted descending
+  local pattern = daily_dir .. "/**/*.md"
+  local all_files = vim.fn.glob(pattern, false, true)
+
+  -- Filter for dates before today, find most recent
+  local prev_file = nil
+  local prev_date = nil
+  for _, path in ipairs(all_files) do
+    local filename = path:match("([^/]+)%.md$")
+    if filename and filename:match("^%d%d%d%d%d%d%d%d$") and filename < today then
+      if not prev_date or filename > prev_date then
+        prev_date = filename
+        prev_file = path
+      end
+    end
+  end
+
+  if prev_file then
+    vim.cmd.edit(prev_file)
+  else
+    vim.notify("No previous daily note found", vim.log.levels.WARN)
+  end
+end
+
+vim.keymap.set("n", "<localleader>nn", "<cmd>Obsidian new<cr>", { desc = "notes: new note" })
+vim.keymap.set("n", "<localleader>no", "<cmd>Obsidian today<cr>", { desc = "notes: today (open)" })
+vim.keymap.set("n", "<localleader>nt", "<cmd>Obsidian today<cr>", { desc = "notes: today" })
+vim.keymap.set("n", "<localleader>np", goto_previous_daily, { desc = "notes: previous daily" })
+vim.keymap.set("n", "<localleader>nb", "<cmd>Obsidian backlinks<cr>", { desc = "notes: backlinks" })
+vim.keymap.set("n", "<localleader>ns", "<cmd>NotesSortTasks<cr>", { desc = "notes: sort tasks" })
+vim.keymap.set("n", "<localleader>ni", "<cmd>NotesIndexCaptures<cr>", { desc = "notes: index captures" })
+vim.keymap.set("n", "<localleader>nl", "<cmd>NotesLinkCapture<cr>", { desc = "notes: link capture" })
+
 return M
