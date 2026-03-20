@@ -4,8 +4,13 @@
 
 ```
 pkgs/
-├── default.nix            # Overlay: all custom packages
-└── chrome-devtools-mcp.nix # Chrome DevTools MCP server (npm-based)
+├── default.nix              # Overlay: imports all custom packages
+├── chrome-devtools-mcp.nix  # Chrome DevTools MCP server (npm-based)
+├── fantastical.nix          # Fantastical calendar (ZIP, appLocation=copy)
+├── bloom.nix                # Bloom Finder replacement (DMG)
+├── brave-browser-nightly.nix # Brave Nightly (DMG, appLocation=wrapper)
+├── tidewave.nix             # Tidewave app (DMG)
+└── tidewave-cli.nix         # Tidewave CLI (binary)
 ```
 
 ## default.nix (overlay)
@@ -15,30 +20,30 @@ Applied via `overlays/default.nix`.
 
 ### App packages (via mkApp)
 
-These are macOS `.app` bundles built from DMG/ZIP sources:
+Each mkApp package lives in its own file, taking `{mkApp}:` as argument:
 
-| Package | Source | Notes |
-|---------|--------|-------|
-| `bloom` | DMG | Calendar app |
-| `brave-browser-nightly` | DMG | Wrapped by mkChromiumBrowser for CLI args |
-| `fantastical` | ZIP | Calendar app |
-| `helium-browser` | ZIP | Wrapper browser |
-| `mailmate` | DMG | Email client |
-| `talktastic` | DMG | Communication app |
+| Package | File | Source | Notes |
+|---------|------|--------|-------|
+| `fantastical` | `fantastical.nix` | ZIP | `appLocation = "copy"` (code signing) |
+| `bloom` | `bloom.nix` | DMG | Finder replacement; default appLocation |
+| `brave-browser-nightly` | `brave-browser-nightly.nix` | DMG | `appLocation = "wrapper"` (managed by mkChromiumBrowser) |
+| `tidewave` | `tidewave.nix` | DMG | No CLI binaries |
+| `tidewave-cli` | `tidewave-cli.nix` | Binary | `artifactType = "binary"` |
 
 ### Other custom packages
 
 | Package | Type | Notes |
 |---------|------|-------|
-| `chrome-devtools-mcp` | npm | Chrome DevTools Protocol MCP server |
-| `nvim-nightly` | overlay | Neovim nightly from nix-community overlay |
+| `chrome-devtools-mcp` | npm (callPackage) | Chrome DevTools Protocol MCP server |
 
-## Adding a new app
+## Adding a new mkApp package
 
-Follow the simple nixpkgs pattern (see otahontas/nix for reference):
+1. Create `pkgs/my-app.nix`:
 
 ```nix
-my-app = mkApp {
+{mkApp}:
+
+mkApp {
   pname = "my-app";
   version = "1.0";
   appName = "My App.app";
@@ -48,10 +53,14 @@ my-app = mkApp {
   };
   desc = "Description";
   homepage = "https://example.com";
-};
+}
 ```
 
-For ZIP sources, mkApp auto-detects format from the URL.
+2. Add to `pkgs/default.nix`:
+
+```nix
+my-app = callMkApp ./my-app.nix;
+```
 
 ## When to use what
 
@@ -61,8 +70,3 @@ For ZIP sources, mkApp auto-detects format from the URL.
 | `modules/brew.nix` | Apps needing cask install (accessibility, kernel extensions) |
 | `home/common/packages.nix` | CLI/GUI tools from nixpkgs |
 | `home/common/programs/*.nix` | Tools with home-manager config (`programs.*.enable`) |
-
-## Future
-
-`mkApp/extract.nix` is ~260 lines but could be simplified to ~30 lines
-following the nixpkgs/otahontas pattern (plain `stdenvNoCC.mkDerivation`).

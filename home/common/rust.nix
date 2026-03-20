@@ -12,7 +12,7 @@
   home.activation = let
     rustup = "${pkgs.rustup}/bin/rustup";
   in {
-    rustup_setup = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    rustupSetup = lib.hm.dag.entryAfter ["writeBoundary"] ''
       run ${rustup} default nightly
     '';
   };

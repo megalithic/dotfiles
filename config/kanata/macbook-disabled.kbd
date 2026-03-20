@@ -1,15 +1,27 @@
-;; Kanata config that disables the internal keyboard
-;; Used when external keyboard (Leeloo) is connected
-;; All keys are blocked (XX = no output)
+;; Kanata config for when external keyboard (Leeloo) is connected
+;; Default: internal keyboard is disabled (all keys blocked)
+;; Toggle: press fn to re-enable with full macbook config (home row mods, vim nav, etc.)
+;; kanata-bar shows current state via layer icons
 
 (defcfg
-  process-unmapped-keys yes  ;; Process ALL keys so we can block them
+  concurrent-tap-hold yes
+  process-unmapped-keys yes
+  override-release-on-activation yes
   macos-dev-names-include (
     "Apple Internal Keyboard / Trackpad"
   )
 )
 
-;; Define all keys we want to block
+;; ────────────────────────────────────────────────────────────────────────────
+;; Key combination overrides (active in enabled layers)
+;; ────────────────────────────────────────────────────────────────────────────
+(defoverrides
+  (lctl bspc) (del)
+)
+
+;; ────────────────────────────────────────────────────────────────────────────
+;; Source keys
+;; ────────────────────────────────────────────────────────────────────────────
 (defsrc
   esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12
   grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
@@ -20,13 +32,82 @@
   left down up   rght
 )
 
-;; Block ALL keys (XX = no output)
+;; ────────────────────────────────────────────────────────────────────────────
+;; Timing configuration
+;; ────────────────────────────────────────────────────────────────────────────
+(defvar
+  ;; tap-time: max duration for a tap to register as base key
+  ;; hold-time: min duration before modifier activates
+  ;; Increase hold-time for heavier typing (reduces false modifier triggers)
+  tap-time 200
+  hold-time 225
+  left-hand-keys (
+    q w e r t
+    a s d f g
+    z x c v b
+  )
+  right-hand-keys (
+    y u i o p
+    h j k l ;
+    n m , . /
+  )
+)
+
+;; ────────────────────────────────────────────────────────────────────────────
+;; Aliases
+;; ────────────────────────────────────────────────────────────────────────────
+(defalias
+  ;; Layer switching via fn key
+  to-enabled (layer-switch enabled)
+  to-disabled (layer-switch disabled)
+
+  ;; Caps lock: tap = escape, hold = control
+  escctrl (tap-hold $tap-time $hold-time esc lctl)
+
+  ;; Left hand home row mods: a=cmd, s=shift, d=opt
+  a (tap-hold-release-keys $tap-time $hold-time a lmet $left-hand-keys)
+  s (tap-hold-release-keys $tap-time $hold-time s lsft $left-hand-keys)
+  d (tap-hold-release-keys $tap-time $hold-time d lalt $left-hand-keys)
+
+  ;; Vim navigation layer: f = 'f' on tap, nav layer on hold
+  nav (tap-hold $tap-time $hold-time f (layer-while-held nav))
+)
+
+;; ────────────────────────────────────────────────────────────────────────────
+;; Disabled layer (default) - blocks all keys, fn toggles to enabled
+;; ────────────────────────────────────────────────────────────────────────────
 (deflayer disabled
   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
-  XX   XX   XX   XX             XX             XX   XX
+  @to-enabled XX XX XX    XX             XX   XX
   XX   XX   XX   XX
+)
+
+;; ────────────────────────────────────────────────────────────────────────────
+;; Enabled layer - full macbook config (home row mods, caps→esc/ctrl, etc.)
+;; ────────────────────────────────────────────────────────────────────────────
+(deflayer enabled
+  _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  @escctrl @a @s @d  @nav _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _
+  @to-disabled f19 _ _    _              f19  _
+  _    _    _    _
+)
+
+;; ────────────────────────────────────────────────────────────────────────────
+;; Navigation layer (activated by holding f in enabled layer)
+;; ────────────────────────────────────────────────────────────────────────────
+(deflayer nav
+  _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    left down up   rght _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _
+  @to-disabled _ _ _      _              _    _
+  _    _    _    _
 )

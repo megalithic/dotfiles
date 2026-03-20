@@ -798,19 +798,26 @@ function M:start()
   applyPTTState()
   updateHUD()
 
-  -- Register for screen changes to reposition notch
+  -- Register for screen changes to reposition notch HUD
+  -- On dock/undock, screen geometry changes and the HUD must move to the correct display
   local screenWatcher = require("watchers.screen")
   screenWatcher.onChange("miccheck", function()
-    if notchHUD and notchHUD.reposition then
-      -- Skip reposition if HUD is actively showing (avoid interrupting PTT/recording)
-      if currentHUDState ~= HUDState.HIDDEN then
-        U.log.d("notchHUD: skipping reposition during active state:", currentHUDState)
-        return
-      end
-      local ok, err = pcall(function() notchHUD:reposition() end)
-      if not ok then
-        U.log.w("notchHUD reposition failed:", tostring(err) or "unknown error")
-      end
+    if not notchHUD then return end
+
+    -- Destroy current HUD and re-enter the same state on the new screen
+    -- This is safer than in-place reposition because it also refreshes
+    -- canvas references held by the level monitor and animation timers
+    local stateToRestore = currentHUDState
+    stopLevelMonitoring()
+    cancelCompleteTimer()
+    destroyHUD()
+    currentHUDState = HUDState.HIDDEN
+
+    if stateToRestore ~= HUDState.HIDDEN then
+      -- Small delay to let screen geometry settle after display change
+      hs.timer.doAfter(0.5, function()
+        setHUDState(stateToRestore)
+      end)
     end
   end)
 

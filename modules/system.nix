@@ -124,10 +124,10 @@
         # 12: Notification Center
         # 13: Lock Screen - immediately locks the screen
         # 14: Quick Note - opens Notes app for quick note-taking
-        "wvous-tl-corner" = 1; # Top-left: Mission Control (overview of all spaces)
-        "wvous-tr-corner" = 1; # Top-right: Desktop (show desktop)
-        "wvous-bl-corner" = 1; # Bottom-left: Lock Screen (security)
-        "wvous-br-corner" = 1; # Bottom-right: Quick Note (productivity)
+        "wvous-tl-corner" = null; # Top-left: Mission Control (overview of all spaces)
+        "wvous-tr-corner" = null; # Top-right: Desktop (show desktop)
+        "wvous-bl-corner" = null; # Bottom-left: Lock Screen (security)
+        "wvous-br-corner" = null; # Bottom-right: Quick Note (productivity)
         # "wvous-tl-corner" = 2; # Top-left: Mission Control (overview of all spaces)
         # "wvous-tr-corner" = 4; # Top-right: Desktop (show desktop)
         # "wvous-bl-corner" = 13; # Bottom-left: Lock Screen (security)
@@ -137,6 +137,7 @@
       finder = {
         AppleShowAllExtensions = true;
         AppleShowAllFiles = true;
+        # When performing a search, search the current folder by default
         FXDefaultSearchScope = "SCcf";
         FXPreferredViewStyle = "Nlsv";
         FXEnableExtensionChangeWarning = false;
@@ -163,7 +164,6 @@
         _HIHideMenuBar = false;
         AppleICUForce24HourTime = true;
         AppleKeyboardUIMode = 3;
-        "com.apple.keyboard.fnState" = true;
         NSAutomaticWindowAnimationsEnabled = false;
         NSWindowShouldDragOnGesture = true;
         NSDocumentSaveNewDocumentsToCloud = false;
@@ -171,6 +171,7 @@
         PMPrintingExpandedStateForPrint2 = true;
         NSNavPanelExpandedStateForSaveMode = true;
         NSNavPanelExpandedStateForSaveMode2 = true;
+        "com.apple.keyboard.fnState" = false;
         "com.apple.swipescrolldirection" = false;
         # Use scroll gesture with the Ctrl (^) modifier key to
         # zoom, this requires to have "Full disk access" in the
@@ -180,14 +181,19 @@
         "com.apple.trackpad.scaling" = 3.0;
         AppleInterfaceStyleSwitchesAutomatically = false;
         AppleShowScrollBars = "WhenScrolling";
-        InitialKeyRepeat = 12;
-        KeyRepeat = 1;
-        # _HIHideMenuBar = false;
-
+        # ---
+        # ludicrous speed:
+        # InitialKeyRepeat = 12;
+        # KeyRepeat = 1;
+        # ---
+        # default'ish speed:
+        InitialKeyRepeat = 25;
+        KeyRepeat = 6;
         # Disable press and hold for diacritics.
         # I want to be able to press and hold j and k
         # in VSCode with vim keys to move around.
         ApplePressAndHoldEnabled = false;
+
         NSAutomaticCapitalizationEnabled = false;
         NSAutomaticDashSubstitutionEnabled = false;
         NSAutomaticPeriodSubstitutionEnabled = false;
@@ -233,8 +239,8 @@
         };
         "com.apple.print.PrintingPrefs" = {"Quit When Finished" = true;}; # quit printer app once jobs complete
         "com.apple.finder".NewWindowTargetPath = "file:///Users/${username}/";
-        NSGlobalDomain."SLSMenuBarUseBlurredAppearance" = false;
         NSGlobalDomain = {
+          "SLSMenuBarUseBlurredAppearance" = false;
           # Add a context menu item for showing the Web Inspector in web views
           WebKitDeveloperExtras = true;
           # automatically switch to a new space when switching to the application
@@ -316,7 +322,38 @@
         "com.apple.commerce".AutoUpdate = true;
         # Prevent Photos from opening automatically when devices are plugged in
         "com.apple.ImageCapture".disableHotPlug = true;
-
+        "com.apple.Safari" = {
+          # Privacy: don’t send search queries to Apple
+          UniversalSearchEnabled = false;
+          SuppressSearchSuggestions = true;
+          # Press Tab to highlight each item on a web page
+          WebKitTabToLinksPreferenceKey = true;
+          ShowFullURLInSmartSearchField = true;
+          # Prevent Safari from opening ‘safe’ files automatically after downloading
+          AutoOpenSafeDownloads = false;
+          ShowFavoritesBar = false;
+          IncludeInternalDebugMenu = true;
+          IncludeDevelopMenu = true;
+          WebKitDeveloperExtrasEnabledPreferenceKey = true;
+          WebContinuousSpellCheckingEnabled = true;
+          WebAutomaticSpellingCorrectionEnabled = false;
+          AutoFillFromAddressBook = false;
+          AutoFillCreditCardData = false;
+          AutoFillMiscellaneousForms = false;
+          WarnAboutFraudulentWebsites = true;
+          WebKitJavaEnabled = false;
+          WebKitJavaScriptCanOpenWindowsAutomatically = false;
+          "com.apple.Safari.ContentPageGroupIdentifier.WebKit2TabsToLinks" = true;
+          "com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled" = true;
+          "com.apple.Safari.ContentPageGroupIdentifier.WebKit2BackspaceKeyNavigationEnabled" = false;
+          "com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaEnabled" = false;
+          "com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaEnabledForLocalFiles" = false;
+          "com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaScriptCanOpenWindowsAutomatically" = false;
+        };
+        "com.apple.mail" = {
+          # Disable inline attachments (just show the icons)
+          DisableInlineAttachmentViewing = true;
+        };
         # tell HS where to find its config file
         "org.hammerspoon.Hammerspoon".MJConfigFile = "~/.config/hammerspoon/init.lua";
 
@@ -424,13 +461,14 @@
     reattach = true;
     # Extend here with additional services (e.g., `login`) if we want biometric auth elsewhere.
   };
+
   security.sudo.extraConfig = "${username}    ALL = (ALL) NOPASSWD: ALL";
 
-  # NOTE: System launchd daemons moved to modules/darwin/services.nix
-  # - limit-maxfiles (file descriptor limits for nix builds)
-
   # Apply symbolic hotkey changes immediately (without requiring logout)
-  # REF: https://zameermanji.com/blog/2021/6/8/applying-com-apple-symbolichotkeys-changes-instantaneously/
+  # REF:
+  # https://zameermanji.com/blog/2021/6/8/applying-com-apple-symbolichotkeys-changes-instantaneously/
+  # https://medium.com/@zmre/nix-darwin-quick-tip-activate-your-preferences-f69942a93236
+
   # NOTE: postUserActivation was removed; using postActivation with sudo -u instead
   system.activationScripts.postActivation.text = ''
     sudo -u ${username} /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u

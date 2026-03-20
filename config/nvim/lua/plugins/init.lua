@@ -70,7 +70,6 @@ return {
       })
     end,
   },
-  { "chrisgrieser/nvim-genghis" },
   {
     "fei6409/log-highlight.nvim",
     ft = { "log" },

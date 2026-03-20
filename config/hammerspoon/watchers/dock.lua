@@ -60,7 +60,7 @@ local function switchKanataProfile(profile)
     return
   end
 
-  U.log.f("Switching Kanata profile to: %s", profile)
+  U.log.df("Switching Kanata profile to: %s", profile)
 
   -- Update the main kanata.kbd symlink to point to the new profile
   U.run(fmt("ln -sf %s %s", profilePath, mainConfig), true)
@@ -74,7 +74,7 @@ local function switchKanataProfile(profile)
   hs.timer.doAfter(2, function()
     local isRunning = U.run("pgrep -x kanata", true)
     if isRunning and isRunning ~= "" then
-      U.log.of("Kanata profile switched to %s (PID: %s)", profile, isRunning:gsub("%s+", ""))
+      U.log.df("Kanata profile switched to %s (PID: %s)", profile, isRunning:gsub("%s+", ""))
     else
       -- Check logs for errors
       local lastErr = U.run("tail -3 /tmp/kanata.err 2>/dev/null", true)
@@ -85,11 +85,11 @@ end
 
 local function keyboardChangedState(state)
   if state == "removed" then
-    U.log.of("External keyboard disconnected")
+    U.log.df("External keyboard disconnected")
     -- Switch to normal internal keyboard config
     if C.dock.kanata.enabled then switchKanataProfile(C.dock.kanata.disconnected) end
   elseif state == "added" then
-    U.log.of("External keyboard connected (Leeloo)")
+    U.log.df("External keyboard connected (Leeloo)")
     -- Switch to config that disables internal keyboard
     if C.dock.kanata.enabled then switchKanataProfile(C.dock.kanata.connected) end
   else

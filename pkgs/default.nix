@@ -6,7 +6,7 @@
 #   - A mkApp derivation (macOS .app bundles from DMG/ZIP)
 #
 # This file exports a single overlay that exposes all custom packages
-# into the nixpkgs namespace (e.g., pkgs.helium, pkgs.chrome-devtools-mcp).
+# into the nixpkgs namespace (e.g., pkgs.fantastical, pkgs.chrome-devtools-mcp).
 #
 # For external overlays, package sets (stable/unstable), and input aliases,
 # see overlays/default.nix instead.
@@ -17,6 +17,7 @@
     inherit lib;
     inherit (prev) stdenvNoCC;
   };
+  callMkApp = file: import file {inherit mkApp;};
 in {
   # ===========================================================================
   # CLI Tools & Utilities
@@ -26,94 +27,9 @@ in {
   # ===========================================================================
   # macOS Apps (mkApp - DMG/ZIP extraction)
   # ===========================================================================
-  # REF:
-  # - https://github.com/ayla6/nixcfg/blob/main/modules/home/programs/helium/default.nix
-  # - https://github.com/isabelroses/dotfiles/blob/main/modules/home/programs/chromium.nix
-  # - https://github.com/will-lol/.dotfiles/blob/main/overlays/helium.nix
-
-  fantastical = mkApp {
-    pname = "fantastical";
-    version = "3.9.2";
-    appName = "Fantastical.app";
-    src = {
-      url = "https://cdn.flexibits.com/Fantastical_3.9.2.zip";
-      sha256 = "sha256-rnOzSwh3fTEY6qNM8QojO7aUm7jxC3AxV11/Pad0pqI=";
-    };
-    appLocation = "copy"; # Needs /Applications for code signing
-    desc = "Calendar and tasks app";
-    homepage = "https://flexibits.com/fantastical";
-  };
-
-  bloom = mkApp {
-    pname = "bloom";
-    version = "1.5.17";
-    appName = "Bloom.app";
-    src = {
-      url = "https://bloomapp.club/downloads/bloom/Bloom-v1.5.17.dmg";
-      sha256 = "sha256-1E7a+izJ1R4KLQGtEeMTMNO/Dq3/TcKdSlS8O4RWrNg=";
-    };
-    desc = "Refined Finder Experience, Reimagined for Productivity.";
-    homepage = "https://bloomapp.club";
-  };
-
-  brave-browser-nightly = mkApp {
-    pname = "brave-browser-nightly";
-    version = "1.89.41.0";
-    appName = "Brave Browser Nightly.app";
-    src = {
-      url = "https://updates-cdn.bravesoftware.com/sparkle/Brave-Browser/nightly-arm64/189.41/Brave-Browser-Nightly-arm64.dmg";
-      sha256 = "15aq7bsr12xbrnfq40siij2fcxxcg4br0fbg1qjvplpnpd1fkh8r";
-    };
-    appLocation = "wrapper";
-    desc = "Privacy-focused web browser - Nightly build";
-    homepage = "https://brave.com/download-nightly/";
-  };
-
-  tidewave = mkApp {
-    pname = "tidewave";
-    version = "latest";
-    appName = "Tidewave.app";
-    src = {
-      url = "https://github.com/tidewave-ai/tidewave_app/releases/latest/download/tidewave-app-aarch64.dmg";
-      sha256 = "sha256-6gPXUahSRmrs3DF0YWqFEWuP2tZdB9A1CIRQDd4EtDE=";
-    };
-    binaries = []; # No CLI in app bundle; use tidewave-cli for CLI
-    desc = "Tidewave is the coding agent for full-stack web app development. Integrate Claude Code, OpenAI Codex, and other agents with your web app and web framework at every layer, from UI to database.";
-    homepage = "https://tidewave.ai";
-  };
-
-  tidewave-cli = mkApp {
-    pname = "tidewave-cli";
-    version = "latest";
-    src = {
-      url = "https://github.com/tidewave-ai/tidewave_app/releases/latest/download/tidewave-cli-aarch64-apple-darwin";
-      sha256 = "sha256-WSNcptqqM5jpMiQ65mQ3y5f+YImfNn8kriqcxL8Nu4I=";
-    };
-    artifactType = "binary";
-    binaries = ["tidewave"];
-    desc = "Tidewave MCP CLI for web app development";
-    homepage = "https://tidewave.ai";
-  };
-
-  # tuna = mkApp {
-  #   pname = "tuna";
-  #   version = "0.34-796";
-  #   appName = "Tuna.app";
-  #   src = {
-  #     # Rails active_storage URL - stable for this version, redirects to signed R2 URL
-  #     #
-  #     # To update in future:
-  #     #  # Get new URL and version from redirect
-  #     #  curl -sI "https://tunaformac.com/download/latest" | rg location
-  #     #  # Download and hash
-  #     #  curl -L -o /tmp/Tuna.zip "<new-rails-url>"
-  #     #  nix hash file --sri /tmp/Tuna.zip
-  #
-  #     url = "https://tunaformac.com/rails/active_storage/blobs/redirect/eyJfcmFpbHMiOnsiZGF0YSI6NjUsInB1ciI6ImJsb2JfaWQifX0=--51a6b05b563cda922ce3451b3ec6d438d3d7d60e/Tuna-0.34-796.zip";
-  #     sha256 = "sha256-hnzkc8JUG9Ho6JjYcPi70s+aH50DwPXYlh8R78BfTHU=";
-  #   };
-  #   binaries = [];
-  #   desc = "New, modern launcher for macOS, in the spirit of Quicksilver.";
-  #   homepage = "https://tunaformac.com";
-  # };
+  fantastical = callMkApp ./fantastical.nix;
+  bloom = callMkApp ./bloom.nix;
+  brave-browser-nightly = callMkApp ./brave-browser-nightly.nix;
+  tidewave = callMkApp ./tidewave.nix;
+  tidewave-cli = callMkApp ./tidewave-cli.nix;
 }

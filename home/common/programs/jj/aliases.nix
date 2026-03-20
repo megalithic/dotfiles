@@ -5,8 +5,8 @@
   # ─────────────────────────────────────────────────────────────
   s = ["status"];
   l = ["log"];
-  ll = ["log" "-T" "builtin_log_compact_full_description"];
-  d = ["diff"];
+  ll = ["log" "-T" "builtin_log_compact_full_description_with_diff"];
+  d = ["describe"];
   rb = ["rebase"];
   b = ["bookmark"];
   g = ["git"];

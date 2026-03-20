@@ -13,7 +13,7 @@
 }: {
   imports = [
     ./lib.nix
-    ./mac-aliases.nix
+    # ./mac-aliases.nix
     ./modules/settings-sync.nix
     ./rust.nix
     ./packages.nix
@@ -29,7 +29,7 @@
     ./programs/fzf.nix
     ./programs/nvim.nix
     ./programs/shade.nix
-    ./programs/worktrunk.nix
+    # ./programs/worktrunk.nix
     inputs.op-shell-plugins.hmModules.default
   ];
 

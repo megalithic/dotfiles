@@ -52,19 +52,30 @@
   };
 
   ask = ''
+    set -l question
+
+    # If no arguments, prompt for input with textarea
     if test (count $argv) -eq 0
-        echo "Usage: ask <question>"
-        return 1
-    end
-
-    set -l question (string join " " $argv)
-
-    # Use pi with minimal noise, pipe through glow for markdown rendering if available
-    if command -q glow
-        pi -p --no-session --no-tools "$question" 2>/dev/null | glow -
+        set question (gum write --placeholder "Ask pi a question..." --header "Question:" --char-limit 0)
+        if test -z "$question"
+            return 0  # User cancelled
+        end
     else
-        pi -p --no-session --no-tools "$question" 2>/dev/null
+        set question (string join " " $argv)
     end
+
+    # Run pi with spinner, capture output to temp file (avoids quoting issues)
+    set -l outfile (mktemp)
+    gum spin --spinner dot --title "Asking pi..." -- sh -c 'pi -p --no-session --no-tools "$1" 2>/dev/null > "$2"' _ "$question" "$outfile"
+
+    # Render with glow if available
+    if command -q glow
+        glow < $outfile
+    else
+        cat $outfile
+    end
+
+    rm -f $outfile
   '';
 
   pr = ''

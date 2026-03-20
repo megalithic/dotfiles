@@ -3,7 +3,7 @@
 # - firefox.nix: Firefox-based browsers (placeholder)
 {
   imports = [
-    ./chromium.nix
+    ./brave-browser-nightly.nix
     ./firefox.nix
   ];
 }

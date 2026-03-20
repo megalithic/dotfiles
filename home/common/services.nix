@@ -59,11 +59,11 @@
   };
 
   # Ensure log directories exist
-  home.activation.ollamaLogDir = lib.hm.dag.entryAfter ["writeBoundary"] ''
+  home.activation.makeOllamaLogDir = lib.hm.dag.entryAfter ["writeBoundary"] ''
     mkdir -p ${config.home.homeDirectory}/Library/Logs/ollama
   '';
 
-  home.activation.espansoLogDir = lib.hm.dag.entryAfter ["writeBoundary"] ''
+  home.activation.makeEspansoLogDir = lib.hm.dag.entryAfter ["writeBoundary"] ''
     mkdir -p ${config.home.homeDirectory}/Library/Logs/espanso
   '';
 }

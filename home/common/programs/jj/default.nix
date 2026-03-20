@@ -63,7 +63,7 @@ in {
       };
 
       templates = {
-        draft_commit_description = "builtin_draft_commit_description";
+        draft_commit_description = "builtin_draft_commit_description_with_diff";
       };
 
       inherit aliases;

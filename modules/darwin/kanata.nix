@@ -72,7 +72,8 @@ in {
     # Daemon mode: headless launchd service with logs
     daemon = {
       enable = true;
-      launchd = {
+      # kanata-darwin renamed daemon.launchd -> daemon.extraLaunchdConfig in 9bfd469
+      extraLaunchdConfig = {
         # Expose TCP port for kanata-bar and Hammerspoon to connect
         ProgramArguments = [
           "/usr/bin/sudo"

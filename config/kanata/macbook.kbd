@@ -7,6 +7,7 @@
 ;; - Extended vim motions: w/b (word), 0/$ (line), u/d (page)
 ;; - Caps lock → Escape (tap) / Control (hold)
 ;; - Left Control → F19 (for Hammerspoon hyper key)
+;; - Right Command → F19 (for Hammerspoon hyper key)
 ;; - Ctrl+Backspace → Forward Delete (via defoverrides)
 
 (defcfg
@@ -31,7 +32,7 @@
 ;; Source keys - what we're remapping
 ;; ────────────────────────────────────────────────────────────────────────────
 (defsrc
-  caps lctl spc bspc
+  caps lctl rmet spc bspc
   a    s    d    f    g    h    j    k    l    ;
   u    i    o    w    b    0    4
 )
@@ -40,8 +41,11 @@
 ;; Timing configuration
 ;; ────────────────────────────────────────────────────────────────────────────
 (defvar
+  ;; tap-time: max duration for a tap to register as base key
+  ;; hold-time: min duration before modifier activates
+  ;; Increase hold-time for heavier typing (reduces false modifier triggers)
   tap-time 200
-  hold-time 175
+  hold-time 225
 
   ;; Keys that trigger early tap for same-hand rolls
   left-hand-keys (
@@ -88,7 +92,7 @@
 ;; Base layer
 ;; ────────────────────────────────────────────────────────────────────────────
 (deflayer base
-  @escctrl f19 spc bspc
+  @escctrl f19 f19 spc bspc
   @a   @s   @d   @nav g    h    j    k    l    ;
   u    i    o    w    b    0    4
 )
@@ -115,7 +119,7 @@
 ;; When you hold f (entering nav), then hold d (activating opt), then tap h,
 ;; kanata sends opt+left (back word).
 (deflayer nav
-  _    _    _    _
-  _    _    _    _    _    left down up   rght _
+  _    _    _    _    _
+  _    _    _    _    _    left down  up   rght _
   pgup _    _    A-rght A-left M-left M-rght
 )

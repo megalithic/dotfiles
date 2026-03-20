@@ -10,7 +10,7 @@
   # xdg.configFile."nvim/.vimrc".source = nvim-next/.vimrc;
 
   # Create folders for backups, swaps, and undo
-  home.activation.mkdirNvimFolders = lib.hm.dag.entryAfter ["writeBoundary"] ''
+  home.activation.makeNvimDirs = lib.hm.dag.entryAfter ["writeBoundary"] ''
     mkdir -p $HOME/.config/nvim/backups $HOME/.config/nvim/swaps $HOME/.config/nvim/undo
   '';
 
