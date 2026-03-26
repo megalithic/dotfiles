@@ -50,6 +50,7 @@ local parsers = {
   "fish",
 
   -- Other langs
+  "devicetree",
   "nix",
   "python",
   "rust",

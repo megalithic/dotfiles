@@ -378,6 +378,8 @@ M.dock = {
     productName = "Leeloo",
     vendorID = 7504,
     vendorName = "ZMK Project",
+    bluetoothAddress = "f3-d9-8d-01-16-54",
+    bluetoothPollInterval = 5, -- seconds between BT connection checks
   },
   kanata = {
     enabled = true,

@@ -50,7 +50,7 @@ matches:
           cmd: 'curl ifconfig.me'
 
   - {trigger: '<3', replace: '🩶'} # use grey haeart instead of red one
-  - {trigger: ":shrug", replace: "¯\\_(ツ)_/¯"}
+  - {trigger: ":shrug", replace: "🤷🏻‍♂️"}
   - trigger: ':wave'
     replace: 👋
 
