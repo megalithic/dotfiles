@@ -17,6 +17,8 @@
 ;; ────────────────────────────────────────────────────────────────────────────
 (defoverrides
   (lctl bspc) (del)
+  ;; Left Shift + Space → F19 (for Hammerspoon)
+  (lsft spc) (f19)
 )
 
 ;; ────────────────────────────────────────────────────────────────────────────
@@ -71,6 +73,10 @@
 
   ;; Vim navigation layer: f = 'f' on tap, nav layer on hold
   nav (tap-hold $tap-time $hold-time f (layer-while-held nav))
+
+  ;; Media control tap-dance (for nav layer)
+  ;; tap = next track, double-tap = previous track
+  navp (tap-dance 200 (next prev))
 )
 
 ;; ────────────────────────────────────────────────────────────────────────────
@@ -102,10 +108,14 @@
 ;; ────────────────────────────────────────────────────────────────────────────
 ;; Navigation layer (activated by holding f in enabled layer)
 ;; ────────────────────────────────────────────────────────────────────────────
+;; Media controls:
+;;   u = mute, i = volume down, o = volume up
+;;   p = next track (double-tap = previous track)
+;;   \ = play/pause
 (deflayer nav
   _    _    _    _    _    _    _    _    _    _    _    _    _
   _    _    _    _    _    _    _    _    _    _    _    _    _    _
-  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    mute vold volu @navp _  _    pp
   _    _    _    _    _    _    left down up   rght _    _    _
   _    _    _    _    _    _    _    _    _    _    _    _
   @to-disabled _ _ _      _              _    _

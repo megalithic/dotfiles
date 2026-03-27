@@ -26,6 +26,8 @@
   ;; Ctrl+Backspace → Forward Delete
   ;; Since caps-hold outputs lctl, this makes caps+bspc = del
   (lctl bspc) (del)
+  ;; Left Shift + Space → F19 (for Hammerspoon)
+  (lsft spc) (f19)
 )
 
 ;; ────────────────────────────────────────────────────────────────────────────
@@ -34,7 +36,7 @@
 (defsrc
   caps lctl rmet spc bspc
   a    s    d    f    g    h    j    k    l    ;
-  u    i    o    w    b    0    4
+  u    i    o    w    b    0    4    p    \
 )
 
 ;; ────────────────────────────────────────────────────────────────────────────
@@ -86,6 +88,10 @@
 
   ;; ── Space as hyper (DISABLED - too buggy) ──────────────────────────────────
   ;; spcf19 (tap-hold $tap-time $hold-time spc f19)
+
+  ;; ── Media control tap-dance (for nav layer) ───────────────────────────────
+  ;; tap = next track, double-tap = previous track
+  navp (tap-dance 200 (next prev))
 )
 
 ;; ────────────────────────────────────────────────────────────────────────────
@@ -94,7 +100,7 @@
 (deflayer base
   @escctrl f19 f19 spc bspc
   @a   @s   @d   @nav g    h    j    k    l    ;
-  u    i    o    w    b    0    4
+  u    i    o    w    b    0    4    p    \
 )
 
 ;; ────────────────────────────────────────────────────────────────────────────
@@ -118,8 +124,13 @@
 ;; Note: d+h/d+l work because d is a tap-hold for opt in base layer.
 ;; When you hold f (entering nav), then hold d (activating opt), then tap h,
 ;; kanata sends opt+left (back word).
+;;
+;; Media controls:
+;;   u = mute, i = volume down, o = volume up
+;;   p = next track (double-tap = previous track)
+;;   \ = play/pause
 (deflayer nav
   _    _    _    _    _
   _    _    _    _    _    left down  up   rght _
-  pgup _    _    A-rght A-left M-left M-rght
+  mute vold volu A-rght A-left M-left M-rght @navp pp
 )
