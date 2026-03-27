@@ -75,7 +75,7 @@ matches:
   - trigger: ':thumbsdown'
     replace: 👎
 
-  - trigger: ':flex'
+  - trigger: ':strong'
     replace: 💪
 
   - trigger: ':pray'

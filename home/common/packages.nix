@@ -9,6 +9,7 @@
   customApps = with pkgs; [
     # bloom
     fantastical
+    # mailmate app moved to home/programs/email/mailmate/default.nix
     # tidewave GUI app moved to home/programs/ai/default.nix
   ];
 
@@ -24,7 +25,7 @@
   guiPkgs = with pkgs; [
     iina # migrated from homebrew 2026-02-13
     inkscape # migrated from homebrew 2026-02-13
-    neovide # Native neovim GUI - potential future use for floating notes window
+    # neovide # Native neovim GUI - potential future use for floating notes window
     obsidian
     shade # Floating terminal panel for macOS (prebuilt from GitHub release v0.1.0)
     slack # migrated from homebrew 2026-02-13
@@ -48,6 +49,7 @@
     difftastic
     desktoppr # declarative wallpaper setter
     devbox
+    devenv
     difftastic
     dust # disk usage analyzer (du replacement)
     espanso

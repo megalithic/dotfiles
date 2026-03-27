@@ -20,6 +20,7 @@
       "kitty"
       # "microsoft-teams"
       "mouseless"
+      "okta-verify" # really just needed for work laptop
       "protonvpn"
       "proton-drive"
       "obs@beta"

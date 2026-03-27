@@ -26,17 +26,84 @@
     '';
   };
 
-  opl = ''
-    eval (op signin --account my) and eval (op signin --account evirts)
+  opl = {
+    description = "1Password CLI session manager (login, restore, status)";
+    body = ''
+      set -l cache_dir ~/.local/cache/op
+      set -l cache_file $cache_dir/sessions
 
-    mkdir -p ~/.local/cache/op/
+      # Subcommands
+      switch "$argv[1]"
+        case status
+          # Show current session state
+          set -l vars (env | string match 'OP_SESSION_*')
+          if test (count $vars) -eq 0
+            echo "No active OP_SESSION_* variables"
+          else
+            for v in $vars
+              set -l name (string split -m1 = $v)[1]
+              echo "  $name = (set)"
+            end
+          end
+          if test -f $cache_file
+            echo "Cache: $cache_file (age: "(math (date +%s) - (stat -f%m $cache_file))"s)"
+          else
+            echo "Cache: none"
+          end
+          return 0
 
-    if test -r ~/.local/cache/op/session
-        mv ~/.local/cache/op/session ~/.local/cache/op/session.bak
-    end
+        case restore
+          # Restore cached sessions into current shell
+          if not test -f $cache_file
+            echo "No cached sessions. Run: opl" >&2
+            return 1
+          end
+          while read -l line
+            set -l parts (string split -m1 = $line)
+            if test (count $parts) -eq 2
+              set -gx $parts[1] $parts[2]
+            end
+          end < $cache_file
+          echo "Restored OP_SESSION_* from cache"
+          return 0
 
-    env | rg OP_SESSION_ | cut -d= -f2 > ~/.local/cache/op/session
-  '';
+        case help -h --help
+          echo "Usage: opl [command]"
+          echo ""
+          echo "Commands:"
+          echo "  (none)    Sign in to 1Password accounts and cache sessions"
+          echo "  restore   Restore cached sessions into current shell"
+          echo "  status    Show current session state"
+          echo "  help      Show this help"
+          echo ""
+          echo "Sessions are cached to $cache_dir/sessions"
+          echo "New shells auto-restore cached sessions on startup."
+          return 0
+
+        case ""
+          # Default: sign in and cache
+
+        case "*"
+          echo "Unknown command: $argv[1]. Run: opl help" >&2
+          return 1
+      end
+
+      # Sign in to accounts
+      eval (op signin --account my)
+      or begin
+        echo "Failed to sign in to 'my' account" >&2
+        return 1
+      end
+
+      eval (op signin --account evirts)
+      or echo "Warning: failed to sign in to 'evirts' account" >&2
+
+      # Cache session tokens (name=value pairs)
+      mkdir -p $cache_dir
+      env | string match 'OP_SESSION_*' > $cache_file
+      echo "Sessions cached to $cache_file"
+    '';
+  };
 
   nix-shell = {
     wraps = "nix-shell";
@@ -52,21 +119,44 @@
   };
 
   ask = ''
+    set -l model "hf:deepseek-ai/DeepSeek-V3.2"
     set -l question
+    set -l args
+
+    # Parse flags
+    while test (count $argv) -gt 0
+        switch $argv[1]
+            case -m --model
+                # Present synthetic models to choose from
+                set -l models (pi --list-models 2>/dev/null | rg "^synthetic" | awk '{print $2}')
+                if test -z "$models"
+                    echo "No synthetic models found"
+                    return 1
+                end
+                set model (printf "%s\n" $models | gum choose --header "Select model:")
+                if test -z "$model"
+                    return 0  # User cancelled
+                end
+                set -e argv[1]
+            case '*'
+                set -a args $argv[1]
+                set -e argv[1]
+        end
+    end
 
     # If no arguments, prompt for input with textarea
-    if test (count $argv) -eq 0
+    if test (count $args) -eq 0
         set question (gum write --placeholder "Ask pi a question..." --header "Question:" --char-limit 0)
         if test -z "$question"
             return 0  # User cancelled
         end
     else
-        set question (string join " " $argv)
+        set question (string join " " $args)
     end
 
     # Run pi with spinner, capture output to temp file (avoids quoting issues)
     set -l outfile (mktemp)
-    gum spin --spinner dot --title "Asking pi..." -- sh -c 'pi -p --no-session --no-tools "$1" 2>/dev/null > "$2"' _ "$question" "$outfile"
+    gum spin --spinner dot --title "Asking $model..." -- sh -c 'pi -p --no-session --no-tools --provider synthetic --model "$1" "$2" 2>/dev/null > "$3"' _ "$model" "$question" "$outfile"
 
     # Render with glow if available
     if command -q glow

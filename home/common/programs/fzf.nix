@@ -91,12 +91,9 @@ in {
       "--preview='preview {}'"
       "--header='find files [$(tput setaf 255)ctrl-y$(tput sgr 0): $(tput setaf 245)copy to clipboard$(tput sgr 0)]'"
     ];
-    tmux.enableShellIntegration = true;
-    tmux.shellIntegrationOptions = [
-      "-d 40%"
-      # "--border=none"
-      # "--preview-window=noborder"
-      # "--padding=0,1"
-    ];
+    # tmux.enableShellIntegration disabled: fzf-tmux drops history entries
+    # due to a race condition piping large datasets through fifos.
+    # Shell widgets (ctrl-r, ctrl-t) now run fzf inline instead.
+    tmux.enableShellIntegration = false;
   };
 }

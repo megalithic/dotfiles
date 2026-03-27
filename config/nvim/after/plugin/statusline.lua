@@ -720,9 +720,6 @@ local function seg_pi()
   local data = mega.p.pi.statusline_data()
   local icon = mega.ui.icons.pi.symbol
 
-  -- Add panel indicator
-  if mega.p.pi.is_panel_open and mega.p.pi.is_panel_open() then icon = icon .. "•" end
-
   if not data.connected then return seg(icon, "StComment", { margin = { 1, 0 } }) end
 
   local session = data.session or "pi"
@@ -773,11 +770,6 @@ function mega.ui.statusline.render()
 
   if not is_focused() then
     return "%#StatusLineInactive# %F %m %r %{&paste?'[paste] ':''} %= %{&spelllang}  %y %8(%l,%c%) %8p%%"
-  end
-
-  -- Pi terminal gets a custom statusline
-  if mega.p.pi and mega.p.pi.is_pi_terminal and mega.p.pi.is_pi_terminal(bufnr) then
-    return mega.p.pi.render_term_statusline(bufnr)
   end
 
   if is_plain() then

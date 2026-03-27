@@ -1,3 +1,11 @@
+-- mini.diff with custom jj + hg sources.
+-- Patterns adapted from:
+--   https://github.com/madmaxieee/nvim-config/blob/main/lua/plugins/mini-diff/init.lua
+--   https://github.com/madmaxieee/nvim-config/blob/main/lua/plugins/mini-diff/gen-custom-source.lua
+
+local get_jj_root = function(path) return require("utils.vcs").get_jj_root(path) end
+local get_hg_root = function(path) return require("utils.vcs").get_hg_root(path) end
+
 ---@alias DiffCacheEntry {fs_event:uv.uv_fs_event_t, timer:uv.uv_timer_t, attached?:string}
 
 ---@type table<integer, DiffCacheEntry>
@@ -18,19 +26,13 @@ end
 ---@field name                  string
 ---@field should_enable?        fun(): boolean
 ---@field setup?                fun()
----@field async_find_root       fun(path: string, callback: fun(root: string?))
+---@field get_root              fun(path: string): string?
 ---@field root_to_watch_pattern fun(root: string): WatchPattern
 ---@field async_get_ref_text    fun(path: string, callback: fun(text: string|string[]))
 
 ---@type fun(buf: integer, text: string|string[])
 local set_ref_text = vim.schedule_wrap(function(buf, text)
   local ok, err = pcall(require("mini.diff").set_ref_text, buf, text)
-  if not ok and err then vim.notify(err) end
-end)
-
----@type fun(buf: integer)
-local fail_attach = vim.schedule_wrap(function(buf)
-  local ok, err = pcall(require("mini.diff").fail_attach, buf)
   if not ok and err then vim.notify(err) end
 end)
 
@@ -90,21 +92,18 @@ local function make_diff_source(opts)
     ---@param buf integer
     attach = function(buf)
       if cache[buf] ~= nil then return false end
+
       local path = get_buf_realpath(buf)
       if not path then return false end
 
+      local root = opts.get_root(path)
+      if not root then return false end
+
       cache[buf] = { attached = name }
 
-      local function fs_callback()
+      local watch_pattern = opts.root_to_watch_pattern(root)
+      start_watching(buf, watch_pattern, function()
         opts.async_get_ref_text(path, function(text) set_ref_text(buf, text) end)
-      end
-      opts.async_find_root(path, function(root)
-        if root then
-          local watch_pattern = opts.root_to_watch_pattern(root)
-          start_watching(buf, watch_pattern, fs_callback)
-        else
-          fail_attach(buf)
-        end
       end)
     end,
 
@@ -119,12 +118,87 @@ local function make_diff_source(opts)
   }
 end
 
+-- ===========================================================================
+-- Mercurial source
+-- ===========================================================================
+
+local hg_config = {
+  base_rev = ".",
+}
+
+local function hg_cmd(...)
+  local HG = {
+    "hg",
+    "--pager=never",
+    "--color=never",
+  }
+  return vim.list_extend(HG, { ... })
+end
+
+---@type DiffSourceOpts
+local hg_opts = {
+  name = "hg",
+
+  setup = function()
+    vim.api.nvim_create_user_command("MiniHgDiff", function(args)
+      local rev = args.args
+      local path = vim.api.nvim_buf_get_name(0)
+      local dir = vim.fs.dirname(path)
+      vim.system(hg_cmd("identify", "--rev", rev), { cwd = dir }, function(res)
+        if res.code ~= 0 then
+          vim.schedule(function() vim.notify(("mini.diff hg: '%s' is not a valid rev"):format(rev)) end)
+          return
+        end
+        hg_config.base_rev = rev
+        for buf, entry in pairs(cache) do
+          if entry.attached == "hg" then
+            vim.schedule(function()
+              require("mini.diff").disable(buf)
+              require("mini.diff").enable(buf)
+              vim.notify(("mini.diff hg: reference rev is set to '%s'"):format(rev))
+            end)
+          end
+        end
+      end)
+    end, { nargs = 1 })
+
+    vim.api.nvim_create_user_command("MiniHgPDiff", function()
+      if hg_config.base_rev == "." then
+        vim.cmd([[MiniHgDiff .^]])
+      else
+        vim.cmd([[MiniHgDiff .]])
+      end
+    end, { nargs = 0 })
+  end,
+
+  root_to_watch_pattern = function(root) return { dir = root .. "/.hg", file = "dirstate" } end,
+
+  get_root = function(path) return get_hg_root(path) end,
+
+  async_get_ref_text = function(path, callback)
+    local dir = vim.fs.dirname(path)
+    local file = vim.fs.basename(path)
+    vim.system(hg_cmd("cat", "--rev", hg_config.base_rev, "--", file), { cwd = dir }, function(res)
+      if res.code ~= 0 then return end
+      local output = res.stdout or ""
+      callback(output)
+    end)
+  end,
+}
+
+-- ===========================================================================
+-- Jujutsu source
+-- ===========================================================================
+
+local jj_config = {
+  base_rev = "@-",
+}
+
 local function jj_cmd(...)
   local JJ = {
     "jj",
     "--no-pager",
     "--color=never",
-    "--ignore-working-copy",
   }
   return vim.list_extend(JJ, { ... })
 end
@@ -133,38 +207,60 @@ end
 local jj_opts = {
   name = "jj",
 
-  root_to_watch_pattern = function(root) return { dir = root .. "/.jj/working_copy", file = "checkout" } end,
+  setup = function()
+    vim.api.nvim_create_user_command("MiniJJDiff", function(args)
+      local rev = args.args
+      local path = vim.api.nvim_buf_get_name(0)
+      local dir = vim.fs.dirname(path)
+      vim.system(jj_cmd("log", "-r", rev, "--no-graph", "-T", ""), { cwd = dir }, function(res)
+        if res.code ~= 0 then
+          vim.schedule(function() vim.notify(("mini.diff jj: '%s' is not a valid rev"):format(rev)) end)
+          return
+        end
+        jj_config.base_rev = rev
+        for buf, entry in pairs(cache) do
+          if entry.attached == "jj" then
+            vim.schedule(function()
+              require("mini.diff").disable(buf)
+              require("mini.diff").enable(buf)
+              vim.notify(("mini.diff jj: reference rev is set to '%s'"):format(rev))
+            end)
+          end
+        end
+      end)
+    end, { nargs = 1 })
 
-  async_find_root = function(path, callback)
-    local dir = vim.fn.fnamemodify(path, ":h")
-    vim.system(jj_cmd("root"), { cwd = dir }, function(res)
-      if res.code ~= 0 then
-        callback(nil)
-        return
+    vim.api.nvim_create_user_command("MiniJJPDiff", function()
+      if jj_config.base_rev == "@-" then
+        vim.cmd([[MiniJJDiff @--]])
+      else
+        vim.cmd([[MiniJJDiff @-]])
       end
-      local output = res.stdout or ""
-      local root = vim.trim(output)
-      if not root or root == "" then
-        callback(nil)
-        return
-      end
-      callback(root)
-    end)
+    end, { nargs = 0 })
   end,
 
+  root_to_watch_pattern = function(root) return { dir = root .. "/.jj/working_copy", file = "checkout" } end,
+
+  get_root = function(path) return get_jj_root(path) end,
+
   async_get_ref_text = function(path, callback)
-    local dir = vim.fn.fnamemodify(path, ":h")
-    local basename = vim.fn.fnamemodify(path, ":t")
-    vim.system(jj_cmd("file", "show", "-r", "@-", "--", basename), { cwd = dir }, function(res)
-      if res.code ~= 0 then return end
-      local output = res.stdout or ""
-      callback(output)
-    end)
+    local dir = vim.fs.dirname(path)
+    local file = vim.fs.basename(path)
+    vim.system(
+      jj_cmd("--ignore-working-copy", "file", "show", "-r", jj_config.base_rev, "--", file),
+      { cwd = dir },
+      function(res)
+        if res.code ~= 0 then return end
+        local output = res.stdout or ""
+        callback(output)
+      end
+    )
   end,
 }
 
-local M = {
-  jj_custom_source = function() return make_diff_source(jj_opts) end,
+local gen_custom_source = {
+  hg = function() return make_diff_source(hg_opts) end,
+  jj = function() return make_diff_source(jj_opts) end,
 }
 
 return {
@@ -193,7 +289,8 @@ return {
         algorithm = "patience",
       },
       source = {
-        M.jj_custom_source(),
+        gen_custom_source.hg(),
+        gen_custom_source.jj(),
         require("mini.diff").gen_source.git(),
         require("mini.diff").gen_source.save(),
         require("mini.diff").gen_source.none(),

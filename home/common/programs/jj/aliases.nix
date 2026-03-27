@@ -9,6 +9,7 @@
   d = ["describe"];
   rb = ["rebase"];
   b = ["bookmark"];
+  bm = ["bookmark"];
   g = ["git"];
 
   # ─────────────────────────────────────────────────────────────
@@ -72,7 +73,7 @@
       # Require -b flag
       if [[ -z "$bookmark" ]]; then
         closest=$(jj log -r 'closest_bookmark(@)' --no-graph \
-          -T 'self.bookmarks().map(|b| b.name()).join(",")' 2>/dev/null | head -1)
+          -T 'self.bookmarks().map(|b| b.name()).join("\n")' 2>/dev/null | head -1)
 
         echo "Error: Must specify bookmark with -b <bookmark>" >&2
         if [[ -n "$closest" && "$closest" != "main" ]]; then
@@ -150,7 +151,7 @@
       # Use explicit bookmark or find closest
       if [[ -z "$bookmark" ]]; then
         bookmark=$(jj log -r 'closest_bookmark(@)' --no-graph \
-          -T 'self.bookmarks().map(|b| b.name()).join(",")' 2>/dev/null | head -1)
+          -T 'self.bookmarks().map(|b| b.name()).join("\n")' 2>/dev/null | head -1)
       fi
 
       # Move bookmark if found and not main
@@ -197,7 +198,7 @@
       # Use explicit bookmark or find closest
       if [[ -z "$bookmark" ]]; then
         bookmark=$(jj log -r 'closest_bookmark(@)' --no-graph \
-          -T 'self.bookmarks().map(|b| b.name()).join(",")' 2>/dev/null | head -1)
+          -T 'self.bookmarks().map(|b| b.name()).join("\n")' 2>/dev/null | head -1)
       fi
 
       # Move bookmark if found and not main
@@ -414,7 +415,7 @@
 
       # Find closest bookmark (PR branch)
       bookmark=$(jj log -r 'closest_bookmark(@)' --no-graph \
-        -T 'self.bookmarks().map(|b| b.name()).join(",")' 2>/dev/null | head -1)
+        -T 'self.bookmarks().map(|b| b.name()).join("\n")' 2>/dev/null | head -1)
 
       if [[ -z "$bookmark" || "$bookmark" == "main" ]]; then
         echo "Error: No feature bookmark found. Create one first:" >&2
@@ -468,7 +469,7 @@
 
       # Find bookmark on parent (where we're squashing into)
       bookmark=$(jj log -r 'closest_bookmark(@-)' --no-graph \
-        -T 'self.bookmarks().map(|b| b.name()).join(",")' 2>/dev/null | head -1)
+        -T 'self.bookmarks().map(|b| b.name()).join("\n")' 2>/dev/null | head -1)
 
       if [[ -z "$bookmark" || "$bookmark" == "main" ]]; then
         echo "Error: No feature bookmark on parent commit" >&2
@@ -521,7 +522,7 @@
 
       # Find closest bookmark
       bookmark=$(jj log -r 'closest_bookmark(@)' --no-graph \
-        -T 'self.bookmarks().map(|b| b.name()).join(",")' 2>/dev/null | head -1)
+        -T 'self.bookmarks().map(|b| b.name()).join("\n")' 2>/dev/null | head -1)
 
       if [[ -z "$bookmark" ]]; then
         echo "Error: No bookmark found. Create one first:" >&2
@@ -559,7 +560,7 @@
 
       # Get current bookmark
       bookmark=$(jj log -r @ --no-graph \
-        -T 'self.bookmarks().map(|b| b.name()).join(",")' 2>/dev/null | head -1)
+        -T 'self.bookmarks().map(|b| b.name()).join("\n")' 2>/dev/null | head -1)
 
       if [[ -z "$bookmark" || "$bookmark" == "main" ]]; then
         echo "Error: Not on a feature bookmark (current: ''${bookmark:-none})" >&2

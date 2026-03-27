@@ -213,3 +213,61 @@ map(
   function() require("utils.interop").shade.smart_toggle() end,
   { desc = "Shade: smart toggle" }
 )
+
+map("n", "*", "m`<cmd>keepjumps normal! *``<CR>", { desc = "Don't jump on first * -- simpler vim-asterisk" })
+
+map(
+  "n",
+  "<leader>h",
+  ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gIc<Left><Left><Left><Left>",
+  { desc = "Replace instances of hovered word" }
+)
+map(
+  "n",
+  "<leader>H",
+  ":%S/<C-r><C-w>/<C-r><C-w>/gcw<Left><Left><Left><Left>",
+  { desc = "Replace instances of hovered word (matching case)" }
+)
+
+map("x", "<leader>h", '"hy:%s/<C-r>h/<C-r>h/gc<left><left><left>', {
+  desc = [[Crude search & replace visual selection
+                 (breaks on multiple lines & special chars)]],
+})
+
+-- [[ spelling ]] --------------------------------------------------------------
+-- map("n", "<leader>s", "z=e") -- Correct current word
+map("n", "<localleader>sj", "]s", { desc = "[spell] move to next misspelling" })
+map("n", "<localleader>sk", "[s", { desc = "[spell] move to previous misspelling" })
+map("n", "<localleader>sf", function()
+  local cur_pos = vim.api.nvim_win_get_cursor(0)
+  vim.cmd.normal({ "1z=", bang = true })
+  vim.api.nvim_win_set_cursor(0, cur_pos)
+end, { desc = "[spell] fix spelling of word under cursor" })
+
+-- Undo zw, remove the word from the entry in 'spellfile'.
+map("n", "<localleader>su", function() vim.cmd("normal! zug") end, { desc = "[spell] remove word from list" })
+
+map("n", "<localleader>sa", function()
+  local cur_pos = vim.api.nvim_win_get_cursor(0)
+  vim.cmd.normal({ "zg", bang = true })
+  vim.api.nvim_win_set_cursor(0, cur_pos)
+end, { desc = "[spell] add word under cursor to dict" })
+map("n", "<localleader>ss", function()
+  -- Simulate pressing "z=" with "m" option using feedkeys
+  -- vim.api.nvim_replace_termcodes ensures "z=" is correctly interpreted
+  -- 'm' is the {mode}, which in this case is 'Remap keys'. This is default.
+  -- If {mode} is absent, keys are remapped.
+  --
+  -- I tried this keymap as usually with
+  vim.cmd("normal! 1z=")
+  -- But didn't work, only with nvim_feedkeys
+  -- vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("z=", true, false, true), "m", true)
+end, { desc = "[spell] suggestions" })
+-- map("n", "<localleader>si", function() vim.cmd.normal({ "ysiw`", bang = true }) end, { desc = "[spell] ignore spelling of word under cursor" })
+
+-- [[ selections ]] ------------------------------------------------------------
+map("n", "gv", "`[v`]", { desc = "reselect pasted content" })
+map("n", "<leader>V", "V`]", { desc = "reselect pasted content" })
+map("n", "gp", "`[v`]", { desc = "reselect pasted content" })
+map("n", "gV", "ggVG", { desc = "select whole buffer" })
+map("n", "<leader>v", "ggVG", { desc = "select whole buffer" })

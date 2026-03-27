@@ -1,11 +1,13 @@
 return {
   {
+    cond = false,
     "nvim-mini/mini.jump",
     event = "VeryLazy",
     opts = {},
   },
   {
     "nvim-mini/mini.jump2d",
+    cond = false,
     event = "VeryLazy",
     opts = {
       view = {

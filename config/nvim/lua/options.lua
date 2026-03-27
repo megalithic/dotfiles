@@ -3,6 +3,8 @@
 
 local opt = vim.opt
 
+-- require("vim._core.ui2").enable({})
+
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- UI
 -- ═══════════════════════════════════════════════════════════════════════════════
@@ -11,12 +13,14 @@ opt.number = true
 opt.relativenumber = true
 opt.signcolumn = "yes"
 opt.cursorline = true
+opt.cursorlineopt = "number"
 opt.showmode = false -- Mode shown in statusline
 opt.showcmd = false
 opt.cmdheight = 0
 opt.laststatus = 2 -- Individual statusline per split
 opt.pumheight = 10 -- Popup menu height
 opt.pumblend = 10 -- Popup menu transparency
+opt.pumborder = "rounded"
 opt.winblend = 0
 opt.splitbelow = true
 opt.splitright = true
@@ -59,8 +63,11 @@ opt.autowrite = false -- Don't auto-save on mode change; use explicit :w or form
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- Completion
 -- ═══════════════════════════════════════════════════════════════════════════════
-opt.completeopt = "menu,menuone,noselect"
-opt.wildmode = "longest:full,full"
+-- opt.completeopt = "menu,menuone,noselect"
+opt.completeopt = "fuzzy,noselect,menuone,popup,nearest"
+-- opt.wildmode = "longest:full,full"
+opt.wildmode = "noselect:longest"
+opt.wildoptions = "fuzzy,pum"
 opt.wildignorecase = true
 
 -- ═══════════════════════════════════════════════════════════════════════════════
@@ -220,6 +227,7 @@ vim.filetype.add({
     ["*.jsonc"] = "jsonc",
     ["tsconfig.json"] = "jsonc",
     ["tsconfig*.json"] = "jsonc",
+    [".*/secrets/*.age"] = "sh",
     -- pass edit uses secure temp files in pass.<random>/<tmp>-<entry>.txt
     [".*/pass%.[^/]+/[^/]+%-.+%.txt"] = "pass",
     -- yaml.github-action & yaml.docker-compose needed for proper treesitter and lsp setups

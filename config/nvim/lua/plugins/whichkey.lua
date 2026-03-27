@@ -65,7 +65,7 @@ return {
         { "<localleader>h", group = "hunk" },
         { "<localleader>n", group = "notes" },
         { "<localleader>p", group = "pi" },
-        { "<localleader>pA", group = "acp" },
+
         { "<localleader>r", group = "repl" },
         { "<localleader>t", group = "test" },
 
@@ -82,17 +82,35 @@ return {
         { "i", group = "inner" },
         { "a", group = "outer" },
         { "g", group = "misc" },
+
+        -- Built-in
         { "ip", desc = "paragraph" },
         { "ap", desc = "paragraph" },
         { "ib", desc = "bracket" },
         { "ab", desc = "bracket" },
-        { "it", desc = "tag" },
-        { "at", desc = "tag" },
         { "is", desc = "sentence" },
         { "as", desc = "sentence" },
         { "iw", desc = "word" },
         { "aw", desc = "word" },
+        { "iW", desc = "WORD" },
+        { "aW", desc = "WORD" },
         { "gn", desc = "search result" },
+
+        -- mini.ai custom
+        { "if", desc = "function" },
+        { "af", desc = "function" },
+        { "ic", desc = "class" },
+        { "ac", desc = "class" },
+        { "io", desc = "block/cond/loop" },
+        { "ao", desc = "block/cond/loop" },
+        { "ia", desc = "argument" },
+        { "aa", desc = "argument" },
+        { "it", desc = "tag" },
+        { "at", desc = "tag" },
+        { "ig", desc = "entire buffer" },
+        { "ag", desc = "entire buffer" },
+        { "ie", desc = "subword" },
+        { "ae", desc = "subword" },
       },
     },
 

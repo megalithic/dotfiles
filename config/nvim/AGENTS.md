@@ -42,12 +42,7 @@ lua/
     ├── init.lua         # Loads all utils
     ├── clipboard.lua    # Clipboard helpers
     ├── fs.lua           # Filesystem helpers
-    ├── log.lua          # Logging (global `log` table)
-    └── acp/             # ACP (Agent Client Protocol) for pi
-        ├── init.lua     # Module entry point
-        ├── client.lua   # JSON-RPC client for pi-acp
-        ├── integration.lua  # High-level send functions
-        └── response.lua # Response display (notifications, virtual text)
+    └── log.lua          # Logging (global `log` table)
 
 after/
 ├── ftplugin/            # Traditional ftplugin overrides
@@ -254,11 +249,7 @@ Working with multiple pi instances:
 
 ### Architecture
 
-Pi integration operates via multiple transports (in priority order):
-
-1. **ACP mode** - JSON-RPC to `pi-acp` process (structured, supports images)
-2. **Socket mode** - JSON to pi's Unix socket (fast, non-blocking)
-3. **Panel mode** - Text to megaterm running pi (fallback)
+Pi integration operates via Unix socket to tmux pi pane:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -268,13 +259,10 @@ Pi integration operates via multiple transports (in priority order):
 │  send_selection() / send_cursor() / add_file()              │
 │                          │                                  │
 │                          ▼                                  │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │              Transport Selection                     │   │
-│  │  1. ACP connected? → utils/acp/integration.lua      │   │
-│  │  2. Pi terminal in nvim? → megaterm send            │   │
-│  │  3. Socket available? → nc -U socket                │   │
-│  │  4. None? → create new pi panel                     │   │
-│  └─────────────────────────────────────────────────────┘   │
+│              send_payload() → nc -U socket                  │
+│                          │                                  │
+│                          ▼                                  │
+│            tmux-toggle-pi (auto-show pi pane)               │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -341,16 +329,6 @@ When sending via socket, pi.lua sends JSON:
 | `<localleader>px` | n | Show context files |
 | `<localleader>pn` | n | Select pi session |
 
-### ACP Keymaps (under `<localleader>pA`)
-
-| Key | Mode | Description |
-|-----|------|-------------|
-| `<localleader>pAc` | n | ACP: connect to pi-acp |
-| `<localleader>pAs` | n | ACP: new session |
-| `<localleader>pAl` | n | ACP: list/load sessions |
-| `<localleader>pAi` | n | ACP: send clipboard image |
-| `<localleader>pA?` | n | ACP: show status |
-
 ### Statusline Integration
 
 The statusline (`after/plugin/statusline.lua`) includes a pi segment:
@@ -358,154 +336,6 @@ The statusline (`after/plugin/statusline.lua`) includes a pi segment:
 - Shows π icon with session name
 - Shows context file count
 - Clickable to open session picker
-
----
-
-## ACP Integration (`lua/utils/acp/`)
-
-ACP (Agent Client Protocol) provides structured communication with pi via JSON-RPC,
-enabling features not possible with plain socket/terminal:
-
-- **Streaming responses** - Real-time message chunks
-- **Image support** - Send screenshots/images to pi
-- **Session management** - Create, list, resume sessions
-- **Model/mode switching** - Change models mid-conversation
-
-### Architecture
-
-```
-┌────────────────────────────────────────────────────────────────┐
-│                    utils/acp/                                  │
-├────────────────────────────────────────────────────────────────┤
-│  init.lua          - Module entry, convenience shortcuts       │
-│  client.lua        - Low-level JSON-RPC client                 │
-│  integration.lua   - High-level send functions                 │
-│  response.lua      - Response display (notify, virtual text)   │
-└────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-                     ┌─────────────────┐
-                     │    pi-acp       │  (external process)
-                     │  JSON-RPC over  │
-                     │     stdio       │
-                     └─────────────────┘
-```
-
-### How It Works
-
-1. **Connection**: `pi-acp` process spawned, communicates via stdin/stdout JSON-RPC
-2. **Initialize**: Client sends capabilities, receives agent info
-3. **Session**: Create or load a session (persisted conversation)
-4. **Prompts**: Send structured content blocks (text, resources, images)
-5. **Responses**: Receive streaming chunks via notifications
-
-### Content Blocks
-
-ACP uses typed content blocks instead of plain text:
-
-```lua
--- Text
-{ type = "text", text = "explain this code" }
-
--- File reference (pi reads it)
-{ type = "resource_link", uri = "file:///path/to/file.lua", name = "file.lua" }
-
--- Embedded content (pi receives content directly)
-{ type = "resource", resource = { uri = "file:///...", text = "content..." } }
-
--- Image (base64)
-{ type = "image", data = "iVBORw0KGgo...", mimeType = "image/png" }
-```
-
-### Usage from pi.lua
-
-pi.lua automatically tries ACP first when connected:
-
-```lua
--- In pi.lua send_payload():
-local acp = lazy_acp()
-if acp then
-  -- Converts payload to ACP content blocks
-  local sent = acp.send_selection(text, file, range, language, opts)
-  if sent then return true end
-end
--- Falls back to socket/panel...
-```
-
-### Direct ACP Usage
-
-```lua
-local acp = require("utils.acp")
-
--- Connect
-acp.connect(function(success, err)
-  if success then
-    print("Connected!")
-  end
-end)
-
--- Send prompt
-acp.prompt({
-  { type = "text", text = "Hello, what can you help with?" }
-}, function(stop_reason, err)
-  print("Done:", stop_reason)
-end)
-
--- Send image from clipboard
-acp.send_clipboard_image("What's in this screenshot?", function(success, err)
-  -- ...
-end)
-
--- Subscribe to streaming responses
-local unsub = acp.subscribe("message", function(data)
-  print("Chunk:", data.text)
-end)
-
--- Later: unsub() to stop listening
-```
-
-### ACP Commands
-
-| Command | Description |
-|---------|-------------|
-| `:PiAcpConnect` | Connect to pi-acp process |
-| `:PiAcpDisconnect` | Disconnect from pi-acp |
-| `:PiAcpSession` | Create new ACP session |
-| `:PiAcpSessions` | List/load existing sessions |
-| `:PiAcpImage` | Send clipboard image |
-| `:PiAcpStatus` | Show ACP connection status |
-
-### Event Types
-
-Subscribe to these events via `acp.subscribe(event, callback)`:
-
-| Event | Data | Description |
-|-------|------|-------------|
-| `connected` | `{ agentInfo }` | Connected to pi-acp |
-| `disconnected` | `{ code }` | Disconnected |
-| `session_created` | `{ sessionId }` | New session created |
-| `message` | `{ session_id, text }` | Agent message chunk |
-| `thought` | `{ session_id, text }` | Agent thinking chunk |
-| `tool_call` | `{ session_id, tool_call }` | Tool execution started |
-| `tool_call_update` | `{ session_id, update }` | Tool status changed |
-| `session_info` | `{ session_id, title }` | Session metadata updated |
-
-### Response Display
-
-`utils/acp/response.lua` automatically subscribes to ACP events and displays:
-
-- **Notifications** - Tool calls, session info, errors
-- **Virtual text** - Streaming message chunks at cursor
-
-Configure via:
-
-```lua
-require("utils.acp.response").setup({
-  notify = { enabled = true, max_lines = 20 },
-  virtual_text = { enabled = true, clear_on_cursor_move = true },
-  show = { messages = true, thoughts = false, tool_calls = true },
-})
-```
 
 ---
 

@@ -2,158 +2,204 @@
 # Toggle pi agent pane into/out of current tmux window
 #
 # Model:
-#   - Agent window ("agent") is the canonical home for pinvim
-#   - FROM nvim: join-pane from agent into current window (40% split)
-#   - FROM shell: just switch to agent window (no split)
-#   - Toggle back reverses the action (close split OR switch to prev window)
+#   - Each tmux session has at most one "agent" window containing pi (pinvim)
+#   - FROM nvim window: join pi pane as a 40% right split
+#   - FROM shell window: switch focus to agent window
+#   - Toggle again to reverse (break split / switch back)
 #
-# Socket: /tmp/pi-{session}-{window}.sock (one per tmux window)
+# All tmux commands are session-qualified to prevent cross-session contamination.
+# Pi panes are detected by pane_title (pi sets "π - <project>").
 
 set -euo pipefail
+
+ENSURE_MODE=false
+if [[ "${1:-}" == "--ensure" ]]; then
+  ENSURE_MODE=true
+  shift
+fi
 
 SESSION=$(tmux display-message -p '#{session_name}')
 CURRENT_WINDOW=$(tmux display-message -p '#{window_name}')
 CURRENT_WINDOW_IDX=$(tmux display-message -p '#{window_index}')
-PANE_COUNT=$(tmux list-panes | wc -l | tr -d ' ')
+SPLIT_WIDTH="30%"
 
 AGENT_WINDOW="agent"
-PINVIM_PATH="pinvim"
-
-# State file to track how we got to agent (split vs direct)
 STATE_FILE="/tmp/tmux-agent-toggle-${SESSION}"
 
-# Get socket path for a specific window
-get_socket_path() {
-  local win_idx="${1:-$CURRENT_WINDOW_IDX}"
-  echo "/tmp/pi-${SESSION}-${win_idx}.sock"
-}
+# --- Detection ---
 
-# Check if agent window exists
 agent_window_exists() {
-  tmux list-windows -F '#{window_name}' | rg -qx "$AGENT_WINDOW"
+  tmux list-windows -t "$SESSION" -F '#{window_name}' | rg -qx "$AGENT_WINDOW"
 }
 
-# Get agent window index
 get_agent_window_idx() {
-  tmux list-windows -F '#{window_index}:#{window_name}' | rg ":${AGENT_WINDOW}$" | cut -d: -f1
+  tmux list-windows -t "$SESSION" -F '#{window_index}:#{window_name}' |
+    rg ":${AGENT_WINDOW}$" | cut -d: -f1
 }
 
-# Check if nvim/vim is running in current pane
+# Find pi pane in the current window (split detection).
+# Pi sets pane_title to "π - <project>".
+find_pi_pane_here() {
+  local pane_count
+  pane_count=$(tmux list-panes -t "$SESSION:$CURRENT_WINDOW_IDX" | wc -l | tr -d ' ')
+  [[ "$pane_count" -lt 2 ]] && return 1
+
+  local pane_id pane_title
+  while read -r pane_id pane_title; do
+    if [[ "$pane_title" == π* ]]; then
+      echo "$pane_id"
+      return 0
+    fi
+  done < <(tmux list-panes -t "$SESSION:$CURRENT_WINDOW_IDX" -F '#{pane_id} #{pane_title}')
+  return 1
+}
+
+# Find specific pi pane ID anywhere in the session.
+find_pi_pane_anywhere() {
+  local pane_id pane_title
+  while read -r pane_id pane_title; do
+    if [[ "$pane_title" == π* ]]; then
+      echo "$pane_id"
+      return 0
+    fi
+  done < <(tmux list-panes -s -t "$SESSION" -F '#{pane_id} #{pane_title}')
+  return 1
+}
+
 is_nvim_running() {
   local cmd
   cmd=$(tmux display-message -p '#{pane_current_command}')
   [[ "$cmd" == "nvim" || "$cmd" == "vim" ]]
 }
 
-# Check if a window index still exists
 window_exists() {
-  local win_idx="$1"
-  tmux list-windows -F '#{window_index}' | rg -qx "$win_idx"
+  tmux list-windows -t "$SESSION" -F '#{window_index}' | rg -qx "$1"
 }
 
-# Check if a pane in current window is linked from agent (has pi process)
-locate_agent_pane_in_current() {
-  [[ "$PANE_COUNT" -lt 2 ]] && return 1
-  local pane_id pane_pid
-  while IFS=: read -r pane_id pane_pid; do
-    if pgrep -P "$pane_pid" -x pi >/dev/null 2>&1; then
-      echo "$pane_id"
-      return 0
-    fi
-  done < <(tmux list-panes -F '#{pane_id}:#{pane_pid}')
-  return 1
-}
+# --- Window management ---
 
-# Locate any window with pinvim running (by checking for pi process)
-locate_pinvim_window() {
-  local win_idx pane_pid
-  for win_idx in $(tmux list-windows -F '#{window_index}'); do
-    for pane_pid in $(tmux list-panes -t "$win_idx" -F '#{pane_pid}'); do
-      if pgrep -P "$pane_pid" -x pi >/dev/null 2>&1; then
-        echo "$win_idx"
-        return 0
-      fi
-    done
-  done
-  return 1
-}
-
-# Move window to last position and rename to "agent"
-move_to_agent_window() {
+# Move a window to the last position, name it "agent", lock the name.
+normalize_agent_window() {
   local src_win="$1"
   local last_idx
-  last_idx=$(tmux list-windows -F '#{window_index}' | sort -n | tail -1)
-  tmux move-window -s "$src_win" -t "$((last_idx + 1))"
-  tmux rename-window -t "$((last_idx + 1))" "$AGENT_WINDOW"
+  last_idx=$(tmux list-windows -t "$SESSION" -F '#{window_index}' | sort -n | tail -1)
+  local target_idx=$((last_idx + 1))
+  tmux move-window -s "$SESSION:$src_win" -t "$SESSION:$target_idx"
+  tmux rename-window -t "$SESSION:$target_idx" "$AGENT_WINDOW"
+  tmux set-option -t "$SESSION:$target_idx" -w automatic-rename off
+  tmux set-option -t "$SESSION:$target_idx" -w allow-rename off
 }
 
-# Create new agent window with pinvim at last position
 create_agent_window() {
   local last_idx
-  last_idx=$(tmux list-windows -F '#{window_index}' | sort -n | tail -1)
-  tmux new-window -d -t "$((last_idx + 1))" -n "$AGENT_WINDOW" "$PINVIM_PATH"
+  last_idx=$(tmux list-windows -t "$SESSION" -F '#{window_index}' | sort -n | tail -1)
+  local target_idx=$((last_idx + 1))
+  tmux new-window -d -t "$SESSION:$target_idx" -n "$AGENT_WINDOW" "pinvim"
+  tmux set-option -t "$SESSION:$target_idx" -w automatic-rename off
+  tmux set-option -t "$SESSION:$target_idx" -w allow-rename off
 }
 
-save_state() { echo "$1" > "$STATE_FILE"; }
+# --- State ---
+
+save_state() { echo "$1" >"$STATE_FILE"; }
 read_state() { [[ -f "$STATE_FILE" ]] && cat "$STATE_FILE" || echo ""; }
-clear_state() { : > "$STATE_FILE"; }  # Truncate instead of delete
+clear_state() { : >"$STATE_FILE"; }
+
+# --- Main ---
 
 main() {
-  # If we are IN the agent window -> toggle OUT
+  # CASE 1: In agent window → toggle OUT
   if [[ "$CURRENT_WINDOW" == "$AGENT_WINDOW" ]]; then
+    [[ "$ENSURE_MODE" == true ]] && exit 0
+    
     local state
     state=$(read_state)
     clear_state
-    if [[ "$state" == "split" ]]; then
-      tmux last-window
-    elif [[ "$state" == direct:* ]]; then
+    if [[ "$state" == direct:* ]]; then
       local prev_win="${state#direct:}"
       if window_exists "$prev_win"; then
-        tmux select-window -t "$prev_win"
+        tmux select-window -t "$SESSION:$prev_win"
+        exit 0
       fi
-    else
-      tmux last-window
     fi
+    tmux last-window
     exit 0
   fi
 
-  # If agent pane is already split into current window -> TOGGLE OUT
-  if agent_pane=$(locate_agent_pane_in_current); then
+  # CASE 2: Pi pane is split into current window → break it out
+  local agent_pane
+  if agent_pane=$(find_pi_pane_here); then
+    [[ "$ENSURE_MODE" == true ]] && exit 0
+
     clear_state
-    local current_pane stay_pane
-    current_pane=$(tmux display-message -p '#{pane_id}')
-    if [[ "$current_pane" == "$agent_pane" ]]; then
-      stay_pane=$(tmux list-panes -F '#{pane_id}' | while read p; do [[ "$p" != "$agent_pane" ]] && echo "$p" && break; done)
-    else
-      stay_pane="$current_pane"
-    fi
+
+    # Find the non-pi pane
+    local other_pane
+    other_pane=$(tmux list-panes -t "$SESSION:$CURRENT_WINDOW_IDX" -F '#{pane_id}' |
+      while read -r p; do [[ "$p" != "$agent_pane" ]] && echo "$p" && break; done)
+
+    # Check if nvim is running in the non-pi pane
+    local other_cmd
+    other_cmd=$(tmux display-message -t "$other_pane" -p '#{pane_current_command}')
+    local has_nvim=false
+    [[ "$other_cmd" == "nvim" || "$other_cmd" == "vim" ]] && has_nvim=true
+
+    # Focus the non-pi pane BEFORE breaking (prevents focus following the broken pane)
+    tmux select-pane -t "$other_pane"
+
+    # Break pi pane out to agent window
     tmux break-pane -d -s "$agent_pane" -n "$AGENT_WINDOW"
-    move_to_agent_window "$(get_agent_window_idx)"
-    tmux move-window -r
-    tmux select-pane -t "$stay_pane"
+    normalize_agent_window "$(get_agent_window_idx)"
+    tmux move-window -r -t "$SESSION"
+
+    # If no nvim in the remaining window, switch to the agent window instead
+    if [[ "$has_nvim" == false ]]; then
+      local agent_idx
+      agent_idx=$(get_agent_window_idx)
+      tmux select-window -t "$SESSION:$agent_idx"
+    fi
+
     exit 0
   fi
 
-  # TOGGLE IN: Need to join agent pane or switch to it
+  # CASE 3: Toggle IN — find or create pi
+  # If agent window exists, check if it actually has pi
+  if agent_window_exists; then
+    local existing_idx
+    existing_idx=$(get_agent_window_idx)
+    local has_pi=false
+    local title
+    while read -r title; do
+      [[ "$title" == π* ]] && has_pi=true && break
+    done < <(tmux list-panes -t "$SESSION:$existing_idx" -F '#{pane_title}')
+    if [[ "$has_pi" == false ]]; then
+      # Stale agent window (pi exited) — kill it
+      tmux kill-window -t "$SESSION:$existing_idx"
+    fi
+    # If has_pi=true, agent window is healthy — fall through to use it
+  fi
+
+  # If no agent window (never existed, or stale one was killed), find or create pi
   if ! agent_window_exists; then
-    if pinvim_win=$(locate_pinvim_window); then
-      move_to_agent_window "$pinvim_win"
+    local pi_pane_global
+    if pi_pane_global=$(find_pi_pane_anywhere); then
+      # Break it out of wherever it is into a new agent window
+      tmux break-pane -d -s "$pi_pane_global" -n "$AGENT_WINDOW"
+      normalize_agent_window "$(get_agent_window_idx)"
     else
       create_agent_window
     fi
   fi
 
-  # Decide: split (nvim) or switch (shell)
+  local agent_idx
+  agent_idx=$(get_agent_window_idx)
+
   if is_nvim_running; then
     save_state "split"
-    local agent_idx
-    agent_idx=$(get_agent_window_idx)
-    tmux join-pane -h -s "${agent_idx}.1" -l 40%
+    tmux join-pane -h -s "$SESSION:${agent_idx}.1" -l "$SPLIT_WIDTH"
   else
     save_state "direct:${CURRENT_WINDOW_IDX}"
-    local agent_idx
-    agent_idx=$(get_agent_window_idx)
-    tmux select-window -t "$agent_idx"
+    tmux select-window -t "$SESSION:$agent_idx"
   fi
 }
 

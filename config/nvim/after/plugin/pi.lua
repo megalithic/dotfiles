@@ -1,96 +1,32 @@
 -- after/plugin/pi.lua
 -- Pi Coding Agent integrations
 --
+-- Pi runs as a tmux pane managed by tmux-toggle-pi (not inside nvim).
+-- Nvim communicates with pi via unix socket.
+--
 -- Features:
---   1. Pinned terminal panel (30% width, right edge)
---   2. Context sending (selection, diagnostics, file info)
---   3. Tmux integration (toggle/connect to existing agent)
---   4. Buffer tracking (remember what's been shared)
---   5. File context (add entire files to context)
---   6. LSP hover info inclusion
---   7. ACP (Agent Client Protocol) support - sessions, images, streaming
---   8. In-process LSP server for code actions
---
--- Usage:
---   :PiPanel          - Open/toggle pi terminal panel
---   :PiSelection      - Send visual selection to pi
---   :PiCursor         - Send cursor line to pi
---   :PiFile           - Add current file to pi context
---   :PiToggle         - Toggle pi pane in tmux
---   :PiContext        - Show tracked context files
---   :PiClearContext   - Clear tracked context
---   :PiAcpConnect     - Connect to pi-acp
---   :PiAcpSession     - Create new ACP session
---   :PiAcpSessions    - List/load ACP sessions
---   :PiAcpImage       - Send clipboard image via ACP
---
--- Keymaps:
---   <localleader>pp   - Toggle pi panel
---   <localleader>ps   - Send selection (visual mode)
---   <localleader>pS   - Quick send selection (no prompt)
---   <localleader>pa   - Send to pi [a]gent (force tmux socket)
---   <localleader>pc   - Send cursor line
---   <localleader>pf   - Add file to context
---   <localleader>ph   - Send with hover info
---   <localleader>pt   - Toggle tmux pane
---   <localleader>pn   - Select pi session (picker)
---   <localleader>pAc  - ACP: connect
---   <localleader>pAs  - ACP: new session
---   <localleader>pAl  - ACP: list sessions
---   <localleader>pAi  - ACP: send clipboard image
---
--- Transport Priority:
---   0. ACP (if connected) - streaming, images, session management
---   1. Megaterm pi terminal in nvim (if exists)
---   2. Unix socket (tmux agent)
---   3. Create new pi panel in nvim (if no target found)
+--   1. Context sending (selection, diagnostics, file info) via socket
+--   2. Tmux integration (toggle pi split via tmux-toggle-pi)
+--   3. Buffer tracking (remember what's been shared)
+--   4. File context (add entire files to context)
+--   5. LSP hover info inclusion
+--   6. In-process LSP server for code actions
 
 if not Plugin_enabled() then return end
 
 mega.p.pi = {}
 
 --------------------------------------------------------------------------------
--- ACP Integration (lazy loaded)
---------------------------------------------------------------------------------
-
-local acp_integration = nil
-local function lazy_acp()
-  if not acp_integration then
-    local ok, mod = pcall(require, "utils.acp.integration")
-    if ok then
-      acp_integration = mod
-      acp_integration.setup()
-    end
-  end
-  return acp_integration
-end
-
-local acp_client = nil
-local function lazy_acp_client()
-  if not acp_client then
-    local ok, mod = pcall(require, "utils.acp.client")
-    if ok then acp_client = mod end
-  end
-  return acp_client
-end
-
---------------------------------------------------------------------------------
 -- Configuration
 --------------------------------------------------------------------------------
 
 local config = {
-  panel = {
-    width = 0.30, -- 30% of editor width
-    position = "right",
-    cmd = nil, -- nil = use default shell, or specify "pi" command
-  },
   socket = {
     dir = vim.env.PI_SOCKET_DIR or "/tmp",
     prefix = vim.env.PI_SOCKET_PREFIX or "pi",
   },
   context = {
     max_file_size = 100000, -- Max bytes to send for a file (100KB)
-    include_hidden = false, -- Include hidden files when adding directories
     send_as_reference = true, -- Send file path reference instead of content (pi reads the file)
   },
 }
@@ -99,19 +35,11 @@ local config = {
 -- State
 --------------------------------------------------------------------------------
 
-local panel_term = nil -- Reference to the pi terminal instance
-
 -- Track files that have been added to context
 -- Key: absolute file path, Value: { added_at: timestamp, lines: count }
 local context_files = {}
 
---------------------------------------------------------------------------------
--- Forward Declarations (functions defined later but called early)
---------------------------------------------------------------------------------
-
-local find_pi_terminals
-local format_payload_for_panel
-local detect_language
+local detect_language -- forward declaration (defined in Selection & Context Helpers)
 
 --------------------------------------------------------------------------------
 -- Socket Communication
@@ -159,63 +87,16 @@ local function get_socket_path()
   return nil
 end
 
---- Send a JSON payload to the pi socket
+--- Send a JSON payload to the pi socket (tmux agent)
 --- Respects buffer-local target (vim.b.pi_target_socket) if set
 ---@param payload table
----@param opts? { force_socket?: boolean, force_panel?: boolean, force_acp?: boolean }
+---@param opts? { auto_toggle?: boolean }
 ---@return boolean success
 local function send_payload(payload, opts)
   opts = opts or {}
+  -- Default: auto-toggle pi pane after sending from nvim
+  if opts.auto_toggle == nil then opts.auto_toggle = true end
 
-  -- If force_panel, skip everything and return false to trigger panel fallback
-  if opts.force_panel then return false end
-
-  -- Priority 0: ACP (unless force_socket or force_panel)
-  if not opts.force_socket then
-    local acp = lazy_acp()
-    if acp then
-      local sent = false
-      if payload.type == "selection" or payload.type == "cursor" then
-        sent = acp.send_selection(payload.selection, payload.file, payload.range, payload.language, {
-          task = payload.task,
-          diagnostics = payload.lsp and payload.lsp.diagnostics,
-          hover = payload.lsp and payload.lsp.hover,
-        })
-      elseif payload.type == "file" then
-        sent = acp.send_file(payload.file, payload.content, {
-          lines = payload.lines,
-          language = payload.language,
-          diagnostics = payload.lsp and payload.lsp.diagnostics,
-        })
-      elseif payload.type == "file_reference" then
-        sent = acp.send_file(payload.file, nil, {
-          language = payload.language,
-          as_reference = true,
-        })
-      end
-      if sent then return true end
-      -- ACP not available or failed, fall through to other transports
-    end
-  end
-
-  -- Priority 1: Try megaterm pi terminal first (unless force_socket)
-  if not opts.force_socket then
-    local pi_terms = find_pi_terminals()
-    if #pi_terms > 0 then
-      -- Found pi terminal in nvim - use it
-      local term = pi_terms[1]
-      panel_term = term -- Track as current panel
-      if not term:is_visible() then term:show() end
-
-      -- Format payload as text for terminal
-      local text = format_payload_for_panel(payload)
-      term:send_line(text)
-      vim.notify("Sent to pi (nvim)", vim.log.levels.INFO)
-      return true
-    end
-  end
-
-  -- Priority 2: Socket (tmux agent)
   if vim.fn.executable("nc") ~= 1 then
     vim.notify("nc not found in PATH", vim.log.levels.ERROR)
     return false
@@ -229,7 +110,7 @@ local function send_payload(payload, opts)
   socket_path = socket_path or get_socket_path()
 
   if not socket_path then
-    -- No socket available - caller should fall back to terminal panel
+    vim.notify("No pi socket found. Use tmux prefix+p to start pi.", vim.log.levels.WARN)
     return false
   end
 
@@ -242,7 +123,7 @@ local function send_payload(payload, opts)
 
   vim.fn.chansend(chan, json)
   vim.fn.chanclose(chan, "stdin")
-  vim.notify("Sent to pi (tmux)", vim.log.levels.INFO)
+  vim.notify("Sent to pi", vim.log.levels.INFO)
 
   -- Ring tmux bell on the agent's pane
   local fname = vim.fn.fnamemodify(socket_path, ":t:r")
@@ -253,42 +134,12 @@ local function send_payload(payload, opts)
     if tty ~= "" then vim.fn.system(string.format("printf '\\a' > %s 2>/dev/null", vim.fn.shellescape(tty))) end
   end
 
+  -- Toggle pi pane after successful send
+  if opts.auto_toggle and vim.env.TMUX then
+    vim.fn.jobstart({ "tmux-toggle-pi", "--ensure" }, { detach = true })
+  end
+
   return true
-end
-
---- Format a payload as text for terminal panel
----@param payload table
----@return string
-format_payload_for_panel = function(payload)
-  local parts = {}
-
-  -- File reference: just use @filepath syntax that pi recognizes
-  if payload.type == "file_reference" then
-    return string.format("@%s", payload.file)
-  end
-
-  if payload.task and payload.task ~= "" then table.insert(parts, string.format("# Task: %s", payload.task)) end
-
-  if payload.file then
-    local range_str = ""
-    if payload.range then range_str = string.format(" (lines %d-%d)", payload.range[1], payload.range[2]) end
-    table.insert(parts, string.format("# File: %s%s", payload.file, range_str))
-  end
-
-  if payload.lsp and payload.lsp.hover then
-    table.insert(parts, "")
-    table.insert(parts, "## Hover Info")
-    table.insert(parts, string.format("```\n%s\n```", payload.lsp.hover))
-  end
-
-  if payload.selection or payload.content then
-    local content = payload.selection or payload.content
-    local lang = payload.language or ""
-    table.insert(parts, "")
-    table.insert(parts, string.format("```%s\n%s\n```", lang, content))
-  end
-
-  return table.concat(parts, "\n")
 end
 
 --------------------------------------------------------------------------------
@@ -461,159 +312,16 @@ detect_language = function(filepath)
 end
 
 --------------------------------------------------------------------------------
--- Megaterm Integration
+-- Tmux Pi Management
 --------------------------------------------------------------------------------
 
---- Find existing pi terminals in megaterm
----@return mega.term.Terminal[]
-find_pi_terminals = function()
-  local pi_terms = {}
-  for _, term in ipairs(mega.term.list()) do
-    if term:is_valid() then
-      local cmd = term.cmd_str or ""
-      -- Match "pi" command (standalone or with args)
-      if cmd:match("^pi%s") or cmd:match("^pi$") or cmd:match("/pi%s") or cmd:match("/pi$") then
-        table.insert(pi_terms, term)
-      end
-      -- Also check buffer variable
-      local ok, is_pi = pcall(vim.api.nvim_buf_get_var, term.buf, "pi_panel")
-      if ok and is_pi then
-        -- Avoid duplicates
-        local found = false
-        for _, t in ipairs(pi_terms) do
-          if t == term then
-            found = true
-            break
-          end
-        end
-        if not found then table.insert(pi_terms, term) end
-      end
-    end
-  end
-  return pi_terms
-end
-
---- Get or find existing pi terminal (prefers existing over creating new)
----@return mega.term.Terminal?
-local function get_or_find_pi_terminal()
-  -- Check if our tracked panel is still valid
-  if panel_term and panel_term:is_valid() then return panel_term end
-
-  -- Look for existing pi terminals
-  local existing = find_pi_terminals()
-  if #existing > 0 then
-    panel_term = existing[1]
-    return panel_term
-  end
-
-  return nil
-end
-
---- Calculate panel width in columns
----@return number
-local function get_panel_width()
-  local width = config.panel.width
-  if width <= 1 then return math.floor(vim.o.columns * width) end
-  return width
-end
-
---- Create new pi panel terminal
----@param cmd string?
----@return mega.term.Terminal?
-local function create_pi_panel(cmd)
-  local width = get_panel_width()
-
-  panel_term = mega.term.create({
-    cmd = cmd or config.panel.cmd or "pi",
-    position = "right",
-    width = width,
-    start_insert = true,
-    auto_close = true, -- Close terminal when pi exits
-    on_exit = function() panel_term = nil end,
-  })
-
-  if panel_term and panel_term.buf then
-    vim.api.nvim_buf_set_var(panel_term.buf, "term_name", "pi")
-    vim.api.nvim_buf_set_var(panel_term.buf, "pi_panel", true)
-  end
-
-  return panel_term
-end
-
---- Get existing pi terminal or create new one
----@return mega.term.Terminal?
-local function get_or_create_panel()
-  local term = get_or_find_pi_terminal()
-  if term then return term end
-  return create_pi_panel()
-end
-
---- Check if the pi panel is currently visible
----@return boolean
-function mega.p.pi.is_panel_open()
-  local term = get_or_find_pi_terminal()
-  return term ~= nil and term:is_visible()
-end
-
---- Toggle the pi panel
---- When opening, automatically adds the previously focused file to context
+--- Toggle pi pane via tmux-toggle-pi (the single source of truth for pi lifecycle)
 function mega.p.pi.toggle_panel()
-  local term = get_or_find_pi_terminal()
-  if term then
-    if term:is_visible() then
-      term:hide()
-    else
-      term:show()
-    end
-  else
-    -- Capture the focused file BEFORE creating the panel
-    local focused_file = vim.api.nvim_buf_get_name(0)
-    local should_add_context = focused_file ~= "" and vim.bo.buftype == "" and not mega.p.pi.is_in_context(focused_file)
-
-    create_pi_panel()
-
-    -- Add the file to context after panel is created (if valid and not already tracked)
-    if should_add_context then vim.schedule(function() mega.p.pi.add_file(focused_file) end) end
+  if not vim.env.TMUX then
+    vim.notify("Not in tmux — pi runs as a tmux pane", vim.log.levels.WARN)
+    return
   end
-end
-
---- Open the pi panel (find existing or create, show if hidden)
-function mega.p.pi.open_panel()
-  local term = get_or_create_panel()
-  if term and not term:is_visible() then term:show() end
-end
-
---- Close the pi panel
-function mega.p.pi.close_panel()
-  local term = get_or_find_pi_terminal()
-  if term then
-    term:close()
-    panel_term = nil
-  end
-end
-
---- Send text to the pi panel terminal
----@param text string
-function mega.p.pi.send_to_panel(text)
-  local term = get_or_create_panel()
-  if term then
-    if not term:is_visible() then term:show() end
-    term:send_line(text)
-  end
-end
-
---- List all pi terminals (for picker)
----@return { term: mega.term.Terminal, name: string, visible: boolean }[]
-function mega.p.pi.list_terminals()
-  local result = {}
-  for i, term in ipairs(find_pi_terminals()) do
-    table.insert(result, {
-      term = term,
-      name = string.format("pi #%d (%s)", i, term.position),
-      visible = term:is_visible(),
-    })
-  end
-  return result
+  vim.fn.system("tmux-toggle-pi")
 end
 
 --------------------------------------------------------------------------------
@@ -670,7 +378,7 @@ end
 ---@param opts table? Options from user command
 ---@param from_visual boolean? Whether called directly from visual mode
 ---@param skip_prompt boolean? Skip task prompt (quick send)
----@param send_opts table? Options for send_payload (force_socket, force_panel)
+---@param send_opts table? Options for send_payload ({ auto_toggle?: boolean })
 function mega.p.pi.send_selection(opts, from_visual, skip_prompt, send_opts)
   opts = opts or {}
   send_opts = send_opts or {}
@@ -707,14 +415,7 @@ function mega.p.pi.send_selection(opts, from_visual, skip_prompt, send_opts)
     task = task,
   }
 
-  -- Try to send (respects send_opts.force_socket to bypass nvim terminals)
-  if not send_payload(payload, send_opts) then
-    -- Format for panel input
-    local header = task ~= "" and string.format("# Task: %s\n", task) or ""
-    local msg =
-      string.format("%s# File: %s (lines %d-%d)\n\n```%s\n%s\n```", header, file, start_row, end_row, lang, selection)
-    mega.p.pi.send_to_panel(msg)
-  end
+  send_payload(payload, send_opts)
 end
 
 --- Quick send selection without prompt
@@ -727,7 +428,7 @@ end
 
 --- Send cursor line to pi
 ---@param include_hover boolean? Include LSP hover info
----@param send_opts table? Options for send_payload (force_socket, force_panel)
+---@param send_opts table? Options for send_payload ({ auto_toggle?: boolean })
 function mega.p.pi.send_cursor(include_hover, send_opts)
   local row, col = unpack(vim.api.nvim_win_get_cursor(0))
   local file = vim.api.nvim_buf_get_name(0)
@@ -753,15 +454,7 @@ function mega.p.pi.send_cursor(include_hover, send_opts)
     task = task,
   }
 
-  if not send_payload(payload, send_opts) then
-    local hover_section = ""
-    if include_hover and lsp_info.hover then
-      hover_section = string.format("\n\n## Hover Info\n```\n%s\n```", lsp_info.hover)
-    end
-    local msg =
-      string.format("# Task: %s\n# File: %s (line %d)%s\n\n```%s\n%s\n```", task, file, row, hover_section, lang, line)
-    mega.p.pi.send_to_panel(msg)
-  end
+  send_payload(payload, send_opts)
 end
 
 --- Send cursor with hover info
@@ -813,11 +506,6 @@ function mega.p.pi.add_file(filepath, opts)
       end
       track_file(filepath, line_count)
       vim.notify(string.format("Added to context: %s (reference)", rel_path), vim.log.levels.INFO)
-    else
-      -- Fall back to panel with just file path
-      local msg = string.format("@%s", abs_path)
-      mega.p.pi.send_to_panel(msg)
-      track_file(filepath, 0)
     end
   else
     -- Send file content (original behavior)
@@ -854,11 +542,6 @@ function mega.p.pi.add_file(filepath, opts)
     if send_payload(payload) then
       track_file(filepath, line_count)
       vim.notify(string.format("Added to context: %s (%d lines)", rel_path, line_count), vim.log.levels.INFO)
-    else
-      -- Fall back to panel
-      local msg = string.format("# File: %s (%d lines)\n\n```%s\n%s\n```", rel_path, line_count, lang, content)
-      mega.p.pi.send_to_panel(msg)
-      track_file(filepath, line_count)
     end
   end
 end
@@ -897,22 +580,6 @@ end
 -- Tmux Integration
 --------------------------------------------------------------------------------
 
---- Toggle pi pane in current tmux window
-function mega.p.pi.toggle_tmux()
-  if not vim.env.TMUX then
-    vim.notify("Not in tmux", vim.log.levels.WARN)
-    return
-  end
-
-  -- Try using tmux-toggle-pi if available
-  if vim.fn.executable("tmux-toggle-pi") == 1 then
-    vim.fn.system("tmux-toggle-pi")
-  else
-    -- Fallback: simple pane toggle
-    vim.fn.system("tmux select-pane -t :.+ 2>/dev/null || tmux split-window -h -p 30")
-  end
-end
-
 --- Get session name from socket path
 ---@param socket_path string?
 ---@return string?
@@ -924,9 +591,9 @@ local function get_session_name(socket_path)
   return session
 end
 
---- Check if connected to a pi agent (socket or terminal)
+--- Check if connected to a pi agent (socket available)
 ---@return boolean
-function mega.p.pi.is_connected() return mega.p.pi.get_target() ~= nil or get_or_find_pi_terminal() ~= nil end
+function mega.p.pi.is_connected() return mega.p.pi.get_target() ~= nil end
 
 --- Get connection status info
 ---@return string
@@ -942,17 +609,6 @@ function mega.p.pi.status()
     table.insert(lines, string.format("󰌘 Socket: %s%s (%s)", session, marker, socket))
   else
     table.insert(lines, "󰌘 Socket: not connected")
-  end
-
-  -- Terminal status
-  local terminals = mega.p.pi.list_terminals()
-  if #terminals > 0 then
-    for _, info in ipairs(terminals) do
-      local status = info.visible and "visible" or "hidden"
-      table.insert(lines, string.format(" Terminal: %s (%s)", info.name, status))
-    end
-  else
-    table.insert(lines, " Terminal: none")
   end
 
   -- Context
@@ -996,7 +652,7 @@ function mega.p.pi.set_target(socket_path)
   end
 end
 
---- Select pi session from available sockets and terminals (via snacks picker)
+--- Select pi session from available sockets (via snacks picker)
 function mega.p.pi.select_session()
   local items = {}
 
@@ -1012,18 +668,6 @@ function mega.p.pi.select_session()
     })
   end
 
-  -- Add megaterm pi instances
-  local terminals = mega.p.pi.list_terminals()
-  for _, info in ipairs(terminals) do
-    local status = info.visible and "visible" or "hidden"
-    table.insert(items, {
-      text = string.format(" %s (%s)", info.name, status),
-      type = "terminal",
-      term = info.term,
-      name = info.name,
-    })
-  end
-
   -- Add auto option at top
   table.insert(items, 1, {
     text = "󰁔 (auto-discover)",
@@ -1031,7 +675,7 @@ function mega.p.pi.select_session()
   })
 
   if #items == 1 then
-    vim.notify("No pi instances found (no sockets or terminals)", vim.log.levels.WARN)
+    vim.notify("No pi sockets found. Use tmux prefix+p to start pi.", vim.log.levels.WARN)
     return
   end
 
@@ -1041,7 +685,7 @@ function mega.p.pi.select_session()
     Snacks.picker.pick({
       source = items,
       prompt = "Select pi instance",
-      format = function(item, ctx)
+      format = function(item)
         return {
           { item.text, hl = "Normal" },
         }
@@ -1052,9 +696,6 @@ function mega.p.pi.select_session()
           mega.p.pi.set_target(nil)
         elseif item.type == "socket" then
           mega.p.pi.set_target(item.path)
-        elseif item.type == "terminal" then
-          panel_term = item.term
-          vim.notify(string.format("Pi terminal set: %s", item.name), vim.log.levels.INFO)
         end
       end,
     })
@@ -1068,9 +709,6 @@ function mega.p.pi.select_session()
         mega.p.pi.set_target(nil)
       elseif choice.type == "socket" then
         mega.p.pi.set_target(choice.path)
-      elseif choice.type == "terminal" then
-        panel_term = choice.term
-        vim.notify(string.format("Pi terminal set: %s", choice.name), vim.log.levels.INFO)
       end
     end)
   end
@@ -1081,20 +719,15 @@ end
 --------------------------------------------------------------------------------
 
 --- Get statusline component data
----@return { connected: boolean, session: string?, context_count: number, has_terminal: boolean }
+---@return { connected: boolean, session: string?, context_count: number }
 function mega.p.pi.statusline_data()
   local socket = mega.p.pi.get_target()
-  local term = get_or_find_pi_terminal()
   local session = socket and get_session_name(socket)
 
-  -- If no socket session but we have a terminal, use terminal info
-  if not session and term then session = "term" end
-
   return {
-    connected = socket ~= nil or term ~= nil,
+    connected = socket ~= nil,
     session = session,
     context_count = mega.p.pi.context_count(),
-    has_terminal = term ~= nil,
   }
 end
 
@@ -1369,11 +1002,7 @@ function mega.p.pi.start_lsp()
         terminate = function() end,
       }
     end,
-    get_language_id = function(bufnr, filetype) return filetype end,
     root_dir = vim.fn.getcwd(),
-    on_attach = function(client, bufnr)
-      -- LSP is attached, keymaps already work via standard LSP
-    end,
   })
 
   return pi_lsp_client_id
@@ -1412,7 +1041,7 @@ end
 vim.api.nvim_create_user_command(
   "PiPanel",
   function() mega.p.pi.toggle_panel() end,
-  { desc = "Toggle pi terminal panel" }
+  { desc = "Toggle pi tmux pane" }
 )
 
 vim.api.nvim_create_user_command(
@@ -1435,7 +1064,7 @@ vim.api.nvim_create_user_command(
 
 vim.api.nvim_create_user_command(
   "PiToggle",
-  function() mega.p.pi.toggle_tmux() end,
+  function() mega.p.pi.toggle_panel() end,
   { desc = "Toggle pi pane in tmux" }
 )
 
@@ -1493,281 +1122,6 @@ vim.api.nvim_create_user_command(
 )
 
 --------------------------------------------------------------------------------
--- ACP Commands
---------------------------------------------------------------------------------
-
---- Connect to ACP
-function mega.p.pi.acp_connect()
-  local acp = lazy_acp_client()
-  if not acp then
-    vim.notify("ACP client not available", vim.log.levels.ERROR)
-    return
-  end
-
-  acp.connect(function(success, err)
-    if success then
-      vim.notify("Connected to pi-acp", vim.log.levels.INFO)
-    else
-      vim.notify("ACP connection failed: " .. (err or "unknown"), vim.log.levels.ERROR)
-    end
-  end)
-end
-
---- Disconnect from ACP
-function mega.p.pi.acp_disconnect()
-  local acp = lazy_acp_client()
-  if acp then
-    acp.disconnect()
-    vim.notify("Disconnected from pi-acp", vim.log.levels.INFO)
-  end
-end
-
---- Check if ACP is connected
----@return boolean
-function mega.p.pi.is_acp_connected()
-  local acp = lazy_acp_client()
-  return acp and acp.is_connected() or false
-end
-
---- Create new ACP session
-function mega.p.pi.acp_new_session()
-  local integration = lazy_acp()
-  if not integration then
-    vim.notify("ACP integration not available", vim.log.levels.ERROR)
-    return
-  end
-
-  integration.new_session(function(session_id, err)
-    if session_id then
-      vim.notify("New session: " .. session_id, vim.log.levels.INFO)
-    else
-      vim.notify("Failed to create session: " .. (err or "unknown"), vim.log.levels.ERROR)
-    end
-  end)
-end
-
---- List ACP sessions
-function mega.p.pi.acp_list_sessions()
-  local integration = lazy_acp()
-  if not integration then
-    vim.notify("ACP integration not available", vim.log.levels.ERROR)
-    return
-  end
-
-  integration.list_sessions(function(sessions, err)
-    if not sessions then
-      vim.notify("Failed to list sessions: " .. (err or "unknown"), vim.log.levels.ERROR)
-      return
-    end
-
-    if #sessions == 0 then
-      vim.notify("No sessions found", vim.log.levels.INFO)
-      return
-    end
-
-    -- Use snacks picker if available
-    local ok, Snacks = pcall(require, "snacks")
-    if ok and Snacks.picker then
-      local items = {}
-      for _, session in ipairs(sessions) do
-        table.insert(items, {
-          text = session.id or session,
-          session = session,
-        })
-      end
-
-      Snacks.picker.pick({
-        source = items,
-        prompt = "Select ACP session",
-        confirm = function(picker, item)
-          picker:close()
-          local acp = lazy_acp_client()
-          if acp then
-            acp.load_session(item.session.id or item.session, {}, function(success, load_err)
-              if success then
-                vim.notify("Loaded session: " .. (item.session.id or item.session), vim.log.levels.INFO)
-              else
-                vim.notify("Failed to load session: " .. (load_err or "unknown"), vim.log.levels.ERROR)
-              end
-            end)
-          end
-        end,
-      })
-    else
-      -- Fallback to vim.ui.select
-      vim.ui.select(sessions, {
-        prompt = "Select session:",
-        format_item = function(s) return s.id or s end,
-      }, function(choice)
-        if choice then
-          local acp = lazy_acp_client()
-          if acp then acp.load_session(choice.id or choice, {}) end
-        end
-      end)
-    end
-  end)
-end
-
---- Send clipboard image via ACP
-function mega.p.pi.acp_send_image()
-  local integration = lazy_acp()
-  if not integration then
-    vim.notify("ACP integration not available", vim.log.levels.ERROR)
-    return
-  end
-
-  vim.ui.input({ prompt = "Question about image (optional): " }, function(task)
-    integration.send_clipboard_image(task, function(success, err)
-      if success then
-        vim.notify("Image sent to pi", vim.log.levels.INFO)
-      else
-        vim.notify("Failed to send image: " .. (err or "unknown"), vim.log.levels.ERROR)
-      end
-    end)
-  end)
-end
-
---- Get ACP status
-function mega.p.pi.acp_status()
-  local acp = lazy_acp_client()
-  local integration = lazy_acp()
-
-  local lines = { "## ACP Status" }
-
-  if not acp then
-    table.insert(lines, "ACP client: not loaded")
-  elseif not acp.is_connected() then
-    table.insert(lines, "ACP client: disconnected")
-  else
-    table.insert(lines, "ACP client: connected")
-    local session_id = acp.get_session_id()
-    if session_id then table.insert(lines, "Session: " .. session_id) end
-  end
-
-  if integration then
-    local info = integration.get_session_info()
-    if info then
-      if info.models and #info.models > 0 then
-        table.insert(lines, "Models: " .. table.concat(vim.tbl_map(function(m) return m.id end, info.models), ", "))
-      end
-    end
-  end
-
-  vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
-end
-
-vim.api.nvim_create_user_command("PiAcpConnect", function() mega.p.pi.acp_connect() end, { desc = "Connect to pi-acp" })
-
-vim.api.nvim_create_user_command(
-  "PiAcpDisconnect",
-  function() mega.p.pi.acp_disconnect() end,
-  { desc = "Disconnect from pi-acp" }
-)
-
-vim.api.nvim_create_user_command(
-  "PiAcpSession",
-  function() mega.p.pi.acp_new_session() end,
-  { desc = "Create new ACP session" }
-)
-
-vim.api.nvim_create_user_command(
-  "PiAcpSessions",
-  function() mega.p.pi.acp_list_sessions() end,
-  { desc = "List/load ACP sessions" }
-)
-
-vim.api.nvim_create_user_command(
-  "PiAcpImage",
-  function() mega.p.pi.acp_send_image() end,
-  { desc = "Send clipboard image via ACP" }
-)
-
-vim.api.nvim_create_user_command(
-  "PiAcpStatus",
-  function() mega.p.pi.acp_status() end,
-  { desc = "Show ACP connection status" }
-)
-
---------------------------------------------------------------------------------
--- Pi Terminal Statusline
---------------------------------------------------------------------------------
-
---- Configuration for pi terminal statusline
---- Users can override: mega.p.pi.term_statusline_config = { ... }
-mega.p.pi.term_statusline_config = {
-  -- Icon to display (defaults to pi symbol)
-  icon = mega.ui.icons.pi.symbol,
-  -- Show hint for exiting terminal mode (only in terminal/insert mode)
-  show_exit_hint = true,
-  -- Exit hint text
-  exit_hint = "<C-q> normal mode",
-  -- Additional segments (functions that return statusline strings)
-  -- Example: { function(bufnr, is_insert) return "custom" end }
-  extra_segments = {},
-}
-
---- Check if a buffer is a pi terminal
----@param bufnr number?
----@return boolean
-function mega.p.pi.is_pi_terminal(bufnr)
-  bufnr = bufnr or vim.api.nvim_get_current_buf()
-  local ok, is_pi = pcall(vim.api.nvim_buf_get_var, bufnr, "pi_panel")
-  if ok and is_pi then return true end
-
-  -- Also check command string
-  local cmd_ok, cmd = pcall(vim.api.nvim_buf_get_var, bufnr, "term_cmd")
-  if cmd_ok and cmd then
-    if cmd:match("^pi%s") or cmd:match("^pi$") or cmd:match("/pi%s") or cmd:match("/pi$") then return true end
-  end
-
-  return false
-end
-
---- Render statusline for pi terminal
---- Called by statusline.lua when the buffer is a pi terminal
----@param bufnr number
----@return string statusline
-function mega.p.pi.render_term_statusline(bufnr)
-  local cfg = mega.p.pi.term_statusline_config
-  local mode = vim.api.nvim_get_mode().mode
-  local is_terminal_insert = mode == "t"
-
-  -- Build statusline parts
-  local parts = {}
-
-  -- Left side: icon and name
-  local icon = cfg.icon or mega.ui.icons.pi.symbol
-  local mode_hl = is_terminal_insert and "StModeTermInsert" or "StModeTermNormal"
-
-  -- Pi icon with mode-based highlight
-  table.insert(parts, "%#" .. mode_hl .. "# " .. icon .. " pi %*")
-
-  -- Session info (if connected)
-  local data = mega.p.pi.statusline_data()
-  if data.session then table.insert(parts, "%#StComment# " .. data.session .. " %*") end
-
-  -- Context count
-  if data.context_count > 0 then table.insert(parts, "%#StBufferCount# " .. data.context_count .. " %*") end
-
-  -- Center spacer
-  table.insert(parts, "%=")
-
-  -- Extra segments (user-defined)
-  for _, segment_fn in ipairs(cfg.extra_segments) do
-    local ok, result = pcall(segment_fn, bufnr, is_terminal_insert)
-    if ok and result and result ~= "" then table.insert(parts, result) end
-  end
-
-  -- Right side: exit hint (only in terminal insert mode)
-  if cfg.show_exit_hint and is_terminal_insert then
-    local hint = cfg.exit_hint or "<C-q> normal mode"
-    table.insert(parts, "%#StComment# " .. hint .. " %*")
-  end
-
-  return table.concat(parts, "")
-end
-
---------------------------------------------------------------------------------
 -- Keymaps
 --------------------------------------------------------------------------------
 
@@ -1821,7 +1175,7 @@ vim.keymap.set(
 vim.keymap.set(
   "n",
   "<localleader>pt",
-  function() mega.p.pi.toggle_tmux() end,
+  function() mega.p.pi.toggle_panel() end,
   { silent = true, desc = "Pi: toggle tmux pane" }
 )
 
@@ -1847,53 +1201,3 @@ vim.keymap.set(
   { silent = true, desc = "Pi: select session" }
 )
 
--- Send to tmux agent (bypass nvim terminals)
-vim.keymap.set(
-  "v",
-  "<localleader>pa",
-  function() mega.p.pi.send_selection(nil, true, false, { force_socket = true }) end,
-  { silent = true, desc = "Pi: send to agent (tmux)" }
-)
-
-vim.keymap.set(
-  "n",
-  "<localleader>pa",
-  function() mega.p.pi.send_cursor(false, { force_socket = true }) end,
-  { silent = true, desc = "Pi: send cursor to agent (tmux)" }
-)
-
--- ACP keymaps (under <localleader>pA prefix)
-vim.keymap.set(
-  "n",
-  "<localleader>pAc",
-  function() mega.p.pi.acp_connect() end,
-  { silent = true, desc = "Pi ACP: connect" }
-)
-
-vim.keymap.set(
-  "n",
-  "<localleader>pAs",
-  function() mega.p.pi.acp_new_session() end,
-  { silent = true, desc = "Pi ACP: new session" }
-)
-
-vim.keymap.set(
-  "n",
-  "<localleader>pAl",
-  function() mega.p.pi.acp_list_sessions() end,
-  { silent = true, desc = "Pi ACP: list sessions" }
-)
-
-vim.keymap.set(
-  "n",
-  "<localleader>pAi",
-  function() mega.p.pi.acp_send_image() end,
-  { silent = true, desc = "Pi ACP: send clipboard image" }
-)
-
-vim.keymap.set(
-  "n",
-  "<localleader>pA?",
-  function() mega.p.pi.acp_status() end,
-  { silent = true, desc = "Pi ACP: status" }
-)

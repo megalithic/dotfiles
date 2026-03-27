@@ -30,7 +30,6 @@
     ./programs/nvim.nix
     ./programs/shade.nix
     # ./programs/worktrunk.nix
-    inputs.op-shell-plugins.hmModules.default
   ];
 
   home.username = username;
@@ -165,6 +164,9 @@
 
   xdg.configFile."zsh".source = ./zsh;
   xdg.configFile."zsh".force = true;
+
+  xdg.configFile."neomd/config.toml".text = ''
+  '';
 
   xdg.configFile."1Password/ssh/agent.toml".text = ''
     [[ssh-keys]]
@@ -415,7 +417,7 @@
       flake = "${config.home.homeDirectory}/.dotfiles/";
       clean = {
         enable = true;
-        extraArgs = "--keep 3";
+        extraArgs = "--keep-since 8d"; # Time-based: keep generations from last 8 days
       };
     };
 

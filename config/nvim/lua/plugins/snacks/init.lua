@@ -66,10 +66,10 @@ return {
       },
 
       -- Titles when toggling
-      titles = {
-        files_from_grep = "FFFiles (from grep)",
-        grep_from_files = "FFFGrep (from files)",
-      },
+      -- titles = {
+      --   files_from_grep = "FFFiles (from grep)",
+      --   grep_from_files = "FFFGrep (from files)",
+      -- },
 
       -- Scoping behavior
       scoping = {
@@ -121,7 +121,22 @@ return {
         bigfile = { enabled = true },
         dashboard = { enabled = false },
         explorer = { enabled = false },
-        indent = { enabled = false },
+        indent = {
+          enabled = true,
+          indent = {
+            enabled = true,
+            only_scope = false,
+            only_current = false,
+            hl = "SnacksIndent",
+          },
+          scope = {
+            enabled = true,
+            hl = "SnacksIndentScope",
+          },
+          chunk = {
+            enabled = true,
+          },
+        },
 
         -- Image preview (hover over image links in markdown)
         image = {
@@ -414,6 +429,12 @@ return {
               added = "󰎔",
               modified = "󰄯",
               renamed = "󰏬",
+            },
+
+            tree = {
+              vertical = "│   ",
+              middle = "│   ",
+              last = "└── ",
             },
           },
 

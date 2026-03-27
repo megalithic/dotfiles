@@ -65,6 +65,7 @@ local parsers = {
   "git_config",
   "gitignore",
   "gitattributes",
+  "jjdescription",
   "diff",
 
   -- Misc

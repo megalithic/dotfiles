@@ -11,8 +11,23 @@ vim.api.nvim_create_autocmd("VimResized", {
 vim.api.nvim_create_autocmd("BufReadPost", {
   desc = "User: Restore cursor position",
   callback = function(ctx)
-    if vim.bo[ctx.buf].buftype ~= "" then return end
-    vim.cmd([[silent! normal! g`"]])
+    -- if vim.bo[ctx.buf].buftype ~= "" then return end
+    -- vim.cmd([[silent! normal! g`"]])
+
+    local mark = vim.api.nvim_buf_get_mark(ctx.buf, '"')
+    local lcount = vim.api.nvim_buf_line_count(ctx.buf)
+    local line = mark[1]
+    local ft = vim.bo.filetype
+    if
+      line > 0
+      and line <= lcount
+      and vim.bo[ctx.buf].buftype ~= ""
+      and vim.fn.index({ "jjdescription", "commit", "gitrebase", "xxd" }, ft) == -1
+      and not vim.o.diff
+    then
+      pcall(vim.api.nvim_win_set_cursor, ctx.buf, mark)
+      -- vim.cmd([[silent! normal! g`"]])
+    end
   end,
 })
 
@@ -34,4 +49,65 @@ vim.api.nvim_create_autocmd("WinScrolled", {
 
 vim.api.nvim_create_autocmd({ "CursorHold", "FocusGained", "CursorMoved" }, {
   callback = function(ctx) vim.cmd("silent! checktime") end,
+})
+
+-- produce the ghostty progress bar, through tmux, for lsp progress messages.
+local active_count = 0
+local clear_timer = nil
+
+local osc_seq_wrap = function(seq)
+  if os.getenv("TMUX") then return string.format("\27Ptmux;\27%s\27\\", seq) end
+  return seq
+end
+
+local function clear_progress()
+  if clear_timer then
+    clear_timer:stop()
+    clear_timer = nil
+  end
+  vim.api.nvim_ui_send(osc_seq_wrap("\027]9;4;0\027\\"))
+end
+
+vim.api.nvim_create_autocmd("LspProgress", {
+  callback = function(ev)
+    local value = ev.data.params.value
+
+    if clear_timer then
+      clear_timer:stop()
+      clear_timer = nil
+    end
+
+    if value.kind == "begin" then
+      active_count = active_count + 1
+      if value.percentage then
+        vim.api.nvim_ui_send(osc_seq_wrap(string.format("\027]9;4;1;%d\027\\", value.percentage)))
+      else
+        vim.api.nvim_ui_send(osc_seq_wrap("\027]9;4;3\027\\"))
+      end
+    elseif value.kind == "report" then
+      if value.percentage then
+        vim.api.nvim_ui_send(osc_seq_wrap(string.format("\027]9;4;1;%d\027\\", value.percentage)))
+      else
+        vim.api.nvim_ui_send(osc_seq_wrap("\027]9;4;3\027\\"))
+      end
+    elseif value.kind == "end" then
+      active_count = math.max(0, active_count - 1)
+      if active_count == 0 then
+        vim.api.nvim_ui_send(osc_seq_wrap("\027]9;4;1;100\027\\"))
+        clear_timer = vim.uv.new_timer()
+        if clear_timer ~= nil then
+          clear_timer:start(1500, 0, vim.schedule_wrap(clear_progress))
+        else
+          clear_progress()
+        end
+      end
+    end
+  end,
+})
+
+vim.api.nvim_create_autocmd("QuitPre", {
+  desc = "Clear ghostty progress bar on quit",
+  callback = function()
+    vim.schedule(function() vim.api.nvim_ui_send(osc_seq_wrap("\027]9;4;0\027\\")) end)
+  end,
 })

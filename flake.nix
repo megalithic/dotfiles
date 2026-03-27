@@ -54,10 +54,9 @@
 
     llm-agents.url = "github:numtide/llm-agents.nix";
     mcp-servers-nix.url = "github:natsukium/mcp-servers-nix";
-    expert.url = "github:elixir-lang/expert";
     nur.url = "github:nix-community/nur";
-    op-shell-plugins.url = "github:1Password/shell-plugins";
-    devenv.url = "github:cachix/devenv";
+expert.url = "github:elixir-lang/expert";
+    devenv.url = "github:cachix/devenv/v2.0.6";
     nh.url = "github:nix-community/nh";
     worktrunk.url = "github:max-sixty/worktrunk";
     kanata-darwin = {

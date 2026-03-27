@@ -23,6 +23,16 @@ in {
       export PATH="/etc/profiles/per-user/${config.home.username}/bin:$PATH"
       set -g fish_prompt_pwd_dir_length 20
 
+      # Restore cached 1Password sessions (from `opl`)
+      if test -f ~/.local/cache/op/sessions
+        while read -l line
+          set -l parts (string split -m1 = $line)
+          if test (count $parts) -eq 2
+            set -gx $parts[1] $parts[2]
+          end
+        end < ~/.local/cache/op/sessions
+      end
+
       # Set TMUX_SESSION and PLUG_EDITOR when in tmux
       # Enables clickable stacktraces in Phoenix dev error pages
       if set -q TMUX

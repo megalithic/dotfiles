@@ -5,7 +5,7 @@
 #   - default.nix (this file): Main config with auto-discovery
 #   - extensions/: TypeScript extensions (auto-discovered)
 #   - skills/: Simple skills (auto-discovered, symlinked)
-#   - skills-with-deps/: Skills with npm dependencies (built with buildNpmPackage)
+#   - patches/: Patches applied to external extensions
 #   - sources/: Source files like GLOBAL_AGENTS.md
 #
 # Socket Configuration (single source of truth):
@@ -40,107 +40,160 @@
   };
 
   # ===========================================================================
-  # Pi extensions from npm (fetched and symlinked, no runtime npm install)
+  # External Extensions (fetched from GitHub/npm, may have dependencies)
   # ===========================================================================
-  # pi-agent-browser: Browser automation tool
-  # Instead of using npm global install, we fetch the package and symlink
-  # the extension directly to ~/.pi/agent/extensions/
-  pi-agent-browser = pkgs.stdenv.mkDerivation {
-    pname = "pi-agent-browser";
-    version = "0.1.0";
-
-    src = pkgs.fetchurl {
-      url = "https://registry.npmjs.org/pi-agent-browser/-/pi-agent-browser-0.1.0.tgz";
-      hash = "sha256-goSz4QmUOWC6+6bd1gNXAAgAgjjyXSFTluQbhG+lwHw=";
-    };
-
-    # No build needed - just extract
-    dontBuild = true;
-
-    unpackPhase = ''
-      mkdir -p $out
-      tar -xzf $src --strip-components=1 -C $out
-    '';
-
-    installPhase = ''
-      # Extension file is at extensions/agent-browser.ts
-      # We keep the whole package structure for reference
-      runHook postInstall
-    '';
-  };
-
-  # pi-mcp-adapter: MCP (Model Context Protocol) adapter for pi
-  # Enables connection to MCP servers like Tidewave (Elixir/Phoenix)
-  # Token-efficient: One proxy tool (~200 tokens) instead of exposing all MCP tools
-  # Config: ~/.pi/agent/mcp.json (global) or .pi/mcp.json (project)
-  # Usage: mcp({ search: "..." }), mcp({ tool: "...", args: '...' }), /mcp
-  # Has npm dependencies: @modelcontextprotocol/sdk, @sinclair/typebox
+  # Uses pi-install-compatible syntax for src field:
+  #   "npm:package@version"           — npm registry package
+  #   "git:github.com/owner/repo@tag" — GitHub repository at tag
   #
-  # Patched: Added Claude Code settings.json support
-  # - Reads from ~/.claude.json (fixes wrong path)
-  # - Auto-reads ~/.claude/settings.json and settings.local.json
-  # - Auto-reads .claude/settings.json and settings.local.json in projects
-  pi-mcp-adapter = pkgs.buildNpmPackage {
-    pname = "pi-mcp-adapter";
-    version = "2.1.1";
+  # Required fields:
+  #   src  — pi-install-style source string
+  #   hash — SRI hash of source (tarball or git archive)
+  #
+  # Additional fields for git sources:
+  #   npmDepsHash — SRI hash of npm dependencies
+  #
+  # Optional fields:
+  #   extractFile — path within package to symlink (for single-file extraction)
+  #   installAs   — override the symlink name (default: repo/package name)
+  #   patches     — list of patches to apply
+  #   npmBuild    — set true if package needs `npm run build`
+  #
+  # To add a new extension: add entry with placeholder hashes, rebuild twice
+  # (nix will report the correct hash on each failed build)
 
-    src = pkgs.fetchFromGitHub {
-      owner = "nicobailon";
-      repo = "pi-mcp-adapter";
-      rev = "v2.1.1";
+  # Parse a pi-install-style src string into structured data
+  # "npm:pkg@1.0.0" → { type = "npm"; name = "pkg"; version = "1.0.0"; }
+  # "git:github.com/owner/repo@v1.0" → { type = "git"; owner = "owner"; repo = "repo"; tag = "v1.0"; }
+  parseSrc = src: let
+    # npm:package@version or npm:@scope/package@version
+    npmMatch = builtins.match "npm:(@?[^@]+)(@.+)?" src;
+    # git:github.com/owner/repo@tag or git:github.com/owner/repo
+    gitMatch = builtins.match "git:(github\\.com/)?([^/@]+)/([^/@]+)(@.+)?" src;
+  in
+    if npmMatch != null
+    then {
+      type = "npm";
+      name = builtins.elemAt npmMatch 0;
+      version =
+        if builtins.elemAt npmMatch 1 != null
+        then lib.removePrefix "@" (builtins.elemAt npmMatch 1)
+        else null;
+    }
+    else if gitMatch != null
+    then {
+      type = "git";
+      owner = builtins.elemAt gitMatch 1;
+      repo = builtins.elemAt gitMatch 2;
+      tag =
+        if builtins.elemAt gitMatch 3 != null
+        then lib.removePrefix "@" (builtins.elemAt gitMatch 3)
+        else null;
+      name = builtins.elemAt gitMatch 2;
+      version =
+        if builtins.elemAt gitMatch 3 != null
+        then lib.removePrefix "@" (builtins.elemAt gitMatch 3)
+        else null;
+    }
+    else throw "Cannot parse source: ${src}. Expected npm:pkg@ver or git:github.com/owner/repo@tag";
+
+  # Extension definitions using pi-install-compatible syntax
+  externalExtensions = [
+    {
+      src = "npm:pi-agent-browser@0.1.0";
+      hash = "sha256-goSz4QmUOWC6+6bd1gNXAAgAgjjyXSFTluQbhG+lwHw=";
+      extractFile = "extensions/agent-browser.ts";
+      installAs = "agent-browser.ts";
+    }
+    {
+      src = "git:github.com/nicobailon/pi-mcp-adapter@v2.1.1";
       hash = "sha256-E9C7hn351bPw1Pkm3p2u7QobYlUaCAtq8odZWek6sJg=";
-    };
+      npmDepsHash = "sha256-Eo8c9quiKXU5zKnb0m+IePwoDL2C/JHXfYoulNuy1DE=";
+      patches = [./patches/claude-settings-support.patch];
+    }
+    {
+      # Shiki-powered terminal diff renderer for pi
+      # No tags yet — pinned to commit SHA on main
+      src = "git:github.com/buddingnewinsights/pi-diff@94653b6d5bc46af6e7a11e19daa9caa171b3f735";
+      hash = "sha256-V2QmRtn+EoJX5Q/KPQcQPdeb/XvXHN65j3OYafyzvNw=";
+      npmDepsHash = "sha256-JuonDFNrq3bWJZEXJAXOM1VEW+5c1/W6KQC5O8adn3o=";
+      extractFile = "src/index.ts";
+      installAs = "pi-diff.ts";
+    }
+    {
+      # Pretty terminal output for pi (syntax-highlighted reads, colored bash, tree view)
+      # No tags yet — pinned to commit SHA on main
+      src = "git:github.com/buddingnewinsights/pi-pretty@9034621575b83268679e95ac7caf26a8b4212b53";
+      hash = "sha256-U3/QyEZm6Z3B4RUgnUhbE9fCm2EDcj+jlBeamdJ4CHw=";
+      npmDepsHash = "sha256-NwKsfX1ntb3IXBgDqe1zQOfU4Vh6YUlvaU6C7D1X01g=";
+      extractFile = "src/index.ts";
+      installAs = "pi-pretty.ts";
+    }
+  ];
 
-    npmDepsHash = "sha256-Eo8c9quiKXU5zKnb0m+IePwoDL2C/JHXfYoulNuy1DE=";
+  # Build a single external extension based on parsed src
+  buildExternalExtension = ext: let
+    parsed = parseSrc ext.src;
+  in
+    if parsed.type == "git"
+    then
+      pkgs.buildNpmPackage {
+        pname = parsed.name;
+        version = lib.removePrefix "v" (parsed.tag or "0.0.0");
+        src = pkgs.fetchFromGitHub {
+          inherit (parsed) owner repo;
+          rev = parsed.tag;
+          inherit (ext) hash;
+        };
+        npmDepsHash = ext.npmDepsHash;
+        dontNpmBuild = !(ext.npmBuild or false);
+        npmBuildScript = ext.npmBuildScript or "build";
+        patches = ext.patches or [];
+        installPhase = ''
+          runHook preInstall
+          mkdir -p $out
+          cp -r . $out/
+          runHook postInstall
+        '';
+      }
+    else if parsed.type == "npm"
+    then
+      pkgs.stdenv.mkDerivation {
+        pname = parsed.name;
+        version = parsed.version or "0.0.0";
+        src = pkgs.fetchurl {
+          # npm registry URL pattern: registry.npmjs.org/pkg/-/pkg-version.tgz
+          # For scoped: registry.npmjs.org/@scope/pkg/-/pkg-version.tgz
+          url = let
+            baseName = lib.last (lib.splitString "/" parsed.name);
+          in "https://registry.npmjs.org/${parsed.name}/-/${baseName}-${parsed.version}.tgz";
+          inherit (ext) hash;
+        };
+        dontBuild = true;
+        unpackPhase = ''
+          mkdir -p $out
+          tar -xzf $src --strip-components=1 -C $out
+        '';
+        installPhase = "runHook postInstall";
+      }
+    else throw "Unknown parsed source type: ${parsed.type}";
 
-    dontNpmBuild = true;
-
-    # Apply Claude settings.json support patch
-    patchPhase = ''
-      runHook prePatch
-      patch -p1 < ${./patches/claude-settings-support.patch}
-      runHook postPatch
-    '';
-
-    installPhase = ''
-      runHook preInstall
-      mkdir -p $out
-      cp -r . $out/
-      runHook postInstall
-    '';
-  };
-
-  # pi-acp: ACP (Agent Client Protocol) adapter for pi
-  # Exposes pi as an ACP-compatible agent for editors like Zed
-  # Usage: pi-acp (runs as ACP server over stdio)
-  pi-acp = pkgs.buildNpmPackage {
-    pname = "pi-acp";
-    version = "0.0.21";
-
-    src = pkgs.fetchFromGitHub {
-      owner = "svkozak";
-      repo = "pi-acp";
-      rev = "v0.0.21";
-      hash = "sha256-QlxFYS9As2EPL6Agq0b4wMbz9hJdJLC3s+/4j4IJKeE=";
-    };
-
-    npmDepsHash = "sha256-kjgpycJaCCAu5agB+/qeVv5ZyctJkNwPrnw2hb6pxsc=";
-
-    npmBuildScript = "build";
-
-    installPhase = ''
-            runHook preInstall
-            mkdir -p $out/bin $out/lib
-            cp -r dist $out/lib/
-            cp -r node_modules $out/lib/
-            cat > $out/bin/pi-acp << 'EOF'
-      #!/bin/sh
-      exec node "$( dirname "$0" )/../lib/dist/index.js" "$@"
-      EOF
-            chmod +x $out/bin/pi-acp
-            runHook postInstall
-    '';
-  };
+  # Generate home.file symlinks for all external extensions
+  externalExtensionSymlinks = builtins.listToAttrs (
+    map (ext: let
+      parsed = parseSrc ext.src;
+      drv = buildExternalExtension ext;
+    in {
+      name = ".pi/agent/extensions/${ext.installAs or parsed.name}";
+      value = {
+        source =
+          if ext ? extractFile
+          then "${drv}/${ext.extractFile}"
+          else drv;
+      };
+    })
+    externalExtensions
+  );
 
   # ===========================================================================
   # Auto-discovery Configuration
@@ -277,7 +330,7 @@
   # ===========================================================================
   managedSettings = {
     defaultProvider = "anthropic";
-    defaultModel = "claude-opus-4-5";
+    defaultModel = "claude-opus-4-6";
     defaultThinkingLevel = "medium";
     doubleEscapeAction = "tree";
     enableSkillCommands = true;
@@ -396,8 +449,8 @@
         HYBRID_DIR="/tmp/pi-config-''${PI_SESSION}-''${PROFILE}"
         mkdir -p "$HYBRID_DIR"
 
-        # Symlink shared config from master
-        for item in AGENTS.md settings.json keybindings.json extensions skills; do
+        # Symlink shared config from master (derived from sharedConfigItems)
+        for item in ${lib.concatStringsSep " " sharedConfigItems}; do
           [[ -e "$MASTER_DIR/$item" || -L "$MASTER_DIR/$item" ]] && \
             ln -sfn "$MASTER_DIR/$item" "$HYBRID_DIR/$item"
         done
@@ -430,7 +483,6 @@ in {
     pinvim
     p
     pkgs.llm-agents.agent-browser # Browser automation CLI for pi's browser tool
-    pi-acp # ACP adapter for pi (used by Zed, etc.)
   ];
 
   # File Symlinks
@@ -439,15 +491,8 @@ in {
     {
       # Global AGENTS.md for pi
       ".pi/agent/AGENTS.md".source = ./sources/GLOBAL_AGENTS.md;
-
-      # Pi extensions from npm (nix-managed, no runtime npm install)
-      # Symlink the .ts extension file directly to pi's extensions directory
-      ".pi/agent/extensions/agent-browser.ts".source = "${pi-agent-browser}/extensions/agent-browser.ts";
-
-      # pi-mcp-adapter: Multi-file extension (index.ts imports other .ts files)
-      # Symlink entire package as extension directory
-      ".pi/agent/extensions/pi-mcp-adapter".source = pi-mcp-adapter;
     }
+    // externalExtensionSymlinks
     // extensionSymlinks
     // skillSymlinks
     // promptSymlinks;

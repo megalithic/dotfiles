@@ -1,6 +1,6 @@
 return {
   "folke/noice.nvim",
-  -- enabled = false,
+  enabled = false,
   dependencies = {
     "MunifTanjim/nui.nvim",
     "folke/snacks.nvim", -- Use snacks.notifier instead of nvim-notify
