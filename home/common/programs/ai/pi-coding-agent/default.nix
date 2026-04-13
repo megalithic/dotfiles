@@ -113,8 +113,8 @@
     '';
   };
 
-  # Terminal diff renderer (has npm dependencies — @shikijs/cli)
-  # NOTE: Known broken upstream — if build fails, disable in disabledExtensions
+  # Terminal diff renderer — single .ts extension with npm deps (@shikijs/cli)
+  # Installed as a directory so jiti can resolve imports from node_modules
   pi-diff = pkgs.buildNpmPackage {
     pname = "pi-diff";
     version = "0.2.1";
@@ -124,13 +124,13 @@
     installPhase = ''
       runHook preInstall
       mkdir -p $out
-      cp -r . $out/
+      cp -r node_modules $out/node_modules
+      cp node_modules/@heyhuynhgiabuu/pi-diff/src/index.ts $out/pi-diff.ts
       runHook postInstall
     '';
   };
 
-  # Syntax highlighting for reads (has npm dependencies)
-  # NOTE: Known broken upstream — if build fails, disable in disabledExtensions
+  # Syntax highlighting for reads — single .ts extension with npm deps
   pi-pretty = pkgs.buildNpmPackage {
     pname = "pi-pretty";
     version = "0.3.2";
@@ -140,7 +140,23 @@
     installPhase = ''
       runHook preInstall
       mkdir -p $out
-      cp -r . $out/
+      cp -r node_modules $out/node_modules
+      cp node_modules/@heyhuynhgiabuu/pi-pretty/src/index.ts $out/pi-pretty.ts
+      runHook postInstall
+    '';
+  };
+
+  # Browser automation — single .ts, no npm deps
+  pi-agent-browser-ext = pkgs.buildNpmPackage {
+    pname = "pi-agent-browser";
+    version = "0.1.0";
+    src = ./packages/pi-agent-browser;
+    npmDepsHash = "sha256-XszK6zl9zd0dBJlTHlqsAeXfsqQIDFT8gL4xiaeE4gE=";
+    dontNpmBuild = true;
+    installPhase = ''
+      runHook preInstall
+      mkdir -p $out
+      cp node_modules/pi-agent-browser/extensions/agent-browser.ts $out/agent-browser.ts
       runHook postInstall
     '';
   };
@@ -428,11 +444,17 @@ in {
       ".pi/agent/mcp.json".source = ./mcp.json;
 
       # Built extensions with npm dependencies
+      # Full directory extensions (symlink whole package)
       ".pi/agent/extensions/pi-mcp-adapter".source = pi-mcp-adapter;
       ".pi/agent/extensions/pi-web-access".source = pi-web-access;
-      # ".pi/agent/extensions/pi-diff".source = "${pi-diff}/node_modules/@heyhuynhgiabuu/pi-diff/src/index.ts";
-      # ".pi/agent/extensions/pi-pretty".source = "${pi-pretty}/node_modules/@heyhuynhgiabuu/pi-pretty/src/index.ts";
       ".pi/agent/extensions/pi-multi-pass".source = pi-multi-pass;
+
+      # Single .ts extensions with deps (dir with .ts + node_modules)
+      ".pi/agent/extensions/pi-diff".source = pi-diff;
+      ".pi/agent/extensions/pi-pretty".source = pi-pretty;
+
+      # Single .ts extensions without deps (just the .ts file)
+      ".pi/agent/extensions/agent-browser.ts".source = "${pi-agent-browser-ext}/agent-browser.ts";
     }
     // extensionSymlinks
     // agentSymlinks

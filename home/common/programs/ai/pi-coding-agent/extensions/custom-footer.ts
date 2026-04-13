@@ -66,6 +66,31 @@ async function fetchStarship(cwd: string): Promise<string> {
   }
 }
 
+async function fetchJjInfo(cwd: string): Promise<string> {
+  try {
+    // Get bookmark + change id + dirty state in one call
+    const { stdout: logOut } = await execFile(
+      "jj",
+      ["log", "--no-graph", "-r", "@", "-T", 'separate(" ", bookmarks, change_id.shortest(4))'],
+      { cwd, timeout: 500 },
+    );
+    const jjLine = logOut.trim();
+    if (!jjLine) return "";
+
+    // Check for uncommitted changes
+    const { stdout: statusOut } = await execFile(
+      "jj",
+      ["status", "--no-pager"],
+      { cwd, timeout: 500 },
+    );
+    const dirty = statusOut.includes("Working copy changes:") ? "*" : "";
+
+    return jjLine + dirty;
+  } catch {
+    return "";
+  }
+}
+
 interface TokenCache {
   totalInput: number;
   totalOutput: number;
@@ -77,6 +102,7 @@ interface TokenCache {
 export default function (pi: ExtensionAPI) {
   pi.on("session_start", (_event, ctx) => {
     let cachedStarship = "";
+    let cachedJjInfo = "";
     const tokenCache: TokenCache = {
       totalInput: 0,
       totalOutput: 0,
@@ -86,14 +112,19 @@ export default function (pi: ExtensionAPI) {
     };
 
     ctx.ui.setFooter((tui, theme, footerData) => {
-      // Pre-fetch starship asynchronously, re-render when ready
+      // Pre-fetch starship + jj info asynchronously, re-render when ready
       fetchStarship(ctx.cwd).then((val) => {
         cachedStarship = val;
+        tui.requestRender();
+      });
+      fetchJjInfo(ctx.cwd).then((val) => {
+        cachedJjInfo = val;
         tui.requestRender();
       });
 
       const unsub = footerData.onBranchChange(async () => {
         cachedStarship = await fetchStarship(ctx.cwd);
+        cachedJjInfo = await fetchJjInfo(ctx.cwd);
         tui.requestRender();
       });
 
@@ -101,12 +132,18 @@ export default function (pi: ExtensionAPI) {
         dispose: unsub,
         invalidate() {},
         render(width: number): string[] {
-          // Line 1: starship prompt (cached) with session name right-aligned
+          // Line 1: starship prompt (cached) with jj info + session name right-aligned
           const starship =
             cachedStarship || theme.fg("dim", getCwdDisplay(ctx.cwd));
           const sessionName = ctx.sessionManager.getSessionName();
-          const line1 = sessionName
-            ? rightAlign(starship, theme.fg("dim", sessionName), width)
+          const jjDisplay = cachedJjInfo
+            ? theme.fg("muted", "jj:") + theme.fg("accent", cachedJjInfo)
+            : "";
+          const rightParts = [jjDisplay, sessionName ? theme.fg("dim", sessionName) : ""]
+            .filter(Boolean)
+            .join(theme.fg("dim", " │ "));
+          const line1 = rightParts
+            ? rightAlign(starship, rightParts, width)
             : starship;
 
           // Token totals (cached, only recompute when entry count changes)

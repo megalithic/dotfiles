@@ -17,6 +17,9 @@
       doCheck = false;
     });
 
+    # ollama: nixos-25.11 is frozen at 0.12.11, need 0.20+ for gemma4 models
+    ollama = final.unstable.ollama;
+
     # NOTE: keeping these around for posterity and quicker reference
     # llm-agents = let
     #   upstream = inputs.llm-agents.packages.${prev.stdenv.hostPlatform.system};

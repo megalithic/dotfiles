@@ -753,10 +753,59 @@ function detectPipeOrRedirect(cmd: string): { hasPipe: boolean; hasRedirect: boo
 
 // ── Extension ────────────────────────────────────────────────────────────────
 
+// ── Investigation mode + Ticket-gated editing ────────────────────────────────
+
+const INVESTIGATE_RE = /\b(investigate|inspect|audit)\b/i;
+const FIX_INTENT_RE = /\b(and\s+fix|then\s+fix)\b/i;
+// Ticket ID patterns:
+//   GitHub:  #123
+//   Jira:    PROJ-123
+//   Linear:  ENG-123, TEAM-456 (same as Jira pattern)
+//   Asana:   https://app.asana.com/0/project/task (long numeric IDs)
+//   Asana:   asana:1234567890 (shorthand)
+//   Generic: tk-abc1234 (shorthand)
+const TICKET_ID_RE = /\b(?:#(\d+)|([A-Z]+-\d+)|([a-z]+-[a-z0-9]{4,})|asana:(\d{5,}))\b|https:\/\/app\.asana\.com\/0\/\d+\/(\d+)/i;
+// Commands that "read" a ticket — lifts the gate
+const TICKET_READ_RE = /\b(?:gh\s+issue\s+view|tk\s+show|jira\s+view|linear\s+issue\s+view|curl\s+.*app\.asana\.com)\b/;
+
 export default function (pi: ExtensionAPI) {
   const config = loadConfig();
   const rules = buildRules(config);
   log(`${rules.length} rules loaded`);
+
+  // ── Session-aware state ──
+  let investigationMode = false;
+  let pendingTicketId: string | null = null;
+  let ticketRead = false;
+
+  // Intercept user input: track investigation mode + ticket references
+  pi.on("input", async (event): Promise<void> => {
+    // Reset investigation mode on every new user input
+    investigationMode = false;
+
+    // Skip extension-generated messages (subagent output, etc.)
+    if (event.source === "extension") return;
+
+    const text = event.text || "";
+
+    // Detect investigation mode: "investigate X" without "and fix"
+    if (INVESTIGATE_RE.test(text) && !FIX_INTENT_RE.test(text)) {
+      investigationMode = true;
+      log(`investigation mode: ON`);
+    }
+
+    // Detect ticket reference in user input
+    const ticketMatch = text.match(TICKET_ID_RE);
+    if (ticketMatch) {
+      pendingTicketId = ticketMatch[0];
+      ticketRead = false;
+      log(`ticket gate: waiting for read of ${pendingTicketId}`);
+    } else {
+      // No ticket in this prompt — clear gating
+      pendingTicketId = null;
+      ticketRead = false;
+    }
+  });
 
   // Intercept user input for override keywords
   pi.on("input", async (event, ctx): Promise<InputEventResult | void> => {
@@ -827,6 +876,53 @@ export default function (pi: ExtensionAPI) {
     const cmd = (input as any).command as string || "";
     const path = (input as any).path as string || "";
     const timeout = (input as any).timeout as number | undefined;
+
+    // ── Ticket gate: detect when agent reads the ticket ──
+    if (
+      pendingTicketId &&
+      !ticketRead &&
+      toolName === "bash" &&
+      typeof cmd === "string" &&
+      TICKET_READ_RE.test(cmd) &&
+      cmd.includes(pendingTicketId)
+    ) {
+      ticketRead = true;
+      log(`ticket gate: ${pendingTicketId} read — gate lifted`);
+    }
+
+    // ── Ticket gate: block edit/write until ticket is read ──
+    if (
+      pendingTicketId &&
+      !ticketRead &&
+      (toolName === "edit" || toolName === "write")
+    ) {
+      log(`TICKET-GATE: ${pendingTicketId} not read yet`);
+      return {
+        block: true,
+        reason: `📋 **Read the ticket first**\n\n` +
+          `You referenced ticket \`${pendingTicketId}\` but haven't read it yet.\n\n` +
+          `Read it before making changes:\n` +
+          `- GitHub: \`gh issue view ${pendingTicketId}\`\n` +
+          `- Linear: \`linear issue view ${pendingTicketId}\`\n` +
+          `- Jira: \`jira view ${pendingTicketId}\`\n` +
+          `- Asana: fetch the task via API\n` +
+          `- Generic: \`tk show ${pendingTicketId}\``,
+      };
+    }
+
+    // ── Investigation mode: block edit/write ──
+    if (
+      investigationMode &&
+      (toolName === "edit" || toolName === "write")
+    ) {
+      log(`INVESTIGATE: blocking ${toolName}`);
+      return {
+        block: true,
+        reason: "🔍 **Investigation mode active**\n\n" +
+          "The user asked you to investigate, not to make changes.\n" +
+          "Report your findings. The user will tell you when to fix things.",
+      };
+    }
 
     // ── Special check: pipe/redirect hang prevention ──
     if (toolName === "bash" && cmd) {
