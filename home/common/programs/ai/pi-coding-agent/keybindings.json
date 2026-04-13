@@ -1,5 +1,12 @@
 {
-  "newLine": ["shift+enter", "ctrl+j"],
-  "pageUp": ["ctrl+u"],
-  "pageDown": ["ctrl+d"]
+  "tui.editor.pageUp": [
+    "ctrl+u"
+  ],
+  "tui.editor.pageDown": [
+    "ctrl+d"
+  ],
+  "tui.input.newLine": [
+    "shift+enter",
+    "ctrl+j"
+  ]
 }

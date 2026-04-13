@@ -8,6 +8,7 @@
     "always_interactive: commands that are always interactive (no flags needed)."
   ],
 
+  "ticket_gate": false,
   "interactive_commands": {
     "jj": {
       "_doc": "Jujutsu VCS — verified via jj 0.35 --help",

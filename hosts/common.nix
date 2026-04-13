@@ -24,7 +24,7 @@ in {
     fira-mono
     font-awesome
     inter
-    jetbrains-mono
+    # jetbrains-mono # temporarily disabled — gftools dep pulls ffmpeg-python which fails in sandbox
     maple-mono.NF
     maple-mono.truetype
     maple-mono.variable

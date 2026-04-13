@@ -81,6 +81,12 @@ fix-shell-files:
 update:
   update-brew update-flake hm
 
+# Update npm package lockfiles and nix hashes (run before `just home`)
+# Usage: just update-npm          (all packages)
+#        just update-npm pi-diff  (one package)
+update-npm *pkg:
+  home/common/programs/ai/pi-coding-agent/scripts/update-npm-pkg.sh {{pkg}}
+
 # ===========================================================================
 # Primary rebuild commands
 # ===========================================================================
@@ -159,11 +165,11 @@ darwin *args="":
   
   if [[ "$DRY" == "--dry-run" ]]; then
     echo ":: [DRY RUN] Building darwin configuration..."
-    darwin-rebuild build --flake ".#$HOST"
+    darwin-rebuild build --flake ".#$HOST" --show-trace -L
     echo ":: Dry run complete. No changes applied."
   else
     echo ":: Running darwin-rebuild switch..."
-    sudo darwin-rebuild switch --flake ".#$HOST"
+    sudo darwin-rebuild switch --flake ".#$HOST" --show-trace -L
   fi
 
 # Home-manager only rebuild (user packages, dotfiles, no sudo needed)
@@ -191,11 +197,11 @@ home *args="":
   
   if [[ "$DRY" == "--dry-run" ]]; then
     echo ":: [DRY RUN] Building home-manager configuration..."
-    nix run home-manager -- build --flake ".#$(whoami)@$HOST"
+    nix run home-manager -- build --flake ".#$(whoami)@$HOST" --show-trace -L
     echo ":: Dry run complete. No changes applied."
   else
     echo ":: Running home-manager switch..."
-    nix run home-manager -- switch --flake ".#$(whoami)@$HOST"
+    nix run home-manager -- switch --flake ".#$(whoami)@$HOST" --show-trace -L
   fi
 
 # ===========================================================================

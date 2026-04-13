@@ -177,7 +177,10 @@ function clonePayload(payload: AnthropicPayload): AnthropicPayload {
 }
 
 function rewritePiSelfReferences(text: string): string {
-	return text.replaceAll("pi itself", "the cli itself");
+	return text
+		.replaceAll("pi itself", "the cli itself")
+		.replaceAll("pi .md files", "cli .md files")
+		.replaceAll("pi packages", "cli packages");
 }
 
 function rewriteSystemBlocks(system: AnthropicPayload["system"]): AnthropicPayload["system"] {
@@ -191,10 +194,8 @@ function rewriteSystemBlocks(system: AnthropicPayload["system"]): AnthropicPaylo
 		if (!isTextBlock(block)) {
 			return block;
 		}
-		return {
-			...block,
-			text: rewritePiSelfReferences(block.text),
-		};
+		const rewritten = rewritePiSelfReferences(block.text);
+		return rewritten === block.text ? block : { ...block, text: rewritten };
 	});
 }
 
@@ -274,8 +275,9 @@ export default async function piClaudeCodeUse(pi: ExtensionAPI): Promise<void> {
 			return undefined;
 		}
 
+		debugLogPayload({ stage: "before", payload: event.payload });
 		const transformedPayload = transformAnthropicOAuthPayload(event.payload as AnthropicPayload);
-		debugLogPayload(transformedPayload);
+		debugLogPayload({ stage: "after", payload: transformedPayload });
 		return transformedPayload;
 	});
 }

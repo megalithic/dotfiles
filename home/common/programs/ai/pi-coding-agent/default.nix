@@ -44,18 +44,51 @@
   };
 
   # ===========================================================================
+  # Standalone tools
+  # ===========================================================================
+
+  # tk — minimal ticket system with dependency tracking
+  # https://github.com/wedow/ticket
+  tk = pkgs.stdenvNoCC.mkDerivation {
+    pname = "tk";
+    version = "0.3.2-patched";
+    src = pkgs.fetchurl {
+      url = "https://raw.githubusercontent.com/wedow/ticket/v0.3.2/ticket";
+      hash = "sha256-QI8sET7MO8BxUHWTp4OG8bTMdDvmSRyenyYn79TZkCs=";
+    };
+    dontUnpack = true;
+    # Patch generate_id: strip non-alphanumeric chars, use 3-char minimum prefix
+    installPhase = ''
+      install -Dm755 $src $out/bin/tk
+      substituteInPlace $out/bin/tk \
+        --replace-fail \
+          'dir_name=$(basename "$(pwd)")' \
+          'dir_name=$(basename "$(pwd)" | tr -d -c "a-zA-Z0-9-_")' \
+        --replace-fail \
+          '[[ ''${#prefix} -lt 2 ]] && prefix="''${dir_name:0:3}"' \
+          '[[ ''${#prefix} -lt 3 ]] && prefix="''${dir_name:0:3}"'
+    '';
+  };
+
+  # ===========================================================================
   # Packages (npm packages built via buildNpmPackage)
   # ===========================================================================
   # Each package has a package.json + package-lock.json in packages/<name>/
   # To add: mkdir packages/<name>, npm init + npm install <dep>, add buildNpmPackage here
-  # To update: bump version in package.json, run npm install --package-lock-only, update npmDepsHash
+  # To update: edit version in package.json, run `just update-npm [pkg]`
+
+  # Read version from a package's sole npm dependency (single source of truth)
+  npmVersion = dir: let
+    pkgJson = builtins.fromJSON (builtins.readFile (dir + "/package.json"));
+  in
+    builtins.head (builtins.attrValues pkgJson.dependencies);
 
   # Pi binary — built from npm, enables patching (retry behavior, etc.)
   pi-coding-agent = pkgs.buildNpmPackage {
     pname = "pi-coding-agent";
-    version = "0.62.0";
+    version = npmVersion ./packages/pi;
     src = ./packages/pi;
-    npmDepsHash = "sha256-bdwceF6m2X+hfEMRQajMqjXUxJU0a338KdHvpP4nokQ=";
+    npmDepsHash = "sha256-Ujr4HsD59lXXDnJf1RVIziI/1YINHcrJjq8ARlaukBo=";
     dontNpmBuild = true;
     installPhase = ''
       runHook preInstall
@@ -84,9 +117,9 @@
   # MCP adapter extension (has npm dependencies)
   pi-mcp-adapter = pkgs.buildNpmPackage {
     pname = "pi-mcp-adapter";
-    version = "2.3.5";
+    version = npmVersion ./packages/pi-mcp-adapter;
     src = ./packages/pi-mcp-adapter;
-    npmDepsHash = "sha256-/lkw32MJicaEmu4fFppQOiXTorpZUtCnA+t+L656rIs=";
+    npmDepsHash = "sha256-PprUC92no4xi4p+UQRbx4/RzoTZ6v/OQCUEp//XU+NY=";
     dontNpmBuild = true;
     # TODO: patch needs path adjustment for npm package layout (was written for git repo)
     # patches = [./patches/claude-settings-support.patch];
@@ -98,50 +131,79 @@
     '';
   };
 
-  # Web search/extraction extension (has npm dependencies)
-  pi-web-access = pkgs.buildNpmPackage {
-    pname = "pi-web-access";
-    version = "0.10.6";
-    src = ./packages/pi-web-access;
-    npmDepsHash = "sha256-by5B1kvgCJ2w+plBRgQHTDWuMyh7IWsivtUNqhwvdlI=";
+  # Web search, content fetching, research (multi-provider: Brave, Tavily, Kagi)
+  pi-internet = pkgs.buildNpmPackage {
+    pname = "pi-internet";
+    version = "0.1.0";
+    src = ./packages/pi-internet;
+    npmDepsHash = "sha256-Z4CPTdGryJx/6agSJsxyiZW2ORhGi2tUpK2OL24ip1s=";
+    makeCacheWritable = true;
     dontNpmBuild = true;
     installPhase = ''
       runHook preInstall
       mkdir -p $out
-      cp -r . $out/
+      cp -r node_modules/pi-internet/* $out/
+      cp -r node_modules $out/node_modules
       runHook postInstall
     '';
   };
 
-  # Terminal diff renderer — single .ts extension with npm deps (@shikijs/cli)
-  # Installed as a directory so jiti can resolve imports from node_modules
+  # Terminal diff renderer — npm package with pi manifest + deps
   pi-diff = pkgs.buildNpmPackage {
     pname = "pi-diff";
-    version = "0.2.1";
+    version = npmVersion ./packages/pi-diff;
     src = ./packages/pi-diff;
-    npmDepsHash = "sha256-78lR0MMdNFbLoWydfEIjBsSu20nLLc7rodwjrxRWO80=";
+    npmDepsHash = "sha256-YypHyE/7qEmqZh7EjlF1nl9/ZwVDAyvWblPJ6yINohM=";
     dontNpmBuild = true;
     installPhase = ''
       runHook preInstall
       mkdir -p $out
+      cp -r node_modules/@heyhuynhgiabuu/pi-diff/* $out/
       cp -r node_modules $out/node_modules
-      cp node_modules/@heyhuynhgiabuu/pi-diff/src/index.ts $out/pi-diff.ts
       runHook postInstall
     '';
   };
 
-  # Syntax highlighting for reads — single .ts extension with npm deps
+  # Syntax highlighting for reads — npm package with pi manifest + deps
   pi-pretty = pkgs.buildNpmPackage {
     pname = "pi-pretty";
-    version = "0.3.2";
+    version = npmVersion ./packages/pi-pretty;
     src = ./packages/pi-pretty;
-    npmDepsHash = "sha256-KQfiB06n2qv77GvG1ILHKgY7L1rLrTk4x8UZMg14uzM=";
+    npmDepsHash = "sha256-qRwdSBQn/Go1dLrdKAHXROiQdVuig/pz/lzaJh2hCxw=";
     dontNpmBuild = true;
     installPhase = ''
       runHook preInstall
       mkdir -p $out
+      cp -r node_modules/@heyhuynhgiabuu/pi-pretty/* $out/
       cp -r node_modules $out/node_modules
-      cp node_modules/@heyhuynhgiabuu/pi-pretty/src/index.ts $out/pi-pretty.ts
+
+      # Disable bash tool registration (conflicts with pi-bash-live-view)
+      substituteInPlace "$out/src/index.ts" \
+        --replace-fail 'if (createBashTool) {' \
+        'if (false /* bash disabled, conflicts with pi-bash-live-view */ && createBashTool) {'
+
+      runHook postInstall
+    '';
+  };
+
+  # Bash live view — npm package with pi manifest + deps
+  pi-bash-live-view = pkgs.buildNpmPackage {
+    pname = "pi-bash-live-view";
+    version = npmVersion ./packages/pi-bash-live-view;
+    src = ./packages/pi-bash-live-view;
+    npmDepsHash = "sha256-sy9oMT6zWhzC6hQizmSHeIQL9KGnmnW5PM0Ky537bDw=";
+    dontNpmBuild = true;
+    installPhase = ''
+      runHook preInstall
+      mkdir -p $out
+      cp -r node_modules/pi-bash-live-view/* $out/
+      cp -r node_modules $out/node_modules
+
+      # node-pty spawn-helper must be executable (nix store defaults to 444)
+      for helper in $out/node_modules/node-pty/prebuilds/*/spawn-helper; do
+        [ -f "$helper" ] && chmod 755 "$helper"
+      done
+
       runHook postInstall
     '';
   };
@@ -149,9 +211,9 @@
   # Browser automation — single .ts, no npm deps
   pi-agent-browser-ext = pkgs.buildNpmPackage {
     pname = "pi-agent-browser";
-    version = "0.1.0";
+    version = npmVersion ./packages/pi-agent-browser;
     src = ./packages/pi-agent-browser;
-    npmDepsHash = "sha256-XszK6zl9zd0dBJlTHlqsAeXfsqQIDFT8gL4xiaeE4gE=";
+    npmDepsHash = "sha256-C1pt9zP/GBefRfX81bRwqXDDC+JF5Bdsngmr+DLdG7Y=";
     dontNpmBuild = true;
     installPhase = ''
       runHook preInstall
@@ -164,35 +226,38 @@
   # Subscription rotation
   pi-multi-pass = pkgs.buildNpmPackage {
     pname = "pi-multi-pass";
-    version = "1.3.0";
+    version = npmVersion ./packages/pi-multi-pass;
     src = ./packages/pi-multi-pass;
     npmDepsHash = "sha256-iF8uoumQk3faBj9RAgxoGmmqU/OvM7ATV/hrWvYogHs=";
     dontNpmBuild = true;
     installPhase = ''
       runHook preInstall
       mkdir -p $out
-      cp -r . $out/
+      cp -r node_modules/pi-multi-pass/* $out/
+
+      # Fix upstream bug: pi.extensions points to directory, not the .ts file
+      substituteInPlace "$out/package.json" \
+        --replace-fail '"./extensions"' '"./extensions/multi-sub.ts"'
+
       runHook postInstall
     '';
   };
 
-  # Knowledge graph CLI (used by lat-md skill)
-  lat-md = pkgs.buildNpmPackage {
-    pname = "lat-md";
-    version = "0.11.0";
-    src = ./packages/lat-md;
-    npmDepsHash = "sha256-gTTGSh/JHPD0Q8tPqpWIl+2GWtcoDDmpEh/wDIJcttg=";
+  # Synthetic.new model provider (dynamic model fetching, reasoning, vision)
+  pi-synthetic-provider = pkgs.buildNpmPackage {
+    pname = "pi-synthetic-provider";
+    version = npmVersion ./packages/pi-synthetic-provider;
+    src = ./packages/pi-synthetic-provider;
+    npmDepsHash = "sha256-m4iI773kd2MHbadoa6/GG3551+bFlNNFFImMOCdnNNo=";
     dontNpmBuild = true;
     installPhase = ''
       runHook preInstall
-      mkdir -p $out/lib
-      cp -r node_modules $out/lib/node_modules
-      mkdir -p $out/bin
-      ln -s $out/lib/node_modules/lat.md/dist/src/cli/index.js $out/bin/lat
+      mkdir -p $out
+      cp -r node_modules/@benvargas/pi-synthetic-provider/* $out/
+      cp -r node_modules $out/node_modules
       runHook postInstall
     '';
   };
-
   # ===========================================================================
   # Auto-discovery Configuration
   # ===========================================================================
@@ -219,22 +284,19 @@
     else {};
 
   # .ts files
-  extensionTsFiles =
-    builtins.filter (name: lib.hasSuffix ".ts" name && !builtins.elem name disabledExtensions) (
-      builtins.attrNames extensionEntries
-    );
+  extensionTsFiles = builtins.filter (name: lib.hasSuffix ".ts" name && !builtins.elem name disabledExtensions) (
+    builtins.attrNames extensionEntries
+  );
 
   # Directories (e.g., subagent/)
-  extensionDirs =
-    builtins.filter (name: extensionEntries.${name} == "directory") (
-      builtins.attrNames extensionEntries
-    );
+  extensionDirs = builtins.filter (name: extensionEntries.${name} == "directory") (
+    builtins.attrNames extensionEntries
+  );
 
   # Data files co-located with extensions (JSON configs, etc.)
-  extensionDataFiles =
-    builtins.filter (name: lib.hasSuffix ".json" name && name != "package.json") (
-      builtins.attrNames extensionEntries
-    );
+  extensionDataFiles = builtins.filter (name: lib.hasSuffix ".json" name && name != "package.json") (
+    builtins.attrNames extensionEntries
+  );
 
   extensionSymlinks = builtins.listToAttrs (
     map (name: {
@@ -336,6 +398,11 @@
     # Clear conflicting AWS credentials
     unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN 2>/dev/null || true
 
+    # Map BRAVE_SEARCH_API_KEY → BRAVE_API_KEY (pi-internet expects the latter)
+    if [ -n "$BRAVE_SEARCH_API_KEY" ] && [ -z "$BRAVE_API_KEY" ]; then
+      export BRAVE_API_KEY="$BRAVE_SEARCH_API_KEY"
+    fi
+
     # Parse --profile flag
     PROFILE=""
     PI_ARGS=()
@@ -379,7 +446,7 @@
     fi
 
     # Add tools to PATH
-    export PATH="${pkgs.ast-grep}/bin:${lat-md}/bin:$PATH"
+    export PATH="${pkgs.ast-grep}/bin:$PATH"
 
     # Handle profile auth borrowing
     if [[ -n "$PROFILE" ]]; then
@@ -425,8 +492,8 @@ in {
   home.packages = [
     pinvim
     p
+    tk
     pkgs.llm-agents.agent-browser # Browser automation CLI
-    lat-md
   ];
 
   # ===========================================================================
@@ -434,24 +501,30 @@ in {
   # ===========================================================================
   home.file =
     {
+      # Symlink pi binary directly (avoids node_modules conflict)
+      ".local/bin/pi".source = "${pi-coding-agent}/bin/pi";
+
       # Global AGENTS.md
       ".pi/agent/AGENTS.md".source = ./sources/GLOBAL_AGENTS.md;
+      ".pi/agent/APPEND_SYSTEM.md".source = ./sources/APPEND_SYSTEM.md;
 
-      # Plain JSON configs (keybindings, models, mcp symlinked directly)
-      # force = true: keybindings.json was previously a regular file from activation script
-      ".pi/agent/keybindings.json" = { source = ./keybindings.json; force = true; };
+      # Plain JSON configs — keybindings uses out-of-store symlink so pi can write to it
+      ".pi/agent/keybindings.json".source = config.lib.mega.linkDotfile "home/common/programs/ai/pi-coding-agent/keybindings.json";
       ".pi/agent/models.json".source = ./models.json;
       ".pi/agent/mcp.json".source = ./mcp.json;
 
       # Built extensions with npm dependencies
       # Full directory extensions (symlink whole package)
       ".pi/agent/extensions/pi-mcp-adapter".source = pi-mcp-adapter;
-      ".pi/agent/extensions/pi-web-access".source = pi-web-access;
+      ".pi/agent/extensions/pi-internet".source = pi-internet;
       ".pi/agent/extensions/pi-multi-pass".source = pi-multi-pass;
+      ".pi/agent/extensions/pi-synthetic-provider".source = pi-synthetic-provider;
 
       # Single .ts extensions with deps (dir with .ts + node_modules)
-      ".pi/agent/extensions/pi-diff".source = pi-diff;
-      ".pi/agent/extensions/pi-pretty".source = pi-pretty;
+      # ".pi/agent/extensions/pi-diff".source = pi-diff;
+      # DISABLED: pi-pretty and pi-bash-live-view
+      # ".pi/agent/extensions/pi-pretty".source = pi-pretty;
+      # ".pi/agent/extensions/pi-bash-live-view".source = pi-bash-live-view;
 
       # Single .ts extensions without deps (just the .ts file)
       ".pi/agent/extensions/agent-browser.ts".source = "${pi-agent-browser-ext}/agent-browser.ts";

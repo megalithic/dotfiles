@@ -109,6 +109,6 @@ Managed in `plugins.tmux.conf`:
 
 ## Cross-references
 
-- **Pi tmux skill:** `$PI_CODING_AGENT_DIR/skills/tmux/SKILL.md`
+- **Pi tmux skill:** `~/.dotfiles/home/common/programs/ai/pi-coding-agent/skills/tmux/SKILL.md`
 - **Ghostty config:** `config/ghostty/AGENTS.md`
 - **Hammerspoon attention detection:** `config/hammerspoon/lib/attention.lua`

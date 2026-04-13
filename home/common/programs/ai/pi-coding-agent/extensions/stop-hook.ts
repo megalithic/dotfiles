@@ -16,6 +16,9 @@ const MAX_FOLLOWUPS = 1;
 const STOP_CHECK_PROMPT =
   "Review your last response. Did you complete everything the user asked? If not, continue working. If you did complete everything, briefly confirm what was done.";
 
+// Gatekeeper configuration
+const GATEKEEPER_PREFERENCE = "local-first" as "local-first" | "cloud-first";
+
 const LOCAL_GATEKEEPER_PROVIDER = "ollama";
 const LOCAL_GATEKEEPER_MODEL_ID = "gemma4:e2b";
 
@@ -188,34 +191,27 @@ async function shouldSendNudge(
 
   const contextMessages = buildGatekeeperMessages(messages);
 
-  // Try local ollama gatekeeper first (direct HTTP, think: false)
-  try {
-    const result = await askOllamaGatekeeper(
-      LOCAL_GATEKEEPER_MODEL_ID,
-      contextMessages,
-    );
-    if (result !== null) {
-      failureCounter.count = 0;
-      return result;
-    }
-  } catch {
-    failureCounter.count++;
-  }
+  // Try gatekeepers based on preference order
+  const gatekeepers = GATEKEEPER_PREFERENCE === "local-first"
+    ? [
+        { type: "local", fn: () => askOllamaGatekeeper(LOCAL_GATEKEEPER_MODEL_ID, contextMessages) },
+        { type: "cloud", fn: () => askCloudGatekeeper(CLOUD_GATEKEEPER_PROVIDER, CLOUD_GATEKEEPER_MODEL_ID, contextMessages, ctx) },
+      ]
+    : [
+        { type: "cloud", fn: () => askCloudGatekeeper(CLOUD_GATEKEEPER_PROVIDER, CLOUD_GATEKEEPER_MODEL_ID, contextMessages, ctx) },
+        { type: "local", fn: () => askOllamaGatekeeper(LOCAL_GATEKEEPER_MODEL_ID, contextMessages) },
+      ];
 
-  // Fall back to cloud gatekeeper (cheap — haiku)
-  try {
-    const result = await askCloudGatekeeper(
-      CLOUD_GATEKEEPER_PROVIDER,
-      CLOUD_GATEKEEPER_MODEL_ID,
-      contextMessages,
-      ctx,
-    );
-    if (result !== null) {
-      failureCounter.count = 0;
-      return result;
+  for (const gatekeeper of gatekeepers) {
+    try {
+      const result = await gatekeeper.fn();
+      if (result !== null) {
+        failureCounter.count = 0;
+        return result;
+      }
+    } catch {
+      failureCounter.count++;
     }
-  } catch {
-    failureCounter.count++;
   }
 
   // Both unavailable — nudge as safe default (unless too many failures)

@@ -42,6 +42,7 @@ interface SentinelConfig {
   interactive_commands: Record<string, InteractiveCommand>;
   always_interactive: { commands: Record<string, AlwaysInteractiveEntry> };
   tool_corrections: Record<string, ToolCorrection>;
+  ticket_gate?: boolean;
 }
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -595,7 +596,30 @@ function buildRules(config: SentinelConfig): Rule[] {
     name: "project-pkg-install",
     tier: "confirm",
     tools: ["bash"],
-    test: (cmd) => {
+    test: (cmd, path) => {
+      // Allowed directories for package installs (nix-managed extensions)
+      const allowedPaths = [
+        `${HOME}/.dotfiles/home/common/programs/ai/pi-coding-agent/packages`,
+      ];
+
+      // Check if current working directory is within allowed paths
+      const normalizedPath = normalizePath(path || "");
+      const isAllowed = allowedPaths.some(allowed =>
+        normalizedPath.startsWith(`${allowed}/`) || normalizedPath === allowed
+      );
+
+      if (isAllowed) return false; // Allow in allowed directories
+
+      // Check for cd in command (updates working directory)
+      const cdMatch = cmd.match(/\bcd\s+(\S+)/);
+      if (cdMatch) {
+        const cdPath = normalizePath(cdMatch[1]);
+        const cdAllowed = allowedPaths.some(allowed =>
+          cdPath.startsWith(`${allowed}/`) || cdPath === allowed || cdPath === allowed
+        );
+        if (cdAllowed) return false; // Allow in cd-changed directories
+      }
+
       // mix deps.get is always allowed - standard Elixir workflow
       if (isCommandPrefix(cmd, "mix", "deps.get")) return false;
       return isCommandPrefix(cmd, "npm", "install") ||
@@ -638,6 +662,18 @@ function buildRules(config: SentinelConfig): Rule[] {
       reason: correction.reason,
     });
   }
+
+  // ── REWRITE: harness built-in tools that duplicate CLI tools ──
+  // The pi harness (and some wrappers) inject built-in tools like Grep, Read, etc.
+  // Block the ones that bypass our preferred CLI tools (rg, fd, etc.)
+
+  rules.push({
+    name: "Grep→rg",
+    tier: "rewrite",
+    tools: ["Grep"],
+    test: () => true,
+    reason: "Use `rg` via bash instead of the built-in Grep tool.",
+  });
 
   // ── HARD: pipe/redirect without timeout (hang prevention) ──
   // Note: This rule is handled specially in the tool_call handler to check
@@ -794,16 +830,17 @@ export default function (pi: ExtensionAPI) {
       log(`investigation mode: ON`);
     }
 
-    // Detect ticket reference in user input
-    const ticketMatch = text.match(TICKET_ID_RE);
-    if (ticketMatch) {
-      pendingTicketId = ticketMatch[0];
-      ticketRead = false;
-      log(`ticket gate: waiting for read of ${pendingTicketId}`);
-    } else {
-      // No ticket in this prompt — clear gating
-      pendingTicketId = null;
-      ticketRead = false;
+    // Detect ticket reference in user input (gated by config.ticket_gate)
+    if (config.ticket_gate !== false) {
+      const ticketMatch = text.match(TICKET_ID_RE);
+      if (ticketMatch) {
+        pendingTicketId = ticketMatch[0];
+        ticketRead = false;
+        log(`ticket gate: waiting for read of ${pendingTicketId}`);
+      } else {
+        pendingTicketId = null;
+        ticketRead = false;
+      }
     }
   });
 
@@ -877,37 +914,40 @@ export default function (pi: ExtensionAPI) {
     const path = (input as any).path as string || "";
     const timeout = (input as any).timeout as number | undefined;
 
-    // ── Ticket gate: detect when agent reads the ticket ──
-    if (
-      pendingTicketId &&
-      !ticketRead &&
-      toolName === "bash" &&
-      typeof cmd === "string" &&
-      TICKET_READ_RE.test(cmd) &&
-      cmd.includes(pendingTicketId)
-    ) {
-      ticketRead = true;
-      log(`ticket gate: ${pendingTicketId} read — gate lifted`);
-    }
+    // ── Ticket gate (gated by config.ticket_gate) ──
+    if (config.ticket_gate !== false) {
+      // Detect when agent reads the ticket
+      if (
+        pendingTicketId &&
+        !ticketRead &&
+        toolName === "bash" &&
+        typeof cmd === "string" &&
+        TICKET_READ_RE.test(cmd) &&
+        cmd.includes(pendingTicketId)
+      ) {
+        ticketRead = true;
+        log(`ticket gate: ${pendingTicketId} read — gate lifted`);
+      }
 
-    // ── Ticket gate: block edit/write until ticket is read ──
-    if (
-      pendingTicketId &&
-      !ticketRead &&
-      (toolName === "edit" || toolName === "write")
-    ) {
-      log(`TICKET-GATE: ${pendingTicketId} not read yet`);
-      return {
-        block: true,
-        reason: `📋 **Read the ticket first**\n\n` +
-          `You referenced ticket \`${pendingTicketId}\` but haven't read it yet.\n\n` +
-          `Read it before making changes:\n` +
-          `- GitHub: \`gh issue view ${pendingTicketId}\`\n` +
-          `- Linear: \`linear issue view ${pendingTicketId}\`\n` +
-          `- Jira: \`jira view ${pendingTicketId}\`\n` +
-          `- Asana: fetch the task via API\n` +
-          `- Generic: \`tk show ${pendingTicketId}\``,
-      };
+      // Block edit/write until ticket is read
+      if (
+        pendingTicketId &&
+        !ticketRead &&
+        (toolName === "edit" || toolName === "write")
+      ) {
+        log(`TICKET-GATE: ${pendingTicketId} not read yet`);
+        return {
+          block: true,
+          reason: `📋 **Read the ticket first**\n\n` +
+            `You referenced ticket \`${pendingTicketId}\` but haven't read it yet.\n\n` +
+            `Read it before making changes:\n` +
+            `- GitHub: \`gh issue view ${pendingTicketId}\`\n` +
+            `- Linear: \`linear issue view ${pendingTicketId}\`\n` +
+            `- Jira: \`jira view ${pendingTicketId}\`\n` +
+            `- Asana: fetch the task via API\n` +
+            `- Generic: \`tk show ${pendingTicketId}\``,
+        };
+      }
     }
 
     // ── Investigation mode: block edit/write ──

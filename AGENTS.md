@@ -202,21 +202,6 @@ just bootstrap        # emergency: rebuild from scratch without just in PATH
 
 Always run `just validate` after nix refactors before pushing.
 
-## Bead Issue Tracking
-
-This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get
-started.
-
-## Quick Reference
-
-```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --status in_progress  # Claim work
-bd close <id>         # Complete work
-bd sync               # Sync with git
-```
-
 ## Jujutsu (jj) Aliases
 
 **Use these aliases instead of full commands:**
