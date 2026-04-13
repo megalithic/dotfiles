@@ -19,6 +19,7 @@ const STOP_CHECK_PROMPT =
 const LOCAL_GATEKEEPER_PROVIDER = "ollama";
 const LOCAL_GATEKEEPER_MODEL_ID = "gemma4:e2b";
 
+// Cloud fallback when local ollama is unavailable
 const CLOUD_GATEKEEPER_PROVIDER = "anthropic";
 const CLOUD_GATEKEEPER_MODEL_ID = "claude-haiku-4-5";
 
@@ -83,7 +84,47 @@ function buildGatekeeperMessages(messages: any[]) {
   ];
 }
 
-async function askGatekeeper(
+/**
+ * Call ollama directly with think: false to prevent gemma4 from burning
+ * tokens on its thinking chain instead of producing a YES/NO response.
+ */
+async function askOllamaGatekeeper(
+  modelId: string,
+  contextMessages: any[],
+): Promise<boolean | null> {
+  try {
+    const body = JSON.stringify({
+      model: modelId,
+      messages: contextMessages.flatMap((m: any) =>
+        (m.content || [])
+          .filter((b: any) => b.type === "text")
+          .map((b: any) => ({ role: m.role || "user", content: b.text }))
+      ),
+      stream: false,
+      think: false,
+      options: { num_predict: 16 },
+    });
+
+    const res = await fetch("http://127.0.0.1:11434/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text = (data.message?.content || "").trim().toUpperCase();
+    return !text.startsWith("NO");
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Call cloud gatekeeper via pi's model registry + completeSimple.
+ */
+async function askCloudGatekeeper(
   provider: string,
   modelId: string,
   contextMessages: any[],
@@ -147,13 +188,11 @@ async function shouldSendNudge(
 
   const contextMessages = buildGatekeeperMessages(messages);
 
-  // Try local gatekeeper model first
+  // Try local ollama gatekeeper first (direct HTTP, think: false)
   try {
-    const result = await askGatekeeper(
-      LOCAL_GATEKEEPER_PROVIDER,
+    const result = await askOllamaGatekeeper(
       LOCAL_GATEKEEPER_MODEL_ID,
       contextMessages,
-      ctx,
     );
     if (result !== null) {
       failureCounter.count = 0;
@@ -163,9 +202,9 @@ async function shouldSendNudge(
     failureCounter.count++;
   }
 
-  // Fall back to cloud gatekeeper model
+  // Fall back to cloud gatekeeper (cheap — haiku)
   try {
-    const result = await askGatekeeper(
+    const result = await askCloudGatekeeper(
       CLOUD_GATEKEEPER_PROVIDER,
       CLOUD_GATEKEEPER_MODEL_ID,
       contextMessages,
@@ -179,7 +218,7 @@ async function shouldSendNudge(
     failureCounter.count++;
   }
 
-  // Both models unavailable — nudge as safe default (unless too many failures)
+  // Both unavailable — nudge as safe default (unless too many failures)
   if (failureCounter.count >= MAX_GATEKEEPER_FAILURES) return false;
   return true;
 }
