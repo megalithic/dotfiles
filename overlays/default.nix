@@ -12,6 +12,11 @@
       config.allowUnfreePredicate = _: true;
     };
 
+    # direnv 2.37.1 fish test gets OOM-killed in nix sandbox
+    direnv = prev.direnv.overrideAttrs (old: {
+      doCheck = false;
+    });
+
     # NOTE: keeping these around for posterity and quicker reference
     # llm-agents = let
     #   upstream = inputs.llm-agents.packages.${prev.stdenv.hostPlatform.system};

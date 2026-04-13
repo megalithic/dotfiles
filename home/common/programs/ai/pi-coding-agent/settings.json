@@ -1,0 +1,28 @@
+{
+  "retry": {
+    "baseDelayMs": 1000,
+    "maxDelayMs": 900000
+  },
+  "defaultProvider": "anthropic",
+  "defaultModel": "claude-opus-4-6",
+  "defaultThinkingLevel": "medium",
+  "doubleEscapeAction": "tree",
+  "enableSkillCommands": true,
+  "hideThinkingBlock": true,
+  "editorPaddingX": 1,
+  "packages": [],
+  "enabledModels": [
+    "ollama/gemma4:e4b",
+    "ollama/gemma4:e2b",
+    "google-vertex/gemini-3.1-pro-preview",
+    "google-vertex/gemini-3-pro-preview",
+    "google-vertex/gemini-3-flash-preview",
+    "anthropic/claude-opus-4-5",
+    "anthropic/claude-opus-4-6",
+    "anthropic/claude-sonnet-4-5"
+  ],
+  "terminal": {
+    "showImages": false
+  },
+  "shellCommandPrefix": "export GIT_EDITOR=true\nexport GIT_SEQUENCE_EDITOR=true\nexport GIT_TERMINAL_PROMPT=0"
+}
