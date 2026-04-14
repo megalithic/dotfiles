@@ -97,8 +97,9 @@ export default function (pi: ExtensionAPI) {
         tui.requestRender();
       });
 
+      const vcsTools = new Set(["bash", "edit", "write"]);
       pi.on("tool_execution_end", async (event) => {
-        if (event.toolName === "Bash") {
+        if (vcsTools.has(event.toolName.toLowerCase())) {
           cachedStarship = await fetchStarship(ctx.cwd);
           tui.requestRender();
         }
