@@ -42,6 +42,7 @@ interface SentinelConfig {
   interactive_commands: Record<string, InteractiveCommand>;
   always_interactive: { commands: Record<string, AlwaysInteractiveEntry> };
   tool_corrections: Record<string, ToolCorrection>;
+  ticket_gate?: boolean;
 }
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -595,7 +596,30 @@ function buildRules(config: SentinelConfig): Rule[] {
     name: "project-pkg-install",
     tier: "confirm",
     tools: ["bash"],
-    test: (cmd) => {
+    test: (cmd, path) => {
+      // Allowed directories for package installs (nix-managed extensions)
+      const allowedPaths = [
+        `${HOME}/.dotfiles/home/common/programs/ai/pi-coding-agent/packages`,
+      ];
+
+      // Check if current working directory is within allowed paths
+      const normalizedPath = normalizePath(path || "");
+      const isAllowed = allowedPaths.some(allowed =>
+        normalizedPath.startsWith(`${allowed}/`) || normalizedPath === allowed
+      );
+
+      if (isAllowed) return false; // Allow in allowed directories
+
+      // Check for cd in command (updates working directory)
+      const cdMatch = cmd.match(/\bcd\s+(\S+)/);
+      if (cdMatch) {
+        const cdPath = normalizePath(cdMatch[1]);
+        const cdAllowed = allowedPaths.some(allowed =>
+          cdPath.startsWith(`${allowed}/`) || cdPath === allowed || cdPath === allowed
+        );
+        if (cdAllowed) return false; // Allow in cd-changed directories
+      }
+
       // mix deps.get is always allowed - standard Elixir workflow
       if (isCommandPrefix(cmd, "mix", "deps.get")) return false;
       return isCommandPrefix(cmd, "npm", "install") ||
@@ -638,6 +662,18 @@ function buildRules(config: SentinelConfig): Rule[] {
       reason: correction.reason,
     });
   }
+
+  // ── REWRITE: harness built-in tools that duplicate CLI tools ──
+  // The pi harness (and some wrappers) inject built-in tools like Grep, Read, etc.
+  // Block the ones that bypass our preferred CLI tools (rg, fd, etc.)
+
+  rules.push({
+    name: "Grep→rg",
+    tier: "rewrite",
+    tools: ["Grep"],
+    test: () => true,
+    reason: "Use `rg` via bash instead of the built-in Grep tool.",
+  });
 
   // ── HARD: pipe/redirect without timeout (hang prevention) ──
   // Note: This rule is handled specially in the tool_call handler to check
@@ -753,10 +789,60 @@ function detectPipeOrRedirect(cmd: string): { hasPipe: boolean; hasRedirect: boo
 
 // ── Extension ────────────────────────────────────────────────────────────────
 
+// ── Investigation mode + Ticket-gated editing ────────────────────────────────
+
+const INVESTIGATE_RE = /\b(investigate|inspect|audit)\b/i;
+const FIX_INTENT_RE = /\b(and\s+fix|then\s+fix)\b/i;
+// Ticket ID patterns:
+//   GitHub:  #123
+//   Jira:    PROJ-123
+//   Linear:  ENG-123, TEAM-456 (same as Jira pattern)
+//   Asana:   https://app.asana.com/0/project/task (long numeric IDs)
+//   Asana:   asana:1234567890 (shorthand)
+//   Generic: tk-abc1234 (shorthand)
+const TICKET_ID_RE = /\b(?:#(\d+)|([A-Z]+-\d+)|([a-z]+-[a-z0-9]{4,})|asana:(\d{5,}))\b|https:\/\/app\.asana\.com\/0\/\d+\/(\d+)/i;
+// Commands that "read" a ticket — lifts the gate
+const TICKET_READ_RE = /\b(?:gh\s+issue\s+view|tk\s+show|jira\s+view|linear\s+issue\s+view|curl\s+.*app\.asana\.com)\b/;
+
 export default function (pi: ExtensionAPI) {
   const config = loadConfig();
   const rules = buildRules(config);
   log(`${rules.length} rules loaded`);
+
+  // ── Session-aware state ──
+  let investigationMode = false;
+  let pendingTicketId: string | null = null;
+  let ticketRead = false;
+
+  // Intercept user input: track investigation mode + ticket references
+  pi.on("input", async (event): Promise<void> => {
+    // Reset investigation mode on every new user input
+    investigationMode = false;
+
+    // Skip extension-generated messages (subagent output, etc.)
+    if (event.source === "extension") return;
+
+    const text = event.text || "";
+
+    // Detect investigation mode: "investigate X" without "and fix"
+    if (INVESTIGATE_RE.test(text) && !FIX_INTENT_RE.test(text)) {
+      investigationMode = true;
+      log(`investigation mode: ON`);
+    }
+
+    // Detect ticket reference in user input (gated by config.ticket_gate)
+    if (config.ticket_gate !== false) {
+      const ticketMatch = text.match(TICKET_ID_RE);
+      if (ticketMatch) {
+        pendingTicketId = ticketMatch[0];
+        ticketRead = false;
+        log(`ticket gate: waiting for read of ${pendingTicketId}`);
+      } else {
+        pendingTicketId = null;
+        ticketRead = false;
+      }
+    }
+  });
 
   // Intercept user input for override keywords
   pi.on("input", async (event, ctx): Promise<InputEventResult | void> => {
@@ -827,6 +913,56 @@ export default function (pi: ExtensionAPI) {
     const cmd = (input as any).command as string || "";
     const path = (input as any).path as string || "";
     const timeout = (input as any).timeout as number | undefined;
+
+    // ── Ticket gate (gated by config.ticket_gate) ──
+    if (config.ticket_gate !== false) {
+      // Detect when agent reads the ticket
+      if (
+        pendingTicketId &&
+        !ticketRead &&
+        toolName === "bash" &&
+        typeof cmd === "string" &&
+        TICKET_READ_RE.test(cmd) &&
+        cmd.includes(pendingTicketId)
+      ) {
+        ticketRead = true;
+        log(`ticket gate: ${pendingTicketId} read — gate lifted`);
+      }
+
+      // Block edit/write until ticket is read
+      if (
+        pendingTicketId &&
+        !ticketRead &&
+        (toolName === "edit" || toolName === "write")
+      ) {
+        log(`TICKET-GATE: ${pendingTicketId} not read yet`);
+        return {
+          block: true,
+          reason: `📋 **Read the ticket first**\n\n` +
+            `You referenced ticket \`${pendingTicketId}\` but haven't read it yet.\n\n` +
+            `Read it before making changes:\n` +
+            `- GitHub: \`gh issue view ${pendingTicketId}\`\n` +
+            `- Linear: \`linear issue view ${pendingTicketId}\`\n` +
+            `- Jira: \`jira view ${pendingTicketId}\`\n` +
+            `- Asana: fetch the task via API\n` +
+            `- Generic: \`tk show ${pendingTicketId}\``,
+        };
+      }
+    }
+
+    // ── Investigation mode: block edit/write ──
+    if (
+      investigationMode &&
+      (toolName === "edit" || toolName === "write")
+    ) {
+      log(`INVESTIGATE: blocking ${toolName}`);
+      return {
+        block: true,
+        reason: "🔍 **Investigation mode active**\n\n" +
+          "The user asked you to investigate, not to make changes.\n" +
+          "Report your findings. The user will tell you when to fix things.",
+      };
+    }
 
     // ── Special check: pipe/redirect hang prevention ──
     if (toolName === "bash" && cmd) {

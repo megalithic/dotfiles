@@ -1,0 +1,16 @@
+{
+  "name": "pi-bash-live-view-wrapper",
+  "version": "1.0.0",
+  "description": "Wrapper for pi-bash-live-view npm package",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "pi-bash-live-view": "0.1.1"
+  }
+}

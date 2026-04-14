@@ -22,7 +22,7 @@
       **CRITICAL**: Before EVERY response, you MUST verify:
 
       ```
-      □ Read <system-reminder> tags (context, git status, beads, session state)
+      □ Read <system-reminder> tags (context, git status, tickets, session state)
       □ Checked CLAUDE.md global + project for relevant rules
       □ Identified applicable skills/agents from memory.text
       □ Reviewed tool selection matrix below (no assumptions)
@@ -41,7 +41,7 @@
       | Version control | `git` | `jj` | Load `jj` skill first |
       | File search | `find`, `ls -R` | `fd` | Load `cli-tools` skill if uncertain |
       | Content search | `grep`, `ack` | `rg` | Load `cli-tools` skill if uncertain |
-      | Task tracking | Manual todos, comments | `bd` (beads) | Check `bd ready` before starting |
+      | Task tracking | Manual todos, comments | `tk` (tickets) | Check `tk list` before starting |
       | Notifications | Echo, print, assume | `~/bin/ntfy` | Load `smart-ntfy` skill for routing |
       | Package installation | `brew install`, `npm -g`, `pip install --user` | `nix run/shell` or add to flake | Load `nix` skill; verify pkg exists in nixpkgs FIRST |
       | Nix builds | `nix build` (bare) | `nix build -o /tmp/...` or `just rebuild` | <50% confidence → load `nix` skill |
@@ -131,7 +131,7 @@
       ✓ Skills list (in memory.text and `<system-reminder>`)
       ✓ MCP servers (shown in ai/default.nix config)
       ✓ System config structure (documented in CLAUDE.md)
-      ✓ Git status, beads context (in startup hook output)
+      ✓ Git status, ticket context (in startup hook output)
       ✓ Previously read files in session
       ✓ Working directory, platform, date (in `<env>` tags)
 
@@ -226,7 +226,7 @@
       **See "TOOL SELECTION MATRIX" and "SKILL LOADING REQUIREMENTS" above for complete rules.**
 
       Key reminders:
-      - Use `jj` (not git), `fd` (not find), `rg` (not grep), `bd` (beads for tasks), `~/bin/ntfy` (notifications)
+      - Use `jj` (not git), `fd` (not find), `rg` (not grep), `tk` (tickets for tasks), `~/bin/ntfy` (notifications)
       - Load relevant skills before acting (see skill loading table above)
       - NEVER push to GitHub without explicit user consent each time
 
@@ -273,8 +273,8 @@
 
       | Command | Aliases | Purpose |
       |---------|---------|---------|
-      | `/start` | `/go` | Start work session - sync remote, check bd ready |
-      | `/finish` | `/end`, `/done` | End session - review changes, update beads, prep push |
+      | `/start` | `/go` | Start work session - sync remote, check tk list |
+      | `/finish` | `/end`, `/done` | End session - review changes, update tickets, prep push |
       | `/next` | - | Complete current work, find next task - ensures clean handoff |
       | `/preview` | - | Smart preview - opens content in tmux pane (context-aware) |
 

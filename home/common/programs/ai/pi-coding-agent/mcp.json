@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "context7": {
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "tidewave": {
+      "type": "http",
+      "url": "http://localhost:4116/tidewave/mcp"
+    },
+    "paper": {
+      "type": "http",
+      "url": "http://localhost:29979/mcp"
+    }
+  }
+}

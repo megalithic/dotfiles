@@ -8,7 +8,7 @@ script: scripts/tell.sh
 
 Delegate tasks to other agents. Works with both pi agent sessions and external agents (Claude Code, opencode, aider).
 
-**Script location:** `$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh`
+**Script location:** `~/.dotfiles/home/common/programs/ai/pi-coding-agent/skills/tell/scripts/tell.sh`
 
 > **Note:** All commands below use `tell.sh` for brevity. Always use the full path above when executing.
 
@@ -22,15 +22,15 @@ Send a task to another pi agent running in a tmux session:
 
 ```bash
 # Use full path (recommended)
-$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh mega "fix the failing tests in src/auth"
-$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh rx "review PR #42 and leave comments"
+~/.dotfiles/home/common/programs/ai/pi-coding-agent/skills/tell/scripts/tell.sh mega "fix the failing tests in src/auth"
+~/.dotfiles/home/common/programs/ai/pi-coding-agent/skills/tell/scripts/tell.sh rx "review PR #42 and leave comments"
 ```
 
 **Explicit window targeting** with `session:window` syntax:
 
 ```bash
-$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh rx:agent "do something"    # Target rx session, agent window
-$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh mega:0 "do something"      # Target mega session, window 0
+~/.dotfiles/home/common/programs/ai/pi-coding-agent/skills/tell/scripts/tell.sh rx:agent "do something"    # Target rx session, agent window
+~/.dotfiles/home/common/programs/ai/pi-coding-agent/skills/tell/scripts/tell.sh mega:0 "do something"      # Target mega session, window 0
 ```
 
 **Multi-instance support:** If a session has multiple pi instances (e.g., `mega:0` and `mega:agent`), the tell skill will:
@@ -46,9 +46,9 @@ Socket pattern: `/tmp/pi-{session}-{window}.sock`
 Spawn an external agent in a tmux session to handle a task:
 
 ```bash
-$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --agent claude "run the user-story-sync skill"
-$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --agent opencode "fix the failing tests in src/auth"
-$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --agent aider "refactor the database module"
+~/.dotfiles/home/common/programs/ai/pi-coding-agent/skills/tell/scripts/tell.sh --agent claude "run the user-story-sync skill"
+~/.dotfiles/home/common/programs/ai/pi-coding-agent/skills/tell/scripts/tell.sh --agent opencode "fix the failing tests in src/auth"
+~/.dotfiles/home/common/programs/ai/pi-coding-agent/skills/tell/scripts/tell.sh --agent aider "refactor the database module"
 ```
 
 **Supported agents:**
@@ -62,10 +62,10 @@ Returns immediately. The agent runs in a background tmux session.
 ## Task management
 
 ```bash
-$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --list                    # List all tasks
-$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --status TASK_ID          # Check task status & output
-$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --watch TASK_ID           # Watch external task live
-$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --kill TASK_ID            # Kill a running external task
+~/.dotfiles/home/common/programs/ai/pi-coding-agent/skills/tell/scripts/tell.sh --list                    # List all tasks
+~/.dotfiles/home/common/programs/ai/pi-coding-agent/skills/tell/scripts/tell.sh --status TASK_ID          # Check task status & output
+~/.dotfiles/home/common/programs/ai/pi-coding-agent/skills/tell/scripts/tell.sh --watch TASK_ID           # Watch external task live
+~/.dotfiles/home/common/programs/ai/pi-coding-agent/skills/tell/scripts/tell.sh --kill TASK_ID            # Kill a running external task
 ```
 
 ## When you receive a task (pi agents)
@@ -74,8 +74,8 @@ You'll see: `[TASK:abc123 from mega] do the thing`
 
 Send updates:
 ```bash
-$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --update abc123 "halfway done"
-$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh --done abc123 "finished, all tests pass"
+~/.dotfiles/home/common/programs/ai/pi-coding-agent/skills/tell/scripts/tell.sh --update abc123 "halfway done"
+~/.dotfiles/home/common/programs/ai/pi-coding-agent/skills/tell/scripts/tell.sh --done abc123 "finished, all tests pass"
 ```
 
 ## Attach to external agent session
@@ -105,7 +105,7 @@ This lets you fire-and-forget tasks and get notified when they're done.
 
 ```bash
 # Define shorthand for readability
-TELL="$PI_CODING_AGENT_DIR/skills/tell/scripts/tell.sh"
+TELL="~/.dotfiles/home/common/programs/ai/pi-coding-agent/skills/tell/scripts/tell.sh"
 
 # Tell specific window in a session
 $TELL rx:agent "review the changes and suggest improvements"

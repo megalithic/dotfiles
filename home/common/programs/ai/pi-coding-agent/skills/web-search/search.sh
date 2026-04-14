@@ -70,22 +70,8 @@ CMD+=("$QUERY")
 
 # Run ddgr and format output
 JSON=$("${CMD[@]}" 2>/dev/null) || {
-  echo "ddgr failed, falling back to brave-search..." >&2
-  BRAVE_SCRIPT="$HOME/.pi/agent/skills/brave-search/search.js"
-  if [[ -x "$BRAVE_SCRIPT" ]] || [[ -f "$BRAVE_SCRIPT" ]]; then
-    BRAVE_CMD=("$BRAVE_SCRIPT" "$QUERY" -n "$NUM")
-    # Map time filter to brave freshness
-    case "$TIME" in
-      d) BRAVE_CMD+=(--freshness pd) ;;
-      w) BRAVE_CMD+=(--freshness pw) ;;
-      m) BRAVE_CMD+=(--freshness pm) ;;
-      y) BRAVE_CMD+=(--freshness py) ;;
-    esac
-    exec node "${BRAVE_CMD[@]}"
-  else
-    echo "Error: brave-search fallback not available" >&2
-    exit 1
-  fi
+  echo "Error: ddgr search failed" >&2
+  exit 1
 }
 
 # Format JSON output

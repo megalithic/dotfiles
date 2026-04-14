@@ -135,8 +135,14 @@ command = '''
     jj_output=$(echo "$jj_output" | sed "s/⋮/${parent_bookmark} ⋮/")
   fi
 
-  # echo -e "${ws_prefix}${jj_output}"
-  echo -e "${jj_output}"
+  # Check for uncommitted changes (dirty working copy)
+  dirty=""
+  if jj status --no-pager 2>/dev/null | grep -q "Working copy changes:"; then
+    # megagrove red: #e67e80 —  (dirty/staged icon from prompt_megalithic_setup)
+    dirty=" \x1b[38;2;230;126;128m\x1b[0m"
+  fi
+
+  echo -e "${jj_output}${dirty}"
 '''
 
 [git_branch]

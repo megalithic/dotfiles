@@ -1,0 +1,25 @@
+{
+  "providers": {
+    "ollama": {
+      "baseUrl": "http://localhost:11434/v1",
+      "apiKey": "ollama",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "gemma4:e2b",
+          "reasoning": false,
+          "input": ["text"],
+          "contextWindow": 128000,
+          "maxTokens": 8192
+        },
+        {
+          "id": "gemma4:e4b",
+          "reasoning": false,
+          "input": ["text", "image"],
+          "contextWindow": 128000,
+          "maxTokens": 8192
+        }
+      ]
+    }
+  }
+}
