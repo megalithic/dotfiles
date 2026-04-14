@@ -121,10 +121,7 @@
     shellcheck
     shfmt
 
-    # docker
-    # colima  # Disabled: depends on lima-full-1.2.2 which is EOL/insecure
-    docker
-    docker-compose
+    # docker (CLI provided by OrbStack, installed via brew cask)
     docker-compose-language-service
     dockerfile-language-server
     podman

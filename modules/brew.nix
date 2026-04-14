@@ -21,6 +21,7 @@
       # "microsoft-teams"
       "mouseless"
       "okta-verify" # really just needed for work laptop
+      "orbstack" # Docker containers + Linux VMs (replaces colima)
       "protonvpn"
       "proton-drive"
       "obs@beta"
