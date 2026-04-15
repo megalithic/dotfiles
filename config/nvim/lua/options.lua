@@ -3,7 +3,7 @@
 
 local opt = vim.opt
 
--- require("vim._core.ui2").enable({})
+require("vim._core.ui2").enable({ msg = { target = "cmd" } })
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- UI
