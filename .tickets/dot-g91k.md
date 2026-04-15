@@ -1,6 +1,6 @@
 ---
 id: dot-g91k
-status: open
+status: closed
 deps: []
 links: [dot-86tz]
 created: 2026-04-15T14:29:27Z
@@ -59,3 +59,9 @@ Key files:
 9. Skill warns before overwriting existing server with same name
 10. just validate passes after adding the skill
 
+
+## Notes
+
+**2026-04-15T17:57:57Z**
+
+Created mcpctl skill at skills/mcpctl/SKILL.md. Covers all 5 operations (add/remove/list/inspect/troubleshoot), both scopes (global nix-managed + project direct), both server types (stdio/HTTP), imports feature, load order docs. Auto-discovered by nix. just validate home passes.
