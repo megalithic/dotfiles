@@ -15,8 +15,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PKG_BASE="$SCRIPT_DIR/../packages"
 NIX_FILE="$SCRIPT_DIR/../default.nix"
 
-# Map package dir names to their nix variable names (for npmDepsHash patching)
-# Format: dir_name:pname_in_nix
+# Map package dir names to their nix variable names (for npmDepsHash patching).
+# AGENT CONTEXT: when adding a new package to packages/, also add it here.
+# Format: [dir_name]="pname_in_nix" (pname must match the pname = "..." in default.nix)
 declare -A PNAME_MAP=(
   [pi]="pi-coding-agent"
   [pi-mcp-adapter]="pi-mcp-adapter"

@@ -1,31 +1,36 @@
 # Pi Coding Agent Configuration
-# Manages pi settings, extensions, skills, and socket naming via Nix
+# Manages pi settings, extensions, skills, and socket naming via Nix.
 #
-# Structure:
-#   - default.nix (this file): Main config with packages/ builds + auto-discovery
-#   - packages/: npm packages built via buildNpmPackage (pi binary, extensions with deps)
-#   - extensions/: TypeScript extensions (auto-discovered)
-#   - skills/: Simple skills (auto-discovered, symlinked)
-#   - agents/: Agent definitions (auto-discovered .md files)
-#   - prompts/: Prompt templates (auto-discovered .md files)
-#   - patches/: Patches applied to built packages
-#   - sources/: Source files like GLOBAL_AGENTS.md
-#   - settings.json: Plain JSON settings (merged into ~/.pi/agent/settings.json)
-#   - keybindings.json: Plain JSON keybindings (symlinked directly)
-#   - models.json: Custom model/provider definitions (symlinked directly)
-#   - mcp.json: MCP server configuration (symlinked directly)
-#   - merge-settings.sh: Idempotent settings merge script
+# AGENT CONTEXT — read before editing this file:
 #
-# Socket Configuration (single source of truth):
-#   - PI_SOCKET_DIR: Directory for sockets (/tmp)
-#   - PI_SOCKET_PREFIX: Socket name prefix (pi)
-#   - PI_SESSION: Current tmux session name
-#   - PI_WINDOW: Current tmux window index
-#   - PI_SOCKET: Full socket path (/tmp/pi-{session}-{window}.sock)
+#   Adding a simple extension (no npm deps):
+#     Just drop a .ts file in extensions/ — auto-discovered, no changes here.
+#     Directories work too (e.g., extensions/subagent/).
+#     To disable: add filename to disabledExtensions list below.
+#
+#   Adding an extension WITH npm deps:
+#     1. Create packages/<name>/ with package.json + package-lock.json
+#     2. Add a buildNpmPackage block below (follow existing patterns)
+#     3. Add home.file mapping in the File Symlinks section
+#     4. Add to PNAME_MAP in scripts/update-npm-pkg.sh
+#     5. Run: just update-npm <name> && just home
+#
+#   Adding a skill (no npm deps):
+#     Create skills/<name>/SKILL.md — auto-discovered, no changes here.
+#
+#   Updating pi or any npm package:
+#     1. Edit version in packages/<name>/package.json (single source of truth)
+#     2. Run: just update-npm <name>
+#     3. Run: just home
+#
+#   Key patterns:
+#     - npmVersion: reads version from package.json deps (no version duplication)
+#     - npmDepsHash: sri hash, auto-updated by scripts/update-npm-pkg.sh
+#     - Auto-discovery: extensions/ and skills/ contents auto-symlinked
+#     - Patches: applied during buildNpmPackage installPhase (see patches/)
 #
 # Socket pattern: /tmp/pi-{session}-{window}.sock
 #   - One socket per tmux window (allows multiple pi instances)
-#   - Enables multi-instance workflows (e.g., mega:0 and mega:agent)
 #   - Non-tmux fallback: /tmp/pi-default-0.sock
 #
 # Based on: https://github.com/otahontas/nix/tree/main/home/configs/pi-coding-agent
@@ -73,9 +78,10 @@
   # ===========================================================================
   # Packages (npm packages built via buildNpmPackage)
   # ===========================================================================
-  # Each package has a package.json + package-lock.json in packages/<name>/
-  # To add: mkdir packages/<name>, npm init + npm install <dep>, add buildNpmPackage here
-  # To update: edit version in package.json, run `just update-npm [pkg]`
+  # Each package: packages/<name>/ with package.json + package-lock.json
+  # To add: mkdir packages/<name>, npm init, npm install <dep>, add block here,
+  #         add to PNAME_MAP in scripts/update-npm-pkg.sh, run just update-npm <name>
+  # To update: edit version in packages/<name>/package.json, run just update-npm <name>
 
   # Read version from a package's sole npm dependency (single source of truth)
   npmVersion = dir: let
@@ -262,7 +268,7 @@
   # Auto-discovery Configuration
   # ===========================================================================
 
-  # Extensions to exclude from auto-loading
+  # Extensions to exclude from auto-loading (filename as it appears in extensions/)
   disabledExtensions = [
     "checkpoint.ts" # Too intrusive
     "subscription-fallback.ts" # Doesn't support everything we need
@@ -275,6 +281,8 @@
 
   # ===========================================================================
   # Auto-discover extensions (.ts files and directories in extensions/)
+  # Simple extensions go in extensions/ — no need to add home.file entries.
+  # Extensions with npm deps go in packages/ and need explicit home.file below.
   # ===========================================================================
   extensionDir = ./extensions;
   extensionDirExists = builtins.pathExists extensionDir;
