@@ -1,6 +1,6 @@
 ---
 id: dot-wl77
-status: open
+status: closed
 deps: [dot-0kut]
 links: []
 created: 2026-04-15T16:35:56Z
