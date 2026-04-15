@@ -197,6 +197,8 @@ just rebuild          # full: darwin + home (syncs from remote first)
 just darwin           # darwin-only (system settings, brew)
 just home             # home-manager only (user packages, dotfiles)
 just validate         # build both without switching (catches errors)
+just validate darwin   # darwin-only validation
+just validate home     # home-manager-only validation
 just bootstrap        # emergency: rebuild from scratch without just in PATH
 ```
 

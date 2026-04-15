@@ -114,20 +114,33 @@ bootstrap:
 
   echo ":: Bootstrap complete."
 
-# Validate: build both configs without switching (catches errors before they break things)
-# Usage: just validate
+# Validate: build configs without switching (catches errors before they break things)
+# Usage: just validate [darwin|home]  — omit argument to build both
 [macos]
-validate:
+validate target="":
   #!/usr/bin/env bash
   set -euo pipefail
   HOST=$(hostname -s)
-  echo ":: Building darwin configuration (no switch)..."
-  darwin-rebuild build --flake ".#$HOST"
-  rm -f result
-  echo ":: Building home-manager configuration (no switch)..."
-  nix run home-manager -- build --flake ".#$(whoami)@$HOST"
-  rm -f result
-  echo ":: ✓ Both configurations build successfully."
+  TARGET="{{ target }}"
+  if [[ -z "$TARGET" || "$TARGET" == "darwin" ]]; then
+    echo ":: Building darwin configuration (no switch)..."
+    darwin-rebuild build --flake ".#$HOST"
+    rm -f result
+  fi
+  if [[ -z "$TARGET" || "$TARGET" == "home" ]]; then
+    echo ":: Building home-manager configuration (no switch)..."
+    nix run home-manager -- build --flake ".#$(whoami)@$HOST"
+    rm -f result
+  fi
+  if [[ -n "$TARGET" && "$TARGET" != "darwin" && "$TARGET" != "home" ]]; then
+    echo "Error: unknown target '$TARGET'. Use 'darwin', 'home', or omit for both." >&2
+    exit 1
+  fi
+  if [[ -z "$TARGET" ]]; then
+    echo ":: ✓ Both configurations build successfully."
+  else
+    echo ":: ✓ $TARGET configuration builds successfully."
+  fi
 
 # Full rebuild: sync from remote, darwin-rebuild, home-manager switch
 # Usage: just rebuild [--dry-run]

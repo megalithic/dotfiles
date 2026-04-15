@@ -1,6 +1,6 @@
 ---
 id: dot-egiy
-status: open
+status: closed
 deps: [dot-wl77]
 links: []
 created: 2026-04-15T16:36:08Z
@@ -43,3 +43,9 @@ Files to edit:
 6. Total GLOBAL file is ~150 lines or less
 7. just validate passes
 
+
+## Notes
+
+**2026-04-15T17:04:40Z**
+
+Added AC: just validate now accepts 'darwin' or 'home' argument, or no arg for both. Justfile updated and tested.

@@ -1,8 +1,8 @@
 ---
 id: dot-mmvc
-status: open
+status: closed
 deps: [dot-egiy]
-links: []
+links: [dot-p774]
 created: 2026-04-15T16:36:17Z
 type: task
 priority: 2
@@ -40,3 +40,9 @@ Files to edit:
 5. Sentinel extension referenced as source of truth for enforcement details
 6. just validate passes
 
+
+## Notes
+
+**2026-04-15T17:23:32Z**
+
+New AC: Investigate commit scope guard — automated enforcement that validates edits/commands belong to current commit scope. Options: pi extension (before_tool_call hook), local LLM classification (like stop-hook), or heuristic file-set tracking. Should warn/block when work drifts outside current commit's logical scope unless user opted into single-commit mode.
