@@ -11,6 +11,7 @@ return {
   --   opts = { at_edge = "stop" },
   {
     "mrjones2014/smart-splits.nvim",
+    cond = function() return not vim.g.started_by_firenvim end,
     lazy = false,
     opts = { ignored_buftypes = { "nofile" }, cursor_follows_swapped_bufs = true, at_edge = "stop" },
     keys = {
