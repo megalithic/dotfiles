@@ -454,7 +454,7 @@
     fi
 
     # Add tools to PATH
-    export PATH="${pkgs.ast-grep}/bin:$PATH"
+    # export PATH="${pkgs.ast-grep}/bin:$PATH"
 
     # Handle profile auth borrowing
     if [[ -n "$PROFILE" ]]; then
