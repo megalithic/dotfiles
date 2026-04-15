@@ -72,3 +72,37 @@ for PNAME_MAP.
 - Don't edit `~/.pi/agent/extensions/` — nix-store symlinks
 - Pi uses jiti for TypeScript — extensions run without precompilation
 - `pi-review-loop` in `~/.pi/agent/extensions/` is NOT nix-managed (local only)
+
+## Telegram / Pi Bridge
+
+Pi receives Telegram messages via Hammerspoon → Unix socket → `bridge.ts`.
+Requires running pi through `pinvim` or `pisock` wrapper.
+
+```
+Telegram → Hammerspoon → Unix Socket → pi (bridge.ts) → notify.ts
+```
+
+Key files:
+- `extensions/bridge.ts` — socket server, receives messages
+- `extensions/notify.ts` — suppresses notifications during Telegram conversations
+- `config/hammerspoon/lib/interop/pi.lua` — forwards Telegram to socket
+
+When receiving `📱 **Telegram message:**`:
+1. Acknowledge immediately via `~/bin/ntfy send -t "pi agent" -m "..." --telegram`
+2. Proceed with requested task
+
+Default session: `mega` (configured in `lib/interop/pi.lua`).
+
+### Debugging
+
+```bash
+echo $PI_SOCKET        # Should show /tmp/pi-{session}-{window}.sock
+ls -la /tmp/pi-*.sock  # Socket exists?
+echo '{"type":"telegram","text":"test"}' | nc -U /tmp/pi-{session}.sock
+```
+
+| Symptom | Fix |
+|---------|-----|
+| No socket file | Use `pinvim` or `pisock pi` |
+| Socket exists, no messages | Check Hammerspoon console/logs |
+| "Bridge listening" not shown | Check `~/.pi/agent/extensions/` |
