@@ -186,10 +186,47 @@ hs.inspect(_G.S)           -- View all state
 hs.inspect(_G.S.notification)  -- View specific namespace
 ```
 
-### Force reload
+### Force reload (CRITICAL — DO NOT CRASH)
 
+**Never use `hs -c "hs.reload()"` directly** — it destroys the Lua interpreter
+and crashes the IPC connection. Also avoid calling `hs.reload()` from timers
+inside `hs -c` commands.
+
+```bash
+# CORRECT — use the hs-reload script (clicks menu, waits for "hammerspork loaded")
+hs-reload
+
+# WRONG — crashes IPC connection
+hs -c "hs.reload()"
+```
+
+The `hs-reload` script uses AppleScript to click "Reload Config" in the menu bar,
+then watches the console for "hammerspork loaded" to confirm completion.
+
+From Lua (inside Hammerspoon console or a module):
 ```lua
-hs.reload()  -- or Cmd+Ctrl+R if bound
+hs.reload()  -- OK here, only dangerous via hs -c
+```
+
+### If Hammerspoon is crashed/not running
+
+```bash
+open -a Hammerspoon
+sleep 3  # Wait for init
+hs -c 'print("ok")' && echo "✓ Started"
+```
+
+### Quick hs -c commands
+
+```bash
+# Test if alive
+hs -c 'print("ok")'
+
+# Get last 20 console lines
+hs -c 'local c = hs.console.getConsole(); local lines = {}; for line in c:gmatch("[^\n]+") do lines[#lines+1] = line end; for i = math.max(1, #lines-20), #lines do print(lines[i]) end'
+
+# Check specific module loaded
+hs -c 'print(HUD ~= nil and "HUD loaded" or "HUD missing")'
 ```
 
 ### Check for errors after reload

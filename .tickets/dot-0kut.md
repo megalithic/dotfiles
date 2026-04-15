@@ -1,6 +1,6 @@
 ---
 id: dot-0kut
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-04-15T16:35:47Z
