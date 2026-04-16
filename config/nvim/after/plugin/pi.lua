@@ -45,7 +45,7 @@ local config = {
   live_context = {
     enabled = true,
     -- NOTE: CursorMoved is high-traffic. Use CursorHold for lower frequency.
-    events = { "BufEnter", "BufWritePost", "InsertLeave", "ModeChanged" },
+    events = { "BufEnter", "BufWritePost", "InsertLeave", "ModeChanged", "CursorHold" },
     debounce_ms = 150,
     include_buffer_text = false,
     max_buffer_bytes = 200000,
@@ -102,9 +102,7 @@ local conn = {
 --- Check if a path is a socket
 ---@param path string
 ---@return boolean
-local function socket_exists(path)
-  return vim.fn.getftype(path) == "socket"
-end
+local function socket_exists(path) return vim.fn.getftype(path) == "socket" end
 
 --- Check if a process is alive
 ---@param pid number
@@ -243,9 +241,7 @@ local function handle_response(line)
   end
 
   if resp.ok == false and resp.error then
-    vim.schedule(function()
-      vim.notify("pi error: " .. resp.error, vim.log.levels.ERROR)
-    end)
+    vim.schedule(function() vim.notify("pi error: " .. resp.error, vim.log.levels.ERROR) end)
   end
 end
 
@@ -256,15 +252,13 @@ local function flush_queue()
   local count = #conn.queue
   for _, item in ipairs(conn.queue) do
     local json = vim.json.encode(item.payload) .. "\n"
-    if conn.pipe and conn.connected then
-      conn.pipe:write(json)
-    end
+    if conn.pipe and conn.connected then conn.pipe:write(json) end
   end
   conn.queue = {}
 
-  vim.schedule(function()
-    vim.notify(string.format("Flushed %d queued message(s) to pi", count), vim.log.levels.INFO)
-  end)
+  vim.schedule(
+    function() vim.notify(string.format("Flushed %d queued message(s) to pi", count), vim.log.levels.INFO) end
+  )
 end
 
 --- Stop ping timer
@@ -281,17 +275,19 @@ local function start_ping_timer()
   stop_ping_timer()
   local interval_ms = config.connection.ping_interval_s * 1000
   conn.ping_timer = vim.uv.new_timer()
-  conn.ping_timer:start(interval_ms, interval_ms, vim.schedule_wrap(function()
-    if conn.pipe and conn.connected then
-      local ok, _ = pcall(function()
-        conn.pipe:write(vim.json.encode({ type = "ping" }) .. "\n")
-      end)
-      if not ok then
-        -- Write failed, connection is dead
-        stop_ping_timer()
+  conn.ping_timer:start(
+    interval_ms,
+    interval_ms,
+    vim.schedule_wrap(function()
+      if conn.pipe and conn.connected then
+        local ok, _ = pcall(function() conn.pipe:write(vim.json.encode({ type = "ping" }) .. "\n") end)
+        if not ok then
+          -- Write failed, connection is dead
+          stop_ping_timer()
+        end
       end
-    end
-  end))
+    end)
+  )
 end
 
 --- Stop reconnect timer
@@ -309,19 +305,21 @@ local function schedule_reconnect()
 
   conn.reconnect_attempts = conn.reconnect_attempts + 1
   if conn.reconnect_attempts > config.connection.reconnect_max_retries then
-    vim.schedule(function()
-      vim.notify(
-        string.format("Pi: gave up reconnecting after %d attempts", config.connection.reconnect_max_retries),
-        vim.log.levels.WARN
-      )
-    end)
+    vim.schedule(
+      function()
+        vim.notify(
+          string.format("Pi: gave up reconnecting after %d attempts", config.connection.reconnect_max_retries),
+          vim.log.levels.WARN
+        )
+      end
+    )
     -- Drop queued messages
     if #conn.queue > 0 then
       local dropped = #conn.queue
       conn.queue = {}
-      vim.schedule(function()
-        vim.notify(string.format("Pi: dropped %d queued message(s)", dropped), vim.log.levels.WARN)
-      end)
+      vim.schedule(
+        function() vim.notify(string.format("Pi: dropped %d queued message(s)", dropped), vim.log.levels.WARN) end
+      )
     end
     return
   end
@@ -329,16 +327,29 @@ local function schedule_reconnect()
   local delay_s = math.min(conn.reconnect_delay_s, config.connection.reconnect_max_delay_s)
   conn.reconnect_delay_s = conn.reconnect_delay_s * 2 -- exponential backoff
 
-  vim.schedule(function()
-    vim.notify(string.format("Pi: reconnecting in %ds (attempt %d/%d)",
-      delay_s, conn.reconnect_attempts, config.connection.reconnect_max_retries), vim.log.levels.INFO)
-  end)
+  vim.schedule(
+    function()
+      vim.notify(
+        string.format(
+          "Pi: reconnecting in %ds (attempt %d/%d)",
+          delay_s,
+          conn.reconnect_attempts,
+          config.connection.reconnect_max_retries
+        ),
+        vim.log.levels.INFO
+      )
+    end
+  )
 
   conn.reconnect_timer = vim.uv.new_timer()
-  conn.reconnect_timer:start(delay_s * 1000, 0, vim.schedule_wrap(function()
-    stop_reconnect_timer()
-    connection_connect()
-  end))
+  conn.reconnect_timer:start(
+    delay_s * 1000,
+    0,
+    vim.schedule_wrap(function()
+      stop_reconnect_timer()
+      connection_connect()
+    end)
+  )
 end
 
 --- Disconnect and clean up pipe
@@ -379,9 +390,7 @@ function connection_connect()
     if err then
       pipe:close()
       conn.connecting = false
-      vim.schedule(function()
-        schedule_reconnect()
-      end)
+      vim.schedule(function() schedule_reconnect() end)
       return
     end
 
@@ -409,11 +418,7 @@ function connection_connect()
       while idx do
         local line = conn.read_buffer:sub(1, idx - 1)
         conn.read_buffer = conn.read_buffer:sub(idx + 1)
-        if line ~= "" then
-          vim.schedule(function()
-            handle_response(line)
-          end)
-        end
+        if line ~= "" then vim.schedule(function() handle_response(line) end) end
         idx = conn.read_buffer:find("\n")
       end
     end)
@@ -440,9 +445,7 @@ local function send_payload(payload, opts)
     local json = vim.json.encode(payload) .. "\n"
     local ok, write_err = pcall(function() conn.pipe:write(json) end)
     if ok then
-      if not opts.silent then
-        vim.notify("Sent to pi", vim.log.levels.INFO)
-      end
+      if not opts.silent then vim.notify("Sent to pi", vim.log.levels.INFO) end
       -- Ring bell + ensure pane via tmux-toggle-pi
       if vim.env.TMUX and conn.socket_path then
         vim.fn.jobstart({ "tmux-toggle-pi", "--bell", conn.socket_path }, { detach = true })
@@ -489,9 +492,7 @@ local function send_payload(payload, opts)
   pipe:connect(socket_path, function(err)
     if err then
       pipe:close()
-      vim.schedule(function()
-        vim.notify("pi socket not available: " .. socket_path, vim.log.levels.ERROR)
-      end)
+      vim.schedule(function() vim.notify("pi socket not available: " .. socket_path, vim.log.levels.ERROR) end)
       return
     end
 
@@ -511,20 +512,14 @@ local function send_payload(payload, opts)
         local line = buf:sub(1, nl - 1)
         pipe:read_stop()
         pipe:close()
-        vim.schedule(function()
-          handle_response(line)
-        end)
+        vim.schedule(function() handle_response(line) end)
       end
     end)
 
     vim.schedule(function()
-      if not opts.silent then
-        vim.notify("Sent to pi", vim.log.levels.INFO)
-      end
+      if not opts.silent then vim.notify("Sent to pi", vim.log.levels.INFO) end
       -- Ring bell + ensure pane via tmux-toggle-pi
-      if vim.env.TMUX then
-        vim.fn.jobstart({ "tmux-toggle-pi", "--bell", socket_path }, { detach = true })
-      end
+      if vim.env.TMUX then vim.fn.jobstart({ "tmux-toggle-pi", "--bell", socket_path }, { detach = true }) end
       if opts.auto_toggle and vim.env.TMUX then
         local ensure_cmd = { "tmux-toggle-pi", "--ensure" }
         table.insert(ensure_cmd, "--socket")
@@ -881,9 +876,7 @@ function mega.p.pi.add_file(filepath, opts)
 
   -- Check if we should send as reference or content
   local send_as_reference = opts.as_reference
-  if send_as_reference == nil then
-    send_as_reference = config.context.send_as_reference
-  end
+  if send_as_reference == nil then send_as_reference = config.context.send_as_reference end
 
   if send_as_reference then
     -- Send file reference (pi reads the file itself)
@@ -1161,9 +1154,7 @@ function mega.p.pi.statusline()
   local data = mega.p.pi.statusline_data()
   local icon = mega.ui.icons.pi.symbol
 
-  if data.reconnecting then
-    return string.format("%%#StWarning#%s…%%*", icon)
-  end
+  if data.reconnecting then return string.format("%%#StWarning#%s…%%*", icon) end
 
   if not data.connected then return string.format("%%#StComment#%s%%*", icon) end
 
@@ -1500,9 +1491,7 @@ local function build_editor_state()
   if config.live_context.include_buffer_text then
     local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
     local text = table.concat(lines, "\n")
-    if #text > config.live_context.max_buffer_bytes then
-      text = text:sub(1, config.live_context.max_buffer_bytes)
-    end
+    if #text > config.live_context.max_buffer_bytes then text = text:sub(1, config.live_context.max_buffer_bytes) end
     state.buffer_text = text
   end
 
@@ -1517,24 +1506,26 @@ local function push_editor_state()
   -- Mark pending and debounce
   live_context_pending = true
 
-  if not live_context_timer then
-    live_context_timer = vim.uv.new_timer()
-  end
+  if not live_context_timer then live_context_timer = vim.uv.new_timer() end
 
   live_context_timer:stop()
-  live_context_timer:start(config.live_context.debounce_ms, 0, vim.schedule_wrap(function()
-    if not live_context_pending then return end
-    live_context_pending = false
+  live_context_timer:start(
+    config.live_context.debounce_ms,
+    0,
+    vim.schedule_wrap(function()
+      if not live_context_pending then return end
+      live_context_pending = false
 
-    if not conn.connected then return end
+      if not conn.connected then return end
 
-    local state = build_editor_state()
-    -- Skip non-file buffers
-    if state.buftype ~= "" then return end
-    if state.absFile == "" then return end
+      local state = build_editor_state()
+      -- Skip non-file buffers
+      if state.buftype ~= "" then return end
+      if state.absFile == "" then return end
 
-    send_payload({ type = "editor_state", state = state }, { auto_toggle = false, silent = true })
-  end))
+      send_payload({ type = "editor_state", state = state }, { auto_toggle = false, silent = true })
+    end)
+  )
 end
 
 --- Set up autocmds for live context sync
@@ -1545,9 +1536,7 @@ local function setup_live_context()
   for _, event in ipairs(config.live_context.events) do
     vim.api.nvim_create_autocmd(event, {
       group = group,
-      callback = function()
-        push_editor_state()
-      end,
+      callback = function() push_editor_state() end,
     })
   end
 end
@@ -1609,9 +1598,7 @@ function mega.p.pi.compose_flush()
     for i, item in ipairs(compose_queue) do
       if item.type == "selection" then
         local header = item.file or "unknown"
-        if item.range then
-          header = string.format("%s lines %d-%d", header, item.range[1], item.range[2])
-        end
+        if item.range then header = string.format("%s lines %d-%d", header, item.range[1], item.range[2]) end
         table.insert(parts, string.format("Context %d - %s:", i, header))
         table.insert(parts, string.format("```%s", item.language or ""))
         table.insert(parts, item.content)
@@ -1622,9 +1609,7 @@ function mega.p.pi.compose_flush()
       table.insert(parts, "")
     end
 
-    if input ~= "" then
-      table.insert(parts, input)
-    end
+    if input ~= "" then table.insert(parts, input) end
 
     local message = table.concat(parts, "\n")
     if message:match("^%s*$") then
@@ -1655,9 +1640,7 @@ function mega.p.pi.prompt(message)
     send_payload({ type = "prompt", message = message })
   else
     vim.ui.input({ prompt = "Pi prompt: " }, function(input)
-      if input and input ~= "" then
-        send_payload({ type = "prompt", message = input })
-      end
+      if input and input ~= "" then send_payload({ type = "prompt", message = input }) end
     end)
   end
 end
@@ -1671,17 +1654,17 @@ local function start_auto_reload()
   if not config.auto_reload.enabled then return end
   if reload_timer then return end
 
-  if not vim.o.autoread then
-    vim.o.autoread = true
-  end
+  if not vim.o.autoread then vim.o.autoread = true end
 
   local interval_ms = config.auto_reload.interval_s * 1000
   reload_timer = vim.uv.new_timer()
-  reload_timer:start(interval_ms, interval_ms, vim.schedule_wrap(function()
-    if conn.connected then
-      pcall(vim.cmd, "silent! checktime")
-    end
-  end))
+  reload_timer:start(
+    interval_ms,
+    interval_ms,
+    vim.schedule_wrap(function()
+      if conn.connected then pcall(vim.cmd, "silent! checktime") end
+    end)
+  )
 end
 
 --- Stop checktime polling
@@ -1706,19 +1689,39 @@ function mega.p.pi.health()
   local results = {}
 
   local function ok(msg)
-    if use_health then h.ok(msg) else table.insert(results, "✓ " .. msg) end
+    if use_health then
+      h.ok(msg)
+    else
+      table.insert(results, "✓ " .. msg)
+    end
   end
   local function warn(msg, advice)
-    if use_health then h.warn(msg, advice) else table.insert(results, "⚠ " .. msg) end
+    if use_health then
+      h.warn(msg, advice)
+    else
+      table.insert(results, "⚠ " .. msg)
+    end
   end
   local function err(msg, advice)
-    if use_health then h.error(msg, advice) else table.insert(results, "✗ " .. msg) end
+    if use_health then
+      h.error(msg, advice)
+    else
+      table.insert(results, "✗ " .. msg)
+    end
   end
   local function info(msg)
-    if use_health then h.info(msg) else table.insert(results, "  " .. msg) end
+    if use_health then
+      h.info(msg)
+    else
+      table.insert(results, "  " .. msg)
+    end
   end
   local function section(name)
-    if use_health then h.start(name) else table.insert(results, "\n── " .. name .. " ──") end
+    if use_health then
+      h.start(name)
+    else
+      table.insert(results, "\n── " .. name .. " ──")
+    end
   end
 
   ---------------------------------------------------------------------------
@@ -1742,16 +1745,15 @@ function mega.p.pi.health()
   elseif conn.connecting then
     warn("Connection in progress")
   elseif conn.reconnect_attempts > 0 then
-    warn(string.format("Reconnecting (attempt %d/%d)",
-      conn.reconnect_attempts, config.connection.reconnect_max_retries))
+    warn(
+      string.format("Reconnecting (attempt %d/%d)", conn.reconnect_attempts, config.connection.reconnect_max_retries)
+    )
   else
     info("No persistent connection (will use one-shot sends)")
   end
 
   -- Message queue
-  if #conn.queue > 0 then
-    warn(string.format("%d message(s) queued during reconnect", #conn.queue))
-  end
+  if #conn.queue > 0 then warn(string.format("%d message(s) queued during reconnect", #conn.queue)) end
 
   ---------------------------------------------------------------------------
   -- Socket Discovery
@@ -1776,8 +1778,7 @@ function mega.p.pi.health()
     if socket_exists(buf_target) then
       ok("Buffer-local target: " .. buf_target)
     else
-      warn("Buffer-local target set but invalid: " .. buf_target,
-        { "Run :PiTarget to clear or update" })
+      warn("Buffer-local target set but invalid: " .. buf_target, { "Run :PiTarget to clear or update" })
     end
   end
 
@@ -1794,7 +1795,10 @@ function mega.p.pi.health()
       if manifest then
         local is_cwd = manifest.cwd == cwd
         local status_parts = { "socket live", "pid " .. (manifest.pid or "?") }
-        if is_cwd then table.insert(status_parts, "cwd match") cwd_match = true end
+        if is_cwd then
+          table.insert(status_parts, "cwd match")
+          cwd_match = true
+        end
         info(string.format("%s → %s [%s]", name, manifest.socket, table.concat(status_parts, ", ")))
       else
         -- parse_info_manifest returns nil for stale (dead pid or missing socket)
@@ -1808,13 +1812,13 @@ function mega.p.pi.health()
             raw_pid = p.pid or "?"
           end
         end
-        err(string.format("%s → %s [STALE — pid %s dead or socket missing]", name, raw_socket, raw_pid),
-          { "Clean up: rm " .. info_path })
+        err(
+          string.format("%s → %s [STALE — pid %s dead or socket missing]", name, raw_socket, raw_pid),
+          { "Clean up: rm " .. info_path }
+        )
       end
     end
-    if not cwd_match then
-      info("No cwd match for: " .. cwd)
-    end
+    if not cwd_match then info("No cwd match for: " .. cwd) end
   else
     info("No .info manifests found in " .. info_dir)
   end
@@ -1831,9 +1835,7 @@ function mega.p.pi.health()
         local tmux_socks = vim.fn.glob(pattern, false, true)
         if #tmux_socks > 0 then
           for _, s in ipairs(tmux_socks) do
-            if socket_exists(s) then
-              info("  " .. vim.fn.fnamemodify(s, ":t"))
-            end
+            if socket_exists(s) then info("  " .. vim.fn.fnamemodify(s, ":t")) end
           end
         else
           info("No tmux-pattern sockets for session " .. session)
@@ -1864,9 +1866,7 @@ function mega.p.pi.health()
     info("Include buffer text: " .. tostring(config.live_context.include_buffer_text))
     -- Check for high-traffic events
     for _, ev in ipairs(config.live_context.events) do
-      if ev == "CursorMoved" then
-        warn("CursorMoved is high-traffic", { "Consider CursorHold for lower frequency" })
-      end
+      if ev == "CursorMoved" then warn("CursorMoved is high-traffic", { "Consider CursorHold for lower frequency" }) end
     end
   else
     info("Live context sync disabled")
@@ -1953,9 +1953,7 @@ function mega.p.pi.health()
   if not use_health and conn.connected and conn.pipe then
     section("Pi Ping Test")
     info("Sending ping...")
-    local ping_ok, _ = pcall(function()
-      conn.pipe:write(vim.json.encode({ type = "ping" }) .. "\n")
-    end)
+    local ping_ok, _ = pcall(function() conn.pipe:write(vim.json.encode({ type = "ping" }) .. "\n") end)
     if ping_ok then
       ok("Ping sent (pong updates last_pong timestamp)")
     else
@@ -1964,9 +1962,7 @@ function mega.p.pi.health()
   end
 
   -- Output results if not using vim.health
-  if not use_health and #results > 0 then
-    vim.notify(table.concat(results, "\n"), vim.log.levels.INFO)
-  end
+  if not use_health and #results > 0 then vim.notify(table.concat(results, "\n"), vim.log.levels.INFO) end
 end
 
 --------------------------------------------------------------------------------
@@ -1982,23 +1978,7 @@ end
 -- Commands
 --------------------------------------------------------------------------------
 
-vim.api.nvim_create_user_command(
-  "PiPanel",
-  function() mega.p.pi.toggle_panel() end,
-  { desc = "Toggle pi tmux pane" }
-)
-
-vim.api.nvim_create_user_command(
-  "PiSelection",
-  function(opts) mega.p.pi.send_selection(opts) end,
-  { desc = "Send selection to pi", range = true }
-)
-
-vim.api.nvim_create_user_command(
-  "PiCursor",
-  function() mega.p.pi.send_cursor() end,
-  { desc = "Send cursor line to pi" }
-)
+vim.api.nvim_create_user_command("PiPanel", function() mega.p.pi.toggle_panel() end, { desc = "Toggle pi tmux pane" })
 
 vim.api.nvim_create_user_command(
   "PiFile",
@@ -2071,29 +2051,21 @@ vim.api.nvim_create_user_command(
   { desc = "Send compose queue with prompt" }
 )
 
-vim.api.nvim_create_user_command(
-  "PiClear",
-  function() mega.p.pi.compose_clear() end,
-  { desc = "Clear compose queue" }
-)
+vim.api.nvim_create_user_command("PiClear", function() mega.p.pi.compose_clear() end, { desc = "Clear compose queue" })
 
 vim.api.nvim_create_user_command("PiPrompt", function(opts)
   local msg = opts.args ~= "" and opts.args or nil
   mega.p.pi.prompt(msg)
 end, { desc = "Send raw prompt to pi", nargs = "*" })
 
-vim.api.nvim_create_user_command("PiHealth", function()
-  mega.p.pi.health()
-end, { desc = "Run pi health checks" })
+vim.api.nvim_create_user_command("PiHealth", function() mega.p.pi.health() end, { desc = "Run pi health checks" })
 
 vim.api.nvim_create_user_command("PiPing", function()
   if not conn.connected then
     vim.notify("Pi: not connected", vim.log.levels.WARN)
     return
   end
-  local ok, _ = pcall(function()
-    conn.pipe:write(vim.json.encode({ type = "ping" }) .. "\n")
-  end)
+  local ok, _ = pcall(function() conn.pipe:write(vim.json.encode({ type = "ping" }) .. "\n") end)
   if ok then
     vim.notify("Pi: ping sent (watch for pong in health check)", vim.log.levels.INFO)
   else
@@ -2117,112 +2089,164 @@ vim.api.nvim_create_user_command("PiDisconnect", function()
 end, { desc = "Disconnect from pi socket" })
 
 --------------------------------------------------------------------------------
+-- Send Operator
+--------------------------------------------------------------------------------
+
+--- Operator function: send text covered by motion to pi
+---@param type string "char", "line", or "block"
+local function pi_send_operator(type, skip_prompt)
+  local start = vim.api.nvim_buf_get_mark(0, "[")
+  local finish = vim.api.nvim_buf_get_mark(0, "]")
+  local lines = vim.api.nvim_buf_get_lines(0, start[1] - 1, finish[1], false)
+  if #lines == 0 then return end
+
+  if type == "char" then
+    if #lines == 1 then
+      lines[1] = lines[1]:sub(start[2] + 1, finish[2] + 1)
+    else
+      lines[1] = lines[1]:sub(start[2] + 1)
+      lines[#lines] = lines[#lines]:sub(1, finish[2] + 1)
+    end
+  end
+
+  local text = table.concat(lines, "\n")
+  if text == "" then return end
+
+  local file = vim.api.nvim_buf_get_name(0)
+  local lang = detect_language(file)
+  local task = ""
+  if not skip_prompt then
+    task = vim.fn.input("Task: ")
+    if task == "" then return end
+  end
+
+  local payload = {
+    type = "selection",
+    file = file,
+    range = { start[1], finish[1] },
+    selection = text,
+    language = lang,
+    lsp = { diagnostics = get_diagnostics(start[1], finish[1]) },
+    task = task,
+  }
+
+  send_payload(payload)
+end
+
+-- Global operator functions (must be globally accessible for operatorfunc)
+_G._pi_send_operator = function(type) pi_send_operator(type, false) end
+_G._pi_send_operator_quick = function(type) pi_send_operator(type, true) end
+
+--------------------------------------------------------------------------------
 -- Keymaps
 --------------------------------------------------------------------------------
 
--- Panel
+-- Toggle (global)
 vim.keymap.set(
-  "n",
-  "<localleader>pp",
+  { "n", "v" },
+  "<C-p>",
   function() mega.p.pi.toggle_panel() end,
-  { silent = true, desc = "Pi: toggle panel" }
+  { silent = true, desc = "π toggle pane" }
 )
 
--- Selection
+-- Send operator: <ll>m{motion} (with prompt)
+vim.keymap.set("n", "<localleader>m", function()
+  vim.go.operatorfunc = "v:lua._pi_send_operator"
+  return "g@"
+end, { expr = true, silent = true, desc = "π send {motion}" })
+
+-- Send operator doubled: <ll>mm = send current line
+vim.keymap.set("n", "<localleader>mm", function()
+  vim.go.operatorfunc = "v:lua._pi_send_operator"
+  return "g@_"
+end, { expr = true, silent = true, desc = "π send line" })
+
+-- Send visual: <ll>m = send selection (with prompt)
 vim.keymap.set(
   "v",
-  "<localleader>ps",
+  "<localleader>m",
   function() mega.p.pi.send_selection(nil, true) end,
-  { silent = true, desc = "Pi: send selection" }
+  { silent = true, desc = "π send selection" }
 )
 
+-- Quick send operator: <ll>M{motion} (no prompt)
+vim.keymap.set("n", "<localleader>M", function()
+  vim.go.operatorfunc = "v:lua._pi_send_operator_quick"
+  return "g@"
+end, { expr = true, silent = true, desc = "π quick send {motion}" })
+
+-- Quick send doubled: <ll>MM = quick send current line
+vim.keymap.set("n", "<localleader>MM", function()
+  vim.go.operatorfunc = "v:lua._pi_send_operator_quick"
+  return "g@_"
+end, { expr = true, silent = true, desc = "π quick send line" })
+
+-- Quick send visual: <ll>M = send selection (no prompt)
 vim.keymap.set(
   "v",
-  "<localleader>pS",
+  "<localleader>M",
   function() mega.p.pi.quick_send_selection(nil, true) end,
-  { silent = true, desc = "Pi: quick send (no prompt)" }
+  { silent = true, desc = "π quick send selection" }
 )
 
--- Cursor
+-- Pi management: <ll>p{key}
 vim.keymap.set(
   "n",
-  "<localleader>pc",
-  function() mega.p.pi.send_cursor() end,
-  { silent = true, desc = "Pi: send cursor line" }
+  "<localleader>ps",
+  function() mega.p.pi.select_session() end,
+  { silent = true, desc = "π session picker" }
 )
 
-vim.keymap.set(
-  "n",
-  "<localleader>ph",
-  function() mega.p.pi.send_cursor_with_hover() end,
-  { silent = true, desc = "Pi: send cursor with hover" }
-)
+vim.keymap.set("n", "<localleader>pn", function()
+  -- TODO: ephemeral pi split (tmux-toggle-pi --new)
+  vim.notify("π ephemeral split not yet implemented", vim.log.levels.INFO)
+end, { silent = true, desc = "π new ephemeral split" })
 
--- File
-vim.keymap.set(
-  "n",
-  "<localleader>pf",
-  function() mega.p.pi.add_file() end,
-  { silent = true, desc = "Pi: add file to context" }
-)
+vim.keymap.set("n", "<localleader>pr", function() mega.p.pi.prompt() end, { silent = true, desc = "π raw prompt" })
 
--- Info
 vim.keymap.set(
   "n",
   "<localleader>pi",
   function() vim.notify(mega.p.pi.status(), vim.log.levels.INFO) end,
-  { silent = true, desc = "Pi: show status" }
+  { silent = true, desc = "π status" }
 )
+
+vim.keymap.set("n", "<localleader>ph", function() mega.p.pi.health() end, { silent = true, desc = "π health check" })
 
 vim.keymap.set(
   "n",
   "<localleader>px",
   function() mega.p.pi.show_context() end,
-  { silent = true, desc = "Pi: show context files" }
-)
-
-vim.keymap.set(
-  "n",
-  "<localleader>pn",
-  function() mega.p.pi.select_session() end,
-  { silent = true, desc = "Pi: select session" }
-)
-
--- Compose mode
-vim.keymap.set(
-  "v",
-  "<localleader>pa",
-  function() mega.p.pi.compose_add() end,
-  { silent = true, desc = "Pi: add selection to queue" }
-)
-
-vim.keymap.set(
-  "n",
-  "<localleader>pa",
-  function() mega.p.pi.compose_add() end,
-  { silent = true, desc = "Pi: add file to queue" }
-)
-
-vim.keymap.set(
-  "n",
-  "<localleader>pF",
-  function() mega.p.pi.compose_flush() end,
-  { silent = true, desc = "Pi: flush queue with prompt" }
+  { silent = true, desc = "π show context" }
 )
 
 vim.keymap.set(
   "n",
   "<localleader>pX",
-  function() mega.p.pi.compose_clear() end,
-  { silent = true, desc = "Pi: clear queue" }
+  function() mega.p.pi.clear_context() end,
+  { silent = true, desc = "π clear context" }
 )
 
--- Raw prompt
+-- Compose queue
+vim.keymap.set(
+  { "v", "n" },
+  "<localleader>pa",
+  function() mega.p.pi.compose_add() end,
+  { silent = true, desc = "π add to queue" }
+)
+
 vim.keymap.set(
   "n",
-  "<localleader>pP",
-  function() mega.p.pi.prompt() end,
-  { silent = true, desc = "Pi: raw prompt" }
+  "<localleader>pf",
+  function() mega.p.pi.compose_flush() end,
+  { silent = true, desc = "π flush queue" }
+)
+
+vim.keymap.set(
+  "n",
+  "<localleader>pc",
+  function() mega.p.pi.compose_clear() end,
+  { silent = true, desc = "π clear queue" }
 )
 
 --------------------------------------------------------------------------------
@@ -2231,9 +2255,7 @@ vim.keymap.set(
 
 -- Try to establish persistent connection on load
 vim.defer_fn(function()
-  if get_socket_path() then
-    connection_connect()
-  end
+  if get_socket_path() then connection_connect() end
   -- Set up live context sync autocmds
   setup_live_context()
   -- Start auto-reload polling
@@ -2252,4 +2274,3 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
     end
   end,
 })
-

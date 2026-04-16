@@ -360,7 +360,8 @@ local function nr(win, lnum, relnum, virtnum, line_count, is_active)
 
   -- When unfocused, always use absolute line numbers (ignore relativenumber)
   local use_relative = is_active and vim.wo[win].relativenumber and not U.falsy(relnum)
-  local num = use_relative and relnum or lnum
+  -- Current line (relnum==0): show absolute number. Others: show relative.
+  local num = (use_relative and relnum ~= 0) and relnum or lnum
 
   if line_count > 999 then col_width = col_width + 1 end
   local ln = tostring(num):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")

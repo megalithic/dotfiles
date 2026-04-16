@@ -1,6 +1,6 @@
 ---
 id: dot-en5k
-status: open
+status: closed
 deps: [dot-3fyc]
 links: []
 created: 2026-04-14T19:46:45Z
