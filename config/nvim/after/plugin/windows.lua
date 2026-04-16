@@ -96,14 +96,22 @@ local quitter_bt = {
 
 -- Convert to sets for O(1) lookup
 local resize_ft_set = {}
-for _, v in ipairs(resize_ignore_ft) do resize_ft_set[v] = true end
+for _, v in ipairs(resize_ignore_ft) do
+  resize_ft_set[v] = true
+end
 local resize_bt_set = {}
-for _, v in ipairs(resize_ignore_bt) do resize_bt_set[v] = true end
+for _, v in ipairs(resize_ignore_bt) do
+  resize_bt_set[v] = true
+end
 
 local quitter_ft_set = {}
-for _, v in ipairs(quitter_ft) do quitter_ft_set[v] = true end
+for _, v in ipairs(quitter_ft) do
+  quitter_ft_set[v] = true
+end
 local quitter_bt_set = {}
-for _, v in ipairs(quitter_bt) do quitter_bt_set[v] = true end
+for _, v in ipairs(quitter_bt) do
+  quitter_bt_set[v] = true
+end
 
 --------------------------------------------------------------------------------
 -- Helpers
@@ -154,9 +162,7 @@ local function count_real_windows()
   for _, win in ipairs(vim.api.nvim_list_wins()) do
     if vim.api.nvim_win_is_valid(win) and not is_floating(win) then
       local buf = vim.api.nvim_win_get_buf(win)
-      if not is_quitter_buf(buf) then
-        count = count + 1
-      end
+      if not is_quitter_buf(buf) then count = count + 1 end
     end
   end
   return count
@@ -167,17 +173,13 @@ end
 local function find_alternate_buffer()
   -- Try alternate buffer first
   local alt = vim.fn.bufnr("#")
-  if alt > 0 and vim.api.nvim_buf_is_valid(alt)
-     and vim.bo[alt].buflisted and not is_quitter_buf(alt) then
+  if alt > 0 and vim.api.nvim_buf_is_valid(alt) and vim.bo[alt].buflisted and not is_quitter_buf(alt) then
     return alt
   end
 
   -- Try any listed, non-quitter buffer
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_is_valid(buf)
-       and vim.bo[buf].buflisted and not is_quitter_buf(buf) then
-      return buf
-    end
+    if vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buflisted and not is_quitter_buf(buf) then return buf end
   end
 
   -- Create a new empty buffer
@@ -190,17 +192,11 @@ end
 
 local saved_cmdheight = vim.o.cmdheight
 
-local function golden_width()
-  return math.floor(vim.o.columns / GOLDEN_RATIO)
-end
+local function golden_width() return math.floor(vim.o.columns / GOLDEN_RATIO) end
 
-local function golden_height()
-  return math.floor(vim.o.lines / GOLDEN_RATIO)
-end
+local function golden_height() return math.floor(vim.o.lines / GOLDEN_RATIO) end
 
-local function golden_minwidth()
-  return math.max(MIN_WIDTH, math.floor(golden_width() / (3 * GOLDEN_RATIO)))
-end
+local function golden_minwidth() return math.max(MIN_WIDTH, math.floor(golden_width() / (3 * GOLDEN_RATIO))) end
 
 local function save_fixed_win_dims()
   local dims = {}
@@ -238,16 +234,10 @@ local function resize_to_golden(bufnr)
   local target_h = golden_height()
   local min_w = golden_minwidth()
 
-  if cur_w < target_w then
-    vim.api.nvim_win_set_width(0, target_w)
-  end
-  if cur_h < target_h then
-    vim.api.nvim_win_set_height(0, target_h)
-  end
+  if cur_w < target_w then vim.api.nvim_win_set_width(0, target_w) end
+  if cur_h < target_h then vim.api.nvim_win_set_height(0, target_h) end
 
-  if vim.o.winwidth < min_w then
-    vim.o.winwidth = min_w
-  end
+  if vim.o.winwidth < min_w then vim.o.winwidth = min_w end
   vim.o.winminwidth = min_w
 
   restore_fixed_win_dims(fixed_dims)
@@ -283,15 +273,11 @@ end
 
 --- Check if we should quit (only special windows remain)
 ---@return boolean
-function M.should_quit()
-  return count_real_windows() == 0 and #vim.api.nvim_list_wins() > 0
-end
+function M.should_quit() return count_real_windows() == 0 and #vim.api.nvim_list_wins() > 0 end
 
 --- Quit if only special windows remain
 function M.quit_if_only_special()
-  if M.should_quit() then
-    vim.cmd("qa!")
-  end
+  if M.should_quit() then vim.cmd("qa!") end
 end
 
 -- Export for use by other modules (megaterm, etc.)
@@ -306,47 +292,39 @@ local group = vim.api.nvim_create_augroup("mega.windows", { clear = true })
 -- Golden ratio resize on window/buffer focus
 vim.api.nvim_create_autocmd({ "WinEnter", "BufEnter" }, {
   group = group,
-  callback = function(args)
-    resize_to_golden(args.buf)
-  end,
+  callback = function(args) resize_to_golden(args.buf) end,
   desc = "Golden ratio auto-resize",
 })
 
 -- Mark resize-ignored buftypes/filetypes
 vim.api.nvim_create_autocmd("WinEnter", {
   group = group,
-  callback = function()
-    vim.w.resize_disable = resize_bt_set[vim.bo.buftype] or false
-  end,
+  callback = function() vim.w.resize_disable = resize_bt_set[vim.bo.buftype] or false end,
 })
 
 vim.api.nvim_create_autocmd("FileType", {
   group = group,
-  callback = function()
-    vim.b.resize_disable = resize_ft_set[vim.bo.filetype] or false
-  end,
+  callback = function() vim.b.resize_disable = resize_ft_set[vim.bo.filetype] or false end,
 })
 
 -- Guardian: quit entirely when only special windows remain after a quit attempt
-vim.api.nvim_create_autocmd("QuitPre", {
-  group = group,
-  nested = true,
-  desc = "Quit if only special windows remain",
-  callback = function()
-    -- Schedule to run after the quit completes
-    vim.schedule(function()
-      M.quit_if_only_special()
-    end)
-  end,
-})
+-- vim.api.nvim_create_autocmd("QuitPre", {
+--   group = group,
+--   nested = true,
+--   desc = "Quit if only special windows remain",
+--   callback = function()
+--     -- Schedule to run after the quit completes
+--     vim.schedule(function()
+--       M.quit_if_only_special()
+--     end)
+--   end,
+-- })
 
 -- Guardian: check after any window closes
-vim.api.nvim_create_autocmd("WinClosed", {
-  group = group,
-  desc = "Quit if only special windows remain after window close",
-  callback = function()
-    vim.schedule(function()
-      M.quit_if_only_special()
-    end)
-  end,
-})
+-- vim.api.nvim_create_autocmd("WinClosed", {
+--   group = group,
+--   desc = "Quit if only special windows remain after window close",
+--   callback = function()
+--     vim.schedule(function() M.quit_if_only_special() end)
+--   end,
+-- })

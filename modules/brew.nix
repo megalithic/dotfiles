@@ -21,7 +21,7 @@
       # "microsoft-teams"
       "mouseless"
       "okta-verify" # really just needed for work laptop
-      "orbstack" # Docker containers + Linux VMs (replaces colima)
+      # "orbstack" # Docker containers + Linux VMs (replaces colima) - removed due to brew quarantine flag deprecation
       "protonvpn"
       "proton-drive"
       "obs@beta"

@@ -59,9 +59,9 @@
 ;; Aliases
 ;; ────────────────────────────────────────────────────────────────────────────
 (defalias
-  ;; Layer switching via fn key
-  to-enabled (layer-switch enabled)
-  to-disabled (layer-switch disabled)
+  ;; Layer switching via fn key - double-tap fn to enable
+  to-enabled (tap-dance 500 (fn (layer-switch enabled)))
+  to-disabled (tap-dance 500 (fn (layer-switch disabled)))
 
   ;; Caps lock: tap = escape, hold = control
   escctrl (tap-hold $tap-time $hold-time esc lctl)

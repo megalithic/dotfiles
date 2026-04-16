@@ -125,7 +125,7 @@
     pname = "pi-mcp-adapter";
     version = npmVersion ./packages/pi-mcp-adapter;
     src = ./packages/pi-mcp-adapter;
-    npmDepsHash = "sha256-PprUC92no4xi4p+UQRbx4/RzoTZ6v/OQCUEp//XU+NY=";
+    npmDepsHash = "sha256-goPvrnZfbXFupES7ChisrSz1QcpsFp4mBBdUL/gzQII=";
     dontNpmBuild = true;
     # TODO: patch needs path adjustment for npm package layout (was written for git repo)
     # patches = [./patches/claude-settings-support.patch];
