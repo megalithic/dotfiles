@@ -30,6 +30,5 @@ in {
   fantastical = callMkApp ./fantastical.nix;
   bloom = callMkApp ./bloom.nix;
   brave-browser-nightly = callMkApp ./brave-browser-nightly.nix;
-  tidewave = callMkApp ./tidewave.nix;
-  tidewave-cli = callMkApp ./tidewave-cli.nix;
+  inherit (import ./tidewave.nix {inherit mkApp;}) tidewave tidewave-cli;
 }
