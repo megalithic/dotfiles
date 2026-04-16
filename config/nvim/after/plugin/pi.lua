@@ -106,6 +106,32 @@ local function socket_exists(path)
   return vim.fn.getftype(path) == "socket"
 end
 
+--- Check if a process is alive
+---@param pid number
+---@return boolean
+local function pid_alive(pid)
+  if not pid or pid <= 0 then return false end
+  -- kill -0 checks existence without sending signal
+  return os.execute(string.format("kill -0 %d 2>/dev/null", pid)) == 0
+end
+
+--- Parse .info manifest and validate liveness
+---@param info_path string
+---@return table? manifest with {socket, cwd, pid, session} or nil if stale
+local function parse_info_manifest(info_path)
+  local content_ok, content = pcall(vim.fn.readfile, info_path)
+  if not content_ok or not content or not content[1] then return nil end
+
+  local parsed_ok, info = pcall(vim.json.decode, content[1])
+  if not parsed_ok or not info or not info.socket then return nil end
+
+  -- Validate: socket file exists AND pid is alive
+  if not socket_exists(info.socket) then return nil end
+  if info.pid and not pid_alive(info.pid) then return nil end
+
+  return info
+end
+
 --- Discover socket via /tmp/pi-nvim-sockets/*.info (cwd match, then newest)
 ---@return string?
 local function discover_socket_by_cwd()
@@ -117,19 +143,14 @@ local function discover_socket_by_cwd()
   local best_sock = nil
   local best_mtime = 0
 
-  -- First pass: exact cwd match, prefer newest
+  -- First pass: exact cwd match, prefer newest (skips stale via pid check)
   for _, info_path in ipairs(files) do
-    local content_ok, content = pcall(vim.fn.readfile, info_path)
-    if content_ok and content and content[1] then
-      local parsed_ok, info = pcall(vim.json.decode, content[1])
-      if parsed_ok and info and info.socket then
-        if info.cwd == cwd and socket_exists(info.socket) then
-          local stat = vim.uv.fs_stat(info.socket)
-          if stat and stat.mtime.sec > best_mtime then
-            best_mtime = stat.mtime.sec
-            best_sock = info.socket
-          end
-        end
+    local info = parse_info_manifest(info_path)
+    if info and info.cwd == cwd then
+      local stat = vim.uv.fs_stat(info.socket)
+      if stat and stat.mtime.sec > best_mtime then
+        best_mtime = stat.mtime.sec
+        best_sock = info.socket
       end
     end
   end
@@ -137,15 +158,12 @@ local function discover_socket_by_cwd()
 
   -- Second pass: any live socket (newest)
   for _, info_path in ipairs(files) do
-    local content_ok, content = pcall(vim.fn.readfile, info_path)
-    if content_ok and content and content[1] then
-      local parsed_ok, info = pcall(vim.json.decode, content[1])
-      if parsed_ok and info and info.socket and socket_exists(info.socket) then
-        local stat = vim.uv.fs_stat(info.socket)
-        if stat and stat.mtime.sec > best_mtime then
-          best_mtime = stat.mtime.sec
-          best_sock = info.socket
-        end
+    local info = parse_info_manifest(info_path)
+    if info then
+      local stat = vim.uv.fs_stat(info.socket)
+      if stat and stat.mtime.sec > best_mtime then
+        best_mtime = stat.mtime.sec
+        best_sock = info.socket
       end
     end
   end
@@ -425,18 +443,17 @@ local function send_payload(payload, opts)
       if not opts.silent then
         vim.notify("Sent to pi", vim.log.levels.INFO)
       end
-      -- Ring tmux bell + ensure pane
-      if conn.socket_path then
-        local fname = vim.fn.fnamemodify(conn.socket_path, ":t:r")
-        local session, win = fname:match("^pi%-(.+)%-(%w+)$")
-        if session and win then
-          local tty = vim.fn.system(string.format("tmux display -p -t '%s:%s' '#{pane_tty}' 2>/dev/null", session, win))
-          tty = vim.trim(tty)
-          if tty ~= "" then vim.fn.system(string.format("printf '\\a' > %s 2>/dev/null", vim.fn.shellescape(tty))) end
-        end
+      -- Ring bell + ensure pane via tmux-toggle-pi
+      if vim.env.TMUX and conn.socket_path then
+        vim.fn.jobstart({ "tmux-toggle-pi", "--bell", conn.socket_path }, { detach = true })
       end
       if opts.auto_toggle and vim.env.TMUX then
-        vim.fn.jobstart({ "tmux-toggle-pi", "--ensure" }, { detach = true })
+        local ensure_cmd = { "tmux-toggle-pi", "--ensure" }
+        if conn.socket_path then
+          table.insert(ensure_cmd, "--socket")
+          table.insert(ensure_cmd, conn.socket_path)
+        end
+        vim.fn.jobstart(ensure_cmd, { detach = true })
       end
       return true
     else
@@ -504,16 +521,15 @@ local function send_payload(payload, opts)
       if not opts.silent then
         vim.notify("Sent to pi", vim.log.levels.INFO)
       end
-      -- Ring tmux bell
-      local fname = vim.fn.fnamemodify(socket_path, ":t:r")
-      local session, win = fname:match("^pi%-(.+)%-(%w+)$")
-      if session and win then
-        local tty = vim.fn.system(string.format("tmux display -p -t '%s:%s' '#{pane_tty}' 2>/dev/null", session, win))
-        tty = vim.trim(tty)
-        if tty ~= "" then vim.fn.system(string.format("printf '\\a' > %s 2>/dev/null", vim.fn.shellescape(tty))) end
+      -- Ring bell + ensure pane via tmux-toggle-pi
+      if vim.env.TMUX then
+        vim.fn.jobstart({ "tmux-toggle-pi", "--bell", socket_path }, { detach = true })
       end
       if opts.auto_toggle and vim.env.TMUX then
-        vim.fn.jobstart({ "tmux-toggle-pi", "--ensure" }, { detach = true })
+        local ensure_cmd = { "tmux-toggle-pi", "--ensure" }
+        table.insert(ensure_cmd, "--socket")
+        table.insert(ensure_cmd, socket_path)
+        vim.fn.jobstart(ensure_cmd, { detach = true })
       end
     end)
   end)
@@ -695,12 +711,19 @@ end
 --------------------------------------------------------------------------------
 
 --- Toggle pi pane via tmux-toggle-pi (the single source of truth for pi lifecycle)
+--- Passes active socket so tmux-toggle-pi targets the correct pane.
 function mega.p.pi.toggle_panel()
   if not vim.env.TMUX then
     vim.notify("Not in tmux — pi runs as a tmux pane", vim.log.levels.WARN)
     return
   end
-  vim.fn.system("tmux-toggle-pi")
+  local cmd = { "tmux-toggle-pi" }
+  local socket = mega.p.pi.get_target()
+  if socket then
+    table.insert(cmd, "--socket")
+    table.insert(cmd, socket)
+  end
+  vim.fn.jobstart(cmd, { detach = true })
 end
 
 --------------------------------------------------------------------------------
@@ -1003,20 +1026,15 @@ function mega.p.pi.list_sockets()
   local seen = {}
   local sockets = {}
 
-  -- From .info manifests
+  -- From .info manifests (validated: socket exists + pid alive)
   local info_dir = "/tmp/pi-nvim-sockets"
   local ok, files = pcall(vim.fn.glob, info_dir .. "/*.info", false, true)
   if ok and files then
     for _, info_path in ipairs(files) do
-      local content_ok, content = pcall(vim.fn.readfile, info_path)
-      if content_ok and content and content[1] then
-        local parsed_ok, info = pcall(vim.json.decode, content[1])
-        if parsed_ok and info and info.socket and socket_exists(info.socket) then
-          if not seen[info.socket] then
-            seen[info.socket] = true
-            table.insert(sockets, info.socket)
-          end
-        end
+      local info = parse_info_manifest(info_path)
+      if info and not seen[info.socket] then
+        seen[info.socket] = true
+        table.insert(sockets, info.socket)
       end
     end
   end
@@ -1771,25 +1789,27 @@ function mega.p.pi.health()
     ok(string.format("%d .info manifest(s) in %s", #info_files, info_dir))
     local cwd_match = false
     for _, info_path in ipairs(info_files) do
-      local content_ok, content = pcall(vim.fn.readfile, info_path)
-      if content_ok and content and content[1] then
-        local parsed_ok, manifest = pcall(vim.json.decode, content[1])
-        if parsed_ok and manifest then
-          local sock_live = manifest.socket and socket_exists(manifest.socket)
-          local is_cwd = manifest.cwd == cwd
-          local name = vim.fn.fnamemodify(info_path, ":t")
-          local status_parts = {}
-          if sock_live then table.insert(status_parts, "socket live") end
-          if is_cwd then table.insert(status_parts, "cwd match") cwd_match = true end
-          if not sock_live then table.insert(status_parts, "socket DEAD") end
-          local line = string.format("%s → %s [%s]",
-            name, manifest.socket or "?", table.concat(status_parts, ", "))
-          if sock_live then
-            info(line)
-          else
-            warn(line, { "Stale manifest — pi session may have crashed" })
+      local manifest = parse_info_manifest(info_path)
+      local name = vim.fn.fnamemodify(info_path, ":t")
+      if manifest then
+        local is_cwd = manifest.cwd == cwd
+        local status_parts = { "socket live", "pid " .. (manifest.pid or "?") }
+        if is_cwd then table.insert(status_parts, "cwd match") cwd_match = true end
+        info(string.format("%s → %s [%s]", name, manifest.socket, table.concat(status_parts, ", ")))
+      else
+        -- parse_info_manifest returns nil for stale (dead pid or missing socket)
+        local raw_ok, raw = pcall(vim.fn.readfile, info_path)
+        local raw_socket = "?"
+        local raw_pid = "?"
+        if raw_ok and raw and raw[1] then
+          local p_ok, p = pcall(vim.json.decode, raw[1])
+          if p_ok and p then
+            raw_socket = p.socket or "?"
+            raw_pid = p.pid or "?"
           end
         end
+        err(string.format("%s → %s [STALE — pid %s dead or socket missing]", name, raw_socket, raw_pid),
+          { "Clean up: rm " .. info_path })
       end
     end
     if not cwd_match then
@@ -1987,12 +2007,6 @@ vim.api.nvim_create_user_command(
 )
 
 vim.api.nvim_create_user_command(
-  "PiToggle",
-  function() mega.p.pi.toggle_panel() end,
-  { desc = "Toggle pi pane in tmux" }
-)
-
-vim.api.nvim_create_user_command(
   "PiStatus",
   function() vim.notify(mega.p.pi.status(), vim.log.levels.INFO) end,
   { desc = "Show pi connection status" }
@@ -2150,14 +2164,6 @@ vim.keymap.set(
   "<localleader>pf",
   function() mega.p.pi.add_file() end,
   { silent = true, desc = "Pi: add file to context" }
-)
-
--- Tmux
-vim.keymap.set(
-  "n",
-  "<localleader>pt",
-  function() mega.p.pi.toggle_panel() end,
-  { silent = true, desc = "Pi: toggle tmux pane" }
 )
 
 -- Info

@@ -7,16 +7,29 @@
 #   - FROM shell window: switch focus to agent window
 #   - Toggle again to reverse (break split / switch back)
 #
+# Options:
+#   --ensure       Only ensure pi is visible (no toggle-off)
+#   --socket PATH  Target pi pane whose socket matches PATH
+#                  Matches by parsing socket filename → window name
+#   --bell PATH    Ring bell on the pane matching socket PATH (no toggle)
+#
 # All tmux commands are session-qualified to prevent cross-session contamination.
 # Pi panes are detected by pane_title (pi sets "π - <project>").
 
 set -euo pipefail
 
 ENSURE_MODE=false
-if [[ "${1:-}" == "--ensure" ]]; then
-  ENSURE_MODE=true
-  shift
-fi
+TARGET_SOCKET=""
+BELL_SOCKET=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --ensure) ENSURE_MODE=true; shift ;;
+    --socket) TARGET_SOCKET="${2:-}"; shift 2 ;;
+    --bell)   BELL_SOCKET="${2:-}"; shift 2 ;;
+    *) shift ;;
+  esac
+done
 
 SESSION=$(tmux display-message -p '#{session_name}')
 CURRENT_WINDOW=$(tmux display-message -p '#{window_name}')
@@ -27,6 +40,84 @@ AGENT_WINDOW="agent"
 STATE_FILE="/tmp/tmux-agent-toggle-${SESSION}"
 
 # --- Detection ---
+
+# Extract window name from socket path.
+# Socket pattern: /tmp/pi-{session}-{window}.sock
+# e.g., /tmp/pi-mega-agent.sock → agent
+socket_to_window() {
+  local sock="$1"
+  local fname
+  fname=$(basename "$sock" .sock)
+  # Strip prefix and session: pi-{session}-{window} → {window}
+  echo "$fname" | sed "s/^pi-${SESSION}-//"
+}
+
+# Find pi pane by matching the window derived from socket path.
+# Returns pane_id if found.
+find_pi_pane_by_socket() {
+  local sock="$1"
+  [[ -z "$sock" ]] && return 1
+
+  local target_win
+  target_win=$(socket_to_window "$sock")
+  [[ -z "$target_win" ]] && return 1
+
+  # First: check if a window with that exact name exists and has a π pane
+  local win_idx
+  win_idx=$(tmux list-windows -t "$SESSION" -F '#{window_index}:#{window_name}' |
+    rg ":${target_win}$" | cut -d: -f1)
+
+  if [[ -n "$win_idx" ]]; then
+    local pane_id pane_title
+    while read -r pane_id pane_title; do
+      if [[ "$pane_title" == π* ]]; then
+        echo "$pane_id"
+        return 0
+      fi
+    done < <(tmux list-panes -t "$SESSION:$win_idx" -F '#{pane_id} #{pane_title}')
+  fi
+
+  # Fallback: scan all panes, check if pane's PI_SOCKET env matches
+  # (expensive but accurate — only used when window name doesn't match)
+  local pane_id pane_pid pane_title
+  while read -r pane_id pane_pid pane_title; do
+    if [[ "$pane_title" == π* ]]; then
+      # Check if this pane's process tree has our socket
+      local pane_env
+      pane_env=$(cat /proc/"$pane_pid"/environ 2>/dev/null | tr '\0' '\n' | rg "^PI_SOCKET=" | head -1) || true
+      # macOS: /proc doesn't exist, try lsof
+      if [[ -z "$pane_env" ]]; then
+        if lsof -p "$pane_pid" 2>/dev/null | rg -q "$(basename "$sock")"; then
+          echo "$pane_id"
+          return 0
+        fi
+      elif [[ "$pane_env" == "PI_SOCKET=$sock" ]]; then
+        echo "$pane_id"
+        return 0
+      fi
+    fi
+  done < <(tmux list-panes -s -t "$SESSION" -F '#{pane_id} #{pane_pid} #{pane_title}')
+
+  return 1
+}
+
+# Ring bell on the pane matching a socket path.
+ring_bell_for_socket() {
+  local sock="$1"
+  local target_win
+  target_win=$(socket_to_window "$sock")
+  [[ -z "$target_win" ]] && return 1
+
+  local win_idx
+  win_idx=$(tmux list-windows -t "$SESSION" -F '#{window_index}:#{window_name}' |
+    rg ":${target_win}$" | cut -d: -f1)
+  [[ -z "$win_idx" ]] && return 1
+
+  local tty
+  tty=$(tmux display -p -t "$SESSION:$win_idx" '#{pane_tty}' 2>/dev/null)
+  [[ -n "$tty" ]] && printf '\a' > "$tty" 2>/dev/null
+  return 0
+}
 
 agent_window_exists() {
   tmux list-windows -t "$SESSION" -F '#{window_name}' | rg -qx "$AGENT_WINDOW"
@@ -108,6 +199,12 @@ clear_state() { : >"$STATE_FILE"; }
 # --- Main ---
 
 main() {
+  # BELL MODE: ring bell and exit (used by pi.lua after sends)
+  if [[ -n "$BELL_SOCKET" ]]; then
+    ring_bell_for_socket "$BELL_SOCKET"
+    exit 0
+  fi
+
   # CASE 1: In agent window → toggle OUT
   if [[ "$CURRENT_WINDOW" == "$AGENT_WINDOW" ]]; then
     [[ "$ENSURE_MODE" == true ]] && exit 0
@@ -163,43 +260,60 @@ main() {
   fi
 
   # CASE 3: Toggle IN — find or create pi
-  # If agent window exists, check if it actually has pi
-  if agent_window_exists; then
-    local existing_idx
-    existing_idx=$(get_agent_window_idx)
-    local has_pi=false
-    local title
-    while read -r title; do
-      [[ "$title" == π* ]] && has_pi=true && break
-    done < <(tmux list-panes -t "$SESSION:$existing_idx" -F '#{pane_title}')
-    if [[ "$has_pi" == false ]]; then
-      # Stale agent window (pi exited) — kill it
-      tmux kill-window -t "$SESSION:$existing_idx"
-    fi
-    # If has_pi=true, agent window is healthy — fall through to use it
+  # If --socket provided, try to find that specific pi pane first
+  local target_pane=""
+  if [[ -n "$TARGET_SOCKET" ]]; then
+    target_pane=$(find_pi_pane_by_socket "$TARGET_SOCKET") || true
   fi
 
-  # If no agent window (never existed, or stale one was killed), find or create pi
-  if ! agent_window_exists; then
-    local pi_pane_global
-    if pi_pane_global=$(find_pi_pane_anywhere); then
-      # Break it out of wherever it is into a new agent window
-      tmux break-pane -d -s "$pi_pane_global" -n "$AGENT_WINDOW"
-      normalize_agent_window "$(get_agent_window_idx)"
+  if [[ -n "$target_pane" ]]; then
+    # Found the specific pi pane — figure out what window it's in
+    local target_win_idx
+    target_win_idx=$(tmux display-message -t "$target_pane" -p '#{window_index}')
+
+    if is_nvim_running; then
+      save_state "split"
+      tmux join-pane -h -s "$target_pane" -l "$SPLIT_WIDTH"
     else
-      create_agent_window
+      save_state "direct:${CURRENT_WINDOW_IDX}"
+      tmux select-window -t "$SESSION:$target_win_idx"
     fi
-  fi
-
-  local agent_idx
-  agent_idx=$(get_agent_window_idx)
-
-  if is_nvim_running; then
-    save_state "split"
-    tmux join-pane -h -s "$SESSION:${agent_idx}.1" -l "$SPLIT_WIDTH"
   else
-    save_state "direct:${CURRENT_WINDOW_IDX}"
-    tmux select-window -t "$SESSION:$agent_idx"
+    # No socket target or socket pane not found — fall back to agent window logic
+    if agent_window_exists; then
+      local existing_idx
+      existing_idx=$(get_agent_window_idx)
+      local has_pi=false
+      local title
+      while read -r title; do
+        [[ "$title" == π* ]] && has_pi=true && break
+      done < <(tmux list-panes -t "$SESSION:$existing_idx" -F '#{pane_title}')
+      if [[ "$has_pi" == false ]]; then
+        # Stale agent window (pi exited) — kill it
+        tmux kill-window -t "$SESSION:$existing_idx"
+      fi
+    fi
+
+    if ! agent_window_exists; then
+      local pi_pane_global
+      if pi_pane_global=$(find_pi_pane_anywhere); then
+        tmux break-pane -d -s "$pi_pane_global" -n "$AGENT_WINDOW"
+        normalize_agent_window "$(get_agent_window_idx)"
+      else
+        create_agent_window
+      fi
+    fi
+
+    local agent_idx
+    agent_idx=$(get_agent_window_idx)
+
+    if is_nvim_running; then
+      save_state "split"
+      tmux join-pane -h -s "$SESSION:${agent_idx}.1" -l "$SPLIT_WIDTH"
+    else
+      save_state "direct:${CURRENT_WINDOW_IDX}"
+      tmux select-window -t "$SESSION:$agent_idx"
+    fi
   fi
 }
 
