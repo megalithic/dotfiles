@@ -1,8 +1,22 @@
 /**
  * Pi Bridge Extension
  *
- * Creates a Unix socket for external communication with pi.
+ * Creates a Unix socket for bidirectional communication with pi.
  * Accepts JSON payloads from nvim, Telegram (via Hammerspoon), and other sources.
+ * Returns JSON responses to all clients ({ ok: true } / { ok: false, error }).
+ *
+ * Protocol:
+ *   Request:  { type: 'ping' }                         → { ok: true, type: 'pong' }
+ *   Request:  { type: 'prompt', message: '...' }        → { ok: true }
+ *   Request:  { type: 'editor_state', state: {...} }    → { ok: true }
+ *   Request:  { type: 'telegram', text: '...' }         → { ok: true }
+ *   Request:  { type: 'tell', text: '...' }             → { ok: true }
+ *   Request:  { file: '...', task: '...' }              → { ok: true }  (legacy nvim)
+ *   Error:    (any malformed JSON)                      → { ok: false, error: '...' }
+ *
+ * Discovery:
+ *   Socket:   /tmp/pi-{session}.sock
+ *   Manifest: /tmp/pi-nvim-sockets/{session}.info  (JSON: socket, cwd, pid, startedAt)
  *
  * Socket Configuration (from nix - single source of truth):
  *   - PI_SOCKET_DIR: /tmp
@@ -69,7 +83,33 @@ type TellPayload = {
   timestamp?: number;
 };
 
-type Payload = NvimPayload | TelegramPayload | TellPayload;
+type PingPayload = {
+  type: "ping";
+};
+
+type PromptPayload = {
+  type: "prompt";
+  message: string;
+};
+
+type EditorStatePayload = {
+  type: "editor_state";
+  state: {
+    file?: string;
+    cursor?: { line: number; col: number };
+    selection?: string;
+    filetype?: string;
+    [key: string]: unknown;
+  };
+};
+
+type Payload =
+  | NvimPayload
+  | TelegramPayload
+  | TellPayload
+  | PingPayload
+  | PromptPayload
+  | EditorStatePayload;
 
 const isTelegramPayload = (p: Payload): p is TelegramPayload =>
   "type" in p && p.type === "telegram";
@@ -77,12 +117,28 @@ const isTelegramPayload = (p: Payload): p is TelegramPayload =>
 const isTellPayload = (p: Payload): p is TellPayload =>
   "type" in p && p.type === "tell";
 
+const isPingPayload = (p: Payload): p is PingPayload =>
+  "type" in p && p.type === "ping";
+
+const isPromptPayload = (p: Payload): p is PromptPayload =>
+  "type" in p && p.type === "prompt";
+
+const isEditorStatePayload = (p: Payload): p is EditorStatePayload =>
+  "type" in p && p.type === "editor_state";
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+const INFO_DIR = "/tmp/pi-nvim-sockets";
+
 // =============================================================================
 // State
 // =============================================================================
 
 let server: net.Server | null = null;
 let latestCtx: ExtensionContext | null = null;
+let infoManifestPath: string | null = null;
 
 // =============================================================================
 // Message Formatting
@@ -121,6 +177,60 @@ const formatNvimMessage = (payload: NvimPayload): string => {
   }
 
   return parts.join("\n");
+};
+
+// =============================================================================
+// Response Helpers
+// =============================================================================
+
+const respond = (socket: net.Socket, data: Record<string, unknown>): void => {
+  try {
+    socket.write(JSON.stringify(data) + "\n");
+  } catch {
+    // Client may have disconnected
+  }
+};
+
+const respondOk = (socket: net.Socket, extra?: Record<string, unknown>): void =>
+  respond(socket, { ok: true, ...extra });
+
+const respondError = (socket: net.Socket, error: string): void =>
+  respond(socket, { ok: false, error });
+
+// =============================================================================
+// Info Manifest
+// =============================================================================
+
+const writeInfoManifest = (): void => {
+  if (!SOCKET_PATH || !PI_SESSION) return;
+
+  try {
+    if (!fs.existsSync(INFO_DIR)) {
+      fs.mkdirSync(INFO_DIR, { recursive: true });
+    }
+
+    infoManifestPath = `${INFO_DIR}/${PI_SESSION}.info`;
+    const manifest = {
+      socket: SOCKET_PATH,
+      cwd: process.cwd(),
+      pid: process.pid,
+      session: PI_SESSION,
+      startedAt: new Date().toISOString(),
+    };
+    fs.writeFileSync(infoManifestPath, JSON.stringify(manifest) + "\n");
+  } catch {
+    // Non-fatal — manifest is for discovery convenience
+  }
+};
+
+const cleanupInfoManifest = (): void => {
+  if (infoManifestPath && fs.existsSync(infoManifestPath)) {
+    try {
+      fs.unlinkSync(infoManifestPath);
+    } catch {
+      // Ignore
+    }
+  }
 };
 
 // =============================================================================
@@ -181,7 +291,36 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
 
         try {
           const payload = JSON.parse(line) as Payload;
-          
+
+          // Handle ping/pong
+          if (isPingPayload(payload)) {
+            respondOk(socket, { type: "pong" });
+            continue;
+          }
+
+          // Handle prompt injection
+          if (isPromptPayload(payload)) {
+            if (!payload.message?.trim()) {
+              respondError(socket, "prompt message is empty");
+              continue;
+            }
+            const currentCtx = latestCtx;
+            if (currentCtx?.isIdle()) {
+              void pi.sendUserMessage(payload.message);
+            } else {
+              void pi.sendUserMessage(payload.message, { deliverAs: "followUp" });
+            }
+            respondOk(socket);
+            continue;
+          }
+
+          // Handle editor state (forward to pinvim.ts via event bus)
+          if (isEditorStatePayload(payload)) {
+            pi.events.emit("pinvim:editor_state", payload.state);
+            respondOk(socket);
+            continue;
+          }
+
           // Handle Telegram messages
           if (isTelegramPayload(payload)) {
             const telegramMessage = `📱 **Telegram message:**\n${payload.text}`;
@@ -197,6 +336,7 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
             } else {
               void pi.sendUserMessage(telegramMessage, { deliverAs: "followUp" });
             }
+            respondOk(socket);
             continue;
           }
           
@@ -215,12 +355,16 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
             } else {
               void pi.sendUserMessage(payload.text, { deliverAs: "followUp" });
             }
+            respondOk(socket);
             continue;
           }
           
-          // Handle nvim payloads
+          // Handle nvim payloads (legacy — no "type" field)
           const message = formatNvimMessage(payload as NvimPayload);
-          if (!message) continue;
+          if (!message) {
+            respondError(socket, "empty nvim payload");
+            continue;
+          }
 
           const currentCtx = latestCtx;
           if (currentCtx?.isIdle()) {
@@ -228,8 +372,9 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
           } else {
             void pi.sendUserMessage(message, { deliverAs: "followUp" });
           }
+          respondOk(socket);
         } catch {
-          // Ignore malformed payloads
+          respondError(socket, "invalid JSON");
         }
       }
     });
@@ -253,6 +398,7 @@ export default function (pi: ExtensionAPI): void {
     // Start server if bridge is enabled (invoked via pinvim/pisock)
     if (IS_BRIDGE_ENABLED) {
       startServer(pi, ctx);
+      writeInfoManifest();
 
       if (ctx.hasUI) {
         ctx.ui.notify(`Bridge listening: ${SOCKET_PATH}`, "info");
@@ -281,5 +427,8 @@ export default function (pi: ExtensionAPI): void {
         // Ignore cleanup failures
       }
     }
+
+    // Clean up info manifest
+    cleanupInfoManifest();
   });
 }
