@@ -29,6 +29,12 @@ local config = {
     max_file_size = 100000, -- Max bytes to send for a file (100KB)
     send_as_reference = true, -- Send file path reference instead of content (pi reads the file)
   },
+  connection = {
+    reconnect_max_retries = 5,
+    reconnect_max_delay_s = 30,
+    ping_interval_s = 30,
+    queue_max = 50,
+  },
 }
 
 --------------------------------------------------------------------------------
@@ -41,103 +47,446 @@ local context_files = {}
 
 local detect_language -- forward declaration (defined in Selection & Context Helpers)
 
+-- Connection state
+local conn = {
+  pipe = nil, ---@type uv_pipe_t?
+  socket_path = nil, ---@type string?
+  connected = false,
+  connecting = false,
+  read_buffer = "",
+  -- Reconnect state
+  reconnect_timer = nil, ---@type uv_timer_t?
+  reconnect_attempts = 0,
+  reconnect_delay_s = 1,
+  -- Ping/pong
+  ping_timer = nil, ---@type uv_timer_t?
+  last_pong = 0, -- os.time() of last pong
+  -- Message queue (for messages during reconnect)
+  queue = {}, ---@type {payload: table, cb: function?}[]
+}
+
 --------------------------------------------------------------------------------
--- Socket Communication
+-- Socket Discovery
 --------------------------------------------------------------------------------
 
---- Get socket path using nix-defined pattern
----@return string|nil
-local function get_socket_path()
-  -- Explicit override (set by pinvim/pisock wrapper)
-  if vim.env.PI_SOCKET then return vim.env.PI_SOCKET end
+--- Check if a path is a socket
+---@param path string
+---@return boolean
+local function socket_exists(path)
+  return vim.fn.getftype(path) == "socket"
+end
 
-  local socket_dir = config.socket.dir
-  local socket_prefix = config.socket.prefix
+--- Discover socket via /tmp/pi-nvim-sockets/*.info (cwd match, then newest)
+---@return string?
+local function discover_socket_by_cwd()
+  local info_dir = "/tmp/pi-nvim-sockets"
+  local ok, files = pcall(vim.fn.glob, info_dir .. "/*.info", false, true)
+  if not ok or not files or #files == 0 then return nil end
 
-  -- Helper to check if socket exists
-  local function socket_exists(path) return vim.fn.filereadable(path) == 1 or vim.fn.getftype(path) == "socket" end
+  local cwd = vim.uv.cwd()
+  local best_sock = nil
+  local best_mtime = 0
 
-  -- Compute from tmux session
-  if vim.env.TMUX then
-    local handle = io.popen("tmux display-message -p '#{session_name}' 2>/dev/null")
-    if handle then
-      local session = handle:read("*l")
-      handle:close()
-      if session and session ~= "" then
-        -- Try {session}-agent.sock first (dedicated agent window)
-        local agent_socket = string.format("%s/%s-%s-agent.sock", socket_dir, socket_prefix, session)
-        if socket_exists(agent_socket) then return agent_socket end
+  -- First pass: exact cwd match, prefer newest
+  for _, info_path in ipairs(files) do
+    local content_ok, content = pcall(vim.fn.readfile, info_path)
+    if content_ok and content and content[1] then
+      local parsed_ok, info = pcall(vim.json.decode, content[1])
+      if parsed_ok and info and info.socket then
+        if info.cwd == cwd and socket_exists(info.socket) then
+          local stat = vim.uv.fs_stat(info.socket)
+          if stat and stat.mtime.sec > best_mtime then
+            best_mtime = stat.mtime.sec
+            best_sock = info.socket
+          end
+        end
+      end
+    end
+  end
+  if best_sock then return best_sock end
 
-        -- Fall back to any socket for this session
-        local glob_handle =
-          io.popen(string.format("ls %s/%s-%s-*.sock 2>/dev/null | head -1", socket_dir, socket_prefix, session))
-        if glob_handle then
-          local found = glob_handle:read("*l")
-          glob_handle:close()
-          if found and found ~= "" and socket_exists(found) then return found end
+  -- Second pass: any live socket (newest)
+  for _, info_path in ipairs(files) do
+    local content_ok, content = pcall(vim.fn.readfile, info_path)
+    if content_ok and content and content[1] then
+      local parsed_ok, info = pcall(vim.json.decode, content[1])
+      if parsed_ok and info and info.socket and socket_exists(info.socket) then
+        local stat = vim.uv.fs_stat(info.socket)
+        if stat and stat.mtime.sec > best_mtime then
+          best_mtime = stat.mtime.sec
+          best_sock = info.socket
         end
       end
     end
   end
 
+  return best_sock
+end
+
+--- Discover socket via tmux session pattern (legacy fallback)
+---@return string?
+local function discover_socket_by_tmux()
+  local socket_dir = config.socket.dir
+  local socket_prefix = config.socket.prefix
+
+  if not vim.env.TMUX then return nil end
+
+  local handle = io.popen("tmux display-message -p '#{session_name}' 2>/dev/null")
+  if not handle then return nil end
+  local session = handle:read("*l")
+  handle:close()
+  if not session or session == "" then return nil end
+
+  -- Try {session}-agent.sock first (dedicated agent window)
+  local agent_socket = string.format("%s/%s-%s-agent.sock", socket_dir, socket_prefix, session)
+  if socket_exists(agent_socket) then return agent_socket end
+
+  -- Fall back to any socket for this session
+  local glob_handle =
+    io.popen(string.format("ls %s/%s-%s-*.sock 2>/dev/null | head -1", socket_dir, socket_prefix, session))
+  if not glob_handle then return nil end
+  local found = glob_handle:read("*l")
+  glob_handle:close()
+  if found and found ~= "" and socket_exists(found) then return found end
+
+  return nil
+end
+
+--- Get socket path with priority: explicit > buffer-local > cwd-match > tmux-session > default
+---@return string?
+local function get_socket_path()
+  -- Explicit override (set by pinvim/pisock wrapper)
+  if vim.env.PI_SOCKET then return vim.env.PI_SOCKET end
+
+  -- Buffer-local target
+  local buf_target = vim.b.pi_target_socket
+  if buf_target and socket_exists(buf_target) then return buf_target end
+
+  -- cwd-based discovery (from .info manifests)
+  local cwd_sock = discover_socket_by_cwd()
+  if cwd_sock then return cwd_sock end
+
+  -- tmux-session pattern (legacy)
+  local tmux_sock = discover_socket_by_tmux()
+  if tmux_sock then return tmux_sock end
+
   -- Fallback to default
-  local default = string.format("%s/%s-default.sock", socket_dir, socket_prefix)
+  local default = string.format("%s/%s-default.sock", config.socket.dir, config.socket.prefix)
   if socket_exists(default) then return default end
 
   return nil
 end
 
---- Send a JSON payload to the pi socket (tmux agent)
---- Respects buffer-local target (vim.b.pi_target_socket) if set
+--------------------------------------------------------------------------------
+-- Persistent Connection (vim.uv.new_pipe)
+--------------------------------------------------------------------------------
+
+local connection_connect -- forward declaration
+
+--- Process a JSON response line from bridge.ts
+---@param line string
+local function handle_response(line)
+  local ok, resp = pcall(vim.json.decode, line)
+  if not ok then return end
+
+  if resp.type == "pong" then
+    conn.last_pong = os.time()
+    return -- silent pong
+  end
+
+  if resp.ok == false and resp.error then
+    vim.schedule(function()
+      vim.notify("pi error: " .. resp.error, vim.log.levels.ERROR)
+    end)
+  end
+end
+
+--- Flush queued messages after reconnect
+local function flush_queue()
+  if #conn.queue == 0 then return end
+
+  local count = #conn.queue
+  for _, item in ipairs(conn.queue) do
+    local json = vim.json.encode(item.payload) .. "\n"
+    if conn.pipe and conn.connected then
+      conn.pipe:write(json)
+    end
+  end
+  conn.queue = {}
+
+  vim.schedule(function()
+    vim.notify(string.format("Flushed %d queued message(s) to pi", count), vim.log.levels.INFO)
+  end)
+end
+
+--- Stop ping timer
+local function stop_ping_timer()
+  if conn.ping_timer then
+    conn.ping_timer:stop()
+    conn.ping_timer:close()
+    conn.ping_timer = nil
+  end
+end
+
+--- Start ping timer for health checks
+local function start_ping_timer()
+  stop_ping_timer()
+  local interval_ms = config.connection.ping_interval_s * 1000
+  conn.ping_timer = vim.uv.new_timer()
+  conn.ping_timer:start(interval_ms, interval_ms, vim.schedule_wrap(function()
+    if conn.pipe and conn.connected then
+      local ok, _ = pcall(function()
+        conn.pipe:write(vim.json.encode({ type = "ping" }) .. "\n")
+      end)
+      if not ok then
+        -- Write failed, connection is dead
+        stop_ping_timer()
+      end
+    end
+  end))
+end
+
+--- Stop reconnect timer
+local function stop_reconnect_timer()
+  if conn.reconnect_timer then
+    conn.reconnect_timer:stop()
+    conn.reconnect_timer:close()
+    conn.reconnect_timer = nil
+  end
+end
+
+--- Schedule a reconnect attempt with exponential backoff
+local function schedule_reconnect()
+  if conn.reconnect_timer then return end -- already scheduled
+
+  conn.reconnect_attempts = conn.reconnect_attempts + 1
+  if conn.reconnect_attempts > config.connection.reconnect_max_retries then
+    vim.schedule(function()
+      vim.notify(
+        string.format("Pi: gave up reconnecting after %d attempts", config.connection.reconnect_max_retries),
+        vim.log.levels.WARN
+      )
+    end)
+    -- Drop queued messages
+    if #conn.queue > 0 then
+      local dropped = #conn.queue
+      conn.queue = {}
+      vim.schedule(function()
+        vim.notify(string.format("Pi: dropped %d queued message(s)", dropped), vim.log.levels.WARN)
+      end)
+    end
+    return
+  end
+
+  local delay_s = math.min(conn.reconnect_delay_s, config.connection.reconnect_max_delay_s)
+  conn.reconnect_delay_s = conn.reconnect_delay_s * 2 -- exponential backoff
+
+  vim.schedule(function()
+    vim.notify(string.format("Pi: reconnecting in %ds (attempt %d/%d)",
+      delay_s, conn.reconnect_attempts, config.connection.reconnect_max_retries), vim.log.levels.INFO)
+  end)
+
+  conn.reconnect_timer = vim.uv.new_timer()
+  conn.reconnect_timer:start(delay_s * 1000, 0, vim.schedule_wrap(function()
+    stop_reconnect_timer()
+    connection_connect()
+  end))
+end
+
+--- Disconnect and clean up pipe
+local function connection_disconnect()
+  stop_ping_timer()
+  stop_reconnect_timer()
+
+  if conn.pipe then
+    if not conn.pipe:is_closing() then
+      conn.pipe:read_stop()
+      conn.pipe:close()
+    end
+    conn.pipe = nil
+  end
+
+  conn.connected = false
+  conn.connecting = false
+  conn.read_buffer = ""
+end
+
+--- Connect to the pi socket
+function connection_connect()
+  if conn.connected or conn.connecting then return end
+
+  local socket_path = get_socket_path()
+  if not socket_path then return end
+
+  conn.connecting = true
+  conn.socket_path = socket_path
+
+  local pipe = vim.uv.new_pipe(false)
+  if not pipe then
+    conn.connecting = false
+    return
+  end
+
+  pipe:connect(socket_path, function(err)
+    if err then
+      pipe:close()
+      conn.connecting = false
+      vim.schedule(function()
+        schedule_reconnect()
+      end)
+      return
+    end
+
+    conn.pipe = pipe
+    conn.connected = true
+    conn.connecting = false
+    conn.reconnect_attempts = 0
+    conn.reconnect_delay_s = 1
+    conn.read_buffer = ""
+
+    -- Start reading responses
+    pipe:read_start(function(read_err, data)
+      if read_err or not data then
+        -- Connection lost
+        vim.schedule(function()
+          connection_disconnect()
+          schedule_reconnect()
+        end)
+        return
+      end
+
+      conn.read_buffer = conn.read_buffer .. data
+      -- Process complete lines
+      local idx = conn.read_buffer:find("\n")
+      while idx do
+        local line = conn.read_buffer:sub(1, idx - 1)
+        conn.read_buffer = conn.read_buffer:sub(idx + 1)
+        if line ~= "" then
+          vim.schedule(function()
+            handle_response(line)
+          end)
+        end
+        idx = conn.read_buffer:find("\n")
+      end
+    end)
+
+    -- Start health check pings
+    vim.schedule(function()
+      start_ping_timer()
+      flush_queue()
+    end)
+  end)
+end
+
+--- Send a JSON payload to the pi socket via persistent connection
+--- Falls back to one-shot pipe if persistent connection unavailable
 ---@param payload table
----@param opts? { auto_toggle?: boolean }
+---@param opts? { auto_toggle?: boolean, silent?: boolean }
 ---@return boolean success
 local function send_payload(payload, opts)
   opts = opts or {}
-  -- Default: auto-toggle pi pane after sending from nvim
   if opts.auto_toggle == nil then opts.auto_toggle = true end
 
-  if vim.fn.executable("nc") ~= 1 then
-    vim.notify("nc not found in PATH", vim.log.levels.ERROR)
-    return false
+  -- Try persistent connection first
+  if conn.pipe and conn.connected then
+    local json = vim.json.encode(payload) .. "\n"
+    local ok, write_err = pcall(function() conn.pipe:write(json) end)
+    if ok then
+      if not opts.silent then
+        vim.notify("Sent to pi", vim.log.levels.INFO)
+      end
+      -- Ring tmux bell + ensure pane
+      if conn.socket_path then
+        local fname = vim.fn.fnamemodify(conn.socket_path, ":t:r")
+        local session, win = fname:match("^pi%-(.+)%-(%w+)$")
+        if session and win then
+          local tty = vim.fn.system(string.format("tmux display -p -t '%s:%s' '#{pane_tty}' 2>/dev/null", session, win))
+          tty = vim.trim(tty)
+          if tty ~= "" then vim.fn.system(string.format("printf '\\a' > %s 2>/dev/null", vim.fn.shellescape(tty))) end
+        end
+      end
+      if opts.auto_toggle and vim.env.TMUX then
+        vim.fn.jobstart({ "tmux-toggle-pi", "--ensure" }, { detach = true })
+      end
+      return true
+    else
+      -- Write failed, connection is dead
+      connection_disconnect()
+    end
   end
 
-  -- Check buffer-local target first, then fall back to auto-discovery
-  local socket_path = vim.b.pi_target_socket
-  if socket_path and vim.fn.getftype(socket_path) ~= "socket" then
-    socket_path = nil -- Invalid, fall back
+  -- Queue message if reconnecting
+  if conn.reconnect_attempts > 0 or conn.connecting then
+    if #conn.queue >= config.connection.queue_max then
+      vim.notify("Pi: message queue full, dropping oldest", vim.log.levels.WARN)
+      table.remove(conn.queue, 1)
+    end
+    table.insert(conn.queue, { payload = payload })
+    vim.notify(string.format("Pi: queued message (%d in queue)", #conn.queue), vim.log.levels.INFO)
+    return true
   end
-  socket_path = socket_path or get_socket_path()
 
+  -- Try one-shot send for buffer-local targets or when not using persistent conn
+  local socket_path = get_socket_path()
   if not socket_path then
     vim.notify("No pi socket found. Use tmux prefix+p to start pi.", vim.log.levels.WARN)
     return false
   end
 
-  local json = vim.fn.json_encode(payload) .. "\n"
-  local chan = vim.fn.jobstart({ "nc", "-U", socket_path }, { stdin = "pipe" })
-  if chan <= 0 then
-    vim.notify("pi socket not available: " .. socket_path, vim.log.levels.ERROR)
+  local pipe = vim.uv.new_pipe(false)
+  if not pipe then
+    vim.notify("Failed to create pipe", vim.log.levels.ERROR)
     return false
   end
 
-  vim.fn.chansend(chan, json)
-  vim.fn.chanclose(chan, "stdin")
-  vim.notify("Sent to pi", vim.log.levels.INFO)
+  pipe:connect(socket_path, function(err)
+    if err then
+      pipe:close()
+      vim.schedule(function()
+        vim.notify("pi socket not available: " .. socket_path, vim.log.levels.ERROR)
+      end)
+      return
+    end
 
-  -- Ring tmux bell on the agent's pane
-  local fname = vim.fn.fnamemodify(socket_path, ":t:r")
-  local session, win = fname:match("^pi%-(.+)%-(%w+)$")
-  if session and win then
-    local tty = vim.fn.system(string.format("tmux display -p -t '%s:%s' '#{pane_tty}' 2>/dev/null", session, win))
-    tty = vim.trim(tty)
-    if tty ~= "" then vim.fn.system(string.format("printf '\\a' > %s 2>/dev/null", vim.fn.shellescape(tty))) end
-  end
+    local json = vim.json.encode(payload) .. "\n"
+    pipe:write(json)
 
-  -- Toggle pi pane after successful send
-  if opts.auto_toggle and vim.env.TMUX then
-    vim.fn.jobstart({ "tmux-toggle-pi", "--ensure" }, { detach = true })
-  end
+    -- Read response
+    local buf = ""
+    pipe:read_start(function(read_err, data)
+      if read_err or not data then
+        pipe:close()
+        return
+      end
+      buf = buf .. data
+      local nl = buf:find("\n")
+      if nl then
+        local line = buf:sub(1, nl - 1)
+        pipe:read_stop()
+        pipe:close()
+        vim.schedule(function()
+          handle_response(line)
+        end)
+      end
+    end)
+
+    vim.schedule(function()
+      if not opts.silent then
+        vim.notify("Sent to pi", vim.log.levels.INFO)
+      end
+      -- Ring tmux bell
+      local fname = vim.fn.fnamemodify(socket_path, ":t:r")
+      local session, win = fname:match("^pi%-(.+)%-(%w+)$")
+      if session and win then
+        local tty = vim.fn.system(string.format("tmux display -p -t '%s:%s' '#{pane_tty}' 2>/dev/null", session, win))
+        tty = vim.trim(tty)
+        if tty ~= "" then vim.fn.system(string.format("printf '\\a' > %s 2>/dev/null", vim.fn.shellescape(tty))) end
+      end
+      if opts.auto_toggle and vim.env.TMUX then
+        vim.fn.jobstart({ "tmux-toggle-pi", "--ensure" }, { detach = true })
+      end
+    end)
+  end)
 
   return true
 end
@@ -591,9 +940,9 @@ local function get_session_name(socket_path)
   return session
 end
 
---- Check if connected to a pi agent (socket available)
+--- Check if connected to a pi agent (persistent connection or socket available)
 ---@return boolean
-function mega.p.pi.is_connected() return mega.p.pi.get_target() ~= nil end
+function mega.p.pi.is_connected() return conn.connected or mega.p.pi.get_target() ~= nil end
 
 --- Get connection status info
 ---@return string
@@ -618,25 +967,49 @@ function mega.p.pi.status()
   return table.concat(lines, "\n")
 end
 
---- List all available pi sockets
+--- List all available pi sockets (from both .info manifests and tmux pattern)
 ---@return string[]
 function mega.p.pi.list_sockets()
-  local socket_dir = config.socket.dir
-  local socket_prefix = config.socket.prefix
-  local pattern = string.format("%s/%s-*.sock", socket_dir, socket_prefix)
+  local seen = {}
+  local sockets = {}
 
-  local sockets = vim.fn.glob(pattern, false, true)
-  -- Filter to only actual sockets
-  return vim.tbl_filter(function(path) return vim.fn.getftype(path) == "socket" end, sockets)
+  -- From .info manifests
+  local info_dir = "/tmp/pi-nvim-sockets"
+  local ok, files = pcall(vim.fn.glob, info_dir .. "/*.info", false, true)
+  if ok and files then
+    for _, info_path in ipairs(files) do
+      local content_ok, content = pcall(vim.fn.readfile, info_path)
+      if content_ok and content and content[1] then
+        local parsed_ok, info = pcall(vim.json.decode, content[1])
+        if parsed_ok and info and info.socket and socket_exists(info.socket) then
+          if not seen[info.socket] then
+            seen[info.socket] = true
+            table.insert(sockets, info.socket)
+          end
+        end
+      end
+    end
+  end
+
+  -- From tmux socket pattern
+  local pattern = string.format("%s/%s-*.sock", config.socket.dir, config.socket.prefix)
+  local glob_socks = vim.fn.glob(pattern, false, true)
+  for _, path in ipairs(glob_socks) do
+    if socket_exists(path) and not seen[path] then
+      seen[path] = true
+      table.insert(sockets, path)
+    end
+  end
+
+  return sockets
 end
 
 --- Get current target socket (explicit or auto-discovered)
 ---@return string?
 function mega.p.pi.get_target()
-  -- Check buffer-local override first
-  local buf_target = vim.b.pi_target_socket
-  if buf_target and vim.fn.getftype(buf_target) == "socket" then return buf_target end
-  -- Fall back to auto-discovery
+  -- Use persistent connection if active
+  if conn.connected and conn.socket_path then return conn.socket_path end
+  -- Fall back to discovery
   return get_socket_path()
 end
 
@@ -719,15 +1092,17 @@ end
 --------------------------------------------------------------------------------
 
 --- Get statusline component data
----@return { connected: boolean, session: string?, context_count: number }
+---@return { connected: boolean, reconnecting: boolean, session: string?, context_count: number, queue_count: number }
 function mega.p.pi.statusline_data()
   local socket = mega.p.pi.get_target()
   local session = socket and get_session_name(socket)
 
   return {
-    connected = socket ~= nil,
+    connected = conn.connected or (socket ~= nil),
+    reconnecting = conn.reconnect_attempts > 0 and not conn.connected,
     session = session,
     context_count = mega.p.pi.context_count(),
+    queue_count = #conn.queue,
   }
 end
 
@@ -737,12 +1112,17 @@ function mega.p.pi.statusline()
   local data = mega.p.pi.statusline_data()
   local icon = mega.ui.icons.pi.symbol
 
+  if data.reconnecting then
+    return string.format("%%#StWarning#%s…%%*", icon)
+  end
+
   if not data.connected then return string.format("%%#StComment#%s%%*", icon) end
 
   local session = data.session or "pi"
   local ctx = data.context_count > 0 and string.format(" %d", data.context_count) or ""
+  local queue = data.queue_count > 0 and string.format(" Q%d", data.queue_count) or ""
 
-  return string.format("%%#StIdentifier#%s%%* %%#StComment#%s%s%%*", icon, session, ctx)
+  return string.format("%%#StIdentifier#%s%%* %%#StComment#%s%s%s%%*", icon, session, ctx, queue)
 end
 
 --- Get statusline component for lualine/custom statusline
@@ -751,6 +1131,10 @@ end
 function mega.p.pi.statusline_component()
   local data = mega.p.pi.statusline_data()
   local icon = mega.ui.icons.pi.symbol
+
+  if data.reconnecting then return {
+    { icon .. "…", hl = "DiagnosticWarn" },
+  } end
 
   if not data.connected then return {
     { icon, hl = "Comment" },
@@ -763,6 +1147,7 @@ function mega.p.pi.statusline_component()
   }
 
   if data.context_count > 0 then table.insert(components, { " " .. data.context_count, hl = "StBufferCount" }) end
+  if data.queue_count > 0 then table.insert(components, { " Q" .. data.queue_count, hl = "DiagnosticWarn" }) end
 
   return components
 end
@@ -1121,6 +1506,36 @@ vim.api.nvim_create_user_command(
   { desc = "Attach pi LSP to current buffer" }
 )
 
+vim.api.nvim_create_user_command("PiPing", function()
+  if not conn.connected then
+    vim.notify("Pi: not connected", vim.log.levels.WARN)
+    return
+  end
+  local ok, _ = pcall(function()
+    conn.pipe:write(vim.json.encode({ type = "ping" }) .. "\n")
+  end)
+  if ok then
+    vim.notify("Pi: ping sent (watch for pong in health check)", vim.log.levels.INFO)
+  else
+    vim.notify("Pi: ping failed, connection may be dead", vim.log.levels.ERROR)
+  end
+end, { desc = "Ping pi agent" })
+
+vim.api.nvim_create_user_command("PiConnect", function()
+  if conn.connected then
+    vim.notify("Pi: already connected to " .. (conn.socket_path or "unknown"), vim.log.levels.INFO)
+    return
+  end
+  conn.reconnect_attempts = 0
+  conn.reconnect_delay_s = 1
+  connection_connect()
+end, { desc = "Connect to pi socket" })
+
+vim.api.nvim_create_user_command("PiDisconnect", function()
+  connection_disconnect()
+  vim.notify("Pi: disconnected", vim.log.levels.INFO)
+end, { desc = "Disconnect from pi socket" })
+
 --------------------------------------------------------------------------------
 -- Keymaps
 --------------------------------------------------------------------------------
@@ -1200,4 +1615,22 @@ vim.keymap.set(
   function() mega.p.pi.select_session() end,
   { silent = true, desc = "Pi: select session" }
 )
+
+--------------------------------------------------------------------------------
+-- Auto-connect & Cleanup
+--------------------------------------------------------------------------------
+
+-- Try to establish persistent connection on load
+vim.defer_fn(function()
+  if get_socket_path() then
+    connection_connect()
+  end
+end, 500)
+
+-- Clean up on exit
+vim.api.nvim_create_autocmd("VimLeavePre", {
+  callback = function()
+    connection_disconnect()
+  end,
+})
 
