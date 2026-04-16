@@ -67,6 +67,8 @@ features with existing functionality.
 
 - config/nvim/after/plugin/pi.lua
 - bin/tmux-toggle-pi
+- home/common/programs/ai/pi-coding-agent/extensions/bridge.ts
+- home/common/programs/ai/pi-coding-agent/default.nix
 
 ## Acceptance Criteria
 
@@ -94,6 +96,9 @@ features with existing functionality.
 22. Duplicate commands removed: PiToggle removed (PiPanel kept), duplicate keymap <ll>pt removed
 23. Bell ringing and --ensure target the pane matching the active socket, not first π pane
 24. PiHealth checks for stale sockets and reports them
+25. bridge.ts auto-detects tmux session/window for socket path (no pinvim shell setup needed)
+26. PI_SOCKET env var still works as override for explicit control
+27. Raw `pi` binary works for socket comms when run inside tmux (pinvim only needed for API keys/profiles)
 
 ## Validation & Testing
 

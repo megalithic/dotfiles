@@ -18,18 +18,16 @@
  *   Socket:   /tmp/pi-{session}.sock
  *   Manifest: /tmp/pi-nvim-sockets/{session}.info  (JSON: socket, cwd, pid, startedAt)
  *
- * Socket Configuration (from nix - single source of truth):
- *   - PI_SOCKET_DIR: /tmp
- *   - PI_SOCKET_PREFIX: pi
- *   - PI_SESSION: tmux session name (or "default")
- *   - PI_SOCKET: full path, e.g., /tmp/pi-mega.sock
+ * Socket Configuration:
+ *   Auto-detected from tmux session/window when TMUX env is set.
+ *   PI_SOCKET env var overrides auto-detection (for explicit control).
+ *   Falls back to /tmp/pi-default-0.sock outside tmux.
  *
- * Socket pattern: /tmp/pi-{session}.sock (one per tmux session)
+ * Socket pattern: /tmp/pi-{session}-{window}.sock
  *
  * Used by:
- *   - pinvim/pisock wrapper (sets PI_SOCKET env var)
- *   - This extension (listens on PI_SOCKET)
- *   - config/nvim/after/plugin/pi-bridge.lua (connects to socket)
+ *   - This extension (listens on auto-detected or PI_SOCKET path)
+ *   - config/nvim/after/plugin/pi.lua (connects to socket)
  *   - config/hammerspoon/lib/interop/pi.lua (forwards Telegram messages)
  *   - bin/ftm (checks for socket existence)
  *   - bin/tmux-toggle-pi (finds/manages agent window)
@@ -43,12 +41,76 @@ import type {
   ExtensionAPI,
   ExtensionContext,
 } from "@mariozechner/pi-coding-agent";
+import { execSync } from "node:child_process";
 import fs from "node:fs";
 import net from "node:net";
 
-// Socket configuration from environment (set by pinvim/pisock wrapper)
-const SOCKET_PATH = process.env.PI_SOCKET;
-const PI_SESSION = process.env.PI_SESSION;
+// =============================================================================
+// Socket Auto-Detection
+// =============================================================================
+
+const SOCKET_DIR = process.env.PI_SOCKET_DIR || "/tmp";
+const SOCKET_PREFIX = process.env.PI_SOCKET_PREFIX || "pi";
+
+/** Detect tmux session and window names. Returns null if not in tmux. */
+const detectTmux = (): { session: string; window: string } | null => {
+  if (!process.env.TMUX) return null;
+  try {
+    const session = execSync("tmux display-message -p '#{session_name}'", {
+      encoding: "utf-8",
+      timeout: 2000,
+    }).trim();
+    const winName = execSync("tmux display-message -p '#{window_name}'", {
+      encoding: "utf-8",
+      timeout: 2000,
+    }).trim();
+    const winIndex = execSync("tmux display-message -p '#{window_index}'", {
+      encoding: "utf-8",
+      timeout: 2000,
+    }).trim();
+    // Use window name if alphanumeric, otherwise index
+    const window =
+      winName && /^[a-zA-Z0-9_-]+$/.test(winName) ? winName : winIndex;
+    return session && window ? { session, window } : null;
+  } catch {
+    return null;
+  }
+};
+
+/** Resolve socket path and session name. */
+const resolveSocket = (): {
+  socketPath: string | null;
+  session: string;
+  window: string;
+} => {
+  // Explicit override takes priority
+  if (process.env.PI_SOCKET) {
+    return {
+      socketPath: process.env.PI_SOCKET,
+      session: process.env.PI_SESSION || "default",
+      window: process.env.PI_WINDOW || "0",
+    };
+  }
+
+  // Auto-detect from tmux
+  const tmux = detectTmux();
+  if (tmux) {
+    return {
+      socketPath: `${SOCKET_DIR}/${SOCKET_PREFIX}-${tmux.session}-${tmux.window}.sock`,
+      session: tmux.session,
+      window: tmux.window,
+    };
+  }
+
+  // Fallback outside tmux
+  return {
+    socketPath: `${SOCKET_DIR}/${SOCKET_PREFIX}-default-0.sock`,
+    session: "default",
+    window: "0",
+  };
+};
+
+const { socketPath: SOCKET_PATH, session: PI_SESSION } = resolveSocket();
 const IS_BRIDGE_ENABLED = !!SOCKET_PATH;
 
 // Status icon

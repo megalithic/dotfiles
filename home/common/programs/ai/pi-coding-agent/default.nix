@@ -30,7 +30,8 @@
 #     - Patches: applied during buildNpmPackage installPhase (see patches/)
 #
 # Socket pattern: /tmp/pi-{session}-{window}.sock
-#   - One socket per tmux window (allows multiple pi instances)
+#   - Auto-detected by bridge.ts from tmux (no shell setup needed)
+#   - PI_SOCKET env var overrides auto-detection
 #   - Non-tmux fallback: /tmp/pi-default-0.sock
 #
 # Based on: https://github.com/otahontas/nix/tree/main/home/configs/pi-coding-agent
@@ -432,29 +433,19 @@
       esac
     done
 
-    # Socket configuration
+    # Socket config — bridge.ts auto-detects tmux session/window.
+    # Only export dir/prefix so bridge.ts uses consistent paths.
+    # PI_SOCKET can still be set explicitly to override auto-detection.
     export PI_SOCKET_DIR="${socketConfig.dir}"
     export PI_SOCKET_PREFIX="${socketConfig.prefix}"
 
+    # Detect session name for profile hybrid dirs (bridge.ts handles socket)
     if [ -n "$TMUX" ]; then
       PI_SESSION=$(${pkgs.tmux}/bin/tmux display-message -p '#{session_name}')
-      WIN_NAME=$(${pkgs.tmux}/bin/tmux display-message -p '#{window_name}' | tr -d ' ')
-      WIN_INDEX=$(${pkgs.tmux}/bin/tmux display-message -p '#{window_index}')
-      if [[ -n "$WIN_NAME" && "$WIN_NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then
-        PI_WINDOW="$WIN_NAME"
-      else
-        PI_WINDOW="$WIN_INDEX"
-      fi
-      export PI_SESSION PI_WINDOW
-      export PI_SOCKET="${socketConfig.dir}/${socketConfig.prefix}-''${PI_SESSION}-''${PI_WINDOW}.sock"
     else
-      export PI_SESSION="default"
-      export PI_WINDOW="0"
-      export PI_SOCKET="${socketConfig.dir}/${socketConfig.prefix}-default-0.sock"
+      PI_SESSION="default"
     fi
-
-    # Add tools to PATH
-    # export PATH="${pkgs.ast-grep}/bin:$PATH"
+    export PI_SESSION
 
     # Handle profile auth borrowing
     if [[ -n "$PROFILE" ]]; then
