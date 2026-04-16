@@ -66,6 +66,7 @@ features with existing functionality.
 ## Key files
 
 - config/nvim/after/plugin/pi.lua
+- bin/tmux-toggle-pi
 
 ## Acceptance Criteria
 
@@ -86,6 +87,13 @@ features with existing functionality.
 15. include_buffer_text defaults to false; enabling it respects max_buffer_bytes cap
 16. CursorMoved in default events list documented as high-traffic; CursorHold recommended as alternative
 17. checktime interval configurable (default 5s, not 1s); only polls when pi socket has had recent activity
+18. toggle_panel() is async (jobstart, not vim.fn.system)
+19. tmux-toggle-pi accepts --socket flag to target specific pi pane by socket path
+20. toggle_panel() passes targeted socket to tmux-toggle-pi so pane matches socket
+21. Socket discovery skips stale sockets (validates .info manifest pid is alive)
+22. Duplicate commands removed: PiToggle removed (PiPanel kept), duplicate keymap <ll>pt removed
+23. Bell ringing and --ensure target the pane matching the active socket, not first π pane
+24. PiHealth checks for stale sockets and reports them
 
 ## Validation & Testing
 
@@ -131,6 +139,14 @@ features with existing functionality.
 - Connected: icon + session name + context count + queue count visible
 - Disconnected: dimmed icon only
 - Reconnecting: icon with "..." or similar indicator
+
+### Tmux toggle integration
+- `<localleader>pp` toggles pi pane that matches active socket target
+- If no pi exists for target → creates new one
+- If pi.lua targets `pi-mega-agent.sock` → toggle shows agent window pane (not random π pane)
+- `:PiSessions` changes socket target → next toggle shows that pi's pane
+- Toggle is non-blocking (nvim stays responsive)
+- Stale sockets (dead pid) skipped in discovery, reported by `:PiHealth`
 
 ### Retained features (regression check)
 - `<localleader>ps` (visual) → sends selection with task prompt

@@ -2,15 +2,22 @@
 -- Pi Coding Agent integrations
 --
 -- Pi runs as a tmux pane managed by tmux-toggle-pi (not inside nvim).
--- Nvim communicates with pi via unix socket.
+-- Nvim communicates with pi via persistent unix socket (vim.uv.new_pipe).
 --
 -- Features:
---   1. Context sending (selection, diagnostics, file info) via socket
---   2. Tmux integration (toggle pi split via tmux-toggle-pi)
---   3. Buffer tracking (remember what's been shared)
---   4. File context (add entire files to context)
---   5. LSP hover info inclusion
---   6. In-process LSP server for code actions
+--   1. Persistent bidirectional connection with auto-reconnect
+--   2. Socket discovery: cwd-match > tmux-session > default
+--   3. Context sending (selection, diagnostics, file info) via socket
+--   4. Tmux integration (toggle pi split via tmux-toggle-pi)
+--   5. Buffer tracking (remember what's been shared)
+--   6. File context (add entire files to context)
+--   7. LSP hover info inclusion
+--   8. In-process LSP server for code actions
+--   9. Live context sync (debounced editor_state on autocmd events)
+--  10. Compose mode (PiAdd/PiFlush/PiClear - queue context + prompt)
+--  11. Raw prompt (PiPrompt - send text directly)
+--  12. Auto-reload (checktime polling when connected)
+--  13. Ping/pong health check
 
 if not Plugin_enabled() then return end
 
@@ -35,6 +42,19 @@ local config = {
     ping_interval_s = 30,
     queue_max = 50,
   },
+  live_context = {
+    enabled = true,
+    -- NOTE: CursorMoved is high-traffic. Use CursorHold for lower frequency.
+    events = { "BufEnter", "BufWritePost", "InsertLeave", "ModeChanged" },
+    debounce_ms = 150,
+    include_buffer_text = false,
+    max_buffer_bytes = 200000,
+    max_selection_bytes = 50000,
+  },
+  auto_reload = {
+    enabled = true,
+    interval_s = 5, -- checktime polling interval (only when connected)
+  },
 }
 
 --------------------------------------------------------------------------------
@@ -46,6 +66,16 @@ local config = {
 local context_files = {}
 
 local detect_language -- forward declaration (defined in Selection & Context Helpers)
+
+-- Compose mode queue (PiAdd/PiFlush/PiClear)
+local compose_queue = {} ---@type {type: string, content: string, file: string?, range: number[]?}[]
+
+-- Live context sync state
+local live_context_timer = nil ---@type uv_timer_t?
+local live_context_pending = false
+
+-- Auto-reload state
+local reload_timer = nil ---@type uv_timer_t?
 
 -- Connection state
 local conn = {
@@ -1092,7 +1122,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Get statusline component data
----@return { connected: boolean, reconnecting: boolean, session: string?, context_count: number, queue_count: number }
+---@return { connected: boolean, reconnecting: boolean, session: string?, context_count: number, queue_count: number, compose_count: number }
 function mega.p.pi.statusline_data()
   local socket = mega.p.pi.get_target()
   local session = socket and get_session_name(socket)
@@ -1103,6 +1133,7 @@ function mega.p.pi.statusline_data()
     session = session,
     context_count = mega.p.pi.context_count(),
     queue_count = #conn.queue,
+    compose_count = #compose_queue,
   }
 end
 
@@ -1120,9 +1151,10 @@ function mega.p.pi.statusline()
 
   local session = data.session or "pi"
   local ctx = data.context_count > 0 and string.format(" %d", data.context_count) or ""
+  local compose = data.compose_count > 0 and string.format(" ✎%d", data.compose_count) or ""
   local queue = data.queue_count > 0 and string.format(" Q%d", data.queue_count) or ""
 
-  return string.format("%%#StIdentifier#%s%%* %%#StComment#%s%s%s%%*", icon, session, ctx, queue)
+  return string.format("%%#StIdentifier#%s%%* %%#StComment#%s%s%s%s%%*", icon, session, ctx, compose, queue)
 end
 
 --- Get statusline component for lualine/custom statusline
@@ -1147,6 +1179,7 @@ function mega.p.pi.statusline_component()
   }
 
   if data.context_count > 0 then table.insert(components, { " " .. data.context_count, hl = "StBufferCount" }) end
+  if data.compose_count > 0 then table.insert(components, { " ✎" .. data.compose_count, hl = "StTitle" }) end
   if data.queue_count > 0 then table.insert(components, { " Q" .. data.queue_count, hl = "DiagnosticWarn" }) end
 
   return components
@@ -1411,6 +1444,512 @@ function mega.p.pi.attach_lsp()
 end
 
 --------------------------------------------------------------------------------
+-- Live Context Sync
+--------------------------------------------------------------------------------
+
+--- Build editor_state payload from current buffer
+---@return table
+local function build_editor_state()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local file = vim.api.nvim_buf_get_name(bufnr)
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local filetype = vim.bo[bufnr].filetype
+  local modified = vim.bo[bufnr].modified
+  local buftype = vim.bo[bufnr].buftype
+
+  local state = {
+    file = vim.fn.fnamemodify(file, ":~:."),
+    absFile = file,
+    filetype = filetype,
+    modified = modified,
+    buftype = buftype,
+    cursor = { line = cursor[1], col = cursor[2] },
+  }
+
+  -- Include visual selection if in visual mode
+  local mode = vim.fn.mode()
+  if mode == "v" or mode == "V" or mode == "\22" then
+    local sel = get_visual_selection(false)
+    if sel then
+      if #sel > config.live_context.max_selection_bytes then
+        sel = sel:sub(1, config.live_context.max_selection_bytes)
+      end
+      state.selection = sel
+    end
+  end
+
+  -- Optionally include buffer text
+  if config.live_context.include_buffer_text then
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local text = table.concat(lines, "\n")
+    if #text > config.live_context.max_buffer_bytes then
+      text = text:sub(1, config.live_context.max_buffer_bytes)
+    end
+    state.buffer_text = text
+  end
+
+  return state
+end
+
+--- Send editor state (debounced)
+local function push_editor_state()
+  if not config.live_context.enabled then return end
+  if not conn.connected then return end
+
+  -- Mark pending and debounce
+  live_context_pending = true
+
+  if not live_context_timer then
+    live_context_timer = vim.uv.new_timer()
+  end
+
+  live_context_timer:stop()
+  live_context_timer:start(config.live_context.debounce_ms, 0, vim.schedule_wrap(function()
+    if not live_context_pending then return end
+    live_context_pending = false
+
+    if not conn.connected then return end
+
+    local state = build_editor_state()
+    -- Skip non-file buffers
+    if state.buftype ~= "" then return end
+    if state.absFile == "" then return end
+
+    send_payload({ type = "editor_state", state = state }, { auto_toggle = false, silent = true })
+  end))
+end
+
+--- Set up autocmds for live context sync
+local function setup_live_context()
+  if not config.live_context.enabled then return end
+
+  local group = vim.api.nvim_create_augroup("PiLiveContext", { clear = true })
+  for _, event in ipairs(config.live_context.events) do
+    vim.api.nvim_create_autocmd(event, {
+      group = group,
+      callback = function()
+        push_editor_state()
+      end,
+    })
+  end
+end
+
+--------------------------------------------------------------------------------
+-- Compose Mode (PiAdd / PiFlush / PiClear)
+--------------------------------------------------------------------------------
+
+--- Get compose queue count (for statusline)
+---@return number
+function mega.p.pi.compose_count() return #compose_queue end
+
+--- Add current selection or file reference to compose queue
+---@param opts table? Command opts (for range)
+function mega.p.pi.compose_add(opts)
+  opts = opts or {}
+  local file = vim.api.nvim_buf_get_name(0)
+  local rel_path = vim.fn.fnamemodify(file, ":~:.")
+
+  -- Try visual selection first
+  local selection, start_row, end_row = get_visual_selection(true)
+
+  -- Handle range from command mode
+  if not selection and opts.range and opts.range > 0 then
+    start_row, end_row = opts.line1, opts.line2
+    local lines = vim.api.nvim_buf_get_lines(0, start_row - 1, end_row, false)
+    selection = table.concat(lines, "\n")
+  end
+
+  if selection then
+    local lang = detect_language(file)
+    table.insert(compose_queue, {
+      type = "selection",
+      content = selection,
+      file = rel_path,
+      range = { start_row, end_row },
+      language = lang,
+    })
+  else
+    -- Add file reference
+    table.insert(compose_queue, {
+      type = "file",
+      content = rel_path,
+      file = rel_path,
+    })
+  end
+
+  vim.notify(string.format("Pi: queued %d item(s)", #compose_queue), vim.log.levels.INFO)
+end
+
+--- Flush compose queue with a prompt
+function mega.p.pi.compose_flush()
+  vim.ui.input({ prompt = "Pi prompt: " }, function(input)
+    if not input then return end
+
+    -- Build message from queue + prompt
+    local parts = {}
+
+    for i, item in ipairs(compose_queue) do
+      if item.type == "selection" then
+        local header = item.file or "unknown"
+        if item.range then
+          header = string.format("%s lines %d-%d", header, item.range[1], item.range[2])
+        end
+        table.insert(parts, string.format("Context %d - %s:", i, header))
+        table.insert(parts, string.format("```%s", item.language or ""))
+        table.insert(parts, item.content)
+        table.insert(parts, "```")
+      elseif item.type == "file" then
+        table.insert(parts, string.format("Context %d - File: %s", i, item.content))
+      end
+      table.insert(parts, "")
+    end
+
+    if input ~= "" then
+      table.insert(parts, input)
+    end
+
+    local message = table.concat(parts, "\n")
+    if message:match("^%s*$") then
+      vim.notify("Pi: nothing to send", vim.log.levels.WARN)
+      return
+    end
+
+    send_payload({ type = "prompt", message = message })
+    compose_queue = {}
+  end)
+end
+
+--- Clear compose queue
+function mega.p.pi.compose_clear()
+  local count = #compose_queue
+  compose_queue = {}
+  vim.notify(string.format("Pi: cleared %d queued item(s)", count), vim.log.levels.INFO)
+end
+
+--------------------------------------------------------------------------------
+-- Raw Prompt
+--------------------------------------------------------------------------------
+
+--- Send raw prompt string to pi
+---@param message string?
+function mega.p.pi.prompt(message)
+  if message and message ~= "" then
+    send_payload({ type = "prompt", message = message })
+  else
+    vim.ui.input({ prompt = "Pi prompt: " }, function(input)
+      if input and input ~= "" then
+        send_payload({ type = "prompt", message = input })
+      end
+    end)
+  end
+end
+
+--------------------------------------------------------------------------------
+-- Auto-reload (checktime)
+--------------------------------------------------------------------------------
+
+--- Start checktime polling (only when connected)
+local function start_auto_reload()
+  if not config.auto_reload.enabled then return end
+  if reload_timer then return end
+
+  if not vim.o.autoread then
+    vim.o.autoread = true
+  end
+
+  local interval_ms = config.auto_reload.interval_s * 1000
+  reload_timer = vim.uv.new_timer()
+  reload_timer:start(interval_ms, interval_ms, vim.schedule_wrap(function()
+    if conn.connected then
+      pcall(vim.cmd, "silent! checktime")
+    end
+  end))
+end
+
+--- Stop checktime polling
+local function stop_auto_reload()
+  if reload_timer then
+    reload_timer:stop()
+    reload_timer:close()
+    reload_timer = nil
+  end
+end
+
+--------------------------------------------------------------------------------
+-- Health Check
+--------------------------------------------------------------------------------
+
+--- Run pi health checks (connection, discovery, extensions, LSP)
+--- Uses vim.health when available, falls back to vim.notify
+function mega.p.pi.health()
+  local h = vim.health or {}
+  -- Detect if called from :checkhealth (vim.health context) or :PiHealth (manual)
+  local use_health = h.start and h.ok and h.warn and h.error and h.info
+  local results = {}
+
+  local function ok(msg)
+    if use_health then h.ok(msg) else table.insert(results, "✓ " .. msg) end
+  end
+  local function warn(msg, advice)
+    if use_health then h.warn(msg, advice) else table.insert(results, "⚠ " .. msg) end
+  end
+  local function err(msg, advice)
+    if use_health then h.error(msg, advice) else table.insert(results, "✗ " .. msg) end
+  end
+  local function info(msg)
+    if use_health then h.info(msg) else table.insert(results, "  " .. msg) end
+  end
+  local function section(name)
+    if use_health then h.start(name) else table.insert(results, "\n── " .. name .. " ──") end
+  end
+
+  ---------------------------------------------------------------------------
+  -- Connection
+  ---------------------------------------------------------------------------
+  section("Pi Connection")
+
+  if conn.connected then
+    ok("Persistent connection active")
+    info("Socket: " .. (conn.socket_path or "unknown"))
+    if conn.last_pong > 0 then
+      local ago = os.time() - conn.last_pong
+      if ago < 60 then
+        ok(string.format("Last pong: %ds ago", ago))
+      else
+        warn(string.format("Last pong: %ds ago (stale)", ago), { "Run :PiPing to test" })
+      end
+    else
+      info("No pong received yet")
+    end
+  elseif conn.connecting then
+    warn("Connection in progress")
+  elseif conn.reconnect_attempts > 0 then
+    warn(string.format("Reconnecting (attempt %d/%d)",
+      conn.reconnect_attempts, config.connection.reconnect_max_retries))
+  else
+    info("No persistent connection (will use one-shot sends)")
+  end
+
+  -- Message queue
+  if #conn.queue > 0 then
+    warn(string.format("%d message(s) queued during reconnect", #conn.queue))
+  end
+
+  ---------------------------------------------------------------------------
+  -- Socket Discovery
+  ---------------------------------------------------------------------------
+  section("Pi Socket Discovery")
+
+  -- Environment
+  if vim.env.PI_SOCKET then
+    ok("PI_SOCKET override: " .. vim.env.PI_SOCKET)
+    if socket_exists(vim.env.PI_SOCKET) then
+      ok("PI_SOCKET is a valid socket")
+    else
+      err("PI_SOCKET path is not a socket", { "Check if pi is running" })
+    end
+  else
+    info("PI_SOCKET not set (using auto-discovery)")
+  end
+
+  -- Buffer-local target
+  local buf_target = vim.b.pi_target_socket
+  if buf_target then
+    if socket_exists(buf_target) then
+      ok("Buffer-local target: " .. buf_target)
+    else
+      warn("Buffer-local target set but invalid: " .. buf_target,
+        { "Run :PiTarget to clear or update" })
+    end
+  end
+
+  -- cwd-based discovery
+  local info_dir = "/tmp/pi-nvim-sockets"
+  local cwd = vim.uv.cwd()
+  local info_ok, info_files = pcall(vim.fn.glob, info_dir .. "/*.info", false, true)
+  if info_ok and info_files and #info_files > 0 then
+    ok(string.format("%d .info manifest(s) in %s", #info_files, info_dir))
+    local cwd_match = false
+    for _, info_path in ipairs(info_files) do
+      local content_ok, content = pcall(vim.fn.readfile, info_path)
+      if content_ok and content and content[1] then
+        local parsed_ok, manifest = pcall(vim.json.decode, content[1])
+        if parsed_ok and manifest then
+          local sock_live = manifest.socket and socket_exists(manifest.socket)
+          local is_cwd = manifest.cwd == cwd
+          local name = vim.fn.fnamemodify(info_path, ":t")
+          local status_parts = {}
+          if sock_live then table.insert(status_parts, "socket live") end
+          if is_cwd then table.insert(status_parts, "cwd match") cwd_match = true end
+          if not sock_live then table.insert(status_parts, "socket DEAD") end
+          local line = string.format("%s → %s [%s]",
+            name, manifest.socket or "?", table.concat(status_parts, ", "))
+          if sock_live then
+            info(line)
+          else
+            warn(line, { "Stale manifest — pi session may have crashed" })
+          end
+        end
+      end
+    end
+    if not cwd_match then
+      info("No cwd match for: " .. cwd)
+    end
+  else
+    info("No .info manifests found in " .. info_dir)
+  end
+
+  -- tmux session sockets
+  if vim.env.TMUX then
+    local handle = io.popen("tmux display-message -p '#{session_name}' 2>/dev/null")
+    if handle then
+      local session = handle:read("*l")
+      handle:close()
+      if session and session ~= "" then
+        ok("Tmux session: " .. session)
+        local pattern = string.format("%s/%s-%s-*.sock", config.socket.dir, config.socket.prefix, session)
+        local tmux_socks = vim.fn.glob(pattern, false, true)
+        if #tmux_socks > 0 then
+          for _, s in ipairs(tmux_socks) do
+            if socket_exists(s) then
+              info("  " .. vim.fn.fnamemodify(s, ":t"))
+            end
+          end
+        else
+          info("No tmux-pattern sockets for session " .. session)
+        end
+      end
+    end
+  else
+    info("Not in tmux")
+  end
+
+  -- Resolved target
+  local target = get_socket_path()
+  if target then
+    ok("Resolved target: " .. target)
+  else
+    warn("No socket found", { "Start pi with tmux prefix+p", "Or set PI_SOCKET env var" })
+  end
+
+  ---------------------------------------------------------------------------
+  -- Live Context Sync
+  ---------------------------------------------------------------------------
+  section("Pi Live Context")
+
+  if config.live_context.enabled then
+    ok("Live context sync enabled")
+    info("Events: " .. table.concat(config.live_context.events, ", "))
+    info(string.format("Debounce: %dms", config.live_context.debounce_ms))
+    info("Include buffer text: " .. tostring(config.live_context.include_buffer_text))
+    -- Check for high-traffic events
+    for _, ev in ipairs(config.live_context.events) do
+      if ev == "CursorMoved" then
+        warn("CursorMoved is high-traffic", { "Consider CursorHold for lower frequency" })
+      end
+    end
+  else
+    info("Live context sync disabled")
+  end
+
+  ---------------------------------------------------------------------------
+  -- Compose Mode
+  ---------------------------------------------------------------------------
+  section("Pi Compose Queue")
+
+  if #compose_queue > 0 then
+    info(string.format("%d item(s) queued", #compose_queue))
+    for i, item in ipairs(compose_queue) do
+      info(string.format("  %d. [%s] %s", i, item.type, item.file or "(no file)"))
+    end
+  else
+    ok("Queue empty")
+  end
+
+  ---------------------------------------------------------------------------
+  -- Auto-reload
+  ---------------------------------------------------------------------------
+  section("Pi Auto-reload")
+
+  if config.auto_reload.enabled then
+    ok(string.format("Checktime polling: every %ds", config.auto_reload.interval_s))
+    if reload_timer then
+      ok("Timer active")
+    else
+      warn("Timer not started", { "May start after connection" })
+    end
+    if vim.o.autoread then
+      ok("autoread is on")
+    else
+      warn("autoread is off", { "Auto-reload won't pick up external changes" })
+    end
+  else
+    info("Auto-reload disabled")
+  end
+
+  ---------------------------------------------------------------------------
+  -- Pi LSP
+  ---------------------------------------------------------------------------
+  section("Pi LSP")
+
+  if pi_lsp_client_id then
+    local client = vim.lsp.get_client_by_id(pi_lsp_client_id)
+    if client then
+      ok("Pi LSP server running (id: " .. pi_lsp_client_id .. ")")
+      local attached = vim.lsp.get_buffers_by_client_id(pi_lsp_client_id)
+      if attached and #attached > 0 then
+        ok(string.format("Attached to %d buffer(s)", #attached))
+      else
+        info("Not attached to any buffer")
+      end
+    else
+      warn("Pi LSP client id set but client not found", { "Run :PiLspStart" })
+    end
+  else
+    info("Pi LSP not started (start with :PiLspStart)")
+  end
+
+  ---------------------------------------------------------------------------
+  -- Context Tracking
+  ---------------------------------------------------------------------------
+  section("Pi Context")
+
+  local ctx_count = mega.p.pi.context_count()
+  if ctx_count > 0 then
+    info(string.format("%d file(s) in context", ctx_count))
+    for _, filepath in ipairs(mega.p.pi.get_context_files()) do
+      local cinfo = context_files[filepath]
+      local rel = vim.fn.fnamemodify(filepath, ":~:.")
+      local age = os.time() - cinfo.added_at
+      info(string.format("  %s (%d lines, %ds ago)", rel, cinfo.lines, age))
+    end
+  else
+    ok("No files in context")
+  end
+
+  ---------------------------------------------------------------------------
+  -- Ping test (async — only in manual mode)
+  ---------------------------------------------------------------------------
+  if not use_health and conn.connected and conn.pipe then
+    section("Pi Ping Test")
+    info("Sending ping...")
+    local ping_ok, _ = pcall(function()
+      conn.pipe:write(vim.json.encode({ type = "ping" }) .. "\n")
+    end)
+    if ping_ok then
+      ok("Ping sent (pong updates last_pong timestamp)")
+    else
+      err("Ping write failed", { "Connection may be broken" })
+    end
+  end
+
+  -- Output results if not using vim.health
+  if not use_health and #results > 0 then
+    vim.notify(table.concat(results, "\n"), vim.log.levels.INFO)
+  end
+end
+
+--------------------------------------------------------------------------------
 -- Setup
 --------------------------------------------------------------------------------
 
@@ -1505,6 +2044,33 @@ vim.api.nvim_create_user_command(
   function() mega.p.pi.attach_lsp() end,
   { desc = "Attach pi LSP to current buffer" }
 )
+
+vim.api.nvim_create_user_command(
+  "PiAdd",
+  function(opts) mega.p.pi.compose_add(opts) end,
+  { desc = "Add selection/file to compose queue", range = true }
+)
+
+vim.api.nvim_create_user_command(
+  "PiFlush",
+  function() mega.p.pi.compose_flush() end,
+  { desc = "Send compose queue with prompt" }
+)
+
+vim.api.nvim_create_user_command(
+  "PiClear",
+  function() mega.p.pi.compose_clear() end,
+  { desc = "Clear compose queue" }
+)
+
+vim.api.nvim_create_user_command("PiPrompt", function(opts)
+  local msg = opts.args ~= "" and opts.args or nil
+  mega.p.pi.prompt(msg)
+end, { desc = "Send raw prompt to pi", nargs = "*" })
+
+vim.api.nvim_create_user_command("PiHealth", function()
+  mega.p.pi.health()
+end, { desc = "Run pi health checks" })
 
 vim.api.nvim_create_user_command("PiPing", function()
   if not conn.connected then
@@ -1616,6 +2182,43 @@ vim.keymap.set(
   { silent = true, desc = "Pi: select session" }
 )
 
+-- Compose mode
+vim.keymap.set(
+  "v",
+  "<localleader>pa",
+  function() mega.p.pi.compose_add() end,
+  { silent = true, desc = "Pi: add selection to queue" }
+)
+
+vim.keymap.set(
+  "n",
+  "<localleader>pa",
+  function() mega.p.pi.compose_add() end,
+  { silent = true, desc = "Pi: add file to queue" }
+)
+
+vim.keymap.set(
+  "n",
+  "<localleader>pF",
+  function() mega.p.pi.compose_flush() end,
+  { silent = true, desc = "Pi: flush queue with prompt" }
+)
+
+vim.keymap.set(
+  "n",
+  "<localleader>pX",
+  function() mega.p.pi.compose_clear() end,
+  { silent = true, desc = "Pi: clear queue" }
+)
+
+-- Raw prompt
+vim.keymap.set(
+  "n",
+  "<localleader>pP",
+  function() mega.p.pi.prompt() end,
+  { silent = true, desc = "Pi: raw prompt" }
+)
+
 --------------------------------------------------------------------------------
 -- Auto-connect & Cleanup
 --------------------------------------------------------------------------------
@@ -1625,12 +2228,22 @@ vim.defer_fn(function()
   if get_socket_path() then
     connection_connect()
   end
+  -- Set up live context sync autocmds
+  setup_live_context()
+  -- Start auto-reload polling
+  start_auto_reload()
 end, 500)
 
 -- Clean up on exit
 vim.api.nvim_create_autocmd("VimLeavePre", {
   callback = function()
     connection_disconnect()
+    stop_auto_reload()
+    if live_context_timer then
+      live_context_timer:stop()
+      live_context_timer:close()
+      live_context_timer = nil
+    end
   end,
 })
 
