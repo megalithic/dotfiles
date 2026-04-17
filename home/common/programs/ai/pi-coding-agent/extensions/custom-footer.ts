@@ -199,15 +199,10 @@ export default function (pi: ExtensionAPI) {
             }
           }
 
-          const lines = [
-            truncateToWidth(line1, width),
-            rightAlign(statsLeft, rightSide, width),
-          ];
-
-          // Extension statuses
+          // Merge extension statuses into stats line (between left stats and right model info)
           const extensionStatuses = footerData.getExtensionStatuses();
           if (extensionStatuses.size > 0) {
-            const statusLine = Array.from(extensionStatuses.entries())
+            const statusParts = Array.from(extensionStatuses.entries())
               .sort(([a], [b]) => a.localeCompare(b))
               .map(([, text]) =>
                 text
@@ -215,13 +210,22 @@ export default function (pi: ExtensionAPI) {
                   .replace(/ +/g, " ")
                   .trim(),
               )
-              .join(" ");
-            lines.push(
-              truncateToWidth(statusLine, width, theme.fg("dim", "...")),
-            );
+              .filter((t) => t.length > 0);
+            if (statusParts.length > 0) {
+              const extStatus = statusParts
+                .map((s) => theme.fg("dim", s))
+                .join(" ");
+              statsLeft += theme.fg("dim", " │ ") + extStatus;
+              if (visibleWidth(statsLeft) > width) {
+                statsLeft = truncateToWidth(statsLeft, width, "...");
+              }
+            }
           }
 
-          return lines;
+          return [
+            truncateToWidth(line1, width),
+            rightAlign(statsLeft, rightSide, width),
+          ];
         },
       };
     });

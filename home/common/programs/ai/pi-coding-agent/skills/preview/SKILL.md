@@ -8,6 +8,22 @@ tools: Bash
 
 Display content in a tmux pane or popup next to the pi agent. Supports code files, JSON, markdown, diffs, images, logs, and more.
 
+## CRITICAL: Pane Safety Rules
+
+**Never kill or disrupt the pane running pi.** Before killing, closing, or replacing ANY pane:
+
+1. **Identify your own pane first:** `tmux display-message -p '#{pane_id}'` — this is pi's pane. Never kill it.
+2. **Before `kill-pane -t X`:** Verify X is not pi's pane ID.
+3. **Before sending keys to any pane:** Verify the expected app is actually running there:
+   ```bash
+   # What's running in that pane?
+   tmux display-message -t "$TARGET" -p '#{pane_current_command}'
+   # Confirm visually
+   tmux capture-pane -p -t "$TARGET" -S -3
+   ```
+4. **Never send keys blindly.** If target pane doesn't have the expected process, STOP. Re-discover the correct pane.
+5. **Never assume pane identity persists.** User may close, rearrange, or swap panes between your commands. Always re-verify.
+
 ## Requirements
 
 - Must be running inside tmux

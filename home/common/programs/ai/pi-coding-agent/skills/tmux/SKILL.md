@@ -11,6 +11,38 @@ Use tmux as a programmable terminal multiplexer for interactive work. Works on L
 
 **Script location:** `~/.dotfiles/home/common/programs/ai/pi-coding-agent/skills/tmux/scripts/`
 
+## CRITICAL: Pane Safety Rules
+
+**Never kill or disrupt the pane running pi.** Before killing, resizing, or replacing ANY pane:
+
+1. **Identify your own pane:** Run `tmux display-message -p '#{pane_id}'` to get the pane pi is running in. Store this — never kill it.
+2. **Verify target pane before kill:** Before `kill-pane -t X`, confirm X is not your own pane ID.
+3. **Verify target pane before send-keys:** Before sending keys to ANY pane, verify the expected process is actually running there:
+   ```bash
+   # Check what's running in target pane
+   tmux display-message -t "$TARGET" -p '#{pane_current_command}'
+   # Or capture last few lines to confirm the right prompt/app
+   tmux capture-pane -p -t "$TARGET" -S -5
+   ```
+4. **Never send keys blindly.** If the expected app (python, gdb, w3m, etc.) is NOT in the target pane, STOP and re-discover the correct pane.
+5. **Never assume pane layout persists.** Panes can be rearranged, closed by user, or swapped. Always re-verify before interacting.
+
+**Verification pattern (use before every send-keys or kill-pane):**
+```bash
+# Get my pane (pi's pane) — do this once at start
+MY_PANE=$(tmux display-message -p '#{pane_id}')
+
+# Before interacting with a target
+TARGET_CMD=$(tmux display-message -t "$TARGET" -p '#{pane_current_command}' 2>&1)
+if [ $? -ne 0 ]; then
+  echo "Target pane $TARGET does not exist"
+elif [ "$TARGET" = "$MY_PANE" ]; then
+  echo "ABORT: target is pi's own pane"
+else
+  echo "Target running: $TARGET_CMD"
+fi
+```
+
 ## Quickstart (isolated socket)
 
 ```bash
@@ -54,6 +86,7 @@ This must ALWAYS be printed right after a session was started and once again at 
 
 ## Sending input safely
 
+- **Always verify the target pane has the expected process before sending keys** (see Pane Safety Rules above).
 - Prefer literal sends to avoid shell splitting: `tmux -L "$SOCKET" send-keys -t target -l -- "$cmd"`
 - When composing inline commands, use single quotes or ANSI C quoting to avoid expansion: `tmux ... send-keys -t target -- $'python3 -m http.server 8000'`.
 - To send control keys: `tmux ... send-keys -t target C-c`, `C-d`, `C-z`, `Escape`, etc.

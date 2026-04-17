@@ -106,7 +106,7 @@ const formatContext = (state: EditorState): string => {
 };
 
 const formatStatus = (state: EditorState | null): string => {
-  if (!state || isStale()) return "nvim: --";
+  if (!state || isStale()) return "";
 
   const file = state.file
     ? state.file.split("/").pop() || state.file

@@ -1,6 +1,6 @@
 ---
 id: dot-3fyc
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-04-14T19:46:04Z
