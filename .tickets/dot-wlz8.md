@@ -57,3 +57,25 @@ Our equivalents live in:
 2. Document which updates conflict with our conventions (jj vs git, etc)
 3. List concrete action items as follow-up tickets if any are worth implementing
 
+
+## Notes
+
+**2026-04-17T17:29:30Z**
+
+## Rebuild hint after ticket completion
+
+After completing work, agent should detect what nix rebuild (if any) is needed based on changed files:
+- `home/` touched → `just home`
+- `hosts/`, `modules/` touched → `just darwin`  
+- Both → `just rebuild`
+- Neither (scripts, tickets, docs) → nothing needed
+
+### Implementation options
+
+1. **AGENTS.md 'Session Completion' section** — add 'run rebuild hint' step so ALL sessions do it
+2. **ticket-worker skill** — add to its completion checklist
+3. **Standalone script** (e.g. `bin/nix-rebuild-hint.sh`) — reads `jj diff --stat`, prints recommendation. Referenced from AGENTS.md and/or skills.
+
+Preferred: option 3 (reusable script) + reference from both AGENTS.md and ticket-worker skill.
+
+Currently the agent just free-forms a summary at end of work — no automated mechanism detects what rebuild is needed. This should be deterministic, not vibes.

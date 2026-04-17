@@ -95,7 +95,7 @@
     pname = "pi-coding-agent";
     version = npmVersion ./packages/pi;
     src = ./packages/pi;
-    npmDepsHash = "sha256-cbAiS2MQDN8ZMZYhrf+Iheq6/IuXRzm4hXQ/PWRjMJs=";
+    npmDepsHash = "sha256-3pjbha2CkUpeJ5tTRlo6xBgfMRZhyW9n0yKeV4PAipo=";
     dontNpmBuild = true;
     installPhase = ''
       runHook preInstall
