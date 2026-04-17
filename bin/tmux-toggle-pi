@@ -3,7 +3,7 @@
 #
 # Model:
 #   - Each tmux session has at most one "agent" window containing pi (pinvim)
-#   - FROM nvim window: join pi pane as a 40% right split
+#   - FROM nvim window: join pi pane as a 30% right split
 #   - FROM shell window: switch focus to agent window
 #   - Toggle again to reverse (break split / switch back)
 #
