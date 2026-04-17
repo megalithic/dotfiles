@@ -142,7 +142,7 @@
   # Web search, content fetching, research (multi-provider: Brave, Tavily, Kagi)
   pi-internet = pkgs.buildNpmPackage {
     pname = "pi-internet";
-    version = "0.1.0";
+    version = "0.1.0"; # github dep, can't use npmVersion
     src = ./packages/pi-internet;
     npmDepsHash = "sha256-ELQZgxUUG4nrfWTbxZ88DLCfP7t3EKEt8OJmCjIzaM4=";
     makeCacheWritable = true;
@@ -156,8 +156,8 @@
     '';
   };
 
-  # Browser automation — single .ts, no npm deps
-  pi-agent-browser-ext = pkgs.buildNpmPackage {
+  # Browser automation — peer deps only (no runtime npm deps)
+  pi-agent-browser = pkgs.buildNpmPackage {
     pname = "pi-agent-browser";
     version = npmVersion ./packages/pi-agent-browser;
     src = ./packages/pi-agent-browser;
@@ -166,7 +166,7 @@
     installPhase = ''
       runHook preInstall
       mkdir -p $out
-      cp node_modules/pi-agent-browser/extensions/agent-browser.ts $out/agent-browser.ts
+      cp -r node_modules/pi-agent-browser/* $out/
       runHook postInstall
     '';
   };
@@ -456,15 +456,13 @@ in {
 
       # Built extensions with npm dependencies
       # Full directory extensions (symlink whole package)
+      ".pi/agent/extensions/pi-agent-browser".source = pi-agent-browser;
       ".pi/agent/extensions/pi-mcp-adapter".source = pi-mcp-adapter;
       ".pi/agent/extensions/pi-internet".source = pi-internet;
       ".pi/agent/extensions/pi-multi-pass".source = pi-multi-pass;
       ".pi/agent/extensions/pi-synthetic-provider".source = pi-synthetic-provider;
 
-      # Single .ts extensions with deps (dir with .ts + node_modules)
 
-      # Single .ts extensions without deps (just the .ts file)
-      # ".pi/agent/extensions/agent-browser.ts".source = "${pi-agent-browser-ext}/agent-browser.ts";
     }
     // extensionSymlinks
     // agentSymlinks

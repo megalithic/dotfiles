@@ -43,4 +43,5 @@ Investigation should produce:
 4. Proposed JSON/config structure drafted for dual-profile setup
 5. Custom footer integration approach documented (how to show profile name in footer line 1)
 6. Findings written to plans/ for future implementation tickets
+7. Review pi-coding-agent nix module (`home/common/programs/ai/pi-coding-agent/`) to determine how multi-pass config (profiles, provider mappings, auth, fallback chains) should be declared and generated via nix — document proposed nix config structure and any module changes needed
 
