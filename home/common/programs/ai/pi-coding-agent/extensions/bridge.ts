@@ -257,6 +257,7 @@ const formatNvimMessage = (payload: NvimPayload): string => {
 // =============================================================================
 
 const respond = (socket: net.Socket, data: Record<string, unknown>): void => {
+  if (socket.destroyed || !socket.writable) return;
   try {
     socket.write(JSON.stringify(data) + "\n");
   } catch {
@@ -350,6 +351,11 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
 
   server = net.createServer((socket) => {
     let buffer = "";
+
+    socket.on("error", (err) => {
+      // EPIPE, ECONNRESET, etc. — client disconnected before we could respond.
+      // Safe to ignore; socket 'close' event handles cleanup.
+    });
 
     socket.on("close", () => {
       if (editorSockets.has(socket)) {
