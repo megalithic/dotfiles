@@ -44,4 +44,15 @@ Investigation should produce:
 5. Custom footer integration approach documented (how to show profile name in footer line 1)
 6. Findings written to plans/ for future implementation tickets
 7. Review pi-coding-agent nix module (`home/common/programs/ai/pi-coding-agent/`) to determine how multi-pass config (profiles, provider mappings, auth, fallback chains) should be declared and generated via nix — document proposed nix config structure and any module changes needed
+8. **Profile config placement strategy documented:** determine where each type of config lives:
+   - **Personal/base profiles** (e.g., 'personal', 'rx') — managed in nix dotfiles (`home/common/programs/ai/pi-coding-agent/`), declaratively generated
+   - **Project-specific profiles** — live in project repo (e.g., `.pi/multi-pass.json` or similar), NOT in dotfiles
+   - Document how project-level config layers on top of / overrides base profiles
+9. **Per-profile auth, providers, and model fallbacks:** each profile must support:
+   - Distinct auth credentials (API keys, subscriptions) per provider
+   - Provider list with priority ordering
+   - Model selection per provider
+   - Fallback chain: if primary provider/model unavailable (rate-limited, token-exhausted, down), automatically try next in chain
+   - Document how fallback triggers are detected and how chain traversal works
+10. **Nix generation strategy:** propose how nix module declares profiles and generates config files — e.g., attrset per profile with providers/models/auth refs, rendered to JSON at build time, secrets handled via env vars or sops-nix
 

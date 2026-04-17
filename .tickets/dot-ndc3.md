@@ -10,34 +10,91 @@ assignee: Seth Messer
 ---
 # Shade: nvumi-inspired scratch buffer with natural language action hooks
 
-Build a scratch buffer system for the Shade app inspired by nvumi
-(github.com/josephburgess/nvumi) — a neovim plugin that evaluates natural
-language expressions inline in a scratch buffer using numi-cli.
+## Vision
 
-The vision goes beyond calculator: a natural language command surface that can
-dispatch actions via hooks. The scratch buffer becomes a universal input for
-quick actions.
+Opening Shade drops you into a **scratch buffer by default**. Type anything.
+Each line is evaluated and dispatched based on intent — like Fantastical's
+natural language input, but for everything.
 
-## Core concept
+**Shade's identity**: a gateway to CLI tools via nvim. Single-purpose,
+single-entry-point interactions. The scratch buffer is the primary surface.
 
-Open a floating scratch buffer (like nvumi). Type natural language. Lines are
-evaluated and dispatched based on pattern matching to registered hooks.
+## How it works
 
-## Hook system
+Type a line → buffer detects intent → dispatches to handler → shows result as
+virtual text.
 
-Hooks register patterns and handlers. Examples:
+| You type | What happens |
+|----------|--------------|
+| `245 * 18.5` | Evaluate via numi-cli, show result |
+| `150 lbs in kg` | numi-cli conversion, show result |
+| `remind me to review PR at 3pm tomorrow` | Task in today's daily note `## Tasks` |
+| `buy groceries on Saturday` | Task in daily note, migrates daily until done |
+| `note: look into caching strategy` | Append to daily note `## Notes` or `## Captures` |
+| `tell pi: investigate test failures in rx` | Send to pi instance (future) |
+| `create ticket: fix auth bug` | Dispatch to tk (future) |
 
-1. **Calculator** (nvumi baseline) — math expressions evaluated via numi-cli,
-   results shown as virtual text
-2. **Ticket creation** — `create ticket: fix the auth bug in rx` dispatches to
-   pi (or ephemeral pi instance) which runs `tk create` in the matched
-   repo/cwd. Could detect repo from context or explicit mention.
-3. **Reminders** — `remind me at 3pm tomorrow to review PR` creates a reminder
-   in macOS Reminders via osascript/Shortcuts
-4. **Notes** — `note: look into caching strategy for API` appends to a daily
-   note file
-5. **Pi dispatch** — `tell pi: investigate the test failures in rx` sends a
-   message to a running pi instance via bridge.ts socket, or spawns ephemeral
+## Intent detection
+
+### Phase 1: explicit prefixes
+
+Prefixes provide clear dispatch and get the pipeline working first:
+
+| Prefix | Intent | Handler |
+|--------|--------|---------|
+| `calc:` or `=` | Math/conversion | numi-cli |
+| `task:` or `todo:` | Task | Append to daily note `## Tasks` |
+| `remind:` | Reminder/task with time | Daily note + notification TBD |
+| `note:` | Capture | Append to daily note `## Notes` or `## Captures` |
+| `pi:` or `tell pi:` | Pi dispatch | bridge.ts / ephemeral (future) |
+| `ticket:` | Ticket creation | tk create (future) |
+
+### Phase 2: prefix-optional (infer intent)
+
+Drop prefix requirement — buffer infers from how line reads. Prefixes still
+work as explicit override.
+
+Possible approaches:
+- **numi-cli first** — try numi-cli on every line. If result, it's math.
+- **Pattern matching** — regex/lua patterns for task keywords (remind, buy,
+  at Xpm, tomorrow, etc.) inspired by Fantastical's parser
+- **LLM classification** — local model for ambiguous lines
+- **Hybrid** — numi-cli → pattern match → fallback to LLM or "just text"
+
+Phase 2 is the goal. Prefixes are scaffolding, not the destination.
+
+## Task migration (bullet journal style)
+
+Tasks added to today's daily note under `## Tasks`:
+```markdown
+## Tasks
+- [ ] review PR by 3pm #reminder
+- [ ] buy groceries Saturday #life
+```
+
+Incomplete tasks migrate forward to each new daily note until completed. Verify
+whether obsidian.nvim / periodic notes already handles this — fill gaps.
+
+### Daily note structure (current)
+
+Path: `$NOTES_HOME/daily/YYYY/YYYYMMDD.md`
+
+```markdown
+## Notes
+## Tasks
+- [ ] task here #tag
+## Captures
+## Links
+```
+
+## Decision: nvim plugin approach
+
+Build as a **neovim plugin** first. Shade loads it, but it works anywhere nvim
+runs. Shade-specific integration (loading config, shade-specific nvim config
+path) is a separate concern.
+
+Future: shade-specific nvim config manageable from dotfiles. Shade config would
+accept a path to nvim config OR default to `~/.config/nvim/`.
 
 ## Architecture sketch
 
@@ -48,35 +105,25 @@ Hooks register patterns and handlers. Examples:
 - Hooks are Lua modules that register themselves
 - Hook interface: `{ pattern: string|fn, handler: fn, preview?: fn }`
 
-## Pi integration for ticket creation
-
-When a line matches ticket creation pattern:
-- Detect target repo (from explicit mention, current cwd, or prompt user)
-- Send to pi via bridge.ts socket (like compose mode does)
-- Or spawn ephemeral `pi -p 'tk create ...' --cwd <repo>`
-- Show result (ticket ID) as virtual text
-
-## macOS Reminders integration
-
-When a line matches reminder pattern:
-- Parse natural language date/time (numi-cli can help, or use date command)
-- Create reminder via osascript or Shortcuts framework
-- Show confirmation as virtual text
-
 ## Research needed
 
-- How nvumi structures its evaluator/processor pipeline (lua/nvumi/*.lua)
-- numi-cli capabilities beyond math (date parsing, unit conversion)
-- macOS Reminders API via osascript vs Shortcuts
-- Whether to build as nvim plugin or Shade-specific feature
-- How to handle async hook results (pi responses take time)
-- Whether hooks should be nvim-only or also work from pi TUI
+- nvumi's evaluator pipeline (lua/nvumi/*.lua) — how it processes lines
+- numi-cli capabilities (math, dates, units, timezone, what else?)
+- Fantastical's natural language patterns — what makes it feel magic?
+- Current daily note task migration — does obsidian.nvim handle this already?
+- Shade repo: current scratch buffer / launch behavior
+- Async result handling in virtual text (for slow hooks like pi dispatch)
 
-## Acceptance Criteria
+## Acceptance criteria
 
-1. Research complete with architecture decision documented
-2. Prototype scratch buffer with at least calculator hook working
-3. Hook registration system designed and documented
-4. At least one dispatch hook (ticket or reminder) prototyped
-5. Integration path with existing pi/bridge infrastructure identified
+### Phase 1
+1. Scratch buffer opens as default Shade surface
+2. Prefix-based dispatch pipeline working
+3. Math/conversion via numi-cli with virtual text results
+4. `task:` / `remind:` appends to today's daily note `## Tasks`
+5. `note:` appends to daily note `## Notes` or `## Captures`
 
+### Phase 2
+6. Prefix-optional intent inference working
+7. Task migration forward on daily note creation (verify or implement)
+8. Hook registration system for third-party extensibility

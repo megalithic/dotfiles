@@ -95,7 +95,7 @@
     pname = "pi-coding-agent";
     version = npmVersion ./packages/pi;
     src = ./packages/pi;
-    npmDepsHash = "sha256-3pjbha2CkUpeJ5tTRlo6xBgfMRZhyW9n0yKeV4PAipo=";
+    npmDepsHash = "sha256-skguSRcCbnX3mWKE6zbfLUlj3OtDf2ACCaZ4q3pQrfE=";
     dontNpmBuild = true;
     installPhase = ''
       runHook preInstall
@@ -191,6 +191,25 @@
     '';
   };
 
+  # Interactive subagents — async sub-agent spawning in mux panes
+  # https://github.com/HazAT/pi-interactive-subagents
+  pi-interactive-subagents = pkgs.stdenvNoCC.mkDerivation {
+    pname = "pi-interactive-subagents";
+    version = "3.0.0";
+    src = pkgs.fetchFromGitHub {
+      owner = "HazAT";
+      repo = "pi-interactive-subagents";
+      rev = "v3.0.0";
+      hash = "sha256-LKv+RtU5EFp5ZYlB50laTpjkUU+tyEAN1H5/Vp6fC+0=";
+    };
+    installPhase = ''
+      runHook preInstall
+      mkdir -p $out
+      cp -r $src/* $out/
+      runHook postInstall
+    '';
+  };
+
   # Synthetic.new model provider (dynamic model fetching, reasoning, vision)
   pi-synthetic-provider = pkgs.buildNpmPackage {
     pname = "pi-synthetic-provider";
@@ -214,6 +233,7 @@
   disabledExtensions = [
     "checkpoint.ts" # Too intrusive
     "subscription-fallback.ts" # Doesn't support everything we need
+    "subagent" # Replaced by pi-interactive-subagents (async, mux-based)
   ];
 
   # Skills to exclude from auto-discovery
@@ -239,7 +259,7 @@
   );
 
   # Directories (e.g., subagent/)
-  extensionDirs = builtins.filter (name: extensionEntries.${name} == "directory") (
+  extensionDirs = builtins.filter (name: extensionEntries.${name} == "directory" && !builtins.elem name disabledExtensions) (
     builtins.attrNames extensionEntries
   );
 
@@ -379,6 +399,7 @@
     # PI_SOCKET can still be set explicitly to override auto-detection.
     export PI_SOCKET_DIR="${socketConfig.dir}"
     export PI_SOCKET_PREFIX="${socketConfig.prefix}"
+    export PI_SUBAGENT_MUX=tmux
 
     # Detect session name for profile hybrid dirs (bridge.ts handles socket)
     if [ -n "$TMUX" ]; then
@@ -461,6 +482,7 @@ in {
       ".pi/agent/extensions/pi-internet".source = pi-internet;
       ".pi/agent/extensions/pi-multi-pass".source = pi-multi-pass;
       ".pi/agent/extensions/pi-synthetic-provider".source = pi-synthetic-provider;
+      ".pi/agent/extensions/pi-interactive-subagents".source = pi-interactive-subagents;
 
 
     }
