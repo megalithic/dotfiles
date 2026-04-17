@@ -146,7 +146,7 @@
     alejandra
     nil
     nix-direnv
-    nixfmt-rfc-style
+    nixfmt
 
     # markdown
     markdown-oxide

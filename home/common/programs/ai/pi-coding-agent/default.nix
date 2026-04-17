@@ -95,7 +95,7 @@
     pname = "pi-coding-agent";
     version = npmVersion ./packages/pi;
     src = ./packages/pi;
-    npmDepsHash = "sha256-Ujr4HsD59lXXDnJf1RVIziI/1YINHcrJjq8ARlaukBo=";
+    npmDepsHash = "sha256-cbAiS2MQDN8ZMZYhrf+Iheq6/IuXRzm4hXQ/PWRjMJs=";
     dontNpmBuild = true;
     installPhase = ''
       runHook preInstall
@@ -126,7 +126,7 @@
     pname = "pi-mcp-adapter";
     version = npmVersion ./packages/pi-mcp-adapter;
     src = ./packages/pi-mcp-adapter;
-    npmDepsHash = "sha256-goPvrnZfbXFupES7ChisrSz1QcpsFp4mBBdUL/gzQII=";
+    npmDepsHash = "sha256-ZU4mf+VGHrZPWV2Jc0Gd9MTrJ5VHbF3WMlTszNR/QDE=";
     dontNpmBuild = true;
     # TODO: patch needs path adjustment for npm package layout (was written for git repo)
     # patches = [./patches/claude-settings-support.patch];
@@ -143,7 +143,7 @@
     pname = "pi-internet";
     version = "0.1.0";
     src = ./packages/pi-internet;
-    npmDepsHash = "sha256-Z4CPTdGryJx/6agSJsxyiZW2ORhGi2tUpK2OL24ip1s=";
+    npmDepsHash = "sha256-ELQZgxUUG4nrfWTbxZ88DLCfP7t3EKEt8OJmCjIzaM4=";
     makeCacheWritable = true;
     dontNpmBuild = true;
     installPhase = ''
@@ -155,72 +155,12 @@
     '';
   };
 
-  # Terminal diff renderer — npm package with pi manifest + deps
-  pi-diff = pkgs.buildNpmPackage {
-    pname = "pi-diff";
-    version = npmVersion ./packages/pi-diff;
-    src = ./packages/pi-diff;
-    npmDepsHash = "sha256-YypHyE/7qEmqZh7EjlF1nl9/ZwVDAyvWblPJ6yINohM=";
-    dontNpmBuild = true;
-    installPhase = ''
-      runHook preInstall
-      mkdir -p $out
-      cp -r node_modules/@heyhuynhgiabuu/pi-diff/* $out/
-      cp -r node_modules $out/node_modules
-      runHook postInstall
-    '';
-  };
-
-  # Syntax highlighting for reads — npm package with pi manifest + deps
-  pi-pretty = pkgs.buildNpmPackage {
-    pname = "pi-pretty";
-    version = npmVersion ./packages/pi-pretty;
-    src = ./packages/pi-pretty;
-    npmDepsHash = "sha256-qRwdSBQn/Go1dLrdKAHXROiQdVuig/pz/lzaJh2hCxw=";
-    dontNpmBuild = true;
-    installPhase = ''
-      runHook preInstall
-      mkdir -p $out
-      cp -r node_modules/@heyhuynhgiabuu/pi-pretty/* $out/
-      cp -r node_modules $out/node_modules
-
-      # Disable bash tool registration (conflicts with pi-bash-live-view)
-      substituteInPlace "$out/src/index.ts" \
-        --replace-fail 'if (createBashTool) {' \
-        'if (false /* bash disabled, conflicts with pi-bash-live-view */ && createBashTool) {'
-
-      runHook postInstall
-    '';
-  };
-
-  # Bash live view — npm package with pi manifest + deps
-  pi-bash-live-view = pkgs.buildNpmPackage {
-    pname = "pi-bash-live-view";
-    version = npmVersion ./packages/pi-bash-live-view;
-    src = ./packages/pi-bash-live-view;
-    npmDepsHash = "sha256-sy9oMT6zWhzC6hQizmSHeIQL9KGnmnW5PM0Ky537bDw=";
-    dontNpmBuild = true;
-    installPhase = ''
-      runHook preInstall
-      mkdir -p $out
-      cp -r node_modules/pi-bash-live-view/* $out/
-      cp -r node_modules $out/node_modules
-
-      # node-pty spawn-helper must be executable (nix store defaults to 444)
-      for helper in $out/node_modules/node-pty/prebuilds/*/spawn-helper; do
-        [ -f "$helper" ] && chmod 755 "$helper"
-      done
-
-      runHook postInstall
-    '';
-  };
-
   # Browser automation — single .ts, no npm deps
   pi-agent-browser-ext = pkgs.buildNpmPackage {
     pname = "pi-agent-browser";
     version = npmVersion ./packages/pi-agent-browser;
     src = ./packages/pi-agent-browser;
-    npmDepsHash = "sha256-C1pt9zP/GBefRfX81bRwqXDDC+JF5Bdsngmr+DLdG7Y=";
+    npmDepsHash = "sha256-hHh9QnT4SmYDgExxQvcM0hii749UBHjQUsxZcOYtPDw=";
     dontNpmBuild = true;
     installPhase = ''
       runHook preInstall
@@ -235,7 +175,7 @@
     pname = "pi-multi-pass";
     version = npmVersion ./packages/pi-multi-pass;
     src = ./packages/pi-multi-pass;
-    npmDepsHash = "sha256-iF8uoumQk3faBj9RAgxoGmmqU/OvM7ATV/hrWvYogHs=";
+    npmDepsHash = "sha256-ulNHxiWvLS9g/o3ut4AtQgMOn77xMu73ZXmRFaGLCFI=";
     dontNpmBuild = true;
     installPhase = ''
       runHook preInstall
@@ -255,7 +195,7 @@
     pname = "pi-synthetic-provider";
     version = npmVersion ./packages/pi-synthetic-provider;
     src = ./packages/pi-synthetic-provider;
-    npmDepsHash = "sha256-m4iI773kd2MHbadoa6/GG3551+bFlNNFFImMOCdnNNo=";
+    npmDepsHash = "sha256-Dy5u6vltV2lr/fNqQwEg+fV/h5pEkxVRbzb5p74v0Vo=";
     dontNpmBuild = true;
     installPhase = ''
       runHook preInstall
@@ -492,7 +432,8 @@ in {
     pinvim
     p
     tk
-    pkgs.llm-agents.agent-browser # Browser automation CLI
+    pkgs.ddgr # DuckDuckGo CLI for web-search skill (free, no API limits)
+    # pkgs.llm-agents.agent-browser # Browser automation CLI
   ];
 
   # ===========================================================================
@@ -520,13 +461,9 @@ in {
       ".pi/agent/extensions/pi-synthetic-provider".source = pi-synthetic-provider;
 
       # Single .ts extensions with deps (dir with .ts + node_modules)
-      # ".pi/agent/extensions/pi-diff".source = pi-diff;
-      # DISABLED: pi-pretty and pi-bash-live-view
-      # ".pi/agent/extensions/pi-pretty".source = pi-pretty;
-      # ".pi/agent/extensions/pi-bash-live-view".source = pi-bash-live-view;
 
       # Single .ts extensions without deps (just the .ts file)
-      ".pi/agent/extensions/agent-browser.ts".source = "${pi-agent-browser-ext}/agent-browser.ts";
+      # ".pi/agent/extensions/agent-browser.ts".source = "${pi-agent-browser-ext}/agent-browser.ts";
     }
     // extensionSymlinks
     // agentSymlinks

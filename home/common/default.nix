@@ -445,7 +445,7 @@
       enable = true;
       enableFishIntegration = true;
       enableZshIntegration = true;
-      settings = {
+      globalConfig.settings = {
         auto_install = true;
         experimental = true;
         verbose = true;

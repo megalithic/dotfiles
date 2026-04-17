@@ -105,11 +105,10 @@ in {
   # ===========================================================================
   # NOTE: claude-code is managed by programs.claude-code in claude-code.nix
   home.packages = [
-    pkgs.llm-agents.opencode
-    pkgs.llm-agents.claude-code-acp # DEPRECATED: hash override in overlays/default.nix
+    # pkgs.llm-agents.opencode
+    # pkgs.llm-agents.claude-code-acp # DEPRECATED: hash override in overlays/default.nix
     pkgs.tidewave # Tidewave GUI app for web app development (custom)
     pkgs.tidewave-cli # Tidewave MCP CLI (custom)
-    pkgs.ddgr # DuckDuckGo CLI for web-search skill (free, no API limits)
   ];
 
   # ===========================================================================

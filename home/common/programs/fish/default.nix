@@ -2,7 +2,6 @@
   config,
   pkgs,
   username,
-  hostname,
   ...
 }: let
   inherit (pkgs.stdenv.hostPlatform) isDarwin;
@@ -17,6 +16,7 @@
 in {
   programs.fish = {
     enable = true;
+    package = pkgs.unstable.fish;
 
     shellInit = ''
       # put Nix profile *first* on my PATH

@@ -16,7 +16,7 @@
     # Personal Instructions (CLAUDE.md)
     # TRIMMED: Verbose content moved to skills (cli-tools, jj, image-handling)
     # =========================================================================
-    memory.text = ''
+    context = ''
       ## MANDATORY PRE-FLIGHT PROTOCOL
 
       **CRITICAL**: Before EVERY response, you MUST verify:
@@ -323,7 +323,7 @@
     # =========================================================================
     # Skills directory - recursively copies all skill directories
     # Each skill is at docs/skills/<name>/SKILL.md with frontmatter
-    skillsDir = self + /docs/skills;
+    skills = self + /docs/skills;
 
     # =========================================================================
     # Agents - Autonomous subprocesses for delegated tasks

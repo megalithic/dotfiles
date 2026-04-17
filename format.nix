@@ -4,7 +4,7 @@
     # keep-sorted start
     deadnix
     keep-sorted
-    nixfmt-rfc-style
+    nixfmt
     statix
     stylua
     taplo

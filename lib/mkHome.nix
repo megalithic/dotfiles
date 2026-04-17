@@ -39,7 +39,6 @@ in
     };
     modules = [
       ../home/${hostname}.nix
-      inputs.worktrunk.homeModules.default
       {
         # Enable home-manager to manage itself (standalone mode)
         programs.home-manager.enable = true;

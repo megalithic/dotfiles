@@ -105,7 +105,6 @@
       biome
       eslint_d
       nixfmt
-      nixfmt-rfc-style
       prettierd
       rustfmt
       selene
@@ -132,7 +131,7 @@
       markdown-oxide
       nil
       nixd
-      nodePackages_latest.typescript-language-server
+      typescript-language-server
       nodejs
       ruff
       rust-analyzer

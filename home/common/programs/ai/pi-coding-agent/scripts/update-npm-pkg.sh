@@ -21,10 +21,8 @@ NIX_FILE="$SCRIPT_DIR/../default.nix"
 declare -A PNAME_MAP=(
   [pi]="pi-coding-agent"
   [pi-mcp-adapter]="pi-mcp-adapter"
-  [pi-web-access]="pi-web-access"
-  [pi-diff]="pi-diff"
-  [pi-pretty]="pi-pretty"
-  [pi-bash-live-view]="pi-bash-live-view"
+  [pi-internet]="pi-internet"
+
   [pi-agent-browser]="pi-agent-browser"
   [pi-multi-pass]="pi-multi-pass"
   [pi-synthetic-provider]="pi-synthetic-provider"

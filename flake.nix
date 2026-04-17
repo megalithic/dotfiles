@@ -11,15 +11,15 @@
   description = "🗿 megadotfiles (nix'd)";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
     home-manager = {
-      url = "github:nix-community/home-manager/release-25.11";
+      url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nix-darwin = {
-      url = "github:LnL7/nix-darwin/nix-darwin-25.11";
+      url = "github:LnL7/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
@@ -54,11 +54,11 @@
 
     llm-agents.url = "github:numtide/llm-agents.nix";
     mcp-servers-nix.url = "github:natsukium/mcp-servers-nix";
-    nur.url = "github:nix-community/nur";
-expert.url = "github:elixir-lang/expert";
+    # nur.url = "github:nix-community/nur";
+    expert.url = "github:elixir-lang/expert";
     devenv.url = "github:cachix/devenv/v2.0.6";
     nh.url = "github:nix-community/nh";
-    worktrunk.url = "github:max-sixty/worktrunk";
+    # worktrunk.url = "github:max-sixty/worktrunk";
     kanata-darwin = {
       url = "github:not-in-stock/kanata-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
