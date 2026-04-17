@@ -448,7 +448,7 @@
       globalConfig.settings = {
         auto_install = true;
         experimental = true;
-        verbose = true;
+        verbose = false;
       };
 
       # globalConfig = {
@@ -480,11 +480,8 @@
 
     bat = {
       enable = true;
-      extraPackages = with pkgs.bat-extras; [
-        batman
-        prettybat
-        batgrep
-      ];
+      # bat-extras disabled — all of them pull in nushell as a build dep
+      # extraPackages = with pkgs.bat-extras; [ batgrep prettybat batman ];
       config = {
         theme = "everforest";
       };

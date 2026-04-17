@@ -62,7 +62,7 @@
 in {
   imports = [
     ./mailmate
-    ./aerc
+    # ./aerc  # disabled — not actively used
   ];
 
   home.packages = with pkgs; [
@@ -97,7 +97,7 @@ in {
           '';
           showSignature = "append";
         };
-        aerc.enable = true;
+        aerc.enable = false;
         notmuch.enable = true;
         mbsync = {
           enable = true;

@@ -26,6 +26,14 @@
 }: let
   kanataConfigDir = "/Users/${username}/.config/kanata";
 
+  # Stable binary path outside the nix store.
+  # Each nix rebuild produces a new /nix/store/...-kanata/bin/kanata path.
+  # macOS TCC (Input Monitoring) tracks binaries by path, so every new store
+  # path creates a duplicate entry in System Settings > Privacy > Input
+  # Monitoring. Using a stable symlink means macOS always sees the same path
+  # and stops accumulating stale entries.
+  kanataStableBin = "/usr/local/bin/kanata";
+
   # kanata-bar app for UI feedback (runs separately from daemon)
   kanata-bar-version = "1.1.1";
   kanata-bar-app = pkgs.stdenv.mkDerivation {
@@ -77,7 +85,7 @@ in {
         # Expose TCP port for kanata-bar and Hammerspoon to connect
         ProgramArguments = [
           "/usr/bin/sudo"
-          "${config.services.kanata.package}/bin/kanata"
+          kanataStableBin
           "--cfg"
           config.services.kanata.configFile
           "--nodelay"
@@ -94,6 +102,11 @@ in {
   # Ensure config directory and default symlink exist
   # Also set up kanata-bar config for UI-only mode
   system.activationScripts.postActivation.text = lib.mkAfter ''
+    # Update stable kanata symlink to current nix store path
+    mkdir -p "$(dirname ${kanataStableBin})"
+    ln -sf "${config.services.kanata.package}/bin/kanata" "${kanataStableBin}"
+    echo "kanata: updated stable symlink ${kanataStableBin} -> ${config.services.kanata.package}/bin/kanata"
+
     KANATA_DIR="${kanataConfigDir}"
     mkdir -p "$KANATA_DIR"
     chown ${username}:staff "$KANATA_DIR"
