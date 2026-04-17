@@ -2265,6 +2265,12 @@ end, 500)
 -- Clean up on exit
 vim.api.nvim_create_autocmd("VimLeavePre", {
   callback = function()
+    -- Notify bridge of disconnect BEFORE closing pipe
+    if conn.pipe and conn.connected then
+      pcall(function()
+        conn.pipe:write(vim.json.encode({ type = "editor_disconnect" }) .. "\n")
+      end)
+    end
     connection_disconnect()
     stop_auto_reload()
     if live_context_timer then

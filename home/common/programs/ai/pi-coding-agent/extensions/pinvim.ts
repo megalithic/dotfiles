@@ -49,8 +49,8 @@ let editorState: EditorState | null = null;
 let lastUpdateAt: number | null = null;
 let latestCtx: ExtensionContext | null = null;
 
-// Stale threshold — if no update in 5 minutes, consider disconnected
-const STALE_MS = 5 * 60 * 1000;
+// Stale threshold — safety net if disconnect event missed (crash without socket close)
+const STALE_MS = 60 * 1000;
 
 // =============================================================================
 // Formatting
@@ -135,6 +135,13 @@ export default function (pi: ExtensionAPI): void {
   pi.events.on("pinvim:editor_state", (data: unknown) => {
     editorState = data as EditorState;
     lastUpdateAt = Date.now();
+    updateStatus();
+  });
+
+  // Listen for editor disconnect (normal exit or socket close)
+  pi.events.on("pinvim:editor_disconnect", () => {
+    editorState = null;
+    lastUpdateAt = null;
     updateStatus();
   });
 

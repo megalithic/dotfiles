@@ -1,6 +1,6 @@
 ---
 id: dot-m8g5
-status: in_progress
+status: closed
 deps: []
 links: []
 created: 2026-04-17T14:56:02Z
@@ -125,3 +125,12 @@ socket routing correctness.
 4. Reconnecting nvim restores the footer as before
 5. No regressions in live context sync during normal nvim usage
 
+
+## Notes
+
+**2026-04-17T16:49:34Z**
+
+Implemented in 3 files:
+- pi.lua: send editor_disconnect msg in VimLeavePre before closing pipe
+- bridge.ts: handle editor_disconnect payload + track editor sockets via Set<net.Socket>, emit pinvim:editor_disconnect on socket close (crash detection)
+- pinvim.ts: listen for pinvim:editor_disconnect to clear state, reduced STALE_MS from 5min to 60s as safety net

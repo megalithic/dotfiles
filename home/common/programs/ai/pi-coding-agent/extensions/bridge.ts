@@ -165,13 +165,18 @@ type EditorStatePayload = {
   };
 };
 
+type EditorDisconnectPayload = {
+  type: "editor_disconnect";
+};
+
 type Payload =
   | NvimPayload
   | TelegramPayload
   | TellPayload
   | PingPayload
   | PromptPayload
-  | EditorStatePayload;
+  | EditorStatePayload
+  | EditorDisconnectPayload;
 
 const isTelegramPayload = (p: Payload): p is TelegramPayload =>
   "type" in p && p.type === "telegram";
@@ -188,6 +193,9 @@ const isPromptPayload = (p: Payload): p is PromptPayload =>
 const isEditorStatePayload = (p: Payload): p is EditorStatePayload =>
   "type" in p && p.type === "editor_state";
 
+const isEditorDisconnectPayload = (p: Payload): p is EditorDisconnectPayload =>
+  "type" in p && p.type === "editor_disconnect";
+
 // =============================================================================
 // Constants
 // =============================================================================
@@ -201,6 +209,9 @@ const INFO_DIR = "/tmp/pi-nvim-sockets";
 let server: net.Server | null = null;
 let latestCtx: ExtensionContext | null = null;
 let infoManifestPath: string | null = null;
+
+// Track sockets that have sent editor_state (for crash detection)
+const editorSockets = new Set<net.Socket>();
 
 // =============================================================================
 // Message Formatting
@@ -340,6 +351,13 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
   server = net.createServer((socket) => {
     let buffer = "";
 
+    socket.on("close", () => {
+      if (editorSockets.has(socket)) {
+        editorSockets.delete(socket);
+        pi.events.emit("pinvim:editor_disconnect");
+      }
+    });
+
     socket.on("data", (chunk) => {
       buffer += chunk.toString();
 
@@ -378,7 +396,16 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
 
           // Handle editor state (forward to pinvim.ts via event bus)
           if (isEditorStatePayload(payload)) {
+            editorSockets.add(socket);
             pi.events.emit("pinvim:editor_state", payload.state);
+            respondOk(socket);
+            continue;
+          }
+
+          // Handle editor disconnect (forward to pinvim.ts)
+          if (isEditorDisconnectPayload(payload)) {
+            editorSockets.delete(socket);
+            pi.events.emit("pinvim:editor_disconnect");
             respondOk(socket);
             continue;
           }
