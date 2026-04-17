@@ -64,7 +64,8 @@ return {
         { "<localleader>g", group = "git/jj" },
         { "<localleader>h", group = "hunk" },
         { "<localleader>n", group = "notes" },
-        { "<localleader>p", group = "pi" },
+        { "<localleader>m", group = "π send" },
+        { "<localleader>p", group = "π pi" },
 
         { "<localleader>r", group = "repl" },
         { "<localleader>t", group = "test" },

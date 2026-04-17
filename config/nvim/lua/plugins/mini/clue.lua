@@ -79,8 +79,10 @@ return {
         { mode = "n", keys = "<Leader>x", desc = "+ trouble" },
 
         -- Localleader subgroups
-        { mode = "n", keys = "<Localleader>p", desc = "+󰌘 pi" },
-        { mode = "x", keys = "<Localleader>p", desc = "+󰌘 pi" },
+        { mode = "n", keys = "<Localleader>m", desc = "+π send" },
+        { mode = "x", keys = "<Localleader>m", desc = "+π send" },
+        { mode = "n", keys = "<Localleader>p", desc = "+π pi" },
+        { mode = "x", keys = "<Localleader>p", desc = "+π pi" },
 
         { mode = "n", keys = "<Localleader>t", desc = "+󰙨 test" },
 
