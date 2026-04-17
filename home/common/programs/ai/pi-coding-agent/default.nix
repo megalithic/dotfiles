@@ -133,7 +133,8 @@
     installPhase = ''
       runHook preInstall
       mkdir -p $out
-      cp -r . $out/
+      cp -r node_modules/pi-mcp-adapter/* $out/
+      cp -r node_modules $out/node_modules
       runHook postInstall
     '';
   };
