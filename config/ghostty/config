@@ -51,7 +51,7 @@ window-save-state = always
 window-height = 9999
 window-width = 9999
 
-command = bash -l -c fish
+command = fish -l
 shell-integration = fish
 shell-integration-features = true
 

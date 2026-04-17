@@ -41,7 +41,9 @@ in {
   # NOTE: home-manager runs independently via homeConfigurations
   # Use `just home` for HM-only rebuilds
 
+  users.knownUsers = [username];
   users.users.${username} = {
+    uid = 501;
     name = username;
     inherit (paths) home;
     isHidden = false;
