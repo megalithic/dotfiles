@@ -130,7 +130,18 @@ local function parse_info_manifest(info_path)
   return info
 end
 
---- Discover socket via /tmp/pi-nvim-sockets/*.info (cwd match, then newest)
+--- Get current tmux session name (cached per discovery call)
+---@return string?
+local function get_tmux_session()
+  if not vim.env.TMUX then return nil end
+  local handle = io.popen("tmux display-message -p '#{session_name}' 2>/dev/null")
+  if not handle then return nil end
+  local session = handle:read("*l")
+  handle:close()
+  return (session and session ~= "") and session or nil
+end
+
+--- Discover socket via /tmp/pi-nvim-sockets/*.info (cwd match, then same-session)
 ---@return string?
 local function discover_socket_by_cwd()
   local info_dir = "/tmp/pi-nvim-sockets"
@@ -154,10 +165,13 @@ local function discover_socket_by_cwd()
   end
   if best_sock then return best_sock end
 
-  -- Second pass: any live socket (newest)
+  -- Second pass: same tmux session only (never leak across sessions)
+  local tmux_session = get_tmux_session()
+  if not tmux_session then return nil end
+
   for _, info_path in ipairs(files) do
     local info = parse_info_manifest(info_path)
-    if info then
+    if info and info.session == tmux_session then
       local stat = vim.uv.fs_stat(info.socket)
       if stat and stat.mtime.sec > best_mtime then
         best_mtime = stat.mtime.sec
