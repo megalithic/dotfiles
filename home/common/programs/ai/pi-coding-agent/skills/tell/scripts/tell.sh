@@ -284,8 +284,12 @@ Original task: ${task_desc}..."
 }
 
 # Get current session context
+# Uses TMUX_PANE to target the actual pane running this command,
+# not whichever tmux window happens to have focus.
 get_context() {
-  if [[ -n "${TMUX:-}" ]]; then
+  if [[ -n "${TMUX_PANE:-}" ]]; then
+    tmux display-message -t "$TMUX_PANE" -p '#S:#I:#P'
+  elif [[ -n "${TMUX:-}" ]]; then
     tmux display-message -p '#S:#I:#P'
   else
     echo "unknown"

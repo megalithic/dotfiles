@@ -95,7 +95,7 @@
     pname = "pi-coding-agent";
     version = npmVersion ./packages/pi;
     src = ./packages/pi;
-    npmDepsHash = "sha256-skguSRcCbnX3mWKE6zbfLUlj3OtDf2ACCaZ4q3pQrfE=";
+    npmDepsHash = "sha256-ha/WtvbxwudoAajGylnuWvvU7gduRn82WUaCqbiXNoI=";
     dontNpmBuild = true;
     installPhase = ''
       runHook preInstall
@@ -126,7 +126,7 @@
     pname = "pi-mcp-adapter";
     version = npmVersion ./packages/pi-mcp-adapter;
     src = ./packages/pi-mcp-adapter;
-    npmDepsHash = "sha256-ZU4mf+VGHrZPWV2Jc0Gd9MTrJ5VHbF3WMlTszNR/QDE=";
+    npmDepsHash = "sha256-F1aVWQnw7dODrfcOgD4ygXiV5D+YbgY0hochO48qLzw=";
     dontNpmBuild = true;
     # TODO: patch needs path adjustment for npm package layout (was written for git repo)
     # patches = [./patches/claude-settings-support.patch];

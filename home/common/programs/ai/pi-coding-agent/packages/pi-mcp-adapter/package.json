@@ -11,6 +11,6 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "pi-mcp-adapter": "2.3.5"
+    "pi-mcp-adapter": "2.4.1"
   }
 }
