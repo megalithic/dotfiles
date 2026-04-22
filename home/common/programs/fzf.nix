@@ -68,8 +68,7 @@ in {
       "--bind='ctrl-o:execute(nvim {})+abort'"
       "--height=25%"
       "--prompt=' '"
-      "--pointer=''" # 
-      # "--pointer='▓'" # 
+      "--pointer='▌'" # ▌
       "--header=''"
       # "--marker='✓ '"
       "--marker='󰛄'"
