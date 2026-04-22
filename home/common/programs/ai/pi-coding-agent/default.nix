@@ -373,17 +373,17 @@
       export BRAVE_API_KEY="$BRAVE_SEARCH_API_KEY"
     fi
 
-    # Parse --profile flag
-    PROFILE=""
+    # Parse --profile flag (overrides multi-pass config only)
+    MP_PROFILE=""
     PI_ARGS=()
     while [[ $# -gt 0 ]]; do
       case "$1" in
         --profile)
           if [[ -z "''${2:-}" || "$2" == --* ]]; then
-            echo "Warning: --profile requires a profile name, using default" >&2
+            echo "Warning: --profile requires a profile name" >&2
             shift
           else
-            PROFILE="$2"
+            MP_PROFILE="$2"
             shift 2
           fi
           ;;
@@ -395,13 +395,11 @@
     done
 
     # Socket config — bridge.ts auto-detects tmux session/window.
-    # Only export dir/prefix so bridge.ts uses consistent paths.
-    # PI_SOCKET can still be set explicitly to override auto-detection.
     export PI_SOCKET_DIR="${socketConfig.dir}"
     export PI_SOCKET_PREFIX="${socketConfig.prefix}"
     export PI_SUBAGENT_MUX=tmux
 
-    # Detect session name for profile hybrid dirs (bridge.ts handles socket)
+    # Detect session name (bridge.ts handles socket)
     if [ -n "$TMUX" ]; then
       PI_SESSION=$(${pkgs.tmux}/bin/tmux display-message -p '#{session_name}')
     else
@@ -409,24 +407,41 @@
     fi
     export PI_SESSION
 
-    # Handle profile auth borrowing
-    if [[ -n "$PROFILE" ]]; then
-      MASTER_DIR="$HOME/.pi/agent"
-      PROFILE_DIR="$HOME/.pi/agent-''${PROFILE}"
+    MASTER_DIR="$HOME/.pi/agent"
+
+    # ---------------------------------------------------------------
+    # Auto-detect profile from active agent dir or tmux session name.
+    # Profile dir = ~/.pi/agent-{name}/ with auth.json
+    # ---------------------------------------------------------------
+    AUTO_PROFILE=""
+    if [[ -n "''${PI_CODING_AGENT_DIR:-}" ]]; then
+      # Extract profile from existing agent dir (e.g. ~/.pi/agent-rx → rx)
+      _dir_name=$(basename "$PI_CODING_AGENT_DIR")
+      if [[ "$_dir_name" == agent-* ]]; then
+        AUTO_PROFILE="''${_dir_name#agent-}"
+      fi
+    elif [[ -f "$HOME/.pi/agent-''${PI_SESSION}/auth.json" ]]; then
+      # Session name matches a profile dir
+      AUTO_PROFILE="$PI_SESSION"
+    fi
+
+    # Resolve which profile to use for auth (auto-detected)
+    # and which to use for multi-pass (--profile override or auto)
+    AUTH_PROFILE="$AUTO_PROFILE"
+    MP_PROFILE="''${MP_PROFILE:-$AUTO_PROFILE}"
+
+    # ---------------------------------------------------------------
+    # Build hybrid dir if we have a profile with auth
+    # ---------------------------------------------------------------
+    if [[ -n "$AUTH_PROFILE" ]]; then
+      PROFILE_DIR="$HOME/.pi/agent-''${AUTH_PROFILE}"
       PROFILE_AUTH="$PROFILE_DIR/auth.json"
 
-      if [[ ! -f "$PROFILE_AUTH" ]]; then
-        echo "Warning: Profile auth not found: $PROFILE_AUTH" >&2
-        echo "Available profiles:" >&2
-        for d in "$HOME"/.pi/agent-*/; do
-          [[ -f "$d/auth.json" ]] && echo "  --profile $(basename "$d" | sed 's/^agent-//')" >&2
-        done
-        echo "" >&2
-        echo "Using default auth instead." >&2
-      else
-        HYBRID_DIR="/tmp/pi-config-''${PI_SESSION}-''${PROFILE}"
+      if [[ -f "$PROFILE_AUTH" ]]; then
+        HYBRID_DIR="/tmp/pi-config-''${PI_SESSION}-''${AUTH_PROFILE}"
         mkdir -p "$HYBRID_DIR"
 
+        # Symlink shared config from master
         for item in ${lib.concatStringsSep " " sharedConfigItems}; do
           [[ -e "$MASTER_DIR/$item" || -L "$MASTER_DIR/$item" ]] && \
             ln -sfn "$MASTER_DIR/$item" "$HYBRID_DIR/$item"
@@ -435,6 +450,15 @@
         mkdir -p "$MASTER_DIR/sessions"
         ln -sfn "$MASTER_DIR/sessions" "$HYBRID_DIR/sessions"
         ln -sfn "$PROFILE_AUTH" "$HYBRID_DIR/auth.json"
+
+        # Symlink multi-pass config from the target profile
+        # (--profile overrides which profile's multi-pass.json to use)
+        MP_PROFILE_DIR="$HOME/.pi/agent-''${MP_PROFILE}"
+        if [[ -f "$MP_PROFILE_DIR/multi-pass.json" ]]; then
+          ln -sfn "$MP_PROFILE_DIR/multi-pass.json" "$HYBRID_DIR/multi-pass.json"
+        elif [[ -f "$MASTER_DIR/multi-pass.json" ]]; then
+          ln -sfn "$MASTER_DIR/multi-pass.json" "$HYBRID_DIR/multi-pass.json"
+        fi
 
         export PI_CODING_AGENT_DIR="$HYBRID_DIR"
 

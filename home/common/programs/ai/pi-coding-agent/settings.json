@@ -4,8 +4,8 @@
     "maxDelayMs": 900000
   },
   "defaultProvider": "anthropic",
-  "defaultModel": "claude-opus-4-6",
-  "defaultThinkingLevel": "medium",
+  "defaultModel": "claude-opus-4-7",
+  "defaultThinkingLevel": "high",
   "doubleEscapeAction": "tree",
   "enableSkillCommands": true,
   "hideThinkingBlock": true,
@@ -17,9 +17,13 @@
     "google-vertex/gemini-3.1-pro-preview",
     "google-vertex/gemini-3-pro-preview",
     "google-vertex/gemini-3-flash-preview",
-    "anthropic/claude-opus-4-5",
+    "anthropic/claude-opus-4-7",
     "anthropic/claude-opus-4-6",
-    "anthropic/claude-sonnet-4-5"
+    "anthropic/claude-sonnet-4-5",
+    "synthetic/hf:zai-org/GLM-5",
+    "synthetic/hf:zai-org/GLM-4.7",
+    "synthetic/hf:moonshotai/Kimi-K2.5",
+    "synthetic/hf:MiniMaxAI/MiniMax-M2.5"
   ],
   "terminal": {
     "showImages": false
