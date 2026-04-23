@@ -209,17 +209,29 @@ end
 -- Socket Path Resolution
 -- =============================================================================
 
+---Check whether a socket path is an ephemeral pi (spawned via <localleader>pn).
+---Ephemerals contain `-eph-` in the basename and must NEVER be picked by
+---Hammerspoon forwarders (Telegram, tell, lastActiveSession).
+---@param path string|nil
+---@return boolean
+local function isEphemeralSocket(path)
+  if not path then return false end
+  return path:match("%-eph%-[^/]+%.sock$") ~= nil
+end
+
 ---Get socket path for a session and optional window
 ---@param session string Session name (e.g., "mega")
----@param window string|nil Window index (e.g., "0", "agent"). If nil, finds first available.
+---@param window string|nil Window index (e.g., "0", "agent"). If nil, finds first available non-ephemeral.
 ---@return string|nil Socket path like /tmp/pi-mega-0.sock or nil if not found
 local function getSocketPath(session, window)
   if window then
-    return string.format("%s/%s-%s-%s.sock", SOCKET_DIR, SOCKET_PREFIX, session, window)
+    local p = string.format("%s/%s-%s-%s.sock", SOCKET_DIR, SOCKET_PREFIX, session, window)
+    if isEphemeralSocket(p) then return nil end
+    return p
   else
-    -- Find first available socket for this session
+    -- Find first available NON-ephemeral socket for this session
     local pattern = string.format("%s/%s-%s-*.sock", SOCKET_DIR, SOCKET_PREFIX, session)
-    local output = hs.execute(string.format("ls %s 2>/dev/null | head -1", pattern))
+    local output = hs.execute(string.format("ls %s 2>/dev/null | grep -v -- '-eph-' | head -1", pattern))
     if output and output ~= "" then
       return output:gsub("%s+$", "")  -- trim trailing whitespace
     end
@@ -298,13 +310,18 @@ end
 ---Called by send.lua when telegram flag is set
 ---@param context string|nil Tmux context (session:window:pane:pid) or session-window
 function M.trackLastActive(context)
-  if context then
-    local session, window = parseContext(context)
-    if session then
-      M.lastActiveSession = session
-      M.lastActiveWindow = window
-      U.log.df("tracked last active session: %s, window: %s", session, window or "any")
-    end
+  if not context then return end
+  -- Skip ephemeral pi contexts — they must never become the last-active target
+  -- for Telegram/tell forwarders.
+  if context:match("%-eph%-") then
+    U.log.df("ignoring ephemeral context for lastActive: %s", context)
+    return
+  end
+  local session, window = parseContext(context)
+  if session then
+    M.lastActiveSession = session
+    M.lastActiveWindow = window
+    U.log.df("tracked last active session: %s, window: %s", session, window or "any")
   end
 end
 
@@ -364,7 +381,8 @@ function M.sendToSession(session, text, source, window)
   return sendToSocket(socketPath, payload)
 end
 
----Get list of available pi sockets
+---Get list of available pi sockets (ephemerals EXCLUDED — forwarders must
+---never auto-pick them).
 ---@return table Array of { session, window, path, connected }
 function M.getActiveSessions()
   local sessions = {}
@@ -373,15 +391,17 @@ function M.getActiveSessions()
 
   if output then
     for line in output:gmatch("[^\n]+") do
-      local session, window = line:match("/tmp/pi%-([^-]+)%-([^%.]+)%.sock")
-      if session and window then
-        local conn = connections[line]
-        table.insert(sessions, {
-          session = session,
-          window = window,
-          path = line,
-          connected = conn and conn.connected or false,
-        })
+      if not isEphemeralSocket(line) then
+        local session, window = line:match("/tmp/pi%-([^-]+)%-([^%.]+)%.sock")
+        if session and window then
+          local conn = connections[line]
+          table.insert(sessions, {
+            session = session,
+            window = window,
+            path = line,
+            connected = conn and conn.connected or false,
+          })
+        end
       end
     end
   end
@@ -389,7 +409,7 @@ function M.getActiveSessions()
   return sessions
 end
 
----Get all sockets for a specific session
+---Get all non-ephemeral sockets for a specific session
 ---@param session string Session name
 ---@return table Array of { window, path, connected }
 function M.getSessionSockets(session)
@@ -399,14 +419,16 @@ function M.getSessionSockets(session)
 
   if output then
     for line in output:gmatch("[^\n]+") do
-      local window = line:match("/tmp/pi%-[^-]+%-([^%.]+)%.sock")
-      if window then
-        local conn = connections[line]
-        table.insert(sockets, {
-          window = window,
-          path = line,
-          connected = conn and conn.connected or false,
-        })
+      if not isEphemeralSocket(line) then
+        local window = line:match("/tmp/pi%-[^-]+%-([^%.]+)%.sock")
+        if window then
+          local conn = connections[line]
+          table.insert(sockets, {
+            window = window,
+            path = line,
+            connected = conn and conn.connected or false,
+          })
+        end
       end
     end
   end

@@ -214,7 +214,7 @@
   # Workflow aliases
   # ─────────────────────────────────────────────────────────────
 
-  # jj up [branch] - Fetch and rebase onto origin (default: main)
+  # jj up - Fetch and rebase current branch (-b @) onto main@origin
   up = [
     "util"
     "exec"
@@ -224,7 +224,7 @@
     ''
       set -euo pipefail
       jj git fetch
-      jj rebase -d "''${1:-main}@origin"
+      jj rebase -b @ -d main@origin
     ''
     ""
   ];

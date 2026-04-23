@@ -64,11 +64,30 @@ return {
     end,
   },
 
-  -- Better code actions
   {
     "rachartier/tiny-code-action.nvim",
     event = "LspAttach",
     dependencies = { "nvim-lua/plenary.nvim" },
     opts = {},
+  },
+
+  {
+    "mhanberg/output-panel.nvim",
+    version = "*",
+    event = "VeryLazy",
+    config = function()
+      require("output_panel").setup({
+        max_buffer_size = 5000, -- default
+      })
+    end,
+    cmd = { "OutputPanel" },
+    keys = {
+      {
+        "<leader>lp",
+        vim.cmd.OutputPanel,
+        mode = "n",
+        desc = "Output Panel",
+      },
+    },
   },
 }

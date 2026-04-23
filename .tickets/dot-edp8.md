@@ -197,3 +197,25 @@ explicitly chosen. Filter: Hammerspoon discovery skips manifests with
 - `:PiHealth` reports ephemeral sockets as a distinct category,
   flags any stale ephemerals.
 
+
+## Notes
+
+**2026-04-23T12:41:29Z**
+
+Implemented:
+- bridge.ts: per-socket .info manifest ({socket-basename}.info); added ephemeral + window fields; IS_EPHEMERAL detect from PI_EPHEMERAL=1 env or socket name containing -eph-
+- bin/tmux-toggle-pi: new --new flag requiring --socket PATH; spawns 30% right split with PI_SOCKET+PI_EPHEMERAL=1 env; does not touch AGENT_WINDOW/state-file; socket_to_window strips -eph-* suffix so --bell still routes correctly
+- config/nvim/after/plugin/pi.lua:
+  - parse_info_manifest: derives ephemeral flag from manifest or name
+  - discover_socket_by_cwd: skips ephemerals in both cwd + same-session passes
+  - discover_socket_by_tmux: glob filters out -eph-
+  - list_sockets(opts): opts.include_ephemeral; returns {path,ephemeral}[]
+  - select_session: shows ephemerals tagged ' · eph'; never auto-picked via discovery
+  - PiHealth: marks ephemeral manifests
+  - <localleader>pn: unique socket path, set vim.b.pi_target_socket, jobstart tmux-toggle-pi --new, poll for socket (3s), fs_event watcher clears target on socket deletion
+- config/hammerspoon/lib/interop/pi.lua:
+  - isEphemeralSocket() helper
+  - getSocketPath/getActiveSessions/getSessionSockets: skip ephemerals
+  - trackLastActive: ignores contexts containing -eph-
+
+Validated: home-manager builds (just validate home), luac -p clean on both lua files, shellcheck clean (pre-existing SC2001 style only), bash -n clean.

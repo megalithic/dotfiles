@@ -115,7 +115,7 @@ end
 
 --- Parse .info manifest and validate liveness
 ---@param info_path string
----@return table? manifest with {socket, cwd, pid, session} or nil if stale
+---@return table? manifest with {socket, cwd, pid, session, window, ephemeral} or nil if stale
 local function parse_info_manifest(info_path)
   local content_ok, content = pcall(vim.fn.readfile, info_path)
   if not content_ok or not content or not content[1] then return nil end
@@ -126,6 +126,12 @@ local function parse_info_manifest(info_path)
   -- Validate: socket file exists AND pid is alive
   if not socket_exists(info.socket) then return nil end
   if info.pid and not pid_alive(info.pid) then return nil end
+
+  -- Derive ephemeral flag from manifest OR socket name pattern
+  -- (backward compatible with older manifests lacking the field)
+  if info.ephemeral == nil then
+    info.ephemeral = info.socket:match("%-eph%-[^/]+%.sock$") ~= nil
+  end
 
   return info
 end
@@ -152,10 +158,14 @@ local function discover_socket_by_cwd()
   local best_sock = nil
   local best_mtime = 0
 
+  -- Ephemeral sockets are NEVER auto-discovered. They are reachable only
+  -- via explicit vim.b.pi_target_socket set by the buffer that spawned them.
+  -- This prevents cross-buffer/cross-nvim bleed-over.
+
   -- First pass: exact cwd match, prefer newest (skips stale via pid check)
   for _, info_path in ipairs(files) do
     local info = parse_info_manifest(info_path)
-    if info and info.cwd == cwd then
+    if info and not info.ephemeral and info.cwd == cwd then
       local stat = vim.uv.fs_stat(info.socket)
       if stat and stat.mtime.sec > best_mtime then
         best_mtime = stat.mtime.sec
@@ -171,7 +181,7 @@ local function discover_socket_by_cwd()
 
   for _, info_path in ipairs(files) do
     local info = parse_info_manifest(info_path)
-    if info and info.session == tmux_session then
+    if info and not info.ephemeral and info.session == tmux_session then
       local stat = vim.uv.fs_stat(info.socket)
       if stat and stat.mtime.sec > best_mtime then
         best_mtime = stat.mtime.sec
@@ -201,9 +211,16 @@ local function discover_socket_by_tmux()
   local agent_socket = string.format("%s/%s-%s-agent.sock", socket_dir, socket_prefix, session)
   if socket_exists(agent_socket) then return agent_socket end
 
-  -- Fall back to any socket for this session
-  local glob_handle =
-    io.popen(string.format("ls %s/%s-%s-*.sock 2>/dev/null | head -1", socket_dir, socket_prefix, session))
+  -- Fall back to any NON-ephemeral socket for this session
+  -- (ephemerals contain `-eph-` in the filename and must never be auto-picked)
+  local glob_handle = io.popen(
+    string.format(
+      "ls %s/%s-%s-*.sock 2>/dev/null | grep -v -- '-eph-' | head -1",
+      socket_dir,
+      socket_prefix,
+      session
+    )
+  )
   if not glob_handle then return nil end
   local found = glob_handle:read("*l")
   glob_handle:close()
@@ -1028,8 +1045,11 @@ function mega.p.pi.status()
 end
 
 --- List all available pi sockets (from both .info manifests and tmux pattern)
----@return string[]
-function mega.p.pi.list_sockets()
+---@param opts? { include_ephemeral?: boolean } default excludes ephemerals
+---@return { path: string, ephemeral: boolean }[]
+function mega.p.pi.list_sockets(opts)
+  opts = opts or {}
+  local include_eph = opts.include_ephemeral == true
   local seen = {}
   local sockets = {}
 
@@ -1040,19 +1060,24 @@ function mega.p.pi.list_sockets()
     for _, info_path in ipairs(files) do
       local info = parse_info_manifest(info_path)
       if info and not seen[info.socket] then
-        seen[info.socket] = true
-        table.insert(sockets, info.socket)
+        if include_eph or not info.ephemeral then
+          seen[info.socket] = true
+          table.insert(sockets, { path = info.socket, ephemeral = info.ephemeral == true })
+        end
       end
     end
   end
 
-  -- From tmux socket pattern
+  -- From tmux socket pattern (derive ephemeral flag from name)
   local pattern = string.format("%s/%s-*.sock", config.socket.dir, config.socket.prefix)
   local glob_socks = vim.fn.glob(pattern, false, true)
   for _, path in ipairs(glob_socks) do
     if socket_exists(path) and not seen[path] then
-      seen[path] = true
-      table.insert(sockets, path)
+      local is_eph = path:match("%-eph%-[^/]+%.sock$") ~= nil
+      if include_eph or not is_eph then
+        seen[path] = true
+        table.insert(sockets, { path = path, ephemeral = is_eph })
+      end
     end
   end
 
@@ -1081,18 +1106,26 @@ function mega.p.pi.set_target(socket_path)
 end
 
 --- Select pi session from available sockets (via snacks picker)
+--- Ephemerals are shown with a distinct tag but NEVER auto-selected.
 function mega.p.pi.select_session()
   local items = {}
 
-  -- Add socket-based sessions
-  local sockets = mega.p.pi.list_sockets()
-  for _, socket_path in ipairs(sockets) do
-    local session = get_session_name(socket_path) or "unknown"
+  -- Add socket-based sessions (ephemerals included, visually tagged)
+  local sockets = mega.p.pi.list_sockets({ include_ephemeral = true })
+  for _, entry in ipairs(sockets) do
+    local session = get_session_name(entry.path) or "unknown"
+    local text
+    if entry.ephemeral then
+      text = string.format("󰌘 %s · eph", session)
+    else
+      text = string.format("󰌘 %s", session)
+    end
     table.insert(items, {
-      text = string.format("󰌘 %s", session),
+      text = text,
       type = "socket",
-      path = socket_path,
+      path = entry.path,
       session = session,
+      ephemeral = entry.ephemeral,
     })
   end
 
@@ -1809,7 +1842,8 @@ function mega.p.pi.health()
       if manifest then
         local is_cwd = manifest.cwd == cwd
         local status_parts = { "socket live", "pid " .. (manifest.pid or "?") }
-        if is_cwd then
+        if manifest.ephemeral then table.insert(status_parts, "ephemeral") end
+        if is_cwd and not manifest.ephemeral then
           table.insert(status_parts, "cwd match")
           cwd_match = true
         end
@@ -2211,9 +2245,116 @@ vim.keymap.set(
   { silent = true, desc = "π session picker" }
 )
 
+--------------------------------------------------------------------------------
+-- Ephemeral split: <localleader>pn
+--
+-- Spawns a NEW pi instance in a tmux split right of the current window, with a
+-- unique socket path that is:
+--   * passed to the new pane via PI_SOCKET env
+--   * pinned to the spawning buffer via vim.b.pi_target_socket
+--   * flagged ephemeral in the .info manifest (excluded from auto-discovery)
+--
+-- Isolation contract (see ticket dot-edp8):
+--   * No other buffer, nvim instance, Hammerspoon forwarder, or pi discovery
+--     path can reach this ephemeral pi implicitly. Only an explicit target
+--     reaches it.
+--   * Closing the pane removes socket + manifest; fs_event watcher here clears
+--     vim.b.pi_target_socket so the buffer falls back to normal discovery.
+--------------------------------------------------------------------------------
 vim.keymap.set("n", "<localleader>pn", function()
-  -- TODO: ephemeral pi split (tmux-toggle-pi --new)
-  vim.notify("π ephemeral split not yet implemented", vim.log.levels.INFO)
+  if not vim.env.TMUX then
+    vim.notify("π ephemeral split needs tmux", vim.log.levels.WARN)
+    return
+  end
+
+  local session = get_tmux_session() or "default"
+  -- Window name (fall back to index if non-alphanumeric, matches bridge.ts)
+  local win_name = vim.fn.systemlist("tmux display-message -p '#{window_name}'")[1] or ""
+  local win_idx = vim.fn.systemlist("tmux display-message -p '#{window_index}'")[1] or "0"
+  local window = (win_name ~= "" and win_name:match("^[%w_%-]+$")) and win_name or win_idx
+
+  local epoch = os.time()
+  local pid = vim.fn.getpid()
+  local sock_path = string.format(
+    "%s/%s-%s-%s-eph-%d-%d.sock",
+    config.socket.dir,
+    config.socket.prefix,
+    session,
+    window,
+    epoch,
+    pid
+  )
+
+  local bufnr = vim.api.nvim_get_current_buf()
+
+  -- Pin target to this buffer BEFORE spawn so any in-flight send routes here.
+  vim.api.nvim_buf_set_var(bufnr, "pi_target_socket", sock_path)
+
+  -- Spawn via tmux-toggle-pi --new --socket <path>
+  local job = vim.fn.jobstart({ "tmux-toggle-pi", "--new", "--socket", sock_path }, { detach = true })
+  if job <= 0 then
+    vim.notify("π ephemeral spawn failed (jobstart error)", vim.log.levels.ERROR)
+    pcall(vim.api.nvim_buf_del_var, bufnr, "pi_target_socket")
+    return
+  end
+
+  -- Poll for the socket file up to ~3s so we can confirm spawn succeeded
+  -- and start the cleanup watcher.
+  local deadline_ms = 3000
+  local interval_ms = 100
+  local elapsed = 0
+  local timer = vim.uv.new_timer()
+  if not timer then
+    vim.notify(string.format("π ephemeral pinned: %s (no watcher)", sock_path), vim.log.levels.INFO)
+    return
+  end
+
+  local function start_cleanup_watcher()
+    local ev = vim.uv.new_fs_event()
+    if not ev then return end
+    ev:start(sock_path, {}, function(err, _fname, events)
+      -- Socket removed → pi pane exited. Clear buffer-local target.
+      if err or (events and events.rename) then
+        local still_exists = vim.uv.fs_stat(sock_path) ~= nil
+        if not still_exists then
+          vim.schedule(function()
+            if vim.api.nvim_buf_is_valid(bufnr) then
+              local cur = vim.b[bufnr].pi_target_socket
+              if cur == sock_path then
+                pcall(vim.api.nvim_buf_del_var, bufnr, "pi_target_socket")
+                vim.notify("π ephemeral closed — target cleared", vim.log.levels.INFO)
+              end
+            end
+            pcall(function() ev:stop() end)
+            pcall(function() ev:close() end)
+          end)
+        end
+      end
+    end)
+  end
+
+  timer:start(
+    interval_ms,
+    interval_ms,
+    vim.schedule_wrap(function()
+      elapsed = elapsed + interval_ms
+      if socket_exists(sock_path) then
+        pcall(function() timer:stop() end)
+        pcall(function() timer:close() end)
+        vim.notify(string.format("π ephemeral ready: %s", vim.fs.basename(sock_path)), vim.log.levels.INFO)
+        start_cleanup_watcher()
+      elseif elapsed >= deadline_ms then
+        pcall(function() timer:stop() end)
+        pcall(function() timer:close() end)
+        -- Socket never appeared — pi failed to start. Clear target.
+        if vim.api.nvim_buf_is_valid(bufnr) then
+          local cur = vim.b[bufnr].pi_target_socket
+          if cur == sock_path then pcall(vim.api.nvim_buf_del_var, bufnr, "pi_target_socket") end
+        end
+        vim.notify("π ephemeral spawn timed out (socket did not appear)", vim.log.levels.WARN)
+      end
+    end)
+  )
 end, { silent = true, desc = "π new ephemeral split" })
 
 vim.keymap.set("n", "<localleader>pr", function() mega.p.pi.prompt() end, { silent = true, desc = "π raw prompt" })

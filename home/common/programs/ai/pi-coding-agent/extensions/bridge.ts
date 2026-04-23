@@ -15,8 +15,12 @@
  *   Error:    (any malformed JSON)                      → { ok: false, error: '...' }
  *
  * Discovery:
- *   Socket:   /tmp/pi-{session}.sock
- *   Manifest: /tmp/pi-nvim-sockets/{session}.info  (JSON: socket, cwd, pid, startedAt)
+ *   Socket:   /tmp/pi-{session}-{window}.sock  (primary)
+ *             /tmp/pi-{session}-{window}-eph-{epoch}-{pid}.sock  (ephemeral)
+ *   Manifest: /tmp/pi-nvim-sockets/{socket-basename}.info
+ *             (JSON: socket, cwd, pid, session, window, ephemeral, startedAt)
+ *   Ephemeral manifests are EXCLUDED from cwd-based auto-discovery — they
+ *   are only reachable via explicit vim.b.pi_target_socket.
  *
  * Socket Configuration:
  *   Auto-detected from tmux session/window when TMUX env is set.
@@ -110,8 +114,18 @@ const resolveSocket = (): {
   };
 };
 
-const { socketPath: SOCKET_PATH, session: PI_SESSION } = resolveSocket();
+const { socketPath: SOCKET_PATH, session: PI_SESSION, window: PI_WINDOW } =
+  resolveSocket();
 const IS_BRIDGE_ENABLED = !!SOCKET_PATH;
+
+/**
+ * Ephemeral detection: explicit PI_EPHEMERAL=1 env wins, else socket path
+ * containing `-eph-` token (set by <localleader>pn in nvim or by callers
+ * using an ephemeral socket naming convention).
+ */
+const IS_EPHEMERAL: boolean =
+  process.env.PI_EPHEMERAL === "1" ||
+  (!!SOCKET_PATH && /-eph-[^/]+\.sock$/.test(SOCKET_PATH));
 
 // Status icon
 const PI_ICON = "π";
@@ -283,12 +297,18 @@ const writeInfoManifest = (): void => {
       fs.mkdirSync(INFO_DIR, { recursive: true });
     }
 
-    infoManifestPath = `${INFO_DIR}/${PI_SESSION}.info`;
+    // Key manifest by socket basename so multiple pis per tmux session (e.g.
+    // primary + ephemeral) don't clobber each other's manifests.
+    const socketBase = SOCKET_PATH.split("/").pop()?.replace(/\.sock$/, "") ||
+      PI_SESSION;
+    infoManifestPath = `${INFO_DIR}/${socketBase}.info`;
     const manifest = {
       socket: SOCKET_PATH,
       cwd: process.cwd(),
       pid: process.pid,
       session: PI_SESSION,
+      window: PI_WINDOW,
+      ephemeral: IS_EPHEMERAL,
       startedAt: new Date().toISOString(),
     };
     fs.writeFileSync(infoManifestPath, JSON.stringify(manifest) + "\n");

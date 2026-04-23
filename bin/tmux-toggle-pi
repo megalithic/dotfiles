@@ -12,6 +12,8 @@
 #   --socket PATH  Target pi pane whose socket matches PATH
 #                  Matches by parsing socket filename → window name
 #   --bell PATH    Ring bell on the pane matching socket PATH (no toggle)
+#   --new          Spawn ephemeral pi in a new split of the current window
+#                  (requires --socket PATH; does not touch agent window state)
 #
 # All tmux commands are session-qualified to prevent cross-session contamination.
 # Pi panes are detected by pane_title (pi sets "π - <project>").
@@ -19,17 +21,24 @@
 set -euo pipefail
 
 ENSURE_MODE=false
+NEW_MODE=false
 TARGET_SOCKET=""
 BELL_SOCKET=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --ensure) ENSURE_MODE=true; shift ;;
+    --new)    NEW_MODE=true; shift ;;
     --socket) TARGET_SOCKET="${2:-}"; shift 2 ;;
     --bell)   BELL_SOCKET="${2:-}"; shift 2 ;;
     *) shift ;;
   esac
 done
+
+if [[ "$NEW_MODE" == true && -z "$TARGET_SOCKET" ]]; then
+  echo "tmux-toggle-pi: --new requires --socket PATH" >&2
+  exit 2
+fi
 
 SESSION=$(tmux display-message -p '#{session_name}')
 CURRENT_WINDOW=$(tmux display-message -p '#{window_name}')
@@ -42,14 +51,18 @@ STATE_FILE="/tmp/tmux-agent-toggle-${SESSION}"
 # --- Detection ---
 
 # Extract window name from socket path.
-# Socket pattern: /tmp/pi-{session}-{window}.sock
-# e.g., /tmp/pi-mega-agent.sock → agent
+# Primary:   /tmp/pi-{session}-{window}.sock         → {window}
+# Ephemeral: /tmp/pi-{session}-{window}-eph-*.sock   → {window}
+#            (strip -eph-* suffix so pane/bell lookup still matches)
 socket_to_window() {
   local sock="$1"
   local fname
   fname=$(basename "$sock" .sock)
-  # Strip prefix and session: pi-{session}-{window} → {window}
-  echo "$fname" | sed "s/^pi-${SESSION}-//"
+  # Strip prefix and session: pi-{session}-{window}[-eph-*] → {window}[-eph-*]
+  local stripped
+  stripped=$(echo "$fname" | sed "s/^pi-${SESSION}-//")
+  # Drop ephemeral suffix if present
+  echo "$stripped" | sed 's/-eph-.*$//'
 }
 
 # Find pi pane by matching the window derived from socket path.
@@ -198,7 +211,32 @@ clear_state() { : >"$STATE_FILE"; }
 
 # --- Main ---
 
+# --- Ephemeral split (--new) ---
+#
+# Spawn a new pi pane in the current window as a 30% right split.
+# Isolated from the singleton agent-window lifecycle: does NOT touch
+# AGENT_WINDOW, state file, break-pane, or move-window.
+# The caller (pi.lua) is responsible for:
+#   - generating a unique ephemeral socket path
+#   - setting vim.b.pi_target_socket so sends route to this pane only
+#   - cleanup when the socket disappears (pane closes)
+spawn_ephemeral_split() {
+  local sock="$1"
+  # Pass PI_SOCKET + PI_EPHEMERAL into the new pane's env.
+  # bridge.ts resolveSocket() honors PI_SOCKET (explicit override).
+  tmux split-window -h -l "$SPLIT_WIDTH" \
+    -e "PI_SOCKET=$sock" \
+    -e "PI_EPHEMERAL=1" \
+    "pinvim"
+}
+
 main() {
+  # NEW MODE: spawn ephemeral pi split and exit (no toggle semantics)
+  if [[ "$NEW_MODE" == true ]]; then
+    spawn_ephemeral_split "$TARGET_SOCKET"
+    exit 0
+  fi
+
   # BELL MODE: ring bell and exit (used by pi.lua after sends)
   if [[ -n "$BELL_SOCKET" ]]; then
     ring_bell_for_socket "$BELL_SOCKET"
