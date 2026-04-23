@@ -3,6 +3,7 @@ id: dot-e0ca
 status: open
 deps: []
 links: []
+parent: dot-2pv9
 created: 2026-04-17T19:06:59Z
 type: task
 priority: 2

@@ -2,7 +2,8 @@
 id: dot-kts9
 status: open
 deps: []
-links: []
+links: [dot-gm39]
+parent: dot-0fjk
 created: 2026-04-14T19:36:06Z
 type: epic
 priority: 1
