@@ -118,7 +118,7 @@ blocked command. Don't ask again. Override is single-use and expires in 2 minute
 - If uncertain, say so immediately — don't guess
 - Work incrementally: complete step → verify (build/lint/test) → commit
 - Complex tasks: write plan first. Simple tasks: just do it
-- Plans go in `~/.local/share/pi/plans/${PI_SESSION:-$(basename $PWD)}/`
+- Plans go in `~/.local/share/pi/plans/$(basename $PWD)/`
 
 ## Session Completion
 
