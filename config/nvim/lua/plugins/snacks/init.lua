@@ -55,9 +55,9 @@ return {
       -- find_files = {},
 
       -- Snacks picker config for grep picker
-      -- live_grep = {
-      --   grep_mode = { "fuzzy", "plain", "regex" }, -- order of modes to cycle
-      -- },
+      live_grep = {
+        grep_mode = { "fuzzy", "plain", "regex" }, -- order of modes to cycle
+      },
 
       -- Keybindings
       keys = {

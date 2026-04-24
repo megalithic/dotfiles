@@ -15,9 +15,11 @@
  *   Selection: lines 5-12
  *   Reference: @config/nvim/after/plugin/pi.lua
  *
- * Footer status:
- *   nvim: init.lua L17  (connected)
- *   nvim: --             (no state)
+ * Footer status (self-prefixed with `│ ` so it visually separates
+ * from preceding extension statuses, which pi joins with a single space):
+ *   │ init.lua:179             (connected, no selection)
+ *   │ init.lua:5-12            (connected, with selection)
+ *   (empty)                     (no state / stale)
  */
 
 import type {
@@ -111,9 +113,17 @@ const formatStatus = (state: EditorState | null): string => {
   const file = state.file
     ? state.file.split("/").pop() || state.file
     : "???";
-  const line = state.cursor ? ` L${state.cursor.line}` : "";
 
-  return `nvim: ${file}${line}`;
+  // `│ ` prefix = section separator (pi joins extension statuses
+  // with a single space). No per-field icons; line/range appended
+  // to the filename with a `:` separator.
+  if (state.selectionRange) {
+    const [s, e] = state.selectionRange;
+    return `│ ${file}:${s}-${e}`;
+  }
+
+  const line = state.cursor ? `:${state.cursor.line}` : "";
+  return `│ ${file}${line}`;
 };
 
 // =============================================================================

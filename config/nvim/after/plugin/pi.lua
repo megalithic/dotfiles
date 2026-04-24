@@ -260,6 +260,7 @@ end
 --------------------------------------------------------------------------------
 
 local connection_connect -- forward declaration
+local push_editor_state -- forward declaration (defined in Live Context Sync)
 
 --- Process a JSON response line from bridge.ts
 ---@param line string
@@ -459,6 +460,10 @@ function connection_connect()
     vim.schedule(function()
       start_ping_timer()
       flush_queue()
+      -- Push current editor state immediately so pinvim footer updates
+      -- on buffer/vim load without waiting for a user event (cursor move,
+      -- mode change, etc.).
+      push_editor_state()
     end)
   end)
 end
@@ -1596,7 +1601,7 @@ local function build_editor_state()
 end
 
 --- Send editor state (debounced)
-local function push_editor_state()
+push_editor_state = function()
   if not config.live_context.enabled then return end
   if not conn.connected then return end
 
@@ -2466,14 +2471,42 @@ vim.keymap.set(
 -- Auto-connect & Cleanup
 --------------------------------------------------------------------------------
 
--- Try to establish persistent connection on load
+--- Try to connect to an existing pinvim instance.
+--- Safe to call repeatedly — early-returns if already connected/connecting.
+--- Resets exponential backoff so user-driven activity (buffer load) always
+--- gets a fresh probe, even after prior attempts gave up.
+local function try_connect()
+  if conn.connected or conn.connecting then return end
+  if not get_socket_path() then return end
+  -- Fresh attempt: reset backoff state
+  conn.reconnect_attempts = 0
+  conn.reconnect_delay_s = 1
+  stop_reconnect_timer()
+  connection_connect()
+end
+
+-- Try to establish persistent connection on load (fast path)
 vim.defer_fn(function()
-  if get_socket_path() then connection_connect() end
+  try_connect()
   -- Set up live context sync autocmds
   setup_live_context()
   -- Start auto-reload polling
   start_auto_reload()
 end, 500)
+
+-- Ensure connection on buffer load/enter — covers:
+--   * nvim started before pinvim socket existed
+--   * pinvim restarted after reconnect gave up
+--   * new buffer opens in long-running nvim after target changed
+vim.api.nvim_create_autocmd({ "VimEnter", "BufEnter", "BufReadPost" }, {
+  group = vim.api.nvim_create_augroup("PiAutoConnect", { clear = true }),
+  callback = function(args)
+    -- Skip non-file buffers (terminals, quickfix, help, etc.)
+    local buftype = vim.bo[args.buf].buftype
+    if buftype ~= "" then return end
+    try_connect()
+  end,
+})
 
 -- Clean up on exit
 vim.api.nvim_create_autocmd("VimLeavePre", {
