@@ -43,6 +43,8 @@ return {
   -- Only load the plugin when started by firenvim, but config above is always set
   lazy = not vim.g.started_by_firenvim,
   build = function()
+    -- Ensure plugin runtime is loaded so autoload/firenvim.vim is sourced
+    require("lazy").load({ plugins = { "firenvim" } })
     vim.fn["firenvim#install"](0)
   end,
   config = function()

@@ -1,5 +1,4 @@
 return {
-  -- fff.nvim - Fast file finder (prebuilt binary via download)
   {
     "dmtrKovalenko/fff.nvim",
     lazy = false,

@@ -21,17 +21,17 @@ require("config.ftplugin").extend_all({
       relativenumber = false,
     },
   },
---  [{ "cmd", "msg", "pager", "dialog" }] = {
---
---    opt = {
---      signcolumn = false,
---      number = false,
---      relativenumber = false,
---    },
---    callback = function(bufnr, args)
---      vim.api.nvim_set_option_value("winhl", "Normal:PanelBackground,FloatBorder:PanelBorder", {})
---    end,
---  },
+  --  [{ "cmd", "msg", "pager", "dialog" }] = {
+  --
+  --    opt = {
+  --      signcolumn = false,
+  --      number = false,
+  --      relativenumber = false,
+  --    },
+  --    callback = function(bufnr, args)
+  --      vim.api.nvim_set_option_value("winhl", "Normal:PanelBackground,FloatBorder:PanelBorder", {})
+  --    end,
+  --  },
   [{ "elixir", "eelixir" }] = {
     opt = {
       syntax = "OFF",
@@ -435,7 +435,7 @@ require("config.ftplugin").extend_all({
       )
     end,
   },
-  [{ "gitcommit", "NeogitCommitMessage" }] = {
+  [{ "gitcommit", "NeogitCommitMessage", "jjdescription" }] = {
     -- keys = {
     --   { "n", "q", function() vim.cmd("cq!") end, { nowait = true, buffer = true, desc = "abort", bang = true } },
     -- },
