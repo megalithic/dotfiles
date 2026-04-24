@@ -118,7 +118,7 @@ blocked command. Don't ask again. Override is single-use and expires in 2 minute
 - If uncertain, say so immediately — don't guess
 - Work incrementally: complete step → verify (build/lint/test) → commit
 - Complex tasks: write plan first. Simple tasks: just do it
-- Plans go in `~/.local/share/pi/plans/$(basename $PWD)/`
+- Plans and research live in `~/.local/share/pi/plans/$(basename $PWD)/` as `{slug}_TASK.md`, `{slug}_PLAN.md`, and `{slug}.ticket-context.md`. `{slug}` = `${TICKET_ID}-<kebab>` if a tk ticket is in progress, else `<kebab>` from the user's prompt. See the task-pipeline skill for slug resolution rules.
 
 ## Session Completion
 

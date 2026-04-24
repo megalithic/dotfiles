@@ -50,4 +50,4 @@ Describe how things work right now. Include relevant code snippets.
 - file paths, URLs, git commits
 ```
 
-Be thorough. Include file paths and line numbers. Your output will be saved as-is to a plans/ directory for a planning agent to use next.
+Be thorough. Include file paths and line numbers. Your output will be saved as-is to `~/.local/share/pi/plans/$(basename $PWD)/{slug}_TASK.md` (the invoking agent supplies the resolved slug) for a planning agent to use next.

@@ -133,13 +133,13 @@ Modes 2 and 3 create a context file to avoid redundant discovery in each ticket-
 
 **Prerequisite**: if a `lat.md/` directory exists at the project root, skip context seeding entirely. The `lat search` command (run in step 2) provides living, queryable context that makes a static context file redundant.
 
-After exploring the codebase (step 2 in both modes), check if `plans/.ticket-context.md` exists. If it does, skip — the context is already seeded. If not, create it:
+After exploring the codebase (step 2 in both modes), check if `~/.local/share/pi/plans/$(basename $PWD)/{slug}.ticket-context.md` exists (slug resolved per the task-pipeline skill — typically `${TICKET_ID}-<kebab>` or the slug passed in by `/tickets`). If it does, skip — the context is already seeded. If not, create it:
 
 ```bash
-mkdir -p plans
+mkdir -p ~/.local/share/pi/plans/"$(basename "$PWD")"
 ```
 
-Write `plans/.ticket-context.md` with three sections:
+Write `~/.local/share/pi/plans/$(basename $PWD)/{slug}.ticket-context.md` with three sections:
 
 ```markdown
 ## Verification commands
@@ -163,7 +163,7 @@ Fill in each section from what you discovered during exploration:
 - **Key directories**: list directories relevant to the batch of tickets being created
 - **Conventions**: notable patterns found during exploration (error handling style, file structure, naming)
 
-The context file is project-local and reusable across all tickets in the batch.
+The context file is scoped per ticket (one file per slug) and lives outside the repo at `~/.local/share/pi/plans/$(basename $PWD)/`. All tickets in a single batch (created from one plan) share the same context file keyed by that plan's slug.
 
 ## Self-validation (always run after Mode 2/3)
 

@@ -93,5 +93,5 @@ If you cannot complete the ticket:
 - **No bonus refactoring.** Fix what the ticket asks, nothing more.
 - **Weak acceptance criteria?** Fall back to: description satisfied + existing tests pass.
 - **One ticket per session.** Don't carry context from unrelated work.
-- **Work in the current checkout.** The pipeline handles worktree setup (task-pipeline skill). When invoked manually or via work-tickets.sh, just work in the current directory.
+- **Work in the current checkout.** Worktrees are supported upstream but not currently in use — task isolation comes from repo-basename + slug scoping (see task-pipeline skill). When invoked manually or via work-tickets.sh, just work in the current directory.
 - **Commit message format.** Always use conventional commits, single line, GPG-signed, no AI attribution.

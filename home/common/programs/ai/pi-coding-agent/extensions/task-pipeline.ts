@@ -6,9 +6,28 @@
  * with restricted tool access (read-only, no file mutations).
  *
  * The main agent's only job during /task and /plan is:
- *   1. Create/manage worktrees
+ *   1. Resolve slug + paths (see below)
  *   2. Invoke the subagent tool
- *   3. Save subagent output to plans/*.md files
+ *   3. Save subagent output to the resolved paths
+ *
+ * Paths: ~/.local/share/pi/plans/$(basename $PWD)/
+ *   {slug}_TASK.md           research output
+ *   {slug}_PLAN.md           plan output
+ *   {slug}.ticket-context.md per-ticket context (created by /tickets)
+ *
+ * {slug} = ${TICKET_ID}-<kebab> if a tk ticket is in progress, else <kebab>
+ * derived from the user's prompt (3–5 words).
+ *
+ * Slug resolution when not passed explicitly:
+ *   1. If $TICKET_ID is set or exactly one tk ticket is in_progress for the
+ *      repo, derive slug from it
+ *   2. Else scan the plans dir for orphan *_TASK.md (no matching *_PLAN.md):
+ *      0 → ask user to run /task first; 1 → use silently; 2+ → list + ask
+ *
+ * Note: the upstream examples this pipeline was adapted from assume a
+ * git-worktree-per-feature layout. We are NOT currently using worktrees;
+ * paths are repo-basename + slug scoped so concurrent tasks don't collide.
+ * A later migration to jj workspaces will be tracked separately.
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
@@ -21,8 +40,8 @@ export default function (pi: ExtensionAPI) {
       if (!args || !args.trim()) {
         pi.sendUserMessage(
           [
-            "Read plans/task.md if it exists and continue research.",
-            "If it doesn't exist, tell the user to provide a task description: /task <description>",
+            "Resolve the active slug (see slug resolution in this extension's header comment), then read ~/.local/share/pi/plans/$(basename $PWD)/{slug}_TASK.md if it exists and continue research.",
+            "If no slug can be resolved and no task file exists, tell the user to provide a task description: /task <description>",
           ].join("\n"),
         );
         return;
@@ -36,13 +55,20 @@ export default function (pi: ExtensionAPI) {
           "",
           "Use the subagent tool with the 'researcher' agent to research this task in an isolated process.",
           "",
+          "Paths:",
+          "  Dir  = ~/.local/share/pi/plans/$(basename $PWD)/",
+          "  Slug = ${TICKET_ID}-<kebab> if a tk ticket is in progress, else <kebab> derived from the prompt (3–5 words). Announce the slug you picked.",
+          "  Task file = <Dir>/{slug}_TASK.md",
+          "",
           "Steps:",
-          "1. If plans/task.md already exists, read it first, then pass its contents as context to continue research",
-          '2. Call subagent tool: { agent: "researcher", task: "<the research task with all context>" }',
-          "3. Save the subagent output to plans/task.md (overwrite if exists)",
+          "1. Resolve slug and ensure Dir exists (mkdir -p). If {slug}_TASK.md already exists, read it first, then pass its contents as context to continue research",
+          '2. Call subagent tool: { agent: "researcher", task: "<the research task with all context; include the resolved slug and task file path so the researcher can reference it>" }',
+          "3. Save the subagent output to <Dir>/{slug}_TASK.md (overwrite if exists)",
           "",
           "The researcher agent runs in isolation — it can read files, search code, and run read-only commands, but CANNOT edit, write, or modify anything.",
-          "Its output will be the research findings. Save that output verbatim to the plans file.",
+          "Its output will be the research findings. Save that output verbatim to the task file.",
+          "",
+          "Note: worktree-based isolation is not in use; slug + basename scoping prevents collisions between concurrent tasks.",
         ].join("\n"),
       );
     },
@@ -58,10 +84,15 @@ export default function (pi: ExtensionAPI) {
           "",
           "Use the subagent tool with the 'planner' agent to create an implementation plan.",
           "",
+          "Paths:",
+          "  Dir  = ~/.local/share/pi/plans/$(basename $PWD)/",
+          "  Slug = resolved the same way as /task (see this extension's header comment). If not passed, prefer $TICKET_ID; else find orphan *_TASK.md in Dir (0 → run /task first; 1 → use silently; 2+ → list + ask).",
+          "  Task file = <Dir>/{slug}_TASK.md   Plan file = <Dir>/{slug}_PLAN.md",
+          "",
           "Steps:",
-          "1. Read plans/task.md (the research findings) — if it doesn't exist, tell the user to run /task first",
-          '2. Call subagent tool: { agent: "planner", task: "<the research findings from plans/task.md>" }',
-          "3. Save the subagent output to plans/plan.md (overwrite if exists)",
+          "1. Resolve slug and read <Dir>/{slug}_TASK.md (the research findings) — if it doesn't exist, tell the user to run /task first",
+          '2. Call subagent tool: { agent: "planner", task: "<the research findings from the task file; include slug + task file path so the planner can reference it>" }',
+          "3. Save the subagent output to <Dir>/{slug}_PLAN.md (overwrite if exists)",
           "",
           "The planner agent runs in isolation — it can read files but CANNOT edit or write anything.",
           "Its output will be the implementation plan. Save that output verbatim to the plans file.",
@@ -79,10 +110,14 @@ export default function (pi: ExtensionAPI) {
         [
           "Create tickets from the implementation plan.",
           "",
+          "Paths:",
+          "  Dir  = ~/.local/share/pi/plans/$(basename $PWD)/",
+          "  Slug = resolved as in /plan. Plan file = <Dir>/{slug}_PLAN.md   Context file = <Dir>/{slug}.ticket-context.md",
+          "",
           "Steps:",
-          "1. Read plans/plan.md — if it doesn't exist, tell the user to run /plan first",
+          "1. Resolve slug and read <Dir>/{slug}_PLAN.md — if it doesn't exist, tell the user to run /plan first",
           "2. Explore the codebase for file hints and verification commands",
-          "3. Seed plans/.ticket-context.md if it doesn't exist (see context seeding in ticket-creator skill)",
+          "3. Seed <Dir>/{slug}.ticket-context.md if it doesn't exist (see context seeding in ticket-creator skill)",
           "4. Create one ticket per plan step using ticket-creator skill Mode 3",
           "5. Self-validate (mandatory):",
           "   - tk list — check all tickets are open",

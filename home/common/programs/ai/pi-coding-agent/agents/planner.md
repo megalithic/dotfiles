@@ -28,7 +28,7 @@ Produce your plan in this exact markdown format:
 ```
 # Plan: <task description>
 
-Research: `plans/task.md`
+Research: `~/.local/share/pi/plans/$(basename $PWD)/{slug}_TASK.md`
 
 ## Steps
 

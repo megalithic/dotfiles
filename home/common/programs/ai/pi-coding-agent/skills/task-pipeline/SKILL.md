@@ -9,15 +9,30 @@ A phased workflow for complex tasks. State lives in files, not session memory. A
 
 ## File structure
 
-All work happens in a worktree at `<repo>/.worktrees/<branch>/`. Docs go in `plans/`:
+Docs live outside the repo, keyed by repo basename + slug:
 
 ```
-plans/
-  task.md     # research findings (fixed filename)
-  plan.md     # implementation plan (fixed filename)
+~/.local/share/pi/plans/$(basename $PWD)/
+  {slug}_TASK.md            # research findings
+  {slug}_PLAN.md            # implementation plan
+  {slug}.ticket-context.md  # ticket-context (created by /tickets)
 ```
 
-Fixed filenames because worktrees already isolate tasks — no need for unique slugs. Overwrite if exists.
+### Slug
+
+`{slug}` = `${TICKET_ID}-<kebab>` if a tk ticket is in progress, else `<kebab>` derived from the user's prompt (3–5 words).
+
+Resolution when a slug isn't passed explicitly:
+
+1. If `$TICKET_ID` is set, or exactly one tk ticket is `in_progress` in the repo — derive slug from it
+2. Else scan the plans dir for orphan `*_TASK.md` (no matching `*_PLAN.md`):
+   - 0 matches → tell user to run `/task` first
+   - 1 match → use it silently
+   - 2+ matches → list numbered, ask user to pick
+
+Announce the resolved slug in output so the user sees which file is being read/written.
+
+> **Note on worktrees:** upstream examples this pipeline borrowed from assume a git-worktree-per-feature layout. We are NOT currently using worktrees. Repo-basename + slug scoping gives the same isolation without the worktree overhead. A later migration to jj workspaces is tracked separately — until then, treat worktree mentions in this repo as documentation of supported-but-unused mode.
 
 ## Phase 1: Research
 
@@ -27,10 +42,11 @@ Any text after `/task` is the research context — the problem to investigate, r
 
 This phase runs in an **isolated subagent** (`researcher`) that physically cannot modify files. The main agent's only jobs are: invoking the subagent and saving output.
 
-1. If `plans/task.md` exists: main agent reads it and passes contents as context to the researcher subagent
-2. Main agent invokes the subagent tool: `{ agent: "researcher", task: "<research task with context>" }`
-3. The researcher subagent runs in isolation — it can read, search, and run read-only commands, but **cannot edit, write, or modify anything**
-4. Main agent saves the subagent output to `plans/task.md`
+1. Main agent resolves the slug (see **Slug** above) and ensures the plans dir exists (`mkdir -p ~/.local/share/pi/plans/$(basename $PWD)`)
+2. If `{slug}_TASK.md` exists: read it and pass contents as context to the researcher subagent
+3. Main agent invokes the subagent tool: `{ agent: "researcher", task: "<research task + context; include the resolved slug and task file path>" }`
+4. The researcher subagent runs in isolation — it can read, search, and run read-only commands, but **cannot edit, write, or modify anything**
+5. Main agent saves the subagent output to `~/.local/share/pi/plans/$(basename $PWD)/{slug}_TASK.md`
 
 ### Research doc format
 
@@ -61,19 +77,19 @@ Keep writing until you can't find more. The user will tell you when to move on.
 
 This phase runs in an **isolated subagent** (`planner`) that physically cannot modify files.
 
-1. Main agent reads `plans/task.md` — the research findings
-2. If `plans/task.md` doesn't exist: tell the user to run `/task` first
+1. Main agent resolves the slug (same rules as **Phase 1**) and reads `{slug}_TASK.md` — the research findings
+2. If `{slug}_TASK.md` doesn't exist: tell the user to run `/task` first
 3. If the user passed inline context (`/plan <context>`), prepend it to the research findings before passing to the planner
-4. Main agent invokes the subagent tool: `{ agent: "planner", task: "<user context + research findings>" }`
+4. Main agent invokes the subagent tool: `{ agent: "planner", task: "<user context + research findings; include slug + task file path>" }`
 5. The planner subagent runs in isolation — it can read files but **cannot edit or write anything**
-6. Main agent saves the subagent output to `plans/plan.md`
+6. Main agent saves the subagent output to `~/.local/share/pi/plans/$(basename $PWD)/{slug}_PLAN.md`
 
 ### Plan doc format
 
 ```markdown
 # Plan: <task description>
 
-Research: `plans/task.md`
+Research: `~/.local/share/pi/plans/$(basename $PWD)/{slug}_TASK.md`
 
 ## Steps
 
@@ -102,9 +118,9 @@ The user reviews and iterates. Do not proceed to tickets until the user explicit
 
 **Entry:** `/tickets`
 
-1. Read `plans/plan.md`
+1. Read `~/.local/share/pi/plans/$(basename $PWD)/{slug}_PLAN.md`
 2. Explore the codebase for file hints and verification commands
-3. Seed `plans/.ticket-context.md` if it doesn't exist (see context seeding in ticket-creator skill)
+3. Seed `~/.local/share/pi/plans/$(basename $PWD)/{slug}.ticket-context.md` if it doesn't exist (see context seeding in ticket-creator skill)
 4. Create one ticket per plan step using ticket-creator skill Mode 3
 5. **Self-validate** (mandatory, every time):
    - `tk list` — check all tickets are open
@@ -116,21 +132,22 @@ The user reviews and iterates. Do not proceed to tickets until the user explicit
 
 ## Phase transitions
 
-| From     | To       | Trigger                        |
-| -------- | -------- | ------------------------------ |
-| —        | Research | `/task <description>`          |
-| Research | Research | `/task` (continue)             |
-| Research | Plan     | `/plan` or `/plan <context>`   |
-| Plan     | Plan     | `/plan <context>` (iterate)    |
-| Plan     | Tickets  | `/tickets`                     |
-| Tickets  | Work     | `work-tickets` in the worktree |
+| From     | To       | Trigger                                  |
+| -------- | -------- | ---------------------------------------- |
+| —        | Research | `/task <description>`                    |
+| Research | Research | `/task` (continue)                       |
+| Research | Plan     | `/plan` or `/plan <context>`             |
+| Plan     | Plan     | `/plan <context>` (iterate)              |
+| Plan     | Tickets  | `/tickets`                               |
+| Tickets  | Work     | `work-tickets` in the current checkout   |
 
 You can go back: run `/plan` after tickets exist to revise, then `/tickets` to recreate. Clean up old tickets first (`tk close` or recreate with new deps).
 
 ## Rules
 
-- Always work in the worktree, not main checkout
+- Work in the current checkout. Worktree support exists upstream but is not currently in use — isolation comes from repo-basename + slug scoping instead
 - Always read existing files before writing — pick up where you left off
 - Research and plan docs are living documents — update, don't replace with alternatives
 - Plan steps must be small enough for one agent session (~30 min of work)
 - Never skip self-validation when creating tickets
+- Announce the resolved slug at the start of each phase so the user knows which files are in play
