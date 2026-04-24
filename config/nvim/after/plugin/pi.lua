@@ -44,8 +44,9 @@ local config = {
   },
   live_context = {
     enabled = true,
-    -- NOTE: CursorMoved is high-traffic. Use CursorHold for lower frequency.
-    events = { "BufEnter", "BufWritePost", "InsertLeave", "ModeChanged", "CursorHold" },
+    -- NOTE: CursorMoved is gated in the handler to fire only while in visual
+    -- mode (so selection extends are captured) — no storm in normal mode.
+    events = { "BufEnter", "BufWritePost", "InsertLeave", "ModeChanged", "CursorHold", "CursorMoved" },
     debounce_ms = 150,
     include_buffer_text = false,
     max_buffer_bytes = 200000,
@@ -611,6 +612,49 @@ local function get_visual_selection(force_update)
     return table.concat(result, "\n"), start_row, end_row
   else
     -- Character-wise
+    if #lines == 1 then
+      lines[1] = string.sub(lines[1], start_col + 1, end_col + 1)
+    else
+      lines[1] = string.sub(lines[1], start_col + 1)
+      lines[#lines] = string.sub(lines[#lines], 1, end_col + 1)
+    end
+    return table.concat(lines, "\n"), start_row, end_row
+  end
+end
+
+--- Get LIVE visual selection (during active visual mode) via getpos("v")/getpos(".")
+--- Unlike get_visual_selection(), this does NOT rely on `<` / `>` marks, which
+--- only update after leaving visual mode. Must be called while mode() is v/V/^V.
+---@return string?, number?, number? text, start_row, end_row
+local function get_live_visual_selection()
+  local mode = vim.fn.mode()
+  if mode ~= "v" and mode ~= "V" and mode ~= "\22" then return nil end
+
+  local bufnr = 0
+  -- getpos returns { bufnum, lnum, col, off } — 1-indexed lnum, 1-indexed col
+  local vpos = vim.fn.getpos("v")
+  local cpos = vim.fn.getpos(".")
+  local start_row, start_col = vpos[2], vpos[3] - 1
+  local end_row, end_col = cpos[2], cpos[3] - 1
+
+  if start_row == 0 or end_row == 0 then return nil end
+
+  start_row, start_col, end_row, end_col = normalize_range(start_row, start_col, end_row, end_col)
+
+  local lines = vim.api.nvim_buf_get_lines(bufnr, start_row - 1, end_row, false)
+  if #lines == 0 then return nil end
+
+  if mode == "V" then
+    return table.concat(lines, "\n"), start_row, end_row
+  elseif mode == "\22" then
+    local result = {}
+    for _, line in ipairs(lines) do
+      local s = math.min(start_col + 1, #line + 1)
+      local e = math.min(end_col + 1, #line)
+      table.insert(result, string.sub(line, s, e))
+    end
+    return table.concat(result, "\n"), start_row, end_row
+  else
     if #lines == 1 then
       lines[1] = string.sub(lines[1], start_col + 1, end_col + 1)
     else
@@ -1522,15 +1566,21 @@ local function build_editor_state()
     cursor = { line = cursor[1], col = cursor[2] },
   }
 
-  -- Include visual selection if in visual mode
+  -- Include visual selection if in visual mode.
+  -- Uses LIVE positions (getpos) — the `<` / `>` marks are stale until visual
+  -- mode exits, which would cause us to ship a 1-char or prior selection
+  -- during active extend. pinvim.ts renders `selectionRange` as
+  -- "Selection: lines N-M" so we include it alongside the text.
   local mode = vim.fn.mode()
   if mode == "v" or mode == "V" or mode == "\22" then
-    local sel = get_visual_selection(false)
-    if sel then
+    local sel, srow, erow = get_live_visual_selection()
+    if sel and srow and erow then
       if #sel > config.live_context.max_selection_bytes then
         sel = sel:sub(1, config.live_context.max_selection_bytes)
       end
       state.selection = sel
+      state.selectionRange = { srow, erow }
+      state.visualmode = mode
     end
   end
 
@@ -1583,7 +1633,15 @@ local function setup_live_context()
   for _, event in ipairs(config.live_context.events) do
     vim.api.nvim_create_autocmd(event, {
       group = group,
-      callback = function() push_editor_state() end,
+      callback = function()
+        -- CursorMoved is high-traffic in normal mode; only push on it
+        -- while in visual mode (to capture selection extend).
+        if event == "CursorMoved" then
+          local m = vim.fn.mode()
+          if m ~= "v" and m ~= "V" and m ~= "\22" then return end
+        end
+        push_editor_state()
+      end,
     })
   end
 end
@@ -1912,9 +1970,9 @@ function mega.p.pi.health()
     info("Events: " .. table.concat(config.live_context.events, ", "))
     info(string.format("Debounce: %dms", config.live_context.debounce_ms))
     info("Include buffer text: " .. tostring(config.live_context.include_buffer_text))
-    -- Check for high-traffic events
+    -- CursorMoved is only pushed while in visual mode (gated in handler).
     for _, ev in ipairs(config.live_context.events) do
-      if ev == "CursorMoved" then warn("CursorMoved is high-traffic", { "Consider CursorHold for lower frequency" }) end
+      if ev == "CursorMoved" then info("CursorMoved gated to visual mode (captures selection extend)") end
     end
   else
     info("Live context sync disabled")
