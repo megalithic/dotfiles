@@ -1,6 +1,6 @@
 ---
 id: dot-vta8
-status: open
+status: closed
 deps: [dot-6jlp]
 links: []
 created: 2026-04-22T16:17:56Z
@@ -45,3 +45,10 @@ This ticket should be worked together with dot-<ID of port-agents> which updates
 6. Ticket-related phrasing preserved in skill (see Preserve section)
 7. Diff against our previous version committed in single jj change with conventional message
 
+
+
+---
+
+**🔒 CLOSED-AS-SUPERSEDED 2026-04-28**
+
+Absorbed by megadots ticket `meg-lp2m` (parent `meg-yblr` Stage 1 + blocks `meg-u3i3` Stage 2). Single tracker carries the obligation; substance preserved in `meg-lp2m` body. Source: `~/.local/share/pi/plans/megadots/cross-repo-status.md`.

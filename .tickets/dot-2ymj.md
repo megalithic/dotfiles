@@ -1,6 +1,6 @@
 ---
 id: dot-2ymj
-status: open
+status: closed
 deps: [dot-z8ku]
 links: []
 created: 2026-04-22T16:18:25Z
@@ -49,3 +49,10 @@ Check ~/.dotfiles/home/common/programs/ai/pi-coding-agent/default.nix for how sc
 5. 'work-tickets' in a repo with .jj and no ready tickets exits cleanly with 'No more ready tickets. Done.'
 6. Smoke test: create trivial ticket ('add blank line to README'), run 'work-tickets' in ~/.dotfiles, confirm: ticket transitions open→in_progress→closed, verification pass runs, final review runs, log file written to .tickets/logs/
 
+
+
+---
+
+**🔒 CLOSED-AS-SUPERSEDED 2026-04-28**
+
+Absorbed by megadots ticket `meg-lp2m` (parent `meg-yblr` Stage 1 + blocks `meg-u3i3` Stage 2). Single tracker carries the obligation; substance preserved in `meg-lp2m` body. Source: `~/.local/share/pi/plans/megadots/cross-repo-status.md`.

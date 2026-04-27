@@ -1,6 +1,6 @@
 ---
 id: dot-wlz8
-status: open
+status: closed
 deps: []
 links: []
 parent: dot-fsxj
@@ -80,3 +80,10 @@ After completing work, agent should detect what nix rebuild (if any) is needed b
 Preferred: option 3 (reusable script) + reference from both AGENTS.md and ticket-worker skill.
 
 Currently the agent just free-forms a summary at end of work — no automated mechanism detects what rebuild is needed. This should be deterministic, not vibes.
+
+
+---
+
+**🔒 CLOSED-AS-SUPERSEDED 2026-04-28**
+
+Absorbed by megadots ticket `meg-lp2m` (parent `meg-yblr` Stage 1 + blocks `meg-u3i3` Stage 2). Single tracker carries the obligation; substance preserved in `meg-lp2m` body. Source: `~/.local/share/pi/plans/megadots/cross-repo-status.md`.

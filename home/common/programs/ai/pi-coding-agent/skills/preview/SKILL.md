@@ -1,12 +1,12 @@
 ---
 name: preview
-description: Display code, diffs, images, and other content in a tmux pane or popup. Auto-detects nvim/megaterm for floating popups.
+description: Display code, diffs, images, and other content in a tmux pane or popup, OR render markdown as a single-page interactive HTML and open in the default chromium-family browser. Auto-detects nvim/megaterm for floating popups.
 tools: Bash
 ---
 
 # Preview Skill
 
-Display content in a tmux pane or popup next to the pi agent. Supports code files, JSON, markdown, diffs, images, logs, and more.
+Display content in a tmux pane or popup next to the pi agent (default), OR render a markdown plan/proposal as an interactive single-page HTML in the default browser's main window (`--html` mode). Supports code files, JSON, markdown, diffs, images, logs, and more.
 
 ## CRITICAL: Pane Safety Rules
 
@@ -49,6 +49,13 @@ Display content in a preview pane or popup.
 - `tmux-split` - Side pane (default outside nvim)
 - `tmux-float` - Large popup window (default inside nvim/megaterm)
 - `auto` - Auto-detect: popup if inside nvim, split otherwise
+- **HTML in browser** - via `--html` flag (see HTML mode below)
+
+**HTML mode flags (skip tmux entirely):**
+- `--html` - Render markdown as interactive HTML, open in browser. Persistent output at `~/.local/share/pi/preview/<ts>-<slug>.html`.
+- `--html-ephemeral` - Same, but output to `/tmp/preview-<slug>-<ts>.html` (gc'd in 1 day)
+- `--html-no-open` - Render only; print path, skip browser open
+- `--html-browser <bundle-id>` - Force a specific chromium-family browser by bundle id (e.g. `com.brave.Browser.nightly`)
 
 **Content Types:**
 - `json` - JSON content (inline or file path)
@@ -64,6 +71,11 @@ Display content in a preview pane or popup.
 **Examples:**
 
 ```
+# Render plan/proposal as interactive HTML in browser (chromium, max-tab window)
+/preview --html ~/.local/share/pi/plans/foo/proposal.md
+/preview --html-ephemeral /tmp/quick-notes.md
+/preview --html --html-no-open doc.md          # render only
+
 # Preview JSON
 /preview json '{"foo": "bar"}'
 /preview json /path/to/data.json
@@ -98,6 +110,61 @@ Display content in a preview pane or popup.
 ## Keyboard Shortcuts
 
 - `Ctrl+Shift+P` - Quick preview of current diff (equivalent to `/preview diff`)
+
+## HTML mode (`--html`)
+
+Render a markdown document as a single-page interactive HTML and open it in the user's default chromium-family browser, in the window with the most tabs (the user's "main" window).
+
+**When to use:** plans, proposals, research docs, decision documents, anything you want the user to scroll, collapse, tick checkboxes on, or answer Q&A in.
+
+**Underlying script:** `~/.dotfiles/bin/preview-html` (Python; pandoc + osascript)
+
+**Output paths:**
+- Default: `~/.local/share/pi/preview/<YYYYMMDD-HHMMSS>-<slug>.html` (gc'd >30d)
+- `--html-ephemeral`: `/tmp/preview-<slug>-<ts>.html` (gc'd >1d)
+- Override dir: `PI_PREVIEW_DIR` env var
+
+**Browser detection (chromium family only):**
+1. `PI_PREVIEW_BROWSER` env var (bundle id), if set
+2. macOS LaunchServices default `http` handler — used if it's chromium-family
+3. Priority chain (running first): Brave Nightly → Brave → Chrome → Arc → Edge → Vivaldi
+4. Any installed chromium app
+
+Safari, Firefox: NOT supported. Use a chromium browser, or override with `--html-browser <bundle-id>`.
+
+**Window targeting:** picks the running window with the **most tabs** (heuristic for the user's primary window). Adds new tab at the end, switches focus to it, brings the window to front.
+
+**Interactive features in the rendered HTML:**
+- Sticky TOC sidebar (auto-built from h2/h3) with active-section highlighting
+- Smooth-scroll on TOC click
+- h2 sections become collapsible (`<details>`); state persisted in localStorage
+- GFM task lists (`- [ ] item`) become interactive checkboxes; state persisted
+- Headings matching `Q1:`, `Q:`, `??`, `Decision:`, OR any h3/h4 nested under `## Open questions`, become **decision cards** with Yes/No/Maybe/Skip radios + free-text notes; state persisted
+- Floating "Export answers" button: builds markdown summary of all decisions + checkbox state, copies to clipboard, downloads `<slug>-answers.md`
+- Dark/light mode via `prefers-color-scheme`
+- Print-friendly (`@media print` collapses TOC and FAB)
+- "Reset answers" link in TOC sidebar clears localStorage
+
+**Garbage collection:** `~/.dotfiles/bin/preview-html-gc` runs automatically on every `preview-html` invocation (`--quiet`). Prunes:
+- `~/.local/share/pi/preview/*.{html,json,*-answers.md}` older than 30 days
+- `/tmp/preview-*.html` older than 1 day
+
+Override: `PI_PREVIEW_PERSIST_DAYS` and `PI_PREVIEW_TMP_DAYS` env vars, or `--persist-days` / `--tmp-days` flags.
+
+**Direct invocation (bypass tmux extension):**
+```bash
+preview-html doc.md                          # render + open
+preview-html --no-open doc.md                # render only
+preview-html --ephemeral notes.md            # /tmp output
+preview-html --browser com.google.Chrome doc.md
+preview-html-gc --dry-run                    # show what would be gc'd
+preview-html-gc --quiet                      # silent prune
+```
+
+**When user makes choices in the HTML and clicks "Export answers":**
+- Markdown summary copied to clipboard AND downloaded as `<slug>-answers.md`
+- Pi can then paste / read the file from `~/Downloads/`
+- Future enhancement: File System Access API write-back to `~/.local/share/pi/preview/<slug>-answers.md` (currently relies on clipboard + Downloads)
 
 ## How It Works
 
@@ -139,6 +206,14 @@ The preview extension wraps the existing `preview-ai` bash script which:
 - Check if `preview-ai` is in PATH: `which preview-ai`
 - Check if required tools are installed: `bat`, `glow`, `jq`, `delta`, `chafa`
 
+**HTML mode: "no chromium-family browser found"**
+- Install Brave/Chrome/Arc/Edge/Vivaldi, OR set `PI_PREVIEW_BROWSER` to a chromium bundle id
+- Verify with: `preview-html --browser com.brave.Browser.nightly --no-open doc.md`
+
+**HTML mode: tab opens in wrong window**
+- The script picks the window with the **most tabs**. If you want a different window, close other windows or temporarily move tabs around.
+- Future: support `--window-id <id>` flag for explicit targeting.
+
 **Preview pane not appearing:**
 - Check if you're in the correct tmux window
 - Try manually: `preview-ai diff` in a terminal
@@ -152,4 +227,6 @@ The preview extension wraps the existing `preview-ai` bash script which:
 
 - **tmux skill** - For advanced tmux pane control
 - **files extension** - Browse and manage files in the session
-- `~/.dotfiles/bin/preview-ai` - The underlying bash script
+- `~/.dotfiles/bin/preview-ai` - The underlying bash dispatcher
+- `~/.dotfiles/bin/preview-html` - HTML render + browser-open script (Python)
+- `~/.dotfiles/bin/preview-html-gc` - Garbage collection script

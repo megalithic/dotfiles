@@ -28,6 +28,10 @@ interface PreviewOptions {
 	mode?: PreviewMode;
 	autoClose?: number;
 	useDelta?: boolean;
+	html?: boolean;
+	htmlEphemeral?: boolean;
+	htmlNoOpen?: boolean;
+	htmlBrowser?: string;
 }
 
 /**
@@ -88,6 +92,33 @@ const parseArgs = (args: string[]): { options: PreviewOptions; content: string[]
 			continue;
 		}
 
+		if (arg === "--html") {
+			options.html = true;
+			i += 1;
+			continue;
+		}
+
+		if (arg === "--html-ephemeral") {
+			options.html = true;
+			options.htmlEphemeral = true;
+			i += 1;
+			continue;
+		}
+
+		if (arg === "--html-no-open") {
+			options.html = true;
+			options.htmlNoOpen = true;
+			i += 1;
+			continue;
+		}
+
+		if (arg === "--html-browser" && i + 1 < args.length) {
+			options.html = true;
+			options.htmlBrowser = args[i + 1];
+			i += 2;
+			continue;
+		}
+
 		if (arg === "-h" || arg === "--help") {
 			options.type = undefined; // Signal to show help
 			return { options, content: [] };
@@ -116,6 +147,16 @@ const parseArgs = (args: string[]): { options: PreviewOptions; content: string[]
  */
 const buildPreviewCommand = (options: PreviewOptions, content: string[]): string[] => {
 	const cmd: string[] = ["preview-ai"];
+
+	// HTML mode short-circuits: bypass tmux flags entirely
+	if (options.html) {
+		if (options.htmlEphemeral) cmd.push("--html-ephemeral");
+		else cmd.push("--html");
+		if (options.htmlNoOpen) cmd.push("--html-no-open");
+		if (options.htmlBrowser) cmd.push("--html-browser", options.htmlBrowser);
+		cmd.push(...content);
+		return cmd;
+	}
 
 	// Resolve mode: auto -> detect based on environment
 	const resolvedMode = options.mode === "auto" ? detectPreviewMode() : options.mode;
@@ -158,6 +199,10 @@ Display code, diffs, images, and other content in a tmux pane or popup.
   -m, --mode <mode>          Preview mode (see below)
   --auto-close-after <secs>  Auto-close pane after N seconds
   --delta                    Use delta for diff viewing (non-interactive)
+  --html                     Render markdown to interactive HTML, open in browser
+  --html-ephemeral           Same as --html, output to /tmp (gc'd in 1 day)
+  --html-no-open             Render only; print path, skip browser open
+  --html-browser <bundle-id> Force chromium browser bundle id
   -h, --help                 Show this help
 
 **Modes:**
@@ -187,6 +232,9 @@ Display code, diffs, images, and other content in a tmux pane or popup.
   /preview markdown "# Hello World"
   /preview image /path/to/screenshot.png
   /preview --auto-close-after 5 diff
+  /preview --html ~/.local/share/pi/plans/foo/proposal.md
+  /preview --html-ephemeral notes.md
+  /preview --html --html-no-open doc.md
 
 **Auto-detection:**
   Inside nvim (megaterm) → tmux-float (large popup)
@@ -205,14 +253,19 @@ Display code, diffs, images, and other content in a tmux pane or popup.
  * Execute preview-ai command
  */
 const runPreview = async (pi: ExtensionAPI, ctx: ExtensionContext, options: PreviewOptions, content: string[]): Promise<void> => {
-	// Validate tmux environment
-	if (!isInTmux()) {
-		ctx.ui.notify("Preview requires tmux. Run pi inside tmux to use this command.", "error");
+	// Validate tmux environment (HTML mode bypasses tmux entirely)
+	if (!options.html && !isInTmux()) {
+		ctx.ui.notify("Preview requires tmux. Run pi inside tmux to use this command (or use --html).", "error");
 		return;
 	}
 
 	// Validate content
-	if (content.length === 0 && options.type !== "diff" && options.type !== "log") {
+	if (options.html) {
+		if (content.length === 0) {
+			ctx.ui.notify("--html requires a markdown file path.", "error");
+			return;
+		}
+	} else if (content.length === 0 && options.type !== "diff" && options.type !== "log") {
 		ctx.ui.notify("No content provided. Use /preview --help for usage.", "error");
 		return;
 	}
@@ -236,7 +289,14 @@ const runPreview = async (pi: ExtensionAPI, ctx: ExtensionContext, options: Prev
 		return;
 	}
 
-	// Success - preview pane should now be showing
+	// Success notification
+	if (options.html) {
+		const path = (result.stdout || "").trim().split("\n").pop() || "";
+		const label = options.htmlNoOpen ? `Rendered (no-open): ${path}` : `Opened in browser: ${path}`;
+		ctx.ui.notify(label, "info");
+		return;
+	}
+
 	const typeLabel = options.type && options.type !== "auto" ? options.type : "content";
 	const resolvedMode = options.mode === "auto" ? detectPreviewMode() : options.mode;
 	const modeLabel = resolvedMode === "tmux-float" ? "popup" : "pane";

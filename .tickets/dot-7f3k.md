@@ -1,6 +1,6 @@
 ---
 id: dot-7f3k
-status: open
+status: closed
 deps: [dot-aqin, dot-9el2, dot-fqt2, dot-vta8, dot-6jlp, dot-2ymj, dot-4ck0, dot-z8ku, dot-8e5o, dot-1r2i, dot-08ij]
 links: []
 created: 2026-04-22T16:20:02Z
@@ -58,3 +58,10 @@ If any step fails, reopen the relevant child ticket with a note pointing to the 
 8. Rollback steps (jj abandon, etc.) clean repo state
 9. No lingering state files in ~/.pi/state/ after session ends
 
+
+
+---
+
+**🔒 CLOSED-AS-SUPERSEDED 2026-04-28**
+
+Absorbed by megadots ticket `meg-lp2m` (parent `meg-yblr` Stage 1 + blocks `meg-u3i3` Stage 2). Single tracker carries the obligation; substance preserved in `meg-lp2m` body. Source: `~/.local/share/pi/plans/megadots/cross-repo-status.md`.

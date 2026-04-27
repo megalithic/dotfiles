@@ -23,6 +23,7 @@ vim.g.disabled_plugins = { "winbar" }
 vim.g.indent_scope_char = "│"
 vim.g.indent_char = "┊"
 vim.g.virt_column_char = "│"
+vim.g.relnum_hybrid = true
 
 --- Check if plugin is enabled (not in disabled list)
 --- Auto-derives plugin name from calling file if not provided

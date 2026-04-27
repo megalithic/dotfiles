@@ -1,6 +1,6 @@
 ---
 id: dot-08ij
-status: open
+status: closed
 deps: [dot-1r2i]
 links: []
 created: 2026-04-22T16:19:44Z
@@ -85,3 +85,10 @@ Optional knobs (document in README-style comment at top of file):
 9. 'just validate home' + 'just home' pass
 10. Extension respects ticketVcs.enabled config knob (set false → no hooks fire)
 
+
+
+---
+
+**🔒 CLOSED-AS-SUPERSEDED 2026-04-28**
+
+Absorbed by megadots ticket `meg-lp2m` (parent `meg-yblr` Stage 1 + blocks `meg-u3i3` Stage 2). Single tracker carries the obligation; substance preserved in `meg-lp2m` body. Source: `~/.local/share/pi/plans/megadots/cross-repo-status.md`.

@@ -1,6 +1,6 @@
 ---
 id: dot-4ck0
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-04-22T16:18:51Z
@@ -50,3 +50,10 @@ Must comply with the new sentinel conventional-commit guard (dot-fqt2) — use '
 4. Dry-run test: spawn pi, ask it to 'create a ticket for testing ticket-creator commit step' in ~/.dotfiles (which has .jj) — observe agent runs 'jj dm "feat(tickets): ..."'
 5. Reference to AGENTS.md jj section preserved at top of commit section
 
+
+
+---
+
+**🔒 CLOSED-AS-SUPERSEDED 2026-04-28**
+
+Absorbed by megadots ticket `meg-lp2m` (parent `meg-yblr` Stage 1 + blocks `meg-u3i3` Stage 2). Single tracker carries the obligation; substance preserved in `meg-lp2m` body. Source: `~/.local/share/pi/plans/megadots/cross-repo-status.md`.

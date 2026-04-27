@@ -1,6 +1,6 @@
 ---
 id: dot-1r2i
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-04-22T16:19:18Z
@@ -41,3 +41,10 @@ Copy that pattern to the new extension's implementation. Don't block this ticket
 5. No orphaned /checkpoint or /goal commands left dangling — 'pi' doesn't show them in /help
 6. Captured jj-bookmark-detection snippet posted as note on the ticket-vcs ticket before closing this one
 
+
+
+---
+
+**🔒 CLOSED-AS-SUPERSEDED 2026-04-28**
+
+Absorbed by megadots ticket `meg-lp2m` (parent `meg-yblr` Stage 1 + blocks `meg-u3i3` Stage 2). Single tracker carries the obligation; substance preserved in `meg-lp2m` body. Source: `~/.local/share/pi/plans/megadots/cross-repo-status.md`.

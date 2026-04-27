@@ -1,6 +1,6 @@
 ---
 id: dot-z8ku
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-04-22T16:18:51Z
@@ -49,3 +49,10 @@ Commit examples must satisfy dot-fqt2 conventional-commit regex. Spot-check: 'fe
 4. 'just validate home' + 'just home' pass
 5. Dry-run: spawn ticket-worker against a trivial ticket in ~/.dotfiles, observe 'jj dm' used, not 'git commit'
 
+
+
+---
+
+**🔒 CLOSED-AS-SUPERSEDED 2026-04-28**
+
+Absorbed by megadots ticket `meg-lp2m` (parent `meg-yblr` Stage 1 + blocks `meg-u3i3` Stage 2). Single tracker carries the obligation; substance preserved in `meg-lp2m` body. Source: `~/.local/share/pi/plans/megadots/cross-repo-status.md`.

@@ -1,6 +1,6 @@
 ---
 id: dot-6jlp
-status: open
+status: closed
 deps: [dot-aqin]
 links: []
 created: 2026-04-22T16:18:25Z
@@ -41,3 +41,10 @@ Worked in tandem with dot-vta8 (task-pipeline sync). Merge as one logical unit.
 5. After dot-aqin + dot-vta8 closed: /task foo end-to-end writes plans/task.md
 6. jj diff shows ONLY agent file changes in this commit
 
+
+
+---
+
+**🔒 CLOSED-AS-SUPERSEDED 2026-04-28**
+
+Absorbed by megadots ticket `meg-lp2m` (parent `meg-yblr` Stage 1 + blocks `meg-u3i3` Stage 2). Single tracker carries the obligation; substance preserved in `meg-lp2m` body. Source: `~/.local/share/pi/plans/megadots/cross-repo-status.md`.

@@ -11,13 +11,19 @@
       config.allowUnfreePredicate = _: true;
     };
 
-    # # direnv 2.37.1 fish test gets OOM-killed in nix sandbox
-    # direnv = prev.direnv.overrideAttrs (old: {
-    #   doCheck = false;
-    # });
+    # direnv 2.37.1 tests hang/OOM in nix sandbox (fish OOM, zsh hangs)
+    direnv = prev.direnv.overrideAttrs (old: {
+      doCheck = false;
+    });
 
     # ollama: nixos-25.11 is frozen at 0.12.11, need 0.20+ for gemma4 models
     ollama = final.unstable.ollama;
+
+    # mise: 2026.4.20 not cached, use 2026.4.6 which has binary in cache.nixos.org
+    mise = (import (builtins.fetchTarball {
+      url = "https://github.com/NixOS/nixpkgs/archive/716d1202c91ee02d6b9f3a281491becf17a9bc46.tar.gz";
+      sha256 = "0c23g3flxl3ba5ldkz3ykcv7mvds37bashyn0id98am79p1vjzrb";
+    }) { inherit (prev.stdenv.hostPlatform) system; config.allowUnfree = true; config.allowUnfreePredicate = _: true; }).mise;
 
     llm-agents = inputs.llm-agents.packages.${prev.stdenv.hostPlatform.system};
     nvim-nightly = inputs.neovim-nightly-overlay.packages.${prev.stdenv.hostPlatform.system}.default;

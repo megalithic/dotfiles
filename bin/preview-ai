@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-CALLER_PANE="$TMUX_PANE"  # Pane to NEVER touch
+CALLER_PANE="${TMUX_PANE:-}"  # Pane to NEVER touch (may be unset in --html mode)
 PREVIEW_TITLE="ai-preview"
 SPLIT_PERCENT=45
 AUTO_CLOSE_AFTER=""  # Seconds to auto-close (empty = disabled)
@@ -13,6 +13,10 @@ USE_CODEDIFF=""  # Use delta by default (codediff.nvim removed)
 USE_FLOAT=""         # Use tmux display-popup instead of split
 FLOAT_WIDTH="80%"    # Popup width
 FLOAT_HEIGHT="80%"   # Popup height
+USE_HTML=""          # Render markdown to HTML and open in browser
+HTML_EPHEMERAL=""    # /tmp output instead of ~/.local/share/pi/preview
+HTML_NO_OPEN=""      # Just print path, don't open browser
+HTML_BROWSER=""      # Force browser bundle id
 
 # Get current session and window (for scoped pane search)
 get_current_session() {
@@ -252,6 +256,11 @@ Usage: preview-ai [options] [type] [content/args...]
 
 Options:
   --float                    Use tmux popup instead of split pane
+  --html                     Render markdown to single-page HTML, open in browser
+                             (chromium-family, max-tab window). Bypasses tmux.
+  --html-ephemeral           Same as --html but output to /tmp (gc'd in 1 day)
+  --html-no-open             Render only; print path, don't open browser
+  --html-browser <bundle-id> Force browser bundle id (chromium-family only)
   --auto-close-after <secs>  Auto-close pane after N seconds (can be cancelled)
   --delta                    Use delta for diff viewing (non-interactive, default is codediff)
   -h, --help                 Show this help
@@ -277,6 +286,9 @@ Examples:
   preview-ai file /path/to/file.lua
   preview-ai --auto-close-after 5 diff    # Auto-close after 5s
   preview-ai markdown "# Hello World"
+  preview-ai --html plan.md               # Render plan.md as interactive HTML in browser
+  preview-ai --html-ephemeral notes.md    # Same, but ephemeral (/tmp)
+  preview-ai --html --html-no-open doc.md # Render only, print path
 
 Safety:
   - NEVER renders in caller's pane (\$TMUX_PANE)
@@ -285,20 +297,52 @@ Safety:
 EOF
 }
 
-# Main
-main() {
-    # Check if we're in tmux
-    if [[ -z "${TMUX:-}" ]]; then
-        echo "ERROR: preview-ai must be run inside tmux" >&2
+# HTML mode: delegate to preview-html (renders + opens in browser)
+run_html_mode() {
+    local md="$1"
+    if [[ -z "$md" ]]; then
+        echo "ERROR: --html requires a markdown file" >&2
         exit 1
     fi
+    if ! command -v preview-html >/dev/null 2>&1; then
+        echo "ERROR: preview-html not found in PATH" >&2
+        exit 1
+    fi
+    local args=()
+    [[ -n "$HTML_EPHEMERAL" ]] && args+=(--ephemeral)
+    [[ -n "$HTML_NO_OPEN" ]]   && args+=(--no-open)
+    [[ -n "$HTML_BROWSER" ]]   && args+=(--browser "$HTML_BROWSER")
+    args+=("$md")
+    exec preview-html "${args[@]}"
+}
 
+# Main
+main() {
     # Parse flags first
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -h|--help)
                 usage
                 exit 0
+                ;;
+            --html)
+                USE_HTML="true"
+                shift
+                ;;
+            --html-ephemeral)
+                USE_HTML="true"
+                HTML_EPHEMERAL="true"
+                shift
+                ;;
+            --html-no-open)
+                USE_HTML="true"
+                HTML_NO_OPEN="true"
+                shift
+                ;;
+            --html-browser)
+                USE_HTML="true"
+                HTML_BROWSER="$2"
+                shift 2
                 ;;
             --float)
                 USE_FLOAT="true"
@@ -322,6 +366,18 @@ main() {
                 ;;
         esac
     done
+
+    # HTML mode: delegate before tmux check (browser-only path)
+    if [[ -n "$USE_HTML" ]]; then
+        run_html_mode "${1:-}"
+        return
+    fi
+
+    # Tmux check applies to all non-HTML modes
+    if [[ -z "${TMUX:-}" ]]; then
+        echo "ERROR: preview-ai must be run inside tmux (or use --html)" >&2
+        exit 1
+    fi
 
     # Handle no args after flag parsing
     if [[ $# -eq 0 ]]; then

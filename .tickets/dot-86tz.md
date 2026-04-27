@@ -12,6 +12,8 @@ tags: [ready-for-development]
 ---
 # Support project-level MCP config via .pi/mcp.json
 
+> **⏸️ DEFERRED — cross-repo coordination.** Per `dot-0oy1`/`meg-ppzd` decision: implement once in megadots **pi-coding-agent Stage 2 reconcile** (`meg-u3i3`) rather than here. This avoids double-implementation during the megadots migration. Status doc: `~/.local/share/pi/plans/megadots/cross-repo-status.md`.
+
 pi-mcp-adapter already supports project-level .pi/mcp.json (in cwd) that overrides global ~/.pi/agent/mcp.json. But we don't use this yet.
 
 Current state:
@@ -19,7 +21,7 @@ Current state:
 - tidewave is rx-specific, paper is canonize-specific
 - Neither works reliably because they're global but the servers are project-local
 
-Otahontas pattern (devenv-base ai module):
+Otahontas pattern (devenv-base ai module — now consumed via fork [`github:megalithic/devenv-base`](https://github.com/megalithic/devenv-base) in megadots):
 - Base mcp.json with global servers (context7)
 - devenv-base.ai.mcp.extraServers nix option for per-project additions
 - enter-shell.sh symlinks merged mcp.json to .pi/mcp.json in project root

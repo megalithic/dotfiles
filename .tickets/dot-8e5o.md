@@ -1,6 +1,6 @@
 ---
 id: dot-8e5o
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-04-22T16:19:18Z
@@ -41,3 +41,10 @@ Our bundled extensions/subagent/ (index.ts + agents.ts) is already installed and
 5. Bundled subagent tool still works: 'subagents_list' returns 'planner' and 'researcher' agents
 6. No references to /iterate command in any prompt/skill (or references removed)
 
+
+
+---
+
+**🔒 CLOSED-AS-SUPERSEDED 2026-04-28**
+
+Absorbed by megadots ticket `meg-lp2m` (parent `meg-yblr` Stage 1 + blocks `meg-u3i3` Stage 2). Single tracker carries the obligation; substance preserved in `meg-lp2m` body. Source: `~/.local/share/pi/plans/megadots/cross-repo-status.md`.

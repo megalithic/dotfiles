@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# preview-html-gc - Prune stale preview HTML artifacts.
+#
+# Cleanup policy:
+#   ~/.local/share/pi/preview/*.html     older than $PERSIST_DAYS days  (default 30)
+#   ~/.local/share/pi/preview/*.json     same window (sidecar state)
+#   ~/.local/share/pi/preview/*.md       same window (exported answers)
+#   /tmp/preview-*.html                  older than $TMP_DAYS days      (default 1)
+#
+# Usage:
+#   preview-html-gc                # default policy, prints what was removed
+#   preview-html-gc --quiet        # silent
+#   preview-html-gc --dry-run      # show plan only
+#   preview-html-gc --persist-days 60 --tmp-days 3
+#
+# Safe to run frequently. Idempotent. Never deletes anything outside the two
+# managed directories above.
+
+set -euo pipefail
+
+PERSIST_DIR="${HOME}/.local/share/pi/preview"
+TMP_GLOB_DIR="/tmp"
+PERSIST_DAYS="${PI_PREVIEW_PERSIST_DAYS:-30}"
+TMP_DAYS="${PI_PREVIEW_TMP_DAYS:-1}"
+QUIET=""
+DRY_RUN=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --quiet|-q)        QUIET=1; shift ;;
+    --dry-run|-n)      DRY_RUN=1; shift ;;
+    --persist-days)    PERSIST_DAYS="$2"; shift 2 ;;
+    --tmp-days)        TMP_DAYS="$2"; shift 2 ;;
+    -h|--help)
+      sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'
+      exit 0
+      ;;
+    *) echo "unknown arg: $1" >&2; exit 2 ;;
+  esac
+done
+
+log() {
+  [[ -z "$QUIET" ]] && echo "$@"
+}
+
+prune() {
+  local dir="$1" pattern="$2" days="$3"
+  [[ -d "$dir" ]] || return 0
+  # -mtime +N  →  modified more than N*24h ago (BSD/macOS find compatible)
+  local found
+  found=$(find "$dir" -maxdepth 1 -type f -name "$pattern" -mtime "+$days" 2>/dev/null || true)
+  [[ -z "$found" ]] && return 0
+  while IFS= read -r f; do
+    [[ -z "$f" ]] && continue
+    if [[ -n "$DRY_RUN" ]]; then
+      log "would remove: $f"
+    else
+      rm -f -- "$f"
+      log "removed: $f"
+    fi
+  done <<<"$found"
+}
+
+# Persistent dir — html, json (sidecar state), md (exported answers)
+prune "$PERSIST_DIR" "*.html" "$PERSIST_DAYS"
+prune "$PERSIST_DIR" "*.json" "$PERSIST_DAYS"
+prune "$PERSIST_DIR" "*-answers.md" "$PERSIST_DAYS"
+
+# Ephemeral dir — only the prefixed files we own
+prune "$TMP_GLOB_DIR" "preview-*.html" "$TMP_DAYS"
+
+exit 0

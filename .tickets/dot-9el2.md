@@ -1,6 +1,6 @@
 ---
 id: dot-9el2
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-04-22T16:17:28Z
@@ -30,3 +30,10 @@ Look specifically for:
 3. If any re-enabled: 'just validate home' passes, 'just home' succeeds
 4. 'pi' still starts and sentinel loads without errors
 
+
+
+---
+
+**🔒 CLOSED-AS-SUPERSEDED 2026-04-28**
+
+Absorbed by megadots ticket `meg-lp2m` (parent `meg-yblr` Stage 1 + blocks `meg-u3i3` Stage 2). Single tracker carries the obligation; substance preserved in `meg-lp2m` body. Source: `~/.local/share/pi/plans/megadots/cross-repo-status.md`.

@@ -1,6 +1,6 @@
 ---
 id: dot-fqt2
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-04-22T16:17:56Z
@@ -51,3 +51,10 @@ Hard block (CONFIRM level) per decision Q4 — user must type 'override' to bypa
 7. 'just validate home' + 'just home' pass
 8. Manual test in pi session: 'jj dm "WIP"' via bash tool triggers confirm; 'jj dm "feat: test"' passes
 
+
+
+---
+
+**🔒 CLOSED-AS-SUPERSEDED 2026-04-28**
+
+Absorbed by megadots ticket `meg-lp2m` (parent `meg-yblr` Stage 1 + blocks `meg-u3i3` Stage 2). Single tracker carries the obligation; substance preserved in `meg-lp2m` body. Source: `~/.local/share/pi/plans/megadots/cross-repo-status.md`.

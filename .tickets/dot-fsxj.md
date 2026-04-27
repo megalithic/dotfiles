@@ -1,6 +1,6 @@
 ---
 id: dot-fsxj
-status: open
+status: closed
 deps: []
 links: []
 parent: dot-0fjk
@@ -11,6 +11,16 @@ assignee: Seth Messer
 tags: [epic, tickets, pi-coding-agent, jj, subagents]
 ---
 # Align tk/tickets workflow with otahontas/nix parity + jj-first integration
+
+> **⚠️ SUPERSEDED by megadots reconcile sub-epics.** Per cross-repo coordination ticket `dot-0oy1` (mirror of megadots `meg-ppzd`), this work has moved to the megadots rebuild and will not happen here.
+>
+> **Megadots replacements:**
+> - Stage 1 sub-epic: `meg-3beo` (Program reconciliation — audit)
+> - Stage 2 sub-epic: `meg-37gp` (Program reconciliation — implementation)
+> - pi-coding-agent reconcile: `meg-yblr` (Stage 1) + `meg-u3i3` (Stage 2)
+> - Convention codification: `meg-478h`
+>
+> **Action:** close this ticket once you confirm. Status doc: `~/.local/share/pi/plans/megadots/cross-repo-status.md`.
 
 Investigate and align the full tk/tickets ecosystem from otahontas/nix. Multiple subsystems have drifted or are missing. Audit, plan, then land as subtasks under this epic.
 
@@ -242,3 +252,10 @@ Not using git worktrees / jj workspace add at this time.
 10. ticket-remove-checkpoint: remove extensions/checkpoint.ts (broken, replaced by ticket-vcs.ts)
 11. ticket-new-ticket-vcs: new extensions/ticket-vcs.ts — tk↔jj bookmark hooks + session state persistence (tk start → jj feat, tk close → jj desc suggestion, stop-hook → .pi/state/current-ticket.json)
 12. ticket-smoke-test: just validate + just home + end-to-end work-tickets.sh dry run. Depends on 1-11.
+
+
+---
+
+**🔒 CLOSED-AS-SUPERSEDED 2026-04-28**
+
+Absorbed by megadots ticket `meg-lp2m` (parent `meg-yblr` Stage 1 + blocks `meg-u3i3` Stage 2). Single tracker carries the obligation; substance preserved in `meg-lp2m` body. Source: `~/.local/share/pi/plans/megadots/cross-repo-status.md`.

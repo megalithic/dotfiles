@@ -1,0 +1,736 @@
+#!/usr/bin/env python3
+"""
+preview-html - Render a markdown document as a single-page interactive HTML
+               and open it in the default chromium-family browser, in the
+               window with the most tabs.
+
+Features in the rendered HTML:
+  - Sticky TOC sidebar (auto-built from h2/h3)
+  - Smooth-scroll on TOC click + active-section highlighting via IntersectionObserver
+  - Collapsible h2 sections (default open, state persisted)
+  - Interactive task checkboxes (`- [ ] X`) with localStorage persistence
+  - "Decision" cards auto-rendered from headings like `### Q1:`, `### Q: ...`,
+    `### ?? ...`, `### Decision:`, OR any h3/h4 nested under a `## Open questions`
+  - Floating "Export answers" button: copies markdown summary to clipboard +
+    downloads to ~/Downloads/<slug>-answers.md
+  - Dark/light mode via prefers-color-scheme
+  - Print-friendly
+
+Usage:
+  preview-html [options] <markdown-file>
+
+Options:
+  --ephemeral, -e        /tmp/preview-<slug>-<ts>.html (gc'd in 1d)
+  --persist              ~/.local/share/pi/preview/<ts>-<slug>.html (default)
+  --no-open              Don't open browser; just print path
+  --no-gc                Skip preview-html-gc invocation
+  --browser <bundle-id>  Force browser bundle id (chromium-family only)
+  --title <text>         Override <title> (default: from <h1> or filename)
+  -h, --help             Show this help
+
+Env:
+  PI_PREVIEW_DIR        override ~/.local/share/pi/preview
+  PI_PREVIEW_BROWSER    override default-browser detection (bundle id)
+
+Requirements:
+  pandoc, macOS (LaunchServices + osascript). Chromium-family browsers only.
+"""
+
+import argparse
+import datetime as dt
+import json
+import os
+import plistlib
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+HOME = Path.home()
+PERSIST_DIR = Path(os.environ.get("PI_PREVIEW_DIR", HOME / ".local/share/pi/preview"))
+
+# Chromium-family bundle IDs (Safari + Firefox excluded — different AppleScript dialect)
+CHROMIUM_BUNDLE_IDS = {
+    "com.brave.Browser.nightly": "Brave Browser Nightly",
+    "com.brave.Browser.beta": "Brave Browser Beta",
+    "com.brave.Browser.dev": "Brave Browser Dev",
+    "com.brave.Browser": "Brave Browser",
+    "com.google.Chrome": "Google Chrome",
+    "com.google.Chrome.canary": "Google Chrome Canary",
+    "com.google.Chrome.beta": "Google Chrome Beta",
+    "com.microsoft.edgemac": "Microsoft Edge",
+    "com.microsoft.edgemac.canary": "Microsoft Edge Canary",
+    "com.microsoft.edgemac.beta": "Microsoft Edge Beta",
+    "company.thebrowser.Browser": "Arc",
+    "com.vivaldi.Vivaldi": "Vivaldi",
+    "com.operasoftware.Opera": "Opera",
+    "io.helium.helium": "Helium",
+}
+
+FALLBACK_BROWSER_PRIORITY = [
+    "com.brave.Browser.nightly",
+    "com.brave.Browser",
+    "com.google.Chrome",
+    "company.thebrowser.Browser",
+    "com.microsoft.edgemac",
+    "com.vivaldi.Vivaldi",
+]
+
+
+def slugify(text: str) -> str:
+    s = (text or "").strip().lower()
+    s = re.sub(r"[^a-z0-9._-]+", "-", s)
+    s = re.sub(r"-+", "-", s).strip("-_.")
+    return s or "preview"
+
+
+def render_markdown(input_path: Path) -> str:
+    """Run pandoc to produce an HTML body fragment."""
+    if shutil.which("pandoc") is None:
+        sys.exit("preview-html: pandoc required")
+    cmd = [
+        "pandoc",
+        str(input_path),
+        "--from",
+        "gfm+task_lists+attributes+fenced_divs",
+        "--to",
+        "html5",
+        "--no-highlight",
+        "--wrap=preserve",
+    ]
+    try:
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as e:
+        sys.exit(f"preview-html: pandoc failed: {e.stderr or e.stdout}")
+    return result.stdout
+
+
+def first_h1(input_path: Path) -> str | None:
+    try:
+        with input_path.open("r", encoding="utf-8") as f:
+            for line in f:
+                m = re.match(r"^#\s+(.+?)\s*$", line)
+                if m:
+                    return m.group(1).strip()
+    except Exception:
+        return None
+    return None
+
+
+def detect_default_browser_bundle_id() -> str | None:
+    """Read macOS LaunchServices to find the default http handler."""
+    if env := os.environ.get("PI_PREVIEW_BROWSER"):
+        return env
+    plist = HOME / "Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist"
+    if not plist.exists():
+        return None
+    try:
+        with plist.open("rb") as f:
+            data = plistlib.load(f)
+    except Exception:
+        return None
+    for entry in data.get("LSHandlers", []):
+        if entry.get("LSHandlerURLScheme") == "http":
+            bid = entry.get("LSHandlerRoleAll") or entry.get("LSHandlerRoleViewer")
+            if bid:
+                return bid
+    return None
+
+
+def app_name_for_bundle_id(bundle_id: str) -> str | None:
+    """Look up the .app display name for a bundle ID."""
+    if bundle_id in CHROMIUM_BUNDLE_IDS:
+        return CHROMIUM_BUNDLE_IDS[bundle_id]
+    # Fallback: use mdfind
+    try:
+        out = subprocess.check_output(
+            ["mdfind", f"kMDItemCFBundleIdentifier == '{bundle_id}'"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip().splitlines()
+        for path in out:
+            if path.endswith(".app"):
+                return Path(path).stem
+    except Exception:
+        pass
+    return None
+
+
+def is_app_running(app_name: str) -> bool:
+    script = f'tell application "System Events" to (name of processes) contains "{app_name}"'
+    try:
+        r = subprocess.run(
+            ["osascript", "-e", script], capture_output=True, text=True, timeout=5
+        )
+        return r.stdout.strip().lower() == "true"
+    except Exception:
+        return False
+
+
+def pick_chromium_app() -> str:
+    """Pick the chromium app to target. Prefers default → fallback chain → first running."""
+    bid = detect_default_browser_bundle_id()
+    if bid:
+        name = app_name_for_bundle_id(bid)
+        if name and bid in CHROMIUM_BUNDLE_IDS:
+            return name
+    # Try fallback chain (running apps first)
+    for fb_bid in FALLBACK_BROWSER_PRIORITY:
+        name = CHROMIUM_BUNDLE_IDS.get(fb_bid)
+        if name and is_app_running(name):
+            return name
+    # Last resort: any chromium app installed
+    for fb_bid, name in CHROMIUM_BUNDLE_IDS.items():
+        try:
+            r = subprocess.run(
+                ["mdfind", f"kMDItemCFBundleIdentifier == '{fb_bid}'"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if r.stdout.strip():
+                return name
+        except Exception:
+            continue
+    sys.exit("preview-html: no chromium-family browser found")
+
+
+def open_url_in_max_tab_window(app_name: str, url: str) -> None:
+    """Open URL in the running window with the most tabs of `app_name`."""
+    script = f'''
+on run argv
+  set theURL to item 1 of argv
+  tell application "{app_name}"
+    if (count of windows) is 0 then
+      activate
+      delay 0.4
+      make new window
+      set targetWin to front window
+    else
+      set maxCount to 0
+      set targetWin to first window
+      repeat with w in windows
+        set tc to (count of tabs of w)
+        if tc > maxCount then
+          set maxCount to tc
+          set targetWin to w
+        end if
+      end repeat
+    end if
+    tell targetWin
+      set newTab to make new tab at end of tabs with properties {{URL:theURL}}
+      set active tab index to (count of tabs)
+    end tell
+    set index of targetWin to 1
+    activate
+    return "ok: window id " & (id of targetWin) & " tabs " & (count of tabs of targetWin)
+  end tell
+end run
+'''
+    r = subprocess.run(
+        ["osascript", "-", url], input=script, capture_output=True, text=True
+    )
+    if r.returncode != 0:
+        sys.exit(f"preview-html: AppleScript failed: {r.stderr.strip()}")
+    print(r.stdout.strip(), file=sys.stderr)
+
+
+# ---- HTML template ----
+# Tokens: {title}, {body}, {slug}, {ts_human}
+TEMPLATE = r"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title}</title>
+<style>
+:root {{
+  --bg:#1a1b26; --fg:#c0caf5; --muted:#a9b1d6; --accent:#7aa2f7;
+  --accent2:#bb9af7; --code-bg:#24283b; --border:#414868;
+  --green:#9ece6a; --red:#f7768e; --yellow:#e0af68;
+  --shadow: 0 6px 24px rgba(0,0,0,.35);
+}}
+@media (prefers-color-scheme: light) {{
+  :root {{
+    --bg:#fafafa; --fg:#2e3338; --muted:#5c6370; --accent:#2563eb;
+    --accent2:#7c3aed; --code-bg:#f1f3f5; --border:#d0d7de;
+    --green:#16a34a; --red:#dc2626; --yellow:#ca8a04;
+    --shadow: 0 6px 24px rgba(0,0,0,.08);
+  }}
+}}
+* {{ box-sizing:border-box; }}
+html {{ scroll-behavior:smooth; }}
+body {{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:15px/1.65 -apple-system,"SF Pro Text","Inter",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}}
+.layout {{
+  display:grid; grid-template-columns: 280px minmax(0,1fr);
+  max-width:1400px; margin:0 auto; min-height:100vh;
+}}
+@media (max-width: 880px) {{
+  .layout {{ grid-template-columns: 1fr; }}
+  .toc {{ position:static !important; max-height:none !important; border-right:none !important; border-bottom:1px solid var(--border); }}
+}}
+.toc {{
+  position:sticky; top:0; align-self:start;
+  height:100vh; max-height:100vh;
+  overflow-y:auto; overflow-x:hidden;
+  padding:24px 18px 24px 24px;
+  border-right:1px solid var(--border); font-size:13.5px;
+}}
+.toc h2 {{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:0 0 10px; }}
+.toc ul {{ list-style:none; padding:0; margin:0; }}
+.toc li {{ margin:2px 0; }}
+.toc a {{
+  display:block; padding:4px 8px; border-radius:4px;
+  color:var(--muted); text-decoration:none;
+  border-left:2px solid transparent;
+  transition:background 120ms,color 120ms,border-color 120ms;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}}
+.toc a:hover {{ color:var(--fg); background:var(--code-bg); }}
+.toc a.active {{ color:var(--accent); border-left-color:var(--accent); background:var(--code-bg); }}
+.toc a.lvl-3 {{ padding-left:20px; font-size:12.5px; }}
+.toc a.lvl-4 {{ padding-left:32px; font-size:12px; }}
+.toc-meta {{ margin-top:18px; padding-top:12px; border-top:1px solid var(--border); color:var(--muted); font-size:11.5px; line-height:1.5; }}
+.content {{ padding:48px 56px 96px; max-width:920px; min-width:0; }}
+@media (max-width: 880px) {{ .content {{ padding:32px 22px 80px; }} }}
+h1,h2,h3,h4,h5,h6 {{ font-weight:700; letter-spacing:-.01em; line-height:1.25; margin:1.8em 0 .5em; scroll-margin-top:24px; }}
+h1 {{ font-size:2.2em; border-bottom:2px solid var(--accent); padding-bottom:.3em; margin-top:0; }}
+h2 {{ font-size:1.6em; color:var(--accent); border-bottom:1px solid var(--border); padding-bottom:.25em; }}
+h3 {{ font-size:1.25em; color:var(--accent2); }}
+h4 {{ font-size:1.05em; color:var(--muted); }}
+a {{ color:var(--accent); text-decoration:none; }} a:hover {{ text-decoration:underline; }}
+hr {{ border:none; border-top:1px solid var(--border); margin:2.5em 0; }}
+code {{ font:.88em/1 "SF Mono","JetBrains Mono",Menlo,Consolas,monospace; background:var(--code-bg); padding:2px 6px; border-radius:4px; border:1px solid var(--border); }}
+pre {{ background:var(--code-bg); border:1px solid var(--border); border-radius:8px; padding:16px 18px; overflow-x:auto; line-height:1.5; }}
+pre code {{ background:none; border:none; padding:0; font-size:.85em; }}
+blockquote {{ border-left:3px solid var(--accent2); margin:1em 0; padding:.4em 1em; color:var(--muted); background:var(--code-bg); border-radius:0 6px 6px 0; }}
+table {{ border-collapse:collapse; width:100%; margin:1em 0; font-size:.92em; background:var(--code-bg); border-radius:6px; overflow:hidden; }}
+th,td {{ text-align:left; padding:10px 14px; border-bottom:1px solid var(--border); vertical-align:top; }}
+th {{ background:rgba(122,162,247,.12); color:var(--accent); font-weight:600; border-bottom:2px solid var(--accent); }}
+tr:last-child td {{ border-bottom:none; }} tr:hover td {{ background:rgba(122,162,247,.05); }}
+ul,ol {{ padding-left:1.6em; }} li {{ margin:.25em 0; }}
+strong {{ color:var(--accent2); font-weight:700; }} em {{ color:var(--muted); }}
+li.task-item {{ list-style:none; margin-left:-1.6em; padding-left:.4em; }}
+li.task-item input[type=checkbox] {{ margin-right:.6em; transform:translateY(1px); accent-color:var(--accent); cursor:pointer; }}
+li.task-item.done > * {{ text-decoration:line-through; color:var(--muted); }}
+details.section {{ margin:1.6em 0; }}
+details.section > summary {{ cursor:pointer; list-style:none; }}
+details.section > summary::-webkit-details-marker {{ display:none; }}
+details.section > summary::before {{ content:"\25BE"; display:inline-block; width:1em; margin-right:6px; color:var(--muted); transition:transform 120ms; }}
+details.section:not([open]) > summary::before {{ transform:rotate(-90deg); }}
+details.section > summary > h2 {{ display:inline-block; margin:1.8em 0 .5em; }}
+.decision {{ background:var(--code-bg); border:1px solid var(--border); border-left:4px solid var(--accent2); border-radius:6px; padding:14px 18px; margin:14px 0; }}
+.decision-q {{ font-weight:600; color:var(--fg); margin-bottom:8px; }}
+.decision-options {{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }}
+.decision-options label {{ display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border:1px solid var(--border); border-radius:999px; cursor:pointer; font-size:13px; background:var(--bg); }}
+.decision-options label:hover {{ border-color:var(--accent); }}
+.decision-options input[type=radio] {{ accent-color:var(--accent); margin:0; }}
+.decision-options input[type=radio]:checked + span {{ color:var(--accent); font-weight:600; }}
+.decision textarea {{ width:100%; min-height:54px; resize:vertical; background:var(--bg); color:var(--fg); border:1px solid var(--border); border-radius:4px; padding:8px 10px; font:13px/1.5 -apple-system,"SF Pro Text",sans-serif; }}
+.decision textarea:focus {{ outline:2px solid var(--accent); outline-offset:-1px; border-color:transparent; }}
+.fab {{ position:fixed; right:24px; bottom:24px; display:flex; gap:8px; flex-direction:column; align-items:flex-end; z-index:100; }}
+.fab button {{ background:var(--accent); color:var(--bg); border:none; padding:10px 16px; border-radius:999px; font-weight:600; font:14px -apple-system,sans-serif; cursor:pointer; box-shadow:var(--shadow); }}
+.fab button.secondary {{ background:var(--code-bg); color:var(--fg); border:1px solid var(--border); }}
+.fab button:hover {{ transform:translateY(-1px); }}
+.fab .toast {{ background:var(--code-bg); color:var(--fg); border:1px solid var(--border); padding:8px 14px; border-radius:6px; font-size:13px; box-shadow:var(--shadow); opacity:0; transition:opacity 200ms,transform 200ms; transform:translateY(8px); pointer-events:none; }}
+.fab .toast.show {{ opacity:1; transform:translateY(0); }}
+.meta-pill {{ display:inline-block; padding:2px 8px; border-radius:999px; background:var(--code-bg); border:1px solid var(--border); color:var(--muted); font-size:11.5px; }}
+@media print {{
+  .toc, .fab {{ display:none !important; }}
+  .layout {{ display:block; }}
+  .content {{ padding:0; max-width:none; }}
+  details.section {{ page-break-inside:avoid; }}
+  details.section > summary::before {{ display:none; }}
+}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav class="toc" id="toc" aria-label="Table of contents">
+    <h2>Contents</h2>
+    <ul id="toc-list"></ul>
+    <div class="toc-meta">
+      <div><span class="meta-pill">{slug}</span></div>
+      <div style="margin-top:6px;">Generated <span id="ts">{ts_human}</span></div>
+      <div style="margin-top:6px;"><a href="#" id="reset-state">Reset answers</a></div>
+    </div>
+  </nav>
+  <main class="content" id="content">
+{body}
+  </main>
+</div>
+<div class="fab">
+  <div class="toast" id="toast"></div>
+  <button id="export-btn" title="Export answers as markdown (also copies to clipboard)">Export answers</button>
+  <button id="collapse-btn" class="secondary" title="Collapse / expand all sections">Collapse all</button>
+</div>
+<script>
+(function(){{
+  "use strict";
+  var STORAGE_KEY = "preview-html:{slug}";
+  var DOC_TITLE = {title_json};
+  var DOC_SLUG  = {slug_json};
+
+  var state = loadState();
+  var content = document.getElementById("content");
+
+  enhanceHeadingIds(content);
+  buildTOC(content);
+  wrapSectionsCollapsible(content);
+  enhanceTaskCheckboxes(content);
+  enhanceDecisionCards(content);
+  setupActiveTOC(content);
+  setupFAB();
+  setupResetLink();
+
+  function loadState(){{
+    try {{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{{}}") || {{}}; }}
+    catch(e) {{ return {{}}; }}
+  }}
+  function saveState(){{
+    try {{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }} catch(e){{}}
+  }}
+  function slugify(s){{
+    return (s||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,80) || "section";
+  }}
+  function enhanceHeadingIds(root){{
+    var seen = {{}};
+    root.querySelectorAll("h1, h2, h3, h4").forEach(function(h){{
+      var base = h.id || slugify(h.textContent);
+      var id = base, n = 1;
+      while (seen[id]) {{ id = base + "-" + (++n); }}
+      seen[id] = true; h.id = id;
+    }});
+  }}
+  function buildTOC(root){{
+    var list = document.getElementById("toc-list");
+    list.innerHTML = "";
+    root.querySelectorAll("h2, h3").forEach(function(h){{
+      var li = document.createElement("li");
+      var a = document.createElement("a");
+      a.href = "#" + h.id;
+      a.textContent = h.textContent;
+      a.className = "lvl-" + h.tagName.substring(1);
+      a.dataset.target = h.id;
+      li.appendChild(a); list.appendChild(li);
+    }});
+  }}
+  function wrapSectionsCollapsible(root){{
+    var openMap = state.sections || {{}};
+    var nodes = Array.from(root.children);
+    var i = 0;
+    while (i < nodes.length) {{
+      var n = nodes[i];
+      if (n.tagName === "H2") {{
+        var details = document.createElement("details");
+        details.className = "section";
+        details.id = "sec-" + n.id;
+        var summary = document.createElement("summary");
+        summary.appendChild(n.cloneNode(true));
+        details.appendChild(summary);
+        var j = i + 1, group = [];
+        while (j < nodes.length && nodes[j].tagName !== "H2") {{
+          group.push(nodes[j]); j++;
+        }}
+        group.forEach(function(g){{ details.appendChild(g); }});
+        n.replaceWith(details);
+        var key = details.id;
+        details.open = openMap.hasOwnProperty(key) ? !!openMap[key] : true;
+        details.addEventListener("toggle", function(){{
+          state.sections = state.sections || {{}};
+          state.sections[this.id] = this.open;
+          saveState();
+        }});
+        i = j;
+      }} else {{ i++; }}
+    }}
+  }}
+  function enhanceTaskCheckboxes(root){{
+    var saved = state.tasks || {{}};
+    var n = 0;
+    root.querySelectorAll("li > input[type=checkbox]").forEach(function(cb){{
+      cb.disabled = false;
+      var li = cb.parentElement;
+      li.classList.add("task-item");
+      var id = "t-" + (++n) + "-" + slugify(li.textContent.slice(0,40));
+      cb.dataset.id = id;
+      if (saved.hasOwnProperty(id)) cb.checked = !!saved[id];
+      if (cb.checked) li.classList.add("done");
+      cb.addEventListener("change", function(){{
+        state.tasks = state.tasks || {{}};
+        state.tasks[this.dataset.id] = this.checked;
+        li.classList.toggle("done", this.checked);
+        saveState();
+      }});
+    }});
+  }}
+  function isDecisionHeading(h){{
+    var t = (h.textContent || "").trim();
+    if (/^Q\d*\s*[:.\-]/i.test(t)) return true;
+    if (/^\?\?/i.test(t)) return true;
+    if (/^Decision\s*[:\-]/i.test(t)) return true;
+    return false;
+  }}
+  function findContainingSectionTitle(el){{
+    var d = el.closest("details.section");
+    if (d) {{
+      var s = d.querySelector("summary h2");
+      if (s) return (s.textContent || "").trim();
+    }}
+    var n = el;
+    while (n && n.previousElementSibling) {{
+      n = n.previousElementSibling;
+      if (n.tagName === "H2") return (n.textContent || "").trim();
+    }}
+    return "";
+  }}
+  function isOpenQuestionsSection(title){{
+    return /open\s*questions?/i.test(title || "");
+  }}
+  function questionTextFromLi(li){{
+    // Use a clone so we can strip nested children we don't want in the prompt.
+    var clone = li.cloneNode(true);
+    // Drop nested lists — they're sub-bullets, not the question itself.
+    clone.querySelectorAll("ul, ol").forEach(function(n){{ n.remove(); }});
+    var t = (clone.textContent || "").replace(/\s+/g, " ").trim();
+    return t;
+  }}
+  function buildDecisionCard(id, qText){{
+    var saved = (state.decisions || {{}})[id] || {{}};
+    var card = document.createElement("div");
+    card.className = "decision"; card.dataset.id = id;
+    var q = document.createElement("div");
+    q.className = "decision-q"; q.textContent = qText;
+    card.appendChild(q);
+    var opts = ["Yes","No","Maybe","Skip"];
+    var optsWrap = document.createElement("div");
+    optsWrap.className = "decision-options";
+    opts.forEach(function(opt){{
+      var label = document.createElement("label");
+      var input = document.createElement("input");
+      input.type = "radio"; input.name = id; input.value = opt;
+      if (saved.choice === opt) input.checked = true;
+      var span = document.createElement("span"); span.textContent = opt;
+      label.appendChild(input); label.appendChild(span);
+      input.addEventListener("change", function(){{
+        state.decisions = state.decisions || {{}};
+        state.decisions[id] = state.decisions[id] || {{}};
+        state.decisions[id].choice = this.value;
+        state.decisions[id].q = qText;
+        saveState();
+      }});
+      optsWrap.appendChild(label);
+    }});
+    card.appendChild(optsWrap);
+    var ta = document.createElement("textarea");
+    ta.placeholder = "Notes / additional context (optional)";
+    if (saved.note) ta.value = saved.note;
+    ta.addEventListener("input", function(){{
+      state.decisions = state.decisions || {{}};
+      state.decisions[id] = state.decisions[id] || {{}};
+      state.decisions[id].note = this.value;
+      state.decisions[id].q = qText;
+      saveState();
+    }});
+    card.appendChild(ta);
+    return card;
+  }}
+  function enhanceDecisionCards(root){{
+    var dn = 0;
+    // Pass 1: heading-based decisions (Q:, ??, Decision:, OR any h3/h4 in an Open Questions section)
+    root.querySelectorAll("h3, h4").forEach(function(h){{
+      var sec = findContainingSectionTitle(h);
+      var openQ = isOpenQuestionsSection(sec);
+      if (!isDecisionHeading(h) && !openQ) return;
+      var id = h.id || ("dq-h-" + (++dn));
+      var card = buildDecisionCard(id, h.textContent);
+      h.parentNode.insertBefore(card, h.nextSibling);
+    }});
+    // Pass 2: list-item decisions inside Open Questions sections (top-level <ol> or <ul> > <li>)
+    root.querySelectorAll("ol, ul").forEach(function(list){{
+      // Only consider lists whose containing section is Open Questions.
+      var sec = findContainingSectionTitle(list);
+      if (!isOpenQuestionsSection(sec)) return;
+      // Skip nested lists — only top-level lists in the section.
+      if (list.parentElement && list.parentElement.closest("li")) return;
+      // Skip task lists — those are checkboxes, not questions.
+      if (list.querySelector("li > input[type=checkbox]")) return;
+      Array.from(list.children).forEach(function(li, idx){{
+        if (li.tagName !== "LI") return;
+        var qText = questionTextFromLi(li);
+        if (!qText) return;
+        var id = "dq-li-" + (++dn);
+        var card = buildDecisionCard(id, qText);
+        // Append card inside the <li> so list ordering remains.
+        li.appendChild(card);
+      }});
+    }});
+  }}
+  function setupActiveTOC(root){{
+    var headings = Array.from(root.querySelectorAll("h2, h3"));
+    if (headings.length === 0) return;
+    var links = {{}};
+    document.querySelectorAll("#toc-list a").forEach(function(a){{ links[a.dataset.target] = a; }});
+    var io = new IntersectionObserver(function(entries){{
+      entries.forEach(function(e){{
+        if (!e.isIntersecting) return;
+        var id = e.target.id;
+        Object.values(links).forEach(function(a){{ a.classList.remove("active"); }});
+        if (links[id]) links[id].classList.add("active");
+      }});
+    }}, {{ rootMargin: "-15% 0px -75% 0px", threshold: 0 }});
+    headings.forEach(function(h){{ io.observe(h); }});
+  }}
+  function toast(msg){{
+    var t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(function(){{ t.classList.remove("show"); }}, 1800);
+  }}
+  function buildAnswersMarkdown(){{
+    var lines = [];
+    lines.push("# Answers: " + DOC_TITLE);
+    lines.push(""); lines.push("- Source slug: `" + DOC_SLUG + "`");
+    lines.push("- Exported: " + new Date().toISOString());
+    lines.push("");
+    var decisions = state.decisions || {{}};
+    var keys = Object.keys(decisions);
+    if (keys.length) {{
+      lines.push("## Decisions"); lines.push("");
+      keys.forEach(function(k){{
+        var d = decisions[k] || {{}};
+        lines.push("### " + (d.q || k));
+        lines.push("");
+        lines.push("- Choice: **" + (d.choice || "(unset)") + "**");
+        if (d.note) {{
+          lines.push("- Notes:"); lines.push("");
+          d.note.split(/\r?\n/).forEach(function(ln){{ lines.push("    " + ln); }});
+        }}
+        lines.push("");
+      }});
+    }}
+    var tasks = state.tasks || {{}};
+    var taskKeys = Object.keys(tasks);
+    if (taskKeys.length) {{
+      lines.push("## Task checkbox state"); lines.push("");
+      taskKeys.forEach(function(k){{
+        lines.push("- [" + (tasks[k] ? "x" : " ") + "] " + k);
+      }});
+      lines.push("");
+    }}
+    return lines.join("\n");
+  }}
+  function downloadText(filename, text){{
+    var blob = new Blob([text], {{ type: "text/markdown;charset=utf-8" }});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){{ URL.revokeObjectURL(url); }}, 1000);
+  }}
+  function setupFAB(){{
+    document.getElementById("export-btn").addEventListener("click", function(){{
+      var md = buildAnswersMarkdown();
+      var fname = DOC_SLUG + "-answers.md";
+      if (navigator.clipboard && navigator.clipboard.writeText) {{
+        navigator.clipboard.writeText(md).then(
+          function(){{ toast("Answers copied + downloading " + fname); }},
+          function(){{ toast("Downloading " + fname); }}
+        );
+      }} else {{
+        toast("Downloading " + fname);
+      }}
+      downloadText(fname, md);
+    }});
+    document.getElementById("collapse-btn").addEventListener("click", function(){{
+      var allOpen = Array.from(document.querySelectorAll("details.section")).every(function(d){{ return d.open; }});
+      document.querySelectorAll("details.section").forEach(function(d){{ d.open = !allOpen; }});
+      this.textContent = allOpen ? "Expand all" : "Collapse all";
+    }});
+  }}
+  function setupResetLink(){{
+    document.getElementById("reset-state").addEventListener("click", function(e){{
+      e.preventDefault();
+      if (!confirm("Reset all answers, checkboxes, and section state for this document?")) return;
+      localStorage.removeItem(STORAGE_KEY); location.reload();
+    }});
+  }}
+}})();
+</script>
+</body>
+</html>
+"""
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(
+        prog="preview-html",
+        description="Render markdown as a single-page interactive HTML and open in browser.",
+    )
+    p.add_argument("input", help="markdown file")
+    g = p.add_mutually_exclusive_group()
+    g.add_argument("--ephemeral", "-e", action="store_true", help="output to /tmp")
+    g.add_argument("--persist", action="store_true", help="output to ~/.local/share/pi/preview (default)")
+    p.add_argument("--no-open", action="store_true")
+    p.add_argument("--no-gc", action="store_true")
+    p.add_argument("--browser", help="force browser bundle id (chromium-family)")
+    p.add_argument("--title")
+    args = p.parse_args()
+
+    inp = Path(args.input).resolve()
+    if not inp.is_file():
+        sys.exit(f"preview-html: not a file: {inp}")
+
+    body = render_markdown(inp)
+    title = args.title or first_h1(inp) or inp.stem
+    slug = slugify(inp.stem)
+    ts = dt.datetime.now()
+    ts_human = ts.strftime("%Y-%m-%d %H:%M:%S")
+    ts_token = ts.strftime("%Y%m%d-%H%M%S")
+
+    if args.ephemeral:
+        out = Path(f"/tmp/preview-{slug}-{ts_token}.html")
+    else:
+        PERSIST_DIR.mkdir(parents=True, exist_ok=True)
+        out = PERSIST_DIR / f"{ts_token}-{slug}.html"
+
+    html = TEMPLATE.format(
+        title=title.replace("<", "&lt;").replace(">", "&gt;"),
+        body=body,
+        slug=slug,
+        ts_human=ts_human,
+        title_json=json.dumps(title),
+        slug_json=json.dumps(slug),
+    )
+    out.write_text(html, encoding="utf-8")
+    print(out)
+
+    # GC stale artifacts
+    if not args.no_gc:
+        gc = shutil.which("preview-html-gc")
+        if gc:
+            try:
+                subprocess.run([gc, "--quiet"], timeout=10, check=False)
+            except Exception:
+                pass
+
+    # Open in browser
+    if not args.no_open:
+        if args.browser:
+            app_name = app_name_for_bundle_id(args.browser)
+            if not app_name:
+                sys.exit(f"preview-html: unknown bundle id {args.browser}")
+        else:
+            app_name = pick_chromium_app()
+        url = "file://" + str(out)
+        open_url_in_max_tab_window(app_name, url)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

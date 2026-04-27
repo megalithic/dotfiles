@@ -12,6 +12,8 @@ tags: [ready-for-development]
 ---
 # Unify nvim↔pi communication: pinvim.ts + bridge.ts refactor + pi.lua upgrade
 
+> **🔗 Cross-repo coordination:** finish nvim↔pi work in this repo. Final artifact (pinvim.ts + bridge.ts + pi.lua) ports to megadots **nvim Stage 2 reconcile** (`meg-pygn`) after closure. Tracked in `~/.local/share/pi/plans/megadots/cross-repo-status.md` + `dot-0oy1`/`meg-ppzd`.
+
 Blend best of carderne/pi-nvim and our bridge.ts/pi.lua into a unified architecture.
 
 ## Background

@@ -38,6 +38,7 @@
   programs.neovim = {
     enable = true;
     defaultEditor = true;
+    sideloadInitLua = true;
     package = pkgs.nvim-nightly;
     withPython3 = true;
     withNodeJs = true;

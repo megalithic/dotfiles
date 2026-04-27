@@ -12,6 +12,8 @@ tags: [nvim, pi, tmux, ephemeral, ready-for-development]
 ---
 # Implement <localleader>pn: isolated ephemeral pi tmux split
 
+> **🔗 Cross-repo coordination:** finish in this repo. Artifact (final pi.lua + tmux split logic) ports to megadots **nvim Stage 2 reconcile** (`meg-pygn`) after closure. Tracked in `~/.local/share/pi/plans/megadots/cross-repo-status.md` + `dot-0oy1`/`meg-ppzd`.
+
 Implement `<localleader>pn` in config/nvim/after/plugin/pi.lua to spawn an
 ephemeral pi instance in a new tmux split, fully isolated from any existing
 pi/nvim pairs. Currently a stub emits "not yet implemented" (pi.lua:2214).
