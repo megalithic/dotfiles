@@ -4,7 +4,6 @@
     "maxDelayMs": 900000
   },
   "defaultProvider": "anthropic",
-  "defaultModel": "GLM-5.1",
   "defaultThinkingLevel": "high",
   "doubleEscapeAction": "tree",
   "enableSkillCommands": true,
@@ -13,14 +12,10 @@
   "packages": [],
   "enabledModels": [
     "anthropic/claude-opus-4-7",
-    "anthropic/claude-opus-4-6",
     "anthropic/claude-sonnet-4-5",
     "google-vertex/gemini-3.1-pro-preview",
-    "google-vertex/gemini-3-pro-preview",
     "google-vertex/gemini-3-flash-preview",
-    "synthetic/hf:Qwen/Qwen3-Coder-480B-A35B-Instruct",
     "synthetic/hf:zai-org/GLM-5.1",
-    "synthetic/hf:zai-org/GLM-5",
     "synthetic/hf:zai-org/GLM-4.7",
     "synthetic/hf:MiniMaxAI/MiniMax-M2.5",
     "synthetic/hf:moonshotai/Kimi-K2.5",

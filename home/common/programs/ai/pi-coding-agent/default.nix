@@ -373,6 +373,11 @@
       export BRAVE_API_KEY="$BRAVE_SEARCH_API_KEY"
     fi
 
+    # Preserve SYNTHETIC_API_KEY for pi-synthetic-provider (loaded from env, not agenix)
+    if [ -n "$SYNTHETIC_API_KEY" ]; then
+      export SYNTHETIC_API_KEY
+    fi
+
     # Parse --profile flag (overrides multi-pass config only)
     MP_PROFILE=""
     PI_ARGS=()

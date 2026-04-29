@@ -7,6 +7,7 @@
 }: let
   inherit (lib) literalExpression mkOption types mkEnableOption;
 
+  # helium.nix layers an extra dev-mode activation script on top.
   supportedBrowsers = {
     helium-browser = "Helium";
     brave-browser-nightly = "Brave Browser Nightly";

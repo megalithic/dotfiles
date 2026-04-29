@@ -28,10 +28,13 @@
 
   # Stable binary path outside the nix store.
   # Each nix rebuild produces a new /nix/store/...-kanata/bin/kanata path.
-  # macOS TCC (Input Monitoring) tracks binaries by path, so every new store
-  # path creates a duplicate entry in System Settings > Privacy > Input
-  # Monitoring. Using a stable symlink means macOS always sees the same path
-  # and stops accumulating stale entries.
+  # macOS TCC (Input Monitoring) tracks binaries by canonical path (resolved
+  # symlinks), so a stable symlink does NOT help — TCC follows it to the
+  # nix store path and creates a new entry per rebuild.
+  #
+  # Strategy: copy the real binary to a stable path. Only re-copy on actual
+  # version change so cdhash stays stable across same-version rebuilds and
+  # macOS does not re-prompt for Input Monitoring.
   kanataStableBin = "/usr/local/bin/kanata";
 
   # kanata-bar app for UI feedback (runs separately from daemon)
@@ -102,10 +105,25 @@ in {
   # Ensure config directory and default symlink exist
   # Also set up kanata-bar config for UI-only mode
   system.activationScripts.postActivation.text = lib.mkAfter ''
-    # Update stable kanata symlink to current nix store path
+    # Copy real kanata binary to stable path (Mode 3: only on version change).
+    # Symlinks resolve to nix store path → TCC duplicates per rebuild.
+    # Same-version rebuilds skip copy → cdhash stable → no re-prompt.
     mkdir -p "$(dirname ${kanataStableBin})"
-    ln -sf "${config.services.kanata.package}/bin/kanata" "${kanataStableBin}"
-    echo "kanata: updated stable symlink ${kanataStableBin} -> ${config.services.kanata.package}/bin/kanata"
+    KANATA_SRC="${config.services.kanata.package}/bin/kanata"
+    KANATA_DST="${kanataStableBin}"
+    NEW_VER=$("$KANATA_SRC" --version 2>/dev/null | head -1 || echo "unknown")
+    OLD_VER=""
+    if [ -f "$KANATA_DST" ] && [ ! -L "$KANATA_DST" ]; then
+      OLD_VER=$("$KANATA_DST" --version 2>/dev/null | head -1 || echo "")
+    fi
+    if [ -L "$KANATA_DST" ] || [ "$NEW_VER" != "$OLD_VER" ]; then
+      rm -f "$KANATA_DST"
+      cp "$KANATA_SRC" "$KANATA_DST"
+      chmod +x "$KANATA_DST"
+      echo "kanata: copied binary to $KANATA_DST (was: '$OLD_VER', now: '$NEW_VER')"
+    else
+      echo "kanata: $KANATA_DST already at $NEW_VER, skipping copy"
+    fi
 
     KANATA_DIR="${kanataConfigDir}"
     mkdir -p "$KANATA_DIR"
