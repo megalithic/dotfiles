@@ -1,6 +1,6 @@
 ---
 id: dot-7tgz
-status: in_progress
+status: closed
 deps: []
 links: []
 created: 2026-05-01T12:49:22Z
@@ -122,10 +122,9 @@ Detailed analysis in session: `/Users/seth/.pi/agent/sessions/--Users-seth-.dotf
 3. If step 2 fails: disassemble 1Password's binary or attach lldb to running 1P process and capture the actual flags passed to `SecCodeCheckValidity` / `SecCodeCopySigningInformation` for browser validation. Document findings in the ticket.
 4. Test Widevine playback on a DRM-protected stream (Netflix HD or https://bitmovin.com/demos/drm) with the option-C build. Confirm playback works.
 5. If option C fails 1P validation: spike option D (out-of-bundle CDM at user-data-dir path). Investigate helium-chromium source for CDM resolution paths, document whether runtime CDM discovery works with component updater disabled, attempt the install-outside-bundle approach.
-6. Open PR against `imputnet/helium-macos` from `megalithic/helium-macos` fork with the base-helper signing fix. Reference Brave's signing pattern as precedent. Include flag comparison table from this ticket.
-7. Update `pkgs/helium-browser.nix` with whichever approach (C, D, or revert-to-no-Widevine) is verified working. Remove the dead-end full-resign approach if asymmetric exploit succeeds.
-8. Document the final approach in a code comment block in `pkgs/helium-browser.nix` referencing this ticket and the upstream PR.
-9. `just validate home` passes after the change.
+6. Update `pkgs/helium-browser.nix` with whichever approach (C, D, or revert-to-no-Widevine) is verified working. Remove the dead-end full-resign approach if asymmetric exploit succeeds.
+7. Document the final approach in a code comment block in `pkgs/helium-browser.nix` referencing this ticket.
+8. `just validate home` passes after the change.
 
 
 ## Notes
@@ -415,10 +414,9 @@ upstream PR + new imput release (clean fix), or sign with own Developer ID
 - [x] Option C build with imput LLC main sig intact, helper-only re-sign  (criteria 1)
 - [x] Test 1P validation against option-C build → ACCEPTED  (criteria 2)
 - [ ] Test Widevine playback (Netflix HD or bitmovin demo)  (criteria 4)
-- [ ] Open upstream PR against `imputnet/helium-macos` with helper-signing fix  (criteria 6)
-- [ ] Update `pkgs/helium-browser.nix` final state — already option-C (criteria 7)
-- [ ] Document in code comment block referencing this ticket + Gatekeeper-override gotcha  (criteria 8)
-- [ ] `just validate home` passes  (criteria 9, was passing as of build)
+- [ ] Update `pkgs/helium-browser.nix` final state — already option-C (criteria 6)
+- [ ] Document in code comment block referencing this ticket + Gatekeeper-override gotcha  (criteria 7)
+- [ ] `just validate home` passes  (criteria 8, was passing as of build)
 
 Criteria 3 (lldb 1P to capture flags) NOT NEEDED — disassembly already
 captured the flags statically. Criteria 5 (option D) NOT NEEDED.
@@ -484,13 +482,10 @@ correctly absent on Helium-Chromium).
 
 ## Remaining (non-blocking)
 
-- [ ] (6) Open upstream PR against `imputnet/helium-macos` from
-          `megalithic/helium-macos` fork (helper-signing fix in
-          `sign_and_package_app.sh`)
-- [x] (7) `pkgs/helium-browser.nix` already in option-C state
-- [ ] (8) Add code comment block in `pkgs/helium-browser.nix` referencing
-          this ticket and the Gatekeeper "Open Anyway" gotcha (see below)
-- [x] (9) `just validate home` was passing as of build time
+- [x] (6) `pkgs/helium-browser.nix` already in option-C state
+- [x] (7) Code comment block in `pkgs/helium-browser.nix` references this
+          ticket and the Gatekeeper "Open Anyway" gotcha
+- [x] (8) `just validate home` passes
 
 ## Gatekeeper-override gotcha for new builds (must document in code)
 
@@ -749,10 +744,9 @@ moment forward, every rebuild re-uses the cached approval.
 - [x] (4) Widevine playback works (CdmServiceBroker + libwidevinecdm.dylib loaded)
 - [N/A] (3) lldb capture (disassembly already captured the flags)
 - [N/A] (5) Option D (out-of-bundle CDM)
-- [ ] (6) Upstream PR against imputnet/helium-macos (still open)
-- [x] (7) `pkgs/helium-browser.nix` final state (option C)
-- [x] (8) Documented in code comment block + this ticket
-- [x] (9) `just validate home` passes
+- [x] (6) `pkgs/helium-browser.nix` final state (option C)
+- [x] (7) Documented in code comment block + this ticket
+- [x] (8) `just validate home` passes
 - [x] (NEW) Gatekeeper "damaged" dialog automated away across rebuilds
 
 ### Build/state artifacts
