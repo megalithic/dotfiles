@@ -132,8 +132,15 @@ const formatStatus = (state: EditorState | null): string => {
 
 const updateStatus = (): void => {
   const ctx = latestCtx;
-  if (!ctx?.hasUI) return;
-  ctx.ui.setStatus("pinvim", formatStatus(editorState));
+  if (!ctx) return;
+  // ctx.hasUI throws if the ctx is stale (session was replaced/reloaded
+  // between when we captured it and when this fires). Guard and clear.
+  try {
+    if (!ctx.hasUI) return;
+    ctx.ui.setStatus("pinvim", formatStatus(editorState));
+  } catch {
+    latestCtx = null;
+  }
 };
 
 // =============================================================================
@@ -177,6 +184,13 @@ export default function (pi: ExtensionAPI): void {
   pi.on("session_switch", (_event, ctx) => {
     latestCtx = ctx;
     updateStatus();
+  });
+
+  // Drop the captured ctx before the runtime is torn down — any events that
+  // arrive between shutdown and the next session_start would otherwise hit
+  // a stale ctx and throw on access.
+  pi.on("session_shutdown", () => {
+    latestCtx = null;
   });
 
   // Register /pinvim-info command
