@@ -144,7 +144,7 @@
     pname = "pi-internet";
     version = "0.1.0"; # github dep, can't use npmVersion
     src = ./packages/pi-internet;
-    npmDepsHash = "sha256-ELQZgxUUG4nrfWTbxZ88DLCfP7t3EKEt8OJmCjIzaM4=";
+    npmDepsHash = "sha256-A+RnTND6XHScz2d+0DHwWQb4WnEIoZs0PNVT8Ig97jQ=";
     makeCacheWritable = true;
     dontNpmBuild = true;
     installPhase = ''
@@ -161,7 +161,7 @@
     pname = "pi-agent-browser";
     version = npmVersion ./packages/pi-agent-browser;
     src = ./packages/pi-agent-browser;
-    npmDepsHash = "sha256-hHh9QnT4SmYDgExxQvcM0hii749UBHjQUsxZcOYtPDw=";
+    npmDepsHash = "sha256-fPu/KUxvqJIW/v3SvoP+ufw/hPGBrJQpJpqrry7XXXA=";
     dontNpmBuild = true;
     installPhase = ''
       runHook preInstall
@@ -211,17 +211,21 @@
   };
 
   # Synthetic.new model provider (dynamic model fetching, reasoning, vision)
+  # Patch adds GLM-5.1 (and any post-1.1.10 models) to fallback list so they're
+  # available at startup for `enabledModels` Ctrl+P scope resolution. Without
+  # the patch, those models only appear after `session_start` async fetch.
   pi-synthetic-provider = pkgs.buildNpmPackage {
     pname = "pi-synthetic-provider";
     version = npmVersion ./packages/pi-synthetic-provider;
     src = ./packages/pi-synthetic-provider;
-    npmDepsHash = "sha256-Dy5u6vltV2lr/fNqQwEg+fV/h5pEkxVRbzb5p74v0Vo=";
+    npmDepsHash = "sha256-lW0n/yVTJQs2hcYTNFN/9fOIN30HFsHav5kbQ13KdaQ=";
     dontNpmBuild = true;
     installPhase = ''
       runHook preInstall
       mkdir -p $out
       cp -r node_modules/@benvargas/pi-synthetic-provider/* $out/
       cp -r node_modules $out/node_modules
+      ( cd $out && patch -p1 < ${./patches/synthetic-fallback-glm-5.1.patch} )
       runHook postInstall
     '';
   };

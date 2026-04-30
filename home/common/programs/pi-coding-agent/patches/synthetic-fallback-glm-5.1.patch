@@ -1,0 +1,32 @@
+--- a/extensions/models.ts
++++ b/extensions/models.ts
+@@ -85,6 +85,7 @@
+  * Synthetic-hosted models:
+  * - Kimi-K2.5 & NVFP4: $0.55 input, $2.19 output, 262K context
+  * - MiniMax-M2.5: $0.60 input, $3.00 output, 191K context
++ * - GLM-5.1: $1.00 input, $3.00 output, 192K context
+  * - GLM-5: $1.00 input, $6.00 output, 192K context
+  * - GLM-4.7: $0.55 input, $2.19 output, 202K context
+  */
+@@ -150,6 +151,21 @@
+ 			maxTokens: 65536,
+ 			compat: SYNTHETIC_COMPAT,
+ 		},
++		{
++			id: "hf:zai-org/GLM-5.1",
++			name: "zai-org/GLM-5.1",
++			reasoning: true,
++			input: ["text"],
++			cost: {
++				input: 1,
++				output: 3,
++				cacheRead: 1,
++				cacheWrite: 0,
++			},
++			contextWindow: 196608,
++			maxTokens: 65536,
++			compat: SYNTHETIC_COMPAT,
++		},
+ 		{
+ 			id: "hf:zai-org/GLM-5",
+ 			name: "zai-org/GLM-5",
