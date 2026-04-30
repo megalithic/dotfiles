@@ -143,6 +143,12 @@
           default = "com.nix.wrapper.${lib.strings.sanitizeDerivationName browser}";
           description = "Bundle identifier for the wrapper application.";
         };
+
+        addToHomePackages = mkOption {
+          type = types.bool;
+          default = true;
+          description = "Whether to add the wrapper application to home.packages.";
+        };
       };
 
       # Extensions configuration
@@ -241,6 +247,14 @@
         description = ''
           List of ${name} native messaging hosts to install.
         '';
+      };
+
+      # Internal: Expose the generated wrapper package for activation scripts
+      wrapperAppPackage = mkOption {
+        type = types.nullOr types.package;
+        default = null;
+        internal = true;
+        description = "The generated macOS wrapper .app package.";
       };
     };
 
@@ -342,6 +356,9 @@
     shouldAddToHomePackages = appLocation == "home-manager";
   in
     lib.mkIf cfg.enable {
+      # Expose wrapper package internally
+      programs.${browser}.wrapperAppPackage = lib.mkIf (pkgs.stdenv.isDarwin && cfg.darwinWrapperApp.enable && cfg.commandLineArgs != []) wrapperApp;
+
       # Add packages to home.packages with smart handling:
       # - Base package: only if appLocation is "home-manager" (avoid duplicates with mkAppActivation)
       # - CLI wrapper: always (it's a CLI tool, not an .app)
@@ -351,8 +368,8 @@
         lib.optionals (cfg.package != null && shouldAddToHomePackages) [cfg.package]
         # CLI wrapper - always add if available
         ++ lib.optional (cliWrapper != null) cliWrapper
-        # macOS wrapper .app - always add if enabled (this is how Finder launches with args)
-        ++ lib.optional (pkgs.stdenv.isDarwin && cfg.darwinWrapperApp.enable && cfg.commandLineArgs != []) wrapperApp;
+        # macOS wrapper .app - only if enabled and not handled elsewhere
+        ++ lib.optional (pkgs.stdenv.isDarwin && cfg.darwinWrapperApp.enable && cfg.darwinWrapperApp.addToHomePackages && cfg.commandLineArgs != []) wrapperApp;
       home.file =
         lib.listToAttrs ((map extensionJson (cfg.extensions or [])) ++ (map dictionary (cfg.dictionaries or [])))
         // lib.optionalAttrs ((cfg.nativeMessagingHosts or []) != []) {

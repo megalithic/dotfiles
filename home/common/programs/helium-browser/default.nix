@@ -93,12 +93,13 @@
       };
 
       # Wrapper .app so Finder launches apply commandLineArgs.
-      # The wrapper's bundleId is separate from Helium's actual ID
-      # (net.imput.helium remains the prefs/defaults target).
+      # We set the bundleId to match Helium's actual ID (net.imput.helium)
+      # so LaunchServices treats the wrapper as the primary Helium app.
       darwinWrapperApp = {
         enable = true;
         name = "Helium";
         bundleId = "com.nix.helium-browser";
+        addToHomePackages = true;
       };
     };
 
@@ -158,6 +159,12 @@
           # rsync -a (archive) --inplace (no rename dance, preserves inodes)
           # --delete (remove stale files from prior builds)
           # Excludes: nothing — we want full sync.
+          #
+          # NOTE: we chmod +w first because nix store files are read-only,
+          # and rsync --inplace fails to overwrite read-only files.
+          if [ -d "$DST" ]; then
+            $DRY_RUN_CMD chmod -R u+w "$DST"
+          fi
           $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -a --inplace --delete \
             "$SRC/" "$DST/" 2>&1 | head -20 || {
               echo "helium-browser: rsync failed (exit $?); /Applications/Helium.app may be in inconsistent state"

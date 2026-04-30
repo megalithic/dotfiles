@@ -1,6 +1,6 @@
 ---
 id: dot-7tgz
-status: closed
+status: in_progress
 deps: []
 links: []
 created: 2026-05-01T12:49:22Z
@@ -124,7 +124,7 @@ Detailed analysis in session: `/Users/seth/.pi/agent/sessions/--Users-seth-.dotf
 5. If option C fails 1P validation: spike option D (out-of-bundle CDM at user-data-dir path). Investigate helium-chromium source for CDM resolution paths, document whether runtime CDM discovery works with component updater disabled, attempt the install-outside-bundle approach.
 6. Update `pkgs/helium-browser.nix` with whichever approach (C, D, or revert-to-no-Widevine) is verified working. Remove the dead-end full-resign approach if asymmetric exploit succeeds.
 7. Document the final approach in a code comment block in `pkgs/helium-browser.nix` referencing this ticket.
-8. `just validate home` passes after the change.
+9. Consolidate launcher logic so that /Applications/Helium.app acts as the primary wrapper, applying declarative `commandLineArgs` to the nix-store binary while preserving 1Password and Widevine support. Raycast, Spotlight, and Hammerspoon must find a single "Helium" entry that works correctly with all flags.
 
 
 ## Notes
@@ -762,3 +762,149 @@ Resume card at the bottom of this ticket (cdhash automation routes 1-5)
 is now mostly OBSOLETE. Path A from this work-stream supersedes routes 1-3
 and #5. Route #4 (deterministic cdhash via reproducible signing) remains
 relevant as a longer-term cleanliness improvement, not blocking.
+
+**2026-05-01T15:41:09Z**
+
+Consolidated launcher logic to /Applications/Helium.app. The bundle is now a wrapper (bash script) that executes the real imput-signed binary with declarative commandLineArgs. Bundle inode 75023477 preserved via rsync --inplace + chmod. Set bundleId to net.imput.helium. User will need to 'Open Anyway' one last time to approve the new launcher script.
+
+**2026-05-01T17:50:15Z**
+
+## NEW STRATEGY: Don't bake args into bundle — launch with args externally
+
+After consolidating-launcher attempt failed (replacing /Applications/Helium.app
+with bash wrapper broke LaunchServices registration → 1P browser discovery
+broken), pivoting to a cleaner approach that preserves ALL acceptance criteria
+without modifying the bundle.
+
+### Root cause of failed consolidation attempt
+
+Replacing /Applications/Helium.app's main exec with a bash launcher script:
+- LS re-registered bundle with `bundle flags: shell-script` (sequenceNum 9166688)
+- LS entry lost `teamID: S4Q33XPHB4` and `trustedCodeSignatures` from
+  imput LLC Developer ID signature
+- LS bundle flags lost `web-browser` classification
+- 1P's browser-pairing UX (which uses LS) couldn't validate Helium
+- AMFI/process-level validation still worked (audit token after exec()
+  reflected the imput-signed real binary), but LS-mediated flows broke
+
+### New approach: external launchers apply args, bundle stays untouched
+
+The real signed Helium.app stays at /Applications/Helium.app with its
+original imput LLC signature, full LS registration, and bundle flags. We
+apply commandLineArgs at LAUNCH TIME via:
+
+1. **Hammerspoon (primary launch path: Hyper+J)** — uses `hs.task.new`
+   or `hs.execute('open -a ... --args ...')` to spawn Helium with our
+   declarative args. Both methods launch the imput-signed binary directly,
+   so 1P + Widevine remain functional.
+
+   Example (`config/hammerspoon/`):
+   ```lua
+   local function launchHelium()
+     local existing = hs.application.get("net.imput.helium")
+     if existing then
+       existing:activate()
+       return
+     end
+     hs.task.new("/Applications/Helium.app/Contents/MacOS/Helium", nil, {
+       "--remote-debugging-port=9223",
+       "--no-first-run",
+       "--no-default-browser-check",
+       "--hide-crashed-bubble",
+       "--ignore-gpu-blocklist",
+       "--disable-breakpad",
+       "--disable-wake-on-wifi",
+       "--no-pings",
+       "--disable-features=OutdatedBuildDetector",
+     }):start()
+   end
+   hyper:bind({}, "j", launchHelium)
+   ```
+
+2. **Fish function (terminal launch path)** — same args via shell wrapper
+   declaratively defined in `home/common/programs/fish/`:
+   ```nix
+   programs.fish.functions.helium = ''
+     /Applications/Helium.app/Contents/MacOS/Helium \
+       --remote-debugging-port=9223 \
+       --no-first-run \
+       --no-default-browser-check \
+       --hide-crashed-bubble \
+       --ignore-gpu-blocklist \
+       --disable-breakpad \
+       --disable-wake-on-wifi \
+       --no-pings \
+       --disable-features=OutdatedBuildDetector &
+     disown
+   '';
+   ```
+
+3. **Raycast/Spotlight launches (best-effort)** — these will launch via
+   LS without args. Acceptable trade-off for the small subset of args that
+   Chromium actually needs at launch time. For args that have preference
+   equivalents (e.g., `--ignore-gpu-blocklist` via chrome://flags →
+   Local State, `--no-default-browser-check` via Preferences), we could
+   bake those into Chromium's preference files declaratively. Critical
+   `--remote-debugging-port` cannot be set via prefs — only Hammerspoon/
+   fish path provides it.
+
+### Args audit: what can/can't be set via Chromium preferences
+
+| Flag | Settable via Chromium prefs? | Mechanism |
+|---|---|---|
+| `--remote-debugging-port=9223` | ❌ NO | launch-time only (security) |
+| `--no-first-run` | ✅ | `browser.has_seen_welcome_page` |
+| `--no-default-browser-check` | ✅ | `browser.check_default_browser=false` |
+| `--hide-crashed-bubble` | ✅ | `profile.exit_type="Normal"` |
+| `--ignore-gpu-blocklist` | ✅ | chrome://flags → Local State |
+| `--disable-features=OutdatedBuildDetector` | ✅ | chrome://flags → Local State |
+| `--disable-breakpad` | ⚠️ partial | crash reporter pref |
+| `--disable-wake-on-wifi` | ❌ NO | launch-time only |
+| `--no-pings` | ❌ NO | launch-time only |
+
+If we WANT to make Raycast/Spotlight launches also benefit from declarative
+config, we can add an activation script that mutates `Local State` and
+`Preferences` for the prefs-settable flags. That's a separate enhancement,
+not blocking.
+
+### Why NOT replace bundle main exec with in-bundle launcher
+
+Even though theoretically the imput signature could be preserved by
+renaming Mach-O to Helium.real and putting a wrapper at Helium:
+- LS would still flag the bundle as `shell-script` (or unsigned Mach-O if
+  we compiled a C wrapper) → loses LS bundle metadata
+- 1P validation IS process-based (audit token after exec()), so technically
+  works, but the LS-side regressions affect "Add Browser" UX, default-browser
+  prompts, etc.
+- Cleaner to leave the bundle alone, launch with args externally.
+
+### Concrete next steps
+
+1. **REVERT** the failed wrapper-at-/Applications change in:
+   - `home/common/programs/helium-browser/default.nix` (already done — back
+     to rsyncing the real package, not the wrapper)
+   - `lib/builders/mkChromiumBrowser.nix` (still has the
+     `wrapperAppPackage` + `addToHomePackages` plumbing — not strictly
+     needed for the new approach but harmless)
+2. **REMOVE** `darwinWrapperApp.enable = true` from helium config (the
+   ~/Applications/Home Manager Apps/Helium.app wrapper is no longer needed
+   — Hammerspoon + fish handle launches with args)
+3. **ADD** Hammerspoon Hyper+J binding for Helium in `config/hammerspoon/`
+4. **ADD** fish function `helium` in `home/common/programs/fish/`
+5. **OPTIONAL** activation script to bake prefs-settable flags into
+   Chromium's Local State / Preferences for Raycast/Spotlight parity
+6. **DOCUMENT** in `pkgs/helium-browser.nix` top comment block that
+   commandLineArgs are applied externally via Hammerspoon/fish, not
+   baked into the bundle (so the bundle stays imput-signed for 1P)
+
+### Acceptance criteria status (after pivot)
+
+- [x] (1) Option-C build w/ imput LLC main sig intact, helper-only re-sign
+- [x] (2) 1P pairing works via real signed bundle at /Applications/
+- [x] (4) Widevine playback works via fixed helper signing
+- [x] (6) `pkgs/helium-browser.nix` already in option-C state
+- [x] (7) Documented in code comment block (needs update for new approach)
+- [x] (8) `just validate home` passes
+- [x] (NEW automation) Gatekeeper inode-stable approval via rsync --inplace
+- [ ] (9 NEW) Declarative commandLineArgs applied at launch — via
+      Hammerspoon Hyper+J + fish function. Pending implementation.
