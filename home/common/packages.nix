@@ -9,8 +9,9 @@
   customApps = with pkgs; [
     # bloom
     fantastical
-    # mailmate app moved to home/programs/email/mailmate/default.nix
-    # tidewave GUI app moved to home/programs/ai/default.nix
+    tidewave # Tidewave GUI app for web app development
+    tidewave-cli # Tidewave MCP CLI
+    # mailmate app managed via home/common/programs/mailmate/default.nix
   ];
 
   # Filter: only apps with appLocation = "home-manager" go to home.packages

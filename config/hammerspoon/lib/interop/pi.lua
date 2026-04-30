@@ -6,7 +6,7 @@
 --
 -- SOCKET CONFIGURATION (nix is single source of truth):
 --   Pattern: /tmp/pi-{session}-{window}.sock (one socket per tmux window)
---   Env vars (defined in ~/.dotfiles/home/common/programs/ai/pi-coding-agent/default.nix):
+--   Env vars (defined in ~/.dotfiles/home/common/programs/pi-coding-agent/default.nix):
 --     - PI_SOCKET_DIR: /tmp
 --     - PI_SOCKET_PREFIX: pi
 --     - PI_SESSION: tmux session name

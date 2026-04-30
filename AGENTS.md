@@ -13,7 +13,7 @@ This is a **nix-darwin + home-manager** managed dotfiles repo.
 
 **Common nix-managed paths:**
 
-- `~/.pi/agent/*` → `home/common/programs/ai/pi-coding-agent/`
+- `~/.pi/agent/*` → `home/common/programs/pi-coding-agent/`
 - `~/.config/fish/*` → `home/common/programs/fish/`
 - `~/.config/ghostty/*` → `config/ghostty/` (out-of-store symlink)
 - `~/.config/tmux/*` → `config/tmux/` (out-of-store symlink)

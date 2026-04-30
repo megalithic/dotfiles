@@ -18,18 +18,35 @@
     ./rust.nix
     ./packages.nix
     ./services.nix
-    ./programs/ai
-    ./programs/agenix.nix
-    ./programs/email
-    ./programs/browsers
-    ./programs/discord.nix
-    ./programs/ghostty.nix
-    ./programs/jj
+    ./accounts.nix
+    # AI tooling
+    ./programs/claude-code
+    ./programs/opencode
+    ./programs/ollama
+    ./programs/pi-coding-agent
+    # Browsers
+    ./programs/brave-browser-nightly
+    ./programs/firefox
+    ./programs/helium-browser
+    # Email
+    ./programs/aerc
+    ./programs/khard
+    ./programs/mailmate
+    ./programs/mbsync
+    ./programs/msmtp
+    ./programs/notmuch
+    # Shells / prompts
     ./programs/fish
-    ./programs/fzf.nix
-    ./programs/nvim.nix
-    ./programs/shade.nix
-    # ./programs/worktrunk.nix
+    ./programs/starship
+    # Misc programs
+    ./programs/agenix
+    ./programs/discord
+    ./programs/fzf
+    ./programs/ghostty
+    ./programs/jj
+    ./programs/nvim
+    ./programs/shade
+    # ./programs/worktrunk
   ];
 
   home.username = username;
@@ -244,7 +261,6 @@
   xdg.configFile."karabiner/karabiner.json".force = true;
 
   xdg.configFile."surfingkeys/config.js".text = builtins.readFile ./surfingkeys/config.js;
-  xdg.configFile."starship.toml".text = builtins.readFile ./starship/starship.toml;
   xdg.configFile."eza/theme.yml".text = ''
     colourful: true
 
@@ -380,10 +396,6 @@
 
     # speed up rebuilds // HT: @tmiller
     man.generateCaches = false;
-
-    starship = {
-      enable = true;
-    };
 
     git = {
       enable = true;

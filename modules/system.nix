@@ -357,7 +357,7 @@
         # tell HS where to find its config file
         "org.hammerspoon.Hammerspoon".MJConfigFile = "~/.config/hammerspoon/init.lua";
 
-        # MailMate settings moved to home/programs/email/mailmate.nix
+        # MailMate settings moved to home/common/programs/mailmate/default.nix
 
         "com.apple.SoftwareUpdate" = {
           AutomaticCheckEnabled = true;
@@ -411,7 +411,7 @@
           };
         };
 
-        # NOTE: Browser keybindings moved to home/programs/browsers/chromium.nix
+        # NOTE: Browser keybindings moved to home/common/programs/{brave-browser-nightly,helium-browser}/default.nix
         # using the keyEquivalents option in mkChromiumBrowser module
       };
     };
