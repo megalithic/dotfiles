@@ -115,5 +115,55 @@
         fi
       ''
     );
+
+    # Install Helium.app to /Applications/ via rsync --inplace, preserving the
+    # bundle directory inode across rebuilds. This is critical for bypassing
+    # macOS Gatekeeper's "damaged" dialog after every nix rebuild.
+    #
+    # Background (tk dot-7tgz):
+    # - Our option-C build breaks the bundle's _CodeSignature/CodeResources seal
+    #   (Widevine injection + helper re-sign). spctl rejects the bundle, which
+    #   triggers Gatekeeper's "\"Helium.app\" is damaged..." dialog when launched
+    #   via LaunchServices (Finder, Dock, Spotlight, NSWorkspace).
+    # - macOS user override ("Open Anyway" in System Settings) is keyed by
+    #   (volume_uuid, object_id, fs_type_name) in /var/db/SystemPolicyConfiguration/ExecPolicy.
+    #   The object_id is the bundle directory's INODE.
+    # - A naive `cp -R` recreates the bundle dir on every rebuild → new inode →
+    #   approval lost → "Open Anyway" required again, every rebuild.
+    # - `rsync -a --inplace --delete` updates contents in place, preserving the
+    #   bundle dir + main exec inodes. The user-override row in syspolicyd
+    #   (flags=526) stays valid → no dialog.
+    #
+    # First-time install: user must click "Open Anyway" ONCE in
+    # System Settings → Privacy & Security after the initial `just home`.
+    # Every rebuild after that reuses the cached approval.
+    home.activation.heliumBrowserInstallToApplications = lib.mkIf config.programs.helium-browser.enable (
+      lib.hm.dag.entryAfter ["writeBoundary"] ''
+        SRC="${config.programs.helium-browser.package}/Applications/Helium.app"
+        DST="/Applications/Helium.app"
+
+        if [ ! -d "$SRC" ]; then
+          echo "helium-browser: source bundle missing at $SRC; skipping /Applications/ install"
+        elif [ ! -w /Applications ] && ! groups | tr ' ' '\n' | grep -qx admin; then
+          echo "helium-browser: cannot write to /Applications/ (user not in admin group); skipping"
+        else
+          # Initial install: just create the bundle. Inode preservation kicks in
+          # on subsequent rebuilds.
+          if [ ! -e "$DST" ]; then
+            echo "helium-browser: first-time install of Helium.app to /Applications/"
+            echo "helium-browser: NOTE — after this run, you must click 'Open Anyway' ONCE"
+            echo "helium-browser:   in System Settings → Privacy & Security to approve the bundle."
+            echo "helium-browser:   The approval persists across all future rebuilds (inode preserved)."
+          fi
+          # rsync -a (archive) --inplace (no rename dance, preserves inodes)
+          # --delete (remove stale files from prior builds)
+          # Excludes: nothing — we want full sync.
+          $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -a --inplace --delete \
+            "$SRC/" "$DST/" 2>&1 | head -20 || {
+              echo "helium-browser: rsync failed (exit $?); /Applications/Helium.app may be in inconsistent state"
+            }
+        fi
+      ''
+    );
   };
 }
