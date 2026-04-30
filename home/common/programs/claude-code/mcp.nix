@@ -1,9 +1,8 @@
 # MCP Server Configuration
-# Shared between Claude Code (./default.nix) and OpenCode (../opencode/default.nix)
+# Used by Claude Code (./default.nix)
 #
 # Exposes via _module.args:
 #   - allMcpServers: { name = { command, args?, env? }; ... }    (Claude Code format)
-#   - opencodeMcpServers: { name = { type, command [...], ... }; ... }  (OpenCode format)
 #   - braveBrowserPath: path to Brave Browser Nightly executable
 #
 # Adding a new MCP server:
@@ -62,28 +61,10 @@
 
   # Combined MCP servers for Claude Code
   allMcpServers = mcpServersConfig // customMcpServers;
-
-  # ===========================================================================
-  # OpenCode MCP Server Transform
-  # Claude: { command, args?, env? }
-  # OpenCode: { type: "local", command: [cmd, ...args], enabled: true, environment? }
-  # ===========================================================================
-  toOpenCodeMcp = name: server:
-    {
-      type = "local";
-      command =
-        if server ? args && server.args != []
-        then [server.command] ++ server.args
-        else [server.command];
-      enabled = true;
-    }
-    // (lib.optionalAttrs (server ? env) {environment = server.env;});
-
-  opencodeMcpServers = lib.mapAttrs toOpenCodeMcp allMcpServers;
 in {
-  # Expose to Claude Code and OpenCode modules
+  # Expose to Claude Code module
   _module.args = {
-    inherit allMcpServers opencodeMcpServers braveBrowserPath;
+    inherit allMcpServers braveBrowserPath;
   };
 
   # Memory MCP storage directory

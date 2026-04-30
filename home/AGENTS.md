@@ -7,25 +7,37 @@ home/
 ├── common/              # Shared config for all users/hosts
 │   ├── default.nix      # Imports all common modules
 │   ├── lib.nix          # Home-manager helper functions (linkBin, linkConfig)
+│   ├── accounts.nix     # Email accounts + shared mail utilities
 │   ├── packages.nix     # CLI tools + GUI apps (nixpkgs + custom mkApp)
 │   ├── mac-aliases.nix  # Finder alias creation (Spotlight/Launchpad support)
 │   ├── mas.nix          # Mac App Store app declarations
 │   ├── services.nix     # User-level launchd services (ollama agent)
-│   ├── zen-browser.nix  # Zen browser config (WIP)
-│   └── programs/        # Per-program config modules
-│       ├── ai/          # AI tools (claude-code, ollama, opencode, pi)
-│       ├── browsers/    # Browser config (chromium wrapper, firefox)
-│       ├── discord.nix  # Discord (migrated from homebrew)
-│       ├── email/       # Email clients (aerc, mailmate)
-│       ├── fish/        # Fish shell (split into 8 modules)
-│       ├── fzf.nix      # FZF fuzzy finder
-│       ├── ghostty.nix  # Ghostty terminal (migrated from homebrew)
-│       ├── jj/          # Jujutsu VCS (split into 3 modules)
-│       ├── nvim.nix     # Neovim (package + LSPs, config lives in config/nvim/)
-│       └── shade.nix    # Shade screen dimmer
+│   └── programs/        # Per-program config modules — one dir per program,
+│                        # each with default.nix (and optional support files)
+│       ├── aerc/                  # Email TUI client
+│       ├── agenix/                # Secrets management
+│       ├── brave-browser-nightly/ # Brave Browser Nightly
+│       ├── claude-code/           # Claude Code (+ mcp.nix)
+│       ├── discord/               # Discord
+│       ├── firefox/               # Firefox (placeholder)
+│       ├── fish/                  # Fish shell (split into 8 sub-modules)
+│       ├── fzf/                   # FZF fuzzy finder
+│       ├── ghostty/               # Ghostty terminal
+│       ├── helium-browser/        # Helium browser
+│       ├── jj/                    # Jujutsu VCS (split into 3 sub-modules)
+│       ├── khard/                 # CLI address book
+│       ├── mailmate/              # Email GUI client
+│       ├── mbsync/                # IMAP→maildir sync
+│       ├── msmtp/                 # SMTP send + queue
+│       ├── notmuch/               # Mail indexing/tagging
+│       ├── nvim/                  # Neovim (package + LSPs)
+│       ├── ollama/                # Local LLM inference
+│       ├── pi-coding-agent/       # pi agent harness
+│       ├── shade/                 # Shade screen dimmer
+│       ├── starship/              # Cross-shell prompt
+│       └── worktrunk/             # (disabled)
 ├── megabookpro.nix      # Personal laptop overrides
-├── rxbookpro.nix        # Work laptop overrides
-└── kanata.nix-wip       # Kanata keyboard remapper (WIP, not imported)
+└── rxbookpro.nix        # Work laptop overrides
 ```
 
 ## Package placement
@@ -35,7 +47,7 @@ home/
 | CLI tools from nixpkgs | `packages.nix` | ripgrep, fd, jq |
 | GUI apps from nixpkgs | `packages.nix` (guiPkgs) | slack, iina, inkscape |
 | Custom .app bundles | `packages.nix` (customApps) | fantastical, bloom |
-| Tools with config | `programs/*.nix` | fish, jj, fzf, ghostty |
+| Tools with config | `programs/<name>/default.nix` | fish, jj, fzf, ghostty |
 | Homebrew-only apps | `modules/brew.nix` | 1password, raycast |
 | Mac App Store | `mas.nix` | Things3 |
 

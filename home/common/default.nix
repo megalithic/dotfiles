@@ -21,7 +21,6 @@
     ./accounts.nix
     # AI tooling
     ./programs/claude-code
-    ./programs/opencode
     ./programs/ollama
     ./programs/pi-coding-agent
     # Browsers
