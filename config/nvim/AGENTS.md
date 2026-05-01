@@ -474,14 +474,18 @@ spec = {
 
 ## Testing Changes
 
+This is the live config (symlinked to `~/.config/nvim/`). Verify changes by opening `nvim` directly:
+
 ```bash
-NVIM_APPNAME=next nvim [file]
+nvim [file]
 ```
 
-This uses separate config/data/state directories:
-- `~/.config/next/`
-- `~/.local/share/next/`
-- `~/.local/state/next/`
+For headless lua sanity checks:
+
+```bash
+nvim --headless "+lua print(require('module.path'))" +qa
+nvim --headless "+Lazy! sync" +qa
+```
 
 ---
 

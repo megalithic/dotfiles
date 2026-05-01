@@ -157,19 +157,19 @@
   };
 
   # Browser automation — peer deps only (no runtime npm deps)
-  pi-agent-browser = pkgs.buildNpmPackage {
-    pname = "pi-agent-browser";
-    version = npmVersion ./packages/pi-agent-browser;
-    src = ./packages/pi-agent-browser;
-    npmDepsHash = "sha256-fPu/KUxvqJIW/v3SvoP+ufw/hPGBrJQpJpqrry7XXXA=";
-    dontNpmBuild = true;
-    installPhase = ''
-      runHook preInstall
-      mkdir -p $out
-      cp -r node_modules/pi-agent-browser/* $out/
-      runHook postInstall
-    '';
-  };
+  # pi-agent-browser = pkgs.buildNpmPackage {
+  #   pname = "pi-agent-browser";
+  #   version = npmVersion ./packages/pi-agent-browser;
+  #   src = ./packages/pi-agent-browser;
+  #   npmDepsHash = "sha256-fPu/KUxvqJIW/v3SvoP+ufw/hPGBrJQpJpqrry7XXXA=";
+  #   dontNpmBuild = true;
+  #   installPhase = ''
+  #     runHook preInstall
+  #     mkdir -p $out
+  #     cp -r node_modules/pi-agent-browser/* $out/
+  #     runHook postInstall
+  #   '';
+  # };
 
   # Subscription rotation
   pi-multi-pass = pkgs.buildNpmPackage {
@@ -193,22 +193,43 @@
 
   # Interactive subagents — async sub-agent spawning in mux panes
   # https://github.com/HazAT/pi-interactive-subagents
-  pi-interactive-subagents = pkgs.stdenvNoCC.mkDerivation {
-    pname = "pi-interactive-subagents";
-    version = "3.0.0";
-    src = pkgs.fetchFromGitHub {
-      owner = "HazAT";
-      repo = "pi-interactive-subagents";
-      rev = "v3.0.0";
-      hash = "sha256-LKv+RtU5EFp5ZYlB50laTpjkUU+tyEAN1H5/Vp6fC+0=";
-    };
-    installPhase = ''
-      runHook preInstall
-      mkdir -p $out
-      cp -r $src/* $out/
-      runHook postInstall
-    '';
-  };
+  # pi-interactive-subagents = pkgs.stdenvNoCC.mkDerivation {
+  #   pname = "pi-interactive-subagents";
+  #   version = "3.0.0";
+  #   src = pkgs.fetchFromGitHub {
+  #     owner = "HazAT";
+  #     repo = "pi-interactive-subagents";
+  #     rev = "v3.0.0";
+  #     hash = "sha256-LKv+RtU5EFp5ZYlB50laTpjkUU+tyEAN1H5/Vp6fC+0=";
+  #   };
+  #   installPhase = ''
+  #     runHook preInstall
+  #     mkdir -p $out
+  #     cp -r $src/* $out/
+  #     runHook postInstall
+  #   '';
+  # };
+
+  # Diff review extension — interactive diff viewer/reviewer
+  # https://github.com/JJGO/pi-diff-review
+  # Note: --ignore-scripts skips the upstream `prepare: husky` script (devDep,
+  # not needed at runtime; pi runs TS via jiti so no build step required).
+  # pi-diff-review = pkgs.buildNpmPackage {
+  #   pname = "pi-diff-review";
+  #   version = "0.3.0"; # github dep, can't use npmVersion
+  #   src = ./packages/pi-diff-review;
+  #   npmDepsHash = "sha256-6/pDrbyRHlizPXHJ6LkQuF37DACQqBJFvGUbrXosLB0=";
+  #   makeCacheWritable = true;
+  #   dontNpmBuild = true;
+  #   npmFlags = ["--ignore-scripts"];
+  #   installPhase = ''
+  #     runHook preInstall
+  #     mkdir -p $out
+  #     cp -r node_modules/pi-diff-review/* $out/
+  #     cp -r node_modules $out/node_modules
+  #     runHook postInstall
+  #   '';
+  # };
 
   # Synthetic.new model provider (dynamic model fetching, reasoning, vision)
   # Patch adds GLM-5.1 (and any post-1.1.10 models) to fallback list so they're
@@ -352,7 +373,6 @@
   # NOTE: pinvim kept as-is for now. Future: tmux-nvim-pi script (Phase 8).
   # Profile borrowing still works if profile dirs exist, degrades gracefully if not.
 
-  profiles = ["rx" "cspire"];
   sharedConfigItems = [
     "AGENTS.md"
     "settings.json"
@@ -510,14 +530,13 @@ in {
 
       # Built extensions with npm dependencies
       # Full directory extensions (symlink whole package)
-      ".pi/agent/extensions/pi-agent-browser".source = pi-agent-browser;
+      # ".pi/agent/extensions/pi-agent-browser".source = pi-agent-browser;
       ".pi/agent/extensions/pi-mcp-adapter".source = pi-mcp-adapter;
       ".pi/agent/extensions/pi-internet".source = pi-internet;
       ".pi/agent/extensions/pi-multi-pass".source = pi-multi-pass;
       ".pi/agent/extensions/pi-synthetic-provider".source = pi-synthetic-provider;
-      ".pi/agent/extensions/pi-interactive-subagents".source = pi-interactive-subagents;
-
-
+      # ".pi/agent/extensions/pi-interactive-subagents".source = pi-interactive-subagents;
+      # ".pi/agent/extensions/pi-diff-review".source = pi-diff-review;
     }
     // extensionSymlinks
     // agentSymlinks

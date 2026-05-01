@@ -181,11 +181,56 @@ function M.shade.smart_toggle()
 end
 
 --------------------------------------------------------------------------------
--- Future: M.tmux, M.ghostty, M.hs (hammerspoon)
+-- Hammerspoon (nvim socket registration for hammerspoon://nvim-open + RPC)
+--
+-- Hammerspoon's lib/interop/nvim.lua scans /tmp/nvim-sockets/ to find running
+-- nvim instances. Each entry is a file named by socket-id whose contents are
+-- the nvim --listen socket path.
+--
+-- Socket id formats (must match parser in config/hammerspoon/lib/interop/nvim.lua):
+--   tmux:     {session}_{window}_{pane}_{pid}
+--   non-tmux: global_{pid}
 --------------------------------------------------------------------------------
 
--- M.tmux = {}
--- M.ghostty = {}
--- M.hs = {}
+M.hs = {}
+
+local HS_SOCKET_DIR = "/tmp/nvim-sockets"
+
+--- Build socket id from current context (tmux-aware).
+---@return string
+function M.hs.build_socket_id()
+  if os.getenv("TMUX_PANE") then
+    local handle = io.popen("tmux display-message -p '#{session_name}_#{window_index}_#{pane_index}' 2>/dev/null")
+    if handle then
+      local info = handle:read("*l")
+      handle:close()
+      if info and info ~= "" then return info .. "_" .. vim.fn.getpid() end
+    end
+  end
+  return "global_" .. vim.fn.getpid()
+end
+
+--- Register this nvim's --listen socket so Hammerspoon can discover it.
+function M.hs.register_socket()
+  if vim.v.servername == nil or vim.v.servername == "" then return end
+  local id = M.hs.build_socket_id()
+  vim.fn.mkdir(HS_SOCKET_DIR, "p")
+  local f = io.open(HS_SOCKET_DIR .. "/" .. id, "w")
+  if f then
+    f:write(vim.v.servername)
+    f:close()
+    vim.g._hs_socket_id = id
+  end
+end
+
+--- Cleanup the socket file on nvim exit.
+function M.hs.cleanup_socket()
+  local id = vim.g._hs_socket_id
+  if id then os.remove(HS_SOCKET_DIR .. "/" .. id) end
+end
+
+--------------------------------------------------------------------------------
+-- Future: M.tmux, M.ghostty
+--------------------------------------------------------------------------------
 
 return M

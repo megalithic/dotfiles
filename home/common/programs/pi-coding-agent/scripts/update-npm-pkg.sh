@@ -31,6 +31,7 @@ declare -A PNAME_MAP=(
   [pi-agent-browser]="pi-agent-browser"
   [pi-multi-pass]="pi-multi-pass"
   [pi-synthetic-provider]="pi-synthetic-provider"
+  [pi-diff-review]="pi-diff-review"
 )
 
 # Build reverse map: npm package name -> directory name

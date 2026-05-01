@@ -144,3 +144,18 @@ vim.api.nvim_create_autocmd({ "ModeChanged", "CursorMoved", "BufEnter", "BufWinE
     vim.opt_local.number = true
   end,
 })
+
+-- Hammerspoon interop: register nvim --listen socket in /tmp/nvim-sockets/
+-- so external tools (hammerspoon://nvim-open URL handler, etc.) can discover
+-- and dispatch to this instance. See lua/utils/interop.lua (M.hs).
+local hs_interop = require("utils.interop").hs
+
+vim.api.nvim_create_autocmd("VimEnter", {
+  desc = "Hammerspoon: register nvim socket",
+  callback = function() hs_interop.register_socket() end,
+})
+
+vim.api.nvim_create_autocmd("VimLeavePre", {
+  desc = "Hammerspoon: cleanup nvim socket file",
+  callback = function() hs_interop.cleanup_socket() end,
+})

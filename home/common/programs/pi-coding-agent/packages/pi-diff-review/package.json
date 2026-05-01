@@ -1,0 +1,8 @@
+{
+  "name": "pi-diff-review-wrapper",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "pi-diff-review": "github:JJGO/pi-diff-review"
+  }
+}

@@ -718,80 +718,10 @@ end
 -- Nvim Open URL Handler (for PLUG_EDITOR / Phoenix clickable stacktraces)
 --------------------------------------------------------------------------------
 
---- Register the hammerspoon://nvim-open URL handler
---- URL format: hammerspoon://nvim-open?file=/path/to/file&line=42&session=rx
---- Opens files in neovim running in a tmux session
+--- Register the hammerspoon://nvim-open URL handler.
+--- All resolution + open logic lives in lib/interop/nvim-open.
 function M.registerNvimOpenHandler()
-  local nvim = require("lib.interop.nvim")
-
-  hs.urlevent.bind("nvim-open", function(eventName, params, senderPID, fullURL)
-    local file = params.file
-    local line = params.line or "1"
-    local session = params.session
-
-    if not file then
-      U.log.ef("[nvim-open] Missing file param: %s", fullURL)
-      return
-    end
-
-    if not session then
-      U.log.ef("[nvim-open] Missing session param: %s", fullURL)
-      return
-    end
-
-    U.log.f("[nvim-open] Opening %s:%s in session %s", file, line, session)
-
-    -- PATH prefix for shell commands (Hammerspoon doesn't inherit nix PATH)
-    local pathPrefix = PATH and ("PATH='" .. PATH .. "' ") or ""
-
-    -- Find nvim instances in the target session
-    local sockets = nvim.getSocketsBySession(session)
-    local targetSocket = nil
-    local targetInfo = nil
-
-    -- Find most recently active (by socket file mtime)
-    local mostRecentMtime = 0
-    for id, info in pairs(sockets) do
-      local socketFile = nvim.socketDir .. "/" .. id
-      local attrs = hs.fs.attributes(socketFile)
-      if attrs and attrs.modification > mostRecentMtime then
-        mostRecentMtime = attrs.modification
-        targetSocket = info.socket
-        targetInfo = info
-      end
-    end
-
-    if targetSocket then
-      -- Open in vertical split (escape spaces in file path)
-      local escapedFile = file:gsub(" ", "\\ ")
-      local cmd = fmt('<Esc>:vsplit +%s %s<CR>', line, escapedFile)
-      nvim.sendKeys(targetSocket, cmd)
-      U.log.f("[nvim-open] Sent to nvim: %s:%s", file, line)
-
-      -- Ring tmux bell on the window (writes BEL to pane tty)
-      if targetInfo.window then
-        hs.execute(fmt(
-          "%stty=$(tmux display -p -t %s:%d '#{pane_tty}' 2>/dev/null) && printf '\\a' > \"$tty\" 2>/dev/null",
-          pathPrefix, session, targetInfo.window
-        ))
-      end
-    else
-      -- No nvim in session: create new window with nvim
-      hs.execute(fmt(
-        "%stmux new-window -t %s -n 'nvim' 'nvim +%s \"%s\"'",
-        pathPrefix, session, line, file
-      ))
-      U.log.f("[nvim-open] Created new tmux window with nvim: %s:%s", file, line)
-    end
-
-    -- Raise Ghostty and switch to the tmux session
-    local ghostty = hs.application.get("Ghostty")
-    if ghostty then
-      ghostty:activate()
-    end
-    hs.execute(fmt("%stmux switch-client -t %s", pathPrefix, session))
-  end)
-
+  hs.urlevent.bind("nvim-open", require("lib.interop.nvim-open").handleURL)
   U.log.f("[%s] nvim-open URL handler registered", M.name)
 end
 

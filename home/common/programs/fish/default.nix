@@ -33,11 +33,15 @@ in {
         end < ~/.local/cache/op/sessions
       end
 
-      # Set TMUX_SESSION and PLUG_EDITOR when in tmux
-      # Enables clickable stacktraces in Phoenix dev error pages
+      # PLUG_EDITOR for clickable stacktraces (Phoenix dev / browser devtools).
+      # Always set — Hammerspoon resolves target nvim instance dynamically at
+      # click time (file-already-open > active tmux client > most-recent socket).
+      # No session param: server-startup-time session is the wrong signal.
+      set -gx PLUG_EDITOR "hammerspoon://nvim-open?file=__FILE__&line=__LINE__"
+
+      # Capture tmux session name (consumed by other tools)
       if set -q TMUX
           set -gx TMUX_SESSION (tmux display-message -p '#S')
-          set -gx PLUG_EDITOR "hammerspoon://nvim-open?file=__FILE__&line=__LINE__&session=$TMUX_SESSION"
       end
 
       ${completions}
