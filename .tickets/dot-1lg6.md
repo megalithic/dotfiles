@@ -1,6 +1,6 @@
 ---
 id: dot-1lg6
-status: open
+status: closed
 deps: [dot-yjzp]
 links: []
 created: 2026-05-01T21:20:46Z

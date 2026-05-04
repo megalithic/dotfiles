@@ -47,4 +47,35 @@ vim.api.nvim_create_user_command("JJPDiff", function()
   end
 end, { nargs = 0 })
 
+-- ── Diffedit ──────────────────────────────────────────────────────────────
+
+--- Launch `jj diffedit --tool difftool`.
+--- End-to-end flow requires the jj merge-tools.difftool config (Step 7 / dot-j34v).
+---@param opts? {args: string}
+function M.diffedit(opts)
+  opts = opts or { args = "" }
+  vim.fn.jobstart("jj diffedit --tool difftool " .. opts.args)
+end
+
+--- Check whether a difftool session is active (qflist populated with user_data.diff).
+--- If not, force-delete any stale /tmp/jj-diff* buffers.
+---@return 0|1
+function M.is_jj_diffedit_open()
+  local entry = vim.fn.getqflist({ all = true }).items[1]
+  if not entry or not entry.user_data or not entry.user_data.diff then
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+      if vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buf), ":p"):match("/tmp/jj%-diff.*") then
+        vim.api.nvim_buf_delete(buf, { force = true })
+      end
+    end
+    return 0
+  else
+    return 1
+  end
+end
+
+vim.api.nvim_create_user_command("Diffedit", function(opts)
+  M.diffedit({ args = opts.args or "" })
+end, { nargs = "*" })
+
 return M
