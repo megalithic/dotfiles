@@ -63,6 +63,11 @@ return {
     cmd = "Neogit",
     branch = "master",
     dependencies = { "nvim-lua/plenary.nvim" },
+    keys = {
+      { "<leader>gg", function() require("neogit").open() end, desc = "neogit: open status" },
+      { "<leader>gS", function() require("neogit").open() end, desc = "neogit: open status" },
+      { "<localleader>gc", function() require("neogit").open({ "commit", "-v" }) end, desc = "neogit: commit" },
+    },
     opts = {
       disable_signs = false,
       disable_hint = true,
@@ -89,6 +94,9 @@ return {
     "madmaxieee/unclash.nvim",
     lazy = false,
     opts = {},
+    keys = {
+      { "<leader>fx", function() require("unclash.snacks").pick() end, desc = "Pick conflicts" },
+    },
     init = function()
       local unclash = require("unclash")
       local utils = mega.u

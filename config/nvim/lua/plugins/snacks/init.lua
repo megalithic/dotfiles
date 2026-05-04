@@ -484,9 +484,9 @@ return {
         { "<leader>fd", function() Snacks.picker.diagnostics() end, desc = "Diagnostics" },
 
         -- Pickers: git
-        -- { "<leader>gs", function() Snacks.picker.git_status() end, desc = "Git status" },
-        -- { "<leader>gc", function() Snacks.picker.git_log() end, desc = "Git commits" },
-        -- { "<leader>gb", function() Snacks.picker.git_branches() end, desc = "Git branches" },
+        { "<leader>gs", function() Snacks.picker.git_status() end, desc = "Git status" },
+        { "<leader>gl", function() Snacks.picker.git_log() end, desc = "Git commits" },
+        { "<leader>gb", function() Snacks.picker.git_branches() end, desc = "Git branches" },
         -- { "<leader>gd", pickers.git_diff_in_file, desc = "Git diff (file)" },
         -- { "<leader>gS", function() pickers.git_pickaxe({ global = false }) end, desc = "Git search (file)" },
         -- { "<leader>gG", function() pickers.git_pickaxe({ global = true }) end, desc = "Git search (global)" },

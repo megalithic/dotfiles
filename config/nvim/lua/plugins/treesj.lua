@@ -6,12 +6,12 @@ return {
   "Wansmer/treesj",
   keys = {
     {
-      "<leader>j",
+      "<localleader>J",
       function() require("treesj").toggle() end,
       desc = "Split/join lines",
     },
     {
-      "<leader>J",
+      "<localleader>\<C-J>",
       function() require("treesj").toggle({ split = { recursive = true } }) end,
       desc = "Split/join recursive",
     },

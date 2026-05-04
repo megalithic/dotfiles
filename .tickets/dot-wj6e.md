@@ -1,6 +1,6 @@
 ---
 id: dot-wj6e
-status: open
+status: closed
 deps: [dot-0srj, dot-o2jq, dot-1lg6]
 links: []
 created: 2026-05-01T21:21:33Z
