@@ -1,6 +1,6 @@
 ---
 id: dot-o2jq
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-05-01T21:20:18Z

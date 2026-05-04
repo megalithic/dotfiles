@@ -59,6 +59,33 @@ return {
   },
 
   {
+    "NeogitOrg/neogit",
+    cmd = "Neogit",
+    branch = "master",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    opts = {
+      disable_signs = false,
+      disable_hint = true,
+      disable_commit_confirmation = true,
+      disable_builtin_notifications = true,
+      disable_insert_on_commit = false,
+      fetch_after_checkout = true,
+      signs = {
+        section = { "", "" },
+        item = { "▸", "▾" },
+        hunk = { "󰐕", "󰍴" },
+      },
+      integrations = {
+        diffview = true,
+        mini_pick = true,
+      },
+      graph_style = "kitty",
+      process_spinner = "true",
+    },
+    config = function(_, opts) require("neogit").setup(opts) end,
+  },
+
+  {
     "madmaxieee/unclash.nvim",
     lazy = false,
     opts = {},
