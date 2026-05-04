@@ -36,6 +36,13 @@ in {
         };
       };
 
+      "merge-tools" = {
+        difftool = {
+          program = "nvim";
+          diff-args = [ "-c" "packadd nvim.difftool" "-d" "$left" "$right" ];
+        };
+      };
+
       # Auto-update stale workspaces when switching between them
       snapshot.auto-update-stale = true;
       remotes.origin.auto-track-bookmarks = "glob:*";

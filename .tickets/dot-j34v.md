@@ -1,6 +1,6 @@
 ---
 id: dot-j34v
-status: open
+status: closed
 deps: [dot-1lg6]
 links: []
 created: 2026-05-01T21:21:04Z
