@@ -1,5 +1,5 @@
--- VCS root detection utilities (jj, hg).
--- Mirrors https://github.com/madmaxieee/nvim-config/blob/main/lua/utils/vcs.lua
+-- VCS root detection utilities (jj only).
+-- Mirrors https://github.com/madmaxieee/nvim-config/blob/main/lua/utils/jj.lua
 
 local M = {}
 
@@ -13,18 +13,6 @@ function M.is_jj_root(dir)
     jj_root_cache[dir] = (stat ~= nil) and (stat.type == "directory")
   end
   return jj_root_cache[dir]
-end
-
----@type table<string, boolean>
-local hg_root_cache = {}
----@param dir string
----@return boolean
-function M.is_hg_root(dir)
-  if hg_root_cache[dir] == nil then
-    local stat = vim.uv.fs_stat(dir .. "/.hg")
-    hg_root_cache[dir] = (stat ~= nil) and (stat.type == "directory")
-  end
-  return hg_root_cache[dir]
 end
 
 --- Gets the vcs root directory for a buffer or path.
@@ -52,11 +40,5 @@ end
 ---@param path? number|string buffer or path
 ---@return string?
 function M.get_jj_root(path) return get_root(path, M.is_jj_root) end
-
---- Gets the hg root directory for a buffer or path.
---- Defaults to the current buffer.
----@param path? number|string buffer or path
----@return string?
-function M.get_hg_root(path) return get_root(path, M.is_hg_root) end
 
 return M
