@@ -8,6 +8,7 @@ return {
     event = { "InsertEnter", "CmdlineEnter" },
     dependencies = {
       { "xzbdmw/colorful-menu.nvim", opts = {} },
+      { "mikavilpas/blink-ripgrep.nvim" },
       -- { "Kaiser-Yang/blink-cmp-git", config = false }, -- configured as source below
     },
     opts = {
@@ -40,7 +41,7 @@ return {
       fuzzy = { implementation = "prefer_rust_with_warning" },
 
       sources = {
-        default = { "lsp", "path", "snippets", "buffer" },
+        default = { "lsp", "path", "snippets", "ripgrep", "buffer" },
         providers = {
           -- git = {
           --   module = "blink-cmp-git",
@@ -86,6 +87,17 @@ return {
           -- },
           path = { name = "[path]" },
           snippets = { name = "[snip]", score_offset = 3 },
+          ripgrep = {
+            enabled = true,
+            module = "blink-ripgrep",
+            name = "[rg]",
+            score_offset = -10,
+            async = true,
+            opts = {
+              project_root_marker = { ".git", ".jj" },
+              backend = { use = "gitgrep-or-ripgrep" },
+            },
+          },
           buffer = {
             name = "[buf]",
             max_items = 4,

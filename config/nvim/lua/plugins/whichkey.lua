@@ -52,12 +52,14 @@ return {
         { "<leader>t", group = "term" },
         { "<leader>g", group = "git" },
         { "<leader>h", group = "hunk" },
+        { "<leader>j", group = "jj" },
         { "<leader>l", group = "lsp" },
         { "<leader>p", group = "plugins" },
         { "<leader>u", group = "ui/toggle" },
         { "<leader>x", group = "trouble" },
 
         -- Localleader subgroups
+        { "<localleader>J", group = "split/join" },
         { "<localleader>c", group = "conflict" },
         { "<localleader>d", group = "debug" },
         { "<localleader>e", group = "eval/lang" },

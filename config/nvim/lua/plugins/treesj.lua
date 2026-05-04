@@ -11,7 +11,7 @@ return {
       desc = "Split/join lines",
     },
     {
-      "<localleader>\<C-J>",
+      "<localleader>J",
       function() require("treesj").toggle({ split = { recursive = true } }) end,
       desc = "Split/join recursive",
     },

@@ -9,7 +9,8 @@ return {
       { "<leader>jl", function() require("jj.cmd").log() end, desc = "jj: log" },
       { "<leader>jh", function() require("jj.picker").file_history() end, desc = "jj: file history" },
       { "<leader>je", function() require("utils.jj").diffedit() end, desc = "jj: diffedit" },
-      { "<leader>jd", function() require("jj.diff").open_vdiff({ rev = "trunk()" }) end, desc = "jj: vdiff vs trunk" },
+      { "<leader>jd", function() require("mini.diff").toggle_overlay(0) end, desc = "jj: toggle diff overlay" },
+      { "<leader>jD", function() require("utils.jj").toggle_vdiff() end, desc = "jj: toggle vdiff vs trunk" },
     },
   },
 }

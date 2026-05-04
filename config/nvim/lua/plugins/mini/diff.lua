@@ -23,9 +23,7 @@ end
 local jj_opts = {
   name = "jj",
 
-  should_enable = function()
-    return jj.find_root(vim.uv.cwd()) ~= nil
-  end,
+  should_enable = function() return jj.find_root(vim.uv.cwd()) ~= nil end,
 
   root_to_watch_pattern = function(root) return { dir = root .. "/.jj/working_copy", file = "checkout" } end,
 
@@ -135,6 +133,6 @@ return {
       desc = "Reset selected lines",
     })
 
-    map("n", "<leader>gd", function() require("mini.diff").toggle_overlay(0) end, { desc = "Toggle diff overlay" })
+    map("n", "<leader>gd", function() require("mini.diff").toggle_overlay(0) end, { desc = "toggle diff overlay" })
   end,
 }

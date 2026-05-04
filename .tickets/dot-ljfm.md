@@ -1,6 +1,6 @@
 ---
 id: dot-ljfm
-status: open
+status: closed
 deps: [dot-wj6e]
 links: []
 created: 2026-05-01T21:21:57Z

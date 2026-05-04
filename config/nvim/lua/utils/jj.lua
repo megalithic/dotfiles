@@ -13,9 +13,60 @@ M.config = {
 ---@return string?
 function M.find_root(path) return require("utils.vcs").get_jj_root(path) end
 
--- ── Commands ──────────────────────────────────────────────────────────────
+-- ── Toggle vdiff ─────────────────────────────────────────────────────────
+
+--- Close any jj:// revision buffer visible in the current tabpage.
+--- Returns true if a diff was closed (i.e. we toggled off).
+---@return boolean
+function M.close_vdiff()
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_is_valid(win) then
+      local buf = vim.api.nvim_win_get_buf(win)
+      local name = vim.api.nvim_buf_get_name(buf)
+      if name:match("^jj://") then
+        -- Closing this buffer triggers the native backend's cleanup autocmd,
+        -- which restores the original window and exits diff mode.
+        vim.api.nvim_buf_delete(buf, { force = true })
+        return true
+      end
+    end
+  end
+  return false
+end
+
+--- Toggle jj.nvim's vertical diff split.
+--- If a jj:// buffer is visible, close it. Otherwise, open a new vdiff.
+---@param rev? string revision to diff against (default: "trunk()")
+function M.toggle_vdiff(rev)
+  rev = rev or "trunk()"
+  if M.close_vdiff() then return end
+  require("jj.diff").open_vdiff({ rev = rev })
+end
+
+-- ── Unified JJDiff command ────────────────────────────────────────────────
+-- :JJDiff <rev>        — set base rev for mini.diff signs + overlay
+-- :JJDiff overlay      — toggle mini.diff overlay
+-- :JJDiff vdiff [rev]  — toggle jj.nvim vertical diff split
+
+local subcommands = { overlay = true, vdiff = true }
 
 vim.api.nvim_create_user_command("JJDiff", function(opts)
+  local args = vim.split(opts.args, "%s+")
+  local first = args[1]
+
+  -- Subcommand: overlay
+  if first == "overlay" then
+    require("mini.diff").toggle_overlay(0)
+    return
+  end
+
+  -- Subcommand: vdiff [rev]
+  if first == "vdiff" then
+    M.toggle_vdiff(args[2])
+    return
+  end
+
+  -- Default: set base rev for mini.diff
   local rev = opts.args
   local path = vim.api.nvim_buf_get_name(0)
   local dir = vim.fs.dirname(path)
@@ -37,7 +88,21 @@ vim.api.nvim_create_user_command("JJDiff", function(opts)
       end)
     end
   )
-end, { nargs = 1 })
+end, {
+  nargs = "?",
+  complete = function(_, line)
+    local prefix = line:match("JJDiff%s+(.*)") or ""
+    if prefix == "" then
+      return vim.tbl_keys(subcommands)
+    end
+    local first = vim.split(prefix, "%s+")[1]
+    if subcommands[first] and first == "vdiff" then
+      -- Could complete revs here; for now just return empty
+      return {}
+    end
+    return vim.tbl_keys(subcommands)
+  end,
+})
 
 vim.api.nvim_create_user_command("JJPDiff", function()
   if M.config.base_rev == "@-" then
