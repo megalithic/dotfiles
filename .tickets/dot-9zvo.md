@@ -1,6 +1,6 @@
 ---
 id: dot-9zvo
-status: open
+status: closed
 deps: [dot-yjzp]
 links: []
 created: 2026-05-01T21:19:46Z

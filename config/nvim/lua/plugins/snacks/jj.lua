@@ -3,7 +3,9 @@
 
 local M = {}
 
-local get_jj_root = require("utils.vcs").get_jj_root
+local jj_utils = require("utils.jj")
+local get_jj_root = jj_utils.find_root
+local jj_config = jj_utils.config
 
 ---@param opts snacks.picker.git.diff.Config
 ---@type snacks.picker.finder
@@ -22,7 +24,7 @@ local function jj_diff_finder(opts, ctx)
       args = {
         "--no-pager", "--color=never",
         "--config", "ui.diff-formatter=:git",
-        "diff",
+        "diff", "--from", jj_config.base_rev,
       },
       cwd = cwd,
     }),
