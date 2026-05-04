@@ -211,13 +211,23 @@ function M.hs.build_socket_id()
 end
 
 --- Register this nvim's --listen socket so Hammerspoon can discover it.
+--- If no listen socket exists yet (e.g. nvim was started with --embed by a
+--- GUI like Neovide), one is created on demand via serverstart() so the
+--- instance is still reachable via RPC.
 function M.hs.register_socket()
-  if vim.v.servername == nil or vim.v.servername == "" then return end
+  local servername = vim.v.servername
+  if servername == nil or servername == "" then
+    -- Auto-create a listen socket. Path matches nvim's default scheme so
+    -- it's cleaned up on exit alongside other tempfiles.
+    local ok, started = pcall(vim.fn.serverstart)
+    if not ok or not started or started == "" then return end
+    servername = started
+  end
   local id = M.hs.build_socket_id()
   vim.fn.mkdir(HS_SOCKET_DIR, "p")
   local f = io.open(HS_SOCKET_DIR .. "/" .. id, "w")
   if f then
-    f:write(vim.v.servername)
+    f:write(servername)
     f:close()
     vim.g._hs_socket_id = id
   end

@@ -129,13 +129,44 @@ end
 -- SOCKET DISCOVERY
 --------------------------------------------------------------------------------
 
---- Get all registered nvim sockets
+--- Get set of currently-live PIDs from a list of candidate PIDs.
+--- Single `ps` invocation for efficiency.
+---@param pids number[]
+---@return table<number, boolean>
+local function livePidSet(pids)
+  local set = {}
+  if #pids == 0 then return set end
+  local args = {}
+  for _, p in ipairs(pids) do args[#args + 1] = tostring(p) end
+  -- `ps -p p1,p2,...` returns header + one row per live pid.
+  local handle = io.popen("ps -p " .. table.concat(args, ",") .. " -o pid= 2>/dev/null")
+  if not handle then return set end
+  for line in handle:lines() do
+    local pid = tonumber((line:gsub("^%s+", ""):match("^%d+")))
+    if pid then set[pid] = true end
+  end
+  handle:close()
+  return set
+end
+
+--- Remove a stale registry file (silently).
+local function pruneStaleEntry(socketId)
+  os.remove(fmt("%s/%s", M.socketDir, socketId))
+end
+
+--- Get all registered nvim sockets.
+--- Stale entries (dead pid or missing server socket) are pruned from disk and
+--- excluded from the result. This guards against nvim being killed without
+--- VimLeavePre firing (e.g. SIGKILL, OOM, tmux pane force-close).
 ---@return table<string, SocketInfo> Map of socket_id -> SocketInfo (with socket path)
 function M.getSockets()
   local sockets = {}
   local dir = io.popen(fmt("ls '%s' 2>/dev/null", M.socketDir))
   if not dir then return sockets end
 
+  -- Pass 1: parse all entries
+  local candidates = {}
+  local pids = {}
   for socketId in dir:lines() do
     local socketFile = fmt("%s/%s", M.socketDir, socketId)
     local f = io.open(socketFile, "r")
@@ -146,12 +177,29 @@ function M.getSockets()
         local info = M.parseSocketId(socketId)
         if info then
           info.socket = socketPath
-          sockets[socketId] = info
+          candidates[socketId] = info
+          pids[#pids + 1] = info.pid
+        else
+          pruneStaleEntry(socketId) -- unparseable id
         end
+      else
+        pruneStaleEntry(socketId) -- empty registry file
       end
     end
   end
   dir:close()
+
+  -- Pass 2: keep only entries whose pid is alive AND server socket file exists
+  local live = livePidSet(pids)
+  for socketId, info in pairs(candidates) do
+    if not live[info.pid] then
+      pruneStaleEntry(socketId) -- pid dead
+    elseif not hs.fs.attributes(info.socket) then
+      pruneStaleEntry(socketId) -- pid alive but server socket file gone
+    else
+      sockets[socketId] = info
+    end
+  end
 
   return sockets
 end
