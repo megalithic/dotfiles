@@ -1,6 +1,6 @@
 ---
 id: dot-yjzp
-status: open
+status: closed
 deps: [dot-913o]
 links: []
 created: 2026-05-01T21:19:32Z
