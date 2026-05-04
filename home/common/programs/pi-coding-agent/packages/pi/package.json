@@ -11,6 +11,6 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@mariozechner/pi-coding-agent": "0.70.4"
+    "@mariozechner/pi-coding-agent": "0.72.1"
   }
 }
