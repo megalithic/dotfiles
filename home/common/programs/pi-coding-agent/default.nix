@@ -258,7 +258,6 @@
   disabledExtensions = [
     "checkpoint.ts" # Too intrusive
     "subscription-fallback.ts" # Doesn't support everything we need
-    "subagent" # Replaced by pi-interactive-subagents (async, mux-based)
   ];
 
   # Skills to exclude from auto-discovery
@@ -426,7 +425,6 @@
     # Socket config — bridge.ts auto-detects tmux session/window.
     export PI_SOCKET_DIR="${socketConfig.dir}"
     export PI_SOCKET_PREFIX="${socketConfig.prefix}"
-    export PI_SUBAGENT_MUX=tmux
 
     # Detect session name (bridge.ts handles socket)
     if [ -n "$TMUX" ]; then
