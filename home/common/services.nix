@@ -16,18 +16,37 @@
   ...
 }: {
   # ─────────────────────────────────────────────────────────────────────────────
-  # Ollama - Local LLM inference server
+  # oMLX - Apple Silicon native LLM inference (default ON)
   # ─────────────────────────────────────────────────────────────────────────────
-  # Runs as a persistent background service, listening on http://localhost:11434
-  # Used by: Shade (image capture intelligence), various AI tools
+  # Listens on http://127.0.0.1:8000/v1. CLI installed via brew tap
+  # (jundot/omlx); see modules/brew.nix and home/common/programs/omlx/.
   #
-  # Model management (run manually after rebuild):
-  #   ollama list              # Show installed models
-  #   ollama pull llava:13b    # Vision model (~7.4GB)
-  #   ollama pull llama3.2     # Text model (~2GB)
-  #
-  launchd.agents.ollama = {
+  # Default ON. Ollama is now opt-in (services.ollama.enable = true).
+  launchd.agents.omlx = {
     enable = true;
+    config = {
+      ProgramArguments = [
+        "/opt/homebrew/bin/omlx"
+        "serve"
+      ];
+      RunAtLoad = true;
+      KeepAlive = true;
+      StandardOutPath = "${config.home.homeDirectory}/Library/Logs/omlx/stdout.log";
+      StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/omlx/stderr.log";
+      EnvironmentVariables = {
+        OMLX_HOST = "127.0.0.1";
+        OMLX_PORT = "8000";
+      };
+    };
+  };
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Ollama - Local LLM inference (legacy, opt-in via services.ollamaAgent.enable)
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Listening on http://localhost:11434. Opt-in only — default OFF.
+  # Enable with: services.ollamaAgent.enable = true; in home/<hostname>.nix
+  launchd.agents.ollama = {
+    enable = config.services.ollamaAgent.enable;
     config = {
       ProgramArguments = [
         "${pkgs.ollama}/bin/ollama"
@@ -61,6 +80,10 @@
   # Ensure log directories exist
   home.activation.makeOllamaLogDir = lib.hm.dag.entryAfter ["writeBoundary"] ''
     mkdir -p ${config.home.homeDirectory}/Library/Logs/ollama
+  '';
+
+  home.activation.makeOmlxLogDir = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    mkdir -p ${config.home.homeDirectory}/Library/Logs/omlx
   '';
 
   home.activation.makeEspansoLogDir = lib.hm.dag.entryAfter ["writeBoundary"] ''

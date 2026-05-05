@@ -43,6 +43,22 @@
       url = "github:FelixKratz/homebrew-formulae";
       flake = false;
     };
+    homebrew-jundot-omlx = {
+      url = "github:jundot/omlx";
+      flake = false;
+    };
+
+    # brew-nix: nix overlay for homebrew casks (replaces nix-homebrew casks)
+    brew-api = {
+      url = "github:BatteredBunny/brew-api";
+      flake = false;
+    };
+    brew-nix = {
+      url = "github:BatteredBunny/brew-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.brew-api.follows = "brew-api";
+      inputs.nix-darwin.follows = "nix-darwin";
+    };
     agenix = {
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -110,6 +126,13 @@
           "homebrew/homebrew-services" = inputs.homebrew-services;
           "homebrew/homebrew-bundle" = inputs.homebrew-bundle;
           "felixkratz/homebrew-formulae" = inputs.homebrew-felixkratz;
+          # Key uses canonical homebrew-<name> tap path (used by nix-homebrew
+          # for the symlink at Library/Taps/jundot/homebrew-omlx). The actual
+          # input repo is github:jundot/omlx (no `homebrew-` prefix). The
+          # replaceStrings mapper below strips `homebrew-` so brew sees the
+          # tap as `jundot/omlx`, which is what `brew install jundot/omlx/omlx`
+          # expects.
+          "jundot/homebrew-omlx" = inputs.homebrew-jundot-omlx;
         };
       };
     };

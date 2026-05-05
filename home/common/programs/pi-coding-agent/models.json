@@ -20,6 +20,27 @@
           "maxTokens": 8192
         }
       ]
+    },
+    "omlx": {
+      "baseUrl": "http://127.0.0.1:8000/v1",
+      "apiKey": "omlx",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "qwen3.6",
+          "reasoning": false,
+          "input": ["text"],
+          "contextWindow": 65536,
+          "maxTokens": 8192
+        },
+        {
+          "id": "gemma4",
+          "reasoning": false,
+          "input": ["text", "image"],
+          "contextWindow": 32768,
+          "maxTokens": 8192
+        }
+      ]
     }
   }
 }

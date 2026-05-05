@@ -2,35 +2,27 @@
   environment.systemPath = ["/opt/homebrew/bin"];
   homebrew = {
     enable = true;
-    # Remove quarantine attribute from casks so they don't prompt on first launch
+    # Remove quarantine attribute from casks so they don't prompt on first launch.
+    # Kept for any future homebrew cask overrides; brew-nix-managed casks bypass
+    # macOS quarantine entirely (installed from /nix/store).
     caskArgs.no_quarantine = true;
     brews = [
-      "whisperkit-cli" # Apple Silicon native speech recognition
+      # whisperkit-cli moved to nix derivation: pkgs/cli/whisperkit-cli.nix
+      "jundot/omlx/omlx" # Apple Silicon native LLM inference server (oMLX)
     ];
+    # Casks migrated to brew-nix overlay (pkgs.brewCasks.*) — see
+    # home/common/programs/gui-apps.nix. Keeping list here as documentation
+    # of which apps moved:
+    #   1password, 1password-cli, colorsnapper, contexts, hammerspoon,
+    #   homerow, kitty, mouseless, okta-verify, protonvpn, proton-drive,
+    #   obs@beta, yubico-authenticator, visual-studio-code, zed
     casks = [
-      "1password"
-      "1password-cli"
-      "colorsnapper"
-      "contexts"
-      # "figma"
-      # "fantastical"
-      "hammerspoon"
-      "homerow"
-      # "karabiner-elements"
-      "kitty"
-      # "microsoft-teams"
-      "mouseless"
-      "okta-verify" # really just needed for work laptop
-      # "orbstack" # Docker containers + Linux VMs (replaces colima) - removed due to brew quarantine flag deprecation
-      "protonvpn"
-      "proton-drive"
-      "obs@beta"
+      # Raycast serves a zlib-wrapped DMG that brew-nix's 7zz unpack can't
+      # handle. Keep on homebrew until upstream fixes the wrapping.
       "raycast"
-      # "spotify"
-      # "thingsmacsandboxhelper"
-      "yubico-authenticator"
-      "visual-studio-code"
-      "zed"
+      # Okta Verify ships a .pkg with URL-encoded paths that brew-nix's
+      # cpio/gzip pipeline can't extract. Keep on homebrew.
+      "okta-verify"
     ];
     masApps = {
       "Xcode" = 497799835;

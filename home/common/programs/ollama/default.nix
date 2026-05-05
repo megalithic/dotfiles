@@ -1,30 +1,30 @@
+# Ollama - Local LLM inference (legacy, opt-in via services.ollama.enable)
+#
+# Epic: shade-cgn (Image capture intelligence - now using MLX)
+# Status: Opt-in via `services.ollama.enable = true;` — defaults OFF.
+# Migration: Replaced by oMLX (dot-8arp). Keep for fallback only.
+#
+# To re-enable:
+#   home/<hostname>.nix: services.ollama.enable = true;
+#
+# Model installation (if re-enabled):
+#   ollama pull llava:13b      # Vision, ~7.4GB
+#   ollama pull llama3.2       # Text, ~2GB
+#
+# Check status:
+#   ollama list
+#   curl http://localhost:11434/api/tags
 {
   config,
   pkgs,
   lib,
   ...
 }: {
-  # Ollama - Local LLM inference for Shade image capture intelligence
-  # Epic: shade-cgn (Image capture intelligence: OCR + AI summarization)
-  # Task: shade-cgn.1 (Setup Ollama with optimal models for M2 Max)
-  #
-  # NOTE: Launchd agent moved to home/common/services.nix
-  # This file now only contains documentation for model installation.
-
-  # Instructions for model installation (run after rebuild)
-  # These are LARGE downloads - user should confirm before pulling
-  #
-  # Vision models (can process images directly):
-  #   ollama pull llava:13b      # Best quality, ~7.4GB, fits in 32GB
-  #   ollama pull llava:7b       # Faster, ~4.7GB
-  #   ollama pull bakllava       # Alternative, ~4.4GB
-  #
-  # Text summarization models:
-  #   ollama pull llama3.2       # Excellent for summarization, ~2GB
-  #   ollama pull mistral        # Fast, good quality, ~4.1GB
-  #   ollama pull phi3:medium    # Compact but capable, ~7.9GB
-  #
-  # Check status:
-  #   ollama list
-  #   curl http://localhost:11434/api/tags
+  options.services.ollamaAgent = {
+    enable = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Enable ollama launchd agent (opt-in, default OFF).";
+    };
+  };
 }

@@ -90,3 +90,11 @@ This is Phase 1 of the oMLX migration plan (dot-8arp). Combines homebrew moderni
 27. bin/omlx-pull exists and omlx-pull --help prints usage
 28. brew list shows only omlx and its dependencies (no casks, no whisperkit-cli)
 29. just validate passes
+
+**App location (added 2026-05-05 by user):**
+30. All nix-managed GUI apps (brewCasks, nixpkgs `.app` bundles, custom mkApp) appear directly under `~/Applications/<Name>.app`, NOT under `~/Applications/Home Manager Apps/`.
+31. `~/Applications/Home Manager Apps/` either does not exist or is empty after `just home`.
+32. `~/Applications/Nix/` (legacy mac-aliases dir) does not exist after `just home`.
+33. System-level nix-darwin GUI apps (currently `/Applications/Nix Apps/Kanata Bar.app`) also surface directly under `/Applications/<Name>.app` (via Finder alias if direct copy would risk clobbering non-nix apps in `/Applications/`).
+34. Spotlight, Launchpad, and the Dock find migrated apps by their canonical name (no "Home Manager Apps", "Nix", or "Nix Apps" subfolder appearing in search/launcher).
+35. Removing an app from `home.packages` cleans it from `~/Applications/` on next activation (orphan cleanup works for auto-linked apps too).

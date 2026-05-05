@@ -23,6 +23,7 @@ in {
   # CLI Tools & Utilities
   # ===========================================================================
   chrome-devtools-mcp = prev.callPackage ./chrome-devtools-mcp.nix {};
+  whisperkit-cli = prev.callPackage ./cli/whisperkit-cli.nix {};
 
   # ===========================================================================
   # macOS Apps (mkApp - DMG/ZIP extraction)

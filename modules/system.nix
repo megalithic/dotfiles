@@ -84,8 +84,8 @@
         magnification = false;
         persistent-others = null;
         persistent-apps = [
-          {app = "~/Applications/Finder.app";}
-          {app = "~/Applications/Home Manager Apps/Brave Browser Nightly.app";}
+          {app = "/System/Library/CoreServices/Finder.app";}
+          {app = "~/Applications/Brave Browser Nightly.app";}
           {app = "~/Applications/Ghostty.app";}
           {app = "/System/Applications/Messages.app";}
 
@@ -253,10 +253,10 @@
           SUHasLaunchedBefore = true;
           SUSendProfileInfo = false;
         };
-        "com.flexibits.fantastical2.mac" = {
-          SUAutomaticallyUpdate = false;
-          SUEnableAutomaticChecks = false;
-        };
+        # "com.flexibits.fantastical2.mac" = {
+        #   SUAutomaticallyUpdate = false;
+        #   SUEnableAutomaticChecks = false;
+        # };
         "com.raycast.macos" = {
           # cmd-space
           initialSpotlightHotkey = "Command-49";
@@ -284,22 +284,8 @@
           # useHyperKeyIcon = 1;
         };
 
-        # REF: https://medium.com/@zmre/nix-darwin-quick-tip-activate-your-preferences-f69942a93236
-        "com.apple.messages.text" = {
-          Autocapitalization = 1;
-          EmojiReplacement = 1;
-          SmartDashes = 1;
-          SmartInsertDelete = 2;
-          SmartQuotes = 1;
-          SpellChecking = 1;
-          ApplePressAndHoldEnabled = false;
-        };
-        "com.apple.ActivityMonitor" = {
-          OpenMainWindow = true;
-          IconType = 5;
-          SortColumn = "CPUUsage";
-          SortDirection = 0;
-        };
+        # com.apple.messages.text and com.apple.ActivityMonitor disabled —
+        # both are sandboxed (see SANDBOXED APP PREFS note below).
         "com.apple.desktopservices" = {
           # Avoid creating .DS_Store files on network or USB volumes
           DSDontWriteNetworkStores = true;
@@ -322,38 +308,16 @@
         "com.apple.commerce".AutoUpdate = true;
         # Prevent Photos from opening automatically when devices are plugged in
         "com.apple.ImageCapture".disableHotPlug = true;
-        "com.apple.Safari" = {
-          # Privacy: don’t send search queries to Apple
-          UniversalSearchEnabled = false;
-          SuppressSearchSuggestions = true;
-          # Press Tab to highlight each item on a web page
-          WebKitTabToLinksPreferenceKey = true;
-          ShowFullURLInSmartSearchField = true;
-          # Prevent Safari from opening ‘safe’ files automatically after downloading
-          AutoOpenSafeDownloads = false;
-          ShowFavoritesBar = false;
-          IncludeInternalDebugMenu = true;
-          IncludeDevelopMenu = true;
-          WebKitDeveloperExtrasEnabledPreferenceKey = true;
-          WebContinuousSpellCheckingEnabled = true;
-          WebAutomaticSpellingCorrectionEnabled = false;
-          AutoFillFromAddressBook = false;
-          AutoFillCreditCardData = false;
-          AutoFillMiscellaneousForms = false;
-          WarnAboutFraudulentWebsites = true;
-          WebKitJavaEnabled = false;
-          WebKitJavaScriptCanOpenWindowsAutomatically = false;
-          "com.apple.Safari.ContentPageGroupIdentifier.WebKit2TabsToLinks" = true;
-          "com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled" = true;
-          "com.apple.Safari.ContentPageGroupIdentifier.WebKit2BackspaceKeyNavigationEnabled" = false;
-          "com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaEnabled" = false;
-          "com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaEnabledForLocalFiles" = false;
-          "com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaScriptCanOpenWindowsAutomatically" = false;
-        };
-        "com.apple.mail" = {
-          # Disable inline attachments (just show the icons)
-          DisableInlineAttachmentViewing = true;
-        };
+        # === SANDBOXED APP PREFS DISABLED (macOS Sequoia) ===
+        # Sequoia hard-fails `defaults write` to sandboxed apps' containers
+        # (~/Library/Containers/<bundle-id>/). Even with FDA on Ghostty,
+        # nix-darwin's `launchctl asuser ... sudo defaults write` runs in the
+        # launchd GUI context which doesn't inherit Ghostty's TCC grant.
+        # Set these manually in each app's Settings/Preferences UI.
+        #
+        # Disabled domains: com.apple.Safari, com.apple.mail,
+        # com.apple.messages.text, com.apple.ActivityMonitor
+        # See: https://lapcatsoftware.com/articles/containers.html
         # tell HS where to find its config file
         "org.hammerspoon.Hammerspoon".MJConfigFile = "~/.config/hammerspoon/init.lua";
 

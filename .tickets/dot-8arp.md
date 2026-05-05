@@ -82,3 +82,26 @@ References:
 15. Coexistence mode: ollama and omlx both configurable via nix flags, can run side-by-side on different ports
 16. Research complete: model download options documented with tradeoffs (omlx admin downloader, CLI, HF cache, manual, nix pre-seed)
 
+## AC Checklist (2026-05-05)
+
+| AC | Status | Evidence |
+|----|--------|----------|
+| 1  | ✅ | Brew tap `jundot/omlx` — lowest risk per TASK.md Stream 1 |
+| 2  | ✅ | Qwen 4bit both hosts; Gemma 4bit mega / 8bit rx — TASK.md Stream 2 |
+| 3  | ✅ | Per-model settings in `omlx/default.nix` + host overrides — TASK.md Stream 4 |
+| 4  | ✅ | `services.ollamaAgent.enable = false` (default) in `ollama/default.nix` |
+| 5  | ✅ | `launchd.agents.omlx` in `services.nix`, running on :8000 |
+| 6  | ✅ | `~/.omlx/settings.json` with XDG dirs, port 8000, host tuning |
+| 7  | ✅ | `omlx` provider in `models.json` with qwen3.6 + gemma4 |
+| 8  | ✅ | `omlx/qwen3.6` + `omlx/gemma4` in enabledModels |
+| 9  | ✅ | No ollama refs in hammerspoon/ (confirmed in research) |
+| 10 | ✅ | No ollama refs in active nvim/ (confirmed in research) |
+| 11 | ⏳ | Blocked on model pulls — see dot-8arp-phase-2-1 |
+| 12 | ✅ | megabookpro.nix + rxbookpro.nix with pinning/TTL/memory |
+| 13 | ✅ | `just home` passed 2026-05-05 |
+| 14 | ✅ | `~/.ollama/models` untouched (16GB preserved) |
+| 15 | ✅ | `services.ollamaAgent.enable` opt-in + omlx default ON |
+| 16 | ✅ | TASK.md Stream 3 documents all 5 download options |
+
+**Remaining blocker:** AC 11 (tmux reachability) requires model pulls (dot-8arp-phase-2-1).
+

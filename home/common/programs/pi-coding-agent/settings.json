@@ -20,8 +20,8 @@
     "synthetic/hf:zai-org/GLM-4.7",
     "synthetic/hf:MiniMaxAI/MiniMax-M2.5",
     "synthetic/hf:moonshotai/Kimi-K2.5",
-    "ollama/gemma4:e4b",
-    "ollama/gemma4:e2b"
+    "omlx/qwen3.6",
+    "omlx/gemma4"
   ],
   "terminal": {
     "showImages": false

@@ -462,6 +462,39 @@ function buildRules(config: SentinelConfig): Rule[] {
     reason: "Squash with --from/--into/-r can flatten history. Simple `jj squash` is safe.",
   });
 
+  // ── CONFIRM: tccutil reset without granular scoping ──
+  // `tccutil reset` without a bundle-id resets a service for ALL apps,
+  // forcing the user to re-grant every TCC permission. `tccutil reset All`
+  // is the nuclear option — resets every service for every app.
+  // Only `tccutil reset <SERVICE> <BUNDLE_ID>` is allowed without confirmation.
+
+  rules.push({
+    name: "tccutil-reset-unscoped",
+    tier: "confirm",
+    tools: ["bash"],
+    test: (cmd) => {
+      const tokens = segmentTokens(cmd, "tccutil", "reset");
+      if (!tokens) return false;
+      // tokens = ["tccutil", "reset", <service?>, <bundle-id?>, ...]
+      const service = tokens[2];
+      const bundleId = tokens[3];
+
+      // Bare `tccutil reset` — no service. Block.
+      if (!service) return true;
+      // `tccutil reset All` — nuclear, resets every service for every app. Block.
+      if (service === "All") return true;
+      // `tccutil reset <service>` without bundle-id — resets service for all apps. Block.
+      if (!bundleId || bundleId.startsWith("-")) return true;
+
+      return false;
+    },
+    reason:
+      "`tccutil reset` without a bundle-id resets the service for ALL apps. " +
+      "Use scoped form: `tccutil reset <SERVICE> <BUNDLE_ID>` (e.g. " +
+      "`tccutil reset SystemPolicyAllFiles com.mitchellh.ghostty`). " +
+      "Avoid `tccutil reset All` — it nukes every TCC permission for every app.",
+  });
+
   // ── HARD: gatekeeper (secrets in diff) ──
   
   // Store gatekeeper findings for error message

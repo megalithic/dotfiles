@@ -19,8 +19,8 @@ const STOP_CHECK_PROMPT =
 // Gatekeeper configuration
 const GATEKEEPER_PREFERENCE = "local-first" as "local-first" | "cloud-first";
 
-const LOCAL_GATEKEEPER_PROVIDER = "ollama";
-const LOCAL_GATEKEEPER_MODEL_ID = "gemma4:e2b";
+const LOCAL_GATEKEEPER_PROVIDER = "omlx";
+const LOCAL_GATEKEEPER_MODEL_ID = "gemma4";
 
 // Cloud fallback when local ollama is unavailable
 const CLOUD_GATEKEEPER_PROVIDER = "anthropic";
@@ -88,10 +88,11 @@ function buildGatekeeperMessages(messages: any[]) {
 }
 
 /**
- * Call ollama directly with think: false to prevent gemma4 from burning
- * tokens on its thinking chain instead of producing a YES/NO response.
+ * Call oMLX via OpenAI-compatible /v1/chat/completions.
+ * Uses gemma4 model settings with enable_thinking=false (server-side lock).
+ * Request-level extra_body for belt-and-suspenders; server forces it anyway.
  */
-async function askOllamaGatekeeper(
+async function askOmlxGatekeeper(
   modelId: string,
   contextMessages: any[],
 ): Promise<boolean | null> {
@@ -104,11 +105,14 @@ async function askOllamaGatekeeper(
           .map((b: any) => ({ role: m.role || "user", content: b.text }))
       ),
       stream: false,
-      think: false,
-      options: { num_predict: 16 },
+      max_tokens: 16,
+      temperature: 0,
+      extra_body: {
+        chat_template_kwargs: { enable_thinking: false },
+      },
     });
 
-    const res = await fetch("http://127.0.0.1:11434/api/chat", {
+    const res = await fetch("http://127.0.0.1:8000/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body,
@@ -117,7 +121,7 @@ async function askOllamaGatekeeper(
 
     if (!res.ok) return null;
     const data = await res.json();
-    const text = (data.message?.content || "").trim().toUpperCase();
+    const text = (data.choices?.[0]?.message?.content || "").trim().toUpperCase();
     return !text.startsWith("NO");
   } catch {
     return null;
@@ -194,12 +198,12 @@ async function shouldSendNudge(
   // Try gatekeepers based on preference order
   const gatekeepers = GATEKEEPER_PREFERENCE === "local-first"
     ? [
-        { type: "local", fn: () => askOllamaGatekeeper(LOCAL_GATEKEEPER_MODEL_ID, contextMessages) },
+        { type: "local", fn: () => askOmlxGatekeeper(LOCAL_GATEKEEPER_MODEL_ID, contextMessages) },
         { type: "cloud", fn: () => askCloudGatekeeper(CLOUD_GATEKEEPER_PROVIDER, CLOUD_GATEKEEPER_MODEL_ID, contextMessages, ctx) },
       ]
     : [
         { type: "cloud", fn: () => askCloudGatekeeper(CLOUD_GATEKEEPER_PROVIDER, CLOUD_GATEKEEPER_MODEL_ID, contextMessages, ctx) },
-        { type: "local", fn: () => askOllamaGatekeeper(LOCAL_GATEKEEPER_MODEL_ID, contextMessages) },
+        { type: "local", fn: () => askOmlxGatekeeper(LOCAL_GATEKEEPER_MODEL_ID, contextMessages) },
       ];
 
   for (const gatekeeper of gatekeepers) {

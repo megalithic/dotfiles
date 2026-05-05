@@ -11,7 +11,7 @@ home/
 │   ├── packages.nix     # CLI tools + GUI apps (nixpkgs + custom mkApp)
 │   ├── mac-aliases.nix  # Finder alias creation (Spotlight/Launchpad support)
 │   ├── mas.nix          # Mac App Store app declarations
-│   ├── services.nix     # User-level launchd services (ollama agent)
+│   ├── services.nix     # User-level launchd services (omlx default, ollama opt-in)
 │   └── programs/        # Per-program config modules — one dir per program,
 │                        # each with default.nix (and optional support files)
 │       ├── aerc/                  # Email TUI client
@@ -31,7 +31,8 @@ home/
 │       ├── msmtp/                 # SMTP send + queue
 │       ├── notmuch/               # Mail indexing/tagging
 │       ├── nvim/                  # Neovim (package + LSPs)
-│       ├── ollama/                # Local LLM inference
+│       ├── ollama/                # Local LLM inference (legacy, opt-in via services.ollamaAgent)
+│       ├── omlx/                  # Apple Silicon LLM inference (default ON)
 │       ├── pi-coding-agent/       # pi agent harness
 │       ├── shade/                 # Shade screen dimmer
 │       ├── starship/              # Cross-shell prompt
@@ -85,7 +86,7 @@ Spotlight, Launchpad, and Dock all work properly.
 ### Services (services.nix)
 
 User-level launchd services. Currently:
-- `ollama-agent` — Ollama model server (configurable per host)
+- `omlx-agent` — oMLX model server (default ON; ollama is opt-in via `services.ollamaAgent`)
 
 Host-specific services → `home/<hostname>.nix` or `hosts/<hostname>.nix`
 

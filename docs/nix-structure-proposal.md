@@ -28,7 +28,7 @@
 |----------|-------|---------|
 | `modules/darwin/services.nix` | All darwin hosts | System daemons (limit-maxfiles) |
 | `hosts/<hostname>.nix` | Single host only | Host-specific services |
-| `home/common/services.nix` | All users | User agents (ollama) |
+| `home/common/services.nix` | All users | User agents (omlx, ollama opt-in) |
 | `home/<user>/<host>.nix` | Single user/host | User-specific agents |
 
 ```nix

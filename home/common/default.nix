@@ -22,6 +22,7 @@
     # AI tooling
     ./programs/claude-code
     ./programs/ollama
+    ./programs/omlx
     ./programs/pi-coding-agent
     # Browsers
     ./programs/brave-browser-nightly
@@ -38,6 +39,7 @@
     ./programs/fish
     ./programs/starship
     # Misc programs
+    ./programs/1password
     ./programs/agenix
     ./programs/discord
     ./programs/fzf
@@ -102,10 +104,19 @@
 
   home.preferXdgDirectories = true;
 
+  # Disable default home-manager app linking (to ~/Applications/Home Manager Apps)
+  # We use our own mkAppActivation which supports ~/Applications directly.
+  home.activation.copyApplications = lib.mkForce "";
+
+  # ALSO disable the specific 'copyApps' script if it's separate from 'copyApplications'
+  home.activation.copyApps = lib.mkForce "";
+
   home.activation.linkSystemApplications = lib.hm.dag.entryAfter ["writeBoundary"] (
     lib.mega.mkAppActivation {
       inherit pkgs;
-      packages = config.mega.customApps;
+      packages = config.home.packages;
+      targetDir = "~/Applications";
+      metadataSubdir = "user-apps";
     }
   );
 
@@ -184,11 +195,6 @@
   xdg.configFile."neomd/config.toml".text = ''
   '';
 
-  xdg.configFile."1Password/ssh/agent.toml".text = ''
-    [[ssh-keys]]
-    vault = "Shared"
-    item = "megaenv_ssh_key"
-  '';
   xdg.configFile."process-compose/shortcuts.yaml".text = ''
     shortcuts:
       log_follow:
@@ -403,7 +409,7 @@
         {path = "~/.gitconfig";}
       ];
 
-      settings.gpg.ssh.program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign";
+      # gpg.ssh.program is set in home/common/programs/1password
       settings.gpg.ssh.allowedSignersFile = "~/.ssh/allowed_signers";
       settings.gpg.format = "ssh";
       settings.user.signingkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICyxphJ0fZhJP6OQeYMsGNQ6E5ZMVc/CQdoYrWYGPDrh";
@@ -448,9 +454,7 @@
       enableZshIntegration = true;
     };
 
-    ssh = {
-      matchBlocks."* \"test -z $SSH_TTY\"".identityAgent = "~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock";
-    };
+    # programs.ssh IdentityAgent set in home/common/programs/1password
 
     mise = {
       enable = true;

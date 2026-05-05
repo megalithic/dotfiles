@@ -3,6 +3,7 @@
   lib,
 }: [
   inputs.mcp-servers-nix.overlays.default
+  inputs.brew-nix.overlays.default
 
   (final: prev: {
     unstable = import inputs.nixpkgs-unstable {

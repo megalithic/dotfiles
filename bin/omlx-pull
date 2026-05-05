@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# omlx-pull — download an mlx-community model into the oMLX model dir.
+#
+# Wraps `hf download` with alias resolution and XDG paths.
+#
+# Aliases (resolve to mlx-community/<id>):
+#   qwen3.6  -> Qwen3.6-35B-A3B-4bit
+#   gemma4   -> gemma-4-26b-a4b-it-4bit  (megabookpro)
+#            -> gemma-4-26b-a4b-it-8bit  (rxbookpro)
+#
+# Any other argument is passed through verbatim as the mlx-community model id.
+#
+# Flags:
+#   --dry-run    print the resolved hf-download command without running it
+#   -h, --help   show this usage
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: omlx-pull [--dry-run] <alias|mlx-community-id> [hf download flags...]
+
+Aliases:
+  qwen3.6   -> mlx-community/Qwen3.6-35B-A3B-4bit
+  gemma4    -> mlx-community/gemma-4-26b-a4b-it-{4,8}bit  (host-dependent)
+
+Examples:
+  omlx-pull qwen3.6
+  omlx-pull gemma4
+  omlx-pull Llama-3.2-3B-Instruct-4bit
+  omlx-pull --dry-run qwen3.6
+EOF
+}
+
+DRY_RUN=0
+ARGS=()
+for arg in "$@"; do
+  case "$arg" in
+    -h|--help) usage; exit 0 ;;
+    --dry-run) DRY_RUN=1 ;;
+    *) ARGS+=("$arg") ;;
+  esac
+done
+
+if [[ ${#ARGS[@]} -eq 0 ]]; then
+  usage >&2
+  exit 1
+fi
+
+ALIAS="${ARGS[0]}"
+EXTRA=("${ARGS[@]:1}")
+
+HOST="$(scutil --get LocalHostName 2>/dev/null || hostname -s)"
+
+case "$ALIAS" in
+  qwen3.6)
+    MODEL="Qwen3.6-35B-A3B-4bit"
+    ;;
+  gemma4)
+    case "$HOST" in
+      rxbookpro*) MODEL="gemma-4-26b-a4b-it-8bit" ;;
+      *)          MODEL="gemma-4-26b-a4b-it-4bit" ;;
+    esac
+    ;;
+  */*)
+    MODEL="${ALIAS#mlx-community/}"
+    ;;
+  *)
+    MODEL="$ALIAS"
+    ;;
+esac
+
+REPO="mlx-community/${MODEL}"
+TARGET="${XDG_DATA_HOME:-$HOME/.local/share}/omlx/models/${MODEL}"
+
+# Prefer omlx's bundled hf if present (matches its python env), else PATH hf.
+HF="/opt/homebrew/opt/omlx/libexec/bin/hf"
+if [[ ! -x "$HF" ]]; then
+  HF="$(command -v hf || true)"
+fi
+
+if [[ -z "$HF" ]]; then
+  if [[ $DRY_RUN -eq 1 ]]; then
+    HF="hf" # placeholder for dry-run output
+  else
+    echo "error: hf CLI not found (need omlx installed or huggingface_hub on PATH)" >&2
+    exit 127
+  fi
+fi
+
+CMD=("$HF" download "$REPO" --local-dir "$TARGET" "${EXTRA[@]}")
+
+if [[ $DRY_RUN -eq 1 ]]; then
+  printf '%q ' "${CMD[@]}"; printf '\n'
+  exit 0
+fi
+
+mkdir -p "$(dirname "$TARGET")"
+
+echo ":: pulling $REPO -> $TARGET"
+exec "${CMD[@]}"

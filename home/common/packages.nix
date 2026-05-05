@@ -32,7 +32,29 @@
     slack # migrated from homebrew 2026-02-13
     spotify
     # telegram-desktop
+    vscode # migrated from homebrew cask 2026-05-05 (brew-nix can't extract Electron symlinks)
+    zed-editor # migrated from homebrew cask 2026-05-05
     zoom-us
+  ];
+
+  # GUI apps from brew-nix overlay (pkgs.brewCasks.*) — migrated from
+  # nix-darwin homebrew.casks. Tokens with leading digits or '@' need
+  # string-keyed access. Excluded:
+  #   raycast      — zlib-wrapped DMG, brew-nix's 7zz can't unpack
+  #   okta-verify  — .pkg with URL-encoded paths, cpio/gzip pipeline fails
+  # Both stay in modules/brew.nix until upstream fixes packaging.
+  brewCaskPkgs = (with pkgs.brewCasks; [
+    colorsnapper
+    contexts
+    hammerspoon
+    homerow
+    kitty
+    mouseless
+    protonvpn
+    proton-drive
+    yubico-authenticator
+  ]) ++ [
+    pkgs.brewCasks."obs@beta"
   ];
 
   # ── cli tools ──────────────────────────────────────────────────────────────────
@@ -89,6 +111,7 @@
     tldr
     transcrypt
     unstable.tmux
+    whisperkit-cli # Apple Silicon Whisper speech recognition (was homebrew formula)
     w3m
     yq # YAML processor (jq for YAML)
     yubikey-manager
@@ -164,5 +187,5 @@ in {
 
   config.mega.customApps = customApps;
 
-  config.home.packages = cliPkgs ++ langPkgs ++ guiPkgs ++ homeManagerApps;
+  config.home.packages = cliPkgs ++ langPkgs ++ guiPkgs ++ brewCaskPkgs ++ homeManagerApps;
 }

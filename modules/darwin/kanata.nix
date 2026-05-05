@@ -180,7 +180,7 @@ in {
       ProgramArguments = [
         "/usr/bin/open"
         "-a"
-        "${kanata-bar-app}/Applications/Kanata Bar.app"
+        "/Applications/Kanata Bar.app"
       ];
       RunAtLoad = true;
       KeepAlive = false; # Don't restart on crash - UI is optional

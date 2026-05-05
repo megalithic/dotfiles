@@ -49,7 +49,7 @@ This is a **nix-darwin + home-manager** managed dotfiles repo.
 │   ├── common/            # Shared across all hosts
 │   │   ├── packages.nix   # CLI + GUI packages (nixpkgs + custom)
 │   │   ├── mac-aliases.nix # Finder aliases for Spotlight/Launchpad
-│   │   ├── services.nix   # User launchd services (ollama)
+│   │   ├── services.nix   # User launchd services (omlx, ollama opt-in)
 │   │   ├── mas.nix        # Mac App Store apps
 │   │   └── programs/      # Per-tool config (fish/, jj/, browsers/, ai/)
 │   ├── megabookpro.nix    # Personal overrides

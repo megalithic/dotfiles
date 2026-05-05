@@ -75,6 +75,48 @@
         "type": "github"
       }
     },
+    "brew-api": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1777988163,
+        "narHash": "sha256-C0M/YolCXh2I0UfdA5FAaeKR4OIbW3jDHMXrsciFPp0=",
+        "owner": "BatteredBunny",
+        "repo": "brew-api",
+        "rev": "0ebd9c6c9c627b3260991331a0aad00e4fb83fab",
+        "type": "github"
+      },
+      "original": {
+        "owner": "BatteredBunny",
+        "repo": "brew-api",
+        "type": "github"
+      }
+    },
+    "brew-nix": {
+      "inputs": {
+        "brew-api": [
+          "brew-api"
+        ],
+        "nix-darwin": [
+          "nix-darwin"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1776709403,
+        "narHash": "sha256-uzycOBt6M7MU3DhS8WculF1GmDBp8I7REinqtZCVDUA=",
+        "owner": "BatteredBunny",
+        "repo": "brew-nix",
+        "rev": "0457cb099ee50ce2587060acfaccf7362542e93a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "BatteredBunny",
+        "repo": "brew-nix",
+        "type": "github"
+      }
+    },
     "brew-src": {
       "flake": false,
       "locked": {
@@ -866,6 +908,22 @@
         "type": "github"
       }
     },
+    "homebrew-jundot-omlx": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1777885829,
+        "narHash": "sha256-opiwqAYhXT7wRHdLtt5nqRYXMw26cxclJhO2b4tm6Mc=",
+        "owner": "jundot",
+        "repo": "omlx",
+        "rev": "bac678ec72c97e497d05c3c6d637fa54f1b3d7e3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "jundot",
+        "repo": "omlx",
+        "type": "github"
+      }
+    },
     "homebrew-services": {
       "flake": false,
       "locked": {
@@ -1428,6 +1486,8 @@
     "root": {
       "inputs": {
         "agenix": "agenix",
+        "brew-api": "brew-api",
+        "brew-nix": "brew-nix",
         "devenv": "devenv",
         "expert": "expert",
         "home-manager": "home-manager_2",
@@ -1435,6 +1495,7 @@
         "homebrew-cask": "homebrew-cask",
         "homebrew-core": "homebrew-core",
         "homebrew-felixkratz": "homebrew-felixkratz",
+        "homebrew-jundot-omlx": "homebrew-jundot-omlx",
         "homebrew-services": "homebrew-services",
         "kanata-darwin": "kanata-darwin",
         "llm-agents": "llm-agents",

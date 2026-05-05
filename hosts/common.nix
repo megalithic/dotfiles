@@ -51,7 +51,7 @@ in {
   };
 
   networking.hostName = hostname;
-  system.defaults.smb.NetBIOSName = hostname;
+  # system.defaults.smb.NetBIOSName = hostname;
 
   time.timeZone = "America/New_York";
   ids.gids.nixbld = 30000;
@@ -125,9 +125,8 @@ in {
     tmux = "direnv exec / tmux";
   };
 
-  environment.extraInit = ''
-    export SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock
-  '';
+  # SSH_AUTH_SOCK for the 1Password agent is set per-user via
+  # home/common/programs/1password (home.sessionVariables).
 
   # Minimal system packages - most should go to home-manager
   # These are essentials needed system-wide or before home-manager runs
@@ -194,4 +193,24 @@ in {
   };
 
   nixpkgs.hostPlatform = arch;
+
+  # Replace default nix-darwin app linking with our own that links directly
+  # to /Applications (no subdirectory). Custom activation script keys like
+  # `linkApps` are NOT included in the activate script — only predefined
+  # slots are. So we use the `applications` slot itself.
+  system.activationScripts.applications.text = lib.mkForce (lib.mega.mkAppActivation {
+    inherit pkgs;
+    packages = config.environment.systemPackages;
+    targetDir = "/Applications";
+    metadataSubdir = "system-apps";
+  });
+
+  # Clean up legacy system-level Nix app directory
+  # (moved here from mkAppActivation — darwin activation runs as root)
+  system.activationScripts.postActivation.text = lib.mkAfter ''
+    if [[ -d "/Applications/Nix Apps" ]]; then
+      echo "Cleaning up legacy Nix Apps directory..."
+      rm -rf "/Applications/Nix Apps"
+    fi
+  '';
 }
