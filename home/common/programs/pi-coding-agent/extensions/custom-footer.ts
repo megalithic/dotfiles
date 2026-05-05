@@ -19,6 +19,11 @@ function formatTokens(count: number): string {
   return `${Math.round(count / 1000000)}M`;
 }
 
+function formatCost(cost: number): string {
+  if (cost < 0.01) return "<$0.01";
+  return `$${cost.toFixed(2)}`;
+}
+
 function rightAlign(
   left: string,
   right: string,
@@ -71,6 +76,7 @@ interface TokenCache {
   totalOutput: number;
   totalCacheRead: number;
   totalCacheWrite: number;
+  totalCost: number;
   entryCount: number;
 }
 
@@ -82,6 +88,7 @@ export default function (pi: ExtensionAPI) {
       totalOutput: 0,
       totalCacheRead: 0,
       totalCacheWrite: 0,
+      totalCost: 0,
       entryCount: 0,
     };
 
@@ -124,7 +131,8 @@ export default function (pi: ExtensionAPI) {
             let ti = 0,
               to = 0,
               tcr = 0,
-              tcw = 0;
+              tcw = 0,
+              cost = 0;
             for (const entry of entries) {
               if (
                 entry.type === "message" &&
@@ -135,12 +143,14 @@ export default function (pi: ExtensionAPI) {
                 to += m.usage.output;
                 tcr += m.usage.cacheRead;
                 tcw += m.usage.cacheWrite;
+                cost += m.usage.cost?.total ?? 0;
               }
             }
             tokenCache.totalInput = ti;
             tokenCache.totalOutput = to;
             tokenCache.totalCacheRead = tcr;
             tokenCache.totalCacheWrite = tcw;
+            tokenCache.totalCost = cost;
             tokenCache.entryCount = entries.length;
           }
 
@@ -166,6 +176,11 @@ export default function (pi: ExtensionAPI) {
             statsParts.push(
               theme.fg("muted", `W${formatTokens(tokenCache.totalCacheWrite)}`),
             );
+
+          // Display session cost (pre-calculated by pi-ai)
+          if (tokenCache.totalCost > 0) {
+            statsParts.push(theme.fg("muted", formatCost(tokenCache.totalCost)));
+          }
 
           const contextDisplay = `${contextPct.toFixed(1)}%/${formatTokens(contextWindow)}`;
           const contextColor =
