@@ -109,7 +109,7 @@ Reference numbers from upstream and r/LocalLLaMA threads (linked in
 
 | Host | Model | Decode | Prefill | Notes |
 |---|---|---|---|---|
-| M2 Max 32 GB | Qwen3.6-35B-A3B-4bit | ~50–60 tok/s | ~600–800 tok/s | MoE 3 B active params |
+| M2 Max 32 GB | Qwen3.6-35B-A3B-4bit | ~67 tok/s (measured) | ~600–800 tok/s | MoE 3 B active params; warm, 256-tok output |
 | M4 Max 64 GB | Qwen3.6-35B-A3B-4bit | ~75–100 tok/s | ~1500–2000 tok/s | |
 | M4 Max 64 GB | Gemma4-26B-A4B-8bit | ~60–75 tok/s | ~1500–2000 tok/s | |
 
