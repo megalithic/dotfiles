@@ -1,6 +1,6 @@
 ---
 id: dot-pabp
-status: in_progress
+status: closed
 deps: []
 links: []
 created: 2026-05-06T12:43:11Z
@@ -32,3 +32,9 @@ Context: ~/.local/share/pi/plans/.dotfiles/pipeline-smart-retrieval.ticket-conte
 5. After just home, in a fresh session: /plan pi-wrapper-fetchfromgithub-extensions causes the agent to read pi-wrapper-fetchfromgithub-extensions_PLAN.md (no orphan scan, no 'run /task first' error)
 6. /tickets pi-wrapper-fetchfromgithub-extensions same behavior
 
+
+## Notes
+
+**2026-05-06T12:46:52Z**
+
+Fixed _args → args in /plan and /tickets handlers. When slug arg passed explicitly, sendUserMessage includes 'Slug = <slug> (passed explicitly, skip orphan scan)'. /task unchanged. just validate home passes. AC 5-6 require fresh session to verify.
