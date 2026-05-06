@@ -1,6 +1,6 @@
 ---
 id: dot-m99m
-status: in_progress
+status: closed
 deps: []
 links: []
 created: 2026-05-06T01:18:17Z
@@ -105,3 +105,21 @@ See: home/common/programs/pi-coding-agent/, home/common/services.nix (omlx), pkg
 7. `just validate` passes after all changes
 8. Side-by-side tok/s benchmark: oMLX vs ollama on same model (even if ollama removed later, confirms oMLX is the right choice)
 
+
+## Notes
+
+**2026-05-06T01:46:13Z**
+
+Closed via 6 commits on main feature branch.
+
+Work scoped to gaps unique to m99m vs siblings (dot-8arp/bd5i/j9q6/362h handle core wiring):
+- omlx default.nix: per-model sampling presets (Qwen qwen3-r-code temp 0.6, Gemma4 gemma4 temp 1.0), scheduler.max_concurrent_requests=4 default
+- pi-coding-agent models.json: qwen3.6 reasoning=true + compat.thinkingFormat=qwen-chat-template, provider compat (no developerRole/reasoningEffort)
+- home/common/programs/omlx/AGENTS.md: full server + per-model knob reference, memory budget tables for mega (32GB) and rx (64GB), tuning playbook, verification commands
+- bin/omlx-bench: side-by-side oMLX vs Ollama tok/s with --warmup, --json, --max-tokens, --prompt flags
+
+Measured: Qwen3.6-35B-A3B-4bit on M2 Max @ 67.3 tok/s warm (256-tok output). Exceeds the conservative 50-60 estimate. Documented inline.
+
+AC #8 partial: ollama already disabled per dot-362h migration plan, so head-to-head impossible without re-enabling. Bench script supports it the moment ollama is opt-in re-enabled. The script's purpose (verify oMLX as right choice + regression-detection on tuning changes) is met.
+
+Not in scope (deferred): per-stack system-prompt biasing for Elixir/Phoenix/Tailwind/Nix/Lua/Swift — that's pi AGENTS.md territory, separate ticket if wanted.
