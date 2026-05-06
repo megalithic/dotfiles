@@ -1,6 +1,6 @@
 ---
 id: dot-idcr
-status: open
+status: closed
 deps: [dot-71pq]
 links: []
 created: 2026-05-06T12:43:44Z
@@ -39,3 +39,9 @@ Plan ref: ~/.local/share/pi/plans/.dotfiles/pipeline-smart-retrieval_PLAN.md (St
 6. /continue does NOT auto-invoke any subagent
 7. just validate home passes
 
+
+## Notes
+
+**2026-05-06T12:57:12Z**
+
+Added /continue and /cont (alias) registerCommand blocks. Shared continueHandler emits phase-detection + next-command messages. No auto-subagent invocation. Steps: resolve slug → check TASK/PLAN/context existence → emit one of 4 messages. just validate home + just home pass; symlink shows 6 registerCommand calls.

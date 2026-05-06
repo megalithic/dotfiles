@@ -144,6 +144,46 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
+  const continueHandler = async (args: string | undefined) => {
+    const explicitSlug = args?.trim();
+    const slugBlock = explicitSlug
+      ? `  Slug = ${explicitSlug} (passed explicitly, skip scans)`
+      : SLUG_FALLBACK_INSTRUCTIONS;
+    pi.sendUserMessage(
+      [
+        "Resume the task pipeline. Determine the next phase and tell the user the equivalent command — do NOT auto-invoke any subagent or other slash command.",
+        "",
+        "Paths:",
+        "  Dir = ~/.local/share/pi/plans/$(basename $PWD)/",
+        slugBlock,
+        "  TASK file    = <Dir>/{slug}_TASK.md",
+        "  PLAN file    = <Dir>/{slug}_PLAN.md",
+        "  Context file = <Dir>/{slug}.ticket-context.md",
+        "",
+        "Steps:",
+        "1. Resolve slug per the rules above.",
+        "2. Once a single slug is selected, check which of TASK / PLAN / context files exist.",
+        "3. Emit ONE of these messages (substitute {slug}) based on file existence — do not run the suggested command yourself, just announce it:",
+        "     no TASK                          → 'No research found. Start with: /task <description>'.",
+        "     TASK only                        → 'Continue to planning. Slug: {slug}. Equivalent: /plan {slug}'.",
+        "     TASK + PLAN (no context)         → 'Continue to ticket creation. Slug: {slug}. Equivalent: /tickets {slug}'.",
+        "     TASK + PLAN + context            → 'All phases complete. Slug: {slug}. Work tickets with: work-tickets'.",
+        "4. If multiple candidates surface from the scans, list top 3 (slug + phase + mtime) and ask user to pick before suggesting a command.",
+      ].join("\n"),
+    );
+  };
+
+  pi.registerCommand("continue", {
+    description:
+      "Resume the task pipeline from wherever you left off (no auto-invoke)",
+    handler: async (args, _ctx) => continueHandler(args),
+  });
+
+  pi.registerCommand("cont", {
+    description: "Alias for /continue",
+    handler: async (args, _ctx) => continueHandler(args),
+  });
+
   pi.registerCommand("retrieve", {
     description:
       "List or look up past TASK/PLAN combos in the current repo's plans dir",
