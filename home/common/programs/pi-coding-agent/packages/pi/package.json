@@ -1,16 +1,8 @@
 {
-  "name": "pi",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "name": "pi-wrapper",
+  "private": true,
+  "version": "0.73.0",
   "dependencies": {
-    "@mariozechner/pi-coding-agent": "0.70.4"
+    "@mariozechner/pi-coding-agent": "0.73.0"
   }
 }
