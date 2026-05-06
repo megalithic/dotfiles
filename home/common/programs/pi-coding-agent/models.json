@@ -25,13 +25,20 @@
       "baseUrl": "http://127.0.0.1:8000/v1",
       "apiKey": "omlx",
       "api": "openai-completions",
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false
+      },
       "models": [
         {
           "id": "qwen3.6",
-          "reasoning": false,
+          "reasoning": true,
           "input": ["text"],
           "contextWindow": 65536,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "compat": {
+            "thinkingFormat": "qwen-chat-template"
+          }
         },
         {
           "id": "gemma4",
