@@ -1,6 +1,6 @@
 ---
 id: dot-lgky
-status: open
+status: closed
 deps: [dot-xtug]
 links: []
 created: 2026-05-06T13:05:19Z

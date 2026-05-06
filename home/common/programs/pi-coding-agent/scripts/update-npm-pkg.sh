@@ -29,7 +29,6 @@ declare -A PNAME_MAP=(
   [pi-internet]="pi-internet"
 
   [pi-agent-browser]="pi-agent-browser"
-  [pi-synthetic-provider]="pi-synthetic-provider"
   [pi-diff-review]="pi-diff-review"
 )
 

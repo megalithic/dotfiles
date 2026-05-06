@@ -235,22 +235,20 @@
   #   '';
   # };
 
-  # Synthetic.new model provider (dynamic model fetching, reasoning, vision)
-  # Patch adds GLM-5.1 (and any post-1.1.10 models) to fallback list so they're
-  # available at startup for `enabledModels` Ctrl+P scope resolution. Without
-  # the patch, those models only appear after `session_start` async fetch.
-  pi-synthetic-provider = pkgs.buildNpmPackage {
+  # Synthetic.new model provider — zero runtime deps, npm tarball direct
+  # https://www.npmjs.com/package/@benvargas/pi-synthetic-provider
+  # GLM-5.1 patch dropped — v1.1.12 already includes GLM-5.1, Kimi-K2.6, Nemotron upstream.
+  pi-synthetic-provider = pkgs.stdenvNoCC.mkDerivation {
     pname = "pi-synthetic-provider";
-    version = npmVersion ./packages/pi-synthetic-provider;
-    src = ./packages/pi-synthetic-provider;
-    npmDepsHash = "sha256-lW0n/yVTJQs2hcYTNFN/9fOIN30HFsHav5kbQ13KdaQ=";
-    dontNpmBuild = true;
+    version = "1.1.12";
+    src = pkgs.fetchurl {
+      url = "https://registry.npmjs.org/@benvargas/pi-synthetic-provider/-/pi-synthetic-provider-1.1.12.tgz";
+      hash = "sha256-fYGVipd4047IcEToU0oxcR0RnQBHWJAFo6c26Sh+BJM=";
+    };
     installPhase = ''
       runHook preInstall
       mkdir -p $out
-      cp -r node_modules/@benvargas/pi-synthetic-provider/* $out/
-      cp -r node_modules $out/node_modules
-      ( cd $out && patch -p1 < ${./patches/synthetic-fallback-glm-5.1.patch} )
+      cp -r ./* $out/
       runHook postInstall
     '';
   };
