@@ -314,6 +314,7 @@
   disabledExtensions = [
     "checkpoint.ts" # Too intrusive
     "subscription-fallback.ts" # Doesn't support everything we need
+    "stop-hook.ts" # broken with omlx
   ];
 
   # Skills to exclude from auto-discovery

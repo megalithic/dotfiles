@@ -18,7 +18,7 @@
   # (home-manager copies these to ~/Applications/Home Manager Apps/)
   homeManagerApps =
     builtins.filter (
-      pkg: (pkg.passthru or {}).appLocation or "home-manager" == "home-manager"
+      pkg: ((pkg.passthru or {}).appLocation or "home-manager") == "home-manager"
     )
     customApps;
 

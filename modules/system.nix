@@ -84,9 +84,9 @@
         magnification = false;
         persistent-others = null;
         persistent-apps = [
-          {app = "~/Applications/Finder.app";}
+          {app = "/System/Library/CoreServices/Finder.app";}
           {app = "~/Applications/Home Manager Apps/Brave Browser Nightly.app";}
-          {app = "~/Applications/Ghostty.app";}
+          {app = "~/Applications/Home Manager Apps/Ghostty.app";}
           {app = "/System/Applications/Messages.app";}
 
           # {
