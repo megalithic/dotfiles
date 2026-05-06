@@ -1,6 +1,6 @@
 ---
 id: dot-6q75
-status: open
+status: closed
 deps: [dot-xtug, dot-lgky, dot-ji0m, dot-y421]
 links: []
 created: 2026-05-06T13:06:10Z
