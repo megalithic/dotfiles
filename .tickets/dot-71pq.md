@@ -1,6 +1,6 @@
 ---
 id: dot-71pq
-status: in_progress
+status: closed
 deps: [dot-pabp]
 links: []
 created: 2026-05-06T12:43:23Z
@@ -37,3 +37,9 @@ Plan ref: ~/.local/share/pi/plans/.dotfiles/pipeline-smart-retrieval_PLAN.md (St
 4. just validate home passes
 5. In a repo with completed TASK+PLAN: /plan with no args lists candidates instead of 'run /task first'
 
+
+## Notes
+
+**2026-05-06T12:53:32Z**
+
+Added SLUG_FALLBACK_INSTRUCTIONS shared constant. Updated /task (no-args), /plan, /tickets to include recent-items scan when orphan-scan returns 0. Header doc updated to describe the 3-step resolution. just validate home + just home pass; symlink confirmed live.

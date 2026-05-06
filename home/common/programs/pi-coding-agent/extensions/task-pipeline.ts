@@ -22,7 +22,11 @@
  *   1. If $TICKET_ID is set or exactly one tk ticket is in_progress for the
  *      repo, derive slug from it
  *   2. Else scan the plans dir for orphan *_TASK.md (no matching *_PLAN.md):
- *      0 → ask user to run /task first; 1 → use silently; 2+ → list + ask
+ *      0 → fall through to recent-items scan; 1 → use silently; 2+ → list + ask
+ *   3. Recent-items fallback (when orphan-scan returns 0): scan the plans dir
+ *      for all *_TASK.md / *_PLAN.md, group by slug, sort by mtime; 0 → tell
+ *      user to run /task first; 1 → use silently; 2-3 → list with phase + ask;
+ *      >3 → show top 3 + 'and N more, use /retrieve <slug>'
  *
  * Note: the upstream examples this pipeline was adapted from assume a
  * git-worktree-per-feature layout. We are NOT currently using worktrees;
@@ -32,6 +36,33 @@
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 
+/**
+ * Shared slug-resolution instructions emitted to the agent when no slug arg
+ * was passed. Used by /task (no-args), /plan, and /tickets.
+ *
+ * The agent is responsible for performing the scans and listings — the
+ * extension API has no list-pick UI; we instruct via message text.
+ */
+const SLUG_FALLBACK_INSTRUCTIONS = [
+  "Slug resolution (no arg passed):",
+  "  1. If $TICKET_ID is set or exactly one tk ticket is in_progress for the repo, derive slug from it.",
+  "  2. Else orphan-scan: list *_TASK.md in Dir with no matching *_PLAN.md.",
+  "     - 1 orphan → use silently.",
+  "     - 2+ orphans → list with mtime, ask user to pick.",
+  "     - 0 orphans → fall through to recent-items scan (step 3).",
+  "  3. Recent-items scan: list all *_TASK.md and *_PLAN.md in Dir, group by",
+  "     slug (strip _TASK.md / _PLAN.md suffix), sort by most recent mtime",
+  "     across each slug's files. Determine phase per slug:",
+  "       TASK only            → 'research'",
+  "       TASK + PLAN          → 'planning-complete'",
+  "       TASK + PLAN + ticket-context.md → 'tickets-seeded'",
+  "     Then:",
+  "       0 results       → tell user to run /task <description> first.",
+  "       1 result        → use silently.",
+  "       2-3 results     → list each as `<slug>  [<phase>]  <mtime>` and ask user to pick.",
+  "       >3 results      → list top 3 + 'and N more, use /retrieve <slug> for a specific one'.",
+].join("\n");
+
 export default function (pi: ExtensionAPI) {
   pi.registerCommand("task", {
     description:
@@ -40,8 +71,15 @@ export default function (pi: ExtensionAPI) {
       if (!args || !args.trim()) {
         pi.sendUserMessage(
           [
-            "Resolve the active slug (see slug resolution in this extension's header comment), then read ~/.local/share/pi/plans/$(basename $PWD)/{slug}_TASK.md if it exists and continue research.",
-            "If no slug can be resolved and no task file exists, tell the user to provide a task description: /task <description>",
+            "Resume research for an existing task.",
+            "",
+            "Paths:",
+            "  Dir = ~/.local/share/pi/plans/$(basename $PWD)/",
+            "",
+            SLUG_FALLBACK_INSTRUCTIONS,
+            "",
+            "Once the slug is resolved, read <Dir>/{slug}_TASK.md and continue research.",
+            "If no slug can be resolved (recent-items scan returns 0), tell the user to provide a task description: /task <description>",
           ].join("\n"),
         );
         return;
@@ -78,9 +116,10 @@ export default function (pi: ExtensionAPI) {
     description:
       "Create an implementation plan using an isolated subagent (read-only)",
     handler: async (args, _ctx) => {
-      const slugHint = args?.trim()
-        ? `\nSlug = ${args.trim()} (passed explicitly, skip orphan scan)`
-        : undefined;
+      const explicitSlug = args?.trim();
+      const slugBlock = explicitSlug
+        ? `  Slug = ${explicitSlug} (passed explicitly, skip orphan scan)`
+        : SLUG_FALLBACK_INSTRUCTIONS;
       pi.sendUserMessage(
         [
           "Create implementation plan from research findings.",
@@ -89,7 +128,7 @@ export default function (pi: ExtensionAPI) {
           "",
           "Paths:",
           "  Dir  = ~/.local/share/pi/plans/$(basename $PWD)/",
-          slugHint ?? "  Slug = resolved the same way as /task (see this extension's header comment). If not passed, prefer $TICKET_ID; else find orphan *_TASK.md in Dir (0 → run /task first; 1 → use silently; 2+ → list + ask).",
+          slugBlock,
           "  Task file = <Dir>/{slug}_TASK.md   Plan file = <Dir>/{slug}_PLAN.md",
           "",
           "Steps:",
@@ -109,16 +148,17 @@ export default function (pi: ExtensionAPI) {
     description:
       "Create tickets from the implementation plan using the ticket-creator skill",
     handler: async (args, _ctx) => {
-      const slugHint = args?.trim()
-        ? `\nSlug = ${args.trim()} (passed explicitly, skip orphan scan)`
-        : undefined;
+      const explicitSlug = args?.trim();
+      const slugBlock = explicitSlug
+        ? `  Slug = ${explicitSlug} (passed explicitly, skip orphan scan)\n  Plan file = <Dir>/{slug}_PLAN.md   Context file = <Dir>/{slug}.ticket-context.md`
+        : `${SLUG_FALLBACK_INSTRUCTIONS}\n  Plan file = <Dir>/{slug}_PLAN.md   Context file = <Dir>/{slug}.ticket-context.md`;
       pi.sendUserMessage(
         [
           "Create tickets from the implementation plan.",
           "",
           "Paths:",
           "  Dir  = ~/.local/share/pi/plans/$(basename $PWD)/",
-          slugHint ?? "  Slug = resolved as in /plan. Plan file = <Dir>/{slug}_PLAN.md   Context file = <Dir>/{slug}.ticket-context.md",
+          slugBlock,
           "",
           "Steps:",
           "1. Resolve slug and read <Dir>/{slug}_PLAN.md — if it doesn't exist, tell the user to run /plan first",
