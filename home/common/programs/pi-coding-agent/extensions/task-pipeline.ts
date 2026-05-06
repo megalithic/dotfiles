@@ -144,6 +144,64 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
+  pi.registerCommand("retrieve", {
+    description:
+      "List or look up past TASK/PLAN combos in the current repo's plans dir",
+    handler: async (args, _ctx) => {
+      const explicitSlug = args?.trim();
+      if (explicitSlug) {
+        pi.sendUserMessage(
+          [
+            `Retrieve plan info for slug: ${explicitSlug}`,
+            "",
+            "Paths:",
+            "  Dir = ~/.local/share/pi/plans/$(basename $PWD)/",
+            `  TASK file    = <Dir>/${explicitSlug}_TASK.md`,
+            `  PLAN file    = <Dir>/${explicitSlug}_PLAN.md`,
+            `  Context file = <Dir>/${explicitSlug}.ticket-context.md`,
+            "",
+            "Steps:",
+            "1. Check which of the three files above exist (ls / test -f).",
+            "2. Determine phase:",
+            "     TASK only                       → 'research'",
+            "     TASK + PLAN                     → 'planning-complete'",
+            "     TASK + PLAN + ticket-context.md → 'tickets-seeded'",
+            "     None                            → emit 'No files found for slug X. Start with /task <description>' and stop.",
+            "3. Report to the user a one-line phase summary + the suggested next command:",
+            `     research            → /plan ${explicitSlug}`,
+            `     planning-complete   → /tickets ${explicitSlug}`,
+            "     tickets-seeded      → work-tickets (pickup or new ticket-worker session)",
+            "4. Do NOT auto-invoke any subagent or run any other slash command.",
+          ].join("\n"),
+        );
+        return;
+      }
+      pi.sendUserMessage(
+        [
+          "List past TASK/PLAN combos in the current repo's plans dir.",
+          "",
+          "Paths:",
+          "  Dir = ~/.local/share/pi/plans/$(basename $PWD)/",
+          "",
+          "Steps:",
+          "1. Scan Dir for all *_TASK.md and *_PLAN.md.",
+          "2. Group by slug (strip _TASK.md / _PLAN.md suffix). For each slug,",
+          "   determine phase from file existence:",
+          "     TASK only                       → 'research'",
+          "     TASK + PLAN                     → 'planning-complete'",
+          "     TASK + PLAN + ticket-context.md → 'tickets-seeded'",
+          "3. Sort slugs by most recent mtime across each slug's files.",
+          "4. Emit results:",
+          "     0 results   → 'No plans found in <Dir>. Start with /task <description>'.",
+          "     1 result    → auto-select silently: emit slug + phase summary + suggested next command (same mapping as /retrieve <slug>).",
+          "     2-3 results → list each as `<slug>  [<phase>]  <mtime>` and ask user to pick (suggest /retrieve <slug>).",
+          "     >3 results  → list top 3 + 'and N more, use /retrieve <slug> for a specific one'.",
+          "5. Do NOT auto-invoke any subagent or run any other slash command.",
+        ].join("\n"),
+      );
+    },
+  });
+
   pi.registerCommand("tickets", {
     description:
       "Create tickets from the implementation plan using the ticket-creator skill",

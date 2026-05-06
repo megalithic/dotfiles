@@ -1,6 +1,6 @@
 ---
 id: dot-h27d
-status: open
+status: closed
 deps: [dot-71pq]
 links: []
 created: 2026-05-06T12:43:34Z
@@ -38,3 +38,9 @@ Plan ref: ~/.local/share/pi/plans/.dotfiles/pipeline-smart-retrieval_PLAN.md (St
 5. /retrieve in a repo with exactly 1 plan auto-selects (no listing UI)
 6. just validate home passes
 
+
+## Notes
+
+**2026-05-06T12:55:38Z**
+
+Added /retrieve registerCommand block. With slug arg: emits phase-detection steps + next-command mapping (research→/plan, planning-complete→/tickets, tickets-seeded→work-tickets). No-args: instructs agent to scan Dir, group by slug, sort by mtime, apply 0/1/2-3/>3 cases. No auto-subagent invocation. just validate home + just home pass; symlink shows 4 registerCommand calls (was 3).
