@@ -1,6 +1,6 @@
 ---
 id: dot-turd
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-05-06T13:04:52Z
