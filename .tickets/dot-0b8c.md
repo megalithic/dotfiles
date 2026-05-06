@@ -1,6 +1,6 @@
 ---
 id: dot-0b8c
-status: open
+status: closed
 deps: [dot-6q75]
 links: []
 created: 2026-05-06T13:06:22Z

@@ -8,26 +8,67 @@
 #     Directories work too (e.g., extensions/subagent/).
 #     To disable: add filename to disabledExtensions list below.
 #
-#   Adding an extension WITH npm deps:
-#     1. Create packages/<name>/ with package.json + package-lock.json
-#     2. Add a buildNpmPackage block below (follow existing patterns)
-#     3. Add home.file mapping in the File Symlinks section
-#     4. Add to PNAME_MAP in scripts/update-npm-pkg.sh
-#     5. Run: just update-npm <name> && just home
-#
 #   Adding a skill (no npm deps):
 #     Create skills/<name>/SKILL.md — auto-discovered, no changes here.
 #
-#   Updating pi or any npm package:
-#     1. Edit version in packages/<name>/package.json (single source of truth)
-#     2. Run: just update-npm <name>
-#     3. Run: just home
+#   Adding an extension WITH npm deps — pick a build pattern:
+#
+#   Pattern A: wrapper + buildNpmPackage
+#     Use when: npm-only release, no public repo, or upstream lockfile broken
+#     Examples: pi-coding-agent, pi-internet, pi-agent-browser, pi-diff-review
+#       1. mkdir packages/<name>; create wrapper package.json (single dep at pinned ver)
+#       2. cd packages/<name> && npm install --package-lock-only
+#       3. Add a buildNpmPackage block (src = ./packages/<name>)
+#       4. Add to PNAME_MAP in scripts/update-npm-pkg.sh
+#       5. just update-npm <name> && just home
+#
+#   Pattern B: fetchFromGitHub + buildNpmPackage
+#     Use when: public GitHub repo + has npm deps + lockfile available (or vendorable)
+#     Examples: pi-mcp-adapter (vendored lockfile from previous tag at v2.5.4)
+#       1. Add a buildNpmPackage block with src = pkgs.fetchFromGitHub { rev="v<x>"; hash=...; }
+#       2. If upstream has no lockfile: vendor one in patches/, copy via postPatch
+#       3. Add to GITHUB_NPM_PKG_MAP in scripts/update-npm-pkg.sh
+#       4. just update-npm <name> && just home (fake hash workflow gets npmDepsHash)
+#
+#   Pattern C: fetchFromGitHub + stdenvNoCC
+#     Use when: public GitHub repo + zero npm deps
+#     Examples: pi-multi-pass
+#       1. stdenvNoCC.mkDerivation with src = pkgs.fetchFromGitHub { ... }
+#       2. installPhase: cp -r $src/* $out/
+#       3. Add to GITHUB_NO_DEPS_PKG_MAP in scripts/update-npm-pkg.sh
+#       4. just update-npm <name> && just home
+#
+#   Pattern D: fetchurl (npm tarball) + stdenvNoCC
+#     Use when: npm-only release + zero npm deps
+#     Examples: pi-synthetic-provider
+#       1. stdenvNoCC.mkDerivation with src = pkgs.fetchurl { url; hash; }
+#       2. Default unpackPhase handles .tgz
+#       3. installPhase: cp -r ./* $out/
+#       4. Add to FETCHURL_PKG_MAP in scripts/update-npm-pkg.sh
+#       5. just update-npm <name> && just home
+#
+#   Decision tree:
+#     no deps + GitHub repo → Pattern C
+#     no deps + npm-only    → Pattern D
+#     deps + GitHub + lockfile (or vendorable) → Pattern B
+#     deps + npm-only or broken upstream lockfile → Pattern A
+#
+#   Updating any package:
+#     just update-npm <name>          # one package, latest
+#     just update-npm <name> <version> # specific version
+#     just update-npm                  # all packages
+#
+#   Patch status:
+#     - synthetic-fallback-glm-5.1.patch: DROPPED (obsolete, features upstream at v1.1.12)
+#     - claude-settings-support.patch: DISABLED, awaiting rewrite for v2.5.4 architecture
+#     - pi-mcp-adapter-2.5.4-package-lock.json: vendored lockfile (copied from v2.5.3,
+#       version bumped to 2.5.4 since deps unchanged; required because v2.5.4 dropped lockfile)
+#     - pi retry patches: inline substituteInPlace in installPhase (still active)
 #
 #   Key patterns:
-#     - npmVersion: reads version from package.json deps (no version duplication)
-#     - npmDepsHash: sri hash, auto-updated by scripts/update-npm-pkg.sh
+#     - npmVersion: reads version from package.json deps (Pattern A only, single source of truth)
+#     - npmDepsHash: SRI hash, auto-updated by scripts/update-npm-pkg.sh
 #     - Auto-discovery: extensions/ and skills/ contents auto-symlinked
-#     - Patches: applied during buildNpmPackage installPhase (see patches/)
 #
 # Socket pattern: /tmp/pi-{session}-{window}.sock
 #   - Auto-detected by bridge.ts from tmux (no shell setup needed)
