@@ -1,6 +1,6 @@
 ---
 id: dot-ztep
-status: open
+status: closed
 deps: [dot-pabp, dot-71pq, dot-h27d, dot-idcr]
 links: []
 created: 2026-05-06T12:43:56Z
@@ -34,3 +34,9 @@ Plan ref: ~/.local/share/pi/plans/.dotfiles/pipeline-smart-retrieval_PLAN.md (St
 4. Doc references the source-of-truth path (home/common/programs/pi-coding-agent/extensions/task-pipeline.ts) so future agents know not to edit the symlink
 5. Doc accurately reflects whatever shipped in dot-pabp, dot-71pq, dot-h27d, dot-idcr
 
+
+## Notes
+
+**2026-05-06T13:02:21Z**
+
+Rewrote SKILL.md: 5-step slug resolution order, Commands table (/task /plan /tickets /retrieve /continue /cont work-tickets), Retrieval and resumption section with phase-detection table, 3 example scenarios (forgot slug, mid-pipeline, fresh repo), source-of-truth path warning in Rules. just validate home passes.
