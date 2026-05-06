@@ -15,75 +15,60 @@ inputs: lib: _:
     #   lib.mega.mkApp { pname = "mailmate"; version = "5673"; src = { url = "..."; sha256 = "..."; }; }
     mkApp = import ./mkApp.nix;
 
-    # mkAppActivation - Generate activation scripts for linking/copying apps to a target directory
-    # Usage:
-    #   system.activationScripts.linkApps.text = lib.mega.mkAppActivation {
-    #     inherit pkgs;
-    #     packages = config.environment.systemPackages;
-    #     targetDir = "/Applications";
-    #   };
-    mkAppActivation = {
-      pkgs,
-      packages,
-      targetDir, # e.g. "/Applications" or "~/Applications"
-      metadataSubdir ? "apps",
-    }: let
-      # Filter packages that have an Applications/ subdirectory
-      appsToProcess = builtins.filter (pkg: builtins.pathExists "${pkg}/Applications") packages;
+    # mkAppActivation - Generate home-manager activation scripts for apps requiring /Applications
+    # Also handles CLI binary symlinks in ~/.local/bin/
+    # Usage: Add to home.activation:
+    #   home.activation.linkSystemApplications = lib.hm.dag.entryAfter ["writeBoundary"] (
+    #     lib.mega.mkAppActivation { inherit pkgs; packages = config.home.packages; }
+    #   );
+    mkAppActivation = {pkgs, packages}: let
+      # Filter packages that need /Applications (symlink or copy)
+      appsNeedingSystemFolder = builtins.filter (
+        pkg: let
+          location = (pkg.passthru or {}).appLocation or "home-manager";
+        in
+          location == "symlink" || location == "copy"
+      ) packages;
 
-      # For each package, find the app name and determine if it should be copied
-      getAppInfo = pkg: let
-        passthru = pkg.passthru or {};
-        passthruAppName = passthru.appName or null;
-        appLocation = passthru.appLocation or "symlink";
-        
-        foundAppName = let
-          appsDir = "${pkg}/Applications";
-          apps = builtins.attrNames (builtins.readDir appsDir);
-        in if apps != [] then builtins.head apps else null;
-
-        appName = if passthruAppName != null then passthruAppName else foundAppName;
-      in {
-        inherit pkg appName appLocation;
-        appPath = "${pkg}/Applications/${appName}";
-      };
-
-      appsWithInfo = builtins.map getAppInfo (builtins.filter (pkg: (getAppInfo pkg).appName != null) appsToProcess);
+      # Filter packages that have CLI binaries to expose (must be a list)
+      packagesWithBinaries = builtins.filter (
+        pkg: let
+          binaries = (pkg.passthru or {}).binaries or null;
+        in
+          binaries != null && builtins.isList binaries && binaries != []
+      ) packages;
 
       # Build list of current app names for cleanup
-      currentAppNames = builtins.map (info: info.appName) appsWithInfo;
+      currentAppNames = builtins.map (pkg: pkg.passthru.appName) appsNeedingSystemFolder;
       currentAppsString = lib.strings.concatStringsSep "\n" currentAppNames;
 
-      cleanupScript = ''
-        # Resolve targetDir
-        TARGET_DIR=$(eval echo "${targetDir}")
-        mkdir -p "$TARGET_DIR"
+      # Build list of current binary names for cleanup
+      currentBinaryNames = lib.flatten (builtins.map (pkg: pkg.passthru.binaries) packagesWithBinaries);
+      currentBinariesString = lib.strings.concatStringsSep "\n" currentBinaryNames;
 
-        METADATA_DIR="$HOME/.local/share/nix-metadata/${metadataSubdir}"
+      # Cleanup script for orphaned apps and binaries
+      cleanupScript = ''
+        # Cleanup orphaned nix-managed apps
+        METADATA_DIR="$HOME/.local/share/nix-apps"
         mkdir -p "$METADATA_DIR"
 
+        # Current apps that should be installed
         CURRENT_APPS=$(cat <<'APPS_EOF'
         ${currentAppsString}
         APPS_EOF
         )
 
+        # Check each metadata file and remove apps no longer in config
         if [[ -d "$METADATA_DIR" ]]; then
           for metadata_file in "$METADATA_DIR"/*.nixpath; do
             if [[ -f "$metadata_file" ]]; then
               app_name=$(basename "$metadata_file" .nixpath)
+              # rg: -q = quiet, -F = fixed string, -x = match whole line
               if ! echo "$CURRENT_APPS" | ${pkgs.ripgrep}/bin/rg -qFx "$app_name"; then
-                echo "Removing orphaned app: $app_name from $TARGET_DIR" 2>/dev/null
-                if [[ -e "$TARGET_DIR/$app_name" ]]; then
-                  # Use /usr/bin/sudo if targetDir is /Applications
-                  # (darwin activation runs as root so sudo is no-op, but /usr/bin/sudo
-                  # is used for robustness in case PATH is minimal)
-                  if [[ "$TARGET_DIR" == "/Applications" ]]; then
-                    /usr/bin/sudo chmod -R u+w "$TARGET_DIR/$app_name" 2>/dev/null || true
-                    /usr/bin/sudo rm -rf "''${TARGET_DIR:?}/''${app_name}"
-                  else
-                    chmod -R u+w "$TARGET_DIR/$app_name" 2>/dev/null || true
-                    rm -rf "''${TARGET_DIR:?}/''${app_name}"
-                  fi
+                echo "Removing orphaned app: $app_name"
+                if [[ -e "/Applications/$app_name" ]]; then
+                  chmod -R u+w "/Applications/$app_name" 2>/dev/null || true
+                  rm -rf "/Applications/$app_name"
                 fi
                 rm -f "$metadata_file"
               fi
@@ -91,122 +76,132 @@ inputs: lib: _:
           done
         fi
 
-        # Clean up legacy user-level directories
-        LEGACY_HM_APPS="$HOME/Applications/Home Manager Apps"
-        if [[ -d "$LEGACY_HM_APPS" ]]; then
-          # Cleaning up legacy Home Manager Apps directory
-          rm -rf "$LEGACY_HM_APPS"
-        fi
+        # Cleanup orphaned nix-managed binaries in ~/.local/bin
+        BIN_DIR="$HOME/.local/bin"
+        BIN_METADATA_DIR="$HOME/.local/share/nix-bins"
+        mkdir -p "$BIN_DIR" "$BIN_METADATA_DIR"
 
-        LEGACY_NIX_ALIASES="$HOME/Applications/Nix"
-        if [[ -d "$LEGACY_NIX_ALIASES" ]]; then
-          # Cleaning up legacy Nix alias directory
-          rm -rf "$LEGACY_NIX_ALIASES"
+        # Current binaries that should be installed
+        CURRENT_BINS=$(cat <<'BINS_EOF'
+        ${currentBinariesString}
+        BINS_EOF
+        )
+
+        # Check each metadata file and remove binaries no longer in config
+        if [[ -d "$BIN_METADATA_DIR" ]]; then
+          for metadata_file in "$BIN_METADATA_DIR"/*.nixpath; do
+            if [[ -f "$metadata_file" ]]; then
+              bin_name=$(basename "$metadata_file" .nixpath)
+              if ! echo "$CURRENT_BINS" | ${pkgs.ripgrep}/bin/rg -qFx "$bin_name"; then
+                echo "Removing orphaned binary: $bin_name"
+                rm -f "$BIN_DIR/$bin_name"
+                rm -f "$metadata_file"
+              fi
+            fi
+          done
         fi
       '';
 
-      mkActivationScript = info: let
-        inherit (info) pkg appName appPath appLocation;
+      # Generate activation script for each cask
+      mkActivationScript = pkg: let
+        appName = pkg.passthru.appName;
+        appPath = "${pkg}/Applications/${appName}";
+        appLocation = pkg.passthru.appLocation or "home-manager";
         shouldCopy = appLocation == "copy";
       in
         if shouldCopy
         then ''
+          echo "Copying ${appName} to /Applications..."
+
+          # Use a metadata directory outside the app bundle to avoid breaking code signatures
+          METADATA_DIR="$HOME/.local/share/nix-apps"
+          mkdir -p "$METADATA_DIR"
           METADATA_FILE="$METADATA_DIR/${appName}.nixpath"
 
+          # Check if the app in /Applications is already from this Nix store path
           SHOULD_COPY=1
           if [[ -f "$METADATA_FILE" ]]; then
             CURRENT_PATH=$(cat "$METADATA_FILE")
-            if [[ "$CURRENT_PATH" == "${appPath}" ]] && [[ -e "$TARGET_DIR/${appName}" ]]; then
+            if [[ "$CURRENT_PATH" == "${appPath}" ]] && [[ -e "/Applications/${appName}" ]]; then
+              echo "✓ ${appName} is already up to date in /Applications"
               SHOULD_COPY=0
             else
-              chmod -R u+w "$TARGET_DIR/$app_name" 2>/dev/null || true
-              rm -rf "$TARGET_DIR/${appName}"
+              echo "  Removing outdated version..."
+              chmod -R u+w "/Applications/${appName}" 2>/dev/null || true
+              rm -rf "/Applications/${appName}"
             fi
-          elif [[ -e "$TARGET_DIR/${appName}" ]]; then
-            if [[ -L "$TARGET_DIR/${appName}" ]]; then
-               rm -f "$TARGET_DIR/${appName}"
-            else
-               # Take over existing unmanaged copy
-               chmod -R u+w "$TARGET_DIR/${appName}" 2>/dev/null || true
-               rm -rf "$TARGET_DIR/${appName}"
-            fi
+          elif [[ -e "/Applications/${appName}" ]]; then
+            echo "  Removing existing app..."
+            chmod -R u+w "/Applications/${appName}" 2>/dev/null || true
+            rm -rf "/Applications/${appName}"
           fi
 
+          # Copy the app bundle to /Applications
           if [[ $SHOULD_COPY -eq 1 ]]; then
             if [[ -e "${appPath}" ]]; then
-              if [[ "$TARGET_DIR" == "/Applications" ]]; then
-                /usr/bin/sudo cp -R "${appPath}" "$TARGET_DIR/${appName}"
-                echo "${appPath}" | /usr/bin/sudo tee "$METADATA_FILE" > /dev/null
-                /usr/bin/sudo xattr -cr "$TARGET_DIR/${appName}" 2>/dev/null || true
-              else
-                cp -R "${appPath}" "$TARGET_DIR/${appName}"
-                echo "${appPath}" > "$METADATA_FILE"
-                xattr -cr "$TARGET_DIR/${appName}" 2>/dev/null || true
-              fi
+              echo "  Copying app bundle..."
+              cp -R "${appPath}" "/Applications/${appName}"
+
+              # Store the Nix store path for future updates (outside the bundle to preserve code signature)
+              echo "${appPath}" > "$METADATA_FILE"
+
+              # Clear ALL extended attributes to prevent "damaged app" errors
+              # This includes: com.apple.quarantine, com.apple.provenance, com.apple.macl
+              xattr -cr "/Applications/${appName}" 2>/dev/null || true
+
+              echo "✓ ${appName} copied to /Applications"
             else
-              echo "Warning: Could not find ${appPath} for copy"
+              echo "Warning: Could not find ${appPath}"
             fi
           fi
         ''
         else ''
-          METADATA_FILE="$METADATA_DIR/${appName}.nixpath"
+          echo "Symlinking ${appName} to /Applications..."
 
-          if [[ -L "$TARGET_DIR/${appName}" ]]; then
-            if [[ "$TARGET_DIR" == "/Applications" ]]; then
-              /usr/bin/sudo rm -f "$TARGET_DIR/${appName}"
-            else
-              rm -f "$TARGET_DIR/${appName}"
-            fi
-          elif [[ -e "$TARGET_DIR/${appName}" ]]; then
-            echo "Warning: $TARGET_DIR/${appName} exists and is not a symlink. Skipping."
+          # Remove existing symlink or app if it exists
+          if [[ -L "/Applications/${appName}" ]] || [[ -e "/Applications/${appName}" ]]; then
+            rm -rf "/Applications/${appName}"
           fi
 
-          if [[ ! -e "$TARGET_DIR/${appName}" ]]; then
-            if [[ -e "${appPath}" ]]; then
-              if [[ "$TARGET_DIR" == "/Applications" ]]; then
-                /usr/bin/sudo ln -sf "${appPath}" "$TARGET_DIR/${appName}"
-                echo "${appPath}" | /usr/bin/sudo tee "$METADATA_FILE" > /dev/null
-              else
-                ln -sf "${appPath}" "$TARGET_DIR/${appName}"
-                echo "${appPath}" > "$METADATA_FILE"
-              fi
-            else
-              echo "Warning: Could not find ${appPath} for linking"
-            fi
+          # Create symlink from Nix store to /Applications
+          if [[ -e "${appPath}" ]]; then
+            ln -sf "${appPath}" "/Applications/${appName}"
+            echo "✓ ${appName} linked to /Applications"
+          else
+            echo "Warning: Could not find ${appPath}"
           fi
         '';
 
-      # Separate helper for binaries as they usually only go to ~/.local/bin
+      # Generate activation script for binaries
       mkBinaryScript = pkg: let
-        passthru = pkg.passthru or {};
-        binaries = passthru.binaries or [];
+        binaries = pkg.passthru.binaries;
         pname = pkg.pname or pkg.name or "unknown";
-        binDir = "$HOME/.local/bin";
-        binMetadataDir = "$HOME/.local/share/nix-metadata/bins";
       in
-        if !(builtins.isList binaries) || binaries == [] then "" else
-        ''
-          mkdir -p "${binDir}" "${binMetadataDir}"
-          ${lib.strings.concatMapStringsSep "\n" (binName: ''
-            BIN_PATH="${pkg}/bin/${binName}"
-            BIN_METADATA_FILE="${binMetadataDir}/${binName}.nixpath"
-            if [[ -x "$BIN_PATH" ]]; then
-              if [[ -f "$BIN_METADATA_FILE" ]] && [[ "$(cat "$BIN_METADATA_FILE")" == "$BIN_PATH" ]] && [[ -L "${binDir}/${binName}" ]]; then
-                : # Already up to date
-              else
-                rm -f "${binDir}/${binName}"
-                ln -sf "$BIN_PATH" "${binDir}/${binName}"
-                echo "$BIN_PATH" > "$BIN_METADATA_FILE"
-                echo "✓ ${binName} linked to ${binDir}"
-              fi
-            fi
-          '') binaries}
-        '';
+        lib.strings.concatMapStringsSep "\n" (binName: ''
+          # Link ${binName} from ${pname}
+          BIN_PATH="${pkg}/bin/${binName}"
+          BIN_METADATA_FILE="$BIN_METADATA_DIR/${binName}.nixpath"
 
-      activationScripts = builtins.map mkActivationScript appsWithInfo;
-      binaryScripts = builtins.map mkBinaryScript packages;
+          if [[ -x "$BIN_PATH" ]]; then
+            # Check if already linked to current store path
+            if [[ -f "$BIN_METADATA_FILE" ]] && [[ "$(cat "$BIN_METADATA_FILE")" == "$BIN_PATH" ]] && [[ -L "$BIN_DIR/${binName}" ]]; then
+              echo "✓ ${binName} already up to date"
+            else
+              rm -f "$BIN_DIR/${binName}"
+              ln -sf "$BIN_PATH" "$BIN_DIR/${binName}"
+              echo "$BIN_PATH" > "$BIN_METADATA_FILE"
+              echo "✓ ${binName} linked to ~/.local/bin"
+            fi
+          else
+            echo "Warning: Binary $BIN_PATH not found for ${binName}"
+          fi
+        '') binaries;
+
+      activationScripts = builtins.map mkActivationScript appsNeedingSystemFolder;
+      binaryScripts = builtins.map mkBinaryScript packagesWithBinaries;
+      allScripts = [cleanupScript] ++ activationScripts ++ binaryScripts;
     in
-      lib.strings.concatStringsSep "\n\n" ([cleanupScript] ++ activationScripts ++ binaryScripts);
+      lib.strings.concatStringsSep "\n\n" allScripts;
 
   };
 }

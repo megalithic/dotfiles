@@ -54,6 +54,8 @@
     proton-drive
     yubico-authenticator
   ]) ++ [
+    pkgs.brewCasks."1password"
+    pkgs.brewCasks."1password-cli"
     pkgs.brewCasks."obs@beta"
   ];
 

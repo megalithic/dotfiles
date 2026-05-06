@@ -23,7 +23,15 @@ in {
       export PATH="/etc/profiles/per-user/${config.home.username}/bin:$PATH"
       set -g fish_prompt_pwd_dir_length 20
 
-      # OP_SESSION restore is set in home/common/programs/1password
+      # Restore cached 1Password sessions (from `opl`)
+      if test -f ~/.local/cache/op/sessions
+        while read -l line
+          set -l parts (string split -m1 = $line)
+          if test (count $parts) -eq 2
+            set -gx $parts[1] $parts[2]
+          end
+        end < ~/.local/cache/op/sessions
+      end
 
       # PLUG_EDITOR for clickable stacktraces (Phoenix dev / browser devtools).
       # Always set — Hammerspoon resolves target nvim instance dynamically at

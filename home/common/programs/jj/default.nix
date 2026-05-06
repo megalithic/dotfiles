@@ -30,8 +30,8 @@ in {
         behavior = "own";
         backend = "ssh";
         key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICyxphJ0fZhJP6OQeYMsGNQ6E5ZMVc/CQdoYrWYGPDrh";
-        # backends.ssh.program is set in home/common/programs/1password
         backends.ssh = {
+          program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign";
           allowed-signers = "${config.home.homeDirectory}/.ssh/allowed_signers";
         };
       };
