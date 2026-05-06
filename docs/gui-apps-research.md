@@ -342,7 +342,7 @@ Apps to evaluate (ask user if still needed):
 | Service | Location | Type |
 |---------|----------|------|
 | limit-maxfiles | `modules/system.nix` | launchd daemon |
-| ollama | `home/common/programs/ollama/` | opt-in launchd agent (superseded by omlx) |
+| ollama | `home/common/programs/ai/ollama.nix` | launchd agent |
 | agenix | `home/common/programs/agenix.nix` | launchd agent (via module) |
 | jankyborders | `hosts/common.nix` | nix-darwin service |
 | native-pkg-installer | `modules/native-pkg-installer.nix` | activation script |
@@ -379,18 +379,14 @@ Create `home/common/services.nix`:
 { config, lib, pkgs, ... }: {
   # User services (launchd agents)
   launchd.agents = {
-    omlx = {
-      enable = true;  # default ON
+    ollama = {
+      enable = true;
       config = {
-        ProgramArguments = ["/opt/homebrew/bin/omlx" "serve"];
+        ProgramArguments = ["${pkgs.ollama}/bin/ollama" "serve"];
         RunAtLoad = true;
         KeepAlive = true;
         # ...
       };
-    };
-    ollama = {
-      enable = config.services.ollamaAgent.enable;  # opt-in
-      # ...
     };
   };
 }

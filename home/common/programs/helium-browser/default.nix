@@ -162,16 +162,12 @@
           #
           # NOTE: we chmod +w first because nix store files are read-only,
           # and rsync --inplace fails to overwrite read-only files.
-          # macOS Sequoia App Management TCC blocks chmod/write to /Applications
-          # apps once installed — even with sudo. Tolerate failures and let rsync
-          # decide if the files actually need updating.
           if [ -d "$DST" ]; then
-            $DRY_RUN_CMD chmod -R u+w "$DST" 2>/dev/null || true
+            $DRY_RUN_CMD chmod -R u+w "$DST"
           fi
           $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -a --inplace --delete \
             "$SRC/" "$DST/" 2>&1 | head -20 || {
-              echo "helium-browser: rsync to /Applications/ failed (Sequoia App Management may be blocking)"
-              echo "helium-browser: existing /Applications/Helium.app left in place"
+              echo "helium-browser: rsync failed (exit $?); /Applications/Helium.app may be in inconsistent state"
             }
         fi
       ''
