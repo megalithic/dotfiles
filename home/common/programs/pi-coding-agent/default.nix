@@ -122,19 +122,32 @@
   };
 
   # MCP adapter extension (has npm dependencies)
+  # https://github.com/nicobailon/pi-mcp-adapter — v2.5.4 (latest release).
+  # Upstream removed package-lock.json at v2.5.4; buildNpmPackage generates one
+  # from package.json. npmDepsHash captures full transitive closure.
+  # NOTE: claude-settings-support.patch was disabled here (TODO since v2.4.1) and
+  # needs full rewrite for v2.5.4's new ConfigSourceSpec architecture. Tracked in
+  # a separate ticket; not blocking the migration.
   pi-mcp-adapter = pkgs.buildNpmPackage {
     pname = "pi-mcp-adapter";
-    version = npmVersion ./packages/pi-mcp-adapter;
-    src = ./packages/pi-mcp-adapter;
-    npmDepsHash = "sha256-F1aVWQnw7dODrfcOgD4ygXiV5D+YbgY0hochO48qLzw=";
+    version = "2.5.4";
+    src = pkgs.fetchFromGitHub {
+      owner = "nicobailon";
+      repo = "pi-mcp-adapter";
+      rev = "v2.5.4";
+      hash = "sha256-1FW6ebPphCfG8ubz1lWvBAhtQV0Vp4ChF+LoEt8JExU=";
+    };
+    npmDepsHash = "sha256-/AU4ZD+YSS4X4z1REkRv6ElTRDnV9ej3ct91toEODWs=";
     dontNpmBuild = true;
-    # TODO: patch needs path adjustment for npm package layout (was written for git repo)
-    # patches = [./patches/claude-settings-support.patch];
+    # Upstream removed package-lock.json at v2.5.4. Vendor the v2.5.3 lockfile
+    # (deps unchanged between v2.5.3 and v2.5.4, version field bumped to 2.5.4).
+    postPatch = ''
+      cp ${./patches/pi-mcp-adapter-2.5.4-package-lock.json} package-lock.json
+    '';
     installPhase = ''
       runHook preInstall
       mkdir -p $out
-      cp -r node_modules/pi-mcp-adapter/* $out/
-      cp -r node_modules $out/node_modules
+      cp -r . $out/
       runHook postInstall
     '';
   };

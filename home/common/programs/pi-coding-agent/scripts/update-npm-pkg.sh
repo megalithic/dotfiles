@@ -25,7 +25,6 @@ NIX_FILE="$SCRIPT_DIR/../default.nix"
 # Format: [dir_name]="pname_in_nix" (pname must match the pname = "..." in default.nix)
 declare -A PNAME_MAP=(
   [pi]="pi-coding-agent"
-  [pi-mcp-adapter]="pi-mcp-adapter"
   [pi-internet]="pi-internet"
 
   [pi-agent-browser]="pi-agent-browser"

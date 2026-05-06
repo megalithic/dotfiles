@@ -1,8 +1,8 @@
 ---
 id: dot-y421
-status: open
+status: closed
 deps: [dot-ji0m]
-links: []
+links: [dot-9i38]
 created: 2026-05-06T13:05:53Z
 type: task
 priority: 2
