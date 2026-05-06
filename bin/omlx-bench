@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+# omlx-bench — side-by-side tok/s benchmark: oMLX vs Ollama
+#
+# Sends a fixed coding prompt to each available local LLM endpoint and reports
+# decode tokens/sec. Used to verify oMLX is the right choice on this host
+# (dot-m99m AC #8) and to track regressions after tuning changes.
+#
+# Endpoints probed:
+#   oMLX:   http://127.0.0.1:8000/v1   (models: qwen3.6, gemma4)
+#   Ollama: http://localhost:11434/v1  (models: gemma4:e4b, gemma4:e2b)
+#
+# Usage:
+#   omlx-bench                 # bench all reachable models, default prompt
+#   omlx-bench --prompt "..."  # custom prompt
+#   omlx-bench --max-tokens N  # cap output (default 512)
+#   omlx-bench --warmup        # pre-warm models with throwaway 1-token call
+#   omlx-bench --json          # machine-readable output
+#
+# Caveats:
+#   - First call to an unloaded model includes weight load (~30s on M2 Max).
+#     Use --warmup or run the script twice and trust the second run.
+#   - decode_tps is completion_tokens / wall_time (includes prefill + load).
+#     Conservative: real steady-state decode is higher.
+#   - oMLX returns HTTP 507 when a model would exceed max_model_memory while
+#     another is pinned. That's the memory budget working as designed.
+#
+# Requires: curl, jq, awk
+
+set -euo pipefail
+
+PROMPT='Write a Phoenix LiveView component that renders a list of users with a search input. Use Tailwind for styling. Return only the .heex template plus the handle_event callback. No prose.'
+MAX_TOKENS=512
+JSON_OUT=false
+WARMUP=false
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --prompt) PROMPT="$2"; shift 2 ;;
+    --max-tokens) MAX_TOKENS="$2"; shift 2 ;;
+    --warmup) WARMUP=true; shift ;;
+    --json) JSON_OUT=true; shift ;;
+    -h|--help) sed -n '2,28p' "$0"; exit 0 ;;
+    *) echo "unknown arg: $1" >&2; exit 2 ;;
+  esac
+done
+
+OMLX_URL="http://127.0.0.1:8000/v1/chat/completions"
+OLLAMA_URL="http://localhost:11434/v1/chat/completions"
+
+# Probe endpoint reachability + return list of model ids.
+probe() {
+  local base="$1"
+  curl -fsS --max-time 2 "${base}/models" 2>/dev/null \
+    | jq -r '.data[].id' 2>/dev/null || true
+}
+
+# Run one bench. Args: label, base_url, model_id.
+# Echoes JSON line: {label, model, decode_tps, prefill_tps, total_s, prompt_tokens, completion_tokens}
+bench_one() {
+  local label="$1" url="$2" model="$3"
+  local payload
+  payload=$(jq -nc \
+    --arg model "$model" \
+    --arg prompt "$PROMPT" \
+    --argjson max "$MAX_TOKENS" \
+    '{model:$model, max_tokens:$max, stream:false, messages:[{role:"user",content:$prompt}]}')
+
+  local t0 t1 resp ok
+  t0=$(perl -MTime::HiRes=time -e 'print time')
+  resp=$(curl -fsS --max-time 300 -H 'Content-Type: application/json' \
+    -d "$payload" "$url" 2>&1) && ok=1 || ok=0
+  t1=$(perl -MTime::HiRes=time -e 'print time')
+
+  if [[ "$ok" -ne 1 ]]; then
+    jq -nc --arg label "$label" --arg model "$model" --arg err "$resp" \
+      '{label:$label, model:$model, error:$err}'
+    return
+  fi
+
+  local total_s prompt_tok completion_tok
+  total_s=$(awk -v a="$t0" -v b="$t1" 'BEGIN{printf "%.3f", b-a}')
+  prompt_tok=$(jq -r '.usage.prompt_tokens // 0' <<< "$resp")
+  completion_tok=$(jq -r '.usage.completion_tokens // 0' <<< "$resp")
+
+  # Decode tok/s — completion tokens divided by total wall time. Conservative
+  # (includes prefill); good enough for relative comparison across endpoints.
+  local decode_tps
+  if [[ "$completion_tok" -gt 0 && $(awk -v t="$total_s" 'BEGIN{print (t>0)}') -eq 1 ]]; then
+    decode_tps=$(awk -v c="$completion_tok" -v t="$total_s" 'BEGIN{printf "%.1f", c/t}')
+  else
+    decode_tps="0"
+  fi
+
+  jq -nc \
+    --arg label "$label" --arg model "$model" \
+    --argjson decode_tps "$decode_tps" --argjson total_s "$total_s" \
+    --argjson prompt_tokens "$prompt_tok" --argjson completion_tokens "$completion_tok" \
+    '{label:$label, model:$model, decode_tps:$decode_tps, total_s:$total_s,
+      prompt_tokens:$prompt_tokens, completion_tokens:$completion_tokens}'
+}
+
+# Pre-warm — discard timing, just load weights into memory.
+warmup_one() {
+  local url="$1" model="$2"
+  local p
+  p=$(jq -nc --arg model "$model" \
+    '{model:$model, max_tokens:1, stream:false, messages:[{role:"user",content:"hi"}]}')
+  curl -fsS --max-time 120 -H 'Content-Type: application/json' \
+    -d "$p" "$url" >/dev/null 2>&1 || true
+}
+
+if "$WARMUP"; then
+  echo "warming up models (first load can take ~30s each)..." >&2
+  for m in $(probe http://127.0.0.1:8000/v1); do warmup_one "$OMLX_URL" "$m"; done
+  for m in $(probe http://localhost:11434/v1); do warmup_one "$OLLAMA_URL" "$m"; done
+fi
+
+results=()
+
+for m in $(probe http://127.0.0.1:8000/v1); do
+  results+=("$(bench_one omlx "$OMLX_URL" "$m")")
+done
+
+for m in $(probe http://localhost:11434/v1); do
+  results+=("$(bench_one ollama "$OLLAMA_URL" "$m")")
+done
+
+if [[ "${#results[@]}" -eq 0 ]]; then
+  echo "no reachable LLM endpoints (oMLX :8000 or Ollama :11434)" >&2
+  exit 1
+fi
+
+if "$JSON_OUT"; then
+  printf '%s\n' "${results[@]}" | jq -s .
+else
+  printf '%-8s  %-32s  %10s  %10s  %8s  %8s\n' \
+    LABEL MODEL DECODE_TPS WALL_S PROMPT_T COMPL_T
+  printf '%-8s  %-32s  %10s  %10s  %8s  %8s\n' \
+    -------- -------------------------------- ---------- ---------- -------- --------
+  for r in "${results[@]}"; do
+    if jq -e .error >/dev/null <<< "$r"; then
+      printf '%-8s  %-32s  ERROR: %s\n' \
+        "$(jq -r .label <<< "$r")" "$(jq -r .model <<< "$r")" \
+        "$(jq -r .error <<< "$r" | head -c 80)"
+    else
+      printf '%-8s  %-32s  %10s  %10s  %8s  %8s\n' \
+        "$(jq -r .label <<< "$r")" \
+        "$(jq -r .model <<< "$r")" \
+        "$(jq -r .decode_tps <<< "$r")" \
+        "$(jq -r .total_s <<< "$r")" \
+        "$(jq -r .prompt_tokens <<< "$r")" \
+        "$(jq -r .completion_tokens <<< "$r")"
+    fi
+  done
+fi
