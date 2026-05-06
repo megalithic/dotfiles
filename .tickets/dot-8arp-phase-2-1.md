@@ -57,8 +57,10 @@ mkdir -p ~/.local/share/omlx/models
   --local-dir ~/.local/share/omlx/models/gemma-4-26b-a4b-it-8bit
 ```
 
-## Post-pull verification
-- `ls ~/.local/share/omlx/models/` — both directories exist
-- `du -sh ~/.local/share/omlx/models/*` — sizes match
-- `launchctl kickstart -k gui/$(id -u)/org.nix-community.home.omlx`
-- `curl -s http://127.0.0.1:8000/v1/models | jq '.data[].id'` — lists aliases
+## Acceptance Criteria
+
+1. ls ~/.local/share/omlx/models/ lists Qwen3.6-35B-A3B-4bit and gemma-4-26b-a4b-it-*bit directories
+2. du -sh ~/.local/share/omlx/models/* shows sizes matching table above (~19GB + ~14.6GB on mega, ~19GB + ~26GB on rx)
+3. launchctl kickstart -k gui/$(id -u)/org.nix-community.home.omlx succeeds (restarts agent to discover models)
+4. curl -s http://127.0.0.1:8000/v1/models | jq -r '.data[].id' lists qwen3.6 and gemma4 aliases
+5. curl -sf -X POST http://127.0.0.1:8000/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"qwen3.6","messages":[{"role":"user","content":"reply OK"}],"max_tokens":4}' returns valid response

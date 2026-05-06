@@ -1,7 +1,10 @@
 {
   "retry": {
     "baseDelayMs": 1000,
-    "maxDelayMs": 900000
+    "maxDelayMs": 900000,
+    "provider": {
+      "timeoutMs": 3600000
+    }
   },
   "defaultProvider": "anthropic",
   "defaultThinkingLevel": "high",
@@ -24,7 +27,8 @@
     "omlx/gemma4"
   ],
   "terminal": {
-    "showImages": false
+    "showTerminalProgress": true,
+    "imageWidthCells": 120
   },
   "shellCommandPrefix": "export GIT_EDITOR=true\nexport GIT_SEQUENCE_EDITOR=true\nexport GIT_TERMINAL_PROMPT=0"
 }

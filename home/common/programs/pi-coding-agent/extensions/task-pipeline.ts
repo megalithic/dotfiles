@@ -77,7 +77,10 @@ export default function (pi: ExtensionAPI) {
   pi.registerCommand("plan", {
     description:
       "Create an implementation plan using an isolated subagent (read-only)",
-    handler: async (_args, _ctx) => {
+    handler: async (args, _ctx) => {
+      const slugHint = args?.trim()
+        ? `\nSlug = ${args.trim()} (passed explicitly, skip orphan scan)`
+        : undefined;
       pi.sendUserMessage(
         [
           "Create implementation plan from research findings.",
@@ -86,7 +89,7 @@ export default function (pi: ExtensionAPI) {
           "",
           "Paths:",
           "  Dir  = ~/.local/share/pi/plans/$(basename $PWD)/",
-          "  Slug = resolved the same way as /task (see this extension's header comment). If not passed, prefer $TICKET_ID; else find orphan *_TASK.md in Dir (0 → run /task first; 1 → use silently; 2+ → list + ask).",
+          slugHint ?? "  Slug = resolved the same way as /task (see this extension's header comment). If not passed, prefer $TICKET_ID; else find orphan *_TASK.md in Dir (0 → run /task first; 1 → use silently; 2+ → list + ask).",
           "  Task file = <Dir>/{slug}_TASK.md   Plan file = <Dir>/{slug}_PLAN.md",
           "",
           "Steps:",
@@ -105,14 +108,17 @@ export default function (pi: ExtensionAPI) {
   pi.registerCommand("tickets", {
     description:
       "Create tickets from the implementation plan using the ticket-creator skill",
-    handler: async (_args, _ctx) => {
+    handler: async (args, _ctx) => {
+      const slugHint = args?.trim()
+        ? `\nSlug = ${args.trim()} (passed explicitly, skip orphan scan)`
+        : undefined;
       pi.sendUserMessage(
         [
           "Create tickets from the implementation plan.",
           "",
           "Paths:",
           "  Dir  = ~/.local/share/pi/plans/$(basename $PWD)/",
-          "  Slug = resolved as in /plan. Plan file = <Dir>/{slug}_PLAN.md   Context file = <Dir>/{slug}.ticket-context.md",
+          slugHint ?? "  Slug = resolved as in /plan. Plan file = <Dir>/{slug}_PLAN.md   Context file = <Dir>/{slug}.ticket-context.md",
           "",
           "Steps:",
           "1. Resolve slug and read <Dir>/{slug}_PLAN.md — if it doesn't exist, tell the user to run /plan first",
