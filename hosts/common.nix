@@ -51,7 +51,11 @@ in {
   };
 
   networking.hostName = hostname;
-  system.defaults.smb.NetBIOSName = hostname;
+  # Disabled: macOS Sequoia blocks `defaults write` to
+  # /Library/Preferences/SystemConfiguration/com.apple.smb.server (system-protected).
+  # nix-darwin's launchctl activation context lacks the entitlements to write here.
+  # Set NetBIOS name manually via System Settings → Sharing → File Sharing if needed.
+  # system.defaults.smb.NetBIOSName = hostname;
 
   time.timeZone = "America/New_York";
   ids.gids.nixbld = 30000;

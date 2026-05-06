@@ -54,8 +54,9 @@
     proton-drive
     yubico-authenticator
   ]) ++ [
-    pkgs.brewCasks."1password"
-    pkgs.brewCasks."1password-cli"
+    # 1password + 1password-cli installed via real homebrew (modules/brew.nix)
+    # because brew-nix copies from /nix/store, which trips 1Password's
+    # anti-tamper / signature checks.
     pkgs.brewCasks."obs@beta"
   ];
 

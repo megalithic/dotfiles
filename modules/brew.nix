@@ -2,10 +2,10 @@
   environment.systemPath = ["/opt/homebrew/bin"];
   homebrew = {
     enable = true;
-    # Remove quarantine attribute from casks so they don't prompt on first launch.
-    # Kept for any future homebrew cask overrides; brew-nix-managed casks bypass
-    # macOS quarantine entirely (installed from /nix/store).
-    caskArgs.no_quarantine = true;
+    # Note: `caskArgs.no_quarantine = true` was removed — Homebrew disabled the
+    # `--no-quarantine` switch with no replacement. Casks now go through normal
+    # quarantine; first launch may prompt. brew-nix-managed casks bypass
+    # quarantine entirely (installed from /nix/store).
     brews = [
       # whisperkit-cli moved to nix derivation: pkgs/cli/whisperkit-cli.nix
       "jundot/omlx/omlx" # Apple Silicon native LLM inference server (oMLX)
@@ -23,6 +23,10 @@
       # Okta Verify ships a .pkg with URL-encoded paths that brew-nix's
       # cpio/gzip pipeline can't extract. Keep on homebrew.
       "okta-verify"
+      # 1Password's anti-tamper / signature checks reject /nix/store copies,
+      # so install via real homebrew (writes to /Applications/ normally).
+      "1password"
+      "1password-cli"
     ];
     masApps = {
       "Xcode" = 497799835;
