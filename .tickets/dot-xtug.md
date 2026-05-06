@@ -1,6 +1,6 @@
 ---
 id: dot-xtug
-status: open
+status: closed
 deps: [dot-turd]
 links: []
 created: 2026-05-06T13:05:05Z

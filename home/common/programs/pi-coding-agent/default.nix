@@ -171,17 +171,21 @@
   #   '';
   # };
 
-  # Subscription rotation
-  pi-multi-pass = pkgs.buildNpmPackage {
+  # Subscription rotation — zero npm deps, fetched directly from GitHub
+  # https://github.com/hjanuschka/pi-multi-pass
+  pi-multi-pass = pkgs.stdenvNoCC.mkDerivation {
     pname = "pi-multi-pass";
-    version = npmVersion ./packages/pi-multi-pass;
-    src = ./packages/pi-multi-pass;
-    npmDepsHash = "sha256-ulNHxiWvLS9g/o3ut4AtQgMOn77xMu73ZXmRFaGLCFI=";
-    dontNpmBuild = true;
+    version = "1.3.0";
+    src = pkgs.fetchFromGitHub {
+      owner = "hjanuschka";
+      repo = "pi-multi-pass";
+      rev = "v1.3.0";
+      hash = "sha256-7xbMwWHQZe4vjHCSpNKQgN2q0KLtwkLVDYz9/vL0dnM=";
+    };
     installPhase = ''
       runHook preInstall
       mkdir -p $out
-      cp -r node_modules/pi-multi-pass/* $out/
+      cp -r $src/* $out/
 
       # Fix upstream bug: pi.extensions points to directory, not the .ts file
       substituteInPlace "$out/package.json" \
