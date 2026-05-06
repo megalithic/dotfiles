@@ -32,6 +32,16 @@
   cacheDir = "${config.xdg.cacheHome}/omlx";
 
   # Default global settings. Per-host overrides via programs.omlx.settings.
+  #
+  # Knob reference (see AGENTS.md for full table):
+  #   server.{host,port}                      bind addr
+  #   model.{model_dirs,max_model_memory}     model store + RAM cap for loaded models
+  #   memory.max_process_memory               total process memory cap (% of RAM, 'auto', 'disabled')
+  #   scheduler.max_concurrent_requests       parallel inflight requests; trades throughput for RAM
+  #   cache.hot_cache_max_size                in-RAM KV cache ("0" = disabled)
+  #   cache.ssd_cache_max_size                paged SSD KV cache (omits prefix-cache hits when small)
+  #   cache.initial_cache_blocks              pre-allocated KV blocks at startup (default 256)
+  #   sampling.{temperature,top_p,top_k,...}  global fallback when per-model unset
   defaultSettings = {
     server = {
       host = "127.0.0.1";
@@ -40,9 +50,15 @@
     model = {
       model_dirs = [modelDir];
     };
+    # Pi-coding-agent issues 1-2 concurrent calls; keep low to preserve KV-cache RAM.
+    # Hosts with more RAM (rxbookpro) can override upward in <host>.nix.
+    scheduler = {
+      max_concurrent_requests = 4;
+    };
     cache = {
       enabled = true;
       ssd_cache_dir = cacheDir;
+      initial_cache_blocks = 256;
     };
     auth = {
       skip_api_key_verification = false;
@@ -54,18 +70,34 @@
   defaultModelSettings = {
     version = 1;
     models = {
+      # Qwen3.6 coding preset (qwen3-r-code from omlx_preset.json):
+      # lower temp + zero presence_penalty for deterministic code generation.
+      # Reddit/r/LocalLLaMA OP used qwen3-r-general (temp 0.7, pp 1.5) for
+      # general; we pick coding bias.
       "Qwen3.6-35B-A3B-4bit" = {
         model_alias = "qwen3.6";
         max_tokens = 8192;
         reasoning_parser = "qwen";
         enable_thinking = true;
+        # Sampling — qwen3-r-code preset
+        temperature = 0.6;
+        top_p = 0.95;
+        top_k = 20;
+        min_p = 0.0;
+        presence_penalty = 0.0;
+        # SpecPrefill: speculative prefill of long prompts (cuts TTFT)
         specprefill_enabled = true;
         specprefill_threshold = 8192;
         specprefill_keep_pct = 0.2;
       };
+      # Gemma4 preset (gemma4 from omlx_preset.json) — Google-recommended.
       "gemma-4-26b-a4b-it-4bit" = {
         model_alias = "gemma4";
         max_context_window = 32768;
+        # Sampling — gemma4 preset
+        temperature = 1.0;
+        top_p = 0.95;
+        top_k = 64;
         # Gatekeeper uses this model — lock enable_thinking to prevent token burn
         chat_template_kwargs = { enable_thinking = false; };
         forced_ct_kwargs = [ "enable_thinking" ];
@@ -73,6 +105,10 @@
       "gemma-4-26b-a4b-it-8bit" = {
         model_alias = "gemma4";
         max_context_window = 65536;
+        # Sampling — gemma4 preset
+        temperature = 1.0;
+        top_p = 0.95;
+        top_k = 64;
         # Gatekeeper uses this model — lock enable_thinking to prevent token burn
         chat_template_kwargs = { enable_thinking = false; };
         forced_ct_kwargs = [ "enable_thinking" ];
