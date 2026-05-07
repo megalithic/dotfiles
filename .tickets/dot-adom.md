@@ -34,3 +34,21 @@ See context file for model aliases and API format.
 4. No METAL OOM: grep -i 'metal.*insufficient\|command buffer execution failed' ~/Library/Logs/omlx/stderr.log is empty
 5. Service stable: omlx process uptime > 15 min (ps shows same PID during test)
 
+
+## Notes
+
+**2026-05-07T13:27:57Z**
+
+REVISED 2026-05-07. Scope changed from omlx to ollama testing on megabookpro.
+
+New acceptance criteria:
+1. ollama serve running via launchd (launchctl list | rg ollama shows positive PID)
+2. curl http://127.0.0.1:11434/api/tags returns models list
+3. qwen3.6:27b responds: curl POST /api/generate with small prompt
+4. deepseek-r1:14b responds similarly
+5. gemma4:e4b responds similarly
+6. No OOM crashes after 15min of alternating model requests
+7. pi-coding-agent can use ollama/qwen3.6:27b model (test query)
+8. Logs clean: no memory errors in ~/Library/Logs/ollama/stderr.log
+
+Blocked on: just home activation (needs graphical terminal for app management permission).

@@ -4,7 +4,7 @@ title: Download oMLX models (Qwen 3.6 + Gemma 4) for dot-8arp
 description: |
   Pull the actual model weights for oMLX to complete Phase 2.1 of dot-8arp.
   Model downloads are ~34GB total and should run offline/background.
-status: proposed
+status: closed
 deps: [dot-8arp]
 links:
   - ~/.local/share/pi/plans/dotfiles/dot-8arp-replace-ollama-with-omlx_PLAN.md
@@ -64,3 +64,13 @@ mkdir -p ~/.local/share/omlx/models
 3. launchctl kickstart -k gui/$(id -u)/org.nix-community.home.omlx succeeds (restarts agent to discover models)
 4. curl -s http://127.0.0.1:8000/v1/models | jq -r '.data[].id' lists qwen3.6 and gemma4 aliases
 5. curl -sf -X POST http://127.0.0.1:8000/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"qwen3.6","messages":[{"role":"user","content":"reply OK"}],"max_tokens":4}' returns valid response
+
+## Notes
+
+**2026-05-07T13:27:25Z**
+
+Completed 2026-05-07. MLX models downloaded via omlx-pull:
+- Qwen3.6-27B-4bit (15GB)
+- DeepSeek-R1-Distill-Qwen-14B-4bit (7.8GB)
+- gemma-4-e4b-it-4bit (4.9GB)
+Old models trashed (35B + 26B = 35GB freed).

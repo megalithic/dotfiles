@@ -45,3 +45,13 @@ See:
 7. Document interaction between multi-pass routing and models.json/settings.json — any conflicts or redundancy
 8. Findings written to plans/dotfiles/ for implementation
 
+
+## Notes
+
+**2026-05-07T13:28:02Z**
+
+SCOPE EXPANDED 2026-05-07. Now covers both backends:
+- ollama routing (megabookpro default)
+- omlx routing (rxbookpro default)
+- Fallback chains should include cross-backend: ollama → omlx or vice versa
+- Per-repo affinity must account for which host/backend is active

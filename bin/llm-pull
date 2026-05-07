@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+# llm-pull — download models for ollama or omlx backends.
+#
+# Dispatches to `ollama pull` or `hf download` depending on --backend/-b flag.
+# Default backend: ollama (safe for all hosts).
+#
+# Aliases resolve differently per backend:
+#   ollama:  qwen3.6 -> qwen3.6:27b, deepseek14b -> deepseek-r1:14b, gemma4 -> gemma4:e4b
+#   omlx:    qwen3.6 -> mlx-community/Qwen3.6-27B-4bit, etc.
+#
+# Flags:
+#   -b, --backend <ollama|omlx>   Backend to pull for (default: ollama)
+#   --dry-run                      Print resolved command without running
+#   -h, --help                     Show usage
+set -euo pipefail
+
+BACKEND="ollama"
+DRY_RUN=0
+ARGS=()
+
+usage() {
+  cat <<'EOF'
+Usage: llm-pull [-b ollama|omlx] [--dry-run] <alias|model-id> [extra flags...]
+
+Backends:
+  ollama (default)  Uses `ollama pull` — GGUF models from ollama.com
+  omlx              Uses `hf download` — MLX safetensors from mlx-community
+
+Aliases:
+  qwen3.6      ollama: qwen3.6:27b          omlx: Qwen3.6-27B-4bit
+  deepseek14b  ollama: deepseek-r1:14b       omlx: DeepSeek-R1-Distill-Qwen-14B-4bit
+  gemma4       ollama: gemma4:e4b            omlx: gemma-4-e4b-it-4bit (mega) / gemma-4-26b-a4b-it-8bit (rx)
+
+Examples:
+  llm-pull qwen3.6                    # ollama pull qwen3.6:27b
+  llm-pull -b omlx qwen3.6           # hf download mlx-community/Qwen3.6-27B-4bit
+  llm-pull deepseek14b                # ollama pull deepseek-r1:14b
+  llm-pull --dry-run gemma4           # print command without running
+  llm-pull gemma4:e2b                 # passthrough: ollama pull gemma4:e2b
+EOF
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    -h|--help) usage; exit 0 ;;
+    --dry-run) DRY_RUN=1 ;;
+    -b|--backend)
+      # handled below with shift
+      ;;
+    *)
+      ARGS+=("$arg")
+      ;;
+  esac
+done
+
+# Re-parse for -b/--backend which takes a value
+set -- "$@"  # reset
+ARGS=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -b|--backend) BACKEND="$2"; shift 2 ;;
+    -h|--help) shift ;;
+    --dry-run) shift ;;
+    *) ARGS+=("$1"); shift ;;
+  esac
+done
+
+if [[ ${#ARGS[@]} -eq 0 ]]; then
+  usage >&2
+  exit 1
+fi
+
+ALIAS="${ARGS[0]}"
+EXTRA=("${ARGS[@]:1}")
+HOST="$(scutil --get LocalHostName 2>/dev/null || hostname -s)"
+
+# ─── Ollama backend ──────────────────────────────────────────────────────────
+pull_ollama() {
+  local model
+  case "$ALIAS" in
+    qwen3.6)     model="qwen3.6:27b" ;;
+    deepseek14b) model="deepseek-r1:14b" ;;
+    gemma4)      model="gemma4:e4b" ;;
+    *)           model="$ALIAS" ;;
+  esac
+
+  local ollama
+  ollama="$(command -v ollama || echo "$HOME/.nix-profile/bin/ollama")"
+
+  local cmd=("$ollama" pull "$model" "${EXTRA[@]}")
+
+  if [[ $DRY_RUN -eq 1 ]]; then
+    printf '%q ' "${cmd[@]}"; printf '\n'
+    exit 0
+  fi
+
+  echo ":: ollama pull $model"
+  exec "${cmd[@]}"
+}
+
+# ─── oMLX backend ────────────────────────────────────────────────────────────
+pull_omlx() {
+  local model
+  case "$ALIAS" in
+    qwen3.6)     model="Qwen3.6-27B-4bit" ;;
+    deepseek14b) model="DeepSeek-R1-Distill-Qwen-14B-4bit" ;;
+    gemma4)
+      case "$HOST" in
+        rxbookpro*) model="gemma-4-26b-a4b-it-8bit" ;;
+        *)          model="gemma-4-e4b-it-4bit" ;;
+      esac
+      ;;
+    */*)  model="${ALIAS#mlx-community/}" ;;
+    *)    model="$ALIAS" ;;
+  esac
+
+  local repo="mlx-community/${model}"
+  local target="${XDG_DATA_HOME:-$HOME/.local/share}/omlx/models/${model}"
+
+  # Prefer omlx's bundled hf, else PATH hf
+  local hf="/opt/homebrew/opt/omlx/libexec/bin/hf"
+  if [[ ! -x "$hf" ]]; then
+    hf="$(command -v hf || true)"
+  fi
+  if [[ -z "$hf" ]]; then
+    if [[ $DRY_RUN -eq 1 ]]; then
+      hf="hf"
+    else
+      echo "error: hf CLI not found (need omlx installed or huggingface_hub on PATH)" >&2
+      exit 127
+    fi
+  fi
+
+  local cmd=("$hf" download "$repo" --local-dir "$target" "${EXTRA[@]}")
+
+  if [[ $DRY_RUN -eq 1 ]]; then
+    printf '%q ' "${cmd[@]}"; printf '\n'
+    exit 0
+  fi
+
+  mkdir -p "$(dirname "$target")"
+  echo ":: pulling $repo -> $target"
+  exec "${cmd[@]}"
+}
+
+# ─── Dispatch ────────────────────────────────────────────────────────────────
+case "$BACKEND" in
+  ollama) pull_ollama ;;
+  omlx)   pull_omlx ;;
+  *)
+    echo "error: unknown backend '$BACKEND' (use ollama or omlx)" >&2
+    exit 1
+    ;;
+esac

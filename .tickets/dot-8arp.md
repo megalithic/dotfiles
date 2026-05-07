@@ -105,3 +105,35 @@ References:
 
 **Remaining blocker:** AC 11 (tmux reachability) requires model pulls (dot-8arp-phase-2-1).
 
+
+## Notes
+
+**2026-05-07T13:27:49Z**
+
+PARTIAL SUCCESS / REVISED 2026-05-07.
+
+oMLX works on rxbookpro (64GB) but UNSAFE on megabookpro (32GB).
+
+Root cause: ProcessMemoryEnforcer only tracks Metal allocations (mx.get_active_memory()),
+not true RSS. Loading second model causes macOS Jetsam to SIGKILL (vm-compressor-space-shortage).
+See: oMLX #702, #1060 (VLM memory leak on unload).
+
+Performance measured: oMLX Qwen3.6 on M2 Max = 67 tok/s decode.
+Ollama Qwen3.6:27b on M2 Max = ~10 tok/s decode. 6-8x gap.
+
+Decision: host-split strategy:
+- megabookpro (32GB): ollama (safe, slower) with tuned env vars
+- rxbookpro (64GB): omlx (fast, sufficient headroom)
+
+Config changes:
+- programs.omlx.enable gates launchd agent + activation scripts
+- megabookpro: ollama ON + tuned, omlx OFF
+- Ollama env: flash attn, q8_0 KV, GPU overhead 4GB, max_loaded=1, ctx 8192
+- Both providers wired in pi-coding-agent models.json + settings.json
+- Ollama models pulled: qwen3.6:27b, deepseek-r1:14b, gemma4:e4b, gemma4:e2b
+
+AC 11 (tmux reachability): RESOLVED via ollama on megabookpro.
+AC 15 (coexistence): ACHIEVED — both configurable per host via nix flags.
+
+Remaining: rxbookpro omlx model definitions still reference old 35B/26B.
+Separate ticket for rx model updates when needed.

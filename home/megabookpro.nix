@@ -41,25 +41,44 @@
   };
 
   # ===========================================================================
-  # oMLX tuning (M2 Max, 32GB unified memory) — dot-8arp Phase 2.3
+  # Ollama — safe local inference for 32GB (sequential model swap, no OOM)
+  # Metal GPU: 100% offload, flash attention, q8_0 KV cache
   # ===========================================================================
+  services.ollamaAgent.enable = true;
+  services.ollamaAgent.extraEnv = {
+    OLLAMA_MAX_LOADED_MODELS = "1";       # Prevent dual-load on 32GB
+    OLLAMA_GPU_OVERHEAD = "4294967296";   # Reserve 4GB for OS/browser/nvim
+    OLLAMA_CONTEXT_LENGTH = "8192";       # Default ctx (auto was 4096, too small for coding)
+  };
+
+  # ===========================================================================
+  # oMLX — DISABLED on megabookpro (32GB insufficient for multi-model)
+  # ===========================================================================
+  # ProcessMemoryEnforcer only tracks Metal allocations, not true RSS.
+  # Loading a second model alongside pinned Qwen27B (~18.7GB) causes macOS
+  # Jetsam to SIGKILL the process (vm-compressor-space-shortage).
+  # See: oMLX Issue #702, #1060 (VLM memory leak on unload).
+  # Config preserved for rxbookpro (64GB) or future oMLX fixes.
+  programs.omlx.enable = false;
   programs.omlx.settings = {
-    model.max_model_memory = "20GB";
+    model.max_model_memory = "24GB";
     cache.hot_cache_max_size = "2GB";
     cache.ssd_cache_max_size = "40GB";
     memory.max_process_memory = "75%";
   };
-
-  # Pin only Qwen (primary), TTL Gemma (secondary) — 32GB limit
   programs.omlx.modelSettings.models = {
-    "Qwen3.6-35B-A3B-4bit" = {
+    "Qwen3.6-27B-4bit" = {
       is_pinned = true;
-      ttl_seconds = null;  # Never auto-unload
+      ttl_seconds = null;
       max_context_window = 32768;
     };
-    "gemma-4-26b-a4b-it-4bit" = {
+    "DeepSeek-R1-Distill-Qwen-14B-4bit" = {
       is_pinned = false;
-      ttl_seconds = 600;  # Unload after 10min idle
+      ttl_seconds = 600;
+    };
+    "gemma-4-e4b-it-4bit" = {
+      is_pinned = false;
+      ttl_seconds = 600;
     };
   };
 

@@ -16,14 +16,16 @@
   ...
 }: {
   # ─────────────────────────────────────────────────────────────────────────────
-  # oMLX - Apple Silicon native LLM inference (default ON)
+  # oMLX - Apple Silicon native LLM inference
   # ─────────────────────────────────────────────────────────────────────────────
   # Listens on http://127.0.0.1:8000/v1. CLI installed via brew tap
   # (jundot/omlx); see modules/brew.nix and home/common/programs/omlx/.
   #
-  # Default ON. Ollama is now opt-in (services.ollama.enable = true).
+  # Disabled on megabookpro (32GB): ProcessMemoryEnforcer only tracks Metal
+  # allocations, not true RSS — causes Jetsam OOM kills. See oMLX #702.
+  # Works on rxbookpro (64GB) where headroom is sufficient.
   launchd.agents.omlx = {
-    enable = true;
+    enable = config.programs.omlx.enable;
     config = {
       ProgramArguments = [
         "/opt/homebrew/bin/omlx"
@@ -57,9 +59,13 @@
       StandardOutPath = "${config.home.homeDirectory}/Library/Logs/ollama/stdout.log";
       StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/ollama/stderr.log";
       EnvironmentVariables = {
-        OLLAMA_HOME = "${config.home.homeDirectory}/.ollama";
+        OLLAMA_HOME = "${config.xdg.dataHome}/ollama";  # ~/.local/share/ollama/
         OLLAMA_HOST = "127.0.0.1:11434"; # localhost only (security)
-      };
+        OLLAMA_FLASH_ATTENTION = "1";     # Flash attention (default 0.21.1+, explicit)
+        OLLAMA_KV_CACHE_TYPE = "q8_0";    # Halve KV cache memory (requires flash attn)
+        OLLAMA_NUM_PARALLEL = "1";        # Single user, single KV alloc
+        OLLAMA_KEEP_ALIVE = "30m";        # Keep model loaded 30min (avoid reload latency)
+      } // config.services.ollamaAgent.extraEnv;
     };
   };
 

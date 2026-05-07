@@ -1,6 +1,6 @@
 ---
 id: dot-362h
-status: open
+status: closed
 deps: [dot-g8dx]
 links: []
 created: 2026-05-05T12:23:21Z
@@ -37,3 +37,20 @@ This is Phase 4 of the oMLX migration plan. Ollama models directory (~/.ollama/m
 9. ~/.ollama/models directory still exists (not deleted)
 10. just validate passes
 
+
+## Notes
+
+**2026-05-07T13:27:20Z**
+
+SUPERSEDED 2026-05-07. Direction reversed.
+
+Original goal: flip default to omlx, make ollama opt-in.
+Outcome: oMLX unsafe on 32GB (Jetsam OOM, #702). Ollama re-enabled as
+default on megabookpro. omlx disabled via programs.omlx.enable = false.
+
+New state:
+- megabookpro (32GB): ollama ON, omlx OFF
+- rxbookpro (64GB): omlx ON (sufficient headroom)
+
+Ollama tuned with: flash attn, q8_0 KV cache, GPU overhead 4GB reserve,
+max_loaded_models=1, ctx 8192, keep_alive 30m.

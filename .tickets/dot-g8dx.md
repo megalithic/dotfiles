@@ -32,3 +32,17 @@ This is Phase 3 of the oMLX migration plan. Must happen before Phase 4 (default 
 7. TS compiles without errors (tsc --noEmit or just lint)
 8. just validate passes
 
+
+## Notes
+
+**2026-05-07T13:27:37Z**
+
+REVISED 2026-05-07. Scope changed:
+
+Original: migrate gatekeeper from ollama to omlx on all hosts.
+New: gatekeeper stays on ollama for megabookpro (32GB, omlx disabled).
+omlx gatekeeper only applies to rxbookpro (64GB) where omlx is still active.
+
+stop-hook.ts currently disabled ('broken with omlx'). For megabookpro,
+re-enabling with ollama backend should work since that's what it was
+originally written for. Separate ticket if needed.

@@ -14,9 +14,10 @@
 # Model directory: ${XDG_DATA_HOME}/omlx/models  (= ~/.local/share/omlx/models)
 # SSD cache dir:   ${XDG_CACHE_HOME}/omlx        (= ~/.cache/omlx)
 #
-# Pulling models (run manually after first rebuild):
-#   omlx-pull qwen3.6   # ~19 GB, primary text/reasoning model
-#   omlx-pull gemma4    # ~14.6 GB (4bit) or ~26 GB (8bit) per host
+# Pulling models (run manually after first rebuild, or use llm-pull):
+#   llm-pull -b omlx qwen3.6      # ~15 GB, primary dense coding/reasoning model
+#   llm-pull -b omlx deepseek14b  # ~8 GB, reasoning specialist
+#   llm-pull -b omlx gemma4       # ~5 GB, lightweight vision + secondary
 #
 # Service is a user launchd agent defined in home/common/services.nix.
 # Toggle with `services.omlx.enable` (default true; ollama is opt-in via
@@ -65,17 +66,17 @@
     };
   };
 
-  # Default per-model settings (mirrors dot-8arp Stream 4 + PLAN Phase 2.2/3.2).
+  # Default per-model settings (dot-hny3: 32GB model replacement strategy).
   # Hosts override in megabookpro.nix/rxbookpro.nix for is_pinned, ttl_seconds, etc.
   defaultModelSettings = {
     version = 1;
     models = {
-      # Qwen3.6 coding preset (qwen3-r-code from omlx_preset.json):
-      # lower temp + zero presence_penalty for deterministic code generation.
-      # Reddit/r/LocalLLaMA OP used qwen3-r-general (temp 0.7, pp 1.5) for
-      # general; we pick coding bias.
-      "Qwen3.6-35B-A3B-4bit" = {
+      # Qwen3.6-27B dense model — primary coding/reasoning.
+      # qwen3-r-code preset: lower temp + zero presence_penalty for deterministic code.
+      # 14.95GB safetensors, ~18.69GB with 25% KV headroom.
+      "Qwen3.6-27B-4bit" = {
         model_alias = "qwen3.6";
+        max_context_window = 32768;
         max_tokens = 8192;
         reasoning_parser = "qwen";
         enable_thinking = true;
@@ -90,26 +91,31 @@
         specprefill_threshold = 8192;
         specprefill_keep_pct = 0.2;
       };
-      # Gemma4 preset (gemma4 from omlx_preset.json) — Google-recommended.
-      "gemma-4-26b-a4b-it-4bit" = {
-        model_alias = "gemma4";
+      # DeepSeek-R1 distilled 14B — reasoning specialist.
+      # 7.73GB safetensors, ~9.66GB with 25% KV headroom.
+      "DeepSeek-R1-Distill-Qwen-14B-4bit" = {
+        model_alias = "deepseek14b";
         max_context_window = 32768;
-        # Sampling — gemma4 preset
+        max_tokens = 8192;
+        reasoning_parser = "deepseek";
+        enable_thinking = true;
+        # Sampling — reasoning defaults (wider sampling for exploration)
         temperature = 1.0;
         top_p = 0.95;
-        top_k = 64;
-        # Gatekeeper uses this model — lock enable_thinking to prevent token burn
-        chat_template_kwargs = { enable_thinking = false; };
-        forced_ct_kwargs = [ "enable_thinking" ];
+        top_k = 40;
+        min_p = 0.0;
+        presence_penalty = 0.0;
       };
-      "gemma-4-26b-a4b-it-8bit" = {
+      # Gemma 4 e4b — lightweight vision + secondary tasks.
+      # 4.85GB safetensors, ~6.06GB with 25% KV headroom.
+      # Gatekeeper uses this model — lock enable_thinking to prevent token burn.
+      "gemma-4-e4b-it-4bit" = {
         model_alias = "gemma4";
-        max_context_window = 65536;
-        # Sampling — gemma4 preset
+        max_context_window = 16384;  # Reduced from 32K to fit alongside Qwen in 24GB budget
+        # Sampling — gemma4 preset (Google-recommended)
         temperature = 1.0;
         top_p = 0.95;
         top_k = 64;
-        # Gatekeeper uses this model — lock enable_thinking to prevent token burn
         chat_template_kwargs = { enable_thinking = false; };
         forced_ct_kwargs = [ "enable_thinking" ];
       };
@@ -146,7 +152,7 @@ in {
     };
   };
 
-  config = {
+  config = lib.mkIf cfg.enable {
     # Write settings via activation script (out-of-store, writable by omlx).
     # home.file creates /nix/store symlinks which are read-only — omlx crashes
     # on startup when it tries to save merged settings back to settings.json.

@@ -1,6 +1,6 @@
 ---
 id: dot-j9q6
-status: open
+status: closed
 deps: [dot-bd5i]
 links: []
 created: 2026-05-05T12:23:10Z
@@ -40,3 +40,15 @@ This is Phase 2 of the oMLX migration plan. Models are downloaded ad-hoc (not ni
 8. From tmux pane: curl to :8000/v1/chat/completions with model=qwen3.6 returns a valid response
 9. just validate passes
 
+
+## Notes
+
+**2026-05-07T13:27:31Z**
+
+Completed 2026-05-07. Both providers wired in pi-coding-agent:
+
+omlx provider (models.json): qwen3.6, deepseek14b, gemma4 — for rxbookpro
+ollama provider (models.json): qwen3.6:27b, deepseek-r1:14b, gemma4:e4b, gemma4:e2b — for megabookpro
+
+Both in enabledModels in settings.json. pi-coding-agent can use either
+backend depending on which host/service is running.
