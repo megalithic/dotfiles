@@ -49,8 +49,13 @@ vim.api.nvim_create_autocmd({ "BufWritePost", "TextChanged", "TextChangedI" }, {
 -- Set up highlight for wrap symbols (dimmed)
 vim.api.nvim_set_hl(0, "StatusColumnWrap", { link = "NonText" })
 
-local excluded_bts = { "terminal", "nofile", "input", "prompt" }
-local excluded_fts = {
+-- Three-tier statuscolumn: full | minimal | none
+-- full:    signs + line numbers + wrap indicators + git signs + fold indicators
+-- minimal: line numbers + wrap indicators only
+-- none:    empty statuscolumn
+
+local none_bts = { "terminal", "nofile", "input", "prompt" }
+local none_fts = {
   "NeogitCommitMessage",
   "NeogitCommitView",
   "cmdline",
@@ -62,7 +67,6 @@ local excluded_fts = {
   "fidget",
   "firenvim",
   "fugitive",
-  "gitcommit",
   "help",
   "himalaya",
   "lazy",
@@ -96,8 +100,24 @@ local excluded_fts = {
   "snacks",
 }
 
-local should_hide_numbers = function(filetype, buftype)
-  return vim.list_contains(excluded_fts, filetype) or vim.list_contains(excluded_bts, buftype) or vim.g.shade_context
+local minimal_fts = {
+  "gitcommit",
+  "jjdescription",
+  "markdown",
+  "markdown.mdx",
+}
+
+--- Resolve statuscolumn tier for a buffer.
+---@param filetype string
+---@param buftype string
+---@param is_active boolean
+---@return "full"|"minimal"|"none"
+local function resolve_tier(filetype, buftype, is_active)
+  if vim.g.shade_context then return "none" end
+  if vim.list_contains(none_fts, filetype) or vim.list_contains(none_bts, buftype) then return "none" end
+  if vim.list_contains(minimal_fts, filetype) then return "minimal" end
+  if not is_active then return "minimal" end
+  return "full"
 end
 
 ---@return StringComponent
@@ -439,7 +459,29 @@ local function extmark_signs(curbuf, lnum)
   return sns.git, sns.other
 end
 
-function mega.ui.statuscolumn.render(is_active)
+--- Render minimal statuscolumn: line numbers + wrap indicators only
+function mega.ui.statuscolumn.render_minimal(is_active)
+  local lnum, relnum, virtnum = v.lnum, v.relnum, v.virtnum
+  local winnr = api.nvim_get_current_win()
+  local bufnr = api.nvim_win_get_buf(winnr)
+  local line_count = get_line_count(bufnr)
+
+  local ln_text, ln_hl = nr(winnr, lnum, relnum, virtnum, line_count, is_active)
+  if not ln_hl then ln_hl = is_active and "" or "StatusColumnInactiveLineNr" end
+
+  local ln_col = { ln_text, ln_hl }
+
+  return display({
+    section:new(spacer(1), {
+      {
+        ln_col,
+      },
+    }, spacer(1)),
+  })
+end
+
+--- Render full statuscolumn: signs + line numbers + wrap + git + folds
+function mega.ui.statuscolumn.render_full(is_active)
   local lnum, relnum, virtnum = v.lnum, v.relnum, v.virtnum
   local winnr = api.nvim_get_current_win()
   local bufnr = api.nvim_win_get_buf(winnr)
@@ -504,21 +546,20 @@ function mega.ui.statuscolumn.render(is_active)
 end
 
 function mega.ui.statuscolumn.set(bufnr, is_active)
-  local statuscolumn = ""
-
-  if is_active then
-    statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render(v:true)]]
-  else
-    statuscolumn = [[%!v:lua.mega.ui.statuscolumn.render(v:false)]]
-  end
-
   local buftype = vim.bo[bufnr].buftype
   local filetype = vim.bo[bufnr].filetype
+  local tier = resolve_tier(filetype, buftype, is_active)
 
-  if should_hide_numbers(filetype, buftype) then
+  if tier == "none" then
     vim.opt_local.statuscolumn = ""
-  else
-    vim.opt_local.statuscolumn = statuscolumn
+  elseif tier == "minimal" then
+    vim.opt_local.statuscolumn = is_active
+        and [[%!v:lua.mega.ui.statuscolumn.render_minimal(v:true)]]
+      or [[%!v:lua.mega.ui.statuscolumn.render_minimal(v:false)]]
+  else -- full
+    vim.opt_local.statuscolumn = is_active
+        and [[%!v:lua.mega.ui.statuscolumn.render_full(v:true)]]
+      or [[%!v:lua.mega.ui.statuscolumn.render_full(v:false)]]
   end
 end
 
