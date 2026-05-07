@@ -116,7 +116,7 @@ local config = {
 --- Build the default nvim command with socket cleanup and SHADE env var
 ---@return string command Shell command to launch nvim with socket
 local function buildDefaultCommand()
-  return fmt("/usr/bin/env zsh -c 'rm -f %s; SHADE=1 exec nvim --listen %s'", NVIM_SOCKET, NVIM_SOCKET)
+  return fmt("/bin/sh -c 'rm -f %s; SHADE=1 exec nvim --listen %s'", NVIM_SOCKET, NVIM_SOCKET)
 end
 
 --- Get the effective command (configured or default)

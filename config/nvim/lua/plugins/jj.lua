@@ -1,5 +1,20 @@
 return {
   {
+    -- https://github.com/jceb/jiejie.nvim.git
+    "jceb/jiejie.nvim",
+    -- Custom configuration settings
+    opts = {
+      -- Excluded revset expression, see https://docs.jj-vcs.dev/latest/revsets/ for the full language
+      excluded_revset = 'bookmarks(glob:"renovate/*") | tracked_remote_bookmarks(glob:"renovate/*") | untracked_remote_bookmarks(glob:"renovate/*")',
+      default_view = 1,
+      dynamic_views = {
+        -- Dynamic view that dispalys all merges, see https://docs.jj-vcs.dev/latest/revsets/ for the full language
+        { revset = "merges()" },
+      },
+      log_revisions = 10,
+    },
+  },
+  {
     "NicolasGB/jj.nvim",
     version = "*",
     config = function() require("jj").setup({}) end,

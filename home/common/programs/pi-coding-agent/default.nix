@@ -558,6 +558,7 @@ in {
 
       # Plain JSON configs — keybindings uses out-of-store symlink so pi can write to it
       ".pi/agent/keybindings.json".source = config.lib.mega.linkDotfile "home/common/programs/pi-coding-agent/keybindings.json";
+      ".pi/agent/multi-pass.json".source = config.lib.mega.linkDotfile "home/common/programs/pi-coding-agent/multi-pass.json";
       ".pi/agent/models.json".source = ./models.json;
       ".pi/agent/mcp.json".source = ./mcp.json;
 

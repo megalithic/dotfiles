@@ -19,6 +19,10 @@
  *   Global:  ~/.pi/agent/multi-pass.json  (subscriptions + default pools)
  *   Project: .pi/multi-pass.json          (pool overrides + subscription filtering)
  *
+ * Nix awareness: When the global config is nix-managed (symlinked to /nix/store),
+ * writes resolve through to the writable source (out-of-store symlink) instead
+ * of failing with EACCES. loadGlobalConfig still reads the symlinked path.
+ *
  * Project-level config can:
  *   - Define project-specific pools (override global pools)
  *   - Restrict which subscriptions are usable via "allowedSubs"
@@ -32,7 +36,7 @@
  *   - google-antigravity (Antigravity)
  */
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readlinkSync, lstatSync } from "fs";
 import { dirname, join } from "path";
 import type {
 	ExtensionAPI,
@@ -1577,6 +1581,38 @@ function globalConfigPath(): string {
 	return join(getAgentDir(), "multi-pass.json");
 }
 
+/** Resolve through nix-store symlinks to writable source.
+ * If path is symlinked to /nix/store, returns that target so writes go
+ * to the out-of-store source rather than failing with EACCES.
+ * Otherwise returns the original path unchanged (idempotent). */
+function resolveNixWritable(path: string): string {
+	try {
+		const stats = lstatSync(path);
+		if (stats.isSymbolicLink()) {
+			const target = readlinkSync(path);
+			if (target.includes("/nix/store/")) {
+				// target is the nix-store symlink (read-only)
+				// keep following until we escape /nix/store
+				let current = target;
+				while (lstatSync(current).isSymbolicLink()) {
+					const next = readlinkSync(current);
+					if (next.includes("/nix/store/")) {
+						current = next;
+					} else {
+						return next;
+					}
+				}
+				return current;
+			}
+			// symlink to non-nix path (e.g. user's own file) — return target
+			return target;
+		}
+	} catch {
+		// not a symlink or doesn't exist yet — return original
+	}
+	return path;
+}
+
 function projectConfigPath(cwd: string): string {
 	return join(cwd, ".pi", "multi-pass.json");
 }
@@ -1697,7 +1733,7 @@ function loadEffectiveConfig(cwd: string): EffectiveConfig {
 }
 
 function saveGlobalConfig(config: MultiPassConfig): void {
-	const path = globalConfigPath();
+	const path = resolveNixWritable(globalConfigPath());
 	const dir = dirname(path);
 	if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 	writeFileSync(path, JSON.stringify(config, null, 2), "utf-8");
@@ -3176,41 +3212,53 @@ async function handleSubsLogin(ctx: ExtensionCommandContext): Promise<void> {
 	const envEntries = parseEnvConfig();
 	const all = normalizeEntries(mergeConfigs(config, envEntries));
 
-	const notLoggedIn = all.filter(
-		(entry) => !ctx.modelRegistry.authStorage.hasAuth(subProviderName(entry)),
-	);
-
-	if (notLoggedIn.length === 0) {
+	if (all.length === 0) {
 		ctx.ui.notify(
-			all.length === 0
-				? "No subscriptions configured. Use /subs add first."
-				: "All subscriptions are already logged in.",
+			"No subscriptions configured. Use /subs add first.",
 			"info",
 		);
 		return;
 	}
 
-	const selectedProviderName = await showWrappedSelect(ctx, {
-		title: "Login to subscription",
-		subtitle: "Select a subscription to see login instructions.",
-		initialValue: ctx.model?.provider,
-		items: notLoggedIn.map((entry) => ({
+	// Show all subscriptions — logged-in ones can be re-authed by logging out first
+	const items = all.map((entry) => {
+		const isLoggedIn = ctx.modelRegistry.authStorage.hasAuth(subProviderName(entry));
+		return {
 			value: subProviderName(entry),
 			label: subDisplayName(entry),
-			description: "not logged in",
-		})),
-		confirmHint: "open",
+			description: isLoggedIn ? "already logged in — logout first to re-auth" : "not logged in",
+		};
+	});
+
+	const selectedProviderName = await showWrappedSelect(ctx, {
+		title: "Login to subscription",
+		subtitle: "Select a subscription. Not-logged-in accounts can authenticate directly.\nAlready-logged-in accounts: use /subs logout first, then /login.",
+		initialValue: ctx.model?.provider,
+		items,
+		confirmHint: "select",
 		cancelHint: "back",
 	});
 	if (!selectedProviderName) return;
 
-	const entry = notLoggedIn.find((candidate) => subProviderName(candidate) === selectedProviderName);
+	const entry = all.find((candidate) => subProviderName(candidate) === selectedProviderName);
 	if (!entry) return;
 
-	ctx.ui.notify(
-		`Use /login and select "${PROVIDER_TEMPLATES[entry.provider]?.buildOAuth(entry.index).name}" to authenticate.`,
-		"info",
-	);
+	const isLoggedIn = ctx.modelRegistry.authStorage.hasAuth(subProviderName(entry));
+
+	// Use the same name that registerSub passes to /login (alias overrides buildOAuth name)
+	const loginName = entry.alias || PROVIDER_TEMPLATES[entry.provider]?.buildOAuth(entry.index).name || subProviderName(entry);
+
+	if (isLoggedIn) {
+		ctx.ui.notify(
+			`Log out first: /subs logout → select ${subDisplayName(entry)}, then /login → select "${loginName}".`,
+			"info",
+		);
+	} else {
+		ctx.ui.notify(
+			`Use /login and select "${loginName}" to authenticate.`,
+			"info",
+		);
+	}
 }
 
 async function handleSubsLogout(ctx: ExtensionCommandContext): Promise<void> {

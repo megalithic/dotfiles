@@ -17,6 +17,7 @@
     #   homerow, kitty, mouseless, okta-verify, protonvpn, proton-drive,
     #   obs@beta, yubico-authenticator, visual-studio-code, zed
     casks = [
+      "hammerspoon"
       # Raycast serves a zlib-wrapped DMG that brew-nix's 7zz unpack can't
       # handle. Keep on homebrew until upstream fixes the wrapping.
       "raycast"
@@ -27,6 +28,9 @@
       # so install via real homebrew (writes to /Applications/ normally).
       "1password"
       "1password-cli"
+      # VPN system extensions need stable /Applications path; brew-nix
+      # /nix/store copies break WireGuard XPC service identity.
+      "protonvpn"
     ];
     masApps = {
       "Xcode" = 497799835;

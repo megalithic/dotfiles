@@ -124,16 +124,16 @@ return {
           enabled = true,
           indent = {
             enabled = true,
-            only_scope = false,
-            only_current = false,
+            only_scope = true,
+            only_current = true,
             hl = "SnacksIndent",
           },
           scope = {
-            enabled = true,
+            enabled = false,
             hl = "SnacksIndentScope",
           },
           chunk = {
-            enabled = true,
+            enabled = false,
           },
         },
 

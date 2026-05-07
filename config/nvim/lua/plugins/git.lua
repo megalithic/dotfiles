@@ -44,8 +44,8 @@ return {
     "linrongbin16/gitlinker.nvim",
     cmd = "GitLink",
     keys = {
-      -- { "<leader>gyf", "<cmd>GitLink<cr>", mode = { "n", "v" }, desc = "Copy file url" },
-      -- { "<leader>gxf", "<cmd>GitLink!", mode = { "n", "v" }, desc = "Open file in browser" },
+      { "<localleader>gxf", "<cmd>GitLink<cr>", mode = { "n", "x" }, desc = "Copy file url" },
+      { "<localleader>ygf", "<cmd>GitLink!", mode = { "n", "x" }, desc = "Open file in browser" },
       --
       -- { "<leader>gxb", "<cmd>GitLink current_branch<cr>", mode = { "n", "v" }, desc = "Open branch in browser" },
       -- { "<leader>gyb", "<cmd>GitLink current_branch<cr>", mode = { "n", "v" }, desc = "Copy branch url" },
@@ -53,7 +53,8 @@ return {
       -- { "<leader>gxr", "<cmd>GitLink! default_branch<cr>", mode = { "n", "v" }, desc = "Open repo in browser" },
       -- { "<leader>gyr", "<cmd>GitLink default_branch<cr>", mode = { "n", "v" }, desc = "Copy repo url" },
 
-      { "<localleader>gxb", "<cmd>GitLink! blame<cr>", mode = { "n", "v" }, desc = "Open blame in browser" },
+      { "<localleader>gxb", "<cmd>GitLink! blame<cr>", mode = { "n", "x" }, desc = "Open blame in browser" },
+      { "<localleader>ygb", "<cmd>GitLink blame<cr>", mode = { "n", "x" }, desc = "Copy blame" },
     },
     opts = {},
   },

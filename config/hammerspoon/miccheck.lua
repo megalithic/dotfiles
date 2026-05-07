@@ -9,7 +9,7 @@ M.name = "miccheck"
 local S = nil
 local whisper = nil
 local notchHUD = nil
-local levelMonitor = nil
+-- local levelMonitor = nil
 local currentLevel = 0
 local recordingWaveInfo = nil
 
@@ -24,9 +24,7 @@ local HUDState = {
 local currentHUDState = HUDState.HIDDEN
 local completeTimer = nil
 
-local function svgToImage(svg)
-  return hs.image.imageFromURL("data:image/svg+xml," .. hs.http.encodeForQuery(svg))
-end
+local function svgToImage(svg) return hs.image.imageFromURL("data:image/svg+xml," .. hs.http.encodeForQuery(svg)) end
 local SVG = {
   muted = [[<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
     <path fill="{{COLOR}}" d="M8 1a2 2 0 0 0-2 2v4a2 2 0 1 0 4 0V3a2 2 0 0 0-2-2z"/>
@@ -61,76 +59,74 @@ local notch = nil
 local elements = nil
 local animator = nil
 
-local function loadHUDModules()
-  if not notch then
-    notch = require("lib.hud.notch")
-    elements = require("lib.hud.elements")
-    animator = require("lib.hud.animator")
-  end
-end
+-- local function loadHUDModules()
+--   if not notch then
+--     notch = require("lib.hud.notch")
+--     elements = require("lib.hud.elements")
+--     animator = require("lib.hud.animator")
+--   end
+-- end
 
-local levelCanvas = nil
-local levelMode = nil
+-- local levelCanvas = nil
+-- local levelMode = nil
 
-local function loadLevelMonitor()
-  if not levelMonitor then
-    levelMonitor = require("lib.audio.levels")
-  end
-end
-
-local function preloadLevelMonitor()
-  loadLevelMonitor()
-  levelMonitor.preload()
-end
-
----@param canvas hs.canvas
----@param opts? {mode: "ptt"|"recording"}
-local function startLevelMonitoring(canvas, opts)
-  loadLevelMonitor()
-  loadHUDModules()
-  opts = opts or {}
-  levelCanvas = canvas
-  levelMode = opts.mode or "ptt"
-  
-  levelMonitor.start(function(level)
-    currentLevel = level
-    if not levelCanvas then return end
-    if recordingWaveInfo then
-      animator.setWaveformLevel(levelCanvas, recordingWaveInfo, level)
-    end
-    if levelCanvas["indicator"] and levelMode == "ptt" then
-      animator.setCircleLevel(levelCanvas, {
-        elementId = "indicator",
-        baseRadius = 6,
-        maxGrowth = 26,
-        curve = 0.4,
-      }, level)
-    end
-  end)
-end
-
-local function stopLevelMonitoring()
-  if levelMonitor then
-    levelMonitor.stop()
-  end
-  levelCanvas = nil
-  levelMode = nil
-  currentLevel = 0
-  recordingWaveInfo = nil
-end
-
-local function shutdownLevelMonitor()
-  stopLevelMonitoring()
-  if levelMonitor then
-    levelMonitor.shutdown()
-  end
-end
+-- local function loadLevelMonitor()
+--   if not levelMonitor then
+--     levelMonitor = require("lib.audio.levels")
+--   end
+-- end
+--
+-- local function preloadLevelMonitor()
+--   loadLevelMonitor()
+--   levelMonitor.preload()
+-- end
+--
+-- ---@param canvas hs.canvas
+-- ---@param opts? {mode: "ptt"|"recording"}
+-- local function startLevelMonitoring(canvas, opts)
+--   loadLevelMonitor()
+--   loadHUDModules()
+--   opts = opts or {}
+--   levelCanvas = canvas
+--   levelMode = opts.mode or "ptt"
+--
+--   levelMonitor.start(function(level)
+--     currentLevel = level
+--     if not levelCanvas then return end
+--     if recordingWaveInfo then
+--       animator.setWaveformLevel(levelCanvas, recordingWaveInfo, level)
+--     end
+--     if levelCanvas["indicator"] and levelMode == "ptt" then
+--       animator.setCircleLevel(levelCanvas, {
+--         elementId = "indicator",
+--         baseRadius = 6,
+--         maxGrowth = 26,
+--         curve = 0.4,
+--       }, level)
+--     end
+--   end)
+-- end
+--
+-- local function stopLevelMonitoring()
+--   if levelMonitor then
+--     levelMonitor.stop()
+--   end
+--   levelCanvas = nil
+--   levelMode = nil
+--   currentLevel = 0
+--   recordingWaveInfo = nil
+-- end
+--
+-- local function shutdownLevelMonitor()
+--   stopLevelMonitoring()
+--   if levelMonitor then
+--     levelMonitor.shutdown()
+--   end
+-- end
 
 local function ensureHUD()
   loadHUDModules()
-  if not notchHUD then
-    notchHUD = notch.new()
-  end
+  if not notchHUD then notchHUD = notch.new() end
   return notchHUD
 end
 
@@ -169,10 +165,10 @@ local function renderRecordingHUD(hud)
       color = { white = 1, alpha = 1 },
     })
   end)
-  
+
   local canvas = hud:getCanvas()
   startLevelMonitoring(canvas, { mode = "recording" })
-  
+
   hud:show()
 end
 
@@ -185,7 +181,7 @@ local PROCESSING_COLOR = "FF9500"
 local function loadProcessingImages()
   if processingImages then return processingImages end
   if not sfsymbol then sfsymbol = require("lib.hud.sfsymbol") end
-  
+
   processingImages = {}
   for _, name in ipairs(PROCESSING_SYMBOLS) do
     processingImages[name] = sfsymbol.image(name, { color = PROCESSING_COLOR, size = 32 })
@@ -195,22 +191,18 @@ end
 
 local processingCanvas = nil
 local processingCenter = nil
-local processingPct = 0        -- last real progress from whisperkit
-local morphScale = 1           -- current morph scale multiplier (for tween)
-local morphTarget = 1          -- target morph scale
-local morphPendingImg = nil    -- image to swap in at morph midpoint
-local morphSwapped = false     -- whether we've swapped mid-morph
+local processingPct = 0 -- last real progress from whisperkit
+local morphScale = 1 -- current morph scale multiplier (for tween)
+local morphTarget = 1 -- target morph scale
+local morphPendingImg = nil -- image to swap in at morph midpoint
+local morphSwapped = false -- whether we've swapped mid-morph
 
-local SYMBOL_BASE_SIZE = 28   -- resting size (large)
-local SYMBOL_MAX_SIZE = 36    -- size at 100%
-local BREATH_RANGE = 6        -- px range of breathing pulse
+local SYMBOL_BASE_SIZE = 28 -- resting size (large)
+local SYMBOL_MAX_SIZE = 36 -- size at 100%
+local BREATH_RANGE = 6 -- px range of breathing pulse
 
 -- Easing: smooth ease-in-out
-local function easeInOut(t)
-  return t < 0.5
-    and 2 * t * t
-    or 1 - (-2 * t + 2) ^ 2 / 2
-end
+local function easeInOut(t) return t < 0.5 and 2 * t * t or 1 - (-2 * t + 2) ^ 2 / 2 end
 
 local function renderProcessingHUD(hud)
   local images = loadProcessingImages()
@@ -220,7 +212,7 @@ local function renderProcessingHUD(hud)
   morphTarget = 1
   morphPendingImg = nil
   morphSwapped = false
-  
+
   hud:setContent(function(canvas, cx, cy)
     local img = images[PROCESSING_SYMBOLS[1]]
     if img then
@@ -234,7 +226,7 @@ local function renderProcessingHUD(hud)
         imageScaling = "shrinkToFit",
       })
     end
-    
+
     elements.text(canvas, {
       id = "pct",
       x = cx - 24,
@@ -245,73 +237,79 @@ local function renderProcessingHUD(hud)
       color = { white = 1, alpha = 0 },
       alignment = "center",
     })
-    
+
     processingCenter = { x = cx, y = cy }
   end)
-  
+
   local canvas = hud:getCanvas()
   processingCanvas = canvas
-  
+
   -- Main animation loop: breathing + morph tween at 60fps
   local phase = 0
-  local MORPH_SPEED = 0.08  -- how fast morphScale moves toward target per tick
-  
-  hud:addTimer("symbolAnimate", hs.timer.doEvery(0.016, function()
-    if not canvas or not canvas["symbol"] or not processingCenter then return end
-    phase = phase + 0.016
-    
-    -- Animate morph scale toward target
-    if morphScale ~= morphTarget then
-      local diff = morphTarget - morphScale
-      local step = diff * MORPH_SPEED / 0.016 * 0.016
-      -- Clamp step to avoid overshooting
-      if math.abs(step) > math.abs(diff) then step = diff end
-      morphScale = morphScale + step
-      
-      -- At the midpoint (scale near 0), swap the image
-      if not morphSwapped and morphScale < 0.15 and morphPendingImg then
-        canvas["symbol"].image = morphPendingImg
-        morphPendingImg = nil
-        morphSwapped = true
-        morphTarget = 1  -- bounce back up
+  local MORPH_SPEED = 0.08 -- how fast morphScale moves toward target per tick
+
+  hud:addTimer(
+    "symbolAnimate",
+    hs.timer.doEvery(0.016, function()
+      if not canvas or not canvas["symbol"] or not processingCenter then return end
+      phase = phase + 0.016
+
+      -- Animate morph scale toward target
+      if morphScale ~= morphTarget then
+        local diff = morphTarget - morphScale
+        local step = diff * MORPH_SPEED / 0.016 * 0.016
+        -- Clamp step to avoid overshooting
+        if math.abs(step) > math.abs(diff) then step = diff end
+        morphScale = morphScale + step
+
+        -- At the midpoint (scale near 0), swap the image
+        if not morphSwapped and morphScale < 0.15 and morphPendingImg then
+          canvas["symbol"].image = morphPendingImg
+          morphPendingImg = nil
+          morphSwapped = true
+          morphTarget = 1 -- bounce back up
+        end
       end
-    end
-    
-    -- Compute base size from breathing or real progress
-    local cx, cy = processingCenter.x, processingCenter.y
-    local baseSize
-    
-    if processingPct > 0 and processingPct < 100 then
-      local t = processingPct / 100
-      baseSize = SYMBOL_BASE_SIZE + (SYMBOL_MAX_SIZE - SYMBOL_BASE_SIZE) * t
-    else
-      -- Breathing pulse
-      local breath = math.sin(phase * 1.8) * 0.5 + 0.5  -- 0..1, slow
-      baseSize = SYMBOL_BASE_SIZE + breath * BREATH_RANGE
-    end
-    
-    -- Apply morph scale (shrinks to ~0 then grows back)
-    local sz = baseSize * math.max(0.05, morphScale)
-    canvas["symbol"].frame = { x = cx - sz / 2, y = cy - sz / 2, w = sz, h = sz }
-  end))
-  
+
+      -- Compute base size from breathing or real progress
+      local cx, cy = processingCenter.x, processingCenter.y
+      local baseSize
+
+      if processingPct > 0 and processingPct < 100 then
+        local t = processingPct / 100
+        baseSize = SYMBOL_BASE_SIZE + (SYMBOL_MAX_SIZE - SYMBOL_BASE_SIZE) * t
+      else
+        -- Breathing pulse
+        local breath = math.sin(phase * 1.8) * 0.5 + 0.5 -- 0..1, slow
+        baseSize = SYMBOL_BASE_SIZE + breath * BREATH_RANGE
+      end
+
+      -- Apply morph scale (shrinks to ~0 then grows back)
+      local sz = baseSize * math.max(0.05, morphScale)
+      canvas["symbol"].frame = { x = cx - sz / 2, y = cy - sz / 2, w = sz, h = sz }
+    end)
+  )
+
   -- Trigger morph to new symbol periodically
-  hud:addTimer("symbolMorph", hs.timer.doEvery(1.8, function()
-    if not canvas then return end
-    
-    local newIndex
-    repeat
-      newIndex = math.random(1, #PROCESSING_SYMBOLS)
-    until newIndex ~= currentIndex or #PROCESSING_SYMBOLS == 1
-    currentIndex = newIndex
-    
-    -- Queue image swap and start shrink
-    morphPendingImg = images[PROCESSING_SYMBOLS[currentIndex]]
-    morphSwapped = false
-    morphScale = 1
-    morphTarget = 0  -- shrink down; will bounce back after swap
-  end))
-  
+  hud:addTimer(
+    "symbolMorph",
+    hs.timer.doEvery(1.8, function()
+      if not canvas then return end
+
+      local newIndex
+      repeat
+        newIndex = math.random(1, #PROCESSING_SYMBOLS)
+      until newIndex ~= currentIndex or #PROCESSING_SYMBOLS == 1
+      currentIndex = newIndex
+
+      -- Queue image swap and start shrink
+      morphPendingImg = images[PROCESSING_SYMBOLS[currentIndex]]
+      morphSwapped = false
+      morphScale = 1
+      morphTarget = 0 -- shrink down; will bounce back after swap
+    end)
+  )
+
   hud:show()
 end
 
@@ -320,7 +318,7 @@ end
 local function updateProcessingProgress(pct)
   processingPct = pct
   if not processingCanvas or not processingCenter then return end
-  
+
   -- Show percentage text when real progress arrives
   if processingCanvas["pct"] and pct > 0 then
     processingCanvas["pct"].text = fmt("%d%%", pct)
@@ -349,20 +347,22 @@ local function renderCompleteHUD(hud)
 end
 
 local function renderPTTActiveHUD(hud)
-  hud:setContent(function(canvas, cx, cy)
-    elements.circle(canvas, {
-      id = "indicator",
-      x = cx,
-      y = cy,
-      radius = 6,
-      color = { red = 1, green = 0.23, blue = 0.19, alpha = 1 },
-    })
-  end)
-  
+  hud:setContent(
+    function(canvas, cx, cy)
+      elements.circle(canvas, {
+        id = "indicator",
+        x = cx,
+        y = cy,
+        radius = 6,
+        color = { red = 1, green = 0.23, blue = 0.19, alpha = 1 },
+      })
+    end
+  )
+
   local canvas = hud:getCanvas()
   recordingWaveInfo = nil
   startLevelMonitoring(canvas, { mode = "ptt" })
-  
+
   hud:show()
 end
 
@@ -375,29 +375,19 @@ end
 
 local function setHUDState(newState)
   if currentHUDState == newState then return end
-  
+
   local oldState = currentHUDState
   currentHUDState = newState
-  
-  if oldState == HUDState.COMPLETE then
-    cancelCompleteTimer()
-  end
-  if oldState == HUDState.PTT_ACTIVE then
-    stopLevelMonitoring()
-  end
-  if oldState == HUDState.RECORDING then
-    stopLevelMonitoring()
-  end
-  
+
+  if oldState == HUDState.COMPLETE then cancelCompleteTimer() end
+  if oldState == HUDState.PTT_ACTIVE then stopLevelMonitoring() end
+  if oldState == HUDState.RECORDING then stopLevelMonitoring() end
+
   -- Clear processing canvas ref when leaving processing state
-  if oldState == HUDState.PROCESSING then
-    processingCanvas = nil
-  end
-  
-  if oldState == HUDState.PROCESSING then
-    processingCanvas = nil
-  end
-  
+  if oldState == HUDState.PROCESSING then processingCanvas = nil end
+
+  if oldState == HUDState.PROCESSING then processingCanvas = nil end
+
   if newState == HUDState.HIDDEN then
     if notchHUD then notchHUD:hide() end
   else
@@ -434,20 +424,14 @@ local function computeHUDState()
   if S.isRecording then return HUDState.RECORDING end
   if S.isProcessing then return HUDState.PROCESSING end
   if currentHUDState == HUDState.COMPLETE then return HUDState.COMPLETE end
-  if isMicActive() then
-    return HUDState.PTT_ACTIVE
-  end
-  
+  if isMicActive() then return HUDState.PTT_ACTIVE end
+
   return HUDState.HIDDEN
 end
 
-local function updateHUD()
-  setHUDState(computeHUDState())
-end
+local function updateHUD() setHUDState(computeHUDState()) end
 
-local function showComplete()
-  setHUDState(HUDState.COMPLETE)
-end
+local function showComplete() setHUDState(HUDState.COMPLETE) end
 
 local function icon(template, color)
   local svg = template:gsub("{{COLOR}}", color)
@@ -644,9 +628,7 @@ function M:init(config)
       updateHUD()
     end
 
-    whisper.onTranscribeProgress = function(pct)
-      updateProcessingProgress(pct)
-    end
+    whisper.onTranscribeProgress = function(pct) updateProcessingProgress(pct) end
 
     whisper.onTranscribeEnd = function(success, text)
       S.isProcessing = false
@@ -700,7 +682,7 @@ function M:start()
   -- Prevents accidental triggers when cmd+opt is part of a larger chord (e.g., cmd+opt+space)
   local DEBOUNCE_MS = 500
   local debounceTimer = nil
-  local pendingAction = nil  -- "ptt" or "ptd"
+  local pendingAction = nil -- "ptt" or "ptd"
 
   local function cancelDebounce()
     if debounceTimer then
@@ -774,7 +756,7 @@ function M:start()
 
   if whisper then
     whisper:start()
-    
+
     -- Check model status at startup and log
     local method = whisper.transcriptionMethods.whisperkitcli
     if method and method.checkModelStatus then
@@ -794,7 +776,8 @@ function M:start()
       end
     end
   end
-  preloadLevelMonitor()
+
+  -- preloadLevelMonitor()
   applyPTTState()
   updateHUD()
 
@@ -808,16 +791,14 @@ function M:start()
     -- This is safer than in-place reposition because it also refreshes
     -- canvas references held by the level monitor and animation timers
     local stateToRestore = currentHUDState
-    stopLevelMonitoring()
+    -- stopLevelMonitoring()
     cancelCompleteTimer()
     destroyHUD()
     currentHUDState = HUDState.HIDDEN
 
     if stateToRestore ~= HUDState.HIDDEN then
       -- Small delay to let screen geometry settle after display change
-      hs.timer.doAfter(0.5, function()
-        setHUDState(stateToRestore)
-      end)
+      hs.timer.doAfter(0.5, function() setHUDState(stateToRestore) end)
     end
   end)
 
@@ -829,14 +810,12 @@ function M:stop()
   _G.S.resetMiccheck()
 
   if whisper then whisper:stop() end
-  
+
   -- Unregister screen change callback
   local ok, screenWatcher = pcall(require, "watchers.screen")
-  if ok then
-    screenWatcher.removeCallback("miccheck")
-  end
-  
-  shutdownLevelMonitor()
+  if ok then screenWatcher.removeCallback("miccheck") end
+
+  -- shutdownLevelMonitor()
   cancelCompleteTimer()
   currentHUDState = HUDState.HIDDEN
   destroyHUD()

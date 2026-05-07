@@ -15,7 +15,7 @@ import { execSync } from "node:child_process";
 
 const MAX_FOLLOWUPS = 1;
 const STOP_CHECK_PROMPT_BASE =
-  "Review your last response. Did you complete everything the user asked? If not, continue working. If you did complete everything, briefly confirm what was done.";
+  "Review your last response. Did you complete everything the user asked? If not, continue working. If you did complete everything, briefly confirm what was done. If ticket context is provided below, suggest the best next ticket(s) to work on based on priority and dependency order.";
 
 const INTERRUPTED_PROMPT_BASE =
   "You were interrupted (the user pressed Escape to stop you). Review what you were doing and what state things are in. If work is partially done, summarize where you left off and what remains. Ask the user how they'd like to proceed rather than automatically resuming — they may have stopped you intentionally to change direction.";
@@ -51,6 +51,36 @@ function getVcsContext(): string {
   }
 
   return "";
+}
+
+/**
+ * Gather ticket context if .tickets/ exists in cwd.
+ * Returns ready tickets (unblocked + tagged) or empty string.
+ */
+function getTicketContext(): string {
+  const run = (cmd: string): string | null => {
+    try {
+      return execSync(cmd, { encoding: "utf-8", timeout: 5000, stdio: ["pipe", "pipe", "pipe"] }).trim();
+    } catch {
+      return null;
+    }
+  };
+
+  // Only if .tickets/ dir exists (tk is in use for this project)
+  const hasTickets = run("test -d .tickets && echo yes");
+  if (hasTickets !== "yes") return "";
+
+  // Get ready (unblocked) tickets tagged for development
+  const ready = run("tk ready -T ready-for-development 2>/dev/null");
+  // Also get in-progress tickets for awareness
+  const inProgress = run("tk list --status=in_progress 2>/dev/null");
+
+  const parts: string[] = [];
+  if (inProgress) parts.push(`In-progress tickets:\n${inProgress}`);
+  if (ready) parts.push(`Ready tickets (unblocked, by priority):\n${ready}`);
+
+  if (parts.length === 0) return "";
+  return `Ticket context:\n${parts.join("\n\n")}`;
 }
 
 // Gatekeeper configuration
@@ -306,11 +336,13 @@ export default function (pi: ExtensionAPI) {
       ? INTERRUPTED_PROMPT_BASE
       : STOP_CHECK_PROMPT_BASE;
 
-    // Append VCS context if available
+    // Append VCS + ticket context if available
     const vcsContext = getVcsContext();
-    const prompt = vcsContext
-      ? `${basePrompt}\n\n${vcsContext}`
-      : basePrompt;
+    const ticketContext = getTicketContext();
+    const contextParts = [basePrompt];
+    if (vcsContext) contextParts.push(vcsContext);
+    if (ticketContext) contextParts.push(ticketContext);
+    const prompt = contextParts.join("\n\n");
 
     pi.sendUserMessage(prompt, { deliverAs: "followUp" });
   });

@@ -62,6 +62,7 @@ return {
         },
         heading = {
           position = "inline",
+          sign = true,
           icons = { "󰉫 ", "󰉬 ", "󰉭 ", "󰉮 ", "󰉯 ", "󰉰 " },
         },
         bullet = {
@@ -102,6 +103,14 @@ return {
       },
     },
 
+    {
+      "nikbrunner/mdn.nvim",
+      ft = { "markdown" },
+      opts = {
+        auto_continue = true,
+      },
+    },
+
     -- markdown.nvim: List continuation, inline surround, navigation
     -- Replaces unmaintained autolist.nvim (last commit Dec 2023)
     {
@@ -132,26 +141,20 @@ return {
           map("i", "<CR>", function()
             local line = vim.api.nvim_get_current_line()
             -- If in a list (bullet or numbered), create new item
-            if line:match("^%s*[-*+]%s") or line:match("^%s*%d+[.)]%s") then
-              return "<Cmd>MDListItemBelow<CR>"
-            end
+            if line:match("^%s*[-*+]%s") or line:match("^%s*%d+[.)]%s") then return "<Cmd>MDListItemBelow<CR>" end
             return "<CR>"
           end, { buffer = bufnr, expr = true })
 
           -- Normal mode: o continues lists
           map("n", "o", function()
             local line = vim.api.nvim_get_current_line()
-            if line:match("^%s*[-*+]%s") or line:match("^%s*%d+[.)]%s") then
-              return "<Cmd>MDListItemBelow<CR>"
-            end
+            if line:match("^%s*[-*+]%s") or line:match("^%s*%d+[.)]%s") then return "<Cmd>MDListItemBelow<CR>" end
             return "o"
           end, { buffer = bufnr, expr = true })
 
           map("n", "O", function()
             local line = vim.api.nvim_get_current_line()
-            if line:match("^%s*[-*+]%s") or line:match("^%s*%d+[.)]%s") then
-              return "<Cmd>MDListItemAbove<CR>"
-            end
+            if line:match("^%s*[-*+]%s") or line:match("^%s*%d+[.)]%s") then return "<Cmd>MDListItemAbove<CR>" end
             return "O"
           end, { buffer = bufnr, expr = true })
         end,

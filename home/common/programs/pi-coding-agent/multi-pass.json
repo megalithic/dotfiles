@@ -1,0 +1,61 @@
+{
+  "subscriptions": [
+    {
+      "provider": "anthropic",
+      "index": 2,
+      "alias": "rx-anthropic",
+      "label": "rx-anthropic"
+    },
+    {
+      "provider": "openai-codex",
+      "index": 2,
+      "label": "mega-codex"
+    }
+  ],
+  "pools": [],
+  "chains": [],
+  "presets": [
+    {
+      "name": "mega",
+      "entries": [
+        {
+          "provider": "anthropic",
+          "model": "claude-opus-4-6",
+          "enabled": true
+        },
+        {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5",
+          "enabled": true
+        },
+        {
+          "provider": "anthropic",
+          "model": "claude-sonnet-4-5",
+          "enabled": true
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "name": "rx",
+      "entries": [
+        {
+          "provider": "rx-anthropic",
+          "model": "claude-haiku-4-5",
+          "enabled": true
+        },
+        {
+          "provider": "rx-anthropic",
+          "model": "claude-opus-4-6",
+          "enabled": true
+        },
+        {
+          "provider": "rx-anthropic",
+          "model": "claude-sonnet-4-5",
+          "enabled": true
+        }
+      ],
+      "enabled": true
+    }
+  ]
+}

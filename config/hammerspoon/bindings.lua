@@ -201,7 +201,7 @@ function M.loadShade()
   -- 2. Multiple commands (rm + nvim)
   -- 3. SHADE=1 env var for nvim to detect it's running in Shade
   -- Opens nvim in captures dir - user creates/opens capture notes there
-  local nvimCmd = string.format("/usr/bin/env zsh -c 'rm -f %s; SHADE=1 exec nvim --listen %s'", socketPath, socketPath)
+  local nvimCmd = string.format("/bin/sh -c 'rm -f %s; SHADE=1 exec nvim --listen %s'", socketPath, socketPath)
 
   shade.configure({
     width = 0.4,

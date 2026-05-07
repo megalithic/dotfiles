@@ -1,5 +1,5 @@
 {mkApp}: let
-  version = "0.4.3";
+  version = "0.4.4";
 in {
   tidewave = mkApp {
     pname = "tidewave";
@@ -7,7 +7,7 @@ in {
     appName = "Tidewave.app";
     src = {
       url = "https://github.com/tidewave-ai/tidewave_app/releases/download/v${version}/tidewave-app-aarch64.dmg";
-      sha256 = "sha256-qT2GT6yvhFol7hbwViq8LVzLzEQ0xc53es/oENEHLFQ";
+      sha256 = "sha256-M36V/MfaD7ShoJ0RiwzW/OfXs+re+5Z2BeVFvS+yJz4=";
     };
     binaries = [];
     desc = "Tidewave coding agent for full-stack web app development";
@@ -19,7 +19,7 @@ in {
     inherit version;
     src = {
       url = "https://github.com/tidewave-ai/tidewave_app/releases/download/v${version}/tidewave-cli-aarch64-apple-darwin";
-      sha256 = "sha256-CXEV/DesGClwWejgNQv1pkrqEW+72+XjBYV1TFiH2PY=";
+      sha256 = "sha256-N/r8X7xouFAPm57Sb5jqO3bTpVD7R9ykRuooY+K5qD8=";
     };
     artifactType = "binary";
     binaries = ["tidewave"];

@@ -118,7 +118,8 @@ If all acceptance criteria pass:
    ```
 4. **Close ticket:** `tk close <id>`
 5. **Add summary note:** `tk add-note <id> "Summary of what was done"`
-6. **Prompt for next action:**
+6. **Suggest next work** (see section below)
+7. **Prompt for next action:**
    > "Ticket closed. Push to remote, or move to next ticket?"
 
 ### 8. If stuck
@@ -134,6 +135,34 @@ If all acceptance criteria pass:
    git add -A && git commit -m "wip(scope): partial work on <ticket>"
    ```
 4. Exit cleanly
+
+## Suggesting next work
+
+After closing a ticket (step 7.6), evaluate what to work on next:
+
+```bash
+# Show unblocked, ready tickets sorted by priority
+tk ready -T ready-for-development
+```
+
+Present top 1–3 candidates to the developer with:
+- Ticket ID + title
+- Priority level
+- Whether it was newly unblocked by the just-closed ticket (check deps)
+
+If an associated plan exists, check it for recommended ordering:
+
+```bash
+# Look for plan files in the plans dir
+ls ~/.local/share/pi/plans/"$(basename "$PWD")"/*_PLAN.md 2>/dev/null
+```
+
+If a plan exists and its steps have an ordering, prefer the plan's sequence over raw priority. Mention this: "Per plan X, next step is Y."
+
+If `tk ready` returns nothing:
+- Check `tk blocked` — are remaining tickets waiting on external work?
+- Check `tk list --status=open` — are there unrefined tickets that need `/refine`?
+- If all tickets are closed, say so: "All tickets complete."
 
 ## Rules
 
