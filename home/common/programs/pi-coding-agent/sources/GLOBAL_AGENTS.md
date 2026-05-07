@@ -38,7 +38,6 @@ implementation files.
 - Always use `jj` instead of `git` for version control
 - Always use `fd` instead of `find` for file discovery
 - Always use `rg` instead of `grep` for content search
-- Always use `web-search` skill first (ddg), fall back to `brave-search` if needed
 - Use project scripts (just, package.json, Makefile) for linting/formatting
 - Use `~/bin/ntfy` for notifications
 - Use `/tmp/` for temporary scripts — clean up after use

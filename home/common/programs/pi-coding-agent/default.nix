@@ -561,7 +561,6 @@ in {
     pinvim
     p
     tk
-    pkgs.ddgr # DuckDuckGo CLI for web-search skill (free, no API limits)
     # pkgs.llm-agents.agent-browser # Browser automation CLI
   ];
 
