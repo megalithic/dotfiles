@@ -11,10 +11,47 @@ import type {
   ExtensionAPI,
   ExtensionContext,
 } from "@mariozechner/pi-coding-agent";
+import { execSync } from "node:child_process";
 
 const MAX_FOLLOWUPS = 1;
-const STOP_CHECK_PROMPT =
+const STOP_CHECK_PROMPT_BASE =
   "Review your last response. Did you complete everything the user asked? If not, continue working. If you did complete everything, briefly confirm what was done.";
+
+const INTERRUPTED_PROMPT_BASE =
+  "You were interrupted (the user pressed Escape to stop you). Review what you were doing and what state things are in. If work is partially done, summarize where you left off and what remains. Ask the user how they'd like to proceed rather than automatically resuming — they may have stopped you intentionally to change direction.";
+
+/**
+ * Gather lightweight VCS status (jj or git, whichever is available).
+ * Returns a short summary or empty string if no VCS / no changes.
+ */
+function getVcsContext(): string {
+  const run = (cmd: string): string | null => {
+    try {
+      return execSync(cmd, { encoding: "utf-8", timeout: 5000, stdio: ["pipe", "pipe", "pipe"] }).trim();
+    } catch {
+      return null;
+    }
+  };
+
+  // Detect VCS: jj first, then git
+  const jjStatus = run("jj status 2>/dev/null");
+  if (jjStatus !== null) {
+    const jjLog = run("jj log -n 3 --no-pager 2>/dev/null") || "";
+    const parts = [`VCS (jj) status:\n${jjStatus}`];
+    if (jjLog) parts.push(`Recent commits:\n${jjLog}`);
+    return parts.join("\n\n");
+  }
+
+  const gitStatus = run("git status --short 2>/dev/null");
+  if (gitStatus !== null) {
+    const gitLog = run("git log --oneline -3 2>/dev/null") || "";
+    const parts = [`VCS (git) status:\n${gitStatus || "(clean)"}`];
+    if (gitLog) parts.push(`Recent commits:\n${gitLog}`);
+    return parts.join("\n\n");
+  }
+
+  return "";
+}
 
 // Gatekeeper configuration
 const GATEKEEPER_PREFERENCE = "local-first" as "local-first" | "cloud-first";
@@ -236,24 +273,45 @@ export default function (pi: ExtensionAPI) {
   pi.on("agent_end", async (event, _ctx) => {
     if (followupCount >= MAX_FOLLOWUPS) return;
 
-    // Skip nudge when agent made no tool calls (simple Q&A)
-    const hasToolUse = event.messages.some(
-      (m: any) =>
-        m.role === "assistant" &&
-        Array.isArray(m.content) &&
-        m.content.some((b: any) => b.type === "toolCall"),
+    // Detect if agent was interrupted (user hit Escape)
+    const wasInterrupted = event.messages.some(
+      (m: any) => m.role === "assistant" && m.n === "aborted",
     );
-    if (!hasToolUse) return;
 
-    // Ask gatekeeper model whether to nudge
-    const shouldNudge = await shouldSendNudge(
-      event.messages,
-      _ctx,
-      gatekeeperFailures,
-    );
-    if (!shouldNudge) return;
+    // Skip nudge when agent made no tool calls (simple Q&A) — unless interrupted
+    if (!wasInterrupted) {
+      const hasToolUse = event.messages.some(
+        (m: any) =>
+          m.role === "assistant" &&
+          Array.isArray(m.content) &&
+          m.content.some((b: any) => b.type === "toolCall"),
+      );
+      if (!hasToolUse) return;
+    }
+
+    // Skip gatekeeper for interruptions — always nudge on abort
+    if (!wasInterrupted) {
+      const shouldNudge = await shouldSendNudge(
+        event.messages,
+        _ctx,
+        gatekeeperFailures,
+      );
+      if (!shouldNudge) return;
+    }
 
     followupCount++;
-    pi.sendUserMessage(STOP_CHECK_PROMPT, { deliverAs: "followUp" });
+
+    // Pick base prompt based on whether agent was interrupted
+    const basePrompt = wasInterrupted
+      ? INTERRUPTED_PROMPT_BASE
+      : STOP_CHECK_PROMPT_BASE;
+
+    // Append VCS context if available
+    const vcsContext = getVcsContext();
+    const prompt = vcsContext
+      ? `${basePrompt}\n\n${vcsContext}`
+      : basePrompt;
+
+    pi.sendUserMessage(prompt, { deliverAs: "followUp" });
   });
 }
