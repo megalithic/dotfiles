@@ -70,6 +70,7 @@ CHROMIUM_BUNDLE_IDS = {
 
 FALLBACK_BROWSER_PRIORITY = [
     "com.brave.Browser.nightly",
+    "io.helium.helium",
     "com.brave.Browser",
     "com.google.Chrome",
     "company.thebrowser.Browser",
@@ -324,6 +325,11 @@ details.section > summary::-webkit-details-marker {{ display:none; }}
 details.section > summary::before {{ content:"\25BE"; display:inline-block; width:1em; margin-right:6px; color:var(--muted); transition:transform 120ms; }}
 details.section:not([open]) > summary::before {{ transform:rotate(-90deg); }}
 details.section > summary > h2 {{ display:inline-block; margin:1.8em 0 .5em; }}
+.section-comment {{ margin-top:18px; padding-top:14px; border-top:1px dashed var(--border); }}
+.section-comment-label {{ font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; }}
+.section-comment textarea {{ width:100%; min-height:64px; resize:vertical; background:var(--bg); color:var(--fg); border:1px solid var(--border); border-radius:4px; padding:8px 10px; font:13px/1.5 -apple-system,"SF Pro Text",sans-serif; }}
+.section-comment textarea:focus {{ outline:2px solid var(--accent); outline-offset:-1px; border-color:transparent; }}
+.section-comment textarea:not(:placeholder-shown) {{ border-color:var(--accent2); }}
 .decision {{ background:var(--code-bg); border:1px solid var(--border); border-left:4px solid var(--accent2); border-radius:6px; padding:14px 18px; margin:14px 0; }}
 .decision-q {{ font-weight:600; color:var(--fg); margin-bottom:8px; }}
 .decision-options {{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }}
@@ -334,14 +340,18 @@ details.section > summary > h2 {{ display:inline-block; margin:1.8em 0 .5em; }}
 .decision textarea {{ width:100%; min-height:54px; resize:vertical; background:var(--bg); color:var(--fg); border:1px solid var(--border); border-radius:4px; padding:8px 10px; font:13px/1.5 -apple-system,"SF Pro Text",sans-serif; }}
 .decision textarea:focus {{ outline:2px solid var(--accent); outline-offset:-1px; border-color:transparent; }}
 .fab {{ position:fixed; right:24px; bottom:24px; display:flex; gap:8px; flex-direction:column; align-items:flex-end; z-index:100; }}
+#response-buttons {{ display:flex; gap:6px; }}
 .fab button {{ background:var(--accent); color:var(--bg); border:none; padding:10px 16px; border-radius:999px; font-weight:600; font:14px -apple-system,sans-serif; cursor:pointer; box-shadow:var(--shadow); }}
 .fab button.secondary {{ background:var(--code-bg); color:var(--fg); border:1px solid var(--border); }}
 .fab button:hover {{ transform:translateY(-1px); }}
 .fab .toast {{ background:var(--code-bg); color:var(--fg); border:1px solid var(--border); padding:8px 14px; border-radius:6px; font-size:13px; box-shadow:var(--shadow); opacity:0; transition:opacity 200ms,transform 200ms; transform:translateY(8px); pointer-events:none; }}
 .fab .toast.show {{ opacity:1; transform:translateY(0); }}
 .meta-pill {{ display:inline-block; padding:2px 8px; border-radius:999px; background:var(--code-bg); border:1px solid var(--border); color:var(--muted); font-size:11.5px; }}
+.plan-actions {{ margin-top:3em; padding-top:1.5em; border-top:2px solid var(--accent); text-align:center; }}
+.plan-action-btn {{ background:var(--accent2); color:var(--bg); border:none; padding:12px 24px; border-radius:8px; font-weight:700; font-size:15px; cursor:pointer; box-shadow:var(--shadow); transition:transform 120ms; }}
+.plan-action-btn:hover {{ transform:translateY(-2px); }}
 @media print {{
-  .toc, .fab {{ display:none !important; }}
+  .toc, .fab, .plan-actions {{ display:none !important; }}
   .layout {{ display:block; }}
   .content {{ padding:0; max-width:none; }}
   details.section {{ page-break-inside:avoid; }}
@@ -364,9 +374,12 @@ details.section > summary > h2 {{ display:inline-block; margin:1.8em 0 .5em; }}
 {body}
   </main>
 </div>
-<div class="fab">
+<div class="fab" id="fab">
   <div class="toast" id="toast"></div>
-  <button id="export-btn" title="Export answers as markdown (also copies to clipboard)">Export answers</button>
+  <div id="response-buttons" style="display:none;">
+    <button id="download-btn" title="Download responses as markdown">Download Responses</button>
+    <button id="copy-btn" class="secondary" title="Copy responses to clipboard">Copy Responses</button>
+  </div>
   <button id="collapse-btn" class="secondary" title="Collapse / expand all sections">Collapse all</button>
 </div>
 <script>
@@ -375,6 +388,7 @@ details.section > summary > h2 {{ display:inline-block; margin:1.8em 0 .5em; }}
   var STORAGE_KEY = "preview-html:{slug}";
   var DOC_TITLE = {title_json};
   var DOC_SLUG  = {slug_json};
+  var DOC_META  = {meta_json};
 
   var state = loadState();
   var content = document.getElementById("content");
@@ -386,7 +400,9 @@ details.section > summary > h2 {{ display:inline-block; margin:1.8em 0 .5em; }}
   enhanceDecisionCards(content);
   setupActiveTOC(content);
   setupFAB();
+  setupPlanActions();
   setupResetLink();
+  updateFABVisibility();
 
   function loadState(){{
     try {{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{{}}") || {{}}; }}
@@ -438,6 +454,25 @@ details.section > summary > h2 {{ display:inline-block; margin:1.8em 0 .5em; }}
           group.push(nodes[j]); j++;
         }}
         group.forEach(function(g){{ details.appendChild(g); }});
+        // Per-section user comments textarea
+        var commentKey = details.id;
+        var commentWrap = document.createElement("div");
+        commentWrap.className = "section-comment";
+        var commentLabel = document.createElement("div");
+        commentLabel.className = "section-comment-label";
+        commentLabel.textContent = "Your comments on this section";
+        commentWrap.appendChild(commentLabel);
+        var commentTa = document.createElement("textarea");
+        commentTa.placeholder = "Add comments, feedback, or suggestions for this section…";
+        commentTa.value = (state.comments || {{}})[commentKey] || "";
+        commentTa.addEventListener("input", function(){{
+          state.comments = state.comments || {{}};
+          state.comments[commentKey] = this.value;
+          saveState();
+          updateFABVisibility();
+        }});
+        commentWrap.appendChild(commentTa);
+        details.appendChild(commentWrap);
         n.replaceWith(details);
         var key = details.id;
         details.open = openMap.hasOwnProperty(key) ? !!openMap[key] : true;
@@ -523,6 +558,7 @@ details.section > summary > h2 {{ display:inline-block; margin:1.8em 0 .5em; }}
         state.decisions[id].choice = this.value;
         state.decisions[id].q = qText;
         saveState();
+        updateFABVisibility();
       }});
       optsWrap.appendChild(label);
     }});
@@ -586,37 +622,58 @@ details.section > summary > h2 {{ display:inline-block; margin:1.8em 0 .5em; }}
     }}, {{ rootMargin: "-15% 0px -75% 0px", threshold: 0 }});
     headings.forEach(function(h){{ io.observe(h); }});
   }}
+  function hasAnyResponses(){{
+    var decisions = state.decisions || {{}};
+    var hasDecision = Object.keys(decisions).some(function(k){{ return decisions[k].choice; }});
+    if (hasDecision) return true;
+    var comments = state.comments || {{}};
+    var hasComment = Object.keys(comments).some(function(k){{ return (comments[k] || "").trim(); }});
+    if (hasComment) return true;
+    return false;
+  }}
+  function updateFABVisibility(){{
+    var el = document.getElementById("response-buttons");
+    if (el) el.style.display = hasAnyResponses() ? "flex" : "none";
+  }}
   function toast(msg){{
     var t = document.getElementById("toast");
     t.textContent = msg; t.classList.add("show");
     setTimeout(function(){{ t.classList.remove("show"); }}, 1800);
   }}
-  function buildAnswersMarkdown(){{
+  function buildResponsesMarkdown(){{
     var lines = [];
-    lines.push("# Answers: " + DOC_TITLE);
-    lines.push(""); lines.push("- Source slug: `" + DOC_SLUG + "`");
-    lines.push("- Exported: " + new Date().toISOString());
+    lines.push("# Responses: " + DOC_TITLE);
+    lines.push("slug: " + DOC_SLUG);
     lines.push("");
-    var decisions = state.decisions || {{}};
-    var keys = Object.keys(decisions);
-    if (keys.length) {{
-      lines.push("## Decisions"); lines.push("");
-      keys.forEach(function(k){{
-        var d = decisions[k] || {{}};
-        lines.push("### " + (d.q || k));
-        lines.push("");
-        lines.push("- Choice: **" + (d.choice || "(unset)") + "**");
-        if (d.note) {{
-          lines.push("- Notes:"); lines.push("");
-          d.note.split(/\r?\n/).forEach(function(ln){{ lines.push("    " + ln); }});
-        }}
-        lines.push("");
+    // Section comments
+    var comments = state.comments || {{}};
+    var commentKeys = Object.keys(comments).filter(function(k){{ return (comments[k]||"").trim(); }});
+    if (commentKeys.length) {{
+      lines.push("## Comments"); lines.push("");
+      commentKeys.forEach(function(k){{
+        var heading = k.replace(/^sec-/, "");
+        var el = document.getElementById(heading);
+        var label = el ? el.textContent.trim() : heading;
+        lines.push("### " + label); lines.push("");
+        lines.push(comments[k].trim()); lines.push("");
       }});
     }}
+    // Decisions
+    var decisions = state.decisions || {{}};
+    var decKeys = Object.keys(decisions).filter(function(k){{ return decisions[k].choice; }});
+    if (decKeys.length) {{
+      lines.push("## Decisions"); lines.push("");
+      decKeys.forEach(function(k){{
+        var d = decisions[k];
+        lines.push("- **" + (d.q || k) + "**: " + d.choice + (d.note ? " — " + d.note.replace(/\n/g, " ") : ""));
+      }});
+      lines.push("");
+    }}
+    // Task checkbox state (only changed items)
     var tasks = state.tasks || {{}};
     var taskKeys = Object.keys(tasks);
     if (taskKeys.length) {{
-      lines.push("## Task checkbox state"); lines.push("");
+      lines.push("## Tasks"); lines.push("");
       taskKeys.forEach(function(k){{
         lines.push("- [" + (tasks[k] ? "x" : " ") + "] " + k);
       }});
@@ -633,24 +690,51 @@ details.section > summary > h2 {{ display:inline-block; margin:1.8em 0 .5em; }}
     setTimeout(function(){{ URL.revokeObjectURL(url); }}, 1000);
   }}
   function setupFAB(){{
-    document.getElementById("export-btn").addEventListener("click", function(){{
-      var md = buildAnswersMarkdown();
-      var fname = DOC_SLUG + "-answers.md";
+    document.getElementById("download-btn").addEventListener("click", function(){{
+      var md = buildResponsesMarkdown();
+      var fname = DOC_SLUG + "-responses.md";
+      downloadText(fname, md);
+      toast("Downloaded " + fname);
+    }});
+    document.getElementById("copy-btn").addEventListener("click", function(){{
+      var md = buildResponsesMarkdown();
       if (navigator.clipboard && navigator.clipboard.writeText) {{
         navigator.clipboard.writeText(md).then(
-          function(){{ toast("Answers copied + downloading " + fname); }},
-          function(){{ toast("Downloading " + fname); }}
+          function(){{ toast("Responses copied to clipboard"); }},
+          function(){{ toast("Copy failed — use Download instead"); }}
         );
       }} else {{
-        toast("Downloading " + fname);
+        toast("Clipboard unavailable — use Download instead");
       }}
-      downloadText(fname, md);
     }});
     document.getElementById("collapse-btn").addEventListener("click", function(){{
       var allOpen = Array.from(document.querySelectorAll("details.section")).every(function(d){{ return d.open; }});
       document.querySelectorAll("details.section").forEach(function(d){{ d.open = !allOpen; }});
       this.textContent = allOpen ? "Expand all" : "Collapse all";
     }});
+  }}
+  function setupPlanActions(){{
+    if (!DOC_META || DOC_META.type !== "plan") return;
+    var slug = DOC_META.slug || DOC_SLUG;
+    var wrap = document.createElement("div");
+    wrap.className = "plan-actions";
+    var btn = document.createElement("button");
+    btn.className = "plan-action-btn";
+    btn.textContent = "Create Tickets from Plan";
+    btn.title = "Copies /tickets " + slug + " to clipboard";
+    btn.addEventListener("click", function(){{
+      var cmd = "/tickets " + slug;
+      if (navigator.clipboard && navigator.clipboard.writeText) {{
+        navigator.clipboard.writeText(cmd).then(
+          function(){{ toast("Copied: " + cmd + " — paste into pi"); }},
+          function(){{ toast("Copy failed: " + cmd); }}
+        );
+      }} else {{
+        toast(cmd);
+      }}
+    }});
+    wrap.appendChild(btn);
+    content.appendChild(wrap);
   }}
   function setupResetLink(){{
     document.getElementById("reset-state").addEventListener("click", function(e){{
@@ -679,7 +763,18 @@ def main() -> int:
     p.add_argument("--no-gc", action="store_true")
     p.add_argument("--browser", help="force browser bundle id (chromium-family)")
     p.add_argument("--title")
+    p.add_argument("--meta", action="append", default=[], metavar="key=value",
+                   help="embed metadata (repeatable, e.g. --meta type=plan --meta slug=foo)")
     args = p.parse_args()
+
+    # Parse --meta key=value pairs
+    meta = {}
+    for item in args.meta:
+        if "=" in item:
+            k, v = item.split("=", 1)
+            meta[k] = v
+        else:
+            meta[item] = "true"
 
     inp = Path(args.input).resolve()
     if not inp.is_file():
@@ -705,6 +800,7 @@ def main() -> int:
         ts_human=ts_human,
         title_json=json.dumps(title),
         slug_json=json.dumps(slug),
+        meta_json=json.dumps(meta),
     )
     out.write_text(html, encoding="utf-8")
     print(out)

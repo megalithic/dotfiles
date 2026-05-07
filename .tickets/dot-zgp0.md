@@ -37,3 +37,9 @@ Relevant code in config/hammerspoon/. See also lib/builders/ for Swift build pat
 4. Document integration approach with Hammerspoon (hs.task, socket, etc.)
 5. Write up findings and recommended architecture
 
+## Research Notes
+
+- Full research: `~/.local/share/pi/plans/mega/dot-zgp0-swift-camera-mic_TASK.md`
+- Implementation plan (7 steps): `~/.local/share/pi/plans/mega/dot-zgp0-swift-camera-mic_PLAN.md`
+- CDP research (2026-05-07): `--remote-debugging-port` CLI flag is the ONLY way to start debug server. No pref/policy alternative. DevToolsActivePort file reading is more reliable than port scanning for Step 4. See addendum in both TASK and PLAN files.
+

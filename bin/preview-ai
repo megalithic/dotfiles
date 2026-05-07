@@ -298,6 +298,9 @@ EOF
 }
 
 # HTML mode: delegate to preview-html (renders + opens in browser)
+# Accumulated --meta flags for HTML mode
+HTML_META_ARGS=()
+
 run_html_mode() {
     local md="$1"
     if [[ -z "$md" ]]; then
@@ -312,6 +315,7 @@ run_html_mode() {
     [[ -n "$HTML_EPHEMERAL" ]] && args+=(--ephemeral)
     [[ -n "$HTML_NO_OPEN" ]]   && args+=(--no-open)
     [[ -n "$HTML_BROWSER" ]]   && args+=(--browser "$HTML_BROWSER")
+    args+=("${HTML_META_ARGS[@]}")
     args+=("$md")
     exec preview-html "${args[@]}"
 }
@@ -342,6 +346,10 @@ main() {
             --html-browser)
                 USE_HTML="true"
                 HTML_BROWSER="$2"
+                shift 2
+                ;;
+            --meta)
+                HTML_META_ARGS+=(--meta "$2")
                 shift 2
                 ;;
             --float)

@@ -32,6 +32,7 @@ interface PreviewOptions {
 	htmlEphemeral?: boolean;
 	htmlNoOpen?: boolean;
 	htmlBrowser?: string;
+	meta?: Record<string, string>;
 }
 
 /**
@@ -154,6 +155,19 @@ const buildPreviewCommand = (options: PreviewOptions, content: string[]): string
 		else cmd.push("--html");
 		if (options.htmlNoOpen) cmd.push("--html-no-open");
 		if (options.htmlBrowser) cmd.push("--html-browser", options.htmlBrowser);
+		// Auto-detect plan documents and inject metadata
+		const meta = { ...options.meta };
+		if (content.length > 0) {
+			const filePath = content[0];
+			const planMatch = filePath.match(/\/([^/]+)_PLAN\.md$/);
+			if (planMatch && !meta.type) {
+				meta.type = "plan";
+				meta.slug = planMatch[1];
+			}
+		}
+		for (const [k, v] of Object.entries(meta)) {
+			cmd.push("--meta", `${k}=${v}`);
+		}
 		cmd.push(...content);
 		return cmd;
 	}
