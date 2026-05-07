@@ -61,7 +61,7 @@ declare -A GITHUB_NPM_PKG_MAP=(
 # Format: [pkg_name]="owner/repo"
 # ---------------------------------------------------------------------------
 declare -A GITHUB_NO_DEPS_PKG_MAP=(
-  [pi-multi-pass]="hjanuschka/pi-multi-pass"
+  # pi-multi-pass: removed — now installed as standalone extensions/multi-sub.ts with local patches
 )
 
 # ---------------------------------------------------------------------------

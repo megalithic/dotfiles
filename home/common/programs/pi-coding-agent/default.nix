@@ -225,29 +225,9 @@
   #   '';
   # };
 
-  # Subscription rotation — zero npm deps, fetched directly from GitHub
+  # pi-multi-pass: now installed as a standalone extension file (extensions/multi-sub.ts)
+  # with local alias support patches. Removed from nix derivation pattern C.
   # https://github.com/hjanuschka/pi-multi-pass
-  pi-multi-pass = pkgs.stdenvNoCC.mkDerivation {
-    pname = "pi-multi-pass";
-    version = "1.3.0";
-    src = pkgs.fetchFromGitHub {
-      owner = "hjanuschka";
-      repo = "pi-multi-pass";
-      rev = "v1.3.0";
-      hash = "sha256-7xbMwWHQZe4vjHCSpNKQgN2q0KLtwkLVDYz9/vL0dnM=";
-    };
-    installPhase = ''
-      runHook preInstall
-      mkdir -p $out
-      cp -r $src/* $out/
-
-      # Fix upstream bug: pi.extensions points to directory, not the .ts file
-      substituteInPlace "$out/package.json" \
-        --replace-fail '"./extensions"' '"./extensions/multi-sub.ts"'
-
-      runHook postInstall
-    '';
-  };
 
   # Interactive subagents — async sub-agent spawning in mux panes
   # https://github.com/HazAT/pi-interactive-subagents
@@ -586,7 +566,7 @@ in {
       # ".pi/agent/extensions/pi-agent-browser".source = pi-agent-browser;
       ".pi/agent/extensions/pi-mcp-adapter".source = pi-mcp-adapter;
       ".pi/agent/extensions/pi-internet".source = pi-internet;
-      ".pi/agent/extensions/pi-multi-pass".source = pi-multi-pass;
+      # pi-multi-pass: auto-discovered as extensions/multi-sub.ts (no nix derivation needed)
       ".pi/agent/extensions/pi-synthetic-provider".source = pi-synthetic-provider;
       # ".pi/agent/extensions/pi-interactive-subagents".source = pi-interactive-subagents;
       # ".pi/agent/extensions/pi-diff-review".source = pi-diff-review;
