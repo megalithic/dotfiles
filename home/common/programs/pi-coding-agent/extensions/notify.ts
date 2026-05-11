@@ -13,9 +13,9 @@
  * Much more sophisticated than OSC 777 escape sequences.
  */
 
-import type { AgentMessage, UserMessage } from "@mariozechner/pi-agent-core";
-import type { AssistantMessage, TextContent } from "@mariozechner/pi-ai";
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import type { AgentMessage, UserMessage } from "@earendil-works/pi-agent-core";
+import type { AssistantMessage, TextContent } from "@earendil-works/pi-ai";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { spawn, execSync } from "node:child_process";
 import path from "node:path";
 

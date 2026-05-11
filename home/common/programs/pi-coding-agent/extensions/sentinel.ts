@@ -10,7 +10,7 @@
  * Hardcoded rules remain for jj editor/message checks, secrets, nix-managed paths,
  * push/deploy/ssh, and package install guards.
  */
-import type { ExtensionAPI, ToolCallEvent, ToolCallEventResult, InputEventResult } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI, ToolCallEvent, ToolCallEventResult, InputEventResult } from "@earendil-works/pi-coding-agent";
 import { readFileSync, existsSync } from "fs";
 import { join, dirname } from "path";
 import { execSync, spawnSync } from "child_process";

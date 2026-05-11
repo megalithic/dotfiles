@@ -29,7 +29,7 @@ import type {
   ExtensionAPI,
   ToolCallEvent,
   ExtensionContext,
-} from "@mariozechner/pi-coding-agent";
+} from "@earendil-works/pi-coding-agent";
 
 // Store reference to pi API for exec
 let piApi: ExtensionAPI | null = null;

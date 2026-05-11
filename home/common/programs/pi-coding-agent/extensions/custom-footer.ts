@@ -3,9 +3,9 @@
  * and uses starship prompt instead of plain cwd.
  */
 
-import type { AssistantMessage } from "@mariozechner/pi-ai";
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
+import type { AssistantMessage } from "@earendil-works/pi-ai";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import { execFile as execFileCb } from "node:child_process";
 import { promisify } from "node:util";
 

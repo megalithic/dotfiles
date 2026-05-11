@@ -1,6 +1,6 @@
 ---
 id: dot-0waj
-status: open
+status: closed
 deps: [dot-sbcv]
 links: []
 created: 2026-05-11T15:14:45Z

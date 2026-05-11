@@ -15,7 +15,7 @@
  * Types: json, markdown, diff, log, file, image, cmd, auto (default)
  */
 
-import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 const VALID_TYPES = ["json", "markdown", "diff", "codediff", "log", "bead", "file", "image", "cmd", "text", "auto"];
 const VALID_MODES = ["tmux-split", "tmux-float", "auto"];

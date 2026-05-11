@@ -6,11 +6,11 @@
  * gets at most one automatic follow-up.
  */
 
-import { completeSimple } from "@mariozechner/pi-ai";
+import { completeSimple } from "@earendil-works/pi-ai";
 import type {
   ExtensionAPI,
   ExtensionContext,
-} from "@mariozechner/pi-coding-agent";
+} from "@earendil-works/pi-coding-agent";
 import { execSync } from "node:child_process";
 
 const MAX_FOLLOWUPS = 1;

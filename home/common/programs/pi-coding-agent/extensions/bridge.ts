@@ -44,7 +44,7 @@
 import type {
   ExtensionAPI,
   ExtensionContext,
-} from "@mariozechner/pi-coding-agent";
+} from "@earendil-works/pi-coding-agent";
 import { execSync } from "node:child_process";
 import fs from "node:fs";
 import net from "node:net";

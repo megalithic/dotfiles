@@ -43,13 +43,13 @@ import type {
 	ExtensionCommandContext,
 	ExtensionContext,
 	AgentEndEvent,
-} from "@mariozechner/pi-coding-agent";
+} from "@earendil-works/pi-coding-agent";
 import {
 	BorderedLoader,
 	DynamicBorder,
 	getAgentDir,
 	keyHint,
-} from "@mariozechner/pi-coding-agent";
+} from "@earendil-works/pi-coding-agent";
 import {
 	anthropicOAuthProvider,
 	loginAnthropic,
@@ -71,8 +71,8 @@ import {
 	type OAuthCredentials,
 	type OAuthLoginCallbacks,
 	type OAuthProviderInterface,
-} from "@mariozechner/pi-ai/oauth";
-import { getModels, type Api, type Model } from "@mariozechner/pi-ai";
+} from "@earendil-works/pi-ai/oauth";
+import { getModels, type Api, type Model } from "@earendil-works/pi-ai";
 import {
 	Container,
 	Key,
@@ -80,7 +80,7 @@ import {
 	Text,
 	matchesKey,
 	type SelectItem,
-} from "@mariozechner/pi-tui";
+} from "@earendil-works/pi-tui";
 
 // ==========================================================================
 // Provider templates

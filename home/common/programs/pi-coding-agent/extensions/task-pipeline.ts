@@ -8,7 +8,7 @@
  * The agent loads the task-pipeline skill on-demand for detailed instructions.
  */
 
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 const DIR_HINT = "Dir = ~/.local/share/pi/plans/$(basename $PWD)/";
 const SKILL_REF = "Load the task-pipeline skill for slug resolution rules and workflow details.";
