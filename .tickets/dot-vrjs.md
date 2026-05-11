@@ -1,6 +1,6 @@
 ---
 id: dot-vrjs
-status: open
+status: closed
 deps: [dot-3bt7]
 links: []
 parent: dot-0fjk
@@ -28,3 +28,9 @@ Critical ordering: multi-pass must register `rx-anthropic` before `enabledModelS
 4. `PI_MODEL_SCOPE=mega` → Ctrl-P shows all mega-scoped models
 5. No "No models match pattern" warnings when provider registration precedes scope validation
 6. Document approach and any upstream patches needed
+
+## Notes
+
+**2026-05-11T18:57:40Z**
+
+Implemented Approach 3: pinvim passes --models from enabledModelScopes[scope]. PI_MODEL_SCOPE env var overrides, AUTH_PROFILE auto-detection is default. No pi source patches. Uses existing --models CLI flag. Documented in AGENTS.md.
