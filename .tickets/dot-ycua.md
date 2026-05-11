@@ -1,6 +1,6 @@
 ---
 id: dot-ycua
-status: in_progress
+status: closed
 deps: [dot-sbcv]
 links: []
 created: 2026-05-11T15:14:53Z

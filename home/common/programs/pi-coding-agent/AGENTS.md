@@ -101,11 +101,10 @@ Usage:
 - `synthetic-fallback-glm-5.1.patch` was **dropped** (obsolete — GLM-5.1,
   Kimi-K2.6, Nemotron all included upstream from `pi-synthetic-provider@1.1.12`).
 - `claude-settings-support.patch` is **disabled** pending rewrite against
-  `pi-mcp-adapter@v2.5.4`'s new `ConfigSourceSpec` architecture (tracked
+  `pi-mcp-adapter`'s current `ConfigSourceSpec` architecture (tracked
   separately). It was last authored against v2.4.1 and won't apply cleanly.
-- `pi-mcp-adapter-2.5.4-package-lock.json` is a **vendored lockfile** (copied
-  from upstream v2.5.3 + version bumped to 2.5.4 since deps are unchanged).
-  Required because v2.5.4 dropped its lockfile.
+- `pi-mcp-adapter-2.6.0-package-lock.json` is a **vendored lockfile** generated
+  from upstream v2.6.0 `package.json`. Required because v2.6.0 has no lockfile.
 - pi retry patches in `default.nix` `installPhase` (`substituteInPlace` on
   `agent-session.js` for `maxRetries`/`baseDelayMs`) are still active.
 

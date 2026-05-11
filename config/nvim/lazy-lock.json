@@ -15,6 +15,7 @@
   "hererocks": { "branch": "master", "commit": "3db37265c3839cbd4d27fc73f92fa7b58bc3a76f" },
   "iex.nvim": { "branch": "master", "commit": "6465f8acdb6600567f8bd222e4510a5cf96c347d" },
   "inc-rename.nvim": { "branch": "main", "commit": "0074b551a17338ccdcd299bd86687cc651bcb33d" },
+  "jiejie.nvim": { "branch": "main", "commit": "dee992a6cbc26cdb774cc5d2e602b78fc6938c18" },
   "jj.nvim": { "branch": "main", "commit": "2dbe2c73c599a29e86e4123b42e430828b1f01d9" },
   "lazy.nvim": { "branch": "main", "commit": "306a05526ada86a7b30af95c5cc81ffba93fef97" },
   "lazydev.nvim": { "branch": "main", "commit": "ff2cbcba459b637ec3fd165a2be59b7bbaeedf0d" },

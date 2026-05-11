@@ -53,7 +53,7 @@ declare -A PNAME_MAP=(
 # vendored_lockfile_relpath empty if upstream provides lockfile at tag.
 # ---------------------------------------------------------------------------
 declare -A GITHUB_NPM_PKG_MAP=(
-  [pi-mcp-adapter]="nicobailon/pi-mcp-adapter:patches/pi-mcp-adapter-2.5.4-package-lock.json"
+  [pi-mcp-adapter]="nicobailon/pi-mcp-adapter:patches/pi-mcp-adapter-2.6.0-package-lock.json"
 )
 
 # ---------------------------------------------------------------------------

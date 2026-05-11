@@ -24,7 +24,7 @@
 #
 #   Pattern B: fetchFromGitHub + buildNpmPackage
 #     Use when: public GitHub repo + has npm deps + lockfile available (or vendorable)
-#     Examples: pi-mcp-adapter (vendored lockfile from previous tag at v2.5.4)
+#     Examples: pi-mcp-adapter (vendored lockfile from previous tag at v2.6.0)
 #       1. Add a buildNpmPackage block with src = pkgs.fetchFromGitHub { rev="v<x>"; hash=...; }
 #       2. If upstream has no lockfile: vendor one in patches/, copy via postPatch
 #       3. Add to GITHUB_NPM_PKG_MAP in scripts/update-npm-pkg.sh
@@ -60,9 +60,9 @@
 #
 #   Patch status:
 #     - synthetic-fallback-glm-5.1.patch: DROPPED (obsolete, features upstream at v1.1.12)
-#     - claude-settings-support.patch: DISABLED, awaiting rewrite for v2.5.4 architecture
-#     - pi-mcp-adapter-2.5.4-package-lock.json: vendored lockfile (copied from v2.5.3,
-#       version bumped to 2.5.4 since deps unchanged; required because v2.5.4 dropped lockfile)
+#     - claude-settings-support.patch: DISABLED, awaiting rewrite for v2.6.0 architecture
+#     - pi-mcp-adapter-2.6.0-package-lock.json: vendored lockfile generated from v2.6.0
+#       package.json; required because v2.6.0 does not include a lockfile
 #     - pi retry patches: inline substituteInPlace in installPhase (still active)
 #
 #   Key patterns:
@@ -163,27 +163,28 @@
   };
 
   # MCP adapter extension (has npm dependencies)
-  # https://github.com/nicobailon/pi-mcp-adapter — v2.5.4 (latest release).
-  # Upstream removed package-lock.json at v2.5.4; buildNpmPackage generates one
-  # from package.json. npmDepsHash captures full transitive closure.
+  # https://github.com/nicobailon/pi-mcp-adapter — v2.6.0.
+  # Upstream does not include package-lock.json; a lockfile generated from
+  # v2.6.0 package.json is vendored below. npmDepsHash captures full transitive
+  # closure.
   # NOTE: claude-settings-support.patch was disabled here (TODO since v2.4.1) and
-  # needs full rewrite for v2.5.4's new ConfigSourceSpec architecture. Tracked in
+  # needs full rewrite for the current ConfigSourceSpec architecture. Tracked in
   # a separate ticket; not blocking the migration.
   pi-mcp-adapter = pkgs.buildNpmPackage {
     pname = "pi-mcp-adapter";
-    version = "2.5.4";
+    version = "2.6.0";
     src = pkgs.fetchFromGitHub {
       owner = "nicobailon";
       repo = "pi-mcp-adapter";
-      rev = "v2.5.4";
-      hash = "sha256-1FW6ebPphCfG8ubz1lWvBAhtQV0Vp4ChF+LoEt8JExU=";
+      rev = "v2.6.0";
+      hash = "sha256-An8T5HCzofCZ0iNDaUPu8NDk+8ndPgAm+owm6F9kmYM=";
     };
-    npmDepsHash = "sha256-/AU4ZD+YSS4X4z1REkRv6ElTRDnV9ej3ct91toEODWs=";
+    npmDepsHash = "sha256-w0wWJuUQAclQn7CV880bC2m9IX/5iMYKS45A5X4To/8=";
     dontNpmBuild = true;
-    # Upstream removed package-lock.json at v2.5.4. Vendor the v2.5.3 lockfile
-    # (deps unchanged between v2.5.3 and v2.5.4, version field bumped to 2.5.4).
+    # Upstream does not include package-lock.json; vendor one generated from
+    # v2.6.0 package.json.
     postPatch = ''
-      cp ${./patches/pi-mcp-adapter-2.5.4-package-lock.json} package-lock.json
+      cp ${./patches/pi-mcp-adapter-2.6.0-package-lock.json} package-lock.json
     '';
     installPhase = ''
       runHook preInstall
@@ -559,6 +560,13 @@ in {
       # Plain JSON configs — keybindings uses out-of-store symlink so pi can write to it
       ".pi/agent/keybindings.json".source = config.lib.mega.linkDotfile "home/common/programs/pi-coding-agent/keybindings.json";
       ".pi/agent/multi-pass.json".source = config.lib.mega.linkDotfile "home/common/programs/pi-coding-agent/multi-pass.json";
+
+      # Per-profile multi-pass.json — ensures config available when PI_CODING_AGENT_DIR
+      # points at a profile dir (e.g. ~/.pi/agent-rx/). Without this, pi can't find
+      # subscriptions/presets when running outside pinvim's hybrid dir.
+      ".pi/agent-rx/multi-pass.json".source = config.lib.mega.linkDotfile "home/common/programs/pi-coding-agent/multi-pass.json";
+      ".pi/agent-evirts/multi-pass.json".source = config.lib.mega.linkDotfile "home/common/programs/pi-coding-agent/multi-pass.json";
+      ".pi/agent-cspire/multi-pass.json".source = config.lib.mega.linkDotfile "home/common/programs/pi-coding-agent/multi-pass.json";
       ".pi/agent/models.json".source = ./models.json;
       ".pi/agent/mcp.json".source = ./mcp.json;
 
