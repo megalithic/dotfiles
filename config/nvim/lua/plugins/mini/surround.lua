@@ -3,17 +3,15 @@
 -- Reference: https://github.com/drowning-cat/nvim/blob/main/plugin/30_mini_ai%2Bsurround.lua
 
 return {
-  "echasnovski/mini.surround",
+  "nvim-mini/mini.surround",
   keys = {
-    { "S", mode = "x" },
+    { "S", mode = { "x" } },
     "ys",
     "ds",
     "cs",
   },
-  opts = function()
-    local surround = require("mini.surround")
-
-    return {
+  config = function()
+    require("mini.surround").setup({
       mappings = {
         add = "ys",
         delete = "ds",
@@ -21,33 +19,21 @@ return {
         find = "",
         find_left = "",
         highlight = "",
-        update_n_lines = "",
-        suffix_last = "",
-        suffix_next = "",
+        update_n_lines = 500,
       },
       custom_surroundings = {
-        -- Function (treesitter-based)
-        F = {
-          input = surround.gen_spec.input.treesitter({
-            outer = "@function.outer",
-            inner = "@function.inner",
-          }),
-        },
-        -- Class (treesitter-based)
-        C = {
-          input = surround.gen_spec.input.treesitter({
-            outer = "@class.outer",
-            inner = "@class.inner",
-          }),
+        tag_name_only = {
+          input = { "<(%w-)%f[^<%w][^<>]->.-</%1>", "^<()%w+().*</()%w+()>$" },
+          output = function()
+            local tag_name = require("mini.surround").user_input("Tag name (excluding attributes)")
+            if tag_name == nil then return nil end
+            return { left = tag_name, right = tag_name }
+          end,
         },
       },
-    }
-  end,
-  config = function(_, opts)
-    require("mini.surround").setup(opts)
-    -- Visual mode surround
-    vim.keymap.set("x", "S", [[:<C-u>lua MiniSurround.add('visual')<CR>]], { silent = true })
-    -- yss for current line
-    vim.keymap.set("n", "yss", "ys_", { remap = true })
+    })
+
+    vim.keymap.set("x", "S", [[:<C-u>lua MiniSurround.add('visual')<CR>]])
+    vim.keymap.set("n", "yss", "ys_", { noremap = false })
   end,
 }

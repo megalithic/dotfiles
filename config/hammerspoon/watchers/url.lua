@@ -216,9 +216,7 @@ local function openUrlWithApp(url, bundleID, opts)
   local appName = app and app:name()
 
   -- If app not running or background mode not requested, use standard method
-  if not appName or not background then
-    return hs.urlevent.openURLWithBundle(url, bundleID)
-  end
+  if not appName or not background then return hs.urlevent.openURLWithBundle(url, bundleID) end
 
   -- Use AppleScript to open URL in background tab (Chromium browsers)
   -- This avoids stealing focus from the current app
@@ -721,8 +719,8 @@ end
 --- Register the hammerspoon://nvim-open URL handler.
 --- All resolution + open logic lives in lib/interop/nvim-open.
 function M.registerNvimOpenHandler()
-  hs.urlevent.bind("nvim-open", require("lib.interop.nvim-open").handleURL)
-  U.log.f("[%s] nvim-open URL handler registered", M.name)
+  -- hs.urlevent.bind("nvim-open", require("lib.interop.nvim-open").handleURL)
+  -- U.log.f("[%s] nvim-open URL handler registered", M.name)
 end
 
 --------------------------------------------------------------------------------

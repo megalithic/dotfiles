@@ -2,7 +2,7 @@
 id: dot-86tz
 status: open
 deps: []
-links: []
+links: [dot-6r8c]
 parent: dot-0fjk
 created: 2026-04-14T18:13:31Z
 type: feature

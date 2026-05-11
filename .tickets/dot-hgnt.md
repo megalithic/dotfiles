@@ -1,6 +1,6 @@
 ---
 id: dot-hgnt
-status: open
+status: closed
 deps: [dot-vr9x, dot-3bt7]
 links: []
 parent: dot-0fjk
@@ -34,3 +34,9 @@ Must NOT:
 4. Profile detection: `--profile` flag > tmux session > default `mega`
 5. Works in both rx and mega tmux sessions
 6. `just validate` passes
+
+## Notes
+
+**2026-05-11T19:01:40Z**
+
+Removed: profile-borrowing (AUTO_PROFILE, AUTH_PROFILE, PI_CODING_AGENT_DIR), hybrid dirs (/tmp/pi-config-*), sharedConfigItems. Added: PI_PROFILE + PI_MULTI_PASS_PRESET + PI_MODEL_SCOPE exports. Profile detection: --profile flag > tmux session name. Single exec path, no branching. Net -48/+10 lines.

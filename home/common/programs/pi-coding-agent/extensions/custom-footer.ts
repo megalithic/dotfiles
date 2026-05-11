@@ -192,33 +192,58 @@ export default function (pi: ExtensionAPI) {
             statsLeft = truncateToWidth(statsLeft, width, "...");
           }
 
+          // Detect multi-pass preset from extension status
+          const extensionStatuses = footerData.getExtensionStatuses();
+          const multiPassStatus = extensionStatuses.get("multi-pass") || "";
+          const presetMatch = multiPassStatus.match(/^preset:([^\s|]+)/);
+          const activePreset = presetMatch?.[1];
+
           // Line 2 right: model + thinking level
           const modelName = ctx.model?.id || "no-model";
-          let rightSide = theme.fg("accent", modelName);
-          if (ctx.model?.reasoning) {
-            const level = pi.getThinkingLevel() || "off";
-            rightSide +=
-              theme.fg("dim", " • ") +
-              theme.fg("mdQuote", level === "off" ? "thinking off" : level);
-          }
+          let rightSide: string;
 
-          // Prepend provider if multiple available
-          if (footerData.getAvailableProviderCount() > 1 && ctx.model) {
-            const withProvider =
-              theme.fg("muted", `(${ctx.model.provider}) `) + rightSide;
-            if (
-              visibleWidth(statsLeft) + 2 + visibleWidth(withProvider) <=
-              width
-            ) {
-              rightSide = withProvider;
+          if (activePreset && ctx.model) {
+            // Preset active: show ({preset}) provider/model • thinkingLevel
+            const providerName = ctx.model.provider;
+            rightSide =
+              theme.fg("muted", `(${activePreset}) `) +
+              theme.fg("muted", `${providerName}/`) +
+              theme.fg("accent", modelName);
+            if (ctx.model.reasoning) {
+              const level = pi.getThinkingLevel() || "off";
+              rightSide +=
+                theme.fg("dim", " • ") +
+                theme.fg("mdQuote", level === "off" ? "thinking off" : level);
+            }
+          } else {
+            // No preset: standard provider/model display
+            rightSide = theme.fg("accent", modelName);
+            if (ctx.model?.reasoning) {
+              const level = pi.getThinkingLevel() || "off";
+              rightSide +=
+                theme.fg("dim", " • ") +
+                theme.fg("mdQuote", level === "off" ? "thinking off" : level);
+            }
+
+            // Prepend provider if multiple available
+            if (footerData.getAvailableProviderCount() > 1 && ctx.model) {
+              const withProvider =
+                theme.fg("muted", `(${ctx.model.provider}) `) + rightSide;
+              if (
+                visibleWidth(statsLeft) + 2 + visibleWidth(withProvider) <=
+                width
+              ) {
+                rightSide = withProvider;
+              }
             }
           }
 
           // Merge extension statuses into stats line (between left stats and right model info)
-          const extensionStatuses = footerData.getExtensionStatuses();
+          // Exclude "multi-pass" preset status when it's shown on the right side
           if (extensionStatuses.size > 0) {
             const statusParts = Array.from(extensionStatuses.entries())
               .sort(([a], [b]) => a.localeCompare(b))
+              .filter(([key]) => !(activePreset && key === "multi-pass"))
               .map(([, text]) =>
                 text
                   .replace(/[\r\n\t]/g, " ")

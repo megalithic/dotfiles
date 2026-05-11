@@ -158,6 +158,19 @@
         --replace-fail 'const delayMs = settings.baseDelayMs * 2 ** (this._retryAttempt - 1);' \
         'const delayMs = Math.min(settings.baseDelayMs * 2 ** (this._retryAttempt - 1), settings.maxDelayMs);'
 
+      # 3. Expose setScopedModels to extensions via providerActions
+      substituteInPlace "$TARGET" \
+        --replace-fail \
+          'unregisterProvider: (name) => {' \
+          'setScopedModels: (models) => { this.setScopedModels(models); }, unregisterProvider: (name) => {'
+
+      # Patch runner.js to wire setScopedModels through to extension runtime
+      RUNNER=$out/lib/node_modules/@earendil-works/pi-coding-agent/dist/core/extensions/runner.js
+      substituteInPlace "$RUNNER" \
+        --replace-fail \
+          'this.runtime.registerProvider = (name, config) => {' \
+          'this.runtime.setScopedModels = providerActions?.setScopedModels ?? (() => {}); this.runtime.registerProvider = (name, config) => {'
+
       runHook postInstall
     '';
   };
@@ -406,17 +419,8 @@
   # ===========================================================================
   # Pi Wrapper Script
   # ===========================================================================
-  # NOTE: pinvim kept as-is for now. Future: tmux-nvim-pi script (Phase 8).
-  # Profile borrowing still works if profile dirs exist, degrades gracefully if not.
-
-  sharedConfigItems = [
-    "AGENTS.md"
-    "settings.json"
-    "keybindings.json"
-    "extensions"
-    "skills"
-    "prompts"
-  ];
+  # Profile is env-var-only (PI_PROFILE, PI_MULTI_PASS_PRESET, PI_MODEL_SCOPE).
+  # All config lives in ~/.pi/agent/ — no hybrid dirs, no profile borrowing.
 
   pinvim = pkgs.writeShellScriptBin "pinvim" ''
     # Source agenix secrets for API keys (BRAVE_SEARCH_API_KEY, etc.)
@@ -425,8 +429,9 @@
       . "$AGENIX_DIR/env-vars"
     fi
 
-    # Clear conflicting AWS credentials
+    # Clear conflicting env from previous pinvim sessions
     unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN 2>/dev/null || true
+    unset PI_CODING_AGENT_DIR 2>/dev/null || true
 
     # Map BRAVE_SEARCH_API_KEY → BRAVE_API_KEY (pi-internet expects the latter)
     if [ -n "$BRAVE_SEARCH_API_KEY" ] && [ -z "$BRAVE_API_KEY" ]; then
@@ -438,8 +443,8 @@
       export SYNTHETIC_API_KEY
     fi
 
-    # Parse --profile flag (overrides multi-pass config only)
-    MP_PROFILE=""
+    # Parse --profile flag and collect pi args
+    EXPLICIT_PROFILE=""
     PI_ARGS=()
     while [[ $# -gt 0 ]]; do
       case "$1" in
@@ -448,7 +453,7 @@
             echo "Warning: --profile requires a profile name" >&2
             shift
           else
-            MP_PROFILE="$2"
+            EXPLICIT_PROFILE="$2"
             shift 2
           fi
           ;;
@@ -471,83 +476,22 @@
     fi
     export PI_SESSION
 
+    # ---------------------------------------------------------------
+    # Profile detection: --profile flag > tmux session > default mega
+    # No profile dirs, no hybrid dirs — just env vars.
+    # ---------------------------------------------------------------
+    PI_PROFILE="''${EXPLICIT_PROFILE:-$PI_SESSION}"
+    export PI_PROFILE
+    export PI_MULTI_PASS_PRESET="$PI_PROFILE"
+
     MASTER_DIR="$HOME/.pi/agent"
 
     # ---------------------------------------------------------------
-    # Auto-detect profile from active agent dir or tmux session name.
-    # Profile dir = ~/.pi/agent-{name}/ with auth.json
+    # Model scope: export PI_MODEL_SCOPE for multi-sub.ts extension.
+    # The extension applies scoped models at session_start (after
+    # extension-registered providers like rx-anthropic are available).
     # ---------------------------------------------------------------
-    AUTO_PROFILE=""
-    if [[ -n "''${PI_CODING_AGENT_DIR:-}" ]]; then
-      # Extract profile from existing agent dir (e.g. ~/.pi/agent-rx → rx)
-      _dir_name=$(basename "$PI_CODING_AGENT_DIR")
-      if [[ "$_dir_name" == agent-* ]]; then
-        AUTO_PROFILE="''${_dir_name#agent-}"
-      fi
-    elif [[ -f "$HOME/.pi/agent-''${PI_SESSION}/auth.json" ]]; then
-      # Session name matches a profile dir
-      AUTO_PROFILE="$PI_SESSION"
-    fi
-
-    # Resolve which profile to use for auth (auto-detected)
-    # and which to use for multi-pass (--profile override or auto)
-    AUTH_PROFILE="$AUTO_PROFILE"
-    MP_PROFILE="''${MP_PROFILE:-$AUTO_PROFILE}"
-
-    # ---------------------------------------------------------------
-    # Model scope: restrict Ctrl-P model list per profile
-    # PI_MODEL_SCOPE overrides; AUTH_PROFILE is default.
-    # Reads enabledModelScopes[scope] from settings.json, passes --models.
-    # ---------------------------------------------------------------
-    MODEL_SCOPE="''${PI_MODEL_SCOPE:-$AUTH_PROFILE}"
-    if [[ -n "$MODEL_SCOPE" ]] && [[ ! "''${PI_ARGS[*]}" =~ --models ]]; then
-      SCOPE_PATTERNS=$(${pkgs.jq}/bin/jq -r --arg scope "$MODEL_SCOPE" \
-        '.enabledModelScopes[$scope][] // empty' "$MASTER_DIR/settings.json" 2>/dev/null | paste -sd,)
-      if [[ -n "$SCOPE_PATTERNS" ]]; then
-        PI_ARGS=(--models "$SCOPE_PATTERNS" "''${PI_ARGS[@]}")
-      elif [[ -n "''${PI_MODEL_SCOPE:-}" ]]; then
-        echo "Warning: PI_MODEL_SCOPE=$PI_MODEL_SCOPE not found in enabledModelScopes" >&2
-      fi
-    fi
-
-    # ---------------------------------------------------------------
-    # Build hybrid dir if we have a profile with auth
-    # ---------------------------------------------------------------
-    if [[ -n "$AUTH_PROFILE" ]]; then
-      PROFILE_DIR="$HOME/.pi/agent-''${AUTH_PROFILE}"
-      PROFILE_AUTH="$PROFILE_DIR/auth.json"
-
-      if [[ -f "$PROFILE_AUTH" ]]; then
-        HYBRID_DIR="/tmp/pi-config-''${PI_SESSION}-''${AUTH_PROFILE}"
-        mkdir -p "$HYBRID_DIR"
-
-        # Symlink shared config from master
-        for item in ${lib.concatStringsSep " " sharedConfigItems}; do
-          [[ -e "$MASTER_DIR/$item" || -L "$MASTER_DIR/$item" ]] && \
-            ln -sfn "$MASTER_DIR/$item" "$HYBRID_DIR/$item"
-        done
-
-        mkdir -p "$MASTER_DIR/sessions"
-        ln -sfn "$MASTER_DIR/sessions" "$HYBRID_DIR/sessions"
-        ln -sfn "$PROFILE_AUTH" "$HYBRID_DIR/auth.json"
-
-        # Symlink multi-pass config from the target profile
-        # (--profile overrides which profile's multi-pass.json to use)
-        MP_PROFILE_DIR="$HOME/.pi/agent-''${MP_PROFILE}"
-        if [[ -f "$MP_PROFILE_DIR/multi-pass.json" ]]; then
-          ln -sfn "$MP_PROFILE_DIR/multi-pass.json" "$HYBRID_DIR/multi-pass.json"
-        elif [[ -f "$MASTER_DIR/multi-pass.json" ]]; then
-          ln -sfn "$MASTER_DIR/multi-pass.json" "$HYBRID_DIR/multi-pass.json"
-        fi
-
-        export PI_CODING_AGENT_DIR="$HYBRID_DIR"
-
-        cleanup() { rm -rf "$HYBRID_DIR" 2>/dev/null; }
-        trap cleanup EXIT INT TERM
-        ${pi-coding-agent}/bin/pi "''${PI_ARGS[@]}"
-        exit $?
-      fi
-    fi
+    export PI_MODEL_SCOPE="''${PI_MODEL_SCOPE:-$PI_PROFILE}"
 
     exec ${pi-coding-agent}/bin/pi "''${PI_ARGS[@]}"
   '';

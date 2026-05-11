@@ -46,7 +46,7 @@ local config = {
     enabled = true,
     -- NOTE: CursorMoved is gated in the handler to fire only while in visual
     -- mode (so selection extends are captured) — no storm in normal mode.
-    events = { "BufEnter", "BufWritePost", "InsertLeave", "ModeChanged", "CursorHold", "CursorMoved" },
+    events = { "BufEnter", "BufWritePost", "InsertLeave", "ModeChanged", "CursorHold" },
     debounce_ms = 150,
     include_buffer_text = false,
     max_buffer_bytes = 200000,
@@ -130,9 +130,7 @@ local function parse_info_manifest(info_path)
 
   -- Derive ephemeral flag from manifest OR socket name pattern
   -- (backward compatible with older manifests lacking the field)
-  if info.ephemeral == nil then
-    info.ephemeral = info.socket:match("%-eph%-[^/]+%.sock$") ~= nil
-  end
+  if info.ephemeral == nil then info.ephemeral = info.socket:match("%-eph%-[^/]+%.sock$") ~= nil end
 
   return info
 end
@@ -215,12 +213,7 @@ local function discover_socket_by_tmux()
   -- Fall back to any NON-ephemeral socket for this session
   -- (ephemerals contain `-eph-` in the filename and must never be auto-picked)
   local glob_handle = io.popen(
-    string.format(
-      "ls %s/%s-%s-*.sock 2>/dev/null | grep -v -- '-eph-' | head -1",
-      socket_dir,
-      socket_prefix,
-      session
-    )
+    string.format("ls %s/%s-%s-*.sock 2>/dev/null | grep -v -- '-eph-' | head -1", socket_dir, socket_prefix, session)
   )
   if not glob_handle then return nil end
   local found = glob_handle:read("*l")
@@ -2338,15 +2331,8 @@ vim.keymap.set("n", "<localleader>pn", function()
 
   local epoch = os.time()
   local pid = vim.fn.getpid()
-  local sock_path = string.format(
-    "%s/%s-%s-%s-eph-%d-%d.sock",
-    config.socket.dir,
-    config.socket.prefix,
-    session,
-    window,
-    epoch,
-    pid
-  )
+  local sock_path =
+    string.format("%s/%s-%s-%s-eph-%d-%d.sock", config.socket.dir, config.socket.prefix, session, window, epoch, pid)
 
   local bufnr = vim.api.nvim_get_current_buf()
 
@@ -2513,9 +2499,7 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
   callback = function()
     -- Notify bridge of disconnect BEFORE closing pipe
     if conn.pipe and conn.connected then
-      pcall(function()
-        conn.pipe:write(vim.json.encode({ type = "editor_disconnect" }) .. "\n")
-      end)
+      pcall(function() conn.pipe:write(vim.json.encode({ type = "editor_disconnect" }) .. "\n") end)
     end
     connection_disconnect()
     stop_auto_reload()

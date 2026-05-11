@@ -183,6 +183,7 @@ return {
   },
   {
     "saghen/blink.pairs",
+    enabled = false,
     build = "nix run .#build-plugin",
     event = { "InsertEnter", "CmdlineEnter" },
     --- @module 'blink.pairs'

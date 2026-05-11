@@ -111,16 +111,19 @@ Usage:
 ## Model scopes (PI_MODEL_SCOPE)
 
 `enabledModelScopes` in `settings.json` maps profile names to model pattern
-arrays. The `pinvim` wrapper reads `PI_MODEL_SCOPE` (env var, falls back to
-auto-detected profile from tmux session) and passes `--models` to pi.
+arrays. Pinvim exports `PI_MODEL_SCOPE` (env var, defaults to `PI_PROFILE`).
+
+`multi-sub.ts` reads `PI_MODEL_SCOPE` at `session_start` (after extension
+providers like `rx-anthropic` are registered), resolves patterns against
+available models, and calls `setScopedModels()` to filter the Ctrl-P list.
 
 - `PI_MODEL_SCOPE=rx` → Ctrl-P shows only rx-anthropic models
 - `PI_MODEL_SCOPE=mega` → Ctrl-P shows all mega-scoped models
-- No scope / unknown scope → falls back to `enabledModels` default list
-- Explicit `--models` on command line takes precedence over scope
+- No scope / unknown scope → falls back to all available models
 
-Implemented in `default.nix` pinvim script (search `MODEL_SCOPE`).
-No upstream pi patches needed — uses existing `--models` CLI flag.
+Requires two small patches to pi (in `default.nix` installPhase):
+- `agent-session.js` — exposes `setScopedModels` via providerActions
+- `runner.js` — wires it to extension runtime
 
 ## Gotchas
 
