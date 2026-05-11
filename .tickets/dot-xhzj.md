@@ -1,6 +1,6 @@
 ---
 id: dot-xhzj
-status: open
+status: closed
 deps: [dot-vr9x]
 links: []
 parent: dot-0fjk
@@ -28,3 +28,9 @@ Equivalent to running `/mp-preset rx` but automatic.
 3. Multi-pass status shows correct preset on launch
 4. Unset var falls back to default behavior
 5. No manual `/mp-preset` needed after launch
+
+## Notes
+
+**2026-05-11T18:28:55Z**
+
+Implemented: multi-sub.ts now reads PI_MULTI_PASS_PRESET on session_start and activates matching enabled preset using shared preset activation logic. Status stays preset:<name> after activation; unset env keeps default status/model behavior. Verified PI_MULTI_PASS_PRESET=rx and =mega in tmux-started pi sessions, plus unset fallback; ran just validate and just home --skip-sync.

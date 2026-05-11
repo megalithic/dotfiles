@@ -5289,6 +5289,48 @@ async function handlePresetList(ctx: ExtensionCommandContext): Promise<void> {
 	});
 }
 
+type PresetActivationResult = "activated" | "not-found" | "unavailable";
+
+function getAutoPresetName(): string | undefined {
+	const value = process.env.PI_MULTI_PASS_PRESET?.trim();
+	return value ? value : undefined;
+}
+
+async function activatePreset(
+	pi: ExtensionAPI,
+	ctx: ExtensionContext | ExtensionCommandContext,
+	presetName: string,
+	allSubs: SubEntry[],
+	presets: PresetConfig[],
+): Promise<PresetActivationResult> {
+	const preset = presets.find((p) => p.name === presetName);
+	if (!preset) {
+		ctx.ui.notify(`Preset "${presetName}" not found.`, "error");
+		return "not-found";
+	}
+
+	for (const entry of preset.entries) {
+		if (!entry.enabled) continue;
+		if (!ctx.modelRegistry.authStorage.hasAuth(entry.provider)) continue;
+		const model = ctx.modelRegistry.find(entry.provider, entry.model);
+		if (!model) continue;
+
+		const success = await pi.setModel(model);
+		if (!success) continue;
+
+		const prettyEntry = formatPresetEntryWith(entry, allSubs);
+		ctx.ui.notify(`Preset "${preset.name}": switched to ${prettyEntry}`, "info");
+		ctx.ui.setStatus("multi-pass", `preset:${preset.name} | ${prettyEntry}`);
+		return "activated";
+	}
+
+	ctx.ui.notify(
+		`Preset "${preset.name}": no entry has a logged-in provider with the required model available.`,
+		"warning",
+	);
+	return "unavailable";
+}
+
 async function handlePresetActivate(
 	pi: ExtensionAPI,
 	ctx: ExtensionCommandContext,
@@ -5319,31 +5361,7 @@ async function handlePresetActivate(
 	}
 	if (!presetName) return;
 
-	const preset = enabled.find((p) => p.name === presetName);
-	if (!preset) {
-		ctx.ui.notify(`Preset "${presetName}" not found.`, "error");
-		return;
-	}
-
-	for (const entry of preset.entries) {
-		if (!entry.enabled) continue;
-		if (!ctx.modelRegistry.authStorage.hasAuth(entry.provider)) continue;
-		const model = ctx.modelRegistry.find(entry.provider, entry.model);
-		if (!model) continue;
-
-		const success = await pi.setModel(model);
-		if (!success) continue;
-
-		const prettyEntry = formatPresetEntryWith(entry, allSubs);
-		ctx.ui.notify(`Preset "${preset.name}": switched to ${prettyEntry}`, "info");
-		ctx.ui.setStatus("multi-pass", `preset:${preset.name} | ${prettyEntry}`);
-		return;
-	}
-
-	ctx.ui.notify(
-		`Preset "${preset.name}": no entry has a logged-in provider with the required model available.`,
-		"warning",
-	);
+	await activatePreset(pi, ctx, presetName, allSubs, enabled);
 }
 
 async function handlePresetRemove(ctx: ExtensionCommandContext): Promise<void> {
@@ -5530,7 +5548,20 @@ export default function multiSub(pi: ExtensionAPI) {
 				statusParts.push(`${poolCount} pool(s)`);
 			}
 		}
-		if (statusParts.length > 0) {
+		const autoPresetName = getAutoPresetName();
+		let autoPresetActivated = false;
+		if (autoPresetName) {
+			const result = await activatePreset(
+				pi,
+				ctx,
+				autoPresetName,
+				effective.subscriptions,
+				effective.presets.filter((p) => p.enabled),
+			);
+			autoPresetActivated = result === "activated";
+		}
+
+		if (statusParts.length > 0 && !autoPresetActivated) {
 			ctx.ui.setStatus("multi-pass", statusParts.join(" | "));
 		}
 
