@@ -1,6 +1,6 @@
 ---
 id: dot-sbcv
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-05-11T15:14:36Z
