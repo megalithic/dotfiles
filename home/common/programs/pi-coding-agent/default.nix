@@ -495,6 +495,22 @@
     MP_PROFILE="''${MP_PROFILE:-$AUTO_PROFILE}"
 
     # ---------------------------------------------------------------
+    # Model scope: restrict Ctrl-P model list per profile
+    # PI_MODEL_SCOPE overrides; AUTH_PROFILE is default.
+    # Reads enabledModelScopes[scope] from settings.json, passes --models.
+    # ---------------------------------------------------------------
+    MODEL_SCOPE="''${PI_MODEL_SCOPE:-$AUTH_PROFILE}"
+    if [[ -n "$MODEL_SCOPE" ]] && [[ ! "''${PI_ARGS[*]}" =~ --models ]]; then
+      SCOPE_PATTERNS=$(${pkgs.jq}/bin/jq -r --arg scope "$MODEL_SCOPE" \
+        '.enabledModelScopes[$scope][] // empty' "$MASTER_DIR/settings.json" 2>/dev/null | paste -sd,)
+      if [[ -n "$SCOPE_PATTERNS" ]]; then
+        PI_ARGS=(--models "$SCOPE_PATTERNS" "''${PI_ARGS[@]}")
+      elif [[ -n "''${PI_MODEL_SCOPE:-}" ]]; then
+        echo "Warning: PI_MODEL_SCOPE=$PI_MODEL_SCOPE not found in enabledModelScopes" >&2
+      fi
+    fi
+
+    # ---------------------------------------------------------------
     # Build hybrid dir if we have a profile with auth
     # ---------------------------------------------------------------
     if [[ -n "$AUTH_PROFILE" ]]; then
