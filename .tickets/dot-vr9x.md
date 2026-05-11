@@ -1,6 +1,6 @@
 ---
 id: dot-vr9x
-status: open
+status: closed
 deps: []
 links: []
 parent: dot-0fjk
@@ -27,3 +27,17 @@ Currently subscriptions may be split across profile dirs. Merge into single file
 4. No profile-specific multi-pass.json files remain
 5. `just validate` passes after nix changes
 
+
+## Notes
+
+**2026-05-11T18:18:18Z**
+
+Implemented: kept single global multi-pass.json with rx-anthropic and mega-codex subscriptions plus mega/rx presets; removed profile-specific multi-pass home.file entries and added activation cleanup for old nix-managed profile symlinks. Verified with jq/rg and just validate.
+
+**2026-05-11T18:19:03Z**
+
+Runtime auth consolidation: merged missing google-antigravity and google-gemini-cli entries from profile auth into global ~/.pi/agent/auth.json without overwriting existing global credentials. Backup created at ~/.pi/agent/auth.json.bak.20260511141857.
+
+**2026-05-11T18:20:37Z**
+
+Applied home-manager with 'just home --skip-sync'. Verified runtime profile multi-pass files are absent for ~/.pi/agent-rx, ~/.pi/agent-evirts, and ~/.pi/agent-cspire; global ~/.pi/agent/multi-pass.json remains linked.

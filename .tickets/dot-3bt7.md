@@ -1,6 +1,6 @@
 ---
 id: dot-3bt7
-status: open
+status: closed
 deps: []
 links: []
 parent: dot-0fjk
@@ -35,3 +35,13 @@ Extend `settings.json` with `enabledModelScopes` map that overrides `enabledMode
 4. rx scope includes only rx-anthropic models
 5. nix module generates this correctly
 6. `just validate` passes
+
+## Notes
+
+**2026-05-11T18:18:18Z**
+
+Implemented: added enabledModelScopes.mega and enabledModelScopes.rx to pi settings.json; kept enabledModels fallback and added omlx models to fallback/mega scope. Verified with jq and just validate.
+
+**2026-05-11T18:20:37Z**
+
+Applied home-manager with 'just home --skip-sync'. Verified runtime ~/.pi/agent/settings.json contains enabledModelScopes mega/rx and 17 fallback enabledModels.

@@ -561,12 +561,6 @@ in {
       ".pi/agent/keybindings.json".source = config.lib.mega.linkDotfile "home/common/programs/pi-coding-agent/keybindings.json";
       ".pi/agent/multi-pass.json".source = config.lib.mega.linkDotfile "home/common/programs/pi-coding-agent/multi-pass.json";
 
-      # Per-profile multi-pass.json — ensures config available when PI_CODING_AGENT_DIR
-      # points at a profile dir (e.g. ~/.pi/agent-rx/). Without this, pi can't find
-      # subscriptions/presets when running outside pinvim's hybrid dir.
-      ".pi/agent-rx/multi-pass.json".source = config.lib.mega.linkDotfile "home/common/programs/pi-coding-agent/multi-pass.json";
-      ".pi/agent-evirts/multi-pass.json".source = config.lib.mega.linkDotfile "home/common/programs/pi-coding-agent/multi-pass.json";
-      ".pi/agent-cspire/multi-pass.json".source = config.lib.mega.linkDotfile "home/common/programs/pi-coding-agent/multi-pass.json";
       ".pi/agent/models.json".source = ./models.json;
       ".pi/agent/mcp.json".source = ./mcp.json;
 
@@ -590,6 +584,20 @@ in {
   # ===========================================================================
   home.activation.mergeSettings = lib.hm.dag.entryAfter ["writeBoundary"] ''
     run ${pkgs.bash}/bin/bash ${./merge-settings.sh} ${./settings.json}
+  '';
+
+  home.activation.cleanProfileMultiPass = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    for profile in rx evirts cspire; do
+      path="$HOME/.pi/agent-$profile/multi-pass.json"
+      if [ -L "$path" ]; then
+        target="$(${pkgs.coreutils}/bin/readlink "$path")"
+        case "$target" in
+          /nix/store/*|$HOME/.dotfiles/*)
+            run rm "$path"
+            ;;
+        esac
+      fi
+    done
   '';
 
   # ===========================================================================
