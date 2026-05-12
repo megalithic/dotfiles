@@ -45,7 +45,7 @@ return {
     cmd = "GitLink",
     keys = {
       { "<localleader>gxf", "<cmd>GitLink<cr>", mode = { "n", "x" }, desc = "Copy file url" },
-      { "<localleader>ygf", "<cmd>GitLink!", mode = { "n", "x" }, desc = "Open file in browser" },
+      { "<localleader>ygf", "<cmd>GitLink!<cr>", mode = { "n", "x" }, desc = "Open file in browser" },
       --
       -- { "<leader>gxb", "<cmd>GitLink current_branch<cr>", mode = { "n", "v" }, desc = "Open branch in browser" },
       -- { "<leader>gyb", "<cmd>GitLink current_branch<cr>", mode = { "n", "v" }, desc = "Copy branch url" },

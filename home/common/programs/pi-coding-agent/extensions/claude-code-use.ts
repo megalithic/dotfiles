@@ -12,7 +12,7 @@
  */
 
 import { appendFileSync } from "node:fs";
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 type CacheControl = {
 	type: "ephemeral";
@@ -265,19 +265,36 @@ function debugLogPayload(payload: unknown): void {
 	} catch {}
 }
 
+type ActiveModel = NonNullable<ExtensionContext["model"]>;
+
+function isAnthropicOAuthModel(
+	model: ActiveModel | undefined,
+	modelRegistry: ExtensionContext["modelRegistry"],
+): model is ActiveModel {
+	if (!model || !modelRegistry.isUsingOAuth(model)) {
+		return false;
+	}
+
+	return (
+		model.provider === "anthropic" ||
+		/(^|-)anthropic($|-)/.test(model.provider) ||
+		model.api === "anthropic-messages"
+	);
+}
+
 export default async function piClaudeCodeUse(pi: ExtensionAPI): Promise<void> {
 	pi.on("before_provider_request", (event, ctx) => {
 		const model = ctx.model;
-		if (!model || model.provider !== "anthropic" || !ctx.modelRegistry.isUsingOAuth(model)) {
+		if (!isAnthropicOAuthModel(model, ctx.modelRegistry)) {
 			return undefined;
 		}
 		if (!isRecord(event.payload)) {
 			return undefined;
 		}
 
-		debugLogPayload({ stage: "before", payload: event.payload });
+		debugLogPayload({ stage: "before", provider: model.provider, payload: event.payload });
 		const transformedPayload = transformAnthropicOAuthPayload(event.payload as AnthropicPayload);
-		debugLogPayload({ stage: "after", payload: transformedPayload });
+		debugLogPayload({ stage: "after", provider: model.provider, payload: transformedPayload });
 		return transformedPayload;
 	});
 }
