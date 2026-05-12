@@ -14,6 +14,7 @@ import type {
 import { execSync } from "node:child_process";
 
 const MAX_FOLLOWUPS = 1;
+const MAX_TICKETS_PER_SECTION = 3;
 const STOP_CHECK_PROMPT_BASE =
   "Review your last response. Did you complete everything the user asked? If not, continue working. If you did complete everything, briefly confirm what was done. If ticket context is provided below, suggest the best next ticket(s) to work on based on priority and dependency order.";
 
@@ -55,7 +56,7 @@ function getVcsContext(): string {
 
 /**
  * Gather ticket context if .tickets/ exists in cwd.
- * Returns ready tickets (unblocked + tagged) or empty string.
+ * Returns top in-progress and ready tickets (unblocked + tagged), or empty string.
  */
 function getTicketContext(): string {
   const run = (cmd: string): string | null => {
@@ -70,14 +71,21 @@ function getTicketContext(): string {
   const hasTickets = run("test -d .tickets && echo yes");
   if (hasTickets !== "yes") return "";
 
+  const topLines = (text: string | null): string =>
+    (text || "")
+      .split("\n")
+      .filter((line) => line.trim().length > 0)
+      .slice(0, MAX_TICKETS_PER_SECTION)
+      .join("\n");
+
   // Get ready (unblocked) tickets tagged for development
-  const ready = run("tk ready -T ready-for-development 2>/dev/null");
+  const ready = topLines(run("tk ready -T ready-for-development 2>/dev/null"));
   // Also get in-progress tickets for awareness
-  const inProgress = run("tk list --status=in_progress 2>/dev/null");
+  const inProgress = topLines(run("tk list --status=in_progress 2>/dev/null"));
 
   const parts: string[] = [];
-  if (inProgress) parts.push(`In-progress tickets:\n${inProgress}`);
-  if (ready) parts.push(`Ready tickets (unblocked, by priority):\n${ready}`);
+  if (inProgress) parts.push(`Top ${MAX_TICKETS_PER_SECTION} in-progress tickets:\n${inProgress}`);
+  if (ready) parts.push(`Top ${MAX_TICKETS_PER_SECTION} ready tickets (unblocked, by priority):\n${ready}`);
 
   if (parts.length === 0) return "";
   return `Ticket context:\n${parts.join("\n\n")}`;
