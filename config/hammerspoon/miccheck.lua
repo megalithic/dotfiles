@@ -9,7 +9,6 @@ M.name = "miccheck"
 local S = nil
 local whisper = nil
 local notchHUD = nil
--- local levelMonitor = nil
 local currentLevel = 0
 local recordingWaveInfo = nil
 
@@ -59,70 +58,30 @@ local notch = nil
 local elements = nil
 local animator = nil
 
--- local function loadHUDModules()
---   if not notch then
---     notch = require("lib.hud.notch")
---     elements = require("lib.hud.elements")
---     animator = require("lib.hud.animator")
---   end
--- end
+local function loadHUDModules()
+  if not notch then
+    notch = require("lib.hud.notch")
+    elements = require("lib.hud.elements")
+    animator = require("lib.hud.animator")
+  end
+end
 
--- local levelCanvas = nil
--- local levelMode = nil
+local function preloadLevelMonitor() end
 
--- local function loadLevelMonitor()
---   if not levelMonitor then
---     levelMonitor = require("lib.audio.levels")
---   end
--- end
---
--- local function preloadLevelMonitor()
---   loadLevelMonitor()
---   levelMonitor.preload()
--- end
---
--- ---@param canvas hs.canvas
--- ---@param opts? {mode: "ptt"|"recording"}
--- local function startLevelMonitoring(canvas, opts)
---   loadLevelMonitor()
---   loadHUDModules()
---   opts = opts or {}
---   levelCanvas = canvas
---   levelMode = opts.mode or "ptt"
---
---   levelMonitor.start(function(level)
---     currentLevel = level
---     if not levelCanvas then return end
---     if recordingWaveInfo then
---       animator.setWaveformLevel(levelCanvas, recordingWaveInfo, level)
---     end
---     if levelCanvas["indicator"] and levelMode == "ptt" then
---       animator.setCircleLevel(levelCanvas, {
---         elementId = "indicator",
---         baseRadius = 6,
---         maxGrowth = 26,
---         curve = 0.4,
---       }, level)
---     end
---   end)
--- end
---
--- local function stopLevelMonitoring()
---   if levelMonitor then
---     levelMonitor.stop()
---   end
---   levelCanvas = nil
---   levelMode = nil
---   currentLevel = 0
---   recordingWaveInfo = nil
--- end
---
--- local function shutdownLevelMonitor()
---   stopLevelMonitoring()
---   if levelMonitor then
---     levelMonitor.shutdown()
---   end
--- end
+---@param _canvas hs.canvas
+---@param _opts? {mode: "ptt"|"recording"}
+local function startLevelMonitoring(_canvas, _opts)
+  loadHUDModules()
+end
+
+local function stopLevelMonitoring()
+  currentLevel = 0
+  recordingWaveInfo = nil
+end
+
+local function shutdownLevelMonitor()
+  stopLevelMonitoring()
+end
 
 local function ensureHUD()
   loadHUDModules()
@@ -777,7 +736,7 @@ function M:start()
     end
   end
 
-  -- preloadLevelMonitor()
+  preloadLevelMonitor()
   applyPTTState()
   updateHUD()
 
@@ -791,7 +750,7 @@ function M:start()
     -- This is safer than in-place reposition because it also refreshes
     -- canvas references held by the level monitor and animation timers
     local stateToRestore = currentHUDState
-    -- stopLevelMonitoring()
+    stopLevelMonitoring()
     cancelCompleteTimer()
     destroyHUD()
     currentHUDState = HUDState.HIDDEN
@@ -815,7 +774,7 @@ function M:stop()
   local ok, screenWatcher = pcall(require, "watchers.screen")
   if ok then screenWatcher.removeCallback("miccheck") end
 
-  -- shutdownLevelMonitor()
+  shutdownLevelMonitor()
   cancelCompleteTimer()
   currentHUDState = HUDState.HIDDEN
   destroyHUD()
