@@ -676,6 +676,23 @@ function buildRules(config: SentinelConfig): Rule[] {
     reason: "Package runner. Prefer package.json scripts or Nix.",
   });
 
+  // ── REWRITE: command-specific tool corrections ──
+
+  rules.push({
+    name: "python-json-tool→jq",
+    tier: "rewrite",
+    tools: ["bash"],
+    test: (cmd) => {
+      for (const pythonCmd of ["python", "python3"]) {
+        const tokens = segmentTokens(cmd, pythonCmd);
+        if (!tokens) continue;
+        if (tokens[1] === "-m" && tokens[2] === "json.tool") return true;
+      }
+      return false;
+    },
+    reason: "Use `jq .` instead of `python -m json.tool`.",
+  });
+
   // ── REWRITE: tool corrections from config ──
 
   for (const [blocked, correction] of Object.entries(config.tool_corrections)) {
