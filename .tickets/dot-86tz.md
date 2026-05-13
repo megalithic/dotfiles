@@ -12,6 +12,14 @@ tags: [ready-for-development]
 ---
 # Support project-level MCP config via .pi/mcp.json
 
+## Context: Nix-based dotfiles
+
+All work is in `~/.dotfiles`, managed via Nix. **Do not assume npm/pnpm are globally installed.**
+Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` for exact build patterns:
+1. Simple extensions/skills: Auto-load (no build step).
+2. npm-dependent extensions: Use Nix `buildNpmPackage` patterns (A, B, C, D).
+3. Need ad-hoc tools? Use `nix run nixpkgs#nodejs -- npm install` or `nix shell nixpkgs#pnpm`.
+
 > **⏸️ DEFERRED — cross-repo coordination.** Per `dot-0oy1`/`meg-ppzd` decision: implement once in megadots **pi-coding-agent Stage 2 reconcile** (`meg-u3i3`) rather than here. This avoids double-implementation during the megadots migration. Status doc: `~/.local/share/pi/plans/megadots/cross-repo-status.md`.
 
 pi-mcp-adapter already supports project-level .pi/mcp.json (in cwd) that overrides global ~/.pi/agent/mcp.json. But we don't use this yet.

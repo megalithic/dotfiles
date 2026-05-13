@@ -12,6 +12,14 @@ tags: [epic, pi-coding-agent, glimpse, review, feedback]
 ---
 # Glimpse-powered interactive review UI for plans, tickets, epics, and diffs
 
+## Context: Nix-based dotfiles
+
+All work is in `~/.dotfiles`, managed via Nix. **Do not assume npm/pnpm are globally installed.**
+Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` for exact build patterns:
+1. Simple extensions/skills: Auto-load (no build step).
+2. npm-dependent extensions: Use Nix `buildNpmPackage` patterns (A, B, C, D).
+3. Need ad-hoc tools? Use `nix run nixpkgs#nodejs -- npm install` or `nix shell nixpkgs#pnpm`.
+
 Build a pi extension using HazAT's glimpse (native macOS WKWebView micro-UI) to present plans, ticket/epic overviews, and jj diffs in a rich HTML interface where the user can review, annotate, and submit feedback that flows back to the pi agent session.
 
 ## Background
