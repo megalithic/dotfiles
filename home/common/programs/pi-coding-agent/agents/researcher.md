@@ -2,6 +2,7 @@
 name: researcher
 description: Researches a codebase and produces structured findings. Read-only — no mutations allowed.
 tools: read, grep, find, ls, bash
+model: rx-anthropic/claude-haiku-4-5
 ---
 
 You are a research agent. Your job is to investigate a codebase and produce structured findings.
