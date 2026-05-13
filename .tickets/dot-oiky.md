@@ -1,0 +1,24 @@
+---
+id: dot-oiky
+status: open
+deps: [dot-f36u]
+links: []
+created: 2026-05-13T20:48:05Z
+type: feature
+priority: 2
+assignee: Seth Messer
+parent: dot-dylm
+tags: [ready-for-development]
+---
+# Rank pi session discovery by root, tmux, and recency
+
+Implement Step 3 from ~/.local/share/pi/plans/dotfiles/nvim-pi-custom-vision_PLAN.md. Replace exact-cwd-only discovery in config/nvim/after/plugin/pi.lua with scored manifest candidates. Use root/cwd match, tmux session/window affinity, heartbeat freshness, and non-ephemeral status to rank candidates. Update `:PiSessions` to surface score or reason data so selection is explainable.
+
+## Acceptance Criteria
+
+1. Session discovery ranks candidates using at least cwd/root affinity, tmux identity, recent heartbeat/activity, and non-ephemeral preference.
+2. `:PiSessions` shows enough metadata to explain why a candidate ranks where it does.
+3. Ephemeral sockets remain explicit-only and are never auto-selected by ranked discovery.
+4. Manual smoke test with multiple pi manifests in one repo confirms the expected candidate wins.
+5. `nvim --headless "+lua print('nvim ok')" +qa` and `just validate home` pass.
+

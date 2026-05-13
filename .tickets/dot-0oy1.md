@@ -2,7 +2,7 @@
 id: dot-0oy1
 status: open
 deps: []
-links: []
+links: [dot-kts9, dot-dylm]
 created: 2026-04-28T13:56:53Z
 type: task
 priority: 1
