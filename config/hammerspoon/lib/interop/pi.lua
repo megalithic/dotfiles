@@ -5,10 +5,9 @@
 -- Connections are pooled per socket path with auto-reconnect on failure.
 --
 -- SOCKET CONFIGURATION (nix is single source of truth):
---   Pattern: /tmp/pi-{session}-{window}.sock (one socket per tmux window)
+--   Pattern: ${PI_STATE_DIR}/sockets/pi-{session}-{window}.sock (one socket per tmux window)
 --   Env vars (defined in ~/.dotfiles/home/common/programs/pi-coding-agent/default.nix):
---     - PI_SOCKET_DIR: /tmp
---     - PI_SOCKET_PREFIX: pi
+--     - PI_STATE_DIR: ~/.local/state/pi
 --     - PI_SESSION: tmux session name
 --     - PI_WINDOW: tmux window index
 --
@@ -23,7 +22,12 @@
 local M = {}
 
 -- Socket configuration (matches nix config)
-local SOCKET_DIR = "/tmp"
+local function join_path(...) return table.concat({ ... }, "/") end
+
+local home = os.getenv("HOME") or "~"
+local xdgStateHome = (NIX_ENV and NIX_ENV.XDG_STATE_HOME) or os.getenv("XDG_STATE_HOME") or join_path(home, ".local", "state")
+local PI_STATE_DIR = os.getenv("PI_STATE_DIR") or join_path(xdgStateHome, "pi")
+local SOCKET_DIR = join_path(PI_STATE_DIR, "sockets")
 local SOCKET_PREFIX = "pi"
 
 ---Default pi session for Telegram forwarding
@@ -222,7 +226,7 @@ end
 ---Get socket path for a session and optional window
 ---@param session string Session name (e.g., "mega")
 ---@param window string|nil Window index (e.g., "0", "agent"). If nil, finds first available non-ephemeral.
----@return string|nil Socket path like /tmp/pi-mega-0.sock or nil if not found
+---@return string|nil Socket path like ~/.local/state/pi/sockets/pi-mega-0.sock or nil if not found
 local function getSocketPath(session, window)
   if window then
     local p = string.format("%s/%s-%s-%s.sock", SOCKET_DIR, SOCKET_PREFIX, session, window)
@@ -392,7 +396,8 @@ function M.getActiveSessions()
   if output then
     for line in output:gmatch("[^\n]+") do
       if not isEphemeralSocket(line) then
-        local session, window = line:match("/tmp/pi%-([^-]+)%-([^%.]+)%.sock")
+        local fname = line:match("([^/]+)$") or line
+        local session, window = fname:match("^" .. SOCKET_PREFIX .. "%-([^-]+)%-([^%.]+)%.sock$")
         if session and window then
           local conn = connections[line]
           table.insert(sessions, {
@@ -420,7 +425,8 @@ function M.getSessionSockets(session)
   if output then
     for line in output:gmatch("[^\n]+") do
       if not isEphemeralSocket(line) then
-        local window = line:match("/tmp/pi%-[^-]+%-([^%.]+)%.sock")
+        local fname = line:match("([^/]+)$") or line
+        local window = fname:match("^" .. SOCKET_PREFIX .. "%-[^-]+%-([^%.]+)%.sock$")
         if window then
           local conn = connections[line]
           table.insert(sockets, {

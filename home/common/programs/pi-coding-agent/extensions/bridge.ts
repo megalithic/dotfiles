@@ -15,9 +15,9 @@
  *   Error:    (any malformed JSON)                      → { ok: false, error: '...' }
  *
  * Discovery:
- *   Socket:   /tmp/pi-{session}-{window}.sock  (primary)
- *             /tmp/pi-{session}-{window}-eph-{epoch}-{pid}.sock  (ephemeral)
- *   Manifest: /tmp/pi-nvim-sockets/{socket-basename}.info
+ *   Socket:   ${PI_STATE_DIR}/sockets/pi-{session}-{window}.sock  (primary)
+ *             ${PI_STATE_DIR}/sockets/pi-{session}-{window}-eph-{epoch}-{pid}.sock  (ephemeral)
+ *   Manifest: ${PI_STATE_DIR}/manifests/{socket-basename}.info
  *             (JSON: socket, cwd, pid, session, window, ephemeral, startedAt)
  *   Ephemeral manifests are EXCLUDED from cwd-based auto-discovery — they
  *   are only reachable via explicit vim.b.pi_target_socket.
@@ -25,9 +25,9 @@
  * Socket Configuration:
  *   Auto-detected from tmux session/window when TMUX env is set.
  *   PI_SOCKET env var overrides auto-detection (for explicit control).
- *   Falls back to /tmp/pi-default-0.sock outside tmux.
+ *   Falls back to ${PI_STATE_DIR}/sockets/pi-default-0.sock outside tmux.
  *
- * Socket pattern: /tmp/pi-{session}-{window}.sock
+ * Socket pattern: ${PI_STATE_DIR}/sockets/pi-{session}-{window}.sock
  *
  * Used by:
  *   - This extension (listens on auto-detected or PI_SOCKET path)
@@ -48,13 +48,19 @@ import type {
 import { execSync } from "node:child_process";
 import fs from "node:fs";
 import net from "node:net";
+import path from "node:path";
 
 // =============================================================================
 // Socket Auto-Detection
 // =============================================================================
 
-const SOCKET_DIR = process.env.PI_SOCKET_DIR || "/tmp";
-const SOCKET_PREFIX = process.env.PI_SOCKET_PREFIX || "pi";
+const xdgStateHome =
+  process.env.XDG_STATE_HOME ||
+  (process.env.HOME ? path.join(process.env.HOME, ".local", "state") : "/tmp");
+const PI_STATE_DIR = process.env.PI_STATE_DIR || path.join(xdgStateHome, "pi");
+const SOCKET_DIR = path.join(PI_STATE_DIR, "sockets");
+const INFO_DIR = path.join(PI_STATE_DIR, "manifests");
+const SOCKET_PREFIX = "pi";
 
 /** Detect tmux session and window names. Returns null if not in tmux. */
 const detectTmux = (): { session: string; window: string } | null => {
@@ -211,12 +217,6 @@ const isEditorDisconnectPayload = (p: Payload): p is EditorDisconnectPayload =>
   "type" in p && p.type === "editor_disconnect";
 
 // =============================================================================
-// Constants
-// =============================================================================
-
-const INFO_DIR = "/tmp/pi-nvim-sockets";
-
-// =============================================================================
 // State
 // =============================================================================
 
@@ -359,6 +359,8 @@ const getModelShortName = (modelId: string | undefined): string => {
 const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
   if (!SOCKET_PATH) return;
   if (server) return;
+
+  fs.mkdirSync(path.dirname(SOCKET_PATH), { recursive: true });
 
   // Clean up stale socket
   if (fs.existsSync(SOCKET_PATH)) {

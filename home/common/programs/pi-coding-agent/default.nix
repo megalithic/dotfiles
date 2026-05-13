@@ -70,10 +70,10 @@
 #     - npmDepsHash: SRI hash, auto-updated by scripts/update-npm-pkg.sh
 #     - Auto-discovery: extensions/ and skills/ contents auto-symlinked
 #
-# Socket pattern: /tmp/pi-{session}-{window}.sock
+# Socket pattern: ${PI_STATE_DIR}/sockets/pi-{session}-{window}.sock
 #   - Auto-detected by bridge.ts from tmux (no shell setup needed)
 #   - PI_SOCKET env var overrides auto-detection
-#   - Non-tmux fallback: /tmp/pi-default-0.sock
+#   - Non-tmux fallback: ${PI_STATE_DIR}/sockets/pi-default-0.sock
 #
 # Based on: https://github.com/otahontas/nix/tree/main/home/configs/pi-coding-agent
 {
@@ -83,12 +83,9 @@
   ...
 }: let
   # ===========================================================================
-  # Socket Configuration (single source of truth)
+  # Pi Runtime State (single source of truth)
   # ===========================================================================
-  socketConfig = {
-    dir = "/tmp";
-    prefix = "pi";
-  };
+  piStateDir = "${config.xdg.stateHome}/pi";
 
   # ===========================================================================
   # Standalone tools
@@ -464,9 +461,9 @@
       esac
     done
 
-    # Socket config — bridge.ts auto-detects tmux session/window.
-    export PI_SOCKET_DIR="${socketConfig.dir}"
-    export PI_SOCKET_PREFIX="${socketConfig.prefix}"
+    # Runtime state — bridge.ts derives sockets/ and manifests/ from this.
+    export PI_STATE_DIR="${piStateDir}"
+    mkdir -p "$PI_STATE_DIR/sockets" "$PI_STATE_DIR/manifests"
 
     # Detect session name (bridge.ts handles socket)
     if [ -n "$TMUX" ]; then
@@ -498,6 +495,8 @@
 
   p = pkgs.writeShellScriptBin "p" ''exec ${pinvim}/bin/pinvim "$@"'';
 in {
+  home.sessionVariables.PI_STATE_DIR = piStateDir;
+
   home.packages = [
     pinvim
     p

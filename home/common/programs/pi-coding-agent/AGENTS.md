@@ -154,9 +154,10 @@ Default session: `mega` (configured in `lib/interop/pi.lua`).
 ### Debugging
 
 ```bash
-echo $PI_SOCKET        # Should show /tmp/pi-{session}-{window}.sock
-ls -la /tmp/pi-*.sock  # Socket exists?
-echo '{"type":"telegram","text":"test"}' | nc -U /tmp/pi-{session}.sock
+echo $PI_STATE_DIR     # Should show ~/.local/state/pi
+echo $PI_SOCKET        # Optional explicit override
+ls -la "$PI_STATE_DIR"/sockets/pi-*.sock  # Socket exists?
+echo '{"type":"telegram","text":"test"}' | nc -U "$PI_STATE_DIR"/sockets/pi-{session}-{window}.sock
 ```
 
 | Symptom | Fix |

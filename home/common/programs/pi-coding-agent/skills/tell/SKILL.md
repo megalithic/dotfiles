@@ -39,7 +39,7 @@ Send a task to another pi agent running in a tmux session:
 3. Prefer the `agent` window socket, then window `0`, then any available
 4. Fall back to tmux `send-keys` if no socket available
 
-Socket pattern: `/tmp/pi-{session}-{window}.sock`
+Socket pattern: `${PI_STATE_DIR:-~/.local/state/pi}/sockets/pi-{session}-{window}.sock`
 
 ## Delegate to external agents (yolo mode)
 
@@ -83,7 +83,7 @@ Send updates:
 For interactive debugging, attach directly:
 
 ```bash
-tmux -S /tmp/pi-agent-sockets/tasks.sock attach -t task-abc123-claude
+tmux -S ~/.local/state/pi/agent-sockets/tasks.sock attach -t task-abc123-claude
 ```
 
 Detach with `Ctrl+b d`.

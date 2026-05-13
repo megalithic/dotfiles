@@ -45,14 +45,18 @@ CURRENT_WINDOW=$(tmux display-message -p '#{window_name}')
 CURRENT_WINDOW_IDX=$(tmux display-message -p '#{window_index}')
 SPLIT_WIDTH="30%"
 
+PI_STATE_DIR="${PI_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/pi}"
+SOCKET_PREFIX="pi"
+mkdir -p "$PI_STATE_DIR"
+
 AGENT_WINDOW="agent"
-STATE_FILE="/tmp/tmux-agent-toggle-${SESSION}"
+STATE_FILE="$PI_STATE_DIR/tmux-agent-toggle-${SESSION}"
 
 # --- Detection ---
 
 # Extract window name from socket path.
-# Primary:   /tmp/pi-{session}-{window}.sock         → {window}
-# Ephemeral: /tmp/pi-{session}-{window}-eph-*.sock   → {window}
+# Primary:   ${PI_STATE_DIR}/sockets/pi-{session}-{window}.sock       → {window}
+# Ephemeral: ${PI_STATE_DIR}/sockets/pi-{session}-{window}-eph-*.sock → {window}
 #            (strip -eph-* suffix so pane/bell lookup still matches)
 socket_to_window() {
   local sock="$1"
@@ -60,7 +64,7 @@ socket_to_window() {
   fname=$(basename "$sock" .sock)
   # Strip prefix and session: pi-{session}-{window}[-eph-*] → {window}[-eph-*]
   local stripped
-  stripped=$(echo "$fname" | sed "s/^pi-${SESSION}-//")
+  stripped=$(echo "$fname" | sed "s/^${SOCKET_PREFIX}-${SESSION}-//")
   # Drop ephemeral suffix if present
   echo "$stripped" | sed 's/-eph-.*$//'
 }

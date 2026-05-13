@@ -17,10 +17,13 @@
 set -euo pipefail
 
 TASKS_DIR="${HOME}/.pi/tasks"
-SOCKET_DIR="${TMPDIR:-/tmp}/pi-agent-sockets"
-mkdir -p "$TASKS_DIR" "$SOCKET_DIR"
+PI_STATE_DIR="${PI_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/pi}"
+PI_SOCKETS_DIR="$PI_STATE_DIR/sockets"
+TASK_SOCKET_DIR="$PI_STATE_DIR/agent-sockets"
+SOCKET_PREFIX="pi"
+mkdir -p "$TASKS_DIR" "$PI_SOCKETS_DIR" "$TASK_SOCKET_DIR"
 
-SOCKET="$SOCKET_DIR/tasks.sock"
+SOCKET="$TASK_SOCKET_DIR/tasks.sock"
 
 # Supported external agents and their commands
 declare -A AGENT_COMMANDS=(
@@ -33,14 +36,21 @@ declare -A AGENT_COMMANDS=(
 # ===========================================================================
 # Pi Socket Functions (for window-aware multi-instance support)
 # ===========================================================================
-# Socket pattern: /tmp/pi-{session}-{window}.sock
+# Socket pattern: ${PI_STATE_DIR}/sockets/pi-{session}-{window}.sock
 # One socket per tmux window, allows multiple pi instances per session
+# Ephemeral sockets are excluded from automatic tell routing.
+
+pi_socket_path() {
+  local session="$1"
+  local window="$2"
+  printf '%s/%s-%s-%s.sock\n' "$PI_SOCKETS_DIR" "$SOCKET_PREFIX" "$session" "$window"
+}
 
 # Get all pi sockets for a session
 # Returns newline-separated list of socket paths
 get_pi_sockets() {
   local session="$1"
-  ls /tmp/pi-${session}-*.sock 2>/dev/null || true
+  ls "$PI_SOCKETS_DIR"/"$SOCKET_PREFIX"-${session}-*.sock 2>/dev/null | rg -v -- '-eph-' || true
 }
 
 # Get the "best" pi socket for a session
@@ -53,14 +63,16 @@ get_best_pi_socket() {
   [[ -z "$sockets" ]] && return 1
   
   # Prefer agent window
-  local agent_socket="/tmp/pi-${session}-agent.sock"
+  local agent_socket
+  agent_socket=$(pi_socket_path "$session" "agent")
   if [[ -S "$agent_socket" ]]; then
     echo "$agent_socket"
     return 0
   fi
   
   # Then window 0
-  local win0_socket="/tmp/pi-${session}-0.sock"
+  local win0_socket
+  win0_socket=$(pi_socket_path "$session" "0")
   if [[ -S "$win0_socket" ]]; then
     echo "$win0_socket"
     return 0
@@ -136,7 +148,7 @@ select_pi_socket() {
 
 # Resolve a window identifier (name or index) to a socket path
 # Tries in order:
-#   1. Direct match: /tmp/pi-{session}-{window}.sock
+#   1. Direct match: ${PI_STATE_DIR}/sockets/pi-{session}-{window}.sock
 #   2. If window is numeric, look up window name and try that
 #   3. If window is a name, look up window index and try that
 # Returns socket path or empty string
@@ -145,7 +157,8 @@ resolve_pi_socket() {
   local window="$2"
   
   # 1. Try direct match first
-  local direct_socket="/tmp/pi-${session}-${window}.sock"
+  local direct_socket
+  direct_socket=$(pi_socket_path "$session" "$window")
   if [[ -S "$direct_socket" ]]; then
     echo "$direct_socket"
     return 0
@@ -157,7 +170,8 @@ resolve_pi_socket() {
     win_name=$(tmux list-windows -t "$session" -F '#{window_index}:#{window_name}' 2>/dev/null | \
       rg "^${window}:" | cut -d: -f2 | tr -d ' ')
     if [[ -n "$win_name" ]]; then
-      local name_socket="/tmp/pi-${session}-${win_name}.sock"
+      local name_socket
+      name_socket=$(pi_socket_path "$session" "$win_name")
       if [[ -S "$name_socket" ]]; then
         echo "$name_socket"
         return 0
@@ -169,7 +183,8 @@ resolve_pi_socket() {
     win_index=$(tmux list-windows -t "$session" -F '#{window_index}:#{window_name}' 2>/dev/null | \
       rg ":${window}$" | cut -d: -f1)
     if [[ -n "$win_index" ]]; then
-      local index_socket="/tmp/pi-${session}-${win_index}.sock"
+      local index_socket
+      index_socket=$(pi_socket_path "$session" "$win_index")
       if [[ -S "$index_socket" ]]; then
         echo "$index_socket"
         return 0

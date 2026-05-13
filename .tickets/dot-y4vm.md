@@ -1,6 +1,6 @@
 ---
 id: dot-y4vm
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-05-13T20:48:05Z
@@ -22,3 +22,9 @@ Implement Step 1 from ~/.local/share/pi/plans/dotfiles/nvim-pi-custom-vision_PLA
 4. Normal startup no longer creates new `/tmp/pi-*.sock` or `/tmp/pi-nvim-sockets/*.info` artifacts.
 5. `just validate home` passes, plus targeted syntax checks (`luac -p` and `bash -n`) stay clean for touched files.
 
+
+## Notes
+
+**2026-05-14T03:45:23Z**
+
+Moved pi runtime sockets to PI_STATE_DIR/sockets and manifests to PI_STATE_DIR/manifests. Updated pinvim wrapper, bridge, nvim discovery, Hammerspoon forwarding, tmux toggle, ftm, and tell routing. Verified bash/lua syntax, nvim headless, and just validate home.

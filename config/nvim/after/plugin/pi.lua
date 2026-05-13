@@ -27,10 +27,17 @@ mega.p.pi = {}
 -- Configuration
 --------------------------------------------------------------------------------
 
+local function path_join(...) return table.concat({ ... }, "/") end
+
+local pi_state_dir = vim.env.PI_STATE_DIR
+  or path_join(vim.env.XDG_STATE_HOME or path_join(vim.env.HOME or "~", ".local", "state"), "pi")
+
 local config = {
   socket = {
-    dir = vim.env.PI_SOCKET_DIR or "/tmp",
-    prefix = vim.env.PI_SOCKET_PREFIX or "pi",
+    state_dir = pi_state_dir,
+    dir = path_join(pi_state_dir, "sockets"),
+    manifest_dir = path_join(pi_state_dir, "manifests"),
+    prefix = "pi",
   },
   context = {
     max_file_size = 100000, -- Max bytes to send for a file (100KB)
@@ -57,6 +64,9 @@ local config = {
     interval_s = 5, -- checktime polling interval (only when connected)
   },
 }
+
+vim.fn.mkdir(config.socket.dir, "p")
+vim.fn.mkdir(config.socket.manifest_dir, "p")
 
 --------------------------------------------------------------------------------
 -- State
@@ -146,10 +156,10 @@ local function get_tmux_session()
   return (session and session ~= "") and session or nil
 end
 
---- Discover socket via /tmp/pi-nvim-sockets/*.info (cwd match, then same-session)
+--- Discover socket via PI_STATE_DIR/manifests/*.info (cwd match, then same-session)
 ---@return string?
 local function discover_socket_by_cwd()
-  local info_dir = "/tmp/pi-nvim-sockets"
+  local info_dir = config.socket.manifest_dir
   local ok, files = pcall(vim.fn.glob, info_dir .. "/*.info", false, true)
   if not ok or not files or #files == 0 then return nil end
 
@@ -212,13 +222,11 @@ local function discover_socket_by_tmux()
 
   -- Fall back to any NON-ephemeral socket for this session
   -- (ephemerals contain `-eph-` in the filename and must never be auto-picked)
-  local glob_handle = io.popen(
-    string.format("ls %s/%s-%s-*.sock 2>/dev/null | grep -v -- '-eph-' | head -1", socket_dir, socket_prefix, session)
-  )
-  if not glob_handle then return nil end
-  local found = glob_handle:read("*l")
-  glob_handle:close()
-  if found and found ~= "" and socket_exists(found) then return found end
+  local pattern = string.format("%s/%s-%s-*.sock", socket_dir, socket_prefix, session)
+  local sockets = vim.fn.glob(pattern, false, true)
+  for _, found in ipairs(sockets) do
+    if not found:match("%-eph%-[^/]+%.sock$") and socket_exists(found) then return found end
+  end
 
   return nil
 end
@@ -242,7 +250,7 @@ local function get_socket_path()
   if tmux_sock then return tmux_sock end
 
   -- Fallback to default
-  local default = string.format("%s/%s-default.sock", config.socket.dir, config.socket.prefix)
+  local default = string.format("%s/%s-default-0.sock", config.socket.dir, config.socket.prefix)
   if socket_exists(default) then return default end
 
   return nil
@@ -1096,7 +1104,7 @@ function mega.p.pi.list_sockets(opts)
   local sockets = {}
 
   -- From .info manifests (validated: socket exists + pid alive)
-  local info_dir = "/tmp/pi-nvim-sockets"
+  local info_dir = config.socket.manifest_dir
   local ok, files = pcall(vim.fn.glob, info_dir .. "/*.info", false, true)
   if ok and files then
     for _, info_path in ipairs(files) do
@@ -1886,7 +1894,7 @@ function mega.p.pi.health()
   end
 
   -- cwd-based discovery
-  local info_dir = "/tmp/pi-nvim-sockets"
+  local info_dir = config.socket.manifest_dir
   local cwd = vim.uv.cwd()
   local info_ok, info_files = pcall(vim.fn.glob, info_dir .. "/*.info", false, true)
   if info_ok and info_files and #info_files > 0 then

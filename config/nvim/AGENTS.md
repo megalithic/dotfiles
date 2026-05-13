@@ -244,7 +244,7 @@ Working with multiple pi instances:
 1. Press <localleader>pn to open session picker
 2. Select target (socket or nvim terminal)
 3. Future sends go to selected target
-4. Or set buffer-local: :PiTarget /tmp/pi-myproject-agent.sock
+4. Or set buffer-local: :PiTarget ~/.local/state/pi/sockets/pi-myproject-agent.sock
 ```
 
 ### Architecture
@@ -272,9 +272,9 @@ Priority order for finding pi socket:
 
 1. `vim.b.pi_target_socket` - Buffer-local explicit target
 2. `PI_SOCKET` env var - Explicit override
-3. Tmux session: `/tmp/pi-{session}-agent.sock`
-4. Tmux session: `/tmp/pi-{session}-*.sock` (first match)
-5. Default: `/tmp/pi-default.sock`
+3. Tmux session: `${PI_STATE_DIR}/sockets/pi-{session}-agent.sock`
+4. Tmux session: `${PI_STATE_DIR}/sockets/pi-{session}-*.sock` (first match)
+5. Default: `${PI_STATE_DIR}/sockets/pi-default-0.sock`
 
 ### Payload Format
 
