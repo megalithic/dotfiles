@@ -15,6 +15,8 @@ export interface AgentConfig {
   description: string;
   tools?: string[];
   model?: string;
+  /** Map of multi-pass preset name to model ID. Takes precedence over `model` when the current preset matches. */
+  modelMap?: Record<string, string>;
   systemPrompt: string;
   source: "user" | "project";
   filePath: string;
@@ -66,11 +68,18 @@ function loadAgentsFromDir(
       .map((t: string) => t.trim())
       .filter(Boolean);
 
+    // Parse modelMap: YAML map of preset name -> model ID
+    const modelMap =
+      frontmatter.modelMap && typeof frontmatter.modelMap === "object"
+        ? (frontmatter.modelMap as Record<string, string>)
+        : undefined;
+
     agents.push({
       name: frontmatter.name,
       description: frontmatter.description,
       tools: tools && tools.length > 0 ? tools : undefined,
       model: frontmatter.model,
+      modelMap,
       systemPrompt: body,
       source,
       filePath,

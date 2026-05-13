@@ -17,7 +17,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import type { AgentToolResult } from "@earendil-works/pi-agent-core";
-import type { Message } from "@earendil-works/pi-ai";
+import type { Message, Model } from "@earendil-works/pi-ai";
 import { StringEnum } from "@earendil-works/pi-ai";
 import {
   type ExtensionAPI,
@@ -27,6 +27,96 @@ import {
 import { Container, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
 import { type AgentConfig, type AgentScope, discoverAgents } from "./agents.js";
+
+// ==========================================================================
+// Multi-pass preset detection
+// ==========================================================================
+
+interface MultiPassPresetEntry {
+  provider: string;
+  model: string;
+  enabled: boolean;
+}
+
+interface MultiPassPreset {
+  name: string;
+  entries: MultiPassPresetEntry[];
+  enabled: boolean;
+}
+
+interface MultiPassConfig {
+  presets?: MultiPassPreset[];
+}
+
+/**
+ * Read multi-pass config and find which preset contains the current model.
+ * Returns the preset name or undefined if no match.
+ */
+function detectCurrentPreset(
+  currentModel: Model<any> | undefined,
+): string | undefined {
+  if (!currentModel) return undefined;
+
+  const configPath = path.join(
+    os.homedir(),
+    ".pi",
+    "agent",
+    "multi-pass.json",
+  );
+  let config: MultiPassConfig;
+  try {
+    const raw = fs.readFileSync(configPath, "utf-8");
+    config = JSON.parse(raw) as MultiPassConfig;
+  } catch {
+    return undefined;
+  }
+
+  const presets = config.presets?.filter((p) => p.enabled) ?? [];
+  for (const preset of presets) {
+    for (const entry of preset.entries) {
+      if (!entry.enabled) continue;
+      // Match on provider + model id
+      if (
+        entry.provider === currentModel.provider &&
+        entry.model === currentModel.id
+      ) {
+        return preset.name;
+      }
+      // Also match full model string format: "provider/model"
+      if (`${entry.provider}/${entry.model}` === currentModel.id) {
+        return preset.name;
+      }
+    }
+  }
+
+  // Fallback: heuristic from provider prefix
+  // "rx-*" providers → "rx" preset, otherwise → "mega"
+  if (currentModel.provider.startsWith("rx-")) return "rx";
+  if (
+    currentModel.provider === "openai-codex" ||
+    currentModel.provider === "synthetic"
+  )
+    return "mega";
+
+  return undefined;
+}
+
+/**
+ * Resolve which model a subagent should use.
+ * Priority: modelMap[preset] > model > undefined (session default)
+ */
+function resolveAgentModel(
+  agent: AgentConfig,
+  currentModel: Model<any> | undefined,
+): string | undefined {
+  if (agent.modelMap && Object.keys(agent.modelMap).length > 0) {
+    const preset = detectCurrentPreset(currentModel);
+    if (preset && agent.modelMap[preset]) {
+      return agent.modelMap[preset];
+    }
+  }
+  return agent.model;
+}
 
 const MAX_PARALLEL_TASKS = 8;
 const MAX_CONCURRENCY = 4;
@@ -275,6 +365,7 @@ async function runSingleAgent(
   signal: AbortSignal | undefined,
   onUpdate: OnUpdateCallback | undefined,
   makeDetails: (results: SingleResult[]) => SubagentDetails,
+  currentModel: Model<any> | undefined,
 ): Promise<SingleResult> {
   const agent = agents.find((a) => a.name === agentName);
 
@@ -301,7 +392,8 @@ async function runSingleAgent(
   }
 
   const args: string[] = ["--mode", "json", "-p", "--no-session"];
-  if (agent.model) args.push("--model", agent.model);
+  const resolvedModel = resolveAgentModel(agent, currentModel);
+  if (resolvedModel) args.push("--model", resolvedModel);
   if (agent.tools && agent.tools.length > 0)
     args.push("--tools", agent.tools.join(","));
 
@@ -324,7 +416,7 @@ async function runSingleAgent(
       contextTokens: 0,
       turns: 0,
     },
-    model: agent.model,
+    model: resolveAgentModel(agent, currentModel),
     step,
   };
 
@@ -630,6 +722,7 @@ export default function (pi: ExtensionAPI) {
             signal,
             chainUpdate,
             makeDetails("chain"),
+            ctx.model,
           );
           results.push(result);
 
@@ -738,6 +831,7 @@ export default function (pi: ExtensionAPI) {
                 }
               },
               makeDetails("parallel"),
+              ctx.model,
             );
             allResults[index] = result;
             emitParallelUpdate();
@@ -774,6 +868,7 @@ export default function (pi: ExtensionAPI) {
           signal,
           onUpdate,
           makeDetails("single"),
+          ctx.model,
         );
         const isError =
           result.exitCode !== 0 ||

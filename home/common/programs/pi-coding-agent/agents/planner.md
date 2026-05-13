@@ -2,6 +2,9 @@
 name: planner
 description: Creates implementation plans from research findings. Read-only — no mutations allowed.
 tools: read, grep, find, ls, bash
+modelMap:
+  mega: openai-codex/gpt-5.4-mini
+  rx: rx-anthropic/claude-haiku-4-5
 ---
 
 You are a planning agent. You receive research findings and produce a clear implementation plan.
