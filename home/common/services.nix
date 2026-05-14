@@ -1,6 +1,6 @@
-# User services (launchd agents)
+# "provider_product_id": 180User services (launchd agents)
 #
-# This module consolidates user-level launchd agents that run per-user.
+#"provider_product_id": 180 This module consolidates user-level launchd agents that run per-user.
 # For system-level daemons, see: modules/darwin/services.nix
 #
 # Usage:
@@ -58,14 +58,16 @@
       KeepAlive = true;
       StandardOutPath = "${config.home.homeDirectory}/Library/Logs/ollama/stdout.log";
       StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/ollama/stderr.log";
-      EnvironmentVariables = {
-        OLLAMA_MODELS = "${config.xdg.dataHome}/ollama/models";
-        OLLAMA_HOST = "127.0.0.1:11434"; # localhost only (security)
-        OLLAMA_FLASH_ATTENTION = "1";     # Flash attention (default 0.21.1+, explicit)
-        OLLAMA_KV_CACHE_TYPE = "q8_0";    # Halve KV cache memory (requires flash attn)
-        OLLAMA_NUM_PARALLEL = "1";        # Single user, single KV alloc
-        OLLAMA_KEEP_ALIVE = "30m";        # Keep model loaded 30min (avoid reload latency)
-      } // config.services.ollamaAgent.extraEnv;
+      EnvironmentVariables =
+        {
+          OLLAMA_MODELS = "${config.xdg.dataHome}/ollama/models";
+          OLLAMA_HOST = "127.0.0.1:11434"; # localhost only (security)
+          OLLAMA_FLASH_ATTENTION = "1"; # Flash attention (default 0.21.1+, explicit)
+          OLLAMA_KV_CACHE_TYPE = "q8_0"; # Halve KV cache memory (requires flash attn)
+          OLLAMA_NUM_PARALLEL = "1"; # Single user, single KV alloc
+          OLLAMA_KEEP_ALIVE = "30m"; # Keep model loaded 30min (avoid reload latency)
+        }
+        // config.services.ollamaAgent.extraEnv;
     };
   };
 

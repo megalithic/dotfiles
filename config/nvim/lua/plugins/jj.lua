@@ -28,4 +28,10 @@ return {
       { "<leader>jD", function() require("utils.jj").toggle_vdiff() end, desc = "jj: toggle vdiff vs trunk" },
     },
   },
+
+  {
+    "julienvincent/hunk.nvim",
+    cmd = { "DiffEditor" },
+    config = function() require("hunk").setup() end,
+  },
 }

@@ -18,7 +18,7 @@ vim.g.keyhelper = "whichkey"
 -- Notes/Obsidian vault path
 vim.g.notes_path = vim.env.NOTES_HOME or (vim.env.HOME .. "/notes")
 
-vim.g.disabled_plugins = { "winbar" }
+vim.g.disabled_plugins = { "winbar", "pi" }
 
 vim.g.indent_scope_char = "│"
 vim.g.indent_char = "┊"

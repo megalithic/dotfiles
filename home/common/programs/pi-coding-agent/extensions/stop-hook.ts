@@ -15,11 +15,23 @@ import { execSync } from "node:child_process";
 
 const MAX_FOLLOWUPS = 1;
 const MAX_TICKETS_PER_SECTION = 3;
-const STOP_CHECK_PROMPT_BASE =
-  "Review your last response. Did you complete everything the user asked? If not, continue working. If you did complete everything, briefly confirm what was done. If ticket context is provided below, suggest the best next ticket(s) to work on based on priority and dependency order.";
 
-const INTERRUPTED_PROMPT_BASE =
-  "You were interrupted (the user pressed Escape to stop you). Review what you were doing and what state things are in. If work is partially done, summarize where you left off and what remains. Ask the user how they'd like to proceed rather than automatically resuming — they may have stopped you intentionally to change direction.";
+const FORMATTING_RULES = `
+IMPORTANT FORMATTING RULES FOR VCS AND TICKET STATUS:
+I have provided raw CLI dumps for VCS status and tk tickets below inside <raw_vcs> and <raw_tickets> blocks. DO NOT simply repeat or list this output. Instead, analyze it and provide a very short, concise conversational summary.
+
+For VCS: e.g., "You're on a clean, empty commit." OR "You've got uncommitted working changes currently described as [commit msg]... however, they look like they belong in a separate commit. I recommend..."
+
+For Tickets: e.g., "You've been working on [ticket_id] ([very brief title summary]). It needs to be closed, and I recommend starting on [next_ticket_id] next to continue with this branch."
+`;
+
+const STOP_CHECK_PROMPT_BASE = `Review your last response. Did you complete everything the user asked? If not, continue working. If you did complete everything, briefly confirm what was done.
+
+${FORMATTING_RULES}`;
+
+const INTERRUPTED_PROMPT_BASE = `You were interrupted (the user pressed Escape to stop you). Review what you were doing and what state things are in. If work is partially done, summarize where you left off and what remains. Ask the user how they'd like to proceed rather than automatically resuming — they may have stopped you intentionally to change direction.
+
+${FORMATTING_RULES}`;
 
 /**
  * Gather lightweight VCS status (jj or git, whichever is available).
@@ -88,18 +100,8 @@ function getTicketContext(): string {
   if (ready) parts.push(`Top ${MAX_TICKETS_PER_SECTION} ready tickets (unblocked, by priority):\n${ready}`);
 
   if (parts.length === 0) return "";
-  return `Ticket context:\n${parts.join("\n\n")}`;
+  return `<raw_tickets>\nTicket context:\n${parts.join("\n\n")}\n</raw_tickets>`;
 }
-
-// Gatekeeper configuration
-const GATEKEEPER_PREFERENCE = "local-first" as "local-first" | "cloud-first";
-
-const LOCAL_GATEKEEPER_PROVIDER = "omlx";
-const LOCAL_GATEKEEPER_MODEL_ID = "gemma4";
-
-// Cloud fallback when local ollama is unavailable
-const CLOUD_GATEKEEPER_PROVIDER = "anthropic";
-const CLOUD_GATEKEEPER_MODEL_ID = "claude-haiku-4-5";
 
 const MAX_GATEKEEPER_FAILURES = 3;
 
@@ -163,60 +165,20 @@ function buildGatekeeperMessages(messages: any[]) {
 }
 
 /**
- * Call oMLX via OpenAI-compatible /v1/chat/completions.
- * Uses gemma4 model settings with enable_thinking=false (server-side lock).
- * Request-level extra_body for belt-and-suspenders; server forces it anyway.
- */
-async function askOmlxGatekeeper(
-  modelId: string,
-  contextMessages: any[],
-): Promise<boolean | null> {
-  try {
-    const body = JSON.stringify({
-      model: modelId,
-      messages: contextMessages.flatMap((m: any) =>
-        (m.content || [])
-          .filter((b: any) => b.type === "text")
-          .map((b: any) => ({ role: m.role || "user", content: b.text }))
-      ),
-      stream: false,
-      max_tokens: 16,
-      temperature: 0,
-      extra_body: {
-        chat_template_kwargs: { enable_thinking: false },
-      },
-    });
-
-    const res = await fetch("http://127.0.0.1:8000/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-      signal: AbortSignal.timeout(10000),
-    });
-
-    if (!res.ok) return null;
-    const data = await res.json();
-    const text = (data.choices?.[0]?.message?.content || "").trim().toUpperCase();
-    return !text.startsWith("NO");
-  } catch {
-    return null;
-  }
-}
-
-/**
  * Call cloud gatekeeper via pi's model registry + completeSimple.
  */
-async function askCloudGatekeeper(
+async function askGatekeeper(
   provider: string,
   modelId: string,
   contextMessages: any[],
   ctx: ExtensionContext,
+  isOllama: boolean = false
 ): Promise<boolean | null> {
   const model = ctx.modelRegistry.find(provider, modelId);
   if (!model) return null;
 
   const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
-  if (!auth.ok || !auth.apiKey) return null;
+  if (!auth.ok || (!auth.apiKey && !isOllama)) return null;
 
   const response = await completeSimple(
     model,
@@ -270,16 +232,24 @@ async function shouldSendNudge(
 
   const contextMessages = buildGatekeeperMessages(messages);
 
-  // Try gatekeepers based on preference order
-  const gatekeepers = GATEKEEPER_PREFERENCE === "local-first"
-    ? [
-        { type: "local", fn: () => askOmlxGatekeeper(LOCAL_GATEKEEPER_MODEL_ID, contextMessages) },
-        { type: "cloud", fn: () => askCloudGatekeeper(CLOUD_GATEKEEPER_PROVIDER, CLOUD_GATEKEEPER_MODEL_ID, contextMessages, ctx) },
-      ]
-    : [
-        { type: "cloud", fn: () => askCloudGatekeeper(CLOUD_GATEKEEPER_PROVIDER, CLOUD_GATEKEEPER_MODEL_ID, contextMessages, ctx) },
-        { type: "local", fn: () => askOmlxGatekeeper(LOCAL_GATEKEEPER_MODEL_ID, contextMessages) },
-      ];
+  // Resolution for multi-pass preset fallback
+  const preset = process.env.PI_MULTI_PASS_PRESET || process.env.PI_PROFILE || "mega";
+  let fallbackProvider = "rx-anthropic";
+  let fallbackModel = "claude-haiku-4-5";
+  
+  if (preset === "mega") {
+    fallbackProvider = "codex";
+    fallbackModel = "gpt-4o-mini"; // Standard identifier, assume 5.4-mini meant 4o-mini
+  }
+
+  const gatekeepers = [
+    // 1. Ollama gemma4:e4b
+    { type: "local-e4b", fn: () => askGatekeeper("ollama", "gemma4:e4b", contextMessages, ctx, true) },
+    // 2. Ollama gemma4:e2b
+    { type: "local-e2b", fn: () => askGatekeeper("ollama", "gemma4:e2b", contextMessages, ctx, true) },
+    // 3. Fallback based on profile
+    { type: "fallback", fn: () => askGatekeeper(fallbackProvider, fallbackModel, contextMessages, ctx, false) },
+  ];
 
   for (const gatekeeper of gatekeepers) {
     try {
@@ -348,8 +318,8 @@ export default function (pi: ExtensionAPI) {
     const vcsContext = getVcsContext();
     const ticketContext = getTicketContext();
     const contextParts = [basePrompt];
-    if (vcsContext) contextParts.push(vcsContext);
-    if (ticketContext) contextParts.push(ticketContext);
+    if (vcsContext) contextParts.push(`<raw_vcs>\n${vcsContext}\n</raw_vcs>`);
+    if (ticketContext) contextParts.push(ticketContext); // ticketContext already wrapped in getTicketContext
     const prompt = contextParts.join("\n\n");
 
     pi.sendUserMessage(prompt, { deliverAs: "followUp" });

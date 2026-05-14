@@ -24,6 +24,7 @@ in {
         # graph.style = "curved";
         # should-sign-off = true;
         show-cryptographic-signatures = true;
+        diff-editor = ["nvim" "-c" "DiffEditor $left $right $output"];
       };
 
       signing = {
@@ -39,7 +40,7 @@ in {
       "merge-tools" = {
         difftool = {
           program = "nvim";
-          diff-args = [ "-c" "packadd nvim.difftool" "-d" "$left" "$right" ];
+          diff-args = ["-c" "DiffEditor $left $right $output"];
         };
       };
 
