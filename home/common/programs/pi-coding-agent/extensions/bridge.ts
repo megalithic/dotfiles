@@ -452,6 +452,7 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
     socket.on("close", () => {
       if (editorSockets.has(socket)) {
         editorSockets.delete(socket);
+        pi.events.emit("pinvim:editor_disconnect");
         pi.events.emit("pinvim_legacy:editor_disconnect");
       }
     });
@@ -501,33 +502,30 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
             continue;
           }
 
-          // Handle prompt injection
+          // Handle pinvim prompt frame — pinvim.ts owns semantics
           if (isPromptPayload(payload)) {
             if (!payload.message?.trim()) {
               respondError(socket, "prompt message is empty");
               continue;
             }
-            const currentCtx = latestCtx;
-            if (currentCtx?.isIdle()) {
-              void pi.sendUserMessage(payload.message);
-            } else {
-              void pi.sendUserMessage(payload.message, { deliverAs: "followUp" });
-            }
+            pi.events.emit("pinvim:prompt", payload);
             respondOk(socket);
             continue;
           }
 
-          // Handle editor state (forward to pinvim_legacy.ts via event bus)
+          // Handle editor state — pinvim.ts owns semantics, legacy event kept during rollout
           if (isEditorStatePayload(payload)) {
             editorSockets.add(socket);
+            pi.events.emit("pinvim:editor_state", payload.state);
             pi.events.emit("pinvim_legacy:editor_state", payload.state);
             respondOk(socket);
             continue;
           }
 
-          // Handle editor disconnect (forward to pinvim_legacy.ts)
+          // Handle editor disconnect — pinvim.ts owns semantics, legacy event kept during rollout
           if (isEditorDisconnectPayload(payload)) {
             editorSockets.delete(socket);
+            pi.events.emit("pinvim:editor_disconnect");
             pi.events.emit("pinvim_legacy:editor_disconnect");
             respondOk(socket);
             continue;

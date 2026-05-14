@@ -6,8 +6,9 @@
  * Transport stays outside this file.
  *
  * Current inputs:
- *   - pinvim_legacy:editor_state / pinvim_legacy:editor_disconnect
+ *   - pinvim:editor_state / pinvim:editor_disconnect / pinvim:prompt
  *   - pinvim:hello / pinvim:hello_ack / pinvim:heartbeat
+ *   - pinvim_legacy:* compatibility events during rollout
  */
 
 import type {
@@ -57,6 +58,11 @@ interface HeartbeatPayload {
   protocol: "pinvim.peer.v1";
   peerId: string;
   sentAt: number;
+}
+
+interface PromptPayload {
+  type: "prompt";
+  message: string;
 }
 
 interface EditorState {
@@ -207,8 +213,8 @@ const renderInfoLines = (): string[] => {
     "- own live context injection + footer status",
     "- track peer metadata independent from transport choice",
     "Current transport inputs:",
-    "- bridge.ts legacy editor_state / editor_disconnect bus",
-    "- future direct hello / hello_ack / heartbeat events",
+    "- bridge.ts shim forwards pinvim editor_state / disconnect / prompt during rollout",
+    "- hello / hello_ack / heartbeat peer metadata events",
     `Last hello: ${lastHello}`,
     `Last hello_ack: ${lastHelloAck}`,
     `Last heartbeat: ${lastHeartbeat}`,
@@ -227,21 +233,57 @@ const updateStatus = (): void => {
   }
 };
 
+const setEditorState = (editorState: EditorState): void => {
+  state.editorState = editorState;
+  state.lastEditorUpdateAt = Date.now();
+  updateStatus();
+};
+
+const clearEditorState = (): void => {
+  state.editorState = null;
+  state.lastEditorUpdateAt = null;
+  updateStatus();
+};
+
+const deliverPrompt = (pi: ExtensionAPI, payload: PromptPayload): void => {
+  if (!payload.message?.trim()) return;
+
+  const ctx = latestCtx;
+  if (!ctx) {
+    void pi.sendUserMessage(payload.message);
+    return;
+  }
+
+  if (ctx.isIdle()) {
+    void pi.sendUserMessage(payload.message);
+  } else {
+    void pi.sendUserMessage(payload.message, { deliverAs: "followUp" });
+  }
+};
+
 // =============================================================================
 // Extension Entry Point
 // =============================================================================
 
 export default function (pi: ExtensionAPI): void {
+  pi.events.on("pinvim:editor_state", (data: unknown) => {
+    setEditorState(data as EditorState);
+  });
+
   pi.events.on("pinvim_legacy:editor_state", (data: unknown) => {
-    state.editorState = data as EditorState;
-    state.lastEditorUpdateAt = Date.now();
-    updateStatus();
+    setEditorState(data as EditorState);
+  });
+
+  pi.events.on("pinvim:editor_disconnect", () => {
+    clearEditorState();
   });
 
   pi.events.on("pinvim_legacy:editor_disconnect", () => {
-    state.editorState = null;
-    state.lastEditorUpdateAt = null;
-    updateStatus();
+    clearEditorState();
+  });
+
+  pi.events.on("pinvim:prompt", (data: unknown) => {
+    deliverPrompt(pi, data as PromptPayload);
   });
 
   pi.events.on("pinvim:hello", (data: unknown) => {

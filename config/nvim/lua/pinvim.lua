@@ -114,6 +114,7 @@ defaults = {
     hello = "hello",
     hello_ack = "hello_ack",
     heartbeat = "heartbeat",
+    prompt = "prompt",
     editor_state = "editor_state",
     editor_disconnect = "editor_disconnect",
   },
@@ -335,7 +336,7 @@ function Transport.build_hello(_state, config)
     capabilities = {
       liveContext = true,
       compose = false,
-      explicitSend = false,
+      explicitSend = true,
     },
   }
 end
@@ -413,7 +414,7 @@ function Handshake.describe(state, transport, config)
         config.protocol.editor_state,
         config.protocol.editor_disconnect,
       },
-      cutover = "peer hello/heartbeat now pass through bridge.ts; compose/raw prompt parity still pending",
+      cutover = "peer hello/heartbeat active; raw prompt now routes through pinvim.ts; compose/explicit send parity still pending",
     },
     next_heartbeat = transport.build_heartbeat(state, config),
   }
@@ -658,6 +659,26 @@ function Commands.setup(api, config)
     if info.state.last_error then table.insert(lines, "last error: " .. info.state.last_error) end
     vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
   end, { desc = "Show pinvim state + target" })
+
+  vim.api.nvim_create_user_command("PinvimPrompt", function(command_opts)
+    local function send_message(message)
+      if not message or vim.trim(message) == "" then return end
+      local ok = api.send_prompt(message, { silent = false })
+      if ok then vim.notify("pinvim: prompt sent", vim.log.levels.INFO) end
+    end
+
+    if command_opts.args and command_opts.args ~= "" then
+      send_message(command_opts.args)
+      return
+    end
+
+    vim.ui.input({ prompt = "pinvim prompt: " }, function(input)
+      send_message(input)
+    end)
+  end, {
+    nargs = "*",
+    desc = "Send raw prompt through pinvim.ts",
+  })
 end
 
 function Autocmds.setup(api, config)
@@ -784,6 +805,15 @@ function M.setup(opts)
     schedule_reconnect(api, runtime, config)
     if not silent then vim.notify("pinvim: write failed", vim.log.levels.WARN) end
     return false
+  end
+
+  function api.send_prompt(message, prompt_opts)
+    prompt_opts = prompt_opts or {}
+    if not message or vim.trim(message) == "" then return false end
+    return api.send_payload({ type = config.protocol.prompt, message = message }, {
+      silent = prompt_opts.silent == true,
+      auto_connect = prompt_opts.auto_connect ~= false,
+    })
   end
 
   function api.push_editor_state(push_opts)
