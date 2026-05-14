@@ -22,6 +22,7 @@ local defaults
 local options
 local live_context_timer = nil
 local live_context_pending = false
+local compose_queue = {}
 
 local conn = {
   pipe = nil,
@@ -97,6 +98,19 @@ local function get_live_visual_selection()
     end
     return table.concat(lines, "\n"), start_row, end_row
   end
+end
+
+local function get_command_selection(command_opts)
+  local selection, start_row, end_row = get_live_visual_selection()
+  if selection and start_row and end_row then return selection, start_row, end_row end
+
+  if command_opts and command_opts.range and command_opts.range > 0 then
+    start_row, end_row = command_opts.line1, command_opts.line2
+    local lines = vim.api.nvim_buf_get_lines(0, start_row - 1, end_row, false)
+    if #lines > 0 then return table.concat(lines, "\n"), start_row, end_row end
+  end
+
+  return nil
 end
 
 local function resolve_root()
@@ -335,7 +349,7 @@ function Transport.build_hello(_state, config)
     peer = Transport.build_peer_identity(config),
     capabilities = {
       liveContext = true,
-      compose = false,
+      compose = true,
       explicitSend = true,
     },
   }
@@ -414,7 +428,7 @@ function Handshake.describe(state, transport, config)
         config.protocol.editor_state,
         config.protocol.editor_disconnect,
       },
-      cutover = "peer hello/heartbeat active; raw prompt now routes through pinvim.ts; compose/explicit send parity still pending",
+      cutover = "peer hello/heartbeat active; raw prompt + compose queue route through pinvim.ts; explicit send parity still pending",
     },
     next_heartbeat = transport.build_heartbeat(state, config),
   }
@@ -636,6 +650,35 @@ local function connection_connect(api, runtime, config, socket_path, source)
 end
 
 function Commands.setup(api, config)
+  local function prompt_command(command_opts)
+    local function send_message(message)
+      if not message or vim.trim(message) == "" then return end
+      local ok = api.send_prompt(message, { silent = false })
+      if ok then vim.notify("pinvim: prompt sent", vim.log.levels.INFO) end
+    end
+
+    if command_opts.args and command_opts.args ~= "" then
+      send_message(command_opts.args)
+      return
+    end
+
+    vim.ui.input({ prompt = "pinvim prompt: " }, function(input)
+      send_message(input)
+    end)
+  end
+
+  local function compose_add_command(command_opts)
+    api.compose_add(command_opts)
+  end
+
+  local function compose_flush_command(command_opts)
+    api.compose_flush(command_opts.args ~= "" and command_opts.args or nil)
+  end
+
+  local function compose_clear_command()
+    api.compose_clear()
+  end
+
   vim.api.nvim_create_user_command("PinvimInfo", function()
     local info = api.info()
     local lines = {
@@ -660,24 +703,38 @@ function Commands.setup(api, config)
     vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
   end, { desc = "Show pinvim state + target" })
 
-  vim.api.nvim_create_user_command("PinvimPrompt", function(command_opts)
-    local function send_message(message)
-      if not message or vim.trim(message) == "" then return end
-      local ok = api.send_prompt(message, { silent = false })
-      if ok then vim.notify("pinvim: prompt sent", vim.log.levels.INFO) end
-    end
-
-    if command_opts.args and command_opts.args ~= "" then
-      send_message(command_opts.args)
-      return
-    end
-
-    vim.ui.input({ prompt = "pinvim prompt: " }, function(input)
-      send_message(input)
-    end)
-  end, {
+  vim.api.nvim_create_user_command("PinvimPrompt", prompt_command, {
     nargs = "*",
     desc = "Send raw prompt through pinvim.ts",
+  })
+  vim.api.nvim_create_user_command("PiPrompt", prompt_command, {
+    nargs = "*",
+    desc = "Send raw prompt through pinvim.ts",
+  })
+
+  vim.api.nvim_create_user_command("PinvimAdd", compose_add_command, {
+    range = true,
+    desc = "Add selection or file reference to pinvim compose queue",
+  })
+  vim.api.nvim_create_user_command("PiAdd", compose_add_command, {
+    range = true,
+    desc = "Add selection or file reference to pinvim compose queue",
+  })
+
+  vim.api.nvim_create_user_command("PinvimFlush", compose_flush_command, {
+    nargs = "*",
+    desc = "Send pinvim compose queue through pinvim.ts",
+  })
+  vim.api.nvim_create_user_command("PiFlush", compose_flush_command, {
+    nargs = "*",
+    desc = "Send pinvim compose queue through pinvim.ts",
+  })
+
+  vim.api.nvim_create_user_command("PinvimClear", compose_clear_command, {
+    desc = "Clear pinvim compose queue",
+  })
+  vim.api.nvim_create_user_command("PiClear", compose_clear_command, {
+    desc = "Clear pinvim compose queue",
   })
 end
 
@@ -816,6 +873,84 @@ function M.setup(opts)
     })
   end
 
+  function api.compose_add(command_opts)
+    local file = vim.api.nvim_buf_get_name(0)
+    if file == "" then
+      vim.notify("pinvim: no file or selection to queue", vim.log.levels.WARN)
+      return false
+    end
+
+    local rel_path = vim.fn.fnamemodify(file, ":~:.")
+    local selection, start_row, end_row = get_command_selection(command_opts)
+
+    if selection and start_row and end_row then
+      table.insert(compose_queue, {
+        type = "selection",
+        content = selection,
+        file = rel_path,
+        range = { start_row, end_row },
+        filetype = vim.bo.filetype,
+      })
+    else
+      table.insert(compose_queue, {
+        type = "file",
+        content = rel_path,
+        file = rel_path,
+      })
+    end
+
+    vim.notify(string.format("pinvim: queued %d item(s)", #compose_queue), vim.log.levels.INFO)
+    return true
+  end
+
+  function api.compose_flush(prompt)
+    local function send_now(message)
+      local parts = {}
+
+      for idx, item in ipairs(compose_queue) do
+        if item.type == "selection" then
+          local header = item.file or "unknown"
+          if item.range then header = string.format("%s lines %d-%d", header, item.range[1], item.range[2]) end
+          table.insert(parts, string.format("Context %d - %s:", idx, header))
+          table.insert(parts, string.format("```%s", item.filetype or ""))
+          table.insert(parts, item.content)
+          table.insert(parts, "```")
+        elseif item.type == "file" then
+          table.insert(parts, string.format("Context %d - File: %s", idx, item.content))
+        end
+        table.insert(parts, "")
+      end
+
+      if message and vim.trim(message) ~= "" then table.insert(parts, message) end
+      local payload = table.concat(parts, "\n")
+      if vim.trim(payload) == "" then
+        vim.notify("pinvim: nothing to send", vim.log.levels.WARN)
+        return false
+      end
+
+      local ok = api.send_prompt(payload, { silent = false })
+      if ok then
+        compose_queue = {}
+        vim.notify("pinvim: compose queue sent", vim.log.levels.INFO)
+      end
+      return ok
+    end
+
+    if prompt ~= nil then return send_now(prompt) end
+
+    vim.ui.input({ prompt = "pinvim compose prompt: " }, function(input)
+      send_now(input)
+    end)
+    return true
+  end
+
+  function api.compose_clear()
+    local count = #compose_queue
+    compose_queue = {}
+    vim.notify(string.format("pinvim: cleared %d queued item(s)", count), vim.log.levels.INFO)
+    return true
+  end
+
   function api.push_editor_state(push_opts)
     push_opts = push_opts or {}
     if not config.live_context.enabled then return end
@@ -860,6 +995,7 @@ function M.setup(opts)
       state = State.snapshot(runtime),
       target = Transport.describe_target(config),
       handshake = Handshake.describe(runtime, Transport, config),
+      compose_count = #compose_queue,
       responsibilities = {
         loader = "config/nvim/after/plugin/pi.lua",
         module = "config/nvim/lua/pinvim.lua",

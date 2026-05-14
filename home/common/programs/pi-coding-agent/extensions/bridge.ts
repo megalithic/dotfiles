@@ -329,8 +329,6 @@ const formatNvimMessage = (payload: NvimPayload): string => {
 
   if (payload.task?.trim()) {
     parts.push(`Task: ${payload.task.trim()}`);
-  } else {
-    parts.push("Task: (not provided)");
   }
 
   return parts.join("\n");
