@@ -6,8 +6,8 @@
       "timeoutMs": 3600000
     }
   },
-  "defaultProvider": "anthropic",
-  "defaultThinkingLevel": "high",
+  "defaultProvider": "openai-codex",
+  "defaultThinkingLevel": "medium",
   "doubleEscapeAction": "tree",
   "enableSkillCommands": true,
   "hideThinkingBlock": true,

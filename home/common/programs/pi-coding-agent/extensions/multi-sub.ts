@@ -6212,35 +6212,54 @@ export default function multiSub(pi: ExtensionAPI) {
     }
 
     // Apply model scope (Ctrl+P filtering) after providers are registered.
-    // Reads enabledModelScopes[scope] from settings.json, resolves against
-    // now-available models, calls setScopedModels (patched into runtime).
+    // Prefer a multi-pass preset matching PI_MODEL_SCOPE/PI_PROFILE. Fall back
+    // to legacy settings.json enabledModelScopes[scope] lists.
     const modelScope =
       process.env.PI_MODEL_SCOPE?.trim() || process.env.PI_PROFILE?.trim();
     if (modelScope && typeof (pi as any).setScopedModels === "function") {
-      try {
-        const settingsPath = join(getAgentDir(), "settings.json");
-        const settings = JSON.parse(readFileSync(settingsPath, "utf-8"));
-        const patterns: string[] = settings?.enabledModelScopes?.[modelScope];
-        if (patterns && patterns.length > 0) {
-          const available = ctx.modelRegistry.getAvailable();
-          const scoped = patterns
-            .map((pat: string) => {
-              // Match provider/model patterns against available models
-              const [prov, modelId] = pat.includes("/")
-                ? pat.split("/", 2)
-                : ["", pat];
-              return available.find(
-                (m) => (prov ? m.provider === prov : true) && m.id === modelId,
-              );
-            })
-            .filter((m): m is NonNullable<typeof m> => m != null)
-            .map((model) => ({ model }));
-          if (scoped.length > 0) {
-            (pi as any).setScopedModels(scoped);
-          }
+      let appliedPresetScope = false;
+      const preset = effective.presets.find(
+        (p) => p.enabled && p.name === modelScope,
+      );
+      if (preset) {
+        const scoped = preset.entries
+          .filter((entry) => entry.enabled)
+          .map((entry) => ctx.modelRegistry.find(entry.provider, entry.model))
+          .filter((model): model is NonNullable<typeof model> => model != null)
+          .map((model) => ({ model }));
+        if (scoped.length > 0) {
+          (pi as any).setScopedModels(scoped);
+          appliedPresetScope = true;
         }
-      } catch {
-        // Silently skip — settings read failure shouldn't block startup
+      }
+
+      if (!appliedPresetScope) {
+        try {
+          const settingsPath = join(getAgentDir(), "settings.json");
+          const settings = JSON.parse(readFileSync(settingsPath, "utf-8"));
+          const patterns: string[] = settings?.enabledModelScopes?.[modelScope];
+          if (patterns && patterns.length > 0) {
+            const available = ctx.modelRegistry.getAvailable();
+            const scoped = patterns
+              .map((pat: string) => {
+                // Match provider/model patterns against available models
+                const [prov, modelId] = pat.includes("/")
+                  ? pat.split("/", 2)
+                  : ["", pat];
+                return available.find(
+                  (m) =>
+                    (prov ? m.provider === prov : true) && m.id === modelId,
+                );
+              })
+              .filter((m): m is NonNullable<typeof m> => m != null)
+              .map((model) => ({ model }));
+            if (scoped.length > 0) {
+              (pi as any).setScopedModels(scoped);
+            }
+          }
+        } catch {
+          // Silently skip — settings read failure shouldn't block startup
+        }
       }
     }
 
