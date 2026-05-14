@@ -1,6 +1,6 @@
 ---
 id: dot-f36u
-status: in_progress
+status: closed
 deps: [dot-y4vm]
 links: []
 created: 2026-05-13T20:48:05Z
@@ -36,3 +36,9 @@ Files in scope:
 6. Handshake work still targets explicit `hello` / `hello_ack` peer metadata with peer id, cwd/root, tmux identity, link mode, and heartbeat timestamps while preserving rollout compatibility.
 7. `nvim --headless "+lua print('nvim ok')" +qa` and `just validate home` both pass after the bootstrap/rename work.
 
+
+## Notes
+
+**2026-05-14T16:49:01Z**
+
+Completed bootstrap split for fresh pinvim nvim↔pi work. Nvim side landed in separate feat(nvim) commit; pi side now has pinvim_legacy.ts for frozen live-context behavior, bridge.ts emits pinvim_legacy events, and fresh pinvim.ts tracks transport-agnostic hello/hello_ack/heartbeat peer state. Verified nvim headless sanity, legacy mega.p.pi=nil, extension jiti loads, and just validate home.

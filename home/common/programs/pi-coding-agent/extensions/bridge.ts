@@ -8,7 +8,7 @@
  * Protocol:
  *   Request:  { type: 'ping' }                         → { ok: true, type: 'pong' }
  *   Request:  { type: 'prompt', message: '...' }        → { ok: true }
- *   Request:  { type: 'editor_state', state: {...} }    → { ok: true }
+ *   Request:  { type: 'editor_state', state: {...} }    → { ok: true }  (legacy live context)
  *   Request:  { type: 'telegram', text: '...' }         → { ok: true }
  *   Request:  { type: 'tell', text: '...' }             → { ok: true }
  *   Request:  { file: '...', task: '...' }              → { ok: true }  (legacy nvim)
@@ -31,7 +31,7 @@
  *
  * Used by:
  *   - This extension (listens on auto-detected or PI_SOCKET path)
- *   - config/nvim/after/plugin/pi.lua (connects to socket)
+ *   - config/nvim/after/plugin/pi_legacy.lua (legacy socket client)
  *   - config/hammerspoon/lib/interop/pi.lua (forwards Telegram messages)
  *   - bin/ftm (checks for socket existence)
  *   - bin/tmux-toggle-pi (finds/manages agent window)
@@ -382,7 +382,7 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
     socket.on("close", () => {
       if (editorSockets.has(socket)) {
         editorSockets.delete(socket);
-        pi.events.emit("pinvim:editor_disconnect");
+        pi.events.emit("pinvim_legacy:editor_disconnect");
       }
     });
 
@@ -422,18 +422,18 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
             continue;
           }
 
-          // Handle editor state (forward to pinvim.ts via event bus)
+          // Handle editor state (forward to pinvim_legacy.ts via event bus)
           if (isEditorStatePayload(payload)) {
             editorSockets.add(socket);
-            pi.events.emit("pinvim:editor_state", payload.state);
+            pi.events.emit("pinvim_legacy:editor_state", payload.state);
             respondOk(socket);
             continue;
           }
 
-          // Handle editor disconnect (forward to pinvim.ts)
+          // Handle editor disconnect (forward to pinvim_legacy.ts)
           if (isEditorDisconnectPayload(payload)) {
             editorSockets.delete(socket);
-            pi.events.emit("pinvim:editor_disconnect");
+            pi.events.emit("pinvim_legacy:editor_disconnect");
             respondOk(socket);
             continue;
           }

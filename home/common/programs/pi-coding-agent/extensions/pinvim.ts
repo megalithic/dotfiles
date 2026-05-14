@@ -1,25 +1,8 @@
 /**
- * Pi Nvim Intelligence Extension
+ * Pinvim Extension
  *
- * Provides nvim-aware context injection into agent turns.
- * Receives editor state from bridge.ts via pi.events bus — no socket of its own.
- *
- * Flow:
- *   nvim → bridge.ts socket → pi.events('pinvim:editor_state') → this extension
- *
- * Context injection (before_agent_start):
- *   [NEOVIM LIVE CONTEXT]
- *   Focused file: init.lua
- *   Filetype: lua
- *   Cursor: L17:C4
- *   Selection: lines 5-12
- *   Reference: @config/nvim/after/plugin/pi.lua
- *
- * Footer status (self-prefixed with `│ ` so it visually separates
- * from preceding extension statuses, which pi joins with a single space):
- *   │ init.lua:179             (connected, no selection)
- *   │ init.lua:5-12            (connected, with selection)
- *   (empty)                     (no state / stale)
+ * Peer-state entrypoint for nvim↔pi handshake work.
+ * Keep this file thin, transport-agnostic, and focused on typed handshake state.
  */
 
 import type {
@@ -28,116 +11,113 @@ import type {
 } from "@earendil-works/pi-coding-agent";
 
 // =============================================================================
-// Types
+// Protocol Types
 // =============================================================================
 
-interface EditorState {
-  file?: string;
-  cursor?: { line: number; col: number };
-  selection?: string;
-  selectionRange?: [number, number];
-  filetype?: string;
-  modified?: boolean;
-  buftype?: string;
-  buftext?: string;
-  [key: string]: unknown;
+type LinkMode = "auto" | "explicit" | "bootstrap";
+
+interface PeerIdentity {
+  id: string;
+  kind: "nvim" | "pi";
+  cwd: string;
+  root?: string;
+  tmux?: {
+    session?: string;
+    window?: string;
+  };
+  linkMode: LinkMode;
+  heartbeatAt?: number;
+}
+
+interface HelloPayload {
+  type: "hello";
+  protocol: "pinvim.peer.v1";
+  peer: PeerIdentity;
+  capabilities?: {
+    liveContext?: boolean;
+    compose?: boolean;
+    explicitSend?: boolean;
+  };
+}
+
+interface HelloAckPayload {
+  type: "hello_ack";
+  protocol: "pinvim.peer.v1";
+  peer: PeerIdentity;
+  accepts?: string[];
+}
+
+interface HeartbeatPayload {
+  type: "heartbeat";
+  protocol: "pinvim.peer.v1";
+  peerId: string;
+  sentAt: number;
+}
+
+interface PinvimState {
+  protocol: "pinvim.peer.v1";
+  lastHello: HelloPayload | null;
+  lastHelloAck: HelloAckPayload | null;
+  lastHeartbeat: HeartbeatPayload | null;
 }
 
 // =============================================================================
 // State
 // =============================================================================
 
-let editorState: EditorState | null = null;
-let lastUpdateAt: number | null = null;
-let latestCtx: ExtensionContext | null = null;
+const state: PinvimState = {
+  protocol: "pinvim.peer.v1",
+  lastHello: null,
+  lastHelloAck: null,
+  lastHeartbeat: null,
+};
 
-// Stale threshold — safety net if disconnect event missed (crash without socket close)
-const STALE_MS = 60 * 1000;
+let latestCtx: ExtensionContext | null = null;
 
 // =============================================================================
 // Formatting
 // =============================================================================
 
-const isStale = (): boolean => {
-  if (!lastUpdateAt) return true;
-  return Date.now() - lastUpdateAt > STALE_MS;
+const formatStatus = (): string => {
+  if (!state.lastHelloAck) return "";
+  const peer = state.lastHelloAck.peer;
+  const label = peer.root || peer.cwd || peer.id;
+  return `│ pinvim:${label.split("/").pop() || label}`;
 };
 
-const formatContext = (state: EditorState): string => {
-  const parts: string[] = ["[NEOVIM LIVE CONTEXT]"];
+const renderInfoLines = (): string[] => {
+  const lastHello = state.lastHello
+    ? JSON.stringify(state.lastHello, null, 2)
+    : "(none yet)";
+  const lastHelloAck = state.lastHelloAck
+    ? JSON.stringify(state.lastHelloAck, null, 2)
+    : "(none yet)";
+  const lastHeartbeat = state.lastHeartbeat
+    ? JSON.stringify(state.lastHeartbeat, null, 2)
+    : "(none yet)";
 
-  if (state.file) {
-    parts.push(`Focused file: ${state.file}`);
-  }
-
-  if (state.filetype) {
-    parts.push(`Filetype: ${state.filetype}`);
-  }
-
-  if (state.cursor) {
-    parts.push(`Cursor: L${state.cursor.line}:C${state.cursor.col}`);
-  }
-
-  if (state.selectionRange) {
-    parts.push(`Selection: lines ${state.selectionRange[0]}-${state.selectionRange[1]}`);
-  }
-
-  if (state.selection?.trim()) {
-    parts.push("Selected text:");
-    parts.push("```");
-    parts.push(state.selection);
-    parts.push("```");
-  }
-
-  if (state.file) {
-    parts.push(`Reference: @${state.file}`);
-  }
-
-  if (state.modified) {
-    parts.push("Buffer: modified (unsaved)");
-  }
-
-  if (state.buftext?.trim()) {
-    parts.push("Buffer contents:");
-    parts.push("```");
-    parts.push(state.buftext);
-    parts.push("```");
-  }
-
-  return parts.join("\n");
+  return [
+    "pinvim peer state",
+    `Protocol: ${state.protocol}`,
+    "Responsibilities:",
+    "- track hello / hello_ack peer metadata",
+    "- surface active peer status in the UI",
+    "- stay transport-agnostic; socket IO belongs outside this extension",
+    "Target handshake:",
+    "- peer id + cwd/root + tmux identity + link mode",
+    "- heartbeat timestamps for freshness",
+    `Last hello: ${lastHello}`,
+    `Last hello_ack: ${lastHelloAck}`,
+    `Last heartbeat: ${lastHeartbeat}`,
+  ];
 };
-
-const formatStatus = (state: EditorState | null): string => {
-  if (!state || isStale()) return "";
-
-  const file = state.file
-    ? state.file.split("/").pop() || state.file
-    : "???";
-
-  // `│ ` prefix = section separator (pi joins extension statuses
-  // with a single space). No per-field icons; line/range appended
-  // to the filename with a `:` separator.
-  if (state.selectionRange) {
-    const [s, e] = state.selectionRange;
-    return `│ ${file}:${s}-${e}`;
-  }
-
-  const line = state.cursor ? `:${state.cursor.line}` : "";
-  return `│ ${file}${line}`;
-};
-
-// =============================================================================
-// Status Update
-// =============================================================================
 
 const updateStatus = (): void => {
   const ctx = latestCtx;
   if (!ctx) return;
-  // ctx.hasUI throws if the ctx is stale (session was replaced/reloaded
-  // between when we captured it and when this fires). Guard and clear.
   try {
     if (!ctx.hasUI) return;
-    ctx.ui.setStatus("pinvim", formatStatus(editorState));
+    ctx.ui.setStatus("pinvim", formatStatus());
   } catch {
     latestCtx = null;
   }
@@ -148,32 +128,19 @@ const updateStatus = (): void => {
 // =============================================================================
 
 export default function (pi: ExtensionAPI): void {
-  // Listen for editor state from bridge.ts
-  pi.events.on("pinvim:editor_state", (data: unknown) => {
-    editorState = data as EditorState;
-    lastUpdateAt = Date.now();
+  pi.events.on("pinvim:hello", (data: unknown) => {
+    state.lastHello = data as HelloPayload;
     updateStatus();
   });
 
-  // Listen for editor disconnect (normal exit or socket close)
-  pi.events.on("pinvim:editor_disconnect", () => {
-    editorState = null;
-    lastUpdateAt = null;
+  pi.events.on("pinvim:hello_ack", (data: unknown) => {
+    state.lastHelloAck = data as HelloAckPayload;
     updateStatus();
   });
 
-  // Inject context before each agent turn
-  pi.on("before_agent_start", async () => {
-    if (!editorState || isStale()) return;
-
-    const content = formatContext(editorState);
-    return {
-      message: {
-        customType: "pinvim-live-context",
-        content,
-        display: false,
-      },
-    };
+  pi.events.on("pinvim:heartbeat", (data: unknown) => {
+    state.lastHeartbeat = data as HeartbeatPayload;
+    updateStatus();
   });
 
   pi.on("session_start", (_event, ctx) => {
@@ -186,29 +153,14 @@ export default function (pi: ExtensionAPI): void {
     updateStatus();
   });
 
-  // Drop the captured ctx before the runtime is torn down — any events that
-  // arrive between shutdown and the next session_start would otherwise hit
-  // a stale ctx and throw on access.
   pi.on("session_shutdown", () => {
     latestCtx = null;
   });
 
-  // Register /pinvim-info command
   pi.registerCommand("pinvim-info", {
-    description: "Show pinvim status: socket path, editor state, last update",
+    description: "Show pinvim peer handshake state",
     handler: async (_args, ctx) => {
-      const socketPath = process.env.PI_SOCKET || "(not set)";
-      const stale = isStale();
-      const lastUpdate = lastUpdateAt
-        ? `${new Date(lastUpdateAt).toISOString()}${stale ? " (stale)" : ""}`
-        : "never";
-
-      const lines = [
-        `Socket: ${socketPath}`,
-        `Last update: ${lastUpdate}`,
-        `State: ${editorState ? JSON.stringify(editorState, null, 2) : "(none)"}`,
-      ];
-
+      const lines = renderInfoLines();
       if (ctx.hasUI) {
         ctx.ui.notify(lines.join("\n"), "info");
       }
