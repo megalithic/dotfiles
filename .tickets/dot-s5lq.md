@@ -1,6 +1,6 @@
 ---
 id: dot-s5lq
-status: open
+status: closed
 deps: [dot-en5k]
 links: []
 created: 2026-04-16T15:46:35Z

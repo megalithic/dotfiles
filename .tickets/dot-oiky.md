@@ -1,7 +1,7 @@
 ---
 id: dot-oiky
 status: open
-deps: [dot-f36u]
+deps: [dot-f6tr]
 links: []
 created: 2026-05-13T20:48:05Z
 type: feature

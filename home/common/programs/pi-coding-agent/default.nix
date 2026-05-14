@@ -305,6 +305,7 @@
   disabledExtensions = [
     "checkpoint.ts" # Too intrusive
     "subscription-fallback.ts" # Doesn't support everything we need
+    "pi_legacy.ts"
   ];
 
   # Skills to exclude from auto-discovery

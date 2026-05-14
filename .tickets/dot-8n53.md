@@ -19,5 +19,5 @@ Implement Step 5 from ~/.local/share/pi/plans/dotfiles/nvim-pi-custom-vision_PLA
 1. Nvim tracks MRU pi targets with enough metadata to distinguish auto, manual, ephemeral, and parked links.
 2. When active socket disappears, `pinvim.lua` can restore previous alive parked target instead of dropping straight to discovery.
 3. User commands for previous/restore behavior exist and are documented in pinvim keymaps or command definitions.
-4. Statusline data reflects current link mode and restored-target state.
+4. Statusline data reflects current link mode and restored-target state using ` mega.p.pinvim` state directly. It must not depend on or restore legacy `mega.p.pi` compatibility.
 5. `nvim --headless "+lua require('pinvim').setup()" +qa` passes and manual close/restore testing works.

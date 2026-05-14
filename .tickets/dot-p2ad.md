@@ -16,8 +16,9 @@ Implement Step 4 from ~/.local/share/pi/plans/dotfiles/nvim-pi-custom-vision_PLA
 
 ## Acceptance Criteria
 
-1. `tmux-toggle-pi` can park and restore reusable pi panes or sessions instead of always creating a fresh process.
-2. Active, last, MRU, and parked socket metadata is persisted in tmux user options with a documented schema.
-3. Toggling hide/show preserves history and reconnects to the intended parked pi instance.
-4. `bash -n bin/tmux-toggle-pi` passes and manual tmux smoke test confirms park/restore behavior.
+1. Primary nvim UX provides a command/keymap to create or focus a 30%-width tmux split to the right of the current nvim pane, running pi. When an existing handshaked pi is active for the tmux session, the split adopts/takes over that handshake instead of spawning a fresh unlinked pi.
+2. `tmux-toggle-pi` can park and restore reusable pi panes or sessions instead of always creating a fresh process.
+3. Active, last, MRU, and parked socket metadata is persisted in tmux user options with a documented schema.
+4. Toggling hide/show preserves history and reconnects to the intended parked pi instance.
+5. `bash -n bin/tmux-toggle-pi` passes and manual tmux smoke test confirms park/restore behavior.
 

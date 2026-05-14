@@ -1,6 +1,6 @@
 ---
 id: dot-edp8
-status: in_progress
+status: closed
 deps: []
 links: []
 created: 2026-04-23T12:25:36Z
