@@ -715,27 +715,40 @@ local function seg_megaterms()
 end
 
 local function seg_pi()
-  if mega.p.pi == nil then return "" end
+  local client = nil
+  local click_target = nil
 
-  local data = mega.p.pi.statusline_data()
+  if mega.p.pinvim ~= nil and mega.p.pinvim.statusline_data then
+    client = mega.p.pinvim
+    click_target = "v:lua.mega.p.pinvim.select_session"
+  elseif mega.p.pi ~= nil and mega.p.pi.statusline_data then
+    client = mega.p.pi
+    click_target = "v:lua.mega.p.pi.select_session"
+  end
+
+  if client == nil then return "" end
+
+  local data = client.statusline_data()
   local icon = mega.ui.icons.pi.symbol
 
+  if data.reconnecting then return seg(icon .. "…", "StWarning", { margin = { 1, 0 } }) end
   if not data.connected then return seg(icon, "StComment", { margin = { 1, 0 } }) end
 
   local session = data.session or "pi"
-  local ctx_str = data.context_count > 0 and fmt(" %d", data.context_count) or ""
+  local count = data.context_count or data.compose_count or 0
+  local count_str = count > 0 and fmt(" %d", count) or ""
 
   local content = seg(
     table.concat({
       wrap("StIdentifier", icon .. " "),
       wrap("StComment", session),
-      wrap("StBufferCount", ctx_str),
+      wrap("StBufferCount", count_str),
     }),
     { margin = { 1, 0 } }
   )
 
-  -- Make clickable to select session
-  return "%@v:lua.mega.p.pi.select_session@" .. content .. "%X"
+  if click_target and client.select_session then return "%@" .. click_target .. "@" .. content .. "%X" end
+  return content
 end
 
 local function seg_rec_macro()

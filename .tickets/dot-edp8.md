@@ -14,7 +14,9 @@ tags: [nvim, pi, tmux, ephemeral, ready-for-development]
 
 > **🔗 Cross-repo coordination:** finish in this repo. Artifact (final `pinvim.lua` + tmux split logic, with `bridge.ts` only as shim if still needed) ports to megadots **nvim Stage 2 reconcile** (`meg-pygn`) after closure. Tracked in `~/.local/share/pi/plans/megadots/cross-repo-status.md` + `dot-0oy1`/`meg-ppzd`.
 
-Implement `<localleader>pn` in primary nvim-side pinvim code (`config/nvim/lua/pinvim.lua`, loaded by `config/nvim/after/plugin/pinvim.lua`) to spawn an ephemeral pi instance in a new tmux split, fully isolated from any existing pi/nvim pairs.
+Implement the fresh pinvim tmux split workflow in primary nvim-side pinvim code (`config/nvim/lua/pinvim.lua`, loaded by the thin loader) without restoring legacy `mega.p.pi` or legacy keymaps.
+
+2026-05-14 UX correction: this is no longer only a throwaway isolated ephemeral split. Primary behavior should create/focus a 30%-width right tmux split for pi and allow that split to adopt/take over the current nvim↔pi handshake for the tmux session when an existing handshaked pi is active. Ephemeral isolation remains useful as an implementation mode or later option, but fresh default UX should be "linked handshaked pi pane" first.
 
 ## Background
 
@@ -118,9 +120,7 @@ explicitly chosen. Filter: Hammerspoon discovery skips manifests with
 
 ## Core functionality
 
-1. `<localleader>pn` in nvim spawns a new tmux pane (30% right split of
-   current window) running pi, without touching the session's singleton
-   agent window.
+1. Fresh pinvim split command/keymap in nvim creates or focuses a tmux pane (30% right split of current window) running pi, without restoring legacy `mega.p.pi` API or old keymaps.
 2. Spawned pi uses a unique socket path
    `/tmp/pi-{session}-{window}-eph-{epoch}-{pid}.sock` passed via
    `PI_SOCKET` env override.

@@ -10,6 +10,7 @@
  *   Request:  { type: 'hello', ... }                   → { ok: true, type: 'hello_ack', ... }
  *   Request:  { type: 'heartbeat', ... }               → { ok: true }
  *   Request:  { type: 'prompt', message: '...' }       → { ok: true }
+ *   Request:  { type: 'explicit_send', context: {...} } → { ok: true }
  *   Request:  { type: 'editor_state', state: {...} }   → { ok: true }  (legacy live context)
  *   Request:  { type: 'telegram', text: '...' }        → { ok: true }
  *   Request:  { type: 'tell', text: '...' }            → { ok: true }
@@ -209,6 +210,24 @@ type PromptPayload = {
   message: string;
 };
 
+type ExplicitSendPayload = {
+  type: "explicit_send";
+  context: {
+    kind?: "selection" | "cursor";
+    file?: string;
+    absFile?: string;
+    filetype?: string;
+    cursor?: { line: number; col: number };
+    selection?: string;
+    selectionRange?: [number, number];
+    word?: string;
+    cwd?: string;
+    root?: string;
+    modified?: boolean;
+    [key: string]: unknown;
+  };
+};
+
 type EditorStatePayload = {
   type: "editor_state";
   state: {
@@ -239,6 +258,7 @@ type Payload =
   | TellPayload
   | PingPayload
   | PromptPayload
+  | ExplicitSendPayload
   | EditorStatePayload
   | EditorDisconnectPayload;
 
@@ -259,6 +279,9 @@ const isPingPayload = (p: Payload): p is PingPayload =>
 
 const isPromptPayload = (p: Payload): p is PromptPayload =>
   "type" in p && p.type === "prompt";
+
+const isExplicitSendPayload = (p: Payload): p is ExplicitSendPayload =>
+  "type" in p && p.type === "explicit_send";
 
 const isEditorStatePayload = (p: Payload): p is EditorStatePayload =>
   "type" in p && p.type === "editor_state";
@@ -294,7 +317,7 @@ const buildHelloAck = (): HelloAckPayload => ({
   type: "hello_ack",
   protocol: "pinvim.peer.v1",
   peer: buildBridgePeerIdentity(),
-  accepts: ["hello", "heartbeat", "editor_state", "editor_disconnect", "ping", "prompt"],
+  accepts: ["hello", "heartbeat", "editor_state", "editor_disconnect", "ping", "prompt", "explicit_send"],
 });
 
 // =============================================================================
@@ -496,6 +519,17 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
             }
 
             pi.events.emit("pinvim:heartbeat", payload);
+            respondOk(socket, {
+              type: "heartbeat",
+              protocol: payload.protocol,
+              peerId: buildBridgePeerIdentity().id,
+              sentAt: payload.sentAt,
+            });
+            continue;
+          }
+
+          if (isExplicitSendPayload(payload)) {
+            pi.events.emit("pinvim:explicit_send", payload);
             respondOk(socket);
             continue;
           }

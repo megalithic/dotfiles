@@ -1,5 +1,5 @@
 -- after/plugin/pi.lua
--- Fresh bootstrap for new nvim↔pi handshake work.
+-- Fresh pinvim loader.
 -- Keep loader thin. Runtime logic lives in lua/pinvim.lua.
 
 if not Plugin_enabled("pinvim") then return end

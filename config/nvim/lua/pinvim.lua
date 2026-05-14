@@ -129,6 +129,7 @@ defaults = {
     hello_ack = "hello_ack",
     heartbeat = "heartbeat",
     prompt = "prompt",
+    explicit_send = "explicit_send",
     editor_state = "editor_state",
     editor_disconnect = "editor_disconnect",
   },
@@ -322,6 +323,38 @@ function Transport.describe_target(config)
   }
 end
 
+function Transport.list_targets(config, opts)
+  opts = opts or {}
+  local entries = {}
+  local seen = {}
+  local ok, files = pcall(vim.fn.glob, config.transport.manifest_dir .. "/*.info", false, true)
+  if not ok or not files then return entries end
+
+  for _, info_path in ipairs(files) do
+    local info = parse_info_manifest(config, info_path)
+    if info and (opts.include_ephemeral or not info.ephemeral) and not seen[info.socket] then
+      seen[info.socket] = true
+      table.insert(entries, {
+        path = info.socket,
+        session = info.session,
+        window = info.window,
+        cwd = info.cwd,
+        ephemeral = info.ephemeral,
+      })
+    end
+  end
+
+  table.sort(entries, function(a, b)
+    local a_ephemeral = a.ephemeral and 1 or 0
+    local b_ephemeral = b.ephemeral and 1 or 0
+    if a_ephemeral ~= b_ephemeral then return a_ephemeral < b_ephemeral end
+    if (a.session or "") ~= (b.session or "") then return (a.session or "") < (b.session or "") end
+    return (a.window or "") < (b.window or "")
+  end)
+
+  return entries
+end
+
 function Transport.build_peer_identity(config)
   return {
     id = string.format(
@@ -398,6 +431,37 @@ function Transport.build_editor_state(config)
   end
 
   return state
+end
+
+function Transport.build_explicit_send(config, command_opts)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local file = vim.api.nvim_buf_get_name(bufnr)
+  local rel_file = file ~= "" and vim.fn.fnamemodify(file, ":~:.") or nil
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local selection, start_row, end_row = get_command_selection(command_opts)
+  local word = vim.fn.expand("<cword>")
+  local line = vim.api.nvim_buf_get_lines(bufnr, cursor[1] - 1, cursor[1], false)[1] or ""
+
+  if selection and #selection > config.live_context.max_selection_bytes then
+    selection = selection:sub(1, config.live_context.max_selection_bytes)
+  end
+
+  return {
+    type = config.protocol.explicit_send,
+    context = {
+      kind = selection and "selection" or "cursor",
+      file = rel_file,
+      absFile = file ~= "" and file or nil,
+      filetype = vim.bo[bufnr].filetype,
+      cursor = { line = cursor[1], col = cursor[2] },
+      cwd = vim.uv.cwd(),
+      root = config.resolve_root(),
+      word = word ~= "" and word or nil,
+      selection = selection or line,
+      selectionRange = selection and { start_row, end_row } or { cursor[1], cursor[1] },
+      modified = vim.bo[bufnr].modified,
+    },
+  }
 end
 
 function Handshake.refresh(state, transport, config)
@@ -679,6 +743,58 @@ function Commands.setup(api, config)
     api.compose_clear()
   end
 
+  local function status_command()
+    local info = api.info()
+    local health = api.health()
+    local lines = {
+      "pinvim status",
+      string.format("socket: %s", info.target.socket_path or "(none)"),
+      string.format("socket source: %s", info.target.source),
+      string.format("connected: %s", tostring(info.state.connected)),
+      string.format("connecting: %s", tostring(info.state.connecting)),
+      string.format("peer linked: %s", health.peer_id or "(none)"),
+      string.format("hello_ack: %s", health.hello_ack and "yes" or "no"),
+      string.format("heartbeat age: %s", health.heartbeat_age and (tostring(health.heartbeat_age) .. "s") or "(none)"),
+      string.format("compose queue: %d", info.compose_count),
+    }
+    if info.state.last_error then table.insert(lines, "last error: " .. info.state.last_error) end
+    vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+  end
+
+  local function health_command()
+    local health = api.health()
+    local ok = health.ok
+    local level = ok and vim.log.levels.INFO or vim.log.levels.WARN
+    local lines = {
+      ok and "pinvim health: ok" or "pinvim health: attention needed",
+      string.format("peer: %s", health.peer_id or "(none)"),
+      string.format("hello_ack: %s", health.hello_ack and "yes" or "no"),
+      string.format("heartbeat age: %s", health.heartbeat_age and (tostring(health.heartbeat_age) .. "s") or "(none)"),
+      string.format("socket: %s", health.socket_path or "(none)"),
+    }
+    vim.notify(table.concat(lines, "\n"), level)
+  end
+
+  local function target_command(command_opts)
+    local arg = command_opts.args and vim.trim(command_opts.args) or ""
+    if arg == "" then
+      local target = api.get_target()
+      if target then
+        vim.notify("pinvim: target " .. target, vim.log.levels.INFO)
+      else
+        vim.notify("pinvim: no target", vim.log.levels.WARN)
+      end
+      return
+    end
+
+    if arg == "auto" or arg == "clear" then
+      api.set_target(nil)
+      return
+    end
+
+    api.set_target(arg)
+  end
+
   vim.api.nvim_create_user_command("PinvimInfo", function()
     local info = api.info()
     local lines = {
@@ -703,6 +819,14 @@ function Commands.setup(api, config)
     vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
   end, { desc = "Show pinvim state + target" })
 
+  vim.api.nvim_create_user_command("PinvimStatus", status_command, {
+    desc = "Show current pinvim link status",
+  })
+
+  vim.api.nvim_create_user_command("PinvimHealth", health_command, {
+    desc = "Check pinvim hello/heartbeat health",
+  })
+
   vim.api.nvim_create_user_command("PinvimPrompt", prompt_command, {
     nargs = "*",
     desc = "Send raw prompt through pinvim.ts",
@@ -710,6 +834,36 @@ function Commands.setup(api, config)
   vim.api.nvim_create_user_command("PiPrompt", prompt_command, {
     nargs = "*",
     desc = "Send raw prompt through pinvim.ts",
+  })
+
+  vim.api.nvim_create_user_command("PinvimSend", function(command_opts)
+    api.send_explicit(command_opts)
+  end, {
+    range = true,
+    desc = "Send explicit selection or cursor context through pinvim.ts",
+  })
+
+  vim.api.nvim_create_user_command("PinvimTarget", target_command, {
+    nargs = "?",
+    complete = "file",
+    desc = "Get/set buffer-local pinvim target socket",
+  })
+
+  vim.api.nvim_create_user_command("PinvimSessions", function()
+    api.select_session()
+  end, {
+    desc = "Select pinvim session from manifests",
+  })
+
+  vim.api.nvim_create_user_command("PinvimPanel", function(command_opts)
+    if command_opts.bang then
+      api.toggle_panel()
+    else
+      api.ensure_panel_visible()
+    end
+  end, {
+    bang = true,
+    desc = "Ensure pi split visible (! toggles)",
   })
 
   vim.api.nvim_create_user_command("PinvimAdd", compose_add_command, {
@@ -736,6 +890,14 @@ function Commands.setup(api, config)
   vim.api.nvim_create_user_command("PiClear", compose_clear_command, {
     desc = "Clear pinvim compose queue",
   })
+
+  vim.keymap.set("n", "gps", function()
+    api.send_explicit()
+  end, { silent = true, desc = "pinvim send cursor context" })
+
+  vim.keymap.set("v", "gps", function()
+    api.send_explicit({ range = true })
+  end, { silent = true, desc = "pinvim send selection" })
 end
 
 function Autocmds.setup(api, config)
@@ -798,7 +960,33 @@ function M.setup(opts)
   local api = {}
   api.runtime = runtime
 
+  local function current_peer()
+    if runtime.last_hello_ack and runtime.last_hello_ack.peer then return runtime.last_hello_ack.peer end
+    if runtime.last_hello and runtime.last_hello.peer then return runtime.last_hello.peer end
+    return runtime.peer
+  end
+
+  function api.clear_stale_target(notify_user)
+    local buf_target = vim.b.pi_target_socket
+    if not buf_target or socket_exists(buf_target) then return false end
+
+    vim.b.pi_target_socket = nil
+    if conn.socket_path == buf_target then connection_disconnect(runtime) end
+
+    State.patch(runtime, {
+      socket = nil,
+      socket_source = "buffer",
+      last_error = "stale buffer target: " .. buf_target,
+    })
+
+    if notify_user ~= false then
+      vim.notify("pinvim: stale buffer target cleared", vim.log.levels.WARN)
+    end
+    return true
+  end
+
   function api.refresh_buffer_state()
+    api.clear_stale_target(false)
     local current = vim.api.nvim_buf_get_name(0)
     local socket_path, source = Transport.resolve_socket(config)
     State.set_buffer(runtime, {
@@ -814,6 +1002,7 @@ function M.setup(opts)
   end
 
   function api.ensure_connected(force_target_check)
+    api.clear_stale_target(false)
     local socket_path, source = Transport.resolve_socket(config)
 
     if force_target_check and conn.connected and socket_path and socket_path ~= conn.socket_path then
@@ -841,6 +1030,136 @@ function M.setup(opts)
 
     connection_connect(api, runtime, config, socket_path, source)
     return false
+  end
+
+  function api.get_target()
+    api.clear_stale_target(false)
+    if conn.connected and conn.socket_path then return conn.socket_path end
+    local socket_path = Transport.resolve_socket(config)
+    return socket_path
+  end
+
+  function api.set_target(socket_path)
+    if socket_path and not socket_exists(socket_path) then
+      vim.notify("pinvim: target socket missing", vim.log.levels.WARN)
+      return false
+    end
+
+    vim.b.pi_target_socket = socket_path
+    if socket_path then
+      vim.notify("pinvim: target set " .. vim.fs.basename(socket_path), vim.log.levels.INFO)
+    else
+      vim.notify("pinvim: target cleared; auto-discovery active", vim.log.levels.INFO)
+    end
+
+    api.refresh_buffer_state()
+    api.ensure_connected(true)
+    return true
+  end
+
+  function api.list_targets(opts)
+    return Transport.list_targets(config, opts)
+  end
+
+  function api.select_session()
+    local targets = api.list_targets({ include_ephemeral = true })
+    if #targets == 0 then
+      vim.notify("pinvim: no discovered pi sessions", vim.log.levels.WARN)
+      return false
+    end
+
+    local items = {
+      {
+        text = "󰁔 auto-discover",
+        kind = "auto",
+      },
+    }
+
+    for _, target in ipairs(targets) do
+      local label = target.session or vim.fs.basename(target.path)
+      if target.window and target.window ~= "" then label = string.format("%s:%s", label, target.window) end
+      if target.ephemeral then label = label .. " · eph" end
+      if target.cwd and target.cwd ~= "" then label = label .. " · " .. target.cwd end
+      table.insert(items, {
+        text = label,
+        kind = "socket",
+        path = target.path,
+      })
+    end
+
+    local function apply_choice(item)
+      if not item then return end
+      if item.kind == "auto" then
+        api.set_target(nil)
+      elseif item.kind == "socket" then
+        api.set_target(item.path)
+      end
+    end
+
+    local ok, Snacks = pcall(require, "snacks")
+    if ok and Snacks.picker then
+      Snacks.picker.pick({
+        source = items,
+        prompt = "Select pinvim target",
+        format = function(item)
+          return {
+            { item.text, hl = "Normal" },
+          }
+        end,
+        confirm = function(picker, item)
+          picker:close()
+          apply_choice(item)
+        end,
+      })
+    else
+      vim.ui.select(items, {
+        prompt = "Select pinvim target:",
+        format_item = function(item) return item.text end,
+      }, apply_choice)
+    end
+
+    return true
+  end
+
+  function api.run_panel_command(ensure_visible)
+    if not vim.env.TMUX then
+      vim.notify("pinvim: tmux split unavailable outside tmux", vim.log.levels.WARN)
+      return false
+    end
+
+    local cmd = { "tmux-toggle-pi" }
+    if ensure_visible then table.insert(cmd, "--ensure") end
+
+    local socket_path = api.get_target()
+    if socket_path then
+      table.insert(cmd, "--socket")
+      table.insert(cmd, socket_path)
+    end
+
+    local job = vim.fn.jobstart(cmd, { detach = true })
+    if job <= 0 then
+      vim.notify("pinvim: tmux-toggle-pi failed", vim.log.levels.ERROR)
+      return false
+    end
+
+    if ensure_visible then
+      vim.notify(socket_path and "pinvim: focusing linked pi split" or "pinvim: opening pi split", vim.log.levels.INFO)
+      vim.defer_fn(function()
+        api.refresh_buffer_state()
+        api.ensure_connected(true)
+        vim.fn.jobstart({ "tmux", "select-pane", "-R" }, { detach = true })
+      end, 180)
+    end
+
+    return true
+  end
+
+  function api.ensure_panel_visible()
+    return api.run_panel_command(true)
+  end
+
+  function api.toggle_panel()
+    return api.run_panel_command(false)
   end
 
   function api.send_payload(payload, send_opts)
@@ -871,6 +1190,56 @@ function M.setup(opts)
       silent = prompt_opts.silent == true,
       auto_connect = prompt_opts.auto_connect ~= false,
     })
+  end
+
+  function api.send_explicit(command_opts)
+    api.clear_stale_target(true)
+    local payload = Transport.build_explicit_send(config, command_opts)
+    local kind = payload.context.kind or "cursor"
+
+    local function complete(ok, message)
+      if ok then
+        vim.notify(message or ("pinvim: sent " .. kind .. " context"), vim.log.levels.INFO)
+        api.ensure_panel_visible()
+      else
+        vim.notify(message or "pinvim: send failed; no live pi target", vim.log.levels.WARN)
+      end
+    end
+
+    if api.send_payload(payload, { silent = true }) then
+      complete(true)
+      return true
+    end
+
+    if not conn.connecting then
+      complete(false)
+      return false
+    end
+
+    local timer = vim.uv.new_timer()
+    if not timer then
+      complete(false, "pinvim: target still connecting")
+      return false
+    end
+
+    local attempts = 0
+    timer:start(
+      80,
+      80,
+      vim.schedule_wrap(function()
+        attempts = attempts + 1
+        if conn.connected then
+          timer:stop()
+          timer:close()
+          complete(api.send_payload(payload, { silent = true, auto_connect = false }))
+        elseif attempts >= 25 then
+          timer:stop()
+          timer:close()
+          complete(false, "pinvim: target not ready")
+        end
+      end)
+    )
+    return true
   end
 
   function api.compose_add(command_opts)
@@ -987,6 +1356,42 @@ function M.setup(opts)
         push_now()
       end)
     )
+  end
+
+  function api.health()
+    local peer = current_peer()
+    local heartbeat_age = nil
+    if runtime.last_heartbeat and runtime.last_heartbeat.sentAt then
+      heartbeat_age = math.max(os.time() - runtime.last_heartbeat.sentAt, 0)
+    end
+
+    return {
+      ok = conn.connected and runtime.last_hello_ack ~= nil and (heartbeat_age == nil or heartbeat_age < (config.connection.ping_interval_s * 4)),
+      peer_id = peer and peer.id or nil,
+      hello_ack = runtime.last_hello_ack ~= nil,
+      heartbeat_age = heartbeat_age,
+      socket_path = runtime.socket,
+    }
+  end
+
+  function api.statusline_data()
+    local peer = current_peer()
+    local session = nil
+    if peer and peer.tmux and peer.tmux.session then
+      session = peer.tmux.session
+      if peer.tmux.window and peer.tmux.window ~= "" then
+        session = string.format("%s:%s", session, peer.tmux.window)
+      end
+    elseif runtime.socket then
+      session = vim.fs.basename(runtime.socket):gsub("%.sock$", "")
+    end
+
+    return {
+      connected = conn.connected or runtime.socket ~= nil,
+      reconnecting = conn.reconnect_attempts > 0 and not conn.connected,
+      session = session,
+      compose_count = #compose_queue,
+    }
   end
 
   function api.info()

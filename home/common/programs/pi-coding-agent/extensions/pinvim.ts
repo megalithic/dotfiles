@@ -6,7 +6,7 @@
  * Transport stays outside this file.
  *
  * Current inputs:
- *   - pinvim:editor_state / pinvim:editor_disconnect / pinvim:prompt
+ *   - pinvim:editor_state / pinvim:editor_disconnect / pinvim:prompt / pinvim:explicit_send
  *   - pinvim:hello / pinvim:hello_ack / pinvim:heartbeat
  *   - pinvim_legacy:* compatibility events during rollout
  */
@@ -65,6 +65,24 @@ interface PromptPayload {
   message: string;
 }
 
+interface ExplicitSendPayload {
+  type: "explicit_send";
+  context: {
+    kind?: "selection" | "cursor";
+    file?: string;
+    absFile?: string;
+    filetype?: string;
+    cursor?: { line: number; col: number };
+    selection?: string;
+    selectionRange?: [number, number];
+    word?: string;
+    cwd?: string;
+    root?: string;
+    modified?: boolean;
+    [key: string]: unknown;
+  };
+}
+
 interface EditorState {
   file?: string;
   cursor?: { line: number; col: number };
@@ -84,6 +102,13 @@ interface PinvimState {
   lastHeartbeat: HeartbeatPayload | null;
   editorState: EditorState | null;
   lastEditorUpdateAt: number | null;
+}
+
+interface PinvimHealth {
+  ok: boolean;
+  activePeerId: string | null;
+  heartbeatAgeSeconds: number | null;
+  editorStateFresh: boolean;
 }
 
 // =============================================================================
@@ -159,6 +184,49 @@ const formatLiveContext = (editor: EditorState): string => {
   return parts.join("\n");
 };
 
+const formatExplicitContext = (payload: ExplicitSendPayload): string => {
+  const { context } = payload;
+  const parts: string[] = ["[NEOVIM EXPLICIT CONTEXT]"];
+
+  if (context.kind) {
+    parts.push(`Kind: ${context.kind}`);
+  }
+
+  if (context.file) {
+    parts.push(`Focused file: ${context.file}`);
+  }
+
+  if (context.filetype) {
+    parts.push(`Filetype: ${context.filetype}`);
+  }
+
+  if (context.cursor) {
+    parts.push(`Cursor: L${context.cursor.line}:C${context.cursor.col}`);
+  }
+
+  if (context.selectionRange) {
+    parts.push(`Range: lines ${context.selectionRange[0]}-${context.selectionRange[1]}`);
+  }
+
+  if (context.word) {
+    parts.push(`Word: ${context.word}`);
+  }
+
+  if (context.selection?.trim()) {
+    parts.push(context.kind === "selection" ? "Selected text:" : "Cursor context:");
+    parts.push(`\`\`\`${context.filetype || ""}`);
+    parts.push(context.selection);
+    parts.push("```");
+  }
+
+  if (context.modified) {
+    parts.push("Buffer: modified (unsaved)");
+  }
+
+  parts.push("User explicitly sent this context from Neovim.");
+  return parts.join("\n");
+};
+
 const formatEditorStatus = (editor: EditorState | null): string => {
   if (!editor || isEditorStateStale()) return "";
 
@@ -184,6 +252,21 @@ const formatPeerStatus = (): string => {
 
 const formatStatus = (): string =>
   formatEditorStatus(state.editorState) || formatPeerStatus();
+
+const getHealth = (): PinvimHealth => {
+  const activePeer = getActivePeer();
+  const heartbeatAgeSeconds = state.lastHeartbeat?.sentAt
+    ? Math.max(Math.floor(Date.now() / 1000) - state.lastHeartbeat.sentAt, 0)
+    : null;
+  const editorStateFresh = !!state.editorState && !isEditorStateStale();
+
+  return {
+    ok: !!activePeer && (heartbeatAgeSeconds === null || heartbeatAgeSeconds < 120),
+    activePeerId: activePeer?.id || null,
+    heartbeatAgeSeconds,
+    editorStateFresh,
+  };
+};
 
 const renderInfoLines = (): string[] => {
   const lastHello = state.lastHello
@@ -245,20 +328,32 @@ const clearEditorState = (): void => {
   updateStatus();
 };
 
-const deliverPrompt = (pi: ExtensionAPI, payload: PromptPayload): void => {
-  if (!payload.message?.trim()) return;
+const deliverMessage = (pi: ExtensionAPI, message: string): void => {
+  if (!message.trim()) return;
 
   const ctx = latestCtx;
   if (!ctx) {
-    void pi.sendUserMessage(payload.message);
+    void pi.sendUserMessage(message);
     return;
   }
 
   if (ctx.isIdle()) {
-    void pi.sendUserMessage(payload.message);
+    void pi.sendUserMessage(message);
   } else {
-    void pi.sendUserMessage(payload.message, { deliverAs: "followUp" });
+    void pi.sendUserMessage(message, { deliverAs: "followUp" });
   }
+};
+
+const deliverPrompt = (pi: ExtensionAPI, payload: PromptPayload): void => {
+  if (!payload.message?.trim()) return;
+  deliverMessage(pi, payload.message);
+};
+
+const deliverExplicitSend = (
+  pi: ExtensionAPI,
+  payload: ExplicitSendPayload,
+): void => {
+  deliverMessage(pi, formatExplicitContext(payload));
 };
 
 // =============================================================================
@@ -284,6 +379,10 @@ export default function (pi: ExtensionAPI): void {
 
   pi.events.on("pinvim:prompt", (data: unknown) => {
     deliverPrompt(pi, data as PromptPayload);
+  });
+
+  pi.events.on("pinvim:explicit_send", (data: unknown) => {
+    deliverExplicitSend(pi, data as ExplicitSendPayload);
   });
 
   pi.events.on("pinvim:hello", (data: unknown) => {
@@ -333,6 +432,22 @@ export default function (pi: ExtensionAPI): void {
       const lines = renderInfoLines();
       if (ctx.hasUI) {
         ctx.ui.notify(lines.join("\n"), "info");
+      }
+    },
+  });
+
+  pi.registerCommand("pinvim-health", {
+    description: "Show pinvim link health: peer id, heartbeat age, editor freshness",
+    handler: async (_args, ctx) => {
+      const health = getHealth();
+      const lines = [
+        health.ok ? "pinvim health: ok" : "pinvim health: attention needed",
+        `Active peer: ${health.activePeerId || "(none)"}`,
+        `Heartbeat age: ${health.heartbeatAgeSeconds == null ? "(none)" : `${health.heartbeatAgeSeconds}s`}`,
+        `Editor state fresh: ${health.editorStateFresh ? "yes" : "no"}`,
+      ];
+      if (ctx.hasUI) {
+        ctx.ui.notify(lines.join("\n"), health.ok ? "info" : "warn");
       }
     },
   });

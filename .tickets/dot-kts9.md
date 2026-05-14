@@ -64,8 +64,21 @@ Current direction:
 - Must not become source of truth for pinvim protocol semantics, live editor state ownership, review UX, or pi-side policy decisions
 
 **Legacy pi.lua path:**
-- `config/nvim/after/plugin/pi.lua` remains compatibility surface only while parity migrates
-- New semantic ownership should not depend on legacy `mega.p.pi` code paths
+- Legacy compatibility may remain outside the fresh primary module while migration finishes.
+- New semantic ownership should not depend on legacy `mega.p.pi` code paths.
+- Fresh `pinvim.lua` must not restore `mega.p.pi` or legacy keymaps as its public API.
+
+## UX boundary update (2026-05-14)
+
+Fresh primary UX should start with these expectations:
+
+1. From nvim, create or focus a tmux split 30% wide to the right of the nvim pane. The split runs pi and should be able to adopt/take over the current nvim↔pi handshake when an existing pi in the tmux session is active.
+2. Explicit send beats implicit live streaming for user-facing workflow: select code (or use cursor/word context), press a fresh keybinding such as `gps` if available, send structured context to the handshaked `pinvim.ts`, then focus the linked pi pane so prompt text can continue there.
+3. `vim.notify` feedback should accurately report connect, target, split, send, focus, stale target, failure, and cleanup events.
+4. Annotation/queue is future fresh UX: likely `gpa` to annotate word/selection through annotator.nvim, then batch file/diff annotations to pi. hunk.nvim and codediff.nvim may supply diff/hunk context.
+5. Statusline and notifications should use new pinvim state directly, not legacy `mega.p.pi` compatibility.
+6. Provide user commands for bidirectional communication health/status/info and explicit send to the handshaked pi instance.
+7. Keep core fresh link: socket discovery, persistent `vim.uv.new_pipe()`, `hello`/`hello_ack`/`heartbeat`, explicit editor context send, status/health/info commands.
 
 ## Key files
 
@@ -105,8 +118,8 @@ Whether some frames temporarily pass through `bridge.ts` is implementation detai
 5. `pinvim.ts` injects `[NEOVIM LIVE CONTEXT]` via `before_agent_start` when editor state is available.
 6. `pinvim.ts` shows nvim status in pi footer and exposes inspection/debug command(s) for current peer/editor state.
 7. `pinvim.lua` uses persistent `vim.uv.new_pipe()` communication with reconnect/health checks and discovery from manifest/env/buffer/tmux sources.
-8. `pinvim.lua` supports parity for raw prompt, explicit send, and compose/queue flows needed to replace legacy nvim usage.
-9. `pinvim.lua` preserves key nvim UX: statusline-facing state, buffer-local targeting, tmux split integration, and recoverable target context across reconnects or parked sessions.
+8. `pinvim.lua` supports fresh explicit send UX for visual selection and cursor/word context to the handshaked `pinvim.ts`; it does not restore legacy `mega.p.pi` or legacy keymaps.
+9. `pinvim.lua` preserves key new UX: statusline-facing state, accurate notifications, buffer-local/session target state, tmux right-split integration, and recoverable target context across reconnects or parked sessions.
 10. `bridge.ts` is limited to shim/legacy support for Hammerspoon, Telegram, tell, tmux-oriented helpers, manifests, and transitional ingress; it does not own pinvim semantic state.
 11. Existing Telegram, tell, Hammerspoon, and tmux helper flows continue to work during migration.
 12. `just validate home`, `nvim --headless '+lua require("pinvim").setup()' +qa`, and manual smoke tests confirm primary `pinvim.lua` ↔ `pinvim.ts` link behavior.
