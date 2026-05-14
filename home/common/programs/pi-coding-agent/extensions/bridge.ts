@@ -7,12 +7,14 @@
  *
  * Protocol:
  *   Request:  { type: 'ping' }                         → { ok: true, type: 'pong' }
- *   Request:  { type: 'prompt', message: '...' }        → { ok: true }
- *   Request:  { type: 'editor_state', state: {...} }    → { ok: true }  (legacy live context)
- *   Request:  { type: 'telegram', text: '...' }         → { ok: true }
- *   Request:  { type: 'tell', text: '...' }             → { ok: true }
- *   Request:  { file: '...', task: '...' }              → { ok: true }  (legacy nvim)
- *   Error:    (any malformed JSON)                      → { ok: false, error: '...' }
+ *   Request:  { type: 'hello', ... }                   → { ok: true, type: 'hello_ack', ... }
+ *   Request:  { type: 'heartbeat', ... }               → { ok: true }
+ *   Request:  { type: 'prompt', message: '...' }       → { ok: true }
+ *   Request:  { type: 'editor_state', state: {...} }   → { ok: true }  (legacy live context)
+ *   Request:  { type: 'telegram', text: '...' }        → { ok: true }
+ *   Request:  { type: 'tell', text: '...' }            → { ok: true }
+ *   Request:  { file: '...', task: '...' }             → { ok: true }  (legacy nvim)
+ *   Error:    (any malformed JSON)                     → { ok: false, error: '...' }
  *
  * Discovery:
  *   Socket:   ${PI_STATE_DIR}/sockets/pi-{session}-{window}.sock  (primary)
@@ -140,6 +142,21 @@ const PI_ICON = "π";
 // Payload Types
 // =============================================================================
 
+type LinkMode = "auto" | "explicit" | "bootstrap";
+
+type PeerIdentity = {
+  id: string;
+  kind: "nvim" | "pi";
+  cwd: string;
+  root?: string;
+  tmux?: {
+    session?: string;
+    window?: string;
+  };
+  linkMode: LinkMode;
+  heartbeatAt?: number;
+};
+
 type NvimPayload = {
   file?: string;
   range?: [number, number];
@@ -149,6 +166,24 @@ type NvimPayload = {
     hover?: string;
   };
   task?: string;
+};
+
+type HelloPayload = {
+  type: "hello";
+  protocol: "pinvim.peer.v1";
+  peer: PeerIdentity;
+  capabilities?: {
+    liveContext?: boolean;
+    compose?: boolean;
+    explicitSend?: boolean;
+  };
+};
+
+type HelloAckPayload = {
+  type: "hello_ack";
+  protocol: "pinvim.peer.v1";
+  peer: PeerIdentity;
+  accepts?: string[];
 };
 
 type TelegramPayload = {
@@ -185,18 +220,33 @@ type EditorStatePayload = {
   };
 };
 
+type HeartbeatPayload = {
+  type: "heartbeat";
+  protocol: "pinvim.peer.v1";
+  peerId: string;
+  sentAt: number;
+};
+
 type EditorDisconnectPayload = {
   type: "editor_disconnect";
 };
 
 type Payload =
   | NvimPayload
+  | HelloPayload
+  | HeartbeatPayload
   | TelegramPayload
   | TellPayload
   | PingPayload
   | PromptPayload
   | EditorStatePayload
   | EditorDisconnectPayload;
+
+const isHelloPayload = (p: Payload): p is HelloPayload =>
+  "type" in p && p.type === "hello";
+
+const isHeartbeatPayload = (p: Payload): p is HeartbeatPayload =>
+  "type" in p && p.type === "heartbeat";
 
 const isTelegramPayload = (p: Payload): p is TelegramPayload =>
   "type" in p && p.type === "telegram";
@@ -226,6 +276,26 @@ let infoManifestPath: string | null = null;
 
 // Track sockets that have sent editor_state (for crash detection)
 const editorSockets = new Set<net.Socket>();
+
+const buildBridgePeerIdentity = (): PeerIdentity => ({
+  id: `pi:${PI_SESSION}:${PI_WINDOW}:${process.pid}`,
+  kind: "pi",
+  cwd: process.cwd(),
+  root: process.cwd(),
+  tmux: {
+    session: PI_SESSION,
+    window: PI_WINDOW,
+  },
+  linkMode: "bootstrap",
+  heartbeatAt: Math.floor(Date.now() / 1000),
+});
+
+const buildHelloAck = (): HelloAckPayload => ({
+  type: "hello_ack",
+  protocol: "pinvim.peer.v1",
+  peer: buildBridgePeerIdentity(),
+  accepts: ["hello", "heartbeat", "editor_state", "editor_disconnect", "ping", "prompt"],
+});
 
 // =============================================================================
 // Message Formatting
@@ -406,6 +476,31 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
             continue;
           }
 
+          // Handle pinvim peer frames
+          if (isHelloPayload(payload)) {
+            if (payload.protocol !== "pinvim.peer.v1") {
+              respondError(socket, `unsupported pinvim protocol: ${payload.protocol}`);
+              continue;
+            }
+
+            pi.events.emit("pinvim:hello", payload);
+            const helloAck = buildHelloAck();
+            pi.events.emit("pinvim:hello_ack", helloAck);
+            respondOk(socket, helloAck);
+            continue;
+          }
+
+          if (isHeartbeatPayload(payload)) {
+            if (payload.protocol !== "pinvim.peer.v1") {
+              respondError(socket, `unsupported pinvim protocol: ${payload.protocol}`);
+              continue;
+            }
+
+            pi.events.emit("pinvim:heartbeat", payload);
+            respondOk(socket);
+            continue;
+          }
+
           // Handle prompt injection
           if (isPromptPayload(payload)) {
             if (!payload.message?.trim()) {
@@ -476,6 +571,11 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
             continue;
           }
           
+          if ("type" in payload) {
+            respondError(socket, `unsupported payload type: ${String(payload.type)}`);
+            continue;
+          }
+
           // Handle nvim payloads (legacy — no "type" field)
           const message = formatNvimMessage(payload as NvimPayload);
           if (!message) {

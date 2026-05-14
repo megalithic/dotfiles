@@ -123,7 +123,7 @@ defaults = {
     manifest_dir = path_join(pi_state_dir, "manifests"),
     prefix = "pi",
     link_mode = vim.env.PINVIM_LINK_MODE or "bootstrap",
-    enable_peer_frames = false,
+    enable_peer_frames = true,
   },
   connection = {
     ping_interval_s = 30,
@@ -174,7 +174,7 @@ local state_defaults = {
   last_error = nil,
   connected = false,
   connecting = false,
-  rollout = "pinvim.ts owns pi-side nvim state; bridge.ts stays transport-only until cutover decision",
+  rollout = "pinvim.ts owns pi-side nvim state; bridge.ts passes peer frames without owning semantics",
 }
 
 function State.new(initial)
@@ -413,7 +413,7 @@ function Handshake.describe(state, transport, config)
         config.protocol.editor_state,
         config.protocol.editor_disconnect,
       },
-      cutover = "pinvim.ts owns semantics now; transport may stay bridge.ts or move later",
+      cutover = "peer hello/heartbeat now pass through bridge.ts; compose/raw prompt parity still pending",
     },
     next_heartbeat = transport.build_heartbeat(state, config),
   }

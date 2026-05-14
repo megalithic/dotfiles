@@ -16,91 +16,130 @@ import { execSync } from "node:child_process";
 const MAX_FOLLOWUPS = 1;
 const MAX_TICKETS_PER_SECTION = 3;
 
-const FORMATTING_RULES = `
-IMPORTANT FORMATTING RULES FOR VCS AND TICKET STATUS:
-I have provided raw CLI dumps for VCS status and tk tickets below inside <raw_vcs> and <raw_tickets> blocks. DO NOT simply repeat or list this output. Instead, analyze it and provide a very short, concise conversational summary.
+const STOP_CHECK_PROMPT_BASE =
+  "Review your last response. Did you complete everything the user asked? If not, continue working. If you did complete everything, briefly confirm what was done. If ticket context is provided below, suggest the best next ticket(s) to work on based on priority and dependency order.";
 
-For VCS: e.g., "You're on a clean, empty commit." OR "You've got uncommitted working changes currently described as [commit msg]... however, they look like they belong in a separate commit. I recommend..."
-
-For Tickets: e.g., "You've been working on [ticket_id] ([very brief title summary]). It needs to be closed, and I recommend starting on [next_ticket_id] next to continue with this branch."
-`;
-
-const STOP_CHECK_PROMPT_BASE = `Review your last response. Did you complete everything the user asked? If not, continue working. If you did complete everything, briefly confirm what was done.
-
-${FORMATTING_RULES}`;
-
-const INTERRUPTED_PROMPT_BASE = `You were interrupted (the user pressed Escape to stop you). Review what you were doing and what state things are in. If work is partially done, summarize where you left off and what remains. Ask the user how they'd like to proceed rather than automatically resuming — they may have stopped you intentionally to change direction.
-
-${FORMATTING_RULES}`;
+const INTERRUPTED_PROMPT_BASE =
+  "You were interrupted (the user pressed Escape to stop you). Review what you were doing and what state things are in. If work is partially done, summarize where you left off and what remains. Ask the user how they'd like to proceed rather than automatically resuming — they may have stopped you intentionally to change direction.";
 
 /**
- * Gather lightweight VCS status (jj or git, whichever is available).
- * Returns a short summary or empty string if no VCS / no changes.
+ * Run a shell command and return trimmed output, or null on failure.
  */
-function getVcsContext(): string {
-  const run = (cmd: string): string | null => {
-    try {
-      return execSync(cmd, { encoding: "utf-8", timeout: 5000, stdio: ["pipe", "pipe", "pipe"] }).trim();
-    } catch {
-      return null;
-    }
-  };
+function run(cmd: string): string | null {
+  try {
+    return execSync(cmd, { encoding: "utf-8", timeout: 5000, stdio: ["pipe", "pipe", "pipe"] }).trim();
+  } catch {
+    return null;
+  }
+}
 
-  // Detect VCS: jj first, then git
+/**
+ * Parse jj/git status into a concise VCS summary for the prompt.
+ * Returns a short conversational string or empty string if no VCS.
+ */
+function getVcsSummary(): string {
+  // --- jj ---
   const jjStatus = run("jj status 2>/dev/null");
   if (jjStatus !== null) {
     const jjLog = run("jj log -n 3 --no-pager 2>/dev/null") || "";
-    const parts = [`VCS (jj) status:\n${jjStatus}`];
-    if (jjLog) parts.push(`Recent commits:\n${jjLog}`);
-    return parts.join("\n\n");
+    const jjDesc = run("jj description 2>/dev/null") || "";
+
+    // Parse working copy state from jj status output
+    const hasWorkingChanges = !jjStatus.includes("no changes") && jjStatus.length > 0;
+    const isEmptyCommit = jjLog.includes("(empty)");
+
+    let summary = "VCS (jj): ";
+    if (hasWorkingChanges) {
+      const changeCount = jjStatus.split("\n").filter((l) => l.trim().length > 0).length;
+      summary += `You have ${changeCount} uncommitted working change${changeCount !== 1 ? "s" : ""} on commit "${jjDesc.split("\n")[0] || "(no description)"}". I recommend committing them with jj describe or jj new before continuing.`;
+    } else if (isEmptyCommit) {
+      summary += `You're on a clean, empty commit ("${jjDesc.split("\n")[0] || "no description"}").`;
+    } else {
+      summary += `Working copy is clean. Current commit: "${jjDesc.split("\n")[0] || "(no description)"}".`;
+    }
+
+    // Parse recent commits for context
+    const commitLines = jjLog.split("\n").filter((l) => l.trim().length > 0).slice(0, 3);
+    if (commitLines.length > 0) {
+      summary += ` Recent: ${commitLines.map((l) => l.replace(/\s+/g, " ").trim()).join("; ")}`;
+    }
+
+    return summary;
   }
 
+  // --- git fallback ---
   const gitStatus = run("git status --short 2>/dev/null");
   if (gitStatus !== null) {
+    const isClean = gitStatus.length === 0;
     const gitLog = run("git log --oneline -3 2>/dev/null") || "";
-    const parts = [`VCS (git) status:\n${gitStatus || "(clean)"}`];
-    if (gitLog) parts.push(`Recent commits:\n${gitLog}`);
-    return parts.join("\n\n");
+
+    let summary = "VCS (git): ";
+    if (isClean) {
+      summary += "Working tree is clean.";
+    } else {
+      const changeCount = gitStatus.split("\n").filter((l) => l.trim().length > 0).length;
+      summary += `You have ${changeCount} uncommitted change${changeCount !== 1 ? "s" : ""}. I recommend committing before continuing.`;
+    }
+
+    if (gitLog) {
+      summary += ` Recent: ${gitLog.split("\n").filter((l) => l.trim().length > 0).join("; ")}`;
+    }
+
+    return summary;
   }
 
   return "";
 }
 
 /**
- * Gather ticket context if .tickets/ exists in cwd.
- * Returns top in-progress and ready tickets (unblocked + tagged), or empty string.
+ * Parse ticket context into a concise summary for the prompt.
+ * Returns a short conversational string or empty string if no tickets.
  */
-function getTicketContext(): string {
-  const run = (cmd: string): string | null => {
-    try {
-      return execSync(cmd, { encoding: "utf-8", timeout: 5000, stdio: ["pipe", "pipe", "pipe"] }).trim();
-    } catch {
-      return null;
-    }
-  };
-
+function getTicketSummary(): string {
   // Only if .tickets/ dir exists (tk is in use for this project)
   const hasTickets = run("test -d .tickets && echo yes");
   if (hasTickets !== "yes") return "";
 
-  const topLines = (text: string | null): string =>
-    (text || "")
-      .split("\n")
-      .filter((line) => line.trim().length > 0)
-      .slice(0, MAX_TICKETS_PER_SECTION)
-      .join("\n");
+  const inProgressRaw = run("tk list --status=in_progress 2>/dev/null");
+  const readyRaw = run("tk ready -T ready-for-development 2>/dev/null");
+  // Also get unblocked ready tickets without tag filter
+  const readyUnblockedRaw = run("tk ready 2>/dev/null");
 
-  // Get ready (unblocked) tickets tagged for development
-  const ready = topLines(run("tk ready -T ready-for-development 2>/dev/null"));
-  // Also get in-progress tickets for awareness
-  const inProgress = topLines(run("tk list --status=in_progress 2>/dev/null"));
+  const parseTicketLine = (line: string): { id: string; text: string } | null => {
+    // tk list format: "dot-xxxx [status] - Title text"
+    const match = line.match(/^(\S+)\s+\[\S+\]\s+-\s+(.+)/);
+    if (!match) return null;
+    return { id: match[1], text: match[2].trim() };
+  };
+
+  const parseTopTickets = (raw: string | null, max: number): { id: string; text: string }[] => {
+    if (!raw) return [];
+    return raw
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0)
+      .slice(0, max)
+      .map(parseTicketLine)
+      .filter((t): t is { id: string; text: string } => t !== null);
+  };
+
+  const inProgress = parseTopTickets(inProgressRaw, MAX_TICKETS_PER_SECTION);
+  const ready = parseTopTickets(readyRaw.length ? readyRaw : readyUnblockedRaw, MAX_TICKETS_PER_SECTION);
 
   const parts: string[] = [];
-  if (inProgress) parts.push(`Top ${MAX_TICKETS_PER_SECTION} in-progress tickets:\n${inProgress}`);
-  if (ready) parts.push(`Top ${MAX_TICKETS_PER_SECTION} ready tickets (unblocked, by priority):\n${ready}`);
+
+  if (inProgress.length > 0) {
+    const items = inProgress.map((t) => `${t.id} (${t.text})`).join(", ");
+    parts.push(`In-progress: ${items}`);
+  }
+
+  if (ready.length > 0) {
+    const items = ready.map((t) => `${t.id} (${t.text})`).join(", ");
+    parts.push(`Ready next: ${items}`);
+  }
 
   if (parts.length === 0) return "";
-  return `<raw_tickets>\nTicket context:\n${parts.join("\n\n")}\n</raw_tickets>`;
+  return `Tickets: ${parts.join(". ")}.`;
 }
 
 const MAX_GATEKEEPER_FAILURES = 3;
@@ -314,12 +353,12 @@ export default function (pi: ExtensionAPI) {
       ? INTERRUPTED_PROMPT_BASE
       : STOP_CHECK_PROMPT_BASE;
 
-    // Append VCS + ticket context if available
-    const vcsContext = getVcsContext();
-    const ticketContext = getTicketContext();
+    // Append concise VCS + ticket summaries (no raw CLI dumps)
+    const vcsSummary = getVcsSummary();
+    const ticketSummary = getTicketSummary();
     const contextParts = [basePrompt];
-    if (vcsContext) contextParts.push(`<raw_vcs>\n${vcsContext}\n</raw_vcs>`);
-    if (ticketContext) contextParts.push(ticketContext); // ticketContext already wrapped in getTicketContext
+    if (vcsSummary) contextParts.push(vcsSummary);
+    if (ticketSummary) contextParts.push(ticketSummary);
     const prompt = contextParts.join("\n\n");
 
     pi.sendUserMessage(prompt, { deliverAs: "followUp" });
