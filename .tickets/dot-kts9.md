@@ -10,7 +10,7 @@ priority: 1
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
-# Unify nvim↔pi communication: pinvim.ts + bridge.ts refactor + pi.lua upgrade
+# Unify nvim↔pi communication: pinvim.ts + pinvim.lua primary link, bridge.ts shim cleanup
 
 ## Context: Nix-based dotfiles
 
@@ -20,114 +20,93 @@ Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` 
 2. npm-dependent extensions: Use Nix `buildNpmPackage` patterns (A, B, C, D).
 3. Need ad-hoc tools? Use `nix run nixpkgs#nodejs -- npm install` or `nix shell nixpkgs#pnpm`.
 
-> **🔗 Cross-repo coordination:** finish nvim↔pi work in this repo. Final artifact (pinvim.ts + bridge.ts + pi.lua) ports to megadots **nvim Stage 2 reconcile** (`meg-pygn`) after closure. Tracked in `~/.local/share/pi/plans/megadots/cross-repo-status.md` + `dot-0oy1`/`meg-ppzd`.
+> **🔗 Cross-repo coordination:** finish nvim↔pi work in this repo. Final artifact (`pinvim.ts` + `pinvim.lua` primary link, with `bridge.ts` only if still needed as shim) ports to megadots **nvim Stage 2 reconcile** (`meg-pygn`) after closure. Tracked in `~/.local/share/pi/plans/megadots/cross-repo-status.md` + `dot-0oy1`/`meg-ppzd`.
 
-Blend best of carderne/pi-nvim and our bridge.ts/pi.lua into a unified architecture.
+Blend best of carderne/pi-nvim and current dotfiles workflow into a unified architecture, but make `pinvim.ts` and Neovim `pinvim.lua` the semantic owners of nvim↔pi communication.
 
 ## Background
 
-Investigated cperalt/pi-nvim (fork of carderne/pi-nvim) and compared with our
-bridge.ts extension + config/nvim/after/plugin/pi.lua. Each has features the
-other lacks. Goal: merge the best of both.
+Earlier ticket text assumed `bridge.ts` would become the durable nvim protocol owner. That is no longer target.
+
+Current direction:
+- `home/common/programs/pi-coding-agent/extensions/pinvim.ts` owns pi-side nvim semantics
+- `config/nvim/lua/pinvim.lua` owns nvim-side peer/client behavior
+- `config/nvim/after/plugin/pinvim.lua` stays a thin loader/bootstrap entrypoint
+- `home/common/programs/pi-coding-agent/extensions/bridge.ts` remains shim/legacy support for Hammerspoon, Telegram, tell, tmux-oriented socket compatibility, and any transitional ingress that still needs it
+
+`bridge.ts` may remain for non-nvim clients or be deprecated later, but it should not be long-term semantic owner of nvim live context, handshake state, review state, or pinvim UX.
 
 ## Architecture
 
-**bridge.ts (enhanced socket owner):**
-- Keeps unix socket (tmux-session pattern for Hammerspoon/tell compatibility)
-- ALSO writes carderne-style .info manifest in /tmp/pi-nvim-sockets/ for
-  cwd-based discovery by nvim
-- Upgrades to bidirectional JSON-RPC (responses back to clients)
-- Handles all message types: nvim (selection, cursor, file, editor_state,
-  prompt, ping), telegram, tell
-- Forwards nvim editor_state to pinvim.ts via pi.events bus
-- Idle-aware delivery (existing: steer vs followUp based on ctx.isIdle())
+**pinvim.ts (primary pi-side nvim owner):**
+- Own nvim peer/session state in pi memory
+- Own `hello` / `hello_ack` / `heartbeat` semantics and peer freshness
+- Own live editor context state and `before_agent_start` injection
+- Own pinvim footer/status surfaces and `/pinvim-*` commands
+- Own future review-bundle state, policy injection, and nvim-aware routing
+- Stay transport-agnostic where possible; transport details should not dominate this file
 
-**pinvim.ts (new extension — nvim intelligence layer):**
-- No socket of its own
-- Listens for editor state updates from bridge.ts via pi.events
-- Uses before_agent_start hook to inject [NEOVIM LIVE CONTEXT] (from carderne)
-- Formats editor state: focused file, cursor, selection, filetype, references
-- Registers /pinvim-info command
-- Status display in pi footer (nvim: filename L17 sel 5-12)
-- Configurable: live context on/off, include buffer text, max bytes
+**pinvim.lua (primary nvim-side peer/client):**
+- Persistent `vim.uv.new_pipe()` connection
+- Socket discovery, ranked target selection, reconnect, ping/pong, and lifecycle
+- Send `hello`, `heartbeat`, live `editor_state`, explicit sends, and future structured envelopes
+- Own compose/raw-prompt/selection/file-send parity on nvim side
+- Own link history, MRU restore, and statusline-facing link metadata
 
-**pi.lua (upgraded nvim plugin):**
-- Replace nc fire-and-forget with vim.uv.new_pipe() persistent bidirectional
-  connection (like carderne uses)
-- Add carderne-style cwd-based socket discovery alongside existing tmux-session
-  pattern discovery
-- Add live editor context sync: debounced push of buffer/cursor/selection/
-  filetype on configurable autocmd events
-- Add configurable sync events table at top of file (default: BufEnter,
-  BufWritePost, InsertLeave, ModeChanged, CursorMoved — user can tune)
-- Add ping/pong health check
-- Add raw prompt message type (send prompt string directly to pi)
-- Add compose/queue mode (PiAdd → PiFlush pattern from carderne)
-- Keep ALL existing features: in-process LSP code actions, context tracking
-  with timestamps, tmux-toggle-pi integration, bell on agent pane, statusline
-  component, buffer-local targeting, Snacks picker for sessions
-- Enhance LSP code actions to leverage live context (e.g. sync-to-pi action)
-- Add auto-reload buffers when pi modifies files (checktime polling when
-  connected, from carderne)
+**after/plugin/pinvim.lua (thin loader):**
+- Guard/feature-flag/bootstrap only
+- Require `lua/pinvim.lua` and avoid housing core logic
 
-**Hammerspoon pi.lua (updated):**
-- Replace nc/io.popen with hs.socket.new() for persistent bidirectional
-  connection to bridge.ts socket
-- Keep existing: session targeting, Telegram forwarding, socket discovery
+**bridge.ts (shim / legacy ingress):**
+- Keep socket + manifest support needed by Hammerspoon / Telegram / tell / tmux helpers
+- Preserve compatibility for non-nvim ingress that still relies on current socket contract
+- May proxy or forward transitional frames only when necessary
+- Must not become source of truth for pinvim protocol semantics, live editor state ownership, review UX, or pi-side policy decisions
+
+**Legacy pi.lua path:**
+- `config/nvim/after/plugin/pi.lua` remains compatibility surface only while parity migrates
+- New semantic ownership should not depend on legacy `mega.p.pi` code paths
 
 ## Key files
 
-- home/common/programs/ai/pi-coding-agent/extensions/bridge.ts (modify)
-- home/common/programs/ai/pi-coding-agent/extensions/pinvim.ts (create)
-- config/nvim/after/plugin/pi.lua (modify)
-- config/hammerspoon/lib/interop/pi.lua (modify)
+- `home/common/programs/pi-coding-agent/extensions/pinvim.ts`
+- `home/common/programs/pi-coding-agent/extensions/bridge.ts`
+- `config/nvim/after/plugin/pinvim.lua`
+- `config/nvim/lua/pinvim.lua`
+- `config/hammerspoon/lib/interop/pi.lua`
 
-## Protocol
+## Canonical protocol direction
 
-Bidirectional JSON-RPC over unix socket. All messages are newline-delimited JSON.
+Primary nvim↔pi protocol should be between `config/nvim/lua/pinvim.lua` and `home/common/programs/pi-coding-agent/extensions/pinvim.ts`.
 
-Requests (client → bridge.ts):
-  { type: 'ping' }
-  { type: 'prompt', message: '...' }
-  { type: 'editor_state', state: { file, cursor, selection, filetype, ... } }
-  { type: 'selection', file, range, selection, language, lsp, task }
-  { type: 'file', file, content, ... } (existing nvim payloads)
-  { type: 'file_reference', file, ... } (existing nvim payloads)
-  { type: 'cursor', file, range, selection, language, lsp, task }
-  { type: 'telegram', text, source, timestamp }
-  { type: 'tell', text, from, timestamp }
+Canonical frame types for this ticket line:
+- `{ type: 'hello', protocol, peer, capabilities }`
+- `{ type: 'hello_ack', protocol, peer, accepts }`
+- `{ type: 'heartbeat', protocol, peerId, sentAt }`
+- `{ type: 'editor_state', state: { file, cursor, selection, filetype, ... } }`
+- raw prompt / explicit send / compose payloads needed for parity
+- future structured envelopes and review bundles build on this owner split
 
-Responses (bridge.ts → client):
-  { ok: true }
-  { ok: true, type: 'pong' }
-  { ok: false, error: '...' }
+Whether some frames temporarily pass through `bridge.ts` is implementation detail. Semantic ownership still belongs to `pinvim.ts` + `pinvim.lua`.
 
 ## Future state (not in scope)
 
-- HTTP/SSE server as transport (replace unix socket entirely)
+- Full HTTP/SSE transport replacement
 - ACP (Agent Context Protocol) for multi-agent orchestration
+- Final `bridge.ts` deprecation decision after Hammerspoon / Telegram / tell / tmux dependencies are clearer
 - Tidewave Web MCP integration (nvim + pi + tidewave runtime intelligence)
-  Tidewave provides: project_eval, get_docs, get_source_location, get_logs,
-  execute_sql_query, get_ecto_schemas, search_package_docs via MCP at
-  http://localhost:PORT/tidewave/mcp. Future ticket to integrate this with
-  pi via MCP client in extension or skill.
 
 ## Acceptance Criteria
 
-1. bridge.ts writes .info manifest alongside socket for cwd-based discovery
-2. bridge.ts sends JSON responses back to clients (bidirectional, not fire-and-forget)
-3. bridge.ts handles ping/pong, prompt, editor_state message types
-4. bridge.ts forwards editor_state to pinvim.ts via pi.events
-5. pinvim.ts injects [NEOVIM LIVE CONTEXT] via before_agent_start hook when editor state available
-6. pinvim.ts shows nvim status in pi footer (file, cursor, selection)
-7. pi.lua uses vim.uv.new_pipe() instead of nc for socket communication
-8. pi.lua discovers sockets via cwd-based .info manifests (carderne pattern)
-9. pi.lua syncs editor state on configurable autocmd events (debounced)
-10. pi.lua config table at top of file includes sync event list
-11. pi.lua supports compose/queue mode (PiAdd/PiFlush commands)
-12. pi.lua supports raw prompt sending (PiPrompt or similar)
-13. pi.lua retains all existing features: LSP code actions, context tracking, tmux toggle, statusline, buffer-local targeting
-14. Hammerspoon pi.lua uses hs.socket.new() instead of nc/io.popen
-15. All existing Telegram and tell message flows still work unchanged
-16. Existing tmux-session socket pattern still works (backward compatible)
-
+1. `pinvim.ts` is documented and implemented as primary pi-side owner for nvim semantics: peer metadata, live context, footer/status, commands, and future nvim-aware state.
+2. `config/nvim/lua/pinvim.lua` is documented and implemented as primary nvim-side peer/client, with `config/nvim/after/plugin/pinvim.lua` as thin loader only.
+3. End-to-end `hello` / `hello_ack` / `heartbeat` path exists for primary pinvim link, including peer id, cwd/root, tmux identity, link mode, and freshness tracking.
+4. Live editor state sync from `pinvim.lua` reaches `pinvim.ts` with debounced autocmd updates, reconnect handling, and disconnect cleanup.
+5. `pinvim.ts` injects `[NEOVIM LIVE CONTEXT]` via `before_agent_start` when editor state is available.
+6. `pinvim.ts` shows nvim status in pi footer and exposes inspection/debug command(s) for current peer/editor state.
+7. `pinvim.lua` uses persistent `vim.uv.new_pipe()` communication with reconnect/health checks and discovery from manifest/env/buffer/tmux sources.
+8. `pinvim.lua` supports parity for raw prompt, explicit send, and compose/queue flows needed to replace legacy nvim usage.
+9. `pinvim.lua` preserves key nvim UX: statusline-facing state, buffer-local targeting, tmux split integration, and recoverable target context across reconnects or parked sessions.
+10. `bridge.ts` is limited to shim/legacy support for Hammerspoon, Telegram, tell, tmux-oriented helpers, manifests, and transitional ingress; it does not own pinvim semantic state.
+11. Existing Telegram, tell, Hammerspoon, and tmux helper flows continue to work during migration.
+12. `just validate home`, `nvim --headless '+lua require("pinvim").setup()' +qa`, and manual smoke tests confirm primary `pinvim.lua` ↔ `pinvim.ts` link behavior.

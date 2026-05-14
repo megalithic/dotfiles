@@ -12,21 +12,19 @@ tags: [nvim, pi, tmux, ephemeral, ready-for-development]
 ---
 # Implement <localleader>pn: isolated ephemeral pi tmux split
 
-> **🔗 Cross-repo coordination:** finish in this repo. Artifact (final pi.lua + tmux split logic) ports to megadots **nvim Stage 2 reconcile** (`meg-pygn`) after closure. Tracked in `~/.local/share/pi/plans/megadots/cross-repo-status.md` + `dot-0oy1`/`meg-ppzd`.
+> **🔗 Cross-repo coordination:** finish in this repo. Artifact (final `pinvim.lua` + tmux split logic, with `bridge.ts` only as shim if still needed) ports to megadots **nvim Stage 2 reconcile** (`meg-pygn`) after closure. Tracked in `~/.local/share/pi/plans/megadots/cross-repo-status.md` + `dot-0oy1`/`meg-ppzd`.
 
-Implement `<localleader>pn` in config/nvim/after/plugin/pi.lua to spawn an
-ephemeral pi instance in a new tmux split, fully isolated from any existing
-pi/nvim pairs. Currently a stub emits "not yet implemented" (pi.lua:2214).
+Implement `<localleader>pn` in primary nvim-side pinvim code (`config/nvim/lua/pinvim.lua`, loaded by `config/nvim/after/plugin/pinvim.lua`) to spawn an ephemeral pi instance in a new tmux split, fully isolated from any existing pi/nvim pairs.
 
 ## Background
 
-All plumbing exists (see parent dot-kts9):
-- `tmux-toggle-pi` handles singleton agent-window lifecycle (--ensure, --socket, --bell)
-- `pinvim` wrapper exports PI_SOCKET_DIR/PREFIX/SESSION and launches pi
-- bridge.ts `resolveSocket()` honors PI_SOCKET env override (line 87)
-- bridge.ts writes `.info` manifest at /tmp/pi-nvim-sockets/{session}.info
-- pi.lua supports `vim.b.pi_target_socket` buffer-local override (line 218)
-- Socket discovery: cwd → tmux-session pattern → newest-mtime fallback
+All plumbing exists (see parent `dot-kts9`):
+- `tmux-toggle-pi` handles singleton agent-window lifecycle (`--ensure`, `--socket`, `--bell`)
+- `pinvim` wrapper exports socket/state env and launches pi
+- `bridge.ts` shim honors `PI_SOCKET` env override for explicit sockets
+- shim/manifest publishing already supports discovery and compatibility flows
+- `pinvim.lua` supports `vim.b.pi_target_socket` buffer-local override
+- socket discovery already has manifest/tmux/default fallback paths
 
 None of this currently supports a throwaway side-by-side pi without
 colliding with the primary per-window pi for the same tmux session.
@@ -50,13 +48,11 @@ Unique path per ephemeral: `/tmp/pi-{session}-{window}-eph-{epoch}-{pid}.sock`
 Passed to bridge.ts via PI_SOCKET env override. Never collides with the
 session's primary socket.
 
-### Manifest isolation (bridge.ts)
-Current `.info` filename keyed by session name collides when multiple pis
-run in one tmux session. Fix: key manifest by socket basename, e.g.
-`/tmp/pi-nvim-sockets/{socket-basename}.info`. Include `ephemeral: true`
-flag in the manifest payload so discovery can filter it out of
-cwd-based auto-discovery (ephemerals only reachable via explicit socket
-target, never via cwd scan).
+### Manifest isolation (shim/compat layer)
+Manifest filename must be keyed by socket basename, not session name, so
+multiple pis in one tmux session do not collide. Include `ephemeral: true`
+flag in manifest payload so primary `pinvim.lua` discovery can filter it out of
+auto-discovery (ephemerals only reachable via explicit socket target, never via cwd scan).
 
 ### tmux-toggle-pi `--new` flag
 New branch, bypasses all agent-window logic:
@@ -75,28 +71,25 @@ New branch, bypasses all agent-window logic:
 lookup), so `--bell` and existing `--socket` targeting keep working.
 Lsof fallback already handles the worst case.
 
-### nvim-side (pi.lua)
-Replace stub at line 2214:
+### nvim-side (`pinvim.lua`)
+Primary implementation should:
 1. Generate unique socket path (epoch+pid suffix).
-2. `vim.b.pi_target_socket = <path>` on the current buffer BEFORE spawn so
+2. Set `vim.b.pi_target_socket = <path>` on current buffer BEFORE spawn so
    any buffer-local send routes only to this ephemeral.
-3. `vim.fn.jobstart({ "tmux-toggle-pi", "--new", "--socket", path }, { detach = true })`.
+3. Start `tmux-toggle-pi --new --socket <path>` detached.
 4. Poll for socket file up to ~2s; on success notify, on timeout notify
    + clear `vim.b.pi_target_socket`.
-5. Register a `vim.uv.fs_event_start` watcher on the socket; on delete
+5. Register a `vim.uv.fs_event_start` watcher on socket; on delete
    (pi pane exit) clear `vim.b.pi_target_socket` and notify.
-6. Ephemeral target is strictly buffer-local — no global state mutation,
-   no change to any other buffer's target, no change to the session
+6. Keep ephemeral target strictly buffer-local — no global state mutation,
+   no change to any other buffer's target, no change to session
    picker's default.
 
 ### pinvim extension (pi extension side)
-pinvim.ts listens for `pinvim:editor_state` events via pi.events. In a
-single-process pi instance this is naturally scoped (one pi process =
-one bridge.ts socket = one event bus). No change required IF each
-ephemeral runs in its own `pinvim` process (which it does — new tmux
-pane = new pi process). Verify: editor_state events from buffer A's
-pi.lua must only reach buffer A's ephemeral pi, never the primary or
-any other ephemeral.
+`pinvim.ts` is semantic owner of editor/link state. Each ephemeral runs in its own
+pi process, so state should stay process-local. Verify: editor state from buffer A's
+`pinvim.lua` reaches only ephemeral A, never primary or any other ephemeral. If
+`bridge.ts` still sits on ingress path, treat it as thin shim only.
 
 ### Hammerspoon/tell forwarders
 config/hammerspoon/lib/interop/pi.lua targets "last active session"
@@ -113,10 +106,11 @@ explicitly chosen. Filter: Hammerspoon discovery skips manifests with
 
 ## Files
 
-- `bin/tmux-toggle-pi` (add --new branch + parser tweak)
-- `config/nvim/after/plugin/pi.lua` (replace stub at ~2214)
-- `home/common/programs/ai/pi-coding-agent/extensions/bridge.ts`
-  (per-socket `.info` manifest + `ephemeral` flag)
+- `bin/tmux-toggle-pi` (add `--new` branch + parser tweak)
+- `config/nvim/after/plugin/pinvim.lua` (loader only, if command/bootstrap hook needed)
+- `config/nvim/lua/pinvim.lua` (primary ephemeral spawn + watcher logic)
+- `home/common/programs/pi-coding-agent/extensions/bridge.ts`
+  (shim manifest compatibility + `ephemeral` flag if still needed)
 - `config/hammerspoon/lib/interop/pi.lua` (filter ephemeral from
   last-active-session resolution)
 
@@ -132,8 +126,7 @@ explicitly chosen. Filter: Hammerspoon discovery skips manifests with
    `PI_SOCKET` env override.
 3. `tmux-toggle-pi --new --socket PATH` exists; rejects invocation
    without `--socket`; does not read/write the agent-window state file.
-4. `vim.b.pi_target_socket` is set on the spawning buffer to the
-   ephemeral socket path before the first send.
+4. `vim.b.pi_target_socket` is set on spawning buffer to ephemeral socket path before first send.
 5. Ephemeral pane close removes socket + `.info` manifest (verified by
    file listing after exit).
 6. fs_event watcher on the socket clears `vim.b.pi_target_socket` when
@@ -154,19 +147,13 @@ explicitly chosen. Filter: Hammerspoon discovery skips manifests with
 10. bridge.ts `.info` manifest includes `ephemeral: boolean` flag set
     from env (`PI_EPHEMERAL=1` or derived from socket-name `-eph-`
     marker).
-11. pi.lua cwd-based discovery (`discover_socket_by_cwd`) ignores
-    manifests where `ephemeral: true`. Ephemeral sockets are reachable
-    ONLY via explicit `vim.b.pi_target_socket`, never via auto-discovery
-    or `:PiSessions` default selection.
+11. `pinvim.lua` discovery ignores manifests where `ephemeral: true`. Ephemeral sockets are reachable ONLY via explicit `vim.b.pi_target_socket`, never via auto-discovery or `:PiSessions` default selection.
 12. `:PiSessions` picker visually distinguishes ephemeral entries
     (e.g., "eph" tag or dim style) and never picks one implicitly.
 13. Hammerspoon `lib/interop/pi.lua` lastActiveSession resolution skips
     ephemeral manifests; Telegram/tell forwards never reach an
     ephemeral pi unless user explicitly targets it.
-14. pinvim.ts editor_state routing: editor_state from nvim instance A
-    reaches only the pi process it was sent to; no shared in-memory
-    state across pi processes (validated by inspecting
-    `pi.events('pinvim:editor_state')` listeners per-process).
+14. `pinvim.ts` editor/link-state routing: editor state from nvim instance A reaches only the pi process it was sent to; no shared in-memory state across pi processes.
 15. A second nvim instance in the same tmux session + same cwd does
     NOT auto-discover another nvim's ephemeral socket (test: open
     nvim B in same cwd while A's ephemeral is live; `:PiStatus` in B
@@ -201,6 +188,8 @@ explicitly chosen. Filter: Hammerspoon discovery skips manifests with
 
 
 ## Notes
+
+Historical notes below describe earlier implementation pass. Current `dot-kts9` direction still requires final ownership to live in `pinvim.ts` + `config/nvim/lua/pinvim.lua`, with `bridge.ts` kept shim-only if retained.
 
 **2026-04-23T12:41:29Z**
 

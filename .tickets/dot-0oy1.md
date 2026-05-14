@@ -45,12 +45,12 @@ User flagged explicit risk of losing track of cross-repo state. ~/.dotfiles is b
 | **dot-p774** (commit scope guard) | Continue here independently | None |
 | **dot-qr4m** (pi-multi-pass extension) | Continue here independently | None |
 | **dot-0hug** (Glimpse review UI) | Continue here independently | None |
-| **dot-kts9** (nvim↔pi unify) | Finish here (nvim work), port to megadots | Megadots nvim reconcile Stage 2 coordinates |
+| **dot-kts9** (nvim↔pi unify) | Finish here with `pinvim.ts` + `pinvim.lua` as primary link, port artifact; keep `bridge.ts` shim only if still needed | Megadots nvim reconcile Stage 2 coordinates |
 
 ## Action items in this repo
 
 1. Close dot-fsxj with link to meg-ppzd + reconcile sub-epic IDs (once they exist)
-2. Add note to dot-edp8 + dot-kts9 bodies: artifacts will port to megadots
+2. Keep dot-edp8 + dot-kts9 bodies aligned with future megadots port notes
 3. Add note to dot-86tz body: deferred until megadots pi-coding-agent reconcile
 
 ## Acceptance Criteria
@@ -59,5 +59,5 @@ User flagged explicit risk of losing track of cross-repo state. ~/.dotfiles is b
 2. dot-edp8, dot-kts9 bodies note future port to megadots.
 3. dot-86tz body notes deferred-until-megadots status.
 4. This ticket links to meg-ppzd via external-ref.
-5. Stays open until megadots reconcile Stage 2 sub-epic closes (parallel to meg-ppzd lifecycle).
-
+5. Cross-repo tracking for dot-kts9 reflects current direction: `pinvim.ts` + `pinvim.lua` primary, `bridge.ts` shim/legacy only if retained.
+6. Stays open until megadots reconcile Stage 2 sub-epic closes (parallel to meg-ppzd lifecycle).
