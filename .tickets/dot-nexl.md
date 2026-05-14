@@ -1,6 +1,6 @@
 ---
 id: dot-nexl
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-05-14T12:16:08Z
