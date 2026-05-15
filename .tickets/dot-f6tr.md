@@ -1,6 +1,6 @@
 ---
 id: dot-f6tr
-status: open
+status: closed
 deps: [dot-hp1p]
 links: []
 created: 2026-05-14T20:28:21Z
@@ -26,7 +26,8 @@ Builds on https://github.com/carderne/pi-nvim and https://github.com/azorng/visi
 6. `pinvim.ts` shows nvim status in pi footer and exposes inspection/debug command(s) for current peer/editor state.
 7. `pinvim.lua` uses persistent `vim.uv.new_pipe()` communication with reconnect/health checks and discovery from manifest/env/buffer/tmux sources.
 8. `bridge.ts` is limited to shim/legacy support for Hammerspoon, Telegram, tell, tmux-oriented helpers, manifests, and transitional ingress; it does not own pinvim semantic state.
-9. `just home`, `nvim --headless '+lua require("pinvim").setup()' +qa`, and `bin/pinvim-protocol-smoke` all pass; smoke test confirms deterministic hello -> hello_ack -> heartbeat cycle.
+9. Live context is audited and safe: default automatic `live_context` is disabled, explicit `gps`/`:PinvimSend` remains primary nvim→pi context path, `/pinvim-info` documents architecture/setup, and safety controls cover opt-in enablement, debounce, buftype/file checks, size limits, freshness, and idle/follow-up delivery behavior.
+10. `just home`, `nvim --headless '+lua require("pinvim").setup()' +qa`, and `bin/pinvim-protocol-smoke` all pass; smoke test confirms deterministic hello -> hello_ack -> heartbeat cycle.
 
 ## Verification
 

@@ -5,6 +5,10 @@
  * Owns editor/live-context state, peer metadata, and UI surfaces.
  * Transport stays outside this file.
  *
+ * Safety: automatic live context injection is opt-in via PINVIM_LIVE_CONTEXT=1.
+ * Default path is explicit nvim send (`gps` / :PinvimSend) to avoid spurious
+ * nvim→pi messages.
+ *
  * Current inputs:
  *   - pinvim:editor_state / pinvim:editor_disconnect / pinvim:prompt / pinvim:explicit_send
  *   - pinvim:hello / pinvim:hello_ack / pinvim:heartbeat
@@ -20,7 +24,7 @@ import type {
 // Protocol Types
 // =============================================================================
 
-type LinkMode = "auto" | "explicit" | "bootstrap";
+type LinkMode = "auto" | "manual" | "ephemeral" | "parked" | "explicit" | "bootstrap" | string;
 
 interface PeerIdentity {
   id: string;
@@ -30,6 +34,7 @@ interface PeerIdentity {
   tmux?: {
     session?: string;
     window?: string;
+    pane?: string;
   };
   linkMode: LinkMode;
   heartbeatAt?: number;
@@ -116,6 +121,7 @@ interface PinvimHealth {
 // =============================================================================
 
 const STALE_MS = 60 * 1000;
+const LIVE_CONTEXT_ENABLED = process.env.PINVIM_LIVE_CONTEXT === "1";
 
 const state: PinvimState = {
   protocol: "pinvim.peer.v1",
@@ -293,8 +299,18 @@ const renderInfoLines = (): string[] => {
     `Last editor update: ${lastEditorUpdate}`,
     "Responsibilities:",
     "- primary pi-side nvim extension",
-    "- own live context injection + footer status",
+    "- own peer metadata + footer status",
+    "- live context injection only when explicitly enabled",
     "- track peer metadata independent from transport choice",
+    "Live context safety:",
+    `- automatic injection enabled: ${LIVE_CONTEXT_ENABLED ? "yes" : "no"}`,
+    "- default nvim path: explicit gps / :PinvimSend -> explicit_send",
+    "- nvim opt-in gate: PINVIM_LIVE_CONTEXT=1 or setup opts",
+    "- nvim debounce: 150ms default",
+    "- nvim filters: file-backed buffers only; buftype must be empty",
+    "- nvim size limits: selection 8000 bytes; buffer text 16000 bytes and off by default",
+    "- pi freshness: editor state older than 60s is stale and not injected",
+    "- pi delivery: explicit sends become user messages; active sessions receive followUp",
     "Current transport inputs:",
     "- bridge.ts shim forwards pinvim editor_state / disconnect / prompt during rollout",
     "- hello / hello_ack / heartbeat peer metadata events",
@@ -401,6 +417,7 @@ export default function (pi: ExtensionAPI): void {
   });
 
   pi.on("before_agent_start", async () => {
+    if (!LIVE_CONTEXT_ENABLED) return;
     if (!state.editorState || isEditorStateStale()) return;
 
     return {
@@ -445,10 +462,37 @@ export default function (pi: ExtensionAPI): void {
         `Active peer: ${health.activePeerId || "(none)"}`,
         `Heartbeat age: ${health.heartbeatAgeSeconds == null ? "(none)" : `${health.heartbeatAgeSeconds}s`}`,
         `Editor state fresh: ${health.editorStateFresh ? "yes" : "no"}`,
+        `Automatic live context: ${LIVE_CONTEXT_ENABLED ? "enabled" : "disabled"}`,
       ];
       if (ctx.hasUI) {
         ctx.ui.notify(lines.join("\n"), health.ok ? "info" : "warn");
       }
+    },
+  });
+
+  pi.registerCommand("pinvim-status", {
+    description: "Show concise pinvim peer/editor status",
+    handler: async (_args, ctx) => {
+      const health = getHealth();
+      const lines = [
+        `pinvim status: ${formatStatus() || "(no active editor)"}`,
+        `Active peer: ${health.activePeerId || "(none)"}`,
+        `Heartbeat age: ${health.heartbeatAgeSeconds == null ? "(none)" : `${health.heartbeatAgeSeconds}s`}`,
+        `Automatic live context: ${LIVE_CONTEXT_ENABLED ? "enabled" : "disabled"}`,
+      ];
+      if (ctx.hasUI) ctx.ui.notify(lines.join("\n"), "info");
+    },
+  });
+
+  pi.registerCommand("pinvim-send", {
+    description: "Explicitly send text from pi command input as a user message",
+    handler: async (args, ctx) => {
+      const message = args?.trim();
+      if (!message) {
+        if (ctx.hasUI) ctx.ui.notify("Usage: /pinvim-send <message>", "warn");
+        return;
+      }
+      deliverMessage(pi, `[PINVIM EXPLICIT MESSAGE]\n${message}`);
     },
   });
 }

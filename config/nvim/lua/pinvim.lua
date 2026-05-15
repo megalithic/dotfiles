@@ -138,7 +138,7 @@ defaults = {
     socket_dir = path_join(pi_state_dir, "sockets"),
     manifest_dir = path_join(pi_state_dir, "manifests"),
     prefix = "pi",
-    link_mode = vim.env.PINVIM_LINK_MODE or "bootstrap",
+    link_mode = vim.env.PINVIM_LINK_MODE or "auto",
     enable_peer_frames = true,
   },
   connection = {
@@ -148,7 +148,9 @@ defaults = {
     reconnect_max_retries = 8,
   },
   live_context = {
-    enabled = true,
+    -- Safety default: automatic live context is off. Use explicit gps / :PinvimSend
+    -- for nvim→pi context. Set PINVIM_LIVE_CONTEXT=1 or pass opts to opt in.
+    enabled = vim.env.PINVIM_LIVE_CONTEXT == "1",
     debounce_ms = 150,
     events = { "BufEnter", "BufWritePost", "InsertLeave", "ModeChanged", "CursorMoved" },
     include_buffer_text = false,
@@ -178,7 +180,7 @@ local state_defaults = {
   root = nil,
   socket = nil,
   socket_source = nil,
-  link_mode = "bootstrap",
+  link_mode = "auto",
   peer = nil,
   last_hello = nil,
   last_hello_ack = nil,
@@ -369,6 +371,7 @@ function Transport.build_peer_identity(config)
     tmux = {
       session = tmux_value("#{session_name}"),
       window = tmux_value("#{window_name}"),
+      pane = tmux_value("#{pane_id}"),
     },
     linkMode = config.transport.link_mode,
     heartbeatAt = os.time(),
@@ -381,7 +384,7 @@ function Transport.build_hello(_state, config)
     protocol = config.protocol.name,
     peer = Transport.build_peer_identity(config),
     capabilities = {
-      liveContext = true,
+      liveContext = config.live_context.enabled,
       compose = true,
       explicitSend = true,
     },
@@ -482,6 +485,7 @@ function Handshake.describe(state, transport, config)
         "root",
         "tmux.session",
         "tmux.window",
+        "tmux.pane",
         "linkMode",
         "heartbeatAt",
       },
@@ -492,7 +496,7 @@ function Handshake.describe(state, transport, config)
         config.protocol.editor_state,
         config.protocol.editor_disconnect,
       },
-      cutover = "peer hello/heartbeat active; raw prompt + compose queue route through pinvim.ts; explicit send parity still pending",
+      cutover = "peer hello/heartbeat active; raw prompt, compose queue, and explicit send route through pinvim.ts; automatic live_context is opt-in only",
     },
     next_heartbeat = transport.build_heartbeat(state, config),
   }
@@ -576,6 +580,7 @@ local function schedule_reconnect(api, runtime, config)
       lifecycle = "reconnect_failed",
       last_error = string.format("reconnect limit reached (%d)", config.connection.reconnect_max_retries),
     })
+    vim.notify("pinvim: reconnect limit reached", vim.log.levels.WARN)
     return
   end
 
@@ -662,7 +667,10 @@ local function connection_connect(api, runtime, config, socket_path, source)
         lifecycle = "connect_failed",
         last_error = tostring(err),
       })
-      vim.schedule(function() schedule_reconnect(api, runtime, config) end)
+      vim.schedule(function()
+        vim.notify("pinvim: connect failed " .. tostring(err), vim.log.levels.WARN)
+        schedule_reconnect(api, runtime, config)
+      end)
       return
     end
 
@@ -686,6 +694,7 @@ local function connection_connect(api, runtime, config, socket_path, source)
       if read_err or not data then
         vim.schedule(function()
           connection_disconnect(runtime)
+          vim.notify("pinvim: disconnected", vim.log.levels.WARN)
           schedule_reconnect(api, runtime, config)
         end)
         return
@@ -706,9 +715,12 @@ local function connection_connect(api, runtime, config, socket_path, source)
       if config.transport.enable_peer_frames then
         api.send_payload(runtime.last_hello, { silent = true, auto_connect = false })
       end
+      vim.notify("pinvim: connected " .. vim.fs.basename(socket_path), vim.log.levels.INFO)
       start_ping_timer(api, runtime, config)
       start_heartbeat_timer(api, runtime, config)
-      api.push_editor_state({ force = true, silent = true })
+      if config.live_context.enabled then
+        api.push_editor_state({ force = true, silent = true })
+      end
     end)
   end)
 end
@@ -809,7 +821,9 @@ function Commands.setup(api, config)
       string.format("link mode: %s", info.target.link_mode),
       string.format("peer frames enabled: %s", tostring(info.target.peer_frames_enabled)),
       string.format("protocol: %s", info.handshake.protocol),
-      string.format("live sync events: %s", table.concat(config.live_context.events, ", ")),
+      string.format("live context enabled: %s", tostring(config.live_context.enabled)),
+      string.format("live sync events: %s", config.live_context.enabled and table.concat(config.live_context.events, ", ") or "(disabled; use gps/:PinvimSend)"),
+      string.format("live context safety: opt-in env PINVIM_LIVE_CONTEXT=1, debounced %dms, no buftype, file required, max selection %d bytes, max buffer %d bytes, buffer text off by default", config.live_context.debounce_ms, config.live_context.max_selection_bytes, config.live_context.max_buffer_bytes),
       string.format("cutover: %s", info.handshake.compatibility.cutover),
       "hello payload:",
       vim.inspect(info.handshake.send),
@@ -822,10 +836,20 @@ function Commands.setup(api, config)
   vim.api.nvim_create_user_command("PinvimStatus", status_command, {
     desc = "Show current pinvim link status",
   })
+  vim.api.nvim_create_user_command("PiStatus", status_command, {
+    desc = "Show current pinvim link status",
+  })
 
   vim.api.nvim_create_user_command("PinvimHealth", health_command, {
     desc = "Check pinvim hello/heartbeat health",
   })
+  vim.api.nvim_create_user_command("PiHealth", health_command, {
+    desc = "Check pinvim hello/heartbeat health",
+  })
+
+  vim.api.nvim_create_user_command("PiInfo", function()
+    vim.cmd("PinvimInfo")
+  end, { desc = "Show pinvim state + target" })
 
   vim.api.nvim_create_user_command("PinvimPrompt", prompt_command, {
     nargs = "*",
@@ -842,14 +866,30 @@ function Commands.setup(api, config)
     range = true,
     desc = "Send explicit selection or cursor context through pinvim.ts",
   })
+  vim.api.nvim_create_user_command("PiSend", function(command_opts)
+    api.send_explicit(command_opts)
+  end, {
+    range = true,
+    desc = "Send explicit selection or cursor context through pinvim.ts",
+  })
 
   vim.api.nvim_create_user_command("PinvimTarget", target_command, {
     nargs = "?",
     complete = "file",
     desc = "Get/set buffer-local pinvim target socket",
   })
+  vim.api.nvim_create_user_command("PiTarget", target_command, {
+    nargs = "?",
+    complete = "file",
+    desc = "Get/set buffer-local pinvim target socket",
+  })
 
   vim.api.nvim_create_user_command("PinvimSessions", function()
+    api.select_session()
+  end, {
+    desc = "Select pinvim session from manifests",
+  })
+  vim.api.nvim_create_user_command("PiSessions", function()
     api.select_session()
   end, {
     desc = "Select pinvim session from manifests",
@@ -920,18 +960,20 @@ function Autocmds.setup(api, config)
     end,
   })
 
-  for _, event in ipairs(config.live_context.events) do
-    vim.api.nvim_create_autocmd(event, {
-      group = group,
-      callback = function()
-        if event == "CursorMoved" then
-          local mode = vim.fn.mode()
-          if mode ~= "v" and mode ~= "V" and mode ~= "\22" then return end
-        end
-        api.refresh_buffer_state()
-        api.push_editor_state({ silent = true })
-      end,
-    })
+  if config.live_context.enabled then
+    for _, event in ipairs(config.live_context.events) do
+      vim.api.nvim_create_autocmd(event, {
+        group = group,
+        callback = function()
+          if event == "CursorMoved" then
+            local mode = vim.fn.mode()
+            if mode ~= "v" and mode ~= "V" and mode ~= "\22" then return end
+          end
+          api.refresh_buffer_state()
+          api.push_editor_state({ silent = true })
+        end,
+      })
+    end
   end
 
   vim.api.nvim_create_autocmd("VimLeavePre", {
@@ -941,6 +983,7 @@ function Autocmds.setup(api, config)
         pcall(function() conn.pipe:write(vim.json.encode({ type = config.protocol.editor_disconnect }) .. "\n") end)
       end
       connection_disconnect(api.runtime)
+      vim.notify("pinvim: cleanup complete", vim.log.levels.INFO)
       if live_context_timer then
         live_context_timer:stop()
         live_context_timer:close()

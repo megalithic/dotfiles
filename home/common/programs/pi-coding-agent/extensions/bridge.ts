@@ -65,8 +65,8 @@ const SOCKET_DIR = path.join(PI_STATE_DIR, "sockets");
 const INFO_DIR = path.join(PI_STATE_DIR, "manifests");
 const SOCKET_PREFIX = "pi";
 
-/** Detect tmux session and window names. Returns null if not in tmux. */
-const detectTmux = (): { session: string; window: string } | null => {
+/** Detect tmux session/window/pane names. Returns null if not in tmux. */
+const detectTmux = (): { session: string; window: string; pane?: string } | null => {
   if (!process.env.TMUX) return null;
   try {
     const session = execSync("tmux display-message -p '#{session_name}'", {
@@ -81,10 +81,14 @@ const detectTmux = (): { session: string; window: string } | null => {
       encoding: "utf-8",
       timeout: 2000,
     }).trim();
+    const pane = execSync("tmux display-message -p '#{pane_id}'", {
+      encoding: "utf-8",
+      timeout: 2000,
+    }).trim();
     // Use window name if alphanumeric, otherwise index
     const window =
       winName && /^[a-zA-Z0-9_-]+$/.test(winName) ? winName : winIndex;
-    return session && window ? { session, window } : null;
+    return session && window ? { session, window, pane } : null;
   } catch {
     return null;
   }
@@ -143,7 +147,7 @@ const PI_ICON = "π";
 // Payload Types
 // =============================================================================
 
-type LinkMode = "auto" | "explicit" | "bootstrap";
+type LinkMode = "auto" | "manual" | "ephemeral" | "parked" | "explicit" | "bootstrap" | string;
 
 type PeerIdentity = {
   id: string;
@@ -153,6 +157,7 @@ type PeerIdentity = {
   tmux?: {
     session?: string;
     window?: string;
+    pane?: string;
   };
   linkMode: LinkMode;
   heartbeatAt?: number;
@@ -308,8 +313,9 @@ const buildBridgePeerIdentity = (): PeerIdentity => ({
   tmux: {
     session: PI_SESSION,
     window: PI_WINDOW,
+    pane: detectTmux()?.pane,
   },
-  linkMode: "bootstrap",
+  linkMode: process.env.PINVIM_LINK_MODE || "auto",
   heartbeatAt: Math.floor(Date.now() / 1000),
 });
 
@@ -399,6 +405,7 @@ const writeInfoManifest = (): void => {
       pid: process.pid,
       session: PI_SESSION,
       window: PI_WINDOW,
+      pane: detectTmux()?.pane,
       ephemeral: IS_EPHEMERAL,
       startedAt: new Date().toISOString(),
     };
