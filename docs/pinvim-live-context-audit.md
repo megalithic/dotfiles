@@ -2,7 +2,11 @@
 
 ## Status
 
-Automatic live context is **disabled by default**.
+Superseded by `dot-klla`: current implicit `live_context` / `editor_state` implementation should be removed from both nvim and pi sides.
+
+Current supported nvim→pi context path: explicit send/queue only (`gps`, `:PinvimSend`, `:PiSend`, `PinvimAdd`, `PinvimFlush`).
+
+Automatic live context is currently disabled by default as an interim safety gate, but the next cleanup removes the implementation rather than keeping it dormant.
 
 - nvim gate: `config/nvim/lua/pinvim.lua` sets `live_context.enabled = vim.env.PINVIM_LIVE_CONTEXT == "1"`.
 - pi gate: `home/common/programs/pi-coding-agent/extensions/pinvim.ts` only injects hidden live context when `process.env.PINVIM_LIVE_CONTEXT === "1"`.
@@ -137,13 +141,22 @@ Live context, when opted in, is hidden context only:
 - `display: false`
 - injected only during `before_agent_start`
 
-## Current answer
+## Current decision
 
 Live context was previously enabled by default in `pinvim.lua`. That was unsafe for intended workflow because nvim could send automatic editor state without explicit user action.
 
-Fix made in dot-f6tr:
+Interim fix made in `dot-f6tr`:
 
 - automatic live context disabled by default
 - explicit `gps` / `:PinvimSend` remains primary path
 - nvim and pi both require `PINVIM_LIVE_CONTEXT=1` for hidden live context
 - `/pinvim-info` reports current live context setting and safety notes
+
+Next cleanup in `dot-klla`:
+
+- remove current nvim-side live_context config/timer/autocmd/editor_state code
+- remove current pi-side editorState storage and hidden `before_agent_start` injection
+- stop treating `editor_state` as supported nvim context transport
+- keep explicit send/queue only
+
+Future live context research may reintroduce a different feature only if it is explicit keymap/motion initiated, limited to same-window active handshakes, acknowledged by pi, and visibly represented in the conversation as user-injected nvim context. Implicit mode may exist later only behind a clear enable/disable option.

@@ -98,6 +98,26 @@ Owns:
 - autocmd-driven sync
 - local commands and buffer awareness
 
+## Current direction (2026-05-15)
+
+`bridge.ts` is now a deprecation target, not a durable architecture layer.
+
+Immediate next steps:
+
+1. `dot-klla`: remove implicit `live_context` / `editor_state` from nvim + pi.
+2. `dot-3t42`: inventory all `bridge.ts` users and plan focused replacements.
+
+Target split:
+
+- `pinvim.ts`: strictly pi↔nvim behavior, explicit send/queue/review/policy payloads.
+- possible `hs.ts`: Hammerspoon↔pi ingress.
+- possible `tmux.ts`: tmux helper/session discovery APIs.
+- possible `ntfy.ts`: richer pi-side counterpart to `~/bin/ntfy`; Telegram only matters through current ntfy usage.
+- tell/delegation owner: focused task delegation ingress instead of shared bridge monolith.
+- shared utility only if needed: socket/manifest helpers without product semantics.
+
+Research must enumerate every current bridge consumer before removal: nvim/pinvim, Hammerspoon, Telegram/ntfy, tell/skills, tmux-toggle-pi, ftm, manifests/session discovery, and any additional socket clients found by code search.
+
 ## Deprecation paths for `bridge.ts`
 
 ### Path A — keep bridge, narrow scope
@@ -130,9 +150,13 @@ Requires:
 - nvim transport replacement
 - manifest/discovery replacement where needed
 
-## Decision from this ticket pass
+## Decision from earlier ticket pass
 
 - revert handshake logic from `bridge.ts`
 - make `pinvim.ts` primary pi-side nvim extension
 - keep `bridge.ts` transport-only for now
 - leave final `bridge.ts` deprecation decision for later, after transport direction is clearer
+
+## Updated decision
+
+Deprecate `bridge.ts` after inventory and replacement planning. Do not expand it with new product semantics. Any current use should either move to `pinvim.ts` (nvim only) or to a focused ingress extension (`hs.ts`, `tmux.ts`, `ntfy.ts`, tell/delegation owner) once `dot-3t42` identifies exact users and risks.
