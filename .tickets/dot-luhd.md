@@ -1,6 +1,6 @@
 ---
 id: dot-luhd
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-05-13T14:28:04Z
@@ -22,3 +22,9 @@ Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` 
 
 Core CDP scripts for navigation, JS eval, screenshots
 
+
+## Notes
+
+**2026-05-15T18:36:56Z**
+
+Copied cdp.js, nav.js, eval.js, screenshot.js from upstream mitsuhiko/agent-stuff verbatim. Added local stub modules (emulation-state.js, devices.js) so imports resolve — real impls land in dot-ezbp (3.4). Runtime requires 'ws' npm module; node_modules wiring deferred (nix-store skill dir is read-only — needs buildNpmPackage or runtime cache install, likely in 3.7).
