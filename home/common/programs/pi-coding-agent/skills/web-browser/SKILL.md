@@ -1,124 +1,168 @@
 ---
 name: web-browser
-description: "Interact with web pages using agent-browser CLI. MUST run 'browser connect 9222' FIRST to use existing browser with authenticated sessions."
+description: "Interact with web pages using Chrome DevTools Protocol. Launches a managed browser instance (Helium / Brave Nightly / Chrome) with an isolated profile and exposes nav, eval, screenshot, pick, and emulation helpers. Run scripts/start.js first."
 ---
 
 # Web Browser Skill
 
-Browser automation using `agent-browser` CLI connected to your running browser.
+Minimal CDP-based browser automation. Scripts live in `scripts/` and run via
+`node`. The skill manages its own browser instance with an **isolated profile
+cache** — it never attaches to your live browser profile.
 
-## 🚨 MANDATORY FIRST STEP
+> Adapted from [mitsuhiko/agent-stuff](https://github.com/mitsuhiko/agent-stuff/tree/main/skills/web-browser) with Helium + Brave Nightly support.
 
-**EVERY browser session MUST start with:**
-
-```bash
-browser connect 9222
-```
-
-This connects to your running browser with all authenticated sessions (Asana, Figma, GitHub, etc.).
-
-**WITHOUT THIS STEP:**
-- Commands will fail or timeout
-- You'll get isolated sessions without logins
-- User will have to re-authenticate everything
-
-## ⚠️ CRITICAL REQUIREMENTS
-
-### 1. ALWAYS connect to port 9222 FIRST
-
-Before ANY browser operation, you MUST connect to the remote debugging port:
+## Start the browser
 
 ```bash
-browser connect 9222
+./scripts/start.js                  # Fresh isolated profile (default)
+./scripts/start.js --profile        # Copy WEB_BROWSER_PROFILE into cache
+./scripts/start.js --reset-profile  # Clear cached profile before launch
 ```
 
-This is REQUIRED for accessing authenticated sessions. Without this step, commands will fail or create isolated sessions without your logins.
+Launches the browser with remote debugging on `:9222`.
 
-### 2. NEVER take over existing tabs
+### Profile cache layout
 
-When navigating to a URL:
-- First check if tab already exists: `browser tab list`
-- If found, switch to it: `browser tab <index>`
-- If NOT found, open a NEW tab: `browser open <url>`
+```
+~/.cache/agent-web/browser/
+  fresh-profile/    # default (--no flag)
+  profile-copy/     # --profile mode
+  state.json        # pid, port, mode, binary
+```
 
-**NEVER navigate an existing tab to a different URL** - this destroys the user's work/context.
+### Browser binary resolution
 
-## Correct workflow
+Default preference order (first match wins):
+
+1. `$WEB_BROWSER_PATH` (if set + exists)
+2. `/Applications/Helium.app/Contents/MacOS/Helium`
+3. `/Applications/Brave Browser Nightly.app/Contents/MacOS/Brave Browser Nightly`
+4. `/Applications/Brave Browser.app/Contents/MacOS/Brave Browser`
+5. Google Chrome / Chromium / Chrome Canary
+
+### Profile source resolution (`--profile` mode)
+
+1. `$WEB_BROWSER_PROFILE` (if set + exists)
+2. `~/Library/Application Support/BraveSoftware/Brave-Browser-Nightly`
+3. `~/Library/Application Support/BraveSoftware/Brave-Browser`
+4. `~/Library/Application Support/Google/Chrome`
+
+### Other env vars
+
+| Var                  | Default     | Purpose                       |
+|----------------------|-------------|-------------------------------|
+| `BROWSER_DEBUG_HOST` | `localhost` | CDP host                      |
+| `BROWSER_DEBUG_PORT` | `9222`      | CDP port                      |
+| `DEBUG`              | unset       | Set to `1` for verbose stderr |
+
+## Navigate
 
 ```bash
-# 1. ALWAYS connect first (required every session)
-browser connect 9222
-
-# 2. Check for existing tab
-browser tab list
-
-# 3a. If tab exists for your URL, switch to it
-browser tab 14
-
-# 3b. If tab doesn't exist, open NEW tab
-browser open https://app.asana.com/...
-
-# 4. Interact
-browser snapshot -i
-browser click @e5
+./scripts/nav.js https://example.com         # current tab
+./scripts/nav.js https://example.com --new   # new tab
 ```
 
-## Check if browser is listening
+## Evaluate JavaScript
 
 ```bash
-lsof -i :9222 -sTCP:LISTEN
+./scripts/eval.js 'document.title'
+./scripts/eval.js 'document.querySelectorAll("a").length'
 ```
 
-## Common commands
+Runs in async context. Prefer single quotes to avoid shell escaping.
 
-After connecting, use standard agent-browser commands:
-
-### Navigation & tabs
-```bash
-browser tab list                    # List all tabs
-browser tab 14                      # Switch to tab by index
-browser open https://example.com    # Open URL (NEW tab)
-browser back                        # Go back
-browser reload                      # Reload page
-```
-
-### Inspection
-```bash
-browser snapshot -i                 # Get interactive elements with @refs
-browser screenshot                  # Take screenshot
-browser get title                   # Get page title
-browser get url                     # Get current URL
-browser get text @e1                # Get text of element
-```
-
-### Interaction
-```bash
-browser click @e1                   # Click element
-browser fill @e2 "search text"      # Clear and type
-browser type @e3 "append text"      # Type without clearing
-browser select @e4 "option"         # Select dropdown
-browser press Enter                 # Press key
-browser scroll down 500             # Scroll
-```
-
-### Waiting
-```bash
-browser wait @e1                    # Wait for element
-browser wait 2000                   # Wait milliseconds
-```
-
-## Tab targeting by URL
-
-Instead of remembering tab numbers, find tabs by URL:
+## Screenshot
 
 ```bash
-browser tab list | rg -i asana
-browser tab list | rg -i localhost:4000
+./scripts/screenshot.js                       # viewport
+./scripts/screenshot.js --full-page           # full document
+./scripts/screenshot.js --device iphone-14    # one-off mobile emulation
+./scripts/screenshot.js --device pixel-7 --full-page
 ```
 
-## Notes
+Writes to a temp file and prints the path.
 
-- Tabs are numbered by CDP, not visual order in browser
-- `snapshot -i` gives @refs like @e1, @e2 for clicking
-- After page changes (navigation, clicks), re-run `snapshot -i`
-- Your browser must be running with `--remote-debugging-port=9222`
+## Device emulation (persistent)
+
+```bash
+./scripts/emulate.js --list             # show available presets
+./scripts/emulate.js iphone-14          # apply preset
+./scripts/emulate.js pixel-7 --landscape
+./scripts/emulate.js --reset            # clear
+```
+
+Sets an **active** emulation preference. `nav.js`, `eval.js`, `pick.js`,
+`dismiss-cookies.js`, and `screenshot.js` automatically reapply it.
+
+## Pick elements
+
+```bash
+./scripts/pick.js "Click the submit button"
+```
+
+Interactive picker. Click to select, Cmd/Ctrl+Click for multi-select, Enter to
+finish.
+
+## Dismiss cookie dialogs
+
+```bash
+./scripts/dismiss-cookies.js          # accept
+./scripts/dismiss-cookies.js --reject # reject where possible
+```
+
+Common chain:
+
+```bash
+./scripts/nav.js https://example.com && ./scripts/dismiss-cookies.js
+```
+
+## Logs (console + errors + network)
+
+`start.js` automatically spawns `watch.js` which writes JSONL to:
+
+```
+~/.cache/agent-web/logs/YYYY-MM-DD/<targetId>.jsonl
+```
+
+Tail:
+
+```bash
+./scripts/logs-tail.js            # dump current log + exit
+./scripts/logs-tail.js --follow   # keep following
+```
+
+Summarize network responses:
+
+```bash
+./scripts/net-summary.js
+```
+
+## Quick mobile debug flow
+
+```bash
+./scripts/start.js
+./scripts/nav.js https://example.com
+./scripts/emulate.js iphone-14
+./scripts/nav.js https://example.com       # reload with mobile UA
+./scripts/dismiss-cookies.js
+./scripts/screenshot.js --full-page
+```
+
+## Runtime dependencies
+
+Scripts require the `ws` npm module (declared in `scripts/package.json`).
+The skill directory is **read-only** in nix-store; node_modules wiring is
+handled by the surrounding nix build (see ticket dot-ol82 / 3.7). If you
+hit `Cannot find package 'ws'`, the npm install step has not yet been
+wired — install manually:
+
+```bash
+cd ~/.pi/agent/skills/web-browser/scripts  # read-only — copy out first
+# or use a writable mirror
+```
+
+## Migration notes (vs old agent-browser CLI)
+
+The previous version of this skill required `browser connect 9222` against a
+user-launched browser. The new version **owns** the browser lifecycle and uses
+an isolated profile — your daily browser stays untouched. No `connect` step.
