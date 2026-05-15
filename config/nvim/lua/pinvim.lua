@@ -20,8 +20,6 @@ local Autocmds = {}
 local did_setup = false
 local defaults
 local options
-local live_context_timer = nil
-local live_context_pending = false
 local compose_queue = {}
 
 local conn = {
@@ -130,8 +128,6 @@ defaults = {
     heartbeat = "heartbeat",
     prompt = "prompt",
     explicit_send = "explicit_send",
-    editor_state = "editor_state",
-    editor_disconnect = "editor_disconnect",
   },
   transport = {
     state_dir = pi_state_dir,
@@ -147,14 +143,7 @@ defaults = {
     reconnect_max_delay_s = 30,
     reconnect_max_retries = 8,
   },
-  live_context = {
-    -- Safety default: automatic live context is off. Use explicit gps / :PinvimSend
-    -- for nvim→pi context. Set PINVIM_LIVE_CONTEXT=1 or pass opts to opt in.
-    enabled = vim.env.PINVIM_LIVE_CONTEXT == "1",
-    debounce_ms = 150,
-    events = { "BufEnter", "BufWritePost", "InsertLeave", "ModeChanged", "CursorMoved" },
-    include_buffer_text = false,
-    max_buffer_bytes = 16000,
+  explicit_context = {
     max_selection_bytes = 8000,
   },
 }
@@ -185,8 +174,6 @@ local state_defaults = {
   last_hello = nil,
   last_hello_ack = nil,
   last_heartbeat = nil,
-  last_editor_state = nil,
-  last_editor_push_at = nil,
   last_ping_at = nil,
   last_pong_at = nil,
   last_error = nil,
@@ -384,7 +371,6 @@ function Transport.build_hello(_state, config)
     protocol = config.protocol.name,
     peer = Transport.build_peer_identity(config),
     capabilities = {
-      liveContext = config.live_context.enabled,
       compose = true,
       explicitSend = true,
     },
@@ -400,42 +386,6 @@ function Transport.build_heartbeat(state, config)
   }
 end
 
-function Transport.build_editor_state(config)
-  local bufnr = vim.api.nvim_get_current_buf()
-  local file = vim.api.nvim_buf_get_name(bufnr)
-  local cursor = vim.api.nvim_win_get_cursor(0)
-  local state = {
-    file = file ~= "" and vim.fn.fnamemodify(file, ":~:.") or nil,
-    absFile = file,
-    filetype = vim.bo[bufnr].filetype,
-    modified = vim.bo[bufnr].modified,
-    buftype = vim.bo[bufnr].buftype,
-    cursor = { line = cursor[1], col = cursor[2] },
-  }
-
-  local mode = vim.fn.mode()
-  if mode == "v" or mode == "V" or mode == "\22" then
-    local selection, start_row, end_row = get_live_visual_selection()
-    if selection and start_row and end_row then
-      if #selection > config.live_context.max_selection_bytes then
-        selection = selection:sub(1, config.live_context.max_selection_bytes)
-      end
-      state.selection = selection
-      state.selectionRange = { start_row, end_row }
-      state.visualmode = mode
-    end
-  end
-
-  if config.live_context.include_buffer_text then
-    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-    local text = table.concat(lines, "\n")
-    if #text > config.live_context.max_buffer_bytes then text = text:sub(1, config.live_context.max_buffer_bytes) end
-    state.buftext = text
-  end
-
-  return state
-end
-
 function Transport.build_explicit_send(config, command_opts)
   local bufnr = vim.api.nvim_get_current_buf()
   local file = vim.api.nvim_buf_get_name(bufnr)
@@ -445,8 +395,8 @@ function Transport.build_explicit_send(config, command_opts)
   local word = vim.fn.expand("<cword>")
   local line = vim.api.nvim_buf_get_lines(bufnr, cursor[1] - 1, cursor[1], false)[1] or ""
 
-  if selection and #selection > config.live_context.max_selection_bytes then
-    selection = selection:sub(1, config.live_context.max_selection_bytes)
+  if selection and #selection > config.explicit_context.max_selection_bytes then
+    selection = selection:sub(1, config.explicit_context.max_selection_bytes)
   end
 
   return {
@@ -491,12 +441,9 @@ function Handshake.describe(state, transport, config)
       },
     },
     compatibility = {
-      legacy_live_context = "bridge.ts -> pinvim.ts",
-      legacy_messages = {
-        config.protocol.editor_state,
-        config.protocol.editor_disconnect,
-      },
-      cutover = "peer hello/heartbeat active; raw prompt, compose queue, and explicit send route through pinvim.ts; automatic live_context is opt-in only",
+      legacy_context = "removed; use explicit_send only",
+      legacy_messages = {},
+      cutover = "peer hello/heartbeat active; raw prompt, compose queue, and explicit send route through pinvim.ts",
     },
     next_heartbeat = transport.build_heartbeat(state, config),
   }
@@ -718,9 +665,6 @@ local function connection_connect(api, runtime, config, socket_path, source)
       vim.notify("pinvim: connected " .. vim.fs.basename(socket_path), vim.log.levels.INFO)
       start_ping_timer(api, runtime, config)
       start_heartbeat_timer(api, runtime, config)
-      if config.live_context.enabled then
-        api.push_editor_state({ force = true, silent = true })
-      end
     end)
   end)
 end
@@ -821,9 +765,7 @@ function Commands.setup(api, config)
       string.format("link mode: %s", info.target.link_mode),
       string.format("peer frames enabled: %s", tostring(info.target.peer_frames_enabled)),
       string.format("protocol: %s", info.handshake.protocol),
-      string.format("live context enabled: %s", tostring(config.live_context.enabled)),
-      string.format("live sync events: %s", config.live_context.enabled and table.concat(config.live_context.events, ", ") or "(disabled; use gps/:PinvimSend)"),
-      string.format("live context safety: opt-in env PINVIM_LIVE_CONTEXT=1, debounced %dms, no buftype, file required, max selection %d bytes, max buffer %d bytes, buffer text off by default", config.live_context.debounce_ms, config.live_context.max_selection_bytes, config.live_context.max_buffer_bytes),
+      "implicit context: removed; use gps/:PinvimSend/:PiSend explicit context",
       string.format("cutover: %s", info.handshake.compatibility.cutover),
       "hello payload:",
       vim.inspect(info.handshake.send),
@@ -960,35 +902,11 @@ function Autocmds.setup(api, config)
     end,
   })
 
-  if config.live_context.enabled then
-    for _, event in ipairs(config.live_context.events) do
-      vim.api.nvim_create_autocmd(event, {
-        group = group,
-        callback = function()
-          if event == "CursorMoved" then
-            local mode = vim.fn.mode()
-            if mode ~= "v" and mode ~= "V" and mode ~= "\22" then return end
-          end
-          api.refresh_buffer_state()
-          api.push_editor_state({ silent = true })
-        end,
-      })
-    end
-  end
-
   vim.api.nvim_create_autocmd("VimLeavePre", {
     group = group,
     callback = function()
-      if conn.pipe and conn.connected then
-        pcall(function() conn.pipe:write(vim.json.encode({ type = config.protocol.editor_disconnect }) .. "\n") end)
-      end
       connection_disconnect(api.runtime)
       vim.notify("pinvim: cleanup complete", vim.log.levels.INFO)
-      if live_context_timer then
-        live_context_timer:stop()
-        live_context_timer:close()
-        live_context_timer = nil
-      end
     end,
   })
 end
@@ -1361,44 +1279,6 @@ function M.setup(opts)
     compose_queue = {}
     vim.notify(string.format("pinvim: cleared %d queued item(s)", count), vim.log.levels.INFO)
     return true
-  end
-
-  function api.push_editor_state(push_opts)
-    push_opts = push_opts or {}
-    if not config.live_context.enabled then return end
-
-    local function push_now()
-      live_context_pending = false
-      if not conn.connected then return end
-
-      local editor_state = Transport.build_editor_state(config)
-      if editor_state.buftype ~= "" then return end
-      if not editor_state.absFile or editor_state.absFile == "" then return end
-
-      runtime.last_editor_state = editor_state
-      runtime.last_editor_push_at = os.time()
-      api.send_payload({ type = config.protocol.editor_state, state = editor_state }, {
-        silent = push_opts.silent ~= false,
-        auto_connect = false,
-      })
-    end
-
-    if push_opts.force then
-      push_now()
-      return
-    end
-
-    live_context_pending = true
-    if not live_context_timer then live_context_timer = vim.uv.new_timer() end
-    live_context_timer:stop()
-    live_context_timer:start(
-      config.live_context.debounce_ms,
-      0,
-      vim.schedule_wrap(function()
-        if not live_context_pending then return end
-        push_now()
-      end)
-    )
   end
 
   function api.health()

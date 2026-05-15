@@ -11,7 +11,7 @@
  *   Request:  { type: 'heartbeat', ... }               → { ok: true }
  *   Request:  { type: 'prompt', message: '...' }       → { ok: true }
  *   Request:  { type: 'explicit_send', context: {...} } → { ok: true }
- *   Request:  { type: 'editor_state', state: {...} }   → { ok: true }  (legacy live context)
+ *   Request:  { type: 'editor_state', state: {...} }   → { ok: false, error: '...' }
  *   Request:  { type: 'telegram', text: '...' }        → { ok: true }
  *   Request:  { type: 'tell', text: '...' }            → { ok: true }
  *   Request:  { file: '...', task: '...' }             → { ok: true }  (legacy nvim)
@@ -233,26 +233,11 @@ type ExplicitSendPayload = {
   };
 };
 
-type EditorStatePayload = {
-  type: "editor_state";
-  state: {
-    file?: string;
-    cursor?: { line: number; col: number };
-    selection?: string;
-    filetype?: string;
-    [key: string]: unknown;
-  };
-};
-
 type HeartbeatPayload = {
   type: "heartbeat";
   protocol: "pinvim.peer.v1";
   peerId: string;
   sentAt: number;
-};
-
-type EditorDisconnectPayload = {
-  type: "editor_disconnect";
 };
 
 type Payload =
@@ -263,9 +248,7 @@ type Payload =
   | TellPayload
   | PingPayload
   | PromptPayload
-  | ExplicitSendPayload
-  | EditorStatePayload
-  | EditorDisconnectPayload;
+  | ExplicitSendPayload;
 
 const isHelloPayload = (p: Payload): p is HelloPayload =>
   "type" in p && p.type === "hello";
@@ -288,12 +271,6 @@ const isPromptPayload = (p: Payload): p is PromptPayload =>
 const isExplicitSendPayload = (p: Payload): p is ExplicitSendPayload =>
   "type" in p && p.type === "explicit_send";
 
-const isEditorStatePayload = (p: Payload): p is EditorStatePayload =>
-  "type" in p && p.type === "editor_state";
-
-const isEditorDisconnectPayload = (p: Payload): p is EditorDisconnectPayload =>
-  "type" in p && p.type === "editor_disconnect";
-
 // =============================================================================
 // State
 // =============================================================================
@@ -301,9 +278,6 @@ const isEditorDisconnectPayload = (p: Payload): p is EditorDisconnectPayload =>
 let server: net.Server | null = null;
 let latestCtx: ExtensionContext | null = null;
 let infoManifestPath: string | null = null;
-
-// Track sockets that have sent editor_state (for crash detection)
-const editorSockets = new Set<net.Socket>();
 
 const buildBridgePeerIdentity = (): PeerIdentity => ({
   id: `pi:${PI_SESSION}:${PI_WINDOW}:${process.pid}`,
@@ -323,7 +297,7 @@ const buildHelloAck = (): HelloAckPayload => ({
   type: "hello_ack",
   protocol: "pinvim.peer.v1",
   peer: buildBridgePeerIdentity(),
-  accepts: ["hello", "heartbeat", "editor_state", "editor_disconnect", "ping", "prompt", "explicit_send"],
+  accepts: ["hello", "heartbeat", "ping", "prompt", "explicit_send"],
 });
 
 // =============================================================================
@@ -477,14 +451,6 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
       // Safe to ignore; socket 'close' event handles cleanup.
     });
 
-    socket.on("close", () => {
-      if (editorSockets.has(socket)) {
-        editorSockets.delete(socket);
-        pi.events.emit("pinvim:editor_disconnect");
-        pi.events.emit("pinvim_legacy:editor_disconnect");
-      }
-    });
-
     socket.on("data", (chunk) => {
       buffer += chunk.toString();
 
@@ -552,21 +518,9 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
             continue;
           }
 
-          // Handle editor state — pinvim.ts owns semantics, legacy event kept during rollout
-          if (isEditorStatePayload(payload)) {
-            editorSockets.add(socket);
-            pi.events.emit("pinvim:editor_state", payload.state);
-            pi.events.emit("pinvim_legacy:editor_state", payload.state);
-            respondOk(socket);
-            continue;
-          }
-
-          // Handle editor disconnect — pinvim.ts owns semantics, legacy event kept during rollout
-          if (isEditorDisconnectPayload(payload)) {
-            editorSockets.delete(socket);
-            pi.events.emit("pinvim:editor_disconnect");
-            pi.events.emit("pinvim_legacy:editor_disconnect");
-            respondOk(socket);
+          const payloadType = "type" in payload ? String(payload.type) : "";
+          if (payloadType === "editor_state" || payloadType === "editor_disconnect") {
+            respondError(socket, "editor_state live context is unsupported; use explicit_send");
             continue;
           }
 

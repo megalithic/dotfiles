@@ -1,6 +1,6 @@
 ---
 id: dot-klla
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-05-15T14:57:01Z
@@ -32,3 +32,9 @@ Future live context must be redesigned separately: explicit nvim keymap/motion i
 4. Explicit send and queue flows still work through `gps`, `:PinvimSend`/`:PiSend`, `PinvimAdd`/`PiAdd`, and `PinvimFlush`/`PiFlush`.
 5. Plans/docs/tickets no longer describe implicit live_context as current behavior; future live context is documented as explicit, acknowledged, same-window/handshaked research only.
 6. Verification passes: `just home`, `nvim --headless '+lua require("pinvim").setup()' +qa`, and `bin/pinvim-protocol-smoke`.
+
+## Notes
+
+**2026-05-15T15:12:55Z**
+
+Removed implicit nvim live_context/editor_state path from pinvim. Kept explicit send/queue via gps, PinvimSend/PiSend, PinvimAdd/PiAdd, and PinvimFlush/PiFlush; bridge now rejects editor_state/editor_disconnect with clear unsupported response.

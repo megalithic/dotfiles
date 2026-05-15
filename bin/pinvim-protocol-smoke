@@ -66,7 +66,7 @@ with conn, conn.makefile("r", encoding="utf-8") as reader:
                     "type": "hello_ack",
                     "protocol": "pinvim.peer.v1",
                     "peer": pi_peer,
-                    "accepts": ["hello", "heartbeat", "editor_state", "editor_disconnect", "ping", "prompt", "explicit_send"],
+                    "accepts": ["hello", "heartbeat", "ping", "prompt", "explicit_send"],
                 }
             elif typ == "heartbeat":
                 response = {
@@ -78,7 +78,7 @@ with conn, conn.makefile("r", encoding="utf-8") as reader:
                 }
             elif typ == "ping":
                 response = {"ok": True, "type": "pong"}
-            elif typ in {"editor_state", "editor_disconnect", "prompt", "explicit_send"}:
+            elif typ in {"prompt", "explicit_send"}:
                 response = {"ok": True, "type": typ}
             else:
                 response = {"ok": False, "error": f"unexpected type: {typ}"}
@@ -103,7 +103,7 @@ PI_STATE_DIR="$tmp_dir/state" \
 PINVIM_LINK_MODE="test" \
 nvim --headless -u NONE \
   --cmd "set runtimepath^=$repo_root/config/nvim" \
-  '+lua local api=require("pinvim").setup({transport={link_mode="test",enable_peer_frames=true},connection={ping_interval_s=1,reconnect_max_retries=0},live_context={enabled=false}}); local ok=vim.wait(5000,function() local h=api.health(); return h.ok and h.hello_ack and h.heartbeat_age ~= nil and h.peer_id == "pi:smoke-test" end,50); if not ok then print(vim.inspect(api.health())); vim.cmd("cquit 1") end; print("pinvim protocol smoke ok")' \
+  '+lua local api=require("pinvim").setup({transport={link_mode="test",enable_peer_frames=true},connection={ping_interval_s=1,reconnect_max_retries=0}}); local ok=vim.wait(5000,function() local h=api.health(); return h.ok and h.hello_ack and h.heartbeat_age ~= nil and h.peer_id == "pi:smoke-test" end,50); if not ok then print(vim.inspect(api.health())); vim.cmd("cquit 1") end; print("pinvim protocol smoke ok")' \
   +qa
 
 if ! rg -q '"type":"hello_ack"' "$server_log" || ! rg -q '"type":"heartbeat"' "$server_log"; then
