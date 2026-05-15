@@ -1,6 +1,6 @@
 ---
 id: dot-uhnq
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-05-13T14:28:04Z
@@ -22,3 +22,9 @@ Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` 
 
 Launch browser (Helium or Chrome) with remote debugging, manage profile cache, copy Brave Nightly profile
 
+
+## Notes
+
+**2026-05-15T18:34:51Z**
+
+Adapted upstream start.js: WEB_BROWSER_PATH + WEB_BROWSER_PROFILE env vars, defaults Helium → Brave Nightly → Chrome, isolated cache at ~/.cache/agent-web/browser/, state.json includes binary path, conditional watch.js spawn.
