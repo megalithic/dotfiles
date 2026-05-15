@@ -47,13 +47,19 @@ Default preference order (first match wins):
 3. `~/Library/Application Support/BraveSoftware/Brave-Browser`
 4. `~/Library/Application Support/Google/Chrome`
 
-### Other env vars
+### Env vars
 
-| Var                  | Default     | Purpose                       |
-|----------------------|-------------|-------------------------------|
-| `BROWSER_DEBUG_HOST` | `localhost` | CDP host                      |
-| `BROWSER_DEBUG_PORT` | `9222`      | CDP port                      |
-| `DEBUG`              | unset       | Set to `1` for verbose stderr |
+| Var                   | Default (nix)                                                                  | Purpose                            |
+|-----------------------|--------------------------------------------------------------------------------|------------------------------------|
+| `WEB_BROWSER_PATH`    | `/Applications/Helium.app/Contents/MacOS/Helium`                               | Browser binary                     |
+| `WEB_BROWSER_PROFILE` | `~/Library/Application Support/BraveSoftware/Brave-Browser-Nightly`            | Source profile for `--profile`     |
+| `BROWSER_DEBUG_HOST`  | `localhost`                                                                    | CDP host                           |
+| `BROWSER_DEBUG_PORT`  | `9222`                                                                         | CDP port                           |
+| `DEBUG`               | unset                                                                          | Set to `1` for verbose stderr      |
+
+`WEB_BROWSER_PATH` + `WEB_BROWSER_PROFILE` are set via `home.sessionVariables`
+in `home/common/programs/pi-coding-agent/default.nix`. Override per-shell by
+exporting before invoking the scripts.
 
 ## Navigate
 
