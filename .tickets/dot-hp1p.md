@@ -1,6 +1,6 @@
 ---
 id: dot-hp1p
-status: in_progress
+status: closed
 deps: []
 links: []
 created: 2026-05-14T20:28:18Z
@@ -39,3 +39,7 @@ Must not break existing Telegram/tell/Hammerspoon/tmux flows. Verify: `just vali
 **2026-05-15T00:15:54Z**
 
 Audit result: XDG migration already shipped via dot-y4vm. Verified PI_STATE_DIR in nix + active consumers (bridge.ts, pinvim.lua, Hammerspoon interop, tmux-toggle-pi, ftm, tell.sh). just validate home passed. Cleaned orphan legacy artifacts with trash: /tmp/pi-pi-xhzj-test-1.sock and /tmp/pi-nvim-sockets/* (empty dir removed). Remaining legacy runtime artifact: /tmp/pi-thistle-rose-agent.sock still held open by long-running pi pid 73624 (elapsed 6+ days). Needs explicit user decision to restart/migrate/kill that process.
+
+**2026-05-15T12:42:58Z**
+
+Final verification: legacy /tmp pi sockets/manifests removed; lsof shows no /tmp/pi* or pi-nvim-sockets handles. Active pi sockets/manifests remain under ~/.local/state/pi/{sockets,manifests}: pi-mega-agent, pi-mega--fish, pi-rx-agent. just validate home passed.
