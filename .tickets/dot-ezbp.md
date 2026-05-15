@@ -1,6 +1,6 @@
 ---
 id: dot-ezbp
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-05-13T14:28:04Z
@@ -22,3 +22,9 @@ Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` 
 
 Device presets (iphone-14, pixel-7, etc.), landscape mode
 
+
+## Notes
+
+**2026-05-15T18:37:54Z**
+
+Replaced 3.3 stubs (devices.js, emulation-state.js) with upstream impls. Added emulate.js CLI. Device presets now available to screenshot.js + nav.js/eval.js for active emulation state.
