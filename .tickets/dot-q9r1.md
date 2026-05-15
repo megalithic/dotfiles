@@ -1,6 +1,6 @@
 ---
 id: dot-q9r1
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-05-13T14:28:04Z
@@ -22,3 +22,9 @@ Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` 
 
 Create scripts/ directory with package.json, install dependencies
 
+
+## Notes
+
+**2026-05-15T17:50:46Z**
+
+Added scripts/ with package.json + package-lock.json (ws@^8.18.0) copied from upstream mitsuhiko/agent-stuff. Verified symlinks at ~/.pi/agent/skills/web-browser/scripts/ after just home.
