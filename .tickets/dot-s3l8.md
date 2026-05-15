@@ -21,5 +21,16 @@ Scope: remove nvim↔pi migration shims only. Do not break still-supported non-n
 1. Rollout-only upgrade/fallback paths for legacy nvim peer-handshake or editor-context payloads are removed from `pinvim.lua`, `pinvim.ts`, and any temporary `bridge.ts` forwarding once canonical `hello`/`hello_ack` and structured envelopes are in place.
 2. Any shimmed bridge handling rejects unsupported legacy nvim protocol payloads gracefully with a clear response or log path instead of silently upgrading them.
 3. Temporary dual-schema peer metadata state added for rollout is removed, and in-file docs/comments describe canonical `pinvim.lua` ↔ `pinvim.ts` ownership only.
-4. `nvim --headless "+lua require('pinvim').setup()" +qa` and `just validate home` both pass after cleanup.
+4. `just home`, `nvim --headless '+lua require("pinvim").setup()' +qa`, and `bin/pinvim-protocol-smoke` all pass after cleanup.
 5. Manual smoke test confirms live sync, explicit send, compose, and review-bundle flows still work with only canonical primary protocol enabled.
+
+## Verification
+
+For any implementation change under this pinvim/vision workstream, run:
+
+1. `just home`
+2. `nvim --headless '+lua require("pinvim").setup()' +qa`
+3. `bin/pinvim-protocol-smoke` — deterministic mock Unix-socket test that asserts nvim sends `hello`, receives `hello_ack`, sends `heartbeat`, receives heartbeat response, and `require("pinvim").setup().health()` reports `ok`.
+
+For research-only tickets, run these before closing any downstream implementation ticket that uses the research.
+

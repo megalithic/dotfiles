@@ -24,3 +24,13 @@ Capture findings as a question-and-answer style research artifact or detailed ti
 4. Research identifies open questions, risks, and recommended follow-up implementation slices for export wiring, especially around jj/git differences and codediff state ownership.
 5. Any probe commands or headless checks used for discovery are recorded, and no lasting review-bundle implementation is required for ticket completion.
 
+## Verification
+
+For any implementation change under this pinvim/vision workstream, run:
+
+1. `just home`
+2. `nvim --headless '+lua require("pinvim").setup()' +qa`
+3. `bin/pinvim-protocol-smoke` — deterministic mock Unix-socket test that asserts nvim sends `hello`, receives `hello_ack`, sends `heartbeat`, receives heartbeat response, and `require("pinvim").setup().health()` reports `ok`.
+
+For research-only tickets, run these before closing any downstream implementation ticket that uses the research.
+

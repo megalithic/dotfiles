@@ -21,3 +21,14 @@ Implement Step 5 from ~/.local/share/pi/plans/dotfiles/nvim-pi-custom-vision_PLA
 3. User commands for previous/restore behavior exist and are documented in pinvim keymaps or command definitions.
 4. Statusline data reflects current link mode and restored-target state using ` mega.p.pinvim` state directly. It must not depend on or restore legacy `mega.p.pi` compatibility.
 5. `nvim --headless "+lua require('pinvim').setup()" +qa` passes and manual close/restore testing works.
+
+## Verification
+
+For any implementation change under this pinvim/vision workstream, run:
+
+1. `just home`
+2. `nvim --headless '+lua require("pinvim").setup()' +qa`
+3. `bin/pinvim-protocol-smoke` — deterministic mock Unix-socket test that asserts nvim sends `hello`, receives `hello_ack`, sends `heartbeat`, receives heartbeat response, and `require("pinvim").setup().health()` reports `ok`.
+
+For research-only tickets, run these before closing any downstream implementation ticket that uses the research.
+

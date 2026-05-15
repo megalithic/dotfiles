@@ -23,3 +23,14 @@ Capture findings as a question-and-answer style research artifact or detailed ti
 3. Research proposes command/status UX for active review context, including at least one recommended design for `/pinvim-review` and any footer/widget/status surfaces.
 4. Research identifies compatibility and payload-size risks for diff-heavy review bundles, plus recommended guardrails for truncation, summarization, or lazy rendering.
 5. Research leaves clear implementation follow-ups and does not require durable review-bundle code changes for completion.
+
+## Verification
+
+For any implementation change under this pinvim/vision workstream, run:
+
+1. `just home`
+2. `nvim --headless '+lua require("pinvim").setup()' +qa`
+3. `bin/pinvim-protocol-smoke` — deterministic mock Unix-socket test that asserts nvim sends `hello`, receives `hello_ack`, sends `heartbeat`, receives heartbeat response, and `require("pinvim").setup().health()` reports `ok`.
+
+For research-only tickets, run these before closing any downstream implementation ticket that uses the research.
+

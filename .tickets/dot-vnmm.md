@@ -20,4 +20,15 @@ Implement Step 6 from ~/.local/share/pi/plans/dotfiles/nvim-pi-custom-vision_PLA
 2. Fresh user command(s) and a non-legacy keymap path send the envelope to the handshaked pi instance and focus the linked pi pane.
 3. `pinvim.lua` and `pinvim.ts` can inspect peer metadata, editor state, selection/cursor context, and typed attachments from the new payload.
 4. Any `bridge.ts` handling is limited to thin shim/compatibility forwarding, not semantic ownership of envelope meaning.
-5. `just validate home` passes and a manual send confirms pi receives the structured context instead of ad-hoc text only.
+5. `just home`, `nvim --headless '+lua require("pinvim").setup()' +qa`, and `bin/pinvim-protocol-smoke` pass; manual send confirms pi receives structured context instead of ad-hoc text only.
+
+## Verification
+
+For any implementation change under this pinvim/vision workstream, run:
+
+1. `just home`
+2. `nvim --headless '+lua require("pinvim").setup()' +qa`
+3. `bin/pinvim-protocol-smoke` — deterministic mock Unix-socket test that asserts nvim sends `hello`, receives `hello_ack`, sends `heartbeat`, receives heartbeat response, and `require("pinvim").setup().health()` reports `ok`.
+
+For research-only tickets, run these before closing any downstream implementation ticket that uses the research.
+

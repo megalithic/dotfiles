@@ -22,3 +22,13 @@ Implement Step 4 from ~/.local/share/pi/plans/dotfiles/nvim-pi-custom-vision_PLA
 4. Toggling hide/show preserves history and reconnects to the intended parked pi instance.
 5. `bash -n bin/tmux-toggle-pi` passes and manual tmux smoke test confirms park/restore behavior.
 
+## Verification
+
+For any implementation change under this pinvim/vision workstream, run:
+
+1. `just home`
+2. `nvim --headless '+lua require("pinvim").setup()' +qa`
+3. `bin/pinvim-protocol-smoke` — deterministic mock Unix-socket test that asserts nvim sends `hello`, receives `hello_ack`, sends `heartbeat`, receives heartbeat response, and `require("pinvim").setup().health()` reports `ok`.
+
+For research-only tickets, run these before closing any downstream implementation ticket that uses the research.
+

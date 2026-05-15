@@ -12,7 +12,7 @@ tags: [nvim, pi, protocol, ready-for-development]
 ---
 # feat(pinvim): peer handshake + hello/hello_ack protocol
 
-Primary protocol handshake between config/nvim/lua/pinvim.lua (nvim-side) and home/common/programs/pi-coding-agent/extensions/pinvim.ts (pi-side). Add explicit peer identity: peer id, cwd/root, tmux session/window/pane identity, link mode (auto/manual/ephemeral/parked), heartbeat timestamps. bridge.ts not involved in nvim semantic ownership; update only if shim manifest compatibility for non-nvim clients needs preservation. Must work after dot-hp1p XDG dir change. Verify: nvim --headless +qa; just validate home; manual test hello -> hello_ack -> heartbeat cycle.
+Primary protocol handshake between config/nvim/lua/pinvim.lua (nvim-side) and home/common/programs/pi-coding-agent/extensions/pinvim.ts (pi-side). Add explicit peer identity: peer id, cwd/root, tmux session/window/pane identity, link mode (auto/manual/ephemeral/parked), heartbeat timestamps. bridge.ts not involved in nvim semantic ownership; update only if shim manifest compatibility for non-nvim clients needs preservation. Must work after dot-hp1p XDG dir change. Verify with `just home`, `nvim --headless '+lua require("pinvim").setup()' +qa`, and `bin/pinvim-protocol-smoke`.
 
 Builds on https://github.com/carderne/pi-nvim and https://github.com/azorng/vision.nvim peer concepts but stays with persistent vim.uv.new_pipe() model, not pull/hook model.
 
@@ -26,4 +26,15 @@ Builds on https://github.com/carderne/pi-nvim and https://github.com/azorng/visi
 6. `pinvim.ts` shows nvim status in pi footer and exposes inspection/debug command(s) for current peer/editor state.
 7. `pinvim.lua` uses persistent `vim.uv.new_pipe()` communication with reconnect/health checks and discovery from manifest/env/buffer/tmux sources.
 8. `bridge.ts` is limited to shim/legacy support for Hammerspoon, Telegram, tell, tmux-oriented helpers, manifests, and transitional ingress; it does not own pinvim semantic state.
-9. `nvim --headless '+lua require("pinvim").setup()' +qa` and `just validate home` both pass; manual test confirms hello -> hello_ack -> heartbeat cycle.
+9. `just home`, `nvim --headless '+lua require("pinvim").setup()' +qa`, and `bin/pinvim-protocol-smoke` all pass; smoke test confirms deterministic hello -> hello_ack -> heartbeat cycle.
+
+## Verification
+
+For any implementation change under this pinvim/vision workstream, run:
+
+1. `just home`
+2. `nvim --headless '+lua require("pinvim").setup()' +qa`
+3. `bin/pinvim-protocol-smoke` — deterministic mock Unix-socket test that asserts nvim sends `hello`, receives `hello_ack`, sends `heartbeat`, receives heartbeat response, and `require("pinvim").setup().health()` reports `ok`.
+
+For research-only tickets, run these before closing any downstream implementation ticket that uses the research.
+

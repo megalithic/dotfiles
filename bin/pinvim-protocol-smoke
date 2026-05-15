@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/pinvim-protocol-smoke.XXXXXX")"
+socket_path="$tmp_dir/pinvim.sock"
+server_log="$tmp_dir/server.log"
+
+cleanup() {
+  local status=$?
+  if [[ -n "${server_pid:-}" ]] && kill -0 "$server_pid" 2>/dev/null; then
+    kill "$server_pid" 2>/dev/null || true
+    wait "$server_pid" 2>/dev/null || true
+  fi
+  trash "$tmp_dir" 2>/dev/null || rm -rf "$tmp_dir"
+  exit "$status"
+}
+trap cleanup EXIT INT TERM
+
+python3 - "$socket_path" >"$server_log" 2>&1 <<'PY' &
+import json
+import os
+import socket
+import sys
+import time
+
+sock_path = sys.argv[1]
+try:
+    os.unlink(sock_path)
+except FileNotFoundError:
+    pass
+
+server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+server.bind(sock_path)
+server.listen(1)
+print(f"listening {sock_path}", flush=True)
+
+conn, _ = server.accept()
+print("accepted", flush=True)
+
+pi_peer = {
+    "id": "pi:smoke-test",
+    "kind": "pi",
+    "cwd": os.getcwd(),
+    "root": os.getcwd(),
+    "tmux": {"session": "smoke", "window": "test"},
+    "linkMode": "test",
+    "heartbeatAt": int(time.time()),
+}
+
+with conn, conn.makefile("r", encoding="utf-8") as reader:
+    for line in reader:
+        line = line.strip()
+        if not line:
+            continue
+        print(f"recv {line}", flush=True)
+        try:
+            payload = json.loads(line)
+        except Exception as exc:
+            response = {"ok": False, "error": f"invalid json: {exc}"}
+        else:
+            typ = payload.get("type")
+            if typ == "hello":
+                response = {
+                    "ok": True,
+                    "type": "hello_ack",
+                    "protocol": "pinvim.peer.v1",
+                    "peer": pi_peer,
+                    "accepts": ["hello", "heartbeat", "editor_state", "editor_disconnect", "ping", "prompt", "explicit_send"],
+                }
+            elif typ == "heartbeat":
+                response = {
+                    "ok": True,
+                    "type": "heartbeat",
+                    "protocol": "pinvim.peer.v1",
+                    "peerId": payload.get("peerId"),
+                    "sentAt": int(time.time()),
+                }
+            elif typ == "ping":
+                response = {"ok": True, "type": "pong"}
+            elif typ in {"editor_state", "editor_disconnect", "prompt", "explicit_send"}:
+                response = {"ok": True, "type": typ}
+            else:
+                response = {"ok": False, "error": f"unexpected type: {typ}"}
+        encoded = json.dumps(response, separators=(",", ":")) + "\n"
+        conn.sendall(encoded.encode("utf-8"))
+        print(f"send {encoded.strip()}", flush=True)
+PY
+server_pid=$!
+
+for _ in {1..100}; do
+  [[ -S "$socket_path" ]] && break
+  sleep 0.05
+done
+if [[ ! -S "$socket_path" ]]; then
+  echo "pinvim smoke: mock socket not created" >&2
+  cat "$server_log" >&2 || true
+  exit 1
+fi
+
+PI_SOCKET="$socket_path" \
+PI_STATE_DIR="$tmp_dir/state" \
+PINVIM_LINK_MODE="test" \
+nvim --headless -u NONE \
+  --cmd "set runtimepath^=$repo_root/config/nvim" \
+  '+lua local api=require("pinvim").setup({transport={link_mode="test",enable_peer_frames=true},connection={ping_interval_s=1,reconnect_max_retries=0},live_context={enabled=false}}); local ok=vim.wait(5000,function() local h=api.health(); return h.ok and h.hello_ack and h.heartbeat_age ~= nil and h.peer_id == "pi:smoke-test" end,50); if not ok then print(vim.inspect(api.health())); vim.cmd("cquit 1") end; print("pinvim protocol smoke ok")' \
+  +qa
+
+if ! rg -q '"type":"hello_ack"' "$server_log" || ! rg -q '"type":"heartbeat"' "$server_log"; then
+  echo "pinvim smoke: expected hello_ack + heartbeat not observed" >&2
+  cat "$server_log" >&2
+  exit 1
+fi
+
+echo "pinvim protocol smoke passed"
