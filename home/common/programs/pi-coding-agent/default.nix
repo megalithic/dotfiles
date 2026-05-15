@@ -204,6 +204,23 @@
     '';
   };
 
+  # web-browser skill scripts — bakes node_modules (ws) into a derivation so
+  # CDP-using scripts (cdp.js + dependents) can resolve `ws` at runtime even
+  # though the skill dir is read-only in nix-store.
+  webBrowserScripts = pkgs.buildNpmPackage {
+    pname = "web-browser-scripts";
+    version = "0.1.0";
+    src = ./skills/web-browser/scripts;
+    npmDepsHash = "sha256-vQxKChe57on93GAA180X/W36YNeumg7zPlcPhrT+yXQ=";
+    dontNpmBuild = true;
+    installPhase = ''
+      runHook preInstall
+      mkdir -p $out
+      cp -r . $out/
+      runHook postInstall
+    '';
+  };
+
   # Web search, content fetching, research (multi-provider: Brave, Tavily, Kagi)
   pi-internet = pkgs.buildNpmPackage {
     pname = "pi-internet";
@@ -309,8 +326,9 @@
   ];
 
   # Skills to exclude from auto-discovery
+  # web-browser is wired manually below (needs buildNpmPackage for ws)
   disabledSkills = [
-    # Add skill names here to disable them
+    "web-browser"
   ];
 
   # ===========================================================================
@@ -534,6 +552,11 @@ in {
       # Full directory extensions (symlink whole package)
       # ".pi/agent/extensions/pi-agent-browser".source = pi-agent-browser;
       ".pi/agent/extensions/pi-mcp-adapter".source = pi-mcp-adapter;
+
+      # web-browser skill: SKILL.md from source, scripts/ from built derivation
+      # (scripts need node_modules/ws baked in by buildNpmPackage)
+      ".pi/agent/skills/web-browser/SKILL.md".source = ./skills/web-browser/SKILL.md;
+      ".pi/agent/skills/web-browser/scripts".source = webBrowserScripts;
       ".pi/agent/extensions/pi-internet".source = pi-internet;
       # pi-multi-pass: auto-discovered as extensions/multi-sub.ts (no nix derivation needed)
       ".pi/agent/extensions/pi-synthetic-provider".source = pi-synthetic-provider;

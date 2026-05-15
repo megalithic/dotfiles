@@ -157,15 +157,14 @@ Summarize network responses:
 ## Runtime dependencies
 
 Scripts require the `ws` npm module (declared in `scripts/package.json`).
-The skill directory is **read-only** in nix-store; node_modules wiring is
-handled by the surrounding nix build (see ticket dot-ol82 / 3.7). If you
-hit `Cannot find package 'ws'`, the npm install step has not yet been
-wired — install manually:
+The `scripts/` directory is built as a `buildNpmPackage` derivation in
+`home/common/programs/pi-coding-agent/default.nix` (search for
+`webBrowserScripts`), so `node_modules/ws` is baked into the symlinked
+ output and resolves automatically at runtime.
 
-```bash
-cd ~/.pi/agent/skills/web-browser/scripts  # read-only — copy out first
-# or use a writable mirror
-```
+To bump the `ws` version: edit `scripts/package.json`, run
+`npm install --package-lock-only` inside `scripts/`, then `just home` (the
+`npmDepsHash` fake-hash workflow will reveal the new sha256).
 
 ## Migration notes (vs old agent-browser CLI)
 
