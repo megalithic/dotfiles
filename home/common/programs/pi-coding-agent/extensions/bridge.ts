@@ -1,16 +1,18 @@
 /**
  * Pi Bridge Extension
  *
- * Creates a Unix socket for bidirectional communication with pi.
- * Accepts JSON payloads from nvim, Telegram (via Hammerspoon), and other sources.
+ * Legacy Unix socket bridge.
+ * Disabled by default: pinvim.ts now owns the primary pi socket and all nvim frames.
+ * Enable only with PI_BRIDGE_LEGACY_SOCKET=1 for temporary non-nvim compatibility.
+ * Accepts JSON payloads from Telegram (via Hammerspoon), tell, and legacy sources.
  * Returns JSON responses to all clients ({ ok: true } / { ok: false, error }).
  *
  * Protocol:
  *   Request:  { type: 'ping' }                         → { ok: true, type: 'pong' }
- *   Request:  { type: 'hello', ... }                   → { ok: true, type: 'hello_ack', ... }
- *   Request:  { type: 'heartbeat', ... }               → { ok: true }
- *   Request:  { type: 'prompt', message: '...' }       → { ok: true }
- *   Request:  { type: 'explicit_send', context: {...} } → { ok: true }
+ *   Request:  { type: 'hello', ... }                   → { ok: false, error: '...' }
+ *   Request:  { type: 'heartbeat', ... }               → { ok: false, error: '...' }
+ *   Request:  { type: 'prompt', message: '...' }       → { ok: false, error: '...' }
+ *   Request:  { type: 'explicit_send', context: {...} } → { ok: false, error: '...' }
  *   Request:  { type: 'editor_state', state: {...} }   → { ok: false, error: '...' }
  *   Request:  { type: 'telegram', text: '...' }        → { ok: true }
  *   Request:  { type: 'tell', text: '...' }            → { ok: true }
@@ -129,7 +131,7 @@ const resolveSocket = (): {
 
 const { socketPath: SOCKET_PATH, session: PI_SESSION, window: PI_WINDOW } =
   resolveSocket();
-const IS_BRIDGE_ENABLED = !!SOCKET_PATH;
+const IS_BRIDGE_ENABLED = !!SOCKET_PATH && process.env.PI_BRIDGE_LEGACY_SOCKET === "1";
 
 /**
  * Ephemeral detection: explicit PI_EPHEMERAL=1 env wins, else socket path
@@ -297,7 +299,7 @@ const buildHelloAck = (): HelloAckPayload => ({
   type: "hello_ack",
   protocol: "pinvim.peer.v1",
   peer: buildBridgePeerIdentity(),
-  accepts: ["hello", "heartbeat", "ping", "prompt", "explicit_send"],
+  accepts: ["ping", "telegram", "tell"],
 });
 
 // =============================================================================
@@ -471,56 +473,9 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
             continue;
           }
 
-          // Handle pinvim peer frames
-          if (isHelloPayload(payload)) {
-            if (payload.protocol !== "pinvim.peer.v1") {
-              respondError(socket, `unsupported pinvim protocol: ${payload.protocol}`);
-              continue;
-            }
-
-            pi.events.emit("pinvim:hello", payload);
-            const helloAck = buildHelloAck();
-            pi.events.emit("pinvim:hello_ack", helloAck);
-            respondOk(socket, helloAck);
-            continue;
-          }
-
-          if (isHeartbeatPayload(payload)) {
-            if (payload.protocol !== "pinvim.peer.v1") {
-              respondError(socket, `unsupported pinvim protocol: ${payload.protocol}`);
-              continue;
-            }
-
-            pi.events.emit("pinvim:heartbeat", payload);
-            respondOk(socket, {
-              type: "heartbeat",
-              protocol: payload.protocol,
-              peerId: buildBridgePeerIdentity().id,
-              sentAt: payload.sentAt,
-            });
-            continue;
-          }
-
-          if (isExplicitSendPayload(payload)) {
-            pi.events.emit("pinvim:explicit_send", payload);
-            respondOk(socket);
-            continue;
-          }
-
-          // Handle pinvim prompt frame — pinvim.ts owns semantics
-          if (isPromptPayload(payload)) {
-            if (!payload.message?.trim()) {
-              respondError(socket, "prompt message is empty");
-              continue;
-            }
-            pi.events.emit("pinvim:prompt", payload);
-            respondOk(socket);
-            continue;
-          }
-
           const payloadType = "type" in payload ? String(payload.type) : "";
-          if (payloadType === "editor_state" || payloadType === "editor_disconnect") {
-            respondError(socket, "editor_state live context is unsupported; use explicit_send");
+          if (["hello", "heartbeat", "prompt", "explicit_send", "editor_state", "editor_disconnect"].includes(payloadType)) {
+            respondError(socket, "pinvim/nvim frames are owned by pinvim.ts; bridge.ts does not handle nvim behavior");
             continue;
           }
 
@@ -601,9 +556,7 @@ export default function (pi: ExtensionAPI): void {
   pi.on("session_start", (_event, ctx) => {
     latestCtx = ctx;
 
-    // Show initial status
-
-    // Start server if bridge is enabled (invoked via pinvim/pisock)
+    // Start legacy server only when explicitly enabled.
     if (IS_BRIDGE_ENABLED) {
       startServer(pi, ctx);
       writeInfoManifest();

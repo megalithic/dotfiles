@@ -4,8 +4,8 @@
 -- Responsibility split:
 --   * after/plugin/pi.lua: guard + require only
 --   * lua/pinvim.lua: editor-side state, handshake targets, commands, autocmds
---   * bridge.ts: audited transport shim + Telegram/tell ingress
---   * extensions/pinvim.ts: primary pi-side nvim extension
+--   * extensions/pinvim.ts: primary pi-side socket + nvim extension
+--   * bridge.ts: legacy non-nvim ingress only, disabled by default
 --   * after/plugin/pi_legacy.lua + extensions/pinvim_legacy.ts: legacy transport path + shim
 
 local M = {}
@@ -179,7 +179,7 @@ local state_defaults = {
   last_error = nil,
   connected = false,
   connecting = false,
-  rollout = "pinvim.ts owns pi-side nvim state; bridge.ts passes peer frames without owning semantics",
+  rollout = "pinvim.ts owns pi-side nvim socket, peer state, and explicit context delivery",
 }
 
 function State.new(initial)
@@ -1327,7 +1327,7 @@ function M.setup(opts)
       responsibilities = {
         loader = "config/nvim/after/plugin/pi.lua",
         module = "config/nvim/lua/pinvim.lua",
-        bridge = "home/common/programs/pi-coding-agent/extensions/bridge.ts",
+        bridge = "legacy non-nvim ingress only; disabled by default",
         extension = "home/common/programs/pi-coding-agent/extensions/pinvim.ts",
         legacy = "config/nvim/after/plugin/pi_legacy.lua + extensions/pinvim_legacy.ts",
       },

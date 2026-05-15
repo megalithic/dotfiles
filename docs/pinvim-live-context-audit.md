@@ -19,12 +19,8 @@ nvim
     peer state, socket discovery, hello/heartbeat, explicit send/queue
       ↓ persistent vim.uv.new_pipe()
 pi socket
-  home/common/programs/pi-coding-agent/extensions/bridge.ts
-    transport shim: parses JSON frames, emits pi events, owns no nvim semantics
-      ↓ pi.events
-pi
   home/common/programs/pi-coding-agent/extensions/pinvim.ts
-    owns peer metadata, footer status, commands, explicit context delivery
+    owns socket, peer metadata, footer status, commands, explicit context delivery
 ```
 
 ## Message types
@@ -36,7 +32,7 @@ pi
 | `heartbeat` | both | No | Freshness/health |
 | `explicit_send` | nvim → pi | Yes | User-triggered context send via `gps` / commands |
 | `prompt` | nvim → pi | Yes | User-triggered prompt send |
-| `editor_state` | nvim → pi | No | Unsupported; bridge returns error directing user to `explicit_send` |
+| `editor_state` | nvim → pi | No | Unsupported; `pinvim.ts` returns error directing user to `explicit_send` |
 
 ## Explicit send behavior
 
@@ -73,11 +69,13 @@ Removed from `home/common/programs/pi-coding-agent/extensions/pinvim.ts`:
 - `pinvim-live-context` custom hidden message
 - legacy `pinvim_legacy:editor_state` handling
 
-Changed in `home/common/programs/pi-coding-agent/extensions/bridge.ts`:
+Changed socket ownership:
 
+- `home/common/programs/pi-coding-agent/extensions/pinvim.ts` owns the nvim↔pi socket path
 - `hello_ack.accepts` no longer lists `editor_state` or `editor_disconnect`
-- `editor_state` / `editor_disconnect` receive clear unsupported response
-- `explicit_send`, `prompt`, `hello`, and `heartbeat` remain supported
+- `editor_state` / `editor_disconnect` receive clear unsupported response from `pinvim.ts`
+- `explicit_send`, `prompt`, `hello`, and `heartbeat` remain supported by `pinvim.ts`
+- `bridge.ts` is disabled by default and rejects nvim/pinvim frames if explicitly enabled
 
 ## Future direction
 

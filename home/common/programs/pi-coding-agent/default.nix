@@ -462,11 +462,11 @@
       esac
     done
 
-    # Runtime state — bridge.ts derives sockets/ and manifests/ from this.
+    # Runtime state — pinvim.ts derives sockets/ and manifests/ from this.
     export PI_STATE_DIR="${piStateDir}"
     mkdir -p "$PI_STATE_DIR/sockets" "$PI_STATE_DIR/manifests"
 
-    # Detect session name (bridge.ts handles socket)
+    # Detect session name (pinvim.ts handles socket)
     if [ -n "$TMUX" ]; then
       PI_SESSION=$(${pkgs.tmux}/bin/tmux display-message -p '#{session_name}')
     else
