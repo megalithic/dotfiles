@@ -1,6 +1,6 @@
 ---
 id: dot-ogoc
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-05-13T14:28:04Z
@@ -22,3 +22,9 @@ Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` 
 
 Cookie dismissal, background logging, network summary
 
+
+## Notes
+
+**2026-05-15T18:38:55Z**
+
+Copied auxiliary scripts from upstream: dismiss-cookies.js, watch.js (background log watcher), logs-tail.js, net-summary.js, pick.js (element picker). All 13 .js scripts now in place; runtime still needs ws install (deferred to 3.7).
