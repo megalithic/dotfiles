@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # pimux: show, hide, and reuse pi panes in tmux.
 #
-# Fresh pinvim/tmux owner. Legacy tmux-toggle-pi stays available for now, but
-# new nvim/tmux UX should call this script.
+# Fresh pinvim/tmux owner for nvim↔pi pane lifecycle.
 #
 # Model:
 #   - From nvim/vim pane: ensure/toggle a 30% right split running pi.

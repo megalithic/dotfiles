@@ -259,10 +259,10 @@ Pi integration operates via Unix socket to tmux pi pane:
 │  send_selection() / send_cursor() / add_file()              │
 │                          │                                  │
 │                          ▼                                  │
-│              send_payload() → nc -U socket                  │
+│              send_payload() → pinvim unix socket            │
 │                          │                                  │
 │                          ▼                                  │
-│            tmux-toggle-pi (auto-show pi pane)               │
+│              pimux (auto-show pi pane)                      │
 └─────────────────────────────────────────────────────────────┘
 ```
 

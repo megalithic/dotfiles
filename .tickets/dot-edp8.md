@@ -16,20 +16,19 @@ tags: [nvim, pi, tmux, ephemeral, ready-for-development]
 
 Implement the fresh pinvim tmux split workflow in primary nvim-side pinvim code (`config/nvim/lua/pinvim.lua`, loaded by the thin loader) without restoring legacy `mega.p.pi` or legacy keymaps.
 
-2026-05-14 UX correction: this is no longer only a throwaway isolated ephemeral split. Primary behavior should create/focus a 30%-width right tmux split for pi and allow that split to adopt/take over the current nvim↔pi handshake for the tmux session when an existing handshaked pi is active. Ephemeral isolation remains useful as an implementation mode or later option, but fresh default UX should be "linked handshaked pi pane" first.
+2026-05-18 UX correction: primary split behavior is an ephemeral linked split. Creating a split from nvim should spawn a fresh pi instance in a 30%-width right tmux split, immediately pair nvim to that new socket, and save the previous nvim target for restore when the split closes. Do not adopt/take over an existing tmux-session pi by default. Existing pi instances remain selectable through explicit target/session commands.
 
 ## Background
 
 All plumbing exists (see parent `dot-kts9`):
-- `tmux-toggle-pi` handles singleton agent-window lifecycle (`--ensure`, `--socket`, `--bell`)
+- `pimux` handles nvim-driven pi split lifecycle, explicit socket targeting, and pane focus/bell behavior
 - `pinvim` wrapper exports socket/state env and launches pi
 - `bridge.ts` shim honors `PI_SOCKET` env override for explicit sockets
 - shim/manifest publishing already supports discovery and compatibility flows
 - `pinvim.lua` supports `vim.b.pi_target_socket` buffer-local override
 - socket discovery already has manifest/tmux/default fallback paths
 
-None of this currently supports a throwaway side-by-side pi without
-colliding with the primary per-window pi for the same tmux session.
+The corrected default requires side-by-side fresh pi instances without colliding with the primary per-window pi for the same tmux session.
 
 ## Isolation requirement (CRITICAL)
 
@@ -56,36 +55,29 @@ multiple pis in one tmux session do not collide. Include `ephemeral: true`
 flag in manifest payload so primary `pinvim.lua` discovery can filter it out of
 auto-discovery (ephemerals only reachable via explicit socket target, never via cwd scan).
 
-### tmux-toggle-pi `--new` flag
-New branch, bypasses all agent-window logic:
-- Require `--socket PATH` (ephemeral path, caller-provided)
-- Split current window 30% right via `tmux split-window -h -l 30%`
-- Launch `PI_SOCKET=<path> pinvim` in the new pane
-- Do NOT touch AGENT_WINDOW, STATE_FILE, or any singleton state
-- Do NOT call `normalize_agent_window` / `break-pane` / `move-window`
-- Do NOT write to `/tmp/tmux-agent-toggle-{session}` state file
-- Exit immediately (no toggle-off semantics — closing the pane is cleanup)
+### `pimux` ephemeral split mode
+Ephemeral split branch:
+- Require or generate a unique `--socket PATH` for the ephemeral pi.
+- Split current window 30% right via `tmux split-window -h -l 30%`.
+- Launch `PI_SOCKET=<path> PI_EPHEMERAL=1 pinvim` in the new pane.
+- Do not adopt any existing tmux-session pi by default.
+- Preserve previous nvim target in nvim-side MRU before switching to the new socket.
+- Closing the pane is cleanup; nvim should restore the previous alive target.
 
-### Parser updates (tmux-toggle-pi)
-`socket_to_window()` and `find_pi_pane_by_socket()` parse
-`pi-{session}-{window}.sock`. Update to also recognize
-`pi-{session}-{window}-eph-*.sock` (strip `-eph-*` suffix for window name
-lookup), so `--bell` and existing `--socket` targeting keep working.
-Lsof fallback already handles the worst case.
+### Parser updates (`pimux`)
+Socket/pane lookup should recognize `pi-{session}-{window}.sock` and `pi-{session}-{window}-eph-*.sock` (strip `-eph-*` suffix for window/name lookup), so focus/bell and explicit socket targeting work. Lsof fallback handles the worst case.
 
 ### nvim-side (`pinvim.lua`)
 Primary implementation should:
 1. Generate unique socket path (epoch+pid suffix).
 2. Set `vim.b.pi_target_socket = <path>` on current buffer BEFORE spawn so
    any buffer-local send routes only to this ephemeral.
-3. Start `tmux-toggle-pi --new --socket <path>` detached.
+3. Start `pimux --ephemeral --socket <path>` (or equivalent fresh-split mode) detached.
 4. Poll for socket file up to ~2s; on success notify, on timeout notify
    + clear `vim.b.pi_target_socket`.
 5. Register a `vim.uv.fs_event_start` watcher on socket; on delete
    (pi pane exit) clear `vim.b.pi_target_socket` and notify.
-6. Keep ephemeral target strictly buffer-local — no global state mutation,
-   no change to any other buffer's target, no change to session
-   picker's default.
+6. Keep ephemeral target explicit to the spawning nvim instance/buffer: switch current target to the new socket, record the previous target for restore, do not change unrelated buffers or other nvim instances, and do not make the ephemeral socket an auto-discovery default.
 
 ### pinvim extension (pi extension side)
 `pinvim.ts` is semantic owner of editor/link state. Each ephemeral runs in its own
@@ -108,7 +100,7 @@ explicitly chosen. Filter: Hammerspoon discovery skips manifests with
 
 ## Files
 
-- `bin/tmux-toggle-pi` (add `--new` branch + parser tweak)
+- `bin/pimux` (fresh ephemeral split mode + parser/focus tweak)
 - `config/nvim/after/plugin/pinvim.lua` (loader only, if command/bootstrap hook needed)
 - `config/nvim/lua/pinvim.lua` (primary ephemeral spawn + watcher logic)
 - `home/common/programs/pi-coding-agent/extensions/bridge.ts`
@@ -120,17 +112,12 @@ explicitly chosen. Filter: Hammerspoon discovery skips manifests with
 
 ## Core functionality
 
-1. Fresh pinvim split command/keymap in nvim creates or focuses a tmux pane (30% right split of current window) running pi, without restoring legacy `mega.p.pi` API or old keymaps.
-2. Spawned pi uses a unique socket path
-   `/tmp/pi-{session}-{window}-eph-{epoch}-{pid}.sock` passed via
-   `PI_SOCKET` env override.
-3. `tmux-toggle-pi --new --socket PATH` exists; rejects invocation
-   without `--socket`; does not read/write the agent-window state file.
-4. `vim.b.pi_target_socket` is set on spawning buffer to ephemeral socket path before first send.
-5. Ephemeral pane close removes socket + `.info` manifest (verified by
-   file listing after exit).
-6. fs_event watcher on the socket clears `vim.b.pi_target_socket` when
-   the socket disappears; user notified.
+1. Fresh pinvim split command/keymap in nvim creates a new tmux pane (30% right split of current window) running a fresh pi instance, without restoring legacy `mega.p.pi` API or old keymaps.
+2. Spawned pi uses a unique XDG state socket path with an ephemeral suffix (for example `~/.local/state/pi/sockets/pi-{session}-{window}-eph-{epoch}-{pid}.sock`) passed via `PI_SOCKET` env override and `PI_EPHEMERAL=1`.
+3. `pimux` fresh-split mode creates the new pane/socket, rejects ambiguous missing-socket cases if the caller is responsible for socket selection, and does not adopt an existing tmux-session pi by default.
+4. `vim.b.pi_target_socket` or current pinvim target state is set to the ephemeral socket before first send, and the previous target is recorded before switching.
+5. Ephemeral pane close removes socket + `.info` manifest (verified by file listing after exit).
+6. fs_event watcher on the socket clears the ephemeral target and restores the previous alive target when the socket disappears; user notified.
 
 ## Isolation (CRITICAL — no bleed-over)
 
@@ -161,9 +148,7 @@ explicitly chosen. Filter: Hammerspoon discovery skips manifests with
 16. Killing an ephemeral pi pane does not affect the primary pi or
     any other ephemeral: primary `:PiStatus` unchanged, other
     ephemerals' buffer-local targets still valid and responsive.
-17. `tmux-toggle-pi --bell PATH` rings the correct pane when `PATH`
-    is an ephemeral socket (parser handles `-eph-*` suffix, or lsof
-    fallback succeeds).
+17. `pimux` focus/bell for an explicit socket rings or focuses the correct pane when `PATH` is an ephemeral socket (parser handles `-eph-*` suffix, or lsof fallback succeeds).
 
 ## Regression
 
@@ -195,7 +180,7 @@ Historical notes below describe earlier implementation pass. Current `dot-kts9` 
 
 Implemented:
 - bridge.ts: per-socket .info manifest ({socket-basename}.info); added ephemeral + window fields; IS_EPHEMERAL detect from PI_EPHEMERAL=1 env or socket name containing -eph-
-- bin/tmux-toggle-pi: new --new flag requiring --socket PATH; spawns 30% right split with PI_SOCKET+PI_EPHEMERAL=1 env; does not touch AGENT_WINDOW/state-file; socket_to_window strips -eph-* suffix so --bell still routes correctly
+- superseded helper behavior: fresh split mode requires a unique socket path, spawns 30% right split with PI_SOCKET+PI_EPHEMERAL=1 env, avoids singleton state, and parses -eph-* suffix so focus/bell routes correctly
 - config/nvim/after/plugin/pi.lua:
   - parse_info_manifest: derives ephemeral flag from manifest or name
   - discover_socket_by_cwd: skips ephemerals in both cwd + same-session passes
@@ -203,7 +188,7 @@ Implemented:
   - list_sockets(opts): opts.include_ephemeral; returns {path,ephemeral}[]
   - select_session: shows ephemerals tagged ' · eph'; never auto-picked via discovery
   - PiHealth: marks ephemeral manifests
-  - <localleader>pn: unique socket path, set vim.b.pi_target_socket, jobstart tmux-toggle-pi --new, poll for socket (3s), fs_event watcher clears target on socket deletion
+  - <localleader>pn: unique socket path, set vim.b.pi_target_socket/current target, start fresh split helper, poll for socket (3s), fs_event watcher restores previous target on socket deletion
 - config/hammerspoon/lib/interop/pi.lua:
   - isEphemeralSocket() helper
   - getSocketPath/getActiveSessions/getSessionSockets: skip ephemerals

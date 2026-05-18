@@ -12,15 +12,17 @@ tags: [ready-for-development]
 ---
 # Add parked tmux pi registry and MRU tracking
 
-Implement Step 4 from ~/.local/share/pi/plans/dotfiles/nvim-pi-custom-vision_PLAN.md. Add fresh bin/pimux command to keep reusable parked pi panes or sessions instead of treating split close as teardown only. Track active, last, MRU, and parked socket state in tmux user options so pi panes can be hidden and restored without losing session history. Keep bin/tmux-toggle-pi as legacy for later deprecation/sunset.
+Implement Step 4 from ~/.local/share/pi/plans/dotfiles/nvim-pi-custom-vision_PLAN.md. Add fresh bin/pimux command for nvim-driven ephemeral pi splits plus reusable parked pi panes or sessions. Default nvim split UX must spawn a fresh pi instance in a 30%-width right tmux split, immediately pair nvim with that new ephemeral socket, and save the previous nvim target for restore when the split closes. Existing pi instances remain selectable through explicit target/session commands, but must not be adopted by default when creating a split.
 
 ## Acceptance Criteria
 
-1. Primary nvim UX provides a command/keymap to create or focus a 30%-width tmux split to the right of the current nvim pane, running pi. When an existing handshaked pi is active for the tmux session, the split adopts/takes over that handshake instead of spawning a fresh unlinked pi.
-2. `pimux` can park and restore reusable pi panes or sessions instead of always creating a fresh process.
-3. Active, last, MRU, and parked socket metadata is persisted in tmux user options with a documented schema.
-4. Toggling hide/show preserves history and reconnects to the intended parked pi instance.
-5. `bash -n bin/pimux` passes and manual tmux smoke test confirms park/restore behavior.
+1. Primary nvim UX provides a command/keymap to create a 30%-width tmux split to the right of the current nvim pane, spawning a fresh pi instance rather than adopting any existing tmux-session pi.
+2. Spawned split pi uses `link_mode = "ephemeral"`, a unique socket, and becomes the current nvim target before the first send.
+3. Nvim records the previous target before switching to the ephemeral split and restores that previous alive target when the split/socket closes.
+4. Explicit target switching remains available so the user can swap among active pi instances, including parked/manual/auto targets and the current ephemeral target.
+5. `pimux` can park and restore reusable pi panes or sessions for explicit reuse without making parked adoption the default split behavior.
+6. Active, previous, MRU, ephemeral, and parked socket metadata is persisted in tmux/nvim state with a documented schema.
+7. `bash -n bin/pimux` passes and manual tmux+nvim smoke confirms: split creates a fresh pi/socket, nvim target switches to it, explicit target switching works, and closing the split restores the prior target.
 
 ## Verification
 

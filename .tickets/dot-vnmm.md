@@ -12,12 +12,12 @@ tags: [ready-for-development]
 ---
 # Send structured editor context envelopes to pi
 
-Implement Step 6 from ~/.local/share/pi/plans/dotfiles/nvim-pi-custom-vision_PLAN.md. Define one structured context schema across `config/nvim/lua/pinvim.lua` and `home/common/programs/pi-coding-agent/extensions/pinvim.ts` for fresh explicit sends and queues. Primary UX: select code or use cursor/word context, trigger a new keybinding such as `gps` if available, send structured context to the handshaked `pinvim.ts`, then focus the linked pi pane so the user can type additional prompt text. Do not use implicit `live_context`/`editor_state`; current context flow is explicit send/queue only. Do not restore legacy `mega.p.pi` or legacy keymaps. If `bridge.ts` needs awareness for shimmed or transitional ingress, keep that involvement thin and compatibility-focused only.
+Implement Step 6 from ~/.local/share/pi/plans/dotfiles/nvim-pi-custom-vision_PLAN.md. Define one structured context schema across `config/nvim/lua/pinvim.lua` and `home/common/programs/pi-coding-agent/extensions/pinvim.ts` for fresh explicit sends and queues. Primary UX: select code or use cursor/word context, trigger a new keybinding such as `gps` if available, send structured context to the currently selected handshaked `pinvim.ts` target (including a newly spawned ephemeral split target), then focus the linked pi pane so the user can type additional prompt text. Do not use implicit `live_context`/`editor_state`; current context flow is explicit send/queue only. Do not restore legacy `mega.p.pi` or legacy keymaps. If `bridge.ts` needs awareness for shimmed or transitional ingress, keep that involvement thin and compatibility-focused only.
 
 ## Acceptance Criteria
 
 1. A structured context envelope exists for explicit visual-selection, cursor/word sends, and queue/batch modes.
-2. Fresh user command(s) and a non-legacy keymap path send the envelope to the handshaked pi instance and focus the linked pi pane.
+2. Fresh user command(s) and a non-legacy keymap path send the envelope to the currently selected handshaked pi instance and focus the linked pi pane, including when current target is a newly spawned ephemeral split.
 3. `pinvim.lua` and `pinvim.ts` can inspect peer metadata, selection/cursor context, queued/batch context, and typed attachments from the new payload without relying on `editor_state`.
 4. Any `bridge.ts` handling is limited to thin shim/compatibility forwarding, not semantic ownership of envelope meaning.
 5. `just home`, `nvim --headless '+lua require("pinvim").setup()' +qa`, and `bin/pinvim-protocol-smoke` pass; manual send confirms pi receives structured context instead of ad-hoc text only.

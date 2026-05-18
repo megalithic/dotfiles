@@ -180,17 +180,6 @@ interface TellPayload {
   timestamp?: number;
 }
 
-interface NvimPayload {
-  file?: string;
-  range?: [number, number];
-  selection?: string;
-  lsp?: {
-    diagnostics?: string[];
-    hover?: string;
-  };
-  task?: string;
-}
-
 type Payload =
   | HelloPayload
   | HeartbeatPayload
@@ -198,8 +187,7 @@ type Payload =
   | PromptPayload
   | ExplicitSendPayload
   | TelegramPayload
-  | TellPayload
-  | NvimPayload;
+  | TellPayload;
 
 interface PinvimState {
   protocol: "pinvim.peer.v1";
@@ -307,36 +295,6 @@ const formatExplicitContext = (payload: ExplicitSendPayload): string => {
   if (context.modified) parts.push("Buffer: modified (unsaved)");
 
   parts.push("User explicitly sent this context from Neovim.");
-  return parts.join("\n");
-};
-
-const formatLegacyNvimMessage = (payload: NvimPayload): string => {
-  const parts: string[] = [];
-
-  if (payload.file) parts.push(`File: ${payload.file}`);
-  if (payload.range) parts.push(`Lines: ${payload.range[0]}-${payload.range[1]}`);
-
-  if (payload.selection?.trim()) {
-    parts.push("Selection:");
-    parts.push("```");
-    parts.push(payload.selection);
-    parts.push("```");
-  }
-
-  if (payload.lsp?.diagnostics?.length) {
-    parts.push("LSP diagnostics:");
-    for (const diag of payload.lsp.diagnostics) parts.push(`- ${diag}`);
-  }
-
-  if (payload.lsp?.hover?.trim()) {
-    parts.push("LSP hover:");
-    parts.push("```");
-    parts.push(payload.lsp.hover);
-    parts.push("```");
-  }
-
-  if (payload.task?.trim()) parts.push(`Task: ${payload.task.trim()}`);
-
   return parts.join("\n");
 };
 
@@ -552,13 +510,7 @@ const handleSocketPayload = (pi: ExtensionAPI, socket: net.Socket, payload: Payl
     return;
   }
 
-  const legacyMessage = formatLegacyNvimMessage(payload as NvimPayload);
-  if (!legacyMessage) {
-    respondError(socket, "empty nvim payload");
-    return;
-  }
-  deliverMessage(pi, legacyMessage);
-  respondOk(socket);
+  respondError(socket, "unsupported untyped pinvim payload; use explicit_send");
 };
 
 const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {

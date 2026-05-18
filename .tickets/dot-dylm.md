@@ -23,8 +23,9 @@ Relevant files span `home/common/programs/pi-coding-agent/`, `config/nvim/`, `co
 1. Child tickets exist for all 9 implementation steps in `nvim-pi-custom-vision_PLAN.md`.
 2. Planned work preserves `pinvim.ts` ↔ `pinvim.lua` as primary nvim communication path; `vision.nvim` ideas are additive, not a transport replacement.
 3. Any remaining `bridge.ts` involvement is temporary shim/legacy support only, not semantic ownership of nvim context, handshake state, review state, or policy decisions; focused replacement extensions are planned.
-4. Planned work keeps ephemeral sockets explicit-only and never auto-selects them.
-5. Final integrated result is verifiable with `just home`, `nvim --headless '+lua require("pinvim").setup()' +qa`, `bin/pinvim-protocol-smoke`, plus tmux+nvim manual smoke tests for primary pinvim link, explicit send/queue flows, parked flows, ephemeral flows, and any still-shimmed non-nvim ingress compatibility.
+4. Planned work keeps ephemeral sockets explicit-only and never auto-selects them during discovery; nvim split creation may explicitly switch the current nvim instance to its newly spawned ephemeral socket.
+5. Primary nvim split UX spawns a fresh ephemeral pi instance by default, immediately pairs nvim to that new socket, preserves the previous target, restores it when the split closes, and still supports explicit user-driven swapping among active pi instances.
+6. Final integrated result is verifiable with `just home`, `nvim --headless '+lua require("pinvim").setup()' +qa`, `bin/pinvim-protocol-smoke`, plus tmux+nvim manual smoke tests for primary pinvim link, explicit send/queue flows, parked flows, ephemeral split/restore flows, explicit target switching, and any still-shimmed non-nvim ingress compatibility.
 
 ## Verification
 

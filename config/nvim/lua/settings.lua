@@ -20,7 +20,6 @@ vim.g.notes_path = vim.env.NOTES_HOME or (vim.env.HOME .. "/notes")
 
 vim.g.disabled_plugins = {
   "winbar",
-  "pi_legacy", -- keep legacy plugin unloaded during pinvim bootstrap work
   -- "pinvim", -- disable new bootstrap entrypoint loaded by after/plugin/pi.lua
 }
 

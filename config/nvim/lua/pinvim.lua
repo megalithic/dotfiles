@@ -5,8 +5,7 @@
 --   * after/plugin/pi.lua: guard + require only
 --   * lua/pinvim.lua: editor-side state, handshake targets, commands, autocmds
 --   * extensions/pinvim.ts: primary pi-side socket + nvim extension
---   * bridge.ts: legacy non-nvim ingress only, disabled by default
---   * after/plugin/pi_legacy.lua + extensions/pinvim_legacy.ts: legacy transport path + shim
+--   * bridge.ts: non-nvim ingress only while Hammerspoon/tell replacements land
 
 local M = {}
 
@@ -1639,9 +1638,8 @@ function M.setup(opts)
       responsibilities = {
         loader = "config/nvim/after/plugin/pi.lua",
         module = "config/nvim/lua/pinvim.lua",
-        bridge = "legacy non-nvim ingress only; disabled by default",
+        bridge = "non-nvim ingress only while Hammerspoon/tell replacements land",
         extension = "home/common/programs/pi-coding-agent/extensions/pinvim.ts",
-        legacy = "config/nvim/after/plugin/pi_legacy.lua + extensions/pinvim_legacy.ts",
       },
     }
   end

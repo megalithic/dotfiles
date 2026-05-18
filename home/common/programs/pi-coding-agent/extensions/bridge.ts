@@ -1,10 +1,10 @@
 /**
  * Pi Bridge Extension
  *
- * Legacy Unix socket bridge.
- * Disabled by default: pinvim.ts now owns the primary pi socket and all nvim frames.
+ * Transitional Unix socket bridge.
+ * Disabled by default: pinvim.ts owns the primary pi socket and all nvim frames.
  * Enable only with PI_BRIDGE_LEGACY_SOCKET=1 for temporary non-nvim compatibility.
- * Accepts JSON payloads from Telegram (via Hammerspoon), tell, and legacy sources.
+ * Accepts JSON payloads from Telegram (via Hammerspoon) and tell only.
  * Returns JSON responses to all clients ({ ok: true } / { ok: false, error }).
  *
  * Protocol:
@@ -16,7 +16,6 @@
  *   Request:  { type: 'editor_state', state: {...} }   → { ok: false, error: '...' }
  *   Request:  { type: 'telegram', text: '...' }        → { ok: true }
  *   Request:  { type: 'tell', text: '...' }            → { ok: true }
- *   Request:  { file: '...', task: '...' }             → { ok: true }  (legacy nvim)
  *   Error:    (any malformed JSON)                     → { ok: false, error: '...' }
  *
  * Discovery:
@@ -36,10 +35,9 @@
  *
  * Used by:
  *   - This extension (listens on auto-detected or PI_SOCKET path)
- *   - config/nvim/after/plugin/pi_legacy.lua (legacy socket client)
  *   - config/hammerspoon/lib/interop/pi.lua (forwards Telegram messages)
  *   - bin/ftm (checks for socket existence)
- *   - bin/tmux-toggle-pi (finds/manages agent window)
+ *   - bin/pimux (manages agent panes)
  *
  * Status display (in footer):
  *   π session:model (green) - socket active (e.g., "π mega:opus-4")
@@ -165,17 +163,6 @@ type PeerIdentity = {
   heartbeatAt?: number;
 };
 
-type NvimPayload = {
-  file?: string;
-  range?: [number, number];
-  selection?: string;
-  lsp?: {
-    diagnostics?: string[];
-    hover?: string;
-  };
-  task?: string;
-};
-
 type HelloPayload = {
   type: "hello";
   protocol: "pinvim.peer.v1";
@@ -243,7 +230,6 @@ type HeartbeatPayload = {
 };
 
 type Payload =
-  | NvimPayload
   | HelloPayload
   | HeartbeatPayload
   | TelegramPayload
@@ -301,43 +287,6 @@ const buildHelloAck = (): HelloAckPayload => ({
   peer: buildBridgePeerIdentity(),
   accepts: ["ping", "telegram", "tell"],
 });
-
-// =============================================================================
-// Message Formatting
-// =============================================================================
-
-const formatNvimMessage = (payload: NvimPayload): string => {
-  const parts: string[] = [];
-
-  if (payload.file) parts.push(`File: ${payload.file}`);
-  if (payload.range)
-    parts.push(`Lines: ${payload.range[0]}-${payload.range[1]}`);
-
-  if (payload.selection?.trim()) {
-    parts.push("Selection:");
-    parts.push("```");
-    parts.push(payload.selection);
-    parts.push("```");
-  }
-
-  if (payload.lsp?.diagnostics?.length) {
-    parts.push("LSP diagnostics:");
-    for (const diag of payload.lsp.diagnostics) parts.push(`- ${diag}`);
-  }
-
-  if (payload.lsp?.hover?.trim()) {
-    parts.push("LSP hover:");
-    parts.push("```");
-    parts.push(payload.lsp.hover);
-    parts.push("```");
-  }
-
-  if (payload.task?.trim()) {
-    parts.push(`Task: ${payload.task.trim()}`);
-  }
-
-  return parts.join("\n");
-};
 
 // =============================================================================
 // Response Helpers
@@ -522,20 +471,7 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
             continue;
           }
 
-          // Handle nvim payloads (legacy — no "type" field)
-          const message = formatNvimMessage(payload as NvimPayload);
-          if (!message) {
-            respondError(socket, "empty nvim payload");
-            continue;
-          }
-
-          const currentCtx = latestCtx;
-          if (currentCtx?.isIdle()) {
-            void pi.sendUserMessage(message);
-          } else {
-            void pi.sendUserMessage(message, { deliverAs: "followUp" });
-          }
-          respondOk(socket);
+          respondError(socket, "unsupported untyped bridge payload");
         } catch {
           respondError(socket, "invalid JSON");
         }
@@ -556,7 +492,7 @@ export default function (pi: ExtensionAPI): void {
   pi.on("session_start", (_event, ctx) => {
     latestCtx = ctx;
 
-    // Start legacy server only when explicitly enabled.
+    // Start transitional server only when explicitly enabled.
     if (IS_BRIDGE_ENABLED) {
       startServer(pi, ctx);
       writeInfoManifest();
