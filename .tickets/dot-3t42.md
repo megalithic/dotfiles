@@ -1,6 +1,6 @@
 ---
 id: dot-3t42
-status: open
+status: closed
 deps: [dot-klla]
 links: []
 created: 2026-05-15T14:57:12Z
@@ -36,3 +36,9 @@ This is research/planning only. Do not delete `bridge.ts` in this ticket.
 4. Identify which `bridge.ts` behavior can be removed immediately after `dot-klla` and which behavior must remain until replacement tickets land.
 5. Create or update follow-up tickets for implementation if research finds clear migration slices.
 6. Research-only verification: `rg` confirms documented consumers match code references; `tk dep cycle` has no cycles.
+
+## Notes
+
+**2026-05-18T13:46:31Z**
+
+Research complete. Updated docs/pinvim-bridge-audit.md with bridge.ts consumer inventory, payloads, socket/manifest dependencies, pi APIs, replacement owners, migration risks, removal staging, and follow-up tickets dot-d6wm/dot-gew8/dot-a07u. Verification: rg audit search found 635 refs; tk dep cycle reported no cycles.

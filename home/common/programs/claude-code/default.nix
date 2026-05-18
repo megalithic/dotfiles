@@ -12,9 +12,6 @@
 }: {
   imports = [./mcp.nix];
 
-  # Force overwrite settings.json (managed by programs.claude-code below)
-  home.file.".claude/settings.json".force = true;
-
   programs.claude-code = {
     enable = true;
     package = pkgs.llm-agents.claude-code;

@@ -28,7 +28,7 @@ in {
   # ===========================================================================
   # macOS Apps (mkApp - DMG/ZIP extraction)
   # ===========================================================================
-  fantastical = callMkApp ./fantastical.nix;
+  # fantastical = callMkApp ./fantastical.nix;
   bloom = callMkApp ./bloom.nix;
   brave-browser-nightly = callMkApp ./brave-browser-nightly.nix;
   helium-browser = prev.callPackage ./helium-browser.nix {};

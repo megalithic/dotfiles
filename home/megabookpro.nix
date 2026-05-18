@@ -34,9 +34,9 @@
         # database = true;  # Include full mail database (large!)
       };
 
-      fantastical = {
-        enable = true;
-      };
+      # fantastical = {
+      #   enable = true;
+      # };
     };
   };
 
@@ -46,9 +46,9 @@
   # ===========================================================================
   services.ollamaAgent.enable = true;
   services.ollamaAgent.extraEnv = {
-    OLLAMA_MAX_LOADED_MODELS = "1";       # Prevent dual-load on 32GB
-    OLLAMA_GPU_OVERHEAD = "4294967296";   # Reserve 4GB for OS/browser/nvim
-    OLLAMA_CONTEXT_LENGTH = "8192";       # Default ctx (auto was 4096, too small for coding)
+    OLLAMA_MAX_LOADED_MODELS = "1"; # Prevent dual-load on 32GB
+    OLLAMA_GPU_OVERHEAD = "4294967296"; # Reserve 4GB for OS/browser/nvim
+    OLLAMA_CONTEXT_LENGTH = "8192"; # Default ctx (auto was 4096, too small for coding)
   };
 
   # ===========================================================================
