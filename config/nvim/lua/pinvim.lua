@@ -21,6 +21,8 @@ local did_setup = false
 local defaults
 local options
 local compose_queue = {}
+local target_history = {}
+local target_history_limit = 20
 
 local conn = {
   pipe = nil,
@@ -48,6 +50,17 @@ local function tmux_value(format)
 end
 
 local function socket_exists(path) return path and vim.fn.getftype(path) == "socket" end
+
+local function tmux_option(name)
+  local session = tmux_value("#{session_name}")
+  if not session then return nil end
+  local handle = io.popen(string.format("tmux show-option -qv -t '%s' '%s' 2>/dev/null", session, name))
+  if not handle then return nil end
+  local value = handle:read("*a")
+  handle:close()
+  value = value and vim.trim(value) or nil
+  return (value and value ~= "") and value or nil
+end
 
 local function pid_alive(pid)
   if not pid or pid <= 0 then return false end
@@ -180,6 +193,8 @@ local state_defaults = {
   connected = false,
   connecting = false,
   rollout = "pinvim.ts owns pi-side nvim socket, peer state, and explicit context delivery",
+  restored_target = false,
+  restored_from = nil,
 }
 
 function State.new(initial)
@@ -389,6 +404,87 @@ local function ranked_manifest_targets(config, opts)
   end)
 
   return entries
+end
+
+local function parked_socket_set()
+  local parked = tmux_option("@pimux.parked_sockets")
+  local set = {}
+  if not parked then return set end
+  for entry in parked:gmatch("[^|]+") do
+    local sock = entry:match("^([^=]+)")
+    if sock and sock ~= "" then set[sock] = true end
+  end
+  return set
+end
+
+local function target_link_mode(source, entry)
+  if entry and entry.ephemeral then return "ephemeral" end
+  if entry and entry.parked then return "parked" end
+  if source == "env" then return "explicit" end
+  if source == "buffer" or source == "manual" then return "manual" end
+  if source == "history-restore" then return "parked" end
+  return "auto"
+end
+
+local function target_metadata(config, socket_path, source)
+  if not socket_path then return nil end
+  if vim.in_fast_event and vim.in_fast_event() then
+    local ephemeral = socket_path:match("%-eph%-[^/]+%.sock$") ~= nil
+    return {
+      path = socket_path,
+      source = source or "unknown",
+      ephemeral = ephemeral,
+      parked = false,
+      link_mode = ephemeral and "ephemeral" or target_link_mode(source, nil),
+      recorded_at = os.time(),
+    }
+  end
+
+  local parked = parked_socket_set()
+  local targets = ranked_manifest_targets(config, { include_ephemeral = true })
+  local found = nil
+  for _, target in ipairs(targets) do
+    if target.path == socket_path then
+      found = vim.deepcopy(target)
+      break
+    end
+  end
+  found = found or { path = socket_path }
+  found.source = source or found.source or "unknown"
+  found.parked = parked[socket_path] == true
+  found.ephemeral = found.ephemeral == true or socket_path:match("%-eph%-[^/]+%.sock$") ~= nil
+  found.link_mode = target_link_mode(found.source, found)
+  found.recorded_at = os.time()
+  return found
+end
+
+local function record_target_history(config, socket_path, source)
+  local meta = target_metadata(config, socket_path, source)
+  if not meta then return nil end
+
+  for idx, entry in ipairs(target_history) do
+    if entry.path == socket_path then
+      table.remove(target_history, idx)
+      break
+    end
+  end
+
+  table.insert(target_history, 1, meta)
+  while #target_history > target_history_limit do
+    table.remove(target_history)
+  end
+
+  return meta
+end
+
+local function previous_alive_parked_target(exclude_socket)
+  local parked = parked_socket_set()
+  for _, entry in ipairs(target_history) do
+    if entry.path ~= exclude_socket and socket_exists(entry.path) and parked[entry.path] and not entry.ephemeral then
+      return entry
+    end
+  end
+  return nil
 end
 
 local function discover_socket_by_tmux(config)
@@ -615,6 +711,8 @@ local function connection_disconnect(runtime)
 
   conn.connected = false
   conn.connecting = false
+  conn.socket_path = nil
+  conn.socket_source = nil
   conn.read_buffer = ""
 
   State.patch(runtime, {
@@ -734,11 +832,13 @@ local function connection_connect(api, runtime, config, socket_path, source)
     conn.reconnect_delay_s = config.connection.reconnect_initial_delay_s
     conn.read_buffer = ""
 
+    local meta = record_target_history(config, socket_path, source)
     State.patch(runtime, {
       connected = true,
       connecting = false,
       socket = socket_path,
       socket_source = source,
+      link_mode = meta and meta.link_mode or runtime.link_mode,
       lifecycle = "connected",
       last_error = nil,
     })
@@ -814,6 +914,8 @@ function Commands.setup(api, config)
       string.format("socket source: %s", info.target.source),
       string.format("connected: %s", tostring(info.state.connected)),
       string.format("connecting: %s", tostring(info.state.connecting)),
+      string.format("link mode: %s", info.state.link_mode or "auto"),
+      string.format("restored target: %s", info.state.restored_target and "yes" or "no"),
       string.format("peer linked: %s", health.peer_id or "(none)"),
       string.format("hello_ack: %s", health.hello_ack and "yes" or "no"),
       string.format("heartbeat age: %s", health.heartbeat_age and (tostring(health.heartbeat_age) .. "s") or "(none)"),
@@ -835,6 +937,22 @@ function Commands.setup(api, config)
       string.format("socket: %s", health.socket_path or "(none)"),
     }
     vim.notify(table.concat(lines, "\n"), level)
+  end
+
+  local function previous_command()
+    if not api.previous_target then
+      vim.notify("pinvim: previous target unavailable", vim.log.levels.WARN)
+      return
+    end
+    api.previous_target()
+  end
+
+  local function restore_command()
+    if not api.restore_previous_target then
+      vim.notify("pinvim: restore target unavailable", vim.log.levels.WARN)
+      return
+    end
+    api.restore_previous_target(nil, { notify = true })
   end
 
   local function target_command(command_opts)
@@ -868,7 +986,8 @@ function Commands.setup(api, config)
       string.format("socket source: %s", info.target.source),
       string.format("connected: %s", tostring(info.state.connected)),
       string.format("connecting: %s", tostring(info.state.connecting)),
-      string.format("link mode: %s", info.target.link_mode),
+      string.format("link mode: %s", info.state.link_mode or info.target.link_mode),
+      string.format("restored target: %s", info.state.restored_target and "yes" or "no"),
       string.format("peer frames enabled: %s", tostring(info.target.peer_frames_enabled)),
       string.format("protocol: %s", info.handshake.protocol),
       "implicit context: removed; use gps/:PinvimSend/:PiSend explicit context",
@@ -932,6 +1051,20 @@ function Commands.setup(api, config)
     desc = "Get/set buffer-local pinvim target socket",
   })
 
+  vim.api.nvim_create_user_command("PinvimPrevious", previous_command, {
+    desc = "Switch to previous alive parked pinvim target",
+  })
+  vim.api.nvim_create_user_command("PiPrevious", previous_command, {
+    desc = "Switch to previous alive parked pinvim target",
+  })
+
+  vim.api.nvim_create_user_command("PinvimRestore", restore_command, {
+    desc = "Restore previous alive parked pinvim target",
+  })
+  vim.api.nvim_create_user_command("PiRestore", restore_command, {
+    desc = "Restore previous alive parked pinvim target",
+  })
+
   vim.api.nvim_create_user_command("PinvimSessions", function()
     api.select_session()
   end, {
@@ -978,6 +1111,10 @@ function Commands.setup(api, config)
   vim.api.nvim_create_user_command("PiClear", compose_clear_command, {
     desc = "Clear pinvim compose queue",
   })
+
+  vim.keymap.set("n", "gpR", function()
+    api.restore_previous_target(nil, { notify = true })
+  end, { silent = true, desc = "pinvim restore previous parked target" })
 
   vim.keymap.set("n", "gps", function()
     api.send_explicit()
@@ -1033,6 +1170,41 @@ function M.setup(opts)
     return runtime.peer
   end
 
+  function api.restore_previous_target(exclude_socket, restore_opts)
+    restore_opts = restore_opts or {}
+    local previous = previous_alive_parked_target(exclude_socket)
+    if not previous then
+      if restore_opts.notify ~= false then
+        vim.notify("pinvim: no previous alive parked target", vim.log.levels.WARN)
+      end
+      return false
+    end
+
+    vim.b.pi_target_socket = previous.path
+    connection_disconnect(runtime)
+    record_target_history(config, previous.path, "history-restore")
+    State.patch(runtime, {
+      socket = previous.path,
+      socket_source = "history-restore",
+      link_mode = "parked",
+      restored_target = true,
+      restored_from = exclude_socket,
+      last_error = nil,
+    })
+
+    if restore_opts.notify ~= false then
+      vim.notify("pinvim: restored parked target " .. vim.fs.basename(previous.path), vim.log.levels.INFO)
+    end
+    api.refresh_buffer_state()
+    api.ensure_connected(true)
+    return true
+  end
+
+  function api.previous_target()
+    local current = conn.socket_path or runtime.socket
+    return api.restore_previous_target(current, { notify = true })
+  end
+
   function api.clear_stale_target(notify_user)
     local buf_target = vim.b.pi_target_socket
     if not buf_target or socket_exists(buf_target) then return false end
@@ -1040,9 +1212,14 @@ function M.setup(opts)
     vim.b.pi_target_socket = nil
     if conn.socket_path == buf_target then connection_disconnect(runtime) end
 
+    if api.restore_previous_target(buf_target, { notify = notify_user ~= false }) then return true end
+
     State.patch(runtime, {
       socket = nil,
       socket_source = "buffer",
+      link_mode = "auto",
+      restored_target = false,
+      restored_from = nil,
       last_error = "stale buffer target: " .. buf_target,
     })
 
@@ -1056,6 +1233,7 @@ function M.setup(opts)
     api.clear_stale_target(false)
     local current = vim.api.nvim_buf_get_name(0)
     local socket_path, source = Transport.resolve_socket(config)
+    local meta = socket_path and record_target_history(config, socket_path, source) or nil
     State.set_buffer(runtime, {
       file = current ~= "" and vim.fn.fnamemodify(current, ":~:.") or nil,
       abs_file = current ~= "" and current or nil,
@@ -1063,13 +1241,18 @@ function M.setup(opts)
       root = config.resolve_root(),
       socket = socket_path,
       socket_source = source,
-      link_mode = config.transport.link_mode,
+      link_mode = meta and meta.link_mode or config.transport.link_mode,
     })
     Handshake.refresh(runtime, Transport, config)
   end
 
   function api.ensure_connected(force_target_check)
     api.clear_stale_target(false)
+    local active_socket = conn.socket_path or runtime.socket
+    if active_socket and not socket_exists(active_socket) then
+      connection_disconnect(runtime)
+      api.restore_previous_target(active_socket, { notify = true })
+    end
     local socket_path, source = Transport.resolve_socket(config)
 
     if force_target_check and conn.connected and socket_path and socket_path ~= conn.socket_path then
@@ -1114,8 +1297,19 @@ function M.setup(opts)
 
     vim.b.pi_target_socket = socket_path
     if socket_path then
+      local meta = record_target_history(config, socket_path, "manual")
+      State.patch(runtime, {
+        link_mode = meta and meta.link_mode or "manual",
+        restored_target = false,
+        restored_from = nil,
+      })
       vim.notify("pinvim: target set " .. vim.fs.basename(socket_path), vim.log.levels.INFO)
     else
+      State.patch(runtime, {
+        link_mode = "auto",
+        restored_target = false,
+        restored_from = nil,
+      })
       vim.notify("pinvim: target cleared; auto-discovery active", vim.log.levels.INFO)
     end
 
@@ -1429,6 +1623,8 @@ function M.setup(opts)
       reconnecting = conn.reconnect_attempts > 0 and not conn.connected,
       session = session,
       compose_count = #compose_queue,
+      link_mode = runtime.link_mode or "auto",
+      restored_target = runtime.restored_target == true,
     }
   end
 
@@ -1439,6 +1635,7 @@ function M.setup(opts)
       target = Transport.describe_target(config),
       handshake = Handshake.describe(runtime, Transport, config),
       compose_count = #compose_queue,
+      target_history = vim.deepcopy(target_history),
       responsibilities = {
         loader = "config/nvim/after/plugin/pi.lua",
         module = "config/nvim/lua/pinvim.lua",

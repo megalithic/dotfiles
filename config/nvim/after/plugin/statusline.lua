@@ -721,9 +721,6 @@ local function seg_pi()
   if mega.p.pinvim ~= nil and mega.p.pinvim.statusline_data then
     client = mega.p.pinvim
     click_target = "v:lua.mega.p.pinvim.select_session"
-  elseif mega.p.pi ~= nil and mega.p.pi.statusline_data then
-    client = mega.p.pi
-    click_target = "v:lua.mega.p.pi.select_session"
   end
 
   if client == nil then return "" end
@@ -737,11 +734,15 @@ local function seg_pi()
   local session = data.session or "pi"
   local count = data.context_count or data.compose_count or 0
   local count_str = count > 0 and fmt(" %d", count) or ""
+  local mode = data.link_mode and data.link_mode ~= "auto" and fmt(" %s", data.link_mode) or ""
+  local restored = data.restored_target and " ↩" or ""
 
   local content = seg(
     table.concat({
       wrap("StIdentifier", icon .. " "),
       wrap("StComment", session),
+      wrap("StWarning", mode),
+      wrap("StIdentifier", restored),
       wrap("StBufferCount", count_str),
     }),
     { margin = { 1, 0 } }

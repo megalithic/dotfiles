@@ -1,6 +1,6 @@
 ---
 id: dot-8n53
-status: open
+status: closed
 deps: [dot-p2ad]
 links: []
 created: 2026-05-13T20:48:05Z
@@ -32,3 +32,9 @@ For any implementation change under this pinvim/vision workstream, run:
 
 For research-only tickets, run these before closing any downstream implementation ticket that uses the research.
 
+
+## Notes
+
+**2026-05-18T18:36:36Z**
+
+Implemented nvim-side pinvim MRU target history with parked-target restore, PiPrevious/PiRestore commands, gpR keymap, and statusline link-mode/restored indicators. Verified just home, pinvim headless setup, protocol smoke, command/statusline smoke, and manual mocked parked restore.
