@@ -1,6 +1,6 @@
 ---
 id: dot-koz6
-status: open
+status: closed
 deps: [dot-8n53, dot-p2ad]
 links: []
 created: 2026-05-18T19:33:52Z
@@ -8,7 +8,7 @@ type: feature
 priority: 2
 assignee: Seth Messer
 parent: dot-dylm
-tags: [ready-for-development]
+tags: [ready-for-development, done]
 ---
 # Make pinvim split spawn fresh ephemeral pi and restore previous target
 
@@ -22,4 +22,25 @@ Correct the nvim/pi/tmux split behavior from the nvim-pi-custom-vision plan. Cre
 4. Explicit target switching still works through session/target commands so the user can swap among active pi instances, including parked/manual/auto targets and the current ephemeral target.
 5. Ephemeral sockets remain excluded from auto-discovery/default selection for other nvim instances, Hammerspoon, Telegram, and tell unless explicitly targeted.
 6. Verification passes: bash -n bin/pimux; nvim --headless '+lua require("pinvim").setup()' +qa; bin/pinvim-protocol-smoke; manual tmux+nvim smoke for fresh split, send-to-ephemeral, close split, restore previous target.
+
+## Notes
+
+**2026-05-18T20:15:00Z**
+
+Implemented ephemeral split spawn with automatic previous-target restore.
+
+Changes in `config/nvim/lua/pinvim.lua`:
+- `generate_ephemeral_socket_path()`: creates `pi-{session}-{window}-eph-{epoch}-{pid}.sock` paths
+- `is_ephemeral_socket()`: detects `-eph-` pattern in socket paths
+- `api.spawn_ephemeral_split()`: generates ephemeral socket, records previous target in MRU, calls `pimux --new --socket`, sets buffer-local target, polls for socket creation, then connects
+- `start_ephemeral_watch_timer()`: 2s polling timer that detects ephemeral socket disappearance and triggers restore of previous alive parked target
+- `schedule_reconnect()`: when connected to an ephemeral socket that disappears, skips reconnection and restores previous target instead
+- `PinvimSplit` / `PiSplit` commands and `gpp` keymap
+- `target_link_mode()`: recognizes `"ephemeral"` source
+- `statusline_data()`: includes `ephemeral` boolean
+- `conn.ephemeral_watch_timer` field + stop/start/cleanup functions
+
+No changes to `bin/pimux` (already had `--new --socket`), `pinvim.ts` (already marks IS_EPHEMERAL and excludes from discovery), or `bridge.ts` (not involved).
+
+Verification: `bash -n bin/pimux` ✓, `nvim --headless` setup ✓, `bin/pinvim-protocol-smoke` ✓, `just validate home` ✓, `just home` ✓.
 

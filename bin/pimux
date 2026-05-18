@@ -14,8 +14,9 @@
 #   --ensure       Ensure pi is visible; do not hide if already visible.
 #   --socket PATH  Prefer pi pane linked to socket PATH.
 #   --bell PATH    Ring bell in pane linked to socket PATH, then exit.
-#   --new          Spawn ephemeral pi in current window split.
-#                  Requires --socket PATH and sets PI_SOCKET/PI_EPHEMERAL.
+#   --new          Spawn ephemeral pi in current nvim window split only.
+#                  Sets PI_SOCKET/PI_EPHEMERAL. Auto-generates socket path
+#                  if --socket not given.
 #
 # Tmux session user option schema:
 #   @pimux.active_socket   current visible/focused socket path, or empty
@@ -46,11 +47,6 @@ while [[ $# -gt 0 ]]; do
     *) shift ;;
   esac
 done
-
-if [[ "$NEW" == true && -z "$TARGET_SOCKET" ]]; then
-  echo "pimux: --new requires --socket PATH" >&2
-  exit 2
-fi
 
 TARGET_PANE="${PIMUX_PANE:-${TMUX_PANE:-}}"
 
@@ -432,13 +428,21 @@ ring_bell() {
 }
 
 main() {
-  if is_invoked_from_pi && [[ "$NEW" != true && -z "$BELL_SOCKET" ]]; then
-    tmux display-message -t "$CURRENT_PANE" "pimux: ignored from pi pane; run from nvim/shell" 2>/dev/null || true
-    exit 0
+  if [[ "$NEW" == true && -z "$TARGET_SOCKET" ]]; then
+    TARGET_SOCKET=$(printf '%s/%s-%s-%s-eph-%d-%d.sock' "$SOCKET_DIR" "$SOCKET_PREFIX" "$SESSION" "$(tmux_socket_window_token "$CURRENT_WINDOW" "$CURRENT_WINDOW_IDX")" "$(date +%s)" "$$")
   fi
 
   if [[ "$NEW" == true ]]; then
+    if ! is_nvim_here || is_invoked_from_pi; then
+      tmux display-message -t "$CURRENT_PANE" "pimux: ephemeral split only works from nvim" 2>/dev/null || true
+      exit 0
+    fi
     spawn_ephemeral_split
+    exit 0
+  fi
+
+  if is_invoked_from_pi && [[ -z "$BELL_SOCKET" ]]; then
+    tmux display-message -t "$CURRENT_PANE" "pimux: ignored from pi pane; run from nvim/shell" 2>/dev/null || true
     exit 0
   fi
 

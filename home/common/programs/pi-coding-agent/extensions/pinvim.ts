@@ -5,7 +5,7 @@
  * Owns pinvim socket, peer metadata, UI surfaces, and explicit context delivery.
  * bridge.ts does not handle nvim/pinvim frames.
  *
- * Context path is explicit nvim send (`gps` / :PinvimSend) to avoid spurious
+ * Context path is explicit nvim send (`gps` / `gpa` / :PinvimSend) to avoid spurious
  * nvim→pi messages.
  *
  * Current pinvim inputs:
@@ -159,6 +159,10 @@ interface ExplicitSendPayload {
     selection?: string;
     selectionRange?: [number, number];
     word?: string;
+    symbolKind?: string;
+    hasDiagnostics?: boolean;
+    lspActive?: boolean;
+    userInput?: string;
     cwd?: string;
     root?: string;
     modified?: boolean;
@@ -283,13 +287,25 @@ const formatExplicitContext = (payload: ExplicitSendPayload): string => {
   if (context.filetype) parts.push(`Filetype: ${context.filetype}`);
   if (context.cursor) parts.push(`Cursor: L${context.cursor.line}:C${context.cursor.col}`);
   if (context.selectionRange) parts.push(`Range: lines ${context.selectionRange[0]}-${context.selectionRange[1]}`);
-  if (context.word) parts.push(`Word: ${context.word}`);
+  if (context.word) {
+    const label = context.symbolKind
+      ? `${context.symbolKind} \`${context.word}\``
+      : `\`${context.word}\``;
+    parts.push(`Symbol: ${label} \u25C0 cursor focus`);
+    if (context.hasDiagnostics) parts.push("Diagnostics: present at cursor");
+    if (context.lspActive) parts.push("LSP: active");
+  }
 
   if (context.selection?.trim()) {
     parts.push(context.kind === "selection" ? "Selected text:" : "Cursor context:");
     parts.push(`\`\`\`${context.filetype || ""}`);
     parts.push(context.selection);
     parts.push("```");
+  }
+
+  if (context.userInput?.trim()) {
+    parts.push("User input:");
+    parts.push(context.userInput.trim());
   }
 
   if (context.modified) parts.push("Buffer: modified (unsaved)");

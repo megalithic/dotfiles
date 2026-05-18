@@ -1,6 +1,6 @@
 ---
 id: dot-vnmm
-status: open
+status: closed
 deps: [dot-8n53]
 links: []
 created: 2026-05-13T20:48:05Z
@@ -8,7 +8,7 @@ type: feature
 priority: 2
 assignee: Seth Messer
 parent: dot-dylm
-tags: [ready-for-development]
+tags: [ready-for-development, done]
 ---
 # Send structured editor context envelopes to pi
 
@@ -31,4 +31,16 @@ For any implementation change under this pinvim/vision workstream, run:
 3. `bin/pinvim-protocol-smoke` — deterministic mock Unix-socket test that asserts nvim sends `hello`, receives `hello_ack`, sends `heartbeat`, receives heartbeat response, and `require("pinvim").setup().health()` reports `ok`.
 
 For research-only tickets, run these before closing any downstream implementation ticket that uses the research.
+
+## Notes
+
+**2026-05-18T20:45:00Z**
+
+All 5 ACs were already met from prior tickets (dot-y4vm, dot-klla, dot-f36u, dot-p2ad, dot-8n53, dot-koz6). This ticket closed the remaining quality gaps:
+
+- `pinvim.lua`: Added `detect_symbol_kind()` (treesitter node → kind map) and `detect_cursor_semantics()` (symbol_kind, has_diagnostics, lsp_active). `Transport.build_explicit_send()` now includes `symbolKind`, `hasDiagnostics`, `lspActive` in context payload.
+- `pinvim.ts`: `ExplicitSendPayload` type extended with `symbolKind`, `hasDiagnostics`, `lspActive`. `formatExplicitContext()` renders `Symbol: function \`socket_exists\` ◀ cursor focus` instead of `Word: socket_exists`, plus diagnostic/LSP hints.
+- Intent-driven sends (Level 3) deferred to dot-fpev/dot-t4dd (review bundle workflows).
+
+Verification: headless setup ✓, protocol smoke ✓, just validate home ✓, just home ✓.
 
