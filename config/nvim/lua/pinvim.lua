@@ -356,7 +356,9 @@ local function ranked_manifest_targets(config, opts)
   local context = current_tmux_context()
   for _, info_path in ipairs(files) do
     local info = parse_info_manifest(config, info_path)
-    if info and (opts.include_ephemeral or not info.ephemeral) and not seen[info.socket] then
+    local same_tmux_session = not context.session or info and info.session == context.session
+    local allowed_session = not opts.same_tmux_session or same_tmux_session
+    if info and allowed_session and (opts.include_ephemeral or not info.ephemeral) and not seen[info.socket] then
       seen[info.socket] = true
       local score, reasons, activity = score_manifest_candidate(config, info, context)
       table.insert(entries, {
@@ -416,7 +418,7 @@ function Transport.resolve_socket(config)
   local buf_target = vim.b.pi_target_socket
   if buf_target and socket_exists(buf_target) then return buf_target, "buffer" end
 
-  local ranked = ranked_manifest_targets(config, { include_ephemeral = false })
+  local ranked = ranked_manifest_targets(config, { include_ephemeral = false, same_tmux_session = true })
   if ranked[1] then return ranked[1].path, "manifest-ranked" end
 
   local tmux_socket = discover_socket_by_tmux(config)
@@ -1197,7 +1199,7 @@ function M.setup(opts)
       return false
     end
 
-    local cmd = { "tmux-toggle-pi" }
+    local cmd = { "pimux" }
     if ensure_visible then table.insert(cmd, "--ensure") end
 
     local socket_path = api.get_target()
@@ -1206,9 +1208,13 @@ function M.setup(opts)
       table.insert(cmd, socket_path)
     end
 
-    local job = vim.fn.jobstart(cmd, { detach = true })
+    local pane_id = vim.fn.trim(vim.fn.system({ "tmux", "display-message", "-p", "#{pane_id}" }))
+    local job_opts = { detach = true }
+    if pane_id ~= "" then job_opts.env = { PIMUX_PANE = pane_id } end
+
+    local job = vim.fn.jobstart(cmd, job_opts)
     if job <= 0 then
-      vim.notify("pinvim: tmux-toggle-pi failed", vim.log.levels.ERROR)
+      vim.notify("pinvim: pimux failed", vim.log.levels.ERROR)
       return false
     end
 
