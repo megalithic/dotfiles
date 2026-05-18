@@ -263,6 +263,13 @@ M.layouts = {
       { nil, 1, M.grid.center.large },
     },
   },
+  ["com.apple.iCal"] = {
+    bundleID = "com.apple.iCal",
+    name = "Calendar",
+    rules = {
+      { nil, 1, M.grid.center.large },
+    },
+  },
   ["com.figma.Desktop"] = {
     bundleID = "com.figma.Desktop",
     name = "Figma",
@@ -340,7 +347,8 @@ M.launchers = {
   -- { "com.spotify.client", "p", nil },
   { "com.apple.Music", "p", nil },
   { "com.freron.MailMate", "e", nil },
-  { "com.flexibits.fantastical2.mac", "y", { "'" } },
+  -- { "com.flexibits.fantastical2.mac", "y", { "'" } },
+  { "com.apple.iCal", "y", { "'" } },
   { "com.raycast.macos", "space", { "c" } },
   -- { "com.brnbw.Tuna", nil, { "space" } },
   -- { "Tuna", nil, { { { "shift", "cmd" }, "space" } } },

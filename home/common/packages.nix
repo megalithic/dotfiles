@@ -7,10 +7,9 @@
   # ── gui tools ──────────────────────────────────────────────────────────────────
   # Custom apps built with mkApp - these have passthru.appLocation
   customApps = with pkgs; [
-    # bloom
-    fantastical
     tidewave # Tidewave GUI app for web app development
     tidewave-cli # Tidewave MCP CLI
+    # bloom
     # mailmate app managed via home/common/programs/mailmate/default.nix
   ];
 
