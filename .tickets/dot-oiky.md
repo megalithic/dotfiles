@@ -1,6 +1,6 @@
 ---
 id: dot-oiky
-status: open
+status: closed
 deps: [dot-f6tr]
 links: []
 created: 2026-05-13T20:48:05Z
@@ -32,3 +32,9 @@ For any implementation change under this pinvim/vision workstream, run:
 
 For research-only tickets, run these before closing any downstream implementation ticket that uses the research.
 
+
+## Notes
+
+**2026-05-18T14:18:10Z**
+
+Implemented ranked pinvim manifest discovery: cwd/root, tmux affinity, heartbeat/activity recency, non-ephemeral preference, explainable PiSessions metadata. Verified just home, nvim headless setup, pinvim protocol smoke, and temp multi-manifest ranking smoke.

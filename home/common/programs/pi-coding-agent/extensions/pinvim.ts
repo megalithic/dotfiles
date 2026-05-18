@@ -228,6 +228,7 @@ const state: PinvimState = {
 let latestCtx: ExtensionContext | null = null;
 let server: net.Server | null = null;
 let infoManifestPath: string | null = null;
+const startedAt = new Date().toISOString();
 
 // =============================================================================
 // Type guards
@@ -453,7 +454,8 @@ const writeInfoManifest = (): void => {
       pane: detectTmux()?.pane,
       ephemeral: IS_EPHEMERAL,
       owner: "pinvim.ts",
-      startedAt: new Date().toISOString(),
+      heartbeatAt: Math.floor(Date.now() / 1000),
+      startedAt,
     };
     fs.writeFileSync(infoManifestPath, JSON.stringify(manifest) + "\n");
   } catch {
@@ -498,6 +500,7 @@ const handleSocketPayload = (pi: ExtensionAPI, socket: net.Socket, payload: Payl
     }
 
     state.lastHeartbeat = payload;
+    writeInfoManifest();
     updateStatus();
     respondOk(socket, {
       type: "heartbeat",

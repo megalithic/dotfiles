@@ -216,45 +216,177 @@ local function parse_info_manifest(config, info_path)
   if not socket_exists(info.socket) then return nil end
   if info.pid and not pid_alive(info.pid) then return nil end
   if info.ephemeral == nil then info.ephemeral = info.socket:match("%-eph%-[^/]+%.sock$") ~= nil end
+  info.info_path = info_path
 
   return info
 end
 
-local function discover_socket_by_cwd(config)
+local function normalize_path(path)
+  if not path or path == "" then return nil end
+  if vim.fs and vim.fs.normalize then return vim.fs.normalize(path) end
+  return vim.fn.fnamemodify(path, ":p"):gsub("/$", "")
+end
+
+local function same_path(a, b)
+  a, b = normalize_path(a), normalize_path(b)
+  return a ~= nil and b ~= nil and a == b
+end
+
+local function path_contains(parent, child)
+  parent, child = normalize_path(parent), normalize_path(child)
+  if not parent or not child then return false end
+  if parent == child then return true end
+  return child:sub(1, #parent + 1) == parent .. "/"
+end
+
+local function stat_mtime(path)
+  local stat = path and vim.uv.fs_stat(path) or nil
+  return stat and stat.mtime and stat.mtime.sec or 0
+end
+
+local function parse_time(value)
+  if type(value) == "number" then return value end
+  if type(value) ~= "string" then return nil end
+  local year, month, day, hour, min, sec = value:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)T(%d%d):(%d%d):(%d%d)")
+  if not year then return nil end
+  return os.time({
+    year = tonumber(year),
+    month = tonumber(month),
+    day = tonumber(day),
+    hour = tonumber(hour),
+    min = tonumber(min),
+    sec = tonumber(sec),
+  })
+end
+
+local function current_tmux_context()
+  if not vim.env.TMUX then return {} end
+  return {
+    session = tmux_value("#{session_name}"),
+    window_name = tmux_value("#{window_name}"),
+    window_index = tmux_value("#{window_index}"),
+    pane = tmux_value("#{pane_id}"),
+  }
+end
+
+local function candidate_activity(info)
+  return math.max(
+    tonumber(info.heartbeatAt or 0) or 0,
+    parse_time(info.startedAt) or 0,
+    stat_mtime(info.socket),
+    stat_mtime(info.info_path)
+  )
+end
+
+local function score_manifest_candidate(config, info, context)
+  local score = 0
+  local reasons = {}
+  local cwd = normalize_path(vim.uv.cwd())
+  local root = normalize_path(config.resolve_root())
+  local info_cwd = normalize_path(info.cwd)
+  local info_root = normalize_path(info.root)
+  local activity = candidate_activity(info)
+
+  if info.ephemeral then
+    score = score - 1000
+    table.insert(reasons, "ephemeral explicit-only")
+  else
+    score = score + 10
+    table.insert(reasons, "non-ephemeral")
+  end
+
+  if same_path(info_cwd, cwd) then
+    score = score + 120
+    table.insert(reasons, "cwd exact")
+  elseif info_cwd and root and path_contains(root, info_cwd) then
+    score = score + 85
+    table.insert(reasons, "same root")
+  elseif info_root and root and (same_path(info_root, root) or path_contains(info_root, cwd)) then
+    score = score + 85
+    table.insert(reasons, "root match")
+  elseif info_cwd and cwd and path_contains(info_cwd, cwd) then
+    score = score + 40
+    table.insert(reasons, "cwd inside session cwd")
+  end
+
+  if context.session and info.session == context.session then
+    score = score + 35
+    table.insert(reasons, "same tmux session")
+  end
+
+  if context.window_name and info.window == context.window_name then
+    score = score + 20
+    table.insert(reasons, "same tmux window")
+  elseif context.window_index and tostring(info.window or "") == tostring(context.window_index) then
+    score = score + 15
+    table.insert(reasons, "same tmux window index")
+  end
+
+  if context.pane and info.pane == context.pane then
+    score = score + 10
+    table.insert(reasons, "same tmux pane")
+  end
+
+  if activity > 0 then
+    local age = math.max(os.time() - activity, 0)
+    if age <= 120 then
+      score = score + 25
+      table.insert(reasons, "fresh <2m")
+    elseif age <= 900 then
+      score = score + 15
+      table.insert(reasons, "recent <15m")
+    elseif age <= 3600 then
+      score = score + 5
+      table.insert(reasons, "active <1h")
+    else
+      table.insert(reasons, "stale")
+    end
+  end
+
+  return score, reasons, activity
+end
+
+local function ranked_manifest_targets(config, opts)
+  opts = opts or {}
+  local entries = {}
+  local seen = {}
   local ok, files = pcall(vim.fn.glob, config.transport.manifest_dir .. "/*.info", false, true)
-  if not ok or not files or #files == 0 then return nil end
+  if not ok or not files then return entries end
 
-  local cwd = vim.uv.cwd()
-  local best_socket = nil
-  local best_mtime = 0
-
+  local context = current_tmux_context()
   for _, info_path in ipairs(files) do
     local info = parse_info_manifest(config, info_path)
-    if info and not info.ephemeral and info.cwd == cwd then
-      local stat = vim.uv.fs_stat(info.socket)
-      if stat and stat.mtime.sec > best_mtime then
-        best_mtime = stat.mtime.sec
-        best_socket = info.socket
-      end
-    end
-  end
-  if best_socket then return best_socket end
-
-  local tmux_session = tmux_value("#{session_name}")
-  if not tmux_session then return nil end
-
-  for _, info_path in ipairs(files) do
-    local info = parse_info_manifest(config, info_path)
-    if info and not info.ephemeral and info.session == tmux_session then
-      local stat = vim.uv.fs_stat(info.socket)
-      if stat and stat.mtime.sec > best_mtime then
-        best_mtime = stat.mtime.sec
-        best_socket = info.socket
-      end
+    if info and (opts.include_ephemeral or not info.ephemeral) and not seen[info.socket] then
+      seen[info.socket] = true
+      local score, reasons, activity = score_manifest_candidate(config, info, context)
+      table.insert(entries, {
+        path = info.socket,
+        session = info.session,
+        window = info.window,
+        pane = info.pane,
+        cwd = info.cwd,
+        root = info.root,
+        ephemeral = info.ephemeral,
+        owner = info.owner,
+        score = score,
+        reasons = reasons,
+        activity = activity,
+        source = "manifest",
+      })
     end
   end
 
-  return best_socket
+  table.sort(entries, function(a, b)
+    if a.score ~= b.score then return a.score > b.score end
+    if (a.activity or 0) ~= (b.activity or 0) then return (a.activity or 0) > (b.activity or 0) end
+    local a_ephemeral = a.ephemeral and 1 or 0
+    local b_ephemeral = b.ephemeral and 1 or 0
+    if a_ephemeral ~= b_ephemeral then return a_ephemeral < b_ephemeral end
+    if (a.session or "") ~= (b.session or "") then return (a.session or "") < (b.session or "") end
+    return (a.window or "") < (b.window or "")
+  end)
+
+  return entries
 end
 
 local function discover_socket_by_tmux(config)
@@ -284,8 +416,8 @@ function Transport.resolve_socket(config)
   local buf_target = vim.b.pi_target_socket
   if buf_target and socket_exists(buf_target) then return buf_target, "buffer" end
 
-  local cwd_socket = discover_socket_by_cwd(config)
-  if cwd_socket then return cwd_socket, "manifest" end
+  local ranked = ranked_manifest_targets(config, { include_ephemeral = false })
+  if ranked[1] then return ranked[1].path, "manifest-ranked" end
 
   local tmux_socket = discover_socket_by_tmux(config)
   if tmux_socket then return tmux_socket, "tmux" end
@@ -313,35 +445,7 @@ function Transport.describe_target(config)
 end
 
 function Transport.list_targets(config, opts)
-  opts = opts or {}
-  local entries = {}
-  local seen = {}
-  local ok, files = pcall(vim.fn.glob, config.transport.manifest_dir .. "/*.info", false, true)
-  if not ok or not files then return entries end
-
-  for _, info_path in ipairs(files) do
-    local info = parse_info_manifest(config, info_path)
-    if info and (opts.include_ephemeral or not info.ephemeral) and not seen[info.socket] then
-      seen[info.socket] = true
-      table.insert(entries, {
-        path = info.socket,
-        session = info.session,
-        window = info.window,
-        cwd = info.cwd,
-        ephemeral = info.ephemeral,
-      })
-    end
-  end
-
-  table.sort(entries, function(a, b)
-    local a_ephemeral = a.ephemeral and 1 or 0
-    local b_ephemeral = b.ephemeral and 1 or 0
-    if a_ephemeral ~= b_ephemeral then return a_ephemeral < b_ephemeral end
-    if (a.session or "") ~= (b.session or "") then return (a.session or "") < (b.session or "") end
-    return (a.window or "") < (b.window or "")
-  end)
-
-  return entries
+  return ranked_manifest_targets(config, opts)
 end
 
 function Transport.build_peer_identity(config)
@@ -1040,9 +1144,14 @@ function M.setup(opts)
       local label = target.session or vim.fs.basename(target.path)
       if target.window and target.window ~= "" then label = string.format("%s:%s", label, target.window) end
       if target.ephemeral then label = label .. " · eph" end
-      if target.cwd and target.cwd ~= "" then label = label .. " · " .. target.cwd end
+      local reason = table.concat(target.reasons or {}, ", ")
+      local age = target.activity and target.activity > 0 and math.max(os.time() - target.activity, 0) or nil
+      local meta = string.format("score %d", target.score or 0)
+      if age then meta = string.format("%s · %ds", meta, age) end
+      if reason ~= "" then meta = string.format("%s · %s", meta, reason) end
+      if target.cwd and target.cwd ~= "" then meta = string.format("%s · %s", meta, target.cwd) end
       table.insert(items, {
-        text = label,
+        text = string.format("%s · %s", label, meta),
         kind = "socket",
         path = target.path,
       })
