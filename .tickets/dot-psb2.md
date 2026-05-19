@@ -1,6 +1,6 @@
 ---
 id: dot-psb2
-status: open
+status: closed
 deps: [dot-rfst]
 links: []
 created: 2026-05-18T13:40:31Z
@@ -21,3 +21,9 @@ Enable programs.llamaCppLocal on megabookpro and rxbookpro with conservative per
 4. alejandra --check home/megabookpro.nix home/rxbookpro.nix passes.
 5. just validate home passes.
 
+
+## Notes
+
+**2026-05-19T12:20:08Z**
+
+Switched host local inference defaults to llama.cpp. megabookpro uses one 8K q8_0/flash-attn slot and rxbookpro uses two 32K q8_0/flash-attn slots; Ollama and oMLX agents disabled on both hosts. Verified alejandra, just validate home, rxbookpro activation build, and Nix option evals.

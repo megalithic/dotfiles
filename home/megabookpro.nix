@@ -41,25 +41,28 @@
   };
 
   # ===========================================================================
-  # Ollama — safe local inference for 32GB (sequential model swap, no OOM)
-  # Metal GPU: 100% offload, flash attention, q8_0 KV cache
+  # llama.cpp — primary local inference for 32GB (conservative defaults)
   # ===========================================================================
-  services.ollamaAgent.enable = true;
-  services.ollamaAgent.extraEnv = {
-    OLLAMA_MAX_LOADED_MODELS = "1"; # Prevent dual-load on 32GB
-    OLLAMA_GPU_OVERHEAD = "4294967296"; # Reserve 4GB for OS/browser/nvim
-    OLLAMA_CONTEXT_LENGTH = "8192"; # Default ctx (auto was 4096, too small for coding)
+  # Migration from Ollama/oMLX: use llama-server router mode with one loaded
+  # GGUF model at a time. 8K context, q8_0 KV cache, and flash attention keep
+  # memory predictable on 32GB while leaving headroom for OS/browser/nvim.
+  programs.llamaCppLocal = {
+    enable = true;
+    modelsMax = 1;
+    ctxSize = 8192;
+    parallel = 1;
+    cacheTypeK = "q8_0";
+    cacheTypeV = "q8_0";
+    flashAttn = "on";
   };
 
-  # ===========================================================================
-  # oMLX — DISABLED on megabookpro (32GB insufficient for multi-model)
-  # ===========================================================================
-  # ProcessMemoryEnforcer only tracks Metal allocations, not true RSS.
-  # Loading a second model alongside pinned Qwen27B (~18.7GB) causes macOS
-  # Jetsam to SIGKILL the process (vm-compressor-space-shortage).
-  # See: oMLX Issue #702, #1060 (VLM memory leak on unload).
-  # Config preserved for rxbookpro (64GB) or future oMLX fixes.
+  # Legacy local inference backends disabled while llama.cpp replaces them.
+  # oMLX stays off: its memory guard missed true RSS and caused Jetsam kills
+  # when a second model loaded alongside pinned Qwen27B on 32GB.
+  services.ollamaAgent.enable = false;
   programs.omlx.enable = false;
+
+  # Preserved oMLX tuning until obsolete wiring cleanup.
   programs.omlx.settings = {
     model.max_model_memory = "24GB";
     cache.hot_cache_max_size = "2GB";
