@@ -22,6 +22,7 @@ local options
 local compose_queue = {}
 local target_history = {}
 local target_history_limit = 20
+local tmux_context_cache = { at = 0, value = nil }
 
 local conn = {
   pipe = nil,
@@ -291,12 +292,25 @@ end
 
 local function current_tmux_context()
   if not vim.env.TMUX then return {} end
-  return {
-    session = tmux_value("#{session_name}"),
-    window_name = tmux_value("#{window_name}"),
-    window_index = tmux_value("#{window_index}"),
-    pane = tmux_value("#{pane_id}"),
+
+  local now = vim.uv.now()
+  if tmux_context_cache.value and (now - tmux_context_cache.at) < 1000 then return tmux_context_cache.value end
+
+  local handle =
+    io.popen("tmux display-message -p '#{session_name}\t#{window_name}\t#{window_index}\t#{pane_id}' 2>/dev/null")
+  if not handle then return {} end
+  local value = handle:read("*l")
+  handle:close()
+
+  local session, window_name, window_index, pane = (value or ""):match("^([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)")
+  local context = {
+    session = session ~= "" and session or nil,
+    window_name = window_name ~= "" and window_name or nil,
+    window_index = window_index ~= "" and window_index or nil,
+    pane = pane ~= "" and pane or nil,
   }
+  tmux_context_cache = { at = now, value = context }
+  return context
 end
 
 local function candidate_activity(info)
@@ -573,20 +587,21 @@ end
 function Transport.list_targets(config, opts) return ranked_manifest_targets(config, opts) end
 
 function Transport.build_peer_identity(config)
+  local context = current_tmux_context()
   return {
     id = string.format(
       "nvim:%s:%s:%d",
-      tmux_value("#{session_name}") or "local",
-      tmux_value("#{window_name}") or "0",
+      context.session or "local",
+      context.window_name or context.window_index or "0",
       vim.fn.getpid()
     ),
     kind = "nvim",
     cwd = vim.uv.cwd(),
     root = config.resolve_root(),
     tmux = {
-      session = tmux_value("#{session_name}"),
-      window = tmux_value("#{window_name}"),
-      pane = tmux_value("#{pane_id}"),
+      session = context.session,
+      window = context.window_name or context.window_index,
+      pane = context.pane,
     },
     linkMode = config.transport.link_mode,
     heartbeatAt = os.time(),
@@ -1292,27 +1307,51 @@ end
 
 function Autocmds.setup(api, config)
   local group = vim.api.nvim_create_augroup("mega.pinvim", { clear = true })
+  local refresh_timer = nil
+
+  local function stop_refresh_timer()
+    if refresh_timer then
+      refresh_timer:stop()
+      refresh_timer:close()
+      refresh_timer = nil
+    end
+  end
+
+  local function schedule_refresh(delay_ms)
+    stop_refresh_timer()
+    refresh_timer = vim.uv.new_timer()
+    if not refresh_timer then return end
+    refresh_timer:start(
+      delay_ms or 150,
+      0,
+      vim.schedule_wrap(function()
+        stop_refresh_timer()
+        api.refresh_buffer_state()
+        api.ensure_connected(true)
+      end)
+    )
+  end
 
   vim.api.nvim_create_autocmd({ "BufEnter", "DirChanged" }, {
     group = group,
-    callback = function()
-      api.refresh_buffer_state()
-      api.ensure_connected(true)
+    callback = function(args)
+      if args.buf and vim.bo[args.buf].buftype ~= "" then return end
+      schedule_refresh(150)
     end,
   })
 
   vim.api.nvim_create_autocmd({ "VimEnter", "BufReadPost" }, {
     group = group,
     callback = function(args)
-      if vim.bo[args.buf].buftype ~= "" then return end
-      api.refresh_buffer_state()
-      api.ensure_connected(true)
+      if args.buf and vim.bo[args.buf].buftype ~= "" then return end
+      schedule_refresh(250)
     end,
   })
 
   vim.api.nvim_create_autocmd("VimLeavePre", {
     group = group,
     callback = function()
+      stop_refresh_timer()
       connection_disconnect(api.runtime)
       vim.notify("pinvim: cleanup complete", vim.log.levels.INFO)
     end,
@@ -1913,7 +1952,6 @@ function M.setup(opts)
     }
   end
 
-  api.refresh_buffer_state()
   Commands.setup(api, config)
   Autocmds.setup(api, config)
 
