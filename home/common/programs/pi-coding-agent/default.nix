@@ -81,7 +81,8 @@
   pkgs,
   lib,
   ...
-}: let
+}:
+let
   # ===========================================================================
   # Pi Runtime State (single source of truth)
   # ===========================================================================
@@ -123,9 +124,11 @@
   # To update: edit version in packages/<name>/package.json, run just update-npm <name>
 
   # Read version from a package's sole npm dependency (single source of truth)
-  npmVersion = dir: let
-    pkgJson = builtins.fromJSON (builtins.readFile (dir + "/package.json"));
-  in
+  npmVersion =
+    dir:
+    let
+      pkgJson = builtins.fromJSON (builtins.readFile (dir + "/package.json"));
+    in
     builtins.head (builtins.attrValues pkgJson.dependencies);
 
   # Pi binary — built from npm, enables patching (retry behavior, etc.)
@@ -337,20 +340,17 @@
   # ===========================================================================
   extensionDir = ./extensions;
   extensionDirExists = builtins.pathExists extensionDir;
-  extensionEntries =
-    if extensionDirExists
-    then builtins.readDir extensionDir
-    else {};
+  extensionEntries = if extensionDirExists then builtins.readDir extensionDir else { };
 
   # .ts files
-  extensionTsFiles = builtins.filter (name: lib.hasSuffix ".ts" name && !builtins.elem name disabledExtensions) (
-    builtins.attrNames extensionEntries
-  );
+  extensionTsFiles = builtins.filter (
+    name: lib.hasSuffix ".ts" name && !builtins.elem name disabledExtensions
+  ) (builtins.attrNames extensionEntries);
 
   # Directories (e.g., subagent/)
-  extensionDirs = builtins.filter (name: extensionEntries.${name} == "directory" && !builtins.elem name disabledExtensions) (
-    builtins.attrNames extensionEntries
-  );
+  extensionDirs = builtins.filter (
+    name: extensionEntries.${name} == "directory" && !builtins.elem name disabledExtensions
+  ) (builtins.attrNames extensionEntries);
 
   # Data files co-located with extensions (JSON configs, etc.)
   extensionDataFiles = builtins.filter (name: lib.hasSuffix ".json" name && name != "package.json") (
@@ -361,8 +361,7 @@
     map (name: {
       name = ".pi/agent/extensions/${name}";
       value.source = ./extensions/${name};
-    })
-    (extensionTsFiles ++ extensionDataFiles ++ extensionDirs)
+    }) (extensionTsFiles ++ extensionDataFiles ++ extensionDirs)
   );
 
   # ===========================================================================
@@ -372,19 +371,16 @@
   agentsDirExists = builtins.pathExists agentsDir;
 
   agentFiles =
-    if agentsDirExists
-    then
-      builtins.filter (name: lib.hasSuffix ".md" name) (
-        builtins.attrNames (builtins.readDir agentsDir)
-      )
-    else [];
+    if agentsDirExists then
+      builtins.filter (name: lib.hasSuffix ".md" name) (builtins.attrNames (builtins.readDir agentsDir))
+    else
+      [ ];
 
   agentSymlinks = builtins.listToAttrs (
     map (name: {
       name = ".pi/agent/agents/${name}";
       value.source = ./agents/${name};
-    })
-    agentFiles
+    }) agentFiles
   );
 
   # ===========================================================================
@@ -394,19 +390,18 @@
   skillsDirExists = builtins.pathExists skillsDir;
 
   skillDirs =
-    if skillsDirExists
-    then
+    if skillsDirExists then
       builtins.filter (name: !builtins.elem name disabledSkills) (
         builtins.attrNames (builtins.readDir skillsDir)
       )
-    else [];
+    else
+      [ ];
 
   skillSymlinks = builtins.listToAttrs (
     map (name: {
       name = ".pi/agent/skills/${name}";
       value.source = ./skills/${name};
-    })
-    skillDirs
+    }) skillDirs
   );
 
   # ===========================================================================
@@ -416,19 +411,16 @@
   promptsDirExists = builtins.pathExists promptsDir;
 
   promptFiles =
-    if promptsDirExists
-    then
-      builtins.filter (name: lib.hasSuffix ".md" name) (
-        builtins.attrNames (builtins.readDir promptsDir)
-      )
-    else [];
+    if promptsDirExists then
+      builtins.filter (name: lib.hasSuffix ".md" name) (builtins.attrNames (builtins.readDir promptsDir))
+    else
+      [ ];
 
   promptSymlinks = builtins.listToAttrs (
     map (name: {
       name = ".pi/agent/prompts/${name}";
       value.source = ./prompts/${name};
-    })
-    promptFiles
+    }) promptFiles
   );
 
   # ===========================================================================
@@ -492,27 +484,29 @@
     export PI_SESSION
 
     # ---------------------------------------------------------------
-    # Profile detection: --profile flag > tmux session > default mega
-    # No profile dirs, no hybrid dirs — just env vars.
+    # Profile detection: --profile > explicit envs > tmux > directoryProfiles > mega
+    # Uses resolve-pinvim-profile.mjs to match cwd against directoryProfiles
+    # from settings.json and output the correct env exports.
     # ---------------------------------------------------------------
-    PI_PROFILE="''${EXPLICIT_PROFILE:-$PI_SESSION}"
-    export PI_PROFILE
-    export PI_MULTI_PASS_PRESET="$PI_PROFILE"
+    # The resolver reads pre-existing env vars directly (PI_PROFILE, etc.)
+    # to distinguish user-explicit values from wrapper defaults (via PI_PROFILE_SOURCE).
+    SETTINGS_PATH="$HOME/.pi/agent/settings.json"
+    RESOLVER="${./scripts/resolve-pinvim-profile.mjs}"
+    RESOLVER_ARGS=(--settings "$SETTINGS_PATH" --cwd "$(pwd)" --session "$PI_SESSION")
+    if [ -n "$EXPLICIT_PROFILE" ]; then
+      RESOLVER_ARGS+=(--explicit-profile "$EXPLICIT_PROFILE")
+    fi
+
+    eval "$(${pkgs.nodejs}/bin/node "$RESOLVER" "''${RESOLVER_ARGS[@]}")"
 
     MASTER_DIR="$HOME/.pi/agent"
-
-    # ---------------------------------------------------------------
-    # Model scope: export PI_MODEL_SCOPE for multi-sub.ts extension.
-    # The extension applies scoped models at session_start (after
-    # extension-registered providers like rx-anthropic are available).
-    # ---------------------------------------------------------------
-    export PI_MODEL_SCOPE="''${PI_MODEL_SCOPE:-$PI_PROFILE}"
 
     exec ${pi-coding-agent}/bin/pi "''${PI_ARGS[@]}"
   '';
 
   p = pkgs.writeShellScriptBin "p" ''exec ${pinvim}/bin/pinvim "$@"'';
-in {
+in
+{
   home.sessionVariables.PI_STATE_DIR = piStateDir;
 
   # web-browser skill (skills/web-browser/scripts/start.js)
@@ -531,68 +525,53 @@ in {
   # ===========================================================================
   # File Symlinks
   # ===========================================================================
-  home.file =
-    {
-      # Symlink pi binary directly (avoids node_modules conflict)
-      ".local/bin/pi".source = "${pi-coding-agent}/bin/pi";
+  home.file = {
+    # Symlink pi binary directly (avoids node_modules conflict)
+    ".local/bin/pi".source = "${pi-coding-agent}/bin/pi";
 
-      # Global AGENTS.md
-      ".pi/agent/AGENTS.md".source = ./sources/GLOBAL_AGENTS.md;
-      ".pi/agent/APPEND_SYSTEM.md".source = ./sources/APPEND_SYSTEM.md;
+    # Global AGENTS.md
+    ".pi/agent/AGENTS.md".source = ./sources/GLOBAL_AGENTS.md;
+    ".pi/agent/APPEND_SYSTEM.md".source = ./sources/APPEND_SYSTEM.md;
 
-      # Plain JSON configs — keybindings uses out-of-store symlink so pi can write to it
-      ".pi/agent/keybindings.json".source = config.lib.mega.linkDotfile "home/common/programs/pi-coding-agent/keybindings.json";
-      ".pi/agent/multi-pass.json".source = config.lib.mega.linkDotfile "home/common/programs/pi-coding-agent/multi-pass.json";
+    # Plain JSON configs — keybindings uses out-of-store symlink so pi can write to it
+    ".pi/agent/keybindings.json".source =
+      config.lib.mega.linkDotfile "home/common/programs/pi-coding-agent/keybindings.json";
 
-      ".pi/agent/models.json".source = ./models.json;
-      ".pi/agent/mcp.json".source = ./mcp.json;
+    ".pi/agent/models.json".source = ./models.json;
+    ".pi/agent/mcp.json".source = ./mcp.json;
 
-      # Built extensions with npm dependencies
-      # Full directory extensions (symlink whole package)
-      # ".pi/agent/extensions/pi-agent-browser".source = pi-agent-browser;
-      ".pi/agent/extensions/pi-mcp-adapter".source = pi-mcp-adapter;
+    # Built extensions with npm dependencies
+    # Full directory extensions (symlink whole package)
+    # ".pi/agent/extensions/pi-agent-browser".source = pi-agent-browser;
+    ".pi/agent/extensions/pi-mcp-adapter".source = pi-mcp-adapter;
 
-      # web-browser skill: SKILL.md from source, scripts/ from built derivation
-      # (scripts need node_modules/ws baked in by buildNpmPackage)
-      ".pi/agent/skills/web-browser/SKILL.md".source = ./skills/web-browser/SKILL.md;
-      ".pi/agent/skills/web-browser/scripts".source = webBrowserScripts;
-      ".pi/agent/extensions/pi-internet".source = pi-internet;
-      # pi-multi-pass: auto-discovered as extensions/multi-sub.ts (no nix derivation needed)
-      ".pi/agent/extensions/pi-synthetic-provider".source = pi-synthetic-provider;
-      # ".pi/agent/extensions/pi-interactive-subagents".source = pi-interactive-subagents;
-      # ".pi/agent/extensions/pi-diff-review".source = pi-diff-review;
-    }
-    // extensionSymlinks
-    // agentSymlinks
-    // skillSymlinks
-    // promptSymlinks;
+    # web-browser skill: SKILL.md from source, scripts/ from built derivation
+    # (scripts need node_modules/ws baked in by buildNpmPackage)
+    ".pi/agent/skills/web-browser/SKILL.md".source = ./skills/web-browser/SKILL.md;
+    ".pi/agent/skills/web-browser/scripts".source = webBrowserScripts;
+    ".pi/agent/extensions/pi-internet".source = pi-internet;
+    # pi-multi-pass: auto-discovered as extensions/multi-sub.ts (no nix derivation needed)
+    ".pi/agent/extensions/pi-synthetic-provider".source = pi-synthetic-provider;
+    # ".pi/agent/extensions/pi-interactive-subagents".source = pi-interactive-subagents;
+    # ".pi/agent/extensions/pi-diff-review".source = pi-diff-review;
+  }
+  // extensionSymlinks
+  // agentSymlinks
+  // skillSymlinks
+  // promptSymlinks;
 
   # ===========================================================================
   # Settings Merge Activation
   # ===========================================================================
-  home.activation.mergeSettings = lib.hm.dag.entryAfter ["writeBoundary"] ''
+  home.activation.mergeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     run ${pkgs.bash}/bin/bash ${./merge-settings.sh} ${./settings.json}
-  '';
-
-  home.activation.cleanProfileMultiPass = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    for profile in rx evirts cspire; do
-      path="$HOME/.pi/agent-$profile/multi-pass.json"
-      if [ -L "$path" ]; then
-        target="$(${pkgs.coreutils}/bin/readlink "$path")"
-        case "$target" in
-          /nix/store/*|$HOME/.dotfiles/*)
-            run rm "$path"
-            ;;
-        esac
-      fi
-    done
   '';
 
   # ===========================================================================
   # Clean Extension Deps Activation
   # ===========================================================================
   # Remove stale node_modules/package.json from extensions dir (pi's jiti resolves internally)
-  home.activation.cleanExtensionDeps = lib.hm.dag.entryAfter ["writeBoundary"] ''
+  home.activation.cleanExtensionDeps = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ext_dir="$HOME/.pi/agent/extensions"
     for f in "$ext_dir/package.json" "$ext_dir/package-lock.json"; do
       [ -f "$f" ] && run rm "$f"

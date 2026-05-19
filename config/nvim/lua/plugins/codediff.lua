@@ -1,18 +1,21 @@
 return {
   {
     "esmuellert/codediff.nvim",
-    enabled = false,
+    cond = function()
+      local root = vim.fs.root(0, { ".jj", ".git" }) or vim.uv.cwd()
+      return vim.uv.fs_stat(root .. "/.git") ~= nil and vim.uv.fs_stat(root .. "/.jj") == nil
+    end,
     dependencies = { "MunifTanjim/nui.nvim" },
     cmd = "CodeDiff",
     event = "VeryLazy",
     keys = {
       -- Workspace level
-      { "<leader>wgd", "<cmd>CodeDiff<cr>", desc = "Workspace [D]iff to `master` (CodeDiff)" },
-      { "<leader>wgD", "<cmd>CodeDiff master<cr>", desc = "Workspace [D]iff (CodeDiff)" },
+      { "<leader>gwd", "<cmd>CodeDiff<cr>", desc = "Workspace [D]iff (CodeDiff)" },
+      { "<leader>gwD", "<cmd>CodeDiff main<cr>", desc = "Workspace [D]iff main (CodeDiff)" },
 
       -- Document level
-      { "<leader>dgd", "<cmd>CodeDiff file HEAD<cr>", desc = "Document [D]iff (CodeDiff)" },
-      { "<leader>dgD", "<cmd>CodeDiff file master<cr>", desc = "Document [D]iff (CodeDiff)" },
+      { "<leader>gdd", "<cmd>CodeDiff file HEAD<cr>", desc = "Document [D]iff (CodeDiff)" },
+      { "<leader>gdD", "<cmd>CodeDiff file main<cr>", desc = "Document [D]iff main (CodeDiff)" },
 
       {
         "<leader>wgb",

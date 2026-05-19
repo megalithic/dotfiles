@@ -65,5 +65,87 @@
     "showTerminalProgress": true,
     "imageWidthCells": 120
   },
+  "multiSub": {
+    "subscriptions": [
+      {
+        "provider": "anthropic",
+        "alias": "rx-anthropic",
+        "label": "rx-anthropic"
+      },
+      {
+        "provider": "openai-codex",
+        "alias": "rx-codex",
+        "label": "rx-codex"
+      }
+    ],
+    "pools": [],
+    "chains": [],
+    "presets": [
+      {
+        "name": "mega",
+        "entries": [
+          {
+            "provider": "openai-codex",
+            "model": "gpt-5.5",
+            "enabled": true
+          },
+          {
+            "provider": "openai-codex",
+            "model": "gpt-5.4",
+            "enabled": true
+          },
+          {
+            "provider": "openai-codex",
+            "model": "gpt-5.4-mini",
+            "enabled": true
+          }
+        ],
+        "enabled": true
+      },
+      {
+        "name": "rx",
+        "entries": [
+          {
+            "provider": "rx-anthropic",
+            "model": "claude-opus-4-6",
+            "enabled": true
+          },
+          {
+            "provider": "rx-anthropic",
+            "model": "claude-sonnet-4-5",
+            "enabled": true
+          },
+          {
+            "provider": "rx-anthropic",
+            "model": "claude-haiku-4-5",
+            "enabled": true
+          },
+          {
+            "provider": "rx-codex",
+            "model": "gpt-5.5",
+            "enabled": true
+          },
+          {
+            "provider": "rx-codex",
+            "model": "gpt-5.4",
+            "enabled": true
+          },
+          {
+            "provider": "rx-codex",
+            "model": "gpt-5.4-mini",
+            "enabled": true
+          }
+        ],
+        "enabled": true
+      }
+    ],
+    "directoryProfiles": [
+      {
+        "glob": "~/code/work/strive/**",
+        "preset": "rx",
+        "modelScope": "rx"
+      }
+    ]
+  },
   "shellCommandPrefix": "export GIT_EDITOR=true\nexport GIT_SEQUENCE_EDITOR=true\nexport GIT_TERMINAL_PROMPT=0"
 }
