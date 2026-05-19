@@ -1,6 +1,6 @@
 ---
 id: dot-ywgf
-status: open
+status: in_progress
 deps: []
 links: []
 created: 2026-05-19T19:09:43Z

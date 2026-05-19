@@ -8,6 +8,8 @@
     # quarantine entirely (installed from /nix/store).
     brews = [
       # whisperkit-cli moved to nix derivation: pkgs/cli/whisperkit-cli.nix
+      # Required for verify-doctor PDF417 barcode NIF compilation
+      "zxing-cpp"
     ];
     # Casks migrated to brew-nix overlay (pkgs.brewCasks.*) — see
     # home/common/programs/gui-apps.nix. Keeping list here as documentation
