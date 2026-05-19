@@ -908,22 +908,6 @@
         "type": "github"
       }
     },
-    "homebrew-jundot-omlx": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1778772539,
-        "narHash": "sha256-G4TS5NjCigPkTmJO2Yv7NbVPT/Lvd7CH488KO9Pyz9I=",
-        "owner": "jundot",
-        "repo": "omlx",
-        "rev": "51907f08074742defec4375fb629e289801a8a9f",
-        "type": "github"
-      },
-      "original": {
-        "owner": "jundot",
-        "repo": "omlx",
-        "type": "github"
-      }
-    },
     "homebrew-services": {
       "flake": false,
       "locked": {
@@ -1495,7 +1479,6 @@
         "homebrew-cask": "homebrew-cask",
         "homebrew-core": "homebrew-core",
         "homebrew-felixkratz": "homebrew-felixkratz",
-        "homebrew-jundot-omlx": "homebrew-jundot-omlx",
         "homebrew-services": "homebrew-services",
         "kanata-darwin": "kanata-darwin",
         "llm-agents": "llm-agents",

@@ -195,7 +195,7 @@
         - User programs -> `~/.dotfiles/home/common/programs/<program>/default.nix`
         - Homebrew packages -> `~/.dotfiles/modules/brew.nix`
         - Environment variables -> `~/.dotfiles/home/common/default.nix` or program-specific configs
-        - AI tools config -> `~/.dotfiles/home/common/programs/{claude-code,omlx,pi-coding-agent}/`
+        - AI tools config -> `~/.dotfiles/home/common/programs/{claude-code,llama-cpp-local,pi-coding-agent}/`
 
       ## Environment Facts
 

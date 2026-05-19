@@ -8,7 +8,6 @@
     # quarantine entirely (installed from /nix/store).
     brews = [
       # whisperkit-cli moved to nix derivation: pkgs/cli/whisperkit-cli.nix
-      "jundot/omlx/omlx" # Apple Silicon native LLM inference server (oMLX)
     ];
     # Casks migrated to brew-nix overlay (pkgs.brewCasks.*) — see
     # home/common/programs/gui-apps.nix. Keeping list here as documentation

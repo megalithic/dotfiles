@@ -22,8 +22,6 @@
     # AI tooling
     ./programs/claude-code
     ./programs/llama-cpp-local
-    ./programs/ollama
-    ./programs/omlx
     ./programs/pi-coding-agent
     # Browsers
     ./programs/brave-browser-nightly

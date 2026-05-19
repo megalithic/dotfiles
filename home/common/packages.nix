@@ -100,7 +100,6 @@
     netcat # nc networking utility
     nix-update
     nix-search-cli
-    ollama # local LLM for AI-powered note summarization
     openconnect
     openssl_3
     openvpn

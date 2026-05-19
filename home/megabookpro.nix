@@ -56,35 +56,6 @@
     flashAttn = "on";
   };
 
-  # Legacy local inference backends disabled while llama.cpp replaces them.
-  # oMLX stays off: its memory guard missed true RSS and caused Jetsam kills
-  # when a second model loaded alongside pinned Qwen27B on 32GB.
-  services.ollamaAgent.enable = false;
-  programs.omlx.enable = false;
-
-  # Preserved oMLX tuning until obsolete wiring cleanup.
-  programs.omlx.settings = {
-    model.max_model_memory = "24GB";
-    cache.hot_cache_max_size = "2GB";
-    cache.ssd_cache_max_size = "40GB";
-    memory.max_process_memory = "75%";
-  };
-  programs.omlx.modelSettings.models = {
-    "Qwen3.6-27B-4bit" = {
-      is_pinned = true;
-      ttl_seconds = null;
-      max_context_window = 32768;
-    };
-    "DeepSeek-R1-Distill-Qwen-14B-4bit" = {
-      is_pinned = false;
-      ttl_seconds = 600;
-    };
-    "gemma-4-e4b-it-4bit" = {
-      is_pinned = false;
-      ttl_seconds = 600;
-    };
-  };
-
   # Host-specific home-manager overrides go here
   # Example: different shell aliases, extra packages, etc.
 }

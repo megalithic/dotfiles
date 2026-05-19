@@ -1,6 +1,6 @@
 ---
 id: dot-hq7c
-status: open
+status: closed
 deps: [dot-psb2]
 links: []
 created: 2026-05-18T13:40:31Z
@@ -22,3 +22,9 @@ Remove no-longer-used Ollama and oMLX package/service plumbing after host config
 5. alejandra --check home/common/services.nix home/common/packages.nix modules/brew.nix flake.nix passes.
 6. just validate home passes.
 
+
+## Notes
+
+**2026-05-19T12:42:15Z**
+
+Removed obsolete Ollama/oMLX Home Manager modules, launchd agents, Homebrew formula/tap input, shared ollama package, host overrides, and stale docs. Kept Home Manager launchd activation override without bootout --wait.
