@@ -16,6 +16,47 @@
   ...
 }: {
   # ─────────────────────────────────────────────────────────────────────────────
+  # llama.cpp - local LLM inference server (OpenAI-compat API)
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Router mode: scans --models-dir for GGUF files, serves on 127.0.0.1:18080.
+  # Opt-in via programs.llamaCppLocal.enable (default OFF).
+  # Per-host tuning: programs.llamaCppLocal.{modelsMax, ctxSize, parallel, ...}
+  launchd.agents.llama-cpp = {
+    enable = config.programs.llamaCppLocal.enable;
+    config = {
+      ProgramArguments =
+        [
+          "${config.programs.llamaCppLocal.package}/bin/llama-server"
+          "--host"
+          config.programs.llamaCppLocal.host
+          "--port"
+          (toString config.programs.llamaCppLocal.port)
+          "--models-dir"
+          config.programs.llamaCppLocal.modelDir
+          "--models-max"
+          (toString config.programs.llamaCppLocal.modelsMax)
+          "-c"
+          (toString config.programs.llamaCppLocal.ctxSize)
+          "--parallel"
+          (toString config.programs.llamaCppLocal.parallel)
+          "--cache-type-k"
+          config.programs.llamaCppLocal.cacheTypeK
+          "--cache-type-v"
+          config.programs.llamaCppLocal.cacheTypeV
+          "--flash-attn"
+          config.programs.llamaCppLocal.flashAttn
+          "--jinja"
+          "--cont-batching"
+        ]
+        ++ config.programs.llamaCppLocal.extraArgs;
+      RunAtLoad = true;
+      KeepAlive = true;
+      StandardOutPath = "${config.home.homeDirectory}/Library/Logs/llama-cpp/stdout.log";
+      StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/llama-cpp/stderr.log";
+    };
+  };
+
+  # ─────────────────────────────────────────────────────────────────────────────
   # oMLX - Apple Silicon native LLM inference
   # ─────────────────────────────────────────────────────────────────────────────
   # Listens on http://127.0.0.1:8000/v1. CLI installed via brew tap
@@ -267,5 +308,9 @@
 
   home.activation.makeEspansoLogDir = lib.hm.dag.entryAfter ["writeBoundary"] ''
     mkdir -p ${config.home.homeDirectory}/Library/Logs/espanso
+  '';
+
+  home.activation.makeLlamaCppLogDir = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    mkdir -p ${config.home.homeDirectory}/Library/Logs/llama-cpp
   '';
 }

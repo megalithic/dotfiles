@@ -1,6 +1,6 @@
 ---
 id: dot-rfst
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-05-18T13:40:30Z
