@@ -97,6 +97,6 @@
     "grep":   { "use": "rg",    "reason": "Use `rg` instead of `grep`." },
     "rm":     { "use": "trash", "reason": "Use `trash` instead of `rm`." },
     "rmdir":  { "use": "trash", "reason": "Use `trash` instead of `rmdir`." },
-    "git":    { "use": "jj",    "reason": "Use `jj` instead of `git`.", "except_prefix": ["jj", "git"] }
+    "git":    { "use": "jj",    "reason": "Use `jj` instead of `git`.", "except_prefix": ["jj", "git"], "only_if_root_dir": ".jj" }
   }
 }

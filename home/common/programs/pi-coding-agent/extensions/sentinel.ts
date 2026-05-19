@@ -37,7 +37,7 @@ interface BlockedState {
 interface SubcommandEntry { flags: string[]; reason: string; }
 interface InteractiveCommand { _doc?: string; subcommands: Record<string, SubcommandEntry>; }
 interface AlwaysInteractiveEntry { reason: string; unless_args?: boolean; }
-interface ToolCorrection { use: string; reason: string; except_prefix?: string[]; }
+interface ToolCorrection { use: string; reason: string; except_prefix?: string[]; only_if_root_dir?: string; }
 interface SentinelConfig {
   interactive_commands: Record<string, InteractiveCommand>;
   always_interactive: { commands: Record<string, AlwaysInteractiveEntry> };
@@ -706,6 +706,27 @@ function buildRules(config: SentinelConfig): Rule[] {
         // Exception: don't flag `git` when it's part of `jj git ...`
         if (correction.except_prefix) {
           if (isCommandPrefix(cmd, ...correction.except_prefix)) return false;
+        }
+        // Conditional: only apply if marker directory exists at repo root
+        if (correction.only_if_root_dir) {
+          try {
+            const cwd = process.cwd();
+            // Walk up to find repo root (look for .git or the marker dir)
+            let dir = cwd;
+            let found = false;
+            while (dir !== dirname(dir)) {
+              if (existsSync(join(dir, correction.only_if_root_dir))) {
+                found = true;
+                break;
+              }
+              // Stop at .git boundary (repo root)
+              if (existsSync(join(dir, ".git"))) break;
+              dir = dirname(dir);
+            }
+            if (!found) return false;
+          } catch {
+            return false;
+          }
         }
         return true;
       },

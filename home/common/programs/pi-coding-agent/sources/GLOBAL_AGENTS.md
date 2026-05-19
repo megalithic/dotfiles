@@ -35,7 +35,7 @@ implementation files.
 ## Tools
 
 - Always use `trash` instead of `rm` for file deletion
-- Always use `jj` instead of `git` for version control
+- Use `jj` instead of `git` when a `.jj` directory exists at repo root (jj-managed repo). Otherwise use `git` normally
 - Always use `fd` instead of `find` for file discovery
 - Always use `rg` instead of `grep` for content search
 - Use project scripts (just, package.json, Makefile) for linting/formatting
@@ -50,14 +50,19 @@ implementation files.
 - No corporate buzzwords: comprehensive, robust, utilize, leverage, streamline, enhance
 - No AI phrases: "dive into", "diving into"
 
-## Version Control (Jujutsu)
+## Version Control
 
-- **Never use git commands** — always use `jj` equivalents
-- **Never push to main** — use feature bookmarks
+Detect VCS at session start: if `.jj` directory exists at repo root, use `jj`.
+Otherwise use `git`. **Never assume jj** — check first.
+
+- **Never push to main** — use feature branches/bookmarks
 - **Never push without explicit user permission** — show exact command, wait for approval
 - **Never deploy or SSH without explicit user permission** — same rule
 
-Common mappings: `git status` → `jj status`, `git diff` → `jj diff`,
+### Jujutsu (jj) repos
+
+When `.jj` exists, use jj equivalents:
+`git status` → `jj status`, `git diff` → `jj diff`,
 `git commit` → `jj describe`, `git log` → `jj log`, `git push` → `jj git push`
 
 ### Multi-phase work
@@ -81,12 +86,12 @@ Rebase onto main before pushing. Atomic PRs.
 ## Uncommitted Changes (CRITICAL)
 
 **User's uncommitted changes are SACRED.** Before ANY VCS operation:
-1. `jj status` and `jj diff` to see working copy state
+1. Check status (`jj status` or `git status`) to see working copy state
 2. If changes exist, ask user — do NOT assume
 
-Never assume "(no description set)" means empty. Sentinel extension enforces
-blocked commands (`jj rebase`, `jj abandon`, `jj restore`, `jj undo`) — check
-`jj status` first, commit WIP, ask user.
+For jj repos: never assume "(no description set)" means empty. Sentinel
+extension enforces blocked commands (`jj rebase`, `jj abandon`, `jj restore`,
+`jj undo`) — check `jj status` first, commit WIP, ask user.
 
 ## Interactive Commands (AVOID)
 
@@ -123,5 +128,5 @@ blocked command. Don't ask again. Override is single-use and expires in 2 minute
 
 1. File issues for remaining work
 2. Run quality gates (tests, linters, builds)
-3. Commit changes with `jj describe -m`
+3. Commit changes (`jj describe -m` or `git commit`)
 4. Ask user if they want to push — never push automatically
