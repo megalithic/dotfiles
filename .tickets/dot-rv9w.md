@@ -1,6 +1,6 @@
 ---
 id: dot-rv9w
-status: open
+status: closed
 deps: [dot-slr0]
 links: [dot-slr0]
 created: 2026-05-19T18:25:44Z
@@ -25,3 +25,9 @@ Relevant files: config/nvim/lua/pinvim.lua, config/nvim/lua/pinvim/review.lua, c
 5. nvim --headless '+lua require("pinvim").setup(); vim.cmd("PiReview"); vim.cmd("PiReviewClose")' '+qa' exits 0.
 6. bin/pinvim-protocol-smoke passes.
 
+
+## Notes
+
+**2026-05-19T18:28:00Z**
+
+Removed Pinvim* Neovim user-command aliases, kept PiReview as review entry point, updated pinvim command docs to Pi* only, and verified stylua/headless nvim/protocol smoke.

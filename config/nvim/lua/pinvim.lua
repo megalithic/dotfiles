@@ -1245,7 +1245,7 @@ function Commands.setup(api, config)
     api.set_target(arg)
   end
 
-  vim.api.nvim_create_user_command("PinvimInfo", function()
+  vim.api.nvim_create_user_command("PiInfo", function()
     local info = api.info()
     local lines = {
       "pinvim state",
@@ -1260,7 +1260,7 @@ function Commands.setup(api, config)
       string.format("restored target: %s", info.state.restored_target and "yes" or "no"),
       string.format("peer frames enabled: %s", tostring(info.target.peer_frames_enabled)),
       string.format("protocol: %s", info.handshake.protocol),
-      "implicit context: removed; use gps/gpa/:PinvimSend/:PiSend explicit context",
+      "implicit context: removed; use gps/gpa/:PiSend explicit context",
       string.format("cutover: %s", info.handshake.compatibility.cutover),
       "hello payload:",
       vim.inspect(info.handshake.send),
@@ -1270,77 +1270,43 @@ function Commands.setup(api, config)
     vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
   end, { desc = "Show pinvim state + target" })
 
-  vim.api.nvim_create_user_command("PinvimStatus", status_command, {
-    desc = "Show current pinvim link status",
-  })
   vim.api.nvim_create_user_command("PiStatus", status_command, {
     desc = "Show current pinvim link status",
   })
 
-  vim.api.nvim_create_user_command("PinvimHealth", health_command, {
-    desc = "Check pinvim hello/heartbeat health",
-  })
   vim.api.nvim_create_user_command("PiHealth", health_command, {
     desc = "Check pinvim hello/heartbeat health",
   })
 
-  vim.api.nvim_create_user_command(
-    "PiInfo",
-    function() vim.cmd("PinvimInfo") end,
-    { desc = "Show pinvim state + target" }
-  )
-
-  vim.api.nvim_create_user_command("PinvimPrompt", prompt_command, {
-    nargs = "*",
-    desc = "Send raw prompt through pinvim.ts",
-  })
   vim.api.nvim_create_user_command("PiPrompt", prompt_command, {
     nargs = "*",
     desc = "Send raw prompt through pinvim.ts",
   })
 
-  vim.api.nvim_create_user_command("PinvimSend", function(command_opts) api.send_explicit(command_opts) end, {
-    range = true,
-    desc = "Send explicit selection or cursor context through pinvim.ts",
-  })
   vim.api.nvim_create_user_command("PiSend", function(command_opts) api.send_explicit(command_opts) end, {
     range = true,
     desc = "Send explicit selection or cursor context through pinvim.ts",
   })
 
-  vim.api.nvim_create_user_command("PinvimTarget", target_command, {
-    nargs = "?",
-    complete = "file",
-    desc = "Get/set buffer-local pinvim target socket",
-  })
   vim.api.nvim_create_user_command("PiTarget", target_command, {
     nargs = "?",
     complete = "file",
     desc = "Get/set buffer-local pinvim target socket",
   })
 
-  vim.api.nvim_create_user_command("PinvimPrevious", previous_command, {
-    desc = "Switch to previous alive parked pinvim target",
-  })
   vim.api.nvim_create_user_command("PiPrevious", previous_command, {
     desc = "Switch to previous alive parked pinvim target",
   })
 
-  vim.api.nvim_create_user_command("PinvimRestore", restore_command, {
-    desc = "Restore previous alive parked pinvim target",
-  })
   vim.api.nvim_create_user_command("PiRestore", restore_command, {
     desc = "Restore previous alive parked pinvim target",
   })
 
-  vim.api.nvim_create_user_command("PinvimSessions", function() api.select_session() end, {
-    desc = "Select pinvim session from manifests",
-  })
   vim.api.nvim_create_user_command("PiSessions", function() api.select_session() end, {
     desc = "Select pinvim session from manifests",
   })
 
-  vim.api.nvim_create_user_command("PinvimPanel", function(command_opts)
+  vim.api.nvim_create_user_command("PiPanel", function(command_opts)
     if command_opts.bang then
       api.toggle_panel()
     else
@@ -1351,34 +1317,20 @@ function Commands.setup(api, config)
     desc = "Ensure pi split visible (! toggles)",
   })
 
-  vim.api.nvim_create_user_command("PinvimSplit", function() api.spawn_ephemeral_split() end, {
-    desc = "Spawn fresh ephemeral pi split",
-  })
   vim.api.nvim_create_user_command("PiSplit", function() api.spawn_ephemeral_split() end, {
     desc = "Spawn fresh ephemeral pi split",
   })
 
-  vim.api.nvim_create_user_command("PinvimAdd", compose_add_command, {
-    range = true,
-    desc = "Add selection or file reference to pinvim compose queue",
-  })
   vim.api.nvim_create_user_command("PiAdd", compose_add_command, {
     range = true,
     desc = "Add selection or file reference to pinvim compose queue",
   })
 
-  vim.api.nvim_create_user_command("PinvimFlush", compose_flush_command, {
-    nargs = "*",
-    desc = "Send pinvim compose queue through pinvim.ts",
-  })
   vim.api.nvim_create_user_command("PiFlush", compose_flush_command, {
     nargs = "*",
     desc = "Send pinvim compose queue through pinvim.ts",
   })
 
-  vim.api.nvim_create_user_command("PinvimClear", compose_clear_command, {
-    desc = "Clear pinvim compose queue",
-  })
   vim.api.nvim_create_user_command("PiClear", compose_clear_command, {
     desc = "Clear pinvim compose queue",
   })

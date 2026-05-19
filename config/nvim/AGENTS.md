@@ -2,10 +2,8 @@
 
 ## User command rubric
 
-Pinvim commands follow a `Pi*` / `Pinvim*` dual-prefix convention.
-Short `Pi*` forms are the primary interface. `Pinvim*` forms exist for
-discoverability via `:Pinvim` tab-completion. Both always map to the same
-handler.
+Pinvim user commands use the `Pi*` prefix. Do not add `Pinvim*` user-command
+aliases; keep `pinvim` for internal Lua module names and implementation details.
 
 ### Categories
 
@@ -16,6 +14,7 @@ handler.
 | **Split** | Tmux pane management | `PiPanel`, `PiSplit` | `gpp` |
 | **Send** | Deliver context/messages to pi | `PiSend`, `PiPrompt` | `gps`, `gpa` |
 | **Compose** | Queue/flush/clear batched context | `PiAdd`, `PiFlush`, `PiClear` | — |
+| **Review** | Open/close/status review mode | `PiReview`, `PiReviewClose`, `PiReviewStatus` | `gds` |
 
 ### Command reference
 
@@ -35,6 +34,9 @@ handler.
 | `PiAdd` | — | ✓ | Append selection/file to compose queue | — | — |
 | `PiFlush` | `*` | — | Send compose queue as combined prompt. Optional arg = inline prompt | — | — |
 | `PiClear` | — | — | Discard compose queue | — | — |
+| `PiReview` | — | — | Open review mode with changed-file tree and diff viewer | `gds` | — |
+| `PiReviewClose` | — | — | Close review mode and restore previous layout | `gds` | — |
+| `PiReviewStatus` | — | — | Show review mode status | — | — |
 
 ### Keymap prefix: `gp`
 
@@ -49,6 +51,7 @@ All pinvim keymaps live under `gp` (mnemonic: **g**o **p**i).
 | `gps` | v | Prompt at cursor, then send visual selection + input |
 | `gpa` | n | Send cursor context and focus pi |
 | `gpa` | v | Send visual selection and focus pi |
+| `gds` | n | Toggle pinvim review mode |
 
 ### tmux bindings
 
@@ -59,7 +62,7 @@ All pinvim keymaps live under `gp` (mnemonic: **g**o **p**i).
 
 ### Design rules
 
-1. **`Pi*` is the user-facing prefix.** `Pinvim*` exists only for `:Pinvim` tab-completion discovery.
+1. **`Pi*` is the user-facing command prefix.** Do not add `Pinvim*` user-command aliases.
 2. **No overlap in behavior.** Each command does one thing. Aliases (`PiPrevious`/`PiRestore`) must share a handler, not diverge.
 3. **Inspect commands are read-only.** They never mutate connection state or send frames.
 4. **Send commands are the only nvim→pi context path.** No implicit streaming.

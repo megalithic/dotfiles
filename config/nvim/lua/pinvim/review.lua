@@ -233,11 +233,8 @@ end
 
 function M.setup(_api, _config)
   vim.api.nvim_create_user_command("PiReview", M.open, { desc = "Open pinvim review mode" })
-  vim.api.nvim_create_user_command("PinvimReview", M.open, { desc = "Open pinvim review mode" })
   vim.api.nvim_create_user_command("PiReviewClose", M.close, { desc = "Close pinvim review mode" })
-  vim.api.nvim_create_user_command("PinvimReviewClose", M.close, { desc = "Close pinvim review mode" })
   vim.api.nvim_create_user_command("PiReviewStatus", M.status, { desc = "Show pinvim review status" })
-  vim.api.nvim_create_user_command("PinvimReviewStatus", M.status, { desc = "Show pinvim review status" })
 
   vim.keymap.set("n", "gds", M.toggle, { silent = true, desc = "pinvim review toggle" })
 
