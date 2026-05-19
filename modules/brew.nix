@@ -5,13 +5,15 @@
   retiredBrews = [
     "omlx"
   ];
-  retiredBrewCleanup = lib.concatMapStringsSep "\n" (formula: ''
-    if /opt/homebrew/bin/brew list --formula ${lib.escapeShellArg formula} >/dev/null 2>&1; then
-      echo "homebrew: uninstalling retired formula ${formula}"
-      /opt/homebrew/bin/brew services stop ${lib.escapeShellArg formula} >/dev/null 2>&1 || true
-      /opt/homebrew/bin/brew uninstall --formula --force ${lib.escapeShellArg formula} || true
-    fi
-  '') retiredBrews;
+  retiredBrewCleanup =
+    lib.concatMapStringsSep "\n" (formula: ''
+      if /opt/homebrew/bin/brew list --formula ${lib.escapeShellArg formula} >/dev/null 2>&1; then
+        echo "homebrew: uninstalling retired formula ${formula}"
+        /opt/homebrew/bin/brew services stop ${lib.escapeShellArg formula} >/dev/null 2>&1 || true
+        /opt/homebrew/bin/brew uninstall --formula --force ${lib.escapeShellArg formula} || true
+      fi
+    '')
+    retiredBrews;
 in {
   environment.systemPath = ["/opt/homebrew/bin"];
 
@@ -23,35 +25,12 @@ in {
 
   homebrew = {
     enable = true;
-    # Note: `caskArgs.no_quarantine = true` was removed — Homebrew disabled the
-    # `--no-quarantine` switch with no replacement. Casks now go through normal
-    # quarantine; first launch may prompt. brew-nix-managed casks bypass
-    # quarantine entirely (installed from /nix/store).
-    brews = [
-      # whisperkit-cli moved to nix derivation: pkgs/cli/whisperkit-cli.nix
-      # Required for verify-doctor PDF417 barcode NIF compilation
-      "zxing-cpp"
-    ];
-    # Casks migrated to brew-nix overlay (pkgs.brewCasks.*) — see
-    # home/common/programs/gui-apps.nix. Keeping list here as documentation
-    # of which apps moved:
-    #   1password, 1password-cli, colorsnapper, contexts, hammerspoon,
-    #   homerow, kitty, mouseless, okta-verify, protonvpn, proton-drive,
-    #   obs@beta, yubico-authenticator, visual-studio-code, zed
     casks = [
       "hammerspoon"
-      # Raycast serves a zlib-wrapped DMG that brew-nix's 7zz unpack can't
-      # handle. Keep on homebrew until upstream fixes the wrapping.
       "raycast"
-      # Okta Verify ships a .pkg with URL-encoded paths that brew-nix's
-      # cpio/gzip pipeline can't extract. Keep on homebrew.
       "okta-verify"
-      # 1Password's anti-tamper / signature checks reject /nix/store copies,
-      # so install via real homebrew (writes to /Applications/ normally).
       "1password"
       "1password-cli"
-      # VPN system extensions need stable /Applications path; brew-nix
-      # /nix/store copies break WireGuard XPC service identity.
       "protonvpn"
     ];
     masApps = {

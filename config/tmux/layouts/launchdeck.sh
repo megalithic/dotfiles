@@ -1,4 +1,4 @@
-#!/usr/local/bin/zsh
+#!/usr/bin/env bash
 
 SESSION="launchdeck"
 CWD="$CODE/work/cspire/$SESSION"
@@ -6,7 +6,7 @@ CWD="$CODE/work/cspire/$SESSION"
 export SESSION_ICON="󱓞"
 export SESSION_FG="#00b6f0"
 
-cd $CWD
+cd "$CWD" || exit
 
 # if [ -f $CWD/development/scripts/setup_dev_ips.sh ]; then
 #   source $CWD/development/scripts/setup_dev_ips.sh
@@ -51,6 +51,6 @@ tmux send-keys -t "$SESSION":4.1 "./start" C-m
 # tmux -2 select-window -t "$SESSION":3
 tmux -2 select-pane -t "$SESSION":3.1
 
-tmux setenv -t ${SESSION} 'SESSION_ICON' "${SESSION_ICON}"
-tmux setenv -t ${SESSION} 'SESSION_FG' "${SESSION_FG}"
-# tmux setenv -t ${SESSION} 'SESSION_BG' "${SESSION_BG}"
+tmux setenv -t "${SESSION}" 'SESSION_ICON' "${SESSION_ICON}"
+tmux setenv -t "${SESSION}" 'SESSION_FG' "${SESSION_FG}"
+# tmux setenv -t "${SESSION}" 'SESSION_BG' "${SESSION_BG}"

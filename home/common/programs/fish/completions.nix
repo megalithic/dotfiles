@@ -20,4 +20,14 @@
 
   # mix task completions
   complete -c mix -xa "(__fish_mix_tasks)"
+
+  # Git worktree completions
+  function __fish_git_pr_branches
+    gh pr list --state open --json number,title,author,createdAt,headRefName --limit 50 2>/dev/null | jq -r '.[] | "\(.headRefName)"'
+  end
+
+  complete -c git-worktree-cd -f -a '(__git_worktree_names)' -d 'Worktree'
+  complete -c git-worktree-new -f -a '(__git_worktree_names)' -d 'Worktree'
+  complete -c git-worktree-prune -f -a '(__git_worktree_names)' -d 'Worktree'
+  complete -c git-worktree-pr -f -a '(__fish_git_pr_branches)' -d 'PR branch'
 ''

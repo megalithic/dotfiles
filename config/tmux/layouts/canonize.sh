@@ -1,14 +1,14 @@
-#!/usr/local/bin/zsh
+#!/usr/bin/env bash
 
-SESSION="rx"
-CWD="$(zoxide query "$SESSION")"
+SESSION="canonize"
+CWD="$(zoxide query "$SESSION" 2>/dev/null || printf '%s\n' "$HOME/code")"
 
-export SESSION_ICON="󰐂" # alts:  󰴓 󰃀   
-export SESSION_FG="#1e64f1"
-export SESSION_BG="#ffffff"
+export SESSION_ICON="" # alts:  󰴓 󰃀   
+export SESSION_FG="#e39b7b"
+# export SESSION_BG="#626262"
 
 echo "$CWD"
-cd "$CWD"
+cd "$CWD" || exit
 
 # Create the session and the first window. Manually switch to root
 # directory if required to support tmux < 1.9
@@ -33,7 +33,7 @@ tmux -2 select-layout -t "$SESSION":2 main-vertical
 tmux -2 select-pane -t "$SESSION":2.1
 
 tmux new-window -c "$CWD" -t "$SESSION":3 -n services
-tmux send-keys -t "$SESSION":3.1 "m s rx-dev" "C-m"
+tmux send-keys -t "$SESSION":3.1 "m s canonize-dev" "C-m"
 
 tmux select-layout -t "$SESSION":3 tiled
 tmux select-layout -t "$SESSION":3 even-horizontal
@@ -62,6 +62,6 @@ tmux send-keys -t "$SESSION":4.1 "pinvim" "C-m"
 tmux -2 select-window -t "$SESSION":2
 tmux -2 select-pane -t "$SESSION":2.1
 
-tmux setenv -t ${SESSION} 'SESSION_ICON' "${SESSION_ICON}"
-tmux setenv -t ${SESSION} 'SESSION_FG' "${SESSION_FG}"
-# tmux setenv -t ${SESSION} 'SESSION_BG' "${SESSION_BG}"
+tmux setenv -t "${SESSION}" 'SESSION_ICON' "${SESSION_ICON}"
+tmux setenv -t "${SESSION}" 'SESSION_FG' "${SESSION_FG}"
+# tmux setenv -t "${SESSION}" 'SESSION_BG' "${SESSION_BG}"

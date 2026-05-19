@@ -1,4 +1,4 @@
-#!/usr/local/bin/zsh
+#!/usr/bin/env bash
 
 # REF: https://www.jakeworth.com/tmux-application-startup-script/
 
@@ -7,7 +7,7 @@ CWD="$DOTS"
 export SESSION_ICON="󰈸" # alts: 🗿󰈸
 export SESSION_FG="#d9bb80"
 
-cd $CWD
+cd "$CWD" || exit
 
 # Run on_project_start command.
 
@@ -36,7 +36,7 @@ tmux send-keys -t "$SESSION":2.1 "pinvim" "C-m"
 tmux -2 select-window -t "$SESSION":1
 tmux -2 select-pane -t "$SESSION":1.1
 
-tmux setenv -t ${SESSION} 'SESSION_ICON' "${SESSION_ICON}"
-tmux setenv -t ${SESSION} 'SESSION_FG' "${SESSION_FG}"
+tmux setenv -t "${SESSION}" 'SESSION_ICON' "${SESSION_ICON}"
+tmux setenv -t "${SESSION}" 'SESSION_FG' "${SESSION_FG}"
 
 # Run on_project_exit command.

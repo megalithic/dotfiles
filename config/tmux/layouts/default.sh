@@ -1,4 +1,4 @@
-#!/usr/local/bin/zsh
+#!/usr/bin/env bash
 
 # REF: https://www.jakeworth.com/tmux-application-startup-script/
 # = layouts --------------------------------------------------------------------
@@ -15,7 +15,7 @@
 SESSION="${1:-}"
 # SESSION_PATH="${2:$CODE}"
 # CODE="${SESSION:"$HOME/code"}"
-CWD="$(zoxide query "$SESSION")"
+CWD="${2:-$(zoxide query "$SESSION" 2>/dev/null || printf '%s\n' "$HOME/code")}"
 
 if [[ -n $SESSION ]]; then
   # CWD="${2:-$CODE}"
@@ -24,7 +24,7 @@ if [[ -n $SESSION ]]; then
   export SESSION_ICON="󱃸" # alts: 󱃷  󰲌 󱃸
   export SESSION_FG="#eeeeee"
 
-  cd $CWD
+  cd "$CWD" || exit
 
   # Create the session and the first window. Manually switch to root
   # directory if required to support tmux < 1.9
@@ -46,6 +46,6 @@ if [[ -n $SESSION ]]; then
   tmux select-window -t "$SESSION":2
   tmux select-pane -t "$SESSION":2.1
 
-  tmux setenv -t ${SESSION} 'SESSION_ICON' "${SESSION_ICON}"
-  tmux setenv -t ${SESSION} 'SESSION_FG' "${SESSION_FG}"
+  tmux setenv -t "${SESSION}" 'SESSION_ICON' "${SESSION_ICON}"
+  tmux setenv -t "${SESSION}" 'SESSION_FG' "${SESSION_FG}"
 fi

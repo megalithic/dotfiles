@@ -8,14 +8,15 @@ _docs/
 
 # Devenv
 .devenv*
-devenv.local.nix
-
-# pre-commit
+.pi
+.nvim.lua
+.nvim.lua
 .pre-commit-config.yaml
-
-# Devenv
-.devenv*
+.pi
 devenv.local.nix
+devenv.local.yaml
+lat.md/.cache/
+result
 
 # direnv
 .direnv

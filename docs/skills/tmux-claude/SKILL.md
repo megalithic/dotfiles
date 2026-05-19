@@ -383,11 +383,11 @@ Layouts live in `~/.config/tmux/layouts/`:
 
 | Layout | Purpose |
 |--------|---------|
-| `default.zsh` | Generic layout for any project |
-| `mega.zsh` | Main dotfiles session |
-| `launchdeck.zsh` | LaunchDeck project layout |
-| `canonize.zsh` | Canonize project layout |
-| `megalithic-io.zsh` | Blog/website layout |
+| `default.sh` | Generic layout for any project |
+| `mega.sh` | Main dotfiles session |
+| `launchdeck.sh` | LaunchDeck project layout |
+| `canonize.sh` | Canonize project layout |
+| `megalithic-io.sh` | Blog/website layout |
 
 Create session with layout: `ftm <layout-name>`
 
@@ -398,7 +398,7 @@ Create session with layout: `ftm <layout-name>`
 | `~/.config/tmux/tmux.conf` | Main config (settings, bindings) |
 | `~/.config/tmux/plugins.tmux.conf` | Plugin configuration |
 | `~/.config/tmux/megaforest.tmux.conf` | Theme/colors |
-| `~/.config/tmux/layouts/*.zsh` | Predefined session layouts |
+| `~/.config/tmux/layouts/*.sh` | Predefined session layouts |
 | `~/.local/share/tmux/plugins/` | TPM plugin directory |
 
 ## AI Agent tmux Orchestration
@@ -890,7 +890,7 @@ tmux show-options -g | grep yank
 ls ~/.config/tmux/layouts/
 
 # Run layout directly to see errors
-sh ~/.config/tmux/layouts/<layout>.zsh
+bash ~/.config/tmux/layouts/<layout>.sh
 
 # Check ftm can find layouts
 ftm -h  # Shows TMUX_LAYOUTS path

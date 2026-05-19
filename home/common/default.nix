@@ -35,8 +35,12 @@
     ./programs/msmtp
     ./programs/notmuch
     # Shells / prompts
+    ./programs/bash
     ./programs/fish
     ./programs/starship
+    ./programs/zsh
+    # Dev environments
+    ./programs/devenv
     # Misc programs
     ./programs/agenix
     ./programs/discord

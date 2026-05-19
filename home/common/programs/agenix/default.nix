@@ -52,7 +52,7 @@ in
 
   # Source secrets as environment variables in shells
   # (secrets are files - this makes them available as env vars)
-  programs.zsh.initExtra = lib.mkAfter ''
+  programs.zsh.initContent = lib.mkAfter ''
     # Load agenix secrets as environment variables
     [ -f "${config.age.secrets.env-vars.path}" ] && source "${config.age.secrets.env-vars.path}"
     [ -f "${config.age.secrets.work-env-vars.path}" ] && source "${config.age.secrets.work-env-vars.path}"

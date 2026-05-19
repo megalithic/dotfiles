@@ -9,8 +9,8 @@ tmux/
 ├── megaforest.tmux.conf # Everforest theme colors
 ├── tmate.conf          # tmate-specific overrides
 ├── layouts/            # Session layout scripts
-│   ├── mega.zsh        # Personal dev layout
-│   ├── rx.zsh          # Work layout
+│   ├── mega.sh         # Personal dev layout
+│   ├── rx.sh           # Work layout
 │   └── ...
 └── AGENTS.md           # This file
 ```
@@ -75,7 +75,7 @@ Layout scripts in `layouts/` create predefined window arrangements:
 
 ```bash
 # Run a layout
-~/.config/tmux/layouts/mega.zsh
+~/.config/tmux/layouts/mega.sh
 ```
 
 ## Keybindings (common)

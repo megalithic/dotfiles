@@ -1,6 +1,6 @@
 vim.api.nvim_create_autocmd("TextYankPost", {
   desc = "User: Highlighted Yank",
-  callback = function() vim.hl.on_yank({ timeout = 250, on_visual = false, higroup = "VisualYank2" }) end,
+  callback = function() vim.hl.hl_op({ timeout = 250, on_visual = false, higroup = "VisualYank2" }) end,
 })
 
 vim.api.nvim_create_autocmd("VimResized", {

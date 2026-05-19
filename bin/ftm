@@ -122,8 +122,8 @@ declare -a layouts
 # -- gets possible pre-defined layouts (naive config dir assumption)
 function get_layouts() {
   if [[ -n $layouts_dir ]]; then
-    for config in "$layouts_dir"/*.zsh; do
-      layout="$(basename "${config##*/}" .zsh)"
+    for config in "$layouts_dir"/*.sh; do
+      layout="$(basename "${config##*/}" .sh)"
       layouts+=("$layout")
     done
     printf "%s\n" "${layouts[@]}"
@@ -145,15 +145,15 @@ function new_session() {
   local session="$1"
   local cwd="$2"
 
-  if [[ -f "$layouts_dir/$session.zsh" ]]; then
+  if [[ -f "$layouts_dir/$session.sh" ]]; then
     # Custom layout handles pinvim
-    (sh "$layouts_dir/$session.zsh" &&
+    (bash "$layouts_dir/$session.sh" &&
       to_session "$session" ||
       tmux new-session -d -s "$session" -c "${cwd}" &&
       to_session "$session") && exit
   else
     # Default layout includes pinvim
-    (sh "$layouts_dir/default.zsh" "$session" "${cwd}" &&
+    (bash "$layouts_dir/default.sh" "$session" "${cwd}" &&
       to_session "$session" ||
       tmux new-session -d -s "$session" -c "${cwd}" &&
       to_session "$session") && exit
@@ -167,12 +167,11 @@ function try_session() {
   # Strip the running indicator (* π) if present
   session="$(echo "$1" | sed 's/ \* π$//' | sed 's/ \*$//' | sed '/^$/d')"
 
-  # FIXME: zoxide doesn't cut it completely; need to fuzzy find all folders in `$CODE`
-  cwd=$(zoxide query "$session" 2>/dev/null || fd -1 "$session" "$CODE")
+  cwd=$(zoxide query "$session" 2>/dev/null || true)
 
-  # backup plan: use dotfiles dir if nothing found
+  # backup plan: use code dir if zoxide finds nothing
   if [[ -z "$cwd" ]]; then
-    cwd="$DOTS"
+    cwd="$HOME/code"
   fi
 
   to_session "$session" 2>/dev/null || new_session "$session" "${cwd}"

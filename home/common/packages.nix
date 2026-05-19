@@ -76,7 +76,7 @@
     difftastic
     desktoppr # declarative wallpaper setter
     devbox
-    devenv
+    # devenv # managed by programs/devenv module
     difftastic
     dust # disk usage analyzer (du replacement)
     espanso

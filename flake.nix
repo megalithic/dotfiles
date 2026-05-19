@@ -67,7 +67,7 @@
     mcp-servers-nix.url = "github:natsukium/mcp-servers-nix";
     # nur.url = "github:nix-community/nur";
     expert.url = "github:elixir-lang/expert";
-    devenv.url = "github:cachix/devenv/v2.0.6";
+    devenv.url = "github:cachix/devenv";
     nh.url = "github:nix-community/nh";
     # worktrunk.url = "github:max-sixty/worktrunk";
     kanata-darwin = {
