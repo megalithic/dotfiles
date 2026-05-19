@@ -1,6 +1,6 @@
 ---
 id: dot-brw8
-status: in_progress
+status: closed
 deps: []
 links: []
 created: 2026-05-19T13:22:47Z
@@ -62,3 +62,17 @@ Relevant files:
 12. stylua succeeds on touched Lua files; TypeScript extension formatting/typecheck/build command succeeds if available.
 13. Before/after startuptime and pinvim health summary is recorded in ticket notes or commit message.
 
+
+## Notes
+
+**2026-05-19T14:41:22Z**
+
+Verification snapshot: before ticket notes cited pinvim load ~136ms and BufEnter ~117ms before quick fixes. After async/cache cleanup: nvim --headless --startuptime /tmp/nvim-start +qa shows require('pinvim') 0.267ms, after/plugin/pinvim.lua 0.386ms total / 0.119ms self, BufEnter autocommands 0.121ms, stderr 0 bytes. nvim --headless +qa and nvim --headless +'sleep 600m' +qa both exited code 0 with stderr 0 bytes. Protocol smoke against /Users/seth/.local/state/pi/sockets/pi-mega-dots-eph-1779138150-53644.sock passed ping, hello, heartbeat, prompt, explicit_send.
+
+**2026-05-19T14:41:46Z**
+
+Additional split smoke: detached tmux session ran nvim --headless +'PiSplit' +'sleep 800m' +qa; tmux listed spawned pane running pinvim with π title before cleanup.
+
+**2026-05-19T14:43:33Z**
+
+Summary: moved nvim pinvim discovery to async/cached manifest and tmux paths, made ensure_connected return immediately on stale discovery, removed pi-side execSync from pinvim normal path, throttled async manifest writes, batched pimux tmux lookups, and updated stop-hook/ticket-worker next-ticket recommendations to prefer same epic/plan/dependents/siblings/scope before global fallback.

@@ -22,7 +22,9 @@ local options
 local compose_queue = {}
 local target_history = {}
 local target_history_limit = 20
-local tmux_context_cache = { at = 0, value = nil }
+local tmux_context_cache = { at = 0, value = nil, running = false, callbacks = {} }
+local discovery_cache = { at = 0, targets = {}, by_socket = {}, running = false, callbacks = {} }
+local discovery_ttl_ms = 2000
 
 local conn = {
   pipe = nil,
@@ -41,16 +43,25 @@ local conn = {
 
 local function path_join(...) return table.concat({ ... }, "/") end
 
+local refresh_tmux_context_async
+
 local function tmux_value(format)
-  if not vim.env.TMUX then return nil end
-  local handle = io.popen(string.format("tmux display-message -p '%s' 2>/dev/null", format))
-  if not handle then return nil end
-  local value = handle:read("*l")
-  handle:close()
-  return (value and value ~= "") and value or nil
+  local context = tmux_context_cache.value or {}
+  local map = {
+    ["#{session_name}"] = context.session,
+    ["#{window_name}"] = context.window_name,
+    ["#{window_index}"] = context.window_index,
+    ["#{pane_id}"] = context.pane,
+  }
+  refresh_tmux_context_async()
+  return map[format]
 end
 
-local function socket_exists(path) return path and vim.fn.getftype(path) == "socket" end
+local function socket_exists(path)
+  if not path or path == "" then return false end
+  local stat = vim.uv.fs_stat(path)
+  return stat and stat.type == "socket" or false
+end
 
 local function is_ephemeral_socket(path) return path ~= nil and path:match("%-eph%-[^/]+%.sock$") ~= nil end
 
@@ -71,20 +82,35 @@ local function generate_ephemeral_socket_path(config)
   )
 end
 
-local function tmux_option(name)
+local tmux_option_cache = { at = 0, values = {}, running = false }
+
+local function refresh_tmux_options_async()
   local session = tmux_value("#{session_name}")
-  if not session then return nil end
-  local handle = io.popen(string.format("tmux show-option -qv -t '%s' '%s' 2>/dev/null", session, name))
-  if not handle then return nil end
-  local value = handle:read("*a")
-  handle:close()
-  value = value and vim.trim(value) or nil
+  if not session or tmux_option_cache.running or (vim.uv.now() - tmux_option_cache.at) < 1000 then return end
+  tmux_option_cache.running = true
+  vim.system({ "tmux", "show-option", "-qv", "-t", session, "@pimux.parked_sockets" }, { text = true }, function(result)
+    vim.schedule(
+      function()
+        tmux_option_cache = {
+          at = vim.uv.now(),
+          running = false,
+          values = { ["@pimux.parked_sockets"] = result.code == 0 and vim.trim(result.stdout or "") or nil },
+        }
+      end
+    )
+  end)
+end
+
+local function tmux_option(name)
+  refresh_tmux_options_async()
+  local value = tmux_option_cache.values[name]
   return (value and value ~= "") and value or nil
 end
 
 local function pid_alive(pid)
+  pid = tonumber(pid)
   if not pid or pid <= 0 then return false end
-  return os.execute(string.format("kill -0 %d 2>/dev/null", pid)) == 0
+  return vim.uv.kill(pid, 0) == 0
 end
 
 local function normalize_range(start_row, start_col, end_row, end_col)
@@ -237,11 +263,10 @@ end
 
 function State.snapshot(state) return vim.deepcopy(state) end
 
-local function parse_info_manifest(config, info_path)
-  local content_ok, content = pcall(vim.fn.readfile, info_path)
-  if not content_ok or not content or not content[1] then return nil end
+local function parse_info_manifest_content(_config, info_path, line)
+  if not line or line == "" then return nil end
 
-  local parsed_ok, info = pcall(vim.json.decode, content[1])
+  local parsed_ok, info = pcall(vim.json.decode, line)
   if not parsed_ok or not info or not info.socket then return nil end
 
   if not socket_exists(info.socket) then return nil end
@@ -250,6 +275,12 @@ local function parse_info_manifest(config, info_path)
   info.info_path = info_path
 
   return info
+end
+
+local function parse_info_manifest(config, info_path)
+  local content_ok, content = pcall(vim.fn.readfile, info_path)
+  if not content_ok or not content or not content[1] then return nil end
+  return parse_info_manifest_content(config, info_path, content[1])
 end
 
 local function normalize_path(path)
@@ -290,27 +321,50 @@ local function parse_time(value)
   })
 end
 
-local function current_tmux_context()
-  if not vim.env.TMUX then return {} end
+local function parse_tmux_context(value)
+  local session, window_name, window_index, pane = (value or ""):match("^([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)")
+  return {
+    session = session and session ~= "" and session or nil,
+    window_name = window_name and window_name ~= "" and window_name or nil,
+    window_index = window_index and window_index ~= "" and window_index or nil,
+    pane = pane and pane ~= "" and pane or nil,
+  }
+end
+
+refresh_tmux_context_async = function(callback)
+  if not vim.env.TMUX then
+    if callback then callback({}) end
+    return
+  end
 
   local now = vim.uv.now()
-  if tmux_context_cache.value and (now - tmux_context_cache.at) < 1000 then return tmux_context_cache.value end
+  if tmux_context_cache.value and (now - tmux_context_cache.at) < 1000 then
+    if callback then callback(tmux_context_cache.value) end
+    return
+  end
 
-  local handle =
-    io.popen("tmux display-message -p '#{session_name}\t#{window_name}\t#{window_index}\t#{pane_id}' 2>/dev/null")
-  if not handle then return {} end
-  local value = handle:read("*l")
-  handle:close()
+  if callback then table.insert(tmux_context_cache.callbacks, callback) end
+  if tmux_context_cache.running then return end
+  tmux_context_cache.running = true
+  vim.system(
+    { "tmux", "display-message", "-p", "#{session_name}\t#{window_name}\t#{window_index}\t#{pane_id}" },
+    { text = true },
+    function(result)
+      local context = result.code == 0 and parse_tmux_context(vim.trim(result.stdout or "")) or {}
+      vim.schedule(function()
+        local callbacks = tmux_context_cache.callbacks or {}
+        tmux_context_cache = { at = vim.uv.now(), value = context, running = false, callbacks = {} }
+        for _, cb in ipairs(callbacks) do
+          pcall(cb, context)
+        end
+      end)
+    end
+  )
+end
 
-  local session, window_name, window_index, pane = (value or ""):match("^([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)")
-  local context = {
-    session = session ~= "" and session or nil,
-    window_name = window_name ~= "" and window_name or nil,
-    window_index = window_index ~= "" and window_index or nil,
-    pane = pane ~= "" and pane or nil,
-  }
-  tmux_context_cache = { at = now, value = context }
-  return context
+local function current_tmux_context()
+  refresh_tmux_context_async()
+  return tmux_context_cache.value or {}
 end
 
 local function candidate_activity(info)
@@ -390,19 +444,15 @@ local function score_manifest_candidate(config, info, context)
   return score, reasons, activity
 end
 
-local function ranked_manifest_targets(config, opts)
+local function rank_manifest_infos(config, infos, context, opts)
   opts = opts or {}
   local entries = {}
   local seen = {}
-  local ok, files = pcall(vim.fn.glob, config.transport.manifest_dir .. "/*.info", false, true)
-  if not ok or not files then return entries end
 
-  local context = current_tmux_context()
-  for _, info_path in ipairs(files) do
-    local info = parse_info_manifest(config, info_path)
-    local same_tmux_session = not context.session or info and info.session == context.session
+  for _, info in ipairs(infos or {}) do
+    local same_tmux_session = not context.session or info.session == context.session
     local allowed_session = not opts.same_tmux_session or same_tmux_session
-    if info and allowed_session and (opts.include_ephemeral or not info.ephemeral) and not seen[info.socket] then
+    if allowed_session and (opts.include_ephemeral or not info.ephemeral) and not seen[info.socket] then
       seen[info.socket] = true
       local score, reasons, activity = score_manifest_candidate(config, info, context)
       table.insert(entries, {
@@ -433,6 +483,79 @@ local function ranked_manifest_targets(config, opts)
   end)
 
   return entries
+end
+
+local function update_discovery_cache(targets)
+  local by_socket = {}
+  for _, target in ipairs(targets or {}) do
+    by_socket[target.path] = target
+  end
+  discovery_cache.at = vim.uv.now()
+  discovery_cache.targets = targets or {}
+  discovery_cache.by_socket = by_socket
+end
+
+local function filter_cached_targets(opts)
+  opts = opts or {}
+  local context = current_tmux_context()
+  local entries = {}
+  for _, target in ipairs(discovery_cache.targets or {}) do
+    local same_tmux_session = not context.session or target.session == context.session
+    local allowed_session = not opts.same_tmux_session or same_tmux_session
+    if allowed_session and (opts.include_ephemeral or not target.ephemeral) and socket_exists(target.path) then
+      table.insert(entries, vim.deepcopy(target))
+    end
+  end
+  return entries
+end
+
+local function discovery_stale() return (vim.uv.now() - (discovery_cache.at or 0)) > discovery_ttl_ms end
+
+local function schedule_manifest_discovery(config, callback)
+  if callback then table.insert(discovery_cache.callbacks, callback) end
+  if discovery_cache.running then return end
+
+  discovery_cache.running = true
+  refresh_tmux_context_async(function(context)
+    vim.system({
+      "sh",
+      "-c",
+      'for f in "$1"/*.info; do [ -f "$f" ] || continue; printf \'\\036%s\\n\' "$f"; head -n 1 "$f"; done',
+      "sh",
+      config.transport.manifest_dir,
+    }, { text = true }, function(result)
+      local infos = {}
+      local current_path = nil
+      if result.code == 0 then
+        for line in (result.stdout or ""):gmatch("[^\n]+") do
+          if line:sub(1, 1) == "\036" then
+            current_path = line:sub(2)
+          elseif current_path then
+            local info = parse_info_manifest_content(config, current_path, line)
+            if info then table.insert(infos, info) end
+            current_path = nil
+          end
+        end
+      end
+
+      local targets = rank_manifest_infos(config, infos, context, { include_ephemeral = true })
+      vim.schedule(function()
+        update_discovery_cache(targets)
+        discovery_cache.running = false
+        local callbacks = discovery_cache.callbacks
+        discovery_cache.callbacks = {}
+        for _, cb in ipairs(callbacks) do
+          pcall(cb, targets)
+        end
+      end)
+    end)
+  end)
+end
+
+local function ranked_manifest_targets(config, opts)
+  opts = opts or {}
+  if discovery_stale() then schedule_manifest_discovery(config) end
+  return filter_cached_targets(opts)
 end
 
 local function parked_socket_set()
@@ -470,15 +593,8 @@ local function target_metadata(config, socket_path, source)
     }
   end
 
-  local parked = parked_socket_set()
-  local targets = ranked_manifest_targets(config, { include_ephemeral = true })
-  local found = nil
-  for _, target in ipairs(targets) do
-    if target.path == socket_path then
-      found = vim.deepcopy(target)
-      break
-    end
-  end
+  local parked = {}
+  local found = discovery_cache.by_socket[socket_path] and vim.deepcopy(discovery_cache.by_socket[socket_path]) or nil
   found = found or { path = socket_path }
   found.source = source or found.source or "unknown"
   found.parked = parked[socket_path] == true
@@ -538,17 +654,18 @@ local function focus_socket_pane(config, socket_path)
 end
 
 local function discover_socket_by_tmux(config)
-  local session = tmux_value("#{session_name}")
-  if not session then return nil end
+  local context = current_tmux_context()
+  if not context.session then return nil end
 
   local agent_socket =
-    string.format("%s/%s-%s-agent.sock", config.transport.socket_dir, config.transport.prefix, session)
+    string.format("%s/%s-%s-agent.sock", config.transport.socket_dir, config.transport.prefix, context.session)
   if socket_exists(agent_socket) then return agent_socket end
 
-  local pattern = string.format("%s/%s-%s-*.sock", config.transport.socket_dir, config.transport.prefix, session)
-  local sockets = vim.fn.glob(pattern, false, true)
-  for _, found in ipairs(sockets) do
-    if not found:match("%-eph%-[^/]+%.sock$") and socket_exists(found) then return found end
+  local window = context.window_name or context.window_index
+  if window then
+    local window_socket =
+      string.format("%s/%s-%s-%s.sock", config.transport.socket_dir, config.transport.prefix, context.session, window)
+    if socket_exists(window_socket) then return window_socket end
   end
 
   return nil
@@ -560,7 +677,9 @@ function Transport.resolve_socket(config)
   local buf_target = vim.b.pi_target_socket
   if buf_target and socket_exists(buf_target) then return buf_target, "buffer" end
 
-  local ranked = ranked_manifest_targets(config, { include_ephemeral = false, same_tmux_session = true })
+  if discovery_stale() then schedule_manifest_discovery(config) end
+
+  local ranked = filter_cached_targets({ include_ephemeral = false, same_tmux_session = true })
   if ranked[1] then return ranked[1].path, "manifest-ranked" end
 
   local tmux_socket = discover_socket_by_tmux(config)
@@ -571,6 +690,10 @@ function Transport.resolve_socket(config)
 
   return nil, "none"
 end
+
+function Transport.discovery_stale() return discovery_stale() end
+
+function Transport.refresh_discovery(config, callback) schedule_manifest_discovery(config, callback) end
 
 function Transport.describe_target(config)
   local socket_path, source = Transport.resolve_socket(config)
@@ -1457,6 +1580,15 @@ function M.setup(opts)
     end
     local socket_path, source = Transport.resolve_socket(config)
 
+    if Transport.discovery_stale() then
+      Transport.refresh_discovery(config, function()
+        vim.schedule(function()
+          api.refresh_buffer_state()
+          api.ensure_connected(force_target_check)
+        end)
+      end)
+    end
+
     if force_target_check and conn.connected and socket_path and socket_path ~= conn.socket_path then
       connection_disconnect(runtime)
     end
@@ -1475,7 +1607,7 @@ function M.setup(opts)
         socket_source = source,
         connected = false,
         connecting = false,
-        lifecycle = "waiting_for_socket",
+        lifecycle = Transport.discovery_stale() and "discovering_socket" or "waiting_for_socket",
       })
       return false
     end

@@ -138,17 +138,32 @@ If all acceptance criteria pass:
 
 ## Suggesting next work
 
-After closing a ticket (step 7.6), evaluate what to work on next:
+After closing a ticket (step 7.6), evaluate what to work on next. Do **related work first**, then global queue:
+
+1. Same parent epic or parent task as the ticket just closed.
+2. Same plan/task sequence, if a plan file orders the work.
+3. Direct dependents that became unblocked by the closed ticket.
+4. Open or in-progress siblings under the same parent.
+5. Related scope/name/file area.
+6. Global priority fallback from `tk ready -T ready-for-development`.
+
+Useful commands:
 
 ```bash
-# Show unblocked, ready tickets sorted by priority
+# Closed ticket metadata: parent, priority, title, deps
+tk show <closed-id>
+
+# Same parent/sibling context
+tk show <parent-id>
+
+# Global fallback only after related candidates
 tk ready -T ready-for-development
 ```
 
 Present top 1–3 candidates to the developer with:
 - Ticket ID + title
 - Priority level
-- Whether it was newly unblocked by the just-closed ticket (check deps)
+- Why it is recommended: same epic, plan-next, newly unblocked/direct dependent, sibling, related scope, or global fallback
 
 If an associated plan exists, check it for recommended ordering:
 
@@ -158,6 +173,8 @@ ls ~/.local/share/pi/plans/"$(basename "$PWD")"/*_PLAN.md 2>/dev/null
 ```
 
 If a plan exists and its steps have an ordering, prefer the plan's sequence over raw priority. Mention this: "Per plan X, next step is Y."
+
+Do not suggest unrelated global P1 tickets ahead of a ready/in-progress sibling in the same epic unless the developer explicitly asks for the global queue.
 
 If `tk ready` returns nothing:
 - Check `tk blocked` — are remaining tickets waiting on external work?

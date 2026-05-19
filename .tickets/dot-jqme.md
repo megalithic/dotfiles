@@ -1,6 +1,6 @@
 ---
 id: dot-jqme
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-05-19T13:22:47Z
@@ -30,3 +30,9 @@ Relevant files:
 3. Before/after Neovim startuptime summaries are captured in child ticket work or commit notes.
 4. Epic can be closed when child tickets are closed.
 
+
+## Notes
+
+**2026-05-19T14:50:40Z**
+
+Summary: completed both child tickets. dot-fvxu lazy-loaded heavy Neovim plugins/Treesitter work; dot-brw8 completed pinvim async transport cleanup across nvim, pi extension, pimux, and next-ticket recommendation behavior. Child ticket notes include before/after startuptime and verification details.

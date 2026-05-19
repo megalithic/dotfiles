@@ -17,8 +17,9 @@ import type {
   ExtensionAPI,
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import { execSync } from "node:child_process";
+import { execFile } from "node:child_process";
 import fs from "node:fs";
+import fsp from "node:fs/promises";
 import net from "node:net";
 import path from "node:path";
 
@@ -34,64 +35,76 @@ const SOCKET_DIR = path.join(PI_STATE_DIR, "sockets");
 const INFO_DIR = path.join(PI_STATE_DIR, "manifests");
 const SOCKET_PREFIX = "pi";
 
-const detectTmux = (): { session: string; window: string; pane?: string } | null => {
-  if (!process.env.TMUX) return null;
-  try {
-    const session = execSync("tmux display-message -p '#{session_name}'", {
-      encoding: "utf-8",
-      timeout: 2000,
-    }).trim();
-    const winName = execSync("tmux display-message -p '#{window_name}'", {
-      encoding: "utf-8",
-      timeout: 2000,
-    }).trim();
-    const winIndex = execSync("tmux display-message -p '#{window_index}'", {
-      encoding: "utf-8",
-      timeout: 2000,
-    }).trim();
-    const pane = execSync("tmux display-message -p '#{pane_id}'", {
-      encoding: "utf-8",
-      timeout: 2000,
-    }).trim();
-    const window = winName && /^[a-zA-Z0-9_-]+$/.test(winName) ? winName : winIndex;
-    return session && window ? { session, window, pane } : null;
-  } catch {
-    return null;
-  }
+let tmuxCache: { at: number; value: { session: string; window: string; pane?: string } | null } = {
+  at: 0,
+  value: null,
 };
 
-const resolveSocket = (): {
-  socketPath: string | null;
-  session: string;
-  window: string;
-} => {
-  if (process.env.PI_SOCKET) {
-    return {
-      socketPath: process.env.PI_SOCKET,
-      session: process.env.PI_SESSION || "default",
-      window: process.env.PI_WINDOW || "0",
-    };
-  }
-
-  const tmux = detectTmux();
-  if (tmux) {
-    return {
-      socketPath: `${SOCKET_DIR}/${SOCKET_PREFIX}-${tmux.session}-${tmux.window}.sock`,
-      session: tmux.session,
-      window: tmux.window,
-    };
-  }
-
-  return {
-    socketPath: `${SOCKET_DIR}/${SOCKET_PREFIX}-default-0.sock`,
-    session: "default",
-    window: "0",
-  };
+const parseTmux = (stdout: string): { session: string; window: string; pane?: string } | null => {
+  const [session, winName, winIndex, pane] = stdout.trim().split("\t");
+  const window = winName && /^[a-zA-Z0-9_-]+$/.test(winName) ? winName : winIndex;
+  return session && window ? { session, window, pane } : null;
 };
 
-const { socketPath: SOCKET_PATH, session: PI_SESSION, window: PI_WINDOW } = resolveSocket();
-const IS_PINVIM_SOCKET_ENABLED = !!SOCKET_PATH;
-const IS_EPHEMERAL =
+const detectTmux = (callback: (tmux: { session: string; window: string; pane?: string } | null) => void): void => {
+  if (!process.env.TMUX) {
+    callback(null);
+    return;
+  }
+
+  if (tmuxCache.value && Date.now() - tmuxCache.at < 5000) {
+    callback(tmuxCache.value);
+    return;
+  }
+
+  execFile(
+    "tmux",
+    ["display-message", "-p", "#{session_name}\t#{window_name}\t#{window_index}\t#{pane_id}"],
+    { encoding: "utf-8", timeout: 2000 },
+    (err, stdout) => {
+      const tmux = err ? null : parseTmux(stdout);
+      tmuxCache = { at: Date.now(), value: tmux };
+      callback(tmux);
+    },
+  );
+};
+
+let SOCKET_PATH: string | null = process.env.PI_SOCKET || null;
+let PI_SESSION = process.env.PI_SESSION || "default";
+let PI_WINDOW = process.env.PI_WINDOW || "0";
+let PI_PANE: string | undefined;
+
+if (SOCKET_PATH) {
+  const match = SOCKET_PATH.match(/\/pi-([^-]+)-([^.]+?)(?:-eph-[^/]+)?\.sock$/);
+  if (match) {
+    PI_SESSION = process.env.PI_SESSION || match[1];
+    PI_WINDOW = process.env.PI_WINDOW || match[2];
+  }
+} else if (!process.env.TMUX) {
+  SOCKET_PATH = `${SOCKET_DIR}/${SOCKET_PREFIX}-default-0.sock`;
+}
+
+const resolveSocketAsync = (callback: () => void): void => {
+  if (SOCKET_PATH) {
+    callback();
+    return;
+  }
+
+  detectTmux((tmux) => {
+    if (tmux) {
+      PI_SESSION = tmux.session;
+      PI_WINDOW = tmux.window;
+      PI_PANE = tmux.pane;
+      SOCKET_PATH = `${SOCKET_DIR}/${SOCKET_PREFIX}-${tmux.session}-${tmux.window}.sock`;
+    } else {
+      SOCKET_PATH = `${SOCKET_DIR}/${SOCKET_PREFIX}-default-0.sock`;
+    }
+    callback();
+  });
+};
+
+const isPinvimSocketEnabled = (): boolean => !!SOCKET_PATH;
+const isEphemeral = (): boolean =>
   process.env.PI_EPHEMERAL === "1" ||
   (!!SOCKET_PATH && /-eph-[^/]+\.sock$/.test(SOCKET_PATH));
 
@@ -265,7 +278,7 @@ const buildPinvimPeerIdentity = (): PeerIdentity => ({
   tmux: {
     session: PI_SESSION,
     window: PI_WINDOW,
-    pane: detectTmux()?.pane,
+    pane: PI_PANE,
   },
   linkMode: process.env.PINVIM_LINK_MODE || "auto",
   heartbeatAt: Math.floor(Date.now() / 1000),
@@ -412,11 +425,16 @@ const respondOk = (socket: net.Socket, extra?: Record<string, unknown>): void =>
 const respondError = (socket: net.Socket, error: string): void =>
   respond(socket, { ok: false, error });
 
-const writeInfoManifest = (): void => {
-  if (!SOCKET_PATH || !PI_SESSION) return;
+let manifestWriteTimer: NodeJS.Timeout | null = null;
+let manifestWriteInFlight = false;
+let lastManifestWriteAt = 0;
 
+const writeInfoManifestNow = async (): Promise<void> => {
+  if (!SOCKET_PATH || !PI_SESSION || manifestWriteInFlight) return;
+
+  manifestWriteInFlight = true;
   try {
-    if (!fs.existsSync(INFO_DIR)) fs.mkdirSync(INFO_DIR, { recursive: true });
+    await fsp.mkdir(INFO_DIR, { recursive: true });
     const socketBase = SOCKET_PATH.split("/").pop()?.replace(/\.sock$/, "") || PI_SESSION;
     infoManifestPath = `${INFO_DIR}/${socketBase}.info`;
     const manifest = {
@@ -425,16 +443,32 @@ const writeInfoManifest = (): void => {
       pid: process.pid,
       session: PI_SESSION,
       window: PI_WINDOW,
-      pane: detectTmux()?.pane,
-      ephemeral: IS_EPHEMERAL,
+      pane: PI_PANE,
+      ephemeral: isEphemeral(),
       owner: "pinvim.ts",
       heartbeatAt: Math.floor(Date.now() / 1000),
       startedAt,
     };
-    fs.writeFileSync(infoManifestPath, JSON.stringify(manifest) + "\n");
+    await fsp.writeFile(infoManifestPath, JSON.stringify(manifest) + "\n");
+    lastManifestWriteAt = Date.now();
   } catch {
     // Non-fatal — manifest is for discovery convenience.
+  } finally {
+    manifestWriteInFlight = false;
   }
+};
+
+const scheduleInfoManifest = (force = false): void => {
+  if (!SOCKET_PATH || !PI_SESSION) return;
+  if (!force && Date.now() - lastManifestWriteAt < 5000) return;
+  if (manifestWriteTimer) return;
+
+  // Heartbeats can be frequent; write manifest async + throttled so socket frame
+  // handling never waits on mkdir/writeFile.
+  manifestWriteTimer = setTimeout(() => {
+    manifestWriteTimer = null;
+    void writeInfoManifestNow();
+  }, force ? 0 : 250);
 };
 
 const cleanupInfoManifest = (): void => {
@@ -474,7 +508,7 @@ const handleSocketPayload = (pi: ExtensionAPI, socket: net.Socket, payload: Payl
     }
 
     state.lastHeartbeat = payload;
-    writeInfoManifest();
+    scheduleInfoManifest();
     updateStatus();
     respondOk(socket, {
       type: "heartbeat",
@@ -532,17 +566,20 @@ const handleSocketPayload = (pi: ExtensionAPI, socket: net.Socket, payload: Payl
 const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
   if (!SOCKET_PATH || server) return;
 
-  fs.mkdirSync(path.dirname(SOCKET_PATH), { recursive: true });
+  void (async () => {
+    if (!SOCKET_PATH || server) return;
 
-  if (fs.existsSync(SOCKET_PATH)) {
-    try {
-      fs.unlinkSync(SOCKET_PATH);
-    } catch {
-      // Ignore stale socket errors.
+    await fsp.mkdir(path.dirname(SOCKET_PATH), { recursive: true });
+
+    if (fs.existsSync(SOCKET_PATH)) {
+      try {
+        await fsp.unlink(SOCKET_PATH);
+      } catch {
+        // Ignore stale socket errors.
+      }
     }
-  }
 
-  server = net.createServer((socket) => {
+    server = net.createServer((socket) => {
     let buffer = "";
 
     socket.on("error", () => {
@@ -568,14 +605,17 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
         }
       }
     });
+    });
+
+    server.listen(SOCKET_PATH);
+    scheduleInfoManifest(true);
+
+    if (ctx.hasUI) {
+      ctx.ui.notify(`Pinvim socket listening: ${SOCKET_PATH}`, "info");
+    }
+  })().catch(() => {
+    // Socket setup is best-effort; pinvim commands still load without ingress.
   });
-
-  server.listen(SOCKET_PATH);
-  writeInfoManifest();
-
-  if (ctx.hasUI) {
-    ctx.ui.notify(`Pinvim socket listening: ${SOCKET_PATH}`, "info");
-  }
 };
 
 // =============================================================================
@@ -587,7 +627,9 @@ export default function (pi: ExtensionAPI): void {
     latestCtx = ctx;
     updateStatus();
 
-    if (IS_PINVIM_SOCKET_ENABLED) startServer(pi, ctx);
+    resolveSocketAsync(() => {
+      if (isPinvimSocketEnabled()) startServer(pi, ctx);
+    });
   });
 
   pi.on("session_switch", (_event, ctx) => {

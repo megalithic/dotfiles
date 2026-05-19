@@ -17,7 +17,7 @@ const MAX_FOLLOWUPS = 1;
 const MAX_TICKETS_PER_SECTION = 3;
 
 const STOP_CHECK_PROMPT_BASE =
-  "Review your last response. Did you complete everything the user asked? If not, continue working. If you did complete everything, briefly confirm what was done. If ticket context is provided below, suggest the best next ticket(s) to work on based on priority and dependency order.";
+  "Review your last response. Did you complete everything the user asked? If not, continue working. If you did complete everything, briefly confirm what was done. If ticket context is provided below, suggest the best next ticket(s) by related work first: same parent epic, same plan/task sequence, direct dependents or unblocked siblings, then related scope. Fall back to global priority only after related options.";
 
 const INTERRUPTED_PROMPT_BASE =
   "You were interrupted (the user pressed Escape to stop you). Review what you were doing and what state things are in. If work is partially done, summarize where you left off and what remains. Ask the user how they'd like to proceed rather than automatically resuming — they may have stopped you intentionally to change direction.";
@@ -95,47 +95,121 @@ function getVcsSummary(): string {
  * Parse ticket context into a concise summary for the prompt.
  * Returns a short conversational string or empty string if no tickets.
  */
-function getTicketSummary(): string {
+function getTicketSummary(messages: any[]): string {
   // Only if .tickets/ dir exists (tk is in use for this project)
   const hasTickets = run("test -d .tickets && echo yes");
   if (hasTickets !== "yes") return "";
 
-  const inProgressRaw = run("tk list --status=in_progress 2>/dev/null");
-  const readyRaw = run("tk ready -T ready-for-development 2>/dev/null");
-  // Also get unblocked ready tickets without tag filter
-  const readyUnblockedRaw = run("tk ready 2>/dev/null");
+  type TicketLine = { id: string; text: string; status?: string; priority?: number; deps?: string[] };
+  type TicketMeta = { id: string; title: string; status?: string; priority?: number; parent?: string };
 
-  const parseTicketLine = (line: string): { id: string; text: string } | null => {
-    // tk list format: "dot-xxxx [status] - Title text"
-    const match = line.match(/^(\S+)\s+\[\S+\]\s+-\s+(.+)/);
+  const parseTicketLine = (line: string): TicketLine | null => {
+    // tk ready format: "dot-xxxx [P2][open] - Title <- [dep]"
+    // tk list format: "dot-xxxx [open] - Title"
+    const match = line.match(/^(\S+)\s+((?:\[[^\]]+\])+)?\s*-\s+(.+?)(?:\s+<-\s+\[([^\]]+)\])?$/);
     if (!match) return null;
-    return { id: match[1], text: match[2].trim() };
+    const badges = match[2] || "";
+    const priorityMatch = badges.match(/\[P(\d+)\]/);
+    const statusMatch = badges.match(/\[(open|in_progress|closed|blocked)\]/);
+    return {
+      id: match[1],
+      text: match[3].trim(),
+      status: statusMatch?.[1],
+      priority: priorityMatch ? Number(priorityMatch[1]) : undefined,
+      deps: match[4]?.split(/[,\s]+/).filter(Boolean) || [],
+    };
   };
 
-  const parseTopTickets = (raw: string | null, max: number): { id: string; text: string }[] => {
+  const parseTickets = (raw: string | null): TicketLine[] => {
     if (!raw) return [];
     return raw
       .split("\n")
       .map((l) => l.trim())
       .filter((l) => l.length > 0)
-      .slice(0, max)
       .map(parseTicketLine)
-      .filter((t): t is { id: string; text: string } => t !== null);
+      .filter((t): t is TicketLine => t !== null);
   };
 
-  const inProgress = parseTopTickets(inProgressRaw, MAX_TICKETS_PER_SECTION);
-  const ready = parseTopTickets(readyRaw.length ? readyRaw : readyUnblockedRaw, MAX_TICKETS_PER_SECTION);
+  const showCache = new Map<string, TicketMeta | null>();
+  const showTicket = (id: string): TicketMeta | null => {
+    if (showCache.has(id)) return showCache.get(id) || null;
+    const raw = run(`tk show ${id} 2>/dev/null`);
+    if (!raw) {
+      showCache.set(id, null);
+      return null;
+    }
+    const meta: TicketMeta = { id, title: "" };
+    const title = raw.match(/#\s+(.+)/);
+    const status = raw.match(/^status:\s+(\S+)/m);
+    const priority = raw.match(/^priority:\s+(\d+)/m);
+    const parent = raw.match(/^parent:\s+(\S+)/m);
+    meta.title = title?.[1]?.trim() || id;
+    meta.status = status?.[1];
+    meta.priority = priority ? Number(priority[1]) : undefined;
+    meta.parent = parent?.[1];
+    showCache.set(id, meta);
+    return meta;
+  };
+
+  const recentIds = messages
+    .flatMap((m: any) => Array.from(extractText(m.content).matchAll(/\b(?:dot|pca)-[a-z0-9-]+\b/g)).map((x) => x[0]))
+    .reverse();
+  const anchorId = recentIds.find((id, idx, arr) => arr.indexOf(id) === idx);
+  const anchor = anchorId ? showTicket(anchorId) : null;
+
+  const inProgressRaw = run("tk list --status=in_progress 2>/dev/null");
+  const readyRaw = run("tk ready -T ready-for-development 2>/dev/null");
+  const readyUnblockedRaw = run("tk ready 2>/dev/null");
+
+  const inProgress = parseTickets(inProgressRaw);
+  const ready = parseTickets(readyRaw && readyRaw.length ? readyRaw : readyUnblockedRaw);
+  const all = [...inProgress, ...ready];
+
+  const anchorWords = new Set((anchor?.title || "").toLowerCase().match(/[a-z0-9]+/g) || []);
+  const scored = all
+    .map((ticket, index) => {
+      const meta = showTicket(ticket.id);
+      let score = 0;
+      const reasons: string[] = [];
+
+      if (anchor?.parent && meta?.parent === anchor.parent) {
+        score += 120;
+        reasons.push("same epic");
+      }
+      if (anchorId && ticket.deps?.includes(anchorId)) {
+        score += 100;
+        reasons.push("direct dependent");
+      }
+      if (ticket.status === "in_progress" || meta?.status === "in_progress") {
+        score += 45;
+        reasons.push("already in progress");
+      }
+
+      const words = new Set(ticket.text.toLowerCase().match(/[a-z0-9]+/g) || []);
+      const overlap = [...words].filter((w) => w.length > 3 && anchorWords.has(w)).length;
+      if (overlap > 0) {
+        score += Math.min(overlap * 10, 40);
+        reasons.push("related scope");
+      }
+
+      score -= (ticket.priority ?? meta?.priority ?? 9) * 2;
+      score -= index / 100;
+      return { ...ticket, meta, score, reasons };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, MAX_TICKETS_PER_SECTION);
 
   const parts: string[] = [];
-
+  if (anchor) parts.push(`Anchor: ${anchor.id} (${anchor.title})${anchor.parent ? ` parent ${anchor.parent}` : ""}`);
   if (inProgress.length > 0) {
-    const items = inProgress.map((t) => `${t.id} (${t.text})`).join(", ");
+    const items = inProgress.slice(0, MAX_TICKETS_PER_SECTION).map((t) => `${t.id} (${t.text})`).join(", ");
     parts.push(`In-progress: ${items}`);
   }
-
-  if (ready.length > 0) {
-    const items = ready.map((t) => `${t.id} (${t.text})`).join(", ");
-    parts.push(`Ready next: ${items}`);
+  if (scored.length > 0) {
+    const items = scored
+      .map((t) => `${t.id} (${t.text}${t.reasons.length ? `; ${t.reasons.join(", ")}` : "; global priority fallback"})`)
+      .join(", ");
+    parts.push(`Recommended next: ${items}`);
   }
 
   if (parts.length === 0) return "";
@@ -355,7 +429,7 @@ export default function (pi: ExtensionAPI) {
 
     // Append concise VCS + ticket summaries (no raw CLI dumps)
     const vcsSummary = getVcsSummary();
-    const ticketSummary = getTicketSummary();
+    const ticketSummary = getTicketSummary(event.messages);
     const contextParts = [basePrompt];
     if (vcsSummary) contextParts.push(vcsSummary);
     if (ticketSummary) contextParts.push(ticketSummary);

@@ -58,10 +58,9 @@ tmux_here() {
   fi
 }
 
-SESSION=$(tmux_here '#{session_name}')
-CURRENT_WINDOW=$(tmux_here '#{window_name}')
-CURRENT_WINDOW_IDX=$(tmux_here '#{window_index}')
-CURRENT_PANE=$(tmux_here '#{pane_id}')
+IFS=$'\t' read -r SESSION CURRENT_WINDOW CURRENT_WINDOW_IDX CURRENT_PANE < <(
+  tmux_here '#{session_name}	#{window_name}	#{window_index}	#{pane_id}'
+)
 PI_STATE_DIR="${PI_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/pi}"
 SOCKET_DIR="$PI_STATE_DIR/sockets"
 SOCKET_PREFIX="pi"
@@ -121,8 +120,7 @@ safe_select_non_pi_neighbor() {
 
 is_nvim_here() {
   local cmd start
-  cmd=$(tmux_here '#{pane_current_command}')
-  start=$(tmux_here '#{pane_start_command}')
+  IFS=$'\t' read -r cmd start < <(tmux_here '#{pane_current_command}	#{pane_start_command}')
   [[ "$cmd" == "nvim" || "$cmd" == "vim" || "$start" == *"nvim"* || "$start" == *"vim"* ]]
 }
 
@@ -292,6 +290,17 @@ find_pane_for_socket() {
   pane=$(parked_pane_for_socket "$sock") && { printf '%s\n' "$pane"; return 0; }
 
   target_window=$(socket_to_window "$sock")
+  # Explicit --socket encodes target window, so scan that window first instead of
+  # always walking every pane in the session.
+  if tmux display-message -t "$SESSION:$target_window" -p '#{window_index}' >/dev/null 2>&1; then
+    while IFS=$'\t' read -r pane title; do
+      if is_pi_title "$title"; then
+        printf '%s\n' "$pane"
+        return 0
+      fi
+    done < <(tmux list-panes -t "$SESSION:$target_window" -F '#{pane_id}	#{pane_title}' 2>/dev/null || true)
+  fi
+
   while IFS=$'\t' read -r pane window window_idx title; do
     if is_pi_title "$title" && { [[ "$window" == "$target_window" ]] || [[ "$window_idx" == "$target_window" ]]; }; then
       printf '%s\n' "$pane"
