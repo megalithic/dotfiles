@@ -156,9 +156,7 @@ return {
       vim.treesitter.language.register("elixir", "eelixir")
       vim.treesitter.language.register("markdown", "mdx")
 
-      -- Install parsers (async) - main branch API
-      local install = require("nvim-treesitter.install")
-      install.install(parsers)
+      -- Parser installs/updates are explicit only: use :TSUpdate or lazy.nvim build.
     end,
   },
 
@@ -175,10 +173,10 @@ return {
   -- },
   {
     "nvim-treesitter/nvim-treesitter-context",
-    event = { "BufRead", "BufNewFile" },
+    cmd = { "TSContextToggle", "TSContextEnable", "TSContextDisable" },
     dependencies = { "nvim-treesitter/nvim-treesitter" },
     opts = {
-      enable = true,
+      enable = false,
       max_lines = 3,
       min_window_height = 30,
       line_numbers = true,
@@ -194,7 +192,8 @@ return {
   {
     "windwp/nvim-ts-autotag",
     dependencies = { "nvim-treesitter/nvim-treesitter" },
-    event = { "BufReadPre", "BufNewFile", "InsertEnter" },
+    event = "InsertEnter",
+    ft = { "html", "xml", "javascriptreact", "typescriptreact", "svelte", "vue", "heex", "phoenix_html", "elixir" },
     opts = {
       aliases = {
         ["elixir"] = "html",
@@ -360,7 +359,19 @@ return {
   -- Rainbow delimiters
   {
     url = "https://gitlab.com/HiPhish/rainbow-delimiters.nvim",
-    event = { "BufReadPost", "BufNewFile" },
+    ft = {
+      "lua",
+      "vim",
+      "javascript",
+      "typescript",
+      "javascriptreact",
+      "typescriptreact",
+      "html",
+      "css",
+      "scss",
+      "elixir",
+      "heex",
+    },
     config = function()
       local rd = require("rainbow-delimiters")
       vim.g.rainbow_delimiters = {
@@ -405,7 +416,8 @@ return {
   { "yorickpeterse/nvim-tree-pairs", event = "VeryLazy", opts = {} },
   {
     "andymass/vim-matchup",
-    event = { "BufReadPost", "BufNewFile" },
+    -- Keep matchup, but defer it past file read so startup render is not blocked.
+    event = "VeryLazy",
     init = function()
       vim.g.matchup_matchparen_nomode = "i"
       vim.g.matchup_delim_noskips = 1 -- recognize symbols within comments

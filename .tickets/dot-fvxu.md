@@ -1,6 +1,6 @@
 ---
 id: dot-fvxu
-status: in_progress
+status: closed
 deps: []
 links: []
 created: 2026-05-19T13:22:47Z
@@ -45,3 +45,13 @@ Relevant files:
 8. nvim --headless +'sleep 600m' +qa exits cleanly with no stderr.
 9. stylua succeeds on touched Lua files.
 
+
+## Notes
+
+**2026-05-19T13:57:00Z**
+
+Before/after startuptime: empty-buffer nvim --headless --startuptime improved from ~145.8ms (/tmp/nvim-start-before) to ~42.0ms (/tmp/nvim-start-after). Eager blocker lines for refer (~11.1ms) and fff/fff-snacks (~13.3ms) disappeared; target plugins smart-splits.nvim, fff.nvim, fff-snacks.nvim, refer.nvim, and unclash.nvim report lazy=true loaded=false at empty startup. Parser install.install removed from startup; :TSUpdate/build remains. Verification: nvim --headless +qa, nvim --headless +'sleep 600m' +qa, lazy trigger require smoke, stylua --check touched files all exit 0 with no stderr.
+
+**2026-05-19T14:07:46Z**
+
+Implemented lazy-loading for smart-splits, fff/fff-snacks, refer, and unclash; removed Treesitter parser install from startup; deferred/restricted Treesitter render helpers; verified headless startup, sleep exit, lazy triggers, and stylua.

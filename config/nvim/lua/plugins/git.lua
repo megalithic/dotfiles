@@ -93,23 +93,38 @@ return {
 
   {
     "madmaxieee/unclash.nvim",
-    lazy = false,
+    lazy = true,
+    cmd = {
+      "UnclashAcceptCurrent",
+      "UnclashAcceptIncoming",
+      "UnclashAcceptBoth",
+      "UnclashScan",
+      "UnclashQf",
+      "UnclashTrouble",
+      "UnclashOpenMergeEditor",
+      "UnclashPick",
+    },
     opts = {},
     keys = {
       { "<leader>fx", function() require("unclash.snacks").pick() end, desc = "Pick conflicts" },
+      { "<leader>gco", function() require("unclash").open_merge_editor() end, desc = "Open Merge Editor" },
+      { "<localleader>cc", function() require("unclash").accept_current() end, desc = "Accept Current" },
+      { "<localleader>co", function() require("unclash").accept_current() end, desc = "Accept Current" },
+      { "<localleader>ci", function() require("unclash").accept_incoming() end, desc = "Accept Incoming" },
+      { "<localleader>ct", function() require("unclash").accept_incoming() end, desc = "Accept Incoming" },
+      { "<localleader>cb", function() require("unclash").accept_both() end, desc = "Accept Both" },
     },
     init = function()
-      local unclash = require("unclash")
       local utils = mega.u
       utils.map_repeatable_pair("n", {
         next = {
           "]x",
-          function() unclash.next_conflict({ wrap = true }) end,
+          function() require("unclash").next_conflict({ wrap = true }) end,
           { desc = "Go to next conflict" },
         },
         prev = {
           "[x",
-          function() unclash.prev_conflict({ wrap = true }) end,
+          function() require("unclash").prev_conflict({ wrap = true }) end,
           { desc = "Go to previous conflict" },
         },
       })
@@ -117,24 +132,15 @@ return {
       utils.map_repeatable_pair("n", {
         next = {
           "]X",
-          function() unclash.next_conflict({ wrap = true, bottom = true }) end,
+          function() require("unclash").next_conflict({ wrap = true, bottom = true }) end,
           { desc = "Go to next conflict (bottom marker)" },
         },
         prev = {
           "[X",
-          function() unclash.prev_conflict({ wrap = true, bottom = true }) end,
+          function() require("unclash").prev_conflict({ wrap = true, bottom = true }) end,
           { desc = "Go to previous conflict (bottom marker)" },
         },
       })
-
-      vim.keymap.set("n", "<leader>gco", unclash.open_merge_editor, { desc = "Open Merge Editor" })
-      --
-      -- -- Helper to accept conflicts
-      vim.keymap.set("n", "<localleader>cc", unclash.accept_current, { desc = "Accept Current" })
-      vim.keymap.set("n", "<localleader>co", unclash.accept_current, { desc = "Accept Current" })
-      vim.keymap.set("n", "<localleader>ci", unclash.accept_incoming, { desc = "Accept Incoming" })
-      vim.keymap.set("n", "<localleader>ct", unclash.accept_incoming, { desc = "Accept Incoming" })
-      vim.keymap.set("n", "<localleader>cb", unclash.accept_both, { desc = "Accept Both" })
     end,
   },
 }

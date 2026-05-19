@@ -12,7 +12,7 @@ return {
   {
     "mrjones2014/smart-splits.nvim",
     cond = function() return not vim.g.started_by_firenvim end,
-    lazy = false,
+    lazy = true,
     opts = { ignored_buftypes = { "nofile" }, cursor_follows_swapped_bufs = true, at_edge = "stop" },
     keys = {
       { "<A-h>", function() require("smart-splits").resize_left() end, mode = { "n", "i", "v" }, desc = "Resize left" },

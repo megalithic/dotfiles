@@ -1,7 +1,8 @@
 return {
   {
     "dmtrKovalenko/fff.nvim",
-    lazy = false,
+    lazy = true,
+    cmd = { "FFFFind", "FFFScan", "FFFRefreshGit", "FFFClearCache", "FFFHealth", "FFFDebug", "FFFOpenLog" },
     -- pin = true,
     build = function() require("fff.download").download_or_build_binary() end,
     opts = {
@@ -48,7 +49,8 @@ return {
     "megalithic/fff-snacks.nvim",
     branch = "main",
     -- "madmaxieee/fff-snacks.nvim",
-    lazy = false, -- lazy loaded by design
+    lazy = true,
+    dependencies = { "dmtrKovalenko/fff.nvim", "folke/snacks.nvim" },
     opts = {
       -- Snacks picker config for file picker
       -- find_files = {},
