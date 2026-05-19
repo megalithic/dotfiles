@@ -21,3 +21,9 @@ Replace Pi local provider definitions with a single llama.cpp OpenAI-compatible 
 4. python -m json.tool validates models.json, settings.json, and multi-pass.json if modified.
 5. just validate home passes.
 
+
+## Notes
+
+**2026-05-19T14:54:06Z**
+
+Resume point after dot-hq7c: Nix service/package wiring is on llama.cpp, but Pi config still references old local providers. Current remaining source refs: models.json has ollama/omlx providers; settings.json enabledModels/model scopes include ollama/omlx; stop-hook still calls ollama gemma4:e4b/e2b (handled by dot-02c4); bin/llm-pull still supports ollama/omlx only (handled by dot-pgs1). Next work should start here.

@@ -1,6 +1,6 @@
 ---
 id: dot-z0nh
-status: open
+status: closed
 deps: [dot-362h]
 links: []
 created: 2026-05-06T12:20:11Z
@@ -36,3 +36,9 @@ No code changes in this ticket — validation and documentation only.
 6. All follow-up tickets have status proposed and deps referencing dot-8arp
 7. tk list shows the three new tickets
 
+
+## Notes
+
+**2026-05-19T14:53:46Z**
+
+Closed as obsolete. Final oMLX AC walk/follow-up filing no longer applies because oMLX migration was superseded by llama.cpp and obsolete wiring was removed in dot-hq7c.

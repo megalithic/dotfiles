@@ -1,6 +1,6 @@
 ---
 id: dot-8arp
-status: in_progress
+status: closed
 deps: []
 links: []
 created: 2026-05-04T16:40:41Z
@@ -137,3 +137,7 @@ AC 15 (coexistence): ACHIEVED — both configurable per host via nix flags.
 
 Remaining: rxbookpro omlx model definitions still reference old 35B/26B.
 Separate ticket for rx model updates when needed.
+
+**2026-05-19T14:53:46Z**
+
+Closed as superseded by llama.cpp migration. oMLX proved unsafe on 32GB megabookpro due to memory/Jetsam behavior; host defaults now use llama.cpp via dot-rfst/dot-psb2, and oMLX/Ollama wiring removal completed in dot-hq7c. Remaining local-inference work continues in llama.cpp chain starting at dot-06iy.

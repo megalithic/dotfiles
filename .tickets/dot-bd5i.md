@@ -1,6 +1,6 @@
 ---
 id: dot-bd5i
-status: in_progress
+status: closed
 deps: []
 links: []
 created: 2026-05-04T20:30:00Z
@@ -98,3 +98,9 @@ This is Phase 1 of the oMLX migration plan (dot-8arp). Combines homebrew moderni
 33. System-level nix-darwin GUI apps (currently `/Applications/Nix Apps/Kanata Bar.app`) also surface directly under `/Applications/<Name>.app` (via Finder alias if direct copy would risk clobbering non-nix apps in `/Applications/`).
 34. Spotlight, Launchpad, and the Dock find migrated apps by their canonical name (no "Home Manager Apps", "Nix", or "Nix Apps" subfolder appearing in search/launcher).
 35. Removing an app from `home.packages` cleans it from `~/Applications/` on next activation (orphan cleanup works for auto-linked apps too).
+
+## Notes
+
+**2026-05-19T14:53:46Z**
+
+Closed as superseded/completed for current direction. brew-nix and whisperkit-cli migration work landed earlier; oMLX install/coexistence pieces are obsolete after llama.cpp replacement and removal in dot-hq7c. Do not resume this ticket; use llama.cpp chain instead.

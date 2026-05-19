@@ -21,3 +21,9 @@ Change the Pi stop-hook local gatekeeper fallback from Ollama gemma4:e4b/gemma4:
 4. Existing Pi extension typecheck/lint/build command, if defined, passes.
 5. just validate home passes.
 
+
+## Notes
+
+**2026-05-19T14:54:06Z**
+
+Depends on dot-06iy because stop-hook aliases must match the llama.cpp provider/model IDs introduced there. Replace local gatekeeper calls with llamacpp Gemma aliases; keep cloud fallback unchanged.

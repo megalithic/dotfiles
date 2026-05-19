@@ -1,6 +1,6 @@
 ---
 id: dot-g8dx
-status: open
+status: closed
 deps: [dot-j9q6]
 links: []
 created: 2026-05-05T12:23:15Z
@@ -46,3 +46,7 @@ omlx gatekeeper only applies to rxbookpro (64GB) where omlx is still active.
 stop-hook.ts currently disabled ('broken with omlx'). For megabookpro,
 re-enabling with ollama backend should work since that's what it was
 originally written for. Separate ticket if needed.
+
+**2026-05-19T14:53:46Z**
+
+Closed as obsolete. Stop-hook should no longer migrate to oMLX; current replacement target is llama.cpp. Use dot-02c4 for stop-hook gatekeeper migration.

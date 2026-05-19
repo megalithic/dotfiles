@@ -22,3 +22,9 @@ Apply the Home Manager llama.cpp changes on megabookpro and verify launchd activ
 5. A small OpenAI-compatible chat completion against a Gemma alias succeeds.
 6. Memory pressure is observed during first model load and no Jetsam/OOM behavior occurs with conservative settings.
 
+
+## Notes
+
+**2026-05-19T14:54:06Z**
+
+Use launchd label org.nix-community.home.llama-cpp (agent attr: launchd.agents.llama-cpp) unless Nix eval shows a different generated label. Service source is home/common/services.nix; module/options source is home/common/programs/llama-cpp-local/default.nix.
