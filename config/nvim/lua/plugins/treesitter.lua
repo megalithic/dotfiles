@@ -105,7 +105,8 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     branch = "main",
-    event = { "LazyFile", "VeryLazy" },
+    lazy = false,
+    -- event = { "LazyFile", "VeryLazy" },
     build = ":TSUpdate",
     init = function()
       -- Enable highlighting on FileType
