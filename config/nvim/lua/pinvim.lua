@@ -2086,6 +2086,7 @@ function M.setup(opts)
 
   Commands.setup(api, config)
   Autocmds.setup(api, config)
+  require("pinvim.review").setup(api, config)
 
   vim.defer_fn(function()
     api.refresh_buffer_state()

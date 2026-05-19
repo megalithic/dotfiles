@@ -1,6 +1,6 @@
 ---
 id: dot-fpev
-status: open
+status: closed
 deps: [dot-vnmm]
 links: []
 created: 2026-05-13T20:48:05Z
@@ -34,3 +34,9 @@ For any implementation change under this pinvim/vision workstream, run:
 
 For research-only tickets, run these before closing any downstream implementation ticket that uses the research.
 
+
+## Notes
+
+**2026-05-19T16:11:59Z**
+
+Superseded by ~/.local/share/pi/plans/dotfiles/pinvim-review-diff-mode_TASK.md and _PLAN.md. Research questions in this ticket (annotator/codediff/hunk cooperation, jj vs git availability, pinvim.review.v1 schema, hook points) are answered in the TASK file's Findings and the PLAN's per-step design. Implementation seeded as new tickets under dot-dylm. Closing as superseded.
