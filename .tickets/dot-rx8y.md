@@ -1,6 +1,6 @@
 ---
 id: dot-rx8y
-status: in_progress
+status: closed
 deps: []
 links: [dot-oiky, dot-0a9p, dot-kts9, dot-koz6, dot-8n53, dot-f6tr, dot-p2ad]
 created: 2026-05-20T15:06:23Z
@@ -36,3 +36,9 @@ Related discovery links: dot-dylm parent epic, dot-kts9 original ownership epic,
 5. Repair path does not route context to unrelated primary pi, unrelated ephemeral pi, Hammerspoon/Telegram/tell targets, or another nvim instance in same cwd but different window.
 6. Verification passes: nvim --headless '+lua require("pinvim").setup()' +qa; bin/pinvim-protocol-smoke; manual tmux smoke where ephemeral pimux survives nvim restart and repairs to the new same-window nvim.
 7. lat.md pinvim section and nvim-pi-custom-vision plan/task notes document bidirectional repair and updated ephemeral auto-resume rules.
+
+## Notes
+
+**2026-05-20T15:27:49Z**
+
+Implemented bidirectional pinvim peer repair: nvim publishes nvim-\*.info peer manifests (5s heartbeat), pinvim.ts scans nvim peer candidates when active peer missing/stale, scores by same-window > same-root > freshness, ephemeral allows same-window or same-root+recent+linked-here, non-ephemeral requires same-window only, acceptedSockets gates hello before data frames, peerAllowedForSocket rejects out-of-scope peers, repair state visible in PiStatus/PiHealth/pinvim-info. All automated tests pass.

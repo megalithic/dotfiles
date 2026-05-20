@@ -54,4 +54,26 @@ Normal `gpp` and `<C-p>` open or focus an ephemeral pi split and immediately sen
 
 On restart, Pinvim may auto-resume a live ephemeral pimux manifest when it belongs to the current tmux session and either matches the current window or matches the current cwd/root recently. This preserves focused ephemeral conversations across Neovim restarts without requiring buffer-local socket state.
 
-Pinvim repair is bidirectional. Neovim publishes a `pinvim.lua` peer manifest in the Pi state manifest directory with peer id, cwd/root, tmux session/window/pane, pid, heartbeat, linked socket, socket source, and link mode. `pinvim.ts` keeps writing pi-side socket manifests and also scans fresh `nvim-*.info` manifests when its active nvim peer is missing or stale. Ephemeral pi repair may accept same-window nvim peers or recent same-root peers; non-ephemeral repair requires the same tmux window so a primary pi does not steal another Neovim instance in the same cwd. PiStatus/PiHealth and `/pinvim-info` expose repair candidate and last repair state.
+### Bidirectional peer repair
+
+Repair is bidirectional — either nvim or pi can reestablish the hello/hello_ack/heartbeat link after the other side restarts.
+
+**Nvim-side manifest** (`nvim-*.info` in `$PI_STATE_DIR/manifests/`): pinvim.lua writes a peer manifest every 5 seconds containing id, cwd, root, pid, tmux session/window/pane, heartbeatAt, linkMode, linked socket path, socket source, connected state, and active peer id. The manifest is cleaned up on `VimLeavePre`.
+
+**Pi-side repair scan** (`pinvim.ts`): when the active nvim peer is missing or its heartbeat is ≥120 seconds stale, pinvim.ts scans `nvim-*.info` manifests every 5 seconds and scores candidates:
+
+| Factor                  | Score |
+| ----------------------- | ----- |
+| Same tmux window        | +200  |
+| Same cwd/root           | +60   |
+| Fresh heartbeat (<30s)  | +40   |
+| Recent heartbeat (<15m) | +10   |
+| Has tmux pane           | +5    |
+
+Candidates must be kind `nvim` / owner `pinvim.lua`, pid alive, and same tmux session. Non-ephemeral pi additionally requires same tmux window (rejects same-cwd/different-window to avoid stealing). Ephemeral pi accepts same-window or same-root+recent+linked-here (candidate socket matches `SOCKET_PATH`).
+
+**Hello gate** (`acceptedSockets` WeakSet): pi requires a valid `hello` before accepting any data frame (heartbeat, explicit_send, prompt). `peerAllowedForSocket` validates the hello peer identity against the same scoring rules. Unaccepted sockets receive an error and the frame is dropped. As a fallback, ephemeral pi also accepts a hello whose peer id matches a pre-existing `repairCandidate`.
+
+**Repair visibility**: repair candidate and last repair timestamp appear in `:PiStatus`, `:PiHealth`, `/pinvim-status`, `/pinvim-health`, and `/pinvim-info`. A `pinvim-repair` status line shows the candidate id while repair is pending, cleared on successful hello.
+
+**Pi manifest enhancements**: pinvim.ts info manifests now include `root`, `linkMode`, and `activePeerId` fields alongside the existing socket/cwd/pid/session/window/pane/ephemeral/heartbeatAt/startedAt fields.
