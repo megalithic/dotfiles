@@ -480,7 +480,29 @@ function mega.ui.statuscolumn.render_minimal(is_active)
   })
 end
 
+--- Compute total displayed width of a list of ComponentOpts (signs/spacers).
+--- Walks each opts[1] chunks list and sums strwidth of chunk text.
+---@param opts_list table
+---@return integer
+local function chunks_total_width(opts_list)
+  local w = 0
+  for _, opts in ipairs(opts_list or {}) do
+    local chunks = opts and opts[1]
+    if chunks then
+      for _, c in ipairs(chunks) do
+        if c and c[1] then w = w + strwidth(tostring(c[1])) end
+      end
+    end
+  end
+  return w
+end
+
 --- Render full statuscolumn: signs + line numbers + wrap + git + folds
+---
+--- Width parity: active and inactive must produce statuscolumns of identical
+--- width so the line number does not shift on focus changes. Inactive reuses
+--- the active section layout but substitutes spacers of equivalent width for
+--- sign content (which is intentionally hidden in inactive windows).
 function mega.ui.statuscolumn.render_full(is_active)
   local lnum, relnum, virtnum = v.lnum, v.relnum, v.virtnum
   local winnr = api.nvim_get_current_win()
@@ -501,24 +523,31 @@ function mega.ui.statuscolumn.render_full(is_active)
 
   local ln_col = { ln_text, ln_hl }
 
-  -- Fold column (only for active buffers, only on real lines not virtual)
+  -- Fold column (only for active buffers, only on real lines not virtual).
+  -- When absent (inactive or no fold), r2 still renders a 2-char placeholder
+  -- (empty component + spacer(2)) so r2 width matches the fold-present case
+  -- (fold_char(1) + spacer(1)).
   local fold_col = nil
   if is_active and (not virtnum or virtnum == 0) then
     local fold_char = fdm(lnum)
     if fold_char ~= space then fold_col = { { { fold_char, "FoldColumn" } }, after = "" } end
   end
 
-  local r1 = is_active and section:new(spacer(1), {
-    {
-      ln_col,
-    },
-  }, unpack(git_signs), spacer(1)) or section:new(spacer(1), {
-    {
-      ln_col,
-    },
-  }, spacer(2))
+  -- For inactive: build width-equivalent spacer placeholders for sign slots
+  -- so total column width matches active. git_signs always has width >= 1
+  -- (extmark_signs pads with spacer(1) when empty); other_signs is padded to
+  -- MIN_SIGN_WIDTH above.
+  local other_slot = is_active and other_signs or { spacer(chunks_total_width(other_signs)) }
+  local git_slot_components = is_active and git_signs or { spacer(chunks_total_width(git_signs)) }
 
-  -- Fold indicator or separator
+  local r1 = section:new(spacer(1), {
+    {
+      ln_col,
+    },
+  }, unpack(git_slot_components))
+  r1 = r1 + section:new(spacer(1))
+
+  -- Fold indicator or width-equivalent separator
   local r2
   if fold_col then
     r2 = section:new(fold_col, spacer(1))
@@ -531,18 +560,11 @@ function mega.ui.statuscolumn.render_full(is_active)
     }, spacer(2))
   end
 
-  if is_active then
-    return display({
-      section:new(spacer(1)),
-      other_signs,
-      r1 + r2,
-    })
-  else
-    return display({
-      section:new(spacer(2)),
-      r1 + r2,
-    })
-  end
+  return display({
+    section:new(spacer(1)),
+    other_slot,
+    r1 + r2,
+  })
 end
 
 function mega.ui.statuscolumn.set(bufnr, is_active)
