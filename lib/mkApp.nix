@@ -48,7 +48,8 @@
   lib ? pkgs.lib,
   stdenvNoCC ? pkgs.stdenvNoCC,
   ...
-}: args @ {
+}:
+{
   pname,
   version ? null,
   src, # { url, sha256 }
@@ -57,24 +58,25 @@
   homepage ? null,
   # Extract method options
   artifactType ? "app", # "app", "pkg", or "binary"
-  binaries ? [pname], # CLI commands to expose in ~/.local/bin (defaults to pname)
+  binaries ? [ pname ], # CLI commands to expose in ~/.local/bin (defaults to pname)
   appLocation ? "home-manager", # "home-manager" | "symlink" | "copy"
 
   ...
-}: let
-  mkExtract = import ./mkApp/extract.nix {inherit pkgs lib stdenvNoCC;};
+}:
+let
+  mkExtract = import ./mkApp/extract.nix { inherit pkgs lib stdenvNoCC; };
 in
-  mkExtract {
-    inherit
-      pname
-      version
-      appName
-      desc
-      homepage
-      artifactType
-      binaries
-      appLocation
-      ;
-    url = src.url;
-    sha256 = src.sha256;
-  }
+mkExtract {
+  inherit
+    pname
+    version
+    appName
+    desc
+    homepage
+    artifactType
+    binaries
+    appLocation
+    ;
+  inherit (src) url;
+  inherit (src) sha256;
+}

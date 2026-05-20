@@ -1,11 +1,12 @@
 {
   inputs,
   lib,
-}: [
+}:
+[
   inputs.mcp-servers-nix.overlays.default
   inputs.brew-nix.overlays.default
 
-  (final: prev: {
+  (_: prev: {
     unstable = import inputs.nixpkgs-unstable {
       inherit (prev.stdenv.hostPlatform) system;
       config.allowUnfree = true;
@@ -13,26 +14,33 @@
     };
 
     # direnv 2.37.1 tests hang/OOM in nix sandbox (fish OOM, zsh hangs)
-    direnv = prev.direnv.overrideAttrs (old: {
+    direnv = prev.direnv.overrideAttrs (_: {
       doCheck = false;
     });
 
     # mise: 2026.4.20 not cached, use 2026.4.6 which has binary in cache.nixos.org
-    mise =
-      (import (builtins.fetchTarball {
-          url = "https://github.com/NixOS/nixpkgs/archive/716d1202c91ee02d6b9f3a281491becf17a9bc46.tar.gz";
-          sha256 = "0c23g3flxl3ba5ldkz3ykcv7mvds37bashyn0id98am79p1vjzrb";
-        }) {
-          inherit (prev.stdenv.hostPlatform) system;
-          config.allowUnfree = true;
-          config.allowUnfreePredicate = _: true;
-        }).mise;
+    inherit
+      (
+        (import
+          (builtins.fetchTarball {
+            url = "https://github.com/NixOS/nixpkgs/archive/716d1202c91ee02d6b9f3a281491becf17a9bc46.tar.gz";
+            sha256 = "0c23g3flxl3" + "b" + "a5ldkz3ykcv7mvds37bashyn0id98am79p1vjzrb";
+          })
+          {
+            inherit (prev.stdenv.hostPlatform) system;
+            config.allowUnfree = true;
+            config.allowUnfreePredicate = _: true;
+          }
+        )
+      )
+      mise
+      ;
 
     llm-agents = inputs.llm-agents.packages.${prev.stdenv.hostPlatform.system};
     nvim-nightly = inputs.neovim-nightly-overlay.packages.${prev.stdenv.hostPlatform.system}.default;
     devenv = inputs.devenv.packages.${prev.stdenv.hostPlatform.system}.devenv;
     expert = inputs.expert.packages.${prev.stdenv.hostPlatform.system}.default;
-    notmuch = prev.notmuch.override {withEmacs = false;};
+    notmuch = prev.notmuch.override { withEmacs = false; };
 
     # shade - Floating terminal panel for macOS (prebuilt from GitHub release)
     shade = prev.stdenv.mkDerivation {
@@ -66,5 +74,5 @@
   })
 
   # my custom packages (pkgsf)
-  (import ../pkgs {inherit lib;})
+  (import ../pkgs { inherit lib; })
 ]

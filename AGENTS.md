@@ -78,20 +78,20 @@ This is a **nix-darwin + home-manager** managed dotfiles repo.
 └── docs/                  # Architecture docs and research
 ```
 
-**Each directory has its own `AGENTS.md`** — read it before making changes there.
+Directory-specific `AGENTS.md` files are removed; use this root file for repo guidance.
 
 ## Package Placement (Where to Add Things)
 
-| What | Where |
-|------|-------|
-| CLI tool from nixpkgs | `home/common/packages.nix` |
-| GUI app from nixpkgs | `home/common/packages.nix` (guiPkgs) |
-| Custom .app not in nixpkgs | `pkgs/default.nix` (mkApp) |
-| Tool with HM config (`programs.*`) | `home/common/programs/<tool>.nix` |
-| Homebrew-only (accessibility, kext) | `modules/brew.nix` |
-| Mac App Store | `home/common/mas.nix` |
-| System service (all hosts) | `modules/darwin/services.nix` |
-| User service (all hosts) | `home/common/services.nix` |
+| What                                | Where                                |
+| ----------------------------------- | ------------------------------------ |
+| CLI tool from nixpkgs               | `home/common/packages.nix`           |
+| GUI app from nixpkgs                | `home/common/packages.nix` (guiPkgs) |
+| Custom .app not in nixpkgs          | `pkgs/default.nix` (mkApp)           |
+| Tool with HM config (`programs.*`)  | `home/common/programs/<tool>.nix`    |
+| Homebrew-only (accessibility, kext) | `modules/brew.nix`                   |
+| Mac App Store                       | `home/common/mas.nix`                |
+| System service (all hosts)          | `modules/darwin/services.nix`        |
+| User service (all hosts)            | `home/common/services.nix`           |
 
 ## Nix Module Rules
 
@@ -124,6 +124,7 @@ home-manager), because they're needed before HM runs:
 ### mkDarwinHost / mkHome parity
 
 Both builders must pass identical `specialArgs`/`extraSpecialArgs`:
+
 - `inputs`, `username`, `hostname`, `version`, `overlays`, `lib`, `paths`,
   `arch`, `self`
 - If you add an arg to one, add it to the other
@@ -131,12 +132,14 @@ Both builders must pass identical `specialArgs`/`extraSpecialArgs`:
 ### Activation environment constraints
 
 Home-manager and darwin activation scripts run in restricted environments:
+
 - **Minimal PATH** — `/usr/bin` may not be available via `env`
 - **No Aqua domain** — `launchctl managername` returns `Background` in tmux
 - **No TTY** — agent/automation contexts don't have a terminal
 - **TCC required** — App Management permission needed for app bundle operations
 
 Rules:
+
 - Use absolute shebangs (`#!/usr/bin/swift`) not `#!/usr/bin/env swift` in
   scripts installed for activation
 - Test activation from both interactive terminal AND agent/tmux context
@@ -151,6 +154,7 @@ symlinked directories:
 2. Source it from the main config file
 
 Pattern (already used):
+
 - `~/.local/share/hammerspoon/nix_path.lua` — PATH + env vars for Hammerspoon
 - `~/.local/share/tmux/nix.conf` — default-shell for tmux
 

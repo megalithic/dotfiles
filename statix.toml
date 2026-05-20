@@ -1,0 +1,4 @@
+# Repeated top-level Nix module keys are intentional in this repo.
+# They keep related Home Manager and nix-darwin options near their context.
+disabled = ["repeated_keys"]
+ignore = [".direnv"]

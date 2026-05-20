@@ -64,11 +64,9 @@ erl_crash.dump
 .obsidian
 .jj
 .direnv
-.beads
 **/.jj
 **/.direnv
-**/.beads
-deps
+**/deps
 .expert
 **/.pi/todos
 .pi/todos

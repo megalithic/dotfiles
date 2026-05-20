@@ -245,17 +245,15 @@ operations in this repo. NEVER use raw git commands directly.
 
 **BEFORE committing/describing (CRITICAL - Sensitive Data Check):**
 
-1. **Scrub `.beads/issues.jsonl`** - This file often contains task descriptions
-   that may include sensitive data copied verbatim from user requests.
+1. **Run comprehensive sensitive data scan**:
 
-2. **Run comprehensive sensitive data scan**:
    ```bash
    # Check the diff for sensitive patterns
    jj diff | rg -i "($(echo $SENSITIVE_PATTERNS | tr ' ' '|'))" && \
      echo "⚠️  POTENTIAL SENSITIVE DATA FOUND - Review above matches"
    ```
 
-3. **Sensitive data categories to check** (based on gitleaks/GitGuardian):
+2. **Sensitive data categories to check** (based on gitleaks/GitGuardian):
 
    **PII (Personally Identifiable Information):**
    - Email addresses: `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`
@@ -283,39 +281,25 @@ operations in this repo. NEVER use raw git commands directly.
    - Bank account numbers
    - Company-specific terms (client names, project codenames)
 
-4. **Quick check commands**:
+3. **Quick check commands**:
+
    ```bash
-   # Emails
-   rg -i "[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}" .beads/issues.jsonl
 
-   # API keys and tokens
-   rg -i "(api[_-]?key|secret|token|password|credential)" .beads/issues.jsonl
-
-   # AWS keys
-   rg "AKIA[0-9A-Z]{16}" .beads/issues.jsonl
-
-   # Private keys
-   rg "BEGIN.*PRIVATE KEY" .beads/issues.jsonl
-
-   # Connection strings
-   rg -i "(mysql|postgres|mongodb|redis)://" .beads/issues.jsonl
-
-   # Internal URLs
-   rg -i "\.(internal|local|corp|lan)\b" .beads/issues.jsonl
    ```
 
-5. **Remediation actions**:
+4. **Remediation actions**:
    - Replace emails with `$WORK_EMAIL env var` or `<email>`
    - Replace tokens with `$TOKEN_NAME env var` or `<redacted>`
    - Replace internal URLs with `<internal-url>` or `$INTERNAL_HOST`
    - Replace names with roles: "the user" instead of "John Smith"
 
-6. **If uncertain, alert via ntfy**:
+5. **If uncertain, alert via ntfy**:
    ```bash
    ntfy send -t "Potential sensitive data" -m "Found pattern X in commit - please review" -q
    ```
 
 **Common sensitive data sources:**
+
 - Bead task descriptions (user creates with real data, agent copies verbatim)
 - Config files with hardcoded values
 - Log output pasted into code comments
@@ -385,14 +369,13 @@ safe push workflows.
 
 ```bash
 # ALWAYS claim a workspace before starting work
-jj-ws-claim <task-id>        # Creates workspace + bead task
+jj-ws-claim <task-id>        # Creates workspace
 jj-ws-claim <task-id> --json # Machine-readable output
 
 # Example
 jj-ws-claim hs-memory-leaks
 # Creates:
 #   - jj workspace: .workspaces/hs-memory-leaks/
-#   - bead task: .dotfiles-hs-memory-leaks
 ```
 
 **During work:**
@@ -417,7 +400,6 @@ jj-ws-complete -r            # Rebase if parallel branch (see below)
 ```
 
 This creates a `ws/<workspace-name>` bookmark and merges to main locally.
-The bead task is closed with a reference to the bookmark for traceability.
 
 **Parallel branches:**
 
@@ -474,6 +456,7 @@ review, not push automatically.
    - What the expected outcome is
 
    Example:
+
    ```
    Running `jj git fetch` - This pulls the latest commits from origin without
    modifying the working copy. Needed because Sunday's flake.lock update may
@@ -486,16 +469,17 @@ review, not push automatically.
    ```markdown
    ## jj Commands Used This Session
 
-   | Command | Purpose |
-   |---------|---------|
-   | `jj new -m "feat: add X"` | Started new unit of work for feature |
-   | `jj git fetch` | Pulled latest from remote |
-   | `jj rebase -r @ -d main` | Rebased work onto updated main |
-   | `jj bookmark set main -r @` | Moved main bookmark to current commit |
-   | `jj git push --bookmark main` | Pushed to origin (with user consent) |
+   | Command                       | Purpose                               |
+   | ----------------------------- | ------------------------------------- |
+   | `jj new -m "feat: add X"`     | Started new unit of work for feature  |
+   | `jj git fetch`                | Pulled latest from remote             |
+   | `jj rebase -r @ -d main`      | Rebased work onto updated main        |
+   | `jj bookmark set main -r @`   | Moved main bookmark to current commit |
+   | `jj git push --bookmark main` | Pushed to origin (with user consent)  |
    ```
 
 **Why this matters:**
+
 - Helps user learn jj workflows through observation
 - Provides visibility into version control state
 - Catches mistakes before they become problems

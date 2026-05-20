@@ -30,8 +30,10 @@ get_current_window() {
 # Find existing preview pane by title - SCOPED TO CURRENT SESSION/WINDOW ONLY
 # This prevents killing preview panes in other projects/sessions
 find_preview_pane() {
-    local session=$(get_current_session)
-    local window=$(get_current_window)
+    local session
+    local window
+    session=$(get_current_session)
+    window=$(get_current_window)
 
     # List panes ONLY in current window (no -a flag!)
     tmux list-panes -t "${session}:${window}" -F "#{pane_id} #{pane_title}" 2>/dev/null \
@@ -40,7 +42,8 @@ find_preview_pane() {
 
 # Kill existing preview pane if found (session-scoped)
 cleanup_preview() {
-    local existing=$(find_preview_pane)
+    local existing
+    existing=$(find_preview_pane)
     if [[ -n "$existing" ]]; then
         tmux kill-pane -t "$existing" 2>/dev/null || true
     fi
@@ -52,7 +55,8 @@ create_preview_popup() {
     local interactive="${2:-false}"
 
     # Write command to temp file
-    local tmpfile=$(mktemp)
+    local tmpfile
+    tmpfile=$(mktemp)
 
     if [[ "$interactive" == "true" ]]; then
         cat > "$tmpfile" << EOF
@@ -97,7 +101,8 @@ create_preview_pane() {
     cleanup_preview
 
     # Write command to temp file to avoid quoting hell
-    local tmpfile=$(mktemp)
+    local tmpfile
+    tmpfile=$(mktemp)
 
     if [[ "$interactive" == "true" ]]; then
         # Interactive mode (e.g., nvim) - no read prompt
@@ -151,14 +156,14 @@ detect_type() {
     case "$arg" in
         *.json|*.jsonc)          echo "json" ;;
         *.md)                    echo "markdown" ;;
-        .dotfiles-*|shade-*)     echo "bead" ;;
         diff)                    echo "diff" ;;
         log)                     echo "log" ;;
         cmd:*)                   echo "cmd" ;;
         *)
             # Check if it's a file
             if [[ -f "$arg" ]]; then
-                local mime=$(file --mime-type -b "$arg" 2>/dev/null)
+                local mime
+                mime=$(file --mime-type -b "$arg" 2>/dev/null)
                 case "$mime" in
                     image/*) echo "image" ;;
                     *)       echo "file" ;;
@@ -198,8 +203,6 @@ build_preview_cmd() {
             fi
             ;;
         diff)
-            # Exclude noisy beads jsonl from diff output using jj fileset negation
-            # Syntax: 'all() & ~glob:".beads/**"' excludes .beads directory
             if [[ -n "$USE_CODEDIFF" ]]; then
                 # Interactive codediff.nvim mode
                 # CodeDiff expects git revisions; jj uses @ for HEAD
@@ -217,11 +220,7 @@ build_preview_cmd() {
                 echo "nvim +\"CodeDiff $rev_args\"|interactive"
             else
                 # Delta mode (non-interactive)
-                if [[ -z "$content" || "$content" == "-r"* ]]; then
-                    echo "jj diff $content 'all() & ~glob:\".beads/**\"' | delta"
-                else
-                    echo "jj diff $content | delta"
-                fi
+                echo "jj diff $content | delta"
             fi
             ;;
         codediff)
@@ -229,11 +228,6 @@ build_preview_cmd() {
             echo "nvim +\"CodeDiff $content\"|interactive"
             ;;
         log)      echo "jj log $content --no-pager" ;;
-        bead)
-            # Render bead as rich markdown with glow
-            # bd show outputs markdown-like format, pipe through glow for rendering
-            echo "bd show '$content' | glow -p -s dark -w 120"
-            ;;
         file)     echo "bat --style=numbers --color=always '$content'" ;;
         image)    echo "preview '$content'" ;;  # Delegate to existing preview script
         cmd)      echo "${content#cmd:}" ;;
@@ -271,7 +265,6 @@ Types:
   diff      jj diff arguments (e.g., "-r @") - uses delta or codediff
   codediff  Explicit codediff.nvim mode (e.g., "HEAD~1 HEAD")
   log       jj log arguments (e.g., "-n 5")
-  bead      Bead task ID - renders with glow (e.g., ".dotfiles-t7f")
   file      File path to preview with bat
   image     Image file path
   cmd       Shell command to execute (prefix with "cmd:")
@@ -282,7 +275,6 @@ Examples:
   preview-ai diff -r @                    # Interactive codediff (default)
   preview-ai --delta diff -r @            # Non-interactive delta view
   preview-ai codediff HEAD~2 HEAD         # Compare specific revisions
-  preview-ai bead .dotfiles-t7f           # Rich markdown bead view
   preview-ai file /path/to/file.lua
   preview-ai --auto-close-after 5 diff    # Auto-close after 5s
   preview-ai markdown "# Hello World"
@@ -399,13 +391,14 @@ main() {
     # Auto-detect if type is "auto" or looks like content
     if [[ "$type" == "auto" ]]; then
         type=$(detect_type "${1:-}")
-    elif [[ ! "$type" =~ ^(json|markdown|diff|codediff|log|bead|file|image|cmd|text)$ ]]; then
+    elif [[ ! "$type" =~ ^(json|markdown|diff|codediff|log|file|image|cmd|text)$ ]]; then
         # First arg wasn't a type, treat it as content
         set -- "$type" "$@"
         type=$(detect_type "$type")
     fi
 
-    local preview_result=$(build_preview_cmd "$type" "$@")
+    local preview_result
+    preview_result=$(build_preview_cmd "$type" "$@")
 
     # Check if interactive mode flag is appended
     local preview_cmd="${preview_result%|interactive}"

@@ -87,9 +87,7 @@
 
   b = branch
   br = branch
-  ; ba = branch -A
   ; bm = branch -m
-  ; bd = branch -d
   ; bbd = branch -D $1 && push origin --delete $1
 
   clean = !git clean -i
@@ -208,7 +206,6 @@
   edit = "!f() { nvim -p $(git diff "HEAD~${1-0}" --name-only --diff-filter=d); }; f"
   ; promote = !$DOTFILES/bin/git-promote
   ; wtf     = !$DOTFILES/bin/git-wtf
-  ; rank-contributers = !$DOTFILES/bin/git-rank-contributers
   ; count   = !git shortlog -sn
   ; this = !git init && git add . && git commit -m \"Initial commit\"
   ; who = shortlog -s -n --no-merges

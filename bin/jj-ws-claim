@@ -6,8 +6,7 @@
 #
 # This script is designed for AI agents (Claude, OpenCode, etc.) to:
 # 1. Create a jj workspace for isolated work
-# 2. Associate it with a bead task
-# 3. Output machine-readable status
+# 2. Output machine-readable status
 #
 # Exit codes:
 #   0 - Success
@@ -75,7 +74,7 @@ while [[ $# -gt 0 ]]; do
         -h|--help)
             echo "Usage: jj-ws-claim <task-id> [--base <revision>] [--json]"
             echo ""
-            echo "Create or claim a jj workspace for a bead task."
+            echo "Create or claim a jj workspace for a task."
             echo ""
             echo "Options:"
             echo "  --base <rev>   Base revision for workspace (default: main)"
@@ -154,32 +153,6 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────────
-# Bead task integration
-# ─────────────────────────────────────────────────────────────────
-
-TASK_CREATED=false
-TASK_EXISTS=false
-
-if command -v bd &>/dev/null; then
-    # Check if task exists (could be full ID like .dotfiles-abc or just abc)
-    if bd show "$TASK_ID" &>/dev/null; then
-        TASK_EXISTS=true
-    elif bd show "$PROJECT_NAME-$TASK_ID" &>/dev/null; then
-        TASK_EXISTS=true
-        TASK_ID="$PROJECT_NAME-$TASK_ID"
-    else
-        # Create task
-        bd create "$WS_NAME" \
-            -t task \
-            -p P2 \
-            -l "workspace,agent" \
-            -d "AI agent workspace task for $WS_NAME" \
-            --silent 2>/dev/null || true
-        TASK_CREATED=true
-    fi
-fi
-
-# ─────────────────────────────────────────────────────────────────
 # Output result
 # ─────────────────────────────────────────────────────────────────
 
@@ -193,11 +166,6 @@ if $JSON_OUTPUT; then
     "created": $WS_CREATED,
     "existed": $WS_EXISTED
   },
-  "task": {
-    "id": "$TASK_ID",
-    "created": $TASK_CREATED,
-    "existed": $TASK_EXISTS
-  },
   "repo": {
     "root": "$REPO_ROOT",
     "project": "$PROJECT_NAME"
@@ -208,9 +176,6 @@ else
     echo "✓ Workspace '$WS_NAME' ready at $WS_DIR"
     if $WS_CREATED; then
         echo "  (workspace created)"
-    fi
-    if $TASK_CREATED; then
-        echo "  (bead task created)"
     fi
     echo ""
     echo "To enter workspace:"

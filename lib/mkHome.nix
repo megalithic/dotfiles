@@ -15,11 +15,13 @@
   lib,
   overlays,
   version,
-}: {
+}:
+{
   hostname,
   username,
   system ? "aarch64-darwin",
-}: let
+}:
+let
   paths = import ./paths.nix username;
   pkgs = import inputs.nixpkgs {
     inherit system;
@@ -30,18 +32,26 @@
     };
   };
 in
-  inputs.home-manager.lib.homeManagerConfiguration {
-    inherit pkgs;
-    extraSpecialArgs = {
-      inherit inputs username hostname version overlays lib paths;
-      arch = system;
-      self = inputs.self;
-    };
-    modules = [
-      ../home/${hostname}.nix
-      {
-        # Enable home-manager to manage itself (standalone mode)
-        programs.home-manager.enable = true;
-      }
-    ];
-  }
+inputs.home-manager.lib.homeManagerConfiguration {
+  inherit pkgs;
+  extraSpecialArgs = {
+    inherit
+      inputs
+      username
+      hostname
+      version
+      overlays
+      lib
+      paths
+      ;
+    arch = system;
+    inherit (inputs) self;
+  };
+  modules = [
+    ../home/${hostname}.nix
+    {
+      # Enable home-manager to manage itself (standalone mode)
+      programs.home-manager.enable = true;
+    }
+  ];
+}

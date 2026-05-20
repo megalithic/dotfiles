@@ -15,42 +15,56 @@
   overlays,
   brew_config,
   version,
-}: {
+}:
+{
   hostname,
   username,
   system ? "aarch64-darwin",
-  extraModules ? [],
-}: let
+  extraModules ? [ ],
+}:
+let
   paths = import ./paths.nix username;
 in
-  inputs.nix-darwin.lib.darwinSystem {
-    inherit lib;
+inputs.nix-darwin.lib.darwinSystem {
+  inherit lib;
 
-    specialArgs = {
-      inherit inputs username hostname version overlays lib paths;
-      arch = system;
-      self = inputs.self;
-    };
+  specialArgs = {
+    inherit
+      inputs
+      username
+      hostname
+      version
+      overlays
+      lib
+      paths
+      ;
+    arch = system;
+    inherit (inputs) self;
+  };
 
-    modules =
-      [
-        {system.configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null;}
-        {nixpkgs.overlays = overlays;}
-        {nixpkgs.config.allowUnfree = true;}
-        {nixpkgs.config.allowUnfreePredicate = _: true;}
-        ../hosts/common.nix
-        ../hosts/${hostname}.nix
-        ../modules/system.nix
-        ../modules/darwin/services.nix
-        inputs.kanata-darwin.darwinModules.default
-        ../modules/darwin/kanata.nix
-        inputs.agenix.darwinModules.default
-        inputs.nix-homebrew.darwinModules.nix-homebrew
-        (brew_config {inherit username;})
-        ({config, ...}: {
-          homebrew.taps = map (key: builtins.replaceStrings ["homebrew-"] [""] key) (builtins.attrNames config.nix-homebrew.taps);
-        })
-        (import ../modules/brew.nix)
-      ]
-      ++ extraModules;
-  }
+  modules = [
+    { system.configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null; }
+    { nixpkgs.overlays = overlays; }
+    { nixpkgs.config.allowUnfree = true; }
+    { nixpkgs.config.allowUnfreePredicate = _: true; }
+    ../hosts/common.nix
+    ../hosts/${hostname}.nix
+    ../modules/system.nix
+    ../modules/darwin/services.nix
+    inputs.kanata-darwin.darwinModules.default
+    ../modules/darwin/kanata.nix
+    inputs.agenix.darwinModules.default
+    inputs.nix-homebrew.darwinModules.nix-homebrew
+    (brew_config { inherit username; })
+    (
+      { config, ... }:
+      {
+        homebrew.taps = map (key: builtins.replaceStrings [ "homebrew-" ] [ "" ] key) (
+          builtins.attrNames config.nix-homebrew.taps
+        );
+      }
+    )
+    (import ../modules/brew.nix)
+  ]
+  ++ extraModules;
+}

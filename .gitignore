@@ -5,6 +5,7 @@ _plans/
 
 # Auto-generated documentation
 _docs/
+docs/
 
 # Devenv
 .devenv*

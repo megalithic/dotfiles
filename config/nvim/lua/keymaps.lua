@@ -65,8 +65,8 @@ end
 
 map("c", "<C-n>", "<Down>")
 map("c", "<C-p>", "<Up>")
--- <C-A> allows you to insert all matches on the command line e.g. bd *.js <c-a>
--- will insert all matching files e.g. :bd a.js b.js c.js
+-- <C-A> allows you to insert all matches on the command line e.g. edit *.js <c-a>
+-- will insert all matching files e.g. :edit a.js b.js c.js
 map("c", "<c-x><c-a>", "<c-a>")
 map("c", "<C-a>", "<Home>")
 map("c", "<C-e>", "<End>")

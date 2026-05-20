@@ -8,8 +8,7 @@
 # This script is designed for AI agents to:
 # 1. Create a ws/<workspace-name> bookmark for the completed work
 # 2. Merge the work to main (locally, not pushed)
-# 3. Close the associated bead task
-# 4. Clean up workspace directory
+# 3. Clean up workspace directory
 #
 # The bookmark allows:
 # - Listing completed work: jj bookmark list -r 'bookmarks(glob:"ws/*")'
@@ -71,7 +70,6 @@ NO_MERGE=false
 NO_CLEANUP=false
 DO_REBASE=false
 JSON_OUTPUT=false
-CLOSE_REASON=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -90,10 +88,6 @@ while [[ $# -gt 0 ]]; do
         --no-cleanup)
             NO_CLEANUP=true
             shift
-            ;;
-        --reason)
-            CLOSE_REASON="$2"
-            shift 2
             ;;
         --json)
             JSON_OUTPUT=true
@@ -114,7 +108,6 @@ Options:
   -r, --rebase     Rebase parallel branches onto main before merging
   --no-merge       Don't merge work to main (just create bookmark)
   --no-cleanup     Don't remove workspace after completion
-  --reason <text>  Reason for closing bead task
   --json           Output result as JSON
   -h, --help       Show this help
 
@@ -158,8 +151,6 @@ if [[ "$WS_PATH" == *"/.workspaces/"* ]]; then
 else
     REPO_ROOT="$WS_PATH"
 fi
-
-PROJECT_NAME=$(basename "$REPO_ROOT")
 
 # Acquire lock for concurrent safety
 acquire_lock "$REPO_ROOT"
@@ -237,48 +228,6 @@ if [[ -n "$CHANGE_ID" ]]; then
         echo "Created bookmark '$BOOKMARK_NAME' at $CHANGE_ID" >&2
     else
         echo "Warning: Failed to create bookmark '$BOOKMARK_NAME'" >&2
-    fi
-fi
-
-# ─────────────────────────────────────────────────────────────────
-# Close bead task (with bookmark reference)
-# ─────────────────────────────────────────────────────────────────
-
-TASK_CLOSED=false
-TASK_ID=""
-
-if command -v bd &>/dev/null; then
-    # Try to find task matching workspace name
-    TASK_ID="$PROJECT_NAME-$CURRENT_WS"
-    if ! bd show "$TASK_ID" &>/dev/null; then
-        # Try without project prefix
-        if bd show "$CURRENT_WS" &>/dev/null; then
-            TASK_ID="$CURRENT_WS"
-        else
-            TASK_ID=""
-        fi
-    fi
-
-    if [[ -n "$TASK_ID" ]]; then
-        # Add comment with bookmark reference for traceability
-        if $BOOKMARK_CREATED; then
-            bd comments add "$TASK_ID" "Completed in jj workspace. Bookmark: $BOOKMARK_NAME (change: $CHANGE_ID)" 2>/dev/null || true
-        fi
-
-        # Build close reason with bookmark info
-        if [[ -n "$CLOSE_REASON" ]]; then
-            FULL_REASON="$CLOSE_REASON"
-        else
-            FULL_REASON="Completed in workspace $CURRENT_WS"
-        fi
-
-        if $BOOKMARK_CREATED; then
-            FULL_REASON="$FULL_REASON [bookmark: $BOOKMARK_NAME]"
-        fi
-
-        if bd close "$TASK_ID" -r "$FULL_REASON" 2>/dev/null; then
-            TASK_CLOSED=true
-        fi
     fi
 fi
 
@@ -369,10 +318,6 @@ if $JSON_OUTPUT; then
     "created": $BOOKMARK_CREATED,
     "change_id": "$CHANGE_ID"
   },
-  "task": {
-    "id": "$TASK_ID",
-    "closed": $TASK_CLOSED
-  },
   "commit": {
     "description": $(echo "$COMMIT_DESC" | jq -Rs .),
     "empty": $COMMIT_EMPTY
@@ -391,9 +336,6 @@ else
     fi
     if $BOOKMARK_CREATED; then
         echo "  (bookmark: $BOOKMARK_NAME)"
-    fi
-    if $TASK_CLOSED; then
-        echo "  (bead task $TASK_ID closed)"
     fi
     if $WS_REMOVED; then
         echo "  (workspace removed)"
