@@ -2,7 +2,7 @@
 id: dot-koz6
 status: closed
 deps: [dot-8n53, dot-p2ad]
-links: []
+links: [dot-oiky, dot-0a9p, dot-kts9, dot-rx8y, dot-8n53, dot-f6tr, dot-p2ad]
 created: 2026-05-18T19:33:52Z
 type: feature
 priority: 2
@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development, done]
 ---
+
 # Make pinvim split spawn fresh ephemeral pi and restore previous target
 
 Correct the nvim/pi/tmux split behavior from the nvim-pi-custom-vision plan. Creating a split from nvim must spawn a fresh pi instance with link_mode=ephemeral in a 30%-width right tmux split, immediately switch the current nvim target to that new socket, and save the previous target for restore when the split closes. Existing pi instances must remain selectable through explicit target/session commands, but must not be adopted by default when creating a split. Relevant files: bin/pimux, config/nvim/lua/pinvim.lua, home/common/programs/pi-coding-agent/extensions/pinvim.ts, home/common/programs/pi-coding-agent/extensions/bridge.ts if shim behavior is touched.
@@ -30,6 +31,7 @@ Correct the nvim/pi/tmux split behavior from the nvim-pi-custom-vision plan. Cre
 Implemented ephemeral split spawn with automatic previous-target restore.
 
 Changes in `config/nvim/lua/pinvim.lua`:
+
 - `generate_ephemeral_socket_path()`: creates `pi-{session}-{window}-eph-{epoch}-{pid}.sock` paths
 - `is_ephemeral_socket()`: detects `-eph-` pattern in socket paths
 - `api.spawn_ephemeral_split()`: generates ephemeral socket, records previous target in MRU, calls `pimux --new --socket`, sets buffer-local target, polls for socket creation, then connects
@@ -44,3 +46,6 @@ No changes to `bin/pimux` (already had `--new --socket`), `pinvim.ts` (already m
 
 Verification: `bash -n bin/pimux` ✓, `nvim --headless` setup ✓, `bin/pinvim-protocol-smoke` ✓, `just validate home` ✓, `just home` ✓.
 
+**2026-05-20T15:06:23Z**
+
+Discovery from live use: nvim restart while typing in an ephemeral pimux loses buffer-local target state. Nvim-side manifest resume is a partial fix, but durable design should use bidirectional repair: nvim advertises peer heartbeat, pi-side pinvim.ts can repair to same-window nvim, and both sides converge through hello/hello_ack/heartbeat. Follow-up ticket: dot-rx8y.

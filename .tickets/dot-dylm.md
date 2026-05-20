@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-0fjk
 tags: [ready-for-development]
 ---
+
 # Build custom nvim+pi vision integration
 
 Seeded from ~/.local/share/pi/plans/dotfiles/nvim-pi-custom-vision_TASK.md and ~/.local/share/pi/plans/dotfiles/nvim-pi-custom-vision_PLAN.md.
@@ -37,3 +38,8 @@ For any implementation change under this pinvim/vision workstream, run:
 
 For research-only tickets, run these before closing any downstream implementation ticket that uses the research.
 
+## Notes
+
+**2026-05-20T15:06:23Z**
+
+Discovery from live use: nvim restart while typing in an ephemeral pimux loses buffer-local target state. Nvim-side manifest resume is a partial fix, but durable design should use bidirectional repair: nvim advertises peer heartbeat, pi-side pinvim.ts can repair to same-window nvim, and both sides converge through hello/hello_ack/heartbeat. Follow-up ticket: dot-rx8y.

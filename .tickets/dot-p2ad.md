@@ -2,7 +2,7 @@
 id: dot-p2ad
 status: closed
 deps: [dot-oiky]
-links: []
+links: [dot-oiky, dot-0a9p, dot-kts9, dot-rx8y, dot-koz6, dot-8n53, dot-f6tr]
 created: 2026-05-13T20:48:05Z
 type: feature
 priority: 2
@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development]
 ---
+
 # Add parked tmux pi registry and MRU tracking
 
 Implement Step 4 from ~/.local/share/pi/plans/dotfiles/nvim-pi-custom-vision_PLAN.md. Add fresh bin/pimux command for nvim-driven ephemeral pi splits plus reusable parked pi panes or sessions. Default nvim split UX must spawn a fresh pi instance in a 30%-width right tmux split, immediately pair nvim with that new ephemeral socket, and save the previous nvim target for restore when the split closes. Existing pi instances remain selectable through explicit target/session commands, but must not be adopted by default when creating a split.
@@ -34,3 +35,8 @@ For any implementation change under this pinvim/vision workstream, run:
 
 For research-only tickets, run these before closing any downstream implementation ticket that uses the research.
 
+## Notes
+
+**2026-05-20T15:07:08Z**
+
+Discovery linked to dot-rx8y: Neovim restart can orphan a live ephemeral pimux because nvim buffer-local target state is gone. Existing nvim-side ranked discovery/MRU/restore work is related but not sufficient; follow-up implements bidirectional same-window peer repair in pinvim.lua + pinvim.ts.

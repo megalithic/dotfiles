@@ -41,3 +41,17 @@ Layout scripts use `.sh` names and `#!/usr/bin/env bash` so they can be run cons
 Neovim config tracks nightly API changes where small compatibility updates prevent startup warnings.
 
 Autocmd callbacks should prefer current `vim.*` APIs over deprecated aliases. Yank highlighting uses `vim.hl.hl_op` instead of deprecated `vim.hl.on_yank` so startup stays clean on nightly builds.
+
+## Pinvim visual selection keymaps
+
+Pinvim visual mappings use Neovim `x` mode, so Lua callbacks may run after Visual mode exits.
+
+Selection capture must first try live Visual state for command-line usage, then fall back to `'<`/`'>` marks plus `visualmode()` for `x` mappings.
+
+Selection-bearing actions (`gpa`, `gps`, `gpp`, `<C-p>`, `:PiSend`, and `:PiAdd`) route through explicit-send payloads. Prompt text added by `gps` is stored as `context.userInput` on that same explicit payload so pi receives normal pinvim context/metadata plus user text.
+
+Normal `gpp` and `<C-p>` open or focus an ephemeral pi split and immediately send cursor/file context from the buffer that was active when the split was requested. Visual `gpp` and `<C-p>` do the same with selection context.
+
+On restart, Pinvim may auto-resume a live ephemeral pimux manifest when it belongs to the current tmux session and either matches the current window or matches the current cwd/root recently. This preserves focused ephemeral conversations across Neovim restarts without requiring buffer-local socket state.
+
+Pinvim repair is bidirectional. Neovim publishes a `pinvim.lua` peer manifest in the Pi state manifest directory with peer id, cwd/root, tmux session/window/pane, pid, heartbeat, linked socket, socket source, and link mode. `pinvim.ts` keeps writing pi-side socket manifests and also scans fresh `nvim-*.info` manifests when its active nvim peer is missing or stale. Ephemeral pi repair may accept same-window nvim peers or recent same-root peers; non-ephemeral repair requires the same tmux window so a primary pi does not steal another Neovim instance in the same cwd. PiStatus/PiHealth and `/pinvim-info` expose repair candidate and last repair state.

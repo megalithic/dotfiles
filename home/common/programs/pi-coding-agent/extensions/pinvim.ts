@@ -35,18 +35,28 @@ const SOCKET_DIR = path.join(PI_STATE_DIR, "sockets");
 const INFO_DIR = path.join(PI_STATE_DIR, "manifests");
 const SOCKET_PREFIX = "pi";
 
-let tmuxCache: { at: number; value: { session: string; window: string; pane?: string } | null } = {
+let tmuxCache: {
+  at: number;
+  value: { session: string; window: string; pane?: string } | null;
+} = {
   at: 0,
   value: null,
 };
 
-const parseTmux = (stdout: string): { session: string; window: string; pane?: string } | null => {
+const parseTmux = (
+  stdout: string,
+): { session: string; window: string; pane?: string } | null => {
   const [session, winName, winIndex, pane] = stdout.trim().split("\t");
-  const window = winName && /^[a-zA-Z0-9_-]+$/.test(winName) ? winName : winIndex;
+  const window =
+    winName && /^[a-zA-Z0-9_-]+$/.test(winName) ? winName : winIndex;
   return session && window ? { session, window, pane } : null;
 };
 
-const detectTmux = (callback: (tmux: { session: string; window: string; pane?: string } | null) => void): void => {
+const detectTmux = (
+  callback: (
+    tmux: { session: string; window: string; pane?: string } | null,
+  ) => void,
+): void => {
   if (!process.env.TMUX) {
     callback(null);
     return;
@@ -59,7 +69,11 @@ const detectTmux = (callback: (tmux: { session: string; window: string; pane?: s
 
   execFile(
     "tmux",
-    ["display-message", "-p", "#{session_name}\t#{window_name}\t#{window_index}\t#{pane_id}"],
+    [
+      "display-message",
+      "-p",
+      "#{session_name}\t#{window_name}\t#{window_index}\t#{pane_id}",
+    ],
     { encoding: "utf-8", timeout: 2000 },
     (err, stdout) => {
       const tmux = err ? null : parseTmux(stdout);
@@ -75,7 +89,9 @@ let PI_WINDOW = process.env.PI_WINDOW || "0";
 let PI_PANE: string | undefined;
 
 if (SOCKET_PATH) {
-  const match = SOCKET_PATH.match(/\/pi-([^-]+)-([^.]+?)(?:-eph-[^/]+)?\.sock$/);
+  const match = SOCKET_PATH.match(
+    /\/pi-([^-]+)-([^.]+?)(?:-eph-[^/]+)?\.sock$/,
+  );
   if (match) {
     PI_SESSION = process.env.PI_SESSION || match[1];
     PI_WINDOW = process.env.PI_WINDOW || match[2];
@@ -112,7 +128,14 @@ const isEphemeral = (): boolean =>
 // Protocol types
 // =============================================================================
 
-type LinkMode = "auto" | "manual" | "ephemeral" | "parked" | "explicit" | "bootstrap" | string;
+type LinkMode =
+  | "auto"
+  | "manual"
+  | "ephemeral"
+  | "parked"
+  | "explicit"
+  | "bootstrap"
+  | string;
 
 interface PeerIdentity {
   id: string;
@@ -219,6 +242,28 @@ interface PinvimHealth {
   heartbeatAgeSeconds: number | null;
 }
 
+interface NvimPeerCandidate {
+  id: string;
+  kind?: "nvim" | string;
+  owner?: string;
+  cwd?: string;
+  root?: string;
+  pid?: number;
+  session?: string;
+  window?: string;
+  pane?: string;
+  tmux?: { session?: string; window?: string; pane?: string };
+  heartbeatAt?: number;
+  linkMode?: LinkMode;
+  socket?: string;
+  socketSource?: string;
+  connected?: boolean;
+  peerId?: string;
+  manifestPath?: string;
+  score?: number;
+  reasons?: string[];
+}
+
 // =============================================================================
 // State
 // =============================================================================
@@ -230,6 +275,11 @@ const state: PinvimState = {
   lastHeartbeat: null,
 };
 
+let repairCandidate: NvimPeerCandidate | null = null;
+let repairedAt: number | null = null;
+let repairReason: string | null = null;
+let peerScanTimer: NodeJS.Timeout | null = null;
+const acceptedSockets = new WeakSet<net.Socket>();
 let latestCtx: ExtensionContext | null = null;
 let server: net.Server | null = null;
 let infoManifestPath: string | null = null;
@@ -268,7 +318,7 @@ const isTellPayload = (p: Payload): p is TellPayload =>
 // =============================================================================
 
 const getActivePeer = (): PeerIdentity | null =>
-  state.lastHelloAck?.peer || state.lastHello?.peer || null;
+  state.lastHello?.peer || state.lastHelloAck?.peer || null;
 
 const buildPinvimPeerIdentity = (): PeerIdentity => ({
   id: `pi:${PI_SESSION}:${PI_WINDOW}:${process.pid}`,
@@ -298,8 +348,12 @@ const formatExplicitContext = (payload: ExplicitSendPayload): string => {
   if (context.kind) parts.push(`Kind: ${context.kind}`);
   if (context.file) parts.push(`Focused file: ${context.file}`);
   if (context.filetype) parts.push(`Filetype: ${context.filetype}`);
-  if (context.cursor) parts.push(`Cursor: L${context.cursor.line}:C${context.cursor.col}`);
-  if (context.selectionRange) parts.push(`Range: lines ${context.selectionRange[0]}-${context.selectionRange[1]}`);
+  if (context.cursor)
+    parts.push(`Cursor: L${context.cursor.line}:C${context.cursor.col}`);
+  if (context.selectionRange)
+    parts.push(
+      `Range: lines ${context.selectionRange[0]}-${context.selectionRange[1]}`,
+    );
   if (context.word) {
     const label = context.symbolKind
       ? `${context.symbolKind} \`${context.word}\``
@@ -310,7 +364,9 @@ const formatExplicitContext = (payload: ExplicitSendPayload): string => {
   }
 
   if (context.selection?.trim()) {
-    parts.push(context.kind === "selection" ? "Selected text:" : "Cursor context:");
+    parts.push(
+      context.kind === "selection" ? "Selected text:" : "Cursor context:",
+    );
     parts.push(`\`\`\`${context.filetype || ""}`);
     parts.push(context.selection);
     parts.push("```");
@@ -342,9 +398,176 @@ const getHealth = (): PinvimHealth => {
     ? Math.max(Math.floor(Date.now() / 1000) - state.lastHeartbeat.sentAt, 0)
     : null;
   return {
-    ok: !!activePeer && (heartbeatAgeSeconds === null || heartbeatAgeSeconds < 120),
+    ok:
+      !!activePeer &&
+      (heartbeatAgeSeconds === null || heartbeatAgeSeconds < 120),
     activePeerId: activePeer?.id || null,
     heartbeatAgeSeconds,
+  };
+};
+
+const samePath = (a?: string, b?: string): boolean =>
+  !!a && !!b && path.resolve(a) === path.resolve(b);
+
+const pidAlive = (pid?: number): boolean => {
+  if (!pid || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const nvimPeerAgeSeconds = (candidate: NvimPeerCandidate): number | null =>
+  candidate.heartbeatAt
+    ? Math.max(Math.floor(Date.now() / 1000) - candidate.heartbeatAt, 0)
+    : null;
+
+const candidateSession = (candidate: NvimPeerCandidate): string | undefined =>
+  candidate.tmux?.session || candidate.session;
+
+const candidateWindow = (candidate: NvimPeerCandidate): string | undefined =>
+  candidate.tmux?.window || candidate.window;
+
+const candidatePane = (candidate: NvimPeerCandidate): string | undefined =>
+  candidate.tmux?.pane || candidate.pane;
+
+const sameRootOrCwd = (candidate: NvimPeerCandidate): boolean =>
+  samePath(candidate.cwd, process.cwd()) ||
+  samePath(candidate.root, process.cwd());
+
+const sameWindow = (candidate: NvimPeerCandidate): boolean =>
+  candidateSession(candidate) === PI_SESSION &&
+  candidateWindow(candidate) === PI_WINDOW;
+
+const peerNeedsRepair = (): boolean => {
+  const health = getHealth();
+  return (
+    !health.activePeerId ||
+    (health.heartbeatAgeSeconds !== null && health.heartbeatAgeSeconds >= 120)
+  );
+};
+
+const scoreNvimCandidate = (
+  candidate: NvimPeerCandidate,
+): NvimPeerCandidate | null => {
+  if (candidate.kind !== "nvim" && candidate.owner !== "pinvim.lua")
+    return null;
+  if (candidate.pid !== undefined && !pidAlive(candidate.pid)) return null;
+  if (candidateSession(candidate) !== PI_SESSION) return null;
+
+  const age = nvimPeerAgeSeconds(candidate);
+  const fresh = age !== null && age <= 30;
+  const recent = age !== null && age <= 900;
+  const windowMatch = sameWindow(candidate);
+  const rootMatch = sameRootOrCwd(candidate);
+  const ephemeral = isEphemeral();
+
+  if (ephemeral) {
+    const linkedHere = !SOCKET_PATH || candidate.socket === SOCKET_PATH;
+    if (!windowMatch && !(rootMatch && recent && linkedHere)) return null;
+  } else if (!windowMatch) {
+    return null;
+  }
+
+  const reasons: string[] = [];
+  let score = 0;
+  if (windowMatch) {
+    score += 200;
+    reasons.push("same tmux window");
+  }
+  if (rootMatch) {
+    score += 60;
+    reasons.push("same cwd/root");
+  }
+  if (fresh) {
+    score += 40;
+    reasons.push("fresh heartbeat");
+  } else if (recent) {
+    score += 10;
+    reasons.push("recent heartbeat");
+  }
+  if (candidatePane(candidate)) {
+    score += 5;
+    reasons.push(`pane ${candidatePane(candidate)}`);
+  }
+
+  return { ...candidate, score, reasons };
+};
+
+const scanNvimPeers = async (): Promise<NvimPeerCandidate[]> => {
+  let entries: string[] = [];
+  try {
+    entries = await fsp.readdir(INFO_DIR);
+  } catch {
+    return [];
+  }
+
+  const candidates: NvimPeerCandidate[] = [];
+  for (const entry of entries) {
+    if (!entry.startsWith("nvim-") || !entry.endsWith(".info")) continue;
+    const manifestPath = path.join(INFO_DIR, entry);
+    try {
+      const raw = await fsp.readFile(manifestPath, "utf-8");
+      const parsed = JSON.parse(
+        raw.split("\n")[0] || "{}",
+      ) as NvimPeerCandidate;
+      const scored = scoreNvimCandidate({ ...parsed, manifestPath });
+      if (scored) candidates.push(scored);
+    } catch {
+      // Ignore malformed manifests.
+    }
+  }
+
+  candidates.sort((a, b) => {
+    if ((a.score || 0) !== (b.score || 0))
+      return (b.score || 0) - (a.score || 0);
+    return (b.heartbeatAt || 0) - (a.heartbeatAt || 0);
+  });
+
+  return candidates;
+};
+
+const refreshRepairCandidate = async (): Promise<void> => {
+  if (!peerNeedsRepair()) return;
+  const [candidate] = await scanNvimPeers();
+  repairCandidate = candidate || null;
+  if (latestCtx?.hasUI) {
+    latestCtx.ui.setStatus(
+      "pinvim-repair",
+      repairCandidate ? `│ repair:${repairCandidate.id}` : "",
+    );
+  }
+};
+
+const peerAllowedForSocket = (
+  peer: PeerIdentity,
+): { ok: boolean; reason: string } => {
+  const candidate: NvimPeerCandidate = {
+    id: peer.id,
+    kind: peer.kind,
+    cwd: peer.cwd,
+    root: peer.root,
+    tmux: peer.tmux,
+    heartbeatAt: peer.heartbeatAt,
+    linkMode: peer.linkMode,
+  };
+  const scored = scoreNvimCandidate(candidate);
+  if (scored) return { ok: true, reason: (scored.reasons || []).join(", ") };
+
+  const candidateMatchesRepair =
+    isEphemeral() &&
+    repairCandidate?.id === peer.id &&
+    (!SOCKET_PATH || repairCandidate.socket === SOCKET_PATH) &&
+    sameRootOrCwd(candidate);
+  if (candidateMatchesRepair) {
+    return { ok: true, reason: "recent same-root repair candidate" };
+  }
+
+  return {
+    ok: false,
+    reason: "nvim peer outside allowed tmux/window/root repair scope",
   };
 };
 
@@ -365,6 +588,9 @@ const renderInfoLines = (): string[] => {
     `Protocol: ${state.protocol}`,
     `Socket: ${SOCKET_PATH || "(disabled)"}`,
     `Active peer: ${activePeer ? JSON.stringify(activePeer, null, 2) : "(none yet)"}`,
+    `Repair candidate: ${repairCandidate ? JSON.stringify(repairCandidate, null, 2) : "(none)"}`,
+    `Repaired at: ${repairedAt ? new Date(repairedAt).toISOString() : "(none)"}`,
+    `Repair reason: ${repairReason || "(none)"}`,
     "Responsibilities:",
     "- owns pinvim socket for all nvim↔pi frames",
     "- owns peer metadata + footer status",
@@ -435,17 +661,24 @@ const writeInfoManifestNow = async (): Promise<void> => {
   manifestWriteInFlight = true;
   try {
     await fsp.mkdir(INFO_DIR, { recursive: true });
-    const socketBase = SOCKET_PATH.split("/").pop()?.replace(/\.sock$/, "") || PI_SESSION;
+    const socketBase =
+      SOCKET_PATH.split("/")
+        .pop()
+        ?.replace(/\.sock$/, "") || PI_SESSION;
     infoManifestPath = `${INFO_DIR}/${socketBase}.info`;
     const manifest = {
       socket: SOCKET_PATH,
       cwd: process.cwd(),
+      root: process.cwd(),
       pid: process.pid,
       session: PI_SESSION,
       window: PI_WINDOW,
       pane: PI_PANE,
       ephemeral: isEphemeral(),
       owner: "pinvim.ts",
+      linkMode:
+        process.env.PINVIM_LINK_MODE || (isEphemeral() ? "ephemeral" : "auto"),
+      activePeerId: getActivePeer()?.id || null,
       heartbeatAt: Math.floor(Date.now() / 1000),
       startedAt,
     };
@@ -465,10 +698,13 @@ const scheduleInfoManifest = (force = false): void => {
 
   // Heartbeats can be frequent; write manifest async + throttled so socket frame
   // handling never waits on mkdir/writeFile.
-  manifestWriteTimer = setTimeout(() => {
-    manifestWriteTimer = null;
-    void writeInfoManifestNow();
-  }, force ? 0 : 250);
+  manifestWriteTimer = setTimeout(
+    () => {
+      manifestWriteTimer = null;
+      void writeInfoManifestNow();
+    },
+    force ? 0 : 250,
+  );
 };
 
 const cleanupInfoManifest = (): void => {
@@ -481,7 +717,11 @@ const cleanupInfoManifest = (): void => {
   }
 };
 
-const handleSocketPayload = (pi: ExtensionAPI, socket: net.Socket, payload: Payload): void => {
+const handleSocketPayload = (
+  pi: ExtensionAPI,
+  socket: net.Socket,
+  payload: Payload,
+): void => {
   if (isPingPayload(payload)) {
     respondOk(socket, { type: "pong" });
     return;
@@ -493,15 +733,38 @@ const handleSocketPayload = (pi: ExtensionAPI, socket: net.Socket, payload: Payl
       return;
     }
 
+    const allowed = peerAllowedForSocket(payload.peer);
+    if (!allowed.ok) {
+      respondError(socket, allowed.reason);
+      return;
+    }
+
+    acceptedSockets.add(socket);
+    const wasRepairing = peerNeedsRepair() || repairCandidate !== null;
     state.lastHello = payload;
     const helloAck = buildHelloAck();
     state.lastHelloAck = helloAck;
+    if (wasRepairing) {
+      repairedAt = Date.now();
+      repairReason = allowed.reason || "hello accepted";
+      repairCandidate = null;
+      latestCtx?.ui?.setStatus?.("pinvim-repair", "");
+      latestCtx?.ui?.notify?.(
+        `Pinvim peer repaired: ${payload.peer.id}`,
+        "info",
+      );
+    }
     updateStatus();
     respondOk(socket, helloAck);
     return;
   }
 
   if (isHeartbeatPayload(payload)) {
+    if (!acceptedSockets.has(socket)) {
+      respondError(socket, "pinvim peer not accepted; send hello first");
+      return;
+    }
+
     if (payload.protocol !== "pinvim.peer.v1") {
       respondError(socket, `unsupported pinvim protocol: ${payload.protocol}`);
       return;
@@ -520,12 +783,22 @@ const handleSocketPayload = (pi: ExtensionAPI, socket: net.Socket, payload: Payl
   }
 
   if (isExplicitSendPayload(payload)) {
+    if (!acceptedSockets.has(socket)) {
+      respondError(socket, "pinvim peer not accepted; send hello first");
+      return;
+    }
+
     deliverMessage(pi, formatExplicitContext(payload));
     respondOk(socket);
     return;
   }
 
   if (isPromptPayload(payload)) {
+    if (!acceptedSockets.has(socket)) {
+      respondError(socket, "pinvim peer not accepted; send hello first");
+      return;
+    }
+
     if (!payload.message?.trim()) {
       respondError(socket, "prompt message is empty");
       return;
@@ -535,8 +808,14 @@ const handleSocketPayload = (pi: ExtensionAPI, socket: net.Socket, payload: Payl
     return;
   }
 
-  if (hasType(payload) && (payload.type === "editor_state" || payload.type === "editor_disconnect")) {
-    respondError(socket, "editor_state live context is unsupported; use explicit_send");
+  if (
+    hasType(payload) &&
+    (payload.type === "editor_state" || payload.type === "editor_disconnect")
+  ) {
+    respondError(
+      socket,
+      "editor_state live context is unsupported; use explicit_send",
+    );
     return;
   }
 
@@ -580,31 +859,31 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
     }
 
     server = net.createServer((socket) => {
-    let buffer = "";
+      let buffer = "";
 
-    socket.on("error", () => {
-      // EPIPE, ECONNRESET, etc. — client disconnected before response.
-    });
+      socket.on("error", () => {
+        // EPIPE, ECONNRESET, etc. — client disconnected before response.
+      });
 
-    socket.on("data", (chunk) => {
-      buffer += chunk.toString();
+      socket.on("data", (chunk) => {
+        buffer += chunk.toString();
 
-      let idx = buffer.indexOf("\n");
-      while (idx !== -1) {
-        const line = buffer.slice(0, idx).trim();
-        buffer = buffer.slice(idx + 1);
-        idx = buffer.indexOf("\n");
+        let idx = buffer.indexOf("\n");
+        while (idx !== -1) {
+          const line = buffer.slice(0, idx).trim();
+          buffer = buffer.slice(idx + 1);
+          idx = buffer.indexOf("\n");
 
-        if (!line) continue;
+          if (!line) continue;
 
-        try {
-          const payload = JSON.parse(line) as Payload;
-          handleSocketPayload(pi, socket, payload);
-        } catch {
-          respondError(socket, "invalid JSON");
+          try {
+            const payload = JSON.parse(line) as Payload;
+            handleSocketPayload(pi, socket, payload);
+          } catch {
+            respondError(socket, "invalid JSON");
+          }
         }
-      }
-    });
+      });
     });
 
     server.listen(SOCKET_PATH);
@@ -626,6 +905,12 @@ export default function (pi: ExtensionAPI): void {
   pi.on("session_start", (_event, ctx) => {
     latestCtx = ctx;
     updateStatus();
+    if (!peerScanTimer) {
+      peerScanTimer = setInterval(() => {
+        void refreshRepairCandidate();
+      }, 5000);
+    }
+    void refreshRepairCandidate();
 
     resolveSocketAsync(() => {
       if (isPinvimSocketEnabled()) startServer(pi, ctx);
@@ -639,6 +924,10 @@ export default function (pi: ExtensionAPI): void {
 
   pi.on("session_shutdown", () => {
     latestCtx = null;
+    if (peerScanTimer) {
+      clearInterval(peerScanTimer);
+      peerScanTimer = null;
+    }
     server?.close();
     server = null;
 
@@ -654,7 +943,8 @@ export default function (pi: ExtensionAPI): void {
   });
 
   pi.registerCommand("pinvim-info", {
-    description: "Show pinvim state: peer metadata, socket, and transport inputs",
+    description:
+      "Show pinvim state: peer metadata, socket, and transport inputs",
     handler: async (_args, ctx) => {
       const lines = renderInfoLines();
       if (ctx.hasUI) ctx.ui.notify(lines.join("\n"), "info");
@@ -669,9 +959,12 @@ export default function (pi: ExtensionAPI): void {
         health.ok ? "pinvim health: ok" : "pinvim health: attention needed",
         `Active peer: ${health.activePeerId || "(none)"}`,
         `Heartbeat age: ${health.heartbeatAgeSeconds == null ? "(none)" : `${health.heartbeatAgeSeconds}s`}`,
+        `Repair candidate: ${repairCandidate?.id || "(none)"}`,
+        `Last repair: ${repairedAt ? new Date(repairedAt).toISOString() : "(none)"}`,
         `Socket: ${SOCKET_PATH || "(disabled)"}`,
       ];
-      if (ctx.hasUI) ctx.ui.notify(lines.join("\n"), health.ok ? "info" : "warn");
+      if (ctx.hasUI)
+        ctx.ui.notify(lines.join("\n"), health.ok ? "info" : "warn");
     },
   });
 
@@ -683,6 +976,8 @@ export default function (pi: ExtensionAPI): void {
         `pinvim status: ${formatStatus() || "(no active peer)"}`,
         `Active peer: ${health.activePeerId || "(none)"}`,
         `Heartbeat age: ${health.heartbeatAgeSeconds == null ? "(none)" : `${health.heartbeatAgeSeconds}s`}`,
+        `Repair candidate: ${repairCandidate?.id || "(none)"}`,
+        `Last repair: ${repairedAt ? new Date(repairedAt).toISOString() : "(none)"}`,
         `Socket: ${SOCKET_PATH || "(disabled)"}`,
       ];
       if (ctx.hasUI) ctx.ui.notify(lines.join("\n"), "info");

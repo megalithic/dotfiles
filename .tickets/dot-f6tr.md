@@ -2,7 +2,7 @@
 id: dot-f6tr
 status: closed
 deps: [dot-hp1p]
-links: []
+links: [dot-oiky, dot-0a9p, dot-kts9, dot-rx8y, dot-koz6, dot-8n53, dot-p2ad]
 created: 2026-05-14T20:28:21Z
 type: feature
 priority: 1
@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [nvim, pi, protocol, ready-for-development]
 ---
+
 # feat(pinvim): peer handshake + hello/hello_ack protocol
 
 Primary protocol handshake between config/nvim/lua/pinvim.lua (nvim-side) and home/common/programs/pi-coding-agent/extensions/pinvim.ts (pi-side). Add explicit peer identity: peer id, cwd/root, tmux session/window/pane identity, link mode (auto/manual/ephemeral/parked), heartbeat timestamps. bridge.ts not involved in nvim semantic ownership; update only if shim manifest compatibility for non-nvim clients needs preservation. Must work after dot-hp1p XDG dir change. Verify with `just home`, `nvim --headless '+lua require("pinvim").setup()' +qa`, and `bin/pinvim-protocol-smoke`.
@@ -39,3 +40,8 @@ For any implementation change under this pinvim/vision workstream, run:
 
 For research-only tickets, run these before closing any downstream implementation ticket that uses the research.
 
+## Notes
+
+**2026-05-20T15:07:08Z**
+
+Discovery linked to dot-rx8y: Neovim restart can orphan a live ephemeral pimux because nvim buffer-local target state is gone. Existing nvim-side ranked discovery/MRU/restore work is related but not sufficient; follow-up implements bidirectional same-window peer repair in pinvim.lua + pinvim.ts.

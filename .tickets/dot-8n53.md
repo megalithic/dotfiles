@@ -2,7 +2,7 @@
 id: dot-8n53
 status: closed
 deps: [dot-p2ad]
-links: []
+links: [dot-oiky, dot-0a9p, dot-kts9, dot-rx8y, dot-koz6, dot-f6tr, dot-p2ad]
 created: 2026-05-13T20:48:05Z
 type: feature
 priority: 2
@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development]
 ---
+
 # Restore previous pi targets from nvim MRU history
 
 Implement Step 5 from ~/.local/share/pi/plans/dotfiles/nvim-pi-custom-vision_PLAN.md. Add nvim-side target history in `config/nvim/lua/pinvim.lua` so link state can restore the previous alive target when the current ephemeral split target disappears. Previous target may be parked, manual, or auto-discovered. Add explicit commands for previous/restore behavior, support user-driven swapping among pi instances, and reflect link mode in statusline data.
@@ -32,9 +33,12 @@ For any implementation change under this pinvim/vision workstream, run:
 
 For research-only tickets, run these before closing any downstream implementation ticket that uses the research.
 
-
 ## Notes
 
 **2026-05-18T18:36:36Z**
 
 Implemented nvim-side pinvim MRU target history with parked-target restore, PiPrevious/PiRestore commands, gpR keymap, and statusline link-mode/restored indicators. Verified just home, pinvim headless setup, protocol smoke, command/statusline smoke, and manual mocked parked restore.
+
+**2026-05-20T15:07:08Z**
+
+Discovery linked to dot-rx8y: Neovim restart can orphan a live ephemeral pimux because nvim buffer-local target state is gone. Existing nvim-side ranked discovery/MRU/restore work is related but not sufficient; follow-up implements bidirectional same-window peer repair in pinvim.lua + pinvim.ts.

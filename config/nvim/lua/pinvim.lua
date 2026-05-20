@@ -25,6 +25,8 @@ local target_history_limit = 20
 local tmux_context_cache = { at = 0, value = nil, running = false, callbacks = {} }
 local discovery_cache = { at = 0, targets = {}, by_socket = {}, running = false, callbacks = {} }
 local discovery_ttl_ms = 2000
+local peer_manifest_timer = nil
+local peer_manifest_path = nil
 
 local conn = {
   pipe = nil,
@@ -120,15 +122,8 @@ local function normalize_range(start_row, start_col, end_row, end_col)
   return start_row, start_col, end_row, end_col
 end
 
-local function get_live_visual_selection()
-  local mode = vim.fn.mode()
+local function extract_visual_selection(mode, start_row, start_col, end_row, end_col)
   if mode ~= "v" and mode ~= "V" and mode ~= "\22" then return nil end
-
-  local vpos = vim.fn.getpos("v")
-  local cpos = vim.fn.getpos(".")
-  local start_row, start_col = vpos[2], vpos[3] - 1
-  local end_row, end_col = cpos[2], cpos[3] - 1
-
   if start_row == 0 or end_row == 0 then return nil end
 
   start_row, start_col, end_row, end_col = normalize_range(start_row, start_col, end_row, end_col)
@@ -157,14 +152,33 @@ local function get_live_visual_selection()
   end
 end
 
+local function get_live_visual_selection()
+  local mode = vim.fn.mode()
+  local vpos = vim.fn.getpos("v")
+  local cpos = vim.fn.getpos(".")
+  return extract_visual_selection(mode, vpos[2], vpos[3] - 1, cpos[2], cpos[3] - 1)
+end
+
+local function get_mark_visual_selection()
+  local mode = vim.fn.visualmode()
+  local start_pos = vim.fn.getpos("'<")
+  local end_pos = vim.fn.getpos("'>")
+  return extract_visual_selection(mode, start_pos[2], start_pos[3] - 1, end_pos[2], end_pos[3] - 1)
+end
+
 local function get_command_selection(command_opts)
   local selection, start_row, end_row = get_live_visual_selection()
   if selection and start_row and end_row then return selection, start_row, end_row end
 
-  if command_opts and command_opts.range and command_opts.range > 0 then
-    start_row, end_row = command_opts.line1, command_opts.line2
-    local lines = vim.api.nvim_buf_get_lines(0, start_row - 1, end_row, false)
-    if #lines > 0 then return table.concat(lines, "\n"), start_row, end_row end
+  if command_opts and command_opts.range then
+    if command_opts.range == true then
+      selection, start_row, end_row = get_mark_visual_selection()
+      if selection and start_row and end_row then return selection, start_row, end_row end
+    elseif type(command_opts.range) == "number" and command_opts.range > 0 then
+      start_row, end_row = command_opts.line1, command_opts.line2
+      local lines = vim.api.nvim_buf_get_lines(0, start_row - 1, end_row, false)
+      if #lines > 0 then return table.concat(lines, "\n"), start_row, end_row end
+    end
   end
 
   return nil
@@ -558,6 +572,45 @@ local function ranked_manifest_targets(config, opts)
   return filter_cached_targets(opts)
 end
 
+local function resumable_ephemeral_target(config)
+  local context = current_tmux_context()
+  if not context.session then return nil end
+
+  local cwd = normalize_path(vim.uv.cwd())
+  local root = normalize_path(config.resolve_root())
+  local candidates = {}
+
+  for _, target in ipairs(filter_cached_targets({ include_ephemeral = true, same_tmux_session = true })) do
+    if target.ephemeral then
+      local same_window = (context.window_name and target.window == context.window_name)
+        or (context.window_index and tostring(target.window or "") == tostring(context.window_index))
+      local target_cwd = normalize_path(target.cwd)
+      local target_root = normalize_path(target.root)
+      local same_cwd_or_root = same_path(target_cwd, cwd)
+        or (target_root and root and same_path(target_root, root))
+        or (target_cwd and root and path_contains(root, target_cwd))
+      local age = target.activity and target.activity > 0 and math.max(os.time() - target.activity, 0) or nil
+
+      if same_window or (same_cwd_or_root and age and age <= 900) then
+        table.insert(candidates, {
+          target = target,
+          same_window = same_window,
+          same_cwd_or_root = same_cwd_or_root,
+          age = age or math.huge,
+        })
+      end
+    end
+  end
+
+  table.sort(candidates, function(a, b)
+    if a.same_window ~= b.same_window then return a.same_window end
+    if a.same_cwd_or_root ~= b.same_cwd_or_root then return a.same_cwd_or_root end
+    return a.age < b.age
+  end)
+
+  return candidates[1] and candidates[1].target or nil
+end
+
 local function parked_socket_set()
   local parked = tmux_option("@pimux.parked_sockets")
   local set = {}
@@ -679,6 +732,9 @@ function Transport.resolve_socket(config)
 
   if discovery_stale() then schedule_manifest_discovery(config) end
 
+  local ephemeral = resumable_ephemeral_target(config)
+  if ephemeral then return ephemeral.path, "manifest-ephemeral" end
+
   local ranked = filter_cached_targets({ include_ephemeral = false, same_tmux_session = true })
   if ranked[1] then return ranked[1].path, "manifest-ranked" end
 
@@ -750,6 +806,70 @@ function Transport.build_heartbeat(state, config)
     peerId = state.peer and state.peer.id or nil,
     sentAt = os.time(),
   }
+end
+
+local function nvim_peer_manifest_path(config)
+  local identity = Transport.build_peer_identity(config)
+  local session = identity.tmux.session or "local"
+  local window = identity.tmux.window or "0"
+  local safe = string.format("nvim-%s-%s-%d", session, window, vim.fn.getpid()):gsub("[^%w_.-]", "_")
+  return path_join(config.transport.manifest_dir, safe .. ".info")
+end
+
+local function write_nvim_peer_manifest(runtime, config)
+  local ok_mkdir = pcall(vim.fn.mkdir, config.transport.manifest_dir, "p")
+  if not ok_mkdir then return end
+
+  local identity = Transport.build_peer_identity(config)
+  local manifest = {
+    kind = "nvim",
+    owner = "pinvim.lua",
+    id = identity.id,
+    cwd = identity.cwd,
+    root = identity.root,
+    pid = vim.fn.getpid(),
+    session = identity.tmux.session,
+    window = identity.tmux.window,
+    pane = identity.tmux.pane,
+    tmux = identity.tmux,
+    heartbeatAt = os.time(),
+    linkMode = runtime.link_mode or config.transport.link_mode,
+    socket = runtime.socket or conn.socket_path,
+    socketSource = runtime.socket_source or conn.socket_source,
+    connected = conn.connected,
+    peerId = runtime.last_hello_ack and runtime.last_hello_ack.peer and runtime.last_hello_ack.peer.id or nil,
+    startedAt = vim.g.pinvim_started_at or os.time(),
+  }
+
+  peer_manifest_path = peer_manifest_path or nvim_peer_manifest_path(config)
+  pcall(vim.fn.writefile, { vim.json.encode(manifest) }, peer_manifest_path)
+end
+
+local function stop_nvim_peer_manifest_timer()
+  if peer_manifest_timer then
+    peer_manifest_timer:stop()
+    peer_manifest_timer:close()
+    peer_manifest_timer = nil
+  end
+end
+
+local function start_nvim_peer_manifest_timer(runtime, config)
+  stop_nvim_peer_manifest_timer()
+  vim.g.pinvim_started_at = vim.g.pinvim_started_at or os.time()
+  write_nvim_peer_manifest(runtime, config)
+  peer_manifest_timer = vim.uv.new_timer()
+  if not peer_manifest_timer then return end
+  peer_manifest_timer:start(
+    5000,
+    5000,
+    vim.schedule_wrap(function() write_nvim_peer_manifest(runtime, config) end)
+  )
+end
+
+local function cleanup_nvim_peer_manifest()
+  stop_nvim_peer_manifest_timer()
+  if peer_manifest_path then pcall(vim.fn.delete, peer_manifest_path) end
+  peer_manifest_path = nil
 end
 
 local function detect_symbol_kind(bufnr, row, col)
@@ -1342,17 +1462,37 @@ function Commands.setup(api, config)
     { silent = true, desc = "pinvim restore previous parked target" }
   )
 
+  local function spawn_ephemeral_with_cursor_context() api.spawn_ephemeral_split({ send_explicit_after = true }) end
+
+  local function spawn_ephemeral_with_selection_context()
+    api.spawn_ephemeral_split({ send_explicit_after = true, command_opts = { range = true } })
+  end
+
   vim.keymap.set(
     "n",
     "gpp",
-    function() api.spawn_ephemeral_split() end,
-    { silent = true, desc = "pinvim spawn ephemeral split" }
+    spawn_ephemeral_with_cursor_context,
+    { silent = true, desc = "pinvim spawn ephemeral split and send cursor context" }
   )
 
   vim.keymap.set(
-    "v",
+    "x",
     "gpp",
-    function() api.spawn_ephemeral_split({ send_explicit_after = true, command_opts = { range = true } }) end,
+    spawn_ephemeral_with_selection_context,
+    { silent = true, desc = "pinvim spawn ephemeral split and send selection" }
+  )
+
+  vim.keymap.set(
+    "n",
+    "<C-p>",
+    spawn_ephemeral_with_cursor_context,
+    { silent = true, desc = "pinvim spawn ephemeral split and send cursor context" }
+  )
+
+  vim.keymap.set(
+    "x",
+    "<C-p>",
+    spawn_ephemeral_with_selection_context,
     { silent = true, desc = "pinvim spawn ephemeral split and send selection" }
   )
 
@@ -1364,7 +1504,7 @@ function Commands.setup(api, config)
   )
 
   vim.keymap.set(
-    "v",
+    "x",
     "gps",
     function() api.prompt_explicit({ range = true }) end,
     { silent = true, desc = "pinvim send selection with prompt" }
@@ -1373,7 +1513,7 @@ function Commands.setup(api, config)
   vim.keymap.set("n", "gpa", function() api.send_explicit() end, { silent = true, desc = "pinvim send cursor context" })
 
   vim.keymap.set(
-    "v",
+    "x",
     "gpa",
     function() api.send_explicit({ range = true }) end,
     { silent = true, desc = "pinvim send selection" }
@@ -1427,6 +1567,7 @@ function Autocmds.setup(api, config)
     group = group,
     callback = function()
       stop_refresh_timer()
+      cleanup_nvim_peer_manifest()
       connection_disconnect(api.runtime)
       vim.notify("pinvim: cleanup complete", vim.log.levels.INFO)
     end,
@@ -2039,6 +2180,7 @@ function M.setup(opts)
   Commands.setup(api, config)
   Autocmds.setup(api, config)
   require("pinvim.review").setup(api, config)
+  start_nvim_peer_manifest_timer(runtime, config)
 
   vim.defer_fn(function()
     api.refresh_buffer_state()

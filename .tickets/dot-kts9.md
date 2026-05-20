@@ -2,7 +2,19 @@
 id: dot-kts9
 status: closed
 deps: []
-links: [dot-gm39, dot-dylm, dot-0oy1]
+links:
+  [
+    dot-gm39,
+    dot-dylm,
+    dot-0oy1,
+    dot-oiky,
+    dot-0a9p,
+    dot-rx8y,
+    dot-koz6,
+    dot-8n53,
+    dot-f6tr,
+    dot-p2ad,
+  ]
 parent: dot-0fjk
 created: 2026-04-14T19:36:06Z
 type: epic
@@ -10,12 +22,14 @@ priority: 1
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Unify nvim↔pi communication: pinvim.ts + pinvim.lua primary link, bridge.ts shim cleanup
 
 ## Context: Nix-based dotfiles
 
 All work is in `~/.dotfiles`, managed via Nix. **Do not assume npm/pnpm are globally installed.**
 Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` for exact build patterns:
+
 1. Simple extensions/skills: Auto-load (no build step).
 2. npm-dependent extensions: Use Nix `buildNpmPackage` patterns (A, B, C, D).
 3. Need ad-hoc tools? Use `nix run nixpkgs#nodejs -- npm install` or `nix shell nixpkgs#pnpm`.
@@ -29,6 +43,7 @@ Blend best of carderne/pi-nvim and current dotfiles workflow into a unified arch
 Earlier ticket text assumed `bridge.ts` would become the durable nvim protocol owner. That is no longer target.
 
 Current direction:
+
 - `home/common/programs/pi-coding-agent/extensions/pinvim.ts` owns pi-side nvim semantics
 - `config/nvim/lua/pinvim.lua` owns nvim-side peer/client behavior
 - `config/nvim/after/plugin/pinvim.lua` stays a thin loader/bootstrap entrypoint
@@ -39,6 +54,7 @@ Current direction:
 ## Architecture
 
 **pinvim.ts (primary pi-side nvim owner):**
+
 - Own nvim peer/session state in pi memory
 - Own `hello` / `hello_ack` / `heartbeat` semantics and peer freshness
 - Own live editor context state and `before_agent_start` injection
@@ -47,6 +63,7 @@ Current direction:
 - Stay transport-agnostic where possible; transport details should not dominate this file
 
 **pinvim.lua (primary nvim-side peer/client):**
+
 - Persistent `vim.uv.new_pipe()` connection
 - Socket discovery, ranked target selection, reconnect, ping/pong, and lifecycle
 - Send `hello`, `heartbeat`, live `editor_state`, explicit sends, and future structured envelopes
@@ -54,16 +71,19 @@ Current direction:
 - Own link history, MRU restore, and statusline-facing link metadata
 
 **after/plugin/pinvim.lua (thin loader):**
+
 - Guard/feature-flag/bootstrap only
 - Require `lua/pinvim.lua` and avoid housing core logic
 
 **bridge.ts (shim / legacy ingress):**
+
 - Keep socket + manifest support needed by Hammerspoon / Telegram / tell / tmux helpers
 - Preserve compatibility for non-nvim ingress that still relies on current socket contract
 - May proxy or forward transitional frames only when necessary
 - Must not become source of truth for pinvim protocol semantics, live editor state ownership, review UX, or pi-side policy decisions
 
 **Legacy pi.lua path:**
+
 - Legacy compatibility may remain outside the fresh primary module while migration finishes.
 - New semantic ownership should not depend on legacy `mega.p.pi` code paths.
 - Fresh `pinvim.lua` must not restore `mega.p.pi` or legacy keymaps as its public API.
@@ -93,6 +113,7 @@ Fresh primary UX should start with these expectations:
 Primary nvim↔pi protocol should be between `config/nvim/lua/pinvim.lua` and `home/common/programs/pi-coding-agent/extensions/pinvim.ts`.
 
 Canonical frame types for this ticket line:
+
 - `{ type: 'hello', protocol, peer, capabilities }`
 - `{ type: 'hello_ack', protocol, peer, accepts }`
 - `{ type: 'heartbeat', protocol, peerId, sentAt }`
@@ -123,3 +144,9 @@ Whether some frames temporarily pass through `bridge.ts` is implementation detai
 10. `bridge.ts` is limited to shim/legacy support for Hammerspoon, Telegram, tell, tmux-oriented helpers, manifests, and transitional ingress; it does not own pinvim semantic state.
 11. Existing Telegram, tell, Hammerspoon, and tmux helper flows continue to work during migration.
 12. `just validate home`, `nvim --headless '+lua require("pinvim").setup()' +qa`, and manual smoke tests confirm primary `pinvim.lua` ↔ `pinvim.ts` link behavior.
+
+## Notes
+
+**2026-05-20T15:06:23Z**
+
+Discovery from live use: nvim restart while typing in an ephemeral pimux loses buffer-local target state. Nvim-side manifest resume is a partial fix, but durable design should use bidirectional repair: nvim advertises peer heartbeat, pi-side pinvim.ts can repair to same-window nvim, and both sides converge through hello/hello_ack/heartbeat. Follow-up ticket: dot-rx8y.

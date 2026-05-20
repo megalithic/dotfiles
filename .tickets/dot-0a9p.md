@@ -2,7 +2,7 @@
 id: dot-0a9p
 status: open
 deps: []
-links: []
+links: [dot-oiky, dot-kts9, dot-rx8y, dot-koz6, dot-8n53, dot-f6tr, dot-p2ad]
 created: 2026-05-15T16:14:09Z
 type: feature
 priority: 2
@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development]
 ---
+
 # Add Shade remote input mode for active-pane pinvim pairing
 
 Add Shade remote-input mode for sending notes/prompts to the pi instance running in the originating terminal tmux pane.
@@ -19,6 +20,7 @@ When Hammerspoon invokes Shade with hyper+enter from a terminal app (Ghostty now
 The paired pi instance remains fixed for the lifetime of the special Shade buffer or Shade nvim instance. Subsequent hyper+enter presses keep existing toggle behavior. hyper+shift+enter continues the existing context-to-note capture path.
 
 Relevant files and areas:
+
 - config/hammerspoon/bindings.lua: hyper+enter and hyper+shift+enter Shade bindings
 - config/hammerspoon/lib/interop/shade.lua: Shade launch/context writing and notifications
 - ~/code/shade/Sources/ShadeAppDelegate.swift: context capture and note-capture notification handling
@@ -32,6 +34,7 @@ Relevant files and areas:
 - bin/tmux-toggle-pi: pi pane/socket detection patterns
 
 Clarifications:
+
 - Detection is active tmux pane first, not session/window. Do not auto-pair merely because another pane in the same tmux window has pi.
 - <localleader>ps in the Shade remote-input buffer sends current visual selection, or whole buffer in normal mode, as a steering/follow-up prompt to paired pi.
 - <localleader>pn queues current visual selection, or whole buffer in normal mode, into pinvim compose/queue for paired pi unless implementation finds a better explicit queue name; queued content should not be delivered until user flushes through existing or new queue UX.
@@ -50,3 +53,8 @@ Clarifications:
 9. Works manually for Ghostty + tmux + pi in active pane; code is structured so Kitty/other terminal context adapters can be added later.
 10. Verification includes existing checks (`just home --skip-sync`, `nvim --headless '+lua require("pinvim").setup()' +qa`, `bin/pinvim-protocol-smoke`) plus documented manual Ghostty/tmux/Shade smoke steps.
 
+## Notes
+
+**2026-05-20T15:07:08Z**
+
+Discovery linked to dot-rx8y: Neovim restart can orphan a live ephemeral pimux because nvim buffer-local target state is gone. Existing nvim-side ranked discovery/MRU/restore work is related but not sufficient; follow-up implements bidirectional same-window peer repair in pinvim.lua + pinvim.ts.
