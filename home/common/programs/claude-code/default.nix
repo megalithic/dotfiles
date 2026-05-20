@@ -5,12 +5,12 @@
 {
   config,
   pkgs,
-  lib,
   self,
   allMcpServers,
   ...
-}: {
-  imports = [./mcp.nix];
+}:
+{
+  imports = [ ./mcp.nix ];
 
   programs.claude-code = {
     enable = true;

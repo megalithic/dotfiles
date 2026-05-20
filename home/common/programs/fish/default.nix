@@ -1,19 +1,20 @@
 {
   config,
   pkgs,
-  username,
   ...
-}: let
+}:
+let
   inherit (pkgs.stdenv.hostPlatform) isDarwin;
 
-  aliases = import ./aliases.nix {inherit pkgs isDarwin;};
+  aliases = import ./aliases.nix { inherit pkgs isDarwin; };
   abbr = import ./abbr.nix;
-  functions = import ./functions.nix {inherit config isDarwin;};
-  plugins = import ./plugins.nix {inherit pkgs;};
+  functions = import ./functions.nix { inherit isDarwin; };
+  plugins = import ./plugins.nix { inherit pkgs; };
   completions = import ./completions.nix;
   keybindings = import ./keybindings.nix;
   theme = import ./theme.nix;
-in {
+in
+{
   programs.fish = {
     enable = true;
     package = pkgs.unstable.fish;

@@ -1,9 +1,9 @@
 {
-  config,
   pkgs,
   lib,
   ...
-}: let
+}:
+let
   # ── gui tools ──────────────────────────────────────────────────────────────────
   # Custom apps built with mkApp - these have passthru.appLocation
   customApps = with pkgs; [
@@ -15,11 +15,9 @@
 
   # Filter: only apps with appLocation = "home-manager" go to home.packages
   # (home-manager copies these to ~/Applications/Home Manager Apps/)
-  homeManagerApps =
-    builtins.filter (
-      pkg: ((pkg.passthru or {}).appLocation or "home-manager") == "home-manager"
-    )
-    customApps;
+  homeManagerApps = builtins.filter (
+    pkg: ((pkg.passthru or { }).appLocation or "home-manager") == "home-manager"
+  ) customApps;
 
   # Standard GUI apps from nixpkgs (not custom mkApp derivations)
   guiPkgs = with pkgs; [
@@ -178,13 +176,14 @@
     # markdown
     markdown-oxide
   ];
-in {
+in
+{
   # Export customApps for mkAppActivation (used in default.nix)
   # These are ALL custom apps regardless of appLocation
   # Other modules can extend this with: mega.customApps = [ pkgs.myApp ];
   options.mega.customApps = lib.mkOption {
     type = lib.types.listOf lib.types.package;
-    default = [];
+    default = [ ];
     description = "Custom apps built with mkApp for activation script processing";
   };
 

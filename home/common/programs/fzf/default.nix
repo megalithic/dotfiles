@@ -1,13 +1,9 @@
 {
-  config,
   pkgs,
-  username,
-  hostname,
   ...
-}: let
-  inherit (pkgs.stdenv.hostPlatform) isDarwin;
-in {
-  home.packages = with pkgs; [glow];
+}:
+{
+  home.packages = with pkgs; [ glow ];
 
   programs.fzf = {
     enable = true;

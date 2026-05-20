@@ -19,11 +19,11 @@
   config,
   lib,
   pkgs,
-  inputs,
   self,
   username,
   ...
-}: let
+}:
+let
   kanataConfigDir = "/Users/${username}/.config/kanata";
 
   # Stable binary path outside the nix store.
@@ -70,7 +70,8 @@
     autorestart_kanata = false
     icons_dir = "${kanata-bar-icons}"
   '';
-in {
+in
+{
   services.kanata = {
     enable = true;
     user = username; # Explicit user for sudoers and paths

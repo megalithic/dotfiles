@@ -86,6 +86,7 @@ Rebase onto main before pushing. Atomic PRs.
 ## Uncommitted Changes (CRITICAL)
 
 **User's uncommitted changes are SACRED.** Before ANY VCS operation:
+
 1. Check status (`jj status` or `git status`) to see working copy state
 2. If changes exist, ask user — do NOT assume
 
@@ -97,14 +98,14 @@ extension enforces blocked commands (`jj rebase`, `jj abandon`, `jj restore`,
 
 These hang forever without flags:
 
-| Command | Non-interactive alternative |
-|---------|---------------------------|
-| `jj squash` | `jj squash -m "msg"` or `-u` |
-| `jj squash --from X --into Y` | Add `-u` or `-m "msg"` |
-| `jj describe` | `jj describe -m "msg"` |
-| `jj commit` | `jj commit -m "msg"` |
-| `jj split` | Avoid — use separate commits |
-| `vim`, `nano`, `emacs` | Use `Write` tool or `cat <<EOF` |
+| Command                       | Non-interactive alternative     |
+| ----------------------------- | ------------------------------- |
+| `jj squash`                   | `jj squash -m "msg"` or `-u`    |
+| `jj squash --from X --into Y` | Add `-u` or `-m "msg"`          |
+| `jj describe`                 | `jj describe -m "msg"`          |
+| `jj commit`                   | `jj commit -m "msg"`            |
+| `jj split`                    | Avoid — use separate commits    |
+| `vim`, `nano`, `emacs`        | Use `Write` tool or `cat <<EOF` |
 
 **Don't guess flags** — run `<cmd> --help` to find the right option.
 
@@ -128,5 +129,8 @@ blocked command. Don't ask again. Override is single-use and expires in 2 minute
 
 1. File issues for remaining work
 2. Run quality gates (tests, linters, builds)
+   - For nix-darwin changes, run `just darwin` and monitor output
+   - For home-manager changes, run `just home` and monitor output
+   - For both, or when unsure which applies, run `just rebuild` and monitor output
 3. Commit changes (`jj describe -m` or `git commit`)
 4. Ask user if they want to push — never push automatically

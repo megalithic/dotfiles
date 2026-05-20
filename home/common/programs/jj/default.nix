@@ -1,13 +1,13 @@
 {
   config,
   pkgs,
-  username,
-  hostname,
   ...
-}: let
+}:
+let
   aliases = import ./aliases.nix;
   # templates = import ./templates.nix;
-in {
+in
+{
   programs.jujutsu = {
     enable = true;
     package = pkgs.unstable.jujutsu;
@@ -24,7 +24,11 @@ in {
         # graph.style = "curved";
         # should-sign-off = true;
         show-cryptographic-signatures = true;
-        diff-editor = ["nvim" "-c" "DiffEditor $left $right $output"];
+        diff-editor = [
+          "nvim"
+          "-c"
+          "DiffEditor $left $right $output"
+        ];
       };
 
       signing = {
@@ -40,7 +44,10 @@ in {
       "merge-tools" = {
         difftool = {
           program = "nvim";
-          diff-args = ["-c" "DiffEditor $left $right $output"];
+          diff-args = [
+            "-c"
+            "DiffEditor $left $right $output"
+          ];
         };
       };
 
@@ -66,8 +73,12 @@ in {
         "node working_copy" = "green";
         "node conflict" = "red";
         "node immutable" = "red";
-        "node normal" = {bold = false;};
-        "node" = {bold = false;};
+        "node normal" = {
+          bold = false;
+        };
+        "node" = {
+          bold = false;
+        };
       };
 
       templates = {

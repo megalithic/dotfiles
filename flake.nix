@@ -93,67 +93,77 @@
     # };
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    nixpkgs-unstable,
-    nix-darwin,
-    home-manager,
-    agenix,
-    nix-homebrew,
-    ...
-  } @ inputs: let
-    arch = "aarch64-darwin";
-    version = "25.11";
-    username = "seth";
-    lib = nixpkgs.lib.extend (import ./lib/default.nix inputs);
-    overlays = import ./overlays {inherit inputs lib;};
-    brew_config = {username}: {
-      nix-homebrew = {
-        enable = true;
-        enableRosetta = true;
-        autoMigrate = true;
-        mutableTaps = false;
-        user = username;
-        taps = {
-          "homebrew/homebrew-core" = inputs.homebrew-core;
-          "homebrew/homebrew-cask" = inputs.homebrew-cask;
-          "homebrew/homebrew-services" = inputs.homebrew-services;
-          "homebrew/homebrew-bundle" = inputs.homebrew-bundle;
-          "felixkratz/homebrew-formulae" = inputs.homebrew-felixkratz;
+  outputs =
+    {
+      nixpkgs,
+      ...
+    }@inputs:
+    let
+      arch = "aarch64-darwin";
+      version = "25.11";
+      username = "seth";
+      lib = nixpkgs.lib.extend (import ./lib/default.nix inputs);
+      overlays = import ./overlays { inherit inputs lib; };
+      brew_config =
+        { username }:
+        {
+          nix-homebrew = {
+            enable = true;
+            enableRosetta = true;
+            autoMigrate = true;
+            mutableTaps = false;
+            user = username;
+            taps = {
+              "homebrew/homebrew-core" = inputs.homebrew-core;
+              "homebrew/homebrew-cask" = inputs.homebrew-cask;
+              "homebrew/homebrew-services" = inputs.homebrew-services;
+              "homebrew/homebrew-bundle" = inputs.homebrew-bundle;
+              "felixkratz/homebrew-formulae" = inputs.homebrew-felixkratz;
+            };
+          };
         };
+
+      mkInit = import ./lib/mkInit.nix { inherit nixpkgs; };
+
+      mkDarwin = import ./lib/mkDarwin.nix {
+        inherit
+          inputs
+          lib
+          overlays
+          brew_config
+          version
+          ;
+      };
+
+      mkHome = import ./lib/mkHome.nix {
+        inherit
+          inputs
+          lib
+          overlays
+          version
+          ;
+      };
+    in
+    {
+      apps."${arch}".default = mkInit {
+        inherit arch;
+        script = builtins.readFile scripts/${arch}_bootstrap.sh;
+      };
+      darwinConfigurations.megabookpro = mkDarwin {
+        hostname = "megabookpro";
+        inherit username;
+      };
+      darwinConfigurations.rxbookpro = mkDarwin {
+        hostname = "rxbookpro";
+        inherit username;
+      };
+      homeConfigurations."${username}@megabookpro" = mkHome {
+        hostname = "megabookpro";
+        inherit username;
+      };
+      homeConfigurations."${username}@rxbookpro" = mkHome {
+        hostname = "rxbookpro";
+        inherit username;
       };
     };
-
-    mkInit = import ./lib/mkInit.nix {inherit nixpkgs;};
-
-    mkDarwin = import ./lib/mkDarwin.nix {
-      inherit inputs lib overlays brew_config version;
-    };
-
-    mkHome = import ./lib/mkHome.nix {
-      inherit inputs lib overlays version;
-    };
-  in {
-    apps."${arch}".default = mkInit {
-      inherit arch;
-      script = builtins.readFile scripts/${arch}_bootstrap.sh;
-    };
-    darwinConfigurations.megabookpro = mkDarwin {
-      hostname = "megabookpro";
-      inherit username;
-    };
-    darwinConfigurations.rxbookpro = mkDarwin {
-      hostname = "rxbookpro";
-      inherit username;
-    };
-    homeConfigurations."${username}@megabookpro" = mkHome {
-      hostname = "megabookpro";
-      inherit username;
-    };
-    homeConfigurations."${username}@rxbookpro" = mkHome {
-      hostname = "rxbookpro";
-      inherit username;
-    };
-  };
 }

@@ -1,19 +1,17 @@
 # Shared darwin configuration for all hosts
 # Host-specific overrides go in hosts/<hostname>/default.nix
 {
-  inputs,
   pkgs,
-  config,
-  lib,
   username,
   hostname,
   paths,
-  version,
   arch,
   ...
-}: let
+}:
+let
   lang = "en_US.UTF-8";
-in {
+in
+{
   # ── fonts ──────────────────────────────────────────────────────────────────────
   # System-wide fonts via nix-darwin (installs to /Library/Fonts/Nix Fonts)
   # Required for macOS apps like Hammerspoon, Terminal, etc.
@@ -41,7 +39,7 @@ in {
   # NOTE: home-manager runs independently via homeConfigurations
   # Use `just home` for HM-only rebuilds
 
-  users.knownUsers = [username];
+  users.knownUsers = [ username ];
   users.users.${username} = {
     uid = 501;
     name = username;
@@ -67,8 +65,11 @@ in {
     "/nix/var/nix/profiles/system/sw/bin"
     "/opt/homebrew/bin"
   ];
-  environment.pathsToLink = ["/Applications"];
-  environment.shells = [pkgs.fish pkgs.zsh];
+  environment.pathsToLink = [ "/Applications" ];
+  environment.shells = [
+    pkgs.fish
+    pkgs.zsh
+  ];
 
   environment.variables = {
     SHELL = "${pkgs.fish}/bin/fish";

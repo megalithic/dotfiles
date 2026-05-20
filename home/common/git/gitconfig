@@ -5,7 +5,6 @@
   email = seth@megalithic.io
   color = auto
 [core]
-  ; pager = `brew --prefix git`/share/git-core/contrib/diff-highlight/diff-highlight | less
   pager = delta --dark --diff-so-fancy # https://github.com/dandavison/delta
   ; whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
 	; editor = nvim
@@ -41,8 +40,6 @@
   commit-decoration-style = bold yellow box ul
   file-style = bold yellow ul
 
-[interactive]
-  diffFilter = delta --color-only
 # [delta]
 # 	line-numbers = true
 # 	features = decorations
@@ -64,17 +61,10 @@
 # 	minus-style = syntax auto
 # 	zero-style = syntax
 
-[diff]
 [difftool]
   prompt = false
-[difftool "nvimdiff"]
-  cmd = "nvim -d \"$LOCAL\" \"$REMOTE\""
-[difftool "vscode"]
-  cmd = "code --wait --diff \"$LOCAL\" \"$REMOTE\""
-[difftool "nvim"]
-  cmd = "nvim -d \"$LOCAL\" \"$REMOTE\""
 [difftool "codediff"]
-  cmd = 'nvim "$LOCAL" "$REMOTE" +"CodeDiff file $LOCAL $REMOTE"'
+  cmd = nvim \"$LOCAL\" \"$REMOTE\" +\"CodeDiff file $LOCAL $REMOTE\"
 
 [help]
   autocorrect = 1
@@ -263,13 +253,9 @@
 
 [mergetool]
   prompt = true
-[mergetool "nvimdiff"]
-  keepBackup = false
-	cmd = "nvim -d \"$LOCAL\" \"$MERGED\" \"$REMOTE\""
-	trustExitCode = true
 [mergetool "codediff"]
   keepBackup = false
-	cmd = 'nvim "$MERGED" -c "CodeDiff merge \"$MERGED\""'
+	cmd = nvim \"$MERGED\" -c \"CodeDiff merge \\\"$MERGED\\\"\"
 	trustExitCode = true
 
 
@@ -303,10 +289,6 @@
 [rerere]
   enabled = true
   autoupdate = true
-[diff-so-fancy]
-  markEmptyLines = true
-  stripLeadingSymbols = true
-
 # [delta]
 #   ; plus-color = "#012800"
 #   ; minus-color = "#340001"
@@ -339,15 +321,6 @@
   pr   = https://{host}/{path}/pull/{short_ref}
   file = "https://{host}/{path}/{file.directory? and :tree or :blob}/{short_rev}/{file}{lines && \"#L%s\" % lines.join(\"-\")}"
 
-; [pager]
-;   #diff = diff-so-fancy | less --tabs=4 -RFX
-;   diff = diff-so-fancy | less --tabs=1,5 -RFX --pattern '^(Date|added|deleted|modified): '
-; 	show = diff-so-fancy | less --tabs=1,5 -RFX
-;   log = diff-so-fancy | less --tab=1,5 -RFX
-
-# [interactive]
-# 	diffFilter = diff-so-fancy | less --tabs=4 -RFX
-
 [diff]
 	compactionHeuristic = true
 	indentHeuristic = true
@@ -355,12 +328,6 @@
   navigate = true  # use n and N to move between diff sections
   algorithm = histogram
   tool = codediff
-
-[color "diff-highlight"]
-	oldNormal = red bold
-	oldHighlight = red bold 52
-	newNormal = green bold
-	newHighlight = green bold 22
 
 [filter "lfs"]
   clean = git-lfs clean -- %f

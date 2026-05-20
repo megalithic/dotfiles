@@ -11,19 +11,22 @@
 # For external overlays, package sets (stable/unstable), and input aliases,
 # see overlays/default.nix instead.
 #
-{lib}: final: prev: let
+{ lib }:
+_final: prev:
+let
   mkApp = import ../lib/mkApp.nix {
     pkgs = prev;
     inherit lib;
     inherit (prev) stdenvNoCC;
   };
-  callMkApp = file: import file {inherit mkApp;};
-in {
+  callMkApp = file: import file { inherit mkApp; };
+in
+{
   # ===========================================================================
   # CLI Tools & Utilities
   # ===========================================================================
-  chrome-devtools-mcp = prev.callPackage ./chrome-devtools-mcp.nix {};
-  whisperkit-cli = prev.callPackage ./cli/whisperkit-cli.nix {};
+  chrome-devtools-mcp = prev.callPackage ./chrome-devtools-mcp.nix { };
+  whisperkit-cli = prev.callPackage ./cli/whisperkit-cli.nix { };
 
   # ===========================================================================
   # macOS Apps (mkApp - DMG/ZIP extraction)
@@ -31,6 +34,6 @@ in {
   # fantastical = callMkApp ./fantastical.nix;
   bloom = callMkApp ./bloom.nix;
   brave-browser-nightly = callMkApp ./brave-browser-nightly.nix;
-  helium-browser = prev.callPackage ./helium-browser.nix {};
-  inherit (import ./tidewave.nix {inherit mkApp;}) tidewave tidewave-cli;
+  helium-browser = prev.callPackage ./helium-browser.nix { };
+  inherit (import ./tidewave.nix { inherit mkApp; }) tidewave tidewave-cli;
 }

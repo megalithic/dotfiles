@@ -16,7 +16,8 @@
  * provider/account.
  *
  * Config files:
- *   Global:  ~/.pi/agent/multi-pass.json  (subscriptions + default pools)
+ *   Primary: ~/.pi/agent/settings.json  (multiSub key: subscriptions, pools, chains, presets, directoryProfiles)
+ *   Legacy:  ~/.pi/agent/multi-pass.json (fallback when settings.json has no multiSub — deprecated)
  *   Project: .pi/multi-pass.json          (pool overrides + subscription filtering)
  *
  * Nix awareness: When the global config is nix-managed (symlinked to /nix/store),
@@ -1761,11 +1762,29 @@ interface ChainConfig {
   enabled: boolean;
 }
 
+/** A directory-based profile assignment rule.
+ *  When the cwd matches `path` (exact) or `glob` (wildcard), the named
+ *  preset and model scope are applied automatically.
+ *  `profile` is an alias for `preset`; `modelScope` defaults to `preset`. */
+interface DirectoryProfileConfig {
+  /** Exact directory path (after ~ expansion). Matches cwd or any ancestor. */
+  path?: string;
+  /** Glob pattern (after ~ expansion). Supports *, ?, and **. */
+  glob?: string;
+  /** Preset name to activate when this directory matches. */
+  preset?: string;
+  /** Alias for `preset` (either works, `preset` wins). */
+  profile?: string;
+  /** Model scope for Ctrl-P filtering. Defaults to resolved preset name. */
+  modelScope?: string;
+}
+
 interface MultiPassConfig {
   subscriptions: SubEntry[];
   pools: PoolConfig[];
   chains: ChainConfig[];
   presets: PresetConfig[];
+  directoryProfiles: DirectoryProfileConfig[];
 }
 
 /** Project-level config (.pi/multi-pass.json) */
@@ -1833,7 +1852,13 @@ function projectConfigPath(cwd: string): string {
 }
 
 function emptyMultiPassConfig(): MultiPassConfig {
-  return { subscriptions: [], pools: [], chains: [], presets: [] };
+  return {
+    subscriptions: [],
+    pools: [],
+    chains: [],
+    presets: [],
+    directoryProfiles: [],
+  };
 }
 
 function normalizeMultiPassConfig(raw: unknown): MultiPassConfig {
@@ -1846,6 +1871,9 @@ function normalizeMultiPassConfig(raw: unknown): MultiPassConfig {
     pools: Array.isArray(parsed.pools) ? parsed.pools : [],
     chains: Array.isArray(parsed.chains) ? parsed.chains : [],
     presets: Array.isArray(parsed.presets) ? parsed.presets : [],
+    directoryProfiles: Array.isArray(parsed.directoryProfiles)
+      ? parsed.directoryProfiles
+      : [],
   };
 }
 
@@ -1860,7 +1888,52 @@ function normalizeProjectConfig(raw: unknown): ProjectConfig {
   return config;
 }
 
+// ---------------------------------------------------------------------------
+// Config loading — settings.json multiSub is primary, multi-pass.json fallback
+// ---------------------------------------------------------------------------
+
+function settingsConfigPath(): string {
+  return join(getAgentDir(), "settings.json");
+}
+
+/** Load multiSub config from settings.json if present. */
+function loadSettingsMultiSubConfig(): MultiPassConfig | undefined {
+  const path = settingsConfigPath();
+  if (!existsSync(path)) return undefined;
+  try {
+    const raw = JSON.parse(readFileSync(path, "utf-8"));
+    const multiSub =
+      raw && typeof raw === "object"
+        ? (raw as Record<string, unknown>).multiSub
+        : undefined;
+    if (!multiSub || typeof multiSub !== "object") return undefined;
+    return normalizeMultiPassConfig(multiSub);
+  } catch {
+    return undefined;
+  }
+}
+
+/** Check whether settings.json has a multiSub key. */
+function settingsHasMultiSub(): boolean {
+  const path = settingsConfigPath();
+  if (!existsSync(path)) return false;
+  try {
+    const raw = JSON.parse(readFileSync(path, "utf-8"));
+    return !!(
+      raw &&
+      typeof raw === "object" &&
+      (raw as Record<string, unknown>).multiSub
+    );
+  } catch {
+    return false;
+  }
+}
+
 function loadGlobalConfig(): MultiPassConfig {
+  // Primary: settings.json multiSub
+  const fromSettings = loadSettingsMultiSubConfig();
+  if (fromSettings) return fromSettings;
+  // Legacy fallback: multi-pass.json (deprecated — will be removed)
   const path = globalConfigPath();
   if (!existsSync(path)) return emptyMultiPassConfig();
   try {
@@ -1964,6 +2037,22 @@ function loadEffectiveConfig(cwd: string): EffectiveConfig {
 }
 
 function saveGlobalConfig(config: MultiPassConfig): void {
+  // If settings.json has multiSub, write there (preserving other keys).
+  if (settingsHasMultiSub()) {
+    const path = resolveNixWritable(settingsConfigPath());
+    const dir = dirname(path);
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    let settings: Record<string, unknown> = {};
+    try {
+      settings = JSON.parse(readFileSync(path, "utf-8"));
+    } catch {
+      // start fresh if corrupt
+    }
+    settings.multiSub = config;
+    writeFileSync(path, JSON.stringify(settings, null, 2), "utf-8");
+    return;
+  }
+  // Legacy fallback: write to multi-pass.json
   const path = resolveNixWritable(globalConfigPath());
   const dir = dirname(path);
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
@@ -5902,9 +5991,173 @@ async function handlePresetList(ctx: ExtensionCommandContext): Promise<void> {
 
 type PresetActivationResult = "activated" | "not-found" | "unavailable";
 
-function getAutoPresetName(): string | undefined {
-  const value = process.env.PI_MULTI_PASS_PRESET?.trim();
-  return value ? value : undefined;
+// ---------------------------------------------------------------------------
+// Directory profile resolution
+// ---------------------------------------------------------------------------
+
+function expandHomePath(value: string): string {
+  if (value.startsWith("~/")) {
+    return join(process.env.HOME || "/tmp", value.slice(2));
+  }
+  return value;
+}
+
+/** Convert a glob pattern to a RegExp.
+ *  Supports: ** (any path segments), * (single segment chars), ? (single char). */
+function globToRegExp(glob: string): RegExp {
+  const expanded = expandHomePath(glob);
+  let regex = "";
+  let i = 0;
+  while (i < expanded.length) {
+    const ch = expanded[i];
+    if (ch === "*" && expanded[i + 1] === "*") {
+      // ** — match any path segments (including none)
+      if (expanded[i + 2] === "/") {
+        regex += "(?:.+/)?"; // **/ — match zero or more path segments
+        i += 3;
+      } else {
+        regex += ".*";
+        i += 2;
+      }
+    } else if (ch === "*") {
+      regex += "[^/]*"; // * — match within a single segment
+      i += 1;
+    } else if (ch === "?") {
+      regex += "[^/]";
+      i += 1;
+    } else if ("/.+^${}()|[]\\".includes(ch)) {
+      regex += "\\" + ch;
+      i += 1;
+    } else {
+      regex += ch;
+      i += 1;
+    }
+  }
+  return new RegExp("^" + regex + "$");
+}
+
+/** Check if a cwd matches a directory profile entry. */
+function directoryProfileMatches(
+  profile: DirectoryProfileConfig,
+  cwd: string,
+): boolean {
+  const normalizedCwd = expandHomePath(cwd);
+
+  // Exact path match: cwd is the path or a descendant
+  if (profile.path) {
+    const normalizedPath = expandHomePath(profile.path);
+    return (
+      normalizedCwd === normalizedPath ||
+      normalizedCwd.startsWith(normalizedPath + "/")
+    );
+  }
+
+  // Glob match
+  if (profile.glob) {
+    return globToRegExp(profile.glob).test(normalizedCwd);
+  }
+
+  return false;
+}
+
+/** Resolve a directory profile for the given cwd.
+ *  Returns { preset, modelScope } or undefined. */
+function resolveDirectoryProfile(
+  config: MultiPassConfig,
+  cwd: string,
+): { preset: string; modelScope: string } | undefined {
+  for (const profile of config.directoryProfiles) {
+    if (!directoryProfileMatches(profile, cwd)) continue;
+    const presetName = profile.preset || profile.profile;
+    if (!presetName) continue;
+    return {
+      preset: presetName,
+      modelScope: profile.modelScope || presetName,
+    };
+  }
+  return undefined;
+}
+
+// ---------------------------------------------------------------------------
+// Profile precedence resolution
+// ---------------------------------------------------------------------------
+
+/** Source of the resolved profile, for debugging and precedence. */
+type ProfileSource = "profile-flag" | "env" | "tmux" | "directory" | "default";
+
+interface ResolvedProfile {
+  /** Preset name to activate. */
+  preset: string;
+  /** Model scope for Ctrl-P filtering. */
+  modelScope: string;
+  /** How the profile was determined. */
+  source: ProfileSource;
+}
+
+/** Resolve the startup profile with full precedence:
+ *  1. --profile flag (via PI_PROFILE_SOURCE=profile-flag)
+ *  2. Explicit env vars (PI_PROFILE, PI_MULTI_PASS_PRESET, PI_SUB_PRESET, PI_PRESET, PI_MODEL_SCOPE)
+ *  3. tmux session name (only if it matches a known preset)
+ *  4. Directory profile (from multiSub.directoryProfiles)
+ *  5. Default "mega"
+ */
+function resolveStartupProfile(cwd: string): ResolvedProfile {
+  const config = loadGlobalConfig();
+  const knownPresets = new Set(config.presets.map((p) => p.name));
+
+  // 1. --profile flag — set by pinvim wrapper with PI_PROFILE_SOURCE=profile-flag
+  const source = process.env.PI_PROFILE_SOURCE?.trim();
+  if (source === "profile-flag") {
+    const preset =
+      process.env.PI_MULTI_PASS_PRESET?.trim() ||
+      process.env.PI_PROFILE?.trim() ||
+      "";
+    if (preset) {
+      return {
+        preset,
+        modelScope: process.env.PI_MODEL_SCOPE?.trim() || preset,
+        source: "profile-flag",
+      };
+    }
+  }
+
+  // 2. Explicit env vars (set by user before pinvim, not by wrapper defaults)
+  //    If PI_PROFILE_SOURCE is unset, treat any preset env as explicit (backward compat).
+  const envPresetCandidates = [
+    process.env.PI_PROFILE?.trim(),
+    process.env.PI_MULTI_PASS_PRESET?.trim(),
+    process.env.PI_SUB_PRESET?.trim(),
+    process.env.PI_PRESET?.trim(),
+    process.env.PI_MODEL_SCOPE?.trim(),
+  ].filter(Boolean);
+
+  if (!source && envPresetCandidates.length > 0) {
+    const preset = envPresetCandidates[0]!;
+    return {
+      preset,
+      modelScope: process.env.PI_MODEL_SCOPE?.trim() || preset,
+      source: "env",
+    };
+  }
+
+  // 3. tmux session — only if it matches a known preset
+  const session = process.env.PI_SESSION?.trim();
+  if (session && knownPresets.has(session)) {
+    return { preset: session, modelScope: session, source: "tmux" };
+  }
+
+  // 4. Directory profiles
+  const dirProfile = resolveDirectoryProfile(config, cwd);
+  if (dirProfile) {
+    return {
+      preset: dirProfile.preset,
+      modelScope: dirProfile.modelScope,
+      source: "directory",
+    };
+  }
+
+  // 5. Default
+  return { preset: "mega", modelScope: "mega", source: "default" };
 }
 
 async function activatePreset(
@@ -6198,24 +6451,26 @@ export default function multiSub(pi: ExtensionAPI) {
         statusParts.push(`${poolCount} pool(s)`);
       }
     }
-    const autoPresetName = getAutoPresetName();
+    // Resolve startup profile with full precedence:
+    // --profile > explicit envs > tmux session > directoryProfiles > mega
+    const resolved = resolveStartupProfile(ctx.cwd);
     let autoPresetActivated = false;
-    if (autoPresetName) {
-      const result = await activatePreset(
-        pi,
-        ctx,
-        autoPresetName,
-        effective.subscriptions,
-        effective.presets.filter((p) => p.enabled),
-      );
-      autoPresetActivated = result === "activated";
+    const autoPresetResult = await activatePreset(
+      pi,
+      ctx,
+      resolved.preset,
+      effective.subscriptions,
+      effective.presets.filter((p) => p.enabled),
+    );
+    autoPresetActivated = autoPresetResult === "activated";
+    if (autoPresetActivated && resolved.source !== "default") {
+      statusParts.push(`preset:${resolved.preset} (${resolved.source})`);
     }
 
     // Apply model scope (Ctrl+P filtering) after providers are registered.
-    // Prefer a multi-pass preset matching PI_MODEL_SCOPE/PI_PROFILE. Fall back
-    // to legacy settings.json enabledModelScopes[scope] lists.
-    const modelScope =
-      process.env.PI_MODEL_SCOPE?.trim() || process.env.PI_PROFILE?.trim();
+    // Use resolved modelScope (covers directory profiles, env, etc.).
+    // Fall back to legacy settings.json enabledModelScopes[scope] lists.
+    const modelScope = resolved.modelScope;
     if (modelScope && typeof (pi as any).setScopedModels === "function") {
       let appliedPresetScope = false;
       const preset = effective.presets.find(

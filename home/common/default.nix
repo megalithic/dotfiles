@@ -4,13 +4,12 @@
   config,
   pkgs,
   lib,
-  inputs,
   username,
-  hostname,
   version,
   paths,
   ...
-}: {
+}:
+{
   imports = [
     ./lib.nix
     # ./mac-aliases.nix
@@ -20,7 +19,7 @@
     ./services.nix
     ./accounts.nix
     # AI tooling
-    ./programs/claude-code
+    # ./programs/claude-code  # disabled: missing docs/agents/*.md refs (untracked)
     ./programs/llama-cpp-local
     ./programs/pi-coding-agent
     # Browsers
@@ -49,6 +48,7 @@
     ./programs/jj
     ./programs/nvim
     ./programs/shade
+    ./programs/meetingbar
     # ./programs/worktrunk
   ];
 
@@ -69,58 +69,59 @@
     PKG_CONFIG_PATH = "${config.home.profileDirectory}/lib/pkgconfig:${config.home.profileDirectory}/share/pkgconfig";
   };
 
-  home.file =
-    {
-      # Note: ~/Applications is managed by macOS with special permissions - don't use home.file for it
-      "code/.keep".text = "";
-      "src/.keep".text = "";
-      "tmp/.keep".text = "";
-      "_screenshots/.keep".text = "";
-      ".hushlogin".text = "";
-      "bin".source = config.lib.mega.linkBin;
-      ".editorconfig".text = ''
-        root = true
-        [*]
-        indent_style = space
-        indent_size = 2
-        end_of_line = lf
-        insert_final_newline = true
-        trim_trailing_whitespace=true
-        charset = utf-8
-      '';
-      ".ignore".source = ./git/tool-ignore;
-      ".gitignore".source = ./git/gitignore;
-      ".gitconfig".source = ./git/gitconfig;
-      ".ssh/config".source = config.lib.mega.linkConfig "ssh/config";
-      ".ssh/allowed_signers".text = "seth@megalithic.io ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICyxphJ0fZhJP6OQeYMsGNQ6E5ZMVc/CQdoYrWYGPDrh";
-      "Library/Application Support/espanso".source = config.lib.mega.linkConfig "espanso";
-      "iclouddrive".source =
-        config.lib.file.mkOutOfStoreSymlink "${paths.home}/Library/Mobile Documents/com~apple~CloudDocs";
-    }
-    // lib.optionalAttrs
-    (builtins.pathExists "${paths.home}/Library/CloudStorage/ProtonDrive-seth@megalithic.io-folder")
-    {
-      "protondrive".source =
-        config.lib.file.mkOutOfStoreSymlink "${paths.home}/Library/CloudStorage/ProtonDrive-seth@megalithic.io-folder";
-    };
+  home.file = {
+    # Note: ~/Applications is managed by macOS with special permissions - don't use home.file for it
+    "code/.keep".text = "";
+    "src/.keep".text = "";
+    "tmp/.keep".text = "";
+    "_screenshots/.keep".text = "";
+    ".hushlogin".text = "";
+    "bin".source = config.lib.mega.linkBin;
+    ".editorconfig".text = ''
+      root = true
+      [*]
+      indent_style = space
+      indent_size = 2
+      end_of_line = lf
+      insert_final_newline = true
+      trim_trailing_whitespace=true
+      charset = utf-8
+    '';
+    ".ignore".source = ./git/tool-ignore;
+    ".gitignore".source = ./git/gitignore;
+    ".gitconfig".source = ./git/gitconfig;
+    ".ssh/config".source = config.lib.mega.linkConfig "ssh/config";
+    ".ssh/allowed_signers".text =
+      "seth@megalithic.io ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICyxphJ0fZhJP6OQeYMsGNQ6E5ZMVc/CQdoYrWYGPDrh";
+    "Library/Application Support/espanso".source = config.lib.mega.linkConfig "espanso";
+    "iclouddrive".source =
+      config.lib.file.mkOutOfStoreSymlink "${paths.home}/Library/Mobile Documents/com~apple~CloudDocs";
+  }
+  //
+    lib.optionalAttrs
+      (builtins.pathExists "${paths.home}/Library/CloudStorage/ProtonDrive-seth@megalithic.io-folder")
+      {
+        "protondrive".source =
+          config.lib.file.mkOutOfStoreSymlink "${paths.home}/Library/CloudStorage/ProtonDrive-seth@megalithic.io-folder";
+      };
 
   home.preferXdgDirectories = true;
 
-  home.activation.linkSystemApplications = lib.hm.dag.entryAfter ["writeBoundary"] (
+  home.activation.linkSystemApplications = lib.hm.dag.entryAfter [ "writeBoundary" ] (
     lib.mega.mkAppActivation {
       inherit pkgs;
       packages = config.mega.customApps;
     }
   );
 
-  home.activation.setWallpaper = lib.hm.dag.entryAfter ["writeBoundary"] ''
+  home.activation.setWallpaper = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     WALLPAPER="${paths.dotfiles}/assets/bokeh_dark.jpg"
     if [ -f "$WALLPAPER" ]; then
       run ${pkgs.desktoppr}/bin/desktoppr "$WALLPAPER"
     fi
   '';
 
-  home.activation.configureObsidian = lib.hm.dag.entryAfter ["writeBoundary"] ''
+  home.activation.configureObsidian = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     OBSIDIAN_CONFIG="${paths.icloud}/Documents/_notes/.obsidian/app.json"
     if [ -d "$(dirname "$OBSIDIAN_CONFIG")" ]; then
       [ -f "$OBSIDIAN_CONFIG" ] || echo '{}' > "$OBSIDIAN_CONFIG"
@@ -185,8 +186,7 @@
   xdg.configFile."zsh".source = ./zsh;
   xdg.configFile."zsh".force = true;
 
-  xdg.configFile."neomd/config.toml".text = ''
-  '';
+  xdg.configFile."neomd/config.toml".text = "";
 
   xdg.configFile."1Password/ssh/agent.toml".text = ''
     [[ssh-keys]]
@@ -404,7 +404,7 @@
       enable = true;
       package = pkgs.gitFull;
       includes = [
-        {path = "~/.gitconfig";}
+        { path = "~/.gitconfig"; }
       ];
 
       settings.gpg.ssh.program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign";
@@ -423,7 +423,7 @@
         global.load_dotenv = true;
         global.warn_timeout = 0;
         global.hide_env_diff = true;
-        whitelist.prefix = [config.home.homeDirectory];
+        whitelist.prefix = [ config.home.homeDirectory ];
       };
     };
 
@@ -453,7 +453,8 @@
     };
 
     ssh = {
-      matchBlocks."* \"test -z $SSH_TTY\"".identityAgent = "~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock";
+      matchBlocks."* \"test -z $SSH_TTY\"".identityAgent =
+        "~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock";
     };
 
     mise = {
@@ -550,7 +551,7 @@
             port = 6697;
             tls = true;
             realname = "Seth";
-            nicks = ["replicant"];
+            nicks = [ "replicant" ];
             join = [
               "#nethack"
               "#nixos"
@@ -559,9 +560,9 @@
           }
         ];
         defaults = {
-          nicks = ["replicant"];
+          nicks = [ "replicant" ];
           realname = "Seth";
-          join = [];
+          join = [ ];
           tls = true;
         };
       };

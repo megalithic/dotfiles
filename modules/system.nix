@@ -1,5 +1,4 @@
 {
-  config,
   username,
   ...
 }:
@@ -84,10 +83,10 @@
         magnification = false;
         persistent-others = null;
         persistent-apps = [
-          {app = "/System/Library/CoreServices/Finder.app";}
-          {app = "~/Applications/Home Manager Apps/Brave Browser Nightly.app";}
-          {app = "~/Applications/Home Manager Apps/Ghostty.app";}
-          {app = "/System/Applications/Messages.app";}
+          { app = "/System/Library/CoreServices/Finder.app"; }
+          { app = "~/Applications/Home Manager Apps/Brave Browser Nightly.app"; }
+          { app = "~/Applications/Home Manager Apps/Ghostty.app"; }
+          { app = "/System/Applications/Messages.app"; }
 
           # {
           #   spacer = {
@@ -237,7 +236,9 @@
           "Stream - Max Outstanding Packets (editable)" = 16;
           "Stream Resume Delay" = "0.75";
         };
-        "com.apple.print.PrintingPrefs" = {"Quit When Finished" = true;}; # quit printer app once jobs complete
+        "com.apple.print.PrintingPrefs" = {
+          "Quit When Finished" = true;
+        }; # quit printer app once jobs complete
         "com.apple.finder".NewWindowTargetPath = "file:///Users/${username}/";
         NSGlobalDomain = {
           "SLSMenuBarUseBlurredAppearance" = false;

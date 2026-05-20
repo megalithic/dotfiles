@@ -7,9 +7,9 @@
 
 <p align="center">
 
-![ghostty + tmux + nvim](https://raw.githubusercontent.com/megalithic/dotfiles/main/assets/megadots_ghostty_tmux_nvim.png 'ghostty + tmux + nvim')
+![ghostty + tmux + nvim](https://raw.githubusercontent.com/megalithic/dotfiles/main/assets/megadots_ghostty_tmux_nvim.png "ghostty + tmux + nvim")
 
-![ghostty + tmux + fish + fzf](https://raw.githubusercontent.com/megalithic/dotfiles/main/assets/megadots_ghostty_tmux_fish_fzf.png 'ghostty + tmux + fish + fzf')
+![ghostty + tmux + fish + fzf](https://raw.githubusercontent.com/megalithic/dotfiles/main/assets/megadots_ghostty_tmux_fish_fzf.png "ghostty + tmux + fish + fzf")
 
 </p>
 
@@ -60,6 +60,14 @@ upgrade-nix   # upgrades nix
 ```
 
 > **_NOTE_**: this nix setup is super unstable at the moment.
+
+#### Quick start if using devenv:
+
+```sh
+devenv shell                    # enter dev environment
+devenv tasks run home:apply     # apply home-manager config
+devenv tasks run system:apply   # apply system config (requires sudo)
+```
 
 ---
 

@@ -3,10 +3,10 @@
 {
   config,
   pkgs,
-  lib,
   inputs,
   ...
-}: let
+}:
+let
   aerc-filters = "${pkgs.aerc}/libexec/aerc/filters";
 
   # Script to clean up deleted messages before sync
@@ -15,7 +15,8 @@
     ${pkgs.notmuch}/bin/notmuch search --format=text0 --output=files tag:deleted | \
       xargs -0 --no-run-if-empty rm -v
   '';
-in {
+in
+{
   programs.aerc = {
     enable = true;
 
@@ -33,32 +34,34 @@ in {
 
         # Query map for unified inbox view across all accounts
         # Using HYBRID approach: path-based for Inbox (reliable), tag-based for other views
-        query-map = toString (pkgs.writeText "query-map" ''
-          # Path-based unified inbox with tag-based exclusions for instant removal
-          # This combines physical location check with tag-based filtering for immediate UI updates
-          Inbox=(path:fastmail/INBOX/** or path:gmail/Inbox/** or path:nibuild/INBOX/**) and not tag:spam and not tag:trash and not tag:archive
+        query-map = toString (
+          pkgs.writeText "query-map" ''
+            # Path-based unified inbox with tag-based exclusions for instant removal
+            # This combines physical location check with tag-based filtering for immediate UI updates
+            Inbox=(path:fastmail/INBOX/** or path:gmail/Inbox/** or path:nibuild/INBOX/**) and not tag:spam and not tag:trash and not tag:archive
 
-          # Tag-based views for instant updates when moving messages
-          Unread=tag:unread and not tag:trash and not tag:spam
-          Starred=tag:flagged
+            # Tag-based views for instant updates when moving messages
+            Unread=tag:unread and not tag:trash and not tag:spam
+            Starred=tag:flagged
 
-          # Folder-specific views (path-based to match physical location)
-          Archive=path:fastmail/Archive/** or path:"gmail/[Gmail]/All Mail/**" or path:nibuild/Archive/**
-          Sent=path:fastmail/Sent/** or path:"gmail/[Gmail]/Sent Mail/**" or path:nibuild/Sent/**
-          Drafts=path:fastmail/Drafts/** or path:"gmail/[Gmail]/Drafts/**" or path:nibuild/Drafts/**
-          Trash=path:fastmail/Trash/** or path:"gmail/[Gmail]/Trash/**" or path:nibuild/Trash/**
-          Spam=path:fastmail/Spam/** or path:"gmail/[Gmail]/Spam/**" or path:nibuild/Spam/**
+            # Folder-specific views (path-based to match physical location)
+            Archive=path:fastmail/Archive/** or path:"gmail/[Gmail]/All Mail/**" or path:nibuild/Archive/**
+            Sent=path:fastmail/Sent/** or path:"gmail/[Gmail]/Sent Mail/**" or path:nibuild/Sent/**
+            Drafts=path:fastmail/Drafts/** or path:"gmail/[Gmail]/Drafts/**" or path:nibuild/Drafts/**
+            Trash=path:fastmail/Trash/** or path:"gmail/[Gmail]/Trash/**" or path:nibuild/Trash/**
+            Spam=path:fastmail/Spam/** or path:"gmail/[Gmail]/Spam/**" or path:nibuild/Spam/**
 
-          # Tag-based filtered views
-          Lists=tag:list and tag:inbox
-          GitHub=tag:github and tag:inbox
-          Automated=tag:automated and tag:inbox
+            # Tag-based filtered views
+            Lists=tag:list and tag:inbox
+            GitHub=tag:github and tag:inbox
+            Automated=tag:automated and tag:inbox
 
-          # Account-specific inboxes
-          Fastmail-Inbox=path:fastmail/INBOX/**
-          Gmail-Inbox=path:gmail/Inbox/**
-          Nibuild-Inbox=path:nibuild/INBOX/**
-        '');
+            # Account-specific inboxes
+            Fastmail-Inbox=path:fastmail/INBOX/**
+            Gmail-Inbox=path:gmail/Inbox/**
+            Nibuild-Inbox=path:nibuild/INBOX/**
+          ''
+        );
 
         default = "Inbox";
 
@@ -66,24 +69,26 @@ in {
         folders-sort = "Inbox,Unread,Starred,Archive,Sent,Drafts,Trash,Spam";
 
         # Check mail command
-        check-mail-cmd = toString (pkgs.writeShellScript "check-mail-combined" ''
-          #!/usr/bin/env bash
+        check-mail-cmd = toString (
+          pkgs.writeShellScript "check-mail-combined" ''
+            #!/usr/bin/env bash
 
-          # Check if mbsync or notmuch is already running
-          if pgrep -x mbsync >/dev/null || pgrep -x notmuch >/dev/null; then
-            echo "Already running mbsync or notmuch. Exiting..."
-            exit 0
-          fi
+            # Check if mbsync or notmuch is already running
+            if pgrep -x mbsync >/dev/null || pgrep -x notmuch >/dev/null; then
+              echo "Already running mbsync or notmuch. Exiting..."
+              exit 0
+            fi
 
-          # Clean up deleted messages first
-          ${notmuchCleanup}
+            # Clean up deleted messages first
+            ${notmuchCleanup}
 
-          # Sync all accounts
-          ${pkgs.isync}/bin/mbsync -a
+            # Sync all accounts
+            ${pkgs.isync}/bin/mbsync -a
 
-          # Update notmuch database
-          ${pkgs.notmuch}/bin/notmuch new
-        '');
+            # Update notmuch database
+            ${pkgs.notmuch}/bin/notmuch new
+          ''
+        );
 
         # Timeout for check-mail-cmd (default is 10s, increased to 2 minutes)
         check-mail-timeout = "10m";
@@ -117,15 +122,17 @@ in {
         cache-headers = true;
 
         # Gmail folder mapping to simplify folder names in aerc
-        folder-map = toString (pkgs.writeText "gmail-folder-map" ''
-          [Gmail]/All Mail=All Mail
-          [Gmail]/Drafts=Drafts
-          [Gmail]/Important=Important
-          [Gmail]/Sent Mail=Sent
-          [Gmail]/Spam=Spam
-          [Gmail]/Starred=Starred
-          [Gmail]/Trash=Trash
-        '');
+        folder-map = toString (
+          pkgs.writeText "gmail-folder-map" ''
+            [Gmail]/All Mail=All Mail
+            [Gmail]/Drafts=Drafts
+            [Gmail]/Important=Important
+            [Gmail]/Sent Mail=Sent
+            [Gmail]/Spam=Spam
+            [Gmail]/Starred=Starred
+            [Gmail]/Trash=Trash
+          ''
+        );
       };
 
       nibuild = {
@@ -161,10 +168,13 @@ in {
       # Filters for different content types
       filters = {
         "subject,~^\\[PATCH" = "${aerc-filters}/hldiff";
-        "text/plain" = "! wrap -w 88 | ${pkgs.aerc}/libexec/aerc/filters/colorize | ${pkgs.delta}/bin/delta --color-only --diff-highlight";
-        "text/calendar" = "${pkgs.aerc}/libexec/aerc/filters/calendar | ${pkgs.aerc}/libexec/aerc/filters/colorize";
+        "text/plain" =
+          "! wrap -w 88 | ${pkgs.aerc}/libexec/aerc/filters/colorize | ${pkgs.delta}/bin/delta --color-only --diff-highlight";
+        "text/calendar" =
+          "${pkgs.aerc}/libexec/aerc/filters/calendar | ${pkgs.aerc}/libexec/aerc/filters/colorize";
         "text/html" = "! ${pkgs.aerc}/libexec/aerc/filters/html";
-        "text/*" = ''test -n "$AERC_FILENAME" && ${pkgs.bat}/bin/bat -fP --file-name="$AERC_FILENAME" --style=plain || ${pkgs.aerc}/libexec/aerc/filters/colorize'';
+        "text/*" =
+          ''test -n "$AERC_FILENAME" && ${pkgs.bat}/bin/bat -fP --file-name="$AERC_FILENAME" --style=plain || ${pkgs.aerc}/libexec/aerc/filters/colorize'';
         "application/pgp-keys" = "gpg";
         "application/x-*" = ''${pkgs.bat}/bin/bat -fP --file-name="$AERC_FILENAME" --style=auto'';
         "message/delivery-status" = "wrap | ${pkgs.aerc}/libexec/aerc/filters/colorize";
@@ -184,7 +194,7 @@ in {
         edit-headers = true;
         reply-to-self = false;
         empty-subject-warning = true;
-        no-attachment-warning = "^[^>]*attach(ed|ment)";
+        no-attachment-warning = "^[^>]*attach(ed|m[e]nt)";
         file-picker-cmd = "${pkgs.fd}/bin/fd -t file . ~ | ${pkgs.fzf}/bin/fzf";
       };
 
@@ -405,9 +415,12 @@ in {
         "zR" = ":unfold -a<Enter>";
 
         # Archive and delete keybindings
-        "e" = '':modify-labels -inbox -unread +archive<Enter>:move {{switch (index (.Filename | split "/") 4) (case "gmail" "gmail/[Gmail]/All Mail") (case "fastmail" "fastmail/Archive") (case "nibuild" "nibuild/Archive") (default "Archive")}}<Enter>'';
-        "E" = '':unmark -a<Enter>:mark -T<Enter>:modify-labels -inbox -unread +archive<Enter>:move {{switch (index (.Filename | split "/") 4) (case "gmail" "gmail/[Gmail]/All Mail") (case "fastmail" "fastmail/Archive") (case "nibuild" "nibuild/Archive") (default "Archive")}}<Enter>'';
-        "d" = '':modify-labels -inbox -unread +trash<Enter>:move {{switch (index (.Filename | split "/") 4) (case "gmail" "gmail/[Gmail]/Trash") (case "fastmail" "fastmail/Trash") (case "nibuild" "nibuild/Trash") (default "Trash")}}<Enter>'';
+        "e" =
+          '':modify-labels -inbox -unread +archive<Enter>:move {{switch (index (.Filename | split "/") 4) (case "gmail" "gmail/[Gmail]/All Mail") (case "fastmail" "fastmail/Archive") (case "nibuild" "nibuild/Archive") (default "Archive")}}<Enter>'';
+        "E" =
+          '':unmark -a<Enter>:mark -T<Enter>:modify-labels -inbox -unread +archive<Enter>:move {{switch (index (.Filename | split "/") 4) (case "gmail" "gmail/[Gmail]/All Mail") (case "fastmail" "fastmail/Archive") (case "nibuild" "nibuild/Archive") (default "Archive")}}<Enter>'';
+        "d" =
+          '':modify-labels -inbox -unread +trash<Enter>:move {{switch (index (.Filename | split "/") 4) (case "gmail" "gmail/[Gmail]/Trash") (case "fastmail" "fastmail/Trash") (case "nibuild" "nibuild/Trash") (default "Trash")}}<Enter>'';
 
         "rr" = ":reply -a<Enter>";
         "rq" = ":reply -aq<Enter>";
@@ -440,10 +453,13 @@ in {
         "q" = ":close<Enter>";
 
         "s" = ":move Starred<Enter>";
-        "d" = '':modify-labels -inbox -unread +trash<Enter>:move {{switch (index (.Filename | split "/") 4) (case "gmail" "gmail/[Gmail]/Trash") (case "fastmail" "fastmail/Trash") (case "nibuild" "nibuild/Trash") (default "Trash")}}<Enter>'';
+        "d" =
+          '':modify-labels -inbox -unread +trash<Enter>:move {{switch (index (.Filename | split "/") 4) (case "gmail" "gmail/[Gmail]/Trash") (case "fastmail" "fastmail/Trash") (case "nibuild" "nibuild/Trash") (default "Trash")}}<Enter>'';
         "D" = ":delete<Enter>";
-        "e" = '':modify-labels -inbox -unread +archive<Enter>:move {{switch (index (.Filename | split "/") 4) (case "gmail" "gmail/[Gmail]/All Mail") (case "fastmail" "fastmail/Archive") (case "nibuild" "nibuild/Archive") (default "Archive")}}<Enter>'';
-        "E" = '':unmark -a<Enter>:mark -T<Enter>:modify-labels -inbox -unread +archive<Enter>:move {{switch (index (.Filename | split "/") 4) (case "gmail" "gmail/[Gmail]/All Mail") (case "fastmail" "fastmail/Archive") (case "nibuild" "nibuild/Archive") (default "Archive")}}<Enter>'';
+        "e" =
+          '':modify-labels -inbox -unread +archive<Enter>:move {{switch (index (.Filename | split "/") 4) (case "gmail" "gmail/[Gmail]/All Mail") (case "fastmail" "fastmail/Archive") (case "nibuild" "nibuild/Archive") (default "Archive")}}<Enter>'';
+        "E" =
+          '':unmark -a<Enter>:mark -T<Enter>:modify-labels -inbox -unread +archive<Enter>:move {{switch (index (.Filename | split "/") 4) (case "gmail" "gmail/[Gmail]/All Mail") (case "fastmail" "fastmail/Archive") (case "nibuild" "nibuild/Archive") (default "Archive")}}<Enter>'';
 
         "o" = ":open<Enter>";
         "S" = ":save<space>";

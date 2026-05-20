@@ -18,13 +18,13 @@
 {
   config,
   pkgs,
-  lib,
-  inputs,
   ...
-}: let
+}:
+let
   ca-bundle_path = "${pkgs.cacert}/etc/ssl/certs/";
   ca-bundle_crt = "${ca-bundle_path}/ca-bundle.crt";
-in {
+in
+{
   # Expose CA bundle for downstream email programs (msmtp, mbsync)
   _module.args = {
     inherit ca-bundle_path ca-bundle_crt;
@@ -86,7 +86,7 @@ in {
         # Real-time IMAP notifications
         imapnotify = {
           enable = true;
-          boxes = ["INBOX"];
+          boxes = [ "INBOX" ];
           onNotify = "${pkgs.isync}/bin/mbsync fastmail";
           onNotifyPost = ''
             ${pkgs.notmuch}/bin/notmuch new
