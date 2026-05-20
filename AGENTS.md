@@ -9,7 +9,7 @@ This is a **nix-darwin + home-manager** managed dotfiles repo.
 1. Check if it's a symlink: `ls -la <path>`
 2. If symlinked to `/nix/store/` → find source in `~/.dotfiles/` and edit there
 3. If it doesn't exist but should be managed → add to appropriate nix module
-4. Run `just rebuild` after nix changes
+4. Run appropriate rebuild command after Nix changes and monitor output
 
 **Common nix-managed paths:**
 
@@ -174,15 +174,23 @@ brave-browser-nightly = mkApp {
 
 ### Rebuilding
 
+After touching Nix configuration, run the narrowest activation command that matches the changed files and monitor output until completion:
+
 ```bash
-just rebuild          # full: darwin + home (syncs from remote first)
-just darwin           # darwin-only (system settings, brew)
-just home             # home-manager only (user packages, dotfiles)
+just darwin           # nix-darwin only: hosts/, modules/, system settings, brew
+just home             # home-manager only: home/, user packages, dotfiles
+just rebuild          # both darwin + home, or when unsure which applies (syncs from remote first)
 just validate         # build both without switching (catches errors)
-just validate darwin   # darwin-only validation
-just validate home     # home-manager-only validation
+just validate darwin  # darwin-only validation
+just validate home    # home-manager-only validation
 just bootstrap        # emergency: rebuild from scratch without just in PATH
 ```
+
+Rules:
+
+- Run `just darwin` and monitor output when any nix-darwin config files were touched.
+- Run `just home` and monitor output when any home-manager config files were touched.
+- Run `just rebuild` and monitor output when both were touched, or when unable to determine the correct narrower command.
 
 Always run `just validate` after nix refactors before pushing.
 

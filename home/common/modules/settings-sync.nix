@@ -16,14 +16,11 @@
   pkgs,
   ...
 }:
-with lib; let
+with lib;
+let
   cfg = config.settings-sync;
 
   # Expand ~ to $HOME in paths
-  expandPath = path:
-    if hasPrefix "~" path
-    then "\${HOME}${removePrefix "~" path}"
-    else path;
 
   # =========================================================================
   # App Profiles
@@ -72,11 +69,19 @@ with lib; let
         "Site Characteristics Database"
         "Crashpad"
       ];
-      sqlite = ["Cookies" "Web Data" "History" "Login Data" "Shortcuts" "Top Sites" "Favicons"];
+      sqlite = [
+        "Cookies"
+        "Web Data"
+        "History"
+        "Login Data"
+        "Shortcuts"
+        "Top Sites"
+        "Favicons"
+      ];
       conditionalFiles = {
-        cookies = ["Cookies"];
-        history = ["History"];
-        logins = ["Login Data"];
+        cookies = [ "Cookies" ];
+        history = [ "History" ];
+        logins = [ "Login Data" ];
       };
     };
 
@@ -95,11 +100,18 @@ with lib; let
         "Resources"
         "Managed"
       ];
-      exclude = ["*.log" ".DS_Store" ".database_lock"];
-      sqlite = [];
+      exclude = [
+        "*.log"
+        ".DS_Store"
+        ".database_lock"
+      ];
+      sqlite = [ ];
       defaults = "com.freron.MailMate";
       conditionalFiles = {
-        database = ["Database.noindex" "Messages"];
+        database = [
+          "Database.noindex"
+          "Messages"
+        ];
       };
     };
 
@@ -107,18 +119,33 @@ with lib; let
       name = "VS Code";
       processName = "Code";
       source = "Library/Application Support/Code/User";
-      include = ["settings.json" "keybindings.json" "snippets" "profiles"];
-      exclude = ["*.log" "workspaceStorage" "globalStorage" "History"];
-      sqlite = [];
+      include = [
+        "settings.json"
+        "keybindings.json"
+        "snippets"
+        "profiles"
+      ];
+      exclude = [
+        "*.log"
+        "workspaceStorage"
+        "globalStorage"
+        "History"
+      ];
+      sqlite = [ ];
     };
 
     raycast = {
       name = "Raycast";
       processName = "Raycast";
       source = "Library/Application Support/Raycast";
-      include = [];
-      exclude = ["*.log" ".DS_Store" "Cache" "Crashpad"];
-      sqlite = [];
+      include = [ ];
+      exclude = [
+        "*.log"
+        ".DS_Store"
+        "Cache"
+        "Crashpad"
+      ];
+      sqlite = [ ];
       defaults = "com.raycast.macos";
     };
 
@@ -126,9 +153,13 @@ with lib; let
       name = "Obsidian";
       processName = "Obsidian";
       source = "Library/Application Support/obsidian";
-      include = ["obsidian.json"];
-      exclude = ["*.log" "Cache" "GPUCache"];
-      sqlite = [];
+      include = [ "obsidian.json" ];
+      exclude = [
+        "*.log"
+        "Cache"
+        "GPUCache"
+      ];
+      sqlite = [ ];
     };
   };
 
@@ -192,118 +223,123 @@ with lib; let
           fi
         }
 
-        ${concatStringsSep "\n\n" (map (appName: let
-        p = appProfiles.${appName};
-        appCfg = cfg.apps.${appName};
-        funcName = replaceStrings ["-"] ["_"] appName;
-        srcDir = "$HOME/${p.source}";
-        dstDir = "$SYNC_DIR/${appName}";
-        excludeArgs = escapeShellArgs (p.exclude or []);
-      in ''
-        # ═══════════════════════════════════════════════════════════════════════
-        # ${p.name}
-        # ═══════════════════════════════════════════════════════════════════════
-        export_${funcName}() {
-          ${optionalString (p.processName or null != null) ''
-          if is_running "${p.processName}" && [[ "$FORCE" != "1" ]]; then
-            error "${p.name} is running. Quit first or use --force"
-            return 1
-          fi
-        ''}
-
-          log "Exporting ${p.name}..."
-          mkdir -p "${dstDir}"
-
-          ${
-          if p.include == []
-          then ''
-            # Sync entire directory
-            sync_dir "${srcDir}" "${dstDir}" ${excludeArgs}
-          ''
-          else ''
-            # Sync specific files/dirs
-            ${concatMapStringsSep "\n" (item: ''
-                [[ -e "${srcDir}/${item}" ]] && \
-                  if [[ -d "${srcDir}/${item}" ]]; then
-                    sync_dir "${srcDir}/${item}" "${dstDir}/${item}" ${excludeArgs}
-                  else
-                    copy_file "${srcDir}/${item}" "${dstDir}/${item}"
-                  fi
-              '')
-              p.include}
-          ''
-        }
-
-          ${optionalString (p.sqlite or [] != []) ''
-          # SQLite databases
-          ${concatMapStringsSep "\n" (db: ''
-              sqlite_backup "${srcDir}/${db}" "${dstDir}/${db}"
-            '')
-            p.sqlite}
-        ''}
-
-          ${concatStringsSep "\n" (mapAttrsToList (
-          flag: files:
-            optionalString (appCfg.${flag} or false) ''
-              # Conditional: ${flag}
-              ${concatMapStringsSep "\n" (f: ''
-                  if [[ -e "${srcDir}/${f}" ]]; then
-                    if [[ -d "${srcDir}/${f}" ]]; then
-                      sync_dir "${srcDir}/${f}" "${dstDir}/${f}" ${excludeArgs}
-                    else
-                      sqlite_backup "${srcDir}/${f}" "${dstDir}/${f}"
-                    fi
-                  fi
-                '')
-                files}
+        ${concatStringsSep "\n\n" (
+          map (
+            appName:
+            let
+              p = appProfiles.${appName};
+              appCfg = cfg.apps.${appName};
+              funcName = replaceStrings [ "-" ] [ "_" ] appName;
+              srcDir = "$HOME/${p.source}";
+              dstDir = "$SYNC_DIR/${appName}";
+              excludeArgs = escapeShellArgs (p.exclude or [ ]);
+            in
             ''
-        ) (p.conditionalFiles or {}))}
+              # ═══════════════════════════════════════════════════════════════════════
+              # ${p.name}
+              # ═══════════════════════════════════════════════════════════════════════
+              export_${funcName}() {
+                ${optionalString (p.processName or null != null) ''
+                  if is_running "${p.processName}" && [[ "$FORCE" != "1" ]]; then
+                    error "${p.name} is running. Quit first or use --force"
+                    return 1
+                  fi
+                ''}
 
-          ${optionalString (p.defaults or null != null) ''
-          # Export defaults
-          defaults export "${p.defaults}" "${dstDir}/defaults.plist" 2>/dev/null || true
-        ''}
+                log "Exporting ${p.name}..."
+                mkdir -p "${dstDir}"
 
-          log "Exported ${p.name} → $SYNC_DIR/${appName}"
-        }
+                ${
+                  if p.include == [ ] then
+                    ''
+                      # Sync entire directory
+                      sync_dir "${srcDir}" "${dstDir}" ${excludeArgs}
+                    ''
+                  else
+                    ''
+                      # Sync specific files/dirs
+                      ${concatMapStringsSep "\n" (item: ''
+                        [[ -e "${srcDir}/${item}" ]] && \
+                          if [[ -d "${srcDir}/${item}" ]]; then
+                            sync_dir "${srcDir}/${item}" "${dstDir}/${item}" ${excludeArgs}
+                          else
+                            copy_file "${srcDir}/${item}" "${dstDir}/${item}"
+                          fi
+                      '') p.include}
+                    ''
+                }
 
-        import_${funcName}() {
-          [[ ! -d "${dstDir}" ]] && { info "No sync data for ${p.name}"; return 0; }
+                ${optionalString (p.sqlite or [ ] != [ ]) ''
+                  # SQLite databases
+                  ${concatMapStringsSep "\n" (db: ''
+                    sqlite_backup "${srcDir}/${db}" "${dstDir}/${db}"
+                  '') p.sqlite}
+                ''}
 
-          ${optionalString (p.processName or null != null) ''
-          if is_running "${p.processName}" && [[ "$FORCE" != "1" ]]; then
-            error "${p.name} is running. Quit first or use --force"
-            return 1
-          fi
-        ''}
+                ${concatStringsSep "\n" (
+                  mapAttrsToList (
+                    flag: files:
+                    optionalString (appCfg.${flag} or false) ''
+                      # Conditional: ${flag}
+                      ${concatMapStringsSep "\n" (f: ''
+                        if [[ -e "${srcDir}/${f}" ]]; then
+                          if [[ -d "${srcDir}/${f}" ]]; then
+                            sync_dir "${srcDir}/${f}" "${dstDir}/${f}" ${excludeArgs}
+                          else
+                            sqlite_backup "${srcDir}/${f}" "${dstDir}/${f}"
+                          fi
+                        fi
+                      '') files}
+                    ''
+                  ) (p.conditionalFiles or { })
+                )}
 
-          log "Importing ${p.name}..."
-          mkdir -p "${srcDir}"
+                ${optionalString (p.defaults or null != null) ''
+                  # Export defaults
+                  defaults export "${p.defaults}" "${dstDir}/defaults.plist" 2>/dev/null || true
+                ''}
 
-          # Restore everything from sync dir
-          sync_dir "${dstDir}" "${srcDir}"
+                log "Exported ${p.name} → $SYNC_DIR/${appName}"
+              }
 
-          ${optionalString (p.defaults or null != null) ''
-          [[ -f "${dstDir}/defaults.plist" ]] && \
-            defaults import "${p.defaults}" "${dstDir}/defaults.plist" 2>/dev/null || true
-        ''}
+              import_${funcName}() {
+                [[ ! -d "${dstDir}" ]] && { info "No sync data for ${p.name}"; return 0; }
 
-          log "Imported ${p.name}"
-        }
+                ${optionalString (p.processName or null != null) ''
+                  if is_running "${p.processName}" && [[ "$FORCE" != "1" ]]; then
+                    error "${p.name} is running. Quit first or use --force"
+                    return 1
+                  fi
+                ''}
 
-        status_${funcName}() {
-          printf "  %-22s" "${p.name}"
-          if [[ -d "${dstDir}" ]]; then
-            local sz=$(du -sh "${dstDir}" 2>/dev/null | cut -f1)
-            # Use macOS native stat for BSD-style flags (-f "%Sm" -t format)
-            local tm=$(/usr/bin/stat -f "%Sm" -t "%Y-%m-%d %H:%M" "${dstDir}" 2>/dev/null || echo "?")
-            echo -e "''${GREEN}✓''${NC} $sz  ($tm)"
-          else
-            echo -e "''${YELLOW}○''${NC} not synced"
-          fi
-        }
-      '')
-      enabledApps)}
+                log "Importing ${p.name}..."
+                mkdir -p "${srcDir}"
+
+                # Restore everything from sync dir
+                sync_dir "${dstDir}" "${srcDir}"
+
+                ${optionalString (p.defaults or null != null) ''
+                  [[ -f "${dstDir}/defaults.plist" ]] && \
+                    defaults import "${p.defaults}" "${dstDir}/defaults.plist" 2>/dev/null || true
+                ''}
+
+                log "Imported ${p.name}"
+              }
+
+              status_${funcName}() {
+                printf "  %-22s" "${p.name}"
+                if [[ -d "${dstDir}" ]]; then
+                  local sz=$(du -sh "${dstDir}" 2>/dev/null | cut -f1)
+                  # Use macOS native stat for BSD-style flags (-f "%Sm" -t format)
+                  local tm=$(/usr/bin/stat -f "%Sm" -t "%Y-%m-%d %H:%M" "${dstDir}" 2>/dev/null || echo "?")
+                  echo -e "''${GREEN}✓''${NC} $sz  ($tm)"
+                else
+                  echo -e "''${YELLOW}○''${NC} not synced"
+                fi
+              }
+            ''
+          ) enabledApps
+        )}
 
         # ═══════════════════════════════════════════════════════════════════════
         # Commands
@@ -311,8 +347,12 @@ with lib; let
         cmd_export() {
           local app="''${1:-all}"
           case "$app" in
-            ${concatStringsSep "\n" (map (a: "${a}) export_${replaceStrings ["-"] ["_"] a} ;;") enabledApps)}
-            all) ${concatMapStringsSep "\n" (a: "export_${replaceStrings ["-"] ["_"] a} || true") enabledApps} ;;
+            ${concatStringsSep "\n" (
+              map (a: "${a}) export_${replaceStrings [ "-" ] [ "_" ] a} ;;") enabledApps
+            )}
+            all) ${
+              concatMapStringsSep "\n" (a: "export_${replaceStrings [ "-" ] [ "_" ] a} || true") enabledApps
+            } ;;
             *) error "Unknown app: $app"; echo "Available: ${concatStringsSep ", " enabledApps}"; exit 1 ;;
           esac
         }
@@ -320,8 +360,12 @@ with lib; let
         cmd_import() {
           local app="''${1:-all}"
           case "$app" in
-            ${concatStringsSep "\n" (map (a: "${a}) import_${replaceStrings ["-"] ["_"] a} ;;") enabledApps)}
-            all) ${concatMapStringsSep "\n" (a: "import_${replaceStrings ["-"] ["_"] a} || true") enabledApps} ;;
+            ${concatStringsSep "\n" (
+              map (a: "${a}) import_${replaceStrings [ "-" ] [ "_" ] a} ;;") enabledApps
+            )}
+            all) ${
+              concatMapStringsSep "\n" (a: "import_${replaceStrings [ "-" ] [ "_" ] a} || true") enabledApps
+            } ;;
             *) error "Unknown app: $app"; echo "Available: ${concatStringsSep ", " enabledApps}"; exit 1 ;;
           esac
           echo ""
@@ -332,7 +376,7 @@ with lib; let
           echo -e "''${BOLD}Settings Sync Status''${NC}"
           echo "Directory: $SYNC_DIR"
           echo ""
-          ${concatMapStringsSep "\n" (a: "status_${replaceStrings ["-"] ["_"] a}") enabledApps}
+          ${concatMapStringsSep "\n" (a: "status_${replaceStrings [ "-" ] [ "_" ] a}") enabledApps}
           echo ""
           [[ -d "$SYNC_DIR" ]] && echo "Total: $(du -sh "$SYNC_DIR" 2>/dev/null | cut -f1)"
         }
@@ -386,7 +430,8 @@ with lib; let
           *) usage ;;
         esac
   '';
-in {
+in
+{
   options.settings-sync = {
     enable = mkEnableOption "Sync app settings between machines";
 
@@ -403,28 +448,31 @@ in {
       description = "Auto-import on home-manager activation (OVERWRITES local!)";
     };
 
-    apps = mapAttrs (name: profile:
+    apps = mapAttrs (
+      _name: profile:
       {
         enable = mkEnableOption "Sync ${profile.name}";
       }
-      // (mapAttrs (flag: _:
+      // (mapAttrs (
+        flag: _:
         mkOption {
           type = types.bool;
           default = false;
           description = "Include ${flag}";
-        }) (profile.conditionalFiles or {})))
-    appProfiles;
+        }
+      ) (profile.conditionalFiles or { }))
+    ) appProfiles;
   };
 
   config = mkIf cfg.enable {
-    home.packages = [syncScript];
+    home.packages = [ syncScript ];
 
-    home.activation.settingsSyncInit = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    home.activation.settingsSyncInit = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       mkdir -p "$(eval echo "${cfg.syncDir}")"
     '';
 
     home.activation.settingsSyncImport = mkIf cfg.importOnActivation (
-      lib.hm.dag.entryAfter ["settingsSyncInit"] ''
+      lib.hm.dag.entryAfter [ "settingsSyncInit" ] ''
         ${syncScript}/bin/settings-sync import all --force || true
       ''
     );

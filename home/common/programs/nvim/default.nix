@@ -2,15 +2,15 @@
   lib,
   pkgs,
   config,
-  username,
   ...
-}: {
+}:
+{
   # Use .vimrc for standard vim settings
   # xdg.configFile."nvim/.vimrc".source = nvim/.vimrc;
   # xdg.configFile."nvim/.vimrc".source = nvim-next/.vimrc;
 
   # Create folders for backups, swaps, and undo
-  home.activation.makeNvimDirs = lib.hm.dag.entryAfter ["writeBoundary"] ''
+  home.activation.makeNvimDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     mkdir -p $HOME/.config/nvim/backups $HOME/.config/nvim/swaps $HOME/.config/nvim/undo
   '';
 
@@ -45,15 +45,14 @@
     withRuby = true;
     vimdiffAlias = true;
     vimAlias = true;
-    extraWrapperArgs =
-      [
-        # "--set"
-        # "NVIM_RUST_ANALYZER"
-        # "${pkgs.rust-analyzer}/bin/rust-analyzer"
-        "--set"
-        "LIBSQLITE"
-      ]
-      ++ ["${pkgs.sqlite.out}/lib/libsqlite3.dylib"];
+    extraWrapperArgs = [
+      # "--set"
+      # "NVIM_RUST_ANALYZER"
+      # "${pkgs.rust-analyzer}/bin/rust-analyzer"
+      "--set"
+      "LIBSQLITE"
+    ]
+    ++ [ "${pkgs.sqlite.out}/lib/libsqlite3.dylib" ];
     extraPackages = with pkgs; [
       # actionlint
       # bash-language-server

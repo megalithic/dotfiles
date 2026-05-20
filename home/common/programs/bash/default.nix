@@ -1,4 +1,5 @@
-{pkgs, ...}: let
+_:
+let
   # Git worktree functions - must be shell functions (not scripts) for cd
   worktreeFunctions = ''
     __git_worktree_names() {
@@ -209,7 +210,8 @@
     complete -F _worktree_name_complete git-worktree-prune
     complete -F _pr_branch_complete git-worktree-pr
   '';
-in {
+in
+{
   programs.bash = {
     enable = true;
     bashrcExtra = worktreeFunctions + devenvAutoActivation + worktreeCompletions;

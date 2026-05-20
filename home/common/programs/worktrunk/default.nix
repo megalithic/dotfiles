@@ -1,12 +1,11 @@
 # Worktrunk: Git worktree management CLI
 # https://github.com/max-sixty/worktrunk
 {
-  config,
   pkgs,
   inputs,
-  lib,
   ...
-}: {
+}:
+{
   programs.worktrunk = {
     enable = true;
     # Use worktrunk-with-git-wt to install as git-wt subcommand (git wt <command>)

@@ -1,8 +1,8 @@
 {
   config,
-  pkgs,
   ...
-}: let
+}:
+let
   # Git worktree functions - must be shell functions (not scripts) for cd
   worktreeFunctions = ''
     __git_worktree_names() {
@@ -224,7 +224,8 @@
     compdef _git_worktree_names git-worktree-prune
     compdef _git_pr_branches git-worktree-pr
   '';
-in {
+in
+{
   programs.zsh = {
     enable = true;
     dotDir = config.home.homeDirectory;

@@ -53,8 +53,13 @@ local function escape_deluxe()
   -- Force redraw
   vim.cmd.redraw({ bang = true })
 
-  -- Auto-save if buffer has filename (not scratch buffers)
-  if vim.fn.bufname("%") ~= "" then vim.cmd.update({ bang = true }) end
+  -- Auto-save real files only when the parent directory exists.
+  -- Missing-path buffers (for not-yet-created files) would make <Esc> throw E212.
+  local bufname = vim.fn.bufname("%")
+  if bufname ~= "" and vim.bo.buftype == "" and vim.bo.modifiable then
+    local dir = vim.fn.fnamemodify(bufname, ":p:h")
+    if dir ~= "" and vim.fn.isdirectory(dir) == 1 then pcall(vim.cmd.update, { bang = true }) end
+  end
 
   -- Clear commandline
   clear_commandline()

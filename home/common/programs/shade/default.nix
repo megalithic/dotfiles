@@ -3,12 +3,8 @@
 # Epic: .dotfiles-42y (Dotfiles support for Shade MLX/LLM integration)
 # Task: .dotfiles-4zt (Create shade.nix home-manager module)
 # Cross-repo: shade-ahf.14 (Shade MLX Integration)
-{
-  config,
-  pkgs,
-  lib,
-  ...
-}: let
+_:
+let
   # ===========================================================================
   # Paths
   # ===========================================================================
@@ -64,7 +60,11 @@
 
     # Mode cycle for toggle - cycles through these modes in order
     # Options: "floating", "sidebar-left", "sidebar-right"
-    modeCycle = ["floating" "sidebar-left" "sidebar-right"];
+    modeCycle = [
+      "floating"
+      "sidebar-left"
+      "sidebar-right"
+    ];
 
     # Focus border - visual indicator when Shade panel has keyboard focus
     # Uses NSVisualEffectView + CALayer for native macOS appearance
@@ -118,7 +118,8 @@
     notes = notesConfig;
     terminal = terminalConfig;
   };
-in {
+in
+{
   home.file.".config/shade/config.json" = {
     text = builtins.toJSON shadeConfig;
     force = true;

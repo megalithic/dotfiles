@@ -9,12 +9,7 @@
 # To add host-specific daemons, add them in hosts/<hostname>.nix:
 #   launchd.daemons.my-daemon = { ... };
 #
-{
-  config,
-  pkgs,
-  lib,
-  ...
-}: {
+_: {
   # ─────────────────────────────────────────────────────────────────────────────
   # Nix Store Garbage Collection (System Profiles)
   # ─────────────────────────────────────────────────────────────────────────────

@@ -2,10 +2,9 @@
 # Host-specific settings that differ from common.nix
 {
   pkgs,
-  lib,
-  paths,
   ...
-}: {
+}:
+{
   # Host-specific system packages
   # Most tools should go to home-manager (home/common/packages.nix)
   # Only keep here what needs system-wide access or is needed before HM runs

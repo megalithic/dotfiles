@@ -5,10 +5,10 @@
 # This approach preserves comments and allows easy editing without nix rebuild.
 {
   config,
-  lib,
   pkgs,
   ...
-}: {
+}:
+{
   programs.ghostty = {
     enable = true;
     package = pkgs.ghostty-bin; # Use pre-built binary (darwin), not ghostty (linux-only)
@@ -21,8 +21,6 @@
   # Symlink our config to where Ghostty looks on macOS
   # Ghostty checks: ~/Library/Application Support/com.mitchellh.ghostty/config
   home.file."Library/Application Support/com.mitchellh.ghostty/config" = {
-    source =
-      config.lib.file.mkOutOfStoreSymlink
-      "${config.home.homeDirectory}/.dotfiles/config/ghostty/config";
+    source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/config/ghostty/config";
   };
 }
