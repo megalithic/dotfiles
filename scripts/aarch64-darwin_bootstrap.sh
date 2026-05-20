@@ -42,14 +42,14 @@ install_clt() {
     head -1)
 
   # Fallback: try older format
-  if [[ -z "$CLT_LABEL" ]]; then
+  if [[ -z $CLT_LABEL ]]; then
     CLT_LABEL=$(softwareupdate -l 2>&1 |
       grep '\* Command Line' |
       sed 's/^.*\* //' |
       head -1)
   fi
 
-  if [[ -n "$CLT_LABEL" ]]; then
+  if [[ -n $CLT_LABEL ]]; then
     echo "░ :: -> Installing: $CLT_LABEL"
     softwareupdate -i "$CLT_LABEL" --verbose
   else
@@ -106,55 +106,33 @@ if [[ "$(stat -f '%Su' "$HOME/Applications")" != "$SUDO_USER" ]]; then
 fi
 chmod 755 "$HOME/Applications"
 
-echo "░ :: -> Running home-manager for the first time for $FLAKE.." &&
-  (nix run home-manager/master -- switch --flake "$DOTFILES_DIR" &&
-    echo "░ [✓] -> Completed installation of $DOTFILES_DIR home-manager flake..") || echo "░ [x] -> Errored while installing $DOTFILES_DIR home-manager flake.."
+echo "░ :: -> Provisioning opnix token for $FLAKE.."
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+OPNIX_TOKEN="$XDG_CONFIG_HOME/opnix/token"
+OPNIX_OP_REF="op://Crypt/opnix/$FLAKE/token"
+mkdir -p "$(dirname "$OPNIX_TOKEN")"
 
-# Bootstrap agenix secrets by fetching SSH key from 1Password
-echo "░ :: -> Setting up agenix secrets.."
-SSH_KEY_PATH="$HOME/.ssh/id_ed25519"
-OP_ACCOUNT="my.1password.com"
-OP_VAULT="m2jsiad2fn7s2widtddpmp6jpe"
-OP_ITEM="e4jheo2uyeg2e2tjrj2xucnmti"
-
-if command -v op &>/dev/null; then
-  if [[ ! -f "$SSH_KEY_PATH" ]]; then
-    echo "░ :: -> Fetching SSH key from 1Password for agenix.."
-    echo "░      (biometric auth required)"
-    mkdir -p "$HOME/.ssh"
-    chmod 700 "$HOME/.ssh"
-
-    if op read "op://$OP_VAULT/$OP_ITEM/private key" --account "$OP_ACCOUNT" >"$SSH_KEY_PATH" 2>/dev/null; then
-      chmod 600 "$SSH_KEY_PATH"
-      echo "░ [✓] -> SSH key written to $SSH_KEY_PATH"
-
-      # Also fetch public key if available
-      if op read "op://$OP_VAULT/$OP_ITEM/public key" --account "$OP_ACCOUNT" >"${SSH_KEY_PATH}.pub" 2>/dev/null; then
-        chmod 644 "${SSH_KEY_PATH}.pub"
-      fi
-
-      # Trigger agenix activation
-      echo "░ :: -> Activating agenix secrets.."
-      if launchctl kickstart -k "gui/$(id -u)/org.nix-community.home.activate-agenix" 2>/dev/null; then
-        sleep 2
-        AGENIX_DIR="$(getconf DARWIN_USER_TEMP_DIR)agenix"
-        if [[ -d "$AGENIX_DIR" ]]; then
-          echo "░ [✓] -> Agenix secrets decrypted"
-        fi
-      fi
-    else
-      echo "░ [!] -> Failed to fetch SSH key from 1Password"
-      echo "░      Run 'bootstrap-secrets' manually after signing into 1Password"
-    fi
+if [[ -f $OPNIX_TOKEN ]]; then
+  chmod 600 "$OPNIX_TOKEN"
+  echo "░ [✓] -> Existing opnix token found"
+elif command -v op &>/dev/null; then
+  echo "░      Fetching service account token from $OPNIX_OP_REF"
+  if op read "$OPNIX_OP_REF" >"$OPNIX_TOKEN" 2>/dev/null; then
+    chmod 600 "$OPNIX_TOKEN"
+    echo "░ [✓] -> opnix token installed"
   else
-    echo "░ :: -> SSH key already exists, triggering agenix activation.."
-    launchctl kickstart -k "gui/$(id -u)/org.nix-community.home.activate-agenix" 2>/dev/null || true
+    rm -f "$OPNIX_TOKEN"
+    echo "░ [!] -> op read failed for $OPNIX_OP_REF"
+    echo "░      Create 1Password item first, then run: just opnix-token"
   fi
 else
   echo "░ [!] -> 1Password CLI (op) not found"
-  echo "░      Install with: brew install 1password-cli"
-  echo "░      Then run 'bootstrap-secrets' to set up agenix"
+  echo "░      Run after bootstrap: just opnix-token && just home"
 fi
+
+echo "░ :: -> Running home-manager for the first time for $FLAKE.." &&
+  (nix run home-manager/master -- switch --flake "$DOTFILES_DIR" &&
+    echo "░ [✓] -> Completed installation of $DOTFILES_DIR home-manager flake..") || echo "░ [x] -> Errored while installing $DOTFILES_DIR home-manager flake.."
 
 echo "░ :: -> Running post-install settings.." &&
   (sudo scutil --set HostName "$FLAKE" &&

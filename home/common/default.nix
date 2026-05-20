@@ -41,7 +41,7 @@
     # Dev environments
     ./programs/devenv
     # Misc programs
-    ./programs/agenix
+    ./programs/opnix
     ./programs/discord
     ./programs/fzf
     ./programs/ghostty
@@ -190,7 +190,7 @@
 
   xdg.configFile."1Password/ssh/agent.toml".text = ''
     [[ssh-keys]]
-    vault = "Shared"
+    vault = "Crypt"
     item = "megaenv_ssh_key"
   '';
   xdg.configFile."process-compose/shortcuts.yaml".text = ''

@@ -5,7 +5,7 @@
 set -euo pipefail
 
 readonly SCRIPT_NAME="$(basename "$0")"
-readonly CONFIG_FILE="${AGENIX_VPN_CONFIG:-$HOME/.config/vpn/launchdeck-inline.ovpn}"
+readonly CONFIG_FILE="${OPNIX_VPN_CONFIG:-$HOME/.config/vpn/launchdeck-inline.ovpn}"
 readonly PID_FILE="/tmp/launchdeck-vpn.pid"
 readonly LOG_FILE="/tmp/launchdeck-vpn.log"
 

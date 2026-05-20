@@ -53,7 +53,6 @@ inputs.nix-darwin.lib.darwinSystem {
     ../modules/darwin/services.nix
     inputs.kanata-darwin.darwinModules.default
     ../modules/darwin/kanata.nix
-    inputs.agenix.darwinModules.default
     inputs.nix-homebrew.darwinModules.nix-homebrew
     (brew_config { inherit username; })
     (

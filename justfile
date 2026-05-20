@@ -354,9 +354,69 @@ apply-nix-config:
     echo "⚠ Warning: trusted-users may not have applied. Check 'nix show-config | grep trusted'"
   fi
 
-# edit an agenix secret file (e.g., just age env-vars.age)
-age file:
+# configure opnix service account token (only unmanaged secret, kept out of Nix store)
+# fetches per-host token from 1Password at op://Crypt/opnix/<hostname>/token,
+# falls back to interactive `opnix token set` if `op` is missing or unauth'd.
+opnix-token:
   #!/usr/bin/env bash
-  pushd {{justfile_directory()}}/secrets > /dev/null
-  agenix -e {{file}}
-  popd > /dev/null
+  set -euo pipefail
+  config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+  token_file="$config_home/opnix/token"
+  host="$(hostname -s)"
+  op_ref="op://Crypt/opnix/${host}/token"
+  mkdir -p "$(dirname "$token_file")"
+  if command -v op >/dev/null 2>&1; then
+    echo ":: Fetching opnix token from $op_ref"
+    if op read "$op_ref" > "$token_file"; then
+      chmod 600 "$token_file"
+      echo ":: ✓ opnix token installed at $token_file"
+      exit 0
+    fi
+    echo ":: ⚠ op read failed, falling back to interactive entry"
+    rm -f "$token_file"
+  fi
+  opnix token -path "$token_file" set
+  chmod 600 "$token_file"
+
+# encrypt plaintext -> secrets/archive/<name>.age (ssh key as recipient)
+# output-name optional; defaults to basename of input. ".age" auto-added.
+# Usage: just age <path-to-plaintext> [output-name]
+age file name="":
+  #!/usr/bin/env bash
+  set -euo pipefail
+  in="{{file}}"
+  [[ -f "$in" ]] || { echo ":: ✗ input not found: $in" >&2; exit 1; }
+  name="{{name}}"
+  [[ -z "$name" ]] && name="$(basename "$in")"
+  [[ "$name" == *.age ]] || name="${name}.age"
+  out="secrets/archive/$name"
+  pub="$HOME/.ssh/id_ed25519.pub"
+  [[ -f "$pub" ]] || { echo ":: ✗ missing $pub" >&2; exit 1; }
+  mkdir -p "$(dirname "$out")"
+  echo ":: Encrypting $in -> $out"
+  nix run nixpkgs#age -- -R "$pub" -o "$out" "$in"
+  echo ":: ✓ wrote $out"
+
+# decrypt secrets/archive/<name>[.age] with ssh key; accepts bare name or full path
+# Usage: just deage <name> [out-path]   (no out-path -> stdout)
+deage file out="":
+  #!/usr/bin/env bash
+  set -euo pipefail
+  arg="{{file}}"
+  if [[ -f "$arg" ]]; then
+    in="$arg"
+  else
+    base="$arg"
+    [[ "$base" == *.age ]] || base="${base}.age"
+    in="secrets/archive/$base"
+  fi
+  [[ -f "$in" ]] || { echo ":: ✗ not found: $in" >&2; exit 1; }
+  key="$HOME/.ssh/id_ed25519"
+  [[ -f "$key" ]] || { echo ":: ✗ missing $key" >&2; exit 1; }
+  out="{{out}}"
+  if [[ -n "$out" ]]; then
+    echo ":: Decrypting $in -> $out" >&2
+    nix run nixpkgs#age -- -d -i "$key" -o "$out" "$in"
+  else
+    nix run nixpkgs#age -- -d -i "$key" "$in"
+  fi

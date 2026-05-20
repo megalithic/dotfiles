@@ -10,8 +10,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NTFY_CMD="$SCRIPT_DIR/ntfy"
 
 # Default configuration
-# VPN URL must be provided via CISCO_VPN_URL environment variable (from agenix work-env-vars.age)
-DEFAULT_VPN_URL="${CISCO_VPN_URL:?ERROR: CISCO_VPN_URL environment variable not set. Ensure work-env-vars.age is configured.}"
+# VPN URL must be provided via CISCO_VPN_URL environment variable (from opnix work env vars)
+DEFAULT_VPN_URL="${CISCO_VPN_URL:?ERROR: CISCO_VPN_URL environment variable not set. Ensure opnix work env vars are configured.}"
 DEFAULT_METHOD="gui"
 ENABLE_NOTIFICATIONS=false
 AUTO_RECONNECT=false

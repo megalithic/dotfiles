@@ -54,10 +54,9 @@
       inputs.brew-api.follows = "brew-api";
       inputs.nix-darwin.follows = "nix-darwin";
     };
-    agenix = {
-      url = "github:ryantm/agenix";
+    opnix = {
+      url = "github:brizzbuzz/opnix";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.darwin.follows = "nix-darwin";
     };
 
     # NOTE: you can pin to a specific show with neovim-nightly-overlay/<sha>
@@ -82,10 +81,6 @@
     # FIXME: Shade build broken - GhosttyKit extraction issue (see overlays/default.nix)
     # shade.url = "github:megalithic/shade";
     # shade.inputs.nixpkgs.follows = "nixpkgs";
-    # opnix = {
-    #   url = "github:brizzbuzz/opnix";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
     # yazi.url = "github:sxyazi/yazi";
     # yazi-plugins = {
     #   url = "github:yazi-rs/plugins";

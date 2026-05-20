@@ -63,7 +63,7 @@ NOTES:
     - Both VPN systems can coexist but only one should be active at a time
     - Cisco VPN supports: gui, cisco-cli, openconnect, openconnect-sso methods
     - Azure VPN connects via OpenVPN with Azure AD authentication
-    - VPN endpoints configured via agenix encrypted secrets (work-env-vars.age)
+    - VPN endpoints configured via opnix work environment secrets
 EOF
 }
 

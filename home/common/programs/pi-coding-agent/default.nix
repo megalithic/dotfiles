@@ -430,10 +430,10 @@ let
   # All config lives in ~/.pi/agent/ — no hybrid dirs, no profile borrowing.
 
   pinvim = pkgs.writeShellScriptBin "pinvim" ''
-    # Source agenix secrets for API keys (BRAVE_SEARCH_API_KEY, etc.)
-    AGENIX_DIR="$(${pkgs.darwin.system_cmds}/bin/getconf DARWIN_USER_TEMP_DIR)/agenix"
-    if [ -f "$AGENIX_DIR/env-vars" ]; then
-      . "$AGENIX_DIR/env-vars"
+    # Source opnix secrets for API keys (BRAVE_SEARCH_API_KEY, etc.)
+    XDG_CONFIG_HOME="''${XDG_CONFIG_HOME:-$HOME/.config}"
+    if [ -f "$XDG_CONFIG_HOME/opnix/secrets/env-vars.sh" ]; then
+      . "$XDG_CONFIG_HOME/opnix/secrets/env-vars.sh"
     fi
 
     # Clear conflicting env from previous pinvim sessions
@@ -445,7 +445,7 @@ let
       export BRAVE_API_KEY="$BRAVE_SEARCH_API_KEY"
     fi
 
-    # Preserve SYNTHETIC_API_KEY for pi-synthetic-provider (loaded from env, not agenix)
+    # Preserve SYNTHETIC_API_KEY for pi-synthetic-provider (loaded from env, not opnix)
     if [ -n "$SYNTHETIC_API_KEY" ]; then
       export SYNTHETIC_API_KEY
     fi

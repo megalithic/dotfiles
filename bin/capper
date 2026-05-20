@@ -3,8 +3,8 @@
 # TODO: setup certbot and own cdn domain with digital-ocean:
 # https://www.digitalocean.com/community/tutorials/how-to-use-certbot-standalone-mode-to-retrieve-let-s-encrypt-ssl-certificates-on-ubuntu-1804
 
-# Source environment variables from agenix (required for Hammerspoon context)
-ENV_VARS_PATH="$(getconf DARWIN_USER_TEMP_DIR)/agenix/env-vars"
+# Source environment variables from opnix (required for Hammerspoon context)
+ENV_VARS_PATH="${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/env-vars.sh"
 if [[ -f "$ENV_VARS_PATH" ]]; then
   source "$ENV_VARS_PATH"
 fi

@@ -4,7 +4,7 @@
 -- Setup:
 -- 1. Create bot via @BotFather on Telegram
 -- 2. Message your bot to get chat_id (use getUpdates API)
--- 3. Add to agenix secrets:
+-- 3. Add to opnix shell exports:
 --    export TELEGRAM_BOT_TOKEN="your-bot-token"
 --    export TELEGRAM_CHAT_ID="your-chat-id"
 --
@@ -25,7 +25,7 @@ local envCache = {}
 local envCacheTime = 0
 local ENV_CACHE_TTL = 300 -- 5 minutes
 
----Get environment variable with agenix secrets fallback
+---Get environment variable with opnix secrets fallback
 ---@param name string
 ---@return string|nil
 local function getEnvVar(name)
@@ -35,10 +35,10 @@ local function getEnvVar(name)
   local now = os.time()
   if envCacheTime + ENV_CACHE_TTL > now and envCache[name] then return envCache[name] end
 
-  -- Source agenix secrets directly (Hammerspoon doesn't inherit shell env)
-  -- Path: $(getconf DARWIN_USER_TEMP_DIR)/agenix/env-vars
+  -- Source opnix secrets directly (Hammerspoon doesn't inherit shell env)
+  -- Path: ${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/env-vars.sh
   local cmd = string.format(
-    '/bin/bash -c \'source "$(getconf DARWIN_USER_TEMP_DIR)/agenix/env-vars" 2>/dev/null && echo "${%s:-}"\'',
+    '/bin/bash -c \'source "${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/env-vars.sh" 2>/dev/null && echo "${%s:-}"\'',
     name
   )
   local output, status = hs.execute(cmd)

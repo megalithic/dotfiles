@@ -48,6 +48,7 @@ inputs.home-manager.lib.homeManagerConfiguration {
     inherit (inputs) self;
   };
   modules = [
+    inputs.opnix.homeManagerModules.default
     ../home/${hostname}.nix
     {
       # Enable home-manager to manage itself (standalone mode)
