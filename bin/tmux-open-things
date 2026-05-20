@@ -1,10 +1,34 @@
-#!/usr/bin/env zsh
-# Description: hook for tmux-fastcopy to open files, that contain like + column references, in vscode
+#!/usr/bin/env bash
+# Open anything — URLs in browser, files in editor, paths with line:col support.
+# Hook for tmux-fastcopy (shift-action) and extrakto (editor).
 
-# if first argument is EDITOR, remove it from $@
-if [[ $1 == "EDITOR" ]]; then
-  shift
-  micro $@
-else
-  open_in_vscode $@
+if (($# == 0)); then
+  echo "usage: tmux-open-things <path-or-url>..." >&2
+  exit 1
 fi
+
+for arg in "$@"; do
+  if [[ "$arg" =~ ^https?:// ]]; then
+    open "$arg"
+  else
+    # Extract file:line:col pattern (e.g. src/main.ts:42:7)
+    file="${arg%%:*}"
+    rest="${arg#*:}"
+    line=""
+    col=""
+
+    if [[ "$file" != "$arg" ]]; then
+      line="${rest%%:*}"
+      rest="${rest#*:}"
+      if [[ "$line" != "$rest" ]]; then
+        col="$rest"
+      fi
+    fi
+
+    if [[ -n "$line" ]]; then
+      ${EDITOR:-nvim} +"${line}${col:+:$col}" "$file"
+    else
+      ${EDITOR:-nvim} "$arg"
+    fi
+  fi
+done
