@@ -74,6 +74,7 @@
   ap = add --patch
 
   aliases = "!git config -l | grep ^alias | cut -c 7- | sort"
+  land = "!f(){ b=$(git branch --show-current); test \"$b\" != main || { echo 'already on main'; exit 1; }; git fetch origin main && git switch main && git merge --ff-only origin/main && git merge --ff-only \"$b\"; }; f"
 
   b = branch
   br = branch
