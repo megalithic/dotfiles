@@ -12,6 +12,8 @@ Nix activation guidance is explicit: when nix-darwin config changes, agents run 
 
 The repo no longer integrates with the old file-backed task tracker. Agent commands, slash-command docs, and jj workspace helper scripts should rely on jj/git state plus harness-provided ticket context instead. Workspace helpers still create and complete jj workspaces/bookmarks, but their JSON and human output no longer include task-tracker state.
 
+The stop-hook extension uses configured model ids from `home/common/programs/pi-coding-agent/settings.json` for its gatekeeper fallback. The `mega` profile falls back to `openai-codex/gpt-5.4-mini`; the `rx` profile falls back to `rx-anthropic/claude-haiku-4-5`.
+
 ## Git hooks and Nix linting
 
 Git hooks are managed by prek from the generated `.pre-commit-config.yaml`. The active hooks check merge conflicts, secrets, Nix dead code/style, shell scripts, formatting, typos, and commit-message convention.
@@ -36,7 +38,7 @@ The 1Password service account token is the only unmanaged secret input and must 
 
 Managed secret outputs:
 
-- `op://Crypt/env/notesPlain` → `${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/env-vars.sh` (sourced by zsh, fish, pinvim, Hammerspoon helpers)
+- `op://Crypt/env/notesPlain` → `${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/env-vars.sh` (POSIX-style `KEY=value`; sourced directly by zsh, parsed into exported vars by fish, and consumed by pinvim/Hammerspoon helpers)
 - `op://Crypt/s3cfg/notesPlain` → `~/.s3cfg` (required by `s3cmd`)
 
 Old `.age` files are archived under `secrets/archive/` for rollback/reference only and are no longer imported by flake, nix-darwin, or Home Manager modules. `just age <file>` re-encrypts and `just deage <name>` decrypts using `~/.ssh/id_ed25519` as the recipient/identity.

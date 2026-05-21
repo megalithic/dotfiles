@@ -27,7 +27,11 @@ const INTERRUPTED_PROMPT_BASE =
  */
 function run(cmd: string): string | null {
   try {
-    return execSync(cmd, { encoding: "utf-8", timeout: 5000, stdio: ["pipe", "pipe", "pipe"] }).trim();
+    return execSync(cmd, {
+      encoding: "utf-8",
+      timeout: 5000,
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
   } catch {
     return null;
   }
@@ -45,12 +49,15 @@ function getVcsSummary(): string {
     const jjDesc = run("jj description 2>/dev/null") || "";
 
     // Parse working copy state from jj status output
-    const hasWorkingChanges = !jjStatus.includes("no changes") && jjStatus.length > 0;
+    const hasWorkingChanges =
+      !jjStatus.includes("no changes") && jjStatus.length > 0;
     const isEmptyCommit = jjLog.includes("(empty)");
 
     let summary = "VCS (jj): ";
     if (hasWorkingChanges) {
-      const changeCount = jjStatus.split("\n").filter((l) => l.trim().length > 0).length;
+      const changeCount = jjStatus
+        .split("\n")
+        .filter((l) => l.trim().length > 0).length;
       summary += `You have ${changeCount} uncommitted working change${changeCount !== 1 ? "s" : ""} on commit "${jjDesc.split("\n")[0] || "(no description)"}". I recommend committing them with jj describe or jj new before continuing.`;
     } else if (isEmptyCommit) {
       summary += `You're on a clean, empty commit ("${jjDesc.split("\n")[0] || "no description"}").`;
@@ -59,7 +66,10 @@ function getVcsSummary(): string {
     }
 
     // Parse recent commits for context
-    const commitLines = jjLog.split("\n").filter((l) => l.trim().length > 0).slice(0, 3);
+    const commitLines = jjLog
+      .split("\n")
+      .filter((l) => l.trim().length > 0)
+      .slice(0, 3);
     if (commitLines.length > 0) {
       summary += ` Recent: ${commitLines.map((l) => l.replace(/\s+/g, " ").trim()).join("; ")}`;
     }
@@ -77,12 +87,17 @@ function getVcsSummary(): string {
     if (isClean) {
       summary += "Working tree is clean.";
     } else {
-      const changeCount = gitStatus.split("\n").filter((l) => l.trim().length > 0).length;
+      const changeCount = gitStatus
+        .split("\n")
+        .filter((l) => l.trim().length > 0).length;
       summary += `You have ${changeCount} uncommitted change${changeCount !== 1 ? "s" : ""}. I recommend committing before continuing.`;
     }
 
     if (gitLog) {
-      summary += ` Recent: ${gitLog.split("\n").filter((l) => l.trim().length > 0).join("; ")}`;
+      summary += ` Recent: ${gitLog
+        .split("\n")
+        .filter((l) => l.trim().length > 0)
+        .join("; ")}`;
     }
 
     return summary;
@@ -100,13 +115,27 @@ function getTicketSummary(messages: any[]): string {
   const hasTickets = run("test -d .tickets && echo yes");
   if (hasTickets !== "yes") return "";
 
-  type TicketLine = { id: string; text: string; status?: string; priority?: number; deps?: string[] };
-  type TicketMeta = { id: string; title: string; status?: string; priority?: number; parent?: string };
+  type TicketLine = {
+    id: string;
+    text: string;
+    status?: string;
+    priority?: number;
+    deps?: string[];
+  };
+  type TicketMeta = {
+    id: string;
+    title: string;
+    status?: string;
+    priority?: number;
+    parent?: string;
+  };
 
   const parseTicketLine = (line: string): TicketLine | null => {
     // tk ready format: "dot-xxxx [P2][open] - Title <- [dep]"
     // tk list format: "dot-xxxx [open] - Title"
-    const match = line.match(/^(\S+)\s+((?:\[[^\]]+\])+)?\s*-\s+(.+?)(?:\s+<-\s+\[([^\]]+)\])?$/);
+    const match = line.match(
+      /^(\S+)\s+((?:\[[^\]]+\])+)?\s*-\s+(.+?)(?:\s+<-\s+\[([^\]]+)\])?$/,
+    );
     if (!match) return null;
     const badges = match[2] || "";
     const priorityMatch = badges.match(/\[P(\d+)\]/);
@@ -152,7 +181,11 @@ function getTicketSummary(messages: any[]): string {
   };
 
   const recentIds = messages
-    .flatMap((m: any) => Array.from(extractText(m.content).matchAll(/\b(?:dot|pca)-[a-z0-9-]+\b/g)).map((x) => x[0]))
+    .flatMap((m: any) =>
+      Array.from(
+        extractText(m.content).matchAll(/\b(?:dot|pca)-[a-z0-9-]+\b/g),
+      ).map((x) => x[0]),
+    )
     .reverse();
   const anchorId = recentIds.find((id, idx, arr) => arr.indexOf(id) === idx);
   const anchor = anchorId ? showTicket(anchorId) : null;
@@ -162,10 +195,14 @@ function getTicketSummary(messages: any[]): string {
   const readyUnblockedRaw = run("tk ready 2>/dev/null");
 
   const inProgress = parseTickets(inProgressRaw);
-  const ready = parseTickets(readyRaw && readyRaw.length ? readyRaw : readyUnblockedRaw);
+  const ready = parseTickets(
+    readyRaw && readyRaw.length ? readyRaw : readyUnblockedRaw,
+  );
   const all = [...inProgress, ...ready];
 
-  const anchorWords = new Set((anchor?.title || "").toLowerCase().match(/[a-z0-9]+/g) || []);
+  const anchorWords = new Set(
+    (anchor?.title || "").toLowerCase().match(/[a-z0-9]+/g) || [],
+  );
   const scored = all
     .map((ticket, index) => {
       const meta = showTicket(ticket.id);
@@ -185,8 +222,12 @@ function getTicketSummary(messages: any[]): string {
         reasons.push("already in progress");
       }
 
-      const words = new Set(ticket.text.toLowerCase().match(/[a-z0-9]+/g) || []);
-      const overlap = [...words].filter((w) => w.length > 3 && anchorWords.has(w)).length;
+      const words = new Set(
+        ticket.text.toLowerCase().match(/[a-z0-9]+/g) || [],
+      );
+      const overlap = [...words].filter(
+        (w) => w.length > 3 && anchorWords.has(w),
+      ).length;
       if (overlap > 0) {
         score += Math.min(overlap * 10, 40);
         reasons.push("related scope");
@@ -200,14 +241,23 @@ function getTicketSummary(messages: any[]): string {
     .slice(0, MAX_TICKETS_PER_SECTION);
 
   const parts: string[] = [];
-  if (anchor) parts.push(`Anchor: ${anchor.id} (${anchor.title})${anchor.parent ? ` parent ${anchor.parent}` : ""}`);
+  if (anchor)
+    parts.push(
+      `Anchor: ${anchor.id} (${anchor.title})${anchor.parent ? ` parent ${anchor.parent}` : ""}`,
+    );
   if (inProgress.length > 0) {
-    const items = inProgress.slice(0, MAX_TICKETS_PER_SECTION).map((t) => `${t.id} (${t.text})`).join(", ");
+    const items = inProgress
+      .slice(0, MAX_TICKETS_PER_SECTION)
+      .map((t) => `${t.id} (${t.text})`)
+      .join(", ");
     parts.push(`In-progress: ${items}`);
   }
   if (scored.length > 0) {
     const items = scored
-      .map((t) => `${t.id} (${t.text}${t.reasons.length ? `; ${t.reasons.join(", ")}` : "; global priority fallback"})`)
+      .map(
+        (t) =>
+          `${t.id} (${t.text}${t.reasons.length ? `; ${t.reasons.join(", ")}` : "; global priority fallback"})`,
+      )
       .join(", ");
     parts.push(`Recommended next: ${items}`);
   }
@@ -285,7 +335,7 @@ async function askGatekeeper(
   modelId: string,
   contextMessages: any[],
   ctx: ExtensionContext,
-  isOllama: boolean = false
+  isOllama: boolean = false,
 ): Promise<boolean | null> {
   const model = ctx.modelRegistry.find(provider, modelId);
   if (!model) return null;
@@ -346,22 +396,34 @@ async function shouldSendNudge(
   const contextMessages = buildGatekeeperMessages(messages);
 
   // Resolution for multi-pass preset fallback
-  const preset = process.env.PI_MULTI_PASS_PRESET || process.env.PI_PROFILE || "mega";
+  const preset =
+    process.env.PI_MULTI_PASS_PRESET || process.env.PI_PROFILE || "mega";
   let fallbackProvider = "rx-anthropic";
   let fallbackModel = "claude-haiku-4-5";
-  
+
   if (preset === "mega") {
-    fallbackProvider = "codex";
-    fallbackModel = "gpt-4o-mini"; // Standard identifier, assume 5.4-mini meant 4o-mini
+    fallbackProvider = "openai-codex";
+    fallbackModel = "gpt-5.4-mini";
   }
 
   const gatekeepers = [
-    // 1. Ollama gemma4:e4b
-    { type: "local-e4b", fn: () => askGatekeeper("ollama", "gemma4:e4b", contextMessages, ctx, true) },
-    // 2. Ollama gemma4:e2b
-    { type: "local-e2b", fn: () => askGatekeeper("ollama", "gemma4:e2b", contextMessages, ctx, true) },
-    // 3. Fallback based on profile
-    { type: "fallback", fn: () => askGatekeeper(fallbackProvider, fallbackModel, contextMessages, ctx, false) },
+    // { type: "local-e4b", fn: () => askGatekeeper("ollama", "gemma4:e4b", contextMessages, ctx, true) },
+    // {
+    //   type: "local-e2b",
+    //   fn: () =>
+    //     askGatekeeper("ollama", "gemma4:e2b", contextMessages, ctx, true),
+    // },
+    {
+      type: "fallback",
+      fn: () =>
+        askGatekeeper(
+          fallbackProvider,
+          fallbackModel,
+          contextMessages,
+          ctx,
+          false,
+        ),
+    },
   ];
 
   for (const gatekeeper of gatekeepers) {

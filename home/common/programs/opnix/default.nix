@@ -57,9 +57,26 @@ in
   '';
 
   programs.fish.interactiveShellInit = lib.mkAfter ''
-    # Load opnix secrets as environment variables
-    test -f "${secretsDir}/env-vars.sh" && source "${secretsDir}/env-vars.sh"
-    test -f "${secretsDir}/work-env-vars.sh" && source "${secretsDir}/work-env-vars.sh"
+    # Load opnix POSIX-style KEY=value secrets as fish environment variables
+    function __opnix_source_env_file --argument-names file
+      test -f "$file" || return
+
+      while read -l line
+        set -l line (string trim -- "$line")
+        test -z "$line" && continue
+        string match -qr '^#' -- "$line" && continue
+
+        set line (string replace -r '^export[[:space:]]+' "" -- "$line")
+        string match -qr '^[A-Za-z_][A-Za-z0-9_]*=' -- "$line" || continue
+
+        set -l parts (string split -m1 = -- "$line")
+        set -gx $parts[1] $parts[2]
+      end < "$file"
+    end
+
+    __opnix_source_env_file "${secretsDir}/env-vars.sh"
+    __opnix_source_env_file "${secretsDir}/work-env-vars.sh"
+    functions -e __opnix_source_env_file
   '';
 
   home.packages = [
