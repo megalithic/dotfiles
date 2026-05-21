@@ -1,6 +1,6 @@
 ---
 id: dot-k0ki
-status: open
+status: in_progress
 deps: []
 links: []
 created: 2026-05-20T20:53:46Z
@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development]
 ---
+
 # Add attach-only pinvim context delivery that avoids stop-hook turns
 
 Add an attach-only context path for pinvim so Neovim can send focused file/selection/cursor context without starting an agent turn, without making pi ask what the user needs, and without triggering stop-hook follow-ups. Keep current explicit prompt behavior available for cases where the user wants to immediately ask something.
@@ -17,6 +18,7 @@ Add an attach-only context path for pinvim so Neovim can send focused file/selec
 Background: current gpa/:PiSend explicit_send path in config/nvim/lua/pinvim.lua sends an explicit_send frame to home/common/programs/pi-coding-agent/extensions/pinvim.ts. pinvim.ts formats the context and calls pi.sendUserMessage(...). sendUserMessage always starts an agent turn, so context-only sends produce a no-task turn and can interact badly with stop-hook. Desired model: context can be attached silently, then injected into the next real user prompt.
 
 Design options to evaluate and document in the ticket implementation:
+
 1. Attach-only pending context: store latest formatted context in pinvim.ts, show UI status/widget, inject it into the next non-extension user prompt. Suggested default.
 2. Custom session message: use pi.sendMessage({ customType: 'pinvim-context', ... }, { deliverAs: 'nextTurn' }) if custom messages reliably enter provider context, or combine with a context hook.
 3. appendEntry + context hook: persist pending context via pi.appendEntry('pinvim-context', data) and use pi.on('context') to inject it into the next LLM call; most controlled and survives reload if needed.
@@ -37,4 +39,3 @@ Relevant files: config/nvim/lua/pinvim.lua, config/nvim/after/plugin/pinvim.lua,
 6. Existing pinvim hello/heartbeat/ping behavior, explicit prompt behavior, ephemeral split send behavior, and protocol smoke expectations remain intact.
 7. Documentation in lat.md reflects the new attach-only vs prompt-triggering delivery modes.
 8. Verification passes: just home; nvim --headless '+lua require("pinvim").setup()' +qa; bin/pinvim-protocol-smoke; manual smoke for gpa attach-only followed by a separate user prompt.
-

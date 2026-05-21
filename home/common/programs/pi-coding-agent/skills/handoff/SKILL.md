@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Compact the current conversation into a handoff document for another agent to pick up. May be invoked with "handoff", "pickup", "/handoff", or "/pickup".
+description: "REQUIRED when user says 'pickup', '/pickup', 'handoff', '/handoff' — MUST load this skill BEFORE any other work. Compacts conversations into handoff docs or resumes work from a prior handoff document."
 argument-hint: "What will the next session be used for?"
 commands:
   - handoff
@@ -26,7 +26,7 @@ Prepend helpful, relevant, human-readable frontmatter to the handoff document:
 ```markdown
 # Handoff: {brief title}
 
-**Tmux Session:** mega
+**Tmux Session:** {output of `tmux display-message -p '#{session_name}'`}
 **Time:** 2026-02-19 14:30:00 EST
 **Working Directory:** /Users/seth/.dotfiles
 **Branch/Bookmark:** feature-auth-refactor
@@ -38,6 +38,13 @@ If a request to "pickup" or `/pickup` is invoked, the agent should use the follo
 
 - `~/.local/share/pi/handoffs/$(basename $PWD)/*.md`, find the specific document via the "Time:" in the frontmatter, the format is `2026-02-19 14:30:00 EST`
 - `~/.local/share/pi/handoffs/{the current tmux session}/*.md`, find the specific document via the "Time:" in the frontmatter, the format is `2026-02-19 14:30:00 EST` (legacy/older handoff documents followed this pattern of storage in subdirectories based on the tmux session)
+
+If the user passed arguments to pickup:
+
+- First, try to match arguments against handoff document titles/content (use `rg` to search) to find the right doc
+- If no specific match, use the most recent handoff and treat arguments as a focus directive — prioritize matching next steps and tailor the summary accordingly
+
+If no arguments, use the most recent handoff document.
 
 The agent should then:
 

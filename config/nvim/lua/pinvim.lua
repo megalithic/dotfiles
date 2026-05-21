@@ -941,6 +941,7 @@ local function detect_cursor_semantics(bufnr, cursor, word)
 end
 
 function Transport.build_explicit_send(config, command_opts)
+  command_opts = command_opts or {}
   local bufnr = vim.api.nvim_get_current_buf()
   local file = vim.api.nvim_buf_get_name(bufnr)
   local rel_file = file ~= "" and vim.fn.fnamemodify(file, ":~:.") or nil
@@ -964,7 +965,7 @@ function Transport.build_explicit_send(config, command_opts)
     word = word ~= "" and word or nil,
     selection = selection or line,
     selectionRange = selection and { start_row, end_row } or { cursor[1], cursor[1] },
-    userInput = command_opts and command_opts.user_input or nil,
+    userInput = command_opts.user_input or nil,
     modified = vim.bo[bufnr].modified,
   }
 
@@ -975,6 +976,7 @@ function Transport.build_explicit_send(config, command_opts)
 
   return {
     type = config.protocol.explicit_send,
+    delivery = command_opts.delivery or "attach",
     context = context,
   }
 end
@@ -1821,7 +1823,8 @@ function M.setup(opts)
 
     local payload = nil
     if spawn_opts.send_explicit_after then
-      payload = Transport.build_explicit_send(config, spawn_opts.command_opts or {})
+      local command_opts = vim.tbl_extend("force", spawn_opts.command_opts or {}, { delivery = "prompt" })
+      payload = Transport.build_explicit_send(config, command_opts)
     end
 
     local function select_target(socket_path, source)
@@ -1983,7 +1986,9 @@ function M.setup(opts)
 
     local function complete(ok, message)
       if ok then
-        vim.notify(message or ("pinvim: sent " .. kind .. " context"), vim.log.levels.INFO)
+        local default_message = payload.delivery == "attach" and ("pinvim: attached " .. kind .. " context")
+          or ("pinvim: sent " .. kind .. " context")
+        vim.notify(message or default_message, vim.log.levels.INFO)
         if focus_after then api.ensure_panel_visible() end
       else
         vim.notify(message or "pinvim: send failed; no live pi target", vim.log.levels.WARN)
@@ -2028,12 +2033,14 @@ function M.setup(opts)
 
   function api.send_explicit(command_opts, send_opts)
     api.clear_stale_target(true)
+    command_opts = vim.tbl_extend("force", command_opts or {}, { delivery = "attach" })
     local payload = Transport.build_explicit_send(config, command_opts)
     return api.send_explicit_payload(payload, send_opts)
   end
 
   function api.prompt_explicit(command_opts)
     api.clear_stale_target(true)
+    command_opts = vim.tbl_extend("force", command_opts or {}, { delivery = "prompt" })
     local payload = Transport.build_explicit_send(config, command_opts)
     vim.ui.input({ prompt = "pi: ", relative = "cursor", row = 1 }, function(input)
       if input == nil then return end

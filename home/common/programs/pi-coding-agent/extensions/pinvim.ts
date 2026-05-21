@@ -184,8 +184,11 @@ interface PromptPayload {
   message: string;
 }
 
+type ExplicitDelivery = "attach" | "prompt";
+
 interface ExplicitSendPayload {
   type: "explicit_send";
+  delivery?: ExplicitDelivery;
   context: {
     kind?: "selection" | "cursor";
     file?: string;
@@ -281,6 +284,15 @@ let repairReason: string | null = null;
 let peerScanTimer: NodeJS.Timeout | null = null;
 const acceptedSockets = new WeakSet<net.Socket>();
 let latestCtx: ExtensionContext | null = null;
+let nextTurnIsUserOrigin = false;
+let pendingContext: {
+  text: string;
+  label: string;
+  attachedAt: number;
+  expiresAt: number;
+} | null = null;
+let pendingContextTimer: NodeJS.Timeout | null = null;
+const PENDING_CONTEXT_TTL_MS = 5 * 60 * 1000;
 let server: net.Server | null = null;
 let infoManifestPath: string | null = null;
 const startedAt = new Date().toISOString();
@@ -341,9 +353,16 @@ const buildHelloAck = (): HelloAckPayload => ({
   accepts: ["hello", "heartbeat", "ping", "prompt", "explicit_send"],
 });
 
-const formatExplicitContext = (payload: ExplicitSendPayload): string => {
+const formatExplicitContext = (
+  payload: ExplicitSendPayload,
+  mode: "attached" | "prompt" = "prompt",
+): string => {
   const { context } = payload;
-  const parts: string[] = ["[NEOVIM EXPLICIT CONTEXT]"];
+  const parts: string[] = [
+    mode === "attached"
+      ? "[NEOVIM ATTACHED CONTEXT]"
+      : "[NEOVIM EXPLICIT CONTEXT]",
+  ];
 
   if (context.kind) parts.push(`Kind: ${context.kind}`);
   if (context.file) parts.push(`Focused file: ${context.file}`);
@@ -379,7 +398,11 @@ const formatExplicitContext = (payload: ExplicitSendPayload): string => {
 
   if (context.modified) parts.push("Buffer: modified (unsaved)");
 
-  parts.push("User explicitly sent this context from Neovim.");
+  parts.push(
+    mode === "attached"
+      ? "User attached this context from Neovim before sending the prompt."
+      : "User explicitly sent this context from Neovim.",
+  );
   return parts.join("\n");
 };
 
@@ -388,6 +411,15 @@ const formatPeerStatus = (): string => {
   if (!peer) return "";
   const label = peer.root || peer.cwd || peer.id;
   return `│ pinvim:${label.split("/").pop() || label}`;
+};
+
+const formatPendingContextStatus = (): string => {
+  if (!pendingContext) return "";
+  const secondsLeft = Math.max(
+    Math.ceil((pendingContext.expiresAt - Date.now()) / 1000),
+    0,
+  );
+  return `│ nvim ctx:${pendingContext.label} ${secondsLeft}s`;
 };
 
 const formatStatus = (): string => formatPeerStatus();
@@ -591,10 +623,12 @@ const renderInfoLines = (): string[] => {
     `Repair candidate: ${repairCandidate ? JSON.stringify(repairCandidate, null, 2) : "(none)"}`,
     `Repaired at: ${repairedAt ? new Date(repairedAt).toISOString() : "(none)"}`,
     `Repair reason: ${repairReason || "(none)"}`,
+    `Pending context: ${pendingContext ? `${pendingContext.label}, expires ${new Date(pendingContext.expiresAt).toISOString()}` : "(none)"}`,
     "Responsibilities:",
     "- owns pinvim socket for all nvim↔pi frames",
     "- owns peer metadata + footer status",
-    "- explicit sends become user messages; active sessions receive followUp",
+    "- attach-mode explicit sends wait for the next user prompt",
+    "- prompt-mode explicit sends become user messages; active sessions receive followUp",
     "Current pinvim socket inputs:",
     "- prompt / explicit_send user context frames",
     "- hello / hello_ack / heartbeat peer metadata frames",
@@ -615,9 +649,61 @@ const updateStatus = (): void => {
   try {
     if (!ctx.hasUI) return;
     ctx.ui.setStatus("pinvim", formatStatus());
+    ctx.ui.setStatus("pinvim-context", formatPendingContextStatus());
   } catch {
     latestCtx = null;
   }
+};
+
+const clearPendingContext = (reason?: string): void => {
+  if (pendingContextTimer) {
+    clearTimeout(pendingContextTimer);
+    pendingContextTimer = null;
+  }
+  const hadContext = pendingContext !== null;
+  pendingContext = null;
+  updateStatus();
+  if (hadContext && reason) latestCtx?.ui?.notify?.(reason, "info");
+};
+
+const attachPendingContext = (payload: ExplicitSendPayload): void => {
+  if (pendingContextTimer) {
+    clearTimeout(pendingContextTimer);
+    pendingContextTimer = null;
+  }
+
+  const fileLabel =
+    payload.context.file?.split("/").pop() ||
+    payload.context.absFile?.split("/").pop() ||
+    payload.context.kind ||
+    "context";
+  pendingContext = {
+    text: formatExplicitContext(payload, "attached"),
+    label: fileLabel,
+    attachedAt: Date.now(),
+    expiresAt: Date.now() + PENDING_CONTEXT_TTL_MS,
+  };
+  pendingContextTimer = setTimeout(() => {
+    clearPendingContext("Pinvim attached context expired");
+  }, PENDING_CONTEXT_TTL_MS);
+
+  updateStatus();
+  latestCtx?.ui?.notify?.(
+    `Pinvim attached ${payload.context.kind || "cursor"} context for next user prompt`,
+    "info",
+  );
+};
+
+const consumePendingContext = (): string | null => {
+  if (!pendingContext) return null;
+  if (Date.now() > pendingContext.expiresAt) {
+    clearPendingContext("Pinvim attached context expired before next prompt");
+    return null;
+  }
+
+  const text = pendingContext.text;
+  clearPendingContext();
+  return text;
 };
 
 const deliverMessage = (pi: ExtensionAPI, message: string): void => {
@@ -788,8 +874,17 @@ const handleSocketPayload = (
       return;
     }
 
-    deliverMessage(pi, formatExplicitContext(payload));
-    respondOk(socket);
+    const delivery: ExplicitDelivery =
+      payload.delivery === "prompt" || payload.context.userInput?.trim()
+        ? "prompt"
+        : "attach";
+    if (delivery === "attach") {
+      attachPendingContext(payload);
+      respondOk(socket, { delivery: "attach" });
+    } else {
+      deliverMessage(pi, formatExplicitContext(payload, "prompt"));
+      respondOk(socket, { delivery: "prompt" });
+    }
     return;
   }
 
@@ -922,6 +1017,23 @@ export default function (pi: ExtensionAPI): void {
     updateStatus();
   });
 
+  pi.on("input", (event) => {
+    nextTurnIsUserOrigin = event.source !== "extension";
+  });
+
+  pi.on("before_agent_start", async () => {
+    if (!nextTurnIsUserOrigin) return;
+    const text = consumePendingContext();
+    if (!text) return;
+    return {
+      message: {
+        customType: "pinvim-context",
+        content: text,
+        display: true,
+      },
+    };
+  });
+
   pi.on("session_shutdown", () => {
     latestCtx = null;
     if (peerScanTimer) {
@@ -940,6 +1052,7 @@ export default function (pi: ExtensionAPI): void {
     }
 
     cleanupInfoManifest();
+    clearPendingContext();
   });
 
   pi.registerCommand("pinvim-info", {
@@ -961,6 +1074,7 @@ export default function (pi: ExtensionAPI): void {
         `Heartbeat age: ${health.heartbeatAgeSeconds == null ? "(none)" : `${health.heartbeatAgeSeconds}s`}`,
         `Repair candidate: ${repairCandidate?.id || "(none)"}`,
         `Last repair: ${repairedAt ? new Date(repairedAt).toISOString() : "(none)"}`,
+        `Pending context: ${pendingContext ? `${pendingContext.label}, expires ${new Date(pendingContext.expiresAt).toISOString()}` : "(none)"}`,
         `Socket: ${SOCKET_PATH || "(disabled)"}`,
       ];
       if (ctx.hasUI)
@@ -978,6 +1092,7 @@ export default function (pi: ExtensionAPI): void {
         `Heartbeat age: ${health.heartbeatAgeSeconds == null ? "(none)" : `${health.heartbeatAgeSeconds}s`}`,
         `Repair candidate: ${repairCandidate?.id || "(none)"}`,
         `Last repair: ${repairedAt ? new Date(repairedAt).toISOString() : "(none)"}`,
+        `Pending context: ${pendingContext ? `${pendingContext.label}, expires ${new Date(pendingContext.expiresAt).toISOString()}` : "(none)"}`,
         `Socket: ${SOCKET_PATH || "(disabled)"}`,
       ];
       if (ctx.hasUI) ctx.ui.notify(lines.join("\n"), "info");

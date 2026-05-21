@@ -69,9 +69,21 @@ Selection capture must first try live Visual state for command-line usage, then 
 
 Selection-bearing actions (`gpa`, `gps`, `gpp`, `<C-p>`, `:PiSend`, and `:PiAdd`) route through explicit-send payloads. Prompt text added by `gps` is stored as `context.userInput` on that same explicit payload so pi receives normal pinvim context/metadata plus user text.
 
-Normal `gpp` and `<C-p>` open or focus an ephemeral pi split and immediately send cursor/file context from the buffer that was active when the split was requested. Visual `gpp` and `<C-p>` do the same with selection context.
+Explicit-send delivery has two modes. `gpa` and `:PiSend` use `delivery = "attach"`, so pi stores the latest formatted Neovim context, shows pending-context status, and injects it exactly once into the next non-extension user prompt. `gps` uses `delivery = "prompt"`, so it still sends context plus prompt immediately and intentionally starts an agent turn. Pending attach context expires after a short TTL and is replaced by newer attach sends; expired context is cleared instead of silently reused.
+
+Normal `gpp` and `<C-p>` open or focus an ephemeral pi split and immediately send cursor/file context from the buffer that was active when the split was requested. Visual `gpp` and `<C-p>` do the same with selection context. Ephemeral split context stays prompt-delivered so its existing start-a-turn behavior is preserved.
 
 On restart, Pinvim may auto-resume a live ephemeral pimux manifest when it belongs to the current tmux session and either matches the current window or matches the current cwd/root recently. This preserves focused ephemeral conversations across Neovim restarts without requiring buffer-local socket state.
+
+### Attach-only context delivery
+
+Pinvim attach delivery separates editor context capture from agent turn creation.
+
+`explicit_send.delivery = "attach"` is context-only. `pinvim.ts` formats the Neovim context as `[NEOVIM ATTACHED CONTEXT]`, stores only the latest pending context, updates `pinvim-context` status/UI notification, and returns `{ delivery: "attach" }` without calling `pi.sendUserMessage`. Because no agent turn starts, stop-hook has no `agent_end` event to nudge.
+
+The next non-extension `input` marks the following `before_agent_start` as user-origin. At that hook, pending context is consumed exactly once and injected as a displayed custom `pinvim-context` message for provider context. Extension-origin prompts and follow-ups do not consume pending Neovim context.
+
+Attach state is intentionally short-lived: a newer attach send replaces the old pending context, the five-minute TTL clears stale context with notification/status cleanup, and session shutdown clears it. `delivery = "prompt"` or any `context.userInput` keeps immediate prompt behavior and still uses `pi.sendUserMessage`.
 
 ### Bidirectional peer repair
 
