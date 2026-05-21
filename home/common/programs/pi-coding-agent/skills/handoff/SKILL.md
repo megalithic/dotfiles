@@ -1,13 +1,15 @@
 ---
 name: handoff
-description: Compact the current conversation into a handoff document for another agent to pick up.
+description: Compact the current conversation into a handoff document for another agent to pick up. May be invoked with "handoff", "pickup", "/handoff", or "/pickup".
 argument-hint: "What will the next session be used for?"
 commands:
   - handoff
   - pickup
 ---
 
-Write a handoff document summarising the current conversation so a fresh agent can continue the work. Save to `~/.local/share/pi/handoffs/$(basename $PWD)/$(date '+%Y-%m-%dT%H-%M-%S').md`, not the current workspace.
+### For "handoff"
+
+If a request to "handoff" is invoked by the user, then write a handoff document summarising the current conversation so a fresh agent or session can continue the work. Save to `~/.local/share/pi/handoffs/$(basename $PWD)/$(date '+%Y-%m-%dT%H-%M-%S').md`, not the current workspace.
 
 Include a "suggested skills" section in the document, which suggests skills that the agent should invoke.
 
@@ -30,10 +32,12 @@ Prepend helpful, relevant, human-readable frontmatter to the handoff document:
 **Branch/Bookmark:** feature-auth-refactor
 ```
 
-When a user invokes `/pickup` and an agent picks up the previously saved handoff document, it should use the following methods for finding the correct handoff document (using `rg` or `fd`):
+### For "pickup"
+
+If a request to "pickup" or `/pickup` is invoked, the agent should use the following methods for finding the correct handoff document (using `rg` or `fd`) to pickup:
 
 - `~/.local/share/pi/handoffs/$(basename $PWD)/*.md`, find the specific document via the "Time:" in the frontmatter, the format is `2026-02-19 14:30:00 EST`
-- `~/.local/share/pi/handoffs/{the current tmux session}/*.md`, find the specific document via the "Time:" in the frontmatter, the format is `2026-02-19 14:30:00 EST`
+- `~/.local/share/pi/handoffs/{the current tmux session}/*.md`, find the specific document via the "Time:" in the frontmatter, the format is `2026-02-19 14:30:00 EST` (legacy/older handoff documents followed this pattern of storage in subdirectories based on the tmux session)
 
 The agent should then:
 
