@@ -31,6 +31,25 @@ interface AuthConfig {
     refresh?: string;
     enterpriseUrl?: string;
   };
+  "openai-codex"?: {
+    access?: string;
+  };
+  "rx-codex"?: {
+    access?: string;
+  };
+  "rx-anthropic"?: {
+    access?: string;
+  };
+}
+
+// Rate limit headers parsed from a lightweight API response
+interface RateLimitInfo {
+  requestsLimit?: number;
+  requestsRemaining?: number;
+  requestsReset?: string;
+  tokensLimit?: number;
+  tokensRemaining?: number;
+  tokensReset?: string;
 }
 
 // Models config (~/.pi/agent/models.json)
@@ -94,6 +113,14 @@ export default function (pi: ExtensionAPI) {
   let lastModelsFetched = 0;
   let modelsFetchInFlight: Promise<ModelsConfig | null> | null = null;
 
+  // OpenAI Codex rate limit cache
+  let cachedOpenAIRateLimit: RateLimitInfo | null = null;
+  let lastOpenAIRateLimitFetched = 0;
+
+  // Anthropic rate limit cache
+  let cachedAnthropicRateLimit: RateLimitInfo | null = null;
+  let lastAnthropicRateLimitFetched = 0;
+
   // auth.json cache (shared by all providers)
   let cachedAuthData: AuthConfig | null = null;
   let lastAuthFetched = 0;
@@ -123,6 +150,18 @@ export default function (pi: ExtensionAPI) {
     if (provider === "zai") {
       cachedZaiQuota = null;
       lastZaiFetched = 0;
+      return;
+    }
+
+    if (provider === "openai-codex" || provider === "rx-codex") {
+      cachedOpenAIRateLimit = null;
+      lastOpenAIRateLimitFetched = 0;
+      return;
+    }
+
+    if (provider === "rx-anthropic") {
+      cachedAnthropicRateLimit = null;
+      lastAnthropicRateLimitFetched = 0;
       return;
     }
   }
@@ -213,7 +252,7 @@ export default function (pi: ExtensionAPI) {
   // Manual command
   pi.registerCommand("model-quota", {
     description:
-      "Show model quota for the current provider (GitHub Copilot + Z.ai supported)",
+      "Show model quota for the current provider (GitHub Copilot, Z.ai, OpenAI Codex, Anthropic supported)",
     handler: async (_args, ctx) => {
       if (!ctx.hasUI) return;
 
@@ -222,24 +261,33 @@ export default function (pi: ExtensionAPI) {
       cachedZaiQuota = null;
       lastZaiFetched = 0;
       lastGitHubCopilotFetched = 0;
+      cachedOpenAIRateLimit = null;
+      lastOpenAIRateLimitFetched = 0;
+      cachedAnthropicRateLimit = null;
+      lastAnthropicRateLimitFetched = 0;
       cachedAuthData = null;
       lastAuthFetched = 0;
       authFetchInFlight = null;
 
       // pi extensions don't get direct access to the selected provider inside commands.
       // So we show all providers if available.
-      const [copilot, zai] = await Promise.all([
+      const [copilot, zai, codex, anthropic] = await Promise.all([
         getQuotaForProvider("github-copilot", ctx.ui.theme),
         getQuotaForProvider("zai", ctx.ui.theme),
+        getQuotaForProvider("openai-codex", ctx.ui.theme),
+        getQuotaForProvider("rx-anthropic", ctx.ui.theme),
       ]);
 
       const lines: string[] = [];
       if (copilot)
         lines.push(`GitHub Copilot: ${stripAnsiLike(copilot.statusText)}`);
       if (zai) lines.push(`Z.ai: ${stripAnsiLike(zai.statusText)}`);
+      if (codex) lines.push(`OpenAI Codex: ${stripAnsiLike(codex.statusText)}`);
+      if (anthropic)
+        lines.push(`Anthropic: ${stripAnsiLike(anthropic.statusText)}`);
       if (lines.length === 0) {
         ctx.ui.notify(
-          "No quota info available. Make sure you are logged in (OAuth) for GitHub Copilot, or have configured Z.ai API key in models.json",
+          "No quota info available. Make sure you are logged in (OAuth) for GitHub Copilot or Codex, or have configured Z.ai API key in models.json",
           "info",
         );
         return;
@@ -255,6 +303,9 @@ export default function (pi: ExtensionAPI) {
   ): Promise<QuotaInfo | null> {
     if (provider === "github-copilot") return getGitHubCopilotQuota(theme);
     if (provider === "zai") return getZaiQuota(theme);
+    if (provider === "openai-codex" || provider === "rx-codex")
+      return getOpenAICodexRateLimit(theme);
+    if (provider === "rx-anthropic") return getAnthropicRateLimit(theme);
     return null;
   }
 
@@ -415,6 +466,192 @@ export default function (pi: ExtensionAPI) {
   function stripAnsiLike(text: string): string {
     // pi theme strings are plain text, but we defensively strip common ANSI just in case.
     return text.replace(/\x1b\[[0-9;]*m/g, "");
+  }
+
+  function formatRateLimitReset(resetValue: string | undefined): string | null {
+    if (!resetValue) return null;
+    try {
+      const resetDate = new Date(resetValue);
+      if (isNaN(resetDate.getTime())) return null;
+      return formatTimeUntil(resetDate.getTime());
+    } catch {
+      return null;
+    }
+  }
+
+  function parseRateLimitHeaders(
+    headers: Headers,
+    prefix: "x-ratelimit" | "anthropic-ratelimit",
+  ): RateLimitInfo {
+    const toHeader = (name: string) =>
+      headers.get(`${prefix}-${name}`) ??
+      headers.get(`${prefix}-${name.replace(/-/g, "-")}`) ??
+      undefined;
+    // OpenAI: x-ratelimit-limit-requests, x-ratelimit-remaining-requests, etc.
+    // Anthropic: anthropic-ratelimit-requests-limit, anthropic-ratelimit-requests-remaining, etc.
+    const isAnthropic = prefix === "anthropic-ratelimit";
+    return {
+      requestsLimit: isAnthropic
+        ? parseInt(headers.get(`${prefix}-requests-limit`) ?? "", 10) ||
+          undefined
+        : parseInt(headers.get(`x-ratelimit-limit-requests`) ?? "", 10) ||
+          undefined,
+      requestsRemaining: isAnthropic
+        ? parseInt(headers.get(`${prefix}-requests-remaining`) ?? "", 10) ||
+          undefined
+        : parseInt(headers.get(`x-ratelimit-remaining-requests`) ?? "", 10) ||
+          undefined,
+      requestsReset: isAnthropic
+        ? (headers.get(`${prefix}-requests-reset`) ?? undefined)
+        : (headers.get(`x-ratelimit-reset-requests`) ?? undefined),
+      tokensLimit: isAnthropic
+        ? parseInt(headers.get(`${prefix}-tokens-limit`) ?? "", 10) || undefined
+        : parseInt(headers.get(`x-ratelimit-limit-tokens`) ?? "", 10) ||
+          undefined,
+      tokensRemaining: isAnthropic
+        ? parseInt(headers.get(`${prefix}-tokens-remaining`) ?? "", 10) ||
+          undefined
+        : parseInt(headers.get(`x-ratelimit-remaining-tokens`) ?? "", 10) ||
+          undefined,
+      tokensReset: isAnthropic
+        ? (headers.get(`${prefix}-tokens-reset`) ?? undefined)
+        : (headers.get(`x-ratelimit-reset-tokens`) ?? undefined),
+    };
+  }
+
+  async function getOpenAICodexRateLimit(
+    theme: ThemeLike | undefined,
+  ): Promise<QuotaInfo | null> {
+    const now = Date.now();
+    if (cachedOpenAIRateLimit && now - lastOpenAIRateLimitFetched < 60 * 1000)
+      return formatRateLimitStatus(cachedOpenAIRateLimit, theme, "min");
+
+    try {
+      const authData = await readAuthData();
+      // Try rx-codex first, then openai-codex
+      const accessToken =
+        authData?.["rx-codex"]?.access || authData?.["openai-codex"]?.access;
+      if (!accessToken) return null;
+
+      // Lightweight request to get rate limit headers
+      const response = await fetchWithTimeout(
+        "https://api.openai.com/v1/models",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        logDebug("OpenAI rate limit fetch error:", response.status);
+        return null;
+      }
+
+      cachedOpenAIRateLimit = parseRateLimitHeaders(
+        response.headers,
+        "x-ratelimit",
+      );
+      lastOpenAIRateLimitFetched = now;
+      return formatRateLimitStatus(cachedOpenAIRateLimit, theme, "min");
+    } catch (error) {
+      logDebug("Failed to fetch OpenAI rate limits:", error);
+      return null;
+    }
+  }
+
+  async function getAnthropicRateLimit(
+    theme: ThemeLike | undefined,
+  ): Promise<QuotaInfo | null> {
+    const now = Date.now();
+    if (
+      cachedAnthropicRateLimit &&
+      now - lastAnthropicRateLimitFetched < 60 * 1000
+    )
+      return formatRateLimitStatus(cachedAnthropicRateLimit, theme, "min");
+
+    try {
+      const authData = await readAuthData();
+      const accessToken = authData?.["rx-anthropic"]?.access;
+      if (!accessToken) return null;
+
+      // Lightweight request to get rate limit headers
+      const response = await fetchWithTimeout(
+        "https://api.anthropic.com/v1/models",
+        {
+          method: "GET",
+          headers: {
+            "x-api-key": accessToken,
+            "anthropic-version": "2023-06-01",
+          },
+        },
+      );
+
+      if (!response.ok) {
+        logDebug("Anthropic rate limit fetch error:", response.status);
+        return null;
+      }
+
+      cachedAnthropicRateLimit = parseRateLimitHeaders(
+        response.headers,
+        "anthropic-ratelimit",
+      );
+      lastAnthropicRateLimitFetched = now;
+      return formatRateLimitStatus(cachedAnthropicRateLimit, theme, "min");
+    } catch (error) {
+      logDebug("Failed to fetch Anthropic rate limits:", error);
+      return null;
+    }
+  }
+
+  function formatRateLimitStatus(
+    info: RateLimitInfo | null,
+    theme: ThemeLike | undefined,
+    windowLabel: string,
+  ): QuotaInfo | null {
+    if (!info) return null;
+
+    // Focus on token rate limits (most relevant for pi usage)
+    const hasTokenInfo =
+      info.tokensLimit != null && info.tokensRemaining != null;
+    const hasRequestInfo =
+      info.requestsLimit != null && info.requestsRemaining != null;
+
+    if (!hasTokenInfo && !hasRequestInfo) return null;
+
+    const parts: string[] = [];
+
+    if (hasTokenInfo) {
+      const usedPct = Math.round(
+        ((info.tokensLimit! - info.tokensRemaining!) / info.tokensLimit!) * 100,
+      );
+      const resetText = formatRateLimitReset(info.tokensReset);
+      const timePart = resetText ? themed(theme, "dim", ` (${resetText})`) : "";
+      const label = themed(theme, "muted", `${windowLabel}: `);
+      parts.push(`${label}${formatUsedPercent(theme, usedPct)}${timePart}`);
+    }
+
+    if (hasRequestInfo && parts.length === 0) {
+      // Fall back to request rate if no token info
+      const usedPct = Math.round(
+        ((info.requestsLimit! - info.requestsRemaining!) /
+          info.requestsLimit!) *
+          100,
+      );
+      const resetText = formatRateLimitReset(info.requestsReset);
+      const timePart = resetText ? themed(theme, "dim", ` (${resetText})`) : "";
+      const label = themed(theme, "muted", `${windowLabel}: `);
+      parts.push(`${label}${formatUsedPercent(theme, usedPct)}${timePart}`);
+    }
+
+    if (parts.length === 0) return null;
+
+    const statusText = parts.join(themed(theme, "dim", " | "));
+    return {
+      statusText,
+      notify: undefined, // Per-minute rate limits auto-reset, no urgent notification needed
+    };
   }
 
   async function readAuthData(): Promise<AuthConfig | null> {

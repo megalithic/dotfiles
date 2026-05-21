@@ -169,7 +169,10 @@ export default function (pi: ExtensionAPI) {
           const presetMatch = multiPassStatus.match(/^preset:([^\s|]+)/);
           const activePreset = presetMatch?.[1];
 
-          // Line 2 right: model + thinking level
+          // Extract model-quota status for right-side display
+          const quotaStatus = extensionStatuses.get("model-quota") || "";
+
+          // Line 2 right: model + thinking level + quota
           const modelName = ctx.model?.id || "no-model";
           let rightSide: string;
 
@@ -209,12 +212,34 @@ export default function (pi: ExtensionAPI) {
             }
           }
 
-          // Merge extension statuses into stats line (between left stats and right model info)
-          // Exclude "multi-pass" preset status when it's shown on the right side
+          // Append quota status after thinking level (right side)
+          if (quotaStatus) {
+            const quotaClean = quotaStatus
+              .replace(/[\r\n\t]/g, " ")
+              .replace(/ +/g, " ")
+              .trim();
+            if (quotaClean) {
+              const quotaPart = theme.fg("dim", quotaClean);
+              const candidate = rightSide + theme.fg("dim", " • ") + quotaPart;
+              if (
+                visibleWidth(statsLeft) + 2 + visibleWidth(candidate) <=
+                width
+              ) {
+                rightSide = candidate;
+              }
+            }
+          }
+
+          // Merge remaining extension statuses into stats line (between left stats and right model info)
+          // Exclude "multi-pass" preset status (shown on right) and "model-quota" (shown on right)
           if (extensionStatuses.size > 0) {
+            const excludedKeys = new Set<string>();
+            if (activePreset) excludedKeys.add("multi-pass");
+            if (quotaStatus) excludedKeys.add("model-quota");
+
             const statusParts = Array.from(extensionStatuses.entries())
               .sort(([a], [b]) => a.localeCompare(b))
-              .filter(([key]) => !(activePreset && key === "multi-pass"))
+              .filter(([key]) => !excludedKeys.has(key))
               .map(([, text]) =>
                 text
                   .replace(/[\r\n\t]/g, " ")
