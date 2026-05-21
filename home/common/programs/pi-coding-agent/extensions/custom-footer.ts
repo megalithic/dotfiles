@@ -72,10 +72,6 @@ async function fetchStarship(cwd: string): Promise<string> {
 }
 
 interface TokenCache {
-  totalInput: number;
-  totalOutput: number;
-  totalCacheRead: number;
-  totalCacheWrite: number;
   totalCost: number;
   entryCount: number;
 }
@@ -84,10 +80,6 @@ export default function (pi: ExtensionAPI) {
   pi.on("session_start", (_event, ctx) => {
     let cachedStarship = "";
     const tokenCache: TokenCache = {
-      totalInput: 0,
-      totalOutput: 0,
-      totalCacheRead: 0,
-      totalCacheWrite: 0,
       totalCost: 0,
       entryCount: 0,
     };
@@ -128,28 +120,16 @@ export default function (pi: ExtensionAPI) {
           // Token totals (cached, only recompute when entry count changes)
           const entries = ctx.sessionManager.getEntries();
           if (entries.length !== tokenCache.entryCount) {
-            let ti = 0,
-              to = 0,
-              tcr = 0,
-              tcw = 0,
-              cost = 0;
+            let cost = 0;
             for (const entry of entries) {
               if (
                 entry.type === "message" &&
                 entry.message.role === "assistant"
               ) {
                 const m = entry.message as AssistantMessage;
-                ti += m.usage.input;
-                to += m.usage.output;
-                tcr += m.usage.cacheRead;
-                tcw += m.usage.cacheWrite;
                 cost += m.usage.cost?.total ?? 0;
               }
             }
-            tokenCache.totalInput = ti;
-            tokenCache.totalOutput = to;
-            tokenCache.totalCacheRead = tcr;
-            tokenCache.totalCacheWrite = tcw;
             tokenCache.totalCost = cost;
             tokenCache.entryCount = entries.length;
           }
@@ -160,29 +140,20 @@ export default function (pi: ExtensionAPI) {
           const contextWindow = contextUsage?.contextWindow ?? 0;
 
           const statsParts: string[] = [];
-          if (tokenCache.totalInput)
-            statsParts.push(
-              theme.fg("muted", `↑${formatTokens(tokenCache.totalInput)}`),
-            );
-          if (tokenCache.totalOutput)
-            statsParts.push(
-              theme.fg("muted", `↓${formatTokens(tokenCache.totalOutput)}`),
-            );
-          if (tokenCache.totalCacheRead)
-            statsParts.push(
-              theme.fg("muted", `R${formatTokens(tokenCache.totalCacheRead)}`),
-            );
-          if (tokenCache.totalCacheWrite)
-            statsParts.push(
-              theme.fg("muted", `W${formatTokens(tokenCache.totalCacheWrite)}`),
-            );
 
           // Display session cost (pre-calculated by pi-ai)
           if (tokenCache.totalCost > 0) {
-            statsParts.push(theme.fg("muted", formatCost(tokenCache.totalCost)));
+            statsParts.push(
+              theme.fg("muted", formatCost(tokenCache.totalCost)),
+            );
           }
 
-          const contextDisplay = `${contextPct.toFixed(1)}%/${formatTokens(contextWindow)}`;
+          // Context: used/total (pct%)
+          const usedTokens =
+            contextUsage?.tokens != null
+              ? formatTokens(contextUsage.tokens)
+              : "?";
+          const contextDisplay = `${usedTokens}/${formatTokens(contextWindow)} (${contextPct.toFixed(1)}%)`;
           const contextColor =
             contextPct > 75 ? "error" : contextPct > 50 ? "warning" : "success";
           statsParts.push(theme.fg(contextColor, contextDisplay));
