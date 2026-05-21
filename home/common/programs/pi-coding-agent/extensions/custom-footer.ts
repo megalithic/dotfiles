@@ -172,61 +172,73 @@ export default function (pi: ExtensionAPI) {
           // Extract model-quota status for right-side display
           const quotaStatus = extensionStatuses.get("model-quota") || "";
 
-          // Line 2 right: model + thinking level + quota
+          // Line 2 right: build as priority-ordered segments
+          // Priority (highest = last to drop): model > thinking > preset > provider > quota
           const modelName = ctx.model?.id || "no-model";
-          let rightSide: string;
+          const sep = theme.fg("dim", " • ");
 
+          // Core: always shown
+          const modelPart = theme.fg("accent", modelName);
+
+          // Thinking level (drop after provider)
+          let thinkingPart = "";
+          if (ctx.model?.reasoning) {
+            const level = pi.getThinkingLevel() || "off";
+            thinkingPart =
+              sep +
+              theme.fg("mdQuote", level === "off" ? "thinking off" : level);
+          }
+
+          // Preset prefix (drop before provider)
+          let presetPart = "";
           if (activePreset && ctx.model) {
-            // Preset active: show ({preset}) provider/model • thinkingLevel
-            const providerName = ctx.model.provider;
-            rightSide =
-              theme.fg("muted", `(${activePreset}) `) +
-              theme.fg("muted", `${providerName}/`) +
-              theme.fg("accent", modelName);
-            if (ctx.model.reasoning) {
-              const level = pi.getThinkingLevel() || "off";
-              rightSide +=
-                theme.fg("dim", " • ") +
-                theme.fg("mdQuote", level === "off" ? "thinking off" : level);
-            }
-          } else {
-            // No preset: standard provider/model display
-            rightSide = theme.fg("accent", modelName);
-            if (ctx.model?.reasoning) {
-              const level = pi.getThinkingLevel() || "off";
-              rightSide +=
-                theme.fg("dim", " • ") +
-                theme.fg("mdQuote", level === "off" ? "thinking off" : level);
-            }
+            presetPart = theme.fg("muted", `(${activePreset}) `);
+          }
 
-            // Prepend provider if multiple available
-            if (footerData.getAvailableProviderCount() > 1 && ctx.model) {
-              const withProvider =
-                theme.fg("muted", `(${ctx.model.provider}) `) + rightSide;
-              if (
-                visibleWidth(statsLeft) + 2 + visibleWidth(withProvider) <=
-                width
-              ) {
-                rightSide = withProvider;
-              }
+          // Provider prefix (drop before quota)
+          let providerPart = "";
+          if (footerData.getAvailableProviderCount() > 1 && ctx.model) {
+            if (activePreset) {
+              providerPart = theme.fg("muted", `${ctx.model.provider}/`);
+            } else {
+              providerPart = theme.fg("muted", `(${ctx.model.provider}) `);
             }
           }
 
-          // Append quota status after thinking level (right side)
+          // Quota (drop first)
+          let quotaPart = "";
           if (quotaStatus) {
             const quotaClean = quotaStatus
               .replace(/[\r\n\t]/g, " ")
               .replace(/ +/g, " ")
               .trim();
             if (quotaClean) {
-              const quotaPart = theme.fg("dim", quotaClean);
-              const candidate = rightSide + theme.fg("dim", " • ") + quotaPart;
-              if (
-                visibleWidth(statsLeft) + 2 + visibleWidth(candidate) <=
-                width
-              ) {
-                rightSide = candidate;
-              }
+              quotaPart = sep + theme.fg("dim", quotaClean);
+            }
+          }
+
+          // Progressive truncation: try full, then drop items from lowest priority
+          // Available width for right side
+          const availableForRight = width - visibleWidth(statsLeft) - 2;
+
+          const candidates = [
+            // 0: Full — preset + provider + model + thinking + quota
+            presetPart + providerPart + modelPart + thinkingPart + quotaPart,
+            // 1: Drop quota — preset + provider + model + thinking
+            presetPart + providerPart + modelPart + thinkingPart,
+            // 2: Drop provider — preset + model + thinking
+            presetPart + modelPart + thinkingPart,
+            // 3: Drop preset — model + thinking
+            modelPart + thinkingPart,
+            // 4: Minimal — model only
+            modelPart,
+          ];
+
+          let rightSide = modelPart;
+          for (const candidate of candidates) {
+            if (visibleWidth(candidate) <= availableForRight) {
+              rightSide = candidate;
+              break;
             }
           }
 
