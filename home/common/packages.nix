@@ -100,7 +100,6 @@ let
     openconnect
     openssl_3
     openvpn
-    poppler
     pre-commit
     procs
     s3cmd

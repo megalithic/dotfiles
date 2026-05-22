@@ -20,6 +20,12 @@ Pi helper scripts copied from external setups live under `home/common/programs/p
 
 Pi skills copied from external setups live under `home/common/programs/pi-coding-agent/skills/`. Existing local skills should be diffed before overwrite because some local versions carry repo-specific workflow rules.
 
+## Home Manager package set
+
+Home Manager package composition avoids direct `pkgs.poppler` plus `pkgs."poppler-utils"` installs.
+
+In nixpkgs 25.10, `pkgs.poppler` (`poppler-glib`) and `pkgs."poppler-utils"` ship overlapping `libpoppler-glib` paths. PDF CLI tools come from `poppler-utils` where needed, including the Pi wrapper module and scripts that call `pdftoppm`.
+
 ## Git hooks and Nix linting
 
 Git hooks are managed by prek from the generated `.pre-commit-config.yaml`. The active hooks check merge conflicts, secrets, Nix dead code/style, shell scripts, formatting, typos, and commit-message convention.
