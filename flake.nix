@@ -62,8 +62,6 @@
     # NOTE: you can pin to a specific show with neovim-nightly-overlay/<sha>
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
 
-    llm-agents.url = "github:numtide/llm-agents.nix";
-    mcp-servers-nix.url = "github:natsukium/mcp-servers-nix";
     # nur.url = "github:nix-community/nur";
     expert.url = "github:elixir-lang/expert";
     devenv.url = "github:cachix/devenv";
@@ -89,10 +87,7 @@
   };
 
   outputs =
-    {
-      nixpkgs,
-      ...
-    }@inputs:
+    { nixpkgs, ... }@inputs:
     let
       arch = "aarch64-darwin";
       version = "25.11";
