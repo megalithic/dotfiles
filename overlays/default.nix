@@ -42,6 +42,42 @@
     expert = inputs.expert.packages.${prev.stdenv.hostPlatform.system}.default;
     notmuch = prev.notmuch.override { withEmacs = false; };
 
+    # pi-coding-agent: patch retry behavior + expose setScopedModels to extensions
+    pi-coding-agent = prev.pi-coding-agent.overrideAttrs (old: {
+      postInstall = (old.postInstall or "") + ''
+        # Find agent-session.js regardless of namespace (@earendil-works, @mariozechner, pi-monorepo)
+        TARGET=$(find $out/lib/node_modules -path '*/dist/core/agent-session.js' -print -quit)
+        if [ -z "$TARGET" ]; then
+          echo "WARNING: agent-session.js not found, skipping pi patches"
+        else
+          # 1. Skip maxRetries cap for 429/rate-limit errors
+          substituteInPlace "$TARGET" \
+            --replace-fail 'if (this._retryAttempt > settings.maxRetries) {' \
+            'const _is429 = /429|rate.?limit|too many requests/i.test(message.errorMessage || ""); if (!_is429 && this._retryAttempt > settings.maxRetries) {'
+
+          # 2. Cap delay at maxDelayMs (set to 900000/15min in settings.json)
+          substituteInPlace "$TARGET" \
+            --replace-fail 'const delayMs = settings.baseDelayMs * 2 ** (this._retryAttempt - 1);' \
+            'const delayMs = Math.min(settings.baseDelayMs * 2 ** (this._retryAttempt - 1), settings.maxDelayMs);'
+
+          # 3. Expose setScopedModels to extensions via providerActions
+          substituteInPlace "$TARGET" \
+            --replace-fail \
+              'unregisterProvider: (name) => {' \
+              'setScopedModels: (models) => { this.setScopedModels(models); }, unregisterProvider: (name) => {'
+
+          # 4. Wire setScopedModels through to extension runtime
+          RUNNER=$(find $out/lib/node_modules -path '*/dist/core/extensions/runner.js' -print -quit)
+          if [ -n "$RUNNER" ]; then
+            substituteInPlace "$RUNNER" \
+              --replace-fail \
+                'this.runtime.registerProvider = (name, config) => {' \
+                'this.runtime.setScopedModels = providerActions?.setScopedModels ?? (() => {}); this.runtime.registerProvider = (name, config) => {'
+          fi
+        fi
+      '';
+    });
+
     # shade - Floating terminal panel for macOS (prebuilt from GitHub release)
     shade = prev.stdenv.mkDerivation {
       pname = "shade";
