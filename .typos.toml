@@ -1,3 +1,7 @@
 [files]
 extend-exclude = ["home/config/weechat/*.conf"]
 ignore-hidden = false
+
+[default.extend-words]
+# imput LLC — Helium browser vendor (imputnet/helium-macos)
+imput = "imput"

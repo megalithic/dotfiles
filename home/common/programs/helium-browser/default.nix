@@ -25,8 +25,9 @@
   lib,
   self,
   ...
-}: {
-  imports = ["${self}/lib/builders/mkChromiumBrowser.nix"];
+}:
+{
+  imports = [ "${self}/lib/builders/mkChromiumBrowser.nix" ];
 
   config = {
     programs.helium-browser = {
@@ -35,9 +36,6 @@
       applicationSupportDir = "net.imput.helium";
 
       commandLineArgs = [
-        # Remote debugging for browser automation.
-        # Brave uses 9222; using 9223 here so both can run concurrently.
-        "--remote-debugging-port=9223"
         # Startup behavior
         "--no-first-run"
         "--no-default-browser-check"
@@ -52,7 +50,7 @@
         "--disable-features=OutdatedBuildDetector"
       ];
 
-      dictionaries = [pkgs.hunspellDictsChromium.en_US];
+      dictionaries = [ pkgs.hunspellDictsChromium.en_US ];
 
       # Extensions auto-install on first launch via External Extensions JSON.
       #
@@ -66,16 +64,21 @@
       # Update prodversion to match Helium's underlying Chromium version on
       # major upgrades (check Helium.app/Contents/Frameworks/Helium\ Framework
       # .framework/Versions/).
-      extensions = let
-        helium-update-url = "https://clients2.google.com/service/update2/crx?prodversion=147.0.7727.116";
-        ext = id: { inherit id; updateUrl = helium-update-url; };
-      in [
-        (ext "gfbliohnnapiefjpjlpjnehglfpaknnc") # Surfingkeys
-        (ext "egpjdkipkomnmjhjmdamaniclmdlobbo") # Firenvim
-        (ext "gmdfnfcigbfkmghbjeelmbkbiglbmbpe") # LiveDebugger DevTools
-        (ext "cfcmijalplpjkfihjkdjdkckkglehgcf") # Clear Downloads
-        (ext "ponfpcnoihfmfllpaingbgckeeldkhle") # Enhancer for YouTube
-      ];
+      extensions =
+        let
+          helium-update-url = "https://clients2.google.com/service/update2/crx?prodversion=147.0.7727.116";
+          ext = id: {
+            inherit id;
+            updateUrl = helium-update-url;
+          };
+        in
+        [
+          (ext "gfbliohnnapiefjpjlpjnehglfpaknnc") # Surfingkeys
+          (ext "egpjdkipkomnmjhjmdamaniclmdlobbo") # Firenvim
+          (ext "gmdfnfcigbfkmghbjeelmbkbiglbmbpe") # LiveDebugger DevTools
+          (ext "cfcmijalplpjkfihjkdjdkckkglehgcf") # Clear Downloads
+          (ext "ponfpcnoihfmfllpaingbgckeeldkhle") # Enhancer for YouTube
+        ];
 
       # macOS keyboard shortcuts (NSUserKeyEquivalents)
       # Format: ^ = Ctrl, $ = Shift, ~ = Option, @ = Cmd
@@ -96,15 +99,12 @@
       # We set the bundleId to match Helium's actual ID (net.imput.helium)
       # so LaunchServices treats the wrapper as the primary Helium app.
       darwinWrapperApp = {
-        enable = true;
-        name = "Helium";
-        bundleId = "com.nix.helium-browser";
-        addToHomePackages = true;
+        enable = false;
       };
     };
 
     home.activation.heliumBrowserEnableDeveloperMode = lib.mkIf config.programs.helium-browser.enable (
-      lib.hm.dag.entryAfter ["writeBoundary"] ''
+      lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         HELIUM_PREFS="${config.home.homeDirectory}/Library/Application Support/net.imput.helium/Default/Secure Preferences"
         if [ -f "$HELIUM_PREFS" ]; then
           if [ "$(${pkgs.jq}/bin/jq -r '.extensions.ui.developer_mode // false' "$HELIUM_PREFS")" != "true" ]; then
@@ -138,43 +138,45 @@
     # First-time install: user must click "Open Anyway" ONCE in
     # System Settings → Privacy & Security after the initial `just home`.
     # Every rebuild after that reuses the cached approval.
-    home.activation.heliumBrowserInstallToApplications = lib.mkIf config.programs.helium-browser.enable (
-      lib.hm.dag.entryAfter ["writeBoundary"] ''
-        SRC="${config.programs.helium-browser.package}/Applications/Helium.app"
-        DST="/Applications/Helium.app"
+    home.activation.heliumBrowserInstallToApplications =
+      lib.mkIf config.programs.helium-browser.enable
+        (
+          lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+            SRC="${config.programs.helium-browser.package}/Applications/Helium.app"
+            DST="/Applications/Helium.app"
 
-        if [ ! -d "$SRC" ]; then
-          echo "helium-browser: source bundle missing at $SRC; skipping /Applications/ install"
-        elif [ ! -w /Applications ] && ! groups | tr ' ' '\n' | grep -qx admin; then
-          echo "helium-browser: cannot write to /Applications/ (user not in admin group); skipping"
-        else
-          # Initial install: just create the bundle. Inode preservation kicks in
-          # on subsequent rebuilds.
-          if [ ! -e "$DST" ]; then
-            echo "helium-browser: first-time install of Helium.app to /Applications/"
-            echo "helium-browser: NOTE — after this run, you must click 'Open Anyway' ONCE"
-            echo "helium-browser:   in System Settings → Privacy & Security to approve the bundle."
-            echo "helium-browser:   The approval persists across all future rebuilds (inode preserved)."
-          fi
-          # rsync -a (archive) --inplace (no rename dance, preserves inodes)
-          # --delete (remove stale files from prior builds)
-          # Excludes: nothing — we want full sync.
-          #
-          # NOTE: we chmod +w first because nix store files are read-only,
-          # and rsync --inplace fails to overwrite read-only files.
-          # macOS Sequoia App Management TCC blocks chmod/write to /Applications
-          # apps once installed — even with sudo. Tolerate failures and let rsync
-          # decide if the files actually need updating.
-          if [ -d "$DST" ]; then
-            $DRY_RUN_CMD chmod -R u+w "$DST" 2>/dev/null || true
-          fi
-          $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -a --inplace --delete \
-            "$SRC/" "$DST/" 2>&1 | head -20 || {
-              echo "helium-browser: rsync to /Applications/ failed (Sequoia App Management may be blocking)"
-              echo "helium-browser: existing /Applications/Helium.app left in place"
-            }
-        fi
-      ''
-    );
+            if [ ! -d "$SRC" ]; then
+              echo "helium-browser: source bundle missing at $SRC; skipping /Applications/ install"
+            elif [ ! -w /Applications ] && ! groups | tr ' ' '\n' | grep -qx admin; then
+              echo "helium-browser: cannot write to /Applications/ (user not in admin group); skipping"
+            else
+              # Initial install: just create the bundle. Inode preservation kicks in
+              # on subsequent rebuilds.
+              if [ ! -e "$DST" ]; then
+                echo "helium-browser: first-time install of Helium.app to /Applications/"
+                echo "helium-browser: NOTE — after this run, you must click 'Open Anyway' ONCE"
+                echo "helium-browser:   in System Settings → Privacy & Security to approve the bundle."
+                echo "helium-browser:   The approval persists across all future rebuilds (inode preserved)."
+              fi
+              # rsync -a (archive) --inplace (no rename dance, preserves inodes)
+              # --delete (remove stale files from prior builds)
+              # Excludes: nothing — we want full sync.
+              #
+              # NOTE: we chmod +w first because nix store files are read-only,
+              # and rsync --inplace fails to overwrite read-only files.
+              # macOS Sequoia App Management TCC blocks chmod/write to /Applications
+              # apps once installed — even with sudo. Tolerate failures and let rsync
+              # decide if the files actually need updating.
+              if [ -d "$DST" ]; then
+                $DRY_RUN_CMD chmod -R u+w "$DST" 2>/dev/null || true
+              fi
+              $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -a --inplace --delete \
+                "$SRC/" "$DST/" 2>&1 | head -20 || {
+                  echo "helium-browser: rsync to /Applications/ failed (Sequoia App Management may be blocking)"
+                  echo "helium-browser: existing /Applications/Helium.app left in place"
+                }
+            fi
+          ''
+        );
   };
 }
