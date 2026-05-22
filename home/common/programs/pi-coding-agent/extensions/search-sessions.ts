@@ -3,7 +3,7 @@
  * Reads a pre-built index from ~/.cache/pi-session-index.json.
  */
 
-import { Type } from "@sinclair/typebox";
+import { Type } from "typebox";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";

@@ -438,9 +438,9 @@ async function shouldSendNudge(
     }
   }
 
-  // Both unavailable — nudge as safe default (unless too many failures)
-  if (failureCounter.count >= MAX_GATEKEEPER_FAILURES) return false;
-  return true;
+  // Both unavailable — don't nudge without informed decision
+  failureCounter.count++;
+  return false;
 }
 
 export default function (pi: ExtensionAPI) {

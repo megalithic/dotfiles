@@ -75,7 +75,8 @@ User says: "create a ticket for X" or "add a ticket for X"
 1. Clarify scope if ambiguous
 2. Explore the codebase to find relevant files
 3. Create the ticket
-4. Show the created ticket to the user
+4. Commit the ticket: `git add .tickets/ && git commit -m "feat(tickets): add ticket for <short description>"`
+5. Show the created ticket to the user
 
 If the request is vague ("add a ticket for that auth thing I mentioned"), create a backlog ticket: brief title, minimal description, **no tag**. The user or a later refine session will fill in the details.
 
@@ -121,7 +122,8 @@ Turn a vague backlog ticket into a workable one. If the ticket is too large, spl
    - Numbered acceptance criteria (each independently verifiable)
    - Correct type if the current one is wrong
 6. Add the `ready-for-development` tag to the frontmatter
-7. Show the refined ticket to the user
+7. Commit the refined ticket: `git add .tickets/ && git commit -m "refactor(tickets): refine ticket <id>"`
+8. Show the refined ticket to the user
 
 Batch refine: if the user says "refine backlog tickets" or "refine all", repeat for each untagged open ticket. Stop on the first one that needs user clarification — don't guess.
 
@@ -133,13 +135,13 @@ Modes 2 and 3 create a context file to avoid redundant discovery in each ticket-
 
 **Prerequisite**: if a `lat.md/` directory exists at the project root, skip context seeding entirely. The `lat search` command (run in step 2) provides living, queryable context that makes a static context file redundant.
 
-After exploring the codebase (step 2 in both modes), check if `~/.local/share/pi/plans/$(basename $PWD)/{slug}.ticket-context.md` exists (slug resolved per the task-pipeline skill — typically `${TICKET_ID}-<kebab>` or the slug passed in by `/tickets`). If it does, skip — the context is already seeded. If not, create it:
+After exploring the codebase (step 2 in both modes), check if `plans/.ticket-context.md` exists. If it does, skip — the context is already seeded. If not, create it:
 
 ```bash
-mkdir -p ~/.local/share/pi/plans/"$(basename "$PWD")"
+mkdir -p plans
 ```
 
-Write `~/.local/share/pi/plans/$(basename $PWD)/{slug}.ticket-context.md` with three sections:
+Write `plans/.ticket-context.md` with three sections:
 
 ```markdown
 ## Verification commands
@@ -163,7 +165,7 @@ Fill in each section from what you discovered during exploration:
 - **Key directories**: list directories relevant to the batch of tickets being created
 - **Conventions**: notable patterns found during exploration (error handling style, file structure, naming)
 
-The context file is scoped per ticket (one file per slug) and lives outside the repo at `~/.local/share/pi/plans/$(basename $PWD)/`. All tickets in a single batch (created from one plan) share the same context file keyed by that plan's slug.
+The context file is project-local and reusable across all tickets in the batch.
 
 ## Self-validation (always run after Mode 2/3)
 
@@ -188,4 +190,7 @@ Report: number of tickets created, any issues found and fixed, whether tickets a
 4. Create tickets via `tk create` with all fields populated. Use real newlines in `-d` and `--acceptance` arguments — never pass literal `\n` characters
 5. If multiple tickets: set dependencies via `tk dep <id> <dep-id>`
 6. Run self-validation (see above)
-7. Present created tickets for review
+7. Commit all created tickets: `git add .tickets/ && git commit -m "feat(tickets): add tickets for <short description>"`
+   - If `.tickets/` is not the tickets dir, find it first with `find . -name .tickets -type d`
+   - Also commit any context file created (`plans/.ticket-context.md`)
+8. Present created tickets for review

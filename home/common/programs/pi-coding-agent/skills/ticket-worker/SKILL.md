@@ -7,20 +7,6 @@ description: Work on a single tk ticket end-to-end. Use when the user says 'work
 
 Work on a single ticket from start to finish. Follow each step in order. Do not skip verification.
 
-## VCS detection
-
-Detect which VCS is in use at the start of every session:
-
-```bash
-if command -v jj >/dev/null 2>&1 && jj root >/dev/null 2>&1; then
-  VCS=jj
-else
-  VCS=git
-fi
-```
-
-Use `$VCS` for all version control operations below.
-
 ## Workflow
 
 ### 1. Read the ticket
@@ -29,166 +15,83 @@ Use `$VCS` for all version control operations below.
 tk show <id>
 ```
 
-Check for `ready-for-development` tag. If missing, **stop** — ticket not refined:
+Check that the ticket has the `ready-for-development` tag. If it doesn't, **stop** — the ticket is not refined enough for automated work. Add a note and exit:
 
 ```bash
-tk add-note <id> "Skipped: ticket not tagged ready-for-development. Needs refinement."
+tk add-note <id> "Skipped: ticket not tagged ready-for-development. Needs refinement before work can start."
 ```
 
-If tag present, mark in progress:
+If the tag is present, mark the ticket as in progress:
 
 ```bash
 tk start <id>
 ```
 
-### 2. Check VCS state
+Understand the title, description, acceptance criteria, and any file hints.
 
-Before any work, check current VCS status:
+### 2. Explore the codebase
 
-```bash
-# jj
-jj status && jj log -n 3
-
-# git
-git status && git log --oneline -3
-```
-
-Ensure working directory is clean or that uncommitted changes are unrelated to this ticket.
-
-### 3. Explore the codebase
-
-- If `lat.md/` exists at project root: run `lat search` with keywords from the ticket
-- Read files mentioned in description
+- If `lat.md/` exists at project root: run `lat search` with keywords from the ticket title and description. Read relevant sections with `lat section` to understand the architecture before exploring code files.
+- Read the files mentioned in the description
 - grep for relevant patterns, function names, imports
-- Understand scope of changes needed
+- Understand the scope of changes needed
 - Do not start implementing yet
 
-### 4. Discover verification commands
+### 3. Discover verification commands
 
-Check in order:
+Check these files in order to find how to build, test, and lint:
 
-1. `devenv.nix` — scripts, tasks, processes, git-hooks, test commands
-2. `package.json` — scripts.test, scripts.lint, scripts.build
-3. `Makefile` — test, lint, check, build targets
-4. `flake.nix` — checks
+1. `devenv.nix` — look for `scripts`, `tasks`, `processes`, `git-hooks`, test commands
+2. `package.json` — look for `scripts.test`, `scripts.lint`, `scripts.build`
+3. `Makefile` — look for `test`, `lint`, `check`, `build` targets
+4. `flake.nix` — look for `checks`
 
-Remember what you find — you need these after every change.
+Remember what you find. You will need these after every change.
 
-### 5. Implement incrementally
+### 4. Implement incrementally
 
 - Make one focused change
-- Run verification commands from step 4
+- Run the verification commands you discovered in step 3
 - If broken: fix before moving on
-- If context is getting heavy: commit what you have, stop — next session continues
+- If context is getting heavy: commit what you have, stop — the next session can continue
 
-### 6. Verify each acceptance criterion
+### 5. Verify each acceptance criterion
 
-Go through criteria one by one:
+Go through the acceptance criteria one by one. For each criterion:
 
-- Command specified → run it, check output
-- "tests pass" → run test suite
-- "linter clean" → run linter
-- Behavioral → verify by reading code or running relevant commands
-- State whether each criterion passes or fails
+- If it specifies a command: run that command and check the output
+- If it says "tests pass": run the test suite
+- If it says "linter clean": run the linter
+- If it is behavioral: verify by reading the changed code or running relevant commands
+- Explicitly state whether each criterion passes or fails
 
-If `lat.md/` exists: run `lat check`. Update lat.md if needed. Ticket not done with failing `lat check`.
+If `lat.md/` exists at project root: run `lat check`. If it fails, update `lat.md/` to reflect your changes and re-run until it passes. The ticket is not complete with a failing `lat check`.
 
 Do not declare victory until every criterion is verified.
 
-### 7. Commit and close
+### 6. Commit and close
 
 If all acceptance criteria pass:
 
-1. **Generate commit title** — brief conventional commit: `type(scope): description`
-2. **Prompt developer for description:**
-   > "Ready to commit as `type(scope): title`. Want to add a detailed description before committing?"
-   - If yes: wait for developer input, include as commit body
-   - If no: commit with title only
-3. **Commit:**
-   ```bash
-   # jj
-   jj describe -m "type(scope): title"
-   # or with description:
-   jj describe -m "type(scope): title" -m "Detailed description from developer"
+1. Commit using the conventions in the `git-commit` skill (`git commit -S -m "type(scope): description"`). If `lat.md/` was updated, include those changes in the same commit.
+2. Close the ticket: `tk close <id>` (not `done` — `done` is not a valid status)
+3. Add a summary note: `tk add-note <id> "Summary of what was done"`
 
-   # git
-   git add -A && git commit -m "type(scope): title"
-   # or with description:
-   git add -A && git commit -m "type(scope): title" -m "Detailed description"
-   ```
-4. **Close ticket:** `tk close <id>`
-5. **Add summary note:** `tk add-note <id> "Summary of what was done"`
-6. **Suggest next work** (see section below)
-7. **Prompt for next action:**
-   > "Ticket closed. Push to remote, or move to next ticket?"
+### 7. If stuck
 
-### 8. If stuck
+If you cannot complete the ticket:
 
-1. Add blocker note: `tk add-note <id> "Blocked because..."`
+1. Add a note to the ticket explaining the blocker: `tk add-note <id> "Blocked because..."`
 2. Do not close the ticket
-3. Commit partial progress if it makes sense:
-   ```bash
-   # jj
-   jj describe -m "wip(scope): partial work on <ticket>"
-
-   # git
-   git add -A && git commit -m "wip(scope): partial work on <ticket>"
-   ```
+3. Commit any partial progress if it makes sense
 4. Exit cleanly
-
-## Suggesting next work
-
-After closing a ticket (step 7.6), evaluate what to work on next. Do **related work first**, then global queue:
-
-1. Same parent epic or parent task as the ticket just closed.
-2. Same plan/task sequence, if a plan file orders the work.
-3. Direct dependents that became unblocked by the closed ticket.
-4. Open or in-progress siblings under the same parent.
-5. Related scope/name/file area.
-6. Global priority fallback from `tk ready -T ready-for-development`.
-
-Useful commands:
-
-```bash
-# Closed ticket metadata: parent, priority, title, deps
-tk show <closed-id>
-
-# Same parent/sibling context
-tk show <parent-id>
-
-# Global fallback only after related candidates
-tk ready -T ready-for-development
-```
-
-Present top 1–3 candidates to the developer with:
-- Ticket ID + title
-- Priority level
-- Why it is recommended: same epic, plan-next, newly unblocked/direct dependent, sibling, related scope, or global fallback
-
-If an associated plan exists, check it for recommended ordering:
-
-```bash
-# Look for plan files in the plans dir
-ls ~/.local/share/pi/plans/"$(basename "$PWD")"/*_PLAN.md 2>/dev/null
-```
-
-If a plan exists and its steps have an ordering, prefer the plan's sequence over raw priority. Mention this: "Per plan X, next step is Y."
-
-Do not suggest unrelated global P1 tickets ahead of a ready/in-progress sibling in the same epic unless the developer explicitly asks for the global queue.
-
-If `tk ready` returns nothing:
-- Check `tk blocked` — are remaining tickets waiting on external work?
-- Check `tk list --status=open` — are there unrefined tickets that need `/refine`?
-- If all tickets are closed, say so: "All tickets complete."
 
 ## Rules
 
-- **Verify, don't assume.** Run commands. Check output.
+- **Verify, don't assume.** Run the commands. Check the output.
 - **Stay focused.** Only change files relevant to the ticket.
 - **No bonus refactoring.** Fix what the ticket asks, nothing more.
 - **Weak acceptance criteria?** Fall back to: description satisfied + existing tests pass.
 - **One ticket per session.** Don't carry context from unrelated work.
-- **One ticket = one commit.** Each ticket produces exactly one VCS commit.
-- **Work in current checkout.** Worktree support planned but not active.
-- **Commit message format.** Conventional commits, brief title. Developer provides description.
-- **VCS-agnostic.** Use jj if available, git otherwise. Never hardcode one.
+- **Work in the current checkout.** The pipeline handles worktree setup (task-pipeline skill). When invoked manually or via work-tickets.sh, just work in the current directory.
+- **Commit message format.** Always use conventional commits, single line, GPG-signed, no AI attribution.
