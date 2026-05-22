@@ -719,6 +719,29 @@ local function discover_socket_by_tmux(config)
     local window_socket =
       string.format("%s/%s-%s-%s.sock", config.transport.socket_dir, config.transport.prefix, context.session, window)
     if socket_exists(window_socket) then return window_socket end
+
+    -- Glob for ephemeral sockets: pi-{session}-{window}-eph-*.sock
+    local eph_pattern = string.format(
+      "%s/%s-%s-%s-eph-*.sock",
+      config.transport.socket_dir,
+      config.transport.prefix,
+      context.session,
+      window
+    )
+    local matches = vim.fn.glob(eph_pattern, false, true)
+    if #matches > 0 then
+      -- Filter to live sockets, pick most recently modified
+      local best, best_mtime = nil, 0
+      for _, sock_path in ipairs(matches) do
+        if socket_exists(sock_path) then
+          local mtime = stat_mtime(sock_path)
+          if mtime > best_mtime then
+            best, best_mtime = sock_path, mtime
+          end
+        end
+      end
+      if best then return best end
+    end
   end
 
   return nil
