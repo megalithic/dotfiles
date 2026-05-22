@@ -30,7 +30,6 @@ let
     spotify
     # telegram-desktop
     vscode # migrated from homebrew cask 2026-05-05 (brew-nix can't extract Electron symlinks)
-    zed-editor # migrated from homebrew cask 2026-05-05
     zoom-us
   ];
 
