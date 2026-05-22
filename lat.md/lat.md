@@ -14,6 +14,12 @@ The repo no longer integrates with the old file-backed task tracker. Agent comma
 
 The stop-hook extension uses configured model ids from `home/common/programs/pi-coding-agent/settings.json` for its gatekeeper fallback. The `mega` profile falls back to `openai-codex/gpt-5.4-mini`; the `rx` profile falls back to `rx-anthropic/claude-haiku-4-5`.
 
+Pi package files copied from external setups live under `home/common/programs/pi-coding-agent/packages/` before being wired into the main Home Manager module. This keeps migration inputs (Nix derivations and vendored lockfiles) close to local wrapper package sources while preserving reviewable upstream pins.
+
+Pi helper scripts copied from external setups live under `home/common/programs/pi-coding-agent/scripts/` alongside local maintenance scripts before being wired into Home Manager activation or user tooling.
+
+Pi skills copied from external setups live under `home/common/programs/pi-coding-agent/skills/`. Existing local skills should be diffed before overwrite because some local versions carry repo-specific workflow rules.
+
 ## Git hooks and Nix linting
 
 Git hooks are managed by prek from the generated `.pre-commit-config.yaml`. The active hooks check merge conflicts, secrets, Nix dead code/style, shell scripts, formatting, typos, and commit-message convention.
