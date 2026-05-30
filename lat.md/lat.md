@@ -102,6 +102,8 @@ In nixpkgs 25.10, `pkgs.poppler` (`poppler-glib`) and `pkgs."poppler-utils"` shi
 
 The local inference path is llama.cpp, not Ollama. `home/common/programs/ollama/` can exist as a small package module for compatibility or manual tooling, but it has no effect unless imported by a Home Manager profile.
 
+`bin/llm-pull` defaults to the `llamacpp` backend. It downloads Q4_K_M GGUF files with `hf download` into `${XDG_DATA_HOME:-$HOME/.local/share}/llama.cpp/models`, then creates alias symlinks such as `qwen3.6.gguf`, `deepseek14b.gguf`, and `gemma4.gguf` so `llama-server --models-dir` exposes IDs that match Pi's `models.json` and `settings.json`. The old `ollama` and `omlx` backends are obsolete and fail with migration guidance rather than assuming those binaries exist.
+
 ## Git hooks and Nix linting
 
 Git hooks are managed by prek from the generated `.pre-commit-config.yaml`.
