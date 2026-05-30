@@ -328,20 +328,20 @@ function buildGatekeeperMessages(messages: any[]) {
 }
 
 /**
- * Call cloud gatekeeper via pi's model registry + completeSimple.
+ * Call a gatekeeper via pi's model registry + completeSimple.
  */
 async function askGatekeeper(
   provider: string,
   modelId: string,
   contextMessages: any[],
   ctx: ExtensionContext,
-  isOllama: boolean = false,
+  allowMissingApiKey: boolean = false,
 ): Promise<boolean | null> {
   const model = ctx.modelRegistry.find(provider, modelId);
   if (!model) return null;
 
   const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
-  if (!auth.ok || (!auth.apiKey && !isOllama)) return null;
+  if (!auth.ok || (!auth.apiKey && !allowMissingApiKey)) return null;
 
   const response = await completeSimple(
     model,
@@ -407,12 +407,10 @@ async function shouldSendNudge(
   }
 
   const gatekeepers = [
-    // { type: "local-e4b", fn: () => askGatekeeper("ollama", "gemma4:e4b", contextMessages, ctx, true) },
-    // {
-    //   type: "local-e2b",
-    //   fn: () =>
-    //     askGatekeeper("ollama", "gemma4:e2b", contextMessages, ctx, true),
-    // },
+    {
+      type: "local-gemma4",
+      fn: () => askGatekeeper("llamacpp", "gemma4", contextMessages, ctx, true),
+    },
     {
       type: "fallback",
       fn: () =>
@@ -438,7 +436,7 @@ async function shouldSendNudge(
     }
   }
 
-  // Both unavailable — don't nudge without informed decision
+  // All unavailable — don't nudge without informed decision
   failureCounter.count++;
   return false;
 }

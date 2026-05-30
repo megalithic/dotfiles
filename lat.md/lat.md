@@ -12,7 +12,7 @@ Nix activation guidance is explicit: when nix-darwin config changes, agents run 
 
 The repo no longer integrates with the old file-backed task tracker. Agent commands, slash-command docs, and jj workspace helper scripts should rely on jj/git state plus harness-provided ticket context instead. Workspace helpers still create and complete jj workspaces/bookmarks, but their JSON and human output no longer include task-tracker state.
 
-The stop-hook extension uses configured model ids from `home/common/programs/pi-coding-agent/settings.json` for its gatekeeper fallback. The `mega` profile falls back to `openai-codex/gpt-5.4-mini`; the `rx` profile falls back to `rx-anthropic/claude-haiku-4-5`.
+The stop-hook extension uses `llamacpp/gemma4` as its local gatekeeper first, matching `home/common/programs/pi-coding-agent/models.json` and `settings.json`. If that local model is unavailable, the cloud fallback stays profile-aware: `mega` falls back to `openai-codex/gpt-5.4-mini`; `rx` falls back to `rx-anthropic/claude-haiku-4-5`.
 
 Pi package files copied from external setups live under `home/common/programs/pi-coding-agent/packages/` before being wired into the main Home Manager module. This keeps migration inputs close to local wrapper package sources while preserving reviewable upstream pins.
 

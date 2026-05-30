@@ -1,6 +1,6 @@
 ---
 id: dot-06iy
-status: in_progress
+status: closed
 deps: [dot-hq7c]
 links: []
 created: 2026-05-18T13:40:31Z
@@ -31,3 +31,7 @@ Resume point after dot-hq7c: Nix service/package wiring is on llama.cpp, but Pi 
 **2026-05-30T03:56:36Z**
 
 Progress: switched Pi local model config to llamacpp provider at http://127.0.0.1:18080/v1; settings local scopes now reference llamacpp/qwen3.6, llamacpp/deepseek14b, and llamacpp/gemma4. Verified JSON, lat_check, and just validate home. Not closed/committed because checkout has unrelated pre-existing changes mixed in settings.json and lat.md.
+
+**2026-05-30T04:15:24Z**
+
+Completed: Pi local model config now uses the llamacpp OpenAI-compatible provider at http://127.0.0.1:18080/v1; settings scopes reference llamacpp aliases; cloud presets unchanged. Verified JSON files, lat_check, and just validate home. No commit created because working tree was already clean.

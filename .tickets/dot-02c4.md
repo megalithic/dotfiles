@@ -1,6 +1,6 @@
 ---
 id: dot-02c4
-status: open
+status: closed
 deps: [dot-06iy]
 links: []
 created: 2026-05-18T13:40:31Z
@@ -9,6 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Update Pi stop-hook gatekeeper to llama.cpp
 
 Change the Pi stop-hook local gatekeeper fallback from Ollama gemma4:e4b/gemma4:e2b to llama.cpp Gemma aliases. Preserve behavior: cheap local gatekeeper first, then fallback path. File hints: home/common/programs/pi-coding-agent/extensions/stop-hook.ts and pi-coding-agent AGENTS.md for extension conventions.
@@ -21,9 +22,12 @@ Change the Pi stop-hook local gatekeeper fallback from Ollama gemma4:e4b/gemma4:
 4. Existing Pi extension typecheck/lint/build command, if defined, passes.
 5. just validate home passes.
 
-
 ## Notes
 
 **2026-05-19T14:54:06Z**
 
 Depends on dot-06iy because stop-hook aliases must match the llama.cpp provider/model IDs introduced there. Replace local gatekeeper calls with llamacpp Gemma aliases; keep cloud fallback unchanged.
+
+**2026-05-30T13:34:01Z**
+
+Completed: stop-hook local gatekeeper now tries llamacpp/gemma4 before the existing profile-aware cloud fallback. Removed Ollama gemma4:e4b/e2b local gatekeeper references. Updated lat.md and verified format, lat_check, reviewer pass, and just validate home.
