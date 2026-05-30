@@ -1,16 +1,19 @@
 {
   "mcpServers": {
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest"]
+    },
     "context7": {
-      "url": "https://mcp.context7.com/mcp"
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
+      }
     },
-    "tidewave": {
-      "type": "http",
-      "url": "http://localhost:4000/tidewave/mcp",
-      "lifecycle": "keep-alive"
-    },
-    "paper": {
-      "type": "http",
-      "url": "http://localhost:29979/mcp"
+    "githits": {
+      "url": "https://mcp.githits.com/",
+      "auth": "bearer",
+      "bearerTokenEnv": "GITHITS_API_KEY"
     }
   }
 }

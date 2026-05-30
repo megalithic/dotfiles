@@ -538,6 +538,7 @@ function mega.ui.statuscolumn.render_full(is_active)
   -- (extmark_signs pads with spacer(1) when empty); other_signs is padded to
   -- MIN_SIGN_WIDTH above.
   local other_slot = is_active and other_signs or { spacer(chunks_total_width(other_signs)) }
+  -- local other_slot = is_active and other_signs or { spacer(chunks_total_width(other_signs)) }
   local git_slot_components = is_active and git_signs or { spacer(chunks_total_width(git_signs)) }
 
   local r1 = section:new(spacer(1), {
@@ -575,12 +576,10 @@ function mega.ui.statuscolumn.set(bufnr, is_active)
   if tier == "none" then
     vim.opt_local.statuscolumn = ""
   elseif tier == "minimal" then
-    vim.opt_local.statuscolumn = is_active
-        and [[%!v:lua.mega.ui.statuscolumn.render_minimal(v:true)]]
+    vim.opt_local.statuscolumn = is_active and [[%!v:lua.mega.ui.statuscolumn.render_minimal(v:true)]]
       or [[%!v:lua.mega.ui.statuscolumn.render_minimal(v:false)]]
   else -- full
-    vim.opt_local.statuscolumn = is_active
-        and [[%!v:lua.mega.ui.statuscolumn.render_full(v:true)]]
+    vim.opt_local.statuscolumn = is_active and [[%!v:lua.mega.ui.statuscolumn.render_full(v:true)]]
       or [[%!v:lua.mega.ui.statuscolumn.render_full(v:false)]]
   end
 end

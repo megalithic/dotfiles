@@ -14,11 +14,85 @@ The repo no longer integrates with the old file-backed task tracker. Agent comma
 
 The stop-hook extension uses configured model ids from `home/common/programs/pi-coding-agent/settings.json` for its gatekeeper fallback. The `mega` profile falls back to `openai-codex/gpt-5.4-mini`; the `rx` profile falls back to `rx-anthropic/claude-haiku-4-5`.
 
-Pi package files copied from external setups live under `home/common/programs/pi-coding-agent/packages/` before being wired into the main Home Manager module. This keeps migration inputs (Nix derivations and vendored lockfiles) close to local wrapper package sources while preserving reviewable upstream pins.
+Pi package files copied from external setups live under `home/common/programs/pi-coding-agent/packages/` before being wired into the main Home Manager module. This keeps migration inputs close to local wrapper package sources while preserving reviewable upstream pins.
 
-Pi helper scripts copied from external setups live under `home/common/programs/pi-coding-agent/scripts/` alongside local maintenance scripts before being wired into Home Manager activation or user tooling.
+NPM-backed Pi helpers use `buildNpmPackage` derivations plus pinned lockfiles under `home/common/programs/pi-coding-agent/packages/`. The built result is symlinked into `~/.pi/agent/extensions/` when the helper is an extension.
+
+The main Pi module auto-discovers `.ts` extensions, extension directories, `./agents/*.md`, `./skills/*`, and `./prompts/*.md` so new simple helpers land in Home Manager by directory shape, not manual list edits. JSON files in `extensions/` are not auto-discovered unless an extension reads them directly. Helpers that need `node_modules` should not rely on generic skill symlinks; give them a package derivation or split `SKILL.md` from built scripts.
+
+The `agents/` directory now contains only a `.gitkeep` sentinel. The previous `planner.md` and `researcher.md` agent definitions were removed because agent definitions come from the pi-subagents package defaults.
+
+Pi helper scripts copied from external setups live under `home/common/programs/pi-coding-agent/scripts/` alongside local maintenance scripts before being wired into Home Manager activation or user tooling. Temporary local verification scripts belong in ignored `.local_scripts/`.
+
+## Pi runtime settings
+
+`home/common/programs/pi-coding-agent/settings.json` is merged during activation.
+
+It drives default provider, enabled models, terminal behavior, and multi-sub presets. The shell command prefix forces noninteractive git behavior and enables tmux image handling via `PI_TMUX_IMAGES=1`.
+
+Local Pi models use the `llamacpp` OpenAI-compatible provider at `http://127.0.0.1:18080/v1`; model scopes reference `llamacpp/qwen3.6`, `llamacpp/deepseek14b`, and `llamacpp/gemma4` aliases instead of Ollama or oMLX. Activation also removes redundant `package.json`, `package-lock.json`, and `node_modules` from `~/.pi/agent/extensions` because Pi's own module resolver handles extension deps.
+
+Global MCP server config lives in `home/common/programs/pi-coding-agent/mcp.json` and is Home Manager-managed. It declares command-backed `chrome-devtools`, remote `context7` with `CONTEXT7_API_KEY`, and remote `githits` with bearer auth from `GITHITS_API_KEY`.
+
+Local app-backed MCP servers such as Tidewave and Paper are not declared globally unless they are expected to be running. Keep-alive localhost MCP entries cause reconnect spam when their backing service is down.
+
+Pi subagent orchestration is provided by the packaged `pi-subagents` extension at `home/common/programs/pi-coding-agent/packages/pi-subagents.nix`, symlinked to `~/.pi/agent/extensions/pi-subagents`. The old local `extensions/subagent/` TypeScript implementation is intentionally removed; agent definitions come from the package defaults plus any local markdown files in `home/common/programs/pi-coding-agent/agents/`.
+
+The local `checkpoint.ts` extension is removed from Home Manager-managed Pi extensions. Checkpoint/main-branch prompting now comes from the agent harness rather than this repo-local extension, so repo docs should not describe `home/common/programs/pi-coding-agent/extensions/checkpoint.ts` as active.
+
+The `sentinel.ts` extension loads rules only from `home/common/programs/pi-coding-agent/extensions/sentinel-rules.json` at startup. A copied file with another name, such as `sentinel-rules 2.json`, is inert until renamed or explicitly wired into the extension.
 
 Pi skills copied from external setups live under `home/common/programs/pi-coding-agent/skills/`. Existing local skills should be diffed before overwrite because some local versions carry repo-specific workflow rules.
+
+The `web-browser` skill is still a local skill directory. Its scripts declare an NPM dependency on `ws`, so the durable Nix pattern is to build `skills/web-browser/scripts` with `buildNpmPackage` and symlink built scripts, rather than running npm during activation.
+
+## Global Pi agent policy
+
+`home/common/programs/pi-coding-agent/sources/GLOBAL_AGENTS.md` is the Home Manager source for `~/.pi/agent/AGENTS.md`; `APPEND_SYSTEM.md` is intentionally empty.
+
+The current global policy mirrors the root repo `AGENTS.md` structure rather than being a standalone shorter document. It covers tools (`trash`, `devenv`, MCP lookups via `context7`/`githits`), caveman mode, writing style, vision-model subprocesses for images, git conventions, KISS/YAGNI coding, lat.md sync, subagent delegation (scout/plan/implement/review/fix), ralph-loop for repetitive tasks, and `.local_scripts/` for ignored scratch scripts. A snapshot of the previous standalone version is preserved in `sources/GLOBAL_AGENTS_20260522.md`.
+
+Version-control rules that are specific to this dotfiles repo remain in root `AGENTS.md`, not in the global Pi source. Keep global guidance portable; keep repo-specific nix-darwin/Home Manager guardrails at repo root.
+
+## Devenv shell activation
+
+Repo devenv entry uses shell hooks plus direnv support; generated caches stay ignored.
+
+Fish startup is generated from `home/common/programs/fish/default.nix` and function definitions from `functions.nix`. Home Manager fish startup sources keybindings, theme, completions, and functions directly; it does not read `home/common/programs/fish/config.fish`.
+
+`home/common/programs/fish/config.fish` is a standalone experiment for loading `devenv print-dev-env` output into the current fish shell on directory changes. It is not active until the Home Manager module sources it.
+
+Interactive bash and zsh shells carry separate `devenv shell`-on-`cd` helpers in `home/common/programs/bash/default.nix` and `home/common/programs/zsh/default.nix`. Home Manager also enables direnv + nix-direnv globally in `home/common/default.nix` for repos that still use `.envrc`.
+
+The root `.envrc` still exists for direnv-based workflows. Repo-local `.devenv` directories are ignored alongside `.direnv`, including nested tool caches, and `.local_scripts/` is ignored for scratch verification scripts.
+
+Unused flake inputs should be removed from `flake.lock` after their `flake.nix` references are gone. The repo no longer retains `llm-agents.nix` or `mcp-servers-nix` lock entries when no module imports them.
+
+## Helium browser launch path
+
+Helium is the primary Hammerspoon browser (`BROWSER = "net.imput.helium"`). Launchers must keep the real `/Applications/Helium.app` bundle intact for LaunchServices and 1Password validation.
+
+Hyper+J launches `/Applications/Helium.app/Contents/MacOS/Helium` through `hs.task` with declarative Chromium flags from `C.helium.args`; if Helium is already running, the binding only activates it.
+
+Terminal launches use the fish `helium` function with the same flag set. Hammerspoon app bindings special-case Helium: if the app is running they focus it; otherwise they launch the real executable via `hs.task` with `C.helium.args`. Do not replace the signed app bundle with a wrapper app just to add flags.
+
+Hammerspoon and fish keep separate copies of the Chromium flag list; changes to remote-debugging, first-run, GPU, crash, wake, ping, or outdated-build flags must update both launch paths together.
+
+Local Developer ID signing/notarization is now viable for the installed Helium bundle. Sign with `Developer ID Application: Seth Messer (3ZJ3F5RFBZ)`, submit with Keychain profile `AC_PASSWORD`, staple ticket, then verify `spctl` reports `source=Notarized Developer ID`.
+
+The current Home Manager activation still rsyncs the unsigned Nix-store Helium over `/Applications/Helium.app`. Until signing is automated in activation, `just home` or `just rebuild` can replace a manually notarized install; darwin-only activation should not touch it.
+
+Pi's web-browser skill defaults to the Helium binary through `WEB_BROWSER_PATH`, so browser automation and the Hammerspoon launch path stay on the same app bundle.
+
+## Terminal and editor UI preferences
+
+UI preferences keep terminal, tmux, and Neovim behavior predictable across local sessions.
+
+Ghostty uses native `maximize = true` instead of oversized window dimensions. The animated boo cursor shader is disabled by default, leaving the block cursor and other shell integration settings active.
+
+Tmux session layouts remain explicit scripts. The `mega` layout opens a separate `code` window before the `agent` window, while the `rx` layout registers a `session-closed` hook that runs `devenv down`. The megaforest theme uses orange for the active pane border to make focus visible.
+
+Neovim git URL mappings define explicit file, branch, and blame copy/open bindings in `config/nvim/lua/plugins/git.lua`. Keep descriptions aligned with the configured `GitLink`/`GitLink!` command forms instead of relying on memory of bang semantics. Mini.diff hunk reset and overlay mappings live under `<localleader>h*` so they do not collide with broader leader mappings.
 
 ## Home Manager package set
 
@@ -26,11 +100,19 @@ Home Manager package composition avoids direct `pkgs.poppler` plus `pkgs."popple
 
 In nixpkgs 25.10, `pkgs.poppler` (`poppler-glib`) and `pkgs."poppler-utils"` ship overlapping `libpoppler-glib` paths. PDF CLI tools come from `poppler-utils` where needed, including the Pi wrapper module and scripts that call `pdftoppm`.
 
+The local inference path is llama.cpp, not Ollama. `home/common/programs/ollama/` can exist as a small package module for compatibility or manual tooling, but it has no effect unless imported by a Home Manager profile.
+
 ## Git hooks and Nix linting
 
-Git hooks are managed by prek from the generated `.pre-commit-config.yaml`. The active hooks check merge conflicts, secrets, Nix dead code/style, shell scripts, formatting, typos, and commit-message convention.
+Git hooks are managed by prek from the generated `.pre-commit-config.yaml`.
+
+The active hooks check merge conflicts, secrets, Nix dead code/style, shell scripts, formatting, and commit-message convention. The typos hook is disabled in `devenv.nix` with `git-hooks.hooks.typos.enable = lib.mkForce false` so the local choice wins over the imported `devenv-base` default.
 
 `statix.toml` disables the `repeated_keys` lint because repeated top-level Nix module keys are intentional in this repo: related Home Manager and nix-darwin options stay near the context that explains them. Other statix/deadnix warnings should still be fixed rather than ignored.
+
+Typos config is still generated by `devenv.nix` into `.typos.toml` for manual runs, but the pre-commit hook is disabled. If `devenv:files` reports a conflicting `.typos.toml`, the checked-in file is masking the generated config; update both or resolve ownership before relying on manual typos output.
+
+Manual `typos` scans can cover more than the active change set, including hidden files and tracked ticket docs. Baseline failures can include old prose, shader variable names, and local acronyms; fix true misspellings separately from adding narrow project vocabulary entries.
 
 ## Preview command
 
@@ -52,12 +134,25 @@ Managed secret outputs:
 
 - `op://Crypt/env/notesPlain` → `${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/env-vars.sh` (POSIX-style `KEY=value`; sourced directly by zsh, parsed into exported vars by fish, and consumed by pinvim/Hammerspoon helpers)
 - `op://Crypt/s3cfg/notesPlain` → `~/.s3cfg` (required by `s3cmd`)
+- `op://Crypt/apple-developer/username` → `${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/apple-developer/apple-id`, exported as `APPLE_ID_EMAIL` in zsh/bash/fish
+- `op://Crypt/apple-developer/Section_6qgogrdycnlqc4x7ngqwchlyvi/team id` → `${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/apple-developer/team-id`, exported as `APPLE_TEAM_ID` in zsh/bash/fish
+- `op://Crypt/apple-developer/Section_6qgogrdycnlqc4x7ngqwchlyvi/notarytool app password` → `${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/apple-developer/notarytool-password`, exported as `APPLE_NOTARYTOOL_PASSWORD` in zsh/bash/fish
+
+Apple notarization credentials are mirrored from `Shared/Apple ID Dev Account` into `Crypt/apple-developer` because the OpNix service account can only read the `Crypt` vault. Do not point Home Manager OpNix references at `Shared`; mirror fields into `Crypt` first. Use them to create the local Keychain profile with `xcrun notarytool store-credentials "AC_PASSWORD" --apple-id "$APPLE_ID_EMAIL" --team-id "$APPLE_TEAM_ID" --password "$APPLE_NOTARYTOOL_PASSWORD"`.
+
+Shell secret loading is shell-specific: zsh uses `programs.zsh.initContent`, bash uses `programs.bash.bashrcExtra`, and fish parses the same files in `programs.fish.interactiveShellInit`. Do not assume zsh init snippets run for bash.
 
 Old `.age` files are archived under `secrets/archive/` for rollback/reference only and are no longer imported by flake, nix-darwin, or Home Manager modules. `just age <file>` re-encrypts and `just deage <name>` decrypts using `~/.ssh/id_ed25519` as the recipient/identity.
 
-## Fish jj wrapper
+## Fish shell helpers
+
+Fish carries repo workflow helpers and desktop integration environment variables.
 
 Fish defines a `jj` wrapper that runs real `jj` inside jj repos, allows `jj git init`, and falls back to `git` with a hint inside plain git repos. This lets shared commands prefer `jj` without breaking git-only repositories.
+
+The `helium` fish function launches `/Applications/Helium.app/Contents/MacOS/Helium` with the same Chromium flags used by Hammerspoon. Keep the fish function and Hammerspoon `C.helium.args` in sync.
+
+`PLUG_EDITOR` is exported from `home/common/programs/fish/default.nix` as a `hammerspoon://nvim-open` URL. Phoenix/browser stack traces use it so Hammerspoon can choose the correct Neovim target at click time.
 
 ## Tmux layouts
 

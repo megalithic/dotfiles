@@ -245,42 +245,6 @@ in
     };
   };
 
-  # home.file =
-  #   {
-  #     # Symlink pi binary directly (avoids node_modules conflict)
-  #     ".local/bin/pi".source = "${pi-coding-agent}/bin/pi";
-  #
-  #     # Global AGENTS.md
-  #     ".pi/agent/AGENTS.md".source = ./sources/GLOBAL_AGENTS.md;
-  #     ".pi/agent/APPEND_SYSTEM.md".source = ./sources/APPEND_SYSTEM.md;
-  #
-  #     # Plain JSON configs — keybindings uses out-of-store symlink so pi can write to it
-  #     ".pi/agent/keybindings.json".source =
-  #       config.lib.mega.linkDotfile "home/common/programs/pi-coding-agent/keybindings.json";
-  #
-  #     ".pi/agent/models.json".source = ./models.json;
-  #     ".pi/agent/mcp.json".source = ./mcp.json;
-  #
-  #     # Built extensions with npm dependencies
-  #     # Full directory extensions (symlink whole package)
-  #     # ".pi/agent/extensions/pi-agent-browser".source = pi-agent-browser;
-  #     ".pi/agent/extensions/pi-mcp-adapter".source = pi-mcp-adapter;
-  #
-  #     # web-browser skill: SKILL.md from source, scripts/ from built derivation
-  #     # (scripts need node_modules/ws baked in by buildNpmPackage)
-  #     ".pi/agent/skills/web-browser/SKILL.md".source = ./skills/web-browser/SKILL.md;
-  #     ".pi/agent/skills/web-browser/scripts".source = webBrowserScripts;
-  #     ".pi/agent/extensions/pi-internet".source = pi-internet;
-  #     # pi-multi-pass: auto-discovered as extensions/multi-sub.ts (no nix derivation needed)
-  #     ".pi/agent/extensions/pi-synthetic-provider".source = pi-synthetic-provider;
-  #     # ".pi/agent/extensions/pi-interactive-subagents".source = pi-interactive-subagents;
-  #     # ".pi/agent/extensions/pi-diff-review".source = pi-diff-review;
-  #   }
-  #   // extensionSymlinks
-  #   // agentSymlinks
-  #   // skillSymlinks
-  #   // promptSymlinks;
-
   launchd.agents.pi-session-indexer = {
     enable = true;
     config = {

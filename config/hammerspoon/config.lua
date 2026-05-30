@@ -1,9 +1,9 @@
 local M = {}
 
 HYPER = "F19"
-BROWSER = "com.nix.brave-browser-nightly"
+BROWSER = "net.imput.helium"
+-- BROWSER = "com.nix.brave-browser-nightly"
 -- BROWSER = "com.brave.Browser.nightly"
--- BROWSER = "net.imput.helium"
 TERMINAL = "com.mitchellh.ghostty"
 
 -- Bundle ID aliases: wrapper bundle ID -> actual running app bundle ID
@@ -11,6 +11,22 @@ TERMINAL = "com.mitchellh.ghostty"
 M.bundleIdAliases = {
   ["com.nix.brave-browser-nightly"] = "com.brave.Browser.nightly",
   ["com.nix.helium-wrapper"] = "net.imput.helium",
+}
+
+M.helium = {
+  bundleID = "net.imput.helium",
+  executable = "/Applications/Helium.app/Contents/MacOS/Helium",
+  args = {
+    "--remote-debugging-port=9223",
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--hide-crashed-bubble",
+    "--ignore-gpu-blocklist",
+    "--disable-breakpad",
+    "--disable-wake-on-wifi",
+    "--no-pings",
+    "--disable-features=OutdatedBuildDetector",
+  },
 }
 
 M.displays = {

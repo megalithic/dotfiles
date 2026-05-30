@@ -28,6 +28,10 @@ tmux -2 send-keys -t "$SESSION":1 ls C-m
 #   tmux -2 send-keys -t "$SESSION":1 aerc C-m
 # fi
 
+# Window "code"
+tmux new-window -c "$CWD" -t "$SESSION":2 -n code
+tmux send-keys -t "$SESSION":2.1 "ls" "C-m"
+
 # Window "agent" - pinvim
 tmux new-window -c "$CWD" -t "$SESSION":2 -n agent
 tmux send-keys -t "$SESSION":2.1 "pinvim" "C-m"

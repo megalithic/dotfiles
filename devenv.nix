@@ -1,4 +1,7 @@
-_: {
+{ lib, ... }:
+{
+  git-hooks.hooks.typos.enable = lib.mkForce false;
+
   files = {
     ".typos.toml".text = ''
       [default.extend-words]

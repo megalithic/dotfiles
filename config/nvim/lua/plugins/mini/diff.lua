@@ -122,17 +122,17 @@ return {
       { desc = "Current hunk text object" }
     )
 
-    map("n", "<leader>hr", function() return require("mini.diff").operator("reset") .. MINI_DIFF_TEXTOBJECT end, {
+    map("n", "<localleader>hr", function() return require("mini.diff").operator("reset") .. MINI_DIFF_TEXTOBJECT end, {
       expr = true,
       remap = true,
       desc = "Reset current hunk",
     })
 
-    map({ "x" }, "<leader>hr", function() return require("mini.diff").operator("reset") end, {
+    map({ "x" }, "<localleader>hr", function() return require("mini.diff").operator("reset") end, {
       expr = true,
       desc = "Reset selected lines",
     })
 
-    map("n", "<leader>gd", function() require("mini.diff").toggle_overlay(0) end, { desc = "toggle diff overlay" })
+    map("n", "<localleader>hd", function() require("mini.diff").toggle_overlay(0) end, { desc = "toggle diff overlay" })
   end,
 }

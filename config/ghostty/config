@@ -47,9 +47,7 @@ window-padding-balance = true
 window-padding-color = background
 window-save-state = always
 
-# start maximized
-window-height = 9999
-window-width = 9999
+maximize = true
 
 # command = fish -l
 # shell-integration = fish
@@ -59,7 +57,7 @@ shell-integration-features = true
 # custom-shader = shaders/cursor_smear.glsl
 # custom-shader = shaders/cursor_warp.glsl
 
-custom-shader = ~/.config/ghostty/shaders/boo-cursor.glsl
+# custom-shader = ~/.config/ghostty/shaders/boo-cursor.glsl
 # custom-shader-animation = always
 cursor-style = block
 cursor-style-blink = true

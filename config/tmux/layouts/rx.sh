@@ -62,6 +62,8 @@ tmux send-keys -t "$SESSION":4.1 "pinvim" "C-m"
 tmux -2 select-window -t "$SESSION":2
 tmux -2 select-pane -t "$SESSION":2.1
 
+tmux set-hook -g -n 'session-closed' 'run "devenv down"'
+
 tmux setenv -t "${SESSION}" 'SESSION_ICON' "${SESSION_ICON}"
 tmux setenv -t "${SESSION}" 'SESSION_FG' "${SESSION_FG}"
 # tmux setenv -t "${SESSION}" 'SESSION_BG' "${SESSION_BG}"

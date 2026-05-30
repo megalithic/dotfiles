@@ -1,5 +1,5 @@
 [files]
-extend-exclude = ["home/config/weechat/*.conf"]
+extend-exclude = ["home/config/weechat/*.conf", "home/config/tmux/*.conf"]
 ignore-hidden = false
 
 [default.extend-words]

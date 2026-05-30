@@ -1,43 +1,8 @@
 {
   "providers": {
-    "ollama": {
-      "baseUrl": "http://localhost:11434/v1",
-      "apiKey": "ollama",
-      "api": "openai-completions",
-      "models": [
-        {
-          "id": "qwen3.6:27b",
-          "reasoning": true,
-          "input": ["text"],
-          "contextWindow": 32768,
-          "maxTokens": 8192
-        },
-        {
-          "id": "deepseek-r1:14b",
-          "reasoning": true,
-          "input": ["text"],
-          "contextWindow": 32768,
-          "maxTokens": 8192
-        },
-        {
-          "id": "gemma4:e4b",
-          "reasoning": false,
-          "input": ["text", "image"],
-          "contextWindow": 32768,
-          "maxTokens": 8192
-        },
-        {
-          "id": "gemma4:e2b",
-          "reasoning": false,
-          "input": ["text"],
-          "contextWindow": 32768,
-          "maxTokens": 8192
-        }
-      ]
-    },
-    "omlx": {
-      "baseUrl": "http://127.0.0.1:8000/v1",
-      "apiKey": "omlx",
+    "llamacpp": {
+      "baseUrl": "http://127.0.0.1:18080/v1",
+      "apiKey": "llamacpp",
       "api": "openai-completions",
       "compat": {
         "supportsDeveloperRole": false,
@@ -68,7 +33,7 @@
           "id": "gemma4",
           "reasoning": false,
           "input": ["text", "image"],
-          "contextWindow": 16384,
+          "contextWindow": 32768,
           "maxTokens": 8192
         }
       ]

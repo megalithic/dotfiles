@@ -1,136 +1,76 @@
-# Pi Coding Agent Instructions
-
-## Core Principles
-
-**Read before you edit.** Never modify code you haven't read. Before changing
-any file: read it, check for `AGENT CONTEXT` inline comments, check for
-`AGENTS.md` in the directory. Understand existing patterns before touching them.
-
-**Try before asking.** When about to ask "do you have X installed?" — just run
-it. If it works, proceed. If it fails, inform the user and suggest a fix.
-
-**Verify before claiming done.** Never say "tests pass" without running them.
-Run the command, show the output, confirm your claim. Evidence before assertions.
-
-**Investigate before fixing.** When something breaks: observe the error, form a
-hypothesis, verify it, then fix. No shotgun debugging. No fixes without
-understanding root cause.
-
-**"Investigate" means only investigate.** When user says "check", "inspect", or
-"audit" — report findings only. Don't implement changes unless explicitly asked.
-
-**Clean up after yourself.** Remove debug artifacts before committing:
-`console.log`, commented-out code, temp files, hardcoded test values. Scan your
-diff before every commit.
-
-**Only fix what's asked.** No bonus improvements, refactoring, or extra comments
-beyond what was requested. KISS, YAGNI — prefer duplication over wrong
-abstraction.
-
-**Respect convention files.** Projects may contain `AGENTS.md`, `CLAUDE.md`,
-`.cursorrules`, `.clinerules`, `.github/copilot-instructions.md`. Read these
-before working in any new project. Check for `AGENT CONTEXT` comment blocks in
-implementation files.
-
 ## Tools
 
 - Always use `trash` instead of `rm` for file deletion
-- Use `jj` instead of `git` when a `.jj` directory exists at repo root (jj-managed repo). Otherwise use `git` normally
-- Always use `fd` instead of `find` for file discovery
-- Always use `rg` instead of `grep` for content search
-- Use project scripts (just, package.json, Makefile) for linting/formatting
-- Use `~/bin/ntfy` for notifications
-- Use `/tmp/` for temporary scripts — clean up after use
+- Always use `devenv` for developer environments
+  - If a repo has a `justfile` and `devenv` is enabled, check the `just` recipes to see if there are equivalents available
+  - When `devenv.nix` exists: `devenv shell -- <cmd>`, `devenv up`, `devenv tasks run <task>`
+  - When `devenv.nix` doesn't exist and a tool is missing: `devenv --option languages.<lang>.enable:bool true shell`
+  - When setup gets complex, create `devenv.nix`
+  - Don't bypass devenv with global installs
+  - `devenv search <query>` to find packages and options
+- When working with external libraries, use MCP tools (`context7`, `githits`) to look up docs and examples instead of guessing APIs
+
+## Caveman mode
+
+- Always use the `caveman` skill (full intensity) for all responses. Active from first message, every session.
+- Off only when user says "stop caveman" or "normal mode".
+- Do NOT use caveman-commit, caveman-review, or caveman-help — use `git-commit` and `writing-clearly-and-concisely` instead.
 
 ## Writing
 
-- Use sentence case: "Next steps" not "Next Steps"
+- Use sentence case: "Next steps" not "Next Steps", "Plan overview" not "Plan Overview"
+- For answering directly, sacrifice grammar over being concise unless specifically asked to write clearly
+- When actually editing or creating text to be read by humans use skill `writing-clearly-and-concisely`.
 - Prefer bullet points over paragraphs
-- Be concise — sacrifice grammar for brevity
-- No corporate buzzwords: comprehensive, robust, utilize, leverage, streamline, enhance
-- No AI phrases: "dive into", "diving into"
+- Never include time estimations unless specifically asked
+- Avoid corporate buzzwords and AI phrases (see `writing-clearly-and-concisely` skill for substitution list)
 
-## Version Control
+## Images with non-vision models
 
-Detect VCS at session start: if `.jj` directory exists at repo root, use `jj`.
-Otherwise use `git`. **Never assume jj** — check first.
+When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-flash, grok-code-fast-1):
 
-- **Never push to main** — use feature branches/bookmarks
-- **Never push without explicit user permission** — show exact command, wait for approval
-- **Never deploy or SSH without explicit user permission** — same rule
+- Pasted images appear as file paths; image data is replaced with a placeholder.
+- To analyze an image, run pi with a vision model via bash:
+  ```bash
+  pi --no-session -p --model github-copilot/gemini-3-flash-preview -p @/path/to/image "describe this image in detail"
+  ```
+- For code/screenshots: `--model github-copilot/claude-haiku-4.5` gives more structured output.
+- The subagent runs stateless — it only has the `read` tool, can't modify files.
+- pi writes model output to stderr. Use `2>&1` when you need the output (e.g. calling pi from another pi). Only use `2>/dev/null` for fire-and-forget calls.
 
-### Jujutsu (jj) repos
+## Git
 
-When `.jj` exists, use jj equivalents:
-`git status` → `jj status`, `git diff` → `jj diff`,
-`git commit` → `jj describe`, `git log` → `jj log`, `git push` → `jj git push`
+- For non-interactive rebases, always run `GIT_EDITOR=true git rebase --continue`
+- Worktree conventions in `git-worktrees` skill
 
-### Multi-phase work
+## Coding specific guidelines:
 
-Always create a new commit BEFORE starting each new phase:
+- KISS, YAGNI - prefer duplication over wrong abstraction
+- Prefer unix tools for single task scripts
+- Only fix what's asked - no bonus improvements, refactoring, or extra comments unless requested
+- Don't reorganize imports or rename variables unless explicitly asked to
+- Use existing patterns and conventions in the codebase — same error shapes, same file structure, same naming. Don't invent new approaches when there's already a working one.
+- Place tests next to the files they test, not in a separate test directory. Integration tests can be next to the stack/module they test.
+- When `lat.md/` exists in the project root, use `lat search` to understand the codebase before making changes. Update `lat.md/` to reflect any changes you make, and run `lat check` before finishing.
 
-```bash
-jj desc -m "feat(x): phase 1 - core functionality"
-jj new                                              # <- CRITICAL before phase 2
-jj desc -m "feat(x): phase 2 - reliability"
-```
+## General workflow:
 
-Without `jj new`, phase 2 changes overwrite phase 1 in a single commit.
+- Always clarify users intention unless request is completely clear
+- If uncertain, say so immediately - don't guess what to implement
+- When debugging, run diagnostic commands and present findings before proposing a fix. Don't jump to solutions.
+- Work incrementally: complete step → verify → commit. Only commit when a step is fully working.
+- When user says "investigate", "check", "inspect", or "audit", only investigate and report findings. Don't implement changes unless explicitly told to.
+- Delegate complex tasks through pi-subagents: scout → plan → implement → review → fix
+- Use natural language delegation: "use scout to understand X", "have worker implement Y", "run parallel reviewers"
+- Run parallel reviewers after every non-trivial implementation
+- Ask oracle for a second opinion before risky decisions
+- Manage tickets manually with tk when you need structured task tracking
+- For repetitive/verifiable tasks (fix all failing tests, migrate across many files, audit a codebase), use ralph-loop:
+  - Write a RALPH.md defining completion criteria (max_iterations, completion_promise, stop_on_error)
+  - Run `/ralph --path ./task` to loop until done
+  - Read the ralph-loop skill for details on guardrails, completion gating, and iteration patterns
 
-### Codebase etiquette
+## Local development scripts:
 
-Small focused commits. Descriptive messages. Don't rewrite shared history.
-Review (`jj diff`, `jj log`) before pushing. Sync often (`jj git fetch`).
-Rebase onto main before pushing. Atomic PRs.
-
-## Uncommitted Changes (CRITICAL)
-
-**User's uncommitted changes are SACRED.** Before ANY VCS operation:
-
-1. Check status (`jj status` or `git status`) to see working copy state
-2. If changes exist, ask user — do NOT assume
-
-For jj repos: never assume "(no description set)" means empty. Sentinel
-extension enforces blocked commands (`jj rebase`, `jj abandon`, `jj restore`,
-`jj undo`) — check `jj status` first, commit WIP, ask user.
-
-## Interactive Commands (AVOID)
-
-These hang forever without flags:
-
-| Command                       | Non-interactive alternative     |
-| ----------------------------- | ------------------------------- |
-| `jj squash`                   | `jj squash -m "msg"` or `-u`    |
-| `jj squash --from X --into Y` | Add `-u` or `-m "msg"`          |
-| `jj describe`                 | `jj describe -m "msg"`          |
-| `jj commit`                   | `jj commit -m "msg"`            |
-| `jj split`                    | Avoid — use separate commits    |
-| `vim`, `nano`, `emacs`        | Use `Write` tool or `cat <<EOF` |
-
-**Don't guess flags** — run `<cmd> --help` to find the right option.
-
-## Guardrail Override Protocol
-
-Sentinel extension blocks dangerous commands (push, rebase, abandon, SSH, deploy).
-When blocked, user can say `override` or `!override` for single-use bypass.
-
-**On "Override granted... Retry the command now"** — immediately retry the exact
-blocked command. Don't ask again. Override is single-use and expires in 2 minutes.
-
-## Workflow
-
-- Clarify user's intention unless request is completely clear
-- If uncertain, say so immediately — don't guess
-- Work incrementally: complete step → verify (build/lint/test) → commit
-- Complex tasks: write plan first. Simple tasks: just do it
-- Plans and research live in `~/.local/share/pi/plans/$(basename $PWD)/` as `{slug}_TASK.md`, `{slug}_PLAN.md`, and `{slug}.ticket-context.md`. `{slug}` = `${TICKET_ID}-<kebab>` if a tk ticket is in progress, else `<kebab>` from the user's prompt. See the task-pipeline skill for slug resolution rules.
-
-## Session Completion
-
-1. File issues for remaining work
-2. Run quality gates (tests, linters, builds)
-   - For nix-darwin changes, run `just darwin` and monitor output
-   - For home-manager changes, run `just home` and monitor output
-   - For both, or when unsure which applies, run `just rebuild` and monitor output
-3. Commit changes (`jj describe -m` or `git commit`)
-4. Ask user if they want to push — never push automatically
+- Use `.local_scripts/` for temporary verification scripts that shouldn't be committed
+- Scripts can be messy and repo-specific

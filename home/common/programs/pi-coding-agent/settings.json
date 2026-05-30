@@ -29,13 +29,9 @@
     "synthetic/hf:zai-org/GLM-5.1",
     "synthetic/hf:MiniMaxAI/MiniMax-M2.5",
     "synthetic/hf:moonshotai/Kimi-K2.6",
-    "ollama/qwen3.6:27b",
-    "ollama/deepseek-r1:14b",
-    "ollama/gemma4:e4b",
-    "ollama/gemma4:e2b",
-    "omlx/qwen3.6",
-    "omlx/deepseek14b",
-    "omlx/gemma4"
+    "llamacpp/qwen3.6",
+    "llamacpp/deepseek14b",
+    "llamacpp/gemma4"
   ],
   "enabledModelScopes": {
     "mega": [
@@ -45,10 +41,9 @@
       "synthetic/hf:zai-org/GLM-5.1",
       "synthetic/hf:moonshotai/Kimi-K2.6",
       "synthetic/hf:MiniMaxAI/MiniMax-M2.5",
-      "ollama/qwen3.6:27b",
-      "ollama/deepseek-r1:14b",
-      "ollama/gemma4:e4b",
-      "ollama/gemma4:e2b"
+      "llamacpp/qwen3.6",
+      "llamacpp/deepseek14b",
+      "llamacpp/gemma4"
     ],
     "rx": [
       "rx-anthropic/claude-opus-4-6",
@@ -147,5 +142,5 @@
       }
     ]
   },
-  "shellCommandPrefix": "export GIT_EDITOR=true\nexport GIT_SEQUENCE_EDITOR=true\nexport GIT_TERMINAL_PROMPT=0"
+  "shellCommandPrefix": "export GIT_EDITOR=true\nexport GIT_SEQUENCE_EDITOR=true\nexport GIT_TERMINAL_PROMPT=0\n export PI_TMUX_IMAGES=1"
 }

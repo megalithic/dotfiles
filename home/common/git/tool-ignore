@@ -64,6 +64,8 @@ erl_crash.dump
 .obsidian
 .jj
 .direnv
+.devenv
+**/.devenv
 **/.jj
 **/.direnv
 **/deps
