@@ -1,7 +1,8 @@
 local.nix
 
-# Plans (local only)
+# Plans and scripts (local only)
 _plans/
+.local_scripts/
 
 # Auto-generated documentation
 _docs/
