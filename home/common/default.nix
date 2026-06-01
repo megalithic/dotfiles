@@ -4,53 +4,32 @@
   config,
   pkgs,
   lib,
+  inputs,
   username,
   version,
   paths,
   ...
 }:
+let
+  programEntries = builtins.readDir ./programs;
+  programModules = builtins.filter (
+    name:
+    programEntries.${name} == "directory"
+    && builtins.pathExists ./programs/${name}/default.nix
+    && (name != "claude-code")
+    && (name != "worktrunk" || inputs ? worktrunk)
+  ) (builtins.attrNames programEntries);
+  programImports = map (name: ./programs/${name}) programModules;
+in
 {
   imports = [
     ./lib.nix
-    # ./mac-aliases.nix
     ./modules/settings-sync.nix
-    ./rust.nix
     ./packages.nix
     ./services.nix
     ./accounts.nix
-    # AI tooling
-    # ./programs/claude-code  # disabled: missing docs/agents/*.md refs (untracked)
-    ./programs/llama-cpp-local
-    ./programs/pi-coding-agent
-    # Browsers
-    ./programs/brave-browser-nightly
-    ./programs/firefox
-    ./programs/helium-browser
-    # Email
-    ./programs/aerc
-    ./programs/khard
-    ./programs/mailmate
-    ./programs/mbsync
-    ./programs/msmtp
-    ./programs/notmuch
-    # Shells / prompts
-    ./programs/bash
-    ./programs/fish
-    ./programs/starship
-    ./programs/zsh
-    # Dev environments
-    ./programs/devenv
-    # Misc programs
-    ./programs/opnix
-    ./programs/discord
-    ./programs/fzf
-    ./programs/ghostty
-    ./programs/jj
-    ./programs/nvim
-    ./programs/shade
-    ./programs/meetingbar
-    # ./programs/worktrunk
-  ];
+  ]
+  ++ programImports;
 
   home.username = username;
   home.homeDirectory = paths.home;
@@ -87,12 +66,6 @@
       trim_trailing_whitespace=true
       charset = utf-8
     '';
-    ".ignore".source = ./git/tool-ignore;
-    ".gitignore".source = ./git/gitignore;
-    ".gitconfig".source = ./git/gitconfig;
-    ".ssh/config".source = config.lib.mega.linkConfig "ssh/config";
-    ".ssh/allowed_signers".text =
-      "seth@megalithic.io ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICyxphJ0fZhJP6OQeYMsGNQ6E5ZMVc/CQdoYrWYGPDrh";
     "Library/Application Support/espanso".source = config.lib.mega.linkConfig "espanso";
     "iclouddrive".source =
       config.lib.file.mkOutOfStoreSymlink "${paths.home}/Library/Mobile Documents/com~apple~CloudDocs";
@@ -133,9 +106,6 @@
   '';
 
   xdg.enable = true;
-
-  xdg.configFile."ghostty".source = config.lib.mega.linkConfig "ghostty";
-  xdg.configFile."ghostty".force = true;
 
   xdg.configFile."hammerspoon".source = config.lib.mega.linkConfig "hammerspoon";
   xdg.configFile."hammerspoon".force = true;
@@ -183,16 +153,8 @@
     force = true;
   };
 
-  xdg.configFile."zsh".source = ./zsh;
-  xdg.configFile."zsh".force = true;
-
   xdg.configFile."neomd/config.toml".text = "";
 
-  xdg.configFile."1Password/ssh/agent.toml".text = ''
-    [[ssh-keys]]
-    vault = "Crypt"
-    item = "megaenv_ssh_key"
-  '';
   xdg.configFile."process-compose/shortcuts.yaml".text = ''
     shortcuts:
       log_follow:
@@ -260,312 +222,9 @@
         fieldFgColor: '#d3c6aa'
   '';
 
-  xdg.configFile."karabiner/karabiner.json".text = builtins.readFile ./karabiner/karabiner.json;
-  xdg.configFile."karabiner/karabiner.json".force = true;
-
-  xdg.configFile."surfingkeys/config.js".text = builtins.readFile ./surfingkeys/config.js;
-  xdg.configFile."eza/theme.yml".text = ''
-    colourful: true
-
-    # Everforest Medium Palette
-    # Background: #2d353b
-    # Foreground: #d3c6aa
-    # Black: #343f44
-    # Red: #e67e80
-    # Green: #a7c080
-    # Yellow: #dbbc7f
-    # Blue: #7fbbb3
-    # Magenta: #d699b6
-    # Cyan: #83c092
-    # White: #d3c6aa
-    # Gray: #859289
-    # Bright Black: #475258
-    # Bright Red: #e67e80
-    # Bright Green: #a7c080
-    # Bright Yellow: #dbbc7f
-    # Bright Blue: #7fbbb3
-    # Bright Magenta: #d699b6
-    # Bright Cyan: #83c092
-    # Bright White: #d3c6aa
-
-    filekinds:
-      normal: { foreground: "#d3c6aa" }
-      directory: { foreground: "#e69875" }
-      symlink: { foreground: "#859289" }
-      pipe: { foreground: "#475258" }
-      block_device: { foreground: "#e67e80" }
-      char_device: { foreground: "#dbbc7f" }
-      socket: { foreground: "#343f44" }
-      special: { foreground: "#d699b6" }
-      executable: { foreground: "#a7c080" }
-      mount_point: { foreground: "#475258" }
-
-    perms:
-      user_read: { foreground: "#859289" }
-      user_write: { foreground: "#475258" }
-      user_execute_file: { foreground: "#a7c080" }
-      user_execute_other: { foreground: "#a7c080" }
-      group_read: { foreground: "#859289" }
-      group_write: { foreground: "#475258" }
-      group_execute: { foreground: "#a7c080" }
-      other_read: { foreground: "#859289" }
-      other_write: { foreground: "#475258" }
-      other_execute: { foreground: "#a7c080" }
-      special_user_file: { foreground: "#d699b6" }
-      special_other: { foreground: "#475258" }
-      attribute: { foreground: "#859289" }
-
-    size:
-      major: { foreground: "#859289" }
-      minor: { foreground: "#e69875" }
-      number_byte: { foreground: "#859289" }
-      number_kilo: { foreground: "#859289" }
-      number_mega: { foreground: "#83c092" }
-      number_giga: { foreground: "#d699b6" }
-      number_huge: { foreground: "#d699b6" }
-      unit_byte: { foreground: "#859289" }
-      unit_kilo: { foreground: "#83c092" }
-      unit_mega: { foreground: "#d699b6" }
-      unit_giga: { foreground: "#d699b6" }
-      unit_huge: { foreground: "#e69875" }
-
-    users:
-      user_you: { foreground: "#dbbc7f" }
-      user_root: { foreground: "#e67e80" }
-      user_other: { foreground: "#d699b6" }
-      group_yours: { foreground: "#859289" }
-      group_other: { foreground: "#475258" }
-      group_root: { foreground: "#e67e80" }
-
-    links:
-      normal: { foreground: "#e69875" }
-      multi_link_file: { foreground: "#83c092" }
-
-    git:
-      new: { foreground: "#a7c080" }
-      modified: { foreground: "#dbbc7f" }
-      deleted: { foreground: "#e67e80" }
-      renamed: { foreground: "#83c092" }
-      typechange: { foreground: "#d699b6" }
-      ignored: { foreground: "#475258" }
-      conflicted: { foreground: "#e67e80" }
-
-    git_repo:
-      branch_main: { foreground: "#859289" }
-      branch_other: { foreground: "#d699b6" }
-      git_clean: { foreground: "#a7c080" }
-      git_dirty: { foreground: "#e67e80" }
-
-    security_context:
-      colon: { foreground: "#859289" }
-      user: { foreground: "#e69875" }
-      role: { foreground: "#d699b6" }
-      typ: { foreground: "#475258" }
-      range: { foreground: "#d699b6" }
-
-    file_type:
-      image: { foreground: "#dbbc7f" }
-      video: { foreground: "#e67e80" }
-      music: { foreground: "#e69875" }
-      lossless: { foreground: "#475258" }
-      crypto: { foreground: "#343f44" }
-      document: { foreground: "#859289" }
-      compressed: { foreground: "#d699b6" }
-      temp: { foreground: "#e67e80" }
-      compiled: { foreground: "#83c092" }
-      build: { foreground: "#475258" }
-      source: { foreground: "#a7c080" }
-
-    punctuation: { foreground: "#859289" }
-    date: { foreground: "#83c092" }
-    inode: { foreground: "#859289" }
-    blocks: { foreground: "#859289" }
-    header: { foreground: "#859289" }
-    octal: { foreground: "#e69875" }
-    flags: { foreground: "#d699b6" }
-
-    symlink_path: { foreground: "#e69875" }
-    control_char: { foreground: "#83c092" }
-    broken_symlink: { foreground: "#e67e80" }
-    broken_path_overlay: { foreground: "#859289" }
-  '';
-
   fonts = {
     fontconfig.enable = true;
   };
 
-  programs = {
-    home-manager.enable = true;
-
-    # speed up rebuilds // HT: @tmiller
-    man.generateCaches = false;
-
-    git = {
-      enable = true;
-      package = pkgs.gitFull;
-      includes = [
-        { path = "~/.gitconfig"; }
-      ];
-
-      settings.gpg.ssh.program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign";
-      settings.gpg.ssh.allowedSignersFile = "~/.ssh/allowed_signers";
-      settings.gpg.format = "ssh";
-      settings.user.signingkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICyxphJ0fZhJP6OQeYMsGNQ6E5ZMVc/CQdoYrWYGPDrh";
-      settings.commit.gpgSign = true;
-    };
-
-    direnv = {
-      enable = true;
-      enableZshIntegration = true;
-      nix-direnv.enable = true;
-      mise.enable = true;
-      config = {
-        global.load_dotenv = true;
-        global.warn_timeout = 0;
-        global.hide_env_diff = true;
-        whitelist.prefix = [ config.home.homeDirectory ];
-      };
-    };
-
-    nh = {
-      enable = true;
-      flake = "${config.home.homeDirectory}/.dotfiles/";
-      clean = {
-        enable = true;
-        extraArgs = "--keep-since 8d"; # Time-based: keep generations from last 8 days
-      };
-    };
-
-    # yazi = import ./yazi/default.nix {inherit config pkgs lib;};
-
-    htop = {
-      enable = true;
-      settings = {
-        sort_direction = true;
-        sort_key = "PERCENT_CPU";
-      };
-    };
-
-    zoxide = {
-      enable = true;
-      enableFishIntegration = true;
-      enableZshIntegration = true;
-    };
-
-    ssh = {
-      matchBlocks."* \"test -z $SSH_TTY\"".identityAgent =
-        "~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock";
-    };
-
-    mise = {
-      enable = true;
-      enableFishIntegration = true;
-      enableZshIntegration = true;
-      globalConfig.settings = {
-        auto_install = true;
-        experimental = true;
-        verbose = false;
-      };
-
-      # globalConfig = {
-      #   tools = {
-      #     elixir = "1.18.4-otp-27"; # alts: 1.18.4-otp-28
-      #     erlang = "27.3.4.1"; # alts: 28.0.1
-      #     python = "3.13.4";
-      #     rust = "beta";
-      #     node = "lts";
-      #     pnpm = "latest";
-      #     aws-cli = "2";
-      #   };
-      # };
-    };
-
-    eza = {
-      enable = true;
-      enableZshIntegration = true;
-      enableFishIntegration = true;
-      colors = "always";
-      git = true;
-      icons = "always";
-      extraOptions = [
-        "-lah"
-        "--group-directories-first"
-        "--color-scale"
-      ];
-    };
-
-    bat = {
-      enable = true;
-      # bat-extras disabled — all of them pull in nushell as a build dep
-      # extraPackages = with pkgs.bat-extras; [ batgrep prettybat batman ];
-      config = {
-        theme = "everforest";
-      };
-      themes = {
-        everforest = {
-          src =
-            pkgs.fetchFromGitHub {
-              owner = "neuromaancer";
-              repo = "everforest_collection";
-              rev = "ec3936e65699f38f8a9b1468d6ac20a25423d5af"; # pinned
-              sha256 = "HQQzmSYcQY4jYyk7zyxdOSJylqJl4aBobT37pST6AXE=";
-            }
-            + "/bat";
-
-          file = "everforest-soft.tmtheme";
-        };
-      };
-    };
-
-    ripgrep = {
-      enable = true;
-    };
-
-    fd = {
-      enable = true;
-      ignores = [
-        ".git"
-        ".jj"
-        ".direnv"
-        "pkg"
-        "Library"
-        ".Trash"
-      ];
-    };
-
-    television = {
-      enable = false;
-      enableFishIntegration = false;
-    };
-
-    k9s.enable = true;
-
-    jq.enable = true;
-
-    tiny = {
-      enable = true;
-      settings = {
-        servers = [
-          {
-            addr = "irc.libera.chat";
-            port = 6697;
-            tls = true;
-            realname = "Seth";
-            nicks = [ "replicant" ];
-            join = [
-              "#nethack"
-              "#nixos"
-              "#neovim"
-            ];
-          }
-        ];
-        defaults = {
-          nicks = [ "replicant" ];
-          realname = "Seth";
-          join = [ ];
-          tls = true;
-        };
-      };
-    };
-  };
+  programs.home-manager.enable = true;
 }

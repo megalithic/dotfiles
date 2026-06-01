@@ -98,6 +98,8 @@ Neovim git URL mappings define explicit file, branch, and blame copy/open bindin
 
 Home Manager package composition avoids direct `pkgs.poppler` plus `pkgs."poppler-utils"` installs.
 
+The shared Home Manager module auto-imports every top-level `home/common/programs/*/default.nix` directory, so the program layout stays one directory per tool instead of a hand-maintained import list. Tool-specific dotfiles and XDG links live beside their Home Manager module: git dotfiles are under `home/common/programs/git/`, ripgrep's rc file is under `home/common/programs/ripgrep/`, zsh's raw config tree is under `home/common/programs/zsh/config/`, and keyboard/browser raw configs are under `home/common/programs/{karabiner,surfingkeys}/`. Rust toolchain setup now lives in `home/common/programs/rust/default.nix` and covers both `rustup` and `bacon`. Modules that need optional flake inputs stay gated until those inputs are present.
+
 In nixpkgs 25.10, `pkgs.poppler` (`poppler-glib`) and `pkgs."poppler-utils"` ship overlapping `libpoppler-glib` paths. PDF CLI tools come from `poppler-utils` where needed, including the Pi wrapper module and scripts that call `pdftoppm`.
 
 The local inference path is llama.cpp, not Ollama. `home/common/programs/ollama/` can exist as a small package module for compatibility or manual tooling, but it has no effect unless imported by a Home Manager profile.

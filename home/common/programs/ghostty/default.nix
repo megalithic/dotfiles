@@ -18,6 +18,11 @@
     enableFishIntegration = true;
   };
 
+  xdg.configFile."ghostty" = {
+    source = config.lib.mega.linkConfig "ghostty";
+    force = true;
+  };
+
   # Symlink our config to where Ghostty looks on macOS
   # Ghostty checks: ~/Library/Application Support/com.mitchellh.ghostty/config
   home.file."Library/Application Support/com.mitchellh.ghostty/config" = {

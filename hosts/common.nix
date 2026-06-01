@@ -12,9 +12,6 @@ let
   lang = "en_US.UTF-8";
 in
 {
-  # ── fonts ──────────────────────────────────────────────────────────────────────
-  # System-wide fonts via nix-darwin (installs to /Library/Fonts/Nix Fonts)
-  # Required for macOS apps like Hammerspoon, Terminal, etc.
   fonts.packages = with pkgs; [
     atkinson-hyperlegible
     emacs-all-the-icons-fonts
@@ -36,8 +33,6 @@ in
     twemoji-color-font
     victor-mono
   ];
-  # NOTE: home-manager runs independently via homeConfigurations
-  # Use `just home` for HM-only rebuilds
 
   users.knownUsers = [ username ];
   users.users.${username} = {
@@ -46,6 +41,7 @@ in
     inherit (paths) home;
     isHidden = false;
     shell = pkgs.fish;
+    # shell = pkgs.legacyPackages.aarch64-darwin.fish;
   };
 
   networking.hostName = hostname;
@@ -68,7 +64,6 @@ in
   environment.pathsToLink = [ "/Applications" ];
   environment.shells = [
     pkgs.fish
-    pkgs.zsh
   ];
 
   environment.variables = {
@@ -158,10 +153,6 @@ in
     unzip
     p7zip
     zip
-
-    # Shell tools (needed early in boot/login)
-    zsh-autosuggestions
-    zsh-syntax-highlighting
   ];
 
   # Determinate Nix handles nix daemon configuration via /etc/nix/nix.conf
@@ -169,12 +160,8 @@ in
   nix.enable = false;
 
   environment.etc."nix/nix.custom.conf".source = ../nix.custom.conf;
-  # environment.etc."nix/nix.custom.conf".text = ''
-  #   !include ${config.sops.secrets.github.path}
-  # '';
 
   programs = {
-    zsh.enable = true;
     bash.enable = true;
     fish = {
       enable = true;
