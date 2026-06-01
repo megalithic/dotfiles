@@ -17,7 +17,7 @@
 #   llm-pull -b llamacpp deepseek14b  # DeepSeek-R1-Distill-Qwen-14B Q4_K_M GGUF
 #   llm-pull -b llamacpp gemma4       # Gemma-4-e4b-it Q4_K_M GGUF
 #
-# Service is a user launchd agent defined in home/common/services.nix.
+# Service is a user launchd agent defined in this module.
 # Toggle with `programs.llamaCppLocal.enable` (default false; opt-in per host).
 #
 # Per-host tuning: set options in home/<hostname>.nix:
@@ -29,10 +29,12 @@
   pkgs,
   lib,
   ...
-}: let
+}:
+let
   cfg = config.programs.llamaCppLocal;
   modelDir = "${config.xdg.dataHome}/llama.cpp/models";
-in {
+in
+{
   options.programs.llamaCppLocal = {
     enable = lib.mkOption {
       type = lib.types.bool;
@@ -84,35 +86,93 @@ in {
     };
 
     cacheTypeK = lib.mkOption {
-      type = lib.types.enum ["f32" "f16" "bf16" "q8_0" "q4_0" "q4_1" "iq4_nl" "q5_0" "q5_1"];
+      type = lib.types.enum [
+        "f32"
+        "f16"
+        "bf16"
+        "q8_0"
+        "q4_0"
+        "q4_1"
+        "iq4_nl"
+        "q5_0"
+        "q5_1"
+      ];
       default = "q8_0";
       description = "KV cache data type for K. q8_0 halves KV cache memory vs f16.";
     };
 
     cacheTypeV = lib.mkOption {
-      type = lib.types.enum ["f32" "f16" "bf16" "q8_0" "q4_0" "q4_1" "iq4_nl" "q5_0" "q5_1"];
+      type = lib.types.enum [
+        "f32"
+        "f16"
+        "bf16"
+        "q8_0"
+        "q4_0"
+        "q4_1"
+        "iq4_nl"
+        "q5_0"
+        "q5_1"
+      ];
       default = "q8_0";
       description = "KV cache data type for V. q8_0 halves KV cache memory vs f16.";
     };
 
     flashAttn = lib.mkOption {
-      type = lib.types.enum ["on" "off" "auto"];
+      type = lib.types.enum [
+        "on"
+        "off"
+        "auto"
+      ];
       default = "on";
       description = "Flash attention mode. Required for q8_0 KV cache on most models.";
     };
 
     extraArgs = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [];
+      default = [ ];
       description = "Extra CLI arguments appended to llama-server invocation.";
     };
   };
 
   config = lib.mkIf cfg.enable {
-    # Ensure model directory exists for the launchd agent.
-    # Log directory creation is in services.nix alongside other log dir activations.
-    home.activation.makeLlamaCppModelDir = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    # Ensure directories exist for the launchd agent.
+    home.activation.makeLlamaCppDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       mkdir -p ${cfg.modelDir}
+      mkdir -p ${config.home.homeDirectory}/Library/Logs/llama-cpp
     '';
+
+    launchd.agents.llama-cpp = {
+      enable = true;
+      config = {
+        ProgramArguments = [
+          "${cfg.package}/bin/llama-server"
+          "--host"
+          cfg.host
+          "--port"
+          (toString cfg.port)
+          "--models-dir"
+          cfg.modelDir
+          "--models-max"
+          (toString cfg.modelsMax)
+          "-c"
+          (toString cfg.ctxSize)
+          "--parallel"
+          (toString cfg.parallel)
+          "--cache-type-k"
+          cfg.cacheTypeK
+          "--cache-type-v"
+          cfg.cacheTypeV
+          "--flash-attn"
+          cfg.flashAttn
+          "--jinja"
+          "--cont-batching"
+        ]
+        ++ cfg.extraArgs;
+        RunAtLoad = true;
+        KeepAlive = true;
+        StandardOutPath = "${config.home.homeDirectory}/Library/Logs/llama-cpp/stdout.log";
+        StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/llama-cpp/stderr.log";
+      };
+    };
   };
 }

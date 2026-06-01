@@ -104,7 +104,9 @@ The shared Home Manager module auto-imports every top-level `home/common/program
 
 In nixpkgs 25.10, `pkgs.poppler` (`poppler-glib`) and `pkgs."poppler-utils"` ship overlapping `libpoppler-glib` paths. PDF CLI tools come from `poppler-utils` where needed, including the Pi wrapper module and scripts that call `pdftoppm`.
 
-The local inference path is llama.cpp, not Ollama. `home/common/programs/ollama/` can exist as a small package module for compatibility or manual tooling, but it has no effect unless imported by a Home Manager profile.
+The local inference path is llama.cpp, not Ollama. `home/common/programs/llama-cpp-local/` owns the `programs.llamaCppLocal` options, the user `launchd.agents.llama-cpp` service, and model/log directory activation. Host files tune that module through `programs.llamaCppLocal`, while `home/common/services.nix` keeps only shared user-service plumbing and unrelated agents.
+
+`home/common/programs/ollama/` can exist as a small package module for compatibility or manual tooling, but it has no effect unless imported by a Home Manager profile.
 
 `bin/llm-pull` defaults to the `llamacpp` backend. It downloads Q4_K_M GGUF files with `hf download` into `${XDG_DATA_HOME:-$HOME/.local/share}/llama.cpp/models`, then creates alias symlinks such as `qwen3.6.gguf`, `deepseek14b.gguf`, and `gemma4.gguf` so `llama-server --models-dir` exposes IDs that match Pi's `models.json` and `settings.json`. The old `ollama` and `omlx` backends are obsolete and fail with migration guidance rather than assuming those binaries exist.
 
