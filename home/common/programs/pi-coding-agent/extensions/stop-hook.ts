@@ -17,7 +17,7 @@ const MAX_FOLLOWUPS = 1;
 const MAX_TICKETS_PER_SECTION = 3;
 
 const STOP_CHECK_PROMPT_BASE =
-  "Review your last response. Did you complete everything the user asked? If not, continue working. If you did complete everything, briefly confirm what was done. If ticket context is provided below, suggest the best next ticket(s) by related work first: same parent epic, same plan/task sequence, direct dependents or unblocked siblings, then related scope. Fall back to global priority only after related options.";
+  "Review your last response. Did you complete everything the user asked? If the user asked a question, make sure you answered it in a format they could clearly see and understand. Do not run lat_search or lat_check just because of this review prompt; only use lat tools if you continue work and the actual task requires code or documentation changes. If not, continue working. If you did complete everything, briefly confirm what was done. If ticket context is provided below, suggest the best next ticket(s) by related work first: same parent epic, same plan/task sequence, direct dependents or unblocked siblings, then related scope. Fall back to global priority only after related options.";
 
 const INTERRUPTED_PROMPT_BASE =
   "You were interrupted (the user pressed Escape to stop you). Review what you were doing and what state things are in. If work is partially done, summarize where you left off and what remains. Ask the user how they'd like to proceed rather than automatically resuming — they may have stopped you intentionally to change direction.";
@@ -294,6 +294,51 @@ function extractText(content: unknown): string {
   return "";
 }
 
+function isEditorContextOnly(text: string): boolean {
+  const trimmed = text.trim();
+  return (
+    /^\[(?:NEOVIM|NVIM|PINVIM)\b[^\]]*CONTEXT\]/i.test(trimmed) &&
+    !/\nUser input:\s*\S/i.test(trimmed)
+  );
+}
+
+function isLatInstructionOnly(text: string): boolean {
+  return text.trim().startsWith("Before starting work, run `lat_search`");
+}
+
+function getLastUserTurnTexts(messages: any[]): string[] {
+  let lastUserIndex = -1;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role === "user") {
+      lastUserIndex = i;
+      break;
+    }
+  }
+  if (lastUserIndex === -1) return [];
+
+  let firstUserIndex = lastUserIndex;
+  while (firstUserIndex > 0 && messages[firstUserIndex - 1].role === "user") {
+    firstUserIndex--;
+  }
+
+  return messages
+    .slice(firstUserIndex, lastUserIndex + 1)
+    .map((m) => extractText(m.content))
+    .map((text) => text.trim())
+    .filter(Boolean);
+}
+
+function isEditorContextOnlyTurn(messages: any[]): boolean {
+  const texts = getLastUserTurnTexts(messages);
+  return (
+    texts.length > 0 &&
+    texts.some(isEditorContextOnly) &&
+    texts.every(
+      (text) => isEditorContextOnly(text) || isLatInstructionOnly(text),
+    )
+  );
+}
+
 function buildGatekeeperMessages(messages: any[]) {
   // Single reverse pass: collect last N user-assistant pairs
   const collected: { role: string; content: unknown }[] = [];
@@ -459,6 +504,9 @@ export default function (pi: ExtensionAPI) {
       (m: any) => m.role === "assistant" && m.n === "aborted",
     );
 
+    // Skip nudge when pinvim/neovim only sent editor context without a user prompt.
+    if (isEditorContextOnlyTurn(event.messages)) return;
+
     // Skip nudge when agent made no tool calls (simple Q&A) — unless interrupted
     if (!wasInterrupted) {
       const hasToolUse = event.messages.some(
@@ -495,6 +543,13 @@ export default function (pi: ExtensionAPI) {
     if (ticketSummary) contextParts.push(ticketSummary);
     const prompt = contextParts.join("\n\n");
 
-    pi.sendUserMessage(prompt, { deliverAs: "followUp" });
+    pi.sendMessage(
+      {
+        customType: "stop-hook",
+        content: prompt,
+        display: true,
+      },
+      { deliverAs: "followUp", triggerTurn: true },
+    );
   });
 }
