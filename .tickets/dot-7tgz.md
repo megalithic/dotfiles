@@ -9,6 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development, helium, nix, 1password, widevine, drm, codesign]
 ---
+
 # Get Helium browser working with both Widevine DRM + 1Password desktop integration
 
 Goal: Helium browser (privacy-focused Chromium fork by imputnet) running locally on aarch64-darwin with BOTH Widevine DRM (Netflix HD, Spotify, etc.) AND 1Password desktop app integration (extension auto-unlock via Touch ID) working simultaneously.
@@ -25,11 +26,11 @@ The base helper (`Helium Helper.app`, host process for the Chromium CDM utility)
 
 Brave handles this correctly: base helper flags 0x10a00 (no library-validation). Chrome gets away with 0x12a00 because Chrome and Widevine share the same team.
 
-| Browser | Base helper flags | DRM works | Why |
-|---|---|---|---|
-| Brave Nightly | 0x10a00 | ✓ | no library-validation, entitlement effective |
-| Chrome | 0x12a00 | ✓ | same team as Widevine, flag irrelevant |
-| Helium | 0x12a00 | ✗ | flag blocks entitlement, different team |
+| Browser       | Base helper flags | DRM works | Why                                          |
+| ------------- | ----------------- | --------- | -------------------------------------------- |
+| Brave Nightly | 0x10a00           | ✓         | no library-validation, entitlement effective |
+| Chrome        | 0x12a00           | ✓         | same team as Widevine, flag irrelevant       |
+| Helium        | 0x12a00           | ✗         | flag blocks entitlement, different team      |
 
 **Fix**: drop `library` from `--options` for the base helper line. Other helpers (Renderer/GPU/Plugin) already correct upstream.
 
@@ -43,27 +44,28 @@ Brave handles this correctly: base helper flags 0x10a00 (no library-validation).
 ### 3. 1Password validation requirements
 
 1Password requires Apple-notarized + Developer-ID-signed browsers. Manual `Add Browser` UI exists for unsupported browsers but still requires valid signature. Strings dump from `1Password.app/Contents/MacOS/1Password` shows:
+
 - `validateProcessCodeSignatureHasMatchingTeamId(auditToken:)`
 - `verifySignature(auditToken:resultCallback:)`
 - `\"Successfully validated the signing information.\"`
 
 This pattern = `SecCodeCopyGuestWithAttributes` → `SecCodeCopySigningInformation(code, flags, &info)`. The flags arg determines whether sealed resources are validated:
 
-| Flags | Main exec sig | Sealed resources | Notarization staple |
-|---|---|---|---|
-| `kSecCSDefaultFlags` | ✓ | ✗ | ✗ |
-| `kSecCSStrictValidate` | ✓ | ✓ | ✗ |
-| `kSecCSCheckAllArchitectures \| kSecCSStrictValidate` | ✓ | ✓ | ✓ |
+| Flags                                                 | Main exec sig | Sealed resources | Notarization staple |
+| ----------------------------------------------------- | ------------- | ---------------- | ------------------- |
+| `kSecCSDefaultFlags`                                  | ✓             | ✗                | ✗                   |
+| `kSecCSStrictValidate`                                | ✓             | ✓                | ✗                   |
+| `kSecCSCheckAllArchitectures \| kSecCSStrictValidate` | ✓             | ✓                | ✓                   |
 
 ### 4. Trade-off matrix (current state)
 
-| Approach | Widevine | 1Password |
-|---|---|---|
-| Inject Widevine, helper fix, full adhoc resign | ✓ | ✗ |
-| Drop Widevine inject, preserve notarization | ✗ | ✓ |
-| Upstream PR merged + new imput release | ✓ | ✓ |
-| User signs with own Developer ID + notarize | ✓ | ✓ ($99/yr) |
-| Asymmetric signature exploit (untested) | ✓ | ? |
+| Approach                                       | Widevine | 1Password  |
+| ---------------------------------------------- | -------- | ---------- |
+| Inject Widevine, helper fix, full adhoc resign | ✓        | ✗          |
+| Drop Widevine inject, preserve notarization    | ✗        | ✓          |
+| Upstream PR merged + new imput release         | ✓        | ✓          |
+| User signs with own Developer ID + notarize    | ✓        | ✓ ($99/yr) |
+| Asymmetric signature exploit (untested)        | ✓        | ?          |
 
 ## Bug-bounty / pentest analysis — asymmetric signature exploit
 
@@ -117,15 +119,14 @@ Detailed analysis in session: `/Users/seth/.pi/agent/sessions/--Users-seth-.dotf
 
 ## Acceptance Criteria
 
-1. Run empirical asymmetric-signature test (option C): build a variant of pkgs/helium-browser.nix that injects Widevine + re-signs only helpers (with base-helper library-validation fix) but leaves Contents/MacOS/Helium and the framework primary binary AND Contents/_CodeSignature/ completely untouched. Verify `codesign -dv $out/Applications/Helium.app/Contents/MacOS/Helium` still reports `TeamIdentifier=S4Q33XPHB4` and `Authority=Developer ID Application: imput LLC`.
+1. Run empirical asymmetric-signature test (option C): build a variant of pkgs/helium-browser.nix that injects Widevine + re-signs only helpers (with base-helper library-validation fix) but leaves Contents/MacOS/Helium and the framework primary binary AND Contents/\_CodeSignature/ completely untouched. Verify `codesign -dv $out/Applications/Helium.app/Contents/MacOS/Helium` still reports `TeamIdentifier=S4Q33XPHB4` and `Authority=Developer ID Application: imput LLC`.
 2. Test 1Password Add Browser against the option-C build. If 1P accepts → done; if 1P rejects → record exact error and proceed to step 3.
 3. If step 2 fails: disassemble 1Password's binary or attach lldb to running 1P process and capture the actual flags passed to `SecCodeCheckValidity` / `SecCodeCopySigningInformation` for browser validation. Document findings in the ticket.
 4. Test Widevine playback on a DRM-protected stream (Netflix HD or https://bitmovin.com/demos/drm) with the option-C build. Confirm playback works.
 5. If option C fails 1P validation: spike option D (out-of-bundle CDM at user-data-dir path). Investigate helium-chromium source for CDM resolution paths, document whether runtime CDM discovery works with component updater disabled, attempt the install-outside-bundle approach.
 6. Update `pkgs/helium-browser.nix` with whichever approach (C, D, or revert-to-no-Widevine) is verified working. Remove the dead-end full-resign approach if asymmetric exploit succeeds.
 7. Document the final approach in a code comment block in `pkgs/helium-browser.nix` referencing this ticket.
-9. Consolidate launcher logic so that /Applications/Helium.app acts as the primary wrapper, applying declarative `commandLineArgs` to the nix-store binary while preserving 1Password and Widevine support. Raycast, Spotlight, and Hammerspoon must find a single "Helium" entry that works correctly with all flags.
-
+8. Consolidate launcher logic so that /Applications/Helium.app acts as the primary wrapper, applying declarative `commandLineArgs` to the nix-store binary while preserving 1Password and Widevine support. Raycast, Spotlight, and Hammerspoon must find a single "Helium" entry that works correctly with all flags.
 
 ## Notes
 
@@ -143,6 +144,7 @@ do not auto-fall-through to D.
 Modifying `pkgs/helium-browser.nix`:
 
 postUnpack changes:
+
 - Keep Widevine injection into `Helium Framework.framework/.../Libraries/WidevineCdm/`
 - Keep `xattr -cr` (clears quarantine, does not affect embedded LC_CODE_SIGNATURE)
 - **Strip `_CodeSignature/` ONLY from helper .app bundles** (was: stripped from
@@ -155,9 +157,10 @@ postUnpack changes:
   - Sparkle.framework signature
 
 postFixup changes:
+
 - Re-sign only the 4-5 helper `.app` bundles inside `Helpers/`
 - Base `Helium Helper.app`: `--options=runtime,kill,restrict` (drops `library`)
-  + `disable-library-validation` entitlement
+  - `disable-library-validation` entitlement
 - Other helpers (Renderer/GPU/Plugin/Alerts): plain adhoc re-sign
 - **REMOVE** signing of: Sparkle.framework/Updater.app, Sparkle.framework,
   framework Versions/X, framework root, main app
@@ -181,6 +184,7 @@ Built `pkgs/helium-browser.nix` at /nix/store/wc6xjk205ls9gzs57bdn969zxwsssfd2-h
 **Codesign verification** (post-build):
 
 Main exec — `Helium.app/Contents/MacOS/Helium`:
+
 ```
 Identifier=net.imput.helium
 flags=0x12a00(kill,restrict,library-validation,runtime)
@@ -190,17 +194,20 @@ Sealed Resources version=2 rules=13 files=62
 ```
 
 Framework primary — `Helium Framework.framework/Versions/147.0.7727.116/Helium Framework`:
+
 ```
 Identifier=net.imput.helium.framework
 TeamIdentifier=S4Q33XPHB4
 Sealed Resources version=2 rules=13 files=245
 ```
+
 (Note: framework's sealed-resources hash is now broken because Widevine was
 injected into Versions/X/Libraries/WidevineCdm/, but the framework's primary
 binary's embedded LC_CODE_SIGNATURE remains valid. dyld validates binary sig
 on load, not bundle seal.)
 
 Base helper — `Helpers/Helium Helper.app`:
+
 ```
 flags=0x10a02(adhoc,kill,restrict,runtime)   # library-validation BIT CLEARED ✓
 Signature=adhoc
@@ -208,6 +215,7 @@ Entitlement: com.apple.security.cs.disable-library-validation = true
 ```
 
 Widevine present:
+
 ```
 Libraries/WidevineCdm/_platform_specific/mac_arm64/libwidevinecdm.dylib
 Libraries/WidevineCdm/_platform_specific/mac_arm64/libwidevinecdm.dylib.sig
@@ -215,6 +223,7 @@ manifest.json, LICENSE, _metadata, _platform_specific
 ```
 
 Wrapper — `~/Applications/Home Manager Apps/Helium.app/Contents/MacOS/launcher`:
+
 - bash script, `exec`s `/nix/store/wc6xj.../Helium.app/Contents/MacOS/Helium`
 - audit token of running process therefore reflects imput-signed binary
 
@@ -261,14 +270,15 @@ bl      _SecStaticCodeCheckValidity / _SecCodeCheckValidity
 **1P final acceptance test = `kSecCSDefaultFlags`.** Our nix-built option C
 Helium PASSES this. Probe results:
 
-| Target | DefaultFlags | ConsiderExpiration | Strict | StrictGK |
-|---|---|---|---|---|
-| nix-built option-C Helium 0.11.6.1 | ✅ OK | ✅ OK | ❌ FAIL -67054 | ❌ FAIL -67054 |
-| /Applications/Helium.app (Sparkle 137, no Widevine) | ✅ OK | ✅ OK | ✅ OK | ✅ OK |
-| Brave Nightly nix-store path | ✅ OK | ✅ OK | ✅ OK | ✅ OK |
-| Chrome | ✅ OK | ✅ OK | ✅ OK | ✅ OK |
+| Target                                              | DefaultFlags | ConsiderExpiration | Strict         | StrictGK       |
+| --------------------------------------------------- | ------------ | ------------------ | -------------- | -------------- |
+| nix-built option-C Helium 0.11.6.1                  | ✅ OK        | ✅ OK              | ❌ FAIL -67054 | ❌ FAIL -67054 |
+| /Applications/Helium.app (Sparkle 137, no Widevine) | ✅ OK        | ✅ OK              | ✅ OK          | ✅ OK          |
+| Brave Nightly nix-store path                        | ✅ OK        | ✅ OK              | ✅ OK          | ✅ OK          |
+| Chrome                                              | ✅ OK        | ✅ OK              | ✅ OK          | ✅ OK          |
 
 Designated requirement on our build (intact):
+
 ```
 identifier "net.imput.helium" and anchor apple generic and
 certificate 1[field.1.2.840.113635.100.6.2.6] and
@@ -304,6 +314,7 @@ goes through LaunchServices — Gatekeeper rejects, so the test cannot complete.
 ## Fundamental tension
 
 Can have at most 2 of:
+
 1. Widevine CDM injected (required for DRM)
 2. Main exec signed by imput LLC team S4Q33XPHB4 (required for 1P designated requirement)
 3. Bundle seal (`_CodeSignature/CodeResources`) intact (required for Gatekeeper)
@@ -314,12 +325,12 @@ Upstream-as-shipped achieves (2) + (3), sacrifices (1) → no Widevine.
 
 ## Resolution options
 
-| Option | Works for | Cost | Status |
-|---|---|---|---|
-| C + `sudo spctl --add /Applications/Helium.app` | All launches (Gatekeeper exception per-app) | Sudo prompt; persists in assessment DB | UNTESTED |
-| Own Apple Developer ID + notarize | All launches, no exception needed | $99/yr | Ticket option |
-| Option D (out-of-bundle CDM) | Avoids bundle-seal break | Unknown if Helium-Chromium honors out-of-bundle path | GATED per user directive 2026-05-01 |
-| Upstream PR + new imput release | All launches | Wait for imput maintainers | In flight (fork patched) |
+| Option                                          | Works for                                   | Cost                                                 | Status                              |
+| ----------------------------------------------- | ------------------------------------------- | ---------------------------------------------------- | ----------------------------------- |
+| C + `sudo spctl --add /Applications/Helium.app` | All launches (Gatekeeper exception per-app) | Sudo prompt; persists in assessment DB               | UNTESTED                            |
+| Own Apple Developer ID + notarize               | All launches, no exception needed           | $99/yr                                               | Ticket option                       |
+| Option D (out-of-bundle CDM)                    | Avoids bundle-seal break                    | Unknown if Helium-Chromium honors out-of-bundle path | GATED per user directive 2026-05-01 |
+| Upstream PR + new imput release                 | All launches                                | Wait for imput maintainers                           | In flight (fork patched)            |
 
 ## Files modified (uncommitted)
 
@@ -411,12 +422,12 @@ upstream PR + new imput release (clean fix), or sign with own Developer ID
 
 ## Remaining acceptance criteria
 
-- [x] Option C build with imput LLC main sig intact, helper-only re-sign  (criteria 1)
-- [x] Test 1P validation against option-C build → ACCEPTED  (criteria 2)
-- [ ] Test Widevine playback (Netflix HD or bitmovin demo)  (criteria 4)
+- [x] Option C build with imput LLC main sig intact, helper-only re-sign (criteria 1)
+- [x] Test 1P validation against option-C build → ACCEPTED (criteria 2)
+- [ ] Test Widevine playback (Netflix HD or bitmovin demo) (criteria 4)
 - [ ] Update `pkgs/helium-browser.nix` final state — already option-C (criteria 6)
-- [ ] Document in code comment block referencing this ticket + Gatekeeper-override gotcha  (criteria 7)
-- [ ] `just validate home` passes  (criteria 8, was passing as of build)
+- [ ] Document in code comment block referencing this ticket + Gatekeeper-override gotcha (criteria 7)
+- [ ] `just validate home` passes (criteria 8, was passing as of build)
 
 Criteria 3 (lldb 1P to capture flags) NOT NEEDED — disassembly already
 captured the flags statically. Criteria 5 (option D) NOT NEEDED.
@@ -430,6 +441,7 @@ End-to-end DRM playback test passed against bitmovin demo (https://bitmovin.com/
 ### Process-level evidence
 
 CdmServiceBroker helper spawned:
+
 ```
 PID 23362  Helium Helper.app/.../Helium Helper
   --type=utility --utility-sub-type=media.mojom.CdmServiceBroker
@@ -437,6 +449,7 @@ PID 23362  Helium Helper.app/.../Helium Helper
 ```
 
 Widevine CDM dylib mapped as TXT segment into PID 23362:
+
 ```
 Helium 23362 seth txt REG 1,13 17508352 74986819
   /Applications/Helium.app/Contents/Frameworks/Helium Framework.framework/Versions/147.0.7727.116/Libraries/WidevineCdm/_platform_specific/mac_arm64/libwidevinecdm.dylib
@@ -444,6 +457,7 @@ Helium 23362 seth txt REG 1,13 17508352 74986819
 
 Google-team `EQHXZ8M8AV` dylib loaded into adhoc-signed (TeamIdentifier=not set)
 helper. Possible only because:
+
 - helper signed with `--options=runtime,kill,restrict` (NO `library` flag) → cs-flag 0x10a02
 - `com.apple.security.cs.disable-library-validation` entitlement set
 - AMFI honors entitlement when library-validation cs-flag is OFF
@@ -476,15 +490,15 @@ correctly absent on Helium-Chromium).
 - [x] (2) 1Password Add Browser / extension pairing — vault data flows to popup
 - [x] (4) Widevine playback — bitmovin DRM demo plays in real-time
 - [N/A] (3) lldb capture — disassembly of `libop_sdk_lib_core.dylib` already
-            captured the flags (`kSecCSDefaultFlags` final, `kSecCSConsiderExpiration`
-            first)
+  captured the flags (`kSecCSDefaultFlags` final, `kSecCSConsiderExpiration`
+  first)
 - [N/A] (5) Option D — not needed, option C succeeded
 
 ## Remaining (non-blocking)
 
 - [x] (6) `pkgs/helium-browser.nix` already in option-C state
 - [x] (7) Code comment block in `pkgs/helium-browser.nix` references this
-          ticket and the Gatekeeper "Open Anyway" gotcha
+      ticket and the Gatekeeper "Open Anyway" gotcha
 - [x] (8) `just validate home` passes
 
 ## Gatekeeper-override gotcha for new builds (must document in code)
@@ -516,7 +530,7 @@ When the user hits the "damaged" dialog after a rebuild:
 
 ## Tools left in /tmp
 
-- `/tmp/codesign-probe.swift` / `/tmp/codesign-probe2.swift` — Swift Sec*Probe
+- `/tmp/codesign-probe.swift` / `/tmp/codesign-probe2.swift` — Swift Sec\*Probe
 - `/tmp/op_disasm.txt` — full libop_sdk_lib_core.dylib disasm (~70MB, prune)
 
 **2026-05-01T13:44:19Z**
@@ -563,6 +577,7 @@ not per-path or per-bundle-id.
   exposed to root + entitled processes.
 
 Investigation commands:
+
 ```bash
 # After clicking Open Anyway once, snapshot DB modifications:
 sudo find /var/db -newer /tmp/before_marker -name '*.db' -o -name '*.plist' -o -name '*.sqlite*' 2>/dev/null
@@ -613,6 +628,7 @@ keep it as a known-good fallback.
 ### Smoke test for any candidate automation
 
 After running candidate-automation script:
+
 1. `nix build` a small no-op change that bumps cdhash (e.g., touch
    pkgs/helium-browser.nix).
 2. Copy new build to /Applications/Helium.app.
@@ -625,10 +641,10 @@ If those four pass on a fresh cdhash, automation succeeded.
 ### Files this ticket leaves behind for the resumer
 
 - `/tmp/codesign-probe2.swift` — flag-by-flag SecCheckValidity probe.
-- `/tmp/op_disasm.txt` (~70MB) — libop_sdk_lib_core.dylib full disasm; the
-  `verifyClient(_:satisfies:)` flag-immediate analysis is at offsets 0x28cd00
-  and 0x28cdd8 (search for `mov w1, #-0x80000000` and `mov w1, #0x0`
-  preceding bl _SecStaticCodeCheckValidity / _SecCodeCheckValidity).
+- `/tmp/op_disasm.txt` (~70MB) — libop*sdk_lib_core.dylib full disasm; the
+  `verifyClient(*:satisfies:)`flag-immediate analysis is at offsets 0x28cd00
+and 0x28cdd8 (search for`mov w1, #-0x80000000`and`mov w1, #0x0`
+  preceding bl \_SecStaticCodeCheckValidity / \_SecCodeCheckValidity).
 - `pkgs/helium-browser.nix` — option-C derivation with full inline rationale
   in the top comment block.
 - `/Applications/Helium.app.bak.sparkle-137` — known-good Sparkle copy,
@@ -779,6 +795,7 @@ without modifying the bundle.
 ### Root cause of failed consolidation attempt
 
 Replacing /Applications/Helium.app's main exec with a bash launcher script:
+
 - LS re-registered bundle with `bundle flags: shell-script` (sequenceNum 9166688)
 - LS entry lost `teamID: S4Q33XPHB4` and `trustedCodeSignatures` from
   imput LLC Developer ID signature
@@ -799,6 +816,7 @@ apply commandLineArgs at LAUNCH TIME via:
    so 1P + Widevine remain functional.
 
    Example (`config/hammerspoon/`):
+
    ```lua
    local function launchHelium()
      local existing = hs.application.get("net.imput.helium")
@@ -823,6 +841,7 @@ apply commandLineArgs at LAUNCH TIME via:
 
 2. **Fish function (terminal launch path)** — same args via shell wrapper
    declaratively defined in `home/common/programs/fish/`:
+
    ```nix
    programs.fish.functions.helium = ''
      /Applications/Helium.app/Contents/MacOS/Helium \
@@ -850,17 +869,17 @@ apply commandLineArgs at LAUNCH TIME via:
 
 ### Args audit: what can/can't be set via Chromium preferences
 
-| Flag | Settable via Chromium prefs? | Mechanism |
-|---|---|---|
-| `--remote-debugging-port=9223` | ❌ NO | launch-time only (security) |
-| `--no-first-run` | ✅ | `browser.has_seen_welcome_page` |
-| `--no-default-browser-check` | ✅ | `browser.check_default_browser=false` |
-| `--hide-crashed-bubble` | ✅ | `profile.exit_type="Normal"` |
-| `--ignore-gpu-blocklist` | ✅ | chrome://flags → Local State |
-| `--disable-features=OutdatedBuildDetector` | ✅ | chrome://flags → Local State |
-| `--disable-breakpad` | ⚠️ partial | crash reporter pref |
-| `--disable-wake-on-wifi` | ❌ NO | launch-time only |
-| `--no-pings` | ❌ NO | launch-time only |
+| Flag                                       | Settable via Chromium prefs? | Mechanism                             |
+| ------------------------------------------ | ---------------------------- | ------------------------------------- |
+| `--remote-debugging-port=9223`             | ❌ NO                        | launch-time only (security)           |
+| `--no-first-run`                           | ✅                           | `browser.has_seen_welcome_page`       |
+| `--no-default-browser-check`               | ✅                           | `browser.check_default_browser=false` |
+| `--hide-crashed-bubble`                    | ✅                           | `profile.exit_type="Normal"`          |
+| `--ignore-gpu-blocklist`                   | ✅                           | chrome://flags → Local State          |
+| `--disable-features=OutdatedBuildDetector` | ✅                           | chrome://flags → Local State          |
+| `--disable-breakpad`                       | ⚠️ partial                   | crash reporter pref                   |
+| `--disable-wake-on-wifi`                   | ❌ NO                        | launch-time only                      |
+| `--no-pings`                               | ❌ NO                        | launch-time only                      |
 
 If we WANT to make Raycast/Spotlight launches also benefit from declarative
 config, we can add an activation script that mutates `Local State` and
@@ -871,6 +890,7 @@ not blocking.
 
 Even though theoretically the imput signature could be preserved by
 renaming Mach-O to Helium.real and putting a wrapper at Helium:
+
 - LS would still flag the bundle as `shell-script` (or unsigned Mach-O if
   we compiled a C wrapper) → loses LS bundle metadata
 - 1P validation IS process-based (audit token after exec()), so technically
@@ -908,3 +928,84 @@ renaming Mach-O to Helium.real and putting a wrapper at Helium:
 - [x] (NEW automation) Gatekeeper inode-stable approval via rsync --inplace
 - [ ] (9 NEW) Declarative commandLineArgs applied at launch — via
       Hammerspoon Hyper+J + fish function. Pending implementation.
+- [ ] (10 REPLAN 2026-06-01) Switch `pkgs/helium-browser.nix` to sign helpers + framework + main exec + bundle seal with `Developer ID Application: Seth Messer (3ZJ3F5RFBZ)`. Helpers keep `disable-library-validation` entitlement. Verify `codesign -dv` reports Seth's Developer ID on main exec, framework primary, and helpers; verify Widevine still loads (CdmServiceBroker + libwidevinecdm.dylib mapped).
+- [ ] (11) Confirm Gatekeeper accepts the new build via `rsync --inplace` install path with NO "Open Anyway" required. Validate by removing existing `/Applications/Helium.app` syspolicyd row (or testing on a fresh host) and running `open /Applications/Helium.app`.
+- [ ] (12) Skip notarization. Document in `pkgs/helium-browser.nix` comment block why it is not required for our rsync-install path (unquarantined Developer-ID-signed bundles bypass GK notarization check).
+- [ ] (13) Decision and implementation of debug-port path — A (in-bundle compiled C wrapper signed with Developer ID), B (fish + Hammerspoon only), or C (drop CDP). Implement chosen path; update `WEB_BROWSER_PATH` / web-browser skill accordingly.
+- [ ] (14) Update `skills/web-browser/scripts/start.js` to prefer attach-to-existing (CDP at `localhost:9223`) over spawn-with-isolated-profile. Use CDP `Target.createTarget` so new agent window shares the daily browser's logged-in profile state.
+- [ ] (15) Replace `heliumBrowserEnableDeveloperMode` jq activation with `targets.darwin.defaults."net.imput.helium".ExtensionDeveloperModeAllowed = true`. Verify policy is honoured by Helium (visit `chrome://policy` after launch). If ungoogled Helium strips the policy, retain jq activation and document why.
+- [ ] (16) Read Helium's bundled Chromium version from `Helium.app/Contents/Frameworks/Helium Framework.framework/Versions/` at build time and substitute into the External Extensions CWS update URL (replace hard-coded `prodversion=147.0.7727.116`).
+- [ ] (17) Remove dead alias `com.nix.helium-wrapper` from `config/hammerspoon/config.lua` (F2).
+- [ ] (18) If option A wins in (13), remove duplicated flag lists from fish `helium` function and Hammerspoon `C.helium.args` (F3). If option B wins, generate both lists from a single Nix source.
+- [ ] (19) Update `lat.md/lat.md` Helium section wording — replace "unsigned Nix-store Helium" with "Developer-ID-signed Helium, valid bundle seal". Reflect new debug-port strategy.
+- [ ] (20) Verify `bin/preview-html` bundle ID is `net.imput.helium` (or coordinate the fix with dot-d5w7).
+- [ ] (21) Final mental-model doc refresh at `~/.local/share/pi/docs/.dotfiles/helium-audit.md` + `.html` after refactor lands.
+
+**2026-06-01T20:34:48Z**
+
+## 2026-06-01 — Replan: simplest path with paid Developer ID
+
+### Core requirements (user, 2026-06-01)
+
+1. Widevine support via downloaded binaries (current GMP-Mozilla flow stays).
+2. Full 1Password extension/auto-fill/Touch-ID unlock.
+3. Agent control via Pi extensions / chrome-devtools/MCP servers.
+4. Declarative dev mode (no jq-mutate activation if avoidable).
+5. Declarative extension list (already done).
+6. Custom CLI args only if achievable without Hammerspoon and without nix `.app` wrappers; otherwise skip.
+
+User has a paid Apple Developer account now. Notarization theoretically available but want to avoid long per-build network round-trips.
+
+### Key insight that simplifies everything
+
+Gatekeeper only blocks **quarantined** files. Bundles installed via `rsync` from the Nix store have no quarantine xattr. For unquarantined Developer-ID-signed apps, Gatekeeper allows launch without notarization. No "Open Anyway", no Apple network round-trip.
+
+This means we can:
+
+- Sign the bundle locally with `Developer ID Application: Seth Messer (3ZJ3F5RFBZ)` (a few seconds in the derivation).
+- Skip notarization entirely.
+- Daily `just home` stays fast.
+
+### Proposed plan
+
+1. **Sign with Developer ID in the derivation; no notarize.**
+   - `pkgs/helium-browser.nix` re-signs helpers + framework + main exec + bundle seal with Developer ID Application: Seth Messer.
+   - Helpers keep the `com.apple.security.cs.disable-library-validation` entitlement (Widevine still loads in the now-Seth-signed helpers).
+   - Result: valid Mach-O sigs + intact bundle seal + single team identifier.
+   - Gatekeeper: accepts (unquarantined Developer-ID).
+   - 1Password: still accepts (`SecCodeCheckValidity` with `kSecCSDefaultFlags` doesn't care which Developer ID, just that it's valid).
+   - Option-C asymmetric complexity goes away. Helper-signing upstream PR is no longer needed for our own use.
+
+2. **Remote-debugging port — pick one, default A.**
+   - **A. In-bundle compiled wrapper.** Tiny C program at `Contents/MacOS/Helium` that exec's the real binary (renamed `Helium.bin`) with `--remote-debugging-port=9223` injected. Compiled, signed with Developer ID as part of the bundle. Every launch path (Finder/Dock/Spotlight/`open`/fish/Hammerspoon) gets the arg automatically. Bundle seal stays valid because the wrapper is part of the signed bundle.
+   - **B. Keep fish + Hammerspoon adding the flag.** Daily browser only has debug port when launched from fish/Hammerspoon. Finder/Dock launches don't.
+   - **C. No debug port. Drop CDP.** Agents fall back to AppleScript/JXA.
+
+3. **Profile sharing for agent control.**
+   - With debug port live (A or B): Pi attaches to existing browser at `localhost:9223`, opens new window via CDP `Target.createTarget`. Window shares all profile state — logins, cookies, extensions.
+   - `skills/web-browser/scripts/start.js`: prefer attach-to-existing over spawn-with-isolated-profile. Spawn only as fallback when no debug port is reachable.
+
+4. **Declarative dev mode via `targets.darwin.defaults`.**
+   - Replace the `jq`-mutate Secure Preferences activation with `targets.darwin.defaults."net.imput.helium".ExtensionDeveloperModeAllowed = true`.
+   - Caveat: Helium is ungoogled-Chromium-derived. Some Chromium enterprise policies are stripped in ungoogled builds. Verify this policy survives via `chrome://policy` after a test build. If stripped, keep the existing `jq` activation as fallback.
+
+5. **Declarative extensions — keep as-is.**
+
+6. **Findings cleanup commit:**
+   - F1: fix `bin/preview-html` bundle ID (`io.helium.helium` → `net.imput.helium`). Likely belongs in dot-d5w7.
+   - F2: delete dead `com.nix.helium-wrapper` alias from `config/hammerspoon/config.lua`.
+   - F3: delete duplicated flag lists from fish + Hammerspoon (only relevant if option A; if B, generate from a single Nix source).
+   - F5: update `lat.md` Helium section — replace "unsigned Nix-store Helium" wording with "Developer-ID-signed Helium, valid bundle seal".
+   - F6: read `prodversion=` from `Helium.app/Contents/Frameworks/Helium Framework.framework/Versions/` at build time and substitute into External Extensions JSON, instead of hard-coding.
+
+### Open decisions (awaiting user)
+
+- Wrapper choice — A (in-bundle C wrapper) vs B (fish/HS only) vs C (drop CDP).
+- Skip notarization entirely confirmed?
+- Verify `ExtensionDeveloperModeAllowed` survives ungoogled Helium policy build, or keep jq fallback?
+- F3 scope — only relevant if option B.
+- 1Password extension auto-install: leave manual, or build a launch-on-first-run helper that opens CWS install + 1Password app to assist user?
+
+### Companion audit doc
+
+Full mental-model audit lives at `~/.local/share/pi/docs/.dotfiles/helium-audit.md` and `helium-audit.html` (snapshot of pre-replan state at commit 57e8648c7).
