@@ -128,6 +128,7 @@ function getTicketSummary(messages: any[]): string {
     status?: string;
     priority?: number;
     parent?: string;
+    deps?: string[];
   };
 
   const parseTicketLine = (line: string): TicketLine | null => {
@@ -172,18 +173,31 @@ function getTicketSummary(messages: any[]): string {
     const status = raw.match(/^status:\s+(\S+)/m);
     const priority = raw.match(/^priority:\s+(\d+)/m);
     const parent = raw.match(/^parent:\s+(\S+)/m);
+    const deps = raw.match(/^deps:\s+\[([^\]]*)\]/m);
     meta.title = title?.[1]?.trim() || id;
     meta.status = status?.[1];
     meta.priority = priority ? Number(priority[1]) : undefined;
     meta.parent = parent?.[1];
+    meta.deps = deps?.[1]?.split(/[ ,]+/).filter(Boolean) || [];
     showCache.set(id, meta);
     return meta;
+  };
+
+  const stripInjectedOverview = (text: string): string => {
+    // Prior stop-hook followups include generated VCS/Tickets summaries. Those
+    // should not become the next anchor, or unrelated in-progress tickets can
+    // keep winning over the ticket the human/assistant just worked on.
+    return text
+      .replace(/\nVCS \([^\n]+\):[\s\S]*$/m, "")
+      .replace(/\nTickets:[\s\S]*$/m, "");
   };
 
   const recentIds = messages
     .flatMap((m: any) =>
       Array.from(
-        extractText(m.content).matchAll(/\b(?:dot|pca)-[a-z0-9-]+\b/g),
+        stripInjectedOverview(extractText(m.content)).matchAll(
+          /\b(?:dot|pca)-[a-z0-9-]+\b/g,
+        ),
       ).map((x) => x[0]),
     )
     .reverse();
@@ -195,10 +209,11 @@ function getTicketSummary(messages: any[]): string {
   const readyUnblockedRaw = run("tk ready 2>/dev/null");
 
   const inProgress = parseTickets(inProgressRaw);
-  const ready = parseTickets(
-    readyRaw && readyRaw.length ? readyRaw : readyUnblockedRaw,
+  const ready = [...parseTickets(readyRaw), ...parseTickets(readyUnblockedRaw)];
+  const all = [...inProgress, ...ready].filter(
+    (ticket, index, tickets) =>
+      tickets.findIndex((t) => t.id === ticket.id) === index,
   );
-  const all = [...inProgress, ...ready];
 
   const anchorWords = new Set(
     (anchor?.title || "").toLowerCase().match(/[a-z0-9]+/g) || [],
@@ -209,12 +224,19 @@ function getTicketSummary(messages: any[]): string {
       let score = 0;
       const reasons: string[] = [];
 
+      if (anchorId && ticket.id === anchorId) {
+        score += 240;
+        reasons.push("active ticket");
+      }
       if (anchor?.parent && meta?.parent === anchor.parent) {
         score += 120;
         reasons.push("same epic");
       }
-      if (anchorId && ticket.deps?.includes(anchorId)) {
-        score += 100;
+      if (
+        anchorId &&
+        (ticket.deps?.includes(anchorId) || meta?.deps?.includes(anchorId))
+      ) {
+        score += 200;
         reasons.push("direct dependent");
       }
       if (ticket.status === "in_progress" || meta?.status === "in_progress") {
@@ -240,17 +262,45 @@ function getTicketSummary(messages: any[]): string {
     .sort((a, b) => b.score - a.score)
     .slice(0, MAX_TICKETS_PER_SECTION);
 
+  const isRelatedToAnchor = (ticket: TicketLine): boolean => {
+    if (!anchor || !anchorId) return false;
+    if (ticket.id === anchorId) return true;
+    const meta = showTicket(ticket.id);
+    if (anchor.parent && meta?.parent === anchor.parent) return true;
+    if (ticket.deps?.includes(anchorId) || meta?.deps?.includes(anchorId))
+      return true;
+    const words = new Set(ticket.text.toLowerCase().match(/[a-z0-9]+/g) || []);
+    return [...words].some((w) => w.length > 3 && anchorWords.has(w));
+  };
+
   const parts: string[] = [];
   if (anchor)
     parts.push(
       `Anchor: ${anchor.id} (${anchor.title})${anchor.parent ? ` parent ${anchor.parent}` : ""}`,
     );
   if (inProgress.length > 0) {
-    const items = inProgress
-      .slice(0, MAX_TICKETS_PER_SECTION)
-      .map((t) => `${t.id} (${t.text})`)
-      .join(", ");
-    parts.push(`In-progress: ${items}`);
+    const relatedInProgress = anchor
+      ? inProgress.filter(isRelatedToAnchor)
+      : inProgress;
+    const otherInProgress = anchor
+      ? inProgress.filter((ticket) => !isRelatedToAnchor(ticket))
+      : [];
+
+    if (relatedInProgress.length > 0) {
+      const items = relatedInProgress
+        .slice(0, MAX_TICKETS_PER_SECTION)
+        .map((t) => `${t.id} (${t.text})`)
+        .join(", ");
+      parts.push(`In-progress: ${items}`);
+    }
+
+    if (otherInProgress.length > 0) {
+      const items = otherInProgress
+        .slice(0, MAX_TICKETS_PER_SECTION)
+        .map((t) => `${t.id} (${t.text})`)
+        .join(", ");
+      parts.push(`Other in-progress: ${items}`);
+    }
   }
   if (scored.length > 0) {
     const items = scored

@@ -14,6 +14,8 @@ The repo no longer integrates with the old file-backed task tracker. Agent comma
 
 The stop-hook extension uses `llamacpp/gemma4` as its local gatekeeper first, matching `home/common/programs/pi-coding-agent/models.json` and `settings.json`. If that local model is unavailable, the cloud fallback stays profile-aware: `mega` falls back to `openai-codex/gpt-5.4-mini`; `rx` falls back to `rx-anthropic/claude-haiku-4-5`. Stop-hook nudges should ensure direct questions were answered clearly, but should not run when the last turn only contains Neovim/nvim/pinvim editor context plus automatic lat instructions and no user prompt. Stop-hook sends its nudge as a `stop-hook` custom message with `triggerTurn` instead of a real user message, so user-input hooks such as automatic lat directives do not fire for stop-check reviews.
 
+Stop-hook ticket summaries are generated from fresh `tk` commands at stop time. Anchor selection ignores previously injected VCS/Tickets overview text so stale review prompts do not outweigh the current thread, direct dependents are ranked ahead of unrelated in-progress tickets, and unrelated in-progress work is listed separately.
+
 Pi package files copied from external setups live under `home/common/programs/pi-coding-agent/packages/` before being wired into the main Home Manager module. This keeps migration inputs close to local wrapper package sources while preserving reviewable upstream pins.
 
 NPM-backed Pi helpers use `buildNpmPackage` derivations plus pinned lockfiles under `home/common/programs/pi-coding-agent/packages/`. The built result is symlinked into `~/.pi/agent/extensions/` when the helper is an extension.
