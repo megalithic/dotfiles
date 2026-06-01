@@ -76,6 +76,12 @@
       '';
     });
 
+    # llama-cpp: nodejs 24 hits a libuv kqueue assertion (Abort trap: 6) on darwin
+    # during the webui `npm run build` teardown. Artifacts are already produced
+    # when it aborts, but nix sees the non-zero exit. Pin nodejs_22 for the webui
+    # build to dodge the libuv bug. Upstream report: nodejs/node#56831.
+    llama-cpp = prev.llama-cpp.override { nodejs = prev.nodejs_22; };
+
     # shade - Floating terminal panel for macOS (prebuilt from GitHub release)
     shade = prev.stdenv.mkDerivation {
       pname = "shade";

@@ -9,9 +9,7 @@
 # Ref: https://github.com/brizzbuzz/opnix
 {
   config,
-  pkgs,
   lib,
-  inputs,
   # hostname,  # re-enable when rxbookpro hostSecrets are restored
   ...
 }:
@@ -112,9 +110,8 @@ in
     functions -e __opnix_source_env_file
   '';
 
-  home.packages = [
-    inputs.opnix.packages.${pkgs.stdenv.hostPlatform.system}.default
-  ];
+  # opnix CLI is installed by the upstream OpNix module itself; adding it here
+  # causes a pkgs.buildEnv conflict because it resolves to a different store path.
 
   home.file.".config/opnix/.keep".text = "";
   home.file.".config/opnix/secrets/.keep".text = "";
