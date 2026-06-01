@@ -78,6 +78,8 @@ Terminal launches use the fish `helium` function with the same flag set. Hammers
 
 Hammerspoon and fish keep separate copies of the Chromium flag list; changes to remote-debugging, first-run, GPU, crash, wake, ping, or outdated-build flags must update both launch paths together.
 
+Hammerspoon browser tab automation treats Helium as the preferred Chromium browser. Meeting and Figma hotkeys call `lib.interop.browser`, which checks `BROWSER` first and keeps Helium in supported browser names and fallback bundle IDs before Brave.
+
 Local Developer ID signing/notarization is now viable for the installed Helium bundle. Sign with `Developer ID Application: Seth Messer (3ZJ3F5RFBZ)`, submit with Keychain profile `AC_PASSWORD`, staple ticket, then verify `spctl` reports `source=Notarized Developer ID`.
 
 The current Home Manager activation still rsyncs the unsigned Nix-store Helium over `/Applications/Helium.app`. Until signing is automated in activation, `just home` or `just rebuild` can replace a manually notarized install; darwin-only activation should not touch it.
