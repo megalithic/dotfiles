@@ -75,10 +75,17 @@ This is a **nix-darwin + home-manager** managed dotfiles repo.
 │   ├── tmux/              # Terminal multiplexer
 │   └── ghostty/           # Terminal emulator
 ├── bin/                   # User scripts (symlinked to ~/bin/)
-└── docs/                  # Architecture docs and research
+└── docs/                  # Curated architecture docs, skills, agents, commands
 ```
 
 Directory-specific `AGENTS.md` files are removed; use this root file for repo guidance.
+
+## Research and audit artifacts
+
+- Ad-hoc agent-generated docs (audits, research, mental-model writeups, investigation reports) live in `~/.local/share/pi/docs/.dotfiles/`, NOT in the repo.
+- Pattern mirrors `~/.local/share/pi/handoffs/.dotfiles/` and plans. Filename should be descriptive (e.g., `helium-audit.md`); companion HTML/diagrams sit next to the markdown.
+- The in-repo `docs/` directory holds only curated, durable architecture docs and skill/agent/command resources that ship with the repo.
+- Promote an ad-hoc doc into `docs/` (or `lat.md/`) only when it becomes durable reference material.
 
 ## Package Placement (Where to Add Things)
 

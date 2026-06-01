@@ -52,7 +52,7 @@ The `web-browser` skill is still a local skill directory. Its scripts declare an
 
 `home/common/programs/pi-coding-agent/sources/GLOBAL_AGENTS.md` is the Home Manager source for `~/.pi/agent/AGENTS.md`; `APPEND_SYSTEM.md` is intentionally empty.
 
-The current global policy mirrors the root repo `AGENTS.md` structure rather than being a standalone shorter document. It covers tools (`trash`, `devenv`, MCP lookups via `context7`/`githits`), caveman mode, writing style, vision-model subprocesses for images, git conventions, KISS/YAGNI coding, lat.md sync, subagent delegation (scout/plan/implement/review/fix), ralph-loop for repetitive tasks, and `.local_scripts/` for ignored scratch scripts. A snapshot of the previous standalone version is preserved in `sources/GLOBAL_AGENTS_20260522.md`.
+The current global policy mirrors the root repo `AGENTS.md` structure rather than being a standalone shorter document. It covers tools (`trash`, `devenv`, MCP lookups via `context7`/`githits`), caveman mode, writing style, vision-model subprocesses for images, git conventions, KISS/YAGNI coding, lat.md sync, subagent delegation (scout/plan/implement/review/fix), ralph-loop for repetitive tasks, `.local_scripts/` for ignored scratch scripts, and `~/.local/share/pi/docs/$(basename $PWD)/` for ad-hoc research/audit/exploration docs (in-repo `docs/` is reserved for curated, durable material). A snapshot of the previous standalone version is preserved in `sources/GLOBAL_AGENTS_20260522.md`.
 
 Version-control rules that are specific to this dotfiles repo remain in root `AGENTS.md`, not in the global Pi source. Keep global guidance portable; keep repo-specific nix-darwin/Home Manager guardrails at repo root.
 
