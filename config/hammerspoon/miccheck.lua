@@ -22,6 +22,7 @@ local HUDState = {
 
 local currentHUDState = HUDState.HIDDEN
 local completeTimer = nil
+local SHOW_PTT_ACTIVE_HUD = false
 
 local function svgToImage(svg) return hs.image.imageFromURL("data:image/svg+xml," .. hs.http.encodeForQuery(svg)) end
 local SVG = {
@@ -104,6 +105,8 @@ local function isMicActive()
   end
   return false
 end
+
+local function shouldShowPTTActiveHUD() return SHOW_PTT_ACTIVE_HUD and isMicActive() end
 
 local function renderRecordingHUD(hud)
   hud:setContent(function(canvas, cx, cy)
@@ -367,7 +370,7 @@ local function setHUDState(newState)
           setHUDState(HUDState.RECORDING)
         elseif S.isProcessing then
           setHUDState(HUDState.PROCESSING)
-        elseif isMicActive() then
+        elseif shouldShowPTTActiveHUD() then
           setHUDState(HUDState.PTT_ACTIVE)
         else
           setHUDState(HUDState.HIDDEN)
@@ -383,7 +386,7 @@ local function computeHUDState()
   if S.isRecording then return HUDState.RECORDING end
   if S.isProcessing then return HUDState.PROCESSING end
   if currentHUDState == HUDState.COMPLETE then return HUDState.COMPLETE end
-  if isMicActive() then return HUDState.PTT_ACTIVE end
+  if shouldShowPTTActiveHUD() then return HUDState.PTT_ACTIVE end
 
   return HUDState.HIDDEN
 end
@@ -395,6 +398,19 @@ local function showComplete() setHUDState(HUDState.COMPLETE) end
 local function icon(template, color)
   local svg = template:gsub("{{COLOR}}", color)
   return svgToImage(svg)
+end
+
+local function iconWithBackground(template, color, backgroundColor)
+  local body = template:match("<svg[^>]*>([%s%S]-)</svg>") or template
+  body = body:gsub("{{COLOR}}", color)
+  return svgToImage(fmt(
+    [[<svg xmlns="http://www.w3.org/2000/svg" width="40" height="24" viewBox="0 0 40 24">
+      <rect x="0" y="0" width="40" height="24" rx="12" fill="%s"/>
+      <g transform="translate(12 4)">%s</g>
+    </svg>]],
+    backgroundColor,
+    body
+  ))
 end
 
 local function updateMenubar()
@@ -414,7 +430,7 @@ local function updateMenubar()
     S.menubar:setIcon(icon(SVG.record, COLORS.red), false)
     S.menubar:setTitle("")
   elseif isMicUnmuted then
-    S.menubar:setIcon(icon(SVG.speak, COLORS.red), false)
+    S.menubar:setIcon(iconWithBackground(SVG.speak, COLORS.white, COLORS.red), false)
     S.menubar:setTitle("")
   else
     S.menubar:setIcon(icon(SVG.muted, COLORS.white), false)
