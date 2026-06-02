@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Find the next free TCP port starting from a given default.
+# Usage: free-port [port]
+#   port  Starting port to check (default: 4000)
+#
+# Examples:
+#   free-port 4000   # next free port from 4000
+#   free-port 5432   # next free postgres port
+
+port="${1:-4000}"
+
+while lsof -iTCP:"$port" -sTCP:LISTEN -t >/dev/null 2>&1; do
+  port=$((port + 1))
+done
+
+echo "$port"
