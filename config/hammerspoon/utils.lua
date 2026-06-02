@@ -63,6 +63,37 @@ function M.required(opts, keys, fnName)
   return true, nil
 end
 
+---Match a value against ordered cases.
+---@param value any Value to match
+---@param cases table[] Ordered cases: { pattern, handler }
+---@param default any|nil Fallback value or function(value)
+---@return any
+---@usage U.case(status, { { "ready", fn }, { function(v) return v == "x" end, fn } }, fallback)
+function M.case(value, cases, default)
+  for _, entry in ipairs(cases or {}) do
+    local pattern, handler = entry[1], entry[2]
+    local matched
+
+    if type(pattern) == "function" then
+      matched = pattern(value)
+    elseif pattern == value then
+      matched = true
+    end
+
+    if matched then
+      if type(handler) == "function" then
+        return handler(value)
+      end
+      return handler
+    end
+  end
+
+  if type(default) == "function" then
+    return default(value)
+  end
+  return default
+end
+
 --------------------------------------------------------------------------------
 
 function M.run(cmd, use_env)

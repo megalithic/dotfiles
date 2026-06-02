@@ -92,6 +92,8 @@ UI preferences keep terminal, tmux, and Neovim behavior predictable across local
 
 Hammerspoon miccheck menubar state lives in `config/hammerspoon/miccheck.lua`. Muted state uses a white slashed-mic glyph on the transparent menubar, processing uses an orange waveform glyph, recording uses a red dot, and unmuted voice passthrough uses the normal mic glyph in white on a 40×24 rounded red SVG pill background so the active hot-mic state is more visible than a transparent red glyph and visually matches pill-shaped menubar indicators. The PTT-active HUD renderer remains in the file, but `SHOW_PTT_ACTIVE_HUD` is false so unmuting the microphone changes only menubar state and does not show the notch HUD.
 
+Hammerspoon utility helpers include `U.case`, an ordered value/predicate matcher for small Lua pattern-matching branches. Hammerspoon clipper uses it for gatekeeper reason display: oversized captures keep the 5MB Claude upload gatekeeper, show `⚠ too large ({capture_filesize}), resizing..`, then ImageMagick resizes/compresses the saved PNG to a conservative 4000KB JPEG target. The resized file replaces the upload path only after it exists and passes the gatekeeper; resize callbacks avoid clearing a newer active resize task.
+
 Ghostty uses native `maximize = true` instead of oversized window dimensions. The animated boo cursor shader is disabled by default, leaving the block cursor and other shell integration settings active.
 
 Tmux session layouts remain explicit scripts. The `mega` layout opens a separate `code` window before the `agent` window, while the `rx` layout registers a `session-closed` hook that runs `devenv down`. The megaforest theme uses orange for the active pane border to make focus visible.

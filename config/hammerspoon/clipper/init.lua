@@ -38,6 +38,7 @@ local shade = require("lib.interop.shade")
 ---@field uploadStatus "idle"|"verifying"|"uploading"|"complete"|"failed"|"gatekeeper" Upload state
 ---@field ocrStatus "idle"|"processing"|"complete"|"failed" OCR state
 ---@field gatekeeperReason string|nil Gatekeeper violation reason
+---@field originalImagePath string|nil Original PNG path before optimization
 ---@field fileSizeBytes number|nil Image file size in bytes
 
 ---@class ClipperModule
@@ -88,6 +89,7 @@ M.config = {
   -- Gatekeeper: max image size for Claude API (5MB limit for base64 images)
   maxImageSizeBytes = 5 * 1024 * 1024, -- 5MB
   maxImageSizeMB = 5,
+  optimizedImageTargetKB = 4000, -- Conservative upload target after resize/compress
 
   -- Modal keybindings: { key, mods, action, description, requiresUrl? }
   -- Cheatsheet is auto-generated from this
@@ -273,6 +275,7 @@ end
 
 ---Update panel status without recreating
 ---Shows combined upload + OCR status
+local formatSize
 -- Status display handlers
 local ocrStatusHandlers = {
   processing = function()
@@ -304,8 +307,16 @@ local uploadStatusHandlers = {
     return "✗ Upload failed", "FF3B30" -- Red
   end,
   gatekeeper = function(capture)
-    local reason = capture.gatekeeperReason or "image too large"
-    return "⚠ gatekeeper: " .. reason, "FF9500" -- Orange/amber
+    return U.case(capture.gatekeeperReason, {
+      {
+        "image too large",
+        function()
+          return fmt("⚠ too large (%s), resizing..", formatSize(capture.fileSizeBytes or 0)), "FF9500"
+        end,
+      },
+    }, function(reason)
+      return "⚠ gatekeeper: " .. (reason or "blocked"), "FF9500" -- Orange/amber
+    end)
   end,
 }
 
@@ -369,7 +380,7 @@ end
 ---Format bytes as human-readable string
 ---@param bytes number
 ---@return string
-local function formatSize(bytes)
+function formatSize(bytes)
   if bytes < 1024 then
     return fmt("%d bytes", bytes)
   elseif bytes < 1024 * 1024 then
@@ -389,8 +400,7 @@ function M.checkGatekeeper(imagePath)
   end
 
   if sizeBytes > M.config.maxImageSizeBytes then
-    local reason = fmt("%s > %dMB limit", formatSize(sizeBytes), M.config.maxImageSizeMB)
-    return false, reason
+    return false, "image too large"
   end
 
   return true, nil
@@ -399,6 +409,76 @@ end
 --------------------------------------------------------------------------------
 -- UPLOAD (ASYNC)
 --------------------------------------------------------------------------------
+
+---Resize/compress an oversized capture before upload.
+---@param imagePath string
+function M.resizeForUpload(imagePath)
+  if not M.capture or M.capture.imagePath ~= imagePath then return end
+
+  local basePath = imagePath:gsub("%.[^/%.]+$", "")
+  local outputPath = basePath .. "_resized.jpg"
+  local imageName = outputPath:gsub(".*/", "")
+
+  local task
+  task = hs.task.new("/usr/bin/env", function(exitCode, _stdOut, stdErr)
+    if not M.capture or M.capture.imagePath ~= imagePath then return end
+    if M.activeTasks.resize == task then M.activeTasks.resize = nil end
+
+    if exitCode ~= 0 then
+      M.capture.gatekeeperReason = "resize failed"
+      M.updatePanelStatus()
+      U.log.e(fmt("magick resize failed: %s", stdErr))
+      return
+    end
+
+    local resizedSizeBytes = getFileSizeBytes(outputPath)
+    if not resizedSizeBytes then
+      M.capture.gatekeeperReason = "resize produced no file"
+      M.updatePanelStatus()
+      U.log.w(M.capture.gatekeeperReason)
+      return
+    end
+
+    if resizedSizeBytes > M.config.maxImageSizeBytes then
+      M.capture.gatekeeperReason = fmt(
+        "resize too large: %s > %dMB limit",
+        formatSize(resizedSizeBytes),
+        M.config.maxImageSizeMB
+      )
+      M.updatePanelStatus()
+      U.log.w(M.capture.gatekeeperReason)
+      return
+    end
+
+    M.capture.originalImagePath = imagePath
+    M.capture.imagePath = outputPath
+    M.capture.imageName = imageName
+    M.capture.fileSizeBytes = resizedSizeBytes
+    M.capture.gatekeeperReason = nil
+    U.log.i(fmt("resized capture to %s", formatSize(resizedSizeBytes)))
+
+    M.verifyAndUpload(outputPath)
+  end, {
+    "magick",
+    imagePath,
+    "-auto-orient",
+    "-strip",
+    "-background",
+    "white",
+    "-alpha",
+    "remove",
+    "-alpha",
+    "off",
+    "-resize",
+    "3000x3000>",
+    "-define",
+    fmt("jpeg:extent=%dKB", M.config.optimizedImageTargetKB),
+    outputPath,
+  })
+
+  M.activeTasks.resize = task
+  task:start()
+end
 
 ---Run gatekeeper verification and upload if passed
 ---Called from async context after file is saved
@@ -414,6 +494,10 @@ function M.verifyAndUpload(imagePath)
     M.capture.gatekeeperReason = reason
     M.updatePanelStatus()
     U.log.w(fmt("gatekeeper blocked upload: %s", reason))
+
+    if reason == "image too large" then
+      M.resizeForUpload(imagePath)
+    end
     return
   end
 
@@ -890,6 +974,7 @@ function M.handleCapture(image)
     uploadStatus = "verifying",
     ocrStatus = "idle",
     gatekeeperReason = nil,
+    originalImagePath = nil,
     fileSizeBytes = nil, -- Set async
   }
 
