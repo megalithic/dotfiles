@@ -130,13 +130,35 @@
 
                       # Entitlements for the base helper (disable library validation so
                       # Google-signed Widevine CDM loads in our Developer-ID-signed helper).
-                      ENTS=$(mktemp)
-                      cat > "$ENTS" <<'PLIST'
+                      HELPER_ENTS=$(mktemp)
+                      cat > "$HELPER_ENTS" <<'PLIST'
             <?xml version="1.0" encoding="UTF-8"?>
             <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
             <plist version="1.0">
             <dict>
               <key>com.apple.security.cs.disable-library-validation</key>
+              <true/>
+            </dict>
+            </plist>
+            PLIST
+
+                      # Entitlements for the main app (camera, microphone, etc. — matches
+                      # Chrome/Brave so macOS TCC prompts fire for getUserMedia).
+                      APP_ENTS=$(mktemp)
+                      cat > "$APP_ENTS" <<'PLIST'
+            <?xml version="1.0" encoding="UTF-8"?>
+            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+            <plist version="1.0">
+            <dict>
+              <key>com.apple.security.device.camera</key>
+              <true/>
+              <key>com.apple.security.device.audio-input</key>
+              <true/>
+              <key>com.apple.security.device.bluetooth</key>
+              <true/>
+              <key>com.apple.security.device.usb</key>
+              <true/>
+              <key>com.apple.security.personal-information.location</key>
               <true/>
             </dict>
             </plist>
@@ -167,7 +189,7 @@
                           # Widevine CDM loads in this Developer-ID-signed process.
                           /usr/bin/codesign --force --sign "$SIGN_ID" \
                             --options=runtime,kill,restrict \
-                            --entitlements "$ENTS" \
+                            --entitlements "$HELPER_ENTS" \
                             "$helper"
                         else
                           /usr/bin/codesign --force --sign "$SIGN_ID" "$helper"
@@ -184,12 +206,13 @@
                       # 5. Helium Framework.framework (seals Widevine + helpers + Sparkle)
                       /usr/bin/codesign --force --sign "$SIGN_ID" "$FW_ROOT"
 
-                      # 6. Main app bundle (outermost seal)
+                      # 6. Main app bundle (outermost seal, with device entitlements)
                       /usr/bin/codesign --force --sign "$SIGN_ID" \
                         --options=runtime,kill,restrict,library-validation \
+                        --entitlements "$APP_ENTS" \
                         "$DST"
 
-                      rm -f "$ENTS"
+                      rm -f "$HELPER_ENTS" "$APP_ENTS"
 
                       # Verify
                       echo "helium-browser: verifying bundle seal..."
