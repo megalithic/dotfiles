@@ -1,14 +1,5 @@
-# REF: Some useful resources
-#
-# https://nix.dev/
-# https://nixos.org/guides/nix-pills/
-# https://nix-community.github.io/awesome-nix/
-# https://serokell.io/blog/practical-nix-flakes
-# https://zero-to-nix.com/
-# https://wiki.nixos.org/wiki/Flakes
-# https://rconybea.github.io/web/nix/nix-for-your-own-project.html
 {
-  description = "🗿 megadotfiles (nix'd)";
+  description = "🗿 dots";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
@@ -22,6 +13,7 @@
       url = "github:LnL7/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
     nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
     homebrew-core = {
       url = "github:homebrew/homebrew-core";
@@ -43,6 +35,7 @@
       url = "github:FelixKratz/homebrew-formulae";
       flake = false;
     };
+
     # brew-nix: nix overlay for homebrew casks (replaces nix-homebrew casks)
     brew-api = {
       url = "github:BatteredBunny/brew-api";
@@ -54,6 +47,7 @@
       inputs.brew-api.follows = "brew-api";
       inputs.nix-darwin.follows = "nix-darwin";
     };
+
     opnix = {
       url = "github:brizzbuzz/opnix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -62,28 +56,20 @@
     # NOTE: you can pin to a specific show with neovim-nightly-overlay/<sha>
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
 
-    # nur.url = "github:nix-community/nur";
-    expert.url = "github:elixir-lang/expert";
     devenv.url = "github:cachix/devenv";
     nh.url = "github:nix-community/nh";
-    # worktrunk.url = "github:max-sixty/worktrunk";
     kanata-darwin = {
       url = "github:not-in-stock/kanata-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # REF: https://github.com/wra-bradshaw/.dotfiles/blob/main/darwin/common/komorebi.nix
-    # komorebi-for-mac = {
-    #   url = "github:LGUG2Z/komorebi-for-mac";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
     # FIXME: Shade build broken - GhosttyKit extraction issue (see overlays/default.nix)
     # shade.url = "github:megalithic/shade";
     # shade.inputs.nixpkgs.follows = "nixpkgs";
-    # yazi.url = "github:sxyazi/yazi";
-    # yazi-plugins = {
-    #   url = "github:yazi-rs/plugins";
-    #   flake = false;
-    # };
+    yazi.url = "github:sxyazi/yazi";
+    yazi-plugins = {
+      url = "github:yazi-rs/plugins";
+      flake = false;
+    };
   };
 
   outputs =

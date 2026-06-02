@@ -227,4 +227,8 @@ in
   };
 
   programs.home-manager.enable = true;
+
+  # use copyApps for GUI apps (works with Spotlight)
+  targets.darwin.linkApps.enable = false;
+  targets.darwin.copyApps.enable = true;
 }

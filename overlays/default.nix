@@ -37,7 +37,6 @@
 
     nvim-nightly = inputs.neovim-nightly-overlay.packages.${prev.stdenv.hostPlatform.system}.default;
     devenv = inputs.devenv.packages.${prev.stdenv.hostPlatform.system}.devenv;
-    expert = inputs.expert.packages.${prev.stdenv.hostPlatform.system}.default;
     notmuch = prev.notmuch.override { withEmacs = false; };
 
     # pi-coding-agent: patch retry behavior + expose setScopedModels to extensions
