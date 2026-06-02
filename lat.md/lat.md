@@ -140,19 +140,11 @@ The extension validates missing content before invoking `preview-ai`: non-HTML p
 
 ## Secrets management
 
-Agenix is retired. Active secrets are declared in `home/common/programs/opnix/default.nix` and resolved by the OpNix Home Manager module during activation. All active 1Password references live in the `Crypt` vault.
+Agenix is retired. Secrets are declared in `home/common/programs/opnix/default.nix` and resolved by the OpNix Home Manager module during activation; read that file for the 1Password reference layout instead of duplicating it here.
 
-The 1Password service account token is the only unmanaged secret input and must stay out of the Nix store. It lives at `${XDG_CONFIG_HOME:-$HOME/.config}/opnix/token` with mode `0600`, sourced from `op://Crypt/opnix/<hostname>/token`; `just opnix-token` is the convenience command for creating it.
+The 1Password service account token is the only unmanaged secret input and must stay out of the Nix store. It lives under `${XDG_CONFIG_HOME:-$HOME/.config}/opnix/token` with mode `0600`; `just opnix-token` provisions it.
 
-Managed secret outputs:
-
-- `op://Crypt/env/notesPlain` → `${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/env-vars.sh` (POSIX-style `KEY=value`; sourced directly by zsh, parsed into exported vars by fish, and consumed by pinvim/Hammerspoon helpers)
-- `op://Crypt/s3cfg/notesPlain` → `~/.s3cfg` (required by `s3cmd`)
-- `op://Crypt/apple-developer/username` → `${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/apple-developer/apple-id`, exported as `APPLE_ID_EMAIL` in zsh/bash/fish
-- `op://Crypt/apple-developer/Section_6qgogrdycnlqc4x7ngqwchlyvi/team id` → `${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/apple-developer/team-id`, exported as `APPLE_TEAM_ID` in zsh/bash/fish
-- `op://Crypt/apple-developer/Section_6qgogrdycnlqc4x7ngqwchlyvi/notarytool app password` → `${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/apple-developer/notarytool-password`, exported as `APPLE_NOTARYTOOL_PASSWORD` in zsh/bash/fish
-
-Apple notarization credentials are mirrored from `Shared/Apple ID Dev Account` into `Crypt/apple-developer` because the OpNix service account can only read the `Crypt` vault. Do not point Home Manager OpNix references at `Shared`; mirror fields into `Crypt` first. Use them to create the local Keychain profile with `xcrun notarytool store-credentials "AC_PASSWORD" --apple-id "$APPLE_ID_EMAIL" --team-id "$APPLE_TEAM_ID" --password "$APPLE_NOTARYTOOL_PASSWORD"`.
+Managed secrets land under `${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/` (plus a few well-known paths like `~/.s3cfg` for tools that don't read alternate locations). Apple notarization credentials are exported in zsh/bash/fish as `APPLE_ID_EMAIL`, `APPLE_TEAM_ID`, and `APPLE_NOTARYTOOL_PASSWORD`, and feed `xcrun notarytool store-credentials "AC_PASSWORD"` to create the local Keychain profile.
 
 Shell secret loading is shell-specific: zsh uses `programs.zsh.initContent`, bash uses `programs.bash.bashrcExtra`, and fish parses the same files in `programs.fish.interactiveShellInit`. Do not assume zsh init snippets run for bash.
 
