@@ -1,7 +1,7 @@
-#!/usr/bin/zsh
+#!/usr/bin/env bash
 
-if (command -v desk &>/dev/null); then
-  desk | grep -q 'No desk activated.') && exit 1 || exit 0
+if command -v desk >/dev/null 2>&1; then
+  desk | grep -q 'No desk activated.' && exit 1 || exit 0
 else
   exit 1
 fi

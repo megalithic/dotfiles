@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 
 # display wan and lan ip addresses only when we're not pairing
 # $(tmux display-message -p '#S') != 'pairing' &&

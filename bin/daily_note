@@ -1,6 +1,6 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 
-source "/Users/$(whoami)/.config/zsh/lib/helpers.zsh"
+source "$HOME/.dotfiles/bin/helpers"
 
 # HT: @linkarzu
 # used his ideas to build my own system (recently switched away from `zk`, the go-lang binary).

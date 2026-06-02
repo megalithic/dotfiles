@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-source "$HOME/.config/zsh/lib/helpers.zsh"
+source "$HOME/.dotfiles/bin/helpers"
 
 # https://til.hashrocket.com/posts/z3ei0ejnjl-convert-mov-to-gif-with-ffmpeg
 

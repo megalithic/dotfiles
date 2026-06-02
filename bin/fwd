@@ -1,9 +1,9 @@
-#!/bin/zsh
+#!/usr/bin/env bash
 
 set -euo pipefail
 [[ -v DEBUG ]] && set -x
 
-[[ -f "$HOME/.config/zsh/lib/helpers.zsh" ]] && source "$HOME/.config/zsh/lib/helpers.zsh"
+[[ -f "$HOME/.dotfiles/bin/helpers" ]] && source "$HOME/.dotfiles/bin/helpers"
 
 trap 'clean_exit $? $LINENO' EXIT
 trap ctrl_c INT # trap ctrl-c and call ctrl_c()
@@ -15,7 +15,7 @@ function clean_exit {
   fi
 }
 
-# clean_exit defined in helpers.zsh
+# clean_exit defined in bin/helpers
 trap 'clean_exit $? $LINENO' EXIT
 
 function __help() {
@@ -95,7 +95,7 @@ if [[ ! -e "${FWD_CONTROL_FILE}" ]]; then
   # TIMESTAMP_FILE="${FWD_CONTROL_FILE}_${TIMESTAMP}"
   # touch ${TIMESTAMP_FILE}
 
-  ssh -M -S "${FWD_CONTROL_FILE}" -fNT -R 8888:localhost:$PORT "$FWD_CONNECTION" 2>/dev/null &&
+  ssh -M -S "${FWD_CONTROL_FILE}" -fNT -R 8888:localhost:$PORT "$FWD_CONNECTION" 2>/dev/null
 fi
 command cat <<EOF
 $(__status)

@@ -2,9 +2,9 @@
 
 set -euo pipefail
 
-[[ -f "$ZDOTDIR/lib/helpers.zsh" ]] && source "$ZDOTDIR/lib/helpers.zsh"
+[[ -f "$HOME/.dotfiles/bin/helpers" ]] && source "$HOME/.dotfiles/bin/helpers"
 
-# clean_exit defined in helpers.zsh
+# clean_exit defined in bin/helpers
 trap 'clean_exit $? $LINENO' EXIT
 
 # -- friendly help if -h option given

@@ -1,10 +1,10 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 # shellcheck shell=bash
 
 set -euo pipefail
 # [[ -v DEBUG ]] && set -x
 
-source "/Users/$(whoami)/.config/zsh/lib/helpers.zsh"
+source "$HOME/.dotfiles/bin/helpers"
 
 # TODO: figure out how to better use exit trapping
 # REF: https://www.youtube.com/watch?v=hWTOfzv_yFE
@@ -18,7 +18,7 @@ __clean_exit() {
   fi
 }
 
-# clean_exit defined in helpers.zsh
+# clean_exit defined in bin/helpers
 trap '__clean_exit $? $LINENO' EXIT
 
 TMUX_LAUNCH_SESSION="slck"

@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 
 function is_ssh {
 	if [[ $(ps -o comm= -p $PPID) == "sshd" ]]; then

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-[[ -f "$HOME/.config/zsh/lib/helpers.zsh" ]] && source "$HOME/.config/zsh/lib/helpers.zsh"
+[[ -f "$HOME/.dotfiles/bin/helpers" ]] && source "$HOME/.dotfiles/bin/helpers"
 
 # gleefully thieved from https://github.com/mhanberg/.dotfiles/blob/4cd05cb9c0985363a65657a43b12fa9a017686f1/bin/m
 # who stole it without remorse from https://github.com/wojtekmach/dotfiles/blob/master/bin/m

@@ -1,7 +1,7 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 
 set -euo pipefail
-source "/Users/$(whoami)/.config/zsh/lib/helpers.zsh"
+source "$HOME/.dotfiles/bin/helpers"
 
 __help() {
   printf -- "\n"

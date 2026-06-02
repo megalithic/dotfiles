@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 # shellcheck shell=bash
 
 #set -euo pipefail
@@ -57,9 +57,9 @@ function valid() {
   fi
 }
 
-# ZSH only and most performant way to check existence of an executable
+# Portable check for existence of an executable (bash + zsh)
 # https://www.topbug.net/blog/2016/10/11/speed-test-check-the-existence-of-a-command-in-bash-and-zsh/
-exists() { (($ + commands["$1"])); }
+exists() { command -v "$1" >/dev/null 2>&1; }
 
 function has() {
   type "$1" &>/dev/null
@@ -110,15 +110,18 @@ indent() {
 }
 
 function checkyes() {
-  result=1
+  local result=1
+  local yn
   tput setaf 6
-  if [[ x$(basename $SHELL) = x'bash' ]]; then
-    read -p "$@ [y/N]: " yn
-    case "$yn" in [yY]*) result=0 ;; *) result=1 ;; esac
-  elif [[ x$(basename $SHELL) = x'zsh' ]]; then
-    printf "$@ [y/N]: "
-    if read -q; then result=0; else result=1; fi
+  if [ -n "${ZSH_VERSION:-}" ]; then
+    printf "%s [y/N]: " "$*"
+    # zsh: read -q reads a single keystroke
+    if read -q yn; then result=0; else result=1; fi
     echo
+  else
+    # bash and POSIX-ish shells
+    read -r -p "$* [y/N]: " yn
+    case "$yn" in [yY]*) result=0 ;; *) result=1 ;; esac
   fi
   tput sgr0
   return $result
