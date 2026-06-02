@@ -720,7 +720,7 @@ end
 --- All resolution + open logic lives in lib/interop/nvim-open.
 function M.registerNvimOpenHandler()
   -- hs.urlevent.bind("nvim-open", require("lib.interop.nvim-open").handleURL)
-  -- U.log.f("[%s] nvim-open URL handler registered", M.name)
+  U.log.f("[%s] nvim-open URL handler registered", M.name)
 end
 
 --------------------------------------------------------------------------------

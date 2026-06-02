@@ -164,7 +164,7 @@ Fish defines a `jj` wrapper that runs real `jj` inside jj repos, allows `jj git 
 
 The `helium` fish function launches `/Applications/Helium.app/Contents/MacOS/Helium` with declarative Chromium flags (no remote-debugging port). Hammerspoon launches Helium via the generic `summon` path without flags, so fish stays the only path that supplies command-line args.
 
-`PLUG_EDITOR` is exported from `home/common/programs/fish/default.nix` as a `hammerspoon://nvim-open` URL. Phoenix/browser stack traces use it so Hammerspoon can choose the correct Neovim target at click time.
+`PLUG_EDITOR` is exported from `home/common/programs/fish/default.nix` as a `hammerspoon://nvim-open` URL. Phoenix/browser stack traces use it so Hammerspoon can choose the correct Neovim target at click time. The Hammerspoon URL watcher logs nvim-open handler registration from `registerNvimOpenHandler`; URL resolution and open behavior remains centralized in `lib/interop/nvim-open`.
 
 ## Tmux layouts
 
