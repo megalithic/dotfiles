@@ -1,16 +1,13 @@
 # Helium Browser with Widevine DRM (Apple Silicon).
 #
-# Strategy (tk dot-7tgz):
-#   - Inject Google-signed Widevine CDM into the Helium framework.
-#   - Strip ALL code signatures (nix build runs as _nixbld user, no keychain).
-#   - Signing with Developer ID happens in the home-manager activation script
-#     (home/common/programs/helium-browser/default.nix) which runs as the real
-#     user with keychain access to "Developer ID Application: Seth Messer".
-#   - The activation signs inside-out: helpers → Sparkle → framework → main
-#     app, producing a valid bundle seal. Base helper gets the
-#     disable-library-validation entitlement so Widevine loads.
-#   - Unquarantined + Developer-ID-signed = Gatekeeper accepts without
-#     notarization and without "Open Anyway". No manual step needed.
+# Inject Widevine CDM into the framework. Strip + ad-hoc re-sign only the
+# helpers (base helper gets disable-library-validation so Widevine loads).
+# Main exec, framework, and Sparkle keep imput's original signatures —
+# required for 1Password desktop pairing (verifyClient allowlists imput's
+# team ID) and for hardened-runtime library validation between the main exec
+# and the framework. The outer bundle CodeResources hashes the helpers'
+# original _CodeSignature; replacing them breaks the outer seal, so first
+# launch per build needs one Gatekeeper "Open Anyway" click.
 {
   lib,
   pkgs,
@@ -83,9 +80,11 @@ stdenvNoCC.mkDerivation {
           # Clear quarantine xattrs (does NOT affect embedded LC_CODE_SIGNATURE).
           /usr/bin/xattr -cr "$HELIUM"
 
-          # Strip ALL _CodeSignature dirs. The nix build user (_nixbld) has no
-          # keychain access; Developer ID signing happens in the HM activation.
-          fd -t d _CodeSignature "$HELIUM" -x rm -rf {}
+          # Strip _CodeSignature from helpers only so postFixup can re-sign
+          # them ad-hoc. Main exec, framework, and Sparkle seals stay intact.
+          for helper in "$FW/$VER/Helpers/"*.app; do
+            rm -rf "$helper/Contents/_CodeSignature"
+          done
   '';
 
   installPhase = ''
@@ -96,8 +95,35 @@ stdenvNoCC.mkDerivation {
     makeWrapper "$out/Applications/Helium.app/Contents/MacOS/Helium" "$out/bin/helium"
   '';
 
-  # No postFixup signing. Developer ID signing happens in the HM activation
-  # script because the nix daemon's _nixbld users cannot access the keychain.
+  postFixup = ''
+          HELIUM="$out/Applications/Helium.app"
+          FW_ROOT="$HELIUM/Contents/Frameworks/Helium Framework.framework"
+          VER=$(ls "$FW_ROOT/Versions" 2>/dev/null | grep -E '^[0-9]+\.' | head -1)
+
+          ENTS="$NIX_BUILD_TOP/helper-entitlements.plist"
+          cat > "$ENTS" <<'PLIST'
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
+    <dict>
+      <key>com.apple.security.cs.disable-library-validation</key>
+      <true/>
+    </dict>
+    </plist>
+    PLIST
+
+          for helper in "$FW_ROOT/Versions/$VER/Helpers/"*.app; do
+            name=$(basename "$helper" .app)
+            if [ "$name" = "Helium Helper" ]; then
+              /usr/bin/codesign --force --sign - \
+                --options=runtime,kill,restrict \
+                --entitlements "$ENTS" \
+                "$helper"
+            else
+              /usr/bin/codesign --force --sign - "$helper"
+            fi
+          done
+  '';
 
   meta = with lib; {
     description = "Helium browser with Widevine DRM (Apple Silicon)";
