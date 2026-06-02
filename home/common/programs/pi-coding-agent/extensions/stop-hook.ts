@@ -389,6 +389,70 @@ function isEditorContextOnlyTurn(messages: any[]): boolean {
   );
 }
 
+const PENDING_COMMAND_KEY = Symbol.for("dotfiles.pi.executeCommand.pending");
+
+type PendingExecuteCommand = { command: string; reason?: string };
+
+function getSharedPendingExecuteCommand(): PendingExecuteCommand | null {
+  return (
+    (globalThis as Record<symbol, PendingExecuteCommand | null>)[
+      PENDING_COMMAND_KEY
+    ] || null
+  );
+}
+
+function queuedExecuteCommand(messages: any[]): boolean {
+  if (getSharedPendingExecuteCommand()) return true;
+
+  const lastAssistant = [...messages]
+    .reverse()
+    .find((m: any) => m.role === "assistant");
+  if (!lastAssistant || !Array.isArray(lastAssistant.content)) return false;
+  return lastAssistant.content.some(
+    (b: any) => b.type === "toolCall" && b.name === "execute_command",
+  );
+}
+
+function sendStopHookFollowup(
+  pi: ExtensionAPI,
+  ctx: ExtensionContext,
+  prompt: string,
+) {
+  const send = (attempt = 0) => {
+    try {
+      if (!ctx.isIdle() && attempt < 20) {
+        setTimeout(() => send(attempt + 1), 50);
+        return;
+      }
+
+      pi.sendMessage(
+        {
+          customType: "stop-hook",
+          content: prompt,
+          display: true,
+        },
+        { deliverAs: "followUp", triggerTurn: true },
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes("Agent is already processing") && attempt < 20) {
+        setTimeout(() => send(attempt + 1), 50);
+        return;
+      }
+
+      if (message.includes("Agent is already processing")) {
+        try {
+          pi.sendUserMessage(prompt, { deliverAs: "followUp" });
+        } catch {
+          // Avoid surfacing stop-hook fallback failures as runtime errors.
+        }
+      }
+    }
+  };
+
+  setTimeout(() => send(), 0);
+}
+
 function buildGatekeeperMessages(messages: any[]) {
   // Single reverse pass: collect last N user-assistant pairs
   const collected: { role: string; content: unknown }[] = [];
@@ -557,6 +621,12 @@ export default function (pi: ExtensionAPI) {
     // Skip nudge when pinvim/neovim only sent editor context without a user prompt.
     if (isEditorContextOnlyTurn(event.messages)) return;
 
+    // Skip nudge when the assistant queued a self-invoked command via the
+    // `execute_command` tool. The execute-command extension will dispatch the
+    // queued command (e.g. /answer) on agent_end, and nudging now would race
+    // with that follow-up turn and hide its output from the user.
+    if (queuedExecuteCommand(event.messages)) return;
+
     // Skip nudge when agent made no tool calls (simple Q&A) — unless interrupted
     if (!wasInterrupted) {
       const hasToolUse = event.messages.some(
@@ -593,13 +663,6 @@ export default function (pi: ExtensionAPI) {
     if (ticketSummary) contextParts.push(ticketSummary);
     const prompt = contextParts.join("\n\n");
 
-    pi.sendMessage(
-      {
-        customType: "stop-hook",
-        content: prompt,
-        display: true,
-      },
-      { deliverAs: "followUp", triggerTurn: true },
-    );
+    sendStopHookFollowup(pi, _ctx, prompt);
   });
 }

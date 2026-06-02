@@ -1,9 +1,18 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "@sinclair/typebox";
 
+type PendingCommand = { command: string; reason?: string };
+
+const PENDING_COMMAND_KEY = Symbol.for("dotfiles.pi.executeCommand.pending");
+
+function setSharedPendingCommand(command: PendingCommand | null): void {
+  (globalThis as Record<symbol, PendingCommand | null>)[PENDING_COMMAND_KEY] =
+    command;
+}
+
 export default function (pi: ExtensionAPI) {
   // Queue of commands to execute after agent turn ends
-  let pendingCommand: { command: string; reason?: string } | null = null;
+  let pendingCommand: PendingCommand | null = null;
 
   // Tool to execute a command/message directly (self-invoke)
   pi.registerTool({
@@ -21,29 +30,36 @@ The command/message appears in the conversation as a user message.`,
       "Use to self-invoke /answer after asking questions, run /reload after creating skills, or send follow-up prompts.",
 
     parameters: Type.Object({
-      command: Type.String({ 
-        description: "The command or message to execute (e.g., '/answer', '/reload', or any text)" 
+      command: Type.String({
+        description:
+          "The command or message to execute (e.g., '/answer', '/reload', or any text)",
       }),
       reason: Type.Optional(
-        Type.String({ 
-          description: "Optional explanation for why you're executing this command (shown to user)" 
-        })
+        Type.String({
+          description:
+            "Optional explanation for why you're executing this command (shown to user)",
+        }),
       ),
     }),
 
     async execute(toolCallId, params, signal, onUpdate, ctx) {
       const { command, reason } = params;
 
-      // Store command to be executed after agent turn ends
-      pendingCommand = { command, reason };
+      const queuedCommand = { command, reason };
 
-      const explanation = reason 
+      // Store command to be executed after agent turn ends. Also publish it on
+      // globalThis so stop-hook can skip its own follow-up and avoid racing the
+      // queued command.
+      pendingCommand = queuedCommand;
+      setSharedPendingCommand(queuedCommand);
+
+      const explanation = reason
         ? `Queued for execution: ${command}\nReason: ${reason}`
         : `Queued for execution: ${command}`;
 
       return {
         content: [{ type: "text", text: explanation }],
-        details: { 
+        details: {
           command,
           reason,
           queued: true,
@@ -57,17 +73,19 @@ The command/message appears in the conversation as a user message.`,
     if (pendingCommand) {
       const { command } = pendingCommand;
       pendingCommand = null;
-      
+
       // Special handling for /answer via event bus (needs context)
       if (command === "/answer") {
         setTimeout(() => {
           pi.events.emit("trigger:answer", ctx);
+          setSharedPendingCommand(null);
         }, 100);
-      } 
+      }
       // Auto-execute slash commands via sendUserMessage
       else if (command.startsWith("/")) {
         setTimeout(() => {
           pi.sendUserMessage(command);
+          setSharedPendingCommand(null);
         }, 100);
       }
       // For non-command text, prefill editor and notify
@@ -76,6 +94,7 @@ The command/message appears in the conversation as a user message.`,
           ctx.ui.setEditorText(command);
           ctx.ui.notify(`Press Enter to send: ${command}`, "info");
         }
+        setSharedPendingCommand(null);
       }
     }
   });
