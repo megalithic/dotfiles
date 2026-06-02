@@ -36,7 +36,6 @@
       end
 
       $helium \
-        --remote-debugging-port=9223 \
         --no-first-run \
         --no-default-browser-check \
         --hide-crashed-bubble \

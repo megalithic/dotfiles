@@ -74,19 +74,17 @@ Unused flake inputs should be removed from `flake.lock` after their `flake.nix` 
 
 Helium is the primary Hammerspoon browser (`BROWSER = "net.imput.helium"`). Launchers must keep the real `/Applications/Helium.app` bundle intact for LaunchServices and 1Password validation.
 
-Hyper+J launches `/Applications/Helium.app/Contents/MacOS/Helium` through `hs.task` with declarative Chromium flags from `C.helium.args`; if Helium is already running, the binding only activates it.
+Hammerspoon launches Helium through the same generic `summon.toggle`/`summon.focus` path as every other launcher entry; there is no Helium-specific `hs.task` branch. The signed `/Applications/Helium.app` bundle is opened directly via its bundle id `net.imput.helium`, so LaunchServices, 1Password validation, and any Helium-managed defaults stay intact.
 
-Terminal launches use the fish `helium` function with the same flag set. Hammerspoon app bindings special-case Helium: if the app is running they focus it; otherwise they launch the real executable via `hs.task` with `C.helium.args`. Do not replace the signed app bundle with a wrapper app just to add flags.
-
-Hammerspoon and fish keep separate copies of the Chromium flag list; changes to remote-debugging, first-run, GPU, crash, wake, ping, or outdated-build flags must update both launch paths together.
+Terminal launches still use the fish `helium` function, which adds declarative Chromium flags (`--no-first-run`, `--no-default-browser-check`, GPU/crash/wake/ping/outdated-build flags). Hammerspoon-initiated launches intentionally omit those flags because LaunchServices does not forward them; the daily Helium launch path also has no remote-debugging port.
 
 Hammerspoon browser tab automation treats Helium as the preferred Chromium browser. Meeting and Figma hotkeys call `lib.interop.browser`, which checks `BROWSER` first and keeps Helium in supported browser names and fallback bundle IDs before Brave.
 
-Local Developer ID signing/notarization is now viable for the installed Helium bundle. Sign with `Developer ID Application: Seth Messer (3ZJ3F5RFBZ)`, submit with Keychain profile `AC_PASSWORD`, staple ticket, then verify `spctl` reports `source=Notarized Developer ID`.
+Local Developer ID signing/notarization remains viable but is not part of the active Helium path. The active package uses the option-C helper resigning approach: it preserves the upstream main executable signature for 1Password, injects Widevine, and relies on rsync plus the existing Gatekeeper approval keyed on the bundle directory's inode.
 
-The current Home Manager activation still rsyncs the unsigned Nix-store Helium over `/Applications/Helium.app`. Until signing is automated in activation, `just home` or `just rebuild` can replace a manually notarized install; darwin-only activation should not touch it.
+Home Manager installs Helium 0.12.5.1 to `/Applications/Helium.app` from the Nix package via `rsync -a --checksum --delete --chmod=u+w`. `--checksum` is mandatory because Nix store files all have mtime `Dec 31 1969` and Chromium's main exec stub is the same byte size across minor Helium versions; rsync's default size+mtime quick check would otherwise SKIP the main exec on a version bump and leave a half-updated bundle (new Info.plist + new framework but old launcher dlopening a deleted `Versions/<old>/Helium Framework`), which crashes with SIGABRT and trips Gatekeeper's "damaged" dialog. `--inplace` is intentionally omitted: rsync's default tempfile+rename keeps the bundle directory inode stable (which is what `syspolicyd` ExecPolicy keys on for the "Open Anyway" approval) while sidestepping the read-only nix-store file mode that App Management TCC can prevent us from chmod'ing. `--chmod=u+w` makes replaced files user-writable so subsequent rebuilds can replace them. The extension update URL uses Chromium prodversion 148.0.7778.215, matching the bundled framework version.
 
-Pi's web-browser skill defaults to the Helium binary through `WEB_BROWSER_PATH`, so browser automation and the Hammerspoon launch path stay on the same app bundle.
+Pi's web-browser skill still points at the Helium binary through `WEB_BROWSER_PATH`, but the daily Helium launchers do not expose CDP. Browser automation that needs CDP must start its own managed browser/debug session instead of attaching to daily Helium.
 
 ## Terminal and editor UI preferences
 
@@ -162,7 +160,7 @@ Fish carries repo workflow helpers and desktop integration environment variables
 
 Fish defines a `jj` wrapper that runs real `jj` inside jj repos, allows `jj git init`, and falls back to `git` with a hint inside plain git repos. This lets shared commands prefer `jj` without breaking git-only repositories.
 
-The `helium` fish function launches `/Applications/Helium.app/Contents/MacOS/Helium` with the same Chromium flags used by Hammerspoon. Keep the fish function and Hammerspoon `C.helium.args` in sync.
+The `helium` fish function launches `/Applications/Helium.app/Contents/MacOS/Helium` with declarative Chromium flags (no remote-debugging port). Hammerspoon launches Helium via the generic `summon` path without flags, so fish stays the only path that supplies command-line args.
 
 `PLUG_EDITOR` is exported from `home/common/programs/fish/default.nix` as a `hammerspoon://nvim-open` URL. Phoenix/browser stack traces use it so Hammerspoon can choose the correct Neovim target at click time.
 

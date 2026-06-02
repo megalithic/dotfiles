@@ -1,24 +1,8 @@
-# Helium-specific config + dev-mode activation on top of mkChromiumBrowser.
-# Install/option plumbing comes from mkChromiumBrowser.nix.
+# Helium-specific config on top of mkChromiumBrowser.
 #
-# Bundle ID note:
-#   - `bundleId = "net.imput.helium"` is Helium's actual CFBundleIdentifier.
-#     This is used as `effectiveBundleId` in mkChromiumBrowser, so
-#     `targets.darwin.defaults` writes to ~/Library/Preferences/net.imput.helium.plist
-#     (which Helium's NSUserDefaults reads). NOT a custom ID.
-#   - `darwinWrapperApp.bundleId = "com.nix.helium-browser"` is the SEPARATE
-#     wrapper .app's Info.plist ID. It only identifies the wrapper to macOS;
-#     does not affect prefs read by Helium itself.
-#
-# Extension install mechanism:
-#   - mkChromiumBrowser writes External Extensions JSON to
-#     ~/Library/Application Support/net.imput.helium/External Extensions/<id>.json
-#     with `external_update_url = https://clients2.google.com/service/update2/crx`
-#     (default). Chromium fetches + installs from CWS on launch.
-#   - `external_crx` (local CRX file) is blocked on macOS since Chrome 44, so
-#     we rely on the update URL path. Works for any CWS-published extension.
-#   - 1Password is intentionally omitted: it requires interactive desktop-app
-#     pairing on first use, which can't be automated declaratively.
+# `bundleId = "net.imput.helium"` is Helium's real CFBundleIdentifier and is
+# used by `targets.darwin.defaults` to write NSUserDefaults to
+# ~/Library/Preferences/net.imput.helium.plist.
 {
   config,
   pkgs,
@@ -36,37 +20,25 @@
       applicationSupportDir = "net.imput.helium";
 
       commandLineArgs = [
-        # Startup behavior
         "--no-first-run"
         "--no-default-browser-check"
         "--hide-crashed-bubble"
-        # Performance
         "--ignore-gpu-blocklist"
-        # Privacy
         "--disable-breakpad"
         "--disable-wake-on-wifi"
         "--no-pings"
-        # Disable auto-update nag (managed by nix)
         "--disable-features=OutdatedBuildDetector"
       ];
 
       dictionaries = [ pkgs.hunspellDictsChromium.en_US ];
 
-      # Extensions auto-install on first launch via External Extensions JSON.
-      #
-      # IMPORTANT: Helium strips `prodversion=` from extension update requests
-      # for fingerprint protection. Google's CRX endpoint returns
-      # `<updatecheck status="noupdate"/>` without prodversion, so we must bake
-      # it into the update URL ourselves. Helium's proxy patch only redirects
-      # CWS-UI installs, NOT External Extensions sideloads, so requests go to
-      # clients2.google.com directly.
-      #
-      # Update prodversion to match Helium's underlying Chromium version on
-      # major upgrades (check Helium.app/Contents/Frameworks/Helium\ Framework
-      # .framework/Versions/).
+      # Helium strips `prodversion=` from extension update requests for
+      # fingerprint protection, and CWS returns `noupdate` without it, so
+      # bake the current Chromium version into the update URL. Bump this
+      # alongside `pkgs/helium-browser.nix` on Helium major upgrades.
       extensions =
         let
-          helium-update-url = "https://clients2.google.com/service/update2/crx?prodversion=147.0.7727.116";
+          helium-update-url = "https://clients2.google.com/service/update2/crx?prodversion=148.0.7778.215";
           ext = id: {
             inherit id;
             updateUrl = helium-update-url;
@@ -80,8 +52,7 @@
           (ext "ponfpcnoihfmfllpaingbgckeeldkhle") # Enhancer for YouTube
         ];
 
-      # macOS keyboard shortcuts (NSUserKeyEquivalents)
-      # Format: ^ = Ctrl, $ = Shift, ~ = Option, @ = Cmd
+      # NSUserKeyEquivalents: ^ = Ctrl, $ = Shift, ~ = Option, @ = Cmd.
       keyEquivalents = {
         "Close Tab" = "^w";
         "New Private Window" = "^$n";
@@ -95,14 +66,11 @@
         "Zoom Out" = "^-";
       };
 
-      # Wrapper .app so Finder launches apply commandLineArgs.
-      # We set the bundleId to match Helium's actual ID (net.imput.helium)
-      # so LaunchServices treats the wrapper as the primary Helium app.
-      darwinWrapperApp = {
-        enable = false;
-      };
+      darwinWrapperApp.enable = false;
     };
 
+    # Chromium `ExtensionDeveloperModeSettings` policy did not surface in
+    # chrome://policy via NSUserDefaults, so mutate Secure Preferences directly.
     home.activation.heliumBrowserEnableDeveloperMode = lib.mkIf config.programs.helium-browser.enable (
       lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         HELIUM_PREFS="${config.home.homeDirectory}/Library/Application Support/net.imput.helium/Default/Secure Preferences"
@@ -117,27 +85,26 @@
       ''
     );
 
-    # Install Helium.app to /Applications/ via rsync --inplace, preserving the
-    # bundle directory inode across rebuilds. This is critical for bypassing
-    # macOS Gatekeeper's "damaged" dialog after every nix rebuild.
+    # Install Helium.app to /Applications/ via rsync.
     #
-    # Background (tk dot-7tgz):
-    # - Our option-C build breaks the bundle's _CodeSignature/CodeResources seal
-    #   (Widevine injection + helper re-sign). spctl rejects the bundle, which
-    #   triggers Gatekeeper's "\"Helium.app\" is damaged..." dialog when launched
-    #   via LaunchServices (Finder, Dock, Spotlight, NSWorkspace).
-    # - macOS user override ("Open Anyway" in System Settings) is keyed by
-    #   (volume_uuid, object_id, fs_type_name) in /var/db/SystemPolicyConfiguration/ExecPolicy.
-    #   The object_id is the bundle directory's INODE.
-    # - A naive `cp -R` recreates the bundle dir on every rebuild → new inode →
-    #   approval lost → "Open Anyway" required again, every rebuild.
-    # - `rsync -a --inplace --delete` updates contents in place, preserving the
-    #   bundle dir + main exec inodes. The user-override row in syspolicyd
-    #   (flags=526) stays valid → no dialog.
+    # The option-C build (Widevine inject + helper re-sign) breaks the
+    # bundle's _CodeSignature seal, so Gatekeeper shows the "damaged" dialog
+    # on first launch. The user clears that once via System Settings →
+    # Privacy & Security → "Open Anyway". That approval is stored in
+    # /var/db/SystemPolicyConfiguration/ExecPolicy keyed on the bundle
+    # directory inode, so the rsync below must preserve it across rebuilds.
     #
-    # First-time install: user must click "Open Anyway" ONCE in
-    # System Settings → Privacy & Security after the initial `just home`.
-    # Every rebuild after that reuses the cached approval.
+    # rsync flags:
+    #   - default tempfile+rename (NOT --inplace): keeps the bundle dir inode
+    #     stable, sidesteps the read-only nix-store file mode that App
+    #     Management TCC can prevent us from chmod'ing.
+    #   - --checksum: required. Nix mtime is always epoch, and Chromium's
+    #     launcher stub is the same byte size across minor Helium versions,
+    #     so the default size+mtime quick-check skips the main exec on a
+    #     version bump → half-updated bundle → SIGABRT on dlopen of the old
+    #     framework path.
+    #   - --delete: removes stale Versions/<old> dirs.
+    #   - --chmod=u+w: replaced files don't inherit nix-store read-only mode.
     home.activation.heliumBrowserInstallToApplications =
       lib.mkIf config.programs.helium-browser.enable
         (
@@ -146,34 +113,17 @@
             DST="/Applications/Helium.app"
 
             if [ ! -d "$SRC" ]; then
-              echo "helium-browser: source bundle missing at $SRC; skipping /Applications/ install"
+              echo "helium-browser: source bundle missing at $SRC; skipping"
             elif [ ! -w /Applications ] && ! groups | tr ' ' '\n' | grep -qx admin; then
               echo "helium-browser: cannot write to /Applications/ (user not in admin group); skipping"
             else
-              # Initial install: just create the bundle. Inode preservation kicks in
-              # on subsequent rebuilds.
               if [ ! -e "$DST" ]; then
-                echo "helium-browser: first-time install of Helium.app to /Applications/"
-                echo "helium-browser: NOTE — after this run, you must click 'Open Anyway' ONCE"
-                echo "helium-browser:   in System Settings → Privacy & Security to approve the bundle."
-                echo "helium-browser:   The approval persists across all future rebuilds (inode preserved)."
+                echo "helium-browser: first-time install; click 'Open Anyway' in"
+                echo "helium-browser:   System Settings → Privacy & Security once after this run."
               fi
-              # rsync -a (archive) --inplace (no rename dance, preserves inodes)
-              # --delete (remove stale files from prior builds)
-              # Excludes: nothing — we want full sync.
-              #
-              # NOTE: we chmod +w first because nix store files are read-only,
-              # and rsync --inplace fails to overwrite read-only files.
-              # macOS Sequoia App Management TCC blocks chmod/write to /Applications
-              # apps once installed — even with sudo. Tolerate failures and let rsync
-              # decide if the files actually need updating.
-              if [ -d "$DST" ]; then
-                $DRY_RUN_CMD chmod -R u+w "$DST" 2>/dev/null || true
-              fi
-              $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -a --inplace --delete \
-                "$SRC/" "$DST/" 2>&1 | head -20 || {
-                  echo "helium-browser: rsync to /Applications/ failed (Sequoia App Management may be blocking)"
-                  echo "helium-browser: existing /Applications/Helium.app left in place"
+              $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -a --checksum --delete --chmod=u+w \
+                "$SRC/" "$DST/" || {
+                  echo "helium-browser: rsync to /Applications/ failed; existing bundle left in place"
                 }
             fi
           ''

@@ -2,7 +2,12 @@
   "mcpServers": {
     "chrome-devtools": {
       "command": "npx",
-      "args": ["-y", "chrome-devtools-mcp@latest"]
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--executable-path=/Users/seth/.nix-profile/bin/helium",
+        "--isolated"
+      ]
     },
     "context7": {
       "url": "https://mcp.context7.com/mcp",

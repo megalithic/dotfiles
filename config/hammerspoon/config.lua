@@ -10,23 +10,6 @@ TERMINAL = "com.mitchellh.ghostty"
 -- Used by summon.lua to find running apps launched via wrappers
 M.bundleIdAliases = {
   ["com.nix.brave-browser-nightly"] = "com.brave.Browser.nightly",
-  ["com.nix.helium-wrapper"] = "net.imput.helium",
-}
-
-M.helium = {
-  bundleID = "net.imput.helium",
-  executable = "/Applications/Helium.app/Contents/MacOS/Helium",
-  args = {
-    "--remote-debugging-port=9223",
-    "--no-first-run",
-    "--no-default-browser-check",
-    "--hide-crashed-bubble",
-    "--ignore-gpu-blocklist",
-    "--disable-breakpad",
-    "--disable-wake-on-wifi",
-    "--no-pings",
-    "--disable-features=OutdatedBuildDetector",
-  },
 }
 
 M.displays = {

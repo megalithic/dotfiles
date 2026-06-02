@@ -12,26 +12,6 @@ local chain = req("chain")
 local enum = req("hs.fnutils")
 local utils = require("utils")
 
-local function launchOrFocusHelium()
-  local cfg = C.helium
-  local app = hs.application.get(cfg.bundleID)
-  if app then
-    app:activate()
-    return
-  end
-
-  local task = hs.task.new(cfg.executable, function(exitCode, _, stdErr)
-    if exitCode ~= 0 then
-      U.log.ef("helium: launch failed (%s): %s", tostring(exitCode), stdErr or "")
-      hs.alert.show("Helium launch failed")
-    end
-  end, cfg.args)
-
-  if not task or not task:start() then
-    hs.alert.show("Helium launch failed")
-  end
-end
-
 function M.loadApps()
   local hyper = req("hyper", { id = "apps" }):start()
   enum.each(C.launchers, function(bindingTable)
@@ -49,9 +29,7 @@ function M.loadApps()
         hyper:bind(mods, key, function() end)
       else
         hyper:bind(mods, key, function()
-          if C.helium and bundleID == C.helium.bundleID then
-            launchOrFocusHelium()
-          elseif focusOnly ~= nil and focusOnly then
+          if focusOnly ~= nil and focusOnly then
             summon.focus(bundleID)
           else
             summon.toggle(bundleID)
