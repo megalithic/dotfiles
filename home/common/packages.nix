@@ -109,7 +109,7 @@ let
     tesseract # OCR fallback for clipper (Vision is primary)
     tldr
     transcrypt
-    unstable.tmux
+    tmux
     whisperkit-cli # Apple Silicon Whisper speech recognition (was homebrew formula)
     w3m
     yq # YAML processor (jq for YAML)

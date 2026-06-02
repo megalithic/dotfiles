@@ -17,7 +17,7 @@ in
 {
   programs.fish = {
     enable = true;
-    package = pkgs.unstable.fish;
+    package = pkgs.fish;
 
     shellInit = ''
       # put Nix profile *first* on my PATH

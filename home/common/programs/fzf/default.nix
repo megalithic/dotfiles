@@ -7,7 +7,7 @@
 
   programs.fzf = {
     enable = true;
-    package = pkgs.unstable.fzf;
+    package = pkgs.fzf;
     enableFishIntegration = true; # broken?
     defaultCommand = "${pkgs.fd}/bin/fd --type f --hidden  --no-ignore-vcs --follow --exclude .git --exclude .jj --exclude .direnv --exclude node_modules --strip-cwd-prefix";
     defaultOptions = [

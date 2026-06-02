@@ -6,12 +6,6 @@
   inputs.brew-nix.overlays.default
 
   (_: prev: {
-    unstable = import inputs.nixpkgs-unstable {
-      inherit (prev.stdenv.hostPlatform) system;
-      config.allowUnfree = true;
-      config.allowUnfreePredicate = _: true;
-    };
-
     # direnv 2.37.1 tests hang/OOM in nix sandbox (fish OOM, zsh hangs)
     direnv = prev.direnv.overrideAttrs (_: {
       doCheck = false;

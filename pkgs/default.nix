@@ -8,8 +8,7 @@
 # This file exports a single overlay that exposes all custom packages
 # into the nixpkgs namespace (e.g., pkgs.fantastical, pkgs.chrome-devtools-mcp).
 #
-# For external overlays, package sets (stable/unstable), and input aliases,
-# see overlays/default.nix instead.
+# For external overlays and input aliases, see overlays/default.nix instead.
 #
 { lib }:
 _final: prev:

@@ -18,7 +18,7 @@ Stop-hook ticket summaries are generated from fresh `tk` commands at stop time. 
 
 Pi package files copied from external setups live under `home/common/programs/pi-coding-agent/packages/` before being wired into the main Home Manager module. This keeps migration inputs close to local wrapper package sources while preserving reviewable upstream pins.
 
-NPM-backed Pi helpers use `buildNpmPackage` derivations plus pinned lockfiles under `home/common/programs/pi-coding-agent/packages/`. The built result is symlinked into `~/.pi/agent/extensions/` when the helper is an extension.
+NPM-backed Pi helpers use `buildNpmPackage` derivations plus pinned lockfiles under `home/common/programs/pi-coding-agent/packages/`. The built result is symlinked into `~/.pi/agent/extensions/` when the helper is an extension. If an upstream release lacks `package-lock.json`, `just update-npm` generates and vendors one from the fetched source before computing `npmDepsHash`. Core `pkgs.pi-coding-agent` is sourced from the shared `nixpkgs` input in `overlays/default.nix`; `just update-npm` updates only active extension package derivations and treats old vendored core wrappers as retired no-ops.
 
 The `/answer` extension can be invoked by its registered slash command, Ctrl+. shortcut, or the internal `trigger:answer` event. The `execute_command` extension publishes a shared pending-command marker while a queued command is waiting, clears it after dispatch, then emits `trigger:answer` for queued `/answer` requests after the agent turn ends so the same interactive TUI runs without creating an extra model turn or lat preflight.
 
