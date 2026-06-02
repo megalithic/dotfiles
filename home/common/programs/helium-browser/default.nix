@@ -34,11 +34,17 @@
 
       # Helium strips `prodversion=` from extension update requests for
       # fingerprint protection, and CWS returns `noupdate` without it, so
-      # bake the current Chromium version into the update URL. Bump this
-      # alongside `pkgs/helium-browser.nix` on Helium major upgrades.
+      # bake the current Chromium version into the update URL. Read the
+      # version from the framework directory so it stays in sync with the
+      # package automatically.
       extensions =
         let
-          helium-update-url = "https://clients2.google.com/service/update2/crx?prodversion=148.0.7778.215";
+          pkg = config.programs.helium-browser.package;
+          fwVersions = builtins.readDir "${pkg}/Applications/Helium.app/Contents/Frameworks/Helium Framework.framework/Versions";
+          prodversion = lib.head (
+            lib.filter (n: builtins.match "[0-9].*" n != null) (builtins.attrNames fwVersions)
+          );
+          helium-update-url = "https://clients2.google.com/service/update2/crx?prodversion=${prodversion}";
           ext = id: {
             inherit id;
             updateUrl = helium-update-url;
