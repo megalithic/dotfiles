@@ -69,6 +69,13 @@
       darwinWrapperApp.enable = false;
     };
 
+    # The base package has appLocation = "wrapper" so mkChromiumBrowser skips
+    # it in home.packages (preventing the unsigned .app from being symlinked).
+    # Add it explicitly for its bin/helium CLI wrapper on PATH.
+    home.packages = lib.mkIf config.programs.helium-browser.enable [
+      config.programs.helium-browser.package
+    ];
+
     # Chromium `ExtensionDeveloperModeSettings` policy did not surface in
     # chrome://policy via NSUserDefaults, so mutate Secure Preferences directly.
     home.activation.heliumBrowserEnableDeveloperMode = lib.mkIf config.programs.helium-browser.enable (
