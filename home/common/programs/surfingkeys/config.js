@@ -52,9 +52,15 @@ settings.tabsThreshold = 0;
 settings.modeAfterYank = "Normal";
 settings.useNeovim = false;
 // blocklist (regex pattern - use | for multiple sites)
-// settings.blocklistPattern = /mail\.google\.com|localhost:9832/i;
+// settings.blocklistPattern = /mail\.google\.com/i;
 settings.blocklistPattern =
-  /(((calendar|mail).google|trello|duolingo|youtube|udemy).com|localhost:9832)/i;
+  /(((calendar|mail).google|trello|duolingo|youtube|udemy).com)/i;
+
+if (location.hostname === "localhost" && location.port === "9832") {
+  settings.editableSelector +=
+    ", [data-testid='message-editor'][contenteditable='true']";
+}
+
 // order
 settings.historyMUOrder = false;
 settings.tabsMRUOrder = false;
