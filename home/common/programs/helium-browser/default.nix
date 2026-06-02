@@ -85,14 +85,14 @@
       ''
     );
 
-    # Install Helium.app to /Applications/ via rsync.
+    # Install Helium.app to /Applications/ via rsync, then sign with Developer ID.
     #
-    # The option-C build (Widevine inject + helper re-sign) breaks the
-    # bundle's _CodeSignature seal, so Gatekeeper shows the "damaged" dialog
-    # on first launch. The user clears that once via System Settings →
-    # Privacy & Security → "Open Anyway". That approval is stored in
-    # /var/db/SystemPolicyConfiguration/ExecPolicy keyed on the bundle
-    # directory inode, so the rsync below must preserve it across rebuilds.
+    # The nix build strips all code signatures (build users can't access the
+    # keychain). This activation runs as the real user, so it signs the
+    # bundle inside-out with "Developer ID Application: Seth Messer (3ZJ3F5RFBZ)".
+    #
+    # Unquarantined (rsync install, no quarantine xattr) + Developer-ID-signed
+    # = Gatekeeper accepts without notarization. No "Open Anyway" needed.
     #
     # rsync flags:
     #   - default tempfile+rename (NOT --inplace): keeps the bundle dir inode
@@ -109,23 +109,97 @@
       lib.mkIf config.programs.helium-browser.enable
         (
           lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-            SRC="${config.programs.helium-browser.package}/Applications/Helium.app"
-            DST="/Applications/Helium.app"
+                    SRC="${config.programs.helium-browser.package}/Applications/Helium.app"
+                    DST="/Applications/Helium.app"
+                    SIGN_ID="Developer ID Application: Seth Messer (3ZJ3F5RFBZ)"
 
-            if [ ! -d "$SRC" ]; then
-              echo "helium-browser: source bundle missing at $SRC; skipping"
-            elif [ ! -w /Applications ] && ! groups | tr ' ' '\n' | grep -qx admin; then
-              echo "helium-browser: cannot write to /Applications/ (user not in admin group); skipping"
-            else
-              if [ ! -e "$DST" ]; then
-                echo "helium-browser: first-time install; click 'Open Anyway' in"
-                echo "helium-browser:   System Settings → Privacy & Security once after this run."
-              fi
-              $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -a --checksum --delete --chmod=u+w \
-                "$SRC/" "$DST/" || {
-                  echo "helium-browser: rsync to /Applications/ failed; existing bundle left in place"
-                }
-            fi
+                    if [ ! -d "$SRC" ]; then
+                      echo "helium-browser: source bundle missing at $SRC; skipping"
+                    elif [ ! -w /Applications ] && ! groups | tr ' ' '\n' | grep -qx admin; then
+                      echo "helium-browser: cannot write to /Applications/ (user not in admin group); skipping"
+                    else
+                      $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -a --checksum --delete --chmod=u+w \
+                        "$SRC/" "$DST/" || {
+                          echo "helium-browser: rsync to /Applications/ failed; existing bundle left in place"
+                          exit 0
+                        }
+
+                      # --- Developer ID signing (inside-out) ---
+                      FW_ROOT="$DST/Contents/Frameworks/Helium Framework.framework"
+                      VER=$(ls "$FW_ROOT/Versions" 2>/dev/null | ${pkgs.coreutils}/bin/head -1)
+
+                      # Entitlements for the base helper (disable library validation so
+                      # Google-signed Widevine CDM loads in our Developer-ID-signed helper).
+                      ENTS=$(mktemp)
+                      cat > "$ENTS" <<'PLIST'
+            <?xml version="1.0" encoding="UTF-8"?>
+            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+            <plist version="1.0">
+            <dict>
+              <key>com.apple.security.cs.disable-library-validation</key>
+              <true/>
+            </dict>
+            </plist>
+            PLIST
+
+                      echo "helium-browser: signing with Developer ID..."
+
+                      # Sign inside-out: deepest nested bundles first, outermost last.
+                      # Each codesign seals the content below it, so order matters.
+
+                      # 1. Sparkle Updater.app (deepest nested .app)
+                      SPARKLE="$FW_ROOT/Versions/$VER/Frameworks/Sparkle.framework"
+                      if [ -d "$SPARKLE/Versions/B/Updater.app" ]; then
+                        /usr/bin/codesign --force --sign "$SIGN_ID" \
+                          "$SPARKLE/Versions/B/Updater.app"
+                      fi
+
+                      # 2. Sparkle.framework
+                      if [ -d "$SPARKLE" ]; then
+                        /usr/bin/codesign --force --sign "$SIGN_ID" "$SPARKLE"
+                      fi
+
+                      # 3. Helper .app bundles
+                      for helper in "$FW_ROOT/Versions/$VER/Helpers/"*.app; do
+                        name=$(basename "$helper" .app)
+                        if [ "$name" = "Helium Helper" ]; then
+                          # Base helper: drop library-validation so Google-signed
+                          # Widevine CDM loads in this Developer-ID-signed process.
+                          /usr/bin/codesign --force --sign "$SIGN_ID" \
+                            --options=runtime,kill,restrict \
+                            --entitlements "$ENTS" \
+                            "$helper"
+                        else
+                          /usr/bin/codesign --force --sign "$SIGN_ID" "$helper"
+                        fi
+                      done
+
+                      # 4. Standalone executables in Helpers/ (crashpad, app_mode_loader, etc.)
+                      for exe in "$FW_ROOT/Versions/$VER/Helpers/"*; do
+                        [ -d "$exe" ] && continue  # skip .app dirs
+                        [ -f "$exe" ] && [ -x "$exe" ] && \
+                          /usr/bin/codesign --force --sign "$SIGN_ID" "$exe"
+                      done
+
+                      # 5. Helium Framework.framework (seals Widevine + helpers + Sparkle)
+                      /usr/bin/codesign --force --sign "$SIGN_ID" "$FW_ROOT"
+
+                      # 6. Main app bundle (outermost seal)
+                      /usr/bin/codesign --force --sign "$SIGN_ID" \
+                        --options=runtime,kill,restrict,library-validation \
+                        "$DST"
+
+                      rm -f "$ENTS"
+
+                      # Verify
+                      echo "helium-browser: verifying bundle seal..."
+                      if /usr/bin/codesign --verify --deep --strict "$DST" 2>&1; then
+                        echo "helium-browser: ✓ bundle seal valid (Developer ID: Seth Messer)"
+                      else
+                        echo "helium-browser: ✗ bundle seal verification failed"
+                        /usr/bin/codesign -dv "$DST" 2>&1 || true
+                      fi
+                    fi
           ''
         );
   };
