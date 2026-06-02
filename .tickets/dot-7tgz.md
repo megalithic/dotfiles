@@ -1,6 +1,6 @@
 ---
 id: dot-7tgz
-status: in_progress
+status: closed
 deps: []
 links: []
 created: 2026-05-01T12:49:22Z
@@ -1009,3 +1009,51 @@ This means we can:
 ### Companion audit doc
 
 Full mental-model audit lives at `~/.local/share/pi/docs/.dotfiles/helium-audit.md` and `helium-audit.html` (snapshot of pre-replan state at commit 57e8648c7).
+
+**2026-06-02T18:27:20Z**
+
+## 2026-06-02 — Resolution: ad-hoc helper-only re-sign (imput sigs preserved)
+
+Both halves working: 1Password desktop pairing + Widevine DRM playback (bitmovin demo verified) on the same `/Applications/Helium.app` install.
+
+### What we shipped (commit 3c4de9c93)
+
+- `pkgs/helium-browser.nix` `postUnpack`: inject Widevine, strip `_CodeSignature` from helper `.app` bundles only.
+- `pkgs/helium-browser.nix` `postFixup`: ad-hoc re-sign helpers. Base `Helium Helper.app` carries `--options=runtime,kill,restrict` (hardened runtime minus library validation) + `com.apple.security.cs.disable-library-validation` entitlement so Google-team Widevine `.dylib` loads.
+- Main exec, `Helium Framework.framework`, `Sparkle.framework`: imput LLC sigs (`S4Q33XPHB4`) intact.
+- HM activation: just rsync, no signing.
+
+### Approaches tested and rejected this session
+
+1. **Full Developer ID inside-out (criterion 10/11 plan)** — broke 1P pairing (`verifyClient` allowlists imput's team ID on main exec); `BrowserSupport` respawn loop.
+2. **Developer ID with adhoc-resigned main exec** — launched cleanly, no respawn, but 1P stuck in standalone master-password mode every launch (handshake never completed).
+3. **Developer ID on framework only, imput main exec intact** — crashed on launch (hardened-runtime library validation rejects cross-team framework load by imput-signed main exec).
+
+### Acceptance criteria final state
+
+- [x] (1) imput main-exec-intact + helper-only re-sign
+- [x] (2) 1P desktop pairing
+- [x] (4) Widevine playback (bitmovin demo)
+- [x] (6) `pkgs/helium-browser.nix` matches the shipped approach
+- [x] (7) Documented in code comment block + lat.md
+- [x] (8) `just validate home` passes
+- [x] (9) Declarative `commandLineArgs` via `programs.helium-browser` config
+- [x] (16) `prodversion=` read from framework `Versions/` at nix eval time (commit 0ca92d42b)
+- [x] (17) Dead `com.nix.helium-wrapper` alias already gone
+- [x] (19) lat.md Helium section updated for final approach (commit 3c4de9c93)
+- [x] (21) Audit doc refreshed: `~/.local/share/pi/docs/.dotfiles/helium-audit.md` Resolution section
+- [~] (10/11) Full Developer ID re-sign: REJECTED based on empirical testing (see above)
+- [~] (12) Notarization skipped (rsync-installed bundles are unquarantined)
+- [~] (13) Debug-port path: chose C (drop daily CDP); agent automation uses `chrome-devtools-mcp --isolated`
+- [~] (14) `start.js` attach-to-existing: landed under dot-d5w7 / web-browser skill
+- [~] (15) Declarative `ExtensionDeveloperModeAllowed`: deferred — ungoogled Helium likely strips the policy, jq activation fallback stays
+- [~] (18) Dedupe Hammerspoon/fish flag lists: N/A given option C
+- [→] (20) `bin/preview-html` bundle ID check: tracked under dot-d5w7
+
+### Known accepted tradeoffs
+
+- Gatekeeper outer bundle seal is broken (helper sigs replaced; outer CodeResources references old hashes) → one "Open Anyway" click in System Settings → Privacy & Security per nix build. ExecPolicy override is keyed by bundle directory inode; rsync's tempfile+rename preserves the inode so the approval persists across rebuilds of the same install.
+
+### Cross-ticket follow-up
+
+- Criterion 20 should be verified inside dot-d5w7 (preview-html bundle id).
