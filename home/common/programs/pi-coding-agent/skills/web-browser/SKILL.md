@@ -1,173 +1,151 @@
 ---
 name: web-browser
-description: "Interact with web pages using Chrome DevTools Protocol. Launches a managed browser instance (Helium / Brave Nightly / Chrome) with an isolated profile and exposes nav, eval, screenshot, pick, and emulation helpers. Run scripts/start.js first."
+description: "Browse the web, take screenshots, fill forms, and interact with pages via the chrome-devtools MCP server. Supports isolated (fresh) or profile-copy (logged-in) modes."
 ---
 
-# Web Browser Skill
+# Web browser skill
 
-Minimal CDP-based browser automation. Scripts live in `scripts/` and run via
-`node`. The skill manages its own browser instance with an **isolated profile
-cache** — it never attaches to your live browser profile.
+Browser automation via the `chrome-devtools` MCP server. Uses Helium (Chromium)
+at `/Applications/Helium.app`.
 
-> Adapted from [mitsuhiko/agent-stuff](https://github.com/mitsuhiko/agent-stuff/tree/main/skills/web-browser) with Helium + Brave Nightly support.
+## Modes
 
-## Start the browser
+### Isolated (default)
 
-```bash
-./scripts/start.js                  # Fresh isolated profile (default)
-./scripts/start.js --profile        # Copy WEB_BROWSER_PROFILE into cache
-./scripts/start.js --reset-profile  # Clear cached profile before launch
-```
+The `chrome-devtools` MCP server in `mcp.json` uses `--isolated` — spawns a
+fresh temp profile. No cookies, no logins. Good for scraping public pages.
 
-Launches the browser with remote debugging on `:9222`.
+### Profile copy (logged-in sessions)
 
-### Profile cache layout
-
-```
-~/.cache/agent-web/browser/
-  fresh-profile/    # default (--no flag)
-  profile-copy/     # --profile mode
-  state.json        # pid, port, mode, binary
-```
-
-### Browser binary resolution
-
-Default preference order (first match wins):
-
-1. `$WEB_BROWSER_PATH` (if set + exists)
-2. `/Applications/Helium.app/Contents/MacOS/Helium`
-3. `/Applications/Brave Browser Nightly.app/Contents/MacOS/Brave Browser Nightly`
-4. `/Applications/Brave Browser.app/Contents/MacOS/Brave Browser`
-5. Google Chrome / Chromium / Chrome Canary
-
-### Profile source resolution (`--profile` mode)
-
-1. `$WEB_BROWSER_PROFILE` (if set + exists)
-2. `~/Library/Application Support/BraveSoftware/Brave-Browser-Nightly`
-3. `~/Library/Application Support/BraveSoftware/Brave-Browser`
-4. `~/Library/Application Support/Google/Chrome`
-
-### Env vars
-
-| Var                   | Default (nix)                                                                  | Purpose                            |
-|-----------------------|--------------------------------------------------------------------------------|------------------------------------|
-| `WEB_BROWSER_PATH`    | `/Applications/Helium.app/Contents/MacOS/Helium`                               | Browser binary                     |
-| `WEB_BROWSER_PROFILE` | `~/Library/Application Support/BraveSoftware/Brave-Browser-Nightly`            | Source profile for `--profile`     |
-| `BROWSER_DEBUG_HOST`  | `localhost`                                                                    | CDP host                           |
-| `BROWSER_DEBUG_PORT`  | `9222`                                                                         | CDP port                           |
-| `DEBUG`               | unset                                                                          | Set to `1` for verbose stderr      |
-
-`WEB_BROWSER_PATH` + `WEB_BROWSER_PROFILE` are set via `home.sessionVariables`
-in `home/common/programs/pi-coding-agent/default.nix`. Override per-shell by
-exporting before invoking the scripts.
-
-## Navigate
+To browse as the logged-in user, copy the daily profile to a temp dir first:
 
 ```bash
-./scripts/nav.js https://example.com         # current tab
-./scripts/nav.js https://example.com --new   # new tab
+./scripts/copy-profile.sh           # copies daily Helium profile (default)
+./scripts/copy-profile.sh brave     # copies daily Brave Nightly profile
 ```
 
-## Evaluate JavaScript
+Then use the `chrome-devtools-profile` MCP server instead of `chrome-devtools`.
+It launches Helium with the copied profile. The copy is read-only to the
+original — no risk of corruption.
+
+### Attach to running browser
+
+If daily Helium is running with `--remote-debugging-port=9223`:
 
 ```bash
-./scripts/eval.js 'document.title'
-./scripts/eval.js 'document.querySelectorAll("a").length'
+# Launch from fish with debug port:
+helium --remote-debugging-port=9223
 ```
 
-Runs in async context. Prefer single quotes to avoid shell escaping.
+Then use the `chrome-devtools-attach` MCP server. It connects to `localhost:9223`
+and shares the live session (cookies, logins, extensions, tabs).
 
-## Screenshot
+## MCP tools reference
 
-```bash
-./scripts/screenshot.js                       # viewport
-./scripts/screenshot.js --full-page           # full document
-./scripts/screenshot.js --device iphone-14    # one-off mobile emulation
-./scripts/screenshot.js --device pixel-7 --full-page
-```
+All tools are prefixed `chrome_devtools_`. Use via the `mcp` gateway.
 
-Writes to a temp file and prints the path.
+### Navigation
 
-## Device emulation (persistent)
-
-```bash
-./scripts/emulate.js --list             # show available presets
-./scripts/emulate.js iphone-14          # apply preset
-./scripts/emulate.js pixel-7 --landscape
-./scripts/emulate.js --reset            # clear
-```
-
-Sets an **active** emulation preference. `nav.js`, `eval.js`, `pick.js`,
-`dismiss-cookies.js`, and `screenshot.js` automatically reapply it.
-
-## Pick elements
-
-```bash
-./scripts/pick.js "Click the submit button"
-```
-
-Interactive picker. Click to select, Cmd/Ctrl+Click for multi-select, Enter to
-finish.
-
-## Dismiss cookie dialogs
-
-```bash
-./scripts/dismiss-cookies.js          # accept
-./scripts/dismiss-cookies.js --reject # reject where possible
-```
-
-Common chain:
-
-```bash
-./scripts/nav.js https://example.com && ./scripts/dismiss-cookies.js
-```
-
-## Logs (console + errors + network)
-
-`start.js` automatically spawns `watch.js` which writes JSONL to:
+| Tool            | Purpose                             |
+| --------------- | ----------------------------------- |
+| `navigate_page` | Go to URL, back, forward, or reload |
+| `new_page`      | Open new tab                        |
+| `list_pages`    | List open tabs                      |
+| `select_page`   | Switch to a tab                     |
+| `close_page`    | Close a tab                         |
 
 ```
-~/.cache/agent-web/logs/YYYY-MM-DD/<targetId>.jsonl
+mcp chrome-devtools navigate_page {"type": "url", "url": "https://example.com"}
+mcp chrome-devtools new_page {"url": "https://example.com"}
 ```
 
-Tail:
+### Interaction
 
-```bash
-./scripts/logs-tail.js            # dump current log + exit
-./scripts/logs-tail.js --follow   # keep following
+| Tool            | Purpose                                |
+| --------------- | -------------------------------------- |
+| `click`         | Click element by CSS selector or text  |
+| `fill`          | Fill a single input field              |
+| `fill_form`     | Fill multiple form fields at once      |
+| `type_text`     | Type text (keystroke simulation)       |
+| `press_key`     | Press a key (Enter, Tab, Escape, etc.) |
+| `hover`         | Hover over element                     |
+| `drag`          | Drag from one element to another       |
+| `upload_file`   | Upload file to input                   |
+| `handle_dialog` | Accept/dismiss alert/confirm/prompt    |
+
+### Inspection
+
+| Tool                | Purpose                             |
+| ------------------- | ----------------------------------- |
+| `evaluate_script`   | Run JavaScript in the page          |
+| `take_screenshot`   | Capture viewport image              |
+| `take_snapshot`     | Get page DOM/accessibility snapshot |
+| `take_heapsnapshot` | Capture V8 heap snapshot            |
+
+### Network and console
+
+| Tool                    | Purpose                           |
+| ----------------------- | --------------------------------- |
+| `list_network_requests` | List captured network requests    |
+| `get_network_request`   | Get details of a specific request |
+| `list_console_messages` | List console output               |
+| `get_console_message`   | Get a specific console message    |
+
+### Emulation and performance
+
+| Tool                          | Purpose                                    |
+| ----------------------------- | ------------------------------------------ |
+| `emulate`                     | Set device emulation (viewport, UA, touch) |
+| `resize_page`                 | Resize viewport                            |
+| `lighthouse_audit`            | Run Lighthouse audit                       |
+| `performance_start_trace`     | Start performance trace                    |
+| `performance_stop_trace`      | Stop trace and get results                 |
+| `performance_analyze_insight` | Analyze a performance insight              |
+| `wait_for`                    | Wait for selector, URL, or timeout         |
+
+## Common workflows
+
+### Screenshot a page
+
+```
+mcp chrome-devtools navigate_page {"type": "url", "url": "https://example.com"}
+mcp chrome-devtools take_screenshot {}
 ```
 
-Summarize network responses:
+### Fill and submit a form
 
-```bash
-./scripts/net-summary.js
+```
+mcp chrome-devtools navigate_page {"type": "url", "url": "https://example.com/login"}
+mcp chrome-devtools fill_form {"fields": [{"selector": "#email", "value": "user@example.com"}, {"selector": "#password", "value": "secret"}]}
+mcp chrome-devtools click {"selector": "button[type=submit]"}
 ```
 
-## Quick mobile debug flow
+### Interactive element picking
 
-```bash
-./scripts/start.js
-./scripts/nav.js https://example.com
-./scripts/emulate.js iphone-14
-./scripts/nav.js https://example.com       # reload with mobile UA
-./scripts/dismiss-cookies.js
-./scripts/screenshot.js --full-page
+Use `evaluate_script` to inject an interactive picker overlay (the agent
+prompts the user to click an element, then reads back the selection):
+
+```
+mcp chrome-devtools evaluate_script {"expression": "<picker JS>"}
 ```
 
-## Runtime dependencies
+The picker JS creates a full-screen overlay with mousemove highlight, captures
+click targets with their tag/id/class/text/html, and supports Cmd+Click for
+multi-select and Enter to finish. See the `pick()` pattern below.
 
-Scripts require the `ws` npm module (declared in `scripts/package.json`).
-The `scripts/` directory is built as a `buildNpmPackage` derivation in
-`home/common/programs/pi-coding-agent/default.nix` (search for
-`webBrowserScripts`), so `node_modules/ws` is baked into the symlinked
- output and resolves automatically at runtime.
+### Mobile testing
 
-To bump the `ws` version: edit `scripts/package.json`, run
-`npm install --package-lock-only` inside `scripts/`, then `just home` (the
-`npmDepsHash` fake-hash workflow will reveal the new sha256).
+```
+mcp chrome-devtools emulate {"deviceName": "iPhone 14"}
+mcp chrome-devtools navigate_page {"type": "url", "url": "https://example.com"}
+mcp chrome-devtools take_screenshot {}
+```
 
-## Migration notes (vs old agent-browser CLI)
+## Notes
 
-The previous version of this skill required `browser connect 9222` against a
-user-launched browser. The new version **owns** the browser lifecycle and uses
-an isolated profile — your daily browser stays untouched. No `connect` step.
+- The `chrome-cdp` skill is a separate tool for connecting to an existing
+  browser session via `chrome://inspect` — use it when you need to inspect
+  the user's actual open tabs without spawning a new instance.
+- All MCP-spawned instances are independent of the daily Helium browser.
+- Profile copies are stored in `~/.cache/agent-web/profile-copy/` and cleaned
+  on each fresh copy.

@@ -9,6 +9,25 @@
         "--isolated"
       ]
     },
+    "chrome-devtools-profile": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--executable-path=/Applications/Helium.app/Contents/MacOS/Helium",
+        "--userDataDir=~/.cache/agent-web/profile-copy"
+      ],
+      "disabled": true
+    },
+    "chrome-devtools-attach": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--browserUrl=http://localhost:9223"
+      ],
+      "disabled": true
+    },
     "context7": {
       "url": "https://mcp.context7.com/mcp",
       "headers": {

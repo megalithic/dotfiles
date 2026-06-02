@@ -188,11 +188,8 @@ in
     sessionVariables = {
       PI_STATE_DIR = piStateDir;
 
-      # web-browser skill (skills/web-browser/scripts/start.js)
-      # Defaults to Helium binary + Brave Nightly profile source. start.js falls
-      # back to other Chromium-family installs if these paths are missing.
-      WEB_BROWSER_PATH = "/Applications/Helium.app/Contents/MacOS/Helium";
-      WEB_BROWSER_PROFILE = "${config.home.homeDirectory}/Library/Application Support/BraveSoftware/Brave-Browser-Nightly";
+      # web-browser skill uses chrome-devtools MCP server (configured in mcp.json).
+      # No env vars needed — executable path and profile dirs are in mcp.json.
     };
 
     file = {

@@ -48,7 +48,7 @@ The `sentinel.ts` extension loads rules only from `home/common/programs/pi-codin
 
 Pi skills copied from external setups live under `home/common/programs/pi-coding-agent/skills/`. Existing local skills should be diffed before overwrite because some local versions carry repo-specific workflow rules.
 
-The `web-browser` skill is still a local skill directory. Its scripts declare an NPM dependency on `ws`, so the durable Nix pattern is to build `skills/web-browser/scripts` with `buildNpmPackage` and symlink built scripts, rather than running npm during activation.
+The `web-browser` skill is a thin wrapper over the `chrome-devtools` MCP server (`chrome-devtools-mcp` on npm). Three MCP server variants are configured in `mcp.json`: `chrome-devtools` (isolated temp profile, default), `chrome-devtools-profile` (copied from daily Helium or Brave, disabled by default), and `chrome-devtools-attach` (attach to running Helium on port 9223, disabled by default). A `copy-profile.sh` helper copies the daily browser profile to `~/.cache/agent-web/profile-copy/` for the profile variant.
 
 ## Global Pi agent policy
 
@@ -86,7 +86,7 @@ The nix build (`pkgs/helium-browser.nix`) injects Widevine and strips all code s
 
 Home Manager installs Helium 0.12.5.1 to `/Applications/Helium.app` from the Nix package via `rsync -a --checksum --delete --chmod=u+w`, then signs the bundle with Developer ID. `--checksum` is mandatory because Nix store files all have mtime `Dec 31 1969` and Chromium's main exec stub is the same byte size across minor Helium versions; rsync's default size+mtime quick check would otherwise SKIP the main exec on a version bump and leave a half-updated bundle (new Info.plist + new framework but old launcher dlopening a deleted `Versions/<old>/Helium Framework`), which crashes with SIGABRT. `--inplace` is intentionally omitted: rsync's default tempfile+rename keeps the bundle directory inode stable while sidestepping the read-only nix-store file mode that App Management TCC can prevent us from chmod'ing. `--chmod=u+w` makes replaced files user-writable so subsequent rebuilds can replace them. The extension update URL uses Chromium prodversion 148.0.7778.215, matching the bundled framework version.
 
-Pi's web-browser skill still points at the Helium binary through `WEB_BROWSER_PATH`, but the daily Helium launchers do not expose CDP. Browser automation that needs CDP must start its own managed browser/debug session instead of attaching to daily Helium.
+Pi's web-browser skill uses the chrome-devtools MCP server to spawn or attach to Helium. The default `chrome-devtools` MCP entry spawns an isolated instance; `chrome-devtools-attach` connects to daily Helium if launched with `--remote-debugging-port=9223`. Daily Helium launchers (Hammerspoon summon, fish function) do not expose CDP by default.
 
 ## Terminal and editor UI preferences
 
