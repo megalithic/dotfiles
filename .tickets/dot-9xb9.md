@@ -1,6 +1,6 @@
 ---
 id: dot-9xb9
-status: open
+status: closed
 deps: [dot-5acm]
 links: []
 created: 2026-05-19T17:58:37Z
@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development]
 ---
+
 # pinvim review: wire jj/git and pi extensions to pinvim review
 
 Plan step 9 of ~/.local/share/pi/plans/dotfiles/pinvim-review-diff-mode_PLAN.md. Make the nvim-based review UI the default diff/review tool for jj and git global config, and teach pi-coding-agent skills/extensions to invoke it. Add a small launcher (e.g. bin/pinvim-diff) that opens nvim with +PiReview (or scope-specific variant) against given refs/files. Configure jj (ui.diff-editor / ui.diff.tool / ui.merge-editor where applicable) and git (diff.tool / difftool.<name>.cmd / optional 'git review' alias) via nix-managed config under home/common/programs/jj/ and home/common/programs/git/. Update the stop-hook, ticket-worker, ticket-creator, task-pipeline, and preview extensions so any code-review / diff-presentation step routes through pinvim review (spawn or attach to an active review session via the existing pinvim socket protocol) instead of plain text dumps or ad-hoc previews. Document the launch contract: how an extension launches a review, passes scope (commit / bookmark / arbitrary refs / file list), and detects when pinvim/nvim is unavailable so it can fall back gracefully.
@@ -27,3 +28,8 @@ Plan step 9 of ~/.local/share/pi/plans/dotfiles/pinvim-review-diff-mode_PLAN.md.
 9. bin/pinvim-protocol-smoke passes.
 10. Manual: 'jj diff' in a dirty repo opens pinvim review; 'git difftool' opens pinvim review; triggering a stop-hook / ticket-worker review surface launches or attaches to a pinvim review session; preview extension diff path renders through pinvim review.
 
+## Notes
+
+**2026-06-03T19:40:18Z**
+
+Deprecated: superseded by pinvim rewrite plan at ~/.local/share/pi/plans/.dotfiles/pinvim-rewrite_PLAN.md. Closing for posterity; architecture is being rebooted.

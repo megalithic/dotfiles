@@ -1,6 +1,6 @@
 ---
 id: dot-7p71
-status: open
+status: closed
 deps: [dot-pbw1]
 links: []
 created: 2026-05-19T16:12:35Z
@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development]
 ---
+
 # pinvim review: pi-side review_bundle protocol (pinvim.review.v1)
 
 Plan step 4. Extend home/common/programs/pi-coding-agent/extensions/pinvim.ts with review_bundle payload support using protocol pinvim.review.v1. Validate required fields, store latest active review bundle per-process, summarize it for user context, update status text with active review info, and add /pinvim-review command to show review status/summary. bridge.ts must not own any review semantics. Supersedes research ticket dot-t4dd findings.
@@ -26,3 +27,8 @@ Plan step 4. Extend home/common/programs/pi-coding-agent/extensions/pinvim.ts wi
 8. bin/pinvim-protocol-smoke passes.
 9. Manual: send a minimal review_bundle JSON frame over a running pinvim socket; /pinvim-review reflects it.
 
+## Notes
+
+**2026-06-03T19:40:18Z**
+
+Deprecated: superseded by pinvim rewrite plan at ~/.local/share/pi/plans/.dotfiles/pinvim-rewrite_PLAN.md. Closing for posterity; architecture is being rebooted.

@@ -1,6 +1,6 @@
 ---
 id: dot-s3l8
-status: open
+status: closed
 deps: [dot-l8f0]
 links: []
 created: 2026-05-14T11:57:20Z
@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development]
 ---
+
 # Remove temporary nvim↔pi protocol compatibility shims
 
 Implement post-rollout cleanup for the staged nvim↔pi protocol migration after the immediate `live_context`/`editor_state` removal and bridge deprecation research land. After handshake, ranked discovery, MRU restore, structured envelope, review bundle, and policy tickets are complete, remove remaining rollout-only compatibility code between `config/nvim/lua/pinvim.lua`, `home/common/programs/pi-coding-agent/extensions/pinvim.ts`, and any temporary `bridge.ts` forwarding kept only for migration. Audit temporary legacy upgrade paths for pre-`hello`/`hello_ack` metadata, ad-hoc pre-envelope payloads, and dual-schema peer state.
@@ -34,3 +35,8 @@ For any implementation change under this pinvim/vision workstream, run:
 
 For research-only tickets, run these before closing any downstream implementation ticket that uses the research.
 
+## Notes
+
+**2026-06-03T19:40:18Z**
+
+Deprecated: superseded by pinvim rewrite plan at ~/.local/share/pi/plans/.dotfiles/pinvim-rewrite_PLAN.md. Closing for posterity; architecture is being rebooted.

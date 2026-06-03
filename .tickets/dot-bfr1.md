@@ -1,6 +1,6 @@
 ---
 id: dot-bfr1
-status: open
+status: closed
 deps: [dot-7p71]
 links: []
 created: 2026-05-19T16:12:47Z
@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development]
 ---
+
 # pinvim review: send bundles from nvim and remap gps/gpS
 
 Plan step 5. Build pinvim.review.v1 bundles from review state, changed files, selected scope, annotations, and capped raw diff data. The gps and gpS keymaps are registered by config/nvim/lua/pinvim/review.lua (not by pinvim.lua); both are mode-aware. In review mode gps sends the bundle without prompt and gpS sends with user prompt. Outside review mode gps sends normal explicit context without prompt and gpS sends normal explicit context with prompt (replaces current gpa send-explicit/gps send-with-prompt semantics). Add PiReviewSend/PinvimReviewSend and PiReviewPrompt/PinvimReviewPrompt commands.
@@ -28,3 +29,8 @@ Plan step 5. Build pinvim.review.v1 bundles from review state, changed files, se
 10. bin/pinvim-protocol-smoke passes.
 11. Manual: inside review, gps delivers a bundle visible via /pinvim-review.
 
+## Notes
+
+**2026-06-03T19:40:18Z**
+
+Deprecated: superseded by pinvim rewrite plan at ~/.local/share/pi/plans/.dotfiles/pinvim-rewrite_PLAN.md. Closing for posterity; architecture is being rebooted.

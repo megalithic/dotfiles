@@ -1,6 +1,6 @@
 ---
 id: dot-5acm
-status: open
+status: closed
 deps: [dot-jkt6]
 links: []
 created: 2026-05-19T16:13:05Z
@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development]
 ---
+
 # pinvim review: bookmark scope with PR-base fallback
 
 Plan step 7. Add scope=bookmark alongside default scope=commit. For jj, resolve the active bookmark, prefer GitHub PR base via 'gh pr view', and fall back to main/trunk/trunk() when no PR is found. Use 'jj diff --from <base> --to @' for file list and diffs. Add PiReviewScope commit|bookmark / PinvimReviewScope commit|bookmark command and a review-local scope switch keymap. The scope-switch keymap is registered by config/nvim/lua/pinvim/review.lua itself (not by pinvim.lua). Bookmark-scope helpers added inline to config/nvim/lua/pinvim/review.lua (single-file dev mode); future split into config/nvim/lua/pinvim/review/vcs.lua is deferred.
@@ -25,3 +26,8 @@ Plan step 7. Add scope=bookmark alongside default scope=commit. For jj, resolve 
 7. nvim --headless '+lua require("pinvim").setup()' '+qa' exits 0.
 8. bin/pinvim-protocol-smoke passes.
 
+## Notes
+
+**2026-06-03T19:40:18Z**
+
+Deprecated: superseded by pinvim rewrite plan at ~/.local/share/pi/plans/.dotfiles/pinvim-rewrite_PLAN.md. Closing for posterity; architecture is being rebooted.

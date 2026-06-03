@@ -1,6 +1,6 @@
 ---
 id: dot-t4dd
-status: open
+status: closed
 deps: [dot-fpev]
 links: []
 created: 2026-05-13T20:48:05Z
@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development]
 ---
+
 # Research pi-side handling for review bundles and diff UX
 
 Research Step 8 from ~/.local/share/pi/plans/dotfiles/nvim-pi-custom-vision_PLAN.md before implementation. Do not wire review-bundle handling yet. Instead, study how `home/common/programs/pi-coding-agent/extensions/pinvim.ts` should receive, validate, store, summarize, and surface `review_bundle` payloads coming from jj/git/codediff review flows. If `bridge.ts` remains on any ingress path, treat it as optional shim/forwarder only rather than semantic owner.
@@ -34,3 +35,8 @@ For any implementation change under this pinvim/vision workstream, run:
 
 For research-only tickets, run these before closing any downstream implementation ticket that uses the research.
 
+## Notes
+
+**2026-06-03T19:40:18Z**
+
+Deprecated: superseded by pinvim rewrite plan at ~/.local/share/pi/plans/.dotfiles/pinvim-rewrite_PLAN.md. Closing for posterity; architecture is being rebooted.

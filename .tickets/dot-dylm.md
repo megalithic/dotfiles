@@ -1,6 +1,6 @@
 ---
 id: dot-dylm
-status: open
+status: closed
 deps: []
 links: [dot-kts9, dot-0oy1]
 created: 2026-05-13T20:48:05Z
@@ -43,3 +43,7 @@ For research-only tickets, run these before closing any downstream implementatio
 **2026-05-20T15:06:23Z**
 
 Discovery from live use: nvim restart while typing in an ephemeral pimux loses buffer-local target state. Nvim-side manifest resume is a partial fix, but durable design should use bidirectional repair: nvim advertises peer heartbeat, pi-side pinvim.ts can repair to same-window nvim, and both sides converge through hello/hello_ack/heartbeat. Follow-up ticket: dot-rx8y.
+
+**2026-06-03T19:40:18Z**
+
+Deprecated: superseded by pinvim rewrite plan at ~/.local/share/pi/plans/.dotfiles/pinvim-rewrite_PLAN.md. Closing for posterity; architecture is being rebooted.

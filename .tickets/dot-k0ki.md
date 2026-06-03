@@ -1,6 +1,6 @@
 ---
 id: dot-k0ki
-status: in_progress
+status: closed
 deps: []
 links: []
 created: 2026-05-20T20:53:46Z
@@ -39,3 +39,9 @@ Relevant files: config/nvim/lua/pinvim.lua, config/nvim/after/plugin/pinvim.lua,
 6. Existing pinvim hello/heartbeat/ping behavior, explicit prompt behavior, ephemeral split send behavior, and protocol smoke expectations remain intact.
 7. Documentation in lat.md reflects the new attach-only vs prompt-triggering delivery modes.
 8. Verification passes: just home; nvim --headless '+lua require("pinvim").setup()' +qa; bin/pinvim-protocol-smoke; manual smoke for gpa attach-only followed by a separate user prompt.
+
+## Notes
+
+**2026-06-03T19:40:18Z**
+
+Deprecated: superseded by pinvim rewrite plan at ~/.local/share/pi/plans/.dotfiles/pinvim-rewrite_PLAN.md. Closing for posterity; architecture is being rebooted.

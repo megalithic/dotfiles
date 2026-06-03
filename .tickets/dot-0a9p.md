@@ -1,6 +1,6 @@
 ---
 id: dot-0a9p
-status: open
+status: closed
 deps: []
 links: [dot-oiky, dot-kts9, dot-rx8y, dot-koz6, dot-8n53, dot-f6tr, dot-p2ad]
 created: 2026-05-15T16:14:09Z
@@ -58,3 +58,7 @@ Clarifications:
 **2026-05-20T15:07:08Z**
 
 Discovery linked to dot-rx8y: Neovim restart can orphan a live ephemeral pimux because nvim buffer-local target state is gone. Existing nvim-side ranked discovery/MRU/restore work is related but not sufficient; follow-up implements bidirectional same-window peer repair in pinvim.lua + pinvim.ts.
+
+**2026-06-03T19:40:18Z**
+
+Deprecated: superseded by pinvim rewrite plan at ~/.local/share/pi/plans/.dotfiles/pinvim-rewrite_PLAN.md. Closing for posterity; architecture is being rebooted.

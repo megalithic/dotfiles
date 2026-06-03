@@ -1,6 +1,6 @@
 ---
 id: dot-pbw1
-status: open
+status: closed
 deps: [dot-qsa8]
 links: []
 created: 2026-05-19T16:12:26Z
@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development]
 ---
+
 # pinvim review: annotation store and gpa keymap
 
 Plan step 3. Implement in-memory review annotations keyed by file plus line/range. Use a dedicated extmark namespace for source and diff buffers. The gpa keymap is registered by config/nvim/lua/pinvim/review.lua itself (not by config/nvim/lua/pinvim.lua); in review mode it prompts for an annotation/comment on the current line or visual range, and outside review mode it no-ops with guidance to start review mode with gds. Add review-local maps/functions for next/previous annotation, delete annotation, clear annotations, and preview bundle, all registered by the review module.
@@ -25,3 +26,8 @@ Plan step 3. Implement in-memory review annotations keyed by file plus line/rang
 7. nvim --headless '+lua require("pinvim").setup()' '+qa' exits 0.
 8. bin/pinvim-protocol-smoke passes.
 
+## Notes
+
+**2026-06-03T19:40:18Z**
+
+Deprecated: superseded by pinvim rewrite plan at ~/.local/share/pi/plans/.dotfiles/pinvim-rewrite_PLAN.md. Closing for posterity; architecture is being rebooted.
