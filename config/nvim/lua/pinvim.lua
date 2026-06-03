@@ -13,6 +13,7 @@ local Config = {}
 local State = {}
 local Transport = {}
 local Registry = {}
+local EditorService = {}
 local Handshake = {}
 local Commands = {}
 local Autocmds = {}
@@ -28,6 +29,7 @@ local discovery_cache = { at = 0, targets = {}, by_socket = {}, running = false,
 local discovery_ttl_ms = 2000
 local peer_manifest_timer = nil
 local peer_manifest_path = nil
+local editor_service_address = nil
 
 local conn = {
   pipe = nil,
@@ -264,6 +266,9 @@ defaults = {
   },
   explicit_context = {
     max_selection_bytes = 8000,
+  },
+  editor_service = {
+    enabled = true,
   },
 }
 
@@ -858,6 +863,7 @@ function Transport.build_peer_identity(config)
     instanceId = registry.instance_id,
     registryRoot = registry.workspace_root,
     role = vim.env.PINVIM_SESSION_ROLE or "main",
+    nvimListenAddress = editor_service_address or vim.v.servername,
     heartbeatAt = os.time(),
   }
 end
@@ -1009,6 +1015,10 @@ function Registry.write_main_intent(registry, runtime, config)
       cwd = identity.cwd,
       projectRoot = identity.root,
     },
+    editorService = {
+      address = identity.nvimListenAddress,
+      transport = "msgpack-rpc",
+    },
     intent = {
       kind = "main-session",
       desired = "present",
@@ -1017,6 +1027,45 @@ function Registry.write_main_intent(registry, runtime, config)
       linkMode = runtime.link_mode or config.transport.link_mode,
     },
   })
+end
+
+function EditorService.setup(config, registry)
+  local service = {
+    enabled = config.editor_service.enabled ~= false,
+    address = nil,
+    transport = "msgpack-rpc",
+    started = false,
+    stale = false,
+    last_error = nil,
+  }
+
+  if not service.enabled then return service end
+
+  local current = vim.v.servername
+  if current and current ~= "" then
+    service.address = current
+    service.started = true
+  else
+    local preferred = registry and registry.instance_root and path_join(registry.instance_root, "editor.sock") or nil
+    local ok, address = pcall(function()
+      if preferred then return vim.fn.serverstart(preferred) end
+      return vim.fn.serverstart()
+    end)
+    if ok and address and address ~= "" then
+      service.address = address
+      service.started = true
+    else
+      service.stale = true
+      service.last_error = tostring(address or "serverstart failed")
+    end
+  end
+
+  if service.address and service.address ~= "" then
+    editor_service_address = service.address
+    vim.env.PINVIM_NVIM_LISTEN_ADDRESS = service.address
+  end
+
+  return service
 end
 
 function Registry.with_launch_lock(registry, fn)
@@ -1084,6 +1133,11 @@ local function write_nvim_peer_manifest(runtime, config)
     instanceId = identity.instanceId,
     registryRoot = identity.registryRoot,
     role = identity.role,
+    nvimListenAddress = identity.nvimListenAddress,
+    editorService = {
+      address = identity.nvimListenAddress,
+      transport = "msgpack-rpc",
+    },
     socket = runtime.socket or conn.socket_path,
     socketSource = runtime.socket_source or conn.socket_source,
     connected = conn.connected,
@@ -1571,6 +1625,8 @@ function Commands.setup(api, config)
       string.format("parent id: %s", info.registry.parent_id),
       string.format("instance id: %s", info.registry.instance_id),
       string.format("registry root: %s", info.registry.workspace_root),
+      string.format("editor service: %s", info.editor_service.address or "(none)"),
+      string.format("editor service stale: %s", tostring(info.editor_service.stale)),
       string.format("connected: %s", tostring(info.state.connected)),
       string.format("connecting: %s", tostring(info.state.connecting)),
       string.format("link mode: %s", info.state.link_mode or "auto"),
@@ -1594,8 +1650,27 @@ function Commands.setup(api, config)
       string.format("hello_ack: %s", health.hello_ack and "yes" or "no"),
       string.format("heartbeat age: %s", health.heartbeat_age and (tostring(health.heartbeat_age) .. "s") or "(none)"),
       string.format("socket: %s", health.socket_path or "(none)"),
+      string.format("editor service: %s", health.editor_service.address or "(none)"),
+      string.format("editor service stale: %s", tostring(health.editor_service.stale)),
     }
     vim.notify(table.concat(lines, "\n"), level)
+  end
+
+  local function doctor_command()
+    local info = api.info()
+    local health = api.health()
+    local ok = info.editor_service.address ~= nil and not info.editor_service.stale
+    local lines = {
+      ok and "pinvim doctor: ok" or "pinvim doctor: attention needed",
+      string.format("peer socket: %s", info.target.socket_path or "(none)"),
+      string.format("peer connected: %s", tostring(info.state.connected)),
+      string.format("editor service: %s", info.editor_service.address or "(none)"),
+      string.format("editor transport: %s", info.editor_service.transport or "(none)"),
+      string.format("editor service stale: %s", tostring(info.editor_service.stale)),
+      string.format("peer: %s", health.peer_id or "(none)"),
+    }
+    if info.editor_service.last_error then table.insert(lines, "editor error: " .. info.editor_service.last_error) end
+    vim.notify(table.concat(lines, "\n"), ok and vim.log.levels.INFO or vim.log.levels.WARN)
   end
 
   local function previous_command() api.restore_previous_target(conn.socket_path or runtime.socket, { notify = true }) end
@@ -1635,6 +1710,8 @@ function Commands.setup(api, config)
       string.format("parent id: %s", info.registry.parent_id),
       string.format("instance id: %s", info.registry.instance_id),
       string.format("registry root: %s", info.registry.workspace_root),
+      string.format("editor service: %s", info.editor_service.address or "(none)"),
+      string.format("editor service stale: %s", tostring(info.editor_service.stale)),
       string.format("connected: %s", tostring(info.state.connected)),
       string.format("connecting: %s", tostring(info.state.connecting)),
       string.format("link mode: %s", info.state.link_mode or info.target.link_mode),
@@ -1657,6 +1734,10 @@ function Commands.setup(api, config)
 
   vim.api.nvim_create_user_command("PiHealth", health_command, {
     desc = "Check pinvim hello/heartbeat health",
+  })
+
+  vim.api.nvim_create_user_command("PiDoctor", doctor_command, {
+    desc = "Diagnose pinvim peer and editor-service transports",
   })
 
   vim.api.nvim_create_user_command("PiPrompt", prompt_command, {
@@ -1843,10 +1924,13 @@ function M.setup(opts)
   local runtime = State.new()
   local registry = Registry.setup(config)
   config.registry = registry
+  local editor_service = EditorService.setup(config, registry)
+  config.editor_service_state = editor_service
 
   local api = {}
   api.runtime = runtime
   api.registry = registry
+  api.editor_service = editor_service
 
   local function current_peer()
     if runtime.last_hello_ack and runtime.last_hello_ack.peer then return runtime.last_hello_ack.peer end
@@ -2412,6 +2496,7 @@ function M.setup(opts)
       hello_ack = runtime.last_hello_ack ~= nil,
       heartbeat_age = heartbeat_age,
       socket_path = runtime.socket,
+      editor_service = vim.deepcopy(editor_service),
     }
   end
 
@@ -2447,6 +2532,7 @@ function M.setup(opts)
       compose_count = #compose_queue,
       target_history = vim.deepcopy(target_history),
       registry = vim.deepcopy(registry),
+      editor_service = vim.deepcopy(editor_service),
       responsibilities = {
         loader = "config/nvim/after/plugin/pi.lua",
         module = "config/nvim/lua/pinvim.lua",
