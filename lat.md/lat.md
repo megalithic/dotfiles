@@ -184,6 +184,8 @@ Pinvim creates a per-workspace registry under `$PI_STATE_DIR/pinvim/<workspace-h
 
 The workspace hash is derived from the normalized project root, and `parent.id` persists the durable parent identity for that workspace. Each Neovim process gets an `instances/<nvim-instance-id>/` directory with Nvim-owned `main.intent.json`; a one-time legacy import can seed `main.runtime.json` from existing tmux/socket manifests when the registry is first created, leaving old manifests as fallback discovery. Main-panel launches use an atomic `main.launch.lock` directory so concurrent `:PiPanel` calls do not race to spawn the main session.
 
+Pinvim peer identity now carries registry identity in hello frames, hello acknowledgements, and manifests: `parentId`, `workspaceId`, `instanceId`, `registryRoot`, and `role` (`main`, `child`, or `nested`). Nvim derives these values from its registry. The Pi extension mirrors them from PINVIM environment variables when present and rejects peers with mismatched explicit parent, workspace, or instance identity before falling back to tmux/root scoring.
+
 ## Pinvim visual selection keymaps
 
 Pinvim visual mappings use Neovim `x` mode, so Lua callbacks may run after Visual mode exits.

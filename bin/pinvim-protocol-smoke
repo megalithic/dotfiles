@@ -45,6 +45,11 @@ pi_peer = {
     "root": os.getcwd(),
     "tmux": {"session": "smoke", "window": "test"},
     "linkMode": "test",
+    "parentId": "parent:smoke",
+    "workspaceId": "workspace:smoke",
+    "instanceId": "instance:smoke",
+    "registryRoot": os.path.join(os.getcwd(), "pinvim", "workspace-smoke"),
+    "role": "main",
     "heartbeatAt": int(time.time()),
 }
 
@@ -61,13 +66,22 @@ with conn, conn.makefile("r", encoding="utf-8") as reader:
         else:
             typ = payload.get("type")
             if typ == "hello":
-                response = {
-                    "ok": True,
-                    "type": "hello_ack",
-                    "protocol": "pinvim.peer.v1",
-                    "peer": pi_peer,
-                    "accepts": ["hello", "heartbeat", "ping", "prompt", "explicit_send"],
-                }
+                peer = payload.get("peer") or {}
+                missing = [
+                    key
+                    for key in ("parentId", "workspaceId", "instanceId", "registryRoot", "role")
+                    if not peer.get(key)
+                ]
+                if missing:
+                    response = {"ok": False, "error": f"missing identity fields: {','.join(missing)}"}
+                else:
+                    response = {
+                        "ok": True,
+                        "type": "hello_ack",
+                        "protocol": "pinvim.peer.v1",
+                        "peer": pi_peer,
+                        "accepts": ["hello", "heartbeat", "ping", "prompt", "explicit_send"],
+                    }
             elif typ == "heartbeat":
                 response = {
                     "ok": True,
@@ -101,6 +115,11 @@ fi
 PI_SOCKET="$socket_path" \
 PI_STATE_DIR="$tmp_dir/state" \
 PINVIM_LINK_MODE="test" \
+PINVIM_PARENT_ID="parent:smoke" \
+PINVIM_WORKSPACE_ID="workspace:smoke" \
+PINVIM_INSTANCE_ID="instance:smoke" \
+PINVIM_SESSION_ROLE="main" \
+PINVIM_REGISTRY_ROOT="$tmp_dir/state/pinvim/workspace-smoke" \
 nvim --headless -u NONE \
   --cmd "set runtimepath^=$repo_root/config/nvim" \
   '+lua local api=require("pinvim").setup({transport={link_mode="test",enable_peer_frames=true},connection={ping_interval_s=1,reconnect_max_retries=0}}); local ok=vim.wait(5000,function() local h=api.health(); return h.ok and h.hello_ack and h.heartbeat_age ~= nil and h.peer_id == "pi:smoke-test" end,50); if not ok then print(vim.inspect(api.health())); vim.cmd("cquit 1") end; print("pinvim protocol smoke ok")' \

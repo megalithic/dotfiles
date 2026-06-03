@@ -148,6 +148,11 @@ interface PeerIdentity {
     pane?: string;
   };
   linkMode: LinkMode;
+  parentId?: string;
+  workspaceId?: string;
+  instanceId?: string;
+  registryRoot?: string;
+  role?: "main" | "child" | "nested" | string;
   heartbeatAt?: number;
 }
 
@@ -258,6 +263,11 @@ interface NvimPeerCandidate {
   tmux?: { session?: string; window?: string; pane?: string };
   heartbeatAt?: number;
   linkMode?: LinkMode;
+  parentId?: string;
+  workspaceId?: string;
+  instanceId?: string;
+  registryRoot?: string;
+  role?: "main" | "child" | "nested" | string;
   socket?: string;
   socketSource?: string;
   connected?: boolean;
@@ -343,6 +353,11 @@ const buildPinvimPeerIdentity = (): PeerIdentity => ({
     pane: PI_PANE,
   },
   linkMode: process.env.PINVIM_LINK_MODE || "auto",
+  parentId: process.env.PINVIM_PARENT_ID,
+  workspaceId: process.env.PINVIM_WORKSPACE_ID,
+  instanceId: process.env.PINVIM_INSTANCE_ID,
+  registryRoot: process.env.PINVIM_REGISTRY_ROOT,
+  role: process.env.PINVIM_SESSION_ROLE || (isEphemeral() ? "child" : "main"),
   heartbeatAt: Math.floor(Date.now() / 1000),
 });
 
@@ -576,6 +591,20 @@ const refreshRepairCandidate = async (): Promise<void> => {
 const peerAllowedForSocket = (
   peer: PeerIdentity,
 ): { ok: boolean; reason: string } => {
+  const localIdentity = buildPinvimPeerIdentity();
+  const identityChecks: Array<
+    ["parentId" | "workspaceId" | "instanceId", string]
+  > = [
+    ["parentId", "parent identity"],
+    ["workspaceId", "workspace identity"],
+    ["instanceId", "nvim instance identity"],
+  ];
+  for (const [key, label] of identityChecks) {
+    if (localIdentity[key] && localIdentity[key] !== peer[key]) {
+      return { ok: false, reason: `mismatched pinvim ${label}` };
+    }
+  }
+
   const candidate: NvimPeerCandidate = {
     id: peer.id,
     kind: peer.kind,
@@ -584,6 +613,11 @@ const peerAllowedForSocket = (
     tmux: peer.tmux,
     heartbeatAt: peer.heartbeatAt,
     linkMode: peer.linkMode,
+    parentId: peer.parentId,
+    workspaceId: peer.workspaceId,
+    instanceId: peer.instanceId,
+    registryRoot: peer.registryRoot,
+    role: peer.role,
   };
   const scored = scoreNvimCandidate(candidate);
   if (scored) return { ok: true, reason: (scored.reasons || []).join(", ") };
@@ -619,6 +653,7 @@ const renderInfoLines = (): string[] => {
     "pinvim state",
     `Protocol: ${state.protocol}`,
     `Socket: ${SOCKET_PATH || "(disabled)"}`,
+    `Local identity: ${JSON.stringify(buildPinvimPeerIdentity(), null, 2)}`,
     `Active peer: ${activePeer ? JSON.stringify(activePeer, null, 2) : "(none yet)"}`,
     `Repair candidate: ${repairCandidate ? JSON.stringify(repairCandidate, null, 2) : "(none)"}`,
     `Repaired at: ${repairedAt ? new Date(repairedAt).toISOString() : "(none)"}`,
@@ -752,6 +787,7 @@ const writeInfoManifestNow = async (): Promise<void> => {
         .pop()
         ?.replace(/\.sock$/, "") || PI_SESSION;
     infoManifestPath = `${INFO_DIR}/${socketBase}.info`;
+    const identity = buildPinvimPeerIdentity();
     const manifest = {
       socket: SOCKET_PATH,
       cwd: process.cwd(),
@@ -764,6 +800,11 @@ const writeInfoManifestNow = async (): Promise<void> => {
       owner: "pinvim.ts",
       linkMode:
         process.env.PINVIM_LINK_MODE || (isEphemeral() ? "ephemeral" : "auto"),
+      parentId: identity.parentId,
+      workspaceId: identity.workspaceId,
+      instanceId: identity.instanceId,
+      registryRoot: identity.registryRoot,
+      role: identity.role,
       activePeerId: getActivePeer()?.id || null,
       heartbeatAt: Math.floor(Date.now() / 1000),
       startedAt,

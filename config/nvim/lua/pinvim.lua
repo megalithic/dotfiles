@@ -836,6 +836,7 @@ function Transport.list_targets(config, opts) return ranked_manifest_targets(con
 
 function Transport.build_peer_identity(config)
   local context = current_tmux_context()
+  local registry = config.registry or {}
   return {
     id = string.format(
       "nvim:%s:%s:%d",
@@ -852,6 +853,11 @@ function Transport.build_peer_identity(config)
       pane = context.pane,
     },
     linkMode = config.transport.link_mode,
+    parentId = registry.parent_id,
+    workspaceId = registry.workspace_id,
+    instanceId = registry.instance_id,
+    registryRoot = registry.workspace_root,
+    role = vim.env.PINVIM_SESSION_ROLE or "main",
     heartbeatAt = os.time(),
   }
 end
@@ -1073,6 +1079,11 @@ local function write_nvim_peer_manifest(runtime, config)
     tmux = identity.tmux,
     heartbeatAt = os.time(),
     linkMode = runtime.link_mode or config.transport.link_mode,
+    parentId = identity.parentId,
+    workspaceId = identity.workspaceId,
+    instanceId = identity.instanceId,
+    registryRoot = identity.registryRoot,
+    role = identity.role,
     socket = runtime.socket or conn.socket_path,
     socketSource = runtime.socket_source or conn.socket_source,
     connected = conn.connected,
@@ -1236,6 +1247,11 @@ function Handshake.describe(state, transport, config)
         "tmux.window",
         "tmux.pane",
         "linkMode",
+        "parentId",
+        "workspaceId",
+        "instanceId",
+        "registryRoot",
+        "role",
         "heartbeatAt",
       },
     },
@@ -1826,6 +1842,7 @@ function M.setup(opts)
   local config = Config.setup(opts)
   local runtime = State.new()
   local registry = Registry.setup(config)
+  config.registry = registry
 
   local api = {}
   api.runtime = runtime
