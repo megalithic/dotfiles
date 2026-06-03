@@ -476,14 +476,16 @@ function M.loadNativeTiling()
       if not app then return end
 
       local bundleID = app:bundleID()
-      local isBrowser = bundleID
-        and (
-          bundleID:match("brave")
-          or bundleID:match("chrome")
-          or bundleID:match("firefox")
-          or bundleID:match("safari")
-          or bundleID:match("arc")
-        )
+      local browserPatterns = { "helium", "brave", "orion", "chrome", "firefox", "safari", "arc" }
+      local isBrowser = false
+      if bundleID then
+        for _, pattern in ipairs(browserPatterns) do
+          if bundleID:match(pattern) then
+            isBrowser = true
+            break
+          end
+        end
+      end
 
       if not isBrowser then
         hs.alert.show("Not a browser")
@@ -584,14 +586,10 @@ function M.loadNativeTiling()
         hs.timer.doAfter(0.3, function()
           if mainWin and pcall(function() return mainWin:id() end) then
             mainWin:focus()
-            if originalFrame then
-              mainWin:setFrame(originalFrame)
-            end
+            if originalFrame then mainWin:setFrame(originalFrame) end
             -- Also restore from native tiling
             local mainApp = mainWin:application()
-            if mainApp then
-              mainApp:selectMenuItem({ "Window", "Move & Resize", "Return to Previous Size" })
-            end
+            if mainApp then mainApp:selectMenuItem({ "Window", "Move & Resize", "Return to Previous Size" }) end
           end
         end)
       end)
