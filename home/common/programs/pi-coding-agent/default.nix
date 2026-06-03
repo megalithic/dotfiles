@@ -9,10 +9,29 @@ let
 
   piStateDir = "${config.xdg.stateHome}/pi";
 
-  pi-mcp-adapter = pkgs.callPackage ./packages/pi-mcp-adapter.nix { };
-  pi-web-access = pkgs.callPackage ./packages/pi-web-access.nix { };
-  pi-subagents = pkgs.callPackage ./packages/pi-subagents.nix { };
-  # pi-ralph-loop = pkgs.callPackage ./packages/pi-ralph-loop.nix {};
+  piExtensionPackageFiles = builtins.filter (
+    name: lib.hasSuffix ".nix" name && !(lib.hasPrefix "_" name)
+  ) (builtins.attrNames (builtins.readDir ./packages));
+  piExtensionPackages = builtins.listToAttrs (
+    map (
+      fileName:
+      let
+        name = lib.removeSuffix ".nix" fileName;
+      in
+      {
+        inherit name;
+        value = pkgs.callPackage (./packages + "/${fileName}") { };
+      }
+    ) piExtensionPackageFiles
+  );
+  piExtensionPackageSymlinks = builtins.listToAttrs (
+    map (name: {
+      name = ".pi/agent/extensions/${name}";
+      value = {
+        source = piExtensionPackages.${name};
+      };
+    }) (builtins.attrNames piExtensionPackages)
+  );
 
   piNodeAliases = pkgs.runCommand "pi-node-aliases" { } ''
     mkdir -p $out/node_modules/@earendil-works
@@ -109,7 +128,7 @@ let
 
   pinvim = pkgs.writeShellScriptBin "pinvim" ''
     # Clear conflicting env from previous pinvim sessions
-    unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN PI_CODING_AGENT_DIR 2>/dev/null || true
+    unset PI_CODING_AGENT_DIR 2>/dev/null || true
 
     # Parse --profile flag and collect pi args
     EXPLICIT_PROFILE=""
@@ -187,39 +206,17 @@ in
     ];
     sessionVariables = {
       PI_STATE_DIR = piStateDir;
-
-      # web-browser skill uses chrome-devtools MCP server (configured in mcp.json).
-      # No env vars needed — executable path and profile dirs are in mcp.json.
     };
 
     file = {
       ".pi/agent/AGENTS.md".source = ./sources/GLOBAL_AGENTS.md;
       ".pi/agent/APPEND_SYSTEM.md".source = ./sources/APPEND_SYSTEM.md;
-
-      # Pi MCP adapter extension - built with deps
-      ".pi/agent/extensions/pi-mcp-adapter".source = pi-mcp-adapter;
-
-      # Pi web access extension - built with deps
-      ".pi/agent/extensions/pi-web-access".source = pi-web-access;
-
-      # pi-subagents extension - multi-agent orchestration
-      ".pi/agent/extensions/pi-subagents".source = pi-subagents;
-
-      # pi-ralph-loop extension - autonomous coding loops
-      # ".pi/agent/extensions/pi-ralph-loop".source = pi-ralph-loop;
-
-      # pi-ralph-loop skills
-      # ".pi/agent/skills/ralph-loop".source = "${pi-ralph-loop}/skills/ralph-loop";
-      # ".pi/agent/skills/ralph-draft".source = "${pi-ralph-loop}/skills/ralph-draft";
-      # ".pi/agent/skills/ralph-finalize".source = "${pi-ralph-loop}/skills/ralph-finalize";
-
-      # Plain JSON configs — keybindings uses out-of-store symlink so pi can write to it
+      ".pi/agent/extensions/sentinel-rules.json".source = ./extensions/sentinel-rules.json;
       ".pi/agent/keybindings.json".source = ./keybindings.json;
-      # config.lib.mega.linkDotfile "home/common/programs/pi-coding-agent/keybindings.json";
       ".pi/agent/models.json".source = ./models.json;
       ".pi/agent/mcp.json".source = ./mcp.json;
-      ".pi/agent/extensions/sentinel-rules.json".source = ./extensions/sentinel-rules.json;
     }
+    // piExtensionPackageSymlinks
     // extensionSymlinks
     // agentSymlinks
     // skillSymlinks
