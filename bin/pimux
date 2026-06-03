@@ -63,8 +63,41 @@ IFS=$'\t' read -r SESSION CURRENT_WINDOW CURRENT_WINDOW_IDX CURRENT_PANE < <(
 )
 PI_STATE_DIR="${PI_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/pi}"
 SOCKET_DIR="$PI_STATE_DIR/sockets"
+PINVIM_REGISTRY_DIR="$PI_STATE_DIR/pinvim"
 SOCKET_PREFIX="pi"
-mkdir -p "$SOCKET_DIR"
+mkdir -p "$SOCKET_DIR" "$PINVIM_REGISTRY_DIR"
+
+PINVIM_FORWARD_ENV=(
+  PINVIM_PARENT_ID
+  PINVIM_WORKSPACE_ID
+  PINVIM_INSTANCE_ID
+  PINVIM_SESSION_ID
+  PINVIM_SESSION_ROLE
+  PINVIM_REGISTRY_ROOT
+  PINVIM_NVIM_LISTEN_ADDRESS
+  PINVIM_LINK_MODE
+  PI_STATE_DIR
+  PI_SOCKET
+  PI_EPHEMERAL
+)
+TMUX_ENV_ARGS=()
+
+build_tmux_env_args() {
+  local overrides=("$@") name override skip
+  TMUX_ENV_ARGS=()
+  for name in "${PINVIM_FORWARD_ENV[@]}"; do
+    skip=false
+    for override in "${overrides[@]}"; do
+      [[ "${override%%=*}" == "$name" ]] && skip=true
+    done
+    if [[ "$skip" == false && -n "${!name+x}" ]]; then
+      TMUX_ENV_ARGS+=(-e "$name=${!name}")
+    fi
+  done
+  for override in "${overrides[@]}"; do
+    TMUX_ENV_ARGS+=(-e "$override")
+  done
+}
 
 opt_get() { tmux show-option -qv -t "$SESSION" "$1" 2>/dev/null || true; }
 opt_set() { tmux set-option -q -t "$SESSION" "$1" "$2"; }
@@ -357,7 +390,8 @@ create_agent_window() {
   local last_idx target_idx
   last_idx=$(tmux list-windows -t "$SESSION" -F '#{window_index}' | sort -n | tail -1)
   target_idx=$((last_idx + 1))
-  tmux new-window -d -t "$SESSION:$target_idx" -n "$AGENT_WINDOW" "pinvim"
+  build_tmux_env_args
+  tmux new-window -d -t "$SESSION:$target_idx" -n "$AGENT_WINDOW" "${TMUX_ENV_ARGS[@]}" "pinvim"
   lock_agent_window "$target_idx"
   printf '%s\n' "$target_idx"
 }
@@ -412,19 +446,21 @@ focus_pane_window() {
 spawn_visible_split() {
   local sock="${1:-}" new_pane
   if [[ -n "$sock" ]]; then
-    new_pane=$(tmux split-window -P -F '#{pane_id}' -h -l "$SPLIT_SIZE" -t "$CURRENT_PANE" -e "PI_SOCKET=$sock" "pinvim")
+    build_tmux_env_args "PI_SOCKET=$sock"
+    new_pane=$(tmux split-window -P -F '#{pane_id}' -h -l "$SPLIT_SIZE" -t "$CURRENT_PANE" "${TMUX_ENV_ARGS[@]}" "pinvim")
   else
     sock=$(socket_for_window "$CURRENT_WINDOW" "$CURRENT_WINDOW_IDX")
-    new_pane=$(tmux split-window -P -F '#{pane_id}' -h -l "$SPLIT_SIZE" -t "$CURRENT_PANE" "pinvim")
+    build_tmux_env_args
+    new_pane=$(tmux split-window -P -F '#{pane_id}' -h -l "$SPLIT_SIZE" -t "$CURRENT_PANE" "${TMUX_ENV_ARGS[@]}" "pinvim")
   fi
   activate_socket "$sock" "$new_pane"
 }
 
 spawn_ephemeral_split() {
   local new_pane
+  build_tmux_env_args "PI_SOCKET=$TARGET_SOCKET" "PI_EPHEMERAL=1"
   new_pane=$(tmux split-window -P -F '#{pane_id}' -h -l "$SPLIT_SIZE" -t "$CURRENT_PANE" \
-    -e "PI_SOCKET=$TARGET_SOCKET" \
-    -e "PI_EPHEMERAL=1" \
+    "${TMUX_ENV_ARGS[@]}" \
     "pinvim")
   activate_socket "$TARGET_SOCKET" "$new_pane"
 }
