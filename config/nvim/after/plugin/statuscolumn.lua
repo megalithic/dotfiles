@@ -50,7 +50,8 @@ vim.api.nvim_create_autocmd({ "BufWritePost", "TextChanged", "TextChangedI" }, {
 vim.api.nvim_set_hl(0, "StatusColumnWrap", { link = "NonText" })
 
 -- Three-tier statuscolumn: full | minimal | none
--- full:    signs + line numbers + wrap indicators + git signs + fold indicators
+-- full:    signs + line numbers + wrap indicators + git signs + fold indicators.
+--          Full buffers stay full when inactive so column width stays stable.
 -- minimal: line numbers + wrap indicators only
 -- none:    empty statuscolumn
 
@@ -116,7 +117,6 @@ local function resolve_tier(filetype, buftype, is_active)
   if vim.g.shade_context then return "none" end
   if vim.list_contains(none_fts, filetype) or vim.list_contains(none_bts, buftype) then return "none" end
   if vim.list_contains(minimal_fts, filetype) then return "minimal" end
-  if not is_active then return "minimal" end
   return "full"
 end
 

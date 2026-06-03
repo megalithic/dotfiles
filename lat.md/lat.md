@@ -90,7 +90,7 @@ Pi's web-browser skill uses the chrome-devtools MCP server to spawn or attach to
 
 ## Terminal and editor UI preferences
 
-UI preferences keep terminal, tmux, and Neovim behavior predictable across local sessions.
+UI preferences keep terminal, tmux, and Neovim behavior predictable across local sessions. Neovim full statuscolumns keep their full layout in inactive windows so focus changes do not change column count.
 
 Hammerspoon miccheck menubar state lives in `config/hammerspoon/miccheck.lua`. Muted state uses a white slashed-mic glyph on the transparent menubar, processing uses an orange waveform glyph, recording uses a red dot, and unmuted voice passthrough uses the normal mic glyph in white on a 40×24 rounded red SVG pill background so the active hot-mic state is more visible than a transparent red glyph and visually matches pill-shaped menubar indicators. The PTT-active HUD renderer remains in the file, but `SHOW_PTT_ACTIVE_HUD` is false so unmuting the microphone changes only menubar state and does not show the notch HUD.
 
