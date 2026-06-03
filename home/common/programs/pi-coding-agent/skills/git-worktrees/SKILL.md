@@ -31,6 +31,13 @@ Copy rules:
 - Preserve symlinks as symlinks.
 - These files are often untracked or gitignored, so do not expect `git worktree add` to bring them over.
 
+After creating a worktree and copying core files, run the one-time worktree setup task when available:
+
+- Only run this immediately after a successful `git worktree add`, not when re-entering an existing worktree.
+- Require `devenv.nix` in the new worktree.
+- Require a `worktree:setup` task in `devenv tasks list`.
+- Run `devenv tasks run worktree:setup` from the worktree cwd.
+
 ```bash
 for file in "${worktree_core_files[@]}"; do
   src="$repo_root/$file"
@@ -42,6 +49,12 @@ for file in "${worktree_core_files[@]}"; do
     fi
   fi
 done
+
+if [ -e "$worktree_path/devenv.nix" ] || [ -L "$worktree_path/devenv.nix" ]; then
+  if (cd "$worktree_path" && devenv tasks list | awk '{print $1}' | grep -qx 'worktree:setup'); then
+    (cd "$worktree_path" && devenv tasks run worktree:setup)
+  fi
+fi
 ```
 
 ## Commands
@@ -64,6 +77,11 @@ for file in "${worktree_core_files[@]}"; do
     fi
   fi
 done
+if [ -e "$worktree_path/devenv.nix" ] || [ -L "$worktree_path/devenv.nix" ]; then
+  if (cd "$worktree_path" && devenv tasks list | awk '{print $1}' | grep -qx 'worktree:setup'); then
+    (cd "$worktree_path" && devenv tasks run worktree:setup)
+  fi
+fi
 ```
 
 ### PR branch worktree (branch name known)
@@ -86,6 +104,11 @@ for file in "${worktree_core_files[@]}"; do
     fi
   fi
 done
+if [ -e "$worktree_path/devenv.nix" ] || [ -L "$worktree_path/devenv.nix" ]; then
+  if (cd "$worktree_path" && devenv tasks list | awk '{print $1}' | grep -qx 'worktree:setup'); then
+    (cd "$worktree_path" && devenv tasks run worktree:setup)
+  fi
+fi
 ```
 
 ### Remove/prune
