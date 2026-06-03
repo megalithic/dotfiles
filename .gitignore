@@ -28,7 +28,6 @@ result
 .vim-test
 ./tags
 .elixir_ls
-.envrc
 .projections.json
 .init.local.lua
 .direnv
