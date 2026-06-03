@@ -12,6 +12,7 @@ local M = {}
 local Config = {}
 local State = {}
 local Transport = {}
+local Registry = {}
 local Handshake = {}
 local Commands = {}
 local Autocmds = {}
@@ -44,6 +45,51 @@ local conn = {
 }
 
 local function path_join(...) return table.concat({ ... }, "/") end
+
+local function read_first_line(path)
+  local ok, lines = pcall(vim.fn.readfile, path, "", 1)
+  if not ok or not lines or not lines[1] then return nil end
+  return lines[1]
+end
+
+local function write_json_atomic(path, value)
+  local dir = vim.fs.dirname(path)
+  if dir then pcall(vim.fn.mkdir, dir, "p") end
+  local tmp = string.format("%s.tmp.%d.%d", path, vim.fn.getpid(), vim.uv.hrtime() % 1000000)
+  local ok = pcall(vim.fn.writefile, { vim.json.encode(value) }, tmp)
+  if not ok then return false end
+  local rename_ok = vim.uv.fs_rename(tmp, path)
+  if not rename_ok then
+    pcall(vim.fn.delete, tmp)
+    return false
+  end
+  return true
+end
+
+local function write_text_atomic(path, value)
+  local dir = vim.fs.dirname(path)
+  if dir then pcall(vim.fn.mkdir, dir, "p") end
+  local tmp = string.format("%s.tmp.%d.%d", path, vim.fn.getpid(), vim.uv.hrtime() % 1000000)
+  local ok = pcall(vim.fn.writefile, { value }, tmp)
+  if not ok then return false end
+  local rename_ok = vim.uv.fs_rename(tmp, path)
+  if not rename_ok then
+    pcall(vim.fn.delete, tmp)
+    return false
+  end
+  return true
+end
+
+local function stable_hash(value)
+  local ok, hash = pcall(vim.fn.sha256, value or "")
+  if ok and type(hash) == "string" and hash ~= "" then return hash:sub(1, 16) end
+
+  local acc = 5381
+  for idx = 1, #(value or "") do
+    acc = ((acc * 33) + string.byte(value, idx)) % 4294967296
+  end
+  return string.format("%08x", acc)
+end
 
 local refresh_tmux_context_async
 
@@ -831,6 +877,176 @@ function Transport.build_heartbeat(state, config)
   }
 end
 
+local function read_manifest_infos_sync(config)
+  local infos = {}
+  local pattern = path_join(config.transport.manifest_dir, "*.info")
+  for _, info_path in ipairs(vim.fn.glob(pattern, false, true)) do
+    local info = parse_info_manifest(config, info_path)
+    if info then table.insert(infos, info) end
+  end
+  return infos
+end
+
+local function legacy_registry_runtime(config)
+  local socket_path, source = Transport.resolve_socket(config)
+  local info = socket_path and manifest_for_socket(config, socket_path) or nil
+
+  if not socket_path then
+    local ranked = rank_manifest_infos(
+      config,
+      read_manifest_infos_sync(config),
+      current_tmux_context(),
+      { include_ephemeral = false }
+    )
+    local first = ranked[1]
+    if first then
+      socket_path = first.path
+      source = "manifest-import"
+      info = first.raw or manifest_for_socket(config, first.path)
+    end
+  end
+
+  if not socket_path then return nil end
+  info = info or {}
+  return {
+    schema = "pinvim.registry.v1",
+    writer = "nvim-import",
+    role = "main",
+    importedFrom = "legacy-manifest-or-tmux",
+    importedAt = os.time(),
+    socket = socket_path,
+    socketSource = source,
+    pid = info.pid,
+    session = info.session,
+    window = info.window,
+    pane = info.pane,
+    tmux = info.tmux,
+    cwd = info.cwd,
+    root = info.root,
+    heartbeatAt = info.heartbeatAt,
+    startedAt = info.startedAt,
+  }
+end
+
+function Registry.setup(config)
+  local root = normalize_path(config.resolve_root()) or normalize_path(vim.uv.cwd()) or vim.uv.cwd()
+  local workspace_id = stable_hash(root)
+  local registry_root = path_join(config.transport.state_dir, "pinvim", workspace_id)
+  local existed = vim.uv.fs_stat(registry_root) ~= nil
+  pcall(vim.fn.mkdir, path_join(registry_root, "instances"), "p")
+  pcall(vim.fn.mkdir, path_join(registry_root, "children"), "p")
+
+  local parent_path = path_join(registry_root, "parent.id")
+  local parent_id = read_first_line(parent_path)
+  if not parent_id or parent_id == "" then
+    parent_id = "parent:" .. stable_hash(root .. "\0" .. tostring(os.time()) .. "\0" .. tostring(vim.fn.getpid()))
+    write_text_atomic(parent_path, parent_id)
+  end
+
+  local started_at = vim.g.pinvim_started_at or os.time()
+  vim.g.pinvim_started_at = started_at
+  local instance_id =
+    string.format("nvim-%d-%s", vim.fn.getpid(), stable_hash(root .. "\0" .. tostring(started_at)):sub(1, 8))
+  local instance_root = path_join(registry_root, "instances", instance_id)
+  pcall(vim.fn.mkdir, instance_root, "p")
+
+  local registry = {
+    schema = "pinvim.registry.v1",
+    workspace_id = workspace_id,
+    workspace_hash = workspace_id,
+    workspace_root = registry_root,
+    project_root = root,
+    parent_id = parent_id,
+    parent_id_path = parent_path,
+    instance_id = instance_id,
+    instance_root = instance_root,
+    children_root = path_join(registry_root, "children"),
+    main_intent_path = path_join(instance_root, "main.intent.json"),
+    main_runtime_path = path_join(instance_root, "main.runtime.json"),
+    launch_lock_path = path_join(registry_root, "main.launch.lock"),
+    imported_legacy = false,
+  }
+
+  if not existed then
+    local imported = legacy_registry_runtime(config)
+    if imported then
+      imported.workspace = { id = workspace_id, root = registry_root, projectRoot = root }
+      imported.parent = { id = parent_id }
+      write_json_atomic(registry.main_runtime_path, imported)
+      registry.imported_legacy = true
+    end
+  end
+
+  return registry
+end
+
+function Registry.write_main_intent(registry, runtime, config)
+  if not registry then return false end
+  local identity = Transport.build_peer_identity(config)
+  return write_json_atomic(registry.main_intent_path, {
+    schema = "pinvim.registry.v1",
+    writer = "nvim",
+    role = "main",
+    updatedAt = os.time(),
+    workspace = {
+      id = registry.workspace_id,
+      hash = registry.workspace_hash,
+      root = registry.workspace_root,
+      projectRoot = registry.project_root,
+    },
+    parent = { id = registry.parent_id, path = registry.parent_id_path },
+    instance = {
+      id = registry.instance_id,
+      root = registry.instance_root,
+      pid = vim.fn.getpid(),
+      tmux = identity.tmux,
+      cwd = identity.cwd,
+      projectRoot = identity.root,
+    },
+    intent = {
+      kind = "main-session",
+      desired = "present",
+      socket = runtime.socket,
+      socketSource = runtime.socket_source,
+      linkMode = runtime.link_mode or config.transport.link_mode,
+    },
+  })
+end
+
+function Registry.with_launch_lock(registry, fn)
+  if not registry then return fn() end
+  local lock_path = registry.launch_lock_path
+  local ok = vim.uv.fs_mkdir(lock_path, 493)
+  if not ok then
+    local owner_path = path_join(lock_path, "owner.json")
+    local owner_line = read_first_line(owner_path)
+    local owner_ok, owner = pcall(vim.json.decode, owner_line or "")
+    if owner_ok and owner and owner.pid and not pid_alive(owner.pid) then
+      pcall(vim.fn.delete, owner_path)
+      pcall(vim.uv.fs_rmdir, lock_path)
+      ok = vim.uv.fs_mkdir(lock_path, 493)
+    end
+  end
+
+  if not ok then
+    vim.notify("pinvim: main launch already in progress", vim.log.levels.WARN)
+    return false
+  end
+
+  write_json_atomic(path_join(lock_path, "owner.json"), {
+    pid = vim.fn.getpid(),
+    instanceId = registry.instance_id,
+    parentId = registry.parent_id,
+    acquiredAt = os.time(),
+  })
+
+  local success, result = xpcall(fn, debug.traceback)
+  pcall(vim.fn.delete, path_join(lock_path, "owner.json"))
+  pcall(vim.uv.fs_rmdir, lock_path)
+  if not success then error(result) end
+  return result
+end
+
 local function nvim_peer_manifest_path(config)
   local identity = Transport.build_peer_identity(config)
   local session = identity.tmux.session or "local"
@@ -882,11 +1098,7 @@ local function start_nvim_peer_manifest_timer(runtime, config)
   write_nvim_peer_manifest(runtime, config)
   peer_manifest_timer = vim.uv.new_timer()
   if not peer_manifest_timer then return end
-  peer_manifest_timer:start(
-    5000,
-    5000,
-    vim.schedule_wrap(function() write_nvim_peer_manifest(runtime, config) end)
-  )
+  peer_manifest_timer:start(5000, 5000, vim.schedule_wrap(function() write_nvim_peer_manifest(runtime, config) end))
 end
 
 local function cleanup_nvim_peer_manifest()
@@ -1339,6 +1551,10 @@ function Commands.setup(api, config)
       "pinvim status",
       string.format("socket: %s", info.target.socket_path or "(none)"),
       string.format("socket source: %s", info.target.source),
+      string.format("workspace id: %s", info.registry.workspace_id),
+      string.format("parent id: %s", info.registry.parent_id),
+      string.format("instance id: %s", info.registry.instance_id),
+      string.format("registry root: %s", info.registry.workspace_root),
       string.format("connected: %s", tostring(info.state.connected)),
       string.format("connecting: %s", tostring(info.state.connecting)),
       string.format("link mode: %s", info.state.link_mode or "auto"),
@@ -1399,6 +1615,10 @@ function Commands.setup(api, config)
       string.format("root: %s", info.state.root or "(none)"),
       string.format("socket: %s", info.target.socket_path or "(none)"),
       string.format("socket source: %s", info.target.source),
+      string.format("workspace id: %s", info.registry.workspace_id),
+      string.format("parent id: %s", info.registry.parent_id),
+      string.format("instance id: %s", info.registry.instance_id),
+      string.format("registry root: %s", info.registry.workspace_root),
       string.format("connected: %s", tostring(info.state.connected)),
       string.format("connecting: %s", tostring(info.state.connecting)),
       string.format("link mode: %s", info.state.link_mode or info.target.link_mode),
@@ -1605,9 +1825,11 @@ function M.setup(opts)
 
   local config = Config.setup(opts)
   local runtime = State.new()
+  local registry = Registry.setup(config)
 
   local api = {}
   api.runtime = runtime
+  api.registry = registry
 
   local function current_peer()
     if runtime.last_hello_ack and runtime.last_hello_ack.peer then return runtime.last_hello_ack.peer end
@@ -1687,6 +1909,7 @@ function M.setup(opts)
       link_mode = meta and meta.link_mode or config.transport.link_mode,
     })
     Handshake.refresh(runtime, Transport, config)
+    Registry.write_main_intent(registry, runtime, config)
   end
 
   function api.ensure_connected(force_target_check)
@@ -1952,22 +2175,30 @@ function M.setup(opts)
     local job_opts = { detach = true }
     if pane_id ~= "" then job_opts.env = { PIMUX_PANE = pane_id } end
 
-    local job = vim.fn.jobstart(cmd, job_opts)
-    if job <= 0 then
-      vim.notify("pinvim: pimux failed", vim.log.levels.ERROR)
-      return false
+    local function launch()
+      local job = vim.fn.jobstart(cmd, job_opts)
+      if job <= 0 then
+        vim.notify("pinvim: pimux failed", vim.log.levels.ERROR)
+        return false
+      end
+
+      if ensure_visible then
+        vim.notify(
+          socket_path and "pinvim: focusing linked pi split" or "pinvim: opening pi split",
+          vim.log.levels.INFO
+        )
+        vim.defer_fn(function()
+          api.refresh_buffer_state()
+          api.ensure_connected(true)
+          vim.fn.jobstart({ "tmux", "select-pane", "-R" }, { detach = true })
+        end, 180)
+      end
+
+      return true
     end
 
-    if ensure_visible then
-      vim.notify(socket_path and "pinvim: focusing linked pi split" or "pinvim: opening pi split", vim.log.levels.INFO)
-      vim.defer_fn(function()
-        api.refresh_buffer_state()
-        api.ensure_connected(true)
-        vim.fn.jobstart({ "tmux", "select-pane", "-R" }, { detach = true })
-      end, 180)
-    end
-
-    return true
+    if ensure_visible and not socket_path then return Registry.with_launch_lock(registry, launch) end
+    return launch()
   end
 
   function api.ensure_panel_visible() return api.run_panel_command(true) end
@@ -2198,6 +2429,7 @@ function M.setup(opts)
       handshake = Handshake.describe(runtime, Transport, config),
       compose_count = #compose_queue,
       target_history = vim.deepcopy(target_history),
+      registry = vim.deepcopy(registry),
       responsibilities = {
         loader = "config/nvim/after/plugin/pi.lua",
         module = "config/nvim/lua/pinvim.lua",
@@ -2211,6 +2443,7 @@ function M.setup(opts)
   Autocmds.setup(api, config)
   require("pinvim.review").setup(api, config)
   start_nvim_peer_manifest_timer(runtime, config)
+  Registry.write_main_intent(registry, runtime, config)
 
   vim.defer_fn(function()
     api.refresh_buffer_state()
@@ -2220,6 +2453,7 @@ function M.setup(opts)
   M.api = api
   M.state = runtime
   M.config = config
+  M.registry = registry
 
   return api
 end

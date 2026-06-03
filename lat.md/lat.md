@@ -178,6 +178,12 @@ Autocmd callbacks should prefer current `vim.*` APIs over deprecated aliases. Ya
 
 Escape handling performs UI cleanup plus opportunistic autosave, but autosave must only run for real file buffers whose parent directory exists. Missing-path buffers are common when opening not-yet-created files, and forcing `:update` there raises `E212`.
 
+## Pinvim registry and identity
+
+Pinvim creates a per-workspace registry under `$PI_STATE_DIR/pinvim/<workspace-hash>/` and exposes it through `:PiInfo` plus `require("pinvim").api.info()`.
+
+The workspace hash is derived from the normalized project root, and `parent.id` persists the durable parent identity for that workspace. Each Neovim process gets an `instances/<nvim-instance-id>/` directory with Nvim-owned `main.intent.json`; a one-time legacy import can seed `main.runtime.json` from existing tmux/socket manifests when the registry is first created, leaving old manifests as fallback discovery. Main-panel launches use an atomic `main.launch.lock` directory so concurrent `:PiPanel` calls do not race to spawn the main session.
+
 ## Pinvim visual selection keymaps
 
 Pinvim visual mappings use Neovim `x` mode, so Lua callbacks may run after Visual mode exits.
