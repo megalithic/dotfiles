@@ -2,6 +2,7 @@
 {
   programs.yazi = {
     enable = true;
+    shellWrapperName = "yy";
     enableFishIntegration = true;
     enableZshIntegration = true;
     settings = {
