@@ -25,7 +25,7 @@ tmux -2 select-pane -t "$SESSION":2.1
 
 tmux send-keys -t "$SESSION":3.1 "p" "C-m"
 
-tmux send-keys -t "$SESSION":4.1 "m s verdoc-dev" "C-m"
+tmux send-keys -t "$SESSION":4.1 "m s ${SESSION}-dev" "C-m"
 tmux select-layout -t "$SESSION":4 tiled
 tmux select-layout -t "$SESSION":4 even-horizontal
 tmux select-pane -t "$SESSION":4.2
