@@ -2748,7 +2748,6 @@ function M.setup(opts)
 
   Commands.setup(api, config)
   Autocmds.setup(api, config)
-  require("pinvim.review").setup(api, config)
   start_nvim_peer_manifest_timer(runtime, config)
   Registry.write_main_intent(registry, runtime, config)
 
