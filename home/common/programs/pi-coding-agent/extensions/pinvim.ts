@@ -1767,12 +1767,29 @@ export default function (pi: ExtensionAPI): void {
       ensureEditorServiceClient();
       const editorStatus = await editorServiceRequest("status");
       const health = getHealth();
+      const activePeer = getActivePeer();
+      const piIdentity = buildPinvimPeerIdentity();
       const lines = [
         health.ok && !editorService.stale
           ? "pinvim doctor: ok"
           : "pinvim doctor: attention needed",
+        `Pi identity: ${piIdentity.id}`,
+        `Pi role: ${piIdentity.role || "(none)"}`,
+        `Pi parent id: ${piIdentity.parentId || "(none)"}`,
+        `Pi workspace id: ${piIdentity.workspaceId || "(none)"}`,
+        `Pi instance id: ${piIdentity.instanceId || "(none)"}`,
+        `Pi registry root: ${piIdentity.registryRoot || "(none)"}`,
+        `Pi tmux: ${PI_SESSION}/${PI_WINDOW}${PI_PANE ? "/" + PI_PANE : ""}`,
+        `Pi ephemeral: ${IS_EPHEMERAL}`,
         `Active peer: ${health.activePeerId || "(none)"}`,
+        `Active peer role: ${activePeer?.role || "(none)"}`,
+        `Active peer parent id: ${activePeer?.parentId || "(none)"}`,
+        `Active peer workspace id: ${activePeer?.workspaceId || "(none)"}`,
+        `Active peer instance id: ${activePeer?.instanceId || "(none)"}`,
+        `Active peer registry root: ${activePeer?.registryRoot || "(none)"}`,
+        `Active peer tmux: ${activePeer?.tmux?.session || "?"}/${activePeer?.tmux?.window || "?"}${activePeer?.tmux?.pane ? "/" + activePeer.tmux.pane : ""}`,
         `Heartbeat age: ${health.heartbeatAgeSeconds == null ? "(none)" : `${health.heartbeatAgeSeconds}s`}`,
+        `Repair candidate: ${repairCandidate?.id || "(none)"}`,
         `Socket: ${SOCKET_PATH || "(disabled)"}`,
         `Editor service address: ${editorService.address || "(none)"}`,
         `Editor service source: ${editorService.source}`,
@@ -1785,6 +1802,25 @@ export default function (pi: ExtensionAPI): void {
         `Editor service error: ${editorService.lastError || "(none)"}`,
         `Editor API status: ${editorStatus.ok ? "ok" : editorStatus.error || "error"}`,
       ];
+      if (!health.activePeerId) {
+        lines.push(
+          "hint: no active nvim peer; start pinvim from nvim or check PI_SOCKET",
+        );
+      }
+      if (editorService.stale) {
+        lines.push(
+          "hint: editor service stale; pi will fall back to peer socket for context",
+        );
+      }
+      if (
+        activePeer?.parentId &&
+        piIdentity.parentId &&
+        activePeer.parentId !== piIdentity.parentId
+      ) {
+        lines.push(
+          `hint: peer parent id mismatch (peer=${activePeer.parentId} pi=${piIdentity.parentId}); nested or misrouted session`,
+        );
+      }
       emitCommandLines(
         ctx,
         lines,

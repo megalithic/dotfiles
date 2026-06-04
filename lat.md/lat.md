@@ -206,7 +206,7 @@ Supported methods are intentionally small and local-only:
 - `refresh_diagnostics` asks Nvim to show diagnostics and returns current diagnostics.
 - `checktime` runs Nvim `:checktime` and returns `{ ok = true }`.
 
-`/pinvim-context` uses the same query path to print current Nvim context. `/pinvim-doctor` calls `status` so operator-visible health covers both socket discovery and callable editor RPC.
+`/pinvim-context` uses the same query path to print current Nvim context. `/pinvim-doctor` calls `status` and also reports pi/peer registry identity (parent id, workspace id, instance id, registry root, role), tmux pane, repair candidate, editor-service state, and cleanup hints when stale or mismatched. The Nvim-side `:PiDoctor` reports the same shape (registry identity, target source, manifest candidates under `$PI_STATE_DIR/manifests`, tmux pane, registry files, heartbeat age, editor-service state, cleanup hints) by reading `api.info()` and `api.health()` snapshots without triggering connect or discovery side effects.
 
 ## Pinvim visual selection keymaps
 

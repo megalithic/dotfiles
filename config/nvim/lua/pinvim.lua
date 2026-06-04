@@ -1818,20 +1818,96 @@ function Commands.setup(api, config)
     vim.notify(table.concat(lines, "\n"), level)
   end
 
+  local function list_manifest_candidates(manifest_dir)
+    if not manifest_dir or vim.fn.isdirectory(manifest_dir) == 0 then return {} end
+    local entries = vim.fn.globpath(manifest_dir, "*.info", false, true) or {}
+    table.sort(entries)
+    return entries
+  end
+
+  local function tmux_pane_info()
+    if vim.env.TMUX == nil or vim.env.TMUX == "" then return nil end
+    local function tmux(fmt)
+      local out = vim.fn.system({ "tmux", "display-message", "-p", fmt })
+      if vim.v.shell_error ~= 0 then return nil end
+      return vim.trim(out)
+    end
+    return {
+      session = tmux("#{session_name}"),
+      window = tmux("#{window_name}"),
+      window_index = tmux("#{window_index}"),
+      pane = tmux("#{pane_id}"),
+    }
+  end
+
   local function doctor_command()
+    -- Read-only diagnostics: must not trigger connect or discovery side effects.
     local info = api.info()
     local health = api.health()
-    local ok = info.editor_service.address ~= nil and not info.editor_service.stale
+    local svc = info.editor_service or {}
+    local registry_info = info.registry or {}
+    local target = info.target or {}
+    local state = info.state or {}
+    local ok = svc.address ~= nil and not svc.stale
     local lines = {
       ok and "pinvim doctor: ok" or "pinvim doctor: attention needed",
-      string.format("peer socket: %s", info.target.socket_path or "(none)"),
-      string.format("peer connected: %s", tostring(info.state.connected)),
-      string.format("editor service: %s", info.editor_service.address or "(none)"),
-      string.format("editor transport: %s", info.editor_service.transport or "(none)"),
-      string.format("editor service stale: %s", tostring(info.editor_service.stale)),
-      string.format("peer: %s", health.peer_id or "(none)"),
+      string.format("lifecycle: %s", info.lifecycle or "(unknown)"),
+      string.format("workspace id: %s", registry_info.workspace_id or "(none)"),
+      string.format("parent id: %s", registry_info.parent_id or "(none)"),
+      string.format("instance id: %s", registry_info.instance_id or "(none)"),
+      string.format("registry root: %s", registry_info.workspace_root or "(none)"),
+      string.format("peer socket: %s", target.socket_path or "(none)"),
+      string.format("target source: %s", target.source or "(none)"),
+      string.format("link mode: %s", state.link_mode or target.link_mode or "auto"),
+      string.format("peer connected: %s", tostring(state.connected)),
+      string.format("peer id: %s", health.peer_id or "(none)"),
+      string.format("heartbeat age: %s", health.heartbeat_age and (health.heartbeat_age .. "s") or "(none)"),
+      string.format("hello acked: %s", tostring(health.hello_ack)),
+      string.format("restored target: %s", state.restored_target and "yes" or "no"),
+      string.format("editor service: %s", svc.address or "(none)"),
+      string.format("editor transport: %s", svc.transport or "(none)"),
+      string.format("editor service stale: %s", tostring(svc.stale)),
     }
-    if info.editor_service.last_error then table.insert(lines, "editor error: " .. info.editor_service.last_error) end
+    if svc.last_error then table.insert(lines, "editor error: " .. svc.last_error) end
+
+    local tmux = tmux_pane_info()
+    if tmux then
+      table.insert(lines, string.format("tmux: %s @ %s/%s (%s)", tmux.session or "?", tmux.window_index or "?", tmux.window or "?", tmux.pane or "?"))
+    else
+      table.insert(lines, "tmux: (not in tmux)")
+    end
+
+    local manifests = list_manifest_candidates(target.manifest_dir)
+    table.insert(lines, string.format("manifest candidates: %d (%s)", #manifests, target.manifest_dir or "(none)"))
+    for i = 1, math.min(#manifests, 5) do
+      table.insert(lines, "  - " .. manifests[i])
+    end
+    if #manifests > 5 then table.insert(lines, string.format("  ... +%d more", #manifests - 5)) end
+
+    if registry_info.workspace_root then
+      for _, rel in ipairs({ "parent.id", "workspace.json" }) do
+        local p = registry_info.workspace_root .. "/" .. rel
+        if vim.fn.filereadable(p) == 1 then table.insert(lines, "registry file: " .. p) end
+      end
+    end
+    if registry_info.instance_root then
+      for _, rel in ipairs({ "main.intent.json", "main.runtime.json", "main.session.intent.json", "launch.lock" }) do
+        local p = registry_info.instance_root .. "/" .. rel
+        if vim.fn.filereadable(p) == 1 then table.insert(lines, "registry file: " .. p) end
+      end
+    end
+
+    -- Cleanup hints
+    if svc.stale then
+      table.insert(lines, "hint: editor service stale; restart nvim or check PINVIM_NVIM_LISTEN_ADDRESS")
+    end
+    if state.connected and health.heartbeat_age and health.heartbeat_age > 120 then
+      table.insert(lines, "hint: peer heartbeat is older than 120s; pi side may be wedged")
+    end
+    if target.socket_path and not state.connected then
+      table.insert(lines, "hint: socket resolved but not connected; run :PiTarget auto or check pi process")
+    end
+
     vim.notify(table.concat(lines, "\n"), ok and vim.log.levels.INFO or vim.log.levels.WARN)
   end
 
