@@ -1,47 +1,33 @@
 /**
  * Pi Bridge Extension
  *
- * Transitional Unix socket bridge.
- * Disabled by default: pinvim.ts owns the primary pi socket and all nvim frames.
- * Enable only with PI_BRIDGE_LEGACY_SOCKET=1 for temporary non-nvim compatibility.
- * Accepts JSON payloads from Telegram (via Hammerspoon) and tell only.
- * Returns JSON responses to all clients ({ ok: true } / { ok: false, error }).
+ * Transitional non-nvim ingress on a Unix socket.
+ * Disabled by default; pinvim.ts owns the primary pi socket and all nvim/pinvim
+ * peer behavior. Bridge has no knowledge of pinvim peer frames anymore.
+ * Enable with PI_BRIDGE_LEGACY_SOCKET=1 to accept Telegram (via Hammerspoon)
+ * and tell payloads on a dedicated socket; nvim/pinvim frames are not handled
+ * here even when enabled.
  *
  * Protocol:
- *   Request:  { type: 'ping' }                         → { ok: true, type: 'pong' }
- *   Request:  { type: 'hello', ... }                   → { ok: false, error: '...' }
- *   Request:  { type: 'heartbeat', ... }               → { ok: false, error: '...' }
- *   Request:  { type: 'prompt', message: '...' }       → { ok: false, error: '...' }
- *   Request:  { type: 'explicit_send', context: {...} } → { ok: false, error: '...' }
- *   Request:  { type: 'editor_state', state: {...} }   → { ok: false, error: '...' }
- *   Request:  { type: 'telegram', text: '...' }        → { ok: true }
- *   Request:  { type: 'tell', text: '...' }            → { ok: true }
- *   Error:    (any malformed JSON)                     → { ok: false, error: '...' }
+ *   Request:  { type: 'ping' }                  → { ok: true, type: 'pong' }
+ *   Request:  { type: 'telegram', text: '...' } → { ok: true }
+ *   Request:  { type: 'tell', text: '...' }     → { ok: true }
+ *   Request:  any other typed payload           → { ok: false, error: '...' }
+ *   Error:    (any malformed JSON)              → { ok: false, error: '...' }
  *
  * Discovery:
- *   Socket:   ${PI_STATE_DIR}/sockets/pi-{session}-{window}.sock  (primary)
- *             ${PI_STATE_DIR}/sockets/pi-{session}-{window}-eph-{epoch}-{pid}.sock  (ephemeral)
+ *   Socket:   ${PI_STATE_DIR}/sockets/pi-{session}-{window}.sock
  *   Manifest: ${PI_STATE_DIR}/manifests/{socket-basename}.info
- *             (JSON: socket, cwd, pid, session, window, ephemeral, startedAt)
- *   Ephemeral manifests are EXCLUDED from cwd-based auto-discovery — they
- *   are only reachable via explicit vim.b.pi_target_socket.
+ *             (JSON: socket, cwd, pid, session, window, pane, startedAt)
  *
  * Socket Configuration:
  *   Auto-detected from tmux session/window when TMUX env is set.
  *   PI_SOCKET env var overrides auto-detection (for explicit control).
  *   Falls back to ${PI_STATE_DIR}/sockets/pi-default-0.sock outside tmux.
  *
- * Socket pattern: ${PI_STATE_DIR}/sockets/pi-{session}-{window}.sock
- *
  * Used by:
  *   - This extension (listens on auto-detected or PI_SOCKET path)
  *   - config/hammerspoon/lib/interop/pi.lua (forwards Telegram messages)
- *   - bin/ftm (checks for socket existence)
- *   - bin/pimux (manages agent panes)
- *
- * Status display (in footer):
- *   π session:model (green) - socket active (e.g., "π mega:opus-4")
- *   π (dim)                 - socket inactive (regular pi)
  */
 
 import type {
@@ -66,7 +52,11 @@ const INFO_DIR = path.join(PI_STATE_DIR, "manifests");
 const SOCKET_PREFIX = "pi";
 
 /** Detect tmux session/window/pane names. Returns null if not in tmux. */
-const detectTmux = (): { session: string; window: string; pane?: string } | null => {
+const detectTmux = (): {
+  session: string;
+  window: string;
+  pane?: string;
+} | null => {
   if (!process.env.TMUX) return null;
   try {
     const session = execSync("tmux display-message -p '#{session_name}'", {
@@ -127,59 +117,17 @@ const resolveSocket = (): {
   };
 };
 
-const { socketPath: SOCKET_PATH, session: PI_SESSION, window: PI_WINDOW } =
-  resolveSocket();
-const IS_BRIDGE_ENABLED = !!SOCKET_PATH && process.env.PI_BRIDGE_LEGACY_SOCKET === "1";
-
-/**
- * Ephemeral detection: explicit PI_EPHEMERAL=1 env wins, else socket path
- * containing `-eph-` token (set by <localleader>pn in nvim or by callers
- * using an ephemeral socket naming convention).
- */
-const IS_EPHEMERAL: boolean =
-  process.env.PI_EPHEMERAL === "1" ||
-  (!!SOCKET_PATH && /-eph-[^/]+\.sock$/.test(SOCKET_PATH));
-
-// Status icon
-const PI_ICON = "π";
+const {
+  socketPath: SOCKET_PATH,
+  session: PI_SESSION,
+  window: PI_WINDOW,
+} = resolveSocket();
+const IS_BRIDGE_ENABLED =
+  !!SOCKET_PATH && process.env.PI_BRIDGE_LEGACY_SOCKET === "1";
 
 // =============================================================================
 // Payload Types
 // =============================================================================
-
-type LinkMode = "auto" | "manual" | "ephemeral" | "parked" | "explicit" | "bootstrap" | string;
-
-type PeerIdentity = {
-  id: string;
-  kind: "nvim" | "pi";
-  cwd: string;
-  root?: string;
-  tmux?: {
-    session?: string;
-    window?: string;
-    pane?: string;
-  };
-  linkMode: LinkMode;
-  heartbeatAt?: number;
-};
-
-type HelloPayload = {
-  type: "hello";
-  protocol: "pinvim.peer.v1";
-  peer: PeerIdentity;
-  capabilities?: {
-    liveContext?: boolean;
-    compose?: boolean;
-    explicitSend?: boolean;
-  };
-};
-
-type HelloAckPayload = {
-  type: "hello_ack";
-  protocol: "pinvim.peer.v1";
-  peer: PeerIdentity;
-  accepts?: string[];
-};
 
 type TelegramPayload = {
   type: "telegram";
@@ -199,50 +147,7 @@ type PingPayload = {
   type: "ping";
 };
 
-type PromptPayload = {
-  type: "prompt";
-  message: string;
-};
-
-type ExplicitSendPayload = {
-  type: "explicit_send";
-  context: {
-    kind?: "selection" | "cursor";
-    file?: string;
-    absFile?: string;
-    filetype?: string;
-    cursor?: { line: number; col: number };
-    selection?: string;
-    selectionRange?: [number, number];
-    word?: string;
-    cwd?: string;
-    root?: string;
-    modified?: boolean;
-    [key: string]: unknown;
-  };
-};
-
-type HeartbeatPayload = {
-  type: "heartbeat";
-  protocol: "pinvim.peer.v1";
-  peerId: string;
-  sentAt: number;
-};
-
-type Payload =
-  | HelloPayload
-  | HeartbeatPayload
-  | TelegramPayload
-  | TellPayload
-  | PingPayload
-  | PromptPayload
-  | ExplicitSendPayload;
-
-const isHelloPayload = (p: Payload): p is HelloPayload =>
-  "type" in p && p.type === "hello";
-
-const isHeartbeatPayload = (p: Payload): p is HeartbeatPayload =>
-  "type" in p && p.type === "heartbeat";
+type Payload = TelegramPayload | TellPayload | PingPayload;
 
 const isTelegramPayload = (p: Payload): p is TelegramPayload =>
   "type" in p && p.type === "telegram";
@@ -253,12 +158,6 @@ const isTellPayload = (p: Payload): p is TellPayload =>
 const isPingPayload = (p: Payload): p is PingPayload =>
   "type" in p && p.type === "ping";
 
-const isPromptPayload = (p: Payload): p is PromptPayload =>
-  "type" in p && p.type === "prompt";
-
-const isExplicitSendPayload = (p: Payload): p is ExplicitSendPayload =>
-  "type" in p && p.type === "explicit_send";
-
 // =============================================================================
 // State
 // =============================================================================
@@ -266,27 +165,6 @@ const isExplicitSendPayload = (p: Payload): p is ExplicitSendPayload =>
 let server: net.Server | null = null;
 let latestCtx: ExtensionContext | null = null;
 let infoManifestPath: string | null = null;
-
-const buildBridgePeerIdentity = (): PeerIdentity => ({
-  id: `pi:${PI_SESSION}:${PI_WINDOW}:${process.pid}`,
-  kind: "pi",
-  cwd: process.cwd(),
-  root: process.cwd(),
-  tmux: {
-    session: PI_SESSION,
-    window: PI_WINDOW,
-    pane: detectTmux()?.pane,
-  },
-  linkMode: process.env.PINVIM_LINK_MODE || "auto",
-  heartbeatAt: Math.floor(Date.now() / 1000),
-});
-
-const buildHelloAck = (): HelloAckPayload => ({
-  type: "hello_ack",
-  protocol: "pinvim.peer.v1",
-  peer: buildBridgePeerIdentity(),
-  accepts: ["ping", "telegram", "tell"],
-});
 
 // =============================================================================
 // Response Helpers
@@ -321,8 +199,10 @@ const writeInfoManifest = (): void => {
 
     // Key manifest by socket basename so multiple pis per tmux session (e.g.
     // primary + ephemeral) don't clobber each other's manifests.
-    const socketBase = SOCKET_PATH.split("/").pop()?.replace(/\.sock$/, "") ||
-      PI_SESSION;
+    const socketBase =
+      SOCKET_PATH.split("/")
+        .pop()
+        ?.replace(/\.sock$/, "") || PI_SESSION;
     infoManifestPath = `${INFO_DIR}/${socketBase}.info`;
     const manifest = {
       socket: SOCKET_PATH,
@@ -331,7 +211,6 @@ const writeInfoManifest = (): void => {
       session: PI_SESSION,
       window: PI_WINDOW,
       pane: detectTmux()?.pane,
-      ephemeral: IS_EPHEMERAL,
       startedAt: new Date().toISOString(),
     };
     fs.writeFileSync(infoManifestPath, JSON.stringify(manifest) + "\n");
@@ -356,11 +235,11 @@ const cleanupInfoManifest = (): void => {
 
 const getModelShortName = (modelId: string | undefined): string => {
   if (!modelId) return "?";
-  
+
   // Extract model name, strip provider prefix and version suffixes
   // e.g., "anthropic/claude-opus-4-5-20250131" → "opus-4"
   const name = modelId.split("/").pop() || modelId;
-  
+
   // Common model name shortenings
   if (name.includes("opus")) return "opus-4";
   if (name.includes("sonnet")) return "sonnet-4";
@@ -369,11 +248,10 @@ const getModelShortName = (modelId: string | undefined): string => {
   if (name.includes("gpt-4")) return "gpt-4";
   if (name.includes("o1")) return "o1";
   if (name.includes("o3")) return "o3";
-  
+
   // Fallback: first part of name
   return name.split("-").slice(0, 2).join("-");
 };
-
 
 // =============================================================================
 // Socket Server
@@ -422,41 +300,37 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
             continue;
           }
 
-          const payloadType = "type" in payload ? String(payload.type) : "";
-          if (["hello", "heartbeat", "prompt", "explicit_send", "editor_state", "editor_disconnect"].includes(payloadType)) {
-            respondError(socket, "pinvim/nvim frames are owned by pinvim.ts; bridge.ts does not handle nvim behavior");
-            continue;
-          }
-
           // Handle Telegram messages
           if (isTelegramPayload(payload)) {
             const telegramMessage = `📱 **Telegram message:**\n${payload.text}`;
             const currentCtx = latestCtx;
-            
+
             // Show notification in TUI
             if (currentCtx?.hasUI) {
               currentCtx.ui.notify("Telegram message received", "info");
             }
-            
+
             if (currentCtx?.isIdle()) {
               void pi.sendUserMessage(telegramMessage);
             } else {
-              void pi.sendUserMessage(telegramMessage, { deliverAs: "followUp" });
+              void pi.sendUserMessage(telegramMessage, {
+                deliverAs: "followUp",
+              });
             }
             respondOk(socket);
             continue;
           }
-          
+
           // Handle tell/delegate messages from other pi agents
           if (isTellPayload(payload)) {
             const fromSession = payload.from || "unknown";
             const currentCtx = latestCtx;
-            
+
             // Show notification in TUI
             if (currentCtx?.hasUI) {
               currentCtx.ui.notify(`Task from ${fromSession}`, "info");
             }
-            
+
             if (currentCtx?.isIdle()) {
               void pi.sendUserMessage(payload.text);
             } else {
@@ -465,9 +339,12 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
             respondOk(socket);
             continue;
           }
-          
+
           if ("type" in payload) {
-            respondError(socket, `unsupported payload type: ${String(payload.type)}`);
+            respondError(
+              socket,
+              `unsupported payload type: ${String(payload.type)}`,
+            );
             continue;
           }
 
