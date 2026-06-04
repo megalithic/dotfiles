@@ -326,6 +326,23 @@ interface EditorServiceState {
   stale: boolean;
   lastOkAt: number | null;
   lastError: string | null;
+  lastMethod: string | null;
+}
+
+type EditorMethod =
+  | "status"
+  | "context.current"
+  | "diagnostics.current"
+  | "open_file"
+  | "reveal_file"
+  | "reload_buffer"
+  | "refresh_diagnostics"
+  | "checktime";
+
+interface EditorQueryResult {
+  ok: boolean;
+  result?: unknown;
+  error?: string;
 }
 
 const editorService: EditorServiceState = {
@@ -337,6 +354,7 @@ const editorService: EditorServiceState = {
   stale: true,
   lastOkAt: null,
   lastError: null,
+  lastMethod: null,
 };
 const startedAt = new Date().toISOString();
 
@@ -449,12 +467,20 @@ const resolveEditorServiceAddress = (): {
 
 const encodeMsgpack = (value: unknown): Buffer => {
   if (value === null || value === undefined) return Buffer.from([0xc0]);
+  if (typeof value === "boolean") return Buffer.from([value ? 0xc3 : 0xc2]);
   if (typeof value === "number") {
     if (Number.isInteger(value) && value >= 0 && value <= 0x7f)
       return Buffer.from([value]);
+    if (Number.isInteger(value) && value >= -32 && value < 0)
+      return Buffer.from([0xe0 | (value + 32)]);
     const buf = Buffer.alloc(5);
-    buf[0] = 0xce;
-    buf.writeUInt32BE(value >>> 0, 1);
+    if (value < 0) {
+      buf[0] = 0xd2;
+      buf.writeInt32BE(value, 1);
+    } else {
+      buf[0] = 0xce;
+      buf.writeUInt32BE(value >>> 0, 1);
+    }
     return buf;
   }
   if (typeof value === "string") {
@@ -477,7 +503,157 @@ const encodeMsgpack = (value: unknown): Buffer => {
     head.writeUInt16BE(value.length, 1);
     return Buffer.concat([head, ...parts]);
   }
+  if (typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>).filter(
+      ([, item]) => item !== undefined,
+    );
+    const parts = entries.flatMap(([key, item]) => [
+      encodeMsgpack(key),
+      encodeMsgpack(item),
+    ]);
+    if (entries.length <= 15)
+      return Buffer.concat([Buffer.from([0x80 | entries.length]), ...parts]);
+    const head = Buffer.alloc(3);
+    head[0] = 0xde;
+    head.writeUInt16BE(entries.length, 1);
+    return Buffer.concat([head, ...parts]);
+  }
   throw new Error(`unsupported msgpack value: ${typeof value}`);
+};
+
+const decodeMsgpack = (
+  buffer: Buffer,
+  offset = 0,
+): { value: unknown; offset: number } | null => {
+  if (offset >= buffer.length) return null;
+  const byte = buffer[offset++];
+
+  if (byte <= 0x7f) return { value: byte, offset };
+  if (byte >= 0xe0) return { value: byte - 0x100, offset };
+  if ((byte & 0xe0) === 0xa0) {
+    const length = byte & 0x1f;
+    if (offset + length > buffer.length) return null;
+    return {
+      value: buffer.subarray(offset, offset + length).toString("utf-8"),
+      offset: offset + length,
+    };
+  }
+  if ((byte & 0xf0) === 0x90) {
+    const length = byte & 0x0f;
+    const result: unknown[] = [];
+    for (let i = 0; i < length; i++) {
+      const decoded = decodeMsgpack(buffer, offset);
+      if (!decoded) return null;
+      result.push(decoded.value);
+      offset = decoded.offset;
+    }
+    return { value: result, offset };
+  }
+  if ((byte & 0xf0) === 0x80) {
+    const length = byte & 0x0f;
+    const result: Record<string, unknown> = {};
+    for (let i = 0; i < length; i++) {
+      const key = decodeMsgpack(buffer, offset);
+      if (!key) return null;
+      const value = decodeMsgpack(buffer, key.offset);
+      if (!value) return null;
+      result[String(key.value)] = value.value;
+      offset = value.offset;
+    }
+    return { value: result, offset };
+  }
+
+  if (byte === 0xc0) return { value: null, offset };
+  if (byte === 0xc2 || byte === 0xc3) return { value: byte === 0xc3, offset };
+  if (byte === 0xcc) {
+    if (offset + 1 > buffer.length) return null;
+    return { value: buffer.readUInt8(offset), offset: offset + 1 };
+  }
+  if (byte === 0xcd) {
+    if (offset + 2 > buffer.length) return null;
+    return { value: buffer.readUInt16BE(offset), offset: offset + 2 };
+  }
+  if (byte === 0xce) {
+    if (offset + 4 > buffer.length) return null;
+    return { value: buffer.readUInt32BE(offset), offset: offset + 4 };
+  }
+  if (byte === 0xcf) {
+    if (offset + 8 > buffer.length) return null;
+    return {
+      value: Number(buffer.readBigUInt64BE(offset)),
+      offset: offset + 8,
+    };
+  }
+  if (byte === 0xcb) {
+    if (offset + 8 > buffer.length) return null;
+    return { value: buffer.readDoubleBE(offset), offset: offset + 8 };
+  }
+  if (byte === 0xd0) {
+    if (offset + 1 > buffer.length) return null;
+    return { value: buffer.readInt8(offset), offset: offset + 1 };
+  }
+  if (byte === 0xd1) {
+    if (offset + 2 > buffer.length) return null;
+    return { value: buffer.readInt16BE(offset), offset: offset + 2 };
+  }
+  if (byte === 0xd2) {
+    if (offset + 4 > buffer.length) return null;
+    return { value: buffer.readInt32BE(offset), offset: offset + 4 };
+  }
+  if (byte === 0xd3) {
+    if (offset + 8 > buffer.length) return null;
+    return { value: Number(buffer.readBigInt64BE(offset)), offset: offset + 8 };
+  }
+  if (byte === 0xd9) {
+    if (offset + 1 > buffer.length) return null;
+    const length = buffer.readUInt8(offset);
+    offset += 1;
+    if (offset + length > buffer.length) return null;
+    return {
+      value: buffer.subarray(offset, offset + length).toString("utf-8"),
+      offset: offset + length,
+    };
+  }
+  if (byte === 0xda) {
+    if (offset + 2 > buffer.length) return null;
+    const length = buffer.readUInt16BE(offset);
+    offset += 2;
+    if (offset + length > buffer.length) return null;
+    return {
+      value: buffer.subarray(offset, offset + length).toString("utf-8"),
+      offset: offset + length,
+    };
+  }
+  if (byte === 0xdc) {
+    if (offset + 2 > buffer.length) return null;
+    const length = buffer.readUInt16BE(offset);
+    offset += 2;
+    const result: unknown[] = [];
+    for (let i = 0; i < length; i++) {
+      const decoded = decodeMsgpack(buffer, offset);
+      if (!decoded) return null;
+      result.push(decoded.value);
+      offset = decoded.offset;
+    }
+    return { value: result, offset };
+  }
+  if (byte === 0xde) {
+    if (offset + 2 > buffer.length) return null;
+    const length = buffer.readUInt16BE(offset);
+    offset += 2;
+    const result: Record<string, unknown> = {};
+    for (let i = 0; i < length; i++) {
+      const key = decodeMsgpack(buffer, offset);
+      if (!key) return null;
+      const value = decodeMsgpack(buffer, key.offset);
+      if (!value) return null;
+      result[String(key.value)] = value.value;
+      offset = value.offset;
+    }
+    return { value: result, offset };
+  }
+
+  throw new Error(`unsupported msgpack byte: 0x${byte.toString(16)}`);
 };
 
 const markEditorServiceStale = (error: string): void => {
@@ -487,6 +663,123 @@ const markEditorServiceStale = (error: string): void => {
   editorService.lastError = error;
   updateStatus();
 };
+
+const markEditorServiceOk = (method?: string): void => {
+  editorService.connected = true;
+  editorService.connecting = false;
+  editorService.stale = false;
+  editorService.lastOkAt = Date.now();
+  editorService.lastError = null;
+  if (method) editorService.lastMethod = method;
+  updateStatus();
+};
+
+const editorServiceRequest = (
+  method: EditorMethod,
+  params: Record<string, unknown> = {},
+): Promise<EditorQueryResult> => {
+  const discovery = resolveEditorServiceAddress();
+  const address = discovery.address;
+  editorService.address = address;
+  editorService.source = discovery.source;
+  if (!address) {
+    markEditorServiceStale(
+      "missing nvim listen address; using peer socket fallback only",
+    );
+    return Promise.resolve({
+      ok: false,
+      error: editorService.lastError || "missing nvim listen address",
+    });
+  }
+
+  return new Promise((resolve) => {
+    const socket = net.createConnection(address);
+    socket.unref();
+    socket.ref();
+    let buffer = Buffer.alloc(0);
+    let settled = false;
+    const requestId = editorServiceRequestId++;
+    const finish = (result: EditorQueryResult): void => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      socket.destroy();
+      resolve(result);
+    };
+    const timeout = setTimeout(() => {
+      markEditorServiceStale(`editor-service ${method} timeout`);
+      finish({ ok: false, error: `editor-service ${method} timeout` });
+    }, EDITOR_SERVICE_TIMEOUT_MS);
+    timeout.unref();
+    timeout.ref();
+
+    socket.on("connect", () => {
+      editorService.connecting = false;
+      const lua =
+        "local method, params = ...; return require('pinvim').api.editor_rpc(method, params or {})";
+      socket.write(
+        encodeMsgpack([0, requestId, "nvim_exec_lua", [lua, [method, params]]]),
+      );
+    });
+
+    socket.on("data", (chunk) => {
+      buffer = Buffer.concat([buffer, chunk]);
+      let decoded: { value: unknown; offset: number } | null;
+      try {
+        decoded = decodeMsgpack(buffer);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        markEditorServiceStale(message);
+        finish({ ok: false, error: message });
+        return;
+      }
+      if (!decoded) return;
+      const response = decoded.value;
+      if (
+        !Array.isArray(response) ||
+        response[0] !== 1 ||
+        response[1] !== requestId
+      ) {
+        finish({ ok: false, error: "unexpected editor-service response" });
+        return;
+      }
+      const error = response[2];
+      if (error) {
+        const message =
+          typeof error === "string" ? error : JSON.stringify(error);
+        markEditorServiceStale(message);
+        finish({ ok: false, error: message });
+        return;
+      }
+      markEditorServiceOk(method);
+      finish({ ok: true, result: response[3] });
+    });
+
+    socket.on("error", (err) => {
+      markEditorServiceStale(err.message || "editor-service socket error");
+      finish({
+        ok: false,
+        error: err.message || "editor-service socket error",
+      });
+    });
+
+    socket.on("close", () => {
+      if (!settled)
+        finish({ ok: false, error: "editor-service socket closed" });
+    });
+  });
+};
+
+const pinvimEditorServiceApi = {
+  query: editorServiceRequest,
+  status: () => ({ ...editorService }),
+};
+
+(
+  globalThis as typeof globalThis & {
+    pinvimEditorService?: typeof pinvimEditorServiceApi;
+  }
+).pinvimEditorService = pinvimEditorServiceApi;
 
 const ensureEditorServiceClient = (): void => {
   const discovery = resolveEditorServiceAddress();
@@ -525,11 +818,7 @@ const ensureEditorServiceClient = (): void => {
 
   socket.on("connect", () => {
     clearTimeout(timeout);
-    editorService.connected = true;
-    editorService.connecting = false;
-    editorService.stale = false;
-    editorService.lastOkAt = Date.now();
-    editorService.lastError = null;
+    markEditorServiceOk("status");
     const request = [
       0,
       editorServiceRequestId++,
@@ -541,11 +830,7 @@ const ensureEditorServiceClient = (): void => {
   });
 
   socket.on("data", () => {
-    editorService.connected = true;
-    editorService.connecting = false;
-    editorService.stale = false;
-    editorService.lastOkAt = Date.now();
-    editorService.lastError = null;
+    markEditorServiceOk("status");
     updateStatus();
   });
 
@@ -932,6 +1217,7 @@ const renderInfoLines = (): string[] => {
     `Editor service stale: ${editorService.stale}`,
     `Editor service last ok: ${editorService.lastOkAt ? new Date(editorService.lastOkAt).toISOString() : "(none)"}`,
     `Editor service error: ${editorService.lastError || "(none)"}`,
+    `Editor service last method: ${editorService.lastMethod || "(none)"}`,
     "Responsibilities:",
     "- owns pinvim socket for all nvim↔pi frames",
     "- owns peer metadata + footer status",
@@ -994,6 +1280,7 @@ const attachPendingContext = (payload: ExplicitSendPayload): void => {
   pendingContextTimer = setTimeout(() => {
     clearPendingContext("Pinvim attached context expired");
   }, PENDING_CONTEXT_TTL_MS);
+  pendingContextTimer.unref();
 
   updateStatus();
   latestCtx?.ui?.notify?.(
@@ -1012,6 +1299,26 @@ const consumePendingContext = (): string | null => {
   const text = pendingContext.text;
   clearPendingContext();
   return text;
+};
+
+const editorContextPayload = (context: unknown): ExplicitSendPayload | null => {
+  if (!context || typeof context !== "object") return null;
+  return {
+    type: "explicit_send",
+    delivery: "attach",
+    context: context as ExplicitSendPayload["context"],
+  };
+};
+
+const fetchLiveEditorContext = async (): Promise<string | null> => {
+  const response = await editorServiceRequest("context.current");
+  if (!response.ok) return null;
+  const payload = editorContextPayload(response.result);
+  if (!payload) return null;
+  return formatExplicitContext(payload, "attached").replace(
+    "[NEOVIM ATTACHED CONTEXT]",
+    "[NEOVIM LIVE CONTEXT]",
+  );
 };
 
 const deliverMessage = (pi: ExtensionAPI, message: string): void => {
@@ -1086,6 +1393,7 @@ const writeInfoManifestNow = async (): Promise<void> => {
         transport: "msgpack-rpc",
         connected: editorService.connected,
         stale: editorService.stale,
+        lastMethod: editorService.lastMethod,
       },
       activePeerId: getActivePeer()?.id || null,
       heartbeatAt: Math.floor(Date.now() / 1000),
@@ -1357,8 +1665,9 @@ export default function (pi: ExtensionAPI): void {
 
   pi.on("before_agent_start", async () => {
     if (!nextTurnIsUserOrigin) return;
+    nextTurnIsUserOrigin = false;
     ensureEditorServiceClient();
-    const text = consumePendingContext();
+    const text = consumePendingContext() || (await fetchLiveEditorContext());
     if (!text) return;
     return {
       message: {
@@ -1456,6 +1765,7 @@ export default function (pi: ExtensionAPI): void {
     description: "Diagnose pinvim peer and Nvim editor-service transports",
     handler: async (_args, ctx) => {
       ensureEditorServiceClient();
+      const editorStatus = await editorServiceRequest("status");
       const health = getHealth();
       const lines = [
         health.ok && !editorService.stale
@@ -1471,13 +1781,31 @@ export default function (pi: ExtensionAPI): void {
         `Editor service connected: ${editorService.connected}`,
         `Editor service stale: ${editorService.stale}`,
         `Editor service last ok: ${editorService.lastOkAt ? new Date(editorService.lastOkAt).toISOString() : "(none)"}`,
+        `Editor service last method: ${editorService.lastMethod || "(none)"}`,
         `Editor service error: ${editorService.lastError || "(none)"}`,
+        `Editor API status: ${editorStatus.ok ? "ok" : editorStatus.error || "error"}`,
       ];
       emitCommandLines(
         ctx,
         lines,
         health.ok && !editorService.stale ? "info" : "warn",
       );
+    },
+  });
+
+  pi.registerCommand("pinvim-context", {
+    description: "Fetch current Nvim buffer context through the editor service",
+    handler: async (_args, ctx) => {
+      const text = await fetchLiveEditorContext();
+      if (!text) {
+        emitCommandLines(
+          ctx,
+          [editorService.lastError || "No editor context available"],
+          "warn",
+        );
+        return;
+      }
+      emitCommandLines(ctx, [text], "info");
     },
   });
 

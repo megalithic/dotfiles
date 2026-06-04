@@ -186,7 +186,25 @@ The workspace hash is derived from the normalized project root, and `parent.id` 
 
 Pinvim peer identity now carries registry identity in hello frames, hello acknowledgements, and manifests: `parentId`, `workspaceId`, `instanceId`, `registryRoot`, and `role` (`main`, `child`, or `nested`). Nvim derives these values from its registry. The Pi extension mirrors them from PINVIM environment variables when present and rejects peers with mismatched explicit parent, workspace, or instance identity before falling back to tmux/root scoring. The `pinvim` and `pi` wrappers create `$PI_STATE_DIR/pinvim`, and `pimux` forwards PINVIM identity variables plus `PI_SOCKET`, `PI_EPHEMERAL`, and `PI_STATE_DIR` into tmux-spawned Pi panes so child splits keep the parent/workspace identity.
 
-Pinvim also exposes a separate Nvim editor service over Neovim's msgpack-RPC server. Nvim starts or reuses `v:servername`, stores the address in `PINVIM_NVIM_LISTEN_ADDRESS`, peer frames, and Nvim manifests, and reports it through `:PiStatus`, `:PiHealth`, `:PiInfo`, `:PiDoctor`, and `require("pinvim").api.info()`. The Pi extension keeps this editor-service client independent from the peer socket: it discovers the listen address from `PINVIM_NVIM_LISTEN_ADDRESS`, active peer frames, Nvim manifests, or `$PINVIM_REGISTRY_ROOT/instances/*/main.intent.json`, probes with a non-blocking msgpack-RPC request, surfaces address source plus connected/stale/fallback state in `/pinvim-status`, `/pinvim-health`, `/pinvim-info`, and `/pinvim-doctor`, and never blocks peer startup when the editor service is absent. When no editor service is connected or no editor address is discoverable, Pi reports `peer socket only` fallback rather than injecting chat context. The Pi extension calls `unref()` on the pinvim ingress server, editor-service socket, connect timeout, manifest write timeout, and the editor/peer scan intervals so a missing editor address cannot keep `pi --no-session -p /pinvim-doctor` (or any short-lived Pi probe) alive past its real work.
+Pinvim also exposes a separate Nvim editor service over Neovim's msgpack-RPC server. Nvim starts or reuses `v:servername`, stores the address in `PINVIM_NVIM_LISTEN_ADDRESS`, peer frames, and Nvim manifests, and reports it through `:PiStatus`, `:PiHealth`, `:PiInfo`, `:PiDoctor`, and `require("pinvim").api.info()`. The Pi extension keeps this editor-service client independent from the peer socket: it discovers the listen address from `PINVIM_NVIM_LISTEN_ADDRESS`, active peer frames, Nvim manifests, or `$PINVIM_REGISTRY_ROOT/instances/*/main.intent.json`, probes with non-blocking msgpack-RPC, surfaces address source plus connected/stale/fallback state in `/pinvim-status`, `/pinvim-health`, `/pinvim-info`, and `/pinvim-doctor`, and never blocks peer startup when the editor service is absent. When no editor service is connected or no editor address is discoverable, Pi reports `peer socket only` fallback rather than injecting chat context. The Pi extension calls `unref()` on the pinvim ingress server, editor-service socket, connect timeout, manifest write timeout, pending-context TTL, and editor/peer scan intervals so a missing editor address cannot keep `pi --no-session -p /pinvim-doctor` or other short-lived Pi probes alive past real work.
+
+### Editor-service RPC surface
+
+The editor-service API lets Pi query or manipulate the active Nvim editor without tmux guessing.
+
+Pi sends msgpack-RPC `nvim_exec_lua` requests to `require("pinvim").api.editor_rpc(method, params)`. The reusable Pi-side client is exposed as `globalThis.pinvimEditorService.query(method, params)` and records connected/stale state, last error, last success time, and last method for status surfaces.
+
+Supported methods are intentionally small and local-only:
+
+- `status` returns pinvim editor-service, peer, registry, and current context status.
+- `context.current` returns the same current buffer/selection context shape used by explicit-send attach payloads.
+- `diagnostics.current` returns current-buffer diagnostics with line, column, end range, severity name, source, code, and message.
+- `open_file` and `reveal_file` edit a requested path and optionally jump to `line` / `col`, then return current context.
+- `reload_buffer` edits an optional path, runs `checktime`, reloads clean file buffers, and returns current context.
+- `refresh_diagnostics` asks Nvim to show diagnostics and returns current diagnostics.
+- `checktime` runs Nvim `:checktime` and returns `{ ok = true }`.
+
+`/pinvim-context` uses the same query path to print current Nvim context. `/pinvim-doctor` calls `status` so operator-visible health covers both socket discovery and callable editor RPC.
 
 ## Pinvim visual selection keymaps
 
@@ -208,7 +226,7 @@ Pinvim attach delivery separates editor context capture from agent turn creation
 
 `explicit_send.delivery = "attach"` is context-only. `pinvim.ts` formats the Neovim context as `[NEOVIM ATTACHED CONTEXT]`, stores only the latest pending context, updates `pinvim-context` status/UI notification, and returns `{ delivery: "attach" }` without calling `pi.sendUserMessage`. Because no agent turn starts, stop-hook has no `agent_end` event to nudge.
 
-The next non-extension `input` marks the following `before_agent_start` as user-origin. At that hook, pending context is consumed exactly once and injected as a displayed custom `pinvim-context` message for provider context. Extension-origin prompts and follow-ups do not consume pending Neovim context.
+The next non-extension `input` marks the following `before_agent_start` as user-origin. At that hook, pending explicit context is consumed exactly once and injected as a displayed custom `pinvim-context` message for provider context. If no pending explicit context exists, Pi asks the editor service for `context.current`, formats it as `[NEOVIM LIVE CONTEXT]`, and injects it through the same custom message path. Extension-origin prompts and follow-ups do not consume pending Neovim context or trigger live editor context lookup.
 
 Attach state is intentionally short-lived: a newer attach send replaces the old pending context, the five-minute TTL clears stale context with notification/status cleanup, and session shutdown clears it. `delivery = "prompt"` or any `context.userInput` keeps immediate prompt behavior and still uses `pi.sendUserMessage`.
 

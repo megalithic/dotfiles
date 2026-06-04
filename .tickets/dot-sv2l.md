@@ -1,6 +1,6 @@
 ---
 id: dot-sv2l
-status: open
+status: closed
 deps: 4:1:deps: [, dot-ds0s]
 links: []
 created: 2026-06-03T20:11:26Z

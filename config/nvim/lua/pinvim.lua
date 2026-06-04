@@ -1281,6 +1281,94 @@ function Transport.build_explicit_send(config, command_opts)
   }
 end
 
+
+local function diagnostic_to_table(diagnostic)
+  local severity_names = {
+    [vim.diagnostic.severity.ERROR] = "ERROR",
+    [vim.diagnostic.severity.WARN] = "WARN",
+    [vim.diagnostic.severity.INFO] = "INFO",
+    [vim.diagnostic.severity.HINT] = "HINT",
+  }
+  return {
+    bufnr = diagnostic.bufnr,
+    lnum = diagnostic.lnum + 1,
+    col = diagnostic.col,
+    end_lnum = diagnostic.end_lnum and (diagnostic.end_lnum + 1) or nil,
+    end_col = diagnostic.end_col,
+    severity = severity_names[diagnostic.severity] or tostring(diagnostic.severity or ""),
+    source = diagnostic.source,
+    code = diagnostic.code,
+    message = diagnostic.message,
+  }
+end
+
+function EditorService.current_context(config)
+  local payload = Transport.build_explicit_send(config, { delivery = "attach" })
+  return payload.context
+end
+
+function EditorService.current_diagnostics()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local diagnostics = vim.diagnostic.get(bufnr)
+  local result = {}
+  for _, diagnostic in ipairs(diagnostics or {}) do
+    table.insert(result, diagnostic_to_table(diagnostic))
+  end
+  return result
+end
+
+function EditorService.handle_request(api, config, method, params)
+  params = params or {}
+  if method == "status" then
+    local info = api.info()
+    return {
+      ok = true,
+      editor_service = info.editor_service,
+      state = info.state,
+      registry = info.registry,
+      context = EditorService.current_context(config),
+    }
+  end
+
+  if method == "context.current" then return EditorService.current_context(config) end
+
+  if method == "diagnostics.current" then return EditorService.current_diagnostics() end
+
+  if method == "open_file" or method == "reveal_file" then
+    local file = params.path or params.file or params.absFile
+    if type(file) ~= "string" or file == "" then error("open_file requires path") end
+    vim.cmd.edit(vim.fn.fnameescape(file))
+    if params.line then
+      local line = math.max(1, tonumber(params.line) or 1)
+      local col = math.max(0, tonumber(params.col) or 0)
+      pcall(vim.api.nvim_win_set_cursor, 0, { line, col })
+    end
+    return EditorService.current_context(config)
+  end
+
+  if method == "reload_buffer" then
+    if params.path or params.file or params.absFile then
+      local file = params.path or params.file or params.absFile
+      if type(file) == "string" and file ~= "" then vim.cmd.edit(vim.fn.fnameescape(file)) end
+    end
+    vim.cmd("checktime")
+    if vim.bo.modified == false and vim.api.nvim_buf_get_name(0) ~= "" then pcall(vim.cmd, "edit") end
+    return EditorService.current_context(config)
+  end
+
+  if method == "refresh_diagnostics" then
+    pcall(vim.diagnostic.show, nil, 0)
+    return EditorService.current_diagnostics()
+  end
+
+  if method == "checktime" then
+    vim.cmd("checktime")
+    return { ok = true }
+  end
+
+  error("unsupported pinvim editor method: " .. tostring(method))
+end
+
 function Handshake.refresh(state, transport, config)
   state.peer = transport.build_peer_identity(config)
   state.last_hello = transport.build_hello(state, config)
@@ -1931,6 +2019,10 @@ function M.setup(opts)
   api.runtime = runtime
   api.registry = registry
   api.editor_service = editor_service
+
+  function api.editor_rpc(method, params)
+    return EditorService.handle_request(api, config, method, params)
+  end
 
   local function current_peer()
     if runtime.last_hello_ack and runtime.last_hello_ack.peer then return runtime.last_hello_ack.peer end
