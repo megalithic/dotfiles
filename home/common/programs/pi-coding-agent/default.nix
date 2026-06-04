@@ -134,6 +134,7 @@ let
     export NODE_PATH="${piNodeAliases}/node_modules''${NODE_PATH:+:$NODE_PATH}"
     export PI_STATE_DIR="''${PI_STATE_DIR:-${piStateDir}}"
     mkdir -p "$PI_STATE_DIR/sockets" "$PI_STATE_DIR/manifests" "$PI_STATE_DIR/pinvim"
+    unset PIMUX_FROM_NVIM 2>/dev/null || true
 
     XDG_CONFIG_HOME="''${XDG_CONFIG_HOME:-$HOME/.config}"
     if [ -f "$XDG_CONFIG_HOME/opnix/secrets/env-vars.sh" ]; then
@@ -190,6 +191,26 @@ let
       PI_SESSION="default"
     fi
     export PI_SESSION
+
+    # If pinvim is started from an existing Pi pane, inherited main-session
+    # pinvim env must not rebind or unlink the original Nvim-owned socket.
+    CURRENT_CMD=""
+    START_CMD=""
+    PANE_TITLE=""
+    if [ -n "$TMUX" ]; then
+      CURRENT_CMD=$(${pkgs.tmux}/bin/tmux display-message -p '#{pane_current_command}' 2>/dev/null || true)
+      START_CMD=$(${pkgs.tmux}/bin/tmux display-message -p '#{pane_start_command}' 2>/dev/null || true)
+      PANE_TITLE=$(${pkgs.tmux}/bin/tmux display-message -p '#{pane_title}' 2>/dev/null || true)
+    fi
+    if [ "''${PIMUX_FROM_NVIM:-}" != "1" ] && \
+       [ "''${PINVIM_SESSION_ROLE:-}" != "child" ] && \
+       [ -n "''${PINVIM_PARENT_ID:-}''${PINVIM_WORKSPACE_ID:-}''${PINVIM_INSTANCE_ID:-}''${PI_SOCKET:-}" ] && \
+       { [ "$CURRENT_CMD" = "pi" ] || [ "$CURRENT_CMD" = "pinvim" ] || [[ "$START_CMD" == *"pinvim"* ]] || [[ "$START_CMD" == *" pi"* ]] || [[ "$PANE_TITLE" == π* ]] || [[ "$PANE_TITLE" == pi* ]]; }; then
+      export PINVIM_NESTED_ATTACH_ONLY=1
+      export PINVIM_SESSION_ROLE="nested"
+      export PINVIM_LINK_MODE="attach-only"
+      unset PI_SOCKET 2>/dev/null || true
+    fi
 
     # Profile detection: --profile > explicit envs > tmux > directoryProfiles > mega
     SETTINGS_PATH="$HOME/.pi/agent/settings.json"

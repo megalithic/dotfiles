@@ -2466,6 +2466,10 @@ function M.setup(opts)
     local pane_id = vim.fn.trim(vim.fn.system({ "tmux", "display-message", "-p", "#{pane_id}" }))
     local cmd = { "pimux", "--new", "--socket", child_socket }
     local job_env = {
+      PINVIM_PARENT_ID = registry and registry.parent_id or nil,
+      PINVIM_WORKSPACE_ID = registry and registry.workspace_id or nil,
+      PINVIM_INSTANCE_ID = registry and registry.instance_id or nil,
+      PINVIM_REGISTRY_ROOT = registry and registry.workspace_root or nil,
       PINVIM_SESSION_ROLE = "child",
       PINVIM_SESSION_ID = child_id,
       PI_SOCKET = child_socket,

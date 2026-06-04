@@ -126,6 +126,31 @@ const isEphemeral = (): boolean =>
   process.env.PI_EPHEMERAL === "1" ||
   (!!SOCKET_PATH && /-eph-[^/]+\.sock$/.test(SOCKET_PATH));
 
+const hasParentContext = (): boolean =>
+  !!(
+    process.env.PINVIM_PARENT_ID ||
+    process.env.PINVIM_WORKSPACE_ID ||
+    process.env.PINVIM_INSTANCE_ID ||
+    process.env.PINVIM_REGISTRY_ROOT
+  );
+
+const isExplicitChild = (): boolean =>
+  process.env.PINVIM_SESSION_ROLE === "child" || isEphemeral();
+
+const isNestedAttachOnly = (): boolean =>
+  process.env.PINVIM_NESTED_ATTACH_ONLY === "1" ||
+  process.env.PINVIM_LINK_MODE === "attach-only";
+
+const pinvimRelationState = ():
+  | "attach-only"
+  | "child"
+  | "parent"
+  | "no-parent" => {
+  if (isNestedAttachOnly()) return "attach-only";
+  if (isExplicitChild()) return "child";
+  return hasParentContext() ? "parent" : "no-parent";
+};
+
 // =============================================================================
 // Protocol types
 // =============================================================================
@@ -870,12 +895,16 @@ const buildPinvimPeerIdentity = (): PeerIdentity => ({
     window: PI_WINDOW,
     pane: PI_PANE,
   },
-  linkMode: process.env.PINVIM_LINK_MODE || "auto",
+  linkMode:
+    process.env.PINVIM_LINK_MODE ||
+    (isNestedAttachOnly() ? "attach-only" : "auto"),
   parentId: process.env.PINVIM_PARENT_ID,
   workspaceId: process.env.PINVIM_WORKSPACE_ID,
   instanceId: process.env.PINVIM_INSTANCE_ID,
   registryRoot: process.env.PINVIM_REGISTRY_ROOT,
-  role: process.env.PINVIM_SESSION_ROLE || (isEphemeral() ? "child" : "main"),
+  role:
+    process.env.PINVIM_SESSION_ROLE ||
+    (isNestedAttachOnly() ? "nested" : isEphemeral() ? "child" : "main"),
   nvimListenAddress: resolveEditorServiceAddress().address || undefined,
   heartbeatAt: Math.floor(Date.now() / 1000),
 });
@@ -1071,6 +1100,8 @@ const scoreNvimCandidate = (
 };
 
 const scanNvimPeers = async (): Promise<NvimPeerCandidate[]> => {
+  if (isNestedAttachOnly()) return [];
+
   let entries: string[] = [];
   try {
     entries = await fsp.readdir(INFO_DIR);
@@ -1104,6 +1135,10 @@ const scanNvimPeers = async (): Promise<NvimPeerCandidate[]> => {
 };
 
 const refreshRepairCandidate = async (): Promise<void> => {
+  if (isNestedAttachOnly()) {
+    repairCandidate = null;
+    return;
+  }
   if (!peerNeedsRepair()) return;
   const [candidate] = await scanNvimPeers();
   repairCandidate = candidate || null;
@@ -1118,6 +1153,13 @@ const refreshRepairCandidate = async (): Promise<void> => {
 const peerAllowedForSocket = (
   peer: PeerIdentity,
 ): { ok: boolean; reason: string } => {
+  if (isNestedAttachOnly()) {
+    return {
+      ok: false,
+      reason: "nested attach-only pinvim does not accept nvim peer links",
+    };
+  }
+
   const localIdentity = buildPinvimPeerIdentity();
   const identityChecks: Array<
     ["parentId" | "workspaceId" | "instanceId", string]
@@ -1127,7 +1169,7 @@ const peerAllowedForSocket = (
     ["instanceId", "nvim instance identity"],
   ];
   for (const [key, label] of identityChecks) {
-    if (localIdentity[key] && localIdentity[key] !== peer[key]) {
+    if ((localIdentity[key] || peer[key]) && localIdentity[key] !== peer[key]) {
       return { ok: false, reason: `mismatched pinvim ${label}` };
     }
   }
@@ -1204,6 +1246,8 @@ const renderInfoLines = (): string[] => {
     `Protocol: ${state.protocol}`,
     `Socket: ${SOCKET_PATH || "(disabled)"}`,
     `Local identity: ${JSON.stringify(buildPinvimPeerIdentity(), null, 2)}`,
+    `Pinvim relation: ${pinvimRelationState()}`,
+    `Nested attach-only: ${isNestedAttachOnly()}`,
     `Active peer: ${activePeer ? JSON.stringify(activePeer, null, 2) : "(none yet)"}`,
     `Repair candidate: ${repairCandidate ? JSON.stringify(repairCandidate, null, 2) : "(none)"}`,
     `Repaired at: ${repairedAt ? new Date(repairedAt).toISOString() : "(none)"}`,
@@ -1385,6 +1429,8 @@ const writeInfoManifestNow = async (): Promise<void> => {
       instanceId: identity.instanceId,
       registryRoot: identity.registryRoot,
       role: identity.role,
+      relation: pinvimRelationState(),
+      attachOnly: isNestedAttachOnly(),
       nvimListenAddress: identity.nvimListenAddress,
       editorService: {
         address: identity.nvimListenAddress,
@@ -1570,7 +1616,7 @@ const handleSocketPayload = (
 };
 
 const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
-  if (!SOCKET_PATH || server) return;
+  if (!SOCKET_PATH || server || isNestedAttachOnly()) return;
 
   void (async () => {
     if (!SOCKET_PATH || server) return;
@@ -1693,7 +1739,7 @@ export default function (pi: ExtensionAPI): void {
     server?.close();
     server = null;
 
-    if (SOCKET_PATH && fs.existsSync(SOCKET_PATH)) {
+    if (!isNestedAttachOnly() && SOCKET_PATH && fs.existsSync(SOCKET_PATH)) {
       try {
         fs.unlinkSync(SOCKET_PATH);
       } catch {
@@ -1701,7 +1747,7 @@ export default function (pi: ExtensionAPI): void {
       }
     }
 
-    cleanupInfoManifest();
+    if (!isNestedAttachOnly()) cleanupInfoManifest();
     clearPendingContext();
   });
 
@@ -1723,6 +1769,9 @@ export default function (pi: ExtensionAPI): void {
       const lines = [
         health.ok ? "pinvim health: ok" : "pinvim health: attention needed",
         `Active peer: ${health.activePeerId || "(none)"}`,
+        `Link mode: ${buildPinvimPeerIdentity().linkMode}`,
+        `Relation: ${pinvimRelationState()}`,
+        `Nested attach-only: ${isNestedAttachOnly() ? "yes" : "no"}`,
         `Heartbeat age: ${health.heartbeatAgeSeconds == null ? "(none)" : `${health.heartbeatAgeSeconds}s`}`,
         `Repair candidate: ${repairCandidate?.id || "(none)"}`,
         `Last repair: ${repairedAt ? new Date(repairedAt).toISOString() : "(none)"}`,
@@ -1746,6 +1795,9 @@ export default function (pi: ExtensionAPI): void {
       const lines = [
         `pinvim status: ${formatStatus() || "(no active peer)"}`,
         `Active peer: ${health.activePeerId || "(none)"}`,
+        `Link mode: ${buildPinvimPeerIdentity().linkMode}`,
+        `Relation: ${pinvimRelationState()}`,
+        `Nested attach-only: ${isNestedAttachOnly() ? "yes" : "no"}`,
         `Heartbeat age: ${health.heartbeatAgeSeconds == null ? "(none)" : `${health.heartbeatAgeSeconds}s`}`,
         `Repair candidate: ${repairCandidate?.id || "(none)"}`,
         `Last repair: ${repairedAt ? new Date(repairedAt).toISOString() : "(none)"}`,
@@ -1775,12 +1827,15 @@ export default function (pi: ExtensionAPI): void {
           : "pinvim doctor: attention needed",
         `Pi identity: ${piIdentity.id}`,
         `Pi role: ${piIdentity.role || "(none)"}`,
+        `Pi relation: ${pinvimRelationState()}`,
+        `Pi link mode: ${piIdentity.linkMode}`,
+        `Pi nested attach-only: ${isNestedAttachOnly() ? "yes" : "no"}`,
         `Pi parent id: ${piIdentity.parentId || "(none)"}`,
         `Pi workspace id: ${piIdentity.workspaceId || "(none)"}`,
         `Pi instance id: ${piIdentity.instanceId || "(none)"}`,
         `Pi registry root: ${piIdentity.registryRoot || "(none)"}`,
         `Pi tmux: ${PI_SESSION}/${PI_WINDOW}${PI_PANE ? "/" + PI_PANE : ""}`,
-        `Pi ephemeral: ${IS_EPHEMERAL}`,
+        `Pi ephemeral: ${isEphemeral()}`,
         `Active peer: ${health.activePeerId || "(none)"}`,
         `Active peer role: ${activePeer?.role || "(none)"}`,
         `Active peer parent id: ${activePeer?.parentId || "(none)"}`,
