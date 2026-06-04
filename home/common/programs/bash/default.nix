@@ -172,21 +172,21 @@ let
     }
   '';
 
-  # Devenv auto-activation - override cd to check for devenv.nix
-  devenvAutoActivation = ''
-    __devenv_auto() {
-      if [ -f "$PWD/devenv.nix" ] && [ -z "''${IN_NIX_SHELL:-}" ]; then
-        devenv shell
-      fi
-    }
-
-    __cd_with_devenv() {
-      builtin cd "$@" || return $?
-      __devenv_auto
-    }
-
-    alias cd=__cd_with_devenv
-  '';
+  # Devenv auto-activation — disabled for now; may re-enable later.
+  # devenvAutoActivation = ''
+  #   __devenv_auto() {
+  #     if [ -f "$PWD/devenv.nix" ] && [ -z "''${IN_NIX_SHELL:-}" ]; then
+  #       devenv shell
+  #     fi
+  #   }
+  #
+  #   __cd_with_devenv() {
+  #     builtin cd "$@" || return $?
+  #     __devenv_auto
+  #   }
+  #
+  #   alias cd=__cd_with_devenv
+  # '';
 
   # Bash completions for worktree commands
   worktreeCompletions = ''
@@ -214,6 +214,7 @@ in
 {
   programs.bash = {
     enable = true;
-    bashrcExtra = worktreeFunctions + devenvAutoActivation + worktreeCompletions;
+    # devenvAutoActivation disabled for now; may re-enable later.
+    bashrcExtra = worktreeFunctions + worktreeCompletions;
   };
 }

@@ -550,13 +550,13 @@
     cd "$worktree_path"; or return 1
   '';
 
-  # Devenv auto-activation on directory change
-  __devenv_auto = {
-    onEvent = "fish_postexec";
-    body = ''
-      if test -f "$PWD/devenv.nix"; and not set -q IN_NIX_SHELL
-        devenv shell
-      end
-    '';
-  };
+  # Devenv auto-activation on directory change — disabled for now; may re-enable later.
+  # __devenv_auto = {
+  #   onEvent = "fish_postexec";
+  #   body = ''
+  #     if test -f "$PWD/devenv.nix"; and not set -q IN_NIX_SHELL
+  #       devenv shell
+  #     end
+  #   '';
+  # };
 }

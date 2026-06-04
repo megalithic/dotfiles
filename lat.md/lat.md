@@ -68,7 +68,7 @@ Fish startup is generated from `home/common/programs/fish/default.nix` and funct
 
 `home/common/programs/fish/config.fish` is a standalone experiment for loading `devenv print-dev-env` output into the current fish shell on directory changes. It is not active until the Home Manager module sources it.
 
-Interactive bash and zsh shells carry separate `devenv shell`-on-`cd` helpers in `home/common/programs/bash/default.nix` and `home/common/programs/zsh/default.nix`. Home Manager also enables direnv + nix-direnv globally in `home/common/default.nix` for repos that still use `.envrc`.
+Bash/fish `devenv shell` auto-activation helpers (post-exec hook in `home/common/programs/fish/functions.nix`, `cd` alias in `home/common/programs/bash/default.nix`) are commented out for now; the spawned subshell pattern was noisy and may return with a different design. Home Manager still enables direnv + nix-direnv globally in `home/common/default.nix` for repos that use `.envrc`.
 
 The root `.envrc` still exists for direnv-based workflows. Repo-local `.devenv` directories are ignored alongside `.direnv`, including nested tool caches, and `.local_scripts/` is ignored for scratch verification scripts.
 
