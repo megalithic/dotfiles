@@ -9,9 +9,12 @@ let
 
   piStateDir = "${config.xdg.stateHome}/pi";
 
+  piPackageFiles = builtins.filter (name: lib.hasSuffix ".nix" name && !(lib.hasPrefix "_" name)) (
+    builtins.attrNames (builtins.readDir ./packages)
+  );
   piExtensionPackageFiles = builtins.filter (
-    name: lib.hasSuffix ".nix" name && !(lib.hasPrefix "_" name)
-  ) (builtins.attrNames (builtins.readDir ./packages));
+    name: lib.removeSuffix ".nix" name != "pi-acp"
+  ) piPackageFiles;
   piExtensionPackages = builtins.listToAttrs (
     map (
       fileName:
@@ -126,6 +129,31 @@ let
     }) promptFiles
   );
 
+  piWrapper = pkgs.writeShellScriptBin "pi" ''
+    export PATH="${pkgs.nodejs_24}/bin:${pkgs."poppler-utils"}/bin:${pkgs.rtk}/bin:$PATH"
+    export NODE_PATH="${piNodeAliases}/node_modules''${NODE_PATH:+:$NODE_PATH}"
+    export PI_STATE_DIR="''${PI_STATE_DIR:-${piStateDir}}"
+    mkdir -p "$PI_STATE_DIR/sockets" "$PI_STATE_DIR/manifests" "$PI_STATE_DIR/pinvim"
+
+    XDG_CONFIG_HOME="''${XDG_CONFIG_HOME:-$HOME/.config}"
+    if [ -f "$XDG_CONFIG_HOME/opnix/secrets/env-vars.sh" ]; then
+      . "$XDG_CONFIG_HOME/opnix/secrets/env-vars.sh"
+    fi
+
+    if [ -n "$BRAVE_SEARCH_API_KEY" ] && [ -z "$BRAVE_API_KEY" ]; then
+      export BRAVE_API_KEY="$BRAVE_SEARCH_API_KEY"
+    fi
+
+    exec ${pi-coding-agent}/bin/pi "$@"
+  '';
+
+  piAcp = pkgs.callPackage ./packages/pi-acp.nix { };
+  piAcpWrapper = pkgs.writeShellScriptBin "pi-acp" ''
+    export PI_ACP_PI_COMMAND="''${PI_ACP_PI_COMMAND:-${piWrapper}/bin/pi}"
+    export PI_ACP_ENABLE_EMBEDDED_CONTEXT="''${PI_ACP_ENABLE_EMBEDDED_CONTEXT:-true}"
+    exec ${piAcp}/bin/pi-acp "$@"
+  '';
+
   pinvim = pkgs.writeShellScriptBin "pinvim" ''
     # Clear conflicting env from previous pinvim sessions
     unset PI_CODING_AGENT_DIR 2>/dev/null || true
@@ -183,29 +211,18 @@ in
     packages = [
       (pkgs.writeShellScriptBin "work-tickets" (builtins.readFile ./scripts/work-tickets.sh))
 
-      (pkgs.writeShellScriptBin "pi" ''
-        export PATH="${pkgs.nodejs_24}/bin:${pkgs."poppler-utils"}/bin:${pkgs.rtk}/bin:$PATH"
-        export NODE_PATH="${piNodeAliases}/node_modules''${NODE_PATH:+:$NODE_PATH}"
-
-        XDG_CONFIG_HOME="''${XDG_CONFIG_HOME:-$HOME/.config}"
-        if [ -f "$XDG_CONFIG_HOME/opnix/secrets/env-vars.sh" ]; then
-          . "$XDG_CONFIG_HOME/opnix/secrets/env-vars.sh"
-        fi
-
-        if [ -n "$BRAVE_SEARCH_API_KEY" ] && [ -z "$BRAVE_API_KEY" ]; then
-          export BRAVE_API_KEY="$BRAVE_SEARCH_API_KEY"
-        fi
-
-        exec ${pi-coding-agent}/bin/pi "$@"
-      '')
+      piWrapper
 
       pkgs."poppler-utils"
 
+      piAcpWrapper
       pinvim
       p
     ];
     sessionVariables = {
       PI_STATE_DIR = piStateDir;
+      PI_ACP_PI_COMMAND = "${piWrapper}/bin/pi";
+      PI_ACP_ENABLE_EMBEDDED_CONTEXT = "true";
     };
 
     file = {
@@ -227,6 +244,12 @@ in
     activation = {
       mergeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         run ${pkgs.bash}/bin/bash ${./scripts/merge-settings.sh} ${./settings.json}
+      '';
+
+      linkPiAcpBinary = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        bin_dir="$HOME/.local/bin"
+        mkdir -p "$bin_dir"
+        run ln -sf ${piAcpWrapper}/bin/pi-acp "$bin_dir/pi-acp"
       '';
 
       # Clean up redundant extension deps (pi's jiti resolves these internally)
