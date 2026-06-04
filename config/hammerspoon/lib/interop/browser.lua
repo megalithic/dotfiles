@@ -39,6 +39,49 @@ local dbg = function(str, ...)
 end
 
 -- Find a running browser app, trying BROWSER global first, then fallbacks
+local function findMenuItemPath(app, titleParts)
+  local function containsAll(title)
+    title = string.lower(title or "")
+    for _, part in ipairs(titleParts) do
+      if not title:find(part, 1, true) then return false end
+    end
+    return true
+  end
+
+  local function walk(items, path)
+    for _, item in ipairs(items or {}) do
+      local title = item.AXTitle or ""
+      local nextPath = path
+
+      if title ~= "" then
+        nextPath = { table.unpack(path) }
+        table.insert(nextPath, title)
+        if item.AXEnabled ~= false and containsAll(title) then return nextPath end
+      end
+
+      if not item.AXTitle and #item > 0 then
+        local found = walk(item, nextPath)
+        if found then return found end
+      end
+
+      for _, child in ipairs(item.AXChildren or {}) do
+        local found = child.AXTitle and walk({ child }, nextPath) or walk(child, nextPath)
+        if found then return found end
+      end
+    end
+
+    return nil
+  end
+
+  return walk(app:getMenuItems(), {})
+end
+
+local function selectMenuItemContaining(app, titleParts)
+  local path = findMenuItemPath(app, titleParts)
+  if not path then return false end
+  return app:selectMenuItem(path)
+end
+
 local function findBrowser()
   -- Try BROWSER global first
   local app = hs.application.get(BROWSER)
@@ -170,11 +213,10 @@ function obj:splitTab(to_next_screen)
     local app = findBrowser()
 
     if app then
-      local moveTab = { "Tab", "Move Tab to New Window" }
-      if string.match(app:name() or "", "Safari") then
-        moveTab = { "Window", "Move Tab to New Window" }
+      if not selectMenuItemContaining(app, { "move", "tab", "new", "window" }) then
+        U.log.w(fmt("[RUN] %s.splitTab/%s missing move-tab menu item", obj.name, app:bundleID()))
+        return
       end
-      app:selectMenuItem(moveTab)
 
       -- Move the split tab to the right of the screen
       if to_next_screen then

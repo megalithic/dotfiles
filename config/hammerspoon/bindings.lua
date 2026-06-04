@@ -316,6 +316,49 @@ function M.loadNativeTiling()
     end
   end
 
+  local function findMenuItemPath(app, titleParts)
+    local function containsAll(title)
+      title = string.lower(title or "")
+      for _, part in ipairs(titleParts) do
+        if not title:find(part, 1, true) then return false end
+      end
+      return true
+    end
+
+    local function walk(items, path)
+      for _, item in ipairs(items or {}) do
+        local title = item.AXTitle or ""
+        local nextPath = path
+
+        if title ~= "" then
+          nextPath = { table.unpack(path) }
+          table.insert(nextPath, title)
+          if item.AXEnabled ~= false and containsAll(title) then return nextPath end
+        end
+
+        if not item.AXTitle and #item > 0 then
+          local found = walk(item, nextPath)
+          if found then return found end
+        end
+
+        for _, child in ipairs(item.AXChildren or {}) do
+          local found = child.AXTitle and walk({ child }, nextPath) or walk(child, nextPath)
+          if found then return found end
+        end
+      end
+
+      return nil
+    end
+
+    return walk(app:getMenuItems(), {})
+  end
+
+  local function selectMenuItemContaining(app, titleParts)
+    local path = findMenuItemPath(app, titleParts)
+    if not path then return false end
+    return app:selectMenuItem(path)
+  end
+
   -- Move window to next screen, then apply tiling
   local function tileOnOtherScreen(position)
     local win = hs.window.frontmostWindow()
@@ -477,13 +520,12 @@ function M.loadNativeTiling()
 
       local bundleID = app:bundleID()
       local browserPatterns = { "helium", "brave", "orion", "chrome", "firefox", "safari", "arc" }
+      local appID = string.lower(table.concat({ bundleID or "", app:name() or "" }, " "))
       local isBrowser = false
-      if bundleID then
-        for _, pattern in ipairs(browserPatterns) do
-          if bundleID:match(pattern) then
-            isBrowser = true
-            break
-          end
+      for _, pattern in ipairs(browserPatterns) do
+        if appID:find(pattern, 1, true) then
+          isBrowser = true
+          break
         end
       end
 
@@ -499,14 +541,13 @@ function M.loadNativeTiling()
       local originalFrame = mainWin:frame()
       local originalScreen = mainWin:screen()
 
-      -- Move tab to new window (Cmd+Shift+N for most browsers, or use menu)
-      -- Try menu first (more reliable across browsers)
-      local moved = app:selectMenuItem({ "Tab", "Move Tab to New Window" })
-        or app:selectMenuItem({ "Window", "Move Tab to New Window" })
+      -- Move tab to new window by finding a matching menu item.
+      -- Do not fall back to Cmd+Shift+N: Chromium maps that to New Incognito Window.
+      local moved = selectMenuItemContaining(app, { "move", "tab", "new", "window" })
 
       if not moved then
-        -- Fallback: try keyboard shortcut
-        hs.eventtap.keyStroke({ "cmd", "shift" }, "n")
+        hs.alert.show("No move-tab menu item")
+        return
       end
 
       -- Wait for new window, then tile
