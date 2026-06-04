@@ -319,6 +319,7 @@ let editorServiceRequestId = 1;
 
 interface EditorServiceState {
   address: string | null;
+  source: string;
   transport: "msgpack-rpc";
   connected: boolean;
   connecting: boolean;
@@ -329,6 +330,7 @@ interface EditorServiceState {
 
 const editorService: EditorServiceState = {
   address: null,
+  source: "none",
   transport: "msgpack-rpc",
   connected: false,
   connecting: false,
@@ -370,15 +372,79 @@ const isTellPayload = (p: Payload): p is TellPayload =>
 // Nvim editor service (msgpack-RPC)
 // =============================================================================
 
-const resolveEditorServiceAddress = (): string | null => {
+const readJsonFile = (file: string): Record<string, unknown> | null => {
+  try {
+    const raw = fs.readFileSync(file, "utf-8");
+    return JSON.parse(raw.split("\n")[0] || "{}") as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+};
+
+const editorAddressFromRecord = (
+  record: Record<string, unknown> | null,
+): string | null => {
+  if (!record) return null;
+  if (typeof record.nvimListenAddress === "string")
+    return record.nvimListenAddress;
+  const editor = record.editorService;
+  if (editor && typeof editor === "object" && "address" in editor) {
+    const address = (editor as Record<string, unknown>).address;
+    if (typeof address === "string") return address;
+  }
+  return null;
+};
+
+const resolveEditorServiceAddress = (): {
+  address: string | null;
+  source: string;
+} => {
   const activePeer = getActivePeer();
-  return (
-    process.env.PINVIM_NVIM_LISTEN_ADDRESS ||
-    activePeer?.nvimListenAddress ||
-    repairCandidate?.nvimListenAddress ||
-    repairCandidate?.editorService?.address ||
-    null
-  );
+  if (process.env.PINVIM_NVIM_LISTEN_ADDRESS) {
+    return { address: process.env.PINVIM_NVIM_LISTEN_ADDRESS, source: "env" };
+  }
+  if (activePeer?.nvimListenAddress) {
+    return { address: activePeer.nvimListenAddress, source: "active peer" };
+  }
+  if (repairCandidate?.nvimListenAddress) {
+    return {
+      address: repairCandidate.nvimListenAddress,
+      source: "nvim manifest",
+    };
+  }
+  if (repairCandidate?.editorService?.address) {
+    return {
+      address: repairCandidate.editorService.address,
+      source: "nvim manifest",
+    };
+  }
+
+  const registryRoot = process.env.PINVIM_REGISTRY_ROOT;
+  const instanceId = process.env.PINVIM_INSTANCE_ID;
+  if (registryRoot && instanceId) {
+    const intent = readJsonFile(
+      path.join(registryRoot, "instances", instanceId, "main.intent.json"),
+    );
+    const address = editorAddressFromRecord(intent);
+    if (address) return { address, source: "registry intent" };
+  }
+
+  if (registryRoot) {
+    const instancesRoot = path.join(registryRoot, "instances");
+    try {
+      for (const entry of fs.readdirSync(instancesRoot)) {
+        const intent = readJsonFile(
+          path.join(instancesRoot, entry, "main.intent.json"),
+        );
+        const address = editorAddressFromRecord(intent);
+        if (address) return { address, source: "registry intent" };
+      }
+    } catch {
+      // Registry discovery is best-effort and non-fatal.
+    }
+  }
+
+  return { address: null, source: "none" };
 };
 
 const encodeMsgpack = (value: unknown): Buffer => {
@@ -423,10 +489,14 @@ const markEditorServiceStale = (error: string): void => {
 };
 
 const ensureEditorServiceClient = (): void => {
-  const address = resolveEditorServiceAddress();
+  const discovery = resolveEditorServiceAddress();
+  const address = discovery.address;
   editorService.address = address;
+  editorService.source = discovery.source;
   if (!address) {
-    markEditorServiceStale("missing nvim listen address");
+    markEditorServiceStale(
+      "missing nvim listen address; using peer socket fallback only",
+    );
     return;
   }
 
@@ -521,7 +591,7 @@ const buildPinvimPeerIdentity = (): PeerIdentity => ({
   instanceId: process.env.PINVIM_INSTANCE_ID,
   registryRoot: process.env.PINVIM_REGISTRY_ROOT,
   role: process.env.PINVIM_SESSION_ROLE || (isEphemeral() ? "child" : "main"),
-  nvimListenAddress: resolveEditorServiceAddress() || undefined,
+  nvimListenAddress: resolveEditorServiceAddress().address || undefined,
   heartbeatAt: Math.floor(Date.now() / 1000),
 });
 
@@ -602,7 +672,7 @@ const formatPendingContextStatus = (): string => {
 };
 
 const formatEditorServiceStatus = (): string => {
-  if (!editorService.address) return "";
+  if (!editorService.address) return "│ nvim-rpc:fallback";
   if (editorService.connected) return "│ nvim-rpc:ok";
   if (editorService.connecting) return "│ nvim-rpc:connecting";
   return "│ nvim-rpc:stale";
@@ -810,6 +880,28 @@ const peerAllowedForSocket = (
   };
 };
 
+const emitCommandLines = (
+  ctx: ExtensionContext,
+  lines: string[],
+  level: "info" | "warn" = "info",
+): void => {
+  if (ctx.hasUI) {
+    ctx.ui.notify(lines.join("\n"), level);
+  } else {
+    console.log(lines.join("\n"));
+  }
+};
+
+const editorServiceStateLine = (): string =>
+  editorService.connected
+    ? "connected"
+    : editorService.stale
+      ? "stale"
+      : "disconnected";
+
+const editorServiceFallbackLine = (): string =>
+  editorService.connected ? "no" : "peer socket only";
+
 const renderInfoLines = (): string[] => {
   const lastHello = state.lastHello
     ? JSON.stringify(state.lastHello, null, 2)
@@ -833,6 +925,8 @@ const renderInfoLines = (): string[] => {
     `Repair reason: ${repairReason || "(none)"}`,
     `Pending context: ${pendingContext ? `${pendingContext.label}, expires ${new Date(pendingContext.expiresAt).toISOString()}` : "(none)"}`,
     `Editor service: ${editorService.address || "(none)"}`,
+    `Editor service source: ${editorService.source}`,
+    `Editor service fallback: ${editorServiceFallbackLine()}`,
     `Editor service transport: ${editorService.transport}`,
     `Editor service connected: ${editorService.connected}`,
     `Editor service stale: ${editorService.stale}`,
@@ -987,6 +1081,8 @@ const writeInfoManifestNow = async (): Promise<void> => {
       nvimListenAddress: identity.nvimListenAddress,
       editorService: {
         address: identity.nvimListenAddress,
+        source: editorService.source,
+        fallback: editorServiceFallbackLine(),
         transport: "msgpack-rpc",
         connected: editorService.connected,
         stale: editorService.stale,
@@ -1018,6 +1114,7 @@ const scheduleInfoManifest = (force = false): void => {
     },
     force ? 0 : 250,
   );
+  manifestWriteTimer.unref();
 };
 
 const cleanupInfoManifest = (): void => {
@@ -1260,6 +1357,7 @@ export default function (pi: ExtensionAPI): void {
 
   pi.on("before_agent_start", async () => {
     if (!nextTurnIsUserOrigin) return;
+    ensureEditorServiceClient();
     const text = consumePendingContext();
     if (!text) return;
     return {
@@ -1302,14 +1400,16 @@ export default function (pi: ExtensionAPI): void {
     description:
       "Show pinvim state: peer metadata, socket, and transport inputs",
     handler: async (_args, ctx) => {
+      ensureEditorServiceClient();
       const lines = renderInfoLines();
-      if (ctx.hasUI) ctx.ui.notify(lines.join("\n"), "info");
+      emitCommandLines(ctx, lines, "info");
     },
   });
 
   pi.registerCommand("pinvim-health", {
     description: "Show pinvim link health: peer id and heartbeat age",
     handler: async (_args, ctx) => {
+      ensureEditorServiceClient();
       const health = getHealth();
       const lines = [
         health.ok ? "pinvim health: ok" : "pinvim health: attention needed",
@@ -1319,18 +1419,20 @@ export default function (pi: ExtensionAPI): void {
         `Last repair: ${repairedAt ? new Date(repairedAt).toISOString() : "(none)"}`,
         `Pending context: ${pendingContext ? `${pendingContext.label}, expires ${new Date(pendingContext.expiresAt).toISOString()}` : "(none)"}`,
         `Editor service: ${editorService.address || "(none)"}`,
-        `Editor service: ${editorService.connected ? "connected" : editorService.stale ? "stale" : "disconnected"}`,
+        `Editor service source: ${editorService.source}`,
+        `Editor service fallback: ${editorServiceFallbackLine()}`,
+        `Editor service state: ${editorServiceStateLine()}`,
         `Editor service error: ${editorService.lastError || "(none)"}`,
         `Socket: ${SOCKET_PATH || "(disabled)"}`,
       ];
-      if (ctx.hasUI)
-        ctx.ui.notify(lines.join("\n"), health.ok ? "info" : "warn");
+      emitCommandLines(ctx, lines, health.ok ? "info" : "warn");
     },
   });
 
   pi.registerCommand("pinvim-status", {
     description: "Show concise pinvim peer status",
     handler: async (_args, ctx) => {
+      ensureEditorServiceClient();
       const health = getHealth();
       const lines = [
         `pinvim status: ${formatStatus() || "(no active peer)"}`,
@@ -1340,11 +1442,13 @@ export default function (pi: ExtensionAPI): void {
         `Last repair: ${repairedAt ? new Date(repairedAt).toISOString() : "(none)"}`,
         `Pending context: ${pendingContext ? `${pendingContext.label}, expires ${new Date(pendingContext.expiresAt).toISOString()}` : "(none)"}`,
         `Editor service: ${editorService.address || "(none)"}`,
-        `Editor service: ${editorService.connected ? "connected" : editorService.stale ? "stale" : "disconnected"}`,
+        `Editor service source: ${editorService.source}`,
+        `Editor service fallback: ${editorServiceFallbackLine()}`,
+        `Editor service state: ${editorServiceStateLine()}`,
         `Editor service error: ${editorService.lastError || "(none)"}`,
         `Socket: ${SOCKET_PATH || "(disabled)"}`,
       ];
-      if (ctx.hasUI) ctx.ui.notify(lines.join("\n"), "info");
+      emitCommandLines(ctx, lines, "info");
     },
   });
 
@@ -1361,17 +1465,19 @@ export default function (pi: ExtensionAPI): void {
         `Heartbeat age: ${health.heartbeatAgeSeconds == null ? "(none)" : `${health.heartbeatAgeSeconds}s`}`,
         `Socket: ${SOCKET_PATH || "(disabled)"}`,
         `Editor service address: ${editorService.address || "(none)"}`,
+        `Editor service source: ${editorService.source}`,
+        `Editor service fallback: ${editorServiceFallbackLine()}`,
         `Editor service transport: ${editorService.transport}`,
         `Editor service connected: ${editorService.connected}`,
         `Editor service stale: ${editorService.stale}`,
         `Editor service last ok: ${editorService.lastOkAt ? new Date(editorService.lastOkAt).toISOString() : "(none)"}`,
         `Editor service error: ${editorService.lastError || "(none)"}`,
       ];
-      if (ctx.hasUI)
-        ctx.ui.notify(
-          lines.join("\n"),
-          health.ok && !editorService.stale ? "info" : "warn",
-        );
+      emitCommandLines(
+        ctx,
+        lines,
+        health.ok && !editorService.stale ? "info" : "warn",
+      );
     },
   });
 
