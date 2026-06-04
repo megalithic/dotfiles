@@ -973,6 +973,9 @@ function Registry.setup(config)
     instance_id = instance_id,
     instance_root = instance_root,
     children_root = path_join(registry_root, "children"),
+    main_socket_path = path_join(registry_root, "main.sock"),
+    main_session_intent_path = path_join(registry_root, "main.intent.json"),
+    main_session_runtime_path = path_join(registry_root, "main.runtime.json"),
     main_intent_path = path_join(instance_root, "main.intent.json"),
     main_runtime_path = path_join(instance_root, "main.runtime.json"),
     launch_lock_path = path_join(registry_root, "main.launch.lock"),
@@ -992,10 +995,9 @@ function Registry.setup(config)
   return registry
 end
 
-function Registry.write_main_intent(registry, runtime, config)
-  if not registry then return false end
+local function registry_base_record(registry, config)
   local identity = Transport.build_peer_identity(config)
-  return write_json_atomic(registry.main_intent_path, {
+  return {
     schema = "pinvim.registry.v1",
     writer = "nvim",
     role = "main",
@@ -1019,14 +1021,34 @@ function Registry.write_main_intent(registry, runtime, config)
       address = identity.nvimListenAddress,
       transport = "msgpack-rpc",
     },
-    intent = {
-      kind = "main-session",
-      desired = "present",
-      socket = runtime.socket,
-      socketSource = runtime.socket_source,
-      linkMode = runtime.link_mode or config.transport.link_mode,
-    },
-  })
+  }
+end
+
+function Registry.write_main_intent(registry, runtime, config)
+  if not registry then return false end
+  local record = registry_base_record(registry, config)
+  record.intent = {
+    kind = "editor-main-session-view",
+    desired = "present",
+    socket = runtime.socket,
+    socketSource = runtime.socket_source,
+    linkMode = runtime.link_mode or config.transport.link_mode,
+  }
+  return write_json_atomic(registry.main_intent_path, record)
+end
+
+function Registry.write_main_session_intent(registry, runtime, config, socket_path, reason)
+  if not registry then return false end
+  local record = registry_base_record(registry, config)
+  record.intent = {
+    kind = "main-session",
+    desired = "present",
+    socket = socket_path or registry.main_socket_path,
+    socketSource = socket_path and "registry-main" or runtime.socket_source,
+    linkMode = "main",
+    reason = reason or "panel",
+  }
+  return write_json_atomic(registry.main_session_intent_path, record)
 end
 
 function EditorService.setup(config, registry)
@@ -2355,31 +2377,59 @@ function M.setup(opts)
       return false
     end
 
+    local socket_path = registry and registry.main_socket_path or api.get_target()
     local cmd = { "pimux" }
     if ensure_visible then table.insert(cmd, "--ensure") end
-
-    local socket_path = api.get_target()
     if socket_path then
       table.insert(cmd, "--socket")
       table.insert(cmd, socket_path)
     end
 
     local pane_id = vim.fn.trim(vim.fn.system({ "tmux", "display-message", "-p", "#{pane_id}" }))
-    local job_opts = { detach = true }
-    if pane_id ~= "" then job_opts.env = { PIMUX_PANE = pane_id } end
+    local job_env = {
+      PIMUX_FROM_NVIM = "1",
+      PI_STATE_DIR = config.transport.state_dir,
+      PINVIM_PARENT_ID = registry and registry.parent_id or nil,
+      PINVIM_WORKSPACE_ID = registry and registry.workspace_id or nil,
+      PINVIM_INSTANCE_ID = registry and registry.instance_id or nil,
+      PINVIM_REGISTRY_ROOT = registry and registry.workspace_root or nil,
+      PINVIM_SESSION_ROLE = "main",
+      PINVIM_LINK_MODE = "main",
+      PI_SOCKET = socket_path,
+    }
+    if pane_id ~= "" then job_env.PIMUX_PANE = pane_id end
+    local job_opts = { detach = true, env = job_env }
 
     local function launch()
-      local job = vim.fn.jobstart(cmd, job_opts)
-      if job <= 0 then
-        vim.notify("pinvim: pimux failed", vim.log.levels.ERROR)
-        return false
+      if registry and socket_path then Registry.write_main_session_intent(registry, runtime, config, socket_path, "panel") end
+      local needs_registration = socket_path and not socket_exists(socket_path)
+      if needs_registration and vim.system then
+        local result = vim.system(cmd, { env = job_env, text = true }):wait()
+        if result.code ~= 0 then
+          vim.notify("pinvim: pimux failed", vim.log.levels.ERROR)
+          return false
+        end
+      else
+        local job = vim.fn.jobstart(cmd, job_opts)
+        if job <= 0 then
+          vim.notify("pinvim: pimux failed", vim.log.levels.ERROR)
+          return false
+        end
+      end
+
+      if socket_path then
+        vim.b.pi_target_socket = socket_path
+        State.patch(runtime, {
+          socket = socket_path,
+          socket_source = "registry-main",
+          link_mode = "main",
+          restored_target = false,
+          restored_from = nil,
+        })
       end
 
       if ensure_visible then
-        vim.notify(
-          socket_path and "pinvim: focusing linked pi split" or "pinvim: opening pi split",
-          vim.log.levels.INFO
-        )
+        vim.notify("pinvim: opening main pi split", vim.log.levels.INFO)
         vim.defer_fn(function()
           api.refresh_buffer_state()
           api.ensure_connected(true)
@@ -2390,7 +2440,7 @@ function M.setup(opts)
       return true
     end
 
-    if ensure_visible and not socket_path then return Registry.with_launch_lock(registry, launch) end
+    if socket_path and not socket_exists(socket_path) then return Registry.with_launch_lock(registry, launch) end
     return launch()
   end
 
