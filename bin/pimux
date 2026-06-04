@@ -474,8 +474,11 @@ spawn_visible_split() {
 }
 
 spawn_ephemeral_split() {
-  local new_pane
-  build_tmux_env_args "PI_SOCKET=$TARGET_SOCKET" "PI_EPHEMERAL=1"
+  # Child sessions are explicit: caller (nvim) provides PINVIM_SESSION_ROLE=child
+  # and PINVIM_SESSION_ID via env. Keep PI_EPHEMERAL=1 so legacy pi-side paths
+  # still treat the pane as explicit-only.
+  local new_pane role="${PINVIM_SESSION_ROLE:-child}"
+  build_tmux_env_args "PI_SOCKET=$TARGET_SOCKET" "PI_EPHEMERAL=1" "PINVIM_SESSION_ROLE=$role"
   new_pane=$(tmux split-window -P -F '#{pane_id}' -h -l "$SPLIT_SIZE" -t "$CURRENT_PANE" \
     "${TMUX_ENV_ARGS[@]}" \
     "pinvim")

@@ -113,7 +113,18 @@ local function socket_exists(path)
   return stat and stat.type == "socket" or false
 end
 
-local function is_ephemeral_socket(path) return path ~= nil and path:match("%-eph%-[^/]+%.sock$") ~= nil end
+local function is_child_socket(path)
+  return path ~= nil and path:match("/pinvim/[^/]+/children/[^/]+/[^/]+%.sock$") ~= nil
+end
+
+local function is_ephemeral_socket(path)
+  if not path then return false end
+  if path:match("%-eph%-[^/]+%.sock$") then return true end
+  -- Child sockets allocated under the registry are explicit-only too:
+  -- never auto-picked as :PiPanel main and treated like ephemeral on close.
+  if is_child_socket(path) then return true end
+  return false
+end
 
 local function generate_ephemeral_socket_path(config)
   local session = tmux_value("#{session_name}") or "default"
@@ -1049,6 +1060,47 @@ function Registry.write_main_session_intent(registry, runtime, config, socket_pa
     reason = reason or "panel",
   }
   return write_json_atomic(registry.main_session_intent_path, record)
+end
+
+function Registry.allocate_child(registry, config, opts)
+  if not registry then return nil end
+  opts = opts or {}
+  local epoch = os.time()
+  local pid = vim.fn.getpid()
+  local seed = string.format("%s|%d|%d|%s", registry.instance_id, pid, epoch, tostring(opts.tag or ""))
+  local child_id = string.format("child-%s-%d-%d", stable_hash(seed):sub(1, 8), pid, epoch)
+  local child_root = path_join(registry.children_root, child_id)
+  pcall(vim.fn.mkdir, child_root, "p")
+  local child = {
+    id = child_id,
+    root = child_root,
+    socket_path = path_join(child_root, "child.sock"),
+    intent_path = path_join(child_root, "intent.json"),
+    runtime_path = path_join(child_root, "runtime.json"),
+  }
+  local record = registry_base_record(registry, config)
+  record.role = "child"
+  record.intent = {
+    kind = "child-session",
+    desired = "present",
+    childId = child_id,
+    socket = child.socket_path,
+    socketSource = "registry-child",
+    linkMode = "child",
+    reason = opts.reason or "split",
+    createdAt = epoch,
+    creatorPid = pid,
+  }
+  write_json_atomic(child.intent_path, record)
+  return child
+end
+
+function Registry.cleanup_child(child)
+  if not child or not child.root then return end
+  pcall(vim.fn.delete, child.intent_path)
+  pcall(vim.fn.delete, child.runtime_path)
+  pcall(vim.fn.delete, child.socket_path)
+  pcall(vim.uv.fs_rmdir, child.root)
 end
 
 function EditorService.setup(config, registry)
@@ -2278,7 +2330,7 @@ function M.setup(opts)
   function api.spawn_ephemeral_split(spawn_opts)
     spawn_opts = spawn_opts or {}
     if not vim.env.TMUX then
-      vim.notify("pinvim: ephemeral split requires tmux", vim.log.levels.WARN)
+      vim.notify("pinvim: child split requires tmux", vim.log.levels.WARN)
       return false
     end
 
@@ -2290,12 +2342,13 @@ function M.setup(opts)
 
     local function select_target(socket_path, source)
       vim.b.pi_target_socket = socket_path
-      vim.b.pi_ephemeral_socket = socket_path
+      vim.b.pi_child_socket = socket_path
+      vim.b.pi_ephemeral_socket = socket_path -- back-compat alias
       local meta = record_target_history(config, socket_path, source)
       State.patch(runtime, {
         socket = socket_path,
         socket_source = source,
-        link_mode = "ephemeral",
+        link_mode = "child",
         restored_target = false,
         restored_from = nil,
         last_error = nil,
@@ -2305,7 +2358,7 @@ function M.setup(opts)
 
     local function connect_and_maybe_send(socket_path)
       connection_disconnect(runtime)
-      connection_connect(api, runtime, config, socket_path, "ephemeral")
+      connection_connect(api, runtime, config, socket_path, "child")
       if payload then
         vim.defer_fn(function()
           api.send_explicit_payload(payload, { focus_after = false })
@@ -2314,15 +2367,19 @@ function M.setup(opts)
       end
     end
 
-    local existing = vim.b.pi_ephemeral_socket
+    local existing = vim.b.pi_child_socket or vim.b.pi_ephemeral_socket
     if existing and socket_exists(existing) and focus_socket_pane(config, existing) then
-      select_target(existing, "ephemeral")
+      select_target(existing, "child")
       connect_and_maybe_send(existing)
-      vim.notify("pinvim: focused ephemeral split " .. vim.fs.basename(existing), vim.log.levels.INFO)
+      vim.notify("pinvim: focused child split " .. vim.fs.basename(existing), vim.log.levels.INFO)
       return true
     end
 
-    local eph_socket = generate_ephemeral_socket_path(config)
+    -- Allocate an explicit child session under the registry. Falls back to
+    -- legacy ephemeral-socket basename when no registry exists (headless edge).
+    local child = registry and Registry.allocate_child(registry, config, { tag = vim.b.pi_target_socket or "" })
+    local child_socket = child and child.socket_path or generate_ephemeral_socket_path(config)
+    local child_id = child and child.id or vim.fs.basename(child_socket):gsub("%.sock$", "")
 
     -- Record previous target before switching
     local prev_socket = conn.socket_path or runtime.socket
@@ -2331,37 +2388,42 @@ function M.setup(opts)
     end
 
     local pane_id = vim.fn.trim(vim.fn.system({ "tmux", "display-message", "-p", "#{pane_id}" }))
-    local cmd = { "pimux", "--new", "--socket", eph_socket }
-    local job_opts = { detach = true }
-    if pane_id ~= "" then job_opts.env = { PIMUX_PANE = pane_id } end
-
-    local job = vim.fn.jobstart(cmd, job_opts)
+    local cmd = { "pimux", "--new", "--socket", child_socket }
+    local job_env = {
+      PINVIM_SESSION_ROLE = "child",
+      PINVIM_SESSION_ID = child_id,
+      PI_SOCKET = child_socket,
+    }
+    if pane_id ~= "" then job_env.PIMUX_PANE = pane_id end
+    local job = vim.fn.jobstart(cmd, { detach = true, env = job_env })
     if job <= 0 then
-      vim.notify("pinvim: ephemeral split spawn failed", vim.log.levels.ERROR)
+      vim.notify("pinvim: child split spawn failed", vim.log.levels.ERROR)
+      if child then Registry.cleanup_child(child) end
       return false
     end
 
-    -- Set buffer-local target to the new ephemeral socket
-    select_target(eph_socket, "ephemeral")
+    -- Set buffer-local target to the new child socket
+    select_target(child_socket, "child")
 
-    vim.notify("pinvim: ephemeral split " .. vim.fs.basename(eph_socket), vim.log.levels.INFO)
+    vim.notify("pinvim: child split " .. child_id, vim.log.levels.INFO)
 
     -- Wait briefly for the pi process to create the socket, then connect
     vim.defer_fn(function()
-      if socket_exists(eph_socket) then
-        connect_and_maybe_send(eph_socket)
+      if socket_exists(child_socket) then
+        connect_and_maybe_send(child_socket)
       else
         -- Poll a few times for socket to appear
         local attempts = 0
         local poll
         poll = vim.schedule_wrap(function()
           attempts = attempts + 1
-          if socket_exists(eph_socket) then
-            connect_and_maybe_send(eph_socket)
+          if socket_exists(child_socket) then
+            connect_and_maybe_send(child_socket)
           elseif attempts < 20 then
             vim.defer_fn(poll, 150)
           else
-            vim.notify("pinvim: ephemeral socket not created", vim.log.levels.WARN)
+            vim.notify("pinvim: child socket not created", vim.log.levels.WARN)
+            if child then Registry.cleanup_child(child) end
           end
         end)
         vim.defer_fn(poll, 150)
