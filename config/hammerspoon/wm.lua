@@ -378,6 +378,16 @@ function M.init()
       M.placeAllApps()
       wmModality:exit()
     end)
+    -- S: split active browser tab to new window, tile both halves
+    :bind({}, "s", function()
+      req("lib.interop.browser"):splitTab(false)
+      wmModality:exit()
+    end)
+    -- Shift+S: split active browser tab to next screen (full)
+    :bind({ "shift" }, "s", function()
+      req("lib.interop.browser"):splitTab(true)
+      wmModality:exit()
+    end)
 
   -- Bind to hyper+l for WM mode
   req("hyper", { id = "wm" }):bind({}, "l", function() wmModality:toggle() end)

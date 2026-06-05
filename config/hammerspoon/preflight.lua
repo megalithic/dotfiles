@@ -17,7 +17,8 @@ hs.window.setShadows(false)
 -- https://developer.apple.com/documentation/applicationservices/1459345-axuielementsetmessagingtimeout
 hs.window.timeout(0.5)
 hs.grid.setGrid("60x20")
-hs.grid.setMargins("0x0")
+-- Keep raw hs.grid placements visually aligned with wm.lua's C.windowGap.
+hs.grid.setMargins("5x5")
 
 ---------------------------------------------------------------------------------------------------
 DefaultFont = { name = "JetBrainsMono Nerd Font Mono", size = 18 }
