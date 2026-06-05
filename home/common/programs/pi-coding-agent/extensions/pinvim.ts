@@ -17,7 +17,7 @@ import type {
   ExtensionAPI,
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import { execFile } from "node:child_process";
+import { execFile, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import fsp from "node:fs/promises";
 import net from "node:net";
@@ -1048,6 +1048,39 @@ const pidAlive = (pid?: number): boolean => {
   }
 };
 
+// Detect orphaned `nvim --embed` whose GUI frontend died without reaping the
+// child. Symptoms: PPID=1 (adopted by init) and no controlling terminal
+// (tty `??`). Real terminal nvim has a pty tty and a shell parent.
+const pidIsOrphanedEmbed = (pid?: number): boolean => {
+  if (!pid || pid <= 0) return false;
+  try {
+    const res = spawnSync("ps", ["-p", String(pid), "-o", "ppid=,tty="], {
+      encoding: "utf8",
+      timeout: 500,
+    });
+    if (res.status !== 0 || !res.stdout) return false;
+    const parts = res.stdout.trim().split(/\s+/);
+    if (parts.length < 2) return false;
+    const ppid = Number(parts[0]);
+    const tty = parts[1];
+    return ppid === 1 && (tty === "??" || tty === "?" || tty === "-");
+  } catch {
+    return false;
+  }
+};
+
+const socketPathExists = (sockPath?: string): boolean => {
+  if (!sockPath) return true; // No socket field in manifest -> nothing to check.
+  try {
+    return fs.statSync(sockPath).isSocket();
+  } catch {
+    return false;
+  }
+};
+
+// manifestPath -> reason, surfaced by /pinvim-doctor for visibility.
+const skippedManifests: Map<string, string> = new Map();
+
 const nvimPeerAgeSeconds = (candidate: NvimPeerCandidate): number | null =>
   candidate.heartbeatAt
     ? Math.max(Math.floor(Date.now() / 1000) - candidate.heartbeatAt, 0)
@@ -1081,10 +1114,22 @@ const peerNeedsRepair = (): boolean => {
 const scoreNvimCandidate = (
   candidate: NvimPeerCandidate,
 ): NvimPeerCandidate | null => {
-  if (candidate.kind !== "nvim" && candidate.owner !== "pinvim.lua")
+  const manifestKey = candidate.manifestPath || candidate.id || "";
+  const skip = (reason: string): null => {
+    if (manifestKey) skippedManifests.set(manifestKey, reason);
     return null;
-  if (candidate.pid !== undefined && !pidAlive(candidate.pid)) return null;
-  if (candidateSession(candidate) !== PI_SESSION) return null;
+  };
+  if (candidate.kind !== "nvim" && candidate.owner !== "pinvim.lua")
+    return skip("wrong kind/owner");
+  if (candidate.pid !== undefined && !pidAlive(candidate.pid))
+    return skip("pid dead");
+  if (candidate.pid !== undefined && pidIsOrphanedEmbed(candidate.pid))
+    return skip("orphaned --embed nvim (ppid=1, no tty)");
+  if (candidate.socket && !socketPathExists(candidate.socket))
+    return skip(`stale socket (${candidate.socket})`);
+  if (candidateSession(candidate) !== PI_SESSION)
+    return skip(`different tmux session (${candidateSession(candidate)})`);
+  if (manifestKey) skippedManifests.delete(manifestKey);
 
   const age = nvimPeerAgeSeconds(candidate);
   const fresh = age !== null && age <= 30;
@@ -1759,7 +1804,7 @@ export default function (pi: ExtensionAPI): void {
     if (shouldAutoScanNvimPeers() && !peerScanTimer) {
       peerScanTimer = setInterval(() => {
         void refreshRepairCandidate();
-      }, 5000);
+      }, 2000);
       peerScanTimer.unref();
     }
     void refreshRepairCandidate();
@@ -1948,6 +1993,11 @@ export default function (pi: ExtensionAPI): void {
         `Active peer tmux: ${activePeer?.tmux?.session || "?"}/${activePeer?.tmux?.window || "?"}${activePeer?.tmux?.pane ? "/" + activePeer.tmux.pane : ""}`,
         `Heartbeat age: ${health.heartbeatAgeSeconds == null ? "(none)" : `${health.heartbeatAgeSeconds}s`}`,
         `Repair candidate: ${repairCandidate?.id || "(none)"}`,
+        skippedManifests.size === 0
+          ? "Skipped manifests: (none)"
+          : `Skipped manifests:\n${Array.from(skippedManifests.entries())
+              .map(([k, v]) => `  - ${path.basename(k)}: ${v}`)
+              .join("\n")}`,
         `Socket: ${SOCKET_PATH || "(disabled)"}`,
         `Editor service address: ${editorService.address || "(none)"}`,
         `Editor service source: ${editorService.source}`,

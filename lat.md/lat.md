@@ -244,7 +244,7 @@ Repair is bidirectional — either nvim or pi can reestablish the hello/hello_ac
 
 **Nvim-side manifest** (`nvim-*.info` in `$PI_STATE_DIR/manifests/`): pinvim.lua writes a peer manifest every 5 seconds containing id, cwd, root, pid, tmux session/window/pane, heartbeatAt, linkMode, linked socket path, socket source, connected state, and active peer id. The manifest is cleaned up on `VimLeavePre`.
 
-**Pi-side repair scan** (`pinvim.ts`): when no parent registry identity is present and the active nvim peer is missing or its heartbeat is ≥120 seconds stale, pinvim.ts scans `nvim-*.info` manifests every 5 seconds and scores candidates. Parent/child sessions with registry identity skip the recurring scan; `/pinvim-doctor` can force one for diagnostics.
+**Pi-side repair scan** (`pinvim.ts`): when no parent registry identity is present and the active nvim peer is missing or its heartbeat is ≥120 seconds stale, pinvim.ts scans `nvim-*.info` manifests every 2 seconds and scores candidates. Parent/child sessions with registry identity skip the recurring scan; `/pinvim-doctor` can force one for diagnostics. Candidates are rejected (and remembered in a `skippedManifests` map surfaced by `/pinvim-doctor`) when the manifest pid is dead, the pid is an orphaned `nvim --embed` (PPID=1 and no controlling tty — its GUI frontend died without reaping it), the manifest `socket` path does not exist on disk, or the tmux session differs from the running Pi.
 
 | Factor                  | Score |
 | ----------------------- | ----- |
