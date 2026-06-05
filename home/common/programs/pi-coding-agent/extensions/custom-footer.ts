@@ -169,13 +169,10 @@ export default function (pi: ExtensionAPI) {
           const presetMatch = multiPassStatus.match(/^preset:([^\s|]+)/);
           const activePreset = presetMatch?.[1];
 
-          // Extract model-quota status for right-side display
-          const quotaStatus = extensionStatuses.get("model-quota") || "";
-
           // Line 2 right: build as priority-ordered segments
-          // Priority (highest = last to drop): model > thinking > preset > provider > quota
+          // Priority (highest = last to drop): model > thinking > preset > provider
           const modelName = ctx.model?.id || "no-model";
-          const sep = theme.fg("dim", " • ");
+          const sep = theme.fg("dim", "/");
 
           // Core: always shown
           const modelPart = theme.fg("accent", modelName);
@@ -205,26 +202,12 @@ export default function (pi: ExtensionAPI) {
             }
           }
 
-          // Quota (drop first)
-          let quotaPart = "";
-          if (quotaStatus) {
-            const quotaClean = quotaStatus
-              .replace(/[\r\n\t]/g, " ")
-              .replace(/ +/g, " ")
-              .trim();
-            if (quotaClean) {
-              quotaPart = sep + theme.fg("dim", quotaClean);
-            }
-          }
-
           // Progressive truncation: try full, then drop items from lowest priority
           // Available width for right side
           const availableForRight = width - visibleWidth(statsLeft) - 2;
 
           const candidates = [
-            // 0: Full — preset + provider + model + thinking + quota
-            presetPart + providerPart + modelPart + thinkingPart + quotaPart,
-            // 1: Drop quota — preset + provider + model + thinking
+            // 0: Full — preset + provider + model + thinking
             presetPart + providerPart + modelPart + thinkingPart,
             // 2: Drop provider — preset + model + thinking
             presetPart + modelPart + thinkingPart,
@@ -243,11 +226,12 @@ export default function (pi: ExtensionAPI) {
           }
 
           // Merge remaining extension statuses into stats line (between left stats and right model info)
-          // Exclude "multi-pass" preset status (shown on right) and "model-quota" (shown on right)
+          // Exclude "multi-pass" preset status (shown on right) (shown on right)
           if (extensionStatuses.size > 0) {
-            const excludedKeys = new Set<string>();
-            if (activePreset) excludedKeys.add("multi-pass");
-            if (quotaStatus) excludedKeys.add("model-quota");
+            const excludedStatusKeys = activePreset
+              ? ["multi-pass", "caveman"]
+              : [];
+            const excludedKeys = new Set<string>(excludedStatusKeys);
 
             const statusParts = Array.from(extensionStatuses.entries())
               .sort(([a], [b]) => a.localeCompare(b))
