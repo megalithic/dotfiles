@@ -15,12 +15,10 @@ import { execSync } from "node:child_process";
 
 const MAX_FOLLOWUPS = 1;
 const MAX_TICKETS_PER_SECTION = 3;
-
+const STOP_HOOK_CHECK_START_EVENT = "mega.stop-hook.check-start";
+const STOP_HOOK_CHECK_END_EVENT = "mega.stop-hook.check-end";
 const STOP_CHECK_PROMPT_BASE =
-  "Review your last response. Did you complete everything the user asked? If the user asked a question, make sure you answered it in a format they could clearly see and understand. Do not run lat_search or lat_check just because of this review prompt; only use lat tools if you continue work and the actual task requires code or documentation changes. If not, continue working. If you did complete everything, briefly confirm what was done. If ticket context is provided below, suggest the best next ticket(s) by related work first: same parent epic, same plan/task sequence, direct dependents or unblocked siblings, then related scope. Fall back to global priority only after related options.";
-
-const INTERRUPTED_PROMPT_BASE =
-  "You were interrupted (the user pressed Escape to stop you). Review what you were doing and what state things are in. If work is partially done, summarize where you left off and what remains. Ask the user how they'd like to proceed rather than automatically resuming — they may have stopped you intentionally to change direction.";
+  "Review your last response. Did you complete everything the user asked? If the user asked a question, make sure you answered it in a format they could clearly see and understand. Do not run lat_search or lat_check just because of this review prompt; only use lat tools if you continue work and the actual task requires code or documentation changes. If not, continue working only within the user's requested scope. If the user only asked you to investigate, inspect, check, audit, or report findings, do not fix anything now; report findings and ask before changing anything. If you did complete everything, briefly confirm what was done. If ticket context is provided below, suggest the best next ticket(s) by related work first: same parent epic, same plan/task sequence, direct dependents or unblocked siblings, then related scope. Fall back to global priority only after related options.";
 
 /**
  * Run a shell command and return trimmed output, or null on failure.
@@ -509,8 +507,11 @@ async function askGatekeeper(
       apiKey: auth.apiKey,
       headers: auth.headers,
       maxTokens: 16,
+      signal: ctx.signal,
     },
   );
+
+  if (ctx.signal?.aborted || response.stopReason === "aborted") return null;
 
   const text = response.content
     .filter((c: any): c is { type: "text"; text: string } => c.type === "text")
@@ -541,11 +542,22 @@ function looksComplete(messages: any[]): boolean {
   return completionSignals.some((re) => re.test(text));
 }
 
+function wasUserInterrupted(messages: any[], ctx: ExtensionContext): boolean {
+  return (
+    ctx.signal?.aborted === true ||
+    messages.some(
+      (m: any) => m.role === "assistant" && m.stopReason === "aborted",
+    )
+  );
+}
+
 async function shouldSendNudge(
   messages: any[],
   ctx: ExtensionContext,
   failureCounter: { count: number },
 ): Promise<boolean> {
+  if (wasUserInterrupted(messages, ctx)) return false;
+
   // Skip gatekeeper if too many consecutive failures
   if (failureCounter.count >= MAX_GATEKEEPER_FAILURES) return false;
 
@@ -584,8 +596,11 @@ async function shouldSendNudge(
   ];
 
   for (const gatekeeper of gatekeepers) {
+    if (wasUserInterrupted(messages, ctx)) return false;
+
     try {
       const result = await gatekeeper.fn();
+      if (wasUserInterrupted(messages, ctx)) return false;
       if (result !== null) {
         failureCounter.count = 0;
         return result;
@@ -610,13 +625,12 @@ export default function (pi: ExtensionAPI) {
     }
   });
 
-  pi.on("agent_end", async (event, _ctx) => {
+  pi.on("agent_end", async (event, ctx) => {
     if (followupCount >= MAX_FOLLOWUPS) return;
 
-    // Detect if agent was interrupted (user hit Escape)
-    const wasInterrupted = event.messages.some(
-      (m: any) => m.role === "assistant" && m.n === "aborted",
-    );
+    // Escape aborts the stop hook too. During agent_end, ctx.signal is still
+    // the active run's AbortSignal; stopReason is the persisted fallback.
+    if (wasUserInterrupted(event.messages, ctx)) return;
 
     // Skip nudge when pinvim/neovim only sent editor context without a user prompt.
     if (isEditorContextOnlyTurn(event.messages)) return;
@@ -627,42 +641,37 @@ export default function (pi: ExtensionAPI) {
     // with that follow-up turn and hide its output from the user.
     if (queuedExecuteCommand(event.messages)) return;
 
-    // Skip nudge when agent made no tool calls (simple Q&A) — unless interrupted
-    if (!wasInterrupted) {
-      const hasToolUse = event.messages.some(
-        (m: any) =>
-          m.role === "assistant" &&
-          Array.isArray(m.content) &&
-          m.content.some((b: any) => b.type === "toolCall"),
-      );
-      if (!hasToolUse) return;
-    }
+    // Skip nudge when agent made no tool calls (simple Q&A).
+    const hasToolUse = event.messages.some(
+      (m: any) =>
+        m.role === "assistant" &&
+        Array.isArray(m.content) &&
+        m.content.some((b: any) => b.type === "toolCall"),
+    );
+    if (!hasToolUse) return;
 
-    // Skip gatekeeper for interruptions — always nudge on abort
-    if (!wasInterrupted) {
+    pi.events.emit(STOP_HOOK_CHECK_START_EVENT, undefined);
+    try {
       const shouldNudge = await shouldSendNudge(
         event.messages,
-        _ctx,
+        ctx,
         gatekeeperFailures,
       );
-      if (!shouldNudge) return;
+      if (!shouldNudge || wasUserInterrupted(event.messages, ctx)) return;
+    } finally {
+      pi.events.emit(STOP_HOOK_CHECK_END_EVENT, undefined);
     }
 
     followupCount++;
 
-    // Pick base prompt based on whether agent was interrupted
-    const basePrompt = wasInterrupted
-      ? INTERRUPTED_PROMPT_BASE
-      : STOP_CHECK_PROMPT_BASE;
-
     // Append concise VCS + ticket summaries (no raw CLI dumps)
     const vcsSummary = getVcsSummary();
     const ticketSummary = getTicketSummary(event.messages);
-    const contextParts = [basePrompt];
+    const contextParts = [STOP_CHECK_PROMPT_BASE];
     if (vcsSummary) contextParts.push(vcsSummary);
     if (ticketSummary) contextParts.push(ticketSummary);
     const prompt = contextParts.join("\n\n");
 
-    sendStopHookFollowup(pi, _ctx, prompt);
+    sendStopHookFollowup(pi, ctx, prompt);
   });
 }
