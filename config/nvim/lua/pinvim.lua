@@ -635,45 +635,6 @@ local function ranked_manifest_targets(config, opts)
   return filter_cached_targets(opts)
 end
 
-local function resumable_ephemeral_target(config)
-  local context = current_tmux_context()
-  if not context.session then return nil end
-
-  local cwd = normalize_path(vim.uv.cwd())
-  local root = normalize_path(config.resolve_root())
-  local candidates = {}
-
-  for _, target in ipairs(filter_cached_targets({ include_ephemeral = true, same_tmux_session = true })) do
-    if target.ephemeral then
-      local same_window = (context.window_name and target.window == context.window_name)
-        or (context.window_index and tostring(target.window or "") == tostring(context.window_index))
-      local target_cwd = normalize_path(target.cwd)
-      local target_root = normalize_path(target.root)
-      local same_cwd_or_root = same_path(target_cwd, cwd)
-        or (target_root and root and same_path(target_root, root))
-        or (target_cwd and root and path_contains(root, target_cwd))
-      local age = target.activity and target.activity > 0 and math.max(os.time() - target.activity, 0) or nil
-
-      if same_window or (same_cwd_or_root and age and age <= 900) then
-        table.insert(candidates, {
-          target = target,
-          same_window = same_window,
-          same_cwd_or_root = same_cwd_or_root,
-          age = age or math.huge,
-        })
-      end
-    end
-  end
-
-  table.sort(candidates, function(a, b)
-    if a.same_window ~= b.same_window then return a.same_window end
-    if a.same_cwd_or_root ~= b.same_cwd_or_root then return a.same_cwd_or_root end
-    return a.age < b.age
-  end)
-
-  return candidates[1] and candidates[1].target or nil
-end
-
 local function parked_socket_set()
   local parked = tmux_option("@pimux.parked_sockets")
   local set = {}
@@ -784,28 +745,6 @@ local function discover_socket_by_tmux(config)
       string.format("%s/%s-%s-%s.sock", config.transport.socket_dir, config.transport.prefix, context.session, window)
     if socket_exists(window_socket) then return window_socket end
 
-    -- Glob for ephemeral sockets: pi-{session}-{window}-eph-*.sock
-    local eph_pattern = string.format(
-      "%s/%s-%s-%s-eph-*.sock",
-      config.transport.socket_dir,
-      config.transport.prefix,
-      context.session,
-      window
-    )
-    local matches = vim.fn.glob(eph_pattern, false, true)
-    if #matches > 0 then
-      -- Filter to live sockets, pick most recently modified
-      local best, best_mtime = nil, 0
-      for _, sock_path in ipairs(matches) do
-        if socket_exists(sock_path) then
-          local mtime = stat_mtime(sock_path)
-          if mtime > best_mtime then
-            best, best_mtime = sock_path, mtime
-          end
-        end
-      end
-      if best then return best end
-    end
   end
 
   return nil
@@ -821,9 +760,6 @@ function Transport.resolve_socket(config)
   if registry_source then return registry_socket, registry_source end
 
   if discovery_stale() then schedule_manifest_discovery(config) end
-
-  local ephemeral = resumable_ephemeral_target(config)
-  if ephemeral then return ephemeral.path, "manifest-ephemeral" end
 
   local ranked = filter_cached_targets({ include_ephemeral = false, same_tmux_session = true })
   if ranked[1] then return ranked[1].path, "manifest-ranked" end

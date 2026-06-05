@@ -5,7 +5,8 @@
 #
 # Model:
 #   - From nvim/vim pane: ensure/toggle a 30% right split running pi.
-#   - Hide does not kill pi; it parks pane in hidden "agent" window.
+#   - Hide parks durable main pi panes in hidden "agent" windows.
+#   - Child/legacy ephemeral panes are not parked by default; hiding them kills the pane.
 #   - Show restores parked pane history, preferring explicit socket, active, last,
 #     MRU, then any parked pi pane.
 #   - From non-nvim pane: focus the agent window instead of joining a split.
@@ -14,8 +15,8 @@
 #   --ensure       Ensure pi is visible; do not hide if already visible.
 #   --socket PATH  Prefer pi pane linked to socket PATH.
 #   --bell PATH    Ring bell in pane linked to socket PATH, then exit.
-#   --new          Spawn ephemeral pi in current nvim window split only.
-#                  Sets PI_SOCKET/PI_EPHEMERAL. Auto-generates socket path
+#   --new          Spawn child pi in current nvim window split only.
+#                  Sets PI_SOCKET/PI_EPHEMERAL. Auto-generates legacy socket path
 #                  if --socket not given.
 #
 # Tmux session user option schema:
@@ -119,6 +120,11 @@ tmux_socket_window_token() {
   fi
 }
 
+is_explicit_only_socket() {
+  local sock="$1"
+  [[ "$sock" == */pinvim/*/children/*/*.sock || "$sock" == *-eph-*.sock ]]
+}
+
 socket_for_window() {
   local name="$1" index="${2:-$1}" token
   token=$(tmux_socket_window_token "$name" "$index")
@@ -193,6 +199,8 @@ pane_exists() {
 
 list_remove_socket() {
   local list="$1" sock="$2" out="" entry entry_sock
+  local -a entries=()
+  [[ -z "$list" ]] && { printf '%s\n' ""; return 0; }
   IFS='|' read -r -a entries <<<"$list"
   for entry in "${entries[@]}"; do
     [[ -z "$entry" ]] && continue
@@ -250,13 +258,24 @@ activate_socket() {
   mru_add "$sock"
 }
 
+deactivate_socket() {
+  local sock="$1" active
+  [[ -z "$sock" ]] && return 0
+  active=$(opt_get @pimux.active_socket)
+  if [[ "$active" == "$sock" ]]; then
+    opt_set @pimux.active_socket ""
+    opt_set @pimux.active_pane ""
+  fi
+  unpark_socket "$sock"
+}
+
 registry_pane_is_safe() {
   local pane="$1"
   pane_exists "$pane" && is_pi_pane "$pane"
 }
 
 candidate_sockets() {
-  local value entry active_socket active_pane last_socket last_pane
+  local value entry entry_sock active_socket active_pane last_socket last_pane
   active_socket=$(opt_get @pimux.active_socket)
   active_pane=$(opt_get @pimux.active_pane)
   last_socket=$(opt_get @pimux.last_socket)
@@ -267,7 +286,12 @@ candidate_sockets() {
   for value in "$TARGET_SOCKET" "$active_socket" "$last_socket" "$(opt_get @pimux.mru_sockets)" "$(opt_get @pimux.parked_sockets)"; do
     IFS='|' read -r -a entries <<<"$value"
     for entry in "${entries[@]}"; do
-      [[ -n "$entry" ]] && printf '%s\n' "${entry%%=*}"
+      [[ -z "$entry" ]] && continue
+      entry_sock="${entry%%=*}"
+      if is_explicit_only_socket "$entry_sock" && [[ "$entry_sock" != "$TARGET_SOCKET" ]]; then
+        continue
+      fi
+      printf '%s\n' "$entry_sock"
     done
   done | awk '!seen[$0]++'
 }
@@ -308,13 +332,17 @@ find_pi_in_current_window() {
 }
 
 find_any_parked_pi_pane() {
-  local pane window title
-  while IFS=$'\t' read -r pane window title; do
-    if is_parked_window "$window" && is_pi_title "$title"; then
-      printf '%s\n' "$pane"
+  local entry entry_sock pane
+  IFS='|' read -r -a entries <<<"$(opt_get @pimux.parked_sockets)"
+  for entry in "${entries[@]}"; do
+    [[ -z "$entry" ]] && continue
+    entry_sock="${entry%%=*}"
+    pane="${entry#*=}"
+    if ! is_explicit_only_socket "$entry_sock" && registry_pane_is_safe "$pane"; then
+      printf '%s\t%s\n' "$pane" "$entry_sock"
       return 0
     fi
-  done < <(tmux list-panes -s -t "$SESSION" -F '#{pane_id}	#{window_name}	#{pane_title}')
+  done
   return 1
 }
 
@@ -359,7 +387,7 @@ find_preferred_pi_pane() {
     pane=$(find_pane_for_socket "$sock") && { printf '%s\t%s\n' "$pane" "$sock"; return 0; }
   done < <(candidate_sockets)
 
-  pane=$(find_any_parked_pi_pane) && { printf '%s\t%s\n' "$pane" "$(opt_get @pimux.last_socket)"; return 0; }
+  find_any_parked_pi_pane && return 0
   return 1
 }
 
@@ -524,7 +552,12 @@ main() {
     if [[ -z "$TARGET_SOCKET" || "$current_sock" == "$TARGET_SOCKET" ]]; then
       [[ "$ENSURE" == true ]] && exit 0
       sock=$(infer_socket_for_pane "$current_pi" "$TARGET_SOCKET")
-      park_pane "$current_pi" "$sock"
+      if is_explicit_only_socket "$sock"; then
+        deactivate_socket "$sock"
+        tmux kill-pane -t "$current_pi"
+      else
+        park_pane "$current_pi" "$sock"
+      fi
       exit 0
     fi
   fi
