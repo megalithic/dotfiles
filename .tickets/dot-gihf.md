@@ -1,6 +1,6 @@
 ---
 id: dot-gihf
-status: in_progress
+status: closed
 deps: []
 links: []
 created: 2026-05-11T15:15:00Z
@@ -9,6 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Set Tidewave lifecycle to keep-alive in mcp.json
 
 Tidewave's Bandit server times out when pi-mcp-adapter's default lazy lifecycle kills idle connections after 10 minutes. This causes Bandit.TransportError: timeout errors.
@@ -24,3 +25,8 @@ See home/common/programs/pi-coding-agent/mcp.json.
 3. pi starts and /mcp shows tidewave as connected
 4. No Bandit.TransportError: timeout errors after 10+ min idle
 
+## Notes
+
+**2026-06-04T20:42:49Z**
+
+Set lifecycle=keep-alive in verify-doctor/devenv.nix and rx/devenv.nix (per-project via devenv-base.ai.mcp.extraServers). Ticket text originally pointed at home/common/programs/pi-coding-agent/mcp.json — that file has no tidewave entry by design (lat.md policy: local app-backed MCP servers are not declared globally). Verification (pi /mcp + 10+ min idle test) is on the user.

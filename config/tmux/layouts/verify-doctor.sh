@@ -6,6 +6,7 @@ CWD="$(zoxide query "$SESSION" 2>/dev/null || printf '%s\n' "$HOME/code")"
 export SESSION_ICON="󰓙" # alts:  󰴓 󰃀   
 export SESSION_FG="#1e64f1"
 export SESSION_BG="#ffffff"
+export SESSION_NAME="${SESSION}"
 
 tmux -2 new-session -d -s "$SESSION" -n dots
 tmux -2 send-keys -t "$SESSION":1 cd\ "$CWD" "C-m"
@@ -26,7 +27,7 @@ tmux -2 select-pane -t "$SESSION":2.1
 # tmux send-keys -t "$SESSION":3.1 "p" "C-m"
 
 tmux send-keys -t "$SESSION":4.1 "ls" "C-m"
-# tmux send-keys -t "$SESSION":4.1 "devenv processes start -d && devenv tasks run app:logs" "C-m"
+tmux send-keys -t "$SESSION":4.1 "devenv up -d && start-phx" "C-m"
 tmux select-layout -t "$SESSION":4 tiled
 tmux select-layout -t "$SESSION":4 even-horizontal
 tmux select-pane -t "$SESSION":4.2
@@ -37,7 +38,7 @@ tmux -2 select-window -t "$SESSION":2
 tmux -2 select-pane -t "$SESSION":2.1
 
 # session closed hook to stop running devenv processes
-tmux set-hook -t "$SESSION" session-closed "run-shell 'cd $CWD && devenv processes down 2>/dev/null'"
+tmux set-hook -t "$SESSION" session-closed "run-shell 'cd $CWD && devenv down 2>/dev/null'"
 
 tmux setenv -t "${SESSION}" 'SESSION_ICON' "${SESSION_ICON}"
 tmux setenv -t "${SESSION}" 'SESSION_FG' "${SESSION_FG}"
