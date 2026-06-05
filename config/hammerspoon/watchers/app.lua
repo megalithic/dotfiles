@@ -16,12 +16,10 @@ M.lollygagger = req("lollygagger")
 -- interface: (element, event, watcher, info)
 function M.handleWatchedEvent(elementOrAppName, event, _watcher, app)
   if elementOrAppName ~= nil then
-    -- M.runLayoutRulesForAppBundleID(elementOrAppName, event, app)
+    M.runLayoutRulesForAppBundleID(elementOrAppName, event, app)
     M.runContextForAppBundleID(elementOrAppName, event, app)
 
-    if M.lollygagger then
-      M.lollygagger:run(elementOrAppName, event, app)
-    end
+    if M.lollygagger then M.lollygagger:run(elementOrAppName, event, app) end
   end
 end
 
@@ -48,19 +46,15 @@ function M.runLayoutRulesForAppBundleID(elementOrAppName, event, app)
   -- NOTE: only certain events are layout-runnable
   local layoutableEvents = {
     hs.application.watcher.launched,
-    hs.application.watcher.terminated,
-    -- hs.uielement.watcher.windowCreated,
-    -- hs.application.watcher.activated,
-    -- hs.application.watcher.deactivated,
-    -- hs.uielement.watcher.applicationActivated,
-    -- hs.uielement.watcher.applicationDeactivated,
+    hs.uielement.watcher.windowCreated,
+    hs.uielement.watcher.mainWindowChanged,
   }
 
   if app and enum.contains(layoutableEvents, event) then
-    hs.timer.waitUntil(
-      function() return #app:allWindows() > 0 and app:mainWindow() ~= nil end,
-      function() req("wm").placeApp(event, app) end
-    )
+    hs.timer.doAfter(0.2, function()
+      local ok, hasWindows = pcall(function() return #app:allWindows() > 0 and app:mainWindow() ~= nil end)
+      if ok and hasWindows then require("wm").placeApp(event, app) end
+    end)
   end
 end
 
@@ -100,9 +94,7 @@ function M:start()
   self.watchers.app = {}
   self.watchers.context = contexts:preload()
 
-  if M.lollygagger then
-    self.lollygagger:start()
-  end
+  if M.lollygagger then self.lollygagger:start() end
 
   U.log.i(fmt("started", self.name))
 
@@ -138,9 +130,7 @@ function M:stop()
   end
 
   -- Clean up lollygagger timers
-  if M.lollygagger then
-    M.lollygagger:stop()
-  end
+  if M.lollygagger then M.lollygagger:stop() end
 
   U.log.i(fmt("stopped", self.name))
 

@@ -18,6 +18,9 @@ M.displays = {
   external = "LG UltraFine",
 }
 
+-- Pixel inset applied to every Hammerspoon-managed window frame.
+M.windowGap = 5
+
 M.grid = {
   full = "0,0 60x20",
   preview = "0,0 60x2",

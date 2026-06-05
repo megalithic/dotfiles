@@ -6,9 +6,7 @@ local M = {}
 -- NOTE: _G.Hypers is managed by hyper.lua module (not here)
 
 local fmt = string.format
-local wm = req("wm")
 local summon = req("lib.summon")
-local chain = req("chain")
 local enum = req("hs.fnutils")
 local utils = require("utils")
 
@@ -173,7 +171,7 @@ function M.loadUtils()
       hs.notify.new({ title = "hammerspork", subTitle = "config is reloading..." }):send()
       hs.reload()
     end)
-    :bind({ "shift", "ctrl" }, "l", nil, req("wm").placeAllApps)
+    :bind({ "shift", "ctrl" }, "l", nil, require("wm").placeAllApps)
     :bind({ "ctrl" }, "d", nil, function() utils.dnd() end)
     :bind({ "ctrl" }, "b", nil, function()
       local axb = require("axbrowse")
@@ -369,7 +367,7 @@ function M.loadNativeTiling()
   end
 
   -- Create hypemode for native tiling (hyper+w)
-  local nativeWmMode = hypemode.new("nativeWm", { showIndicator = true })
+  local nativeWmMode = hypemode.new("nativeWm", { showIndicator = true }):start()
 
   nativeWmMode
     -- H: tile left half
@@ -638,8 +636,8 @@ function M.loadNativeTiling()
       _G._browserSplitState = nil
     end, nil)
 
-  -- Bind hyper+l to enter native tiling mode
-  req("hyper", { id = "nativeWm" }):bind({}, "l", function() nativeWmMode:toggle() end)
+  -- Bind hyper+w to enter native tiling mode
+  req("hyper", { id = "nativeWm" }):bind({}, "w", function() nativeWmMode:toggle() end)
 
   U.log.i("nativeTiling: initialized (hyper+w for native macOS tiling via menu)")
 end
@@ -650,7 +648,7 @@ function M:init()
   M.loadFigma()
   M.loadUtils()
   M.loadWm()
-  M.loadNativeTiling() -- Experimental: hyper+w for native macOS tiling
+  M.loadNativeTiling() -- Optional native Tahoe tiling on hyper+w
   M.loadNotifications()
   M.loadForceQuit()
   M.loadShade()

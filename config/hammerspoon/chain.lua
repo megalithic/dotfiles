@@ -17,9 +17,7 @@ obj.lastSeenAt = nil
 obj.DEBUG = true
 
 local function profLog(msg, ...)
-  if obj.DEBUG then
-    U.log.d(string.format("[PERF] chain: " .. msg, ...))
-  end
+  if obj.DEBUG then U.log.d(string.format("[PERF] chain: " .. msg, ...)) end
 end
 
 --- Chain window positions with proper visual tracking
@@ -32,39 +30,41 @@ obj.placeInSequence = function(movements, modal, interval)
   local cycleLength = #movements
   local sequenceNumber = 1
 
-  return function()
+  return function(targetScreen)
     local startTime = hs.timer.absoluteTime()
     profLog(">>> chain action started")
-    
+
     local win = hs.window.frontmostWindow()
     if not win then return end
-    
+
     local id = win:id()
     local now = hs.timer.secondsSinceEpoch()
-    local screen = win:screen()
+    local screen = targetScreen or win:screen()
 
     -- Reset chain if:
     -- - Different chain
     -- - Timeout expired (or first call)
     -- - Different window
-    if obj.lastSeenChain ~= movements 
-       or not obj.lastSeenAt
-       or obj.lastSeenAt < now - chainResetInterval 
-       or obj.lastSeenWindow ~= id then
+    if
+      obj.lastSeenChain ~= movements
+      or not obj.lastSeenAt
+      or obj.lastSeenAt < now - chainResetInterval
+      or obj.lastSeenWindow ~= id
+    then
       sequenceNumber = 1
       obj.lastSeenChain = movements
-    elseif sequenceNumber == 1 then
+    elseif sequenceNumber == 1 and not targetScreen then
       -- At end of chain, restart on next screen
       screen = screen:next()
     end
-    
+
     obj.lastSeenAt = now
     obj.lastSeenWindow = id
 
     -- Move the window
     local gridStart = hs.timer.absoluteTime()
-    hs.grid.set(win, movements[sequenceNumber], screen)
-    profLog("hs.grid.set: %.2fms", (hs.timer.absoluteTime() - gridStart) / 1e6)
+    require("wm").place(movements[sequenceNumber], screen, win)
+    profLog("wm.place: %.2fms", (hs.timer.absoluteTime() - gridStart) / 1e6)
 
     -- Advance sequence
     sequenceNumber = sequenceNumber % cycleLength + 1
@@ -77,12 +77,10 @@ obj.placeInSequence = function(movements, modal, interval)
         modal:updateVisuals()
         profLog("updateVisuals: %.2fms", (hs.timer.absoluteTime() - updateStart) / 1e6)
       end
-      
+
       -- Show indicator if available
       local vm = modal.visualManager
-      if vm and vm.indicator then
-        vm:showIndicator()
-      end
+      if vm and vm.indicator then vm:showIndicator() end
 
       -- Handle exit
       if interval then
@@ -91,7 +89,7 @@ obj.placeInSequence = function(movements, modal, interval)
         modal:exit()
       end
     end
-    
+
     profLog("<<< chain action complete: %.2fms total", (hs.timer.absoluteTime() - startTime) / 1e6)
   end
 end
@@ -101,6 +99,4 @@ end
 ---@param modal table|nil Modality instance
 ---@param interval number|nil Auto-exit delay
 ---@return function
-return function(movements, modal, interval)
-  return obj.placeInSequence(movements, modal, interval)
-end
+return function(movements, modal, interval) return obj.placeInSequence(movements, modal, interval) end

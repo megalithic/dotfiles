@@ -39,6 +39,47 @@ local function matchesPattern(title, pattern)
   return (title or ""):lower():find(pattern:lower(), 1, true) ~= nil
 end
 
+local GRID_COLS = 60
+local GRID_ROWS = 20
+
+local function windowGap() return C.windowGap or 5 end
+
+local function parseGridPosition(pos)
+  if type(pos) == "table" then return pos end
+  if type(pos) ~= "string" then return nil end
+
+  local x, y, w, h = pos:match("^(%-?%d+),(%-?%d+)%s+(%d+)x(%d+)$")
+  if not x then return nil end
+
+  return {
+    x = tonumber(x),
+    y = tonumber(y),
+    w = tonumber(w),
+    h = tonumber(h),
+  }
+end
+
+function M.frameForPosition(pos, screen)
+  local grid = parseGridPosition(pos)
+  if not grid then return nil end
+
+  screen = screen or hs.screen.primaryScreen()
+  local frame = screen:frame()
+  local gap = windowGap()
+
+  local x = frame.x + (frame.w * grid.x / GRID_COLS) + gap
+  local y = frame.y + (frame.h * grid.y / GRID_ROWS) + gap
+  local w = (frame.w * grid.w / GRID_COLS) - (gap * 2)
+  local h = (frame.h * grid.h / GRID_ROWS) - (gap * 2)
+
+  return {
+    x = math.floor(x + 0.5),
+    y = math.floor(y + 0.5),
+    w = math.max(1, math.floor(w + 0.5)),
+    h = math.max(1, math.floor(h + 0.5)),
+  }
+end
+
 function M.targetDisplay(hint)
   local displays = hs.screen.allScreens() or {}
   if type(hint) == "number" then
@@ -48,25 +89,43 @@ function M.targetDisplay(hint)
   end
 end
 
-function M.place(pos)
-  local win = hs.window.frontmostWindow()
+function M.place(pos, screen, win)
+  win = win or hs.window.frontmostWindow()
   if not win then return nil end
-  hs.grid.set(win, pos)
+
+  screen = screen or win:screen()
+  if type(screen) ~= "userdata" then screen = M.targetDisplay(screen) end
+  if not screen then return nil end
+
+  local frame = M.frameForPosition(pos, screen)
+  if not frame then return nil end
+
+  win:setFrame(frame, 0)
   return win
+end
+
+function M.nextScreen(win)
+  win = win or hs.window.frontmostWindow()
+  if not win then return nil end
+  return win:screen():next()
+end
+
+function M.prevScreen(win)
+  win = win or hs.window.frontmostWindow()
+  if not win then return nil end
+  return win:screen():previous()
 end
 
 function M.toNextScreen()
   local win = hs.window.frontmostWindow()
   if not win then return nil end
-  win:moveToScreen(win:screen():next())
-  return win
+  return win:moveToScreen(M.nextScreen(win))
 end
 
 function M.toPrevScreen()
   local win = hs.window.frontmostWindow()
   if not win then return nil end
-  win:moveToScreen(win:screen():previous())
-  return win
+  return win:moveToScreen(M.prevScreen(win))
 end
 
 function M.tile()
@@ -87,18 +146,15 @@ function M.tile()
       local focused = hs.window.focusedWindow()
       local alt = hs.window.find(choice.id)
       if not focused or not alt then return end
+      local screen = focused:screen()
       if hs.eventtap.checkKeyboardModifiers()["shift"] then
         hs.alert.show("  70 󱪳 30  ")
-        hs.layout.apply({
-          { nil, focused, focused:screen(), hs.layout.left70, 0, 0 },
-          { nil, alt, focused:screen(), hs.layout.right30, 0, 0 },
-        })
+        M.place("0,0 42x20", screen, focused)
+        M.place("42,0 18x20", screen, alt)
       else
         hs.alert.show("  50 󱪳 50  ")
-        hs.layout.apply({
-          { nil, focused, focused:screen(), hs.layout.left50, 0, 0 },
-          { nil, alt, focused:screen(), hs.layout.right50, 0, 0 },
-        })
+        M.place(C.grid.halves.left, screen, focused)
+        M.place(C.grid.halves.right, screen, alt)
       end
       alt:raise()
     end
@@ -138,14 +194,14 @@ function M.placeApp(event, app)
         if #standardWindows > 0 then
           enum.each(standardWindows, function(w)
             U.log.n(fmt([[[RUN] wm/layouts/%s/%s: "%s"]], app:bundleID(), utils.eventString(event), w:title()))
-            hs.grid.set(w, position, M.targetDisplay(screenNum))
+            M.place(position, M.targetDisplay(screenNum), w)
           end)
         end
       else
         local win = hs.window.find(winTitlePattern)
         if win and matchesPattern(win:title(), winTitlePattern) and not shouldExcludeWindow(win:title(), rules) then
           U.log.n(fmt([[[RUN] wm/layouts/%s/%s: "%s"]], app:bundleID(), utils.eventString(event), win:title()))
-          hs.grid.set(win, position, M.targetDisplay(screenNum))
+          M.place(position, M.targetDisplay(screenNum), win)
         end
       end
     end)
@@ -159,6 +215,8 @@ end
 function M.init()
   U.log.i("wm: Initializing")
 
+  local chainExitDelay = 1.25
+
   -- Create WM modality with all visual features
   local wmModality = hypemode.new("wm", {
     showAlert = true,
@@ -166,7 +224,7 @@ function M.init()
     showIndicator = true, -- Border around window
     indicatorColor = "#e39b7b", -- Warm orange
     dimWindow = 0.4, -- 40% dim (lighter than before)
-    autoExit = 3, -- Auto-exit after 3s of inactivity
+    autoExit = 2.0, -- Auto-exit after 2s of inactivity
   })
 
   -- Pre-create chain closures for Shift+H/L so they maintain state across calls
@@ -176,7 +234,7 @@ function M.init()
       return C.grid[size]["left"]
     end),
     wmModality,
-    2.0
+    chainExitDelay
   )
   local shiftLChain = chain(
     enum.map({ "halves", "thirds", "twoThirds", "fiveSixths", "sixths" }, function(size)
@@ -184,7 +242,7 @@ function M.init()
       return C.grid[size]["right"]
     end),
     wmModality,
-    2.0
+    chainExitDelay
   )
 
   wmModality
@@ -202,8 +260,8 @@ function M.init()
         C.grid.center.tiny,
         C.grid.center.mini,
         C.grid.preview,
-      }, wmModality, 2.0)
-    ) -- 2s before auto-exit
+      }, wmModality, chainExitDelay)
+    ) -- chainExitDelay before auto-exit
     -- Return: fullscreen
     :bind({}, "return", function()
       M.place(C.grid.full)
@@ -211,8 +269,7 @@ function M.init()
     end, function() wmModality:exit(0.3) end)
     -- Shift+Return: fullscreen on next screen
     :bind({ "shift" }, "return", function()
-      M.toNextScreen()
-      M.place(C.grid.full)
+      M.place(C.grid.full, M.nextScreen())
       wmModality:updateVisuals()
     end, function() wmModality:exit(0.3) end)
     -- H: left side sizes
@@ -225,7 +282,7 @@ function M.init()
           return C.grid[size]["left"]
         end),
         wmModality,
-        2.0
+        chainExitDelay
       )
     )
     -- L: right side sizes
@@ -238,20 +295,18 @@ function M.init()
           return C.grid[size]["right"]
         end),
         wmModality,
-        2.0
+        chainExitDelay
       )
     )
     -- Shift+H: prev screen + left (uses pre-created chain)
     :bind({ "shift" }, "h", function()
-      M.toPrevScreen()
-      wmModality:updateVisuals()
-      shiftHChain()
+      local screen = M.prevScreen()
+      shiftHChain(screen)
     end)
     -- Shift+L: next screen + right (uses pre-created chain)
     :bind({ "shift" }, "l", function()
-      M.toNextScreen()
-      wmModality:updateVisuals()
-      shiftLChain()
+      local screen = M.nextScreen()
+      shiftLChain(screen)
     end)
     -- J: center large
     :bind({}, "j", function()
@@ -275,7 +330,7 @@ function M.init()
     end)
 
   -- Bind to hyper+l for WM mode
-  req("hyper", { id = "wm" }):bind({}, "w", function() wmModality:toggle() end)
+  req("hyper", { id = "wm" }):bind({}, "l", function() wmModality:toggle() end)
 
   U.log.i("wm: initialized (hyper+l to activate)")
 
