@@ -13,19 +13,14 @@
     enable = true;
     package = pkgs.ghostty-bin; # Use pre-built binary (darwin), not ghostty (linux-only)
 
-    # Don't use settings - we symlink the raw config file instead
-    # This preserves comments and allows editing without rebuild
+    # Don't use settings - we symlink the raw config file instead.
+    # This preserves comments and allows editing without rebuild.
     enableFishIntegration = true;
   };
 
+  # Ghostty on macOS supports XDG config, so keep one canonical live link.
   xdg.configFile."ghostty" = {
     source = config.lib.mega.linkConfig "ghostty";
     force = true;
-  };
-
-  # Symlink our config to where Ghostty looks on macOS
-  # Ghostty checks: ~/Library/Application Support/com.mitchellh.ghostty/config
-  home.file."Library/Application Support/com.mitchellh.ghostty/config" = {
-    source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/config/ghostty/config";
   };
 }
