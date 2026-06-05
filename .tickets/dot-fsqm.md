@@ -1,6 +1,6 @@
 ---
 id: dot-fsqm
-status: open
+status: closed
 deps: 4:1:deps: [, dot-sv2l]
 links: []
 created: 2026-06-03T20:11:43Z
