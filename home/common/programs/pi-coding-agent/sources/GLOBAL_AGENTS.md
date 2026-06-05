@@ -12,8 +12,6 @@
 
 ## Caveman mode
 
-- Always use the `caveman` skill (full intensity) for all responses. Active from first message, every session.
-- Off only when user says "stop caveman" or "normal mode".
 - Do NOT use caveman-commit, caveman-review, or caveman-help — use `git-commit` and `writing-clearly-and-concisely` instead.
 
 ## Writing
@@ -79,5 +77,3 @@ When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-f
 
 - Ad-hoc agent-generated documents (audits, research notes, mental-model writeups, investigation reports) go to `~/.local/share/pi/docs/$(basename $PWD)/`, mirroring the layout used by handoffs (`~/.local/share/pi/handoffs/$(basename $PWD)/`) and plans.
 - Use a descriptive filename, e.g. `helium-audit.md`, `widevine-research.md`. Companion artifacts (HTML, diagrams) sit next to the markdown with the same stem.
-- The in-repo `docs/` directory is reserved for curated, tracked architecture docs and skills/agents/commands resources that are part of the repo's deliverables. Don't drop ad-hoc audits there.
-- If an ad-hoc doc proves durable and becomes reference material, promote it: move into repo `docs/` (or `lat.md/` where appropriate) in a follow-up commit.
