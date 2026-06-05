@@ -361,8 +361,9 @@ end
 
 local function normalize_path(path)
   if not path or path == "" then return nil end
-  if vim.fs and vim.fs.normalize then return vim.fs.normalize(path) end
-  return vim.fn.fnamemodify(path, ":p"):gsub("/$", "")
+  local normalized = vim.fs and vim.fs.normalize and vim.fs.normalize(path) or vim.fn.fnamemodify(path, ":p"):gsub("/$", "")
+  local real = normalized and vim.uv.fs_realpath(normalized) or nil
+  return (real or normalized):gsub("/$", "")
 end
 
 local function same_path(a, b)
@@ -1368,6 +1369,77 @@ function Transport.build_explicit_send(config, command_opts)
 end
 
 
+local function editor_service_buffers_for_path(file)
+  local normalized = normalize_path(file)
+  if not normalized then return {} end
+  local matches = {}
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    local name = vim.api.nvim_buf_get_name(bufnr)
+    if name ~= "" and same_path(name, normalized) then
+      table.insert(matches, bufnr)
+    end
+  end
+  return matches
+end
+
+local function editor_service_reload_file(file)
+  local normalized = normalize_path(file)
+  local response = {
+    ok = true,
+    path = normalized,
+    reloaded = {},
+    conflicts = {},
+    missing = {},
+  }
+  if not normalized then return response end
+
+  local bufs = editor_service_buffers_for_path(normalized)
+  if #bufs == 0 then
+    table.insert(response.missing, { path = normalized, reason = "buffer not open" })
+    return response
+  end
+
+  local current = vim.api.nvim_get_current_buf()
+  for _, bufnr in ipairs(bufs) do
+    local name = vim.api.nvim_buf_get_name(bufnr)
+    local modified = vim.bo[bufnr].modified == true
+    local entry = {
+      bufnr = bufnr,
+      path = name,
+      current = bufnr == current,
+      modified = modified,
+    }
+
+    if modified then
+      table.insert(response.conflicts, entry)
+    else
+      local checktime_ok, checktime_err = pcall(vim.api.nvim_buf_call, bufnr, function()
+        vim.cmd("checktime")
+        if vim.api.nvim_get_current_buf() == bufnr and vim.bo[bufnr].modified == false and name ~= "" then pcall(vim.cmd, "edit") end
+      end)
+      entry.reloaded = checktime_ok
+      if not checktime_ok then entry.error = tostring(checktime_err) end
+      table.insert(response.reloaded, entry)
+    end
+  end
+
+  if #response.conflicts > 0 then
+    local label = vim.fn.fnamemodify(normalized, ":~:.")
+    local count = #response.conflicts
+    vim.notify(
+      string.format(
+        "pinvim: external change left %d dirty buffer%s untouched (%s)",
+        count,
+        count == 1 and "" or "s",
+        label
+      ),
+      vim.log.levels.WARN
+    )
+  end
+
+  return response
+end
+
 local function diagnostic_to_table(diagnostic)
   local severity_names = {
     [vim.diagnostic.severity.ERROR] = "ERROR",
@@ -1433,13 +1505,45 @@ function EditorService.handle_request(api, config, method, params)
   end
 
   if method == "reload_buffer" then
-    if params.path or params.file or params.absFile then
-      local file = params.path or params.file or params.absFile
-      if type(file) == "string" and file ~= "" then vim.cmd.edit(vim.fn.fnameescape(file)) end
+    local file = params.path or params.file or params.absFile
+    if type(file) == "string" and file ~= "" then
+      local result = editor_service_reload_file(file)
+      result.context = EditorService.current_context(config)
+      return result
+    end
+    if vim.bo.modified then
+      return {
+        ok = true,
+        conflicts = {
+          {
+            bufnr = vim.api.nvim_get_current_buf(),
+            path = vim.api.nvim_buf_get_name(0),
+            current = true,
+            modified = true,
+          },
+        },
+        reloaded = {},
+        missing = {},
+        context = EditorService.current_context(config),
+      }
     end
     vim.cmd("checktime")
     if vim.bo.modified == false and vim.api.nvim_buf_get_name(0) ~= "" then pcall(vim.cmd, "edit") end
-    return EditorService.current_context(config)
+    return {
+      ok = true,
+      conflicts = {},
+      reloaded = {
+        {
+          bufnr = vim.api.nvim_get_current_buf(),
+          path = vim.api.nvim_buf_get_name(0),
+          current = true,
+          modified = false,
+          reloaded = true,
+        },
+      },
+      missing = {},
+      context = EditorService.current_context(config),
+    }
   end
 
   if method == "refresh_diagnostics" then

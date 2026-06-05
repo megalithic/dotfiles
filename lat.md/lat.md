@@ -202,9 +202,11 @@ Supported methods are intentionally small and local-only:
 - `context.current` returns the same current buffer/selection context shape used by explicit-send attach payloads.
 - `diagnostics.current` returns current-buffer diagnostics with line, column, end range, severity name, source, code, and message.
 - `open_file` and `reveal_file` edit a requested path and optionally jump to `line` / `col`, then return current context.
-- `reload_buffer` edits an optional path, runs `checktime`, reloads clean file buffers, and returns current context.
+- `reload_buffer` edits an optional path, reloads only matching clean buffers, and returns current context plus `reloaded` / `conflicts` / `missing` entries. Dirty buffers are never clobbered; they stay modified and surface a conflict warning instead.
 - `refresh_diagnostics` asks Nvim to show diagnostics and returns current diagnostics.
 - `checktime` runs Nvim `:checktime` and returns `{ ok = true }`.
+
+After successful Pi `edit` and `write` tool calls, `pinvim.ts` asks the editor service to run `reload_buffer` for the changed path. Clean open buffers refresh from disk; dirty buffers stay dirty and Pi surfaces a warning so the user can compare buffer vs file before saving.
 
 `/pinvim-context` uses the same query path to print current Nvim context. `/pinvim-doctor` calls `status` and also reports pi/peer registry identity (parent id, workspace id, instance id, registry root, role), tmux pane, repair candidate, editor-service state, and cleanup hints when stale or mismatched. The Nvim-side `:PiDoctor` reports the same shape (registry identity, target source, manifest candidates under `$PI_STATE_DIR/manifests`, tmux pane, registry files, heartbeat age, editor-service state, cleanup hints) by reading `api.info()` and `api.health()` snapshots without triggering connect or discovery side effects.
 

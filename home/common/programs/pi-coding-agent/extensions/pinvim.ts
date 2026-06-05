@@ -313,6 +313,29 @@ interface NvimPeerCandidate {
   reasons?: string[];
 }
 
+interface ReloadBufferResult {
+  ok?: boolean;
+  path?: string;
+  reloaded?: Array<{
+    bufnr?: number;
+    path?: string;
+    current?: boolean;
+    modified?: boolean;
+    reloaded?: boolean;
+    error?: string;
+  }>;
+  conflicts?: Array<{
+    bufnr?: number;
+    path?: string;
+    current?: boolean;
+    modified?: boolean;
+  }>;
+  missing?: Array<{
+    path?: string;
+    reason?: string;
+  }>;
+}
+
 // =============================================================================
 // State
 // =============================================================================
@@ -1397,6 +1420,36 @@ const deliverMessage = (pi: ExtensionAPI, message: string): void => {
   }
 };
 
+const changedPathFromToolEvent = (
+  event: { input?: unknown },
+  cwd: string,
+): string | null => {
+  const input = (event.input || {}) as Record<string, unknown>;
+  const rawPath =
+    typeof input.path === "string"
+      ? input.path
+      : typeof input.file === "string"
+        ? input.file
+        : typeof input.absFile === "string"
+          ? input.absFile
+          : null;
+  if (!rawPath || rawPath.trim() === "") return null;
+  return path.isAbsolute(rawPath) ? rawPath : path.resolve(cwd, rawPath);
+};
+
+const describeReloadBufferResult = (
+  toolName: string,
+  filePath: string,
+  result: ReloadBufferResult,
+): string | null => {
+  const conflicts = result.conflicts || [];
+  if (conflicts.length === 0) return null;
+  return [
+    `Pinvim kept dirty buffer${conflicts.length === 1 ? "" : "s"} unchanged after ${toolName}: ${path.basename(filePath)}`,
+    "Disk changed. Buffer still dirty. Compare buffer with file before saving.",
+  ].join("\n");
+};
+
 const respond = (socket: net.Socket, data: Record<string, unknown>): void => {
   if (socket.destroyed || !socket.writable) return;
   try {
@@ -1737,6 +1790,39 @@ export default function (pi: ExtensionAPI): void {
         content: text,
         display: true,
       },
+    };
+  });
+
+  pi.on("tool_result", async (event, ctx) => {
+    const toolName = String(event.toolName || "").toLowerCase();
+    if (!new Set(["edit", "write"]).has(toolName)) return;
+    if (event.isError) return;
+
+    const filePath = changedPathFromToolEvent(event, ctx.cwd);
+    if (!filePath) return;
+
+    const response = await editorServiceRequest("reload_buffer", {
+      path: filePath,
+      reason: `pi-tool:${toolName}`,
+    });
+    if (!response.ok) return;
+
+    const summary = describeReloadBufferResult(
+      toolName,
+      filePath,
+      (response.result || {}) as ReloadBufferResult,
+    );
+    if (!summary) return;
+
+    if (ctx.hasUI) ctx.ui.notify(summary, "warn");
+    return {
+      content: [
+        ...event.content,
+        {
+          type: "text" as const,
+          text: `⚠️ ${summary}`,
+        },
+      ],
     };
   });
 
