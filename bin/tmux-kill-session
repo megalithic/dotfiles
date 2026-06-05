@@ -33,7 +33,8 @@ devenv_cwd=$(tmux showenv -t "$kill_session" DEVENV_CWD 2>/dev/null | cut -d= -f
   devenv_cwd=""
 
 if [ -n "$devenv_cwd" ] && [ -f "$devenv_cwd/devenv.nix" ]; then
-  (cd "$devenv_cwd" && devenv down 2>/dev/null)
+  # `devenv down` exits 1 when no process manager is running; still kill session.
+  (cd "$devenv_cwd" && devenv down 2>/dev/null) || true
 fi
 
 # kill the session
