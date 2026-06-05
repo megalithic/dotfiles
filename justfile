@@ -159,7 +159,7 @@ rebuild dry="":
 darwin *args="":
   #!/usr/bin/env bash
   set -euo pipefail
-  
+
   DRY=""
   SKIP_SYNC=""
   for arg in {{args}}; do
@@ -168,14 +168,14 @@ darwin *args="":
       --skip-sync) SKIP_SYNC="1" ;;
     esac
   done
-  
+
   HOST=$(hostname -s)
-  
+
   if [[ -z "$SKIP_SYNC" ]]; then
     echo ":: Syncing from remote..."
     just _sync-main
   fi
-  
+
   if [[ "$DRY" == "--dry-run" ]]; then
     echo ":: [DRY RUN] Building darwin configuration..."
     darwin-rebuild build --flake ".#$HOST" --show-trace -L
@@ -191,7 +191,7 @@ darwin *args="":
 home *args="":
   #!/usr/bin/env bash
   set -euo pipefail
-  
+
   DRY=""
   SKIP_SYNC=""
   for arg in {{args}}; do
@@ -200,14 +200,14 @@ home *args="":
       --skip-sync) SKIP_SYNC="1" ;;
     esac
   done
-  
+
   HOST=$(hostname -s)
-  
+
   if [[ -z "$SKIP_SYNC" ]]; then
     echo ":: Syncing from remote..."
     just _sync-main
   fi
-  
+
   if [[ "$DRY" == "--dry-run" ]]; then
     echo ":: [DRY RUN] Building home-manager configuration..."
     nix run home-manager -- build --flake ".#$(whoami)@$HOST" --show-trace -L
@@ -215,6 +215,7 @@ home *args="":
   else
     echo ":: Running home-manager switch..."
     nix run home-manager -- switch --flake ".#$(whoami)@$HOST" --show-trace -L
+    pi update --extensions
   fi
 
 # ===========================================================================
@@ -226,25 +227,25 @@ home *args="":
 _sync-main:
   #!/usr/bin/env bash
   set -euo pipefail
-  
+
   # Fetch remote updates
   jj git fetch 2>/dev/null || true
-  
+
   # Check if remote main is ahead
   LOCAL_MAIN=$(jj log -r main -T change_id --no-graph 2>/dev/null || echo "")
   REMOTE_MAIN=$(jj log -r 'main@origin' -T change_id --no-graph 2>/dev/null || echo "")
-  
+
   if [[ -n "$REMOTE_MAIN" && "$LOCAL_MAIN" != "$REMOTE_MAIN" ]]; then
     echo ":: Remote main has updates (likely flake.lock from Sunday automation)"
     jj bookmark set main -r main@origin --allow-backwards
-    
+
     # Rebase current work onto updated main if we're not on main
     CURRENT=$(jj log -r @ -T 'if(bookmarks, bookmarks, change_id)' --no-graph)
     if [[ "$CURRENT" != "main" ]]; then
       echo ":: Rebasing current work onto updated main..."
       jj rebase -d main 2>/dev/null || echo ":: (already up to date or rebase not needed)"
     fi
-    
+
     ntfy send -t "Nix" -m "Synced flake.lock from remote" 2>/dev/null || true
   else
     echo ":: Already up to date with remote"
@@ -265,53 +266,18 @@ _sync-main:
 sync *args:
   #!/usr/bin/env bash
   set -euo pipefail
-  
+
   if ! command -v settings-sync &>/dev/null; then
     echo "Error: settings-sync not found. Run 'just home' first to install it."
     exit 1
   fi
-  
+
   if [[ -z "${1:-}" ]]; then
     settings-sync status
   else
     settings-sync "$@"
   fi
 
-# ===========================================================================
-# Legacy recipes (kept for compatibility, use above instead)
-# ===========================================================================
-
-[macos]
-rebuild-user host=`hostname`:
-  just home
-
-[macos]
-rebuild-home host=`hostname`:
-  just home
-
-[macos]
-rebuild-system host=`hostname`:
-  just darwin
-
-[macos]
-rebuild-fast host=`hostname`:
-  just home
-
-[macos]
-rebuild-old:
-  @echo "WARNING: This may hang on setupLaunchAgents. Use 'just rebuild' instead."
-  sudo darwin-rebuild switch --flake ./
-
-[macos]
-mac:
-  @echo "Deprecated: use 'just darwin' instead"
-  just darwin
-
-# initial nix-darwin build
-[macos]
-build host=`hostname`:
-  sudo nix --experimental-features 'nix-command flakes' run nix-darwin/nix-darwin-25.05 -- switch --option eval-cache false --flake {{flake}}#{{host}} --refresh
-  # eventually: nh darwin switch ./
 
 # REF: https://docs.determinate.systems/troubleshooting/installation-failed-macos#run-the-uninstaller
 [macos]
@@ -327,32 +293,6 @@ check:
   sudo darwin-rebuild check --flake ./
   # nix flake check --no-allow-import-from-derivation
 
-# apply custom nix config for Determinate Nix (trusted-users, cachix caches, etc.)
-[macos]
-apply-nix-config:
-  #!/usr/bin/env bash
-  set -euo pipefail
-
-  SOURCE="{{justfile_directory()}}/nix.custom.conf"
-  TARGET="/etc/nix/nix.custom.conf"
-
-  if [[ ! -f "$SOURCE" ]]; then
-    echo "Error: $SOURCE not found"
-    exit 1
-  fi
-
-  echo ":: Copying nix.custom.conf to $TARGET..."
-  sudo cp "$SOURCE" "$TARGET"
-
-  echo ":: Restarting nix-daemon..."
-  sudo launchctl kickstart -k system/org.nixos.nix-daemon
-
-  echo ":: Verifying trusted-users..."
-  if nix show-config | grep -q "trusted-users.*$(whoami)"; then
-    echo "✓ You are now a trusted user"
-  else
-    echo "⚠ Warning: trusted-users may not have applied. Check 'nix show-config | grep trusted'"
-  fi
 
 # configure opnix service account token (only unmanaged secret, kept out of Nix store)
 # fetches per-host token from 1Password at op://Crypt/opnix/<hostname>/token,
