@@ -35,9 +35,6 @@ tmux send-keys -t "$SESSION":3.1 "p" "C-m"
 tmux -2 select-window -t "$SESSION":2
 tmux -2 select-pane -t "$SESSION":2.1
 
-# session closed hook to stop running devenv processes
-tmux set-hook -g -n 'session-closed' 'run "devenv down 2>/dev/null"'
-
 tmux setenv -t "${SESSION}" 'SESSION_ICON' "${SESSION_ICON}"
 tmux setenv -t "${SESSION}" 'SESSION_FG' "${SESSION_FG}"
 # tmux setenv -t "${SESSION}" 'SESSION_BG' "${SESSION_BG}"

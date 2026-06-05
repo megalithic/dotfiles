@@ -3,17 +3,38 @@
 # usage:
 # bind -r C-k confirm-before -p "kill-session #S (y/n)?" "run-shell 'tmux-kill-session \"#S\" \"mega\"\'"
 
+set -euo pipefail
+
 kill_session=${1:-}
 switch_session=${2:-"mega"}
 
-# check if our target session to switch to exists
-# REF: thanks! https://davidltran.com/blog/check-tmux-session-exists-script
-if (! tmux has-session -t "$switch_session" != 0); then
-  # it does, so switch to it
-  tmux switch-client -t "$switch_session"
-else
-  tmux switch-client -n
+if [ -z "$kill_session" ]; then
+  echo "usage: tmux-kill-session <session-to-kill> [session-to-switch-to]" >&2
+  exit 1
 fi
 
-# kill our desired session
+# don't kill the session we're about to switch to
+if [ "$kill_session" = "$switch_session" ]; then
+  switch_session=""
+fi
+
+# switch client to another session before killing
+if [ -n "$switch_session" ] && tmux has-session -t "$switch_session" 2>/dev/null; then
+  tmux switch-client -t "$switch_session"
+else
+  tmux switch-client -n 2>/dev/null || true
+fi
+
+# stop devenv processes if the session has a devenv project
+# use DEVENV_CWD session env (set by layouts) for reliable project root,
+# falling back to pane current path
+devenv_cwd=$(tmux showenv -t "$kill_session" DEVENV_CWD 2>/dev/null | cut -d= -f2) ||
+  devenv_cwd=$(tmux display-message -t "$kill_session" -p '#{pane_current_path}' 2>/dev/null) ||
+  devenv_cwd=""
+
+if [ -n "$devenv_cwd" ] && [ -f "$devenv_cwd/devenv.nix" ]; then
+  (cd "$devenv_cwd" && devenv down 2>/dev/null)
+fi
+
+# kill the session
 tmux kill-session -t "$kill_session"
