@@ -1,6 +1,6 @@
 ---
 id: dot-xe1y
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-06-03T20:11:43Z

@@ -1,6 +1,6 @@
 ---
 id: dot-eda2
-status: open
+status: closed
 deps: 4:1:deps: [, dot-fiq5]
 links: []
 created: 2026-06-03T20:11:03Z

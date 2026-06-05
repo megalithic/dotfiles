@@ -50,7 +50,7 @@ The local `checkpoint.ts` extension is removed from Home Manager-managed Pi exte
 
 The `sentinel.ts` extension loads rules only from `home/common/programs/pi-coding-agent/extensions/sentinel-rules.json` at startup. A copied file with another name, such as `sentinel-rules 2.json`, is inert until renamed or explicitly wired into the extension.
 
-Pi skills copied from external setups live under `home/common/programs/pi-coding-agent/skills/`. Existing local skills should be diffed before overwrite because some local versions carry repo-specific workflow rules. The `git-worktrees` skill treats `.env`, `.envrc`, `devenv.nix`, and `devenv.yaml` as default core files to copy into new worktrees when present and missing; extend its `worktree_core_files` array when more untracked per-worktree setup files become standard. After a successful new or PR-branch `git worktree add`, the skill runs `devenv tasks run worktree:setup` once from the new worktree when `devenv.nix` exists there and `devenv tasks list` includes `worktree:setup`.
+Pi skills copied from external setups live under `home/common/programs/pi-coding-agent/skills/`. Existing local skills should be diffed before overwrite because some local versions carry repo-specific workflow rules. The `git-worktrees` skill treats `.env`, `.envrc`, `devenv.nix`, and `devenv.yaml` as default core files to copy into new worktrees when present and missing; extend its `worktree_core_files` array when more untracked per-worktree setup files become standard. After a successful new or PR-branch `git worktree add`, the skill runs `devenv tasks run worktree:setup` once from the new worktree when `devenv.nix` exists there and `devenv tasks list` includes `worktree:setup`. The `pinvim-kitty-test` skill documents real pinvim rewrite verification through the running kitty app (`unix:/tmp/mykitty`), an ephemeral private tmux socket/session that avoids all existing tmux sessions, Nvim, Pi, `pimux`, registry state, nested/child/main routing checks, Nvim command/action checks, Pi command checks, and a required pass/fail result matrix.
 
 The `web-browser` skill is a thin wrapper over the `chrome-devtools` MCP server (`chrome-devtools-mcp` on npm). Three MCP server variants are configured in `mcp.json`: `chrome-devtools` (isolated temp profile, default), `chrome-devtools-profile` (copied from daily Helium or Brave, disabled by default), and `chrome-devtools-attach` (attach to running Helium on port 9223, disabled by default). A `copy-profile.sh` helper copies the daily browser profile to `~/.cache/agent-web/profile-copy/` for the profile variant.
 
@@ -178,6 +178,38 @@ Autocmd callbacks should prefer current `vim.*` APIs over deprecated aliases. Ya
 
 Escape handling performs UI cleanup plus opportunistic autosave, but autosave must only run for real file buffers whose parent directory exists. Missing-path buffers are common when opening not-yet-created files, and forcing `:update` there raises `E212`.
 
+## Pinvim registry and identity
+
+Pinvim creates a per-workspace registry under `$PI_STATE_DIR/pinvim/<workspace-hash>/` and exposes it through `:PiInfo` plus `require("pinvim").api.info()`.
+
+The workspace hash is derived from the normalized project root, and `parent.id` persists the durable parent identity for that workspace. Each Neovim process gets an `instances/<nvim-instance-id>/` directory with Nvim-owned `main.intent.json`; a one-time legacy import can seed `main.runtime.json` from existing tmux/socket manifests when the registry is first created, leaving old manifests as fallback discovery. Main-panel launches use registry-root `main.sock` and root-level `main.intent.json` as the durable parent-owned Pi target. When explicit `PI_SOCKET` or buffer-local targets are absent, this registry main socket is the automatic fast path; manifest ranking and tmux socket discovery run only before a parent registry exists or when the user explicitly asks through target/session/doctor commands. `:PiPanel` passes that socket to `pimux`, marks the call as Nvim-originated, marks the panel as `PINVIM_SESSION_ROLE=main`, and uses an atomic `main.launch.lock` directory so concurrent panel opens do not race to spawn the main session.
+
+`:PiSplit` allocates an explicit child session under `children/<child-id>/` with a stable child id, dedicated `child.sock`, and an `intent.json` derived from `registry_base_record`. Nvim spawns the child through `pimux --new --socket <child.sock>` with `PINVIM_SESSION_ROLE=child`, `PINVIM_SESSION_ID=<child-id>`, and `PI_SOCKET=<child.sock>` in the job env; `pimux` forwards those plus `PI_EPHEMERAL=1` into the tmux pane so legacy explicit-only paths still apply. Child sockets live under the registry's `children/` directory, so `is_ephemeral_socket` matches them by path and child closure never touches main. Child sockets are never auto-selected by manifest/discovery scans, never replace the main registry entry, and stay out of default `:PiPanel` reconnect; identity comes from registry + env, not socket basename parsing. Hiding/toggling a visible child or legacy `-eph-` pane kills that pane instead of parking it for later auto-resume, and `pimux` filters child/legacy ephemeral sockets out of active/last/MRU/parked automatic candidates unless the user passed an explicit `--socket`; durable main panes can still park. Child link mode is reported as `child` in runtime state and buffer-local `vim.b.pi_child_socket` (with `vim.b.pi_ephemeral_socket` kept as a back-compat alias).
+
+Pinvim peer identity now carries registry identity in hello frames, hello acknowledgements, and manifests: `parentId`, `workspaceId`, `instanceId`, `registryRoot`, and `role` (`main`, `child`, or `nested`). Nvim derives these values from its registry. The Pi extension mirrors them from PINVIM environment variables when present and rejects peers with mismatched explicit parent, workspace, or instance identity before falling back to tmux/root scoring. The `pinvim` and `pi` wrappers create `$PI_STATE_DIR/pinvim`, and `pimux` forwards PINVIM identity variables plus `PI_SOCKET`, `PI_EPHEMERAL`, and `PI_STATE_DIR` into tmux-spawned Pi panes so main and child splits keep the parent/workspace identity.
+
+Pinvim also exposes a separate Nvim editor service over Neovim's msgpack-RPC server. Nvim starts or reuses `v:servername`, stores the address in `PINVIM_NVIM_LISTEN_ADDRESS`, peer frames, and Nvim manifests, and reports it through `:PiStatus`, `:PiHealth`, `:PiInfo`, `:PiDoctor`, and `require("pinvim").api.info()`. The Pi extension keeps this editor-service client independent from the peer socket: it discovers the listen address from `PINVIM_NVIM_LISTEN_ADDRESS`, active peer frames, Nvim manifests, or `$PINVIM_REGISTRY_ROOT/instances/*/main.intent.json`, probes with non-blocking msgpack-RPC, surfaces address source plus connected/stale/fallback state in `/pinvim-status`, `/pinvim-health`, `/pinvim-info`, and `/pinvim-doctor`, and never blocks peer startup when the editor service is absent. When no editor service is connected or no editor address is discoverable, Pi reports `peer socket only` fallback rather than injecting chat context. The Pi extension calls `unref()` on the pinvim ingress server, editor-service socket, connect timeout, manifest write timeout, pending-context TTL, and editor/peer scan intervals so a missing editor address cannot keep `pi --no-session -p /pinvim-doctor` or other short-lived Pi probes alive past real work.
+
+### Editor-service RPC surface
+
+The editor-service API lets Pi query or manipulate the active Nvim editor without tmux guessing.
+
+Pi sends msgpack-RPC `nvim_exec_lua` requests to `require("pinvim").api.editor_rpc(method, params)`. The reusable Pi-side client is exposed as `globalThis.pinvimEditorService.query(method, params)` and records connected/stale state, last error, last success time, and last method for status surfaces.
+
+Supported methods are intentionally small and local-only:
+
+- `status` returns pinvim editor-service, peer, registry, and current context status.
+- `context.current` returns the same current buffer/selection context shape used by explicit-send attach payloads.
+- `diagnostics.current` returns current-buffer diagnostics with line, column, end range, severity name, source, code, and message.
+- `open_file` and `reveal_file` edit a requested path and optionally jump to `line` / `col`, then return current context.
+- `reload_buffer` edits an optional path, reloads only matching clean buffers, and returns current context plus `reloaded` / `conflicts` / `missing` entries. Dirty buffers are never clobbered; they stay modified and surface a conflict warning instead.
+- `refresh_diagnostics` asks Nvim to show diagnostics and returns current diagnostics.
+- `checktime` runs Nvim `:checktime` and returns `{ ok = true }`.
+
+After successful Pi `edit` and `write` tool calls, `pinvim.ts` asks the editor service to run `reload_buffer` for the changed path. Clean open buffers refresh from disk; dirty buffers stay dirty and Pi surfaces a warning so the user can compare buffer vs file before saving.
+
+`/pinvim-context` uses the same query path to print current Nvim context. `/pinvim-doctor` calls `status` and also reports pi/peer registry identity (parent id, workspace id, instance id, registry root, role), tmux pane, repair candidate, editor-service state, and cleanup hints when stale or mismatched. The Nvim-side `:PiDoctor` reports the same shape (registry identity, target source, manifest candidates under `$PI_STATE_DIR/manifests`, tmux pane, registry files, heartbeat age, editor-service state, cleanup hints) by reading `api.info()` and `api.health()` snapshots without triggering connect or discovery side effects.
+
 ## Pinvim visual selection keymaps
 
 Pinvim visual mappings use Neovim `x` mode, so Lua callbacks may run after Visual mode exits.
@@ -188,9 +220,9 @@ Selection-bearing actions (`gpa`, `gps`, `gpp`, `<C-p>`, `:PiSend`, and `:PiAdd`
 
 Explicit-send delivery has two modes. `gpa` and `:PiSend` use `delivery = "attach"`, so pi stores the latest formatted Neovim context, shows pending-context status, and injects it exactly once into the next non-extension user prompt. `gps` uses `delivery = "prompt"`, so it still sends context plus prompt immediately and intentionally starts an agent turn. Pending attach context expires after a short TTL and is replaced by newer attach sends; expired context is cleared instead of silently reused.
 
-Normal `gpp` and `<C-p>` open or focus an ephemeral pi split and immediately send cursor/file context from the buffer that was active when the split was requested. Visual `gpp` and `<C-p>` do the same with selection context. Ephemeral split context stays prompt-delivered so its existing start-a-turn behavior is preserved.
+Normal `gpp` and `<C-p>` open or focus a child pi split (registry-allocated under `children/<child-id>/`) and immediately send cursor/file context from the buffer that was active when the split was requested. Visual `gpp` and `<C-p>` do the same with selection context. Child split context stays prompt-delivered so its existing start-a-turn behavior is preserved.
 
-On restart, Pinvim may auto-resume a live ephemeral pimux manifest when it belongs to the current tmux session and either matches the current window or matches the current cwd/root recently. This preserves focused ephemeral conversations across Neovim restarts without requiring buffer-local socket state.
+On restart, parent-owned sessions prefer the registry main socket and never auto-resume old ephemeral or child sockets from manifests or tmux globbing. Child sockets stay explicit-only, and explicit `:PiTarget <socket>` still works as a manual override.
 
 ### Attach-only context delivery
 
@@ -198,7 +230,7 @@ Pinvim attach delivery separates editor context capture from agent turn creation
 
 `explicit_send.delivery = "attach"` is context-only. `pinvim.ts` formats the Neovim context as `[NEOVIM ATTACHED CONTEXT]`, stores only the latest pending context, updates `pinvim-context` status/UI notification, and returns `{ delivery: "attach" }` without calling `pi.sendUserMessage`. Because no agent turn starts, stop-hook has no `agent_end` event to nudge.
 
-The next non-extension `input` marks the following `before_agent_start` as user-origin. At that hook, pending context is consumed exactly once and injected as a displayed custom `pinvim-context` message for provider context. Extension-origin prompts and follow-ups do not consume pending Neovim context.
+The next non-extension `input` marks the following `before_agent_start` as user-origin. At that hook, pending explicit context is consumed exactly once and injected as a displayed custom `pinvim-context` message for provider context. If no pending explicit context exists, Pi asks the editor service for `context.current`, formats it as `[NEOVIM LIVE CONTEXT]`, and injects it through the same custom message path. Extension-origin prompts and follow-ups do not consume pending Neovim context or trigger live editor context lookup.
 
 Attach state is intentionally short-lived: a newer attach send replaces the old pending context, the five-minute TTL clears stale context with notification/status cleanup, and session shutdown clears it. `delivery = "prompt"` or any `context.userInput` keeps immediate prompt behavior and still uses `pi.sendUserMessage`.
 
@@ -208,7 +240,7 @@ Repair is bidirectional — either nvim or pi can reestablish the hello/hello_ac
 
 **Nvim-side manifest** (`nvim-*.info` in `$PI_STATE_DIR/manifests/`): pinvim.lua writes a peer manifest every 5 seconds containing id, cwd, root, pid, tmux session/window/pane, heartbeatAt, linkMode, linked socket path, socket source, connected state, and active peer id. The manifest is cleaned up on `VimLeavePre`.
 
-**Pi-side repair scan** (`pinvim.ts`): when the active nvim peer is missing or its heartbeat is ≥120 seconds stale, pinvim.ts scans `nvim-*.info` manifests every 5 seconds and scores candidates:
+**Pi-side repair scan** (`pinvim.ts`): when no parent registry identity is present and the active nvim peer is missing or its heartbeat is ≥120 seconds stale, pinvim.ts scans `nvim-*.info` manifests every 5 seconds and scores candidates. Parent/child sessions with registry identity skip the recurring scan; `/pinvim-doctor` can force one for diagnostics.
 
 | Factor                  | Score |
 | ----------------------- | ----- |
@@ -218,10 +250,12 @@ Repair is bidirectional — either nvim or pi can reestablish the hello/hello_ac
 | Recent heartbeat (<15m) | +10   |
 | Has tmux pane           | +5    |
 
-Candidates must be kind `nvim` / owner `pinvim.lua`, pid alive, and same tmux session. Non-ephemeral pi additionally requires same tmux window (rejects same-cwd/different-window to avoid stealing). Ephemeral pi accepts same-window or same-root+recent+linked-here (candidate socket matches `SOCKET_PATH`).
+Candidates must be kind `nvim` / owner `pinvim.lua`, pid alive, and same tmux session. Non-ephemeral pi additionally requires same tmux window (rejects same-cwd/different-window to avoid stealing). Ephemeral pi accepts same-window or same-root+recent+linked-here (candidate socket matches `SOCKET_PATH`). Nested attach-only pi skips manifest scanning entirely.
 
-**Hello gate** (`acceptedSockets` WeakSet): pi requires a valid `hello` before accepting any data frame (heartbeat, explicit_send, prompt). `peerAllowedForSocket` validates the hello peer identity against the same scoring rules. Unaccepted sockets receive an error and the frame is dropped. As a fallback, ephemeral pi also accepts a hello whose peer id matches a pre-existing `repairCandidate`.
+**Nested safety**: the `pinvim` wrapper detects launches from an existing Pi pane with inherited pinvim registry/socket env and no explicit child role, using tmux command/start-command plus Pi pane title checks. Nvim-originated `pimux` launches forward `PIMUX_FROM_NVIM` into the new tmux pane for wrapper-time exemption, and the `pi` wrapper clears it before child processes can inherit it. Nested launches are marked with `PINVIM_NESTED_ATTACH_ONLY=1`, `PINVIM_SESSION_ROLE=nested`, `PINVIM_LINK_MODE=attach-only`, and `PI_SOCKET` is unset so the nested process cannot unlink or bind the original Nvim-owned socket. Explicit child split launches carry parent/workspace/instance registry ids so the hello gate can still validate them exactly. In attach-only mode, `pinvim.ts` does not start a socket server, does not repair-scan, rejects incoming peer hellos, and does not clean up inherited socket paths on shutdown.
 
-**Repair visibility**: repair candidate and last repair timestamp appear in `:PiStatus`, `:PiHealth`, `/pinvim-status`, `/pinvim-health`, and `/pinvim-info`. A `pinvim-repair` status line shows the candidate id while repair is pending, cleared on successful hello.
+**Hello gate** (`acceptedSockets` WeakSet): pi requires a valid `hello` before accepting any data frame (heartbeat, explicit_send, prompt). `peerAllowedForSocket` first rejects attach-only nested sessions, then rejects parent/workspace mismatches. A matching parent/workspace registry is accepted before tmux/root scoring, even if a restarted Nvim has a new instance id, so the current parent cannot be stolen by unrelated ephemeral or child sockets. Unaccepted sockets receive an error and the frame is dropped. As a fallback, ephemeral pi also accepts a hello whose peer id matches a pre-existing `repairCandidate`.
 
-**Pi manifest enhancements**: pinvim.ts info manifests now include `root`, `linkMode`, and `activePeerId` fields alongside the existing socket/cwd/pid/session/window/pane/ephemeral/heartbeatAt/startedAt fields.
+**Repair visibility**: repair candidate and last repair timestamp appear in `:PiStatus`, `:PiHealth`, `/pinvim-status`, `/pinvim-health`, and `/pinvim-info`. A `pinvim-repair` status line shows the candidate id while repair is pending, cleared on successful hello. `/pinvim-health`, `/pinvim-status`, `/pinvim-doctor`, and `/pinvim-info` also report relation state (`attach-only`, `child`, `parent`, or `no-parent`) plus link mode.
+
+**Pi manifest enhancements**: pinvim.ts info manifests now include `root`, `linkMode`, `relation`, `attachOnly`, and `activePeerId` fields alongside the existing socket/cwd/pid/session/window/pane/ephemeral/heartbeatAt/startedAt fields.

@@ -1,6 +1,6 @@
 ---
 id: dot-vbyh
-status: open
+status: closed
 deps: 4:1:deps: [, dot-msws]
 links: []
 created: 2026-06-03T20:11:26Z
@@ -21,3 +21,9 @@ Plan Step 9. Expose separate editor-service transport from Nvim using v:serverna
 2. Stale service visible in doctor/status output
 3. Peer startup does not block on editor-service availability
 4. nvim --headless '+lua require("pinvim").setup(); vim.cmd("PiDoctor")' +qa succeeds
+
+## Notes
+
+**2026-06-03T21:55:18Z**
+
+Implemented editor-service transport, added unref guards so pinvim doctor/no-session probes cannot leave orphaned pi processes, cleaned orphan panes, and verified formatting/home/lat checks.

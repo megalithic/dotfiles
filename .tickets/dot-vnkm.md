@@ -1,6 +1,6 @@
 ---
 id: dot-vnkm
-status: open
+status: closed
 deps: 4:1:deps: [, dot-msws]
 links: []
 created: 2026-06-03T20:11:03Z
@@ -21,3 +21,9 @@ Plan Step 4. Wrapper and pimux preserve/forward PINVIM_PARENT_ID, PINVIM_WORKSPA
 2. Env vars reach spawned Pi via pimux split/join
 3. Aliases p, pis, pisock still work
 4. $PI_STATE_DIR/pinvim exists after wrapper invocation
+
+## Notes
+
+**2026-06-03T20:56:48Z**
+
+Implemented pinvim env propagation through pi/pinvim wrappers and pimux tmux spawns; verified bash syntax, protocol smoke, headless nvim setup, just home, fish aliases, state dir creation, and lat check.

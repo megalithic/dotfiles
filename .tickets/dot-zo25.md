@@ -1,6 +1,6 @@
 ---
 id: dot-zo25
-status: open
+status: closed
 deps: 4:1:deps: 4:1:deps: [, dot-fiq5, dot-vnkm]
 links: []
 created: 2026-06-03T20:11:03Z

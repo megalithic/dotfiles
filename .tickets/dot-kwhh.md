@@ -1,6 +1,6 @@
 ---
 id: dot-kwhh
-status: open
+status: closed
 deps: 4:1:deps: 4:1:deps: 4:1:deps: 4:1:deps: [, dot-fsqm, dot-nknd, dot-m3c1, dot-xe1y]
 links: []
 created: 2026-06-03T20:11:43Z

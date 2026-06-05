@@ -1,6 +1,6 @@
 ---
 id: dot-msws
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-06-03T20:11:03Z
@@ -22,3 +22,9 @@ Plan Step 1. Add stable workspace + process identity. Workspace root at $PI_STAT
 3. First run can seed registry from existing live state without breaking current sessions
 4. nvim --headless '+lua require("pinvim").setup(); print(vim.inspect(require("pinvim").api.info()))' +qa succeeds
 5. Existing pinvim handshake still works
+
+## Notes
+
+**2026-06-03T20:43:54Z**
+
+Implemented workspace registry identity in pinvim.lua: persisted parent.id, per-instance main.intent writes, legacy runtime import, launch lock, PiInfo/api.info visibility. Verified headless source registry write, exact headless command success, lat_check, just home, and just validate home.

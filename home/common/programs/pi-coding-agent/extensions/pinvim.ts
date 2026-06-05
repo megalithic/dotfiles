@@ -34,6 +34,8 @@ const PI_STATE_DIR = process.env.PI_STATE_DIR || path.join(xdgStateHome, "pi");
 const SOCKET_DIR = path.join(PI_STATE_DIR, "sockets");
 const INFO_DIR = path.join(PI_STATE_DIR, "manifests");
 const SOCKET_PREFIX = "pi";
+const EDITOR_SERVICE_TIMEOUT_MS = 500;
+const EDITOR_SERVICE_STALE_MS = 15_000;
 
 let tmuxCache: {
   at: number;
@@ -124,6 +126,34 @@ const isEphemeral = (): boolean =>
   process.env.PI_EPHEMERAL === "1" ||
   (!!SOCKET_PATH && /-eph-[^/]+\.sock$/.test(SOCKET_PATH));
 
+const hasParentContext = (): boolean =>
+  !!(
+    process.env.PINVIM_PARENT_ID ||
+    process.env.PINVIM_WORKSPACE_ID ||
+    process.env.PINVIM_INSTANCE_ID ||
+    process.env.PINVIM_REGISTRY_ROOT
+  );
+
+const isExplicitChild = (): boolean =>
+  process.env.PINVIM_SESSION_ROLE === "child" || isEphemeral();
+
+const isNestedAttachOnly = (): boolean =>
+  process.env.PINVIM_NESTED_ATTACH_ONLY === "1" ||
+  process.env.PINVIM_LINK_MODE === "attach-only";
+
+const shouldAutoScanNvimPeers = (): boolean =>
+  !isNestedAttachOnly() && !hasParentContext();
+
+const pinvimRelationState = ():
+  | "attach-only"
+  | "child"
+  | "parent"
+  | "no-parent" => {
+  if (isNestedAttachOnly()) return "attach-only";
+  if (isExplicitChild()) return "child";
+  return hasParentContext() ? "parent" : "no-parent";
+};
+
 // =============================================================================
 // Protocol types
 // =============================================================================
@@ -148,6 +178,12 @@ interface PeerIdentity {
     pane?: string;
   };
   linkMode: LinkMode;
+  parentId?: string;
+  workspaceId?: string;
+  instanceId?: string;
+  registryRoot?: string;
+  role?: "main" | "child" | "nested" | string;
+  nvimListenAddress?: string;
   heartbeatAt?: number;
 }
 
@@ -258,6 +294,16 @@ interface NvimPeerCandidate {
   tmux?: { session?: string; window?: string; pane?: string };
   heartbeatAt?: number;
   linkMode?: LinkMode;
+  parentId?: string;
+  workspaceId?: string;
+  instanceId?: string;
+  registryRoot?: string;
+  role?: "main" | "child" | "nested" | string;
+  nvimListenAddress?: string;
+  editorService?: {
+    address?: string;
+    transport?: string;
+  };
   socket?: string;
   socketSource?: string;
   connected?: boolean;
@@ -265,6 +311,29 @@ interface NvimPeerCandidate {
   manifestPath?: string;
   score?: number;
   reasons?: string[];
+}
+
+interface ReloadBufferResult {
+  ok?: boolean;
+  path?: string;
+  reloaded?: Array<{
+    bufnr?: number;
+    path?: string;
+    current?: boolean;
+    modified?: boolean;
+    reloaded?: boolean;
+    error?: string;
+  }>;
+  conflicts?: Array<{
+    bufnr?: number;
+    path?: string;
+    current?: boolean;
+    modified?: boolean;
+  }>;
+  missing?: Array<{
+    path?: string;
+    reason?: string;
+  }>;
 }
 
 // =============================================================================
@@ -295,6 +364,49 @@ let pendingContextTimer: NodeJS.Timeout | null = null;
 const PENDING_CONTEXT_TTL_MS = 5 * 60 * 1000;
 let server: net.Server | null = null;
 let infoManifestPath: string | null = null;
+let editorServiceTimer: NodeJS.Timeout | null = null;
+let editorServiceSocket: net.Socket | null = null;
+let editorServiceRequestId = 1;
+
+interface EditorServiceState {
+  address: string | null;
+  source: string;
+  transport: "msgpack-rpc";
+  connected: boolean;
+  connecting: boolean;
+  stale: boolean;
+  lastOkAt: number | null;
+  lastError: string | null;
+  lastMethod: string | null;
+}
+
+type EditorMethod =
+  | "status"
+  | "context.current"
+  | "diagnostics.current"
+  | "open_file"
+  | "reveal_file"
+  | "reload_buffer"
+  | "refresh_diagnostics"
+  | "checktime";
+
+interface EditorQueryResult {
+  ok: boolean;
+  result?: unknown;
+  error?: string;
+}
+
+const editorService: EditorServiceState = {
+  address: null,
+  source: "none",
+  transport: "msgpack-rpc",
+  connected: false,
+  connecting: false,
+  stale: true,
+  lastOkAt: null,
+  lastError: null,
+  lastMethod: null,
+};
 const startedAt = new Date().toISOString();
 
 // =============================================================================
@@ -326,6 +438,473 @@ const isTellPayload = (p: Payload): p is TellPayload =>
   hasType(p) && p.type === "tell";
 
 // =============================================================================
+// Nvim editor service (msgpack-RPC)
+// =============================================================================
+
+const readJsonFile = (file: string): Record<string, unknown> | null => {
+  try {
+    const raw = fs.readFileSync(file, "utf-8");
+    return JSON.parse(raw.split("\n")[0] || "{}") as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+};
+
+const editorAddressFromRecord = (
+  record: Record<string, unknown> | null,
+): string | null => {
+  if (!record) return null;
+  if (typeof record.nvimListenAddress === "string")
+    return record.nvimListenAddress;
+  const editor = record.editorService;
+  if (editor && typeof editor === "object" && "address" in editor) {
+    const address = (editor as Record<string, unknown>).address;
+    if (typeof address === "string") return address;
+  }
+  return null;
+};
+
+const resolveEditorServiceAddress = (): {
+  address: string | null;
+  source: string;
+} => {
+  const activePeer = getActivePeer();
+  if (process.env.PINVIM_NVIM_LISTEN_ADDRESS) {
+    return { address: process.env.PINVIM_NVIM_LISTEN_ADDRESS, source: "env" };
+  }
+  if (activePeer?.nvimListenAddress) {
+    return { address: activePeer.nvimListenAddress, source: "active peer" };
+  }
+  if (repairCandidate?.nvimListenAddress) {
+    return {
+      address: repairCandidate.nvimListenAddress,
+      source: "nvim manifest",
+    };
+  }
+  if (repairCandidate?.editorService?.address) {
+    return {
+      address: repairCandidate.editorService.address,
+      source: "nvim manifest",
+    };
+  }
+
+  const registryRoot = process.env.PINVIM_REGISTRY_ROOT;
+  const instanceId = process.env.PINVIM_INSTANCE_ID;
+  if (registryRoot && instanceId) {
+    const intent = readJsonFile(
+      path.join(registryRoot, "instances", instanceId, "main.intent.json"),
+    );
+    const address = editorAddressFromRecord(intent);
+    if (address) return { address, source: "registry intent" };
+  }
+
+  if (registryRoot) {
+    const instancesRoot = path.join(registryRoot, "instances");
+    try {
+      for (const entry of fs.readdirSync(instancesRoot)) {
+        const intent = readJsonFile(
+          path.join(instancesRoot, entry, "main.intent.json"),
+        );
+        const address = editorAddressFromRecord(intent);
+        if (address) return { address, source: "registry intent" };
+      }
+    } catch {
+      // Registry discovery is best-effort and non-fatal.
+    }
+  }
+
+  return { address: null, source: "none" };
+};
+
+const encodeMsgpack = (value: unknown): Buffer => {
+  if (value === null || value === undefined) return Buffer.from([0xc0]);
+  if (typeof value === "boolean") return Buffer.from([value ? 0xc3 : 0xc2]);
+  if (typeof value === "number") {
+    if (Number.isInteger(value) && value >= 0 && value <= 0x7f)
+      return Buffer.from([value]);
+    if (Number.isInteger(value) && value >= -32 && value < 0)
+      return Buffer.from([0xe0 | (value + 32)]);
+    const buf = Buffer.alloc(5);
+    if (value < 0) {
+      buf[0] = 0xd2;
+      buf.writeInt32BE(value, 1);
+    } else {
+      buf[0] = 0xce;
+      buf.writeUInt32BE(value >>> 0, 1);
+    }
+    return buf;
+  }
+  if (typeof value === "string") {
+    const body = Buffer.from(value, "utf-8");
+    if (body.length <= 31)
+      return Buffer.concat([Buffer.from([0xa0 | body.length]), body]);
+    if (body.length <= 0xff)
+      return Buffer.concat([Buffer.from([0xd9, body.length]), body]);
+    const head = Buffer.alloc(3);
+    head[0] = 0xda;
+    head.writeUInt16BE(body.length, 1);
+    return Buffer.concat([head, body]);
+  }
+  if (Array.isArray(value)) {
+    const parts = value.map(encodeMsgpack);
+    if (value.length <= 15)
+      return Buffer.concat([Buffer.from([0x90 | value.length]), ...parts]);
+    const head = Buffer.alloc(3);
+    head[0] = 0xdc;
+    head.writeUInt16BE(value.length, 1);
+    return Buffer.concat([head, ...parts]);
+  }
+  if (typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>).filter(
+      ([, item]) => item !== undefined,
+    );
+    const parts = entries.flatMap(([key, item]) => [
+      encodeMsgpack(key),
+      encodeMsgpack(item),
+    ]);
+    if (entries.length <= 15)
+      return Buffer.concat([Buffer.from([0x80 | entries.length]), ...parts]);
+    const head = Buffer.alloc(3);
+    head[0] = 0xde;
+    head.writeUInt16BE(entries.length, 1);
+    return Buffer.concat([head, ...parts]);
+  }
+  throw new Error(`unsupported msgpack value: ${typeof value}`);
+};
+
+const decodeMsgpack = (
+  buffer: Buffer,
+  offset = 0,
+): { value: unknown; offset: number } | null => {
+  if (offset >= buffer.length) return null;
+  const byte = buffer[offset++];
+
+  if (byte <= 0x7f) return { value: byte, offset };
+  if (byte >= 0xe0) return { value: byte - 0x100, offset };
+  if ((byte & 0xe0) === 0xa0) {
+    const length = byte & 0x1f;
+    if (offset + length > buffer.length) return null;
+    return {
+      value: buffer.subarray(offset, offset + length).toString("utf-8"),
+      offset: offset + length,
+    };
+  }
+  if ((byte & 0xf0) === 0x90) {
+    const length = byte & 0x0f;
+    const result: unknown[] = [];
+    for (let i = 0; i < length; i++) {
+      const decoded = decodeMsgpack(buffer, offset);
+      if (!decoded) return null;
+      result.push(decoded.value);
+      offset = decoded.offset;
+    }
+    return { value: result, offset };
+  }
+  if ((byte & 0xf0) === 0x80) {
+    const length = byte & 0x0f;
+    const result: Record<string, unknown> = {};
+    for (let i = 0; i < length; i++) {
+      const key = decodeMsgpack(buffer, offset);
+      if (!key) return null;
+      const value = decodeMsgpack(buffer, key.offset);
+      if (!value) return null;
+      result[String(key.value)] = value.value;
+      offset = value.offset;
+    }
+    return { value: result, offset };
+  }
+
+  if (byte === 0xc0) return { value: null, offset };
+  if (byte === 0xc2 || byte === 0xc3) return { value: byte === 0xc3, offset };
+  if (byte === 0xcc) {
+    if (offset + 1 > buffer.length) return null;
+    return { value: buffer.readUInt8(offset), offset: offset + 1 };
+  }
+  if (byte === 0xcd) {
+    if (offset + 2 > buffer.length) return null;
+    return { value: buffer.readUInt16BE(offset), offset: offset + 2 };
+  }
+  if (byte === 0xce) {
+    if (offset + 4 > buffer.length) return null;
+    return { value: buffer.readUInt32BE(offset), offset: offset + 4 };
+  }
+  if (byte === 0xcf) {
+    if (offset + 8 > buffer.length) return null;
+    return {
+      value: Number(buffer.readBigUInt64BE(offset)),
+      offset: offset + 8,
+    };
+  }
+  if (byte === 0xcb) {
+    if (offset + 8 > buffer.length) return null;
+    return { value: buffer.readDoubleBE(offset), offset: offset + 8 };
+  }
+  if (byte === 0xd0) {
+    if (offset + 1 > buffer.length) return null;
+    return { value: buffer.readInt8(offset), offset: offset + 1 };
+  }
+  if (byte === 0xd1) {
+    if (offset + 2 > buffer.length) return null;
+    return { value: buffer.readInt16BE(offset), offset: offset + 2 };
+  }
+  if (byte === 0xd2) {
+    if (offset + 4 > buffer.length) return null;
+    return { value: buffer.readInt32BE(offset), offset: offset + 4 };
+  }
+  if (byte === 0xd3) {
+    if (offset + 8 > buffer.length) return null;
+    return { value: Number(buffer.readBigInt64BE(offset)), offset: offset + 8 };
+  }
+  if (byte === 0xd9) {
+    if (offset + 1 > buffer.length) return null;
+    const length = buffer.readUInt8(offset);
+    offset += 1;
+    if (offset + length > buffer.length) return null;
+    return {
+      value: buffer.subarray(offset, offset + length).toString("utf-8"),
+      offset: offset + length,
+    };
+  }
+  if (byte === 0xda) {
+    if (offset + 2 > buffer.length) return null;
+    const length = buffer.readUInt16BE(offset);
+    offset += 2;
+    if (offset + length > buffer.length) return null;
+    return {
+      value: buffer.subarray(offset, offset + length).toString("utf-8"),
+      offset: offset + length,
+    };
+  }
+  if (byte === 0xdc) {
+    if (offset + 2 > buffer.length) return null;
+    const length = buffer.readUInt16BE(offset);
+    offset += 2;
+    const result: unknown[] = [];
+    for (let i = 0; i < length; i++) {
+      const decoded = decodeMsgpack(buffer, offset);
+      if (!decoded) return null;
+      result.push(decoded.value);
+      offset = decoded.offset;
+    }
+    return { value: result, offset };
+  }
+  if (byte === 0xde) {
+    if (offset + 2 > buffer.length) return null;
+    const length = buffer.readUInt16BE(offset);
+    offset += 2;
+    const result: Record<string, unknown> = {};
+    for (let i = 0; i < length; i++) {
+      const key = decodeMsgpack(buffer, offset);
+      if (!key) return null;
+      const value = decodeMsgpack(buffer, key.offset);
+      if (!value) return null;
+      result[String(key.value)] = value.value;
+      offset = value.offset;
+    }
+    return { value: result, offset };
+  }
+
+  throw new Error(`unsupported msgpack byte: 0x${byte.toString(16)}`);
+};
+
+const markEditorServiceStale = (error: string): void => {
+  editorService.connected = false;
+  editorService.connecting = false;
+  editorService.stale = true;
+  editorService.lastError = error;
+  updateStatus();
+};
+
+const markEditorServiceOk = (method?: string): void => {
+  editorService.connected = true;
+  editorService.connecting = false;
+  editorService.stale = false;
+  editorService.lastOkAt = Date.now();
+  editorService.lastError = null;
+  if (method) editorService.lastMethod = method;
+  updateStatus();
+};
+
+const editorServiceRequest = (
+  method: EditorMethod,
+  params: Record<string, unknown> = {},
+): Promise<EditorQueryResult> => {
+  const discovery = resolveEditorServiceAddress();
+  const address = discovery.address;
+  editorService.address = address;
+  editorService.source = discovery.source;
+  if (!address) {
+    markEditorServiceStale(
+      "missing nvim listen address; using peer socket fallback only",
+    );
+    return Promise.resolve({
+      ok: false,
+      error: editorService.lastError || "missing nvim listen address",
+    });
+  }
+
+  return new Promise((resolve) => {
+    const socket = net.createConnection(address);
+    socket.unref();
+    socket.ref();
+    let buffer = Buffer.alloc(0);
+    let settled = false;
+    const requestId = editorServiceRequestId++;
+    const finish = (result: EditorQueryResult): void => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      socket.destroy();
+      resolve(result);
+    };
+    const timeout = setTimeout(() => {
+      markEditorServiceStale(`editor-service ${method} timeout`);
+      finish({ ok: false, error: `editor-service ${method} timeout` });
+    }, EDITOR_SERVICE_TIMEOUT_MS);
+    timeout.unref();
+    timeout.ref();
+
+    socket.on("connect", () => {
+      editorService.connecting = false;
+      const lua =
+        "local method, params = ...; return require('pinvim').api.editor_rpc(method, params or {})";
+      socket.write(
+        encodeMsgpack([0, requestId, "nvim_exec_lua", [lua, [method, params]]]),
+      );
+    });
+
+    socket.on("data", (chunk) => {
+      buffer = Buffer.concat([buffer, chunk]);
+      let decoded: { value: unknown; offset: number } | null;
+      try {
+        decoded = decodeMsgpack(buffer);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        markEditorServiceStale(message);
+        finish({ ok: false, error: message });
+        return;
+      }
+      if (!decoded) return;
+      const response = decoded.value;
+      if (
+        !Array.isArray(response) ||
+        response[0] !== 1 ||
+        response[1] !== requestId
+      ) {
+        finish({ ok: false, error: "unexpected editor-service response" });
+        return;
+      }
+      const error = response[2];
+      if (error) {
+        const message =
+          typeof error === "string" ? error : JSON.stringify(error);
+        markEditorServiceStale(message);
+        finish({ ok: false, error: message });
+        return;
+      }
+      markEditorServiceOk(method);
+      finish({ ok: true, result: response[3] });
+    });
+
+    socket.on("error", (err) => {
+      markEditorServiceStale(err.message || "editor-service socket error");
+      finish({
+        ok: false,
+        error: err.message || "editor-service socket error",
+      });
+    });
+
+    socket.on("close", () => {
+      if (!settled)
+        finish({ ok: false, error: "editor-service socket closed" });
+    });
+  });
+};
+
+const pinvimEditorServiceApi = {
+  query: editorServiceRequest,
+  status: () => ({ ...editorService }),
+};
+
+(
+  globalThis as typeof globalThis & {
+    pinvimEditorService?: typeof pinvimEditorServiceApi;
+  }
+).pinvimEditorService = pinvimEditorServiceApi;
+
+const ensureEditorServiceClient = (): void => {
+  const discovery = resolveEditorServiceAddress();
+  const address = discovery.address;
+  editorService.address = address;
+  editorService.source = discovery.source;
+  if (!address) {
+    markEditorServiceStale(
+      "missing nvim listen address; using peer socket fallback only",
+    );
+    return;
+  }
+
+  const lastOkAge = editorService.lastOkAt
+    ? Date.now() - editorService.lastOkAt
+    : Infinity;
+  if (editorService.connected && lastOkAge < EDITOR_SERVICE_STALE_MS) return;
+  if (editorService.connecting) return;
+
+  editorServiceSocket?.destroy();
+  editorServiceSocket = null;
+  editorService.connecting = true;
+  editorService.connected = false;
+  editorService.stale = lastOkAge >= EDITOR_SERVICE_STALE_MS;
+  editorService.lastError = null;
+  updateStatus();
+
+  const socket = net.createConnection(address);
+  editorServiceSocket = socket;
+  socket.unref();
+  const timeout = setTimeout(() => {
+    socket.destroy();
+    markEditorServiceStale("editor-service connect timeout");
+  }, EDITOR_SERVICE_TIMEOUT_MS);
+  timeout.unref();
+
+  socket.on("connect", () => {
+    clearTimeout(timeout);
+    markEditorServiceOk("status");
+    const request = [
+      0,
+      editorServiceRequestId++,
+      "nvim_get_vvar",
+      ["servername"],
+    ];
+    socket.write(encodeMsgpack(request));
+    updateStatus();
+  });
+
+  socket.on("data", () => {
+    markEditorServiceOk("status");
+    updateStatus();
+  });
+
+  socket.on("error", (err) => {
+    clearTimeout(timeout);
+    markEditorServiceStale(err.message || "editor-service socket error");
+  });
+
+  socket.on("close", () => {
+    clearTimeout(timeout);
+    editorService.connected = false;
+    editorService.connecting = false;
+    if (
+      !editorService.lastOkAt ||
+      Date.now() - editorService.lastOkAt >= EDITOR_SERVICE_STALE_MS
+    ) {
+      editorService.stale = true;
+    }
+    updateStatus();
+  });
+};
+
+// =============================================================================
 // Formatting
 // =============================================================================
 
@@ -342,7 +921,17 @@ const buildPinvimPeerIdentity = (): PeerIdentity => ({
     window: PI_WINDOW,
     pane: PI_PANE,
   },
-  linkMode: process.env.PINVIM_LINK_MODE || "auto",
+  linkMode:
+    process.env.PINVIM_LINK_MODE ||
+    (isNestedAttachOnly() ? "attach-only" : "auto"),
+  parentId: process.env.PINVIM_PARENT_ID,
+  workspaceId: process.env.PINVIM_WORKSPACE_ID,
+  instanceId: process.env.PINVIM_INSTANCE_ID,
+  registryRoot: process.env.PINVIM_REGISTRY_ROOT,
+  role:
+    process.env.PINVIM_SESSION_ROLE ||
+    (isNestedAttachOnly() ? "nested" : isEphemeral() ? "child" : "main"),
+  nvimListenAddress: resolveEditorServiceAddress().address || undefined,
   heartbeatAt: Math.floor(Date.now() / 1000),
 });
 
@@ -422,7 +1011,15 @@ const formatPendingContextStatus = (): string => {
   return `│ nvim ctx:${pendingContext.label} ${secondsLeft}s`;
 };
 
-const formatStatus = (): string => formatPeerStatus();
+const formatEditorServiceStatus = (): string => {
+  if (!editorService.address) return "│ nvim-rpc:fallback";
+  if (editorService.connected) return "│ nvim-rpc:ok";
+  if (editorService.connecting) return "│ nvim-rpc:connecting";
+  return "│ nvim-rpc:stale";
+};
+
+const formatStatus = (): string =>
+  [formatPeerStatus(), formatEditorServiceStatus()].filter(Boolean).join(" ");
 
 const getHealth = (): PinvimHealth => {
   const activePeer = getActivePeer();
@@ -529,6 +1126,8 @@ const scoreNvimCandidate = (
 };
 
 const scanNvimPeers = async (): Promise<NvimPeerCandidate[]> => {
+  if (isNestedAttachOnly()) return [];
+
   let entries: string[] = [];
   try {
     entries = await fsp.readdir(INFO_DIR);
@@ -561,8 +1160,14 @@ const scanNvimPeers = async (): Promise<NvimPeerCandidate[]> => {
   return candidates;
 };
 
-const refreshRepairCandidate = async (): Promise<void> => {
-  if (!peerNeedsRepair()) return;
+const refreshRepairCandidate = async (
+  opts: { force?: boolean } = {},
+): Promise<void> => {
+  if (isNestedAttachOnly() || (!opts.force && !shouldAutoScanNvimPeers())) {
+    repairCandidate = null;
+    return;
+  }
+  if (!opts.force && !peerNeedsRepair()) return;
   const [candidate] = await scanNvimPeers();
   repairCandidate = candidate || null;
   if (latestCtx?.hasUI) {
@@ -576,6 +1181,38 @@ const refreshRepairCandidate = async (): Promise<void> => {
 const peerAllowedForSocket = (
   peer: PeerIdentity,
 ): { ok: boolean; reason: string } => {
+  if (isNestedAttachOnly()) {
+    return {
+      ok: false,
+      reason: "nested attach-only pinvim does not accept nvim peer links",
+    };
+  }
+
+  const localIdentity = buildPinvimPeerIdentity();
+  const identityChecks: Array<
+    ["parentId" | "workspaceId" | "instanceId", string]
+  > = [
+    ["parentId", "parent identity"],
+    ["workspaceId", "workspace identity"],
+    ["instanceId", "nvim instance identity"],
+  ];
+  const exactParentRegistry =
+    !!localIdentity.parentId &&
+    !!localIdentity.workspaceId &&
+    peer.parentId === localIdentity.parentId &&
+    peer.workspaceId === localIdentity.workspaceId;
+
+  for (const [key, label] of identityChecks) {
+    if (key === "instanceId" && exactParentRegistry) continue;
+    if ((localIdentity[key] || peer[key]) && localIdentity[key] !== peer[key]) {
+      return { ok: false, reason: `mismatched pinvim ${label}` };
+    }
+  }
+
+  if (exactParentRegistry) {
+    return { ok: true, reason: "exact pinvim parent registry" };
+  }
+
   const candidate: NvimPeerCandidate = {
     id: peer.id,
     kind: peer.kind,
@@ -584,6 +1221,12 @@ const peerAllowedForSocket = (
     tmux: peer.tmux,
     heartbeatAt: peer.heartbeatAt,
     linkMode: peer.linkMode,
+    parentId: peer.parentId,
+    workspaceId: peer.workspaceId,
+    instanceId: peer.instanceId,
+    registryRoot: peer.registryRoot,
+    role: peer.role,
+    nvimListenAddress: peer.nvimListenAddress,
   };
   const scored = scoreNvimCandidate(candidate);
   if (scored) return { ok: true, reason: (scored.reasons || []).join(", ") };
@@ -603,6 +1246,28 @@ const peerAllowedForSocket = (
   };
 };
 
+const emitCommandLines = (
+  ctx: ExtensionContext,
+  lines: string[],
+  level: "info" | "warn" = "info",
+): void => {
+  if (ctx.hasUI) {
+    ctx.ui.notify(lines.join("\n"), level);
+  } else {
+    console.log(lines.join("\n"));
+  }
+};
+
+const editorServiceStateLine = (): string =>
+  editorService.connected
+    ? "connected"
+    : editorService.stale
+      ? "stale"
+      : "disconnected";
+
+const editorServiceFallbackLine = (): string =>
+  editorService.connected ? "no" : "peer socket only";
+
 const renderInfoLines = (): string[] => {
   const lastHello = state.lastHello
     ? JSON.stringify(state.lastHello, null, 2)
@@ -619,11 +1284,23 @@ const renderInfoLines = (): string[] => {
     "pinvim state",
     `Protocol: ${state.protocol}`,
     `Socket: ${SOCKET_PATH || "(disabled)"}`,
+    `Local identity: ${JSON.stringify(buildPinvimPeerIdentity(), null, 2)}`,
+    `Pinvim relation: ${pinvimRelationState()}`,
+    `Nested attach-only: ${isNestedAttachOnly()}`,
     `Active peer: ${activePeer ? JSON.stringify(activePeer, null, 2) : "(none yet)"}`,
     `Repair candidate: ${repairCandidate ? JSON.stringify(repairCandidate, null, 2) : "(none)"}`,
     `Repaired at: ${repairedAt ? new Date(repairedAt).toISOString() : "(none)"}`,
     `Repair reason: ${repairReason || "(none)"}`,
     `Pending context: ${pendingContext ? `${pendingContext.label}, expires ${new Date(pendingContext.expiresAt).toISOString()}` : "(none)"}`,
+    `Editor service: ${editorService.address || "(none)"}`,
+    `Editor service source: ${editorService.source}`,
+    `Editor service fallback: ${editorServiceFallbackLine()}`,
+    `Editor service transport: ${editorService.transport}`,
+    `Editor service connected: ${editorService.connected}`,
+    `Editor service stale: ${editorService.stale}`,
+    `Editor service last ok: ${editorService.lastOkAt ? new Date(editorService.lastOkAt).toISOString() : "(none)"}`,
+    `Editor service error: ${editorService.lastError || "(none)"}`,
+    `Editor service last method: ${editorService.lastMethod || "(none)"}`,
     "Responsibilities:",
     "- owns pinvim socket for all nvim↔pi frames",
     "- owns peer metadata + footer status",
@@ -686,6 +1363,7 @@ const attachPendingContext = (payload: ExplicitSendPayload): void => {
   pendingContextTimer = setTimeout(() => {
     clearPendingContext("Pinvim attached context expired");
   }, PENDING_CONTEXT_TTL_MS);
+  pendingContextTimer.unref();
 
   updateStatus();
   latestCtx?.ui?.notify?.(
@@ -706,6 +1384,26 @@ const consumePendingContext = (): string | null => {
   return text;
 };
 
+const editorContextPayload = (context: unknown): ExplicitSendPayload | null => {
+  if (!context || typeof context !== "object") return null;
+  return {
+    type: "explicit_send",
+    delivery: "attach",
+    context: context as ExplicitSendPayload["context"],
+  };
+};
+
+const fetchLiveEditorContext = async (): Promise<string | null> => {
+  const response = await editorServiceRequest("context.current");
+  if (!response.ok) return null;
+  const payload = editorContextPayload(response.result);
+  if (!payload) return null;
+  return formatExplicitContext(payload, "attached").replace(
+    "[NEOVIM ATTACHED CONTEXT]",
+    "[NEOVIM LIVE CONTEXT]",
+  );
+};
+
 const deliverMessage = (pi: ExtensionAPI, message: string): void => {
   if (!message.trim()) return;
 
@@ -720,6 +1418,36 @@ const deliverMessage = (pi: ExtensionAPI, message: string): void => {
   } else {
     void pi.sendUserMessage(message, { deliverAs: "followUp" });
   }
+};
+
+const changedPathFromToolEvent = (
+  event: { input?: unknown },
+  cwd: string,
+): string | null => {
+  const input = (event.input || {}) as Record<string, unknown>;
+  const rawPath =
+    typeof input.path === "string"
+      ? input.path
+      : typeof input.file === "string"
+        ? input.file
+        : typeof input.absFile === "string"
+          ? input.absFile
+          : null;
+  if (!rawPath || rawPath.trim() === "") return null;
+  return path.isAbsolute(rawPath) ? rawPath : path.resolve(cwd, rawPath);
+};
+
+const describeReloadBufferResult = (
+  toolName: string,
+  filePath: string,
+  result: ReloadBufferResult,
+): string | null => {
+  const conflicts = result.conflicts || [];
+  if (conflicts.length === 0) return null;
+  return [
+    `Pinvim kept dirty buffer${conflicts.length === 1 ? "" : "s"} unchanged after ${toolName}: ${path.basename(filePath)}`,
+    "Disk changed. Buffer still dirty. Compare buffer with file before saving.",
+  ].join("\n");
 };
 
 const respond = (socket: net.Socket, data: Record<string, unknown>): void => {
@@ -752,6 +1480,7 @@ const writeInfoManifestNow = async (): Promise<void> => {
         .pop()
         ?.replace(/\.sock$/, "") || PI_SESSION;
     infoManifestPath = `${INFO_DIR}/${socketBase}.info`;
+    const identity = buildPinvimPeerIdentity();
     const manifest = {
       socket: SOCKET_PATH,
       cwd: process.cwd(),
@@ -764,6 +1493,23 @@ const writeInfoManifestNow = async (): Promise<void> => {
       owner: "pinvim.ts",
       linkMode:
         process.env.PINVIM_LINK_MODE || (isEphemeral() ? "ephemeral" : "auto"),
+      parentId: identity.parentId,
+      workspaceId: identity.workspaceId,
+      instanceId: identity.instanceId,
+      registryRoot: identity.registryRoot,
+      role: identity.role,
+      relation: pinvimRelationState(),
+      attachOnly: isNestedAttachOnly(),
+      nvimListenAddress: identity.nvimListenAddress,
+      editorService: {
+        address: identity.nvimListenAddress,
+        source: editorService.source,
+        fallback: editorServiceFallbackLine(),
+        transport: "msgpack-rpc",
+        connected: editorService.connected,
+        stale: editorService.stale,
+        lastMethod: editorService.lastMethod,
+      },
       activePeerId: getActivePeer()?.id || null,
       heartbeatAt: Math.floor(Date.now() / 1000),
       startedAt,
@@ -791,6 +1537,7 @@ const scheduleInfoManifest = (force = false): void => {
     },
     force ? 0 : 250,
   );
+  manifestWriteTimer.unref();
 };
 
 const cleanupInfoManifest = (): void => {
@@ -938,7 +1685,7 @@ const handleSocketPayload = (
 };
 
 const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
-  if (!SOCKET_PATH || server) return;
+  if (!SOCKET_PATH || server || isNestedAttachOnly()) return;
 
   void (async () => {
     if (!SOCKET_PATH || server) return;
@@ -982,6 +1729,7 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
     });
 
     server.listen(SOCKET_PATH);
+    server.unref();
     scheduleInfoManifest(true);
 
     if (ctx.hasUI) {
@@ -1000,10 +1748,19 @@ export default function (pi: ExtensionAPI): void {
   pi.on("session_start", (_event, ctx) => {
     latestCtx = ctx;
     updateStatus();
-    if (!peerScanTimer) {
+    ensureEditorServiceClient();
+    if (!editorServiceTimer) {
+      editorServiceTimer = setInterval(() => {
+        ensureEditorServiceClient();
+      }, 5000);
+      editorServiceTimer.unref();
+    }
+
+    if (shouldAutoScanNvimPeers() && !peerScanTimer) {
       peerScanTimer = setInterval(() => {
         void refreshRepairCandidate();
       }, 5000);
+      peerScanTimer.unref();
     }
     void refreshRepairCandidate();
 
@@ -1023,7 +1780,9 @@ export default function (pi: ExtensionAPI): void {
 
   pi.on("before_agent_start", async () => {
     if (!nextTurnIsUserOrigin) return;
-    const text = consumePendingContext();
+    nextTurnIsUserOrigin = false;
+    ensureEditorServiceClient();
+    const text = consumePendingContext() || (await fetchLiveEditorContext());
     if (!text) return;
     return {
       message: {
@@ -1034,16 +1793,55 @@ export default function (pi: ExtensionAPI): void {
     };
   });
 
+  pi.on("tool_result", async (event, ctx) => {
+    const toolName = String(event.toolName || "").toLowerCase();
+    if (!new Set(["edit", "write"]).has(toolName)) return;
+    if (event.isError) return;
+
+    const filePath = changedPathFromToolEvent(event, ctx.cwd);
+    if (!filePath) return;
+
+    const response = await editorServiceRequest("reload_buffer", {
+      path: filePath,
+      reason: `pi-tool:${toolName}`,
+    });
+    if (!response.ok) return;
+
+    const summary = describeReloadBufferResult(
+      toolName,
+      filePath,
+      (response.result || {}) as ReloadBufferResult,
+    );
+    if (!summary) return;
+
+    if (ctx.hasUI) ctx.ui.notify(summary, "warn");
+    return {
+      content: [
+        ...event.content,
+        {
+          type: "text" as const,
+          text: `⚠️ ${summary}`,
+        },
+      ],
+    };
+  });
+
   pi.on("session_shutdown", () => {
     latestCtx = null;
     if (peerScanTimer) {
       clearInterval(peerScanTimer);
       peerScanTimer = null;
     }
+    if (editorServiceTimer) {
+      clearInterval(editorServiceTimer);
+      editorServiceTimer = null;
+    }
+    editorServiceSocket?.destroy();
+    editorServiceSocket = null;
     server?.close();
     server = null;
 
-    if (SOCKET_PATH && fs.existsSync(SOCKET_PATH)) {
+    if (!isNestedAttachOnly() && SOCKET_PATH && fs.existsSync(SOCKET_PATH)) {
       try {
         fs.unlinkSync(SOCKET_PATH);
       } catch {
@@ -1051,7 +1849,7 @@ export default function (pi: ExtensionAPI): void {
       }
     }
 
-    cleanupInfoManifest();
+    if (!isNestedAttachOnly()) cleanupInfoManifest();
     clearPendingContext();
   });
 
@@ -1059,43 +1857,149 @@ export default function (pi: ExtensionAPI): void {
     description:
       "Show pinvim state: peer metadata, socket, and transport inputs",
     handler: async (_args, ctx) => {
+      ensureEditorServiceClient();
       const lines = renderInfoLines();
-      if (ctx.hasUI) ctx.ui.notify(lines.join("\n"), "info");
+      emitCommandLines(ctx, lines, "info");
     },
   });
 
   pi.registerCommand("pinvim-health", {
     description: "Show pinvim link health: peer id and heartbeat age",
     handler: async (_args, ctx) => {
+      ensureEditorServiceClient();
       const health = getHealth();
       const lines = [
         health.ok ? "pinvim health: ok" : "pinvim health: attention needed",
         `Active peer: ${health.activePeerId || "(none)"}`,
+        `Link mode: ${buildPinvimPeerIdentity().linkMode}`,
+        `Relation: ${pinvimRelationState()}`,
+        `Nested attach-only: ${isNestedAttachOnly() ? "yes" : "no"}`,
         `Heartbeat age: ${health.heartbeatAgeSeconds == null ? "(none)" : `${health.heartbeatAgeSeconds}s`}`,
         `Repair candidate: ${repairCandidate?.id || "(none)"}`,
         `Last repair: ${repairedAt ? new Date(repairedAt).toISOString() : "(none)"}`,
         `Pending context: ${pendingContext ? `${pendingContext.label}, expires ${new Date(pendingContext.expiresAt).toISOString()}` : "(none)"}`,
+        `Editor service: ${editorService.address || "(none)"}`,
+        `Editor service source: ${editorService.source}`,
+        `Editor service fallback: ${editorServiceFallbackLine()}`,
+        `Editor service state: ${editorServiceStateLine()}`,
+        `Editor service error: ${editorService.lastError || "(none)"}`,
         `Socket: ${SOCKET_PATH || "(disabled)"}`,
       ];
-      if (ctx.hasUI)
-        ctx.ui.notify(lines.join("\n"), health.ok ? "info" : "warn");
+      emitCommandLines(ctx, lines, health.ok ? "info" : "warn");
     },
   });
 
   pi.registerCommand("pinvim-status", {
     description: "Show concise pinvim peer status",
     handler: async (_args, ctx) => {
+      ensureEditorServiceClient();
       const health = getHealth();
       const lines = [
         `pinvim status: ${formatStatus() || "(no active peer)"}`,
         `Active peer: ${health.activePeerId || "(none)"}`,
+        `Link mode: ${buildPinvimPeerIdentity().linkMode}`,
+        `Relation: ${pinvimRelationState()}`,
+        `Nested attach-only: ${isNestedAttachOnly() ? "yes" : "no"}`,
         `Heartbeat age: ${health.heartbeatAgeSeconds == null ? "(none)" : `${health.heartbeatAgeSeconds}s`}`,
         `Repair candidate: ${repairCandidate?.id || "(none)"}`,
         `Last repair: ${repairedAt ? new Date(repairedAt).toISOString() : "(none)"}`,
         `Pending context: ${pendingContext ? `${pendingContext.label}, expires ${new Date(pendingContext.expiresAt).toISOString()}` : "(none)"}`,
+        `Editor service: ${editorService.address || "(none)"}`,
+        `Editor service source: ${editorService.source}`,
+        `Editor service fallback: ${editorServiceFallbackLine()}`,
+        `Editor service state: ${editorServiceStateLine()}`,
+        `Editor service error: ${editorService.lastError || "(none)"}`,
         `Socket: ${SOCKET_PATH || "(disabled)"}`,
       ];
-      if (ctx.hasUI) ctx.ui.notify(lines.join("\n"), "info");
+      emitCommandLines(ctx, lines, "info");
+    },
+  });
+
+  pi.registerCommand("pinvim-doctor", {
+    description: "Diagnose pinvim peer and Nvim editor-service transports",
+    handler: async (_args, ctx) => {
+      ensureEditorServiceClient();
+      await refreshRepairCandidate({ force: true });
+      const editorStatus = await editorServiceRequest("status");
+      const health = getHealth();
+      const activePeer = getActivePeer();
+      const piIdentity = buildPinvimPeerIdentity();
+      const lines = [
+        health.ok && !editorService.stale
+          ? "pinvim doctor: ok"
+          : "pinvim doctor: attention needed",
+        `Pi identity: ${piIdentity.id}`,
+        `Pi role: ${piIdentity.role || "(none)"}`,
+        `Pi relation: ${pinvimRelationState()}`,
+        `Pi link mode: ${piIdentity.linkMode}`,
+        `Pi nested attach-only: ${isNestedAttachOnly() ? "yes" : "no"}`,
+        `Pi parent id: ${piIdentity.parentId || "(none)"}`,
+        `Pi workspace id: ${piIdentity.workspaceId || "(none)"}`,
+        `Pi instance id: ${piIdentity.instanceId || "(none)"}`,
+        `Pi registry root: ${piIdentity.registryRoot || "(none)"}`,
+        `Pi tmux: ${PI_SESSION}/${PI_WINDOW}${PI_PANE ? "/" + PI_PANE : ""}`,
+        `Pi ephemeral: ${isEphemeral()}`,
+        `Active peer: ${health.activePeerId || "(none)"}`,
+        `Active peer role: ${activePeer?.role || "(none)"}`,
+        `Active peer parent id: ${activePeer?.parentId || "(none)"}`,
+        `Active peer workspace id: ${activePeer?.workspaceId || "(none)"}`,
+        `Active peer instance id: ${activePeer?.instanceId || "(none)"}`,
+        `Active peer registry root: ${activePeer?.registryRoot || "(none)"}`,
+        `Active peer tmux: ${activePeer?.tmux?.session || "?"}/${activePeer?.tmux?.window || "?"}${activePeer?.tmux?.pane ? "/" + activePeer.tmux.pane : ""}`,
+        `Heartbeat age: ${health.heartbeatAgeSeconds == null ? "(none)" : `${health.heartbeatAgeSeconds}s`}`,
+        `Repair candidate: ${repairCandidate?.id || "(none)"}`,
+        `Socket: ${SOCKET_PATH || "(disabled)"}`,
+        `Editor service address: ${editorService.address || "(none)"}`,
+        `Editor service source: ${editorService.source}`,
+        `Editor service fallback: ${editorServiceFallbackLine()}`,
+        `Editor service transport: ${editorService.transport}`,
+        `Editor service connected: ${editorService.connected}`,
+        `Editor service stale: ${editorService.stale}`,
+        `Editor service last ok: ${editorService.lastOkAt ? new Date(editorService.lastOkAt).toISOString() : "(none)"}`,
+        `Editor service last method: ${editorService.lastMethod || "(none)"}`,
+        `Editor service error: ${editorService.lastError || "(none)"}`,
+        `Editor API status: ${editorStatus.ok ? "ok" : editorStatus.error || "error"}`,
+      ];
+      if (!health.activePeerId) {
+        lines.push(
+          "hint: no active nvim peer; start pinvim from nvim or check PI_SOCKET",
+        );
+      }
+      if (editorService.stale) {
+        lines.push(
+          "hint: editor service stale; pi will fall back to peer socket for context",
+        );
+      }
+      if (
+        activePeer?.parentId &&
+        piIdentity.parentId &&
+        activePeer.parentId !== piIdentity.parentId
+      ) {
+        lines.push(
+          `hint: peer parent id mismatch (peer=${activePeer.parentId} pi=${piIdentity.parentId}); nested or misrouted session`,
+        );
+      }
+      emitCommandLines(
+        ctx,
+        lines,
+        health.ok && !editorService.stale ? "info" : "warn",
+      );
+    },
+  });
+
+  pi.registerCommand("pinvim-context", {
+    description: "Fetch current Nvim buffer context through the editor service",
+    handler: async (_args, ctx) => {
+      const text = await fetchLiveEditorContext();
+      if (!text) {
+        emitCommandLines(
+          ctx,
+          [editorService.lastError || "No editor context available"],
+          "warn",
+        );
+        return;
+      }
+      emitCommandLines(ctx, [text], "info");
     },
   });
 

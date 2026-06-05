@@ -1,6 +1,6 @@
 ---
 id: dot-fiq5
-status: open
+status: closed
 deps: 4:1:deps: [, dot-msws]
 links: []
 created: 2026-06-03T20:11:03Z
@@ -22,3 +22,9 @@ Plan Step 2. Extend Nvim peer identity + manifests with parentId, workspaceId, i
 3. just home passes
 4. Manifests on both sides include new identity fields
 5. Child/nested sessions rejected unless they match current parent/workspace/session
+
+## Notes
+
+**2026-06-03T20:50:13Z**
+
+Implemented pinvim registry identity in Nvim/Pi peer identities and manifests; smoke/headless/home/lat checks pass.

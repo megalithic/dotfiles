@@ -12,6 +12,8 @@ local M = {}
 local Config = {}
 local State = {}
 local Transport = {}
+local Registry = {}
+local EditorService = {}
 local Handshake = {}
 local Commands = {}
 local Autocmds = {}
@@ -27,6 +29,7 @@ local discovery_cache = { at = 0, targets = {}, by_socket = {}, running = false,
 local discovery_ttl_ms = 2000
 local peer_manifest_timer = nil
 local peer_manifest_path = nil
+local editor_service_address = nil
 
 local conn = {
   pipe = nil,
@@ -44,6 +47,51 @@ local conn = {
 }
 
 local function path_join(...) return table.concat({ ... }, "/") end
+
+local function read_first_line(path)
+  local ok, lines = pcall(vim.fn.readfile, path, "", 1)
+  if not ok or not lines or not lines[1] then return nil end
+  return lines[1]
+end
+
+local function write_json_atomic(path, value)
+  local dir = vim.fs.dirname(path)
+  if dir then pcall(vim.fn.mkdir, dir, "p") end
+  local tmp = string.format("%s.tmp.%d.%d", path, vim.fn.getpid(), vim.uv.hrtime() % 1000000)
+  local ok = pcall(vim.fn.writefile, { vim.json.encode(value) }, tmp)
+  if not ok then return false end
+  local rename_ok = vim.uv.fs_rename(tmp, path)
+  if not rename_ok then
+    pcall(vim.fn.delete, tmp)
+    return false
+  end
+  return true
+end
+
+local function write_text_atomic(path, value)
+  local dir = vim.fs.dirname(path)
+  if dir then pcall(vim.fn.mkdir, dir, "p") end
+  local tmp = string.format("%s.tmp.%d.%d", path, vim.fn.getpid(), vim.uv.hrtime() % 1000000)
+  local ok = pcall(vim.fn.writefile, { value }, tmp)
+  if not ok then return false end
+  local rename_ok = vim.uv.fs_rename(tmp, path)
+  if not rename_ok then
+    pcall(vim.fn.delete, tmp)
+    return false
+  end
+  return true
+end
+
+local function stable_hash(value)
+  local ok, hash = pcall(vim.fn.sha256, value or "")
+  if ok and type(hash) == "string" and hash ~= "" then return hash:sub(1, 16) end
+
+  local acc = 5381
+  for idx = 1, #(value or "") do
+    acc = ((acc * 33) + string.byte(value, idx)) % 4294967296
+  end
+  return string.format("%08x", acc)
+end
 
 local refresh_tmux_context_async
 
@@ -65,7 +113,18 @@ local function socket_exists(path)
   return stat and stat.type == "socket" or false
 end
 
-local function is_ephemeral_socket(path) return path ~= nil and path:match("%-eph%-[^/]+%.sock$") ~= nil end
+local function is_child_socket(path)
+  return path ~= nil and path:match("/pinvim/[^/]+/children/[^/]+/[^/]+%.sock$") ~= nil
+end
+
+local function is_ephemeral_socket(path)
+  if not path then return false end
+  if path:match("%-eph%-[^/]+%.sock$") then return true end
+  -- Child sockets allocated under the registry are explicit-only too:
+  -- never auto-picked as :PiPanel main and treated like ephemeral on close.
+  if is_child_socket(path) then return true end
+  return false
+end
 
 local function generate_ephemeral_socket_path(config)
   local session = tmux_value("#{session_name}") or "default"
@@ -219,6 +278,9 @@ defaults = {
   explicit_context = {
     max_selection_bytes = 8000,
   },
+  editor_service = {
+    enabled = true,
+  },
 }
 
 options = vim.deepcopy(defaults)
@@ -299,8 +361,9 @@ end
 
 local function normalize_path(path)
   if not path or path == "" then return nil end
-  if vim.fs and vim.fs.normalize then return vim.fs.normalize(path) end
-  return vim.fn.fnamemodify(path, ":p"):gsub("/$", "")
+  local normalized = vim.fs and vim.fs.normalize and vim.fs.normalize(path) or vim.fn.fnamemodify(path, ":p"):gsub("/$", "")
+  local real = normalized and vim.uv.fs_realpath(normalized) or nil
+  return (real or normalized):gsub("/$", "")
 end
 
 local function same_path(a, b)
@@ -572,45 +635,6 @@ local function ranked_manifest_targets(config, opts)
   return filter_cached_targets(opts)
 end
 
-local function resumable_ephemeral_target(config)
-  local context = current_tmux_context()
-  if not context.session then return nil end
-
-  local cwd = normalize_path(vim.uv.cwd())
-  local root = normalize_path(config.resolve_root())
-  local candidates = {}
-
-  for _, target in ipairs(filter_cached_targets({ include_ephemeral = true, same_tmux_session = true })) do
-    if target.ephemeral then
-      local same_window = (context.window_name and target.window == context.window_name)
-        or (context.window_index and tostring(target.window or "") == tostring(context.window_index))
-      local target_cwd = normalize_path(target.cwd)
-      local target_root = normalize_path(target.root)
-      local same_cwd_or_root = same_path(target_cwd, cwd)
-        or (target_root and root and same_path(target_root, root))
-        or (target_cwd and root and path_contains(root, target_cwd))
-      local age = target.activity and target.activity > 0 and math.max(os.time() - target.activity, 0) or nil
-
-      if same_window or (same_cwd_or_root and age and age <= 900) then
-        table.insert(candidates, {
-          target = target,
-          same_window = same_window,
-          same_cwd_or_root = same_cwd_or_root,
-          age = age or math.huge,
-        })
-      end
-    end
-  end
-
-  table.sort(candidates, function(a, b)
-    if a.same_window ~= b.same_window then return a.same_window end
-    if a.same_cwd_or_root ~= b.same_cwd_or_root then return a.same_cwd_or_root end
-    return a.age < b.age
-  end)
-
-  return candidates[1] and candidates[1].target or nil
-end
-
 local function parked_socket_set()
   local parked = tmux_option("@pimux.parked_sockets")
   local set = {}
@@ -627,6 +651,7 @@ local function target_link_mode(source, entry)
   if entry and entry.parked then return "parked" end
   if source == "env" then return "explicit" end
   if source == "ephemeral" then return "ephemeral" end
+  if source == "registry-main" then return "main" end
   if source == "buffer" or source == "manual" then return "manual" end
   if source == "history-restore" then return "parked" end
   return "auto"
@@ -635,7 +660,7 @@ end
 local function target_metadata(config, socket_path, source)
   if not socket_path then return nil end
   if vim.in_fast_event and vim.in_fast_event() then
-    local ephemeral = socket_path:match("%-eph%-[^/]+%.sock$") ~= nil
+    local ephemeral = socket_path:match("%-eph%-[^/]+%.sock$") ~= nil or is_child_socket(socket_path)
     return {
       path = socket_path,
       source = source or "unknown",
@@ -651,7 +676,7 @@ local function target_metadata(config, socket_path, source)
   found = found or { path = socket_path }
   found.source = source or found.source or "unknown"
   found.parked = parked[socket_path] == true
-  found.ephemeral = found.ephemeral == true or socket_path:match("%-eph%-[^/]+%.sock$") ~= nil
+  found.ephemeral = found.ephemeral == true or socket_path:match("%-eph%-[^/]+%.sock$") ~= nil or is_child_socket(socket_path)
   found.link_mode = target_link_mode(found.source, found)
   found.recorded_at = os.time()
   return found
@@ -720,28 +745,6 @@ local function discover_socket_by_tmux(config)
       string.format("%s/%s-%s-%s.sock", config.transport.socket_dir, config.transport.prefix, context.session, window)
     if socket_exists(window_socket) then return window_socket end
 
-    -- Glob for ephemeral sockets: pi-{session}-{window}-eph-*.sock
-    local eph_pattern = string.format(
-      "%s/%s-%s-%s-eph-*.sock",
-      config.transport.socket_dir,
-      config.transport.prefix,
-      context.session,
-      window
-    )
-    local matches = vim.fn.glob(eph_pattern, false, true)
-    if #matches > 0 then
-      -- Filter to live sockets, pick most recently modified
-      local best, best_mtime = nil, 0
-      for _, sock_path in ipairs(matches) do
-        if socket_exists(sock_path) then
-          local mtime = stat_mtime(sock_path)
-          if mtime > best_mtime then
-            best, best_mtime = sock_path, mtime
-          end
-        end
-      end
-      if best then return best end
-    end
   end
 
   return nil
@@ -753,10 +756,10 @@ function Transport.resolve_socket(config)
   local buf_target = vim.b.pi_target_socket
   if buf_target and socket_exists(buf_target) then return buf_target, "buffer" end
 
-  if discovery_stale() then schedule_manifest_discovery(config) end
+  local registry_socket, registry_source = Registry.main_target(config.registry)
+  if registry_source then return registry_socket, registry_source end
 
-  local ephemeral = resumable_ephemeral_target(config)
-  if ephemeral then return ephemeral.path, "manifest-ephemeral" end
+  if discovery_stale() then schedule_manifest_discovery(config) end
 
   local ranked = filter_cached_targets({ include_ephemeral = false, same_tmux_session = true })
   if ranked[1] then return ranked[1].path, "manifest-ranked" end
@@ -774,6 +777,8 @@ function Transport.discovery_stale() return discovery_stale() end
 
 function Transport.refresh_discovery(config, callback) schedule_manifest_discovery(config, callback) end
 
+function Transport.auto_discovery_enabled(config) return not (config.registry and config.registry.parent_id) end
+
 function Transport.describe_target(config)
   local socket_path, source = Transport.resolve_socket(config)
   return {
@@ -790,6 +795,7 @@ function Transport.list_targets(config, opts) return ranked_manifest_targets(con
 
 function Transport.build_peer_identity(config)
   local context = current_tmux_context()
+  local registry = config.registry or {}
   return {
     id = string.format(
       "nvim:%s:%s:%d",
@@ -806,6 +812,12 @@ function Transport.build_peer_identity(config)
       pane = context.pane,
     },
     linkMode = config.transport.link_mode,
+    parentId = registry.parent_id,
+    workspaceId = registry.workspace_id,
+    instanceId = registry.instance_id,
+    registryRoot = registry.workspace_root,
+    role = vim.env.PINVIM_SESSION_ROLE or "main",
+    nvimListenAddress = editor_service_address or vim.v.servername,
     heartbeatAt = os.time(),
   }
 end
@@ -829,6 +841,288 @@ function Transport.build_heartbeat(state, config)
     peerId = state.peer and state.peer.id or nil,
     sentAt = os.time(),
   }
+end
+
+local function read_manifest_infos_sync(config)
+  local infos = {}
+  local pattern = path_join(config.transport.manifest_dir, "*.info")
+  for _, info_path in ipairs(vim.fn.glob(pattern, false, true)) do
+    local info = parse_info_manifest(config, info_path)
+    if info then table.insert(infos, info) end
+  end
+  return infos
+end
+
+local function legacy_registry_runtime(config)
+  local socket_path, source = Transport.resolve_socket(config)
+  local info = socket_path and manifest_for_socket(config, socket_path) or nil
+
+  if not socket_path then
+    local ranked = rank_manifest_infos(
+      config,
+      read_manifest_infos_sync(config),
+      current_tmux_context(),
+      { include_ephemeral = false }
+    )
+    local first = ranked[1]
+    if first then
+      socket_path = first.path
+      source = "manifest-import"
+      info = first.raw or manifest_for_socket(config, first.path)
+    end
+  end
+
+  if not socket_path then return nil end
+  info = info or {}
+  return {
+    schema = "pinvim.registry.v1",
+    writer = "nvim-import",
+    role = "main",
+    importedFrom = "legacy-manifest-or-tmux",
+    importedAt = os.time(),
+    socket = socket_path,
+    socketSource = source,
+    pid = info.pid,
+    session = info.session,
+    window = info.window,
+    pane = info.pane,
+    tmux = info.tmux,
+    cwd = info.cwd,
+    root = info.root,
+    heartbeatAt = info.heartbeatAt,
+    startedAt = info.startedAt,
+  }
+end
+
+function Registry.setup(config)
+  local root = normalize_path(config.resolve_root()) or normalize_path(vim.uv.cwd()) or vim.uv.cwd()
+  local workspace_id = stable_hash(root)
+  local registry_root = path_join(config.transport.state_dir, "pinvim", workspace_id)
+  local existed = vim.uv.fs_stat(registry_root) ~= nil
+  pcall(vim.fn.mkdir, path_join(registry_root, "instances"), "p")
+  pcall(vim.fn.mkdir, path_join(registry_root, "children"), "p")
+
+  local parent_path = path_join(registry_root, "parent.id")
+  local parent_id = read_first_line(parent_path)
+  if not parent_id or parent_id == "" then
+    parent_id = "parent:" .. stable_hash(root .. "\0" .. tostring(os.time()) .. "\0" .. tostring(vim.fn.getpid()))
+    write_text_atomic(parent_path, parent_id)
+  end
+
+  local started_at = vim.g.pinvim_started_at or os.time()
+  vim.g.pinvim_started_at = started_at
+  local instance_id =
+    string.format("nvim-%d-%s", vim.fn.getpid(), stable_hash(root .. "\0" .. tostring(started_at)):sub(1, 8))
+  local instance_root = path_join(registry_root, "instances", instance_id)
+  pcall(vim.fn.mkdir, instance_root, "p")
+
+  local registry = {
+    schema = "pinvim.registry.v1",
+    workspace_id = workspace_id,
+    workspace_hash = workspace_id,
+    workspace_root = registry_root,
+    project_root = root,
+    parent_id = parent_id,
+    parent_id_path = parent_path,
+    instance_id = instance_id,
+    instance_root = instance_root,
+    children_root = path_join(registry_root, "children"),
+    main_socket_path = path_join(registry_root, "main.sock"),
+    main_session_intent_path = path_join(registry_root, "main.intent.json"),
+    main_session_runtime_path = path_join(registry_root, "main.runtime.json"),
+    main_intent_path = path_join(instance_root, "main.intent.json"),
+    main_runtime_path = path_join(instance_root, "main.runtime.json"),
+    launch_lock_path = path_join(registry_root, "main.launch.lock"),
+    imported_legacy = false,
+  }
+
+  if not existed then
+    local imported = legacy_registry_runtime(config)
+    if imported then
+      imported.workspace = { id = workspace_id, root = registry_root, projectRoot = root }
+      imported.parent = { id = parent_id }
+      write_json_atomic(registry.main_runtime_path, imported)
+      registry.imported_legacy = true
+    end
+  end
+
+  return registry
+end
+
+function Registry.main_target(registry)
+  if not registry or not registry.parent_id then return nil, nil end
+  if socket_exists(registry.main_socket_path) then return registry.main_socket_path, "registry-main" end
+  return nil, "registry-main"
+end
+
+local function registry_base_record(registry, config)
+  local identity = Transport.build_peer_identity(config)
+  return {
+    schema = "pinvim.registry.v1",
+    writer = "nvim",
+    role = "main",
+    updatedAt = os.time(),
+    workspace = {
+      id = registry.workspace_id,
+      hash = registry.workspace_hash,
+      root = registry.workspace_root,
+      projectRoot = registry.project_root,
+    },
+    parent = { id = registry.parent_id, path = registry.parent_id_path },
+    instance = {
+      id = registry.instance_id,
+      root = registry.instance_root,
+      pid = vim.fn.getpid(),
+      tmux = identity.tmux,
+      cwd = identity.cwd,
+      projectRoot = identity.root,
+    },
+    editorService = {
+      address = identity.nvimListenAddress,
+      transport = "msgpack-rpc",
+    },
+  }
+end
+
+function Registry.write_main_intent(registry, runtime, config)
+  if not registry then return false end
+  local record = registry_base_record(registry, config)
+  record.intent = {
+    kind = "editor-main-session-view",
+    desired = "present",
+    socket = runtime.socket,
+    socketSource = runtime.socket_source,
+    linkMode = runtime.link_mode or config.transport.link_mode,
+  }
+  return write_json_atomic(registry.main_intent_path, record)
+end
+
+function Registry.write_main_session_intent(registry, runtime, config, socket_path, reason)
+  if not registry then return false end
+  local record = registry_base_record(registry, config)
+  record.intent = {
+    kind = "main-session",
+    desired = "present",
+    socket = socket_path or registry.main_socket_path,
+    socketSource = socket_path and "registry-main" or runtime.socket_source,
+    linkMode = "main",
+    reason = reason or "panel",
+  }
+  return write_json_atomic(registry.main_session_intent_path, record)
+end
+
+function Registry.allocate_child(registry, config, opts)
+  if not registry then return nil end
+  opts = opts or {}
+  local epoch = os.time()
+  local pid = vim.fn.getpid()
+  local seed = string.format("%s|%d|%d|%s", registry.instance_id, pid, epoch, tostring(opts.tag or ""))
+  local child_id = string.format("child-%s-%d-%d", stable_hash(seed):sub(1, 8), pid, epoch)
+  local child_root = path_join(registry.children_root, child_id)
+  pcall(vim.fn.mkdir, child_root, "p")
+  local child = {
+    id = child_id,
+    root = child_root,
+    socket_path = path_join(child_root, "child.sock"),
+    intent_path = path_join(child_root, "intent.json"),
+    runtime_path = path_join(child_root, "runtime.json"),
+  }
+  local record = registry_base_record(registry, config)
+  record.role = "child"
+  record.intent = {
+    kind = "child-session",
+    desired = "present",
+    childId = child_id,
+    socket = child.socket_path,
+    socketSource = "registry-child",
+    linkMode = "child",
+    reason = opts.reason or "split",
+    createdAt = epoch,
+    creatorPid = pid,
+  }
+  write_json_atomic(child.intent_path, record)
+  return child
+end
+
+function Registry.cleanup_child(child)
+  if not child or not child.root then return end
+  pcall(vim.fn.delete, child.intent_path)
+  pcall(vim.fn.delete, child.runtime_path)
+  pcall(vim.fn.delete, child.socket_path)
+  pcall(vim.uv.fs_rmdir, child.root)
+end
+
+function EditorService.setup(config, registry)
+  local service = {
+    enabled = config.editor_service.enabled ~= false,
+    address = nil,
+    transport = "msgpack-rpc",
+    started = false,
+    stale = false,
+    last_error = nil,
+  }
+
+  if not service.enabled then return service end
+
+  local current = vim.v.servername
+  if current and current ~= "" then
+    service.address = current
+    service.started = true
+  else
+    local preferred = registry and registry.instance_root and path_join(registry.instance_root, "editor.sock") or nil
+    local ok, address = pcall(function()
+      if preferred then return vim.fn.serverstart(preferred) end
+      return vim.fn.serverstart()
+    end)
+    if ok and address and address ~= "" then
+      service.address = address
+      service.started = true
+    else
+      service.stale = true
+      service.last_error = tostring(address or "serverstart failed")
+    end
+  end
+
+  if service.address and service.address ~= "" then
+    editor_service_address = service.address
+    vim.env.PINVIM_NVIM_LISTEN_ADDRESS = service.address
+  end
+
+  return service
+end
+
+function Registry.with_launch_lock(registry, fn)
+  if not registry then return fn() end
+  local lock_path = registry.launch_lock_path
+  local ok = vim.uv.fs_mkdir(lock_path, 493)
+  if not ok then
+    local owner_path = path_join(lock_path, "owner.json")
+    local owner_line = read_first_line(owner_path)
+    local owner_ok, owner = pcall(vim.json.decode, owner_line or "")
+    if owner_ok and owner and owner.pid and not pid_alive(owner.pid) then
+      pcall(vim.fn.delete, owner_path)
+      pcall(vim.uv.fs_rmdir, lock_path)
+      ok = vim.uv.fs_mkdir(lock_path, 493)
+    end
+  end
+
+  if not ok then
+    vim.notify("pinvim: main launch already in progress", vim.log.levels.WARN)
+    return false
+  end
+
+  write_json_atomic(path_join(lock_path, "owner.json"), {
+    pid = vim.fn.getpid(),
+    instanceId = registry.instance_id,
+    parentId = registry.parent_id,
+    acquiredAt = os.time(),
+  })
+
+  local success, result = xpcall(fn, debug.traceback)
+  pcall(vim.fn.delete, path_join(lock_path, "owner.json"))
+  pcall(vim.uv.fs_rmdir, lock_path)
+  if not success then error(result) end
+  return result
 end
 
 local function nvim_peer_manifest_path(config)
@@ -857,6 +1151,16 @@ local function write_nvim_peer_manifest(runtime, config)
     tmux = identity.tmux,
     heartbeatAt = os.time(),
     linkMode = runtime.link_mode or config.transport.link_mode,
+    parentId = identity.parentId,
+    workspaceId = identity.workspaceId,
+    instanceId = identity.instanceId,
+    registryRoot = identity.registryRoot,
+    role = identity.role,
+    nvimListenAddress = identity.nvimListenAddress,
+    editorService = {
+      address = identity.nvimListenAddress,
+      transport = "msgpack-rpc",
+    },
     socket = runtime.socket or conn.socket_path,
     socketSource = runtime.socket_source or conn.socket_source,
     connected = conn.connected,
@@ -882,11 +1186,7 @@ local function start_nvim_peer_manifest_timer(runtime, config)
   write_nvim_peer_manifest(runtime, config)
   peer_manifest_timer = vim.uv.new_timer()
   if not peer_manifest_timer then return end
-  peer_manifest_timer:start(
-    5000,
-    5000,
-    vim.schedule_wrap(function() write_nvim_peer_manifest(runtime, config) end)
-  )
+  peer_manifest_timer:start(5000, 5000, vim.schedule_wrap(function() write_nvim_peer_manifest(runtime, config) end))
 end
 
 local function cleanup_nvim_peer_manifest()
@@ -1004,6 +1304,197 @@ function Transport.build_explicit_send(config, command_opts)
   }
 end
 
+
+local function editor_service_buffers_for_path(file)
+  local normalized = normalize_path(file)
+  if not normalized then return {} end
+  local matches = {}
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    local name = vim.api.nvim_buf_get_name(bufnr)
+    if name ~= "" and same_path(name, normalized) then
+      table.insert(matches, bufnr)
+    end
+  end
+  return matches
+end
+
+local function editor_service_reload_file(file)
+  local normalized = normalize_path(file)
+  local response = {
+    ok = true,
+    path = normalized,
+    reloaded = {},
+    conflicts = {},
+    missing = {},
+  }
+  if not normalized then return response end
+
+  local bufs = editor_service_buffers_for_path(normalized)
+  if #bufs == 0 then
+    table.insert(response.missing, { path = normalized, reason = "buffer not open" })
+    return response
+  end
+
+  local current = vim.api.nvim_get_current_buf()
+  for _, bufnr in ipairs(bufs) do
+    local name = vim.api.nvim_buf_get_name(bufnr)
+    local modified = vim.bo[bufnr].modified == true
+    local entry = {
+      bufnr = bufnr,
+      path = name,
+      current = bufnr == current,
+      modified = modified,
+    }
+
+    if modified then
+      table.insert(response.conflicts, entry)
+    else
+      local checktime_ok, checktime_err = pcall(vim.api.nvim_buf_call, bufnr, function()
+        vim.cmd("checktime")
+        if vim.api.nvim_get_current_buf() == bufnr and vim.bo[bufnr].modified == false and name ~= "" then pcall(vim.cmd, "edit") end
+      end)
+      entry.reloaded = checktime_ok
+      if not checktime_ok then entry.error = tostring(checktime_err) end
+      table.insert(response.reloaded, entry)
+    end
+  end
+
+  if #response.conflicts > 0 then
+    local label = vim.fn.fnamemodify(normalized, ":~:.")
+    local count = #response.conflicts
+    vim.notify(
+      string.format(
+        "pinvim: external change left %d dirty buffer%s untouched (%s)",
+        count,
+        count == 1 and "" or "s",
+        label
+      ),
+      vim.log.levels.WARN
+    )
+  end
+
+  return response
+end
+
+local function diagnostic_to_table(diagnostic)
+  local severity_names = {
+    [vim.diagnostic.severity.ERROR] = "ERROR",
+    [vim.diagnostic.severity.WARN] = "WARN",
+    [vim.diagnostic.severity.INFO] = "INFO",
+    [vim.diagnostic.severity.HINT] = "HINT",
+  }
+  return {
+    bufnr = diagnostic.bufnr,
+    lnum = diagnostic.lnum + 1,
+    col = diagnostic.col,
+    end_lnum = diagnostic.end_lnum and (diagnostic.end_lnum + 1) or nil,
+    end_col = diagnostic.end_col,
+    severity = severity_names[diagnostic.severity] or tostring(diagnostic.severity or ""),
+    source = diagnostic.source,
+    code = diagnostic.code,
+    message = diagnostic.message,
+  }
+end
+
+function EditorService.current_context(config)
+  local payload = Transport.build_explicit_send(config, { delivery = "attach" })
+  return payload.context
+end
+
+function EditorService.current_diagnostics()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local diagnostics = vim.diagnostic.get(bufnr)
+  local result = {}
+  for _, diagnostic in ipairs(diagnostics or {}) do
+    table.insert(result, diagnostic_to_table(diagnostic))
+  end
+  return result
+end
+
+function EditorService.handle_request(api, config, method, params)
+  params = params or {}
+  if method == "status" then
+    local info = api.info()
+    return {
+      ok = true,
+      editor_service = info.editor_service,
+      state = info.state,
+      registry = info.registry,
+      context = EditorService.current_context(config),
+    }
+  end
+
+  if method == "context.current" then return EditorService.current_context(config) end
+
+  if method == "diagnostics.current" then return EditorService.current_diagnostics() end
+
+  if method == "open_file" or method == "reveal_file" then
+    local file = params.path or params.file or params.absFile
+    if type(file) ~= "string" or file == "" then error("open_file requires path") end
+    vim.cmd.edit(vim.fn.fnameescape(file))
+    if params.line then
+      local line = math.max(1, tonumber(params.line) or 1)
+      local col = math.max(0, tonumber(params.col) or 0)
+      pcall(vim.api.nvim_win_set_cursor, 0, { line, col })
+    end
+    return EditorService.current_context(config)
+  end
+
+  if method == "reload_buffer" then
+    local file = params.path or params.file or params.absFile
+    if type(file) == "string" and file ~= "" then
+      local result = editor_service_reload_file(file)
+      result.context = EditorService.current_context(config)
+      return result
+    end
+    if vim.bo.modified then
+      return {
+        ok = true,
+        conflicts = {
+          {
+            bufnr = vim.api.nvim_get_current_buf(),
+            path = vim.api.nvim_buf_get_name(0),
+            current = true,
+            modified = true,
+          },
+        },
+        reloaded = {},
+        missing = {},
+        context = EditorService.current_context(config),
+      }
+    end
+    vim.cmd("checktime")
+    if vim.bo.modified == false and vim.api.nvim_buf_get_name(0) ~= "" then pcall(vim.cmd, "edit") end
+    return {
+      ok = true,
+      conflicts = {},
+      reloaded = {
+        {
+          bufnr = vim.api.nvim_get_current_buf(),
+          path = vim.api.nvim_buf_get_name(0),
+          current = true,
+          modified = false,
+          reloaded = true,
+        },
+      },
+      missing = {},
+      context = EditorService.current_context(config),
+    }
+  end
+
+  if method == "refresh_diagnostics" then
+    pcall(vim.diagnostic.show, nil, 0)
+    return EditorService.current_diagnostics()
+  end
+
+  if method == "checktime" then
+    vim.cmd("checktime")
+    return { ok = true }
+  end
+
+  error("unsupported pinvim editor method: " .. tostring(method))
+end
+
 function Handshake.refresh(state, transport, config)
   state.peer = transport.build_peer_identity(config)
   state.last_hello = transport.build_hello(state, config)
@@ -1024,6 +1515,11 @@ function Handshake.describe(state, transport, config)
         "tmux.window",
         "tmux.pane",
         "linkMode",
+        "parentId",
+        "workspaceId",
+        "instanceId",
+        "registryRoot",
+        "role",
         "heartbeatAt",
       },
     },
@@ -1339,6 +1835,12 @@ function Commands.setup(api, config)
       "pinvim status",
       string.format("socket: %s", info.target.socket_path or "(none)"),
       string.format("socket source: %s", info.target.source),
+      string.format("workspace id: %s", info.registry.workspace_id),
+      string.format("parent id: %s", info.registry.parent_id),
+      string.format("instance id: %s", info.registry.instance_id),
+      string.format("registry root: %s", info.registry.workspace_root),
+      string.format("editor service: %s", info.editor_service.address or "(none)"),
+      string.format("editor service stale: %s", tostring(info.editor_service.stale)),
       string.format("connected: %s", tostring(info.state.connected)),
       string.format("connecting: %s", tostring(info.state.connecting)),
       string.format("link mode: %s", info.state.link_mode or "auto"),
@@ -1362,8 +1864,103 @@ function Commands.setup(api, config)
       string.format("hello_ack: %s", health.hello_ack and "yes" or "no"),
       string.format("heartbeat age: %s", health.heartbeat_age and (tostring(health.heartbeat_age) .. "s") or "(none)"),
       string.format("socket: %s", health.socket_path or "(none)"),
+      string.format("editor service: %s", health.editor_service.address or "(none)"),
+      string.format("editor service stale: %s", tostring(health.editor_service.stale)),
     }
     vim.notify(table.concat(lines, "\n"), level)
+  end
+
+  local function list_manifest_candidates(manifest_dir)
+    if not manifest_dir or vim.fn.isdirectory(manifest_dir) == 0 then return {} end
+    local entries = vim.fn.globpath(manifest_dir, "*.info", false, true) or {}
+    table.sort(entries)
+    return entries
+  end
+
+  local function tmux_pane_info()
+    if vim.env.TMUX == nil or vim.env.TMUX == "" then return nil end
+    local function tmux(fmt)
+      local out = vim.fn.system({ "tmux", "display-message", "-p", fmt })
+      if vim.v.shell_error ~= 0 then return nil end
+      return vim.trim(out)
+    end
+    return {
+      session = tmux("#{session_name}"),
+      window = tmux("#{window_name}"),
+      window_index = tmux("#{window_index}"),
+      pane = tmux("#{pane_id}"),
+    }
+  end
+
+  local function doctor_command()
+    -- Read-only diagnostics: must not trigger connect or discovery side effects.
+    local info = api.info()
+    local health = api.health()
+    local svc = info.editor_service or {}
+    local registry_info = info.registry or {}
+    local target = info.target or {}
+    local state = info.state or {}
+    local ok = svc.address ~= nil and not svc.stale
+    local lines = {
+      ok and "pinvim doctor: ok" or "pinvim doctor: attention needed",
+      string.format("lifecycle: %s", info.lifecycle or "(unknown)"),
+      string.format("workspace id: %s", registry_info.workspace_id or "(none)"),
+      string.format("parent id: %s", registry_info.parent_id or "(none)"),
+      string.format("instance id: %s", registry_info.instance_id or "(none)"),
+      string.format("registry root: %s", registry_info.workspace_root or "(none)"),
+      string.format("peer socket: %s", target.socket_path or "(none)"),
+      string.format("target source: %s", target.source or "(none)"),
+      string.format("link mode: %s", state.link_mode or target.link_mode or "auto"),
+      string.format("peer connected: %s", tostring(state.connected)),
+      string.format("peer id: %s", health.peer_id or "(none)"),
+      string.format("heartbeat age: %s", health.heartbeat_age and (health.heartbeat_age .. "s") or "(none)"),
+      string.format("hello acked: %s", tostring(health.hello_ack)),
+      string.format("restored target: %s", state.restored_target and "yes" or "no"),
+      string.format("editor service: %s", svc.address or "(none)"),
+      string.format("editor transport: %s", svc.transport or "(none)"),
+      string.format("editor service stale: %s", tostring(svc.stale)),
+    }
+    if svc.last_error then table.insert(lines, "editor error: " .. svc.last_error) end
+
+    local tmux = tmux_pane_info()
+    if tmux then
+      table.insert(lines, string.format("tmux: %s @ %s/%s (%s)", tmux.session or "?", tmux.window_index or "?", tmux.window or "?", tmux.pane or "?"))
+    else
+      table.insert(lines, "tmux: (not in tmux)")
+    end
+
+    local manifests = list_manifest_candidates(target.manifest_dir)
+    table.insert(lines, string.format("manifest candidates: %d (%s)", #manifests, target.manifest_dir or "(none)"))
+    for i = 1, math.min(#manifests, 5) do
+      table.insert(lines, "  - " .. manifests[i])
+    end
+    if #manifests > 5 then table.insert(lines, string.format("  ... +%d more", #manifests - 5)) end
+
+    if registry_info.workspace_root then
+      for _, rel in ipairs({ "parent.id", "workspace.json" }) do
+        local p = registry_info.workspace_root .. "/" .. rel
+        if vim.fn.filereadable(p) == 1 then table.insert(lines, "registry file: " .. p) end
+      end
+    end
+    if registry_info.instance_root then
+      for _, rel in ipairs({ "main.intent.json", "main.runtime.json", "main.session.intent.json", "launch.lock" }) do
+        local p = registry_info.instance_root .. "/" .. rel
+        if vim.fn.filereadable(p) == 1 then table.insert(lines, "registry file: " .. p) end
+      end
+    end
+
+    -- Cleanup hints
+    if svc.stale then
+      table.insert(lines, "hint: editor service stale; restart nvim or check PINVIM_NVIM_LISTEN_ADDRESS")
+    end
+    if state.connected and health.heartbeat_age and health.heartbeat_age > 120 then
+      table.insert(lines, "hint: peer heartbeat is older than 120s; pi side may be wedged")
+    end
+    if target.socket_path and not state.connected then
+      table.insert(lines, "hint: socket resolved but not connected; run :PiTarget auto or check pi process")
+    end
+
+    vim.notify(table.concat(lines, "\n"), ok and vim.log.levels.INFO or vim.log.levels.WARN)
   end
 
   local function previous_command() api.restore_previous_target(conn.socket_path or runtime.socket, { notify = true }) end
@@ -1373,6 +1970,11 @@ function Commands.setup(api, config)
   local function target_command(command_opts)
     local arg = command_opts.args and vim.trim(command_opts.args) or ""
     if arg == "" then
+      if Transport.discovery_stale() then
+        Transport.refresh_discovery(config, function()
+          vim.schedule(function() vim.notify("pinvim: discovery refreshed", vim.log.levels.INFO) end)
+        end)
+      end
       local target = api.get_target()
       if target then
         vim.notify("pinvim: target " .. target, vim.log.levels.INFO)
@@ -1399,6 +2001,12 @@ function Commands.setup(api, config)
       string.format("root: %s", info.state.root or "(none)"),
       string.format("socket: %s", info.target.socket_path or "(none)"),
       string.format("socket source: %s", info.target.source),
+      string.format("workspace id: %s", info.registry.workspace_id),
+      string.format("parent id: %s", info.registry.parent_id),
+      string.format("instance id: %s", info.registry.instance_id),
+      string.format("registry root: %s", info.registry.workspace_root),
+      string.format("editor service: %s", info.editor_service.address or "(none)"),
+      string.format("editor service stale: %s", tostring(info.editor_service.stale)),
       string.format("connected: %s", tostring(info.state.connected)),
       string.format("connecting: %s", tostring(info.state.connecting)),
       string.format("link mode: %s", info.state.link_mode or info.target.link_mode),
@@ -1421,6 +2029,10 @@ function Commands.setup(api, config)
 
   vim.api.nvim_create_user_command("PiHealth", health_command, {
     desc = "Check pinvim hello/heartbeat health",
+  })
+
+  vim.api.nvim_create_user_command("PiDoctor", doctor_command, {
+    desc = "Diagnose pinvim peer and editor-service transports",
   })
 
   vim.api.nvim_create_user_command("PiPrompt", prompt_command, {
@@ -1605,9 +2217,19 @@ function M.setup(opts)
 
   local config = Config.setup(opts)
   local runtime = State.new()
+  local registry = Registry.setup(config)
+  config.registry = registry
+  local editor_service = EditorService.setup(config, registry)
+  config.editor_service_state = editor_service
 
   local api = {}
   api.runtime = runtime
+  api.registry = registry
+  api.editor_service = editor_service
+
+  function api.editor_rpc(method, params)
+    return EditorService.handle_request(api, config, method, params)
+  end
 
   local function current_peer()
     if runtime.last_hello_ack and runtime.last_hello_ack.peer then return runtime.last_hello_ack.peer end
@@ -1687,6 +2309,7 @@ function M.setup(opts)
       link_mode = meta and meta.link_mode or config.transport.link_mode,
     })
     Handshake.refresh(runtime, Transport, config)
+    Registry.write_main_intent(registry, runtime, config)
   end
 
   function api.ensure_connected(force_target_check)
@@ -1698,7 +2321,7 @@ function M.setup(opts)
     end
     local socket_path, source = Transport.resolve_socket(config)
 
-    if Transport.discovery_stale() then
+    if Transport.auto_discovery_enabled(config) and Transport.discovery_stale() then
       Transport.refresh_discovery(config, function()
         vim.schedule(function()
           api.refresh_buffer_state()
@@ -1773,6 +2396,14 @@ function M.setup(opts)
   function api.list_targets(opts) return Transport.list_targets(config, opts) end
 
   function api.select_session()
+    if Transport.discovery_stale() then
+      Transport.refresh_discovery(config, function()
+        vim.schedule(function() api.select_session() end)
+      end)
+      vim.notify("pinvim: discovering pi sessions", vim.log.levels.INFO)
+      return false
+    end
+
     local targets = api.list_targets({ include_ephemeral = true })
     if #targets == 0 then
       vim.notify("pinvim: no discovered pi sessions", vim.log.levels.WARN)
@@ -1840,7 +2471,7 @@ function M.setup(opts)
   function api.spawn_ephemeral_split(spawn_opts)
     spawn_opts = spawn_opts or {}
     if not vim.env.TMUX then
-      vim.notify("pinvim: ephemeral split requires tmux", vim.log.levels.WARN)
+      vim.notify("pinvim: child split requires tmux", vim.log.levels.WARN)
       return false
     end
 
@@ -1852,12 +2483,13 @@ function M.setup(opts)
 
     local function select_target(socket_path, source)
       vim.b.pi_target_socket = socket_path
-      vim.b.pi_ephemeral_socket = socket_path
+      vim.b.pi_child_socket = socket_path
+      vim.b.pi_ephemeral_socket = socket_path -- back-compat alias
       local meta = record_target_history(config, socket_path, source)
       State.patch(runtime, {
         socket = socket_path,
         socket_source = source,
-        link_mode = "ephemeral",
+        link_mode = "child",
         restored_target = false,
         restored_from = nil,
         last_error = nil,
@@ -1867,7 +2499,7 @@ function M.setup(opts)
 
     local function connect_and_maybe_send(socket_path)
       connection_disconnect(runtime)
-      connection_connect(api, runtime, config, socket_path, "ephemeral")
+      connection_connect(api, runtime, config, socket_path, "child")
       if payload then
         vim.defer_fn(function()
           api.send_explicit_payload(payload, { focus_after = false })
@@ -1876,15 +2508,19 @@ function M.setup(opts)
       end
     end
 
-    local existing = vim.b.pi_ephemeral_socket
+    local existing = vim.b.pi_child_socket or vim.b.pi_ephemeral_socket
     if existing and socket_exists(existing) and focus_socket_pane(config, existing) then
-      select_target(existing, "ephemeral")
+      select_target(existing, "child")
       connect_and_maybe_send(existing)
-      vim.notify("pinvim: focused ephemeral split " .. vim.fs.basename(existing), vim.log.levels.INFO)
+      vim.notify("pinvim: focused child split " .. vim.fs.basename(existing), vim.log.levels.INFO)
       return true
     end
 
-    local eph_socket = generate_ephemeral_socket_path(config)
+    -- Allocate an explicit child session under the registry. Falls back to
+    -- legacy ephemeral-socket basename when no registry exists (headless edge).
+    local child = registry and Registry.allocate_child(registry, config, { tag = vim.b.pi_target_socket or "" })
+    local child_socket = child and child.socket_path or generate_ephemeral_socket_path(config)
+    local child_id = child and child.id or vim.fs.basename(child_socket):gsub("%.sock$", "")
 
     -- Record previous target before switching
     local prev_socket = conn.socket_path or runtime.socket
@@ -1893,37 +2529,46 @@ function M.setup(opts)
     end
 
     local pane_id = vim.fn.trim(vim.fn.system({ "tmux", "display-message", "-p", "#{pane_id}" }))
-    local cmd = { "pimux", "--new", "--socket", eph_socket }
-    local job_opts = { detach = true }
-    if pane_id ~= "" then job_opts.env = { PIMUX_PANE = pane_id } end
-
-    local job = vim.fn.jobstart(cmd, job_opts)
+    local cmd = { "pimux", "--new", "--socket", child_socket }
+    local job_env = {
+      PINVIM_PARENT_ID = registry and registry.parent_id or nil,
+      PINVIM_WORKSPACE_ID = registry and registry.workspace_id or nil,
+      PINVIM_INSTANCE_ID = registry and registry.instance_id or nil,
+      PINVIM_REGISTRY_ROOT = registry and registry.workspace_root or nil,
+      PINVIM_SESSION_ROLE = "child",
+      PINVIM_SESSION_ID = child_id,
+      PI_SOCKET = child_socket,
+    }
+    if pane_id ~= "" then job_env.PIMUX_PANE = pane_id end
+    local job = vim.fn.jobstart(cmd, { detach = true, env = job_env })
     if job <= 0 then
-      vim.notify("pinvim: ephemeral split spawn failed", vim.log.levels.ERROR)
+      vim.notify("pinvim: child split spawn failed", vim.log.levels.ERROR)
+      if child then Registry.cleanup_child(child) end
       return false
     end
 
-    -- Set buffer-local target to the new ephemeral socket
-    select_target(eph_socket, "ephemeral")
+    -- Set buffer-local target to the new child socket
+    select_target(child_socket, "child")
 
-    vim.notify("pinvim: ephemeral split " .. vim.fs.basename(eph_socket), vim.log.levels.INFO)
+    vim.notify("pinvim: child split " .. child_id, vim.log.levels.INFO)
 
     -- Wait briefly for the pi process to create the socket, then connect
     vim.defer_fn(function()
-      if socket_exists(eph_socket) then
-        connect_and_maybe_send(eph_socket)
+      if socket_exists(child_socket) then
+        connect_and_maybe_send(child_socket)
       else
         -- Poll a few times for socket to appear
         local attempts = 0
         local poll
         poll = vim.schedule_wrap(function()
           attempts = attempts + 1
-          if socket_exists(eph_socket) then
-            connect_and_maybe_send(eph_socket)
+          if socket_exists(child_socket) then
+            connect_and_maybe_send(child_socket)
           elseif attempts < 20 then
             vim.defer_fn(poll, 150)
           else
-            vim.notify("pinvim: ephemeral socket not created", vim.log.levels.WARN)
+            vim.notify("pinvim: child socket not created", vim.log.levels.WARN)
+            if child then Registry.cleanup_child(child) end
           end
         end)
         vim.defer_fn(poll, 150)
@@ -1939,35 +2584,71 @@ function M.setup(opts)
       return false
     end
 
+    local socket_path = registry and registry.main_socket_path or api.get_target()
     local cmd = { "pimux" }
     if ensure_visible then table.insert(cmd, "--ensure") end
-
-    local socket_path = api.get_target()
     if socket_path then
       table.insert(cmd, "--socket")
       table.insert(cmd, socket_path)
     end
 
     local pane_id = vim.fn.trim(vim.fn.system({ "tmux", "display-message", "-p", "#{pane_id}" }))
-    local job_opts = { detach = true }
-    if pane_id ~= "" then job_opts.env = { PIMUX_PANE = pane_id } end
+    local job_env = {
+      PIMUX_FROM_NVIM = "1",
+      PI_STATE_DIR = config.transport.state_dir,
+      PINVIM_PARENT_ID = registry and registry.parent_id or nil,
+      PINVIM_WORKSPACE_ID = registry and registry.workspace_id or nil,
+      PINVIM_INSTANCE_ID = registry and registry.instance_id or nil,
+      PINVIM_REGISTRY_ROOT = registry and registry.workspace_root or nil,
+      PINVIM_SESSION_ROLE = "main",
+      PINVIM_LINK_MODE = "main",
+      PI_SOCKET = socket_path,
+    }
+    if pane_id ~= "" then job_env.PIMUX_PANE = pane_id end
+    local job_opts = { detach = true, env = job_env }
 
-    local job = vim.fn.jobstart(cmd, job_opts)
-    if job <= 0 then
-      vim.notify("pinvim: pimux failed", vim.log.levels.ERROR)
-      return false
+    local function launch()
+      if registry and socket_path then Registry.write_main_session_intent(registry, runtime, config, socket_path, "panel") end
+      local needs_registration = socket_path and not socket_exists(socket_path)
+      if needs_registration and vim.system then
+        local result = vim.system(cmd, { env = job_env, text = true }):wait()
+        if result.code ~= 0 then
+          vim.notify("pinvim: pimux failed", vim.log.levels.ERROR)
+          return false
+        end
+      else
+        local job = vim.fn.jobstart(cmd, job_opts)
+        if job <= 0 then
+          vim.notify("pinvim: pimux failed", vim.log.levels.ERROR)
+          return false
+        end
+      end
+
+      if socket_path then
+        vim.b.pi_target_socket = socket_path
+        State.patch(runtime, {
+          socket = socket_path,
+          socket_source = "registry-main",
+          link_mode = "main",
+          restored_target = false,
+          restored_from = nil,
+        })
+      end
+
+      if ensure_visible then
+        vim.notify("pinvim: opening main pi split", vim.log.levels.INFO)
+        vim.defer_fn(function()
+          api.refresh_buffer_state()
+          api.ensure_connected(true)
+          vim.fn.jobstart({ "tmux", "select-pane", "-R" }, { detach = true })
+        end, 180)
+      end
+
+      return true
     end
 
-    if ensure_visible then
-      vim.notify(socket_path and "pinvim: focusing linked pi split" or "pinvim: opening pi split", vim.log.levels.INFO)
-      vim.defer_fn(function()
-        api.refresh_buffer_state()
-        api.ensure_connected(true)
-        vim.fn.jobstart({ "tmux", "select-pane", "-R" }, { detach = true })
-      end, 180)
-    end
-
-    return true
+    if socket_path and not socket_exists(socket_path) then return Registry.with_launch_lock(registry, launch) end
+    return launch()
   end
 
   function api.ensure_panel_visible() return api.run_panel_command(true) end
@@ -2164,6 +2845,7 @@ function M.setup(opts)
       hello_ack = runtime.last_hello_ack ~= nil,
       heartbeat_age = heartbeat_age,
       socket_path = runtime.socket,
+      editor_service = vim.deepcopy(editor_service),
     }
   end
 
@@ -2198,6 +2880,8 @@ function M.setup(opts)
       handshake = Handshake.describe(runtime, Transport, config),
       compose_count = #compose_queue,
       target_history = vim.deepcopy(target_history),
+      registry = vim.deepcopy(registry),
+      editor_service = vim.deepcopy(editor_service),
       responsibilities = {
         loader = "config/nvim/after/plugin/pi.lua",
         module = "config/nvim/lua/pinvim.lua",
@@ -2209,8 +2893,8 @@ function M.setup(opts)
 
   Commands.setup(api, config)
   Autocmds.setup(api, config)
-  require("pinvim.review").setup(api, config)
   start_nvim_peer_manifest_timer(runtime, config)
+  Registry.write_main_intent(registry, runtime, config)
 
   vim.defer_fn(function()
     api.refresh_buffer_state()
@@ -2220,6 +2904,7 @@ function M.setup(opts)
   M.api = api
   M.state = runtime
   M.config = config
+  M.registry = registry
 
   return api
 end
