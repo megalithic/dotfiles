@@ -12,7 +12,13 @@
   "enableSkillCommands": true,
   "hideThinkingBlock": true,
   "editorPaddingX": 1,
-  "packages": [],
+  "packages": [
+    "npm:pi-mcp-adapter",
+    "npm:pi-web-access",
+    "npm:pi-subagents",
+    "npm:pi-caveman",
+    "npm:pi-rtk-optimizer"
+  ],
   "enabledModels": [
     "rx-anthropic/claude-opus-4-7",
     "rx-anthropic/claude-opus-4-6",
@@ -21,11 +27,13 @@
     "rx-codex/gpt-5.5",
     "rx-codex/gpt-5.4",
     "rx-codex/gpt-5.4-mini",
+    "rx-codex/gpt-5.3-codex-spark",
     "google-vertex/gemini-3.1-pro-preview",
     "google-vertex/gemini-3-flash-preview",
     "openai-codex/gpt-5.5",
     "openai-codex/gpt-5.4",
     "openai-codex/gpt-5.4-mini",
+    "openai-codex/gpt-5.3-codex-spark",
     "synthetic/hf:zai-org/GLM-5.1",
     "synthetic/hf:MiniMaxAI/MiniMax-M2.5",
     "synthetic/hf:moonshotai/Kimi-K2.6",
@@ -38,6 +46,7 @@
       "openai-codex/gpt-5.5",
       "openai-codex/gpt-5.4",
       "openai-codex/gpt-5.4-mini",
+      "openai-codex/gpt-5.3-codex-spark",
       "synthetic/hf:zai-org/GLM-5.1",
       "synthetic/hf:moonshotai/Kimi-K2.6",
       "synthetic/hf:MiniMaxAI/MiniMax-M2.5",
@@ -52,6 +61,7 @@
       "rx-codex/gpt-5.5",
       "rx-codex/gpt-5.4",
       "rx-codex/gpt-5.4-mini",
+      "rx-codex/gpt-5.3-codex-spark",
       "google-vertex/gemini-3.1-pro-preview",
       "google-vertex/gemini-3-flash-preview"
     ]

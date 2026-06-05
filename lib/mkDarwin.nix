@@ -39,6 +39,7 @@ inputs.nix-darwin.lib.darwinSystem {
       paths
       ;
     arch = system;
+    inherit system;
     inherit (inputs) self;
   };
 

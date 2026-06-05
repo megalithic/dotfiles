@@ -30,10 +30,6 @@
       url = "github:homebrew/homebrew-bundle";
       flake = false;
     };
-    homebrew-felixkratz = {
-      url = "github:FelixKratz/homebrew-formulae";
-      flake = false;
-    };
 
     # brew-nix: nix overlay for homebrew casks (replaces nix-homebrew casks)
     brew-api = {
@@ -54,7 +50,10 @@
 
     # NOTE: you can pin to a specific show with neovim-nightly-overlay/<sha>
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
-
+    pi-nix = {
+      url = "github:lukasl-dev/pi.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     devenv.url = "github:cachix/devenv";
     nh.url = "github:nix-community/nh";
     kanata-darwin = {
@@ -93,7 +92,6 @@
               "homebrew/homebrew-cask" = inputs.homebrew-cask;
               "homebrew/homebrew-services" = inputs.homebrew-services;
               "homebrew/homebrew-bundle" = inputs.homebrew-bundle;
-              "felixkratz/homebrew-formulae" = inputs.homebrew-felixkratz;
             };
           };
         };

@@ -1,11 +1,14 @@
 {
+  inputs,
   config,
   pkgs,
   lib,
+  system,
   ...
 }:
 let
-  inherit (pkgs) pi-coding-agent;
+  # inherit (pkgs) pi-coding-agent;
+  piPackage = inputs.pi-nix.packages.${system}.coding-agent;
 
   piStateDir = "${config.xdg.stateHome}/pi";
 
@@ -36,31 +39,21 @@ let
     }) (builtins.attrNames piExtensionPackages)
   );
 
-  piNodeAliases = pkgs.runCommand "pi-node-aliases" { } ''
-    mkdir -p $out/node_modules/@earendil-works
+  piWrapper = pkgs.writeShellScriptBin "pi" ''
+    export PI_STATE_DIR="''${PI_STATE_DIR:-${piStateDir}}"
+    mkdir -p "$PI_STATE_DIR/sockets" "$PI_STATE_DIR/manifests" "$PI_STATE_DIR/pinvim"
+    unset PIMUX_FROM_NVIM 2>/dev/null || true
 
-    piRoot=$(find ${pi-coding-agent}/lib/node_modules -mindepth 1 -maxdepth 1 -type d | head -n1)
-    piNodeModules="$piRoot/node_modules"
+    if [ -f "$XDG_CONFIG_HOME/opnix/secrets/env-vars.sh" ]; then
+      . "$XDG_CONFIG_HOME/opnix/secrets/env-vars.sh"
+    fi
 
-    makeAlias() {
-      target="$1"
-      package="$2"
-      aliasDir="$out/node_modules/@earendil-works/$package"
+    # if [ -n "$BRAVE_SEARCH_API_KEY" ] && [ -z "$BRAVE_API_KEY" ]; then
+    #   export BRAVE_API_KEY="$BRAVE_SEARCH_API_KEY"
+    # fi
 
-      mkdir -p "$aliasDir"
-      ln -s "$target/dist" "$aliasDir/dist"
-      printf '{"name":"@earendil-works/%s","type":"module","main":"./dist/index.js","types":"./dist/index.d.ts"}\n' "$package" > "$aliasDir/package.json"
-    }
-
-    makeAlias "$piRoot" pi-coding-agent
-
-    for package in pi-ai pi-agent-core pi-tui; do
-      if [ -e "$piNodeModules/@earendil-works/$package" ]; then
-        makeAlias "$piNodeModules/@earendil-works/$package" "$package"
-      elif [ -e "$piNodeModules/@mariozechner/$package" ]; then
-        makeAlias "$piNodeModules/@mariozechner/$package" "$package"
-      fi
-    done
+    export PATH="${pkgs."poppler-utils"}/bin:${pkgs.rtk}/bin:$PATH"
+    exec ${piPackage}/bin/pi "$@"
   '';
 
   # Auto-discover extensions (.ts files and directories with index.ts)
@@ -129,24 +122,24 @@ let
     }) promptFiles
   );
 
-  piWrapper = pkgs.writeShellScriptBin "pi" ''
-    export PATH="${pkgs.nodejs_24}/bin:${pkgs."poppler-utils"}/bin:${pkgs.rtk}/bin:$PATH"
-    export NODE_PATH="${piNodeAliases}/node_modules''${NODE_PATH:+:$NODE_PATH}"
-    export PI_STATE_DIR="''${PI_STATE_DIR:-${piStateDir}}"
-    mkdir -p "$PI_STATE_DIR/sockets" "$PI_STATE_DIR/manifests" "$PI_STATE_DIR/pinvim"
-    unset PIMUX_FROM_NVIM 2>/dev/null || true
-
-    XDG_CONFIG_HOME="''${XDG_CONFIG_HOME:-$HOME/.config}"
-    if [ -f "$XDG_CONFIG_HOME/opnix/secrets/env-vars.sh" ]; then
-      . "$XDG_CONFIG_HOME/opnix/secrets/env-vars.sh"
-    fi
-
-    if [ -n "$BRAVE_SEARCH_API_KEY" ] && [ -z "$BRAVE_API_KEY" ]; then
-      export BRAVE_API_KEY="$BRAVE_SEARCH_API_KEY"
-    fi
-
-    exec ${pi-coding-agent}/bin/pi "$@"
-  '';
+  # piWrapper = pkgs.writeShellScriptBin "pi" ''
+  #   export PATH="${pkgs.nodejs_24}/bin:${pkgs."poppler-utils"}/bin:${pkgs.rtk}/bin:$PATH"
+  #   export NODE_PATH="${piNodeAliases}/node_modules''${NODE_PATH:+:$NODE_PATH}"
+  #   export PI_STATE_DIR="''${PI_STATE_DIR:-${piStateDir}}"
+  #   mkdir -p "$PI_STATE_DIR/sockets" "$PI_STATE_DIR/manifests" "$PI_STATE_DIR/pinvim"
+  #   unset PIMUX_FROM_NVIM 2>/dev/null || true
+  #
+  #   XDG_CONFIG_HOME="''${XDG_CONFIG_HOME:-$HOME/.config}"
+  #   if [ -f "$XDG_CONFIG_HOME/opnix/secrets/env-vars.sh" ]; then
+  #     . "$XDG_CONFIG_HOME/opnix/secrets/env-vars.sh"
+  #   fi
+  #
+  #   if [ -n "$BRAVE_SEARCH_API_KEY" ] && [ -z "$BRAVE_API_KEY" ]; then
+  #     export BRAVE_API_KEY="$BRAVE_SEARCH_API_KEY"
+  #   fi
+  #
+  #   exec ${pi-coding-agent}/bin/pi "$@"
+  # '';
 
   piAcp = pkgs.callPackage ./packages/pi-acp.nix { };
   piAcpWrapper = pkgs.writeShellScriptBin "pi-acp" ''
@@ -231,11 +224,7 @@ in
   home = {
     packages = [
       (pkgs.writeShellScriptBin "work-tickets" (builtins.readFile ./scripts/work-tickets.sh))
-
-      piWrapper
-
       pkgs."poppler-utils"
-
       piAcpWrapper
       pinvim
       p
@@ -300,10 +289,18 @@ in
     };
   };
 
-  programs.fish.shellAliases = {
-    pic = "pi -c"; # Continue last session
-    pir = "pi -r"; # Resume mode
-    pisock = "pinvim"; # pi with socket connection
-    pis = "pinvim"; # Short alias
+  programs = {
+    fish.shellAliases = {
+      pic = "pi -c"; # Continue last session
+      pir = "pi -r"; # Resume mode
+      pisock = "pinvim"; # pi with socket connection
+      pis = "pinvim"; # Short alias
+    };
+    pi = {
+      coding-agent = {
+        enable = true;
+        package = piWrapper;
+      };
+    };
   };
 }
