@@ -89,7 +89,37 @@ function M.targetDisplay(hint)
   end
 end
 
-function M.place(pos, screen, win)
+-- Per-window one-shot suppression of the next auto-layout pass.
+-- Manual placements (M.place callers: tile, chain, hypemode bindings,
+-- browser interop) seed this so the mainWindowChanged/windowCreated event
+-- triggered by setFrame doesn't immediately stomp the manual layout.
+-- TTL guards against stale entries when no event fires.
+M._suppressed = {} -- [winId] = expiryEpochSeconds
+M._suppressTTL = 1.0
+
+local function winId(win)
+  if not win then return nil end
+  local ok, id = pcall(function() return win:id() end)
+  if ok then return id end
+  return nil
+end
+
+function M.suppressNextLayout(win, ttl)
+  local id = winId(win)
+  if not id then return end
+  M._suppressed[id] = hs.timer.secondsSinceEpoch() + (ttl or M._suppressTTL)
+end
+
+function M.consumeSuppression(win)
+  local id = winId(win)
+  if not id then return false end
+  local exp = M._suppressed[id]
+  if not exp then return false end
+  M._suppressed[id] = nil
+  return exp > hs.timer.secondsSinceEpoch()
+end
+
+function M._placeRaw(pos, screen, win)
   win = win or hs.window.frontmostWindow()
   if not win then return nil end
 
@@ -102,6 +132,15 @@ function M.place(pos, screen, win)
 
   win:setFrame(frame, 0)
   return win
+end
+
+-- Manual placement entry point: places the window and suppresses the next
+-- auto-layout pass for it. Use M._placeRaw from auto-layout code paths
+-- (placeApp) so they don't suppress themselves.
+function M.place(pos, screen, win)
+  local placed = M._placeRaw(pos, screen, win)
+  if placed then M.suppressNextLayout(placed) end
+  return placed
 end
 
 function M.nextScreen(win)
@@ -176,36 +215,47 @@ end
 function M.placeApp(event, app)
   local utils = require("utils")
   local appLayout = C.layouts[app:bundleID()]
-  if appLayout ~= nil and appLayout.rules and #appLayout.rules > 0 then
-    local rules = appLayout.rules
+  if not (appLayout and appLayout.rules and #appLayout.rules > 0) then return end
+  local rules = appLayout.rules
 
-    enum.each(rules, function(rule)
-      local winTitlePattern, screenNum, position = table.unpack(rule)
-      winTitlePattern = winTitlePattern or ""
-
-      -- Skip exclusion-only rules
-      if winTitlePattern:sub(1, 1) == "!" and position == nil then return end
-
-      if winTitlePattern == "" then
-        local standardWindows = enum.filter(
-          app:allWindows(),
-          function(w) return w:isStandard() and not shouldExcludeWindow(w:title(), rules) end
-        )
-        if #standardWindows > 0 then
-          enum.each(standardWindows, function(w)
-            U.log.n(fmt([[[RUN] wm/layouts/%s/%s: "%s"]], app:bundleID(), utils.eventString(event), w:title()))
-            M.place(position, M.targetDisplay(screenNum), w)
-          end)
-        end
-      else
-        local win = hs.window.find(winTitlePattern)
-        if win and matchesPattern(win:title(), winTitlePattern) and not shouldExcludeWindow(win:title(), rules) then
-          U.log.n(fmt([[[RUN] wm/layouts/%s/%s: "%s"]], app:bundleID(), utils.eventString(event), win:title()))
-          M.place(position, M.targetDisplay(screenNum), win)
-        end
-      end
-    end)
+  -- Partition rules: specific (named title) win over catch-all (nil/"").
+  -- First catch-all with a position wins. Exclusion-only rules ("!foo")
+  -- are consulted by shouldExcludeWindow.
+  local specificRules, catchAll = {}, nil
+  for _, rule in ipairs(rules) do
+    local pattern, _, position = rule[1], rule[2], rule[3]
+    pattern = pattern or ""
+    if pattern == "" then
+      if position ~= nil and catchAll == nil then catchAll = rule end
+    elseif pattern:sub(1, 1) ~= "!" then
+      table.insert(specificRules, rule)
+    end
   end
+
+  enum.each(app:allWindows(), function(w)
+    if not (w and w:isStandard()) then return end
+    local title = w:title() or ""
+    if shouldExcludeWindow(title, rules) then return end
+
+    local matched
+    for _, rule in ipairs(specificRules) do
+      if matchesPattern(title, rule[1]) then
+        matched = rule
+        break
+      end
+    end
+    matched = matched or catchAll
+    if not matched then return end
+
+    if M.consumeSuppression(w) then
+      U.log.df("wm/layouts/%s: skip (suppressed) %q", app:bundleID(), title)
+      return
+    end
+
+    local _, screenNum, position = table.unpack(matched)
+    U.log.n(fmt([[[RUN] wm/layouts/%s/%s: "%s"]], app:bundleID(), utils.eventString(event), title))
+    M._placeRaw(position, M.targetDisplay(screenNum), w)
+  end)
 end
 
 --------------------------------------------------------------------------------
