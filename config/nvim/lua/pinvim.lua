@@ -2167,7 +2167,9 @@ function Commands.setup(api, config)
       Transport.build_explicit_send(config, vim.tbl_extend("force", command_opts or {}, { delivery = "attach" }))
     api.clear_stale_target(true)
     api.ensure_panel_visible()
-    vim.defer_fn(function() api.send_explicit_payload(payload, { focus_after = false }) end, 250)
+    -- First-launch pi bootstrap can take several seconds before main.sock binds;
+    -- send_explicit_payload polls until connected or budget elapses.
+    api.send_explicit_payload(payload, { focus_after = false, await_connect_ms = 8000 })
   end
 
   vim.keymap.set(
@@ -2691,7 +2693,21 @@ function M.setup(opts)
         vim.defer_fn(function()
           api.refresh_buffer_state()
           api.ensure_connected(true)
-          vim.fn.jobstart({ "tmux", "select-pane", "-R" }, { detach = true })
+          -- Prefer the pane id pimux just activated; poll briefly for detached
+          -- pimux paths, then fall back to direction-based focus.
+          local focus_attempts = 0
+          local function try_focus()
+            local pane = vim.fn.trim(vim.fn.system({ "tmux", "show-option", "-vq", "@pimux.active_pane" }))
+            if pane ~= "" then
+              vim.fn.jobstart({ "tmux", "select-pane", "-t", pane }, { detach = true })
+            elseif focus_attempts < 10 then
+              focus_attempts = focus_attempts + 1
+              vim.defer_fn(try_focus, 100)
+            else
+              vim.fn.jobstart({ "tmux", "select-pane", "-R" }, { detach = true })
+            end
+          end
+          try_focus()
         end, 180)
       end
 
@@ -2755,28 +2771,27 @@ function M.setup(opts)
       return true
     end
 
-    if not conn.connecting then
-      complete(false)
-      return false
-    end
-
+    -- Poll for connection. Also drives ensure_connected so we cover the case
+    -- where the socket file does not exist yet (e.g. PiPanel just spawned pi
+    -- and main.sock has not bound). Caller can pass `await_connect_ms` to
+    -- extend the budget for first-launch flows; default preserves prior 2s.
     local timer = vim.uv.new_timer()
     if not timer then
       complete(false, "pinvim: target still connecting")
       return false
     end
 
-    local attempts = 0
+    local deadline = vim.uv.now() + (send_opts.await_connect_ms or 2000)
     timer:start(
       80,
       80,
       vim.schedule_wrap(function()
-        attempts = attempts + 1
+        if not conn.connected and not conn.connecting then api.ensure_connected(true) end
         if conn.connected then
           timer:stop()
           timer:close()
           complete(api.send_payload(payload, { silent = true, auto_connect = false }))
-        elseif attempts >= 25 then
+        elseif vim.uv.now() >= deadline then
           timer:stop()
           timer:close()
           complete(false, "pinvim: target not ready")
