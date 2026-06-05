@@ -995,11 +995,13 @@ const formatExplicitContext = (
   return parts.join("\n");
 };
 
+const NEOVIM_ICON = "\x1b[38;2;87;161;67m\x1b[0m";
+
 const formatPeerStatus = (): string => {
   const peer = getActivePeer();
   if (!peer) return "";
   const label = peer.root || peer.cwd || peer.id;
-  return `│ pinvim:${label.split("/").pop() || label}`;
+  return `│ ${NEOVIM_ICON} ${label.split("/").pop() || label}`;
 };
 
 const formatPendingContextStatus = (): string => {
@@ -1011,15 +1013,7 @@ const formatPendingContextStatus = (): string => {
   return `│ nvim ctx:${pendingContext.label} ${secondsLeft}s`;
 };
 
-const formatEditorServiceStatus = (): string => {
-  if (!editorService.address) return "│ nvim-rpc:fallback";
-  if (editorService.connected) return "│ nvim-rpc:ok";
-  if (editorService.connecting) return "│ nvim-rpc:connecting";
-  return "│ nvim-rpc:stale";
-};
-
-const formatStatus = (): string =>
-  [formatPeerStatus(), formatEditorServiceStatus()].filter(Boolean).join(" ");
+const formatStatus = (): string => formatPeerStatus();
 
 const getHealth = (): PinvimHealth => {
   const activePeer = getActivePeer();
