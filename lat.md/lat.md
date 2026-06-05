@@ -220,11 +220,11 @@ Pinvim visual mappings use Neovim `x` mode, so Lua callbacks may run after Visua
 
 Selection capture must first try live Visual state for command-line usage, then fall back to `'<`/`'>` marks plus `visualmode()` for `x` mappings.
 
-Selection-bearing actions (`gpa`, `gps`, `gpp`, `<C-p>`, `:PiSend`, and `:PiAdd`) route through explicit-send payloads. Prompt text added by `gps` is stored as `context.userInput` on that same explicit payload so pi receives normal pinvim context/metadata plus user text.
+Selection-bearing actions (`gpa`, `gps`, `gpp`, `:PiSend`, and `:PiAdd`) route through explicit-send payloads. Prompt text added by `gps` is stored as `context.userInput` on that same explicit payload so pi receives normal pinvim context/metadata plus user text.
 
 Explicit-send delivery has two modes. `gpa` and `:PiSend` use `delivery = "attach"`, so pi stores the latest formatted Neovim context, shows pending-context status, and injects it exactly once into the next non-extension user prompt. `gps` uses `delivery = "prompt"`, so it still sends context plus prompt immediately and intentionally starts an agent turn. Pending attach context expires after a short TTL and is replaced by newer attach sends; expired context is cleared instead of silently reused.
 
-Normal `gpp` and `<C-p>` open or focus a child pi split (registry-allocated under `children/<child-id>/`) and immediately send cursor/file context from the buffer that was active when the split was requested. Visual `gpp` and `<C-p>` do the same with selection context. Child split context stays prompt-delivered so its existing start-a-turn behavior is preserved.
+Normal `gpp` opens or focuses a child pi split (registry-allocated under `children/<child-id>/`) and immediately sends cursor/file context from the buffer that was active when the split was requested. Visual `gpp` does the same with selection context. Child split context stays prompt-delivered so its existing start-a-turn behavior is preserved. `<C-p>` (normal and visual) toggles the main parent-owned PiPanel via `api.toggle_panel()` and never spawns a child split.
 
 On restart, parent-owned sessions prefer the registry main socket and never auto-resume old ephemeral or child sockets from manifests or tmux globbing. Child sockets stay explicit-only, and explicit `:PiTarget <socket>` still works as a manual override.
 

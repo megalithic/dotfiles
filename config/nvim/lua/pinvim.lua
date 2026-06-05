@@ -2109,28 +2109,28 @@ function Commands.setup(api, config)
     "n",
     "gpp",
     spawn_ephemeral_with_cursor_context,
-    { silent = true, desc = "pinvim spawn ephemeral split and send cursor context" }
+    { silent = true, desc = "pinvim spawn/focus child pi split and send cursor context" }
   )
 
   vim.keymap.set(
     "x",
     "gpp",
     spawn_ephemeral_with_selection_context,
-    { silent = true, desc = "pinvim spawn ephemeral split and send selection" }
+    { silent = true, desc = "pinvim spawn/focus child pi split and send selection" }
   )
 
   vim.keymap.set(
     "n",
     "<C-p>",
-    spawn_ephemeral_with_cursor_context,
-    { silent = true, desc = "pinvim spawn ephemeral split and send cursor context" }
+    function() api.toggle_panel() end,
+    { silent = true, desc = "pinvim toggle main PiPanel" }
   )
 
   vim.keymap.set(
     "x",
     "<C-p>",
-    spawn_ephemeral_with_selection_context,
-    { silent = true, desc = "pinvim spawn ephemeral split and send selection" }
+    function() api.toggle_panel() end,
+    { silent = true, desc = "pinvim toggle main PiPanel" }
   )
 
   vim.keymap.set(
