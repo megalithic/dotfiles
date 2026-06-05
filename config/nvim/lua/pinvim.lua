@@ -361,7 +361,8 @@ end
 
 local function normalize_path(path)
   if not path or path == "" then return nil end
-  local normalized = vim.fs and vim.fs.normalize and vim.fs.normalize(path) or vim.fn.fnamemodify(path, ":p"):gsub("/$", "")
+  local normalized = vim.fs and vim.fs.normalize and vim.fs.normalize(path)
+    or vim.fn.fnamemodify(path, ":p"):gsub("/$", "")
   local real = normalized and vim.uv.fs_realpath(normalized) or nil
   return (real or normalized):gsub("/$", "")
 end
@@ -676,7 +677,9 @@ local function target_metadata(config, socket_path, source)
   found = found or { path = socket_path }
   found.source = source or found.source or "unknown"
   found.parked = parked[socket_path] == true
-  found.ephemeral = found.ephemeral == true or socket_path:match("%-eph%-[^/]+%.sock$") ~= nil or is_child_socket(socket_path)
+  found.ephemeral = found.ephemeral == true
+    or socket_path:match("%-eph%-[^/]+%.sock$") ~= nil
+    or is_child_socket(socket_path)
   found.link_mode = target_link_mode(found.source, found)
   found.recorded_at = os.time()
   return found
@@ -744,7 +747,6 @@ local function discover_socket_by_tmux(config)
     local window_socket =
       string.format("%s/%s-%s-%s.sock", config.transport.socket_dir, config.transport.prefix, context.session, window)
     if socket_exists(window_socket) then return window_socket end
-
   end
 
   return nil
@@ -1304,16 +1306,13 @@ function Transport.build_explicit_send(config, command_opts)
   }
 end
 
-
 local function editor_service_buffers_for_path(file)
   local normalized = normalize_path(file)
   if not normalized then return {} end
   local matches = {}
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
     local name = vim.api.nvim_buf_get_name(bufnr)
-    if name ~= "" and same_path(name, normalized) then
-      table.insert(matches, bufnr)
-    end
+    if name ~= "" and same_path(name, normalized) then table.insert(matches, bufnr) end
   end
   return matches
 end
@@ -1351,7 +1350,9 @@ local function editor_service_reload_file(file)
     else
       local checktime_ok, checktime_err = pcall(vim.api.nvim_buf_call, bufnr, function()
         vim.cmd("checktime")
-        if vim.api.nvim_get_current_buf() == bufnr and vim.bo[bufnr].modified == false and name ~= "" then pcall(vim.cmd, "edit") end
+        if vim.api.nvim_get_current_buf() == bufnr and vim.bo[bufnr].modified == false and name ~= "" then
+          pcall(vim.cmd, "edit")
+        end
       end)
       entry.reloaded = checktime_ok
       if not checktime_ok then entry.error = tostring(checktime_err) end
@@ -1924,7 +1925,16 @@ function Commands.setup(api, config)
 
     local tmux = tmux_pane_info()
     if tmux then
-      table.insert(lines, string.format("tmux: %s @ %s/%s (%s)", tmux.session or "?", tmux.window_index or "?", tmux.window or "?", tmux.pane or "?"))
+      table.insert(
+        lines,
+        string.format(
+          "tmux: %s @ %s/%s (%s)",
+          tmux.session or "?",
+          tmux.window_index or "?",
+          tmux.window or "?",
+          tmux.pane or "?"
+        )
+      )
     else
       table.insert(lines, "tmux: (not in tmux)")
     end
@@ -2119,18 +2129,59 @@ function Commands.setup(api, config)
     { silent = true, desc = "pinvim spawn/focus child pi split and send selection" }
   )
 
+  local function pi_visible_in_current_window()
+    if not vim.env.TMUX then return false end
+    local out = vim.fn.system({
+      "tmux",
+      "list-panes",
+      "-F",
+      "#{pane_title}\t#{pane_current_command}\t#{pane_start_command}",
+    })
+    if vim.v.shell_error ~= 0 then return false end
+    for line in tostring(out):gmatch("[^\n]+") do
+      local title, cmd, start = line:match("^([^\t]*)\t([^\t]*)\t(.*)$")
+      title = title or ""
+      cmd = cmd or ""
+      start = start or ""
+      if
+        title:sub(1, 2) == "π"
+        or cmd == "pi"
+        or cmd == "pinvim"
+        or start:find("pinvim", 1, true)
+        or start:find(" pi", 1, true)
+      then
+        return true
+      end
+    end
+    return false
+  end
+
+  local function toggle_panel_with_context(command_opts)
+    local was_visible = pi_visible_in_current_window()
+    if was_visible then
+      api.toggle_panel()
+      return
+    end
+    -- Capture selection/cursor context BEFORE the tmux split steals focus.
+    local payload =
+      Transport.build_explicit_send(config, vim.tbl_extend("force", command_opts or {}, { delivery = "attach" }))
+    api.clear_stale_target(true)
+    api.ensure_panel_visible()
+    vim.defer_fn(function() api.send_explicit_payload(payload, { focus_after = false }) end, 250)
+  end
+
   vim.keymap.set(
     "n",
     "<C-p>",
-    function() api.toggle_panel() end,
-    { silent = true, desc = "pinvim toggle main PiPanel" }
+    function() toggle_panel_with_context() end,
+    { silent = true, desc = "pinvim toggle main PiPanel (attach cursor context on open)" }
   )
 
   vim.keymap.set(
     "x",
     "<C-p>",
-    function() api.toggle_panel() end,
-    { silent = true, desc = "pinvim toggle main PiPanel" }
+    function() toggle_panel_with_context({ range = true }) end,
+    { silent = true, desc = "pinvim toggle main PiPanel (attach selection on open)" }
   )
 
   vim.keymap.set(
@@ -2227,9 +2278,7 @@ function M.setup(opts)
   api.registry = registry
   api.editor_service = editor_service
 
-  function api.editor_rpc(method, params)
-    return EditorService.handle_request(api, config, method, params)
-  end
+  function api.editor_rpc(method, params) return EditorService.handle_request(api, config, method, params) end
 
   local function current_peer()
     if runtime.last_hello_ack and runtime.last_hello_ack.peer then return runtime.last_hello_ack.peer end
@@ -2608,7 +2657,9 @@ function M.setup(opts)
     local job_opts = { detach = true, env = job_env }
 
     local function launch()
-      if registry and socket_path then Registry.write_main_session_intent(registry, runtime, config, socket_path, "panel") end
+      if registry and socket_path then
+        Registry.write_main_session_intent(registry, runtime, config, socket_path, "panel")
+      end
       local needs_registration = socket_path and not socket_exists(socket_path)
       if needs_registration and vim.system then
         local result = vim.system(cmd, { env = job_env, text = true }):wait()
