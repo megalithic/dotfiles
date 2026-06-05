@@ -222,7 +222,7 @@ Explicit-send delivery has two modes. `gpa` and `:PiSend` use `delivery = "attac
 
 Normal `gpp` and `<C-p>` open or focus a child pi split (registry-allocated under `children/<child-id>/`) and immediately send cursor/file context from the buffer that was active when the split was requested. Visual `gpp` and `<C-p>` do the same with selection context. Child split context stays prompt-delivered so its existing start-a-turn behavior is preserved.
 
-On restart, Pinvim may auto-resume a live ephemeral pimux manifest when it belongs to the current tmux session and either matches the current window or matches the current cwd/root recently. This preserves focused ephemeral conversations across Neovim restarts without requiring buffer-local socket state.
+On restart, parent-owned sessions now prefer the registry main socket instead of ephemeral manifest resume. The old ephemeral auto-resume path remains only as a legacy fallback when no parent registry target exists; explicit `:PiTarget <socket>` still works as a manual override.
 
 ### Attach-only context delivery
 
