@@ -1,6 +1,6 @@
 ---
 id: dot-13eb
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-06-05T14:38:34Z
