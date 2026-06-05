@@ -141,6 +141,9 @@ const isNestedAttachOnly = (): boolean =>
   process.env.PINVIM_NESTED_ATTACH_ONLY === "1" ||
   process.env.PINVIM_LINK_MODE === "attach-only";
 
+const shouldAutoScanNvimPeers = (): boolean =>
+  !isNestedAttachOnly() && !hasParentContext();
+
 const pinvimRelationState = ():
   | "attach-only"
   | "child"
@@ -1134,12 +1137,14 @@ const scanNvimPeers = async (): Promise<NvimPeerCandidate[]> => {
   return candidates;
 };
 
-const refreshRepairCandidate = async (): Promise<void> => {
-  if (isNestedAttachOnly()) {
+const refreshRepairCandidate = async (
+  opts: { force?: boolean } = {},
+): Promise<void> => {
+  if (isNestedAttachOnly() || (!opts.force && !shouldAutoScanNvimPeers())) {
     repairCandidate = null;
     return;
   }
-  if (!peerNeedsRepair()) return;
+  if (!opts.force && !peerNeedsRepair()) return;
   const [candidate] = await scanNvimPeers();
   repairCandidate = candidate || null;
   if (latestCtx?.hasUI) {
@@ -1168,10 +1173,21 @@ const peerAllowedForSocket = (
     ["workspaceId", "workspace identity"],
     ["instanceId", "nvim instance identity"],
   ];
+  const exactParentRegistry =
+    !!localIdentity.parentId &&
+    !!localIdentity.workspaceId &&
+    peer.parentId === localIdentity.parentId &&
+    peer.workspaceId === localIdentity.workspaceId;
+
   for (const [key, label] of identityChecks) {
+    if (key === "instanceId" && exactParentRegistry) continue;
     if ((localIdentity[key] || peer[key]) && localIdentity[key] !== peer[key]) {
       return { ok: false, reason: `mismatched pinvim ${label}` };
     }
+  }
+
+  if (exactParentRegistry) {
+    return { ok: true, reason: "exact pinvim parent registry" };
   }
 
   const candidate: NvimPeerCandidate = {
@@ -1687,7 +1703,7 @@ export default function (pi: ExtensionAPI): void {
       editorServiceTimer.unref();
     }
 
-    if (!peerScanTimer) {
+    if (shouldAutoScanNvimPeers() && !peerScanTimer) {
       peerScanTimer = setInterval(() => {
         void refreshRepairCandidate();
       }, 5000);
@@ -1817,6 +1833,7 @@ export default function (pi: ExtensionAPI): void {
     description: "Diagnose pinvim peer and Nvim editor-service transports",
     handler: async (_args, ctx) => {
       ensureEditorServiceClient();
+      await refreshRepairCandidate({ force: true });
       const editorStatus = await editorServiceRequest("status");
       const health = getHealth();
       const activePeer = getActivePeer();

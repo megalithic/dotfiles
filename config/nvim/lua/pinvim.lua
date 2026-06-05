@@ -689,6 +689,7 @@ local function target_link_mode(source, entry)
   if entry and entry.parked then return "parked" end
   if source == "env" then return "explicit" end
   if source == "ephemeral" then return "ephemeral" end
+  if source == "registry-main" then return "main" end
   if source == "buffer" or source == "manual" then return "manual" end
   if source == "history-restore" then return "parked" end
   return "auto"
@@ -697,7 +698,7 @@ end
 local function target_metadata(config, socket_path, source)
   if not socket_path then return nil end
   if vim.in_fast_event and vim.in_fast_event() then
-    local ephemeral = socket_path:match("%-eph%-[^/]+%.sock$") ~= nil
+    local ephemeral = socket_path:match("%-eph%-[^/]+%.sock$") ~= nil or is_child_socket(socket_path)
     return {
       path = socket_path,
       source = source or "unknown",
@@ -713,7 +714,7 @@ local function target_metadata(config, socket_path, source)
   found = found or { path = socket_path }
   found.source = source or found.source or "unknown"
   found.parked = parked[socket_path] == true
-  found.ephemeral = found.ephemeral == true or socket_path:match("%-eph%-[^/]+%.sock$") ~= nil
+  found.ephemeral = found.ephemeral == true or socket_path:match("%-eph%-[^/]+%.sock$") ~= nil or is_child_socket(socket_path)
   found.link_mode = target_link_mode(found.source, found)
   found.recorded_at = os.time()
   return found
@@ -815,6 +816,9 @@ function Transport.resolve_socket(config)
   local buf_target = vim.b.pi_target_socket
   if buf_target and socket_exists(buf_target) then return buf_target, "buffer" end
 
+  local registry_socket, registry_source = Registry.main_target(config.registry)
+  if registry_source then return registry_socket, registry_source end
+
   if discovery_stale() then schedule_manifest_discovery(config) end
 
   local ephemeral = resumable_ephemeral_target(config)
@@ -835,6 +839,8 @@ end
 function Transport.discovery_stale() return discovery_stale() end
 
 function Transport.refresh_discovery(config, callback) schedule_manifest_discovery(config, callback) end
+
+function Transport.auto_discovery_enabled(config) return not (config.registry and config.registry.parent_id) end
 
 function Transport.describe_target(config)
   local socket_path, source = Transport.resolve_socket(config)
@@ -1004,6 +1010,12 @@ function Registry.setup(config)
   end
 
   return registry
+end
+
+function Registry.main_target(registry)
+  if not registry or not registry.parent_id then return nil, nil end
+  if socket_exists(registry.main_socket_path) then return registry.main_socket_path, "registry-main" end
+  return nil, "registry-main"
 end
 
 local function registry_base_record(registry, config)
@@ -1918,6 +1930,11 @@ function Commands.setup(api, config)
   local function target_command(command_opts)
     local arg = command_opts.args and vim.trim(command_opts.args) or ""
     if arg == "" then
+      if Transport.discovery_stale() then
+        Transport.refresh_discovery(config, function()
+          vim.schedule(function() vim.notify("pinvim: discovery refreshed", vim.log.levels.INFO) end)
+        end)
+      end
       local target = api.get_target()
       if target then
         vim.notify("pinvim: target " .. target, vim.log.levels.INFO)
@@ -2264,7 +2281,7 @@ function M.setup(opts)
     end
     local socket_path, source = Transport.resolve_socket(config)
 
-    if Transport.discovery_stale() then
+    if Transport.auto_discovery_enabled(config) and Transport.discovery_stale() then
       Transport.refresh_discovery(config, function()
         vim.schedule(function()
           api.refresh_buffer_state()
@@ -2339,6 +2356,14 @@ function M.setup(opts)
   function api.list_targets(opts) return Transport.list_targets(config, opts) end
 
   function api.select_session()
+    if Transport.discovery_stale() then
+      Transport.refresh_discovery(config, function()
+        vim.schedule(function() api.select_session() end)
+      end)
+      vim.notify("pinvim: discovering pi sessions", vim.log.levels.INFO)
+      return false
+    end
+
     local targets = api.list_targets({ include_ephemeral = true })
     if #targets == 0 then
       vim.notify("pinvim: no discovered pi sessions", vim.log.levels.WARN)
