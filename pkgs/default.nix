@@ -18,21 +18,27 @@ let
     inherit lib;
     inherit (prev) stdenvNoCC;
   };
-  callMkApp = file: import file { inherit mkApp; };
-in
-{
-  # ===========================================================================
-  # CLI Tools & Utilities
-  # ===========================================================================
-  chrome-devtools-mcp = prev.callPackage ./chrome-devtools-mcp.nix { };
-  whisperkit-cli = prev.callPackage ./cli/whisperkit-cli.nix { };
 
-  # ===========================================================================
-  # macOS Apps (mkApp - DMG/ZIP extraction)
-  # ===========================================================================
-  # fantastical = callMkApp ./fantastical.nix;
-  bloom = callMkApp ./bloom.nix;
-  brave-browser-nightly = callMkApp ./brave-browser-nightly.nix;
-  helium-browser = prev.callPackage ./helium-browser.nix { };
-  inherit (import ./tidewave.nix { inherit mkApp; }) tidewave tidewave-cli;
-}
+  packageFiles =
+    dir:
+    lib.concatMapAttrs (
+      name: type:
+      let
+        path = dir + "/${name}";
+      in
+      if type == "directory" then
+        packageFiles path
+      else if type == "regular" && lib.hasSuffix ".nix" name && name != "default.nix" then
+        { ${lib.removeSuffix ".nix" name} = path; }
+      else
+        { }
+    ) (builtins.readDir dir);
+
+  callLocalPackage =
+    _name: path:
+    let
+      args = builtins.functionArgs (import path);
+    in
+    prev.callPackage path (lib.optionalAttrs (args ? mkApp) { inherit mkApp; });
+in
+lib.mapAttrs callLocalPackage (packageFiles ./.)

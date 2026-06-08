@@ -187,5 +187,25 @@ in
     tailscale.enable = true;
   };
 
+  # ─── Spotlight exclusions ────────────────────────────────────────────────
+  # Prevents Spotlight from indexing build artifacts, deps, and devenv state.
+  # Override or extend in hosts/<hostname>.nix via spotlight.exclusions.paths/scanPaths.
+  spotlight.exclusions = {
+    enable = true;
+    fromFile = ../home/common/programs/git/gitignore;
+    paths = [
+      "node_modules"
+      ".devenv"
+      ".direnv"
+      "_build"
+      "deps"
+      ".elixir_ls"
+      ".lexical"
+      ".elixir-tools"
+      ".expert"
+    ];
+    scanPaths = [ "${paths.home}/code" ];
+  };
+
   nixpkgs.hostPlatform = arch;
 }

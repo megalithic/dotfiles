@@ -183,6 +183,7 @@ M.layouts = {
     rules = {
       -- Named windows take precedence over the catch-all below.
       { "Inbox", 2, M.grid.full },
+      { "Unread", 2, M.grid.full },
       { "All Messages", 2, M.grid.full },
       -- Compose windows, individual message viewers, etc.
       { "", 2, M.grid.halves.left },

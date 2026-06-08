@@ -51,7 +51,7 @@ for file in "${worktree_core_files[@]}"; do
 done
 
 if [ -e "$worktree_path/devenv.nix" ] || [ -L "$worktree_path/devenv.nix" ]; then
-  if (cd "$worktree_path" && devenv tasks list | awk '{print $1}' | grep -qx 'worktree:setup'); then
+  if (cd "$worktree_path" && devenv tasks list 2>/dev/null | awk '{print $NF}' | rg -qx 'worktree:setup'); then
     (cd "$worktree_path" && devenv tasks run worktree:setup)
   fi
 fi
@@ -78,7 +78,7 @@ for file in "${worktree_core_files[@]}"; do
   fi
 done
 if [ -e "$worktree_path/devenv.nix" ] || [ -L "$worktree_path/devenv.nix" ]; then
-  if (cd "$worktree_path" && devenv tasks list | awk '{print $1}' | grep -qx 'worktree:setup'); then
+  if (cd "$worktree_path" && devenv tasks list 2>/dev/null | awk '{print $NF}' | rg -qx 'worktree:setup'); then
     (cd "$worktree_path" && devenv tasks run worktree:setup)
   fi
 fi
@@ -105,7 +105,7 @@ for file in "${worktree_core_files[@]}"; do
   fi
 done
 if [ -e "$worktree_path/devenv.nix" ] || [ -L "$worktree_path/devenv.nix" ]; then
-  if (cd "$worktree_path" && devenv tasks list | awk '{print $1}' | grep -qx 'worktree:setup'); then
+  if (cd "$worktree_path" && devenv tasks list 2>/dev/null | awk '{print $NF}' | rg -qx 'worktree:setup'); then
     (cd "$worktree_path" && devenv tasks run worktree:setup)
   fi
 fi

@@ -1,5 +1,8 @@
-{pkgs, ...}: {
-  home.packages = [pkgs.devenv];
+{ pkgs, ... }:
+{
+  home.packages = [ pkgs.devenv ];
+
+  home.sessionVariables.DEVENV_TUI = "false";
 
   # Fish completion for `devenv tasks run <task>`
   xdg.configFile."fish/conf.d/devenv-tasks-run.fish".text = builtins.readFile ./devenv-tasks-run.fish;

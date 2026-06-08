@@ -83,7 +83,12 @@
       "--color=border:#2f3d44,label:#c0caf5,query:#aeaeae"
       "--color=preview-border:#415c6d"
     ];
-    fileWidgetCommand = "${pkgs.fd}/bin/fd --type f --hidden --no-ignore-vcs --follow --strip-cwd-prefix --exclude .git --exclude .jj --exclude .direnv";
+    # fish fzf CTRL-T sets $dir from the current command-line token (for example
+    # `nvim ~/code/<C-t>`). fd cannot combine --strip-cwd-prefix with an explicit
+    # search path, so pass $dir as fd's root and strip only the ./ prefix from cwd
+    # results. Leave $dir unquoted so Home Manager emits it literally; fish does not
+    # split variable expansions on spaces.
+    fileWidgetCommand = "${pkgs.fd}/bin/fd --type f --hidden --no-ignore-vcs --follow --exclude .git --exclude .jj --exclude .direnv . \\$dir | sed 's#^\\./##'";
     fileWidgetOptions = [
       "--preview='preview {}'"
       "--header='find files [$(tput setaf 255)ctrl-y$(tput sgr 0): $(tput setaf 245)copy to clipboard$(tput sgr 0)]'"

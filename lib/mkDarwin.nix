@@ -52,6 +52,7 @@ inputs.nix-darwin.lib.darwinSystem {
     ../hosts/${hostname}.nix
     ../modules/system.nix
     ../modules/darwin/services.nix
+    ../modules/darwin/spotlight.nix
     inputs.kanata-darwin.darwinModules.default
     ../modules/darwin/kanata.nix
     inputs.nix-homebrew.darwinModules.nix-homebrew

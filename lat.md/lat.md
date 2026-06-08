@@ -70,6 +70,8 @@ Repo devenv entry uses shell hooks plus direnv support; generated caches stay ig
 
 Fish startup is generated from `home/common/programs/fish/default.nix` and function definitions from `functions.nix`. Home Manager fish startup sources keybindings, theme, completions, and functions directly; it does not read `home/common/programs/fish/config.fish`.
 
+Home Manager exports `DEVENV_TUI=false` from `home/common/programs/devenv/default.nix` so direnv-triggered `devenv direnv-export` runs without the interactive TUI and cannot spin in devenv's terminal render loop.
+
 `home/common/programs/fish/config.fish` is a standalone experiment for loading `devenv print-dev-env` output into the current fish shell on directory changes. It is not active until the Home Manager module sources it.
 
 Bash/fish `devenv shell` auto-activation helpers (post-exec hook in `home/common/programs/fish/functions.nix`, `cd` alias in `home/common/programs/bash/default.nix`) are commented out for now; the spawned subshell pattern was noisy and may return with a different design. Home Manager still enables direnv + nix-direnv globally in `home/common/default.nix` for repos that use `.envrc`.
@@ -112,11 +114,17 @@ Tmux session layouts remain explicit scripts. The `mega` layout opens a separate
 
 Neovim git URL mappings define explicit file, branch, and blame copy/open bindings in `config/nvim/lua/plugins/git.lua`. Keep descriptions aligned with the configured `GitLink`/`GitLink!` command forms instead of relying on memory of bang semantics. Mini.diff hunk reset and overlay mappings live under `<localleader>h*` so they do not collide with broader leader mappings.
 
+Neovim loads general editor autocmds from `config/nvim/lua/autocmds.lua`. Its `BufWritePre` hook creates missing parent directories for real file buffers before writes, while `<Esc>` in `config/nvim/lua/keymaps.lua` clears UI state without autosaving the buffer.
+
 ## Home Manager package set
 
 Home Manager package composition avoids direct `pkgs.poppler` plus `pkgs."poppler-utils"` installs.
 
-The shared Home Manager module auto-imports every top-level `home/common/programs/*/default.nix` directory, so the program layout stays one directory per tool instead of a hand-maintained import list. `mkHome` imports `inputs.pi-nix.homeModules.default` so `programs.pi.coding-agent` can manage the wrapped Pi package declaratively. Tool-specific dotfiles and XDG links live beside their Home Manager module: git dotfiles are under `home/common/programs/git/`, ripgrep's rc file is under `home/common/programs/ripgrep/`, zsh's raw config tree is under `home/common/programs/zsh/config/`, Yazi's module and plugin tree are under `home/common/programs/yazi/`, and raw app config links are owned by program modules such as `home/common/programs/{hammerspoon,kitty,tmux,kanata,espanso}/`. Process Compose, Neomd, Obsidian vault activation, and Desktoppr wallpaper activation likewise live in their own program directories rather than `home/common/default.nix`. Surfingkeys stays enabled on Tidewave at `localhost:9832`, but the Lexical message editor is added to `settings.editableSelector` so its `contenteditable` div enters Insert mode like a normal input. Rust toolchain setup now lives in `home/common/programs/rust/default.nix` and covers both `rustup` and `bacon`. Modules that need optional or removed inputs stay gated: `worktrunk` imports only when `inputs.worktrunk` exists, and `claude-code` stays parked until its old `pkgs.llm-agents` dependency is restored or replaced.
+The shared Home Manager module auto-imports every top-level `home/common/programs/*/default.nix` directory, so the program layout stays one directory per tool instead of a hand-maintained import list. `mkHome` imports `inputs.pi-nix.homeModules.default` so `programs.pi.coding-agent` can manage the wrapped Pi package declaratively. Tool-specific dotfiles and XDG links live beside their Home Manager module: git dotfiles are under `home/common/programs/git/`, ripgrep's rc file is under `home/common/programs/ripgrep/`, zsh's raw config tree is under `home/common/programs/zsh/config/`, Yazi's module and plugin tree are under `home/common/programs/yazi/`, and raw app config links are owned by program modules such as `home/common/programs/{hammerspoon,kitty,tmux,kanata,espanso}/`. Process Compose, Neomd, Obsidian vault activation, Desktoppr wallpaper activation, and Handy's package install likewise live in their own program directories rather than `home/common/default.nix`. Surfingkeys stays enabled on Tidewave at `localhost:9832`, but the Lexical message editor is added to `settings.editableSelector` so its `contenteditable` div enters Insert mode like a normal input. Rust toolchain setup now lives in `home/common/programs/rust/default.nix` and covers both `rustup` and `bacon`. Modules that need optional or removed inputs stay gated: `worktrunk` imports only when `inputs.worktrunk` exists, and `claude-code` stays parked until its old `pkgs.llm-agents` dependency is restored or replaced.
+
+`pkgs/default.nix` auto-discovers every non-`default.nix` package file under `pkgs/` recursively and exposes it through the local overlay by its filename. Package files are single-package modules; if a module's arguments include `mkApp`, the overlay injects the shared macOS app builder automatically, otherwise it uses normal `callPackage` arguments. Multi-package files should be split into one file per package, as with `tidewave.nix` and `tidewave-cli.nix`.
+
+`pkgs.handy` is a local overlay backport of the nixpkgs Handy package so current Home Manager profiles can install the macOS app before the pinned nixpkgs input carries it. It intentionally supports only `aarch64-darwin`; Linux inputs, GStreamer/Gtk wrapping, and non-Darwin frontend hashes are removed.
 
 In nixpkgs 25.10, `pkgs.poppler` (`poppler-glib`) and `pkgs."poppler-utils"` ship overlapping `libpoppler-glib` paths. PDF CLI tools come from `poppler-utils` where needed, including the Pi wrapper module and scripts that call `pdftoppm`.
 
@@ -169,6 +177,8 @@ Old `.age` files are archived under `secrets/archive/` for rollback/reference on
 ## Fish shell helpers
 
 Fish carries repo workflow helpers and desktop integration environment variables.
+
+Fish fzf Ctrl-T uses fzf's fish token parser: the current path token becomes `$dir`, so `nvim ~/code/<C-t>` searches under `~/code` instead of `$PWD`. The Home Manager fzf `fileWidgetCommand` passes `$dir` as fd's explicit search path, not `--strip-cwd-prefix`, because fd rejects `--strip-cwd-prefix` when a path argument is present; a small `sed` removes only the `./` prefix for normal cwd results.
 
 Fish defines a `jj` wrapper that runs real `jj` inside jj repos, allows `jj git init`, and falls back to `git` with a hint inside plain git repos. This lets shared commands prefer `jj` without breaking git-only repositories.
 
