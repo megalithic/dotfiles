@@ -1,6 +1,6 @@
 ---
 id: dot-6fon
-status: open
+status: closed
 deps: 4:1:deps: [, dot-e5sy]
 links: []
 created: 2026-06-09T15:10:56Z
