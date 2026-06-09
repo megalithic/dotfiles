@@ -6,7 +6,10 @@
  * gets at most one automatic follow-up.
  */
 
-import { completeSimple } from "@earendil-works/pi-ai";
+import {
+  completeSimple,
+  type SimpleStreamOptions,
+} from "@earendil-works/pi-ai";
 import type {
   ExtensionAPI,
   ExtensionContext,
@@ -427,7 +430,7 @@ function sendStopHookFollowup(
         {
           customType: "stop-hook",
           content: prompt,
-          display: true,
+          display: false,
         },
         { deliverAs: "followUp", triggerTurn: true },
       );
@@ -485,30 +488,32 @@ function buildGatekeeperMessages(messages: any[]) {
 }
 
 /**
- * Call a gatekeeper via pi's model registry + completeSimple.
+ * Call a gatekeeper via the same model pi is using for this session.
  */
 async function askGatekeeper(
-  provider: string,
-  modelId: string,
   contextMessages: any[],
   ctx: ExtensionContext,
-  allowMissingApiKey: boolean = false,
+  thinkingLevel: ReturnType<ExtensionAPI["getThinkingLevel"]>,
 ): Promise<boolean | null> {
-  const model = ctx.modelRegistry.find(provider, modelId);
+  const model = ctx.model;
   if (!model) return null;
 
   const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
-  if (!auth.ok || (!auth.apiKey && !allowMissingApiKey)) return null;
+  if (!auth.ok || !auth.apiKey) return null;
+
+  const options: SimpleStreamOptions = {
+    apiKey: auth.apiKey,
+    headers: auth.headers,
+    maxTokens: 16,
+  };
+  if (thinkingLevel !== "off") {
+    options.reasoning = thinkingLevel;
+  }
 
   const response = await completeSimple(
     model,
     { messages: contextMessages },
-    {
-      apiKey: auth.apiKey,
-      headers: auth.headers,
-      maxTokens: 16,
-      signal: ctx.signal,
-    },
+    options,
   );
 
   if (ctx.signal?.aborted || response.stopReason === "aborted") return null;
@@ -554,6 +559,7 @@ function wasUserInterrupted(messages: any[], ctx: ExtensionContext): boolean {
 async function shouldSendNudge(
   messages: any[],
   ctx: ExtensionContext,
+  thinkingLevel: ReturnType<ExtensionAPI["getThinkingLevel"]>,
   failureCounter: { count: number },
 ): Promise<boolean> {
   if (wasUserInterrupted(messages, ctx)) return false;
@@ -566,51 +572,20 @@ async function shouldSendNudge(
 
   const contextMessages = buildGatekeeperMessages(messages);
 
-  // Resolution for multi-pass preset fallback
-  const preset =
-    process.env.PI_MULTI_PASS_PRESET || process.env.PI_PROFILE || "mega";
-  let fallbackProvider = "alt-anthropic";
-  let fallbackModel = "claude-haiku-4-5";
-
-  if (preset === "mega") {
-    fallbackProvider = "openai-codex";
-    fallbackModel = "gpt-5.4-mini";
-  }
-
-  const gatekeepers = [
-    {
-      type: "local-gemma4",
-      fn: () => askGatekeeper("llamacpp", "gemma4", contextMessages, ctx, true),
-    },
-    {
-      type: "fallback",
-      fn: () =>
-        askGatekeeper(
-          fallbackProvider,
-          fallbackModel,
-          contextMessages,
-          ctx,
-          false,
-        ),
-    },
-  ];
-
-  for (const gatekeeper of gatekeepers) {
+  // Ask the same model and thinking level pi is using for this session.
+  try {
+    const result = await askGatekeeper(contextMessages, ctx, thinkingLevel);
     if (wasUserInterrupted(messages, ctx)) return false;
-
-    try {
-      const result = await gatekeeper.fn();
-      if (wasUserInterrupted(messages, ctx)) return false;
-      if (result !== null) {
-        failureCounter.count = 0;
-        return result;
-      }
-    } catch {
-      failureCounter.count++;
+    if (result !== null) {
+      failureCounter.count = 0;
+      return result;
     }
+  } catch {
+    failureCounter.count++;
+    return false;
   }
 
-  // All unavailable — don't nudge without informed decision
+  // Default model unavailable — don't nudge without informed decision
   failureCounter.count++;
   return false;
 }
@@ -655,6 +630,7 @@ export default function (pi: ExtensionAPI) {
       const shouldNudge = await shouldSendNudge(
         event.messages,
         ctx,
+        pi.getThinkingLevel(),
         gatekeeperFailures,
       );
       if (!shouldNudge || wasUserInterrupted(event.messages, ctx)) return;
