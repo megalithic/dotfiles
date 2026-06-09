@@ -121,7 +121,6 @@ let
     }) skillDirs
   );
 
-  # Auto-discover prompt templates (.md files in prompts/)
   promptFiles = builtins.filter (name: lib.hasSuffix ".md" name && isEnabledEntry name) (
     builtins.attrNames (builtins.readDir ./prompts)
   );
@@ -134,29 +133,13 @@ let
     }) promptFiles
   );
 
-  # piWrapper = pkgs.writeShellScriptBin "pi" ''
-  #   export PATH="${pkgs.nodejs_24}/bin:${pkgs."poppler-utils"}/bin:${pkgs.rtk}/bin:$PATH"
-  #   export NODE_PATH="${piNodeAliases}/node_modules''${NODE_PATH:+:$NODE_PATH}"
-  #   export PI_STATE_DIR="''${PI_STATE_DIR:-${piStateDir}}"
-  #   mkdir -p "$PI_STATE_DIR/sockets" "$PI_STATE_DIR/manifests" "$PI_STATE_DIR/pinvim"
-  #   unset PIMUX_FROM_NVIM 2>/dev/null || true
-  #
-  #   XDG_CONFIG_HOME="''${XDG_CONFIG_HOME:-$HOME/.config}"
-  #   if [ -f "$XDG_CONFIG_HOME/opnix/secrets/env-vars.sh" ]; then
-  #     . "$XDG_CONFIG_HOME/opnix/secrets/env-vars.sh"
-  #   fi
-  #
-  #   if [ -n "$BRAVE_SEARCH_API_KEY" ] && [ -z "$BRAVE_API_KEY" ]; then
-  #     export BRAVE_API_KEY="$BRAVE_SEARCH_API_KEY"
-  #   fi
-  #
-  #   exec ${pi-coding-agent}/bin/pi "$@"
-  # '';
-
   piAcp = pkgs.callPackage ./packages/pi-acp.nix { };
   piAcpWrapper = pkgs.writeShellScriptBin "pi-acp" ''
     export PI_ACP_PI_COMMAND="''${PI_ACP_PI_COMMAND:-${piWrapper}/bin/pi}"
     export PI_ACP_ENABLE_EMBEDDED_CONTEXT="''${PI_ACP_ENABLE_EMBEDDED_CONTEXT:-true}"
+    export PI_PROFILE="''${PI_PROFILE:-alt}"
+    export PI_PROFILE_SOURCE="''${PI_PROFILE_SOURCE:-profile-flag}"
+    export PI_ACP_MODEL_PREFIXES="''${PI_ACP_MODEL_PREFIXES:-alt-anthropic,alt-codex}"
     exec ${piAcp}/bin/pi-acp "$@"
   '';
 

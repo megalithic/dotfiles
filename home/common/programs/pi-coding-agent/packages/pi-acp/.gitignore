@@ -1,0 +1,11 @@
+node_modules
+.dist
+.dist-cache
+dist
+*.log
+
+# ESLint cache
+.eslintcache
+
+/agentDocs
+.DS_Store
