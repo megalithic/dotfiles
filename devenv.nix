@@ -5,6 +5,8 @@
   devenv-base.treefmt = {
     settings.global.excludes = [
       "config/nvim/spell/en.utf-8.add"
+      # Vendored third-party source (svkozak/pi-acp) — keep upstream formatting
+      "home/common/programs/pi-coding-agent/packages/pi-acp/**"
     ];
     programs = {
       fish_indent.enable = true;
