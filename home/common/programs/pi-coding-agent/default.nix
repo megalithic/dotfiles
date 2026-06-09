@@ -50,6 +50,16 @@ let
       . "$XDG_CONFIG_HOME/opnix/secrets/env-vars.sh"
     fi
 
+    # Derive lat.md semantic-search config from synthetic key (single source
+    # of truth). Mirrors the opnix shell-init derivation so pi sessions launched
+    # outside interactive shells (GUI, launchd, subprocesses) still see LAT_LLM_*.
+    if [ -n "$SYNTHETIC_API_KEY" ]; then
+      export LAT_LLM_KEY="$SYNTHETIC_API_KEY"
+      export LAT_LLM_BASE_URL="https://api.synthetic.new/openai/v1"
+      export LAT_LLM_MODEL="hf:nomic-ai/nomic-embed-text-v1.5"
+      export LAT_LLM_DIMENSIONS="768"
+    fi
+
     # if [ -n "$BRAVE_SEARCH_API_KEY" ] && [ -z "$BRAVE_API_KEY" ]; then
     #   export BRAVE_API_KEY="$BRAVE_SEARCH_API_KEY"
     # fi
