@@ -41,6 +41,32 @@ function M:bindPassThrough(mods, key, app)
   return self
 end
 
+-- Bind a Hyper chord (mods+key, evaluated inside the Hyper modal) so that it
+-- launches/focuses `app` and then sends a clean app-native chord
+-- (targetMods+targetKey) to it. Unlike bindPassThrough, the chord delivered to
+-- the app is decoupled from Hyper: the app only ever sees its own keybinding.
+function M:bindAppChord(mods, key, app, targetMods, targetKey)
+  targetMods = targetMods or {}
+
+  self:bind(mods, key, nil, function()
+    local appObj = hs.application.get(app)
+    if appObj and appObj:isFrontmost() then
+      hs.eventtap.keyStroke(targetMods, targetKey)
+    else
+      hs.application.launchOrFocusByBundleID(app)
+      hs.timer.waitWhile(
+        function()
+          local a = hs.application.get(app)
+          return not a or not a:isFrontmost()
+        end,
+        function() hs.eventtap.keyStroke(targetMods, targetKey) end
+      )
+    end
+  end)
+
+  return self
+end
+
 function M:init(opts)
   opts = opts or {}
 

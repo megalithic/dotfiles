@@ -72,6 +72,7 @@ hs.loadSpoon("EmmyLua")
 local watchers = { "audio", "dock", "app", "notification", "url", "pasteboard", "screen" }
 
 req("bindings")
+req("shade_next") -- inert until shade-next is installed
 req("watchers", { watchers = watchers })
 req("miccheck", { model = "large-v3", languages = { "en" } }):start()
 req("quitter"):start()
