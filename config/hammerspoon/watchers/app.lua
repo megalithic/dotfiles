@@ -35,7 +35,6 @@ function M.watchApp(app, _)
 
   watcher:start({
     hs.uielement.watcher.windowCreated,
-    hs.uielement.watcher.mainWindowChanged,
     hs.uielement.watcher.focusedWindowChanged,
     hs.uielement.watcher.titleChanged,
     hs.uielement.watcher.elementDestroyed,
@@ -47,7 +46,6 @@ function M.runLayoutRulesForAppBundleID(elementOrAppName, event, app)
   local layoutableEvents = {
     hs.application.watcher.launched,
     hs.uielement.watcher.windowCreated,
-    hs.uielement.watcher.mainWindowChanged,
   }
 
   if app and enum.contains(layoutableEvents, event) then
