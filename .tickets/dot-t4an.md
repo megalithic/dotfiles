@@ -1,6 +1,6 @@
 ---
 id: dot-t4an
-status: in_progress
+status: closed
 deps: []
 links: []
 created: 2026-06-09T15:10:54Z

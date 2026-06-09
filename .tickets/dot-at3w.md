@@ -1,6 +1,6 @@
 ---
 id: dot-at3w
-status: open
+status: closed
 deps: 4:1:deps: [, dot-mv1h]
 links: []
 created: 2026-06-09T15:10:55Z

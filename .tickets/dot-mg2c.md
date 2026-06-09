@@ -1,6 +1,6 @@
 ---
 id: dot-mg2c
-status: open
+status: closed
 deps: 4:1:deps: [, dot-t4an]
 links: []
 created: 2026-06-09T15:10:54Z

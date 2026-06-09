@@ -1,6 +1,6 @@
 ---
 id: dot-ol5u
-status: open
+status: closed
 deps: 4:1:deps: [, dot-4h17]
 links: []
 created: 2026-06-09T15:10:55Z
