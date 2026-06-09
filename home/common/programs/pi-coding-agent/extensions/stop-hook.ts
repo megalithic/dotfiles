@@ -569,7 +569,7 @@ async function shouldSendNudge(
   // Resolution for multi-pass preset fallback
   const preset =
     process.env.PI_MULTI_PASS_PRESET || process.env.PI_PROFILE || "mega";
-  let fallbackProvider = "rx-anthropic";
+  let fallbackProvider = "alt-anthropic";
   let fallbackModel = "claude-haiku-4-5";
 
   if (preset === "mega") {

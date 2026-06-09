@@ -9,6 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Migrate stop-hook gatekeeper from ollama-native to omlx OpenAI-compat API
 
 Rewrite the stop-hook gatekeeper to use the OpenAI-compatible /v1/chat/completions endpoint against omlx/gemma4 instead of the Ollama-native /api/chat endpoint. Add server-side forced_ct_kwargs to prevent thinking re-enable on the gatekeeper model.
@@ -16,6 +17,7 @@ Rewrite the stop-hook gatekeeper to use the OpenAI-compatible /v1/chat/completio
 This is Phase 3 of the oMLX migration plan. Must happen before Phase 4 (default flip) so the gatekeeper isn't broken when ollama is disabled.
 
 **Files:**
+
 - home/common/programs/pi-coding-agent/extensions/stop-hook.ts — rename LOCAL_GATEKEEPER_PROVIDER to omlx, LOCAL_GATEKEEPER_MODEL_ID to gemma4, rewrite askOllamaGatekeeper to askOmlxGatekeeper using OpenAI-compat POST to http://127.0.0.1:8000/v1/chat/completions with model/messages/max_tokens/temperature=0, drop think:false and options.num_predict, parse data.choices[0].message.content
 - home/common/programs/omlx/default.nix — add chat_template_kwargs.enable_thinking=false and forced_ct_kwargs=["enable_thinking"] to gemma4 model_settings so server blocks thinking override
 
@@ -32,7 +34,6 @@ This is Phase 3 of the oMLX migration plan. Must happen before Phase 4 (default 
 7. TS compiles without errors (tsc --noEmit or just lint)
 8. just validate passes
 
-
 ## Notes
 
 **2026-05-07T13:27:37Z**
@@ -41,7 +42,7 @@ REVISED 2026-05-07. Scope changed:
 
 Original: migrate gatekeeper from ollama to omlx on all hosts.
 New: gatekeeper stays on ollama for megabookpro (32GB, omlx disabled).
-omlx gatekeeper only applies to rxbookpro (64GB) where omlx is still active.
+omlx gatekeeper only applies to workbookpro (64GB) where omlx is still active.
 
 stop-hook.ts currently disabled ('broken with omlx'). For megabookpro,
 re-enabling with ollama backend should work since that's what it was

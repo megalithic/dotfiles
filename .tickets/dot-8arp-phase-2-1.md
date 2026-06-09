@@ -15,19 +15,21 @@ priority: 2
 assignee: Seth Messer
 tags: [omlx, model-download, blocking]
 ---
+
 # Download oMLX models for dot-8arp
 
 Phase 2.1 follow-up for ticket dot-8arp. Pull actual model weights.
 
 ## megabookpro (M2 Max 32GB)
 
-| Model | Quant | On-disk | Peak mem | Settings |
-|-------|-------|---------|----------|----------|
-| Qwen3.6-35B-A3B | 4bit | ~19 GB | ~20 GB | `is_pinned: true` |
-| gemma-4-26b-a4b-it | 4bit | ~14.6 GB | ~15 GB | `is_pinned: false`, `ttl_seconds: 600` |
-| **Total** | — | **~33.6 GB** | **~35 GB** | Pin only Qwen |
+| Model              | Quant | On-disk      | Peak mem   | Settings                               |
+| ------------------ | ----- | ------------ | ---------- | -------------------------------------- |
+| Qwen3.6-35B-A3B    | 4bit  | ~19 GB       | ~20 GB     | `is_pinned: true`                      |
+| gemma-4-26b-a4b-it | 4bit  | ~14.6 GB     | ~15 GB     | `is_pinned: false`, `ttl_seconds: 600` |
+| **Total**          | —     | **~33.6 GB** | **~35 GB** | Pin only Qwen                          |
 
 **Pull commands:**
+
 ```bash
 mkdir -p ~/.local/share/omlx/models
 
@@ -38,15 +40,16 @@ mkdir -p ~/.local/share/omlx/models
   --local-dir ~/.local/share/omlx/models/gemma-4-26b-a4b-it-4bit
 ```
 
-## rxbookpro (M4 Max 64GB)
+## workbookpro (M4 Max 64GB)
 
-| Model | Quant | On-disk | Peak mem | Settings |
-|-------|-------|---------|----------|----------|
-| Qwen3.6-35B-A3B | 4bit | ~19 GB | ~22 GB @ 16k | `is_pinned: true` |
-| gemma-4-26b-a4b-it | 8bit | ~26 GB | ~26 GB | `is_pinned: true` |
-| **Total** | — | **~45 GB** | **~48 GB** | Both pinned, ~16GB headroom |
+| Model              | Quant | On-disk    | Peak mem     | Settings                    |
+| ------------------ | ----- | ---------- | ------------ | --------------------------- |
+| Qwen3.6-35B-A3B    | 4bit  | ~19 GB     | ~22 GB @ 16k | `is_pinned: true`           |
+| gemma-4-26b-a4b-it | 8bit  | ~26 GB     | ~26 GB       | `is_pinned: true`           |
+| **Total**          | —     | **~45 GB** | **~48 GB**   | Both pinned, ~16GB headroom |
 
 **Pull commands:**
+
 ```bash
 mkdir -p ~/.local/share/omlx/models
 
@@ -59,8 +62,8 @@ mkdir -p ~/.local/share/omlx/models
 
 ## Acceptance Criteria
 
-1. ls ~/.local/share/omlx/models/ lists Qwen3.6-35B-A3B-4bit and gemma-4-26b-a4b-it-*bit directories
-2. du -sh ~/.local/share/omlx/models/* shows sizes matching table above (~19GB + ~14.6GB on mega, ~19GB + ~26GB on rx)
+1. ls ~/.local/share/omlx/models/ lists Qwen3.6-35B-A3B-4bit and gemma-4-26b-a4b-it-\*bit directories
+2. du -sh ~/.local/share/omlx/models/\* shows sizes matching table above (~19GB + ~14.6GB on mega, ~19GB + ~26GB on rx)
 3. launchctl kickstart -k gui/$(id -u)/org.nix-community.home.omlx succeeds (restarts agent to discover models)
 4. curl -s http://127.0.0.1:8000/v1/models | jq -r '.data[].id' lists qwen3.6 and gemma4 aliases
 5. curl -sf -X POST http://127.0.0.1:8000/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"qwen3.6","messages":[{"role":"user","content":"reply OK"}],"max_tokens":4}' returns valid response
@@ -70,7 +73,8 @@ mkdir -p ~/.local/share/omlx/models
 **2026-05-07T13:27:25Z**
 
 Completed 2026-05-07. MLX models downloaded via omlx-pull:
+
 - Qwen3.6-27B-4bit (15GB)
 - DeepSeek-R1-Distill-Qwen-14B-4bit (7.8GB)
 - gemma-4-e4b-it-4bit (4.9GB)
-Old models trashed (35B + 26B = 35GB freed).
+  Old models trashed (35B + 26B = 35GB freed).

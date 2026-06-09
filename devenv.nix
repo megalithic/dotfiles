@@ -2,27 +2,8 @@
 {
   git-hooks.hooks.typos.enable = lib.mkForce false;
 
-  files = {
-    ".typos.toml".text = ''
-      [default.extend-words]
-      rxv = "rxvortex"
-      verdoc = "verify.doctor"
-
-      [type.md]
-      extend-ignore-re = [
-        "nix-[a-z0-9]{4}\\.md",
-        "(?m)^id:\\s+nix-[a-z0-9]{4}$",
-      ]
-
-      [type.asc]
-      extend-glob = ["*.asc"]
-      check-file = false
-    '';
-  };
-
   devenv-base.treefmt = {
     settings.global.excludes = [
-      "home/configs/git/allowed_signers"
       "config/nvim/spell/en.utf-8.add"
     ];
     programs = {

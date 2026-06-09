@@ -44,7 +44,7 @@ This is a **nix-darwin + home-manager** managed dotfiles repo.
 ├── hosts/                 # Per-host nix-darwin config
 │   ├── common.nix         # Shared system settings (minimal packages)
 │   ├── megabookpro.nix    # Personal laptop
-│   └── rxbookpro.nix      # Work laptop
+│   └── workbookpro.nix      # Work laptop
 ├── home/                  # Home-manager config
 │   ├── common/            # Shared across all hosts
 │   │   ├── packages.nix   # CLI + GUI packages (nixpkgs + custom)
@@ -53,7 +53,7 @@ This is a **nix-darwin + home-manager** managed dotfiles repo.
 │   │   ├── mas.nix        # Mac App Store apps
 │   │   └── programs/      # Per-tool config (fish/, jj/, browsers/, ai/)
 │   ├── megabookpro.nix    # Personal overrides
-│   └── rxbookpro.nix      # Work overrides
+│   └── workbookpro.nix      # Work overrides
 ├── modules/               # nix-darwin modules
 │   ├── system.nix         # Core system settings
 │   ├── brew.nix           # Homebrew casks (last resort)
@@ -225,8 +225,7 @@ To view large images: `magick image.png -resize 25% /tmp/preview.png`
 
 ## Pi Agent Directories
 
-- `PI_CODING_AGENT_DIR` — current agent config dir (e.g., `~/.pi/agent-evirts`)
-- `PI_SESSION` — current session name (e.g., `rx`, `mega`)
-- Base config: `~/.pi/agent/`, profiles: `~/.pi/agent-{name}/`
+- `PI_CODING_AGENT_DIR` — current agent config dir
+- `PI_SESSION` — current session name (typically based on tmux sessio namen)
+- Base config: `~/.pi/agent/`
 - Skills/extensions: `$PI_CODING_AGENT_DIR/skills/`, `$PI_CODING_AGENT_DIR/extensions/`
-- Never hardcode a specific agent directory like `agent-evirts`

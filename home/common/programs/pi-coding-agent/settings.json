@@ -20,14 +20,14 @@
     "npm:pi-rtk-optimizer"
   ],
   "enabledModels": [
-    "rx-anthropic/claude-opus-4-7",
-    "rx-anthropic/claude-opus-4-6",
-    "rx-anthropic/claude-sonnet-4-5",
-    "rx-anthropic/claude-haiku-4-5",
-    "rx-codex/gpt-5.5",
-    "rx-codex/gpt-5.4",
-    "rx-codex/gpt-5.4-mini",
-    "rx-codex/gpt-5.3-codex-spark",
+    "alt-anthropic/claude-opus-4-7",
+    "alt-anthropic/claude-opus-4-6",
+    "alt-anthropic/claude-sonnet-4-5",
+    "alt-anthropic/claude-haiku-4-5",
+    "alt-codex/gpt-5.5",
+    "alt-codex/gpt-5.4",
+    "alt-codex/gpt-5.4-mini",
+    "alt-codex/gpt-5.3-codex-spark",
     "google-vertex/gemini-3.1-pro-preview",
     "google-vertex/gemini-3-flash-preview",
     "openai-codex/gpt-5.5",
@@ -55,13 +55,13 @@
       "llamacpp/gemma4"
     ],
     "rx": [
-      "rx-anthropic/claude-opus-4-6",
-      "rx-anthropic/claude-sonnet-4-5",
-      "rx-anthropic/claude-haiku-4-5",
-      "rx-codex/gpt-5.5",
-      "rx-codex/gpt-5.4",
-      "rx-codex/gpt-5.4-mini",
-      "rx-codex/gpt-5.3-codex-spark",
+      "alt-anthropic/claude-opus-4-6",
+      "alt-anthropic/claude-sonnet-4-5",
+      "alt-anthropic/claude-haiku-4-5",
+      "alt-codex/gpt-5.5",
+      "alt-codex/gpt-5.4",
+      "alt-codex/gpt-5.4-mini",
+      "alt-codex/gpt-5.3-codex-spark",
       "google-vertex/gemini-3.1-pro-preview",
       "google-vertex/gemini-3-flash-preview"
     ]
@@ -74,13 +74,13 @@
     "subscriptions": [
       {
         "provider": "anthropic",
-        "alias": "rx-anthropic",
-        "label": "rx-anthropic"
+        "alias": "alt-anthropic",
+        "label": "alt-anthropic"
       },
       {
         "provider": "openai-codex",
-        "alias": "rx-codex",
-        "label": "rx-codex"
+        "alias": "alt-codex",
+        "label": "alt-codex"
       }
     ],
     "pools": [],
@@ -111,32 +111,32 @@
         "name": "rx",
         "entries": [
           {
-            "provider": "rx-anthropic",
+            "provider": "alt-anthropic",
             "model": "claude-opus-4-6",
             "enabled": true
           },
           {
-            "provider": "rx-anthropic",
+            "provider": "alt-anthropic",
             "model": "claude-sonnet-4-5",
             "enabled": true
           },
           {
-            "provider": "rx-anthropic",
+            "provider": "alt-anthropic",
             "model": "claude-haiku-4-5",
             "enabled": true
           },
           {
-            "provider": "rx-codex",
+            "provider": "alt-codex",
             "model": "gpt-5.5",
             "enabled": true
           },
           {
-            "provider": "rx-codex",
+            "provider": "alt-codex",
             "model": "gpt-5.4",
             "enabled": true
           },
           {
-            "provider": "rx-codex",
+            "provider": "alt-codex",
             "model": "gpt-5.4-mini",
             "enabled": true
           }
@@ -156,49 +156,52 @@
   "subagents": {
     "agentOverrides": {
       "planner": {
-        "model": "rx-anthropic/claude-opus-4-7",
+        "model": "alt-anthropic/claude-opus-4-7",
         "fallbackModels": [
-          "rx-anthropic/claude-opus-4-6",
+          "alt-anthropic/claude-opus-4-6",
           "openai-codex/gpt-5.5",
           "synthetic/hf:zai-org/GLM-5.1"
         ],
         "thinking": "medium"
       },
       "reviewer": {
-        "model": "rx-anthropic/claude-opus-4-7",
+        "model": "alt-anthropic/claude-opus-4-7",
         "fallbackModels": [
-          "rx-anthropic/claude-opus-4-6",
+          "alt-anthropic/claude-opus-4-6",
           "openai-codex/gpt-5.5",
           "synthetic/hf:zai-org/GLM-5.1"
         ],
         "thinking": "medium"
       },
       "oracle": {
-        "model": "rx-anthropic/claude-opus-4-7",
+        "model": "alt-anthropic/claude-opus-4-7",
         "fallbackModels": [
-          "rx-anthropic/claude-opus-4-6",
+          "alt-anthropic/claude-opus-4-6",
           "openai-codex/gpt-5.5",
           "synthetic/hf:zai-org/GLM-5.1"
         ]
       },
       "worker": {
-        "model": "rx-anthropic/claude-sonnet-4-5",
+        "model": "alt-anthropic/claude-sonnet-4-5",
         "fallbackModels": [
-          "rx-codex/gpt-5.5",
+          "alt-codex/gpt-5.5",
           "openai-codex/gpt-5.5",
           "synthetic/hf:moonshotai/Kimi-K2.6"
         ]
       },
       "researcher": {
-        "model": "rx-anthropic/claude-sonnet-4-5",
+        "model": "alt-anthropic/claude-sonnet-4-5",
         "fallbackModels": [
-          "rx-codex/gpt-5.5",
+          "alt-codex/gpt-5.5",
+          "alt-codex/gpt-5.4",
           "openai-codex/gpt-5.5",
-          "synthetic/hf:moonshotai/Kimi-K2.6"
-        ]
+          "openai-codex/gpt-5.4",
+          "alt-anthropic/claude-haiku-4-5"
+        ],
+        "thinking": "medium"
       },
       "scout": {
-        "model": "rx-anthropic/claude-haiku-4-5",
+        "model": "alt-anthropic/claude-haiku-4-5",
         "fallbackModels": [
           "google-vertex/gemini-3-flash-preview",
           "openai-codex/gpt-5.4-mini",
@@ -206,7 +209,7 @@
         ]
       },
       "context-builder": {
-        "model": "rx-anthropic/claude-haiku-4-5",
+        "model": "alt-anthropic/claude-haiku-4-5",
         "fallbackModels": [
           "google-vertex/gemini-3-flash-preview",
           "openai-codex/gpt-5.4-mini",

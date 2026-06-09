@@ -1,4 +1,4 @@
-# rxbookpro - Work laptop configuration
+# workbookpro - Work laptop configuration
 # Host-specific settings that differ from common.nix
 {
   pkgs,

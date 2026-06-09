@@ -9,6 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Verify omlx health and test API calls
 
 Restart oMLX service to load new config and models.
@@ -16,6 +17,7 @@ Test API: call /v1/chat/completions for each model to verify no HTTP 507 (memory
 Check logs for errors.
 
 Steps:
+
 1. Restart: 'launchctl stop com.jundot.omlx && sleep 2 && launchctl start com.jundot.omlx && sleep 3'
 2. Health: 'curl -s http://127.0.0.1:8000/health'
 3. Test Qwen: curl POST to /v1/chat/completions with model='qwen3.6', small prompt
@@ -34,7 +36,6 @@ See ~/.omlx/settings.json and context file for API details.
 5. Gemma request succeeds: returns response, no error field
 6. Logs clean: 'tail ~/Library/Logs/omlx/stderr.log' shows no 507 or METAL OOM errors
 
-
 ## Notes
 
 **2026-05-07T13:27:11Z**
@@ -52,4 +53,4 @@ SSD hot cache buffers, file-backed mappings. Only tracks mx.get_active_memory().
 Additional bug: Issue #1060 — VLM memory leak on unload in 0.3.8.
 
 Decision: disable oMLX on megabookpro (32GB), re-enable Ollama as default.
-oMLX remains viable for rxbookpro (64GB).
+oMLX remains viable for workbookpro (64GB).

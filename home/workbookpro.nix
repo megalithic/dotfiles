@@ -1,4 +1,4 @@
-# rxbookpro (work laptop) home-manager configuration
+# workbookpro (work laptop) home-manager configuration
 # Imports shared config + adds host-specific overrides
 {
   ...

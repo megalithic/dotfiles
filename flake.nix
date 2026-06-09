@@ -126,16 +126,16 @@
         hostname = "megabookpro";
         inherit username;
       };
-      darwinConfigurations.rxbookpro = mkDarwin {
-        hostname = "rxbookpro";
+      darwinConfigurations.workbookpro = mkDarwin {
+        hostname = "workbookpro";
         inherit username;
       };
       homeConfigurations."${username}@megabookpro" = mkHome {
         hostname = "megabookpro";
         inherit username;
       };
-      homeConfigurations."${username}@rxbookpro" = mkHome {
-        hostname = "rxbookpro";
+      homeConfigurations."${username}@workbookpro" = mkHome {
+        hostname = "workbookpro";
         inherit username;
       };
     };

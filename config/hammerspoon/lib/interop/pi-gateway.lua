@@ -109,7 +109,6 @@ local function loadConfig()
   -- Defaults
   cfg.enabled = cfg.enabled ~= false
   cfg.defaultProfile = cfg.defaultProfile or "mega"
-  cfg.authProfiles = cfg.authProfiles or { "mega", "rx" }
   cfg.prioritySignal = cfg.prioritySignal or "!!"
   cfg.abortPhrases = cfg.abortPhrases or { "abort!", "stop!", "kill!", "cancel!" }
   cfg.taskTimeoutMinutes = cfg.taskTimeoutMinutes or 15
@@ -345,7 +344,7 @@ end
 local function getProviderIndicator()
   if not M.isUsingFallback then return "" end
 
-  local profile = cfg and cfg.defaultProfile or "gateway"
+  local profile = cfg and cfg.defaultProfile or "mega"
   local provider = M.currentProvider or "?"
 
   -- Short provider names for display
@@ -495,7 +494,9 @@ local function getQueueStatusText()
 
   -- Health
   local runOk, isRunning = false, false
-  if M.process then runOk, isRunning = pcall(function() return M.process:isRunning() end) end
+  if M.process then
+    runOk, isRunning = pcall(function() return M.process:isRunning() end)
+  end
   isRunning = runOk and isRunning
   if isRunning then
     table.insert(lines, "💚 Process healthy")
@@ -841,9 +842,7 @@ local function sendAck(isPriority, position, messageText)
     else
       -- Queued behind other tasks
       parts[#parts + 1] = emoji .. " " .. (isPriority and "Priority" or "Queued") .. ": " .. preview
-      if (position or 0) > 1 then
-        parts[#parts + 1] = string.format("(#%d in queue)", position)
-      end
+      if (position or 0) > 1 then parts[#parts + 1] = string.format("(#%d in queue)", position) end
       -- Show what's currently running
       if M.busy and M.currentTaskText then
         local currentPreview = truncateText(M.currentTaskText, 30)
@@ -1022,7 +1021,7 @@ function M.start()
     return false
   end
 
-  U.log.f("Starting (profile=%s)", cfg.defaultProfile or "default")
+  U.log.f("Starting (profile=%s)", cfg.defaultProfile or "mega")
 
   local ok, result = pcall(function()
     -- Check if already running (safely)

@@ -9,6 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Optimize Qwen 3.6 + oMLX + pi-coding-agent on megabookpro
 
 Configure megabookpro to run Qwen 3.6 optimally via oMLX for pi-coding-agent across: Elixir, LiveView, JavaScript, Tailwind, Phoenix, Nix, Neovim, Hammerspoon, Lua, Swift.
@@ -18,6 +19,7 @@ End state: concrete nix config changes committed — not just documentation. Eve
 ## Performance levers to map
 
 ### oMLX server knobs
+
 - Model + quant selection (Q4_K_M, Q5_K_M, Q6_K, unsloth UD variants)
 - Context window size (`--context-length`)
 - Batch size / parallel requests
@@ -27,13 +29,15 @@ End state: concrete nix config changes committed — not just documentation. Eve
 - Adapter/LoRA for stack-specific fine-tuning (if applicable)
 
 ### Nix config
+
 - oMLX service definition (home/common/services.nix or modules/)
 - Model download + path management
-- Host-conditional config (megabookpro vs rxbookpro)
+- Host-conditional config (megabookpro vs workbookpro)
 - Memory budget coexistence with Hammerspoon, Neovim, browser
 - Launchd plist tuning (KeepAlive, MemoryLimit, Nice)
 
 ### pi-coding-agent provider config
+
 - Provider endpoint (oMLX OpenAI-compat API)
 - Model name mapping
 - Context window, temperature, stop tokens
@@ -42,6 +46,7 @@ End state: concrete nix config changes committed — not just documentation. Eve
 - Compaction strategy for long sessions
 
 Reference threads:
+
 - https://www.reddit.com/r/LocalLLaMA/comments/1t4ji36/use_qwen36_right_way_send_it_to_pi_coding_agent/
 - https://www.reddit.com/r/LocalLLaMA/comments/1t4e046/running_a_26b_llm_locally_with_no_gpu/
 
@@ -85,6 +90,7 @@ Key insights (13h old, 102 upvotes, 71 comments):
 ## Apple Silicon implications for megabookpro
 
 megabookpro = M-series (likely M3/M4 Pro with 36/48GB unified memory). Key differences vs CPU-only in threads:
+
 - Unified memory = much higher bandwidth than DDR4/5 → higher tok/s
 - Apple GPU cores can accelerate inference (MLX/oMLX)
 - MoE models (Qwen 3.6 35B-A3B, 35B total / 3B active) are ideal: low active params = fast
@@ -105,7 +111,6 @@ See: home/common/programs/pi-coding-agent/, home/common/services.nix (omlx), pkg
 7. `just validate` passes after all changes
 8. Side-by-side tok/s benchmark: oMLX vs ollama on same model (even if ollama removed later, confirms oMLX is the right choice)
 
-
 ## Notes
 
 **2026-05-06T01:46:13Z**
@@ -113,6 +118,7 @@ See: home/common/programs/pi-coding-agent/, home/common/services.nix (omlx), pkg
 Closed via 6 commits on main feature branch.
 
 Work scoped to gaps unique to m99m vs siblings (dot-8arp/bd5i/j9q6/362h handle core wiring):
+
 - omlx default.nix: per-model sampling presets (Qwen qwen3-r-code temp 0.6, Gemma4 gemma4 temp 1.0), scheduler.max_concurrent_requests=4 default
 - pi-coding-agent models.json: qwen3.6 reasoning=true + compat.thinkingFormat=qwen-chat-template, provider compat (no developerRole/reasoningEffort)
 - home/common/programs/omlx/AGENTS.md: full server + per-model knob reference, memory budget tables for mega (32GB) and rx (64GB), tuning playbook, verification commands

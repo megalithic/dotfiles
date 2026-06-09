@@ -28,7 +28,7 @@ Improve the stop-hook ticket summary so anchors and recommended-next suggestions
 
 **2026-06-01T16:53:44Z**
 
-User chose to work this before finishing the remaining rxbookpro llama.cpp tuning, so removed dependency on dot-1ijx and started the ticket.
+User chose to work this before finishing the remaining workbookpro llama.cpp tuning, so removed dependency on dot-1ijx and started the ticket.
 
 **2026-06-01T16:59:31Z**
 

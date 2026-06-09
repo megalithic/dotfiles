@@ -9,6 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Flip default to omlx, make ollama opt-in via nix flag
 
 Disable ollama launchd agent by default (services.ollama.enable = false), remove ollama models from pi enabledModels, and clean up documentation references. omlx becomes the daily driver; ollama remains available via opt-in flag.
@@ -16,6 +17,7 @@ Disable ollama launchd agent by default (services.ollama.enable = false), remove
 This is Phase 4 of the oMLX migration plan. Ollama models directory (~/.ollama/models, 16GB) is preserved — NOT deleted. Full ollama package removal deferred to follow-up ticket.
 
 **Files:**
+
 - home/common/programs/ollama/default.nix — add services.ollama.enable option (default false), add note about opt-in re-enable
 - home/common/programs/omlx/default.nix — add services.omlx.enable option (default true) for symmetry
 - home/common/services.nix — wrap launchd.agents.ollama in mkIf config.services.ollama.enable; wrap launchd.agents.omlx in mkIf config.services.omlx.enable; same for activation entries
@@ -30,13 +32,12 @@ This is Phase 4 of the oMLX migration plan. Ollama models directory (~/.ollama/m
 2. services.omlx.enable option exists in home/common/programs/omlx/default.nix with default=true
 3. After just home: launchctl list shows omlx agent, does NOT show ollama agent
 4. After just home: curl :11434 connection refused, curl :8000/v1/models returns 200
-5. pi-coding-agent/settings.json enabledModels no longer includes ollama/* models
+5. pi-coding-agent/settings.json enabledModels no longer includes ollama/\* models
 6. pi-coding-agent/models.json still has ollama provider block (not deleted — for opt-in re-enable)
 7. rg -i ollama in docs/ and AGENTS.md returns only intentional references (opt-in instructions, historical)
 8. Setting services.ollama.enable=true in a host file causes ollama agent to load on next just home (verified in scratch branch, not committed)
 9. ~/.ollama/models directory still exists (not deleted)
 10. just validate passes
-
 
 ## Notes
 
@@ -49,8 +50,9 @@ Outcome: oMLX unsafe on 32GB (Jetsam OOM, #702). Ollama re-enabled as
 default on megabookpro. omlx disabled via programs.omlx.enable = false.
 
 New state:
+
 - megabookpro (32GB): ollama ON, omlx OFF
-- rxbookpro (64GB): omlx ON (sufficient headroom)
+- workbookpro (64GB): omlx ON (sufficient headroom)
 
 Ollama tuned with: flash attn, q8_0 KV cache, GPU overhead 4GB reserve,
 max_loaded_models=1, ctx 8192, keep_alive 30m.

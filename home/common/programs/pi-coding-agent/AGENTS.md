@@ -116,10 +116,10 @@ Usage:
 arrays. Pinvim exports `PI_MODEL_SCOPE` (env var, defaults to `PI_PROFILE`).
 
 `multi-sub.ts` reads `PI_MODEL_SCOPE` at `session_start` (after extension
-providers like `rx-anthropic` are registered), resolves patterns against
+providers like `alt-anthropic` are registered), resolves patterns against
 available models, and calls `setScopedModels()` to filter the Ctrl-P list.
 
-- `PI_MODEL_SCOPE=rx` → Ctrl-P shows only rx-anthropic models
+- `PI_MODEL_SCOPE=rx` → Ctrl-P shows only alt-anthropic models
 - `PI_MODEL_SCOPE=mega` → Ctrl-P shows all mega-scoped models
 - No scope / unknown scope → falls back to all available models
 

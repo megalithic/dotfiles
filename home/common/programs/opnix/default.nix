@@ -10,7 +10,7 @@
 {
   config,
   lib,
-  # hostname,  # re-enable when rxbookpro hostSecrets are restored
+  # hostname,  # re-enable when workbookpro hostSecrets are restored
   ...
 }:
 let
@@ -48,10 +48,10 @@ let
     };
   };
 
-  # TODO(rxbookpro): re-enable once work-vars item is moved to a known vault.
-  # hostSecrets = lib.optionalAttrs (hostname == "rxbookpro") {
+  # TODO(workbookpro): re-enable once work-vars item is moved to a known vault.
+  # hostSecrets = lib.optionalAttrs (hostname == "workbookpro") {
   #   workEnvVars = {
-  #     reference = "op://Work/rxbookpro-vars/shell-exports";
+  #     reference = "op://Work/workbookpro-vars/shell-exports";
   #     path = "${secretsDir}/work-env-vars.sh";
   #     mode = "0600";
   #   };

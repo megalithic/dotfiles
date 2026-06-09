@@ -2248,7 +2248,6 @@ function subDisplayName(entry: SubEntry): string {
 // Module-level subscription cache, populated on extension init and config reload
 let _cachedSubs: SubEntry[] = [];
 
-/** Get the base provider type from a provider name, e.g. "openai-codex-2" -> "openai-codex", "rxvortex" -> "anthropic" */
 function getBaseProvider(providerName: string): string | undefined {
   // Direct match
   if (PROVIDER_TEMPLATES[providerName]) return providerName;

@@ -720,9 +720,6 @@ M.piGateway = {
   -- Default pi profile (auth cascade: tries this first, then fallbacks)
   defaultProfile = "mega",
 
-  -- Auth profiles in order of preference
-  authProfiles = { "mega", "rx" },
-
   -- Queue behavior
   prioritySignal = "!!", -- Messages starting with this jump queue + steer if busy
   abortPhrases = { "abort!", "stop!", "kill!", "cancel!" }, -- Emergency abort triggers
