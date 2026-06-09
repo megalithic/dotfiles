@@ -130,6 +130,8 @@ Tmux session layouts remain explicit scripts. `mega`, `rx`, and `verify-doctor` 
 
 Neovim git URL mappings define explicit file, branch, and blame copy/open bindings in `config/nvim/lua/plugins/git.lua`. Keep descriptions aligned with the configured `GitLink`/`GitLink!` command forms instead of relying on memory of bang semantics. Mini.diff hunk reset and overlay mappings live under `<localleader>h*` so they do not collide with broader leader mappings.
 
+Blink.cmp fuzzy matching uses `implementation = "prefer_rust"` in `config/nvim/lua/plugins/blink.lua` so unsupported or failed Rust binary downloads fall back to Lua without startup notifications.
+
 Neovim loads general editor autocmds from `config/nvim/lua/autocmds.lua`. Its `BufWritePre` hook creates missing parent directories for real file buffers before writes, while `<Esc>` in `config/nvim/lua/keymaps.lua` clears UI state without autosaving the buffer.
 
 ## Home Manager package set
@@ -193,6 +195,8 @@ The 1Password service account token is the only unmanaged secret input and must 
 Managed secrets land under `${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/` (plus a few well-known paths like `~/.s3cfg` for tools that don't read alternate locations). Apple notarization credentials are exported in zsh/bash/fish as `APPLE_ID_EMAIL`, `APPLE_TEAM_ID`, and `APPLE_NOTARYTOOL_PASSWORD`, and feed `xcrun notarytool store-credentials "AC_PASSWORD"` to create the local Keychain profile.
 
 Shell secret loading is shell-specific: zsh uses `programs.zsh.initContent`, bash uses `programs.bash.bashrcExtra`, and fish parses the same files in `programs.fish.interactiveShellInit`. Do not assume zsh init snippets run for bash.
+
+The opnix module also derives `lat.md` semantic-search config from the loaded secrets, right after `env-vars.sh` is sourced (same pattern as the `APPLE_*` derivation). When `SYNTHETIC_API_KEY` is present it exports `LAT_LLM_KEY=$SYNTHETIC_API_KEY`, `LAT_LLM_BASE_URL=https://api.synthetic.new/openai/v1`, `LAT_LLM_MODEL=hf:nomic-ai/nomic-embed-text-v1.5`, and `LAT_LLM_DIMENSIONS=768`. This points `lat search` at synthetic's nomic embeddings, which are exempt from synthetic's chat rate limit (so search works even when chat usage is capped) and avoids the old failure where a `sk-or-v1` OpenRouter `LAT_LLM_KEY` was misrouted to OpenAI's endpoint (401). The env-driven provider itself is a `postPatch` in the external `devenv-base` `modules/lat-md` (adds a custom-provider branch to `detectProvider` when `LAT_LLM_BASE_URL` is set), not in this repo. Switching embedding providers changes vector dimensions, so the per-project `lat.md/.cache/vectors.db` must be deleted and re-indexed (`lat search --reindex`) on a dimension change.
 
 Old `.age` files are archived under `secrets/archive/` for rollback/reference only and are no longer imported by flake, nix-darwin, or Home Manager modules. `just age <file>` re-encrypts and `just deage <name>` decrypts using `~/.ssh/id_ed25519` as the recipient/identity.
 

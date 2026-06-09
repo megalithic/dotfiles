@@ -16,6 +16,19 @@
 let
   secretsDir = "${config.xdg.configHome}/opnix/secrets";
   tokenFile = "${config.xdg.configHome}/opnix/token";
+
+  # lat.md semantic search uses synthetic's nomic embeddings (768-dim). Synthetic
+  # embeddings are exempt from the chat rate limit, so this works even when chat
+  # usage is capped. LAT_LLM_KEY derives from SYNTHETIC_API_KEY (single source of
+  # truth); the env-driven provider lives in devenv-base modules/lat-md.
+  latLlmEnvPosix = ''
+    if [ -n "$SYNTHETIC_API_KEY" ]; then
+      export LAT_LLM_KEY="$SYNTHETIC_API_KEY"
+      export LAT_LLM_BASE_URL="https://api.synthetic.new/openai/v1"
+      export LAT_LLM_MODEL="hf:nomic-ai/nomic-embed-text-v1.5"
+      export LAT_LLM_DIMENSIONS="768"
+    fi
+  '';
   commonSecrets = {
     envVars = {
       reference = "op://Crypt/env/notesPlain";
@@ -69,6 +82,7 @@ in
   programs.zsh.initContent = lib.mkAfter ''
     # Load opnix secrets as environment variables
     [ -f "${secretsDir}/env-vars.sh" ] && source "${secretsDir}/env-vars.sh"
+    ${latLlmEnvPosix}
     [ -f "${secretsDir}/apple-developer/apple-id" ] && export APPLE_ID_EMAIL="$(<"${secretsDir}/apple-developer/apple-id")"
     [ -f "${secretsDir}/apple-developer/team-id" ] && export APPLE_TEAM_ID="$(<"${secretsDir}/apple-developer/team-id")"
     [ -f "${secretsDir}/apple-developer/notarytool-password" ] && export APPLE_NOTARYTOOL_PASSWORD="$(<"${secretsDir}/apple-developer/notarytool-password")"
@@ -78,6 +92,7 @@ in
   programs.bash.bashrcExtra = lib.mkAfter ''
     # Load opnix secrets as environment variables
     [ -f "${secretsDir}/env-vars.sh" ] && source "${secretsDir}/env-vars.sh"
+    ${latLlmEnvPosix}
     [ -f "${secretsDir}/apple-developer/apple-id" ] && export APPLE_ID_EMAIL="$(<"${secretsDir}/apple-developer/apple-id")"
     [ -f "${secretsDir}/apple-developer/team-id" ] && export APPLE_TEAM_ID="$(<"${secretsDir}/apple-developer/team-id")"
     [ -f "${secretsDir}/apple-developer/notarytool-password" ] && export APPLE_NOTARYTOOL_PASSWORD="$(<"${secretsDir}/apple-developer/notarytool-password")"
@@ -103,6 +118,13 @@ in
     end
 
     __opnix_source_env_file "${secretsDir}/env-vars.sh"
+    # lat.md semantic search → synthetic embeddings (exempt from chat rate limit)
+    if set -q SYNTHETIC_API_KEY
+      set -gx LAT_LLM_KEY $SYNTHETIC_API_KEY
+      set -gx LAT_LLM_BASE_URL "https://api.synthetic.new/openai/v1"
+      set -gx LAT_LLM_MODEL "hf:nomic-ai/nomic-embed-text-v1.5"
+      set -gx LAT_LLM_DIMENSIONS 768
+    end
     test -f "${secretsDir}/apple-developer/apple-id"; and set -gx APPLE_ID_EMAIL (string collect < "${secretsDir}/apple-developer/apple-id")
     test -f "${secretsDir}/apple-developer/team-id"; and set -gx APPLE_TEAM_ID (string collect < "${secretsDir}/apple-developer/team-id")
     test -f "${secretsDir}/apple-developer/notarytool-password"; and set -gx APPLE_NOTARYTOOL_PASSWORD (string collect < "${secretsDir}/apple-developer/notarytool-password")
