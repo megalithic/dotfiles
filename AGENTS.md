@@ -163,7 +163,6 @@ symlinked directories:
 Pattern (already used):
 
 - `~/.local/share/hammerspoon/nix_path.lua` — PATH + env vars for Hammerspoon
-- `~/.local/share/tmux/nix.conf` — default-shell for tmux
 
 ### Custom app packages (pkgs/default.nix)
 
@@ -199,33 +198,6 @@ Rules:
 - Run `just home` and monitor output when any home-manager config files were touched.
 - Run `just rebuild` and monitor output when both were touched, or when unable to determine the correct narrower command.
 
-Always run `just validate` after nix refactors before pushing.
+### Hammerspoon
 
-## Jujutsu (jj) Aliases
-
-**Use these aliases instead of full commands:**
-
-| Alias               | Command                                | Description                      |
-| ------------------- | -------------------------------------- | -------------------------------- |
-| `jj dm "msg"`       | describe + move bookmark               | Commit with message              |
-| `jj dv`             | describe (interactive) + move bookmark | Edit commit message              |
-| `jj push -b <name>` | git push --bookmark                    | Push bookmark (required -b flag) |
-| `jj pr`             | push + gh pr create                    | Create PR from bookmark          |
-| `jj feat <name>`    | new + bookmark create                  | Start feature branch             |
-| `jj done`           | cleanup after merge                    | Delete bookmark, switch to main  |
-| `jj b`              | bookmark                               | Manage bookmarks                 |
-| `jj s`              | status                                 | Show status                      |
-| `jj d`              | diff                                   | Show diff                        |
-| `jj l`              | log                                    | Show log                         |
-
-## Image File Size Limit
-
-`file-size-guard` extension blocks images over 5MB (Claude API limit).
-To view large images: `magick image.png -resize 25% /tmp/preview.png`
-
-## Pi Agent Directories
-
-- `PI_CODING_AGENT_DIR` — current agent config dir
-- `PI_SESSION` — current session name (typically based on tmux sessio namen)
-- Base config: `~/.pi/agent/`
-- Skills/extensions: `$PI_CODING_AGENT_DIR/skills/`, `$PI_CODING_AGENT_DIR/extensions/`
+**CRITICAL** You must always use `bin/hs-reload` to initiate a Hammerspoon reload. Any other way will crash Hammerspoon.

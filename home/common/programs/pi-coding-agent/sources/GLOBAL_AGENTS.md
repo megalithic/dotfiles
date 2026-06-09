@@ -3,7 +3,7 @@
 - Always use `trash` instead of `rm` for file deletion
 - Always use `rg` instead of `grep` for searching for text in files/folders
 - Always use `fd` instead of `find` for finding files/folders
-- Always wrap commands in a pi timeout of some sort; especially for known or assumed long running tasks; e.g., just home/darwin/rebuild/validate, backgrounded executions, etc.
+- Always set the pi tool `timeout` parameter for shell commands that may run long or hang; especially just home/darwin/rebuild/validate, backgrounded executions, and command shapes sentinel flags as risky.
 - Always use `devenv` for developer environments
   - If a repo has a `justfile` and `devenv` is enabled, check the `just` recipes to see if there are equivalents available
   - When `devenv.nix` exists: `devenv shell -- <cmd>`, `devenv up`, `devenv tasks run <task>`
