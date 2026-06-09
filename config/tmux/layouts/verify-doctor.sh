@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 SESSION="verify-doctor"
-CWD="$(zoxide query "$SESSION" 2>/dev/null || printf '%s\n' "$HOME/code")"
+CWD="/Users/seth/code/work/strive/verify-doctor"
 
 export SESSION_ICON="󰓙" # alts:  󰴓 󰃀   
 export SESSION_FG="#1e64f1"

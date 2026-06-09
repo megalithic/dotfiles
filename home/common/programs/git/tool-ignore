@@ -73,7 +73,7 @@ erl_crash.dump
 **/.pi/todos
 .pi/todos
 result
-
+.worktrees
 
 
 # ignores, etc from ripgrep

@@ -4,7 +4,7 @@
 
 SESSION="mega"
 
-CWD="$(zoxide query ".dotfiles" 2>/dev/null || printf '%s\n' "$HOME/.dotfiles")"
+CWD="/Users/seth/.dotfiles"
 
 export SESSION_ICON="󰈸" # alts: 🗿󰈸
 export SESSION_FG="#d9bb80"

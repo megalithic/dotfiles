@@ -29,7 +29,6 @@ let
     slack # migrated from homebrew 2026-02-13
     spotify
     # telegram-desktop
-    vscode # migrated from homebrew cask 2026-05-05 (brew-nix can't extract Electron symlinks)
     zoom-us
   ];
 

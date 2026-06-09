@@ -1,5 +1,6 @@
 --- Miccheck - Unified Voice Control Module
---- Keybindings: cmd+opt (PTT), cmd+opt+shift (PTD), +p to toggle modes
+--- Keybindings: cmd+opt (PTT), cmd+opt+p to toggle PTT mode
+--- Dictation/recording is disabled; a separate app handles push-to-record.
 
 local fmt = string.format
 local M = {}
@@ -497,41 +498,15 @@ local function loadWhisper()
   end
 end
 
-local function startRecording()
-  if not whisper then return end
-  setMicMuted(false)
-  whisper:beginTranscribe()
-end
+local function startRecording() end
 
-local function stopRecording()
-  if not whisper or not S.isRecording then return end
-  whisper:endTranscribe()
-end
+local function stopRecording() end
 
-local function onPTDKeyDown()
-  if S.ptdMode == "push-to-dictate" then
-    startRecording()
-  elseif S.ptdMode == "always-on" then
-    if S.isRecording then
-      stopRecording()
-    else
-      startRecording()
-    end
-  end
-end
+local function onPTDKeyDown() end
 
-local function onPTDKeyUp()
-  if S.ptdMode == "push-to-dictate" and S.isRecording then stopRecording() end
-end
+local function onPTDKeyUp() end
 
-local function togglePTDMode()
-  if S.ptdMode == "push-to-dictate" then
-    S.ptdMode = "always-on"
-  else
-    S.ptdMode = "push-to-dictate"
-    if S.isRecording then stopRecording() end
-  end
-end
+local function togglePTDMode() end
 
 ---@param callback fun(muted: boolean)
 function M.onMuteChange(callback) table.insert(S.hooks.onMuteChange, callback) end
@@ -553,10 +528,10 @@ end
 
 function M.getPTTMode() return S.pttMode end
 
----@param mode "push-to-dictate"|"always-on"|"disabled"
-function M.setPTDMode(mode) S.ptdMode = mode end
+---@param _mode "push-to-dictate"|"always-on"|"disabled"
+function M.setPTDMode(_mode) S.ptdMode = "disabled" end
 
-function M.getPTDMode() return S.ptdMode end
+function M.getPTDMode() return "disabled" end
 
 function M.isRecording() return S.isRecording end
 
@@ -571,7 +546,8 @@ end
 function M:init(config)
   config = config or {}
   S = _G.S.miccheck
-  whisper = loadWhisper()
+  -- Dictation/transcription is disabled here; push-to-record now lives in a separate app.
+  whisper = nil
   if whisper then
     whisper.transcriptionMethod = "whisperkitcli"
     whisper.model = config.model or "large-v3"
@@ -648,16 +624,13 @@ function M:start()
   S.menubar:setMenu({
     { title = "Push-to-talk", fn = function() M.setPTTMode("push-to-talk") end },
     { title = "Push-to-mute", fn = function() M.setPTTMode("push-to-mute") end },
-    { title = "-" },
-    { title = "Push-to-dictate", fn = function() M.setPTDMode("push-to-dictate") end },
-    { title = "Always-on dictation", fn = function() M.setPTDMode("always-on") end },
   })
 
-  -- Debounce state for PTT/PTD activation
+  -- Debounce state for PTT activation
   -- Prevents accidental triggers when cmd+opt is part of a larger chord (e.g., cmd+opt+space)
   local DEBOUNCE_MS = 500
   local debounceTimer = nil
-  local pendingAction = nil -- "ptt" or "ptd"
+  local pendingAction = nil -- "ptt"
 
   local function cancelDebounce()
     if debounceTimer then
@@ -687,7 +660,7 @@ function M:start()
     local keyCode = evt:getKeyCode()
     local key = hs.keycodes.map[keyCode]
 
-    -- "p" is allowed (used for mode toggles cmd+opt+p, cmd+opt+shift+p)
+    -- "p" is allowed (used for mode toggle cmd+opt+p)
     if key == "p" then return false end
 
     -- Any other key cancels the pending activation
@@ -701,16 +674,6 @@ function M:start()
     local flags = evt:getFlags()
     local cmdOpt = flags.cmd and flags.alt and not flags.shift and not flags.ctrl
     local cmdOptShift = flags.cmd and flags.alt and flags.shift and not flags.ctrl
-
-    -- PTD (push-to-dictate): cmd+opt+shift
-    if cmdOptShift and not S.isRecording then
-      startDebounce("ptd", onPTDKeyDown)
-    elseif not cmdOptShift and S.isRecording and S.ptdMode == "push-to-dictate" then
-      cancelDebounce()
-      onPTDKeyUp()
-    elseif not cmdOptShift and pendingAction == "ptd" then
-      cancelDebounce()
-    end
 
     -- PTT (push-to-talk): cmd+opt (no shift)
     if cmdOpt and not S.isUnmuted and not S.isRecording then
@@ -727,7 +690,6 @@ function M:start()
   S.hotkeys.modifierTap:start()
 
   S.hotkeys.pttToggle = hs.hotkey.bind({ "cmd", "alt" }, "p", togglePTTMode)
-  S.hotkeys.ptdToggle = hs.hotkey.bind({ "cmd", "alt", "shift" }, "p", togglePTDMode)
 
   if whisper then
     whisper:start()

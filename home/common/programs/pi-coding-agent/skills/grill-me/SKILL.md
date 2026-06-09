@@ -96,6 +96,14 @@ Things the user explicitly chose not to do.
 
 The log is the _distilled_ output, not a transcript. Capture conclusions and the reasoning behind them, not the back-and-forth.
 
+After writing the log, tell the user the next task-pipeline command:
+
+```text
+/continue <slug>
+```
+
+`/continue` will route GRILL-only docs to `/task <slug>` for research.
+
 ## What this skill is not
 
 - **Not a bug hunt.** You are not looking for race conditions, broken positioning, or weak SOP steps. You are expanding the user's understanding of what they want and why.

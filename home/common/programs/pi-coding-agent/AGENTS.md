@@ -9,10 +9,10 @@ them into place. Run `just home` after changes.
 pi-coding-agent/
 ├── default.nix          # Main nix module — see inline comments for build patterns
 ├── packages/            # npm packages built via buildNpmPackage
-├── extensions/          # Simple .ts extensions (auto-discovered, no npm deps)
-├── skills/              # Simple skills (auto-discovered, symlinked)
-├── agents/              # Agent .md definitions
-├── prompts/             # Prompt templates
+├── extensions/          # Simple .ts extensions (auto-discovered, no npm deps; _* ignored)
+├── skills/              # Simple skills (auto-discovered, symlinked; _* ignored)
+├── agents/              # Agent .md definitions (_* ignored)
+├── prompts/             # Prompt templates (_* ignored)
 ├── patches/             # Patches applied to built packages
 ├── sources/             # Source files (GLOBAL_AGENTS.md)
 ├── scripts/             # Build/update helpers — see inline comments for PNAME_MAP
@@ -44,7 +44,7 @@ For whole repos or many files, clone and copy what's needed.
 
 1. Fetch source (URL, repo, etc.)
 2. Check `import` statements for npm packages (not relative imports, not pi SDK)
-3. **No npm deps** → simple extension → `extensions/` (auto-discovered)
+3. **No npm deps** → simple extension → `extensions/` (auto-discovered unless name starts with `_`)
 4. **Has npm deps** → nix derivation in `default.nix` (pick a pattern below)
 
 ## Build patterns
@@ -74,7 +74,7 @@ and `scripts/update-npm-pkg.sh` for the dispatch maps.
 1. Fetch source
 2. Skill = directory with `SKILL.md` (frontmatter: name, description) +
    optional reference files
-3. **No npm deps** → `skills/` (auto-discovered)
+3. **No npm deps** → `skills/` (auto-discovered unless directory starts with `_`)
 4. **Has npm deps** → `packages/` (rare, follow extension npm-deps pattern)
 
 ## Updating pi or npm packages

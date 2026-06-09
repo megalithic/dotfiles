@@ -115,25 +115,6 @@ let
       };
     };
 
-    vscode = {
-      name = "VS Code";
-      processName = "Code";
-      source = "Library/Application Support/Code/User";
-      include = [
-        "settings.json"
-        "keybindings.json"
-        "snippets"
-        "profiles"
-      ];
-      exclude = [
-        "*.log"
-        "workspaceStorage"
-        "globalStorage"
-        "History"
-      ];
-      sqlite = [ ];
-    };
-
     raycast = {
       name = "Raycast";
       processName = "Raycast";

@@ -41,17 +41,17 @@ M.notification = {
 M.hypers = {}
 
 --------------------------------------------------------------------------------
--- MICCHECK STATE (unified PTT + PTD voice control)
+-- MICCHECK STATE (push-to-talk voice control; dictation disabled)
 --------------------------------------------------------------------------------
 
 M.miccheck = {
   -- Mode states
   pttMode = "push-to-talk",  -- "push-to-talk", "push-to-mute", "disabled"
-  ptdMode = "push-to-dictate",  -- "push-to-dictate", "always-on", "disabled"
+  ptdMode = "disabled",      -- dictation/recording is handled by a separate app
 
   -- Current activity state (for icon priority)
-  isRecording = false,   -- Currently recording audio (PTD)
-  isProcessing = false,  -- Transcribing audio (Whisper)
+  isRecording = false,   -- Legacy dictation state; kept false
+  isProcessing = false,  -- Legacy transcription state; kept false
   isUnmuted = false,     -- PTT key held / mic unmuted
 
   -- UI elements
@@ -59,9 +59,8 @@ M.miccheck = {
 
   -- Hotkeys (stored for cleanup)
   hotkeys = {
-    modifierTap = nil,   -- eventtap for cmd+opt (PTT) and cmd+opt+shift (PTD)
+    modifierTap = nil,   -- eventtap for cmd+opt (PTT)
     pttToggle = nil,     -- cmd+opt+p
-    ptdToggle = nil,     -- cmd+opt+shift+p
   },
 
   -- Watcher hooks (callbacks registered by other modules)
@@ -146,7 +145,7 @@ function M.resetMiccheck()
     if binding then
       -- Try eventtap stop first (for modifierTap, keyDownTap, etc.)
       pcall(function() binding:stop() end)
-      -- Then try hotkey delete (for pttToggle, ptdToggle, etc.)
+      -- Then try hotkey delete (for pttToggle, etc.)
       pcall(function() binding:delete() end)
       M.miccheck.hotkeys[name] = nil
     end

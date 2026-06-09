@@ -11,7 +11,10 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 const DIR_HINT = "Dir = ~/.local/share/pi/plans/$(basename $PWD)/";
-const SKILL_REF = "Load the task-pipeline skill for slug resolution rules and workflow details.";
+const SKILL_REF =
+  "Load the task-pipeline skill for slug resolution rules and workflow details.";
+const GRILL_HINT =
+  "Treat <Dir>/{slug}_GRILL.md and <Dir>/{slug}_grill.md as pre-research context. GRILL-only means next step is /task {slug}.";
 
 export default function (pi: ExtensionAPI) {
   pi.registerCommand("task", {
@@ -25,8 +28,10 @@ export default function (pi: ExtensionAPI) {
             "",
             SKILL_REF,
             `  ${DIR_HINT}`,
+            `  ${GRILL_HINT}`,
             "",
             "Resolve slug per skill rules, then read <Dir>/{slug}_TASK.md and continue research.",
+            "If TASK is missing but GRILL exists, read GRILL as context and start research for that slug.",
             "If no slug can be resolved, tell the user to provide a description: /task <description>",
           ].join("\n"),
         );
@@ -39,9 +44,10 @@ export default function (pi: ExtensionAPI) {
           "",
           SKILL_REF,
           `  ${DIR_HINT}`,
+          `  ${GRILL_HINT}`,
           "",
           "Steps:",
-          "1. Resolve slug and ensure Dir exists (mkdir -p). If {slug}_TASK.md exists, read it first as context.",
+          "1. Resolve slug and ensure Dir exists (mkdir -p). If {slug}_TASK.md exists, read it first as context. Else if {slug}_GRILL.md or {slug}_grill.md exists, read it as context.",
           '2. Call subagent: { agent: "researcher", task: "<research task + context>" }',
           "3. Save subagent output to <Dir>/{slug}_TASK.md",
         ].join("\n"),
@@ -60,14 +66,17 @@ export default function (pi: ExtensionAPI) {
           "",
           SKILL_REF,
           `  ${DIR_HINT}`,
+          `  ${GRILL_HINT}`,
           slug ? `  Slug = ${slug} (explicit)` : "",
           "",
           "Steps:",
-          "1. Resolve slug and read <Dir>/{slug}_TASK.md — if missing, tell user to run /task first.",
+          "1. Resolve slug and read <Dir>/{slug}_TASK.md — if missing but GRILL exists, tell user to run /task {slug} first.",
           '2. Call subagent: { agent: "planner", task: "<research findings + context>" }',
           "3. Save subagent output to <Dir>/{slug}_PLAN.md",
           "4. Present plan for review. Do NOT create tickets until user approves.",
-        ].filter(Boolean).join("\n"),
+        ]
+          .filter(Boolean)
+          .join("\n"),
       );
     },
   });
@@ -80,10 +89,13 @@ export default function (pi: ExtensionAPI) {
         "",
         SKILL_REF,
         `  ${DIR_HINT}`,
+        `  ${GRILL_HINT}`,
         slug ? `  Slug = ${slug} (explicit)` : "",
         "",
-        "Resolve slug, check which files exist (TASK/PLAN/context), emit the next-phase suggestion per skill rules.",
-      ].filter(Boolean).join("\n"),
+        "Resolve slug, check which files exist (GRILL/TASK/PLAN/context), emit the next-phase suggestion per skill rules.",
+      ]
+        .filter(Boolean)
+        .join("\n"),
     );
   };
 
@@ -98,17 +110,18 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerCommand("retrieve", {
-    description: "List or look up past TASK/PLAN combos",
+    description: "List or look up past GRILL/TASK/PLAN combos",
     handler: async (args, _ctx) => {
       const slug = args?.trim();
       pi.sendUserMessage(
         [
           slug
             ? `Retrieve plan info for slug: ${slug}`
-            : "List past TASK/PLAN combos in the current repo's plans dir.",
+            : "List past GRILL/TASK/PLAN combos in the current repo's plans dir.",
           "",
           SKILL_REF,
           `  ${DIR_HINT}`,
+          `  ${GRILL_HINT}`,
           "",
           slug
             ? "Check which files exist for this slug, report phase + next command."
@@ -129,16 +142,19 @@ export default function (pi: ExtensionAPI) {
           "",
           SKILL_REF,
           `  ${DIR_HINT}`,
+          `  ${GRILL_HINT}`,
           slug ? `  Slug = ${slug} (explicit)` : "",
           "",
           "Steps:",
-          "1. Resolve slug and read <Dir>/{slug}_PLAN.md — if missing, tell user to run /plan first.",
+          "1. Resolve slug and read <Dir>/{slug}_PLAN.md — if missing, tell user to run /plan first (or /task {slug} when only GRILL exists).",
           "2. Explore codebase for file hints and verification commands.",
           "3. Seed <Dir>/{slug}.ticket-context.md if missing (see ticket-creator skill).",
           "4. Create one ticket per plan step using ticket-creator skill Mode 3.",
           "5. Self-validate: tk list, tk show each, tk dep cycle, tk ready.",
           "6. Report what was created.",
-        ].filter(Boolean).join("\n"),
+        ]
+          .filter(Boolean)
+          .join("\n"),
       );
     },
   });

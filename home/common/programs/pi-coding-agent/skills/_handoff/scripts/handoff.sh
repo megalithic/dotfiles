@@ -21,18 +21,18 @@ TITLE=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --file)
-      CONTENT_FILE="$2"
-      shift 2
-      ;;
-    --title)
-      TITLE="$2"
-      shift 2
-      ;;
-    *)
-      echo "Unknown option: $1" >&2
-      exit 1
-      ;;
+  --file)
+    CONTENT_FILE="$2"
+    shift 2
+    ;;
+  --title)
+    TITLE="$2"
+    shift 2
+    ;;
+  *)
+    echo "Unknown option: $1" >&2
+    exit 1
+    ;;
   esac
 done
 
@@ -55,7 +55,7 @@ fi
 JJ_BOOKMARK=""
 if command -v jj &>/dev/null && jj root &>/dev/null 2>&1; then
   JJ_BOOKMARK=$(jj log -r @ -T 'bookmarks' --no-graph 2>/dev/null | tr ' ' '\n' | head -1 || true)
-  if [[ -z "$JJ_BOOKMARK" ]]; then
+  if [[ -z $JJ_BOOKMARK ]]; then
     # Check parent - bookmark may be there if working on uncommitted changes
     JJ_BOOKMARK=$(jj log -r @- -T 'bookmarks' --no-graph 2>/dev/null | tr ' ' '\n' | head -1 || true)
   fi
@@ -76,53 +76,53 @@ fi
 # Get todos from .pi/todos/ in working directory
 TODOS_INFO=""
 TODOS_DIR=".pi/todos"
-if [[ -d "$TODOS_DIR" ]] && command -v jq &>/dev/null; then
+if [[ -d $TODOS_DIR ]] && command -v jq &>/dev/null; then
   # Count todos
   TOTAL_TODOS=$(ls "$TODOS_DIR"/*.md 2>/dev/null | wc -l | tr -d ' ')
-  
-  if [[ "$TOTAL_TODOS" -gt 0 ]]; then
+
+  if [[ $TOTAL_TODOS -gt 0 ]]; then
     TODOS_INFO="### Todos\n\n"
-    
+
     IN_PROGRESS=""
     OPEN=""
-    
+
     # Get open/in-progress todos (JSON frontmatter at start of file)
     for f in "$TODOS_DIR"/*.md; do
-      [[ -f "$f" ]] || continue
-      
+      [[ -f $f ]] || continue
+
       # Extract JSON block (everything before first blank line or ## heading)
       JSON_BLOCK=$(awk '/^$|^##/{exit} {print}' "$f" 2>/dev/null)
-      
+
       # Parse with jq
       TODO_STATUS=$(echo "$JSON_BLOCK" | jq -r '.status // "open"' 2>/dev/null || echo "open")
       TODO_TITLE=$(echo "$JSON_BLOCK" | jq -r '.title // "(untitled)"' 2>/dev/null || echo "(untitled)")
-      
+
       # Skip closed todos
-      [[ "$TODO_STATUS" == "closed" ]] && continue
-      
+      [[ $TODO_STATUS == "closed" ]] && continue
+
       # Get todo ID from filename
       TODO_ID=$(basename "$f" .md)
-      
+
       # Format based on status
-      if [[ "$TODO_STATUS" == "in_progress" ]]; then
+      if [[ $TODO_STATUS == "in_progress" ]]; then
         IN_PROGRESS+="- 🔄 **TODO-$TODO_ID**: $TODO_TITLE\n"
       else
         OPEN+="- ○ TODO-$TODO_ID: $TODO_TITLE\n"
       fi
     done
-    
-    if [[ -n "$IN_PROGRESS" ]]; then
+
+    if [[ -n $IN_PROGRESS ]]; then
       TODOS_INFO+="**In progress:**\n$IN_PROGRESS\n"
     fi
-    if [[ -n "$OPEN" ]]; then
+    if [[ -n $OPEN ]]; then
       TODOS_INFO+="**Open:**\n$OPEN"
     fi
   fi
 fi
 
 # Read content from file or stdin
-if [[ -n "$CONTENT_FILE" ]]; then
-  if [[ ! -f "$CONTENT_FILE" ]]; then
+if [[ -n $CONTENT_FILE ]]; then
+  if [[ ! -f $CONTENT_FILE ]]; then
     echo "Error: Content file not found: $CONTENT_FILE" >&2
     exit 1
   fi
@@ -137,12 +137,12 @@ else
 fi
 
 # Set default title if not provided
-if [[ -z "$TITLE" ]]; then
+if [[ -z $TITLE ]]; then
   TITLE="Session Handoff"
 fi
 
 # Write the handoff document
-cat > "$OUTPUT_FILE" << EOF
+cat >"$OUTPUT_FILE" <<EOF
 # Handoff: ${TITLE}
 
 **Session:** ${SESSION}
@@ -171,7 +171,7 @@ ${JJ_LOG:-"(not in a jj repository)"}
 ${JJ_DIFF_STAT:-"(no changes or not in a jj repository)"}
 \`\`\`
 
-$(if [[ -n "$TODOS_INFO" ]]; then echo -e "$TODOS_INFO"; else echo "### Todos\n\n(no .pi/todos directory found)"; fi)
+$(if [[ -n $TODOS_INFO ]]; then echo -e "$TODOS_INFO"; else echo "### Todos\n\n(no .pi/todos directory found)"; fi)
 EOF
 
 echo "✓ Handoff saved: ${OUTPUT_FILE}"

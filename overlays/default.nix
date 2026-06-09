@@ -29,7 +29,14 @@
       mise
       ;
 
-    nvim-nightly = inputs.neovim-nightly-overlay.packages.${prev.stdenv.hostPlatform.system}.default;
+    # neovim-nightly-overlay can run upstream functional tests while building
+    # from source; those tests are flaky in nix sandbox on Darwin (e.g. listen
+    # address collisions like "T164"). Keep rebuilds focused on packaging.
+    nvim-nightly =
+      inputs.neovim-nightly-overlay.packages.${prev.stdenv.hostPlatform.system}.default.overrideAttrs
+        (_: {
+          doCheck = false;
+        });
     devenv = inputs.devenv.packages.${prev.stdenv.hostPlatform.system}.devenv;
     notmuch = prev.notmuch.override { withEmacs = false; };
 
@@ -73,7 +80,7 @@
     # during the webui `npm run build` teardown. Artifacts are already produced
     # when it aborts, but nix sees the non-zero exit. Pin nodejs_22 for the webui
     # build to dodge the libuv bug. Upstream report: nodejs/node#56831.
-    llama-cpp = prev.llama-cpp.override { nodejs = prev.nodejs_22; };
+    llama-cpp = prev.llama-cpp.override { nodejs_latest = prev.nodejs_22; };
 
     # shade - Floating terminal panel for macOS (prebuilt from GitHub release)
     shade = prev.stdenv.mkDerivation {

@@ -12,7 +12,9 @@ let
 
   piStateDir = "${config.xdg.stateHome}/pi";
 
-  piPackageFiles = builtins.filter (name: lib.hasSuffix ".nix" name && !(lib.hasPrefix "_" name)) (
+  isEnabledEntry = name: !(lib.hasPrefix "_" name);
+
+  piPackageFiles = builtins.filter (name: lib.hasSuffix ".nix" name && isEnabledEntry name) (
     builtins.attrNames (builtins.readDir ./packages)
   );
   piExtensionPackageFiles = builtins.filter (
@@ -61,12 +63,19 @@ let
   extensionSymlinks = builtins.listToAttrs (
     builtins.concatLists [
       # Single .ts files
-      (map (name: {
-        name = ".pi/agent/extensions/${name}";
-        value = {
-          source = ./extensions/${name};
-        };
-      }) (builtins.filter (name: lib.hasSuffix ".ts" name) (builtins.attrNames extensionEntries)))
+      (map
+        (name: {
+          name = ".pi/agent/extensions/${name}";
+          value = {
+            source = ./extensions/${name};
+          };
+        })
+        (
+          builtins.filter (name: lib.hasSuffix ".ts" name && isEnabledEntry name) (
+            builtins.attrNames extensionEntries
+          )
+        )
+      )
       # Directories (extension subdirectories like subagent/)
       (map
         (name: {
@@ -76,7 +85,7 @@ let
           };
         })
         (
-          builtins.filter (name: extensionEntries.${name} == "directory") (
+          builtins.filter (name: extensionEntries.${name} == "directory" && isEnabledEntry name) (
             builtins.attrNames extensionEntries
           )
         )
@@ -86,7 +95,7 @@ let
 
   # Agent definitions now come from pi-subagents package (scout, researcher, planner, worker, reviewer, oracle, context-builder, delegate)
   # Custom agents can be added to ./agents/ directory — auto-discovered and symlinked to ~/.pi/agent/agents/
-  agentFiles = builtins.filter (name: lib.hasSuffix ".md" name) (
+  agentFiles = builtins.filter (name: lib.hasSuffix ".md" name && isEnabledEntry name) (
     builtins.attrNames (builtins.readDir ./agents)
   );
   agentSymlinks = builtins.listToAttrs (
@@ -99,7 +108,10 @@ let
   );
 
   # Auto-discover simple skills (no deps) - symlink entire directories
-  skillDirs = builtins.attrNames (builtins.readDir ./skills);
+  skillEntries = builtins.readDir ./skills;
+  skillDirs = builtins.filter (name: skillEntries.${name} == "directory" && isEnabledEntry name) (
+    builtins.attrNames skillEntries
+  );
   skillSymlinks = builtins.listToAttrs (
     map (name: {
       name = ".pi/agent/skills/${name}";
@@ -110,7 +122,7 @@ let
   );
 
   # Auto-discover prompt templates (.md files in prompts/)
-  promptFiles = builtins.filter (name: lib.hasSuffix ".md" name) (
+  promptFiles = builtins.filter (name: lib.hasSuffix ".md" name && isEnabledEntry name) (
     builtins.attrNames (builtins.readDir ./prompts)
   );
   promptSymlinks = builtins.listToAttrs (
