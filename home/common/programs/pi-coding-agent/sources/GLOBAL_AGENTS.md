@@ -1,6 +1,9 @@
 ## Tools
 
 - Always use `trash` instead of `rm` for file deletion
+- Always use `rg` instead of `grep` for searching for text in files/folders
+- Always use `fd` instead of `find` for finding files/folders
+- Always wrap commands in a pi timeout of some sort; especially for known or assumed long running tasks; e.g., just home/darwin/rebuild/validate, backgrounded executions, etc.
 - Always use `devenv` for developer environments
   - If a repo has a `justfile` and `devenv` is enabled, check the `just` recipes to see if there are equivalents available
   - When `devenv.nix` exists: `devenv shell -- <cmd>`, `devenv up`, `devenv tasks run <task>`
@@ -9,10 +12,6 @@
   - Don't bypass devenv with global installs
   - `devenv search <query>` to find packages and options
 - When working with external libraries, use MCP tools (`context7`, `githits`) to look up docs and examples instead of guessing APIs
-
-## Caveman mode
-
-- Do NOT use caveman-commit, caveman-review, or caveman-help — use `git-commit` and `writing-clearly-and-concisely` instead.
 
 ## Writing
 

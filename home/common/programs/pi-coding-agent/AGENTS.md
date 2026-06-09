@@ -119,7 +119,7 @@ arrays. Pinvim exports `PI_MODEL_SCOPE` (env var, defaults to `PI_PROFILE`).
 providers like `alt-anthropic` are registered), resolves patterns against
 available models, and calls `setScopedModels()` to filter the Ctrl-P list.
 
-- `PI_MODEL_SCOPE=rx` → Ctrl-P shows only alt-anthropic models
+- `PI_MODEL_SCOPE=alt` → Ctrl-P shows only alt-anthropic models
 - `PI_MODEL_SCOPE=mega` → Ctrl-P shows all mega-scoped models
 - No scope / unknown scope → falls back to all available models
 
@@ -146,8 +146,8 @@ Schema:
     "directoryProfiles": [     // NEW: cwd-based preset assignment
       {
         "glob": "~/code/work/strive/**",
-        "preset": "rx",
-        "modelScope": "rx"
+        "preset": "alt",
+        "modelScope": "alt"
       }
     ]
   }
