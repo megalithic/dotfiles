@@ -424,20 +424,28 @@ refresh_tmux_context_async = function(callback)
   if callback then table.insert(tmux_context_cache.callbacks, callback) end
   if tmux_context_cache.running then return end
   tmux_context_cache.running = true
-  vim.system(
-    { "tmux", "display-message", "-p", "#{session_name}\t#{window_name}\t#{window_index}\t#{pane_id}" },
-    { text = true },
-    function(result)
-      local context = result.code == 0 and parse_tmux_context(vim.trim(result.stdout or "")) or {}
-      vim.schedule(function()
-        local callbacks = tmux_context_cache.callbacks or {}
-        tmux_context_cache = { at = vim.uv.now(), value = context, running = false, callbacks = {} }
-        for _, cb in ipairs(callbacks) do
-          pcall(cb, context)
-        end
-      end)
-    end
-  )
+  local cmd = { "tmux", "display-message", "-p", "#{session_name}\t#{window_name}\t#{window_index}\t#{pane_id}" }
+  if vim.env.TMUX_PANE and vim.env.TMUX_PANE ~= "" then
+    cmd = {
+      "tmux",
+      "display-message",
+      "-t",
+      vim.env.TMUX_PANE,
+      "-p",
+      "#{session_name}\t#{window_name}\t#{window_index}\t#{pane_id}",
+    }
+  end
+
+  vim.system(cmd, { text = true }, function(result)
+    local context = result.code == 0 and parse_tmux_context(vim.trim(result.stdout or "")) or {}
+    vim.schedule(function()
+      local callbacks = tmux_context_cache.callbacks or {}
+      tmux_context_cache = { at = vim.uv.now(), value = context, running = false, callbacks = {} }
+      for _, cb in ipairs(callbacks) do
+        pcall(cb, context)
+      end
+    end)
+  end)
 end
 
 local function current_tmux_context()
@@ -2131,12 +2139,23 @@ function Commands.setup(api, config)
 
   local function pi_visible_in_current_window()
     if not vim.env.TMUX then return false end
-    local out = vim.fn.system({
+    local cmd = {
       "tmux",
       "list-panes",
       "-F",
       "#{pane_title}\t#{pane_current_command}\t#{pane_start_command}",
-    })
+    }
+    if vim.env.TMUX_PANE and vim.env.TMUX_PANE ~= "" then
+      cmd = {
+        "tmux",
+        "list-panes",
+        "-t",
+        vim.env.TMUX_PANE,
+        "-F",
+        "#{pane_title}\t#{pane_current_command}\t#{pane_start_command}",
+      }
+    end
+    local out = vim.fn.system(cmd)
     if vim.v.shell_error ~= 0 then return false end
     for line in tostring(out):gmatch("[^\n]+") do
       local title, cmd, start = line:match("^([^\t]*)\t([^\t]*)\t(.*)$")
@@ -2579,7 +2598,8 @@ function M.setup(opts)
       record_target_history(config, prev_socket, conn.socket_source or runtime.socket_source or "auto")
     end
 
-    local pane_id = vim.fn.trim(vim.fn.system({ "tmux", "display-message", "-p", "#{pane_id}" }))
+    local pane_id = vim.env.TMUX_PANE or ""
+    if pane_id == "" then pane_id = vim.fn.trim(vim.fn.system({ "tmux", "display-message", "-p", "#{pane_id}" })) end
     local cmd = { "pimux", "--new", "--socket", child_socket }
     local job_env = {
       PINVIM_PARENT_ID = registry and registry.parent_id or nil,
@@ -2643,7 +2663,8 @@ function M.setup(opts)
       table.insert(cmd, socket_path)
     end
 
-    local pane_id = vim.fn.trim(vim.fn.system({ "tmux", "display-message", "-p", "#{pane_id}" }))
+    local pane_id = vim.env.TMUX_PANE or ""
+    if pane_id == "" then pane_id = vim.fn.trim(vim.fn.system({ "tmux", "display-message", "-p", "#{pane_id}" })) end
     local job_env = {
       PIMUX_FROM_NVIM = "1",
       PI_STATE_DIR = config.transport.state_dir,
