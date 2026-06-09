@@ -77,6 +77,13 @@ stdenvNoCC.mkDerivation {
           mkdir -p "$FW/$VER/Libraries/WidevineCdm"
           cp -R "$WIDEVINE"/* "$FW/$VER/Libraries/WidevineCdm/"
 
+          # Add purpose strings for optional macOS permission prompts. These
+          # keys only explain access if Helium ever hits the corresponding APIs;
+          # they do not grant permission or force prompts by themselves.
+          /usr/bin/plutil -replace NSAppleEventsUsageDescription -string "Helium needs automation access when a feature asks to control another app on your behalf." "$HELIUM/Contents/Info.plist"
+          /usr/bin/plutil -replace NSInputMonitoringUsageDescription -string "Helium needs input monitoring access when a feature asks to observe global keyboard or mouse events outside the browser." "$HELIUM/Contents/Info.plist"
+          /usr/bin/plutil -replace NSScreenCaptureDescription -string "Helium needs screen capture access when a feature asks to share, record, or capture your screen." "$HELIUM/Contents/Info.plist"
+
           # Clear quarantine xattrs (does NOT affect embedded LC_CODE_SIGNATURE).
           /usr/bin/xattr -cr "$HELIUM"
 
