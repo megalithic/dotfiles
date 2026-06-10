@@ -22,6 +22,7 @@ local did_setup = false
 local defaults
 local options
 local compose_queue = {}
+local compose_ns = vim.api.nvim_create_namespace("pinvim_compose")
 local target_history = {}
 local target_history_limit = 20
 local tmux_context_cache = { at = 0, value = nil, running = false, callbacks = {} }
@@ -2117,6 +2118,10 @@ function Commands.setup(api, config)
     desc = "Annotate selection or cursor line and add to pinvim compose queue",
   })
 
+  vim.api.nvim_create_user_command("PiComments", function() api.compose_comments_list() end, {
+    desc = "List queued pinvim comments in quickfix/trouble",
+  })
+
   vim.keymap.set(
     "n",
     "gpc",
@@ -2892,8 +2897,44 @@ function M.setup(opts)
     return true
   end
 
+  --- Remove all comment indicator extmarks for queued items.
+  local function clear_compose_marks()
+    for _, item in ipairs(compose_queue) do
+      if item.bufnr and item.extmark and vim.api.nvim_buf_is_valid(item.bufnr) then
+        pcall(vim.api.nvim_buf_del_extmark, item.bufnr, compose_ns, item.extmark)
+      end
+      item.bufnr, item.extmark = nil, nil
+    end
+  end
+
+  --- Place (or replace) the indicator extmark for one queued comment item:
+  --- sign-column glyph plus end-of-line virtual text with a comment preview.
+  local function place_compose_mark(item)
+    if not (item.bufnr and vim.api.nvim_buf_is_valid(item.bufnr)) then return end
+    if item.extmark then pcall(vim.api.nvim_buf_del_extmark, item.bufnr, compose_ns, item.extmark) end
+    local preview = item.note or ""
+    if #preview > 48 then preview = preview:sub(1, 47) .. "\u{2026}" end
+    item.extmark = vim.api.nvim_buf_set_extmark(item.bufnr, compose_ns, item.range[1] - 1, 0, {
+      sign_text = "\u{f075}", -- comment glyph
+      sign_hl_group = "DiagnosticSignInfo",
+      virt_text = { { " \u{f075} " .. preview, "DiagnosticVirtualTextInfo" } },
+      virt_text_pos = "eol",
+    })
+  end
+
+  --- Find a queued comment whose range covers the given buffer line.
+  local function compose_comment_at(bufnr, row)
+    for idx, item in ipairs(compose_queue) do
+      if item.note and item.bufnr == bufnr and item.range and row >= item.range[1] and row <= item.range[2] then
+        return idx, item
+      end
+    end
+    return nil, nil
+  end
+
   --- Capture selection (or cursor line) plus a typed comment, queue both as one
-  --- annotated context item. Flush with :PiFlush / gpF like any compose item.
+  --- annotated context item. Re-running on a commented line edits that comment
+  --- in place (prefilled input; empty input deletes it). Flush with :PiFlush.
   function api.compose_comment(command_opts)
     local file = vim.api.nvim_buf_get_name(0)
     if file == "" then
@@ -2901,6 +2942,7 @@ function M.setup(opts)
       return false
     end
 
+    local bufnr = vim.api.nvim_get_current_buf()
     local rel_path = vim.fn.fnamemodify(file, ":~:.")
     local selection, start_row, end_row = get_command_selection(command_opts)
     if not (selection and start_row and end_row) then
@@ -2909,22 +2951,74 @@ function M.setup(opts)
       selection = vim.api.nvim_buf_get_lines(0, start_row - 1, start_row, false)[1] or ""
     end
 
+    -- Edit-in-place when the line already carries a queued comment.
+    local existing_idx, existing = compose_comment_at(bufnr, start_row)
+
     local filetype = vim.bo.filetype
-    vim.ui.input({ prompt = "comment: " }, function(input)
-      if input == nil or vim.trim(input) == "" then
-        vim.notify("pinvim: comment cancelled", vim.log.levels.INFO)
-        return
+    vim.ui.input(
+      { prompt = "comment: ", default = existing and existing.note or nil },
+      function(input)
+        if input == nil then
+          vim.notify("pinvim: comment cancelled", vim.log.levels.INFO)
+          return
+        end
+        if vim.trim(input) == "" then
+          if existing_idx then
+            if existing.bufnr and existing.extmark then
+              pcall(vim.api.nvim_buf_del_extmark, existing.bufnr, compose_ns, existing.extmark)
+            end
+            table.remove(compose_queue, existing_idx)
+            vim.notify("pinvim: comment removed", vim.log.levels.INFO)
+          else
+            vim.notify("pinvim: comment cancelled", vim.log.levels.INFO)
+          end
+          return
+        end
+        if existing then
+          existing.note = input
+          place_compose_mark(existing)
+          vim.notify("pinvim: comment updated", vim.log.levels.INFO)
+          return
+        end
+        local item = {
+          type = "selection",
+          content = selection,
+          file = rel_path,
+          range = { start_row, end_row },
+          filetype = filetype,
+          note = input,
+          bufnr = bufnr,
+        }
+        table.insert(compose_queue, item)
+        place_compose_mark(item)
+        vim.notify(string.format("pinvim: queued comment %d", #compose_queue), vim.log.levels.INFO)
       end
-      table.insert(compose_queue, {
-        type = "selection",
-        content = selection,
-        file = rel_path,
-        range = { start_row, end_row },
-        filetype = filetype,
-        note = input,
-      })
-      vim.notify(string.format("pinvim: queued comment %d", #compose_queue), vim.log.levels.INFO)
-    end)
+    )
+    return true
+  end
+
+  --- Populate the quickfix list with queued comments (file/line/annotation).
+  --- Opens trouble.nvim's quickfix view when available, else :copen.
+  function api.compose_comments_list()
+    local entries = {}
+    for _, item in ipairs(compose_queue) do
+      if item.note then
+        table.insert(entries, {
+          filename = vim.fn.fnamemodify(item.file, ":p"),
+          lnum = item.range and item.range[1] or 1,
+          end_lnum = item.range and item.range[2] or nil,
+          text = item.note,
+          type = "I",
+        })
+      end
+    end
+    if #entries == 0 then
+      vim.notify("pinvim: no queued comments", vim.log.levels.INFO)
+      return false
+    end
+    vim.fn.setqflist({}, " ", { title = "pinvim comments", items = entries })
+    local ok = pcall(function() require("trouble").open("qflist") end)
+    if not ok then vim.cmd("copen") end
     return true
   end
 
@@ -2958,6 +3052,7 @@ function M.setup(opts)
 
       local ok = api.send_prompt(payload, { silent = false })
       if ok then
+        clear_compose_marks()
         compose_queue = {}
         vim.notify("pinvim: compose queue sent", vim.log.levels.INFO)
       end
@@ -2972,6 +3067,7 @@ function M.setup(opts)
 
   function api.compose_clear()
     local count = #compose_queue
+    clear_compose_marks()
     compose_queue = {}
     vim.notify(string.format("pinvim: cleared %d queued item(s)", count), vim.log.levels.INFO)
     return true
