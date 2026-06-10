@@ -1837,6 +1837,8 @@ function Commands.setup(api, config)
 
   local function compose_clear_command() api.compose_clear() end
 
+  local function compose_comment_command(command_opts) api.compose_comment(command_opts) end
+
   local function status_command()
     local info = api.info()
     local health = api.health()
@@ -2109,6 +2111,25 @@ function Commands.setup(api, config)
   vim.api.nvim_create_user_command("PiClear", compose_clear_command, {
     desc = "Clear pinvim compose queue",
   })
+
+  vim.api.nvim_create_user_command("PiComment", compose_comment_command, {
+    range = true,
+    desc = "Annotate selection or cursor line and add to pinvim compose queue",
+  })
+
+  vim.keymap.set(
+    "n",
+    "gpc",
+    function() api.compose_comment() end,
+    { silent = true, desc = "pinvim comment on cursor line (queued)" }
+  )
+
+  vim.keymap.set(
+    "x",
+    "gpc",
+    function() api.compose_comment({ range = true }) end,
+    { silent = true, desc = "pinvim comment on selection (queued)" }
+  )
 
   vim.keymap.set(
     "n",
@@ -2871,6 +2892,42 @@ function M.setup(opts)
     return true
   end
 
+  --- Capture selection (or cursor line) plus a typed comment, queue both as one
+  --- annotated context item. Flush with :PiFlush / gpF like any compose item.
+  function api.compose_comment(command_opts)
+    local file = vim.api.nvim_buf_get_name(0)
+    if file == "" then
+      vim.notify("pinvim: no file to comment on", vim.log.levels.WARN)
+      return false
+    end
+
+    local rel_path = vim.fn.fnamemodify(file, ":~:.")
+    local selection, start_row, end_row = get_command_selection(command_opts)
+    if not (selection and start_row and end_row) then
+      local cursor = vim.api.nvim_win_get_cursor(0)
+      start_row, end_row = cursor[1], cursor[1]
+      selection = vim.api.nvim_buf_get_lines(0, start_row - 1, start_row, false)[1] or ""
+    end
+
+    local filetype = vim.bo.filetype
+    vim.ui.input({ prompt = "comment: " }, function(input)
+      if input == nil or vim.trim(input) == "" then
+        vim.notify("pinvim: comment cancelled", vim.log.levels.INFO)
+        return
+      end
+      table.insert(compose_queue, {
+        type = "selection",
+        content = selection,
+        file = rel_path,
+        range = { start_row, end_row },
+        filetype = filetype,
+        note = input,
+      })
+      vim.notify(string.format("pinvim: queued comment %d", #compose_queue), vim.log.levels.INFO)
+    end)
+    return true
+  end
+
   function api.compose_flush(prompt)
     local function send_now(message)
       local parts = {}
@@ -2883,6 +2940,9 @@ function M.setup(opts)
           table.insert(parts, string.format("```%s", item.filetype or ""))
           table.insert(parts, item.content)
           table.insert(parts, "```")
+          if item.note and vim.trim(item.note) ~= "" then
+            table.insert(parts, string.format("Comment %d: %s", idx, item.note))
+          end
         elseif item.type == "file" then
           table.insert(parts, string.format("Context %d - File: %s", idx, item.content))
         end

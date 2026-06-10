@@ -276,7 +276,7 @@ Pinvim visual mappings use Neovim `x` mode, so Lua callbacks may run after Visua
 
 Selection capture must first try live Visual state for command-line usage, then fall back to `'<`/`'>` marks plus `visualmode()` for `x` mappings.
 
-Selection-bearing actions (`gpa`, `gps`, `gpp`, `:PiSend`, and `:PiAdd`) route through explicit-send payloads. Prompt text added by `gps` is stored as `context.userInput` on that same explicit payload so pi receives normal pinvim context/metadata plus user text.
+Selection-bearing actions (`gpa`, `gps`, `gpp`, `:PiSend`, and `:PiAdd`) route through explicit-send payloads. `gpc` / `:PiComment` captures the selection (or cursor line) plus a typed annotation into the compose queue as a `note`-carrying item; `:PiFlush` renders each annotated item as a fenced context block followed by `Comment N:` text and sends the whole queue as one prompt, so multiple doc comments arrive as a single reviewable payload. Prompt text added by `gps` is stored as `context.userInput` on that same explicit payload so pi receives normal pinvim context/metadata plus user text.
 
 Explicit-send delivery has two modes. `gpa` and `:PiSend` use `delivery = "attach"`, so pi stores the latest formatted Neovim context, shows pending-context status, and injects it exactly once into the next non-extension user prompt. `gps` uses `delivery = "prompt"`, so it still sends context plus prompt immediately and intentionally starts an agent turn. Pending attach context expires after a short TTL and is replaced by newer attach sends; expired context is cleared instead of silently reused.
 
