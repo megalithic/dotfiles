@@ -16,9 +16,6 @@ let
     name:
     programEntries.${name} == "directory"
     && builtins.pathExists ./programs/${name}/default.nix
-    # claude-code is a parked legacy module: it references pkgs.llm-agents,
-    # which is no longer imported by the flake.
-    && (name != "claude-code")
     # worktrunk depends on an optional flake input.
     && (name != "worktrunk" || inputs ? worktrunk)
   ) (builtins.attrNames programEntries);
