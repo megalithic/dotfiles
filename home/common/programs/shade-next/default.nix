@@ -21,8 +21,8 @@ let
     font_family = "SF Pro Text"
     font_size = 22
     line_height = 1.3
-    compact_width = 920
-    compact_height = 120
+    compact_width = 900
+    compact_height = 104
     expanded_height = 560
     results_height = 480
     panel_padding = 24

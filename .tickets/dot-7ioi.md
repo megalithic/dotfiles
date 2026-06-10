@@ -1,6 +1,6 @@
 ---
 id: dot-7ioi
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-06-10T16:42:30Z
@@ -21,3 +21,9 @@ Add a prerequisite before dot-d5j1 that settles the shade-next panel's core user
 3. Verify compact launcher keeps Enter=commit while expanded composer reserves cmd+enter for commit in the design, without requiring Nvim embedding yet.
 4. Confirm current shade workflow and existing shade-next Hammerspoon bindings remain untouched unless explicitly covered.
 5. Run the narrowest available shade-next validation or document why validation must wait for the app repo/build context.
+
+## Notes
+
+**2026-06-10T16:56:41Z**
+
+Implemented shade-next panel workflow prerequisite: compact geometry is now 900x104, panel overview renders drafts/recent history/previews from SQLite, README documents compact/expanded/search/prefill workflow, --panel-dump and --overview-dump verify geometry and overview rows, and dot-7yvx tracks full image conversion preview follow-up.
