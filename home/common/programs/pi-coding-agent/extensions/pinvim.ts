@@ -220,6 +220,12 @@ interface PromptPayload {
   message: string;
 }
 
+interface FillPromptPayload {
+  type: "fill_prompt";
+  text: string;
+  focus?: boolean;
+}
+
 type ExplicitDelivery = "attach" | "prompt";
 
 interface ExplicitSendPayload {
@@ -264,6 +270,7 @@ type Payload =
   | HeartbeatPayload
   | PingPayload
   | PromptPayload
+  | FillPromptPayload
   | ExplicitSendPayload
   | TelegramPayload
   | TellPayload;
@@ -427,6 +434,9 @@ const isPingPayload = (p: Payload): p is PingPayload =>
 
 const isPromptPayload = (p: Payload): p is PromptPayload =>
   hasType(p) && p.type === "prompt";
+
+const isFillPromptPayload = (p: Payload): p is FillPromptPayload =>
+  hasType(p) && p.type === "fill_prompt";
 
 const isExplicitSendPayload = (p: Payload): p is ExplicitSendPayload =>
   hasType(p) && p.type === "explicit_send";
@@ -939,7 +949,14 @@ const buildHelloAck = (): HelloAckPayload => ({
   type: "hello_ack",
   protocol: "pinvim.peer.v1",
   peer: buildPinvimPeerIdentity(),
-  accepts: ["hello", "heartbeat", "ping", "prompt", "explicit_send"],
+  accepts: [
+    "hello",
+    "heartbeat",
+    "ping",
+    "prompt",
+    "fill_prompt",
+    "explicit_send",
+  ],
 });
 
 const formatExplicitContext = (
@@ -1459,6 +1476,13 @@ const deliverMessage = (pi: ExtensionAPI, message: string): void => {
   }
 };
 
+const focusOwnTmuxPane = (): void => {
+  if (!PI_PANE && !process.env.TMUX_PANE) return;
+  const pane = PI_PANE || process.env.TMUX_PANE;
+  if (!pane) return;
+  execFile("tmux", ["select-pane", "-t", pane], { timeout: 500 }, () => {});
+};
+
 const changedPathFromToolEvent = (
   event: { input?: unknown },
   cwd: string,
@@ -1671,6 +1695,25 @@ const handleSocketPayload = (
       deliverMessage(pi, formatExplicitContext(payload, "prompt"));
       respondOk(socket, { delivery: "prompt" });
     }
+    return;
+  }
+
+  // @lat: [[lat#Dotfiles architecture#Pi runtime settings]]
+  if (isFillPromptPayload(payload)) {
+    if (typeof payload.text !== "string") {
+      respondError(socket, "fill_prompt text must be a string");
+      return;
+    }
+    if (!latestCtx) {
+      respondError(socket, "Pi UI context is not ready");
+      return;
+    }
+    latestCtx.ui.setEditorText(payload.text);
+    if (payload.focus !== false) focusOwnTmuxPane();
+    respondOk(socket, {
+      type: "fill_prompt",
+      focused: payload.focus !== false,
+    });
     return;
   }
 
