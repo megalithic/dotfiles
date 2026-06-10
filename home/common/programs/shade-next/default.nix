@@ -44,6 +44,7 @@ let
       launch = {
         repo = "${home}/code/shade-next",
         config = "${configHome}/shade-next/config.toml",
+        socket = "${home}/.local/state/shade-next/shade-next.sock",
         binaries = {
           debug = "${home}/code/shade-next/.build/debug/shade-next",
           release = "${home}/code/shade-next/.build/release/shade-next",
@@ -52,6 +53,12 @@ let
       chords = {
         toggle = { mods = { "cmd" }, key = "return" },
         search = { mods = { "cmd" }, key = "f" },
+      },
+      -- Hyper chords that launch/focus shade-next prefilled with a route.
+      -- mods are extra modifiers on top of Hyper; key is the trigger.
+      prefills = {
+        { mods = { }, key = "p", route = "pi", focus = true },
+        { mods = { }, key = "n", route = "note", focus = true },
       },
     }
   '';
