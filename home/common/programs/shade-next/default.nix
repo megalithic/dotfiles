@@ -28,6 +28,9 @@ let
     panel_padding = 24
     corner_radius = 24
     row_spacing = 6
+    border_width = 1.0
+    border_color = "#FFFFFF22"
+    dim_unfocused = 0.85
 
     [keys]
     commit = "cmd+enter"
