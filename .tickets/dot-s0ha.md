@@ -1,6 +1,6 @@
 ---
 id: dot-s0ha
-status: open
+status: closed
 deps: 4:1:deps: [, dot-rmen]
 links: []
 created: 2026-06-10T14:37:21Z
@@ -46,3 +46,13 @@ Verification:
 5. Unfocused dimming is implemented: losing key/focus lowers panel opacity to a configured value; gaining focus restores full opacity.
 6. Relevant visual defaults are configurable and wired through VisualConfig/default Nix config when needed.
 7. `swift build` and `swift test` pass in ~/code/shade-next; `just validate home` passes if dotfiles config changed.
+
+## Notes
+
+**2026-06-10T14:54:07Z**
+
+Implemented. shade-next commit 3ff603e, dotfiles 976196640. Changes: panel.isOpaque=false (real .behindWindow vibrancy + truly clear out-of-radius corners); invalidateShadow() after content install + per-frame in positionPanel; hairline layer border; key/resign-key observers animate alphaValue for Shade-like unfocused dimming. Pure PanelStyle in core (alpha math, RGBA hex parse #RGB/#RRGGBB/#RRGGBBAA, border/dim gating) fed from VisualConfig [ui] keys border_width/border_color/dim_unfocused; nix [ui] defaults border_width=1.0 border_color=#FFFFFF22 dim_unfocused=0.85. Tests: new PanelStyleTests + VisualConfig polish-key assertions, 68/68 pass; swift build clean; just validate home passes. Remaining: live on-screen visual confirmation (window compositing not unit-testable).
+
+**2026-06-10T15:13:05Z**
+
+Visual follow-up from user video: isOpaque/cornerRadius fix left opaque WHITE square corners + square shadow because NSVisualEffectView vibrancy backdrop ignores layer cornerRadius/masksToBounds. Fixed in shade-next d49fde4 with resizable rounded-rect maskImage (capInsets stretch) clipping the material itself -> corners truly transparent, shadow follows rounded shape. Rebuilt+rebundled+relaunched; screenshot-verified rounded/transparent corners with table content blurred through and soft shadow.

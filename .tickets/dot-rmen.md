@@ -1,6 +1,6 @@
 ---
 id: dot-rmen
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-06-10T14:37:21Z
@@ -39,3 +39,9 @@ Verification:
 3. Findings name exact files/functions to change for implementation.
 4. Findings include recommended config keys/defaults if new visual settings are needed.
 5. No code changes are required for this audit ticket.
+
+## Notes
+
+**2026-06-10T14:49:05Z**
+
+Audit complete. Root causes: (1) panel.isOpaque never set false -> opaque backing kills .behindWindow vibrancy = flat gray (PRIMARY); (2) square corners show because opaque window draws out-of-radius pixels opaque; (3) hasShadow set but never invalidateShadow() after rounding/frame; (4) no border stroke; (5) no didBecomeKey/didResignKey observers -> no focus dimming. Spec: ~/.local/share/pi/docs/.dotfiles/shade-next-visual-polish-audit.md
