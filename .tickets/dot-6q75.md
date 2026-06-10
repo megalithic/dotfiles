@@ -9,6 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # pi-wrapper migration: extend update-npm-pkg.sh with fetchFromGitHub + fetchurl dispatch
 
 Step 6 of pi-wrapper-fetchfromgithub-extensions plan.
@@ -26,6 +27,7 @@ Keep pi-internet as manual-only (no release tags). Document in script comments.
 Verify deleted wrapper packages (pi-multi-pass, pi-synthetic-provider, pi-internet, pi-mcp-adapter) are removed from PNAME_MAP (already done in steps 2-5; confirm).
 
 Files:
+
 - home/common/programs/pi-coding-agent/scripts/update-npm-pkg.sh — add 3 functions + GITHUB_PKG_MAP + dispatch
 
 Depends on steps 2-5 (those packages must already be migrated).
@@ -40,4 +42,3 @@ Depends on steps 2-5 (those packages must already be migrated).
 6. just update-npm pi-multi-pass exits 0 and updates rev/hash (or reports already-latest)
 7. just update-npm pi-synthetic-provider exits 0 and updates url/hash (or reports already-latest)
 8. just update-npm (no arg) iterates over all manageable packages without errors and skips pi-internet with a clear 'manual-only' note
-

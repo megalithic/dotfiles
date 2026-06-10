@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-kts9
 tags: [ready-for-development]
 ---
+
 # Upgrade pi.lua: persistent connection, cwd discovery, live context sync, compose mode
 
 Major upgrade to config/nvim/after/plugin/pi.lua blending carderne/pi-nvim
@@ -18,20 +19,23 @@ features with existing functionality.
 ## Changes
 
 ### Connection (replace nc with vim.uv.new_pipe)
+
 - Persistent bidirectional connection via vim.uv.new_pipe()
 - Parse JSON responses from bridge.ts (ok/error handling)
 - Auto-reconnect on connection loss
 - Connection health via ping/pong
 
 ### Discovery (add cwd-based alongside tmux-session)
-- Scan /tmp/pi-nvim-sockets/*.info for cwd-based socket discovery
+
+- Scan /tmp/pi-nvim-sockets/\*.info for cwd-based socket discovery
 - Prefer cwd match, fall back to tmux-session pattern, then latest
 - Keep existing tmux-session pattern as fallback
 
 ### Live context sync (new)
+
 - Configurable autocmd events table at top of config:
   config.live_context.events = { 'BufEnter', 'BufWritePost', 'InsertLeave',
-    'ModeChanged', 'CursorMoved' }
+  'ModeChanged', 'CursorMoved' }
 - config.live_context.enabled = true/false
 - config.live_context.debounce_ms = 150
 - config.live_context.include_buffer_text = false
@@ -41,20 +45,24 @@ features with existing functionality.
 - Sends: file, absFile, filetype, modified, buftype, cursor, selection
 
 ### Compose/queue mode (new, from carderne)
+
 - PiAdd command: queue context reference without sending
 - PiFlush command: prompt for text, send all queued + prompt
 - PiClear command: clear queue
 - Queue count shown in statusline
 
 ### Raw prompt (new)
+
 - PiPrompt command: send raw prompt string to pi
 - No file/selection context, just text
 
 ### Auto-reload (new, from carderne)
+
 - checktime polling when connected (1s interval)
 - Only when pi socket is reachable
 
 ### Retained features (all existing)
+
 - In-process LSP code actions (add to context, send selection, ask pi, send with diagnostics)
 - Context tracking with timestamps
 - tmux-toggle-pi integration + bell on agent pane
@@ -74,7 +82,7 @@ features with existing functionality.
 
 1. pi.lua uses vim.uv.new_pipe(true) (IPC mode) for socket communication (no nc)
 2. pi.lua parses JSON responses and notifies on errors
-3. pi.lua discovers sockets via /tmp/pi-nvim-sockets/*.info (cwd match)
+3. pi.lua discovers sockets via /tmp/pi-nvim-sockets/\*.info (cwd match)
 4. pi.lua falls back to tmux-session pattern if no cwd match
 5. config table at top includes live_context section with events list
 6. Editor state synced on configured autocmd events, debounced
@@ -103,6 +111,7 @@ features with existing functionality.
 ## Validation & Testing
 
 ### Connection (vim.uv.new_pipe)
+
 - Open nvim with pi running → `:PiStatus` shows connected with session name
 - Kill pi process → statusline updates to disconnected within ~5s
 - Restart pi → auto-reconnect restores connection (watch `:messages` for reconnect notifications)
@@ -110,6 +119,7 @@ features with existing functionality.
 - Send selection while disconnected → queued message notification, delivered on reconnect
 
 ### Discovery (cwd-based)
+
 - `cat /tmp/pi-nvim-sockets/*.info` — verify manifest exists with correct cwd
 - Open nvim in same cwd as pi → auto-discovers correct socket (`:PiStatus`)
 - Open nvim in different cwd → falls back to tmux-session pattern
@@ -117,6 +127,7 @@ features with existing functionality.
 - No pi sessions → graceful "not connected" in statusline
 
 ### Live context sync
+
 - Enable: confirm `config.live_context.enabled = true` in config block
 - Switch buffers → bridge.ts receives `editor_state` (check pi debug log or add temp log)
 - Save file → editor_state sent with updated modified flag
@@ -124,6 +135,7 @@ features with existing functionality.
 - Disable: set `config.live_context.enabled = false` → no editor_state messages sent
 
 ### Compose mode (PiAdd/PiFlush/PiClear)
+
 - `:PiAdd` in visual mode → "Queued 1 item" notification, statusline shows queue count
 - `:PiAdd` on multiple selections → queue count increments
 - `:PiFlush` → prompts for text, sends all queued items + prompt to pi, queue clears
@@ -131,21 +143,25 @@ features with existing functionality.
 - `:PiFlush` with empty queue → sends just the prompt text
 
 ### Raw prompt (PiPrompt)
+
 - `:PiPrompt hello` → sends "hello" directly to pi (appears in pi conversation)
 - `:PiPrompt` (no args) → prompts for input, then sends
 - Empty input → no message sent
 
 ### Auto-reload (checktime)
+
 - Pi edits a file open in nvim → buffer reloads automatically (no manual `:e!`)
 - Disconnect pi → checktime polling stops (no wasted cycles)
 - Verify interval: should poll every 5s (not 1s) — check with `:lua print(vim.inspect(config))`
 
 ### Statusline
+
 - Connected: icon + session name + context count + queue count visible
 - Disconnected: dimmed icon only
 - Reconnecting: icon with "..." or similar indicator
 
 ### Tmux toggle integration
+
 - `<localleader>pp` toggles pi pane that matches active socket target
 - If no pi exists for target → creates new one
 - If pi.lua targets `pi-mega-agent.sock` → toggle shows agent window pane (not random π pane)
@@ -154,10 +170,10 @@ features with existing functionality.
 - Stale sockets (dead pid) skipped in discovery, reported by `:PiHealth`
 
 ### Retained features (regression check)
+
 - `<localleader>ps` (visual) → sends selection with task prompt
 - `<localleader>pf` → adds file to context
 - `<localleader>pp` → toggles pi tmux pane
 - `<localleader>pn` → opens session picker
 - `:PiLspStart` / `:PiLspAttach` → code actions appear in LSP menu
 - `vim.b.pi_target_socket = "/tmp/pi-other.sock"` → overrides auto-discovery for that buffer
-

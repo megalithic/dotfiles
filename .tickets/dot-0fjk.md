@@ -9,7 +9,7 @@ priority: 1
 assignee: Seth Messer
 tags: [epic, pi-coding-agent, tk, tickets]
 ---
+
 # Pi coding agent ecosystem
 
 Umbrella epic for all pi coding agent, tk/tickets workflow, and nvim↔pi integration work.
-

@@ -10,12 +10,14 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Support project-level MCP config via .pi/mcp.json
 
 ## Context: Nix-based dotfiles
 
 All work is in `~/.dotfiles`, managed via Nix. **Do not assume npm/pnpm are globally installed.**
 Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` for exact build patterns:
+
 1. Simple extensions/skills: Auto-load (no build step).
 2. npm-dependent extensions: Use Nix `buildNpmPackage` patterns (A, B, C, D).
 3. Need ad-hoc tools? Use `nix run nixpkgs#nodejs -- npm install` or `nix shell nixpkgs#pnpm`.
@@ -25,17 +27,20 @@ Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` 
 pi-mcp-adapter already supports project-level .pi/mcp.json (in cwd) that overrides global ~/.pi/agent/mcp.json. But we don't use this yet.
 
 Current state:
+
 - Global mcp.json in ~/.pi/agent/mcp.json has tidewave + paper + context7
 - tidewave is rx-specific, paper is canonize-specific
 - Neither works reliably because they're global but the servers are project-local
 
 Otahontas pattern (devenv-base ai module — now consumed via fork [`github:megalithic/devenv-base`](https://github.com/megalithic/devenv-base) in megadots):
+
 - Base mcp.json with global servers (context7)
 - devenv-base.ai.mcp.extraServers nix option for per-project additions
 - enter-shell.sh symlinks merged mcp.json to .pi/mcp.json in project root
 - pi-mcp-adapter auto-discovers project .pi/mcp.json in cwd
 
 Implementation:
+
 1. Move tidewave out of global mcp.json into rx repo .pi/mcp.json
 2. Move paper out of global mcp.json into canonize repo .pi/mcp.json
 3. Keep only truly global servers (context7) in ~/.pi/agent/mcp.json
@@ -53,4 +58,3 @@ See: home/common/programs/ai/pi-coding-agent/mcp.json
 4. Running /mcp in rx pi session shows tidewave connected (when Phoenix running)
 5. Running /mcp in mega pi session does NOT show tidewave
 6. Existing global MCP servers still work in all sessions
-

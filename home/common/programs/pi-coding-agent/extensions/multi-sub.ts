@@ -2568,6 +2568,7 @@ class PoolManager {
   private pi: ExtensionAPI;
   private cascadeState: FailoverCascadeState | null = null;
   private suppressNextStartTurn = false;
+  private failoverSwitchInFlight = false;
   private activePresetName: string | undefined;
 
   constructor(pi: ExtensionAPI) {
@@ -2576,6 +2577,14 @@ class PoolManager {
 
   setActivePresetName(presetName: string | undefined): void {
     this.activePresetName = presetName;
+  }
+
+  getActivePresetName(): string | undefined {
+    return this.activePresetName;
+  }
+
+  isFailoverSwitchInFlight(): boolean {
+    return this.failoverSwitchInFlight;
   }
 
   private getOrCreatePoolState(poolName: string): PoolState {
@@ -3186,7 +3195,13 @@ class PoolManager {
       return false;
     }
 
-    const success = await this.pi.setModel(nextModel);
+    let success = false;
+    this.failoverSwitchInFlight = true;
+    try {
+      success = await this.pi.setModel(nextModel);
+    } finally {
+      this.failoverSwitchInFlight = false;
+    }
     if (!success) {
       ctx.ui.notify(
         `[pool:${nextCandidate.poolName}] ${nextCandidate.provider} skipped (authentication unavailable during switch); cascade exhausted; no later eligible target`,
@@ -5035,6 +5050,15 @@ function formatFailoverTarget(
   return `${candidate.provider} (${candidate.modelId})`;
 }
 
+function formatActiveModelStatus(
+  model: Model<Api> | undefined,
+  presetName?: string,
+): string {
+  const preset = presetName ? `preset:${presetName} | ` : "";
+  if (!model) return `${preset}no active model`;
+  return `${preset}active ${model.provider} (${model.id})`;
+}
+
 function formatFailoverStatus(
   candidate: Pick<
     FailoverCandidate,
@@ -6575,7 +6599,14 @@ export default function multiSub(pi: ExtensionAPI) {
   });
 
   pi.on("model_select", async (_event, ctx) => {
-    await enforceProjectRestriction(ctx, "model");
+    const ok = await enforceProjectRestriction(ctx, "model");
+    if (ok && !poolManager.isFailoverSwitchInFlight()) {
+      poolManager.clearCascadeState();
+      ctx.ui.setStatus(
+        "multi-pass",
+        formatActiveModelStatus(ctx.model, poolManager.getActivePresetName()),
+      );
+    }
   });
 
   pi.on("input", async (event, ctx) => {

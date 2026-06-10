@@ -4,7 +4,8 @@
   config,
   pkgs,
   ...
-}: let
+}:
+let
   notmuchPreNew = pkgs.writeShellScript "notmuch-pre-new_remove_tagged_deleted" ''
     #!/usr/bin/env bash
 
@@ -43,7 +44,8 @@
     # Mark automated emails
     ${pkgs.notmuch}/bin/notmuch tag +automated -- from:noreply or from:no-reply or from:donotreply
   '';
-in {
+in
+{
   programs.notmuch = {
     enable = true;
 

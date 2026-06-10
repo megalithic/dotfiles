@@ -2,6 +2,7 @@
 {
   git-hooks.hooks.typos.enable = lib.mkForce false;
 
+  devenv-base.gitignore.enable = false;
   devenv-base.treefmt = {
     settings.global.excludes = [
       "config/nvim/spell/en.utf-8.add"
@@ -9,10 +10,14 @@
       "home/common/programs/pi-coding-agent/packages/pi-acp/**"
     ];
     programs = {
-      fish_indent.enable = true;
+      # Comment out or remove formatters you don't want
+      # fish_indent.enable = true;
+      # nixpkgs-fmt.enable = true;
+      # prettier.enable = true;
+      # shfmt.enable = true;
+      # biome.enable = true;
     };
   };
-  devenv-base.gitignore.enable = false;
 
   tasks = {
     "home:apply" = {

@@ -9,7 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [epic, hammerspoon, macos]
 ---
+
 # Hammerspoon automation
 
 Ongoing epic for Hammerspoon-related work: window management, audio, sensors, and macOS automation.
-

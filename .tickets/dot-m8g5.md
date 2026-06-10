@@ -10,6 +10,7 @@ assignee: Seth Messer
 tags:
   - ready-for-development
 ---
+
 # Fix pinvim.ts and pi.lua stale context cleanup when nvim exits
 
 When nvim closes, pinvim.ts keeps showing the last editor state in the footer
@@ -73,11 +74,13 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
 ### 2. bridge.ts — handle disconnect message + track editor sockets
 
 **a) Add `editor_disconnect` payload type:**
+
 - Add type guard `isEditorDisconnectPayload`
 - In message handler, when received: `pi.events.emit("pinvim:editor_disconnect")`
   and `respondOk(socket)`
 
 **b) Track editor sockets for crash detection:**
+
 - Maintain a `Set<net.Socket>` called `editorSockets`
 - When `editor_state` is received, add the socket to the set
 - When `editor_disconnect` is received, remove from set
@@ -99,6 +102,7 @@ socket.on("close", () => {
 ### 3. pinvim.ts — handle disconnect + reduce stale timeout
 
 **a) Listen for disconnect event:**
+
 ```typescript
 pi.events.on("pinvim:editor_disconnect", () => {
   editorState = null;
@@ -125,12 +129,12 @@ socket routing correctness.
 4. Reconnecting nvim restores the footer as before
 5. No regressions in live context sync during normal nvim usage
 
-
 ## Notes
 
 **2026-04-17T16:49:34Z**
 
 Implemented in 3 files:
+
 - pi.lua: send editor_disconnect msg in VimLeavePre before closing pipe
 - bridge.ts: handle editor_disconnect payload + track editor sockets via Set<net.Socket>, emit pinvim:editor_disconnect on socket close (crash detection)
 - pinvim.ts: listen for pinvim:editor_disconnect to clear state, reduced STALE_MS from 5min to 60s as safety net

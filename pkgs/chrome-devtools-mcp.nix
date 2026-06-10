@@ -44,7 +44,7 @@ buildNpmPackage {
     homepage = "https://github.com/ChromeDevTools/chrome-devtools-mcp";
     changelog = "https://github.com/ChromeDevTools/chrome-devtools-mcp/releases";
     license = lib.licenses.asl20;
-    maintainers = [];
+    maintainers = [ ];
     platforms = lib.platforms.linux ++ lib.platforms.darwin;
     mainProgram = "chrome-devtools-mcp";
   };

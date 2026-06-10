@@ -19,9 +19,7 @@
         "parameters": [
           " * mapping - A table containing hotkey modifier/key details for the following (optional) items:\n   * show - This will cause Seal's UI to be shown\n   * toggle - This will cause Seal's UI to be shown or hidden depending on its current state"
         ],
-        "returns": [
-          " * The Seal object"
-        ],
+        "returns": [" * The Seal object"],
         "signature": "Seal:bindHotkeys(mapping)",
         "stripped_doc": "",
         "type": "Method"
@@ -66,9 +64,7 @@
         "parameters": [
           " * plugins - A list containing the names of plugins to load"
         ],
-        "returns": [
-          " * The Seal object"
-        ],
+        "returns": [" * The Seal object"],
         "signature": "Seal:loadPlugins(plugins)",
         "stripped_doc": "",
         "type": "Method"
@@ -84,12 +80,8 @@
         "notes": [
           " * Most Seal plugins expose a static list of commands (if any), which are registered at the time the plugin is loaded. This method is used for plugins which expose a dynamic or changing (e.g. depending on configuration) list of commands."
         ],
-        "parameters": [
-          " * None"
-        ],
-        "returns": [
-          " * The Seal object"
-        ],
+        "parameters": [" * None"],
+        "returns": [" * The Seal object"],
         "signature": "Seal:refreshAllCommands()",
         "stripped_doc": "",
         "type": "Method"
@@ -108,9 +100,7 @@
         "parameters": [
           " * plugin_name - the name of the plugin. Should be the name as passed to `loadPlugins()` or `loadPluginFromFile`."
         ],
-        "returns": [
-          " * The Seal object"
-        ],
+        "returns": [" * The Seal object"],
         "signature": "Seal:refreshCommandsForPlugin(plugin_name)",
         "stripped_doc": "",
         "type": "Method"
@@ -129,9 +119,7 @@
         "parameters": [
           " * query - An optional string to pre-populate the query box with"
         ],
-        "returns": [
-          " * None"
-        ],
+        "returns": [" * None"],
         "signature": "Seal:show(query)",
         "stripped_doc": "",
         "type": "Method"
@@ -145,12 +133,8 @@
         "lineno": "190",
         "name": "start",
         "notes": [],
-        "parameters": [
-          " * None"
-        ],
-        "returns": [
-          " * The Seal object"
-        ],
+        "parameters": [" * None"],
+        "returns": [" * The Seal object"],
         "signature": "Seal:start()",
         "stripped_doc": "",
         "type": "Method"
@@ -166,12 +150,8 @@
         "notes": [
           " * Some Seal plugins will continue performing background work even after this call (e.g. Spotlight searches)"
         ],
-        "parameters": [
-          " * None"
-        ],
-        "returns": [
-          " * The Seal object"
-        ],
+        "parameters": [" * None"],
+        "returns": [" * The Seal object"],
         "signature": "Seal:stop()",
         "stripped_doc": "",
         "type": "Method"
@@ -188,9 +168,7 @@
         "parameters": [
           " * query - An optional string to pre-populate the query box with"
         ],
-        "returns": [
-          " * None"
-        ],
+        "returns": [" * None"],
         "signature": "Seal:toggle(query)",
         "stripped_doc": "",
         "type": "Method"
@@ -215,9 +193,7 @@
         "file": "Source/Seal.spoon//init.lua",
         "lineno": "37",
         "name": "queryChangedTimerDuration",
-        "notes": [
-          " * Defaults to 0.02s (20ms)."
-        ],
+        "notes": [" * Defaults to 0.02s (20ms)."],
         "signature": "Seal.queryChangedTimerDuration",
         "stripped_doc": "",
         "type": "Variable"
@@ -238,9 +214,7 @@
         "parameters": [
           " * mapping - A table containing hotkey modifier/key details for the following (optional) items:\n   * show - This will cause Seal's UI to be shown\n   * toggle - This will cause Seal's UI to be shown or hidden depending on its current state"
         ],
-        "returns": [
-          " * The Seal object"
-        ],
+        "returns": [" * The Seal object"],
         "signature": "Seal:bindHotkeys(mapping)",
         "stripped_doc": "",
         "type": "Method"
@@ -285,9 +259,7 @@
         "parameters": [
           " * plugins - A list containing the names of plugins to load"
         ],
-        "returns": [
-          " * The Seal object"
-        ],
+        "returns": [" * The Seal object"],
         "signature": "Seal:loadPlugins(plugins)",
         "stripped_doc": "",
         "type": "Method"
@@ -310,9 +282,7 @@
         "file": "Source/Seal.spoon//init.lua",
         "lineno": "37",
         "name": "queryChangedTimerDuration",
-        "notes": [
-          " * Defaults to 0.02s (20ms)."
-        ],
+        "notes": [" * Defaults to 0.02s (20ms)."],
         "signature": "Seal.queryChangedTimerDuration",
         "stripped_doc": "",
         "type": "Variable"
@@ -328,12 +298,8 @@
         "notes": [
           " * Most Seal plugins expose a static list of commands (if any), which are registered at the time the plugin is loaded. This method is used for plugins which expose a dynamic or changing (e.g. depending on configuration) list of commands."
         ],
-        "parameters": [
-          " * None"
-        ],
-        "returns": [
-          " * The Seal object"
-        ],
+        "parameters": [" * None"],
+        "returns": [" * The Seal object"],
         "signature": "Seal:refreshAllCommands()",
         "stripped_doc": "",
         "type": "Method"
@@ -352,9 +318,7 @@
         "parameters": [
           " * plugin_name - the name of the plugin. Should be the name as passed to `loadPlugins()` or `loadPluginFromFile`."
         ],
-        "returns": [
-          " * The Seal object"
-        ],
+        "returns": [" * The Seal object"],
         "signature": "Seal:refreshCommandsForPlugin(plugin_name)",
         "stripped_doc": "",
         "type": "Method"
@@ -373,9 +337,7 @@
         "parameters": [
           " * query - An optional string to pre-populate the query box with"
         ],
-        "returns": [
-          " * None"
-        ],
+        "returns": [" * None"],
         "signature": "Seal:show(query)",
         "stripped_doc": "",
         "type": "Method"
@@ -389,12 +351,8 @@
         "lineno": "190",
         "name": "start",
         "notes": [],
-        "parameters": [
-          " * None"
-        ],
-        "returns": [
-          " * The Seal object"
-        ],
+        "parameters": [" * None"],
+        "returns": [" * The Seal object"],
         "signature": "Seal:start()",
         "stripped_doc": "",
         "type": "Method"
@@ -410,12 +368,8 @@
         "notes": [
           " * Some Seal plugins will continue performing background work even after this call (e.g. Spotlight searches)"
         ],
-        "parameters": [
-          " * None"
-        ],
-        "returns": [
-          " * The Seal object"
-        ],
+        "parameters": [" * None"],
+        "returns": [" * The Seal object"],
         "signature": "Seal:stop()",
         "stripped_doc": "",
         "type": "Method"
@@ -432,9 +386,7 @@
         "parameters": [
           " * query - An optional string to pre-populate the query box with"
         ],
-        "returns": [
-          " * None"
-        ],
+        "returns": [" * None"],
         "signature": "Seal:toggle(query)",
         "stripped_doc": "",
         "type": "Method"
@@ -442,9 +394,7 @@
     ],
     "name": "Seal",
     "stripped_doc": "\nDownload: [https://github.com/Hammerspoon/Spoons/raw/master/Spoons/Seal.spoon.zip](https://github.com/Hammerspoon/Spoons/raw/master/Spoons/Seal.spoon.zip)\n\nSeal includes a number of plugins, which you can choose to load (see `:loadPlugins()` below):\n * apps : Launch applications by name\n * calc : Simple calculator\n * rot13 : Apply ROT13 substitution cipher\n * safari_bookmarks : Open Safari bookmarks (this is broken since at least High Sierra)\n * screencapture : Lets you take screenshots in various ways\n * urlformats : User defined URL formats to open\n * useractions : User defined custom actions\n * vpn : Connect and disconnect VPNs (currently supports Viscosity and macOS system preferences)A",
-    "submodules": [
-      "plugins"
-    ],
+    "submodules": ["plugins"],
     "type": "Module"
   },
   {
@@ -489,12 +439,8 @@
         "lineno": "105",
         "name": "restart",
         "notes": [],
-        "parameters": [
-          " * None"
-        ],
-        "returns": [
-          " * None"
-        ],
+        "parameters": [" * None"],
+        "returns": [" * None"],
         "signature": "Seal.plugins.apps:restart()",
         "stripped_doc": "",
         "type": "Method"
@@ -507,15 +453,9 @@
         "file": "Source/Seal.spoon//seal_apps.lua",
         "lineno": "70",
         "name": "start",
-        "notes": [
-          " * This is called automatically when the plugin is loaded"
-        ],
-        "parameters": [
-          " * None"
-        ],
-        "returns": [
-          " * None"
-        ],
+        "notes": [" * This is called automatically when the plugin is loaded"],
+        "parameters": [" * None"],
+        "returns": [" * None"],
         "signature": "Seal.plugins.apps:start()",
         "stripped_doc": "",
         "type": "Method"
@@ -529,12 +469,8 @@
         "lineno": "90",
         "name": "stop",
         "notes": [],
-        "parameters": [
-          " * None"
-        ],
-        "returns": [
-          " * None"
-        ],
+        "parameters": [" * None"],
+        "returns": [" * None"],
         "signature": "Seal.plugins.apps:stop()",
         "stripped_doc": "",
         "type": "Method"
@@ -582,12 +518,8 @@
         "lineno": "105",
         "name": "restart",
         "notes": [],
-        "parameters": [
-          " * None"
-        ],
-        "returns": [
-          " * None"
-        ],
+        "parameters": [" * None"],
+        "returns": [" * None"],
         "signature": "Seal.plugins.apps:restart()",
         "stripped_doc": "",
         "type": "Method"
@@ -600,15 +532,9 @@
         "file": "Source/Seal.spoon//seal_apps.lua",
         "lineno": "70",
         "name": "start",
-        "notes": [
-          " * This is called automatically when the plugin is loaded"
-        ],
-        "parameters": [
-          " * None"
-        ],
-        "returns": [
-          " * None"
-        ],
+        "notes": [" * This is called automatically when the plugin is loaded"],
+        "parameters": [" * None"],
+        "returns": [" * None"],
         "signature": "Seal.plugins.apps:start()",
         "stripped_doc": "",
         "type": "Method"
@@ -622,12 +548,8 @@
         "lineno": "90",
         "name": "stop",
         "notes": [],
-        "parameters": [
-          " * None"
-        ],
-        "returns": [
-          " * None"
-        ],
+        "parameters": [" * None"],
+        "returns": [" * None"],
         "signature": "Seal.plugins.apps:stop()",
         "stripped_doc": "",
         "type": "Method"

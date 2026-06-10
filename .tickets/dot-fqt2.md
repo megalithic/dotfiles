@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-fsxj
 tags: [ready-for-development]
 ---
+
 # Add jj-aware conventional-commit rule to sentinel.ts
 
 Add a new guard rule to extensions/sentinel.ts that blocks commit messages not matching conventional-commit format. Must cover BOTH jj and git invocations.
@@ -50,8 +51,6 @@ Hard block (CONFIRM level) per decision Q4 — user must type 'override' to bypa
 6. Block is CONFIRM level (user can override with 'override' keyword)
 7. 'just validate home' + 'just home' pass
 8. Manual test in pi session: 'jj dm "WIP"' via bash tool triggers confirm; 'jj dm "feat: test"' passes
-
-
 
 ---
 

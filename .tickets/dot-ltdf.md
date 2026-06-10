@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-wo6i
 tags: [nix, browser, sync, chromium, symlink]
 ---
+
 # Implement Chromium browser shared data via symlinks
 
 Enable shared bookmarks/cookies/history/logins between Chromium browsers.
@@ -17,6 +18,7 @@ Enable shared bookmarks/cookies/history/logins between Chromium browsers.
 Approach: Designate one browser as source (Helium after migration), symlink others to it.
 
 Implementation:
+
 1. Add sync.chromiumSharedData option (browsers = [brave brave-nightly helium], source = helium)
 2. Create activation script to symlink:
    - Bookmarks → source/Bookmarks
@@ -28,4 +30,3 @@ Implementation:
 5. Document caveats (browsers must be closed for initial setup)
 
 Dependency: Requires dot-myti (module relocation) complete first
-

@@ -10,7 +10,12 @@
  * Hardcoded rules remain for jj editor/message checks, secrets, nix-managed paths,
  * push/deploy/ssh, and package install guards.
  */
-import type { ExtensionAPI, ToolCallEvent, ToolCallEventResult, InputEventResult } from "@earendil-works/pi-coding-agent";
+import type {
+  ExtensionAPI,
+  ToolCallEvent,
+  ToolCallEventResult,
+  InputEventResult,
+} from "@earendil-works/pi-coding-agent";
 import { readFileSync, existsSync } from "fs";
 import { join, dirname } from "path";
 import { execSync, spawnSync } from "child_process";
@@ -34,10 +39,24 @@ interface BlockedState {
 
 // ── Config types ─────────────────────────────────────────────────────────────
 
-interface SubcommandEntry { flags: string[]; reason: string; }
-interface InteractiveCommand { _doc?: string; subcommands: Record<string, SubcommandEntry>; }
-interface AlwaysInteractiveEntry { reason: string; unless_args?: boolean; }
-interface ToolCorrection { use: string; reason: string; except_prefix?: string[]; only_if_root_dir?: string; }
+interface SubcommandEntry {
+  flags: string[];
+  reason: string;
+}
+interface InteractiveCommand {
+  _doc?: string;
+  subcommands: Record<string, SubcommandEntry>;
+}
+interface AlwaysInteractiveEntry {
+  reason: string;
+  unless_args?: boolean;
+}
+interface ToolCorrection {
+  use: string;
+  reason: string;
+  except_prefix?: string[];
+  only_if_root_dir?: string;
+}
 interface SentinelConfig {
   interactive_commands: Record<string, InteractiveCommand>;
   always_interactive: { commands: Record<string, AlwaysInteractiveEntry> };
@@ -52,9 +71,16 @@ let blocked: BlockedState | null = null;
 let overrideGranted = false;
 let overrideAt = 0;
 
-function log(msg: string) { console.log(`[sentinel] ${msg}`); }
-function resetOverride() { overrideGranted = false; overrideAt = 0; }
-function resetBlocked() { blocked = null; }
+function log(msg: string) {
+  console.log(`[sentinel] ${msg}`);
+}
+function resetOverride() {
+  overrideGranted = false;
+  overrideAt = 0;
+}
+function resetBlocked() {
+  blocked = null;
+}
 
 function grantOverride() {
   overrideGranted = true;
@@ -176,7 +202,7 @@ function cmdMatch(cmd: string, pattern: RegExp): boolean {
 
 /** Test if any of the given names appear as a command (first token of a segment). */
 function isCommand(cmd: string, ...names: string[]): boolean {
-  return commandNames(stripQuoted(cmd)).some(c => names.includes(c));
+  return commandNames(stripQuoted(cmd)).some((c) => names.includes(c));
 }
 
 /** Test if a multi-word prefix appears at command position in any segment. */
@@ -184,11 +210,14 @@ function isCommandPrefix(cmd: string, ...prefix: string[]): boolean {
   for (const seg of splitSegments(stripQuoted(cmd))) {
     const trimmed = seg.trim();
     if (!trimmed) continue;
-    const tokens = trimmed.split(/\s+/).filter(t => !/^\w+=/.test(t));
+    const tokens = trimmed.split(/\s+/).filter((t) => !/^\w+=/.test(t));
     const start = tokens[0] === "sudo" ? 1 : 0;
     let match = true;
     for (let i = 0; i < prefix.length; i++) {
-      if (tokens[start + i] !== prefix[i]) { match = false; break; }
+      if (tokens[start + i] !== prefix[i]) {
+        match = false;
+        break;
+      }
     }
     if (match && tokens.length >= start + prefix.length) return true;
   }
@@ -200,13 +229,17 @@ function segmentTokens(cmd: string, ...prefix: string[]): string[] | null {
   for (const seg of splitSegments(stripQuoted(cmd))) {
     const trimmed = seg.trim();
     if (!trimmed) continue;
-    const tokens = trimmed.split(/\s+/).filter(t => !/^\w+=/.test(t));
+    const tokens = trimmed.split(/\s+/).filter((t) => !/^\w+=/.test(t));
     const start = tokens[0] === "sudo" ? 1 : 0;
     let match = true;
     for (let i = 0; i < prefix.length; i++) {
-      if (tokens[start + i] !== prefix[i]) { match = false; break; }
+      if (tokens[start + i] !== prefix[i]) {
+        match = false;
+        break;
+      }
     }
-    if (match && tokens.length >= start + prefix.length) return tokens.slice(start);
+    if (match && tokens.length >= start + prefix.length)
+      return tokens.slice(start);
   }
   return null;
 }
@@ -225,7 +258,10 @@ function hasArgs(cmd: string, cmdName: string): boolean {
 // ── Load config ──────────────────────────────────────────────────────────────
 
 function loadConfig(): SentinelConfig {
-  const configPath = join(dirname(new URL(import.meta.url).pathname), "sentinel-rules.json");
+  const configPath = join(
+    dirname(new URL(import.meta.url).pathname),
+    "sentinel-rules.json",
+  );
   try {
     const raw = readFileSync(configPath, "utf-8");
     const config = JSON.parse(raw) as SentinelConfig;
@@ -271,7 +307,10 @@ function buildRules(config: SentinelConfig): Rule[] {
             tools: ["bash"],
             test: (cmd) => {
               const tokens = segmentTokens(cmd, tool);
-              return tokens !== null && subEntry.flags.some(f => tokens.includes(f));
+              return (
+                tokens !== null &&
+                subEntry.flags.some((f) => tokens.includes(f))
+              );
             },
             reason: `⛔ ${subEntry.reason}`,
           });
@@ -294,7 +333,10 @@ function buildRules(config: SentinelConfig): Rule[] {
             tools: ["bash"],
             test: (cmd) => {
               const tokens = segmentTokens(cmd, tool, sub);
-              return tokens !== null && subEntry.flags.some(f => tokens.includes(f));
+              return (
+                tokens !== null &&
+                subEntry.flags.some((f) => tokens.includes(f))
+              );
             },
             reason: `⛔ ${subEntry.reason}`,
           });
@@ -304,7 +346,9 @@ function buildRules(config: SentinelConfig): Rule[] {
   }
 
   // Always-interactive commands (editors, REPLs, pagers)
-  for (const [cmd, entry] of Object.entries(config.always_interactive.commands)) {
+  for (const [cmd, entry] of Object.entries(
+    config.always_interactive.commands,
+  )) {
     if (cmd === "_doc") continue;
     rules.push({
       name: `${cmd}-interactive`,
@@ -327,10 +371,11 @@ function buildRules(config: SentinelConfig): Rule[] {
     tier: "hard",
     tools: ["bash"],
     test: (cmd) => {
-      const tokens = segmentTokens(cmd, "jj", "describe") || segmentTokens(cmd, "jj", "dm");
+      const tokens =
+        segmentTokens(cmd, "jj", "describe") || segmentTokens(cmd, "jj", "dm");
       return tokens !== null && !tokens.includes("-m");
     },
-    reason: "⛔ Opens editor. Use `jj describe -m \"message\"`",
+    reason: '⛔ Opens editor. Use `jj describe -m "message"`',
   });
 
   rules.push({
@@ -341,7 +386,7 @@ function buildRules(config: SentinelConfig): Rule[] {
       const tokens = segmentTokens(cmd, "jj", "commit");
       return tokens !== null && !tokens.includes("-m");
     },
-    reason: "⛔ Opens editor. Use `jj commit -m \"message\"`",
+    reason: '⛔ Opens editor. Use `jj commit -m "message"`',
   });
 
   rules.push({
@@ -351,9 +396,13 @@ function buildRules(config: SentinelConfig): Rule[] {
     test: (cmd) => {
       const tokens = segmentTokens(cmd, "jj", "squash");
       if (!tokens) return false;
-      return !tokens.includes("-m") && !tokens.includes("-u") && !tokens.includes("--use-destination-message");
+      return (
+        !tokens.includes("-m") &&
+        !tokens.includes("-u") &&
+        !tokens.includes("--use-destination-message")
+      );
     },
-    reason: "⛔ May open editor. Use `-m \"message\"` or `-u`",
+    reason: '⛔ May open editor. Use `-m "message"` or `-u`',
   });
 
   rules.push({
@@ -383,8 +432,12 @@ function buildRules(config: SentinelConfig): Rule[] {
     test: (_cmd, path) => {
       if (!path) return false;
       const p = normalizePath(path);
-      return [HOME + "/bin/", HOME + "/.config/", HOME + "/.hammerspoon/", HOME + "/.pi/agent/"]
-        .some(m => p.startsWith(m));
+      return [
+        HOME + "/bin/",
+        HOME + "/.config/",
+        HOME + "/.hammerspoon/",
+        HOME + "/.pi/agent/",
+      ].some((m) => p.startsWith(m));
     },
     reason: "⛔ Nix-managed path. Edit ~/.dotfiles/ source instead.",
   });
@@ -408,21 +461,26 @@ function buildRules(config: SentinelConfig): Rule[] {
           if (target && target.startsWith("/tmp/")) return false;
         }
         // Handle --out-link=/tmp/... form
-        if (tokens[i].startsWith("--out-link=/tmp/") || tokens[i].startsWith("-o=/tmp/")) return false;
+        if (
+          tokens[i].startsWith("--out-link=/tmp/") ||
+          tokens[i].startsWith("-o=/tmp/")
+        )
+          return false;
       }
       // Block: would create ./result in current directory
       return true;
     },
-    reason: "⛔ `nix build` creates ./result symlink. Use `--no-link` or `-o /tmp/<name>` and clean up after.",
+    reason:
+      "⛔ `nix build` creates ./result symlink. Use `--no-link` or `-o /tmp/<name>` and clean up after.",
   });
 
   // ── CONFIRM: destructive jj ──
 
   for (const [sub, reason] of Object.entries({
-    "rebase": "Can discard uncommitted changes or flatten commit history.",
-    "abandon": "Permanently discards changes.",
-    "restore": "Can overwrite uncommitted changes.",
-    "undo": "Can affect uncommitted work.",
+    rebase: "Can discard uncommitted changes or flatten commit history.",
+    abandon: "Permanently discards changes.",
+    restore: "Can overwrite uncommitted changes.",
+    undo: "Can affect uncommitted work.",
   } as Record<string, string>)) {
     rules.push({
       name: `jj-${sub}`,
@@ -440,26 +498,41 @@ function buildRules(config: SentinelConfig): Rule[] {
     test: (cmd) => {
       const tokens = segmentTokens(cmd, "jj", "squash");
       if (!tokens) return false;
-      
+
       // Safe: simple squash (@ into @-) with any message options
       // Only block when --from, --into, or -r is used with potentially broad revsets
       const hasFrom = tokens.includes("--from") || tokens.includes("-f");
-      const hasInto = tokens.includes("--into") || tokens.includes("--to") || tokens.includes("-t");
-      const hasRevision = tokens.includes("-r") || tokens.includes("--revision");
-      const hasDestination = tokens.includes("-d") || tokens.includes("--destination");
-      const hasInsertAfter = tokens.includes("-A") || tokens.includes("--insert-after");
-      const hasInsertBefore = tokens.includes("-B") || tokens.includes("--insert-before");
-      
+      const hasInto =
+        tokens.includes("--into") ||
+        tokens.includes("--to") ||
+        tokens.includes("-t");
+      const hasRevision =
+        tokens.includes("-r") || tokens.includes("--revision");
+      const hasDestination =
+        tokens.includes("-d") || tokens.includes("--destination");
+      const hasInsertAfter =
+        tokens.includes("-A") || tokens.includes("--insert-after");
+      const hasInsertBefore =
+        tokens.includes("-B") || tokens.includes("--insert-before");
+
       // If none of these multi-commit options are present, it's a simple squash (safe)
-      if (!hasFrom && !hasInto && !hasRevision && !hasDestination && !hasInsertAfter && !hasInsertBefore) {
+      if (
+        !hasFrom &&
+        !hasInto &&
+        !hasRevision &&
+        !hasDestination &&
+        !hasInsertAfter &&
+        !hasInsertBefore
+      ) {
         return false;
       }
-      
+
       // Block if any of these potentially dangerous options are used
       // User can override if they know what they're doing
       return true;
     },
-    reason: "Squash with --from/--into/-r can flatten history. Simple `jj squash` is safe.",
+    reason:
+      "Squash with --from/--into/-r can flatten history. Simple `jj squash` is safe.",
   });
 
   // ── CONFIRM: tccutil reset without granular scoping ──
@@ -496,16 +569,18 @@ function buildRules(config: SentinelConfig): Rule[] {
   });
 
   // ── HARD: gatekeeper (secrets in diff) ──
-  
+
   // Store gatekeeper findings for error message
   let gatekeeperFindings = "";
-  
+
   function isPushCommand(cmd: string): boolean {
-    return isCommandPrefix(cmd, "jj", "push") || 
-           isCommandPrefix(cmd, "jj", "git", "push") || 
-           isCommandPrefix(cmd, "git", "push");
+    return (
+      isCommandPrefix(cmd, "jj", "push") ||
+      isCommandPrefix(cmd, "jj", "git", "push") ||
+      isCommandPrefix(cmd, "git", "push")
+    );
   }
-  
+
   function checkDiffForSecrets(): { blocked: boolean; findings: string } {
     // Check if gatekeeper is available
     try {
@@ -514,24 +589,27 @@ function buildRules(config: SentinelConfig): Rule[] {
       log("gatekeeper not found, skipping secrets check");
       return { blocked: false, findings: "" };
     }
-    
+
     // Get the diff
     let diff = "";
     try {
-      diff = execSync("jj diff --git 2>/dev/null || git diff HEAD 2>/dev/null || echo ''", {
-        encoding: "utf-8",
-        timeout: 10000,
-        stdio: ["pipe", "pipe", "pipe"],
-      });
+      diff = execSync(
+        "jj diff --git 2>/dev/null || git diff HEAD 2>/dev/null || echo ''",
+        {
+          encoding: "utf-8",
+          timeout: 10000,
+          stdio: ["pipe", "pipe", "pipe"],
+        },
+      );
     } catch (e) {
       log("failed to get diff for gatekeeper check");
       return { blocked: false, findings: "" };
     }
-    
+
     if (!diff.trim()) {
       return { blocked: false, findings: "" };
     }
-    
+
     // Run gatekeeper on the diff
     try {
       const result = spawnSync("gatekeeper", ["--stdin", "--severity=high"], {
@@ -539,7 +617,7 @@ function buildRules(config: SentinelConfig): Rule[] {
         encoding: "utf-8",
         timeout: 30000,
       });
-      
+
       if (result.status === 2) {
         // Blocked - secrets found
         return { blocked: true, findings: result.stdout || "Secrets detected" };
@@ -550,14 +628,14 @@ function buildRules(config: SentinelConfig): Rule[] {
       return { blocked: false, findings: "" };
     }
   }
-  
+
   rules.push({
     name: "gatekeeper-secrets",
     tier: "hard",
     tools: ["bash"],
     test: (cmd) => {
       if (!isPushCommand(cmd)) return false;
-      
+
       const check = checkDiffForSecrets();
       if (check.blocked) {
         gatekeeperFindings = check.findings;
@@ -584,7 +662,8 @@ function buildRules(config: SentinelConfig): Rule[] {
     name: "deploy",
     tier: "confirm",
     tools: ["bash"],
-    test: (cmd) => isCommand(cmd, "deploy", "vercel", "dokploy") ||
+    test: (cmd) =>
+      isCommand(cmd, "deploy", "vercel", "dokploy") ||
       isCommandPrefix(cmd, "fly", "deploy") ||
       isCommandPrefix(cmd, "netlify", "deploy") ||
       isCommandPrefix(cmd, "kubectl", "apply") ||
@@ -597,7 +676,9 @@ function buildRules(config: SentinelConfig): Rule[] {
     name: "ssh",
     tier: "confirm",
     tools: ["bash"],
-    test: (cmd) => isCommand(cmd, "ssh", "scp") || (isCommandPrefix(cmd, "rsync") && cmdMatch(cmd, /rsync\s+.*:/)),
+    test: (cmd) =>
+      isCommand(cmd, "ssh", "scp") ||
+      (isCommandPrefix(cmd, "rsync") && cmdMatch(cmd, /rsync\s+.*:/)),
     reason: "Remote server access.",
   });
 
@@ -607,7 +688,10 @@ function buildRules(config: SentinelConfig): Rule[] {
     name: "brew-install",
     tier: "confirm",
     tools: ["bash"],
-    test: (cmd) => isCommandPrefix(cmd, "brew", "install") || isCommandPrefix(cmd, "brew", "cask") || isCommandPrefix(cmd, "brew", "tap"),
+    test: (cmd) =>
+      isCommandPrefix(cmd, "brew", "install") ||
+      isCommandPrefix(cmd, "brew", "cask") ||
+      isCommandPrefix(cmd, "brew", "tap"),
     reason: "Non-nix install. Nix is the source of truth.",
   });
 
@@ -617,10 +701,12 @@ function buildRules(config: SentinelConfig): Rule[] {
     tools: ["bash"],
     test: (cmd) => {
       const stripped = stripQuoted(cmd);
-      return /(?:^|[;&|]\s*)npm\s+(i|install)\s+(-g|--global)\b/.test(stripped) ||
+      return (
+        /(?:^|[;&|]\s*)npm\s+(i|install)\s+(-g|--global)\b/.test(stripped) ||
         isCommandPrefix(cmd, "pip", "install") ||
         isCommandPrefix(cmd, "cargo", "install") ||
-        isCommandPrefix(cmd, "go", "install");
+        isCommandPrefix(cmd, "go", "install")
+      );
     },
     reason: "Global package install. Check Nix first.",
   });
@@ -637,8 +723,10 @@ function buildRules(config: SentinelConfig): Rule[] {
 
       // Check if current working directory is within allowed paths
       const normalizedPath = normalizePath(path || "");
-      const isAllowed = allowedPaths.some(allowed =>
-        normalizedPath.startsWith(`${allowed}/`) || normalizedPath === allowed
+      const isAllowed = allowedPaths.some(
+        (allowed) =>
+          normalizedPath.startsWith(`${allowed}/`) ||
+          normalizedPath === allowed,
       );
 
       if (isAllowed) return false; // Allow in allowed directories
@@ -647,15 +735,19 @@ function buildRules(config: SentinelConfig): Rule[] {
       const cdMatch = cmd.match(/\bcd\s+(\S+)/);
       if (cdMatch) {
         const cdPath = normalizePath(cdMatch[1]);
-        const cdAllowed = allowedPaths.some(allowed =>
-          cdPath.startsWith(`${allowed}/`) || cdPath === allowed || cdPath === allowed
+        const cdAllowed = allowedPaths.some(
+          (allowed) =>
+            cdPath.startsWith(`${allowed}/`) ||
+            cdPath === allowed ||
+            cdPath === allowed,
         );
         if (cdAllowed) return false; // Allow in cd-changed directories
       }
 
       // mix deps.get is always allowed - standard Elixir workflow
       if (isCommandPrefix(cmd, "mix", "deps.get")) return false;
-      return isCommandPrefix(cmd, "npm", "install") ||
+      return (
+        isCommandPrefix(cmd, "npm", "install") ||
         isCommandPrefix(cmd, "npm", "i") ||
         isCommandPrefix(cmd, "npm", "add") ||
         isCommandPrefix(cmd, "yarn", "add") ||
@@ -663,7 +755,8 @@ function buildRules(config: SentinelConfig): Rule[] {
         isCommandPrefix(cmd, "pnpm", "install") ||
         isCommandPrefix(cmd, "cargo", "add") ||
         isCommandPrefix(cmd, "bun", "add") ||
-        isCommandPrefix(cmd, "bun", "install");
+        isCommandPrefix(cmd, "bun", "install")
+      );
     },
     reason: "Project dependency install. Verify not already available via Nix.",
   });
@@ -757,66 +850,86 @@ function buildRules(config: SentinelConfig): Rule[] {
 
 const MAX_PIPE_TIMEOUT_SECONDS = 300; // 5 minutes max
 
-const PIPE_TARGETS = ["tail", "head", "tee", "less", "more", "cat", "wc", "sort", "uniq", "awk", "sed", "grep", "rg"];
+const PIPE_TARGETS = [
+  "tail",
+  "head",
+  "tee",
+  "less",
+  "more",
+  "cat",
+  "wc",
+  "sort",
+  "uniq",
+  "awk",
+  "sed",
+  "grep",
+  "rg",
+];
 
 // Commands that are safe to pipe without timeout (they always terminate quickly)
 const SAFE_UPSTREAM = [
-  /^echo\s/,                    // echo always terminates
-  /^printf\s/,                  // printf always terminates
-  /^ls\b/,                      // ls always terminates
-  /^cat\s+\S/,                  // cat with file argument (not stdin)
-  /^fd\b/,                      // fd file finder
-  /^rg\b/,                      // ripgrep
-  /^jj\s/,                      // jj commands
-  /^git\s/,                     // git commands (when used, e.g., in jj git)
-  /^curl\s/,                    // curl always terminates
-  /^wget\s/,                    // wget always terminates
-  /^date\b/,                    // date command
-  /^pwd\b/,                     // pwd command
-  /^env\b/,                     // env command
-  /^which\b/,                   // which command
-  /^whoami\b/,                  // whoami command
-  /^hostname\b/,                // hostname command
-  /^uname\b/,                   // uname command
-  /^id\b/,                      // id command
-  /^ps\b/,                      // ps command (snapshot, not continuous)
-  /^df\b/,                      // df command
-  /^du\b/,                      // du command
-  /^stat\b/,                    // stat command
-  /^file\b/,                    // file command
-  /^timeout\s/,                 // explicit timeout wrapper
-  /^gtimeout\s/,                // GNU timeout on macOS
-  /^jq\b/,                      // jq JSON processor
-  /^yq\b/,                      // yq YAML processor
-  /^tr\b/,                      // tr character translator
-  /^cut\b/,                     // cut field extractor
-  /^basename\b/,                // basename path component
-  /^dirname\b/,                 // dirname path component
-  /^realpath\b/,                // realpath resolver
-  /^readlink\b/,                // readlink symlink resolver
+  /^echo\s/, // echo always terminates
+  /^printf\s/, // printf always terminates
+  /^ls\b/, // ls always terminates
+  /^cat\s+\S/, // cat with file argument (not stdin)
+  /^fd\b/, // fd file finder
+  /^rg\b/, // ripgrep
+  /^jj\s/, // jj commands
+  /^git\s/, // git commands (when used, e.g., in jj git)
+  /^curl\s/, // curl always terminates
+  /^wget\s/, // wget always terminates
+  /^date\b/, // date command
+  /^pwd\b/, // pwd command
+  /^env\b/, // env command
+  /^which\b/, // which command
+  /^whoami\b/, // whoami command
+  /^hostname\b/, // hostname command
+  /^uname\b/, // uname command
+  /^id\b/, // id command
+  /^ps\b/, // ps command (snapshot, not continuous)
+  /^df\b/, // df command
+  /^du\b/, // du command
+  /^stat\b/, // stat command
+  /^file\b/, // file command
+  /^timeout\s/, // explicit timeout wrapper
+  /^gtimeout\s/, // GNU timeout on macOS
+  /^jq\b/, // jq JSON processor
+  /^yq\b/, // yq YAML processor
+  /^tr\b/, // tr character translator
+  /^cut\b/, // cut field extractor
+  /^basename\b/, // basename path component
+  /^dirname\b/, // dirname path component
+  /^realpath\b/, // realpath resolver
+  /^readlink\b/, // readlink symlink resolver
 ];
 
 // Commands known to potentially hang when piped (wait for stdin, event loops, etc.)
 const RISKY_UPSTREAM = [
-  /\bnvim\s+--headless\b/,      // nvim headless with vim.defer_fn hangs
-  /\bnvim\s+-c\b/,              // nvim with -c may not exit
+  /\bnvim\s+--headless\b/, // nvim headless with vim.defer_fn hangs
+  /\bnvim\s+-c\b/, // nvim with -c may not exit
   /\bvim\s+--headless\b/,
   /\bvim\s+-c\b/,
-  /\bwatch\b/,                  // watch is continuous
-  /\btail\s+-f\b/,              // tail -f is continuous
-  /\bjournalctl\s+-f\b/,        // journalctl follow
-  /\blog\s+tail\b/,             // heroku/fly log tail
-  /\bdocker\s+logs\s+-f\b/,     // docker logs follow
-  /\bkubectl\s+logs\s+-f\b/,    // kubectl logs follow
+  /\bwatch\b/, // watch is continuous
+  /\btail\s+-f\b/, // tail -f is continuous
+  /\bjournalctl\s+-f\b/, // journalctl follow
+  /\blog\s+tail\b/, // heroku/fly log tail
+  /\bdocker\s+logs\s+-f\b/, // docker logs follow
+  /\bkubectl\s+logs\s+-f\b/, // kubectl logs follow
 ];
 
 /**
  * Check if command pipes to tail/head/etc or redirects output.
  * Returns details for the block message.
  */
-function detectPipeOrRedirect(cmd: string): { hasPipe: boolean; hasRedirect: boolean; pipeTarget?: string; riskyUpstream?: string; isSafeUpstream: boolean } {
+function detectPipeOrRedirect(cmd: string): {
+  hasPipe: boolean;
+  hasRedirect: boolean;
+  pipeTarget?: string;
+  riskyUpstream?: string;
+  isSafeUpstream: boolean;
+} {
   const stripped = stripQuoted(cmd);
-  
+
   // Check for pipes to common targets
   let hasPipe = false;
   let pipeTarget: string | undefined;
@@ -829,12 +942,12 @@ function detectPipeOrRedirect(cmd: string): { hasPipe: boolean; hasRedirect: boo
       break;
     }
   }
-  
+
   // Check for redirects (but not heredocs which use <<)
   // Matches: >, >>, 2>, 2>>, 2>&1, &>, &>>
   const redirectPattern = /(?:^|[^<])(?:>>?|2>>?|2>&1|&>>?)/;
   const hasRedirect = redirectPattern.test(stripped);
-  
+
   // Check if upstream command is known to be safe (always terminates)
   let isSafeUpstream = false;
   const trimmed = stripped.trim();
@@ -844,17 +957,20 @@ function detectPipeOrRedirect(cmd: string): { hasPipe: boolean; hasRedirect: boo
       break;
     }
   }
-  
+
   // Check for known risky upstream patterns (overrides safe check)
   let riskyUpstream: string | undefined;
   for (const pattern of RISKY_UPSTREAM) {
     if (pattern.test(stripped)) {
-      riskyUpstream = pattern.toString().replace(/^\/|\/$/g, "").replace(/\\b/g, "");
+      riskyUpstream = pattern
+        .toString()
+        .replace(/^\/|\/$/g, "")
+        .replace(/\\b/g, "");
       isSafeUpstream = false; // Risky overrides safe
       break;
     }
   }
-  
+
   return { hasPipe, hasRedirect, pipeTarget, riskyUpstream, isSafeUpstream };
 }
 
@@ -871,9 +987,11 @@ const FIX_INTENT_RE = /\b(and\s+fix|then\s+fix)\b/i;
 //   Asana:   https://app.asana.com/0/project/task (long numeric IDs)
 //   Asana:   asana:1234567890 (shorthand)
 //   Generic: tk-abc1234 (shorthand)
-const TICKET_ID_RE = /\b(?:#(\d+)|([A-Z]+-\d+)|([a-z]+-[a-z0-9]{4,})|asana:(\d{5,}))\b|https:\/\/app\.asana\.com\/0\/\d+\/(\d+)/i;
+const TICKET_ID_RE =
+  /\b(?:#(\d+)|([A-Z]+-\d+)|([a-z]+-[a-z0-9]{4,})|asana:(\d{5,}))\b|https:\/\/app\.asana\.com\/0\/\d+\/(\d+)/i;
 // Commands that "read" a ticket — lifts the gate
-const TICKET_READ_RE = /\b(?:gh\s+issue\s+view|tk\s+show|jira\s+view|linear\s+issue\s+view|curl\s+.*app\.asana\.com)\b/;
+const TICKET_READ_RE =
+  /\b(?:gh\s+issue\s+view|tk\s+show|jira\s+view|linear\s+issue\s+view|curl\s+.*app\.asana\.com)\b/;
 
 export default function (pi: ExtensionAPI) {
   const config = loadConfig();
@@ -920,7 +1038,9 @@ export default function (pi: ExtensionAPI) {
     const text = event.text?.trim().toLowerCase() || "";
 
     const isOverrideCmd = ["override", "bypass", "force"].includes(text);
-    const isForceOverride = ["!override", "!bypass", "!force", "!!"].includes(text);
+    const isForceOverride = ["!override", "!bypass", "!force", "!!"].includes(
+      text,
+    );
 
     if (!isOverrideCmd && !isForceOverride) return;
 
@@ -935,13 +1055,17 @@ export default function (pi: ExtensionAPI) {
     if (isForceOverride) {
       grantOverride();
       log(`${text}: immediate grant`);
-      if (ctx.hasUI) ctx.ui.notify(`✓ Override granted for: ${blockedRule}`, "info");
+      if (ctx.hasUI)
+        ctx.ui.notify(`✓ Override granted for: ${blockedRule}`, "info");
       // Signal agent to retry the blocked command
-      pi.sendMessage({
-        customType: "sentinel_override",
-        content: `✓ Override granted for **${blockedRule}**. Retry the command now.`,
-        display: "user",
-      }, { triggerTurn: true });
+      pi.sendMessage(
+        {
+          customType: "sentinel_override",
+          content: `✓ Override granted for **${blockedRule}**. Retry the command now.`,
+          display: "user",
+        },
+        { triggerTurn: true },
+      );
       return { action: "handled" };
     }
 
@@ -954,11 +1078,14 @@ export default function (pi: ExtensionAPI) {
         grantOverride();
         ctx.ui.notify(`✓ Override granted for: ${blockedRule}`, "info");
         // Signal agent to retry the blocked command
-        pi.sendMessage({
-          customType: "sentinel_override",
-          content: `✓ Override granted for **${blockedRule}**. Retry the command now.`,
-          display: "user",
-        }, { triggerTurn: true });
+        pi.sendMessage(
+          {
+            customType: "sentinel_override",
+            content: `✓ Override granted for **${blockedRule}**. Retry the command now.`,
+            display: "user",
+          },
+          { triggerTurn: true },
+        );
       } else {
         log("override rejected");
         resetBlocked();
@@ -967,104 +1094,124 @@ export default function (pi: ExtensionAPI) {
       grantOverride();
       log("override: no UI, granted directly");
       // Signal agent to retry
-      pi.sendMessage({
-        customType: "sentinel_override",
-        content: `✓ Override granted for **${blockedRule}**. Retry the command now.`,
-        display: "user",
-      }, { triggerTurn: true });
+      pi.sendMessage(
+        {
+          customType: "sentinel_override",
+          content: `✓ Override granted for **${blockedRule}**. Retry the command now.`,
+          display: "user",
+        },
+        { triggerTurn: true },
+      );
     }
 
     return { action: "handled" };
   });
 
   // Intercept tool calls
-  pi.on("tool_call", async (event, _ctx): Promise<ToolCallEventResult | void> => {
-    const toolName = event.toolName;
-    const input = (event as ToolCallEvent).input;
-    const cmd = (input as any).command as string || "";
-    const path = (input as any).path as string || "";
-    const timeout = (input as any).timeout as number | undefined;
+  pi.on(
+    "tool_call",
+    async (event, _ctx): Promise<ToolCallEventResult | void> => {
+      const toolName = event.toolName;
+      const input = (event as ToolCallEvent).input;
+      const cmd = ((input as any).command as string) || "";
+      const path = ((input as any).path as string) || "";
+      const timeout = (input as any).timeout as number | undefined;
 
-    // ── Ticket gate (gated by config.ticket_gate) ──
-    if (config.ticket_gate !== false) {
-      // Detect when agent reads the ticket
-      if (
-        pendingTicketId &&
-        !ticketRead &&
-        toolName === "bash" &&
-        typeof cmd === "string" &&
-        TICKET_READ_RE.test(cmd) &&
-        cmd.includes(pendingTicketId)
-      ) {
-        ticketRead = true;
-        log(`ticket gate: ${pendingTicketId} read — gate lifted`);
-      }
+      // ── Ticket gate (gated by config.ticket_gate) ──
+      if (config.ticket_gate !== false) {
+        // Detect when agent reads the ticket
+        if (
+          pendingTicketId &&
+          !ticketRead &&
+          toolName === "bash" &&
+          typeof cmd === "string" &&
+          TICKET_READ_RE.test(cmd) &&
+          cmd.includes(pendingTicketId)
+        ) {
+          ticketRead = true;
+          log(`ticket gate: ${pendingTicketId} read — gate lifted`);
+        }
 
-      // Block edit/write until ticket is read
-      if (
-        pendingTicketId &&
-        !ticketRead &&
-        (toolName === "edit" || toolName === "write")
-      ) {
-        log(`TICKET-GATE: ${pendingTicketId} not read yet`);
-        return {
-          block: true,
-          reason: `📋 **Read the ticket first**\n\n` +
-            `You referenced ticket \`${pendingTicketId}\` but haven't read it yet.\n\n` +
-            `Read it before making changes:\n` +
-            `- GitHub: \`gh issue view ${pendingTicketId}\`\n` +
-            `- Linear: \`linear issue view ${pendingTicketId}\`\n` +
-            `- Jira: \`jira view ${pendingTicketId}\`\n` +
-            `- Asana: fetch the task via API\n` +
-            `- Generic: \`tk show ${pendingTicketId}\``,
-        };
-      }
-    }
-
-    // ── Investigation mode: block edit/write ──
-    if (
-      investigationMode &&
-      (toolName === "edit" || toolName === "write")
-    ) {
-      log(`INVESTIGATE: blocking ${toolName}`);
-      return {
-        block: true,
-        reason: "🔍 **Investigation mode active**\n\n" +
-          "The user asked you to investigate, not to make changes.\n" +
-          "Report your findings. The user will tell you when to fix things.",
-      };
-    }
-
-    // ── Special check: pipe/redirect hang prevention ──
-    if (toolName === "bash" && cmd) {
-      const pipeCheck = detectPipeOrRedirect(cmd);
-      
-      if ((pipeCheck.hasPipe || pipeCheck.hasRedirect) && !pipeCheck.isSafeUpstream) {
-        // Check if timeout is missing or too long
-        const hasValidTimeout = timeout !== undefined && timeout > 0 && timeout <= MAX_PIPE_TIMEOUT_SECONDS;
-        
-        if (!hasValidTimeout) {
-          const issues: string[] = [];
-          
-          if (pipeCheck.riskyUpstream) {
-            issues.push(`- **Risky upstream**: \`${pipeCheck.riskyUpstream}\` may hang or never produce output`);
-          }
-          if (pipeCheck.hasPipe) {
-            issues.push(`- **Pipes to**: \`${pipeCheck.pipeTarget}\` — upstream must terminate to produce output`);
-          }
-          if (pipeCheck.hasRedirect) {
-            issues.push(`- **Redirects output** — if upstream hangs, no error will be visible`);
-          }
-          if (!timeout) {
-            issues.push(`- **No timeout specified** — command could hang indefinitely`);
-          } else if (timeout > MAX_PIPE_TIMEOUT_SECONDS) {
-            issues.push(`- **Timeout too long**: ${timeout}s > ${MAX_PIPE_TIMEOUT_SECONDS}s max`);
-          }
-
-          log(`PIPE-HANG: ${cmd.slice(0, 80)}`);
+        // Block edit/write until ticket is read
+        if (
+          pendingTicketId &&
+          !ticketRead &&
+          (toolName === "edit" || toolName === "write")
+        ) {
+          log(`TICKET-GATE: ${pendingTicketId} not read yet`);
           return {
             block: true,
-            reason: `⚠️ **Potential hang detected** — command pipes/redirects output without safeguards.
+            reason:
+              `📋 **Read the ticket first**\n\n` +
+              `You referenced ticket \`${pendingTicketId}\` but haven't read it yet.\n\n` +
+              `Read it before making changes:\n` +
+              `- GitHub: \`gh issue view ${pendingTicketId}\`\n` +
+              `- Linear: \`linear issue view ${pendingTicketId}\`\n` +
+              `- Jira: \`jira view ${pendingTicketId}\`\n` +
+              `- Asana: fetch the task via API\n` +
+              `- Generic: \`tk show ${pendingTicketId}\``,
+          };
+        }
+      }
+
+      // ── Investigation mode: block edit/write ──
+      if (investigationMode && (toolName === "edit" || toolName === "write")) {
+        log(`INVESTIGATE: blocking ${toolName}`);
+        return {
+          block: true,
+          reason:
+            "🔍 **Investigation mode active**\n\n" +
+            "The user asked you to investigate, not to make changes.\n" +
+            "Report your findings. The user will tell you when to fix things.",
+        };
+      }
+
+      // ── Special check: pipe/redirect hang prevention ──
+      if (toolName === "bash" && cmd) {
+        const pipeCheck = detectPipeOrRedirect(cmd);
+
+        if (
+          (pipeCheck.hasPipe || pipeCheck.hasRedirect) &&
+          !pipeCheck.isSafeUpstream
+        ) {
+          // Check if timeout is missing or too long
+          const hasValidTimeout =
+            timeout !== undefined &&
+            timeout > 0 &&
+            timeout <= MAX_PIPE_TIMEOUT_SECONDS;
+
+          if (!hasValidTimeout) {
+            const issues: string[] = [];
+
+            if (pipeCheck.riskyUpstream) {
+              issues.push(
+                `- **Risky upstream**: \`${pipeCheck.riskyUpstream}\` may hang or never produce output`,
+              );
+            }
+            if (pipeCheck.hasPipe) {
+              issues.push(
+                `- **Pipes to**: \`${pipeCheck.pipeTarget}\` — upstream must terminate to produce output`,
+              );
+            }
+            if (pipeCheck.hasRedirect) {
+              issues.push(
+                `- **Redirects output** — if upstream hangs, no error will be visible`,
+              );
+            }
+            if (!timeout) {
+              issues.push(
+                `- **No timeout specified** — command could hang indefinitely`,
+              );
+            } else if (timeout > MAX_PIPE_TIMEOUT_SECONDS) {
+              issues.push(
+                `- **Timeout too long**: ${timeout}s > ${MAX_PIPE_TIMEOUT_SECONDS}s max`,
+              );
+            }
+
+            log(`PIPE-HANG: ${cmd.slice(0, 80)}`);
+            return {
+              block: true,
+              reason: `⚠️ **Potential hang detected** — command pipes/redirects output without safeguards.
 
 ${issues.join("\n")}
 
@@ -1077,36 +1224,41 @@ ${issues.join("\n")}
 - \`tail -f\` or \`journalctl -f\` — continuous streams never terminate
 - Interactive processes — wait for stdin that will never come
 
-**Fix:** Add \`timeout: <seconds>\` parameter to the bash tool call.`
+**Fix:** Add \`timeout: <seconds>\` parameter to the bash tool call.`,
+            };
+          }
+        }
+      }
+
+      for (const rule of rules) {
+        if (!rule.tools.includes(toolName)) continue;
+        if (!rule.test(cmd, path)) continue;
+
+        if (rule.tier === "hard") {
+          log(`HARD [${rule.name}]: ${(cmd || path).slice(0, 60)}`);
+          return { block: true, reason: rule.reason };
+        }
+
+        if (rule.tier === "rewrite") {
+          log(`REWRITE [${rule.name}]: ${cmd.slice(0, 60)}`);
+          return { block: true, reason: `⚙️ ${rule.reason}` };
+        }
+
+        if (rule.tier === "confirm") {
+          if (overrideGranted && blocked?.command === cmd) {
+            if (consumeOverride()) return undefined;
+          }
+          blocked = {
+            command: cmd,
+            rule: rule.name,
+            reason: rule.reason,
+            timestamp: Date.now(),
           };
-        }
-      }
-    }
-
-    for (const rule of rules) {
-      if (!rule.tools.includes(toolName)) continue;
-      if (!rule.test(cmd, path)) continue;
-
-      if (rule.tier === "hard") {
-        log(`HARD [${rule.name}]: ${(cmd || path).slice(0, 60)}`);
-        return { block: true, reason: rule.reason };
-      }
-
-      if (rule.tier === "rewrite") {
-        log(`REWRITE [${rule.name}]: ${cmd.slice(0, 60)}`);
-        return { block: true, reason: `⚙️ ${rule.reason}` };
-      }
-
-      if (rule.tier === "confirm") {
-        if (overrideGranted && blocked?.command === cmd) {
-          if (consumeOverride()) return undefined;
-        }
-        blocked = { command: cmd, rule: rule.name, reason: rule.reason, timestamp: Date.now() };
-        log(`CONFIRM [${rule.name}]: ${cmd.slice(0, 60)}`);
-        const cmdPreview = cmd.length > 200 ? cmd.slice(0, 200) + "..." : cmd;
-        return {
-          block: true,
-          reason: `🔒 **${rule.name}** — ${rule.reason}
+          log(`CONFIRM [${rule.name}]: ${cmd.slice(0, 60)}`);
+          const cmdPreview = cmd.length > 200 ? cmd.slice(0, 200) + "..." : cmd;
+          return {
+            block: true,
+            reason: `🔒 **${rule.name}** — ${rule.reason}
 
 **Command:** \`${cmdPreview}\`
 
@@ -1115,19 +1267,27 @@ ${issues.join("\n")}
 2. Why it was blocked (${rule.reason})
 3. Whether it's safe to override in this context
 
-Say \`override\` to allow.`
-        };
+Say \`override\` to allow.`,
+          };
+        }
       }
-    }
 
-    return undefined;
-  });
+      return undefined;
+    },
+  );
 
   (globalThis as Record<string, unknown>).__sentinel = {
-    get blocked() { return blocked; },
-    get overrideGranted() { return overrideGranted; },
-    rules: rules.map(r => r.name),
-    reset: () => { resetOverride(); resetBlocked(); },
+    get blocked() {
+      return blocked;
+    },
+    get overrideGranted() {
+      return overrideGranted;
+    },
+    rules: rules.map((r) => r.name),
+    reset: () => {
+      resetOverride();
+      resetBlocked();
+    },
     grant: grantOverride,
   };
 }

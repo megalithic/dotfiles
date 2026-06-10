@@ -1,6 +1,7 @@
 ---
 description: Rewrite text to sound more natural and less AI-generated
 ---
+
 Review the following text and rewrite it to sound more natural and human.
 
 **AI writing patterns to eliminate** (from Wikipedia's "Signs of AI writing"):
@@ -17,6 +18,7 @@ Review the following text and rewrite it to sound more natural and human.
 10. **List exhaustion**: Don't enumerate every possible case
 
 **Goals:**
+
 - Sound like a person wrote it, not a language model
 - Vary sentence length and structure
 - Use concrete examples over abstract statements

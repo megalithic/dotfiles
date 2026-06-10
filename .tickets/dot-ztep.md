@@ -9,6 +9,7 @@ priority: 3
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Update task-pipeline SKILL.md docs for new commands + resolution flow
 
 Update the task-pipeline skill doc to reflect the changes from dot-pabp, dot-71pq, dot-h27d, dot-idcr:
@@ -33,7 +34,6 @@ Plan ref: ~/.local/share/pi/plans/.dotfiles/pipeline-smart-retrieval_PLAN.md (St
 3. SKILL.md includes example usage for the 'forgot slug', 'mid-pipeline', 'fresh session' scenarios
 4. Doc references the source-of-truth path (home/common/programs/pi-coding-agent/extensions/task-pipeline.ts) so future agents know not to edit the symlink
 5. Doc accurately reflects whatever shipped in dot-pabp, dot-71pq, dot-h27d, dot-idcr
-
 
 ## Notes
 

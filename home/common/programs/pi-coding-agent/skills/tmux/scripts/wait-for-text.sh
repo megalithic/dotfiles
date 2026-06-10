@@ -27,29 +27,54 @@ lines=1000
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -t|--target)   target="${2-}"; shift 2 ;;
-    -p|--pattern)  pattern="${2-}"; shift 2 ;;
-    -F|--fixed)    grep_flag="-F"; shift ;;
-    -T|--timeout)  timeout="${2-}"; shift 2 ;;
-    -i|--interval) interval="${2-}"; shift 2 ;;
-    -l|--lines)    lines="${2-}"; shift 2 ;;
-    -h|--help)     usage; exit 0 ;;
-    *) echo "Unknown option: $1" >&2; usage; exit 1 ;;
+  -t | --target)
+    target="${2-}"
+    shift 2
+    ;;
+  -p | --pattern)
+    pattern="${2-}"
+    shift 2
+    ;;
+  -F | --fixed)
+    grep_flag="-F"
+    shift
+    ;;
+  -T | --timeout)
+    timeout="${2-}"
+    shift 2
+    ;;
+  -i | --interval)
+    interval="${2-}"
+    shift 2
+    ;;
+  -l | --lines)
+    lines="${2-}"
+    shift 2
+    ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  *)
+    echo "Unknown option: $1" >&2
+    usage
+    exit 1
+    ;;
   esac
 done
 
-if [[ -z "$target" || -z "$pattern" ]]; then
+if [[ -z $target || -z $pattern ]]; then
   echo "target and pattern are required" >&2
   usage
   exit 1
 fi
 
-if ! [[ "$timeout" =~ ^[0-9]+$ ]]; then
+if ! [[ $timeout =~ ^[0-9]+$ ]]; then
   echo "timeout must be an integer number of seconds" >&2
   exit 1
 fi
 
-if ! [[ "$lines" =~ ^[0-9]+$ ]]; then
+if ! [[ $lines =~ ^[0-9]+$ ]]; then
   echo "lines must be an integer" >&2
   exit 1
 fi
@@ -72,7 +97,7 @@ while true; do
   fi
 
   now=$(date +%s)
-  if (( now >= deadline )); then
+  if ((now >= deadline)); then
     echo "Timed out after ${timeout}s waiting for pattern: $pattern" >&2
     echo "Last ${lines} lines from $target:" >&2
     printf '%s\n' "$pane_text" >&2

@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-fsxj
 tags: [ready-for-development]
 ---
+
 # Remove extensions/checkpoint.ts (broken, replaced by ticket-vcs.ts)
 
 Decision Q5 in dot-fsxj: checkpoint.ts (570 lines) is not working properly. Will be replaced by extensions/ticket-vcs.ts (new, in ticket dot-<TBD>). Remove checkpoint to prevent interference.
@@ -24,13 +25,13 @@ Decision Q5 in dot-fsxj: checkpoint.ts (570 lines) is not working properly. Will
 
 The jj bookmark detection logic in checkpoint.ts (lines ~145-150, 188-195) is the pattern ticket-vcs.ts should reuse:
 
-  jj log -r @ --no-graph -T bookmarks
+jj log -r @ --no-graph -T bookmarks
 
 Copy that pattern to the new extension's implementation. Don't block this ticket on ticket-vcs.ts completion — just capture the snippet in a note for the ticket-vcs.ts worker.
 
 ## Cleanup
 
-- Remove any state files checkpoint.ts created (check for ~/.pi/agent/checkpoint-*.json or similar)
+- Remove any state files checkpoint.ts created (check for ~/.pi/agent/checkpoint-\*.json or similar)
 
 ## Acceptance Criteria
 
@@ -40,8 +41,6 @@ Copy that pattern to the new extension's implementation. Don't block this ticket
 4. 'pi' starts without errors about missing checkpoint extension
 5. No orphaned /checkpoint or /goal commands left dangling — 'pi' doesn't show them in /help
 6. Captured jj-bookmark-detection snippet posted as note on the ticket-vcs ticket before closing this one
-
-
 
 ---
 

@@ -10,16 +10,19 @@ assignee: Seth Messer
 parent: dot-wo6i
 tags: [safari, chromium, converter, python]
 ---
+
 # Implement Safari bookmark converter (if GoSuki doesn't support)
 
 Build Safari ↔ Chromium bookmark converter (ONLY if GoSuki research shows no Safari support).
 
 Requirements (from user Q&A):
+
 - Safari is import-only (one-way: Chromium → Safari)
 - Purpose: iOS access to bookmarks created in Helium
 - Periodic sync is acceptable (cron job)
 
 Implementation:
+
 1. Python script: safari-bookmark-sync
 2. Read Chromium Bookmarks JSON (from Helium profile)
 3. Convert to Safari plist format
@@ -29,9 +32,9 @@ Implementation:
 7. Launchd agent for periodic execution (daily or manual trigger)
 
 Safety:
+
 - Backup Safari bookmarks before overwrite
 - Check if Safari is running (warn user)
 - Conflict resolution: Chromium always wins (user confirmed)
 
 Dependency: Blocked on GoSuki research ticket (only implement if needed)
-

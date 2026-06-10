@@ -64,16 +64,21 @@ Exported responses are compact markdown optimized for LLM consumption:
 
 ```markdown
 # Responses: <title>
+
 slug: <slug>
 
 ## Comments
+
 ### <section heading>
+
 <user's comment text>
 
 ## Decisions
+
 - **<question>**: <choice> — <notes>
 
 ## Tasks
+
 - [x] <completed item>
 - [ ] <incomplete item>
 ```
@@ -103,6 +108,7 @@ primary window). New tab at end, switches focus, brings window to front.
 - Override: `PI_PREVIEW_DIR`, `PI_PREVIEW_PERSIST_DAYS`, `PI_PREVIEW_TMP_DAYS`
 
 GC runs automatically on each `preview-html` invocation. Manual:
+
 ```bash
 preview-html-gc --dry-run    # show what would be pruned
 preview-html-gc --quiet      # silent prune

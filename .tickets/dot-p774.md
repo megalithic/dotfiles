@@ -10,12 +10,14 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Investigate commit scope guard for pi-coding-agent
 
 ## Context: Nix-based dotfiles
 
 All work is in `~/.dotfiles`, managed via Nix. **Do not assume npm/pnpm are globally installed.**
 Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` for exact build patterns:
+
 1. Simple extensions/skills: Auto-load (no build step).
 2. npm-dependent extensions: Use Nix `buildNpmPackage` patterns (A, B, C, D).
 3. Need ad-hoc tools? Use `nix run nixpkgs#nodejs -- npm install` or `nix shell nixpkgs#pnpm`.
@@ -24,11 +26,13 @@ Agent frequently forgets to create new commits for new logical work. Changes pil
 in one commit. Splitting after the fact is painful and sometimes the agent refuses.
 
 Need automated enforcement that checks before each edit/bash tool call whether:
+
 1. The change belongs to the current commit's scope
 2. A new commit was already created for this work
 3. User explicitly opted into single-commit mode
 
 Implementation options to investigate:
+
 - Pi extension (before_tool_call hook) that checks commit scope
 - Local LLM classification (like stop-hook pattern) — classify 'does this change match current commit message?'
 - Heuristic: track which files/directories the current commit touches, warn when editing outside that set
@@ -38,6 +42,7 @@ Reference: sentinel extension pattern for blocking/overriding dangerous commands
 Reference: stop-hook extension for local LLM integration pattern.
 
 Files to study:
+
 - home/common/programs/ai/pi-coding-agent/extensions/sentinel.ts
 - home/common/programs/ai/pi-coding-agent/extensions/stop-hook.ts
 
@@ -47,4 +52,3 @@ Files to study:
 2. Prototype the most promising approach (or explain why none are viable yet)
 3. If viable: create implementation ticket(s)
 4. If not viable: document blockers and what would unblock
-

@@ -10,12 +10,14 @@ assignee: Seth Messer
 parent: dot-42gl
 tags: [ready-for-development]
 ---
+
 # Phase 2: Deduplicate GLOBAL and repo AGENTS.md
 
 Remove sections that appear word-for-word in both GLOBAL_AGENTS.md and repo AGENTS.md.
 Keep each section in exactly one place.
 
 Duplicated sections to resolve:
+
 - Uncommitted changes (~35 lines) → keep in GLOBAL (universal rule), remove from repo
 - Push/deploy/SSH restrictions (~30 lines) → keep in GLOBAL (universal), remove from repo
 - Guardrail override protocol (~35 lines) → slim to brief mention in GLOBAL, remove from repo (sentinel extension is source of truth)
@@ -23,6 +25,7 @@ Duplicated sections to resolve:
 - VCS aliases + interactive commands (~50 lines) → keep jj aliases in repo AGENTS.md (repo-specific aliases), keep interactive commands table in GLOBAL
 
 Files to edit:
+
 - home/common/programs/ai/pi-coding-agent/sources/GLOBAL_AGENTS.md
 - AGENTS.md (repo root)
 
@@ -36,4 +39,3 @@ Files to edit:
 6. jj aliases in repo AGENTS.md only
 7. Interactive commands table in GLOBAL only
 8. just validate passes
-

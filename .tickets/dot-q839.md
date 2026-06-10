@@ -9,6 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Clarify chrome-cdp vs web-browser skill usage boundaries
 
 Both chrome-cdp and web-browser skills connect to Chrome via CDP but serve different
@@ -19,11 +20,12 @@ A) Merge into one 'browser' skill with sections for each tool
 B) Add 'When to use' section to each skill
 
 Recommended: Option B (less disruption, both skills stay self-contained).
+
 - chrome-cdp: inspection, debugging, screenshots, JS eval, a11y tree, network timing
 - web-browser: page interaction, form filling, tab management, navigation workflows
 
 Files: home/common/programs/pi-coding-agent/skills/chrome-cdp/SKILL.md
-       home/common/programs/pi-coding-agent/skills/web-browser/SKILL.md
+home/common/programs/pi-coding-agent/skills/web-browser/SKILL.md
 
 ## Acceptance Criteria
 
@@ -32,4 +34,3 @@ Files: home/common/programs/pi-coding-agent/skills/chrome-cdp/SKILL.md
 3. web-browser documents: use for interaction, forms, tab management, navigation
 4. Cross-references between the two skills exist
 5. just validate home passes
-

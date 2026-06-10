@@ -9,7 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [epic, nix, nix-darwin, home-manager]
 ---
+
 # Nix ecosystem
 
 Ongoing epic for nix-darwin, home-manager, flake, and package management work.
-

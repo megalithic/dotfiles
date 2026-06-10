@@ -52,26 +52,26 @@ return {
 
 ## Key Bindings
 
-| Key | Action |
-|-----|--------|
-| `,` | Leader |
-| `<Space>` | Local leader |
-| `<Esc>` | Clear UI, save buffer |
-| `gd` | Go to definition |
-| `gr` | References |
-| `K` | Hover |
-| `<leader>ff` | Find files |
-| `<leader>a` | Live grep |
-| `<leader>e` | File explorer (Oil) |
+| Key          | Action                |
+| ------------ | --------------------- |
+| `,`          | Leader                |
+| `<Space>`    | Local leader          |
+| `<Esc>`      | Clear UI, save buffer |
+| `gd`         | Go to definition      |
+| `gr`         | References            |
+| `K`          | Hover                 |
+| `<leader>ff` | Find files            |
+| `<leader>a`  | Live grep             |
+| `<leader>e`  | File explorer (Oil)   |
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
+| Command               | Description               |
+| --------------------- | ------------------------- |
 | `:LangInspect [lang]` | Show resolved lang config |
-| `:LangList` | List all languages |
-| `:LangServers` | List LSP servers |
-| `:LangReload` | Reload lang configs |
+| `:LangList`           | List all languages        |
+| `:LangServers`        | List LSP servers          |
+| `:LangReload`         | Reload lang configs       |
 
 ## Requirements
 

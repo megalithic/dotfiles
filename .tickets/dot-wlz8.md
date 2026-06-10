@@ -9,6 +9,7 @@ type: task
 priority: 3
 assignee: Seth Messer
 ---
+
 # Investigate otahontas/nix tk/ticket config updates
 
 otahontas/nix repo (github.com/otahontas/nix) has evolved its tk/ticket pipeline.
@@ -49,6 +50,7 @@ Key areas to review:
 Repo cloned at: /Users/seth/.cache/pi-internet/github-repos/otahontas/nix/
 
 Our equivalents live in:
+
 - home/common/programs/ai/pi-coding-agent/extensions/
 - ~/.pi/agent/skills/
 
@@ -58,7 +60,6 @@ Our equivalents live in:
 2. Document which updates conflict with our conventions (jj vs git, etc)
 3. List concrete action items as follow-up tickets if any are worth implementing
 
-
 ## Notes
 
 **2026-04-17T17:29:30Z**
@@ -66,8 +67,9 @@ Our equivalents live in:
 ## Rebuild hint after ticket completion
 
 After completing work, agent should detect what nix rebuild (if any) is needed based on changed files:
+
 - `home/` touched → `just home`
-- `hosts/`, `modules/` touched → `just darwin`  
+- `hosts/`, `modules/` touched → `just darwin`
 - Both → `just rebuild`
 - Neither (scripts, tickets, docs) → nothing needed
 
@@ -80,7 +82,6 @@ After completing work, agent should detect what nix rebuild (if any) is needed b
 Preferred: option 3 (reusable script) + reference from both AGENTS.md and ticket-worker skill.
 
 Currently the agent just free-forms a summary at end of work — no automated mechanism detects what rebuild is needed. This should be deterministic, not vibes.
-
 
 ---
 

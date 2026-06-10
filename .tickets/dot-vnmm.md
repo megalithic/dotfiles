@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development, done]
 ---
+
 # Send structured editor context envelopes to pi
 
 Implement Step 6 from ~/.local/share/pi/plans/dotfiles/nvim-pi-custom-vision_PLAN.md. Define one structured context schema across `config/nvim/lua/pinvim.lua` and `home/common/programs/pi-coding-agent/extensions/pinvim.ts` for fresh explicit sends and queues. Primary UX: select code or use cursor/word context, trigger a new keybinding such as `gps` if available, send structured context to the currently selected handshaked `pinvim.ts` target (including a newly spawned ephemeral split target), then focus the linked pi pane so the user can type additional prompt text. Do not use implicit `live_context`/`editor_state`; current context flow is explicit send/queue only. Do not restore legacy `mega.p.pi` or legacy keymaps. If `bridge.ts` needs awareness for shimmed or transitional ingress, keep that involvement thin and compatibility-focused only.
@@ -39,8 +40,7 @@ For research-only tickets, run these before closing any downstream implementatio
 All 5 ACs were already met from prior tickets (dot-y4vm, dot-klla, dot-f36u, dot-p2ad, dot-8n53, dot-koz6). This ticket closed the remaining quality gaps:
 
 - `pinvim.lua`: Added `detect_symbol_kind()` (treesitter node → kind map) and `detect_cursor_semantics()` (symbol_kind, has_diagnostics, lsp_active). `Transport.build_explicit_send()` now includes `symbolKind`, `hasDiagnostics`, `lspActive` in context payload.
-- `pinvim.ts`: `ExplicitSendPayload` type extended with `symbolKind`, `hasDiagnostics`, `lspActive`. `formatExplicitContext()` renders `Symbol: function \`socket_exists\` ◀ cursor focus` instead of `Word: socket_exists`, plus diagnostic/LSP hints.
+- `pinvim.ts`: `ExplicitSendPayload` type extended with `symbolKind`, `hasDiagnostics`, `lspActive`. `formatExplicitContext()` renders `Symbol: function \`socket_exists\` ◀ cursor focus`instead of`Word: socket_exists`, plus diagnostic/LSP hints.
 - Intent-driven sends (Level 3) deferred to dot-fpev/dot-t4dd (review bundle workflows).
 
 Verification: headless setup ✓, protocol smoke ✓, just validate home ✓, just home ✓.
-

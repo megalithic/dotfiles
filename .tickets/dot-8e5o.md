@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-fsxj
 tags: [ready-for-development]
 ---
+
 # Remove pi-interactive-subagents extension (HazAT)
 
 Decision Q1-A from dot-fsxj: abandon pi-interactive-subagents. It's too heavy (async tmux panes, bundled planner/scout/worker/reviewer/visual-tester agents that conflict with our researcher/planner) and doesn't integrate with work-tickets.sh synchronous pi -p loop.
@@ -26,7 +27,7 @@ Decision Q1-A from dot-fsxj: abandon pi-interactive-subagents. It's too heavy (a
 
 - ~/.pi/agent/extensions/pi-interactive-subagents/ (entire dir)
 - ~/.pi/agent/settings.json (check for extension config)
-- home/common/programs/ai/pi-coding-agent/*.md (check any prompts/skills mentioning /iterate or HazAT agents)
+- home/common/programs/ai/pi-coding-agent/\*.md (check any prompts/skills mentioning /iterate or HazAT agents)
 
 ## Replacement
 
@@ -40,8 +41,6 @@ Our bundled extensions/subagent/ (index.ts + agents.ts) is already installed and
 4. 'pi' starts cleanly without missing-extension errors
 5. Bundled subagent tool still works: 'subagents_list' returns 'planner' and 'researcher' agents
 6. No references to /iterate command in any prompt/skill (or references removed)
-
-
 
 ---
 

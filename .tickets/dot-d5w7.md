@@ -9,6 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Enhance preview-html and trim preview skill
 
 Two tracks: enhance the preview-html interactive features, and trim the preview
@@ -17,7 +18,7 @@ skill doc to non-obvious content only.
 ## Track A: preview-html enhancements
 
 Files: bin/preview-html, home/common/programs/pi-coding-agent/extensions/preview.ts,
-       home/common/programs/pi-coding-agent/extensions/task-pipeline.ts
+home/common/programs/pi-coding-agent/extensions/task-pipeline.ts
 
 ### A1: Metadata embedding for plan documents
 

@@ -10,12 +10,14 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Add enabledModelScopes to settings.json: per-profile model lists
 
 ## Context: Nix-based dotfiles
 
 All work is in `~/.dotfiles`, managed via Nix. **Do not assume npm/pnpm are globally installed.**
 Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` for exact build patterns:
+
 1. Simple extensions/skills: Auto-load (no build step).
 2. npm-dependent extensions: Use Nix `buildNpmPackage` patterns (A, B, C, D).
 3. Need ad-hoc tools? Use `nix run nixpkgs#nodejs -- npm install` or `nix shell nixpkgs#pnpm`.
@@ -37,6 +39,7 @@ Extend `settings.json` with `enabledModelScopes` map that overrides `enabledMode
 `enabledModels` remains fallback/default. `enabledModelScopes[PI_PROFILE]` overrides for current session.
 
 ## Acceptance Criteria
+
 1. `settings.json` has `enabledModelScopes` with `mega` and `rx` scopes
 2. `enabledModels` kept as default/fallback
 3. mega scope includes all personal models (anthropic + synthetic + ollama + omlx)

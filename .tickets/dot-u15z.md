@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-kts9
 tags: [ready-for-development]
 ---
+
 # Create pinvim.ts extension: nvim intelligence layer with live context injection
 
 New pi extension that provides nvim-aware context injection into agent turns.
@@ -34,12 +35,12 @@ New pi extension that provides nvim-aware context injection into agent turns.
 ## Architecture
 
 pinvim.ts has no socket. It receives editor state from bridge.ts:
-  pi.events.on('pinvim:editor_state', (state) => { ... })
+pi.events.on('pinvim:editor_state', (state) => { ... })
 
 Context injection uses before_agent_start hook (from carderne/pi-nvim):
-  pi.on('before_agent_start', async () => {
-    return { message: { customType: 'pinvim-live-context', content: formatted, display: false } }
-  })
+pi.on('before_agent_start', async () => {
+return { message: { customType: 'pinvim-live-context', content: formatted, display: false } }
+})
 
 ## Format (matches carderne pattern)
 
@@ -60,4 +61,3 @@ Reference: @config/nvim/after/plugin/pi.lua
 6. Footer status shows nvim: filename L17 (or nvim: -- when disconnected)
 7. /pinvim-info command shows socket path and current editor state
 8. No socket created by pinvim.ts (bridge.ts owns the socket)
-

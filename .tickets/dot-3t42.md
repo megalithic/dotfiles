@@ -10,11 +10,13 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development]
 ---
+
 # Research bridge.ts deprecation into focused ingress extensions
 
 Inventory every current `bridge.ts` user and propose a migration path away from the monolithic bridge extension. Target architecture: `pinvim.ts` handles only pi↔nvim, possible `hs.ts` handles Hammerspoon↔pi, possible `tmux.ts` handles tmux helper/discovery APIs, possible `ntfy.ts` expands `~/bin/ntfy` integration, and tell/delegation ingress moves to a focused owner.
 
 Relevant files:
+
 - `home/common/programs/pi-coding-agent/extensions/bridge.ts`
 - `home/common/programs/pi-coding-agent/extensions/pinvim.ts`
 - `home/common/programs/pi-coding-agent/extensions/notify.ts`

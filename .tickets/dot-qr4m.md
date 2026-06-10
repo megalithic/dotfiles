@@ -10,12 +10,14 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Investigate pi-multi-pass extension for profile-based provider/model/auth management
 
 ## Context: Nix-based dotfiles
 
 All work is in `~/.dotfiles`, managed via Nix. **Do not assume npm/pnpm are globally installed.**
 Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` for exact build patterns:
+
 1. Simple extensions/skills: Auto-load (no build step).
 2. npm-dependent extensions: Use Nix `buildNpmPackage` patterns (A, B, C, D).
 3. Need ad-hoc tools? Use `nix run nixpkgs#nodejs -- npm install` or `nix shell nixpkgs#pnpm`.
@@ -23,6 +25,7 @@ Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` 
 Investigate the pi-multi-pass extension (installed at ~/.pi/agent/extensions/pi-multi-pass/) to understand its capabilities and determine how to configure it for a dual-profile setup.
 
 Goals:
+
 - Two profiles: 'rx' (work) and 'personal'
 - Each profile specifies available providers (including synthetic provider via pi-synthetic-provider, and ollama) and models per provider
 - Each profile defines fallback chains (e.g., if tokens exhausted or rate-limited on primary, fall to secondary provider/model)
@@ -30,6 +33,7 @@ Goals:
 - Custom footer (custom-footer.ts) shows active profile name on line 1, left of provider/model display
 
 Relevant files:
+
 - ~/.pi/agent/extensions/pi-multi-pass/ — extension source + README
 - ~/.pi/agent/extensions/pi-multi-pass/README.md — docs
 - ~/.pi/agent/extensions/custom-footer.ts — existing footer extension
@@ -38,6 +42,7 @@ Relevant files:
 - ~/.dotfiles/home/common/programs/ai/pi-coding-agent/ — nix module managing these extensions
 
 Investigation should produce:
+
 1. Summary of pi-multi-pass capabilities and config schema
 2. Gap analysis: what it supports vs what's needed
 3. Proposed config structure for rx + personal profiles
@@ -64,4 +69,3 @@ Investigation should produce:
    - Fallback chain: if primary provider/model unavailable (rate-limited, token-exhausted, down), automatically try next in chain
    - Document how fallback triggers are detected and how chain traversal works
 10. **Nix generation strategy:** propose how nix module declares profiles and generates config files — e.g., attrset per profile with providers/models/auth refs, rendered to JSON at build time, secrets handled via env vars or sops-nix
-

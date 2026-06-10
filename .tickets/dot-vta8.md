@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-fsxj
 tags: [ready-for-development]
 ---
+
 # Sync extensions/task-pipeline.ts + skills/task-pipeline/SKILL.md with otahontas (leaner subagent model)
 
 Replace our verbose task-pipeline with otahontas's leaner version where subagents write their own output via write-task/write-plan tools (blocked by ticket-port-restricted-write dot-aqin).
@@ -44,8 +45,6 @@ This ticket should be worked together with dot-<ID of port-agents> which updates
 5. '/plan' with existing plans/task.md invokes planner; plans/plan.md written
 6. Ticket-related phrasing preserved in skill (see Preserve section)
 7. Diff against our previous version committed in single jj change with conventional message
-
-
 
 ---
 

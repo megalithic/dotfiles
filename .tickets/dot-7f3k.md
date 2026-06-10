@@ -1,7 +1,20 @@
 ---
 id: dot-7f3k
 status: closed
-deps: [dot-aqin, dot-9el2, dot-fqt2, dot-vta8, dot-6jlp, dot-2ymj, dot-4ck0, dot-z8ku, dot-8e5o, dot-1r2i, dot-08ij]
+deps:
+  [
+    dot-aqin,
+    dot-9el2,
+    dot-fqt2,
+    dot-vta8,
+    dot-6jlp,
+    dot-2ymj,
+    dot-4ck0,
+    dot-z8ku,
+    dot-8e5o,
+    dot-1r2i,
+    dot-08ij,
+  ]
 links: []
 created: 2026-04-22T16:20:02Z
 type: task
@@ -10,6 +23,7 @@ assignee: Seth Messer
 parent: dot-fsxj
 tags: [ready-for-development]
 ---
+
 # End-to-end smoke test: just validate, just home, work-tickets dry run
 
 Final verification after all child tickets land. No code changes expected — just exercise the full pipeline.
@@ -57,8 +71,6 @@ If any step fails, reopen the relevant child ticket with a note pointing to the 
 7. Final review output mentions 1 completed, 0 skipped
 8. Rollback steps (jj abandon, etc.) clean repo state
 9. No lingering state files in ~/.pi/state/ after session ends
-
-
 
 ---
 

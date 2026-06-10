@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-fsxj
 tags: [ready-for-development]
 ---
+
 # New extension: extensions/ticket-vcs.ts (tk↔jj bookmark hooks + session state)
 
 New extension hooking tk lifecycle into jj bookmarks (git fallback when no .jj).
@@ -26,12 +27,14 @@ New extension hooking tk lifecycle into jj bookmarks (git fallback when no .jj).
 Parse bash command for 'tk start <id>' or 'tk close <id>' patterns.
 
 **tk start <id>:**
+
 1. Detect VCS: if .jj exists → jj path; else git path
 2. jj: run 'jj log -r @ --no-graph -T bookmarks' → if current bookmark is not <id>, run 'jj feat <id>' (our alias) or 'jj bookmark create <id>'
 3. git: 'git checkout -b <id>' if branch doesn't exist
 4. If already on matching bookmark/branch: no-op, log 'resuming'
 
 **tk close <id>:**
+
 1. Peek current jj description: 'jj log -r @ --no-graph -T description'
 2. If empty or '(no description set)': inject prompt into conversation suggesting: 'jj dm "feat(<type>): <title> (closes <id>)"' where <type>/<title> come from 'tk show <id>'
 3. Do NOT auto-run the commit — just surface the suggestion
@@ -40,14 +43,16 @@ Parse bash command for 'tk start <id>' or 'tk close <id>' patterns.
 ### stop_hook — persist in-progress ticket state
 
 On session stop:
+
 1. Run 'tk query' and parse JSON for tickets with status=in_progress
 2. If any exist: write ~/.pi/state/current-ticket.json:
-     { "id": "dot-xxxx", "bookmark": "dot-xxxx", "started_at": "2026-04-22T15:00:00Z", "cwd": "/path/to/repo" }
+   { "id": "dot-xxxx", "bookmark": "dot-xxxx", "started_at": "2026-04-22T15:00:00Z", "cwd": "/path/to/repo" }
 3. If none: remove the state file
 
 ### session_start — restore
 
 On new session start:
+
 1. Read ~/.pi/state/current-ticket.json if exists
 2. Emit a markdown notice: '🎫 Resuming work on ticket {id} (bookmark: {bookmark})'
 3. Don't auto-switch bookmark — surface info only
@@ -62,6 +67,7 @@ Same pattern for description lookup: 'jj log -r @ --no-graph -T description'.
 ## Config surface (settings.json)
 
 Optional knobs (document in README-style comment at top of file):
+
 - ticketVcs.enabled (default true)
 - ticketVcs.autoCreateBookmark (default true) — if false, only suggest
 - ticketVcs.suggestCommitOnClose (default true)
@@ -84,8 +90,6 @@ Optional knobs (document in README-style comment at top of file):
 8. On new session start with stale state file + in_progress ticket: emits '🎫 Resuming' notice
 9. 'just validate home' + 'just home' pass
 10. Extension respects ticketVcs.enabled config knob (set false → no hooks fire)
-
-
 
 ---
 

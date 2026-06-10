@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-wo6i
 tags: [browser, migration, bookmarks]
 ---
+
 # Migration: Export Brave Nightly bookmarks → Helium
 
 One-time migration: Brave Browser Nightly (current source of truth) → Helium (future primary).
@@ -17,6 +18,7 @@ One-time migration: Brave Browser Nightly (current source of truth) → Helium (
 User plan: Trial Helium, eventually make it source of truth.
 
 Steps:
+
 1. Export bookmarks from Brave Nightly using sync module
 2. Backup existing Helium bookmarks (if any)
 3. Import to Helium
@@ -27,4 +29,3 @@ Steps:
 This is the transition from 'Brave Nightly as source' to 'Helium as source'.
 
 Dependency: Requires sync module with Helium support (dot-v5xw) and symlink feature (dot-ltdf)
-

@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-kts9
 tags: [ready-for-development]
 ---
+
 # Enhance bridge.ts: bidirectional JSON-RPC, cwd discovery, new message types
 
 Upgrade bridge.ts to be the unified socket owner with bidirectional communication.
@@ -31,17 +32,17 @@ Upgrade bridge.ts to be the unified socket owner with bidirectional communicatio
 ## Protocol additions
 
 Responses (bridge.ts → client):
-  { ok: true }
-  { ok: true, type: 'pong' }
-  { ok: false, error: '...' }
+{ ok: true }
+{ ok: true, type: 'pong' }
+{ ok: false, error: '...' }
 
 New request types:
-  { type: 'ping' }
-  { type: 'prompt', message: '...' }
-  { type: 'editor_state', state: { file, cursor, selection, filetype, ... } }
+{ type: 'ping' }
+{ type: 'prompt', message: '...' }
+{ type: 'editor_state', state: { file, cursor, selection, filetype, ... } }
 
 Forward editor_state to pinvim.ts:
-  pi.events.emit('pinvim:editor_state', state)
+pi.events.emit('pinvim:editor_state', state)
 
 ## Acceptance Criteria
 
@@ -53,4 +54,3 @@ Forward editor_state to pinvim.ts:
 6. .info manifest cleaned up on session_shutdown
 7. Existing telegram and tell message flows unchanged
 8. Existing tmux-session socket pattern unchanged
-

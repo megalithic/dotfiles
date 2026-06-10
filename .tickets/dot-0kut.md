@@ -10,12 +10,14 @@ assignee: Seth Messer
 parent: dot-42gl
 tags: [ready-for-development]
 ---
+
 # Phase 1: Relocate system-specific content out of GLOBAL_AGENTS.md
 
 Move system-specific sections from GLOBAL_AGENTS.md to their proper homes.
 These sections are loaded into every pi session but only relevant to specific contexts.
 
 Relocations:
+
 - Hammerspoon rules (~40 lines) → config/hammerspoon/AGENTS.md (create new file)
 - Telegram interaction + bridge debugging (~60 lines) → home/common/programs/ai/pi-coding-agent/AGENTS.md
 - IEx scripts (~20 lines) → create skill or keep for Elixir project AGENTS.md files
@@ -24,8 +26,9 @@ Relocations:
 - Ntfy telegram formatting → bin/ntfy inline comments or help text
 
 Files to create:
+
 - config/hammerspoon/AGENTS.md
-Files to edit:
+  Files to edit:
 - home/common/programs/ai/pi-coding-agent/sources/GLOBAL_AGENTS.md (remove relocated sections)
 - home/common/programs/ai/pi-coding-agent/AGENTS.md (receive Telegram content)
 - AGENTS.md (receive Pi agent directory detection if not already there)
@@ -42,4 +45,3 @@ Acceptance criteria verifiable by checking line counts and content.
 6. GLOBAL_AGENTS.md no longer contains system-specific sections
 7. just validate passes
 8. No content lost — all relocated sections findable via rg
-

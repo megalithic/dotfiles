@@ -24,21 +24,40 @@ socket_dir="${CLAUDE_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/claude-tmux-sockets}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -L|--socket)      socket_name="${2-}"; shift 2 ;;
-    -S|--socket-path) socket_path="${2-}"; shift 2 ;;
-    -A|--all)         scan_all=true; shift ;;
-    -q|--query)       query="${2-}"; shift 2 ;;
-    -h|--help)        usage; exit 0 ;;
-    *) echo "Unknown option: $1" >&2; usage; exit 1 ;;
+  -L | --socket)
+    socket_name="${2-}"
+    shift 2
+    ;;
+  -S | --socket-path)
+    socket_path="${2-}"
+    shift 2
+    ;;
+  -A | --all)
+    scan_all=true
+    shift
+    ;;
+  -q | --query)
+    query="${2-}"
+    shift 2
+    ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  *)
+    echo "Unknown option: $1" >&2
+    usage
+    exit 1
+    ;;
   esac
 done
 
-if [[ "$scan_all" == true && ( -n "$socket_name" || -n "$socket_path" ) ]]; then
+if [[ $scan_all == true && (-n $socket_name || -n $socket_path) ]]; then
   echo "Cannot combine --all with -L or -S" >&2
   exit 1
 fi
 
-if [[ -n "$socket_name" && -n "$socket_path" ]]; then
+if [[ -n $socket_name && -n $socket_path ]]; then
   echo "Use either -L or -S, not both" >&2
   exit 1
 fi
@@ -49,7 +68,8 @@ if ! command -v tmux >/dev/null 2>&1; then
 fi
 
 list_sessions() {
-  local label="$1"; shift
+  local label="$1"
+  shift
   local tmux_cmd=(tmux "$@")
 
   if ! sessions="$("${tmux_cmd[@]}" list-sessions -F '#{session_name}\t#{session_attached}\t#{session_created_string}' 2>/dev/null)"; then
@@ -57,24 +77,24 @@ list_sessions() {
     return 1
   fi
 
-  if [[ -n "$query" ]]; then
+  if [[ -n $query ]]; then
     sessions="$(printf '%s\n' "$sessions" | grep -i -- "$query" || true)"
   fi
 
-  if [[ -z "$sessions" ]]; then
+  if [[ -z $sessions ]]; then
     echo "No sessions found on $label"
     return 0
   fi
 
   echo "Sessions on $label:"
   printf '%s\n' "$sessions" | while IFS=$'\t' read -r name attached created; do
-    attached_label=$([[ "$attached" == "1" ]] && echo "attached" || echo "detached")
+    attached_label=$([[ $attached == "1" ]] && echo "attached" || echo "detached")
     printf '  - %s (%s, started %s)\n' "$name" "$attached_label" "$created"
   done
 }
 
-if [[ "$scan_all" == true ]]; then
-  if [[ ! -d "$socket_dir" ]]; then
+if [[ $scan_all == true ]]; then
+  if [[ ! -d $socket_dir ]]; then
     echo "Socket directory not found: $socket_dir" >&2
     exit 1
   fi
@@ -83,14 +103,14 @@ if [[ "$scan_all" == true ]]; then
   sockets=("$socket_dir"/*)
   shopt -u nullglob
 
-  if [[ "${#sockets[@]}" -eq 0 ]]; then
+  if [[ ${#sockets[@]} -eq 0 ]]; then
     echo "No sockets found under $socket_dir" >&2
     exit 1
   fi
 
   exit_code=0
   for sock in "${sockets[@]}"; do
-    if [[ ! -S "$sock" ]]; then
+    if [[ ! -S $sock ]]; then
       continue
     fi
     list_sessions "socket path '$sock'" -S "$sock" || exit_code=$?
@@ -101,10 +121,10 @@ fi
 tmux_cmd=(tmux)
 socket_label="default socket"
 
-if [[ -n "$socket_name" ]]; then
+if [[ -n $socket_name ]]; then
   tmux_cmd+=(-L "$socket_name")
   socket_label="socket name '$socket_name'"
-elif [[ -n "$socket_path" ]]; then
+elif [[ -n $socket_path ]]; then
   tmux_cmd+=(-S "$socket_path")
   socket_label="socket path '$socket_path'"
 fi

@@ -10,11 +10,13 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development]
 ---
+
 # Remove implicit live_context and editor_state from pinvim
 
 Remove the current live_context implementation from both nvim and pi sides. Current explicit send/queue paths are the only supported nvim→pi context path for now.
 
 Relevant files:
+
 - `config/nvim/lua/pinvim.lua`
 - `home/common/programs/pi-coding-agent/extensions/pinvim.ts`
 - `home/common/programs/pi-coding-agent/extensions/bridge.ts`

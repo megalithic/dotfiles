@@ -34,10 +34,10 @@ Supported import sources: `vscode`, `cursor`, `claude-code`, `codex`, `windsurf`
 
 ## Scope rules
 
-| Scope | Config file | Managed by | How to edit |
-|-------|-------------|------------|-------------|
-| **Global** | `~/.pi/agent/mcp.json` | Nix (home-manager) | Edit `~/.dotfiles/home/common/programs/pi-coding-agent/mcp.json`, then `just home` |
-| **Project** | `.pi/mcp.json` (project root) | Direct | Write file directly |
+| Scope       | Config file                   | Managed by         | How to edit                                                                        |
+| ----------- | ----------------------------- | ------------------ | ---------------------------------------------------------------------------------- |
+| **Global**  | `~/.pi/agent/mcp.json`        | Nix (home-manager) | Edit `~/.dotfiles/home/common/programs/pi-coding-agent/mcp.json`, then `just home` |
+| **Project** | `.pi/mcp.json` (project root) | Direct             | Write file directly                                                                |
 
 **Global is nix-managed.** The file at `~/.pi/agent/mcp.json` is a symlink to the nix store. To change it:
 
@@ -91,22 +91,23 @@ Short form (URL only, type inferred):
 
 ### Config options (all optional)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `command` | string | Executable to run (stdio) |
-| `args` | string[] | Command arguments (stdio) |
-| `env` | object | Environment variables (stdio) |
-| `cwd` | string | Working directory (stdio) |
-| `url` | string | Server URL (HTTP) |
-| `headers` | object | HTTP headers (HTTP) |
-| `auth` | `"oauth"` or `"bearer"` | Auth method (HTTP) |
-| `bearerToken` | string | Static bearer token |
-| `bearerTokenEnv` | string | Env var name for bearer token |
-| `lifecycle` | `"lazy"` / `"eager"` / `"keep-alive"` | Connection strategy (default: `lazy`) |
-| `idleTimeout` | number | Minutes before idle disconnect |
-| `debug` | boolean | Show server stderr |
+| Field            | Type                                  | Description                           |
+| ---------------- | ------------------------------------- | ------------------------------------- |
+| `command`        | string                                | Executable to run (stdio)             |
+| `args`           | string[]                              | Command arguments (stdio)             |
+| `env`            | object                                | Environment variables (stdio)         |
+| `cwd`            | string                                | Working directory (stdio)             |
+| `url`            | string                                | Server URL (HTTP)                     |
+| `headers`        | object                                | HTTP headers (HTTP)                   |
+| `auth`           | `"oauth"` or `"bearer"`               | Auth method (HTTP)                    |
+| `bearerToken`    | string                                | Static bearer token                   |
+| `bearerTokenEnv` | string                                | Env var name for bearer token         |
+| `lifecycle`      | `"lazy"` / `"eager"` / `"keep-alive"` | Connection strategy (default: `lazy`) |
+| `idleTimeout`    | number                                | Minutes before idle disconnect        |
+| `debug`          | boolean                               | Show server stderr                    |
 
 Lifecycle modes:
+
 - **lazy** (default) — connects on first tool call, disconnects after idle timeout
 - **eager** — connects at session start, no auto-disconnect
 - **keep-alive** — connects at start, auto-reconnects if dropped

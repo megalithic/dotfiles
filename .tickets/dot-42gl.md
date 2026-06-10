@@ -9,6 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Refactor AGENTS.md: slim GLOBAL, deduplicate, add core principles
 
 GLOBAL_AGENTS.md is ~450 lines, loaded into every pi session across every project.
@@ -22,4 +23,3 @@ Session context: inline comments > AGENTS.md for file-specific rules.
 Goal: GLOBAL ~150 lines (universal only), repo AGENTS.md ~200 lines (repo-specific only),
 zero duplication, core principles as opening section, system-specific content relocated
 to proper homes.
-

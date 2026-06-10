@@ -3,27 +3,51 @@
   # ─────────────────────────────────────────────────────────────
   # Basic shortcuts
   # ─────────────────────────────────────────────────────────────
-  s = ["status"];
-  l = ["log"];
-  ll = ["log" "-T" "builtin_log_compact_full_description_with_diff"];
-  d = ["describe"];
-  rb = ["rebase"];
-  b = ["bookmark"];
-  bm = ["bookmark"];
-  g = ["git"];
+  s = [ "status" ];
+  l = [ "log" ];
+  ll = [
+    "log"
+    "-T"
+    "builtin_log_compact_full_description_with_diff"
+  ];
+  d = [ "describe" ];
+  rb = [ "rebase" ];
+  b = [ "bookmark" ];
+  bm = [ "bookmark" ];
+  g = [ "git" ];
 
   # ─────────────────────────────────────────────────────────────
   # Bookmark management
   # ─────────────────────────────────────────────────────────────
 
   # Moves closest bookmark to current working copy
-  here = ["bookmark" "move" "--from" "closest_bookmark(@)" "--to" "@"];
+  here = [
+    "bookmark"
+    "move"
+    "--from"
+    "closest_bookmark(@)"
+    "--to"
+    "@"
+  ];
 
   # Advances closest bookmark to parent commit
-  tug = ["bookmark" "move" "--from" "closest_bookmark(@-)" "--to" "@-"];
+  tug = [
+    "bookmark"
+    "move"
+    "--from"
+    "closest_bookmark(@-)"
+    "--to"
+    "@-"
+  ];
 
   # Move main to current
-  main = ["bookmark" "move" "main" "--to" "@"];
+  main = [
+    "bookmark"
+    "move"
+    "main"
+    "--to"
+    "@"
+  ];
 
   # ─────────────────────────────────────────────────────────────
   # Smart push with guardrails
@@ -400,8 +424,8 @@
     ''
     ""
   ];
-  checkout = ["co"];
-  switch = ["co"];
+  checkout = [ "co" ];
+  switch = [ "co" ];
 
   # jj pr-fix ["msg"] - New commit on PR branch, describe, push with confirmation
   pr-fix = [

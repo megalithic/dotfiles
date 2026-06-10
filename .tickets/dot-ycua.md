@@ -9,11 +9,13 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Update pi-mcp-adapter to v2.6.0
 
-Bump pi-mcp-adapter from v2.5.4 to v2.6.0 in default.nix. v2.6.0 migrated its own deps from @mariozechner/* to @earendil-works/*, has OAuth fixes (re-register dynamic clients, credential isolation per server URL), and compact tool result rendering.
+Bump pi-mcp-adapter from v2.5.4 to v2.6.0 in default.nix. v2.6.0 migrated its own deps from @mariozechner/_ to @earendil-works/_, has OAuth fixes (re-register dynamic clients, credential isolation per server URL), and compact tool result rendering.
 
 Steps:
+
 1. Update fetchFromGitHub rev from v2.5.4 to v2.6.0 in default.nix
 2. Update src hash (use fake hash first, then let nix tell you the real one)
 3. Check if v2.6.0 includes a package-lock.json — if yes, remove the vendored lockfile postPatch; if no, generate a new one from v2.6.0 package.json and update patches/
@@ -30,4 +32,3 @@ See home/common/programs/pi-coding-agent/default.nix (pi-mcp-adapter block), hom
 3. just validate home builds without error
 4. pi starts and /mcp shows tidewave and paper servers connected
 5. MCP tools are callable (e.g., mcp({ search: 'logs' }))
-

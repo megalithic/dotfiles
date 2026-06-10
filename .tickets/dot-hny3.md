@@ -9,6 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Plan model replacement strategy and memory tuning
 
 Decide final models: Qwen3.6-27B-4bit (~13GB), DeepSeek-R1-Distill-Qwen-14B-4bit (~7GB), gemma-4-e4b-it-4bit (~3GB).
@@ -27,7 +28,6 @@ See context file for memory math.
 4. Memory budget math checked: weights + headroom fits 32GB
 5. Decision documented: which models to download/delete and in what order
 
-
 ## Notes
 
 **2026-05-06T20:13:42Z**
@@ -42,6 +42,7 @@ Model replacement strategy decided 2026-05-06.
 | gemma-4-e4b-it-4bit | 4.85GB | 6.06GB | Vision + lightweight (TTL 600s) |
 
 **Memory budget (M2 Max 32GB):**
+
 - max_process_memory: 75% = 24GB
 - Qwen27B pinned: 18.69GB → 5.3GB spare for one secondary
 - Qwen + Gemma-e4b: 24.75GB (borderline, may need reduced context window)
@@ -49,12 +50,14 @@ Model replacement strategy decided 2026-05-06.
 - Only one secondary at a time alongside Qwen
 
 **Settings changes:**
+
 - max_model_memory: keep 20GB (fits Qwen w/ headroom, forces eviction before 2nd model)
 - Qwen27B: pinned, TTL null, max_context_window 32768
 - DeepSeek14B: unpinned, TTL 600s, max_context_window 32768
 - Gemma-e4b: unpinned, TTL 600s, max_context_window 16384 (reduced to stay in budget)
 
 **Migration order:**
+
 1. Download Qwen3.6-27B-4bit (~15GB)
 2. Download gemma-4-e4b-it-4bit (~5GB)
 3. Download DeepSeek-R1-Distill-Qwen-14B-4bit (~8GB)
@@ -63,6 +66,7 @@ Model replacement strategy decided 2026-05-06.
    Total disk freed: ~35GB; new total: ~28GB
 
 **Why this combo:**
+
 - Qwen27B is dense 27B (not MoE) — better per-param quality at 4bit than MoE 35B at 4bit
 - DeepSeek14B is reasoning-specialized distillation — good for complex planning
 - Gemma-e4b is tiny vision model — covers multimodal without RAM pressure

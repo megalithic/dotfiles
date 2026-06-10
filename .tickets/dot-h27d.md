@@ -9,18 +9,20 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Add /retrieve slash command
 
 New slash command for explicit retrieval/listing of past TASK/PLAN combos. Accepts optional slug arg.
 
 Behavior:
+
 1. If args.trim() non-empty → treat as slug, emit message with phase summary (TASK? PLAN? ticket-context?) + suggested next command
-2. Else → scan ~/.local/share/pi/plans/$(basename $PWD)/ for all *_TASK.md / *_PLAN.md
+2. Else → scan ~/.local/share/pi/plans/$(basename $PWD)/ for all _\_TASK.md / _\_PLAN.md
 3. Extract unique slugs, sort by most recent mtime
 4. 0 → 'No plans found. Start with /task <description>'
 5. 1 → emit message with slug + phase + next command suggestion
 6. 2-3 → list with numbered choices, ask user to pick
-7. >3 → list top 3 + 'and N more. Use /retrieve <slug> for a specific one.'
+7. > 3 → list top 3 + 'and N more. Use /retrieve <slug> for a specific one.'
 
 Use pi.registerCommand('retrieve', { ... }). Same sendUserMessage pattern as /task and /plan — the handler emits a message instructing the agent to do the listing/asking; there is no direct list-pick UI.
 
@@ -37,7 +39,6 @@ Plan ref: ~/.local/share/pi/plans/.dotfiles/pipeline-smart-retrieval_PLAN.md (St
 4. /retrieve in a repo with 0 plans says 'No plans found, start with /task'
 5. /retrieve in a repo with exactly 1 plan auto-selects (no listing UI)
 6. just validate home passes
-
 
 ## Notes
 

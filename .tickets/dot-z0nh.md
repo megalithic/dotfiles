@@ -9,6 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Walk all 16 ACs for dot-8arp + file follow-up tickets
 
 Final validation phase for the oMLX migration (dot-8arp). Two parts:
@@ -21,6 +22,7 @@ Final validation phase for the oMLX migration (dot-8arp). Two parts:
    - (c) Shade migration to share oMLX model dir if HF-cache discovery is enabled
 
 Files:
+
 - .tickets/dot-8arp.md — status update with AC evidence
 - New tickets under .tickets/ for follow-ups
 
@@ -35,7 +37,6 @@ No code changes in this ticket — validation and documentation only.
 5. Follow-up ticket (c) exists for Shade model dir sharing
 6. All follow-up tickets have status proposed and deps referencing dot-8arp
 7. tk list shows the three new tickets
-
 
 ## Notes
 

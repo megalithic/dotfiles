@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development]
 ---
+
 # pinvim review: jj/git current-change diff source
 
 Plan step 2. Add VCS helpers for default `scope=commit` (current working change) with jj preferred when a `.jj` workspace is present and git fallback when only a git worktree is present. Populate the `nui.tree` from changed-file names and load read-only per-file diffs into the diff buffer when a file is selected.

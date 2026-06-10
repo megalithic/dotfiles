@@ -9,12 +9,14 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Update pi-coding-agent to v0.74.0, migrate to @earendil-works scope
 
 Update the pi wrapper package from @mariozechner/pi-coding-agent@0.73.0 to @earendil-works/pi-coding-agent@0.74.0.
 The package was renamed in v0.74.0 when the project moved from mariozechner to earendil-works.
 
 Steps:
+
 1. Edit packages/pi/package.json: change dep from @mariozechner/pi-coding-agent to @earendil-works/pi-coding-agent, version 0.74.0
 2. Run 'just update-npm pi 0.74.0' to regenerate lockfile and npmDepsHash
 3. Update default.nix installPhase: symlink path changes from node_modules/@mariozechner/pi-coding-agent/ to node_modules/@earendil-works/pi-coding-agent/
@@ -31,4 +33,3 @@ See home/common/programs/pi-coding-agent/packages/pi/package.json and home/commo
 4. just validate home builds without error
 5. pi --version reports 0.74.0
 6. Retry patches apply correctly to the new path
-

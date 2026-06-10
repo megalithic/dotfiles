@@ -10,11 +10,13 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [nvim, pi, infrastructure, cleanup, ready-for-development]
 ---
+
 # cleanup(pi): verify XDG socket migration and remove legacy /tmp artifacts
 
 Migration itself already shipped via `dot-y4vm`. This ticket now covers post-migration verification and cleanup so current nvim↔pi vision plan starts from clean state.
 
 Scope:
+
 - Verify active code paths use `PI_STATE_DIR=~/.local/state/pi` with `sockets/` and `manifests/` subdirs.
 - Confirm primary consumers (`bridge.ts`, `pinvim.lua`, Hammerspoon interop, `tmux-toggle-pi`, `ftm`, `tell.sh`, nix wrapper/session vars) all point at XDG state, not `/tmp`.
 - Inventory any remaining legacy `/tmp/pi-*` sockets or `/tmp/pi-nvim-sockets/*` manifests.
@@ -33,13 +35,12 @@ Must not break existing Telegram/tell/Hammerspoon/tmux flows. Verify: `just vali
 5. Any still-running pi process bound to legacy `/tmp` socket is identified explicitly; ticket notes record whether it was intentionally left running, restarted, or migrated with user approval.
 6. Post-cleanup verification shows nvim/Hammerspoon/tmux/tell discovery still resolves active pi instances from XDG state.
 
-
 ## Notes
 
 **2026-05-15T00:15:54Z**
 
-Audit result: XDG migration already shipped via dot-y4vm. Verified PI_STATE_DIR in nix + active consumers (bridge.ts, pinvim.lua, Hammerspoon interop, tmux-toggle-pi, ftm, tell.sh). just validate home passed. Cleaned orphan legacy artifacts with trash: /tmp/pi-pi-xhzj-test-1.sock and /tmp/pi-nvim-sockets/* (empty dir removed). Remaining legacy runtime artifact: /tmp/pi-thistle-rose-agent.sock still held open by long-running pi pid 73624 (elapsed 6+ days). Needs explicit user decision to restart/migrate/kill that process.
+Audit result: XDG migration already shipped via dot-y4vm. Verified PI_STATE_DIR in nix + active consumers (bridge.ts, pinvim.lua, Hammerspoon interop, tmux-toggle-pi, ftm, tell.sh). just validate home passed. Cleaned orphan legacy artifacts with trash: /tmp/pi-pi-xhzj-test-1.sock and /tmp/pi-nvim-sockets/\* (empty dir removed). Remaining legacy runtime artifact: /tmp/pi-thistle-rose-agent.sock still held open by long-running pi pid 73624 (elapsed 6+ days). Needs explicit user decision to restart/migrate/kill that process.
 
 **2026-05-15T12:42:58Z**
 
-Final verification: legacy /tmp pi sockets/manifests removed; lsof shows no /tmp/pi* or pi-nvim-sockets handles. Active pi sockets/manifests remain under ~/.local/state/pi/{sockets,manifests}: pi-mega-agent, pi-mega--fish, pi-rx-agent. just validate home passed.
+Final verification: legacy /tmp pi sockets/manifests removed; lsof shows no /tmp/pi\* or pi-nvim-sockets handles. Active pi sockets/manifests remain under ~/.local/state/pi/{sockets,manifests}: pi-mega-agent, pi-mega--fish, pi-rx-agent. just validate home passed.

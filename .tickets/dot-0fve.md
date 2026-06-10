@@ -9,6 +9,7 @@ type: task
 priority: 2
 assignee: Seth Messer
 ---
+
 # Investigate Hammerspoon window management with hyperkey/hypermodal
 
 Re-open investigation into window movement and control via Hammerspoon using
@@ -32,4 +33,3 @@ Consider hs.window, hs.window.filter, hs.layout, hs.grid, hs.screen.
 4. Research browser tab control APIs (accessibility, AppleScript, CDP)
 5. Document auto-placement rule approach (hs.window.filter + hs.layout or custom)
 6. Write up findings and proposed keybinding scheme
-

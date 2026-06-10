@@ -9,6 +9,7 @@ type: task
 priority: 2
 assignee: Seth Messer
 ---
+
 # Investigate Swift-based camera/microphone activity detection for Hammerspoon
 
 Re-open investigation into a Swift binary/script that detects camera and microphone usage
@@ -42,4 +43,3 @@ Relevant code in config/hammerspoon/. See also lib/builders/ for Swift build pat
 - Full research: `~/.local/share/pi/plans/mega/dot-zgp0-swift-camera-mic_TASK.md`
 - Implementation plan (7 steps): `~/.local/share/pi/plans/mega/dot-zgp0-swift-camera-mic_PLAN.md`
 - CDP research (2026-05-07): `--remote-debugging-port` CLI flag is the ONLY way to start debug server. No pref/policy alternative. DevToolsActivePort file reading is more reliable than port scanning for Step 4. See addendum in both TASK and PLAN files.
-

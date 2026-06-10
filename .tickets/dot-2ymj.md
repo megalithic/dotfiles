@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-fsxj
 tags: [ready-for-development]
 ---
+
 # Port scripts/work-tickets.sh from otahontas/nix, adapt for jj
 
 Port scripts/work-tickets.sh from /tmp/otahontas-nix/home/configs/pi-coding-agent/scripts/work-tickets.sh. Main runner loop: iterates 'tk ready -T ready-for-development', spawns 'pi -p' worker for each, runs verification pass, tallies completed/skipped, then final review. Logs to .tickets/logs/<timestamp>.log.
@@ -24,11 +25,11 @@ Port scripts/work-tickets.sh from /tmp/otahontas-nix/home/configs/pi-coding-agen
 
 Upstream uses 'git diff HEAD~1' in the verification prompt. Rewrite:
 
-  if [ -d .jj ]; then
-    DIFF_CMD='jj diff -r @-'
-  else
-    DIFF_CMD='git diff HEAD~1'
-  fi
+if [ -d .jj ]; then
+DIFF_CMD='jj diff -r @-'
+else
+DIFF_CMD='git diff HEAD~1'
+fi
 
 Inject DIFF_CMD into the VERIFY_PROMPT expansion. Keep rest of verification text identical (test/lint discovery, unused imports check, lat.md check).
 
@@ -48,8 +49,6 @@ Check ~/.dotfiles/home/common/programs/ai/pi-coding-agent/default.nix for how sc
 4. 'which work-tickets' returns path after rebuild
 5. 'work-tickets' in a repo with .jj and no ready tickets exits cleanly with 'No more ready tickets. Done.'
 6. Smoke test: create trivial ticket ('add blank line to README'), run 'work-tickets' in ~/.dotfiles, confirm: ticket transitions open→in_progress→closed, verification pass runs, final review runs, log file written to .tickets/logs/
-
-
 
 ---
 

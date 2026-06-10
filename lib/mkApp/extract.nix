@@ -23,7 +23,8 @@
   lib ? pkgs.lib,
   stdenvNoCC ? pkgs.stdenvNoCC,
   ...
-}: {
+}:
+{
   pname,
   version,
   url,
@@ -32,50 +33,50 @@
   desc ? null,
   homepage ? null,
   artifactType ? "app", # "app", "pkg", or "binary"
-  binaries ? [pname], # CLI commands to expose in ~/.local/bin (defaults to pname)
+  binaries ? [ pname ], # CLI commands to expose in ~/.local/bin (defaults to pname)
   appLocation ? "home-manager", # "home-manager" | "symlink" | "copy"
-}: let
+}:
+let
   # Detect artifact type based on URL if not specified
-  detectedType =
-    if lib.strings.hasSuffix ".pkg" url
-    then "pkg"
-    else artifactType;
+  detectedType = if lib.strings.hasSuffix ".pkg" url then "pkg" else artifactType;
 
   isPkg = detectedType == "pkg";
   isApp = detectedType == "app";
   isBinary = detectedType == "binary";
 in
-  stdenvNoCC.mkDerivation (finalAttrs: {
-    inherit pname version;
+stdenvNoCC.mkDerivation (finalAttrs: {
+  inherit pname version;
 
-    src = pkgs.fetchurl {
-      inherit url sha256;
-    };
+  src = pkgs.fetchurl {
+    inherit url sha256;
+  };
 
-    nativeBuildInputs = with pkgs;
+  nativeBuildInputs =
+    with pkgs;
+    [
+      undmg
+      unzip
+      gzip
+      bzip2
+      _7zz
+      file
+      makeWrapper
+      fd
+      ripgrep
+    ]
+    ++ lib.lists.optional isPkg (
+      with pkgs;
       [
-        undmg
-        unzip
-        gzip
-        bzip2
-        _7zz
-        file
-        makeWrapper
-        fd
-        ripgrep
+        xar
+        cpio
+        gnused
+        pbzx
       ]
-      ++ lib.lists.optional isPkg (
-        with pkgs; [
-          xar
-          cpio
-          gnused
-          pbzx
-        ]
-      );
+    );
 
-    unpackPhase =
-      if isPkg
-      then ''
+  unpackPhase =
+    if isPkg then
+      ''
         echo "Extracting PKG installer..."
         xar -xf $src
 
@@ -104,8 +105,8 @@ in
           fi
         done
       ''
-      else if isApp
-      then ''
+    else if isApp then
+      ''
         echo "Extracting application archive..."
         case "$src" in
           *.dmg)
@@ -158,8 +159,8 @@ in
           fi
         fi
       ''
-      else if isBinary
-      then ''
+    else if isBinary then
+      ''
         echo "Processing binary artifact..."
         if [ "$(file --mime-type -b "$src")" == "application/gzip" ]; then
           echo "Decompressing gzipped binary..."
@@ -172,16 +173,17 @@ in
           cp $src ${lib.lists.elemAt binaries 0}
         fi
       ''
-      else "";
+    else
+      "";
 
-    sourceRoot = lib.strings.optionalString isApp appName;
+  sourceRoot = lib.strings.optionalString isApp appName;
 
-    dontPatchShebangs = true;
-    dontFixup = true;
+  dontPatchShebangs = true;
+  dontFixup = true;
 
-    installPhase =
-      if isPkg
-      then ''
+  installPhase =
+    if isPkg then
+      ''
         echo "Installing PKG contents..."
 
         if [ -d "Applications" ]; then
@@ -208,8 +210,8 @@ in
           cp -R Library/* $out/Library/
         fi
       ''
-      else if isApp
-      then ''
+    else if isApp then
+      ''
         runHook preInstall
 
         echo "Installing application bundle for ${finalAttrs.sourceRoot}..."
@@ -231,13 +233,14 @@ in
 
         runHook postInstall
       ''
-      else if (isBinary && !isApp)
-      then ''
+    else if (isBinary && !isApp) then
+      ''
         echo "Installing binary..."
         mkdir -p $out/bin
         install -Dm755 ./* $out/bin/
       ''
-      else ''
+    else
+      ''
         echo "Installing via fallback..."
         runHook preInstall
         mkdir -p $out/Applications
@@ -245,41 +248,30 @@ in
         runHook postInstall
       '';
 
-    postInstall =
-      lib.optionalString (isApp || isPkg)
-      ''
-        echo "Removing quarantine attributes..."
+  postInstall = lib.optionalString (isApp || isPkg) ''
+    echo "Removing quarantine attributes..."
 
-        if [ -d "$out/Applications" ]; then
-          for app in $(fd -t d -e app . "$out/Applications" 2>/dev/null || true); do
-            # Clear ALL extended attributes to prevent "damaged app" errors
-            xattr -cr "$app" 2>/dev/null || true
-          done
-        fi
+    if [ -d "$out/Applications" ]; then
+      for app in $(fd -t d -e app . "$out/Applications" 2>/dev/null || true); do
+        # Clear ALL extended attributes to prevent "damaged app" errors
+        xattr -cr "$app" 2>/dev/null || true
+      done
+    fi
 
-        if [ -d "$out/Library" ]; then
-          xattr -cr "$out/Library" 2>/dev/null || true
-        fi
-      '';
+    if [ -d "$out/Library" ]; then
+      xattr -cr "$out/Library" 2>/dev/null || true
+    fi
+  '';
 
-    passthru = {
-      inherit appName binaries appLocation;
-      installMethod = "extract";
-    };
+  passthru = {
+    inherit appName binaries appLocation;
+    installMethod = "extract";
+  };
 
-    meta = {
-      description =
-        if desc != null
-        then desc
-        else "macOS application";
-      homepage =
-        if homepage != null
-        then homepage
-        else "";
-      platforms = lib.platforms.darwin;
-      mainProgram =
-        if (isBinary && !isApp)
-        then (lib.lists.elemAt binaries 0)
-        else pname;
-    };
-  })
+  meta = {
+    description = if desc != null then desc else "macOS application";
+    homepage = if homepage != null then homepage else "";
+    platforms = lib.platforms.darwin;
+    mainProgram = if (isBinary && !isApp) then (lib.lists.elemAt binaries 0) else pname;
+  };
+})

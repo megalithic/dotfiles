@@ -9,11 +9,13 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Add /continue slash command
 
 New slash command for smart 'pick up where I left off' resumption. Accepts optional slug arg.
 
 Behavior:
+
 1. Same slug resolution as /plan / /tickets after dot-71pq lands (orphan-scan → recent-items fallback)
 2. Once slug resolved, determine next phase from file existence:
    - TASK only (no PLAN) → emit 'Continue to planning. Slug: <slug>. Equivalent: /plan <slug>'
@@ -38,7 +40,6 @@ Plan ref: ~/.local/share/pi/plans/.dotfiles/pipeline-smart-retrieval_PLAN.md (St
 5. /continue with no TASK files says 'start with /task'
 6. /continue does NOT auto-invoke any subagent
 7. just validate home passes
-
 
 ## Notes
 

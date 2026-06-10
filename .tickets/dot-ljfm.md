@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-r5vb
 tags: [ready-for-development, nvim, blink, whichkey]
 ---
+
 # nvim Step 9: Whichkey groups + enable blink-ripgrep with .jj marker
 
 Add whichkey group labels for the new <leader>j prefix and the relocated <localleader>J. Add 'mikavilpas/blink-ripgrep.nvim' as a blink.cmp source (currently absent in our config — adding from scratch with project_root_marker including .jj).
@@ -21,28 +22,31 @@ Reference for ripgrep spec: ~/.cache/pi-internet/github-repos/iofq/nvim.nix@mast
 ## What
 
 Part A — whichkey:
+
 - Edit 'config/nvim/lua/plugins/whichkey.lua' (around lines 52-67 where group labels live), add:
   - { '<leader>j', group = 'jj' }
   - { '<localleader>J', group = 'split/join' }
 
 Part B — blink-ripgrep:
+
 - Edit 'config/nvim/lua/plugins/blink.lua':
   - Add 'mikavilpas/blink-ripgrep.nvim' to the 'dependencies' list of saghen/blink.cmp (sibling to 'xzbdmw/colorful-menu.nvim')
   - In opts.sources.default: add 'ripgrep' → { 'lsp', 'path', 'snippets', 'ripgrep', 'buffer' }
   - In opts.sources.providers, add a new ripgrep provider:
     ripgrep = {
-      enabled = true,
-      module = 'blink-ripgrep',
-      name = '[rg]',
-      score_offset = -10,
-      async = true,
-      opts = {
-        project_root_marker = { '.git', '.jj' },
-        backend = { use = 'gitgrep-or-ripgrep' },
-      },
+    enabled = true,
+    module = 'blink-ripgrep',
+    name = '[rg]',
+    score_offset = -10,
+    async = true,
+    opts = {
+    project_root_marker = { '.git', '.jj' },
+    backend = { use = 'gitgrep-or-ripgrep' },
+    },
     },
 
 ## Why
+
 - Discoverability: <leader>j shows 'jj' header in whichkey instead of raw keymap list
 - blink-ripgrep adds project-wide grep completion to blink.cmp; works in jj-only repos via .jj marker + gitgrep-or-ripgrep fallback to plain rg
 
@@ -58,4 +62,3 @@ Part B — blink-ripgrep:
 8. Manual: pressing <leader>j (no follow-up) shows whichkey popup with 'jj' header listing ja/jf/jl/jh/je/jd
 9. Manual: pressing <localleader>J shows 'split/join' label
 10. No regressions: blink.cmp still works for lsp/path/snippets/buffer sources
-

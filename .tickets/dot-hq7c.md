@@ -9,6 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Remove obsolete Ollama and oMLX wiring
 
 Remove no-longer-used Ollama and oMLX package/service plumbing after host configs use llama.cpp. Keep the current Home Manager launchd activation override in home/common/services.nix because macOS 15 rejects launchctl bootout --wait. File hints: home/common/services.nix, home/common/packages.nix, modules/brew.nix, flake.nix, flake.lock, home/common/programs/ollama/default.nix, home/common/programs/omlx/default.nix.
@@ -21,7 +22,6 @@ Remove no-longer-used Ollama and oMLX package/service plumbing after host config
 4. Current Home Manager launchd activation override remains in place and still avoids launchctl bootout --wait.
 5. alejandra --check home/common/services.nix home/common/packages.nix modules/brew.nix flake.nix passes.
 6. just validate home passes.
-
 
 ## Notes
 

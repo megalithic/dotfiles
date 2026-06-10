@@ -91,7 +91,10 @@ function getUserMessageText(message: UserMessage): string {
 }
 
 function getLastMeaningfulLine(text: string, maxLength: number = 200): string {
-  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  const lines = text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
   for (let i = lines.length - 1; i >= 0; i--) {
     const line = lines[i];
     if (/^```|^---$|^===|^\*\*\*$/.test(line)) continue;
@@ -129,11 +132,12 @@ function notify(
     attention?: boolean;
     question?: boolean;
     phone?: boolean;
-  } = {}
+  } = {},
 ): void {
   const args = ["send", "-t", title, "-m", message, "-s", getSource()];
   if (options.urgency) args.push("-u", options.urgency);
-  if (options.attention !== undefined) args.push("-a", options.attention ? "true" : "false");
+  if (options.attention !== undefined)
+    args.push("-a", options.attention ? "true" : "false");
   if (options.question) args.push("-q");
   if (options.phone) args.push("-p");
   const proc = spawn(NTFY_PATH, args, { stdio: "ignore", detached: true });
@@ -149,12 +153,12 @@ const NOTIFY_DELAY_MS = 3000;
 export default function (pi: ExtensionAPI) {
   pi.on("input", async (_event, _ctx, message) => {
     lastInputTime = Date.now();
-    
+
     // Track telegram messages to suppress duplicate notifications
     if (message && message.startsWith(TELEGRAM_PREFIX)) {
       lastTelegramTime = Date.now();
     }
-    
+
     // Cancel pending notification if user starts typing
     if (pendingNotifyTimeout) {
       clearTimeout(pendingNotifyTimeout);
@@ -164,25 +168,30 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("agent_end", async (event, ctx) => {
     if (!ctx.hasUI) return;
-    
+
     // Skip notification if conversation includes telegram messages
     // Check if any recent user message was from telegram
     const hasTelegramInConversation = event.messages.some((msg) => {
       if (msg.role !== "user") return false;
-      const content = typeof msg.content === "string" 
-        ? msg.content 
-        : msg.content.filter((b): b is { type: "text"; text: string } => b.type === "text")
-            .map((b) => b.text).join("");
+      const content =
+        typeof msg.content === "string"
+          ? msg.content
+          : msg.content
+              .filter(
+                (b): b is { type: "text"; text: string } => b.type === "text",
+              )
+              .map((b) => b.text)
+              .join("");
       return content.includes(TELEGRAM_PREFIX);
     });
-    
+
     // Skip if telegram conversation OR recent telegram activity
     if (hasTelegramInConversation || isTelegramActive()) {
       return;
     }
-    
+
     const body = extractNotificationBody(event.messages);
-    
+
     // Delay notification to avoid spam when switching focus
     pendingNotifyTimeout = setTimeout(() => {
       pendingNotifyTimeout = null;

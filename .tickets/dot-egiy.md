@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-42gl
 tags: [ready-for-development]
 ---
+
 # Phase 3: Add core principles to GLOBAL_AGENTS.md
 
 Add behavioral principles as the opening section of GLOBAL_AGENTS.md.
@@ -17,6 +18,7 @@ These are universal rules that prevent common agent failures (like skipping cont
 Inspired by HazAT's pi-config AGENTS.md.
 
 Principles to add (each 2-4 lines max):
+
 1. Read before you edit — read file, inline comments, check AGENTS.md in directory
 2. Try before asking — don't ask if tool installed, run it
 3. Verify before claiming done — run command, show output, confirm claim
@@ -31,6 +33,7 @@ This section should come BEFORE the Tools section — principles first, mechanic
 Reference: https://github.com/HazAT/pi-config/blob/main/AGENTS.md (Core Principles section)
 
 Files to edit:
+
 - home/common/programs/ai/pi-coding-agent/sources/GLOBAL_AGENTS.md
 
 ## Acceptance Criteria
@@ -42,7 +45,6 @@ Files to edit:
 5. 'Respect convention files' lists known formats (AGENTS.md, CLAUDE.md, .cursorrules)
 6. Total GLOBAL file is ~150 lines or less
 7. just validate passes
-
 
 ## Notes
 

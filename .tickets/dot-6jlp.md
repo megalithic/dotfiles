@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-fsxj
 tags: [ready-for-development]
 ---
+
 # Port agents/planner.md + agents/researcher.md with write-task/write-plan tool refs
 
 Replace our read-only planner/researcher agents with otahontas's versions that write their own output files via the write-task/write-plan tools. Depends on dot-aqin (restricted-write.ts port).
@@ -40,8 +41,6 @@ Worked in tandem with dot-vta8 (task-pipeline sync). Merge as one logical unit.
 4. After dot-aqin is closed: subagent tool invocation with agent: 'researcher' produces plans/task.md
 5. After dot-aqin + dot-vta8 closed: /task foo end-to-end writes plans/task.md
 6. jj diff shows ONLY agent file changes in this commit
-
-
 
 ---
 

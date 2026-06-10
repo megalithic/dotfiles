@@ -6,10 +6,11 @@ links: []
 created: 2026-05-04T18:45:00Z
 type: feature
 priority: 2
-assignee: 
-parent: 
+assignee:
+parent:
 tags: [pi-skill, jj, conflict-resolution, git-merge, workflow-automation]
 ---
+
 # pi skill: jj massive conflict resolution with multi-commit history preservation
 
 Create a pi-coding-agent skill that provides vetted scripts and workflows for resolving large merge conflicts across multiple commits in jj/jujutsu repositories, while preserving well-defined commit history (not squashing to a single commit).
@@ -35,12 +36,13 @@ During PR #800 rebase in the rx repo (34 commits → 6 logical groups via squash
    - Then use `jj split` or `jj diffedit` to carve into logical commits
 
 4. **3-way merge setup that worked well:**
+
    ```bash
    # Get base (fork point), branch endpoint, and main versions
    jj file show -r 'fork_point(main@origin | branch@origin)' path > base.ex
-   jj file show -r 'branch@origin' path > branch.ex  
+   jj file show -r 'branch@origin' path > branch.ex
    jj file show -r 'main@origin' path > main.ex
-   
+
    # Run 3-way merge with diff3 markers
    git merge-file --diff3 branch.ex base.ex main.ex
    # Produces clearer conflict markers than jj's native format

@@ -10,6 +10,7 @@ assignee: Seth Messer
 external-ref: fff-snacks.nvim#fff-9mmd
 tags: [ready-for-development]
 ---
+
 # Track upstream fix for fff-snacks.nvim breakage (fff.nvim PR #387)
 
 Watcher ticket. Tracks work being done in ~/code/oss/fff-snacks.nvim on ticket fff-9mmd.
@@ -29,4 +30,3 @@ If fff-snacks fix requires a bumped lazy spec commit pin, update the spec here a
 2. :Lazy sync (or equivalent) pulls fix into local lazy cache
 3. <leader>ff renders files in nvim without error
 4. If a plugin spec pin needed updating, change is committed here and 'just rebuild' succeeds
-

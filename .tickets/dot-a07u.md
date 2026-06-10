@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development]
 ---
+
 # Retire bridge.ts after focused ingress replacements land
 
 Remove the legacy bridge.ts extension only after nvim, Hammerspoon/Telegram, tell/delegation, and session-discovery callers have focused owners. This ticket is final cleanup, not first migration step.
@@ -17,4 +18,3 @@ Remove the legacy bridge.ts extension only after nvim, Hammerspoon/Telegram, tel
 ## Acceptance Criteria
 
 rg finds no active bridge.ts consumers or docs requiring it; pinvim.ts no longer carries telegram/tell/no-type legacy compatibility unless separately justified; bridge.ts removed from nix-managed extension set; pinvim-bridge audit updated with final decision; relevant smoke tests pass.
-

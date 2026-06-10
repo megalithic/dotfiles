@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-r5vb
 tags: [ready-for-development, nvim, jj, mini.diff]
 ---
+
 # nvim Step 1: Refresh mini.diff jj source — adopt madmaxieee bug fix + co2, drop hg
 
 Adopt the new-file fallback bug fix and co2 coroutine helper from madmaxieee/nvim-config; drop hg support entirely. Headline: new untracked files currently show NO mini.diff signs in our config — this is a silent bug we've been carrying.
@@ -18,6 +19,7 @@ Plan: ~/.local/share/pi/plans/dotfiles/nvim-jj-iofq-port_PLAN.md (Step 1)
 Context: ~/.local/share/pi/plans/dotfiles/nvim-jj-iofq-port.ticket-context.md
 
 ## What
+
 - Add 'config/nvim/lua/co2.lua' (verbatim from ~/.cache/pi-internet/github-repos/madmaxieee/nvim-config/lua/co2.lua)
 - Edit 'config/nvim/lua/plugins/mini/diff.lua':
   - Remove the entire '-- Mercurial source' block (hg_config, hg_cmd, hg_opts, gen_custom_source.hg)
@@ -31,6 +33,7 @@ Context: ~/.local/share/pi/plans/dotfiles/nvim-jj-iofq-port.ticket-context.md
 - Edit 'config/nvim/lua/utils/vcs.lua': remove get_hg_root, is_hg_root, hg_root_cache (leave get_jj_root)
 
 ## Why
+
 - Bug fix: new untracked files currently show no mini.diff highlights (silent regression)
 - Drop hg: we don't use mercurial; mirrors madmaxieee 71f08c0
 - co2: cleaner async with the new fallback branch (less callback nesting)
@@ -45,4 +48,3 @@ Context: ~/.local/share/pi/plans/dotfiles/nvim-jj-iofq-port.ticket-context.md
 6. Manual REGRESSION TEST: in a jj repo, run 'echo foo > /tmp/newfile-test.txt && cd <jj-repo> && cp /tmp/newfile-test.txt . && nvim newfile-test.txt' — column shows add-signs for the new line(s)
 7. ':checkhealth mini.diff' reports 'jj' source attached and does NOT mention 'hg'
 8. No regressions to existing mini.diff hunk nav (]h/[h), textobject (ih), reset (<leader>hr), or overlay toggle (<leader>gd)
-

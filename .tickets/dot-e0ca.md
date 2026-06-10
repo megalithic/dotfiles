@@ -9,6 +9,7 @@ type: task
 priority: 2
 assignee: Seth Messer
 ---
+
 # Investigate Hammerspoon bluetooth audio device management
 
 Research and prototype Hammerspoon-based menu/keybindings for controlling bluetooth connections.
@@ -25,4 +26,3 @@ Consider a menubar widget and/or hyper-key bindings for quick switching.
 2. Document available macOS CLI tools (blueutil, SwitchAudioSource, etc.)
 3. Identify gaps — what can't be done natively and needs workarounds
 4. Write up findings in a research doc or ticket comment
-

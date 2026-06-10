@@ -9,7 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [epic, nvim, neovim]
 ---
+
 # Neovim configuration
 
 Ongoing epic for Neovim config, plugins, and editor-related work.
-

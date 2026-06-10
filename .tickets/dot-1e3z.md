@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-wo6i
 tags: [nix, syncthing, sync, multi-device]
 ---
+
 # Add syncthing support to sync module
 
 Add syncthing as sync backend option (alongside iCloud).
@@ -17,6 +18,7 @@ Add syncthing as sync backend option (alongside iCloud).
 User goal: Sync data between laptops, NAS, phone (mix of backup + 2-way sync).
 
 Implementation:
+
 1. Add programs.syncthing config to home-manager
 2. Declarative folder configuration
 3. Device ID management (per-host)
@@ -29,4 +31,3 @@ Implementation:
 Note: Syncthing itself available in nixpkgs, just needs declarative config.
 
 Lower priority than Chromium sync, but foundation for future NAS/phone sync.
-

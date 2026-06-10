@@ -1,7 +1,18 @@
 ---
 id: dot-4mns
 status: open
-deps: [dot-913o, dot-yjzp, dot-9zvo, dot-0srj, dot-o2jq, dot-1lg6, dot-j34v, dot-wj6e, dot-ljfm]
+deps:
+  [
+    dot-913o,
+    dot-yjzp,
+    dot-9zvo,
+    dot-0srj,
+    dot-o2jq,
+    dot-1lg6,
+    dot-j34v,
+    dot-wj6e,
+    dot-ljfm,
+  ]
 links: []
 created: 2026-05-01T21:22:21Z
 type: task
@@ -10,6 +21,7 @@ assignee: Seth Messer
 parent: dot-r5vb
 tags: [ready-for-development, nvim, jj, verification]
 ---
+
 # nvim Step 10: Smoke test + cleanup verification
 
 End-to-end smoke test of the entire jj/mini.diff/diffedit/keymap port. No code changes — verification only.
@@ -18,6 +30,7 @@ Plan: ~/.local/share/pi/plans/dotfiles/nvim-jj-iofq-port_PLAN.md (Step 10)
 Depends on: ALL preceding steps (dot-913o, dot-yjzp, dot-9zvo, dot-0srj, dot-o2jq, dot-1lg6, dot-j34v, dot-wj6e, dot-ljfm)
 
 ## What
+
 Run all of these in a jj repo with pending changes (use a scratch repo or your dotfiles):
 
 1. Open nvim — confirm no errors
@@ -59,4 +72,3 @@ Run all of these in a jj repo with pending changes (use a scratch repo or your d
 14. 'rg "neojj|neojjit|MiniHg|hg_root|get_hg_root|MiniJJDiff|MiniJJPDiff" config/nvim/' returns no matches
 15. 'just validate home' and 'just validate darwin' both succeed
 16. Existing keymaps (]x/[x, <localleader>c{c,o,i,t,b}, <leader>gco, <leader>gd mini.diff overlay, ]h/[h hunk nav, <leader>hr reset, ih textobject) still work — no regressions
-

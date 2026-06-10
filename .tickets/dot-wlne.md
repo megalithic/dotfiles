@@ -9,6 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Update pi-coding-agent models.json with new aliases
 
 In home/common/programs/pi-coding-agent/models.json, review and update omlx provider section.
@@ -27,7 +28,6 @@ See home/common/programs/pi-coding-agent/models.json omlx section.
 4. Context windows set: each model has contextWindow field (32768 or 65536)
 5. maxTokens set: each model has maxTokens field (8192)
 
-
 ## Notes
 
 **2026-05-06T20:22:06Z**
@@ -35,11 +35,13 @@ See home/common/programs/pi-coding-agent/models.json omlx section.
 Completed 2026-05-06. Updated pi-coding-agent config:
 
 models.json:
+
 - Added deepseek14b entry (reasoning=true, contextWindow=32768, thinkingFormat=deepseek)
 - qwen3.6 contextWindow: 65536 → 32768 (matches 27B model max_context_window)
 - gemma4 contextWindow: 32768 → 16384 (matches reduced budget in default.nix)
 
 settings.json:
+
 - Added omlx/deepseek14b to enabledModels list
 
 just validate home passes.

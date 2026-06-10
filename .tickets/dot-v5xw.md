@@ -10,9 +10,11 @@ assignee: Seth Messer
 parent: dot-wo6i
 tags: [nix, browser, sync, chromium]
 ---
+
 # Add Brave Browser + Helium support to sync module
 
 Extend sync module to support all Chromium browsers:
+
 - Brave Browser (currently missing)
 - Helium Browser (currently missing)
 - Brave Browser Nightly (already exists)
@@ -20,9 +22,9 @@ Extend sync module to support all Chromium browsers:
 All use identical JSON format for bookmarks.
 
 Implementation:
+
 1. Add app profiles for brave-browser and helium-browser
 2. Mirror brave-nightly profile structure
 3. Include: Bookmarks, Preferences, Cookies, History, Login Data
 4. Support conditional flags: cookies, history, logins (user already wants these)
 5. Test export/import from each browser
-

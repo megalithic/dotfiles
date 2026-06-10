@@ -10,11 +10,13 @@ assignee: Seth Messer
 parent: dot-jqme
 tags: [ready-for-development]
 ---
+
 # Lazy-load heavy Neovim plugins and reduce Treesitter render overhead
 
 Optimize Neovim startup and first-file render by lazy-loading heavy plugins and reducing Treesitter startup/render overhead. Recent profiling after pinvim quick wins shows pinvim no longer blocks startup, but several plugins still load eagerly or on every file read.
 
 Profile findings:
+
 - smart-splits.nvim: ~6-10ms, currently lazy=false in config/nvim/lua/plugins/init.lua.
 - fff.nvim / fff-snacks.nvim: ~4-9ms, currently eager in config/nvim/lua/plugins/snacks/init.lua.
 - refer.nvim: can pull blink.cmp, ~5-15ms, currently no lazy trigger in config/nvim/lua/plugins/refer.lua.
@@ -26,6 +28,7 @@ Profile findings:
 - nvim-treesitter.install.install(parsers) runs during startup/init.
 
 Relevant files:
+
 - config/nvim/lua/plugins/treesitter.lua
 - config/nvim/lua/plugins/init.lua
 - config/nvim/lua/plugins/snacks/init.lua
@@ -44,7 +47,6 @@ Relevant files:
 7. nvim --headless +qa exits cleanly with no stderr.
 8. nvim --headless +'sleep 600m' +qa exits cleanly with no stderr.
 9. stylua succeeds on touched Lua files.
-
 
 ## Notes
 

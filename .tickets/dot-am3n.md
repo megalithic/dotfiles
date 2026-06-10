@@ -9,6 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Add conflict guard between stop-hook and pi-review-loop extensions
 
 Both stop-hook.ts and pi-review-loop fire follow-up turns after agent completes.
@@ -19,14 +20,15 @@ Approach: pi-review-loop exports a flag (or emits an event) indicating active st
 stop-hook checks this flag and skips nudge when review-loop is active.
 
 Implementation options:
-1. Shared global: pi-review-loop sets globalThis.__reviewLoopActive, stop-hook checks it
+
+1. Shared global: pi-review-loop sets globalThis.\_\_reviewLoopActive, stop-hook checks it
 2. Event bus: pi-review-loop emits event, stop-hook listens
 3. Extension state: use pi.events or shared state mechanism
 
-Option 1 is simplest and matches existing pattern (sentinel uses globalThis.__sentinel).
+Option 1 is simplest and matches existing pattern (sentinel uses globalThis.\_\_sentinel).
 
 Files: home/common/programs/pi-coding-agent/extensions/stop-hook.ts
-       home/common/programs/pi-coding-agent/extensions/pi-review-loop/
+home/common/programs/pi-coding-agent/extensions/pi-review-loop/
 
 ## Acceptance Criteria
 
@@ -35,4 +37,3 @@ Files: home/common/programs/pi-coding-agent/extensions/stop-hook.ts
 3. No regression: stop-hook still nudges on non-reviewed tasks
 4. No regression: pi-review-loop still iterates as before
 5. just validate home passes
-

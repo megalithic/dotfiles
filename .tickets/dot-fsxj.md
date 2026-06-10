@@ -10,12 +10,14 @@ priority: 1
 assignee: Seth Messer
 tags: [epic, tickets, pi-coding-agent, jj, subagents]
 ---
+
 # Align tk/tickets workflow with otahontas/nix parity + jj-first integration
 
 ## Context: Nix-based dotfiles
 
 All work is in `~/.dotfiles`, managed via Nix. **Do not assume npm/pnpm are globally installed.**
 Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` for exact build patterns:
+
 1. Simple extensions/skills: Auto-load (no build step).
 2. npm-dependent extensions: Use Nix `buildNpmPackage` patterns (A, B, C, D).
 3. Need ad-hoc tools? Use `nix run nixpkgs#nodejs -- npm install` or `nix shell nixpkgs#pnpm`.
@@ -23,6 +25,7 @@ Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` 
 > **⚠️ SUPERSEDED by megadots reconcile sub-epics.** Per cross-repo coordination ticket `dot-0oy1` (mirror of megadots `meg-ppzd`), this work has moved to the megadots rebuild and will not happen here.
 >
 > **Megadots replacements:**
+>
 > - Stage 1 sub-epic: `meg-3beo` (Program reconciliation — audit)
 > - Stage 2 sub-epic: `meg-37gp` (Program reconciliation — implementation)
 > - pi-coding-agent reconcile: `meg-yblr` (Stage 1) + `meg-u3i3` (Stage 2)
@@ -93,12 +96,14 @@ Cloned /tmp/otahontas-nix (main @ 2026-04-22). Baseline for diffs below.
 Currently: installed pi-interactive-subagents (HazAT) via 'pi install'.
 
 Problems:
+
 1. Too heavy — bundles planner/scout/worker/reviewer/visual-tester agents that conflict with our researcher/planner
 2. Async tmux-pane model doesn't fit our ticket-worker flow (work-tickets.sh needs synchronous pi -p calls)
 3. No hook into tk lifecycle — doesn't know about tickets/bookmarks
 4. Competes with task-pipeline.ts /plan command
 
 Options to evaluate:
+
 - A. Remove pi-interactive-subagents entirely, use bundled extensions/subagent/ (synchronous, matches work-tickets.sh)
 - B. Keep pi-interactive-subagents ONLY for exploratory /iterate work, add ticket-aware agents (ticket-worker, ticket-verifier)
 - C. Fork HazAT extension to add tk integration (auto-pass ticket id, bookmark handoff)
@@ -112,6 +117,7 @@ Everything ticket-related assumes git. Convert to jj-first with git fallback. De
     if [ -d .jj ]; then VCS=jj; else VCS=git; fi
 
 Affected surfaces:
+
 - skills/ticket-creator — commit-after-create logic
 - skills/ticket-worker — 'commit and close' step (currently says 'git commit -S -m')
 - scripts/work-tickets.sh — no commit logic today, but verification pass runs 'git diff HEAD~1'; use 'jj diff -r @-' when jj
@@ -121,15 +127,15 @@ Affected surfaces:
 
 ### jj command mapping
 
-| Purpose | jj | git |
-|---|---|---|
-| Commit message | jj desc -m / jj dm | git commit -S -m |
-| New change | jj new | (implicit) |
-| Branch/bookmark | jj bookmark create/move | git checkout -b |
-| Diff last change | jj diff -r @- | git diff HEAD~1 |
-| Show log | jj log --limit N | git log --oneline -N |
-| Worktree | jj workspace add | git worktree add |
-| Rebase | jj rebase -d main | git rebase main |
+| Purpose          | jj                      | git                  |
+| ---------------- | ----------------------- | -------------------- |
+| Commit message   | jj desc -m / jj dm      | git commit -S -m     |
+| New change       | jj new                  | (implicit)           |
+| Branch/bookmark  | jj bookmark create/move | git checkout -b      |
+| Diff last change | jj diff -r @-           | git diff HEAD~1      |
+| Show log         | jj log --limit N        | git log --oneline -N |
+| Worktree         | jj workspace add        | git worktree add     |
+| Rebase           | jj rebase -d main       | git rebase main      |
 
 ## Ticket ↔ jj bookmark automation (new extension)
 
@@ -186,7 +192,6 @@ Split into child tickets for each bullet below. Acceptance for this epic = all c
 7. 'tk dep cycle' clean; 'tk ready -T ready-for-development' shows at least one child unblocked when work begins
 8. Epic closed only when all 13 children closed
 
-
 ## Notes
 
 **2026-04-22T15:59:03Z**
@@ -209,7 +214,7 @@ We use extensions/sentinel.ts (1062 lines) + extensions/sentinel-rules.json, NOT
 
 - ❌ Non-conventional commits — NOT enforced. otahontas regex checks 'git commit -m "..."' against /^(feat|fix|docs|...)(\(scope\))?: /. We need jj-aware version: match both 'jj desc -m', 'jj dm', 'jj commit -m' AND 'git commit -m'
 - ❌ Non-standard worktree paths — NOT enforced. otahontas blocks 'git worktree add' unless path contains '.worktrees/'. Add to sentinel with jj workspace add support too
-- ⚠️  commented-out rules — user mentioned some guards may exist commented-out. rg didn't find obvious ones; do a second pass reading sentinel.ts top-to-bottom during implementation
+- ⚠️ commented-out rules — user mentioned some guards may exist commented-out. rg didn't find obvious ones; do a second pass reading sentinel.ts top-to-bottom during implementation
 
 ### Amended subtask list
 
@@ -260,7 +265,6 @@ Not using git worktrees / jj workspace add at this time.
 10. ticket-remove-checkpoint: remove extensions/checkpoint.ts (broken, replaced by ticket-vcs.ts)
 11. ticket-new-ticket-vcs: new extensions/ticket-vcs.ts — tk↔jj bookmark hooks + session state persistence (tk start → jj feat, tk close → jj desc suggestion, stop-hook → .pi/state/current-ticket.json)
 12. ticket-smoke-test: just validate + just home + end-to-end work-tickets.sh dry run. Depends on 1-11.
-
 
 ---
 

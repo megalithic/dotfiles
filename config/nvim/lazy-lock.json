@@ -9,7 +9,7 @@
   },
   "blink-ripgrep.nvim": {
     "branch": "main",
-    "commit": "ca0f772b773e8ecedb7a1b3731b87b2ef569c720"
+    "commit": "81149816bc52432b43f732e2d24709cc7a521932"
   },
   "blink.cmp": {
     "branch": "main",
@@ -21,7 +21,7 @@
   },
   "codediff.nvim": {
     "branch": "main",
-    "commit": "5d6aa753797a0ebda14dd769ed03d12a320d689b"
+    "commit": "4a29c176b621823a8342224405b2c370ede7749d"
   },
   "colorful-menu.nvim": {
     "branch": "master",
@@ -37,7 +37,7 @@
   },
   "fff.nvim": {
     "branch": "main",
-    "commit": "535b44374e02049a5f35d9daebc15f66bba2cfaf"
+    "commit": "373d240b13c82940e65e92fec04bbce6493e4bd7"
   },
   "firenvim": {
     "branch": "master",
@@ -245,7 +245,7 @@
   },
   "schemastore.nvim": {
     "branch": "main",
-    "commit": "0f3cd0e584b4ed221fc44eee5b0b6ce335f7e263"
+    "commit": "961c2a806abf56d4e100713ec9dc71d2c8d9d022"
   },
   "smart-splits.nvim": {
     "branch": "master",
@@ -261,7 +261,7 @@
   },
   "tiny-inline-diagnostic.nvim": {
     "branch": "main",
-    "commit": "680762989e8b05a72e90769959d0fb9a557e6917"
+    "commit": "e930d0a46031645040d5492595b46cdf6ab3514f"
   },
   "treesitter-endwise.nvim": {
     "branch": "master",

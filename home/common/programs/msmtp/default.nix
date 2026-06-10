@@ -4,7 +4,8 @@
   lib,
   ca-bundle_crt,
   ...
-}: {
+}:
+{
   programs.msmtp = {
     enable = true;
     # Enable offline queue - use configContent with mkBefore (extraConfig is deprecated)

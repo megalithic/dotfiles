@@ -21,7 +21,16 @@ const MAX_IMAGE_SIZE_MB = 5;
 
 // Image extensions to check
 const IMAGE_EXTENSIONS = new Set([
-  ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff", ".tif", ".ico", ".svg"
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".webp",
+  ".bmp",
+  ".tiff",
+  ".tif",
+  ".ico",
+  ".svg",
 ]);
 
 function isImageFile(path: string): boolean {
@@ -137,7 +146,7 @@ Then read the preview file instead.`,
 
       ctx.ui.notify(
         `🛑 **Image(s) too large** — exceeds ${MAX_IMAGE_SIZE_MB}MB API limit:\n\n${details}\n\n**Resize before attaching:**\n\`magick input.png -resize 25% smaller.png\``,
-        "error"
+        "error",
       );
 
       // Block the input

@@ -10,12 +10,14 @@ assignee: Seth Messer
 parent: dot-42gl
 tags: [ready-for-development]
 ---
+
 # Phase 5: Final trim of repo AGENTS.md and validation
 
 After phases 1-4, repo AGENTS.md should only contain repo-specific content.
 Review and trim any remaining bloat. Verify both files against target metrics.
 
 Target metrics:
+
 - GLOBAL_AGENTS.md: ~150 lines, universal content only
 - Repo AGENTS.md: ~200 lines, repo-specific content only
 - Zero duplicated sections between the two files
@@ -25,6 +27,7 @@ Also verify the inline comments added to default.nix (from earlier in this sessi
 are consistent with the updated AGENTS.md files.
 
 Files to review:
+
 - home/common/programs/ai/pi-coding-agent/sources/GLOBAL_AGENTS.md
 - AGENTS.md (repo root)
 - home/common/programs/ai/pi-coding-agent/default.nix (inline comments)
@@ -40,4 +43,3 @@ Files to review:
 5. Inline AGENT CONTEXT comments in default.nix are consistent with AGENTS.md
 6. just validate passes
 7. nix flake check --no-build passes
-

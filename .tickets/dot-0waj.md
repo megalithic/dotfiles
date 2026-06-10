@@ -9,13 +9,15 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Migrate extension imports from @mariozechner to @earendil-works
 
 All 23 custom extension .ts files import from @mariozechner/pi-coding-agent, @mariozechner/pi-ai, @mariozechner/pi-tui, and @mariozechner/pi-agent-core.
-These must be updated to @earendil-works/* equivalents since pi v0.74.0 ships under the new scope.
+These must be updated to @earendil-works/\* equivalents since pi v0.74.0 ships under the new scope.
 This is a bulk find-and-replace — no functional changes.
 
 Four mappings:
+
 - @mariozechner/pi-coding-agent → @earendil-works/pi-coding-agent
 - @mariozechner/pi-ai → @earendil-works/pi-ai
 - @mariozechner/pi-tui → @earendil-works/pi-tui
@@ -31,4 +33,3 @@ Also: statusline.ts.disabled (disabled but should be updated for consistency)
 3. just validate home builds without error
 4. pi starts and loads all extensions without import errors
 5. A working extension (e.g., sentinel, review, or loop) functions normally
-

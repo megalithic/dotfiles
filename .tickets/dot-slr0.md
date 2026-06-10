@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-dylm
 tags: [ready-for-development]
 ---
+
 # pinvim review: skeleton module and gds toggle UI
 
 Plan step 1 of ~/.local/share/pi/plans/dotfiles/pinvim-review-diff-mode_PLAN.md. Create config/nvim/lua/pinvim/review.lua as separate module required from config/nvim/lua/pinvim.lua without rewriting core transport. The gds review-toggle keymap is registered by the review module itself (in its own setup()/loader); pinvim.lua only loads the module. Opening review uses native nvim windows: left nui.tree changed-file tree at 20% width, right scratch diff viewer placeholder; closing restores prior layout. Add review-buffer local maps with desc values and g? buffer-local which-key help. Add PiReview/PinvimReview, PiReviewClose/PinvimReviewClose, PiReviewStatus/PinvimReviewStatus commands.
@@ -23,7 +24,6 @@ Plan step 1 of ~/.local/share/pi/plans/dotfiles/pinvim-review-diff-mode_PLAN.md.
 5. stylua --check config/nvim/lua/pinvim.lua config/nvim/lua/pinvim/review.lua clean.
 6. nvim --headless '+lua require("pinvim").setup()' '+qa' exits 0.
 7. bin/pinvim-protocol-smoke passes.
-
 
 ## Notes
 

@@ -9,6 +9,7 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
+
 # Add auto-version support to update-npm script
 
 The update-npm-pkg.sh script currently requires manually editing package.json before running. It should support two new workflows:
@@ -19,6 +20,7 @@ The update-npm-pkg.sh script currently requires manually editing package.json be
 Currently $2 (version arg) is silently ignored by the script.
 
 Relevant files:
+
 - home/common/programs/ai/pi-coding-agent/scripts/update-npm-pkg.sh
 - justfile (update-npm recipe)
 
@@ -31,4 +33,3 @@ Relevant files:
 5. Existing hash-update and lockfile-generation logic unchanged
 6. `just update-npm pi 0.67.6` successfully updates the pi package end-to-end (package.json → lockfile → nix hash → `just home` builds)
 7. Script accepts both directory name and npm package name — e.g., `just update-npm pi` and `just update-npm pi-coding-agent` both resolve to the `pi` package directory
-

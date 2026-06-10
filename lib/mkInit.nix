@@ -21,7 +21,8 @@ let
     name = "init";
     text = script;
   };
-in {
+in
+{
   type = "app";
   program = "${init}/bin/init";
 }

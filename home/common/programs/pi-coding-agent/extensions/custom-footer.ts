@@ -235,7 +235,7 @@ export default function (pi: ExtensionAPI) {
 
           // Line 2 right: compact multi-pass routing status.
           // @lat: [[lat#Dotfiles architecture#Pi runtime settings]]
-          // Shape: ({preset}){active provider}/{model}/thinking_level
+          // Shape: ({preset}){provider-or-failover-pool}/{model}/thinking_level
           const sep = theme.fg("dim", "/");
           const activeProvider =
             multiPass.activeProvider || ctx.model?.provider || "";
@@ -246,10 +246,11 @@ export default function (pi: ExtensionAPI) {
             currentPool.length > 0 &&
             startingPool.length > 0 &&
             currentPool !== startingPool;
-          const providerPart = activeProvider
+          const displayProvider = poolChanged ? currentPool : activeProvider;
+          const providerPart = displayProvider
             ? poolChanged
-              ? theme.fg("success", theme.bold(activeProvider))
-              : activeProvider
+              ? theme.fg("success", theme.bold(displayProvider))
+              : displayProvider
             : "";
           const modelPart = theme.fg("accent", activeModel);
           const thinkingLevel = pi.getThinkingLevel() || "off";
@@ -257,7 +258,7 @@ export default function (pi: ExtensionAPI) {
             ? sep + theme.fg("dim", thinkingLevel)
             : "";
           const presetPart = multiPass.preset
-            ? theme.fg("dim", `(${multiPass.preset})`)
+            ? theme.fg("dim", `(${multiPass.preset}) `)
             : "";
 
           const poolModelPart = providerPart

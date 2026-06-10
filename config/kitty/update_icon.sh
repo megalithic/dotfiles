@@ -9,7 +9,6 @@ if [[ $(uname) != "Darwin" ]]; then
   exit 0
 fi
 
-
 function __debug_info() {
   # -- set some useful vars for executable info:
   __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

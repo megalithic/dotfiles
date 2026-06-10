@@ -11,12 +11,14 @@ external-ref: meg-ppzd
 parent: dot-0fjk
 tags: [cross-repo, coordination, megadots, tracking]
 ---
+
 # Cross-repo coordination: megadots reconcile interaction with pi ecosystem
 
 ## Context: Nix-based dotfiles
 
 All work is in `~/.dotfiles`, managed via Nix. **Do not assume npm/pnpm are globally installed.**
 Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` for exact build patterns:
+
 1. Simple extensions/skills: Auto-load (no build step).
 2. npm-dependent extensions: Use Nix `buildNpmPackage` patterns (A, B, C, D).
 3. Need ad-hoc tools? Use `nix run nixpkgs#nodejs -- npm install` or `nix shell nixpkgs#pnpm`.
@@ -37,15 +39,15 @@ User flagged explicit risk of losing track of cross-repo state. ~/.dotfiles is b
 
 ## Decision per ticket in this repo
 
-| This ticket | Decision | Driven by megadots ticket |
-|---|---|---|
-| **dot-edp8** (in_progress, nvim ephemeral pi tmux split) | Finish here, port artifact to megadots | Megadots nvim reconcile Stage 2 waits for this |
-| **dot-fsxj** (otahontas parity + jj-first) | **Close as superseded** by megadots reconcile sub-epics | Megadots reconcile sub-epics own this work |
-| **dot-86tz** (project MCP config .pi/mcp.json) | Defer here; megadots implements once | Megadots pi-coding-agent reconcile Stage 2 |
-| **dot-p774** (commit scope guard) | Continue here independently | None |
-| **dot-qr4m** (pi-multi-pass extension) | Continue here independently | None |
-| **dot-0hug** (Glimpse review UI) | Continue here independently | None |
-| **dot-kts9** (nvim↔pi unify) | Finish here with `pinvim.ts` + `pinvim.lua` as primary link, port artifact; keep `bridge.ts` shim only if still needed | Megadots nvim reconcile Stage 2 coordinates |
+| This ticket                                              | Decision                                                                                                               | Driven by megadots ticket                      |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| **dot-edp8** (in_progress, nvim ephemeral pi tmux split) | Finish here, port artifact to megadots                                                                                 | Megadots nvim reconcile Stage 2 waits for this |
+| **dot-fsxj** (otahontas parity + jj-first)               | **Close as superseded** by megadots reconcile sub-epics                                                                | Megadots reconcile sub-epics own this work     |
+| **dot-86tz** (project MCP config .pi/mcp.json)           | Defer here; megadots implements once                                                                                   | Megadots pi-coding-agent reconcile Stage 2     |
+| **dot-p774** (commit scope guard)                        | Continue here independently                                                                                            | None                                           |
+| **dot-qr4m** (pi-multi-pass extension)                   | Continue here independently                                                                                            | None                                           |
+| **dot-0hug** (Glimpse review UI)                         | Continue here independently                                                                                            | None                                           |
+| **dot-kts9** (nvim↔pi unify)                            | Finish here with `pinvim.ts` + `pinvim.lua` as primary link, port artifact; keep `bridge.ts` shim only if still needed | Megadots nvim reconcile Stage 2 coordinates    |
 
 ## Action items in this repo
 

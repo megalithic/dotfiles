@@ -20,16 +20,16 @@
 { pkgs, lib }:
 
 {
-  name,           # Display name for the wrapper app
-  originalApp,    # Path to the original .app bundle
-  appName,        # Original app name (e.g., "Brave Browser Nightly")
+  name, # Display name for the wrapper app
+  originalApp, # Path to the original .app bundle
+  appName, # Original app name (e.g., "Brave Browser Nightly")
   executableName, # Name of executable in Contents/MacOS/
-  args,           # Command-line arguments to pass
-  iconFile ? "app.icns",  # Icon filename in Resources
-  bundleId ? "com.wrapper.app",  # Bundle identifier
+  args, # Command-line arguments to pass
+  iconFile ? "app.icns", # Icon filename in Resources
+  bundleId ? "com.wrapper.app", # Bundle identifier
 }:
 
-pkgs.runCommand "${lib.strings.sanitizeDerivationName name}" {} ''
+pkgs.runCommand "${lib.strings.sanitizeDerivationName name}" { } ''
   mkdir -p "$out/Applications/${name}.app/Contents/MacOS"
   mkdir -p "$out/Applications/${name}.app/Contents/Resources"
 

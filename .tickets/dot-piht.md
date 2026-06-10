@@ -10,6 +10,7 @@ assignee: Seth Messer
 parent: dot-kts9
 tags: [ready-for-development]
 ---
+
 # Update Hammerspoon pi.lua: replace nc with hs.socket.new() for bidirectional comms
 
 Migrate Hammerspoon's pi interop from fire-and-forget nc to persistent
@@ -30,20 +31,20 @@ bidirectional socket connection using hs.socket.new().
 ## Current approach (replace)
 
 local function sendToSocket(socketPath, payload)
-  local json = hs.json.encode(payload)
-  local cmd = string.format("echo '%s' | nc -U %s", json, socketPath)
-  hs.execute(cmd)
+local json = hs.json.encode(payload)
+local cmd = string.format("echo '%s' | nc -U %s", json, socketPath)
+hs.execute(cmd)
 end
 
 ## New approach
 
 local socket = hs.socket.new()
 socket:connect(socketPath, function()
-  socket:write(json .. '\n')
-  socket:read('\n', function(data)
-    local response = hs.json.decode(data)
-    -- handle ok/error
-  end)
+socket:write(json .. '\n')
+socket:read('\n', function(data)
+local response = hs.json.decode(data)
+-- handle ok/error
+end)
 end)
 
 ## Acceptance Criteria
@@ -55,4 +56,3 @@ end)
 5. Tell/delegate message forwarding still works
 6. Session targeting still works (lastActiveSession)
 7. No nc or io.popen calls remain in pi.lua
-

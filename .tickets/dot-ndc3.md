@@ -9,6 +9,7 @@ type: feature
 priority: 3
 assignee: Seth Messer
 ---
+
 # Shade: nvumi-inspired scratch buffer with natural language action hooks
 
 ## Vision
@@ -25,15 +26,15 @@ single-entry-point interactions. The scratch buffer is the primary surface.
 Type a line → buffer detects intent → dispatches to handler → shows result as
 virtual text.
 
-| You type | What happens |
-|----------|--------------|
-| `245 * 18.5` | Evaluate via numi-cli, show result |
-| `150 lbs in kg` | numi-cli conversion, show result |
-| `remind me to review PR at 3pm tomorrow` | Task in today's daily note `## Tasks` |
-| `buy groceries on Saturday` | Task in daily note, migrates daily until done |
-| `note: look into caching strategy` | Append to daily note `## Notes` or `## Captures` |
-| `tell pi: investigate test failures in rx` | Send to pi instance (future) |
-| `create ticket: fix auth bug` | Dispatch to tk (future) |
+| You type                                   | What happens                                     |
+| ------------------------------------------ | ------------------------------------------------ |
+| `245 * 18.5`                               | Evaluate via numi-cli, show result               |
+| `150 lbs in kg`                            | numi-cli conversion, show result                 |
+| `remind me to review PR at 3pm tomorrow`   | Task in today's daily note `## Tasks`            |
+| `buy groceries on Saturday`                | Task in daily note, migrates daily until done    |
+| `note: look into caching strategy`         | Append to daily note `## Notes` or `## Captures` |
+| `tell pi: investigate test failures in rx` | Send to pi instance (future)                     |
+| `create ticket: fix auth bug`              | Dispatch to tk (future)                          |
 
 ## Intent detection
 
@@ -41,14 +42,14 @@ virtual text.
 
 Prefixes provide clear dispatch and get the pipeline working first:
 
-| Prefix | Intent | Handler |
-|--------|--------|---------|
-| `calc:` or `=` | Math/conversion | numi-cli |
-| `task:` or `todo:` | Task | Append to daily note `## Tasks` |
-| `remind:` | Reminder/task with time | Daily note + notification TBD |
-| `note:` | Capture | Append to daily note `## Notes` or `## Captures` |
-| `pi:` or `tell pi:` | Pi dispatch | bridge.ts / ephemeral (future) |
-| `ticket:` | Ticket creation | tk create (future) |
+| Prefix              | Intent                  | Handler                                          |
+| ------------------- | ----------------------- | ------------------------------------------------ |
+| `calc:` or `=`      | Math/conversion         | numi-cli                                         |
+| `task:` or `todo:`  | Task                    | Append to daily note `## Tasks`                  |
+| `remind:`           | Reminder/task with time | Daily note + notification TBD                    |
+| `note:`             | Capture                 | Append to daily note `## Notes` or `## Captures` |
+| `pi:` or `tell pi:` | Pi dispatch             | bridge.ts / ephemeral (future)                   |
+| `ticket:`           | Ticket creation         | tk create (future)                               |
 
 ### Phase 2: prefix-optional (infer intent)
 
@@ -56,6 +57,7 @@ Drop prefix requirement — buffer infers from how line reads. Prefixes still
 work as explicit override.
 
 Possible approaches:
+
 - **numi-cli first** — try numi-cli on every line. If result, it's math.
 - **Pattern matching** — regex/lua patterns for task keywords (remind, buy,
   at Xpm, tomorrow, etc.) inspired by Fantastical's parser
@@ -67,8 +69,10 @@ Phase 2 is the goal. Prefixes are scaffolding, not the destination.
 ## Task migration (bullet journal style)
 
 Tasks added to today's daily note under `## Tasks`:
+
 ```markdown
 ## Tasks
+
 - [ ] review PR by 3pm #reminder
 - [ ] buy groceries Saturday #life
 ```
@@ -82,9 +86,13 @@ Path: `$NOTES_HOME/daily/YYYY/YYYYMMDD.md`
 
 ```markdown
 ## Notes
+
 ## Tasks
+
 - [ ] task here #tag
+
 ## Captures
+
 ## Links
 ```
 
@@ -108,7 +116,7 @@ accept a path to nvim config OR default to `~/.config/nvim/`.
 
 ## Research needed
 
-- nvumi's evaluator pipeline (lua/nvumi/*.lua) — how it processes lines
+- nvumi's evaluator pipeline (lua/nvumi/\*.lua) — how it processes lines
 - numi-cli capabilities (math, dates, units, timezone, what else?)
 - Fantastical's natural language patterns — what makes it feel magic?
 - Current daily note task migration — does obsidian.nvim handle this already?
@@ -118,6 +126,7 @@ accept a path to nvim config OR default to `~/.config/nvim/`.
 ## Acceptance criteria
 
 ### Phase 1
+
 1. Scratch buffer opens as default Shade surface
 2. Prefix-based dispatch pipeline working
 3. Math/conversion via numi-cli with virtual text results
@@ -125,6 +134,7 @@ accept a path to nvim config OR default to `~/.config/nvim/`.
 5. `note:` appends to daily note `## Notes` or `## Captures`
 
 ### Phase 2
+
 6. Prefix-optional intent inference working
 7. Task migration forward on daily note creation (verify or implement)
 8. Hook registration system for third-party extensibility

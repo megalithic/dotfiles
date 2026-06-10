@@ -13,6 +13,7 @@ Delegate tasks to other agents. Works with both pi agent sessions and external a
 > **Note:** All commands below use `tell.sh` for brevity. Always use the full path above when executing.
 
 **Auto-notification:** When a delegated task completes, you'll be notified via:
+
 1. **ntfy** - Push notification to your devices
 2. **Session message** - `[TASK_RESULT:id]` sent to your pi session
 
@@ -34,6 +35,7 @@ Send a task to another pi agent running in a tmux session:
 ```
 
 **Multi-instance support:** If a session has multiple pi instances (e.g., `mega:0` and `mega:agent`), the tell skill will:
+
 1. If `session:window` specified → use that socket directly
 2. Otherwise try socket first (cleaner, no shell pollution)
 3. Prefer the `agent` window socket, then window `0`, then any available
@@ -52,6 +54,7 @@ Spawn an external agent in a tmux session to handle a task:
 ```
 
 **Supported agents:**
+
 - `claude` - Claude Code (runs with `--dangerously-skip-permissions`)
 - `opencode` - OpenCode
 - `aider` - Aider (runs with `--yes-always`)
@@ -73,6 +76,7 @@ Returns immediately. The agent runs in a background tmux session.
 You'll see: `[TASK:abc123 from mega] do the thing`
 
 Send updates:
+
 ```bash
 ~/.dotfiles/home/common/programs/pi-coding-agent/skills/tell/scripts/tell.sh --update abc123 "halfway done"
 ~/.dotfiles/home/common/programs/pi-coding-agent/skills/tell/scripts/tell.sh --done abc123 "finished, all tests pass"
@@ -93,7 +97,7 @@ Detach with `Ctrl+b d`.
 When a task completes (either external agent or pi agent calling `--done`):
 
 1. **ntfy notification** sent with task summary
-2. **Message sent to delegator's session**: 
+2. **Message sent to delegator's session**:
    ```
    [TASK_RESULT:abc123] claude completed: Task finished successfully
    Original task: run the user-story-sync skill...

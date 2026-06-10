@@ -10,12 +10,14 @@ assignee: Seth Messer
 parent: dot-0fjk
 tags: [epic, pi-coding-agent, glimpse, review, feedback]
 ---
+
 # Glimpse-powered interactive review UI for plans, tickets, epics, and diffs
 
 ## Context: Nix-based dotfiles
 
 All work is in `~/.dotfiles`, managed via Nix. **Do not assume npm/pnpm are globally installed.**
 Check the top of `~/.dotfiles/home/common/programs/pi-coding-agent/default.nix` for exact build patterns:
+
 1. Simple extensions/skills: Auto-load (no build step).
 2. npm-dependent extensions: Use Nix `buildNpmPackage` patterns (A, B, C, D).
 3. Need ad-hoc tools? Use `nix run nixpkgs#nodejs -- npm install` or `nix shell nixpkgs#pnpm`.
@@ -48,18 +50,23 @@ The `setHTML()` method allows iterating — agent processes feedback, regenerate
 ## Use Cases
 
 ### 1. Epic/Ticket Overview Review
+
 Render an epic (e.g., meg-8lkv megadots completion) as rich HTML with collapsible phases. Each phase has an inline textarea for feedback. User reviews all phases, adds notes like "Phase 2: also need to port kanata config" or "Phase 5: defer GPG setup", submits. Agent receives structured `{ phase: 2, feedback: "also need to port kanata config" }` for each annotation.
 
 ### 2. Plan Document Review
+
 Render a plan doc (e.g., megadots-completion-plan.md) as formatted HTML. Each section gets a feedback affordance. User can approve sections (✅), request changes (✏️), or add comments. Submitted feedback includes section ID + action + comment text.
 
 ### 3. Diff Review
+
 Run `jj diff` or `jj diff -r @-`, parse output, render as side-by-side or unified diff with syntax highlighting. User can comment on specific hunks/files, approve or reject changes. Useful before committing or as part of ticket-worker verification.
 
 ### 4. Ticket Refinement
+
 Show a single ticket's full content (description, acceptance criteria, design notes) in a editable form. User tweaks wording, adds acceptance criteria, submits. Agent applies changes via `tk edit` or direct file edit.
 
 ### 5. Multi-Ticket Triage
+
 Show all open tickets in a kanban-like or list view. User can drag to reorder priority, check/uncheck for inclusion in a sprint, add quick notes. Submit returns the full triage result.
 
 ## Architecture
@@ -68,18 +75,19 @@ Show all open tickets in a kanban-like or list view. User can drag to reorder pr
 
 Registers slash commands:
 
-| Command | Description |
-|---------|-------------|
-| `/glimpse <ticket-id>` | Open ticket/epic in glimpse for review |
-| `/glimpse plan [path]` | Open a plan document for review |
-| `/glimpse diff [rev]` | Open jj diff in glimpse for review |
-| `/glimpse tickets [filter]` | Open ticket list for triage |
+| Command                     | Description                            |
+| --------------------------- | -------------------------------------- |
+| `/glimpse <ticket-id>`      | Open ticket/epic in glimpse for review |
+| `/glimpse plan [path]`      | Open a plan document for review        |
+| `/glimpse diff [rev]`       | Open jj diff in glimpse for review     |
+| `/glimpse tickets [filter]` | Open ticket list for triage            |
 
 **Aliases:** `/peek` and `/view` behave identically to `/glimpse`. All three registered as commands pointing to the same handler.
 
 **Why `/glimpse` not `/review`:** `/review` already exists (`extensions/review.ts`) for agent-driven code review (PRs, branches, commits — text-based, in-terminal). Glimpse is a different UX paradigm: native window, user-driven visual review with structured feedback loop. Separate namespace avoids conflation.
 
 Each command:
+
 1. Gathers data (tk show, file read, jj diff)
 2. Generates HTML with feedback forms + dark mode + system font
 3. Opens glimpse window
@@ -93,6 +101,7 @@ Each command:
 ### HTML Template System
 
 Reusable HTML generator functions:
+
 - `renderEpicReview(epicData, children)` — collapsible phases with feedback
 - `renderPlanReview(markdown)` — rendered markdown with section annotations
 - `renderDiffReview(diffOutput)` — syntax-highlighted diff with hunk comments
@@ -143,4 +152,3 @@ Reusable HTML generator functions:
 7. All templates respect system dark mode
 8. Window closes cleanly on Submit or Escape
 9. `just validate home` passes with extension installed
-

@@ -1,4 +1,4 @@
-{mkApp}:
+{ mkApp }:
 
 mkApp {
   pname = "bloom";
