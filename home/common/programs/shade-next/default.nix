@@ -54,8 +54,8 @@ let
         toggle = { mods = { "cmd" }, key = "return" },
         search = { mods = { "cmd" }, key = "f" },
       },
-      -- Hyper chords that launch/focus shade-next prefilled with a route.
-      -- mods are extra modifiers on top of Hyper; key is the trigger.
+      -- Keys inside the Hyper+n shade-next modal that launch/focus shade-next
+      -- prefilled with a route.
       prefills = {
         { mods = { }, key = "p", route = "pi", focus = true },
         { mods = { }, key = "n", route = "note", focus = true },

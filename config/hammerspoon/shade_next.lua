@@ -1,9 +1,9 @@
 -- shade-next Hyper bindings.
 --
 -- Loads the Nix-generated, data-only fragment at
--- ~/.local/share/hammerspoon/fragments/shade-next.lua and binds the default
--- Hyper chord (hyper+enter) to launch/toggle shade-next using its own
--- app-native chord (via hyper:bindAppChord).
+-- ~/.local/share/hammerspoon/fragments/shade-next.lua. Hyper+return toggles
+-- shade-next directly through its control channel; Hyper+n enters a shade-next
+-- modal where keys like p/n prefill specific routes.
 --
 -- This module stays INERT until shade-next is actually built/installed, so the
 -- current `shade` workflow is unaffected during the transition.
@@ -21,13 +21,6 @@ local function loadFragment()
   return nil
 end
 
--- Minimal JSON string escape for values we send over the socket.
-local function jsonEscape(s)
-  s = string.gsub(s or "", "\\", "\\\\")
-  s = string.gsub(s, '"', '\\"')
-  return s
-end
-
 -- Percent-encode a query value for the URL fallback.
 local function urlEncode(s)
   return (string.gsub(s or "", "[^%w%-_%.~]", function(c)
@@ -35,39 +28,42 @@ local function urlEncode(s)
   end))
 end
 
+local function sendControl(frag, method, params)
+  local socket = frag.launch and frag.launch.socket
+  if not socket or not hs.application.get(frag.app.bundle_id) then return false end
+
+  local payload = hs.json.encode({ method = method, params = params or {} })
+  if not payload then return false end
+
+  local cmd = string.format(
+    "printf '%%s\\n' %s | /usr/bin/nc -U %s",
+    string.format("%q", payload),
+    string.format("%q", socket)
+  )
+  hs.task.new("/bin/sh", nil, { "-c", cmd }):start()
+  return true
+end
+
+local function openActionUrl(frag, action, query)
+  local parts = {}
+  for key, value in pairs(query or {}) do
+    if value ~= nil then table.insert(parts, key .. "=" .. urlEncode(tostring(value))) end
+  end
+  local suffix = #parts > 0 and ("?" .. table.concat(parts, "&")) or ""
+  hs.urlevent.openURL(frag.app.url_scheme .. action .. suffix)
+end
+
+local function toggle(frag)
+  if sendControl(frag, "toggle") then return end
+  openActionUrl(frag, "toggle")
+end
+
 -- Launch/focus shade-next prefilled with `text` (optionally routed).
 -- Reuses a running instance via the control socket; otherwise opens the
 -- shade-next:// URL (which launches the app, then prefills).
 local function prefill(frag, text, route, focus)
-  text = text or ""
-  local bundleID = frag.app.bundle_id
-  local socket = frag.launch and frag.launch.socket
-
-  if socket and hs.application.get(bundleID) then
-    -- Running: send a socket prefill (no duplicate window).
-    local payload = string.format(
-      '{"method":"prefill","params":{"text":"%s","route":%s,"focus":%s}}',
-      jsonEscape(text),
-      route and ('"' .. jsonEscape(route) .. '"') or "null",
-      focus and "true" or "false"
-    )
-    local cmd = string.format(
-      "printf '%%s\\n' %s | /usr/bin/nc -U %s",
-      string.format("%q", payload),
-      string.format("%q", socket)
-    )
-    hs.task.new("/bin/sh", nil, { "-c", cmd }):start()
-  else
-    -- Not running: launch via URL scheme (handler prefills on launch).
-    local url = string.format(
-      "%sprefill?text=%s&focus=%s",
-      frag.app.url_scheme,
-      urlEncode(text),
-      focus and "1" or "0"
-    )
-    if route then url = url .. "&route=" .. urlEncode(route) end
-    hs.urlevent.openURL(url)
-  end
+  if sendControl(frag, "prefill", { text = text or "", route = route, focus = focus ~= false }) then return end
+  openActionUrl(frag, "prefill", { text = text or "", route = route, focus = focus and "1" or "0" })
 end
 
 local function binaryInstalled(frag)
@@ -99,18 +95,26 @@ function M:init(_)
   end
 
   local hyper = req("hyper", { id = "shade-next" }):start()
-  local toggle = (frag.chords and frag.chords.toggle) or { mods = { "cmd" }, key = "return" }
+  local mode = require("hypemode").new("shade-next", {
+    autoExit = 1,
+    dim = false,
+  }):start()
 
-  -- hyper+enter -> launch/toggle shade-next, delivering its native chord.
-  hyper:bindAppChord({}, "return", frag.app.bundle_id, toggle.mods, toggle.key)
-  U.log.i("shade-next: bound hyper+return -> " .. frag.app.bundle_id)
+  -- hyper+enter -> launch/toggle shade-next through its native control channel.
+  hyper:bind({}, "return", nil, function() toggle(frag) end)
+  U.log.i("shade-next: bound hyper+return -> toggle " .. frag.app.bundle_id)
 
-  -- Prefill chords: hyper(+mods)+key -> open shade-next prefilled with a route.
+  -- hyper+n -> enter shade-next route modal.
+  hyper:bind({}, "n", nil, function() mode:toggle() end)
+  U.log.i("shade-next: bound hyper+n -> route modal")
+
+  -- Modal prefill chords: hyper+n,p -> pi route; hyper+n,n -> note route.
   for _, p in ipairs(frag.prefills or {}) do
-    hyper:bind(p.mods or {}, p.key, nil, function()
+    mode:bind(p.mods or {}, p.key, function()
       prefill(frag, p.text or "", p.route, p.focus ~= false)
+      mode:exit(0.1)
     end)
-    U.log.i("shade-next: bound hyper+" .. p.key .. " -> prefill " .. (p.route or ""))
+    U.log.i("shade-next: bound hyper+n," .. p.key .. " -> prefill " .. (p.route or ""))
   end
 
   return self
