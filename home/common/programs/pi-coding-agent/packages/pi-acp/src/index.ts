@@ -68,6 +68,7 @@ const input = new WritableStream<Uint8Array>({
 
 const output = new ReadableStream<Uint8Array>({
   start(controller) {
+    const encoder = new TextEncoder()
     let buffer = ''
     process.stdin.on('data', (chunk: Buffer) => {
       buffer += chunk.toString()
@@ -76,14 +77,14 @@ const output = new ReadableStream<Uint8Array>({
       buffer = lines.pop()!
       for (const line of lines) {
         const normalized = normalizeAcpMessage(line)
-        controller.enqueue(new Uint8Array(normalized + '\n'))
+        controller.enqueue(encoder.encode(normalized + '\n'))
       }
     })
     process.stdin.on('end', () => {
       // Flush any remaining buffered data
       if (buffer.trim()) {
         const normalized = normalizeAcpMessage(buffer)
-        controller.enqueue(new Uint8Array(normalized + '\n'))
+        controller.enqueue(encoder.encode(normalized + '\n'))
       }
       controller.close()
     })
