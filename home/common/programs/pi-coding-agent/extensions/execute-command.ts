@@ -10,6 +10,35 @@ function setSharedPendingCommand(command: PendingCommand | null): void {
     command;
 }
 
+function dispatchAfterIdle(
+  ctx: { isIdle?: () => boolean },
+  send: () => void | Promise<void>,
+  onDone: () => void,
+) {
+  const attempt = async (count = 0) => {
+    try {
+      if (ctx.isIdle && !ctx.isIdle() && count < 20) {
+        setTimeout(() => void attempt(count + 1), 50);
+        return;
+      }
+
+      await Promise.resolve(send());
+      onDone();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes("Agent is already processing") && count < 20) {
+        setTimeout(() => void attempt(count + 1), 50);
+        return;
+      }
+
+      onDone();
+      console.warn(`execute_command dispatch failed: ${message}`);
+    }
+  };
+
+  setTimeout(() => void attempt(), 100);
+}
+
 export default function (pi: ExtensionAPI) {
   // Queue of commands to execute after agent turn ends
   let pendingCommand: PendingCommand | null = null;
@@ -76,17 +105,19 @@ The command/message appears in the conversation as a user message.`,
 
       // Special handling for /answer via event bus (needs context)
       if (command === "/answer") {
-        setTimeout(() => {
-          pi.events.emit("trigger:answer", ctx);
-          setSharedPendingCommand(null);
-        }, 100);
+        dispatchAfterIdle(
+          ctx,
+          () => pi.events.emit("trigger:answer", ctx),
+          () => setSharedPendingCommand(null),
+        );
       }
       // Auto-execute slash commands via sendUserMessage
       else if (command.startsWith("/")) {
-        setTimeout(() => {
-          pi.sendUserMessage(command);
-          setSharedPendingCommand(null);
-        }, 100);
+        dispatchAfterIdle(
+          ctx,
+          () => pi.sendUserMessage(command, { deliverAs: "followUp" }),
+          () => setSharedPendingCommand(null),
+        );
       }
       // For non-command text, prefill editor and notify
       else {
