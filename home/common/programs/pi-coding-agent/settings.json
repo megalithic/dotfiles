@@ -68,7 +68,6 @@
       "synthetic/hf:MiniMaxAI/MiniMax-M2.5",
       "synthetic/hf:Qwen/Qwen3.6-27B",
       "synthetic/hf:nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4",
-      "llamacpp/qwen3.6",
       "llamacpp/deepseek14b",
       "llamacpp/gemma4"
     ],
