@@ -260,8 +260,11 @@ interface TelegramPayload {
 
 interface TellPayload {
   type: "tell";
+  protocol?: "pi.tell.v1" | string;
+  id?: string;
   text: string;
   from?: string;
+  fromSocket?: string;
   timestamp?: number;
 }
 
@@ -1476,6 +1479,82 @@ const deliverMessage = (pi: ExtensionAPI, message: string): void => {
   }
 };
 
+const tellWidgetTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+const summarizeTellText = (text: string, maxLength = 160): string => {
+  const cleaned = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !line.startsWith("[TELL:"))
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (cleaned.length <= maxLength) return cleaned;
+  return `${cleaned.slice(0, maxLength - 1)}…`;
+};
+
+const notifyTellViaNtfy = (from: string, text: string): void => {
+  const home = process.env.HOME || "";
+  const candidates = [path.join(home, "bin", "ntfy"), "ntfy"];
+  const title = `Pi tell from ${from}`;
+  const message = summarizeTellText(text, 220) || "New Pi tell message";
+  const tryNext = (index: number): void => {
+    const command = candidates[index];
+    if (!command) return;
+    execFile(
+      command,
+      ["send", "-t", title, "-m", message, "-s", "pi tell"],
+      { timeout: 2000 },
+      (err) => {
+        if (err && index + 1 < candidates.length) tryNext(index + 1);
+      },
+    );
+  };
+  tryNext(0);
+};
+
+const persistAndSurfaceTell = (
+  pi: ExtensionAPI,
+  payload: TellPayload,
+): void => {
+  const ctx = latestCtx;
+  const id = payload.id || `tell-${Date.now().toString(36)}`;
+  const from = payload.from || "unknown";
+  const summary = summarizeTellText(payload.text) || "New Pi tell message";
+
+  pi.appendEntry("tell-message", {
+    id,
+    direction: "received",
+    from,
+    fromSocket: payload.fromSocket,
+    text: payload.text,
+    timestamp: payload.timestamp || Math.floor(Date.now() / 1000),
+  });
+
+  notifyTellViaNtfy(from, payload.text);
+
+  if (!ctx?.hasUI) return;
+  ctx.ui.notify(`Tell from ${from}`, "info");
+  ctx.ui.setWidget("tell", [
+    ctx.ui.theme.fg("accent", `Tell from ${from}`),
+    summary,
+    ctx.ui.theme.fg(
+      "muted",
+      `Use /tell ${from.split(" ")[0]} <message> to reply`,
+    ),
+  ]);
+
+  const existing = tellWidgetTimers.get(id);
+  if (existing) clearTimeout(existing);
+  const timer = setTimeout(() => {
+    latestCtx?.ui?.setWidget?.("tell", undefined);
+    tellWidgetTimers.delete(id);
+  }, 120_000);
+  timer.unref();
+  tellWidgetTimers.set(id, timer);
+};
+
 const focusOwnTmuxPane = (): void => {
   if (!PI_PANE && !process.env.TMUX_PANE) return;
   const pane = PI_PANE || process.env.TMUX_PANE;
@@ -1698,7 +1777,7 @@ const handleSocketPayload = (
     return;
   }
 
-  // @lat: [[lat#Dotfiles architecture#Pi runtime settings]]
+  // @lat: [[pi-coding-agent#Runtime settings]]
   if (isFillPromptPayload(payload)) {
     if (typeof payload.text !== "string") {
       respondError(socket, "fill_prompt text must be a string");
@@ -1751,10 +1830,9 @@ const handleSocketPayload = (
   }
 
   if (isTellPayload(payload)) {
-    const fromSession = payload.from || "unknown";
-    latestCtx?.ui?.notify?.(`Task from ${fromSession}`, "info");
+    persistAndSurfaceTell(pi, payload);
     deliverMessage(pi, payload.text);
-    respondOk(socket);
+    respondOk(socket, { id: payload.id, type: "tell_ack" });
     return;
   }
 
@@ -1910,6 +1988,10 @@ export default function (pi: ExtensionAPI): void {
 
   pi.on("session_shutdown", () => {
     latestCtx = null;
+    for (const timer of tellWidgetTimers.values()) {
+      clearTimeout(timer);
+    }
+    tellWidgetTimers.clear();
     if (peerScanTimer) {
       clearInterval(peerScanTimer);
       peerScanTimer = null;
