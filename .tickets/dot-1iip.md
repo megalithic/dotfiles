@@ -1,6 +1,6 @@
 ---
 id: dot-1iip
-status: open
+status: closed
 deps: 4:1:deps: 4:1:deps: [, dot-xwa4, dot-j262]
 links: []
 created: 2026-06-10T00:34:22Z
@@ -21,3 +21,13 @@ Use the now-registered shade-next:// URL scheme (and/or the control socket) so a
 3. Already-running instance is reused (socket prefill) rather than spawning duplicates where possible.
 4. Lua syntax-checked; just validate home passes; reloaded via bin/hs-reload.
 5. Current shade bindings/workflow untouched.
+
+## Notes
+
+**2026-06-10T00:58:14Z**
+
+Capture-with-context chord (hyper+shift+enter) is deferred to dot-k9xk; dot-1iip stays the generic launch-prefilled transport.
+
+**2026-06-10T01:01:34Z**
+
+Done: fragment exposes socket path + data-only prefills (hyper+p->pi:, hyper+n->note:); shade_next.lua prefill() reuses running instance via socket else launches via shade-next:// URL. Verified socket prefill -> getInput 'pi: '; hs-reload clean; validate home passes. dotfiles commit a8e24c32b.
