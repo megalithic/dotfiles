@@ -30,7 +30,7 @@ let
     row_spacing = 6
     border_width = 1.0
     border_color = "#FFFFFF22"
-    dim_unfocused = 0.85
+    dim_unfocused = 0.5
 
     [keys]
     commit = "cmd+enter"
