@@ -3190,7 +3190,10 @@ class PoolManager {
 
     if (lastUserPrompt) {
       this.suppressNextStartTurn = true;
-      this.pi.sendUserMessage(lastUserPrompt);
+      this.pi.sendUserMessage(
+        lastUserPrompt,
+        ctx.isIdle() ? undefined : { deliverAs: "steer" },
+      );
     }
 
     return true;
