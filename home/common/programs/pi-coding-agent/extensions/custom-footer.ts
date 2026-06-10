@@ -52,6 +52,61 @@ function getCwdDisplay(cwd: string): string {
   return cwd;
 }
 
+function sanitizeStatusText(text: string): string {
+  return text
+    .replace(/[\r\n\t]/g, " ")
+    .replace(/ +/g, " ")
+    .trim();
+}
+
+interface MultiPassFooterStatus {
+  preset?: string;
+  activePool?: string;
+  startingPool?: string;
+  model?: string;
+}
+
+function parseMultiPassStatus(status: string): MultiPassFooterStatus {
+  const parsed: MultiPassFooterStatus = {};
+  const clean = sanitizeStatusText(status);
+  if (!clean) return parsed;
+
+  const presetMatch = clean.match(/(?:^|\|)\s*preset:([^|\s]+)/);
+  if (presetMatch?.[1]) parsed.preset = presetMatch[1];
+
+  const poolMatch = clean.match(/(?:^|\|)\s*pool:([^|\s]+)/);
+  if (poolMatch?.[1]) parsed.activePool = poolMatch[1];
+
+  const startMatch = clean.match(/(?:^|\|)\s*start:([^|\s]+)/);
+  if (startMatch?.[1]) parsed.startingPool = startMatch[1];
+
+  const activeMatch = clean.match(/active\s+([^|()\s]+)\s*\(([^)]+)\)/);
+  if (activeMatch?.[1] && !parsed.activePool)
+    parsed.activePool = activeMatch[1];
+  if (activeMatch?.[2]) parsed.model = activeMatch[2];
+
+  return parsed;
+}
+
+function formatMcpStatus(key: string, text: string): string | undefined {
+  const clean = sanitizeStatusText(text);
+  if (!/mcp/i.test(key) && !/mcp/i.test(clean)) return undefined;
+
+  const slashMatch = clean.match(/(\d+)\s*\/\s*(\d+)/);
+  if (slashMatch?.[1] && slashMatch?.[2]) {
+    return ` ${slashMatch[1]}/${slashMatch[2]}`;
+  }
+
+  const wordsMatch = clean.match(
+    /(\d+)\s+(?:active|connected|ready|enabled)\D+(\d+)\s+(?:total|servers|configured)/i,
+  );
+  if (wordsMatch?.[1] && wordsMatch?.[2]) {
+    return ` ${wordsMatch[1]}/${wordsMatch[2]}`;
+  }
+
+  return undefined;
+}
+
 async function fetchStarship(cwd: string): Promise<string> {
   try {
     const { stdout: raw } = await execFile(
@@ -163,59 +218,46 @@ export default function (pi: ExtensionAPI) {
             statsLeft = truncateToWidth(statsLeft, width, "...");
           }
 
-          // Detect multi-pass preset from extension status
           const extensionStatuses = footerData.getExtensionStatuses();
-          const multiPassStatus = extensionStatuses.get("multi-pass") || "";
-          const presetMatch = multiPassStatus.match(/^preset:([^\s|]+)/);
-          const activePreset = presetMatch?.[1];
+          const multiPass = parseMultiPassStatus(
+            extensionStatuses.get("multi-pass") || "",
+          );
 
-          // Line 2 right: build as priority-ordered segments
-          // Priority (highest = last to drop): model > thinking > preset > provider
-          const modelName = ctx.model?.id || "no-model";
+          // Line 2 right: compact multi-pass routing status.
+          // @lat: [[lat#Dotfiles architecture#Pi runtime settings]]
+          // Shape: ({preset}){active pool}/{model}/thinking_level
           const sep = theme.fg("dim", "/");
+          const activePool = multiPass.activePool || ctx.model?.provider || "";
+          const startingPool = multiPass.startingPool || activePool;
+          const activeModel = multiPass.model || ctx.model?.id || "no-model";
+          const poolChanged =
+            activePool.length > 0 &&
+            startingPool.length > 0 &&
+            activePool !== startingPool;
+          const poolPart = activePool
+            ? poolChanged
+              ? theme.fg("warning", theme.bold(activePool))
+              : theme.bold(activePool)
+            : "";
+          const modelPart = theme.fg("accent", activeModel);
+          const thinkingLevel = pi.getThinkingLevel() || "off";
+          const thinkingPart = ctx.model?.reasoning
+            ? sep + theme.fg("dim", thinkingLevel)
+            : "";
+          const presetPart = multiPass.preset
+            ? theme.fg("dim", `(${multiPass.preset})`)
+            : "";
 
-          // Core: always shown
-          const modelPart = theme.fg("accent", modelName);
-
-          // Thinking level (drop after provider)
-          let thinkingPart = "";
-          if (ctx.model?.reasoning) {
-            const level = pi.getThinkingLevel() || "off";
-            thinkingPart =
-              sep +
-              theme.fg("mdQuote", level === "off" ? "thinking off" : level);
-          }
-
-          // Preset prefix (drop before provider)
-          let presetPart = "";
-          if (activePreset && ctx.model) {
-            presetPart = theme.fg("muted", `(${activePreset}) `);
-          }
-
-          // Provider prefix (drop before quota)
-          let providerPart = "";
-          if (footerData.getAvailableProviderCount() > 1 && ctx.model) {
-            if (activePreset) {
-              providerPart = theme.fg("muted", `${ctx.model.provider}/`);
-            } else {
-              providerPart = theme.fg("muted", `(${ctx.model.provider}) `);
-            }
-          }
-
-          // Progressive truncation: try full, then drop items from lowest priority
-          // Available width for right side
+          const poolModelPart = poolPart
+            ? poolPart + sep + modelPart
+            : modelPart;
           const availableForRight = width - visibleWidth(statsLeft) - 2;
-
           const candidates = [
-            // 0: Full — preset + provider + model + thinking
-            presetPart + providerPart + modelPart + thinkingPart,
-            // 2: Drop provider — preset + model + thinking
-            presetPart + modelPart + thinkingPart,
-            // 3: Drop preset — model + thinking
+            presetPart + poolModelPart + thinkingPart,
+            poolModelPart + thinkingPart,
             modelPart + thinkingPart,
-            // 4: Minimal — model only
             modelPart,
-          ];
+          ].filter((candidate) => visibleWidth(candidate) > 0);
 
           let rightSide = modelPart;
           for (const candidate of candidates) {
@@ -225,24 +267,21 @@ export default function (pi: ExtensionAPI) {
             }
           }
 
-          // Merge remaining extension statuses into stats line (between left stats and right model info)
-          // Exclude "multi-pass" preset status (shown on right) (shown on right)
+          // Merge remaining extension statuses into stats line.
+          // Multi-pass owns the right side. Caveman never belongs in the footer.
           if (extensionStatuses.size > 0) {
-            const excludedStatusKeys = activePreset
-              ? ["multi-pass", "caveman"]
-              : [];
-            const excludedKeys = new Set<string>(excludedStatusKeys);
-
+            const excludedKeys = new Set<string>(["multi-pass", "caveman"]);
             const statusParts = Array.from(extensionStatuses.entries())
               .sort(([a], [b]) => a.localeCompare(b))
               .filter(([key]) => !excludedKeys.has(key))
-              .map(([, text]) =>
-                text
-                  .replace(/[\r\n\t]/g, " ")
-                  .replace(/ +/g, " ")
-                  .trim(),
-              )
-              .filter((t) => t.length > 0);
+              .map(([key, text]) => {
+                const mcpStatus = formatMcpStatus(key, text);
+                if (mcpStatus) return mcpStatus;
+                if (/mcp/i.test(key) || /mcp/i.test(text)) return "";
+                return sanitizeStatusText(text);
+              })
+              .filter((text) => text.length > 0)
+              .filter((text) => !/caveman/i.test(text));
             if (statusParts.length > 0) {
               const extStatus = statusParts
                 .map((s) => theme.fg("dim", s))

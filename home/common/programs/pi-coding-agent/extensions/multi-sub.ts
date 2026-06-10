@@ -3017,6 +3017,14 @@ class PoolManager {
     }
   }
 
+  private getStartingPoolName(currentModel?: Model<Api>): string | undefined {
+    if (!currentModel) return undefined;
+    return (
+      this.getPoolForProvider(currentModel.provider)?.name ||
+      currentModel.provider
+    );
+  }
+
   private ensureCascadeState(
     prompt: string | null,
     currentModel: Model<Api>,
@@ -3024,6 +3032,7 @@ class PoolManager {
     if (!prompt) {
       const fallbackState: FailoverCascadeState = {
         prompt: "",
+        startingPoolName: this.getStartingPoolName(currentModel),
         attemptedProviders: new Set([currentModel.provider]),
         visitedChainIndexes: new Set<number>(),
       };
@@ -3034,6 +3043,7 @@ class PoolManager {
     if (!this.cascadeState || this.cascadeState.prompt !== prompt) {
       this.cascadeState = {
         prompt,
+        startingPoolName: this.getStartingPoolName(currentModel),
         attemptedProviders: new Set([currentModel.provider]),
         visitedChainIndexes: new Set<number>(),
       };
@@ -3056,6 +3066,7 @@ class PoolManager {
     if (!this.cascadeState || this.cascadeState.prompt !== prompt) {
       this.cascadeState = {
         prompt,
+        startingPoolName: this.getStartingPoolName(currentModel),
         attemptedProviders: new Set(
           currentModel ? [currentModel.provider] : [],
         ),
@@ -3136,13 +3147,17 @@ class PoolManager {
       );
     }
 
+    const startingPoolName = cascade.startingPoolName || pool.name;
     const nextCandidate = plan.candidates[0];
     if (!nextCandidate) {
       ctx.ui.notify(
         formatFailoverExhausted(pool.name, currentModel.provider),
         "warning",
       );
-      ctx.ui.setStatus("multi-pass", formatFailoverStatus(null, pool.name));
+      ctx.ui.setStatus(
+        "multi-pass",
+        formatFailoverStatus(null, startingPoolName),
+      );
       return false;
     }
 
@@ -3159,7 +3174,10 @@ class PoolManager {
         formatFailoverExhausted(pool.name, currentModel.provider),
         "warning",
       );
-      ctx.ui.setStatus("multi-pass", formatFailoverStatus(null, pool.name));
+      ctx.ui.setStatus(
+        "multi-pass",
+        formatFailoverStatus(null, startingPoolName),
+      );
       return false;
     }
 
@@ -3173,7 +3191,10 @@ class PoolManager {
         formatFailoverExhausted(pool.name, currentModel.provider),
         "warning",
       );
-      ctx.ui.setStatus("multi-pass", formatFailoverStatus(null, pool.name));
+      ctx.ui.setStatus(
+        "multi-pass",
+        formatFailoverStatus(null, startingPoolName),
+      );
       return false;
     }
 
@@ -3186,7 +3207,10 @@ class PoolManager {
       formatFailoverTransition(pool.name, currentModel.provider, nextCandidate),
       "info",
     );
-    ctx.ui.setStatus("multi-pass", formatFailoverStatus(nextCandidate));
+    ctx.ui.setStatus(
+      "multi-pass",
+      formatFailoverStatus(nextCandidate, startingPoolName),
+    );
 
     if (lastUserPrompt) {
       this.suppressNextStartTurn = true;
@@ -4991,6 +5015,7 @@ interface FailoverPlan {
 
 interface FailoverCascadeState {
   prompt: string;
+  startingPoolName?: string;
   attemptedProviders: Set<string>;
   visitedChainIndexes: Set<number>;
 }
@@ -5006,18 +5031,19 @@ function formatFailoverStatus(
     FailoverCandidate,
     "provider" | "modelId" | "source" | "poolName" | "chainName" | "chainIndex"
   > | null,
-  fallbackPoolName?: string,
+  startingPoolName?: string,
 ): string {
   if (!candidate) {
-    return fallbackPoolName
-      ? `pool:${fallbackPoolName} | cascade exhausted | no eligible target`
+    return startingPoolName
+      ? `pool:${startingPoolName} | cascade exhausted | no eligible target`
       : "cascade exhausted | no eligible target";
   }
   const scope =
     candidate.source === "chain"
-      ? `chain:${candidate.chainName}#${(candidate.chainIndex ?? 0) + 1}`
+      ? `chain:${candidate.chainName}#${(candidate.chainIndex ?? 0) + 1} | pool:${candidate.poolName}`
       : `pool:${candidate.poolName}`;
-  return `${scope} | active ${formatFailoverTarget(candidate)}`;
+  const start = startingPoolName ? ` | start:${startingPoolName}` : "";
+  return `${scope}${start} | active ${formatFailoverTarget(candidate)}`;
 }
 
 function formatFailoverContinuation(
@@ -6189,7 +6215,10 @@ async function activatePreset(
       `Preset "${preset.name}": switched to ${prettyEntry}`,
       "info",
     );
-    ctx.ui.setStatus("multi-pass", `preset:${preset.name} | ${prettyEntry}`);
+    ctx.ui.setStatus(
+      "multi-pass",
+      `preset:${preset.name} | active ${entry.provider} (${entry.model})`,
+    );
     return "activated";
   }
 
