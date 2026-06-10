@@ -2,6 +2,6 @@
 {
   programs.codex = {
     enable = true;
-    package = pkgs.openai-codex;
+    package = pkgs.codex;
   };
 }
