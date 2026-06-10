@@ -234,7 +234,7 @@ export default function (pi: ExtensionAPI) {
           );
 
           // Line 2 right: compact multi-pass routing status.
-          // @lat: [[lat#Dotfiles architecture#Pi runtime settings]]
+          // @lat: [[pi-coding-agent#Runtime settings]]
           // Shape: ({preset}){provider-or-failover-pool}/{model}/thinking_level
           const sep = theme.fg("dim", "/");
           const activeProvider =

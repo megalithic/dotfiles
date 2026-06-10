@@ -294,6 +294,28 @@ check:
   # nix flake check --no-allow-import-from-derivation
 
 
+# ===========================================================================
+# Security scanning
+# ===========================================================================
+
+# Scan the repo for compromising info (secrets, keys, tokens) before pushing.
+# Add more checks (PII, deps, SAST, etc.) to this recipe over time.
+# Usage: just scan
+scan:
+  #!/usr/bin/env bash
+  set -uo pipefail
+  rc=0
+
+  echo ":: gitleaks — scanning git history + working tree for secrets..."
+  nix run nixpkgs#gitleaks -- detect --source . --redact --verbose || rc=$?
+
+  if [[ $rc -eq 0 ]]; then
+    echo ":: ✓ scan complete — no findings."
+  else
+    echo ":: ✗ scan found issues (exit $rc) — review output above before pushing." >&2
+  fi
+  exit $rc
+
 # configure opnix service account token (only unmanaged secret, kept out of Nix store)
 # fetches per-host token from 1Password at op://Crypt/opnix/<hostname>/token,
 # falls back to interactive `opnix token set` if `op` is missing or unauth'd.
