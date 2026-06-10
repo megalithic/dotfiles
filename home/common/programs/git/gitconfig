@@ -188,9 +188,11 @@
   last = !git log --max-count=1 | awk '{print $2}' | awk 'NR==1{print $1}'
   ; lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
   log = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+  log = --pretty=format:"%C(auto)%h%C(reset) %C(yellow)%s%C(reset) %C(auto)%d%C(reset) %C(blue)(%cr)%C(reset) %C(green)<%an>%C(reset)" --abbrev-commit
+  lg = log
   ; log = !gitin log
   ; lg = !gitin log
-  lg = !lazygit
+  ; lg = !lazygit
   ; branch = !gitin branch
   br = !gitin branch
   ; st = !gitin status
