@@ -2568,9 +2568,14 @@ class PoolManager {
   private pi: ExtensionAPI;
   private cascadeState: FailoverCascadeState | null = null;
   private suppressNextStartTurn = false;
+  private activePresetName: string | undefined;
 
   constructor(pi: ExtensionAPI) {
     this.pi = pi;
+  }
+
+  setActivePresetName(presetName: string | undefined): void {
+    this.activePresetName = presetName;
   }
 
   private getOrCreatePoolState(poolName: string): PoolState {
@@ -3156,7 +3161,7 @@ class PoolManager {
       );
       ctx.ui.setStatus(
         "multi-pass",
-        formatFailoverStatus(null, startingPoolName),
+        formatFailoverStatus(null, startingPoolName, this.activePresetName),
       );
       return false;
     }
@@ -3176,7 +3181,7 @@ class PoolManager {
       );
       ctx.ui.setStatus(
         "multi-pass",
-        formatFailoverStatus(null, startingPoolName),
+        formatFailoverStatus(null, startingPoolName, this.activePresetName),
       );
       return false;
     }
@@ -3193,7 +3198,7 @@ class PoolManager {
       );
       ctx.ui.setStatus(
         "multi-pass",
-        formatFailoverStatus(null, startingPoolName),
+        formatFailoverStatus(null, startingPoolName, this.activePresetName),
       );
       return false;
     }
@@ -3209,7 +3214,11 @@ class PoolManager {
     );
     ctx.ui.setStatus(
       "multi-pass",
-      formatFailoverStatus(nextCandidate, startingPoolName),
+      formatFailoverStatus(
+        nextCandidate,
+        startingPoolName,
+        this.activePresetName,
+      ),
     );
 
     if (lastUserPrompt) {
@@ -5032,18 +5041,20 @@ function formatFailoverStatus(
     "provider" | "modelId" | "source" | "poolName" | "chainName" | "chainIndex"
   > | null,
   startingPoolName?: string,
+  presetName?: string,
 ): string {
+  const preset = presetName ? `preset:${presetName} | ` : "";
   if (!candidate) {
     return startingPoolName
-      ? `pool:${startingPoolName} | cascade exhausted | no eligible target`
-      : "cascade exhausted | no eligible target";
+      ? `${preset}pool:${startingPoolName} | cascade exhausted | no eligible target`
+      : `${preset}cascade exhausted | no eligible target`;
   }
   const scope =
     candidate.source === "chain"
       ? `chain:${candidate.chainName}#${(candidate.chainIndex ?? 0) + 1} | pool:${candidate.poolName}`
       : `pool:${candidate.poolName}`;
   const start = startingPoolName ? ` | start:${startingPoolName}` : "";
-  return `${scope}${start} | active ${formatFailoverTarget(candidate)}`;
+  return `${preset}${scope}${start} | active ${formatFailoverTarget(candidate)}`;
 }
 
 function formatFailoverContinuation(
@@ -6233,7 +6244,7 @@ async function handlePresetActivate(
   pi: ExtensionAPI,
   ctx: ExtensionCommandContext,
   requestedName?: string,
-): Promise<void> {
+): Promise<string | undefined> {
   const config = loadGlobalConfig();
   const envEntries = parseEnvConfig();
   const allSubs = normalizeEntries(mergeConfigs(config, envEntries));
@@ -6263,9 +6274,10 @@ async function handlePresetActivate(
       cancelHint: "back",
     });
   }
-  if (!presetName) return;
+  if (!presetName) return undefined;
 
-  await activatePreset(pi, ctx, presetName, allSubs, enabled);
+  const result = await activatePreset(pi, ctx, presetName, allSubs, enabled);
+  return result === "activated" ? presetName : undefined;
 }
 
 async function handlePresetRemove(ctx: ExtensionCommandContext): Promise<void> {
@@ -6331,6 +6343,7 @@ async function handlePresetToggle(ctx: ExtensionCommandContext): Promise<void> {
 async function handlePresetMenu(
   pi: ExtensionAPI,
   ctx: ExtensionCommandContext,
+  poolManager: PoolManager,
 ): Promise<void> {
   const actions: SelectItem[] = [
     {
@@ -6361,9 +6374,11 @@ async function handlePresetMenu(
 
     preferredAction = action;
     switch (action) {
-      case "activate":
-        await handlePresetActivate(pi, ctx);
+      case "activate": {
+        const activatedPreset = await handlePresetActivate(pi, ctx);
+        if (activatedPreset) poolManager.setActivePresetName(activatedPreset);
         break;
+      }
       case "create":
         await handlePresetCreate(ctx);
         break;
@@ -6494,6 +6509,9 @@ export default function multiSub(pi: ExtensionAPI) {
       effective.presets.filter((p) => p.enabled),
     );
     autoPresetActivated = autoPresetResult === "activated";
+    poolManager.setActivePresetName(
+      autoPresetActivated ? resolved.preset : undefined,
+    );
     if (autoPresetActivated && resolved.source !== "default") {
       statusParts.push(`preset:${resolved.preset} (${resolved.source})`);
     }
@@ -6768,8 +6786,15 @@ export default function multiSub(pi: ExtensionAPI) {
       const rest = parts.slice(1).join(" ");
       switch (subcommand) {
         case "activate":
-        case "use":
-          return handlePresetActivate(pi, ctx, rest || undefined);
+        case "use": {
+          const activatedPreset = await handlePresetActivate(
+            pi,
+            ctx,
+            rest || undefined,
+          );
+          if (activatedPreset) poolManager.setActivePresetName(activatedPreset);
+          return;
+        }
         case "create":
         case "new":
           return handlePresetCreate(ctx);
@@ -6790,10 +6815,17 @@ export default function multiSub(pi: ExtensionAPI) {
               (p) => p.name.toLowerCase() === subcommand && p.enabled,
             );
             if (preset) {
-              return handlePresetActivate(pi, ctx, preset.name);
+              const activatedPreset = await handlePresetActivate(
+                pi,
+                ctx,
+                preset.name,
+              );
+              if (activatedPreset)
+                poolManager.setActivePresetName(activatedPreset);
+              return;
             }
           }
-          return handlePresetMenu(pi, ctx);
+          return handlePresetMenu(pi, ctx, poolManager);
       }
     },
   });

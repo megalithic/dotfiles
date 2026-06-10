@@ -61,7 +61,8 @@ function sanitizeStatusText(text: string): string {
 
 interface MultiPassFooterStatus {
   preset?: string;
-  activePool?: string;
+  activeProvider?: string;
+  currentPool?: string;
   startingPool?: string;
   model?: string;
 }
@@ -75,33 +76,42 @@ function parseMultiPassStatus(status: string): MultiPassFooterStatus {
   if (presetMatch?.[1]) parsed.preset = presetMatch[1];
 
   const poolMatch = clean.match(/(?:^|\|)\s*pool:([^|\s]+)/);
-  if (poolMatch?.[1]) parsed.activePool = poolMatch[1];
+  if (poolMatch?.[1]) parsed.currentPool = poolMatch[1];
 
   const startMatch = clean.match(/(?:^|\|)\s*start:([^|\s]+)/);
   if (startMatch?.[1]) parsed.startingPool = startMatch[1];
 
   const activeMatch = clean.match(/active\s+([^|()\s]+)\s*\(([^)]+)\)/);
-  if (activeMatch?.[1] && !parsed.activePool)
-    parsed.activePool = activeMatch[1];
+  if (activeMatch?.[1]) parsed.activeProvider = activeMatch[1];
   if (activeMatch?.[2]) parsed.model = activeMatch[2];
 
   return parsed;
 }
 
-function formatMcpStatus(key: string, text: string): string | undefined {
+interface McpFooterStatus {
+  text: string;
+  activeCount: number;
+}
+
+function formatMcpStatus(
+  key: string,
+  text: string,
+): McpFooterStatus | undefined {
   const clean = sanitizeStatusText(text);
   if (!/mcp/i.test(key) && !/mcp/i.test(clean)) return undefined;
 
   const slashMatch = clean.match(/(\d+)\s*\/\s*(\d+)/);
   if (slashMatch?.[1] && slashMatch?.[2]) {
-    return ` ${slashMatch[1]}/${slashMatch[2]}`;
+    const activeCount = Number.parseInt(slashMatch[1], 10);
+    return { text: ` ${slashMatch[1]}/${slashMatch[2]}`, activeCount };
   }
 
   const wordsMatch = clean.match(
     /(\d+)\s+(?:active|connected|ready|enabled)\D+(\d+)\s+(?:total|servers|configured)/i,
   );
   if (wordsMatch?.[1] && wordsMatch?.[2]) {
-    return ` ${wordsMatch[1]}/${wordsMatch[2]}`;
+    const activeCount = Number.parseInt(wordsMatch[1], 10);
+    return { text: ` ${wordsMatch[1]}/${wordsMatch[2]}`, activeCount };
   }
 
   return undefined;
@@ -225,19 +235,21 @@ export default function (pi: ExtensionAPI) {
 
           // Line 2 right: compact multi-pass routing status.
           // @lat: [[lat#Dotfiles architecture#Pi runtime settings]]
-          // Shape: ({preset}){active pool}/{model}/thinking_level
+          // Shape: ({preset}){active provider}/{model}/thinking_level
           const sep = theme.fg("dim", "/");
-          const activePool = multiPass.activePool || ctx.model?.provider || "";
-          const startingPool = multiPass.startingPool || activePool;
+          const activeProvider =
+            multiPass.activeProvider || ctx.model?.provider || "";
+          const currentPool = multiPass.currentPool || activeProvider;
+          const startingPool = multiPass.startingPool || currentPool;
           const activeModel = multiPass.model || ctx.model?.id || "no-model";
           const poolChanged =
-            activePool.length > 0 &&
+            currentPool.length > 0 &&
             startingPool.length > 0 &&
-            activePool !== startingPool;
-          const poolPart = activePool
+            currentPool !== startingPool;
+          const providerPart = activeProvider
             ? poolChanged
-              ? theme.fg("warning", theme.bold(activePool))
-              : theme.bold(activePool)
+              ? theme.fg("success", theme.bold(activeProvider))
+              : activeProvider
             : "";
           const modelPart = theme.fg("accent", activeModel);
           const thinkingLevel = pi.getThinkingLevel() || "off";
@@ -248,8 +260,8 @@ export default function (pi: ExtensionAPI) {
             ? theme.fg("dim", `(${multiPass.preset})`)
             : "";
 
-          const poolModelPart = poolPart
-            ? poolPart + sep + modelPart
+          const poolModelPart = providerPart
+            ? providerPart + sep + modelPart
             : modelPart;
           const availableForRight = width - visibleWidth(statsLeft) - 2;
           const candidates = [
@@ -276,16 +288,18 @@ export default function (pi: ExtensionAPI) {
               .filter(([key]) => !excludedKeys.has(key))
               .map(([key, text]) => {
                 const mcpStatus = formatMcpStatus(key, text);
-                if (mcpStatus) return mcpStatus;
+                if (mcpStatus) {
+                  const color = mcpStatus.activeCount > 0 ? "accent" : "dim";
+                  return theme.fg(color, mcpStatus.text);
+                }
                 if (/mcp/i.test(key) || /mcp/i.test(text)) return "";
-                return sanitizeStatusText(text);
+                const clean = sanitizeStatusText(text);
+                if (!clean || /caveman/i.test(clean)) return "";
+                return theme.fg("dim", clean);
               })
-              .filter((text) => text.length > 0)
-              .filter((text) => !/caveman/i.test(text));
+              .filter((text) => text.length > 0);
             if (statusParts.length > 0) {
-              const extStatus = statusParts
-                .map((s) => theme.fg("dim", s))
-                .join(" ");
+              const extStatus = statusParts.join(" ");
               statsLeft += theme.fg("dim", " │ ") + extStatus;
               if (visibleWidth(statsLeft) > width) {
                 statsLeft = truncateToWidth(statsLeft, width, "...");

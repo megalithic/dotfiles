@@ -21,6 +21,7 @@
     "npm:@aliou/pi-synthetic"
   ],
   "enabledModels": [
+    "alt-anthropic/claude-fable-5",
     "alt-anthropic/claude-opus-4-8",
     "alt-anthropic/claude-opus-4-7",
     "alt-anthropic/claude-opus-4-6",
@@ -72,6 +73,7 @@
       "llamacpp/gemma4"
     ],
     "alt": [
+      "alt-anthropic/claude-fable-5",
       "alt-anthropic/claude-opus-4-8",
       "alt-anthropic/claude-opus-4-7",
       "alt-anthropic/claude-opus-4-6",
@@ -139,6 +141,21 @@
         "entries": [
           {
             "provider": "alt-anthropic",
+            "model": "claude-fable-5",
+            "enabled": true
+          },
+          {
+            "provider": "alt-anthropic",
+            "model": "claude-opus-4-8",
+            "enabled": true
+          },
+          {
+            "provider": "alt-anthropic",
+            "model": "claude-opus-4-7",
+            "enabled": true
+          },
+          {
+            "provider": "alt-anthropic",
             "model": "claude-opus-4-6",
             "enabled": true
           },
@@ -182,7 +199,7 @@
   "subagents": {
     "agentOverrides": {
       "planner": {
-        "model": "alt-anthropic/claude-opus-4-7",
+        "model": "alt-anthropic/claude-opus-4-8",
         "fallbackModels": [
           "alt-anthropic/claude-opus-4-7",
           "openai-codex/gpt-5.5",
@@ -191,7 +208,7 @@
         "thinking": "medium"
       },
       "reviewer": {
-        "model": "alt-anthropic/claude-opus-4-7",
+        "model": "alt-anthropic/claude-opus-4-8",
         "fallbackModels": [
           "alt-anthropic/claude-opus-4-7",
           "openai-codex/gpt-5.5",
@@ -200,7 +217,7 @@
         "thinking": "medium"
       },
       "oracle": {
-        "model": "alt-anthropic/claude-opus-4-7",
+        "model": "alt-anthropic/claude-opus-4-8",
         "fallbackModels": [
           "alt-anthropic/claude-opus-4-7",
           "openai-codex/gpt-5.5",
@@ -208,7 +225,7 @@
         ]
       },
       "worker": {
-        "model": "alt-anthropic/claude-sonnet-4-5",
+        "model": "alt-anthropic/claude-sonnet-4-6",
         "fallbackModels": [
           "alt-codex/gpt-5.5",
           "openai-codex/gpt-5.5",
@@ -229,16 +246,18 @@
       "scout": {
         "model": "alt-anthropic/claude-haiku-4-5",
         "fallbackModels": [
-          "google-vertex/gemini-3-flash-preview",
           "openai-codex/gpt-5.4-mini",
+          "google-vertex/gemini-3-flash-preview",
+          "synthetic/syn:small:text",
           "llamacpp/gemma4"
         ]
       },
       "context-builder": {
         "model": "alt-anthropic/claude-haiku-4-5",
         "fallbackModels": [
-          "google-vertex/gemini-3-flash-preview",
           "openai-codex/gpt-5.4-mini",
+          "google-vertex/gemini-3-flash-preview",
+          "synthetic/syn:small:text",
           "llamacpp/gemma4"
         ]
       }
