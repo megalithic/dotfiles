@@ -237,7 +237,7 @@ M.layouts = {
     bundleID = "com.tinyspeck.slackmacgap",
     name = "Slack",
     rules = {
-      { nil, 2, M.grid.full },
+      { nil, 2, M.grid.halves.right },
     },
   },
   ["com.agilebits.onepassword7"] = {
