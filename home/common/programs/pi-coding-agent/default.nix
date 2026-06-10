@@ -64,7 +64,7 @@ let
     #   export BRAVE_API_KEY="$BRAVE_SEARCH_API_KEY"
     # fi
 
-    export PATH="${pkgs."poppler-utils"}/bin:${pkgs.rtk}/bin:$PATH"
+    export PATH="$HOME/.pi/agent/bin:${pkgs."poppler-utils"}/bin:${pkgs.rtk}/bin:$PATH"
     exec ${piPackage}/bin/pi "$@"
   '';
 
