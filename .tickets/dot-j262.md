@@ -1,7 +1,7 @@
 ---
 id: dot-j262
-status: open
-deps: 4:1:deps: 4:1:deps: 4:1:deps: 4:1:deps: [, dot-e5sy, dot-ol5u, dot-xwa4, dot-6fon]
+status: closed
+deps: 4:1:deps: 4:1:deps: 4:1:deps: 4:1:deps: 4:1:deps: [, dot-e5sy, dot-ol5u, dot-xwa4, dot-6fon, dot-l66f]
 links: []
 created: 2026-06-10T00:13:23Z
 type: feature
@@ -46,3 +46,9 @@ Open decisions for the implementer:
 5. Protocol logic is unit-tested headlessly (e.g. request parsing/dispatch in ShadeNextCore); manual notes/commands show a live prefill + getInput round-trip.
 6. A documented example shows Hammerspoon (or a bin helper) launching shade-next prefilled with input, and Pi setting/reading the input.
 7. Current shade and its socket are untouched; shade-next uses its own socket path and bundle id.
+
+## Notes
+
+**2026-06-10T00:31:39Z**
+
+Implemented: control socket (~/.local/state/shade-next/shade-next.sock, 0600) + shade-next:// URL scheme (show/hide/toggle/prefill) + commit wiring shared with Enter key. Verified live prefill/getInput/setInput/commit round-trips. Note: plain Enter commits (launcher convention); cmd+enter-specific binding can be revisited when multiline/Nvim composer lands. shade-next repo commit 9dba06e.
