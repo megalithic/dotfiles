@@ -234,11 +234,6 @@ return {
     attachments = {
       folder = "assets",
     },
-    completion = {
-      blink = true,
-      nvim_cmp = false,
-      min_chars = 0,
-    },
     picker = { name = "snacks.pick" },
     link = { style = "wiki" },
     legacy_commands = false, -- Use new command style: `Obsidian backlinks` not `ObsidianBacklinks`
