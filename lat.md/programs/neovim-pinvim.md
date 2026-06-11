@@ -30,6 +30,8 @@ Pi sends msgpack-RPC `nvim_exec_lua` requests to `require("pinvim").api.editor_r
 
 After successful Pi `edit` and `write` tool calls, `pinvim.ts` asks the editor service to run `reload_buffer` for the changed path. Clean open buffers refresh from disk; dirty buffers stay dirty and Pi surfaces a conflict warning. `/pinvim-context` prints current context through the same path, and `/pinvim-doctor` plus Nvim-side `:PiDoctor` report registry identity, tmux pane, repair candidate, and editor-service state without new discovery side effects.
 
+`pinvim.ts` also shares Pi socket routing with [[pi-coding-agent#Pi coding agent#Session and routing extensions|Pi tell]]. Incoming `pi.tell.v1` messages are persisted, surfaced, delivered as prompts or follow-ups, and acknowledged with async `tell_ack` messages to the sender's `fromSocket`.
+
 ## Pinvim visual selection keymaps
 
 Pinvim visual mappings use Neovim `x` mode, so Lua callbacks may run after Visual mode exits.

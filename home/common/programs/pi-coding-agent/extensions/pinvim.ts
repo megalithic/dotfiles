@@ -258,6 +258,13 @@ interface TelegramPayload {
   timestamp?: number;
 }
 
+interface TellAckPayload {
+  type: "tell_ack";
+  id?: string;
+  to?: string;
+  timestamp?: number;
+}
+
 interface TellPayload {
   type: "tell";
   protocol?: "pi.tell.v1" | string;
@@ -276,7 +283,8 @@ type Payload =
   | FillPromptPayload
   | ExplicitSendPayload
   | TelegramPayload
-  | TellPayload;
+  | TellPayload
+  | TellAckPayload;
 
 interface PinvimState {
   protocol: "pinvim.peer.v1";
@@ -449,6 +457,9 @@ const isTelegramPayload = (p: Payload): p is TelegramPayload =>
 
 const isTellPayload = (p: Payload): p is TellPayload =>
   hasType(p) && p.type === "tell";
+
+const isTellAckPayload = (p: Payload): p is TellAckPayload =>
+  hasType(p) && p.type === "tell_ack";
 
 // =============================================================================
 // Nvim editor service (msgpack-RPC)
@@ -1607,6 +1618,41 @@ const respondOk = (socket: net.Socket, extra?: Record<string, unknown>): void =>
 const respondError = (socket: net.Socket, error: string): void =>
   respond(socket, { ok: false, error });
 
+// Send async acknowledgement to the sender's socket
+const sendTellAck = async (
+  toSocket: string,
+  originalFrom: string,
+  tellId?: string,
+): Promise<void> => {
+  const client = net.createConnection(toSocket);
+  const ack: TellAckPayload = {
+    type: "tell_ack",
+    id: tellId,
+    to: originalFrom,
+    timestamp: Math.floor(Date.now() / 1000),
+  };
+
+  const timeoutMs = 500;
+  const timer = setTimeout(() => {
+    client.destroy();
+  }, timeoutMs);
+
+  client.on("error", () => {
+    clearTimeout(timer);
+    client.destroy();
+  });
+
+  client.on("connect", () => {
+    try {
+      client.write(JSON.stringify(ack) + "\n");
+    } catch {
+      // Ignore errors sending ack
+    }
+    clearTimeout(timer);
+    client.destroy();
+  });
+};
+
 let manifestWriteTimer: NodeJS.Timeout | null = null;
 let manifestWriteInFlight = false;
 let lastManifestWriteAt = 0;
@@ -1830,9 +1876,21 @@ const handleSocketPayload = (
   }
 
   if (isTellPayload(payload)) {
+    const fromLabel = payload.from || "unknown";
     persistAndSurfaceTell(pi, payload);
     deliverMessage(pi, payload.text);
+    // Send async acknowledgement back to sender
+    if (payload.fromSocket && payload.protocol === "pi.tell.v1") {
+      void sendTellAck(payload.fromSocket, fromLabel, payload.id);
+    }
     respondOk(socket, { id: payload.id, type: "tell_ack" });
+    return;
+  }
+
+  if (isTellAckPayload(payload)) {
+    const toLabel = payload.to || "unknown";
+    latestCtx?.ui?.notify?.(`Tell acknowledged by ${toLabel}`, "info");
+    respondOk(socket);
     return;
   }
 

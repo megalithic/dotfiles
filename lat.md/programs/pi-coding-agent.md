@@ -36,6 +36,8 @@ The `/handoff` extension replaces the old file-backed handoff skill: it serializ
 
 The `/tell` extension replaces the shell-script tell skill for Pi-to-Pi guidance. It discovers running Pi instances from `PI_STATE_DIR` socket manifests, uses Pi's selector UI when the target hint is ambiguous, sends `pi.tell.v1` JSON over the existing Pi socket, and exposes the `tell_pi` tool so the receiving instance can reply asynchronously. Incoming tell messages are persisted as custom entries, surfaced near the editor through a temporary widget, and mirrored through the same `~/bin/ntfy` path used by the notify extension.
 
+Tell is bidirectional: the sender includes `id` and `fromSocket` in the `pi.tell.v1` payload, and receivers in both `bridge.ts` and [[neovim-pinvim#Neovim and pinvim|pinvim.ts]] send a fire-and-forget `tell_ack` to that socket with the original id and receiver identity. Ack delivery uses a 500ms timeout, never blocks the receiving socket handler, and shows a sender-side notification when the ack arrives.
+
 The task-pipeline commands use repo-scoped plan files under `~/.local/share/pi/plans/$(basename $PWD)/` and treat GRILL, TASK, PLAN, and ticket-context files as one progression. The `geo-workbench.ts` extension is a no-dependency browser UI for image geolocation that exposes `geo_lookup` and expects agents to call `geo_report`.
 
 `sentinel.ts` loads rules only from `extensions/sentinel-rules.json` at startup; a copied file with another name is inert until renamed or wired in. The hardcoded pipe/redirect hang guard in `sentinel.ts` blocks `bash` commands that pipe or redirect risky upstreams unless the call passes a `timeout` between 1 and 300 seconds.

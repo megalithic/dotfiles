@@ -138,8 +138,18 @@ type TelegramPayload = {
 
 type TellPayload = {
   type: "tell";
+  protocol?: "pi.tell.v1" | string;
+  id?: string;
   text: string;
   from?: string;
+  fromSocket?: string;
+  timestamp?: number;
+};
+
+type TellAckPayload = {
+  type: "tell_ack";
+  id?: string;
+  to?: string;
   timestamp?: number;
 };
 
@@ -147,13 +157,16 @@ type PingPayload = {
   type: "ping";
 };
 
-type Payload = TelegramPayload | TellPayload | PingPayload;
+type Payload = TelegramPayload | TellPayload | TellAckPayload | PingPayload;
 
 const isTelegramPayload = (p: Payload): p is TelegramPayload =>
   "type" in p && p.type === "telegram";
 
 const isTellPayload = (p: Payload): p is TellPayload =>
   "type" in p && p.type === "tell";
+
+const isTellAckPayload = (p: Payload): p is TellAckPayload =>
+  "type" in p && p.type === "tell_ack";
 
 const isPingPayload = (p: Payload): p is PingPayload =>
   "type" in p && p.type === "ping";
@@ -184,6 +197,41 @@ const respondOk = (socket: net.Socket, extra?: Record<string, unknown>): void =>
 
 const respondError = (socket: net.Socket, error: string): void =>
   respond(socket, { ok: false, error });
+
+// Send async acknowledgement to the sender's socket
+const sendTellAck = async (
+  toSocket: string,
+  originalFrom: string,
+  tellId?: string,
+): Promise<void> => {
+  const client = net.createConnection(toSocket);
+  const ack: TellAckPayload = {
+    type: "tell_ack",
+    id: tellId,
+    to: originalFrom,
+    timestamp: Math.floor(Date.now() / 1000),
+  };
+
+  const timeoutMs = 500;
+  const timer = setTimeout(() => {
+    client.destroy();
+  }, timeoutMs);
+
+  client.on("error", () => {
+    clearTimeout(timer);
+    client.destroy();
+  });
+
+  client.on("connect", () => {
+    try {
+      client.write(JSON.stringify(ack) + "\n");
+    } catch {
+      // Ignore errors sending ack
+    }
+    clearTimeout(timer);
+    client.destroy();
+  });
+};
 
 // =============================================================================
 // Info Manifest
@@ -335,6 +383,23 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
               void pi.sendUserMessage(payload.text);
             } else {
               void pi.sendUserMessage(payload.text, { deliverAs: "followUp" });
+            }
+            // Send async acknowledgement back to sender
+            if (payload.fromSocket && payload.protocol === "pi.tell.v1") {
+              void sendTellAck(payload.fromSocket, fromSession, payload.id);
+            }
+            respondOk(socket, { id: payload.id, type: "tell_ack" });
+            continue;
+          }
+
+          // Handle tell_ack messages (acknowledgement from receivers)
+          if (isTellAckPayload(payload)) {
+            const toLabel = payload.to || "unknown";
+            const currentCtx = latestCtx;
+
+            // Show notification in TUI
+            if (currentCtx?.hasUI) {
+              currentCtx.ui.notify(`Tell acknowledged by ${toLabel}`, "info");
             }
             respondOk(socket);
             continue;
