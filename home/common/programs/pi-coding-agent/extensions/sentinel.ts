@@ -993,6 +993,32 @@ const TICKET_ID_RE =
 const TICKET_READ_RE =
   /\b(?:gh\s+issue\s+view|tk\s+show|jira\s+view|linear\s+issue\s+view|curl\s+.*app\.asana\.com)\b/;
 
+function investigationWriteKey(
+  toolName: string,
+  cmd: string,
+  path: string,
+): string | null {
+  if (toolName === "edit" || toolName === "write") {
+    return `${toolName}:${path || "<unknown>"}`;
+  }
+  if (toolName !== "bash" || !cmd) return null;
+
+  const stripped = stripQuoted(cmd);
+  const mutatesViaShell =
+    /(^|[;&|()\s])(?:mv|cp|install|touch|mkdir|chmod|chown|ln|trash|rm|rsync|git\s+apply|patch|perl\s+-pi|python\d?\s+-m\s+pip)\b/.test(
+      stripped,
+    ) ||
+    /(^|[^<])>>?\s*[^&\s]/.test(stripped) ||
+    /\|\s*(?:tee|sponge)\b/.test(stripped);
+
+  const mutatesViaPython =
+    /\.write_(?:text|bytes)\s*\(/.test(cmd) ||
+    /\bopen\s*\([^\n)]*,\s*["'][^"']*[wax+][^"']*["']/.test(cmd);
+
+  if (!mutatesViaShell && !mutatesViaPython) return null;
+  return `bash:${cmd.slice(0, 120)}`;
+}
+
 export default function (pi: ExtensionAPI) {
   const config = loadConfig();
   const rules = buildRules(config);
@@ -1154,16 +1180,34 @@ export default function (pi: ExtensionAPI) {
         }
       }
 
-      // ── Investigation mode: block edit/write ──
-      if (investigationMode && (toolName === "edit" || toolName === "write")) {
-        log(`INVESTIGATE: blocking ${toolName}`);
-        return {
-          block: true,
-          reason:
-            "🔍 **Investigation mode active**\n\n" +
-            "The user asked you to investigate, not to make changes.\n" +
-            "Report your findings. The user will tell you when to fix things.",
-        };
+      // ── Investigation mode: block writes unless user explicitly overrides ──
+      if (investigationMode) {
+        const writeKey = investigationWriteKey(toolName, cmd, path);
+        if (writeKey) {
+          if (overrideGranted && blocked?.command === writeKey) {
+            if (consumeOverride()) return undefined;
+          }
+
+          blocked = {
+            command: writeKey,
+            rule: "Investigation mode write",
+            reason:
+              "The user asked for investigation-only work, so writes require explicit override.",
+            timestamp: Date.now(),
+          };
+          log(`INVESTIGATE: blocking ${writeKey.slice(0, 80)}`);
+          return {
+            block: true,
+            reason:
+              "🔍 **Investigation mode active**\n\n" +
+              "The user asked you to investigate, not to make changes.\n\n" +
+              "**Agent:** Do not work around this with bash, Python heredocs, redirects, or alternate write paths. Before asking for override, explain:\n" +
+              "1. Why this is not investigation-only work, or why a write is required\n" +
+              "2. What file(s) or command would change\n" +
+              "3. Whether the change is safe and scoped\n\n" +
+              "Say `override` to allow this one write.",
+          };
+        }
       }
 
       // ── Special check: pipe/redirect hang prevention ──

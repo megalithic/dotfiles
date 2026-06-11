@@ -40,7 +40,7 @@ Tell is bidirectional: the sender includes `id` and `fromSocket` in the `pi.tell
 
 The task-pipeline commands use repo-scoped plan files under `~/.local/share/pi/plans/$(basename $PWD)/` and treat GRILL, TASK, PLAN, and ticket-context files as one progression. The `geo-workbench.ts` extension is a no-dependency browser UI for image geolocation that exposes `geo_lookup` and expects agents to call `geo_report`.
 
-`sentinel.ts` loads rules only from `extensions/sentinel-rules.json` at startup; a copied file with another name is inert until renamed or wired in. The hardcoded pipe/redirect hang guard in `sentinel.ts` blocks `bash` commands that pipe or redirect risky upstreams unless the call passes a `timeout` between 1 and 300 seconds.
+`sentinel.ts` loads rules only from `extensions/sentinel-rules.json` at startup; a copied file with another name is inert until renamed or wired in. The hardcoded pipe/redirect hang guard in `sentinel.ts` blocks `bash` commands that pipe or redirect risky upstreams unless the call passes a `timeout` between 1 and 300 seconds. Investigation mode is also enforced in `sentinel.ts`: prompts containing `investigate`, `inspect`, or `audit` without `and fix`/`then fix` block write-capable tool calls and bash write workarounds until the user grants the same `override` flow used by confirm-tier sentinel rules.
 
 The local `checkpoint.ts` extension is removed from the active profile; checkpoint and main-branch prompting come from the agent harness instead.
 
