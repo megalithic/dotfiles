@@ -7,6 +7,10 @@ description: Interview the user relentlessly to expand context and surface inten
 
 Your job is to **expand the user's context and understanding of what they actually want** through relentless, high-quality questioning. This is not bug-hunting. It is not a checklist. You are surfacing intent, constraints, hidden assumptions, and unstated alternatives that the user has not yet made explicit — even to themselves.
 
+## Before starting
+
+If a `lat_hooks` tool is available, call it with `{"enabled": false}` **before asking your first question**. Grilling is pure conversation — lat.md reminders and post-turn checks must not interrupt the interview. Do not run `lat_search`, `lat_check`, or any other lat tools during the session.
+
 ## Core loop
 
 1. Ask **one question at a time**.
@@ -96,7 +100,9 @@ Things the user explicitly chose not to do.
 
 The log is the _distilled_ output, not a transcript. Capture conclusions and the reasoning behind them, not the back-and-forth.
 
-After writing the log, tell the user the next task-pipeline command:
+After writing the log, if you disabled lat hooks at the start, re-enable them: call `lat_hooks` with `{"enabled": true}`. The follow-up work after grilling needs lat.md context again.
+
+Then tell the user the next task-pipeline command:
 
 ```text
 /continue <slug>
