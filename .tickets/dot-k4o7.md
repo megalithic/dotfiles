@@ -1,6 +1,6 @@
 ---
 id: dot-k4o7
-status: open
+status: closed
 deps: 4:1:deps: 4:1:deps: [, dot-satx, dot-o6bg]
 links: []
 created: 2026-06-11T11:38:03Z

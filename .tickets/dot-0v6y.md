@@ -1,6 +1,6 @@
 ---
 id: dot-0v6y
-status: open
+status: closed
 deps: 4:1:deps: [, dot-satx]
 links: []
 created: 2026-06-11T11:38:03Z

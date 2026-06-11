@@ -1,6 +1,6 @@
 ---
 id: dot-r0f8
-status: open
+status: closed
 deps: 4:1:deps: 4:1:deps: [, dot-satx, dot-0v6y]
 links: []
 created: 2026-06-11T11:38:03Z

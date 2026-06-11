@@ -1,6 +1,6 @@
 ---
 id: dot-ks5d
-status: open
+status: closed
 deps: 4:1:deps: 4:1:deps: [, dot-k4o7, dot-0v6y]
 links: []
 created: 2026-06-11T11:38:03Z
