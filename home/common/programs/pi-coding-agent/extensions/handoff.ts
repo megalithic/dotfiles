@@ -210,19 +210,20 @@ export default function (pi: ExtensionAPI) {
         return;
       }
 
-      // Create new session with parent tracking
+      // Create new session with parent tracking. After replacement, only use
+      // the fresh ctx passed to withSession; old command ctx is stale.
       const newSessionResult = await ctx.newSession({
         parentSession: currentSessionFile,
+        withSession: async (ctx) => {
+          // Set the edited prompt in the main editor for submission
+          ctx.ui.setEditorText(editedPrompt);
+          ctx.ui.notify("Handoff ready. Submit when ready.", "info");
+        },
       });
 
       if (newSessionResult.cancelled) {
         ctx.ui.notify("New session cancelled", "info");
-        return;
       }
-
-      // Set the edited prompt in the main editor for submission
-      ctx.ui.setEditorText(editedPrompt);
-      ctx.ui.notify("Handoff ready. Submit when ready.", "info");
     },
   });
 }
