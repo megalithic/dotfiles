@@ -773,7 +773,13 @@ function Transport.resolve_socket(config)
   if discovery_stale() then schedule_manifest_discovery(config) end
 
   local ranked = filter_cached_targets({ include_ephemeral = false, same_tmux_session = true })
-  if ranked[1] then return ranked[1].path, "manifest-ranked" end
+  if ranked[1] then
+    local local_pair_id = config.registry and config.registry.pair_id
+    if local_pair_id and ranked[1].pairId and local_pair_id ~= ranked[1].pairId then
+      return nil, "manifest-unpaired"
+    end
+    return ranked[1].path, "manifest-ranked"
+  end
 
   local tmux_socket = discover_socket_by_tmux(config)
   if tmux_socket then return tmux_socket, "tmux" end
@@ -824,6 +830,7 @@ function Transport.build_peer_identity(config)
     },
     linkMode = config.transport.link_mode,
     parentId = registry.parent_id,
+    pairId = registry.pair_id or vim.env.PINVIM_PAIR_ID,
     workspaceId = registry.workspace_id,
     instanceId = registry.instance_id,
     registryRoot = registry.workspace_root,
@@ -908,6 +915,12 @@ end
 function Registry.setup(config)
   local root = normalize_path(config.resolve_root()) or normalize_path(vim.uv.cwd()) or vim.uv.cwd()
   local workspace_id = stable_hash(root)
+  local pair_id = string.format(
+    "nvim-%d-%s",
+    vim.fn.getpid(),
+    stable_hash(vim.fn.getpid() .. "\0" .. (vim.g.pinvim_started_at or os.time())):sub(1, 12)
+  )
+  vim.env.PINVIM_PAIR_ID = pair_id
   local registry_root = path_join(config.transport.state_dir, "pinvim", workspace_id)
   local existed = vim.uv.fs_stat(registry_root) ~= nil
   pcall(vim.fn.mkdir, path_join(registry_root, "instances"), "p")
@@ -937,6 +950,7 @@ function Registry.setup(config)
     parent_id_path = parent_path,
     instance_id = instance_id,
     instance_root = instance_root,
+    pair_id = pair_id,
     children_root = path_join(registry_root, "children"),
     main_socket_path = path_join(registry_root, "main.sock"),
     main_session_intent_path = path_join(registry_root, "main.intent.json"),
@@ -973,6 +987,7 @@ local function registry_base_record(registry, config)
     writer = "nvim",
     role = "main",
     updatedAt = os.time(),
+    pairId = registry.pair_id,
     workspace = {
       id = registry.workspace_id,
       hash = registry.workspace_hash,
@@ -984,6 +999,7 @@ local function registry_base_record(registry, config)
       id = registry.instance_id,
       root = registry.instance_root,
       pid = vim.fn.getpid(),
+      pairId = registry.pair_id,
       tmux = identity.tmux,
       cwd = identity.cwd,
       projectRoot = identity.root,
@@ -1149,10 +1165,12 @@ local function write_nvim_peer_manifest(runtime, config)
   if not ok_mkdir then return end
 
   local identity = Transport.build_peer_identity(config)
+  local pair_id = vim.env.PINVIM_PAIR_ID or nil
   local manifest = {
     kind = "nvim",
     owner = "pinvim.lua",
     id = identity.id,
+    pairId = pair_id,
     cwd = identity.cwd,
     root = identity.root,
     pid = vim.fn.getpid(),

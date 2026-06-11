@@ -64,9 +64,14 @@ IFS=$'\t' read -r SESSION CURRENT_WINDOW CURRENT_WINDOW_IDX CURRENT_PANE < <(
 )
 PI_STATE_DIR="${PI_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/pi}"
 SOCKET_DIR="$PI_STATE_DIR/sockets"
+MANIFEST_DIR="$PI_STATE_DIR/manifests"
 PINVIM_REGISTRY_DIR="$PI_STATE_DIR/pinvim"
 SOCKET_PREFIX="pi"
 mkdir -p "$SOCKET_DIR" "$PINVIM_REGISTRY_DIR"
+
+# dot-satx: this Nvim's pair id, forwarded so pimux can prefer the pane
+# already paired with the launching Nvim instead of any same-window pi.
+PINVIM_PAIR_ID="${PINVIM_PAIR_ID:-}"
 
 PINVIM_FORWARD_ENV=(
   PINVIM_PARENT_ID
@@ -123,6 +128,27 @@ tmux_socket_window_token() {
 is_explicit_only_socket() {
   local sock="$1"
   [[ "$sock" == */pinvim/*/children/*/*.sock || "$sock" == *-eph-*.sock ]]
+}
+
+# dot-itag: probe a pi socket's recorded pair id from its manifest. This is the
+# reuse-decision input for strict pairing; returns empty when unknown.
+socket_pair_id() {
+  local sock="$1" base manifest
+  [[ -z "$sock" ]] && return 0
+  base=$(basename "$sock" .sock)
+  manifest="$MANIFEST_DIR/$base.info"
+  [[ -f "$manifest" ]] || return 0
+  # Manifest is single-line JSON; pull the pairId field without a JSON dep.
+  sed -n 's/.*"pairId":"\([^"]*\)".*/\1/p' "$manifest" 2>/dev/null | head -n1
+}
+
+# dot-r0f8: a socket is pair-eligible when we have no pair id (legacy/no strict
+# pairing) or its manifest pair id matches this Nvim's pair id.
+socket_pair_matches() {
+  local sock="$1" sock_pair
+  [[ -z "$PINVIM_PAIR_ID" ]] && return 0
+  sock_pair=$(socket_pair_id "$sock")
+  [[ -z "$sock_pair" || "$sock_pair" == "$PINVIM_PAIR_ID" ]]
 }
 
 socket_for_window() {
@@ -291,6 +317,11 @@ candidate_sockets() {
       if is_explicit_only_socket "$entry_sock" && [[ "$entry_sock" != "$TARGET_SOCKET" ]]; then
         continue
       fi
+      # dot-r0f8: skip panes paired with a different Nvim. An explicit
+      # --socket TARGET_SOCKET always wins and is never pair-filtered.
+      if [[ "$entry_sock" != "$TARGET_SOCKET" ]] && ! socket_pair_matches "$entry_sock"; then
+        continue
+      fi
       printf '%s\n' "$entry_sock"
     done
   done | awk '!seen[$0]++'
@@ -338,7 +369,8 @@ find_any_parked_pi_pane() {
     [[ -z "$entry" ]] && continue
     entry_sock="${entry%%=*}"
     pane="${entry#*=}"
-    if ! is_explicit_only_socket "$entry_sock" && registry_pane_is_safe "$pane"; then
+    # dot-r0f8: never fall back to a pane paired with a different Nvim.
+    if ! is_explicit_only_socket "$entry_sock" && socket_pair_matches "$entry_sock" && registry_pane_is_safe "$pane"; then
       printf '%s\t%s\n' "$pane" "$entry_sock"
       return 0
     fi

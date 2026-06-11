@@ -67,9 +67,12 @@ with conn, conn.makefile("r", encoding="utf-8") as reader:
             typ = payload.get("type")
             if typ == "hello":
                 peer = payload.get("peer") or {}
+                # dot-ubjx: strict pairing requires the hello peer frame to
+                # carry a non-empty pairId so the Pi side can enforce exact
+                # pair ownership.
                 missing = [
                     key
-                    for key in ("parentId", "workspaceId", "instanceId", "registryRoot", "role")
+                    for key in ("parentId", "workspaceId", "instanceId", "registryRoot", "role", "pairId")
                     if not peer.get(key)
                 ]
                 if missing:
@@ -127,6 +130,15 @@ nvim --headless -u NONE \
 
 if ! rg -q '"type":"hello_ack"' "$server_log" || ! rg -q '"type":"heartbeat"' "$server_log"; then
   echo "pinvim smoke: expected hello_ack + heartbeat not observed" >&2
+  cat "$server_log" >&2
+  exit 1
+fi
+
+# dot-ubjx: confirm the hello peer frame carried a non-empty pairId. A missing
+# pairId would surface above as "missing identity fields", but assert the
+# positive case too so strict pairing regressions are caught directly.
+if ! rg -q '"pairId":"[^"]+"' "$server_log"; then
+  echo "pinvim smoke: hello peer frame missing pairId (strict pairing broken)" >&2
   cat "$server_log" >&2
   exit 1
 fi

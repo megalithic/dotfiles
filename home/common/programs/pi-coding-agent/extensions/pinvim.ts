@@ -36,6 +36,9 @@ const INFO_DIR = path.join(PI_STATE_DIR, "manifests");
 const SOCKET_PREFIX = "pi";
 const EDITOR_SERVICE_TIMEOUT_MS = 500;
 const EDITOR_SERVICE_STALE_MS = 15_000;
+// dot-0v6y: strict pairing staleness window. A same-window peer can only claim
+// a Pi already paired with a different peer once its heartbeat is older.
+const STRICT_PAIR_STALE_SECONDS = 20;
 
 let tmuxCache: {
   at: number;
@@ -179,6 +182,7 @@ interface PeerIdentity {
   };
   linkMode: LinkMode;
   parentId?: string;
+  pairId?: string;
   workspaceId?: string;
   instanceId?: string;
   registryRoot?: string;
@@ -949,6 +953,7 @@ const buildPinvimPeerIdentity = (): PeerIdentity => ({
     process.env.PINVIM_LINK_MODE ||
     (isNestedAttachOnly() ? "attach-only" : "auto"),
   parentId: process.env.PINVIM_PARENT_ID,
+  pairId: process.env.PINVIM_PAIR_ID,
   workspaceId: process.env.PINVIM_WORKSPACE_ID,
   instanceId: process.env.PINVIM_INSTANCE_ID,
   registryRoot: process.env.PINVIM_REGISTRY_ROOT,
@@ -1239,6 +1244,9 @@ const refreshRepairCandidate = async (
   }
   if (!opts.force && !peerNeedsRepair()) return;
   const [candidate] = await scanNvimPeers();
+  // @lat: dot-so9c: RepairCandidate is diagnostic-only
+  // Nvim manifests should never auto-adopt for pairing.
+  // This is read-only for diagnostics and manual repair.
   repairCandidate = candidate || null;
   if (latestCtx?.hasUI) {
     latestCtx.ui.setStatus(
@@ -1279,6 +1287,24 @@ const peerAllowedForSocket = (
     }
   }
 
+  if (
+    localIdentity.pairId &&
+    peer.pairId &&
+    localIdentity.pairId !== peer.pairId
+  ) {
+    return { ok: false, reason: "mismatched pair identity" };
+  }
+
+  // dot-0v6y AC1/AC4: exact pairId is the strongest claim and is always
+  // accepted, including non-tmux peers and explicit target mode.
+  if (
+    localIdentity.pairId &&
+    peer.pairId &&
+    localIdentity.pairId === peer.pairId
+  ) {
+    return { ok: true, reason: "exact pinvim pair id" };
+  }
+
   if (exactParentRegistry) {
     return { ok: true, reason: "exact pinvim parent registry" };
   }
@@ -1298,6 +1324,25 @@ const peerAllowedForSocket = (
     role: peer.role,
     nvimListenAddress: peer.nvimListenAddress,
   };
+
+  // dot-0v6y AC3: a same-window score must not steal a Pi that is still
+  // actively paired with a different live peer. Allow the claim only when the
+  // current peer is unpaired, gone, or its heartbeat is stale (>20s).
+  const activePeer = getActivePeer();
+  if (activePeer && activePeer.id !== peer.id) {
+    const heartbeatAge = state.lastHeartbeat?.sentAt
+      ? Math.max(Math.floor(Date.now() / 1000) - state.lastHeartbeat.sentAt, 0)
+      : null;
+    const activePeerLive =
+      heartbeatAge === null || heartbeatAge <= STRICT_PAIR_STALE_SECONDS;
+    if (activePeerLive) {
+      return {
+        ok: false,
+        reason: `pinvim already paired with live peer ${activePeer.id} (strict claim blocked <${STRICT_PAIR_STALE_SECONDS}s)`,
+      };
+    }
+  }
+
   const scored = scoreNvimCandidate(candidate);
   if (scored) return { ok: true, reason: (scored.reasons || []).join(", ") };
 
@@ -1357,6 +1402,16 @@ const renderInfoLines = (): string[] => {
     `Local identity: ${JSON.stringify(buildPinvimPeerIdentity(), null, 2)}`,
     `Pinvim relation: ${pinvimRelationState()}`,
     `Nested attach-only: ${isNestedAttachOnly()}`,
+    // dot-l8d4: surface strict pair state explicitly, not just inside JSON.
+    `Pair id: ${process.env.PINVIM_PAIR_ID || "(none)"}`,
+    `Active peer pair id: ${activePeer?.pairId || "(none)"}`,
+    `Pair status: ${
+      activePeer?.pairId && process.env.PINVIM_PAIR_ID
+        ? activePeer.pairId === process.env.PINVIM_PAIR_ID
+          ? "paired (exact)"
+          : "mismatch"
+        : "unpaired"
+    }`,
     `Active peer: ${activePeer ? JSON.stringify(activePeer, null, 2) : "(none yet)"}`,
     `Repair candidate: ${repairCandidate ? JSON.stringify(repairCandidate, null, 2) : "(none)"}`,
     `Repaired at: ${repairedAt ? new Date(repairedAt).toISOString() : "(none)"}`,
@@ -1684,6 +1739,7 @@ const writeInfoManifestNow = async (): Promise<void> => {
       parentId: identity.parentId,
       workspaceId: identity.workspaceId,
       instanceId: identity.instanceId,
+      pairId: process.env.PINVIM_PAIR_ID || identity.parentId,
       registryRoot: identity.registryRoot,
       role: identity.role,
       relation: pinvimRelationState(),
@@ -1824,6 +1880,10 @@ const handleSocketPayload = (
   }
 
   // @lat: [[pi-coding-agent#Runtime settings]]
+  // dot-ks5d: fill_prompt (shade-next remote input) is ownership-neutral.
+  // It must never run peerAllowedForSocket, add to acceptedSockets, claim or
+  // reclaim the pair, or auto-submit. It only prefills the editor and may
+  // focus the pane, leaving strict pair ownership untouched.
   if (isFillPromptPayload(payload)) {
     if (typeof payload.text !== "string") {
       respondError(socket, "fill_prompt text must be a string");

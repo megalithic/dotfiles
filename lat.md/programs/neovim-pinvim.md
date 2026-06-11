@@ -18,7 +18,9 @@ The workspace hash comes from the normalized project root, and `parent.id` persi
 
 `:PiSplit` allocates an explicit child session under `children/<child-id>/` with a stable child id, dedicated `child.sock`, and an `intent.json` derived from `registry_base_record`. Child sockets never replace the main registry entry and never become automatic default reconnect targets.
 
-Pinvim peer identity carries `parentId`, `workspaceId`, `instanceId`, `registryRoot`, and `role` (`main`, `child`, or `nested`) in hello frames, acknowledgements, and manifests. The Pi extension mirrors those from PINVIM environment when present and rejects mismatched peers before falling back to tmux or root scoring.
+Pinvim peer identity carries `pairId`, `parentId`, `workspaceId`, `instanceId`, `registryRoot`, and `role` (`main`, `child`, or `nested`) in hello frames, acknowledgements, and manifests. The Pi extension mirrors those from PINVIM environment when present and rejects mismatched peers before falling back to tmux or root scoring.
+
+Each Neovim process generates one `pairId` in `Registry.setup` (`nvim-<pid>-<hash>`) and exports it as `vim.env.PINVIM_PAIR_ID`. The pair id flows into `build_peer_identity` (hello frames), `registry_base_record` (main intent records), and `write_nvim_peer_manifest` (Nvim manifests), so `api.info()`, manifests, and main intent records all report the same value. Restarting Neovim produces a new pair id; explicit `:PiSplit` child records reuse the parent registry pair id and never overwrite the main pair identity. `bin/pimux` forwards `PINVIM_PAIR_ID` into the Pi pane at launch, and `pinvim.ts` reads it back via `PINVIM_PAIR_ID` so the launched Pi knows which Neovim owns it.
 
 Pinvim also exposes a separate Neovim editor service over msgpack-RPC. Nvim stores the address in `PINVIM_NVIM_LISTEN_ADDRESS`, peer frames, and manifests, and reports it through `:PiStatus`, `:PiHealth`, `:PiInfo`, `:PiDoctor`, and `api.info()`. The Pi-side client discovers the address from PINVIM env, peer frames, manifests, or registry files; probes with non-blocking msgpack-RPC; and reports connected/stale/fallback state. When no editor service is connected, Pi reports `peer socket only` fallback instead of injecting guessed context. Pi-side timers and sockets use `unref()` so a missing editor address cannot keep short-lived Pi probes alive.
 
@@ -48,12 +50,31 @@ Pinvim attach delivery separates editor context capture from agent-turn creation
 
 `explicit_send.delivery = "attach"` is context-only: `pinvim.ts` formats it as `[NEOVIM ATTACHED CONTEXT]`, stores only the latest pending context, updates status, and returns without calling `pi.sendUserMessage`. The next non-extension `input` marks the following `before_agent_start` as user-origin; pending context is then consumed exactly once and injected as a displayed custom `pinvim-context` message. If none exists, Pi asks the editor service for `context.current`, formats it as `[NEOVIM LIVE CONTEXT]`, and injects through the same path. Extension-origin prompts and follow-ups never consume pending context or trigger live lookup. Pending state is short-lived: newer attach sends replace older ones, stale context expires, and shutdown clears it.
 
-### Bidirectional peer repair
+### Strict pinvim pairing
 
-Repair is bidirectional, so either Nvim or Pi can reestablish the `hello` / `hello_ack` / heartbeat link after the other side restarts.
+Normal pinvim links are strictly paired: a Pi session belongs to exactly one Neovim, identified by `pairId`. Live Pi socket state in `pinvim.ts` is the ownership authority; the registry and manifests only mirror it for diagnostics.
 
-Nvim writes `nvim-*.info` manifests under `$PI_STATE_DIR/manifests/` every five seconds with id, cwd, root, pid, tmux session/window/pane, heartbeat time, link mode, socket path, socket source, connected state, and active peer id; `VimLeavePre` cleans it up. When no parent registry identity is present and the active Nvim peer is missing or stale, `pinvim.ts` scans those manifests every two seconds and scores candidates; parent/child sessions with registry identity skip the recurring scan. Candidates are rejected when the pid is dead, the pid is an orphaned `nvim --embed`, the socket path is gone, or the tmux session differs.
+**Automatic socket resolution (Nvim side).** `Transport.resolve_socket` resolves in order: explicit `PI_SOCKET`, buffer-local `:PiTarget`, the registry main socket, then manifest-ranked candidates limited to the same tmux session. A manifest-ranked candidate is rejected (`manifest-unpaired`) when both sides carry a `pairId` and they differ, so auto-resolution only adopts the exact pair, the registry main, or an explicit target. There is no broad cwd/root manifest adoption in the normal path.
 
-Candidate scoring prefers same tmux window, then same cwd or root, then heartbeat freshness, then a matching tmux pane. Non-ephemeral Pi requires the same tmux window so the main parent cannot be stolen; ephemeral Pi is looser. Nested attach-only Pi disables manifest scanning entirely: the wrapper detects nested launches from inherited env plus tmux pane title/command checks, marks them with `PINVIM_NESTED_ATTACH_ONLY=1`, `PINVIM_SESSION_ROLE=nested`, and `PINVIM_LINK_MODE=attach-only`, and unsets `PI_SOCKET` so it cannot bind or unlink the original Nvim-owned socket.
+**Pi-side claim rules.** Pi requires a valid `hello` before accepting any data frame, and heartbeats before an accepted hello stay rejected. `peerAllowedForSocket` rejects attach-only nested sessions first, then parent/workspace/instance mismatches, then any `pairId` mismatch with a visible `mismatched pair identity` reason (even from the same tmux window). An exact `pairId` match is always accepted, including non-tmux peers and explicit target mode. Without a pair id, an exact parent/workspace registry match is accepted. A same-window score cannot steal a Pi that is still actively paired with a different live peer: such claims are blocked until the current peer is unpaired, gone, or its heartbeat is stale for more than 20 seconds (`STRICT_PAIR_STALE_SECONDS`).
 
-Pi requires a valid hello before accepting any data frame. `peerAllowedForSocket` rejects attach-only nested sessions first, then parent/workspace mismatches; matching parent/workspace identity is accepted before tmux/root scoring so the current parent cannot be stolen. Repair candidate and last repair timestamp appear in `:PiStatus`, `:PiHealth`, `/pinvim-status`, `/pinvim-health`, and `/pinvim-info`, with relation state (`attach-only`, `child`, `parent`, `no-parent`) plus link mode in the doctor and health commands.
+**Manifest discovery is diagnostic/manual only.** Nvim still writes `nvim-*.info` manifests under `$PI_STATE_DIR/manifests/` every five seconds (now including `pairId`); `VimLeavePre` cleans them up. `pinvim.ts` still scans manifests when no parent registry identity is present and the active peer is missing or stale, but the resulting `repairCandidate` is read-only for diagnostics (`/pinvim-doctor`, `/pinvim-status`) — normal flows never auto-adopt a scanned manifest for pairing. Candidates are still rejected when the pid is dead, the pid is an orphaned `nvim --embed`, the socket path is gone, or the tmux session differs. Pair state, relation (`attach-only`, `child`, `parent`, `no-parent`), and link mode appear in `:PiStatus`, `:PiHealth`, `/pinvim-status`, `/pinvim-health`, `/pinvim-info`, and the doctor commands.
+
+**pimux pair-aware reuse.** `bin/pimux` forwards `PINVIM_PAIR_ID` into the Pi pane and uses it for reuse decisions. `socket_pair_id` probes a socket's manifest `pairId`, and `socket_pair_matches` treats a socket as eligible only when there is no local pair id or the manifest pair id matches. `candidate_sockets` and `find_any_parked_pi_pane` skip panes paired with a different Neovim, while an explicit `--socket` target always wins and is never pair-filtered.
+
+**Ownership neutrality.** `:PiTarget <socket>` is an explicit manual override: it sets the buffer-local target (checked before pair gating in `resolve_socket`) and never rewrites pair ownership. The shade-next `fill_prompt` remote-input path is ownership-neutral — it only prefills the editor and may focus the pane; it never runs `peerAllowedForSocket`, adds to `acceptedSockets`, claims or reclaims the pair, or auto-submits.
+
+### Strict pairing verification checklist
+
+The automated check is `bin/pinvim-protocol-smoke`, run with `bash bin/pinvim-protocol-smoke`. It boots headless Neovim against a mock Pi socket and fails unless the `hello` peer frame carries a non-empty `pairId`.
+
+Cases covered by code review plus manual tmux verification (no full multi-Neovim UI harness exists):
+
+- Exact pair acceptance — covered by `bin/pinvim-protocol-smoke`.
+- Unpaired same-window claim — allowed (no active peer, scoring path).
+- Stale > 20s / dead pid — same-window claim allowed once the live peer lapses (`STRICT_PAIR_STALE_SECONDS`).
+- Live `pairId` mismatch — rejected with `mismatched pair identity`, even in the same window.
+- Other window/session — rejected by `scoreNvimCandidate` session/window gating.
+- Non-tmux peer — accepted only by exact `pairId` or explicit target mode.
+- `:PiTarget` — explicit override that does not rewrite pair ownership.
+- `fill_prompt` — prefills only; no claim, reclaim, or auto-submit.
