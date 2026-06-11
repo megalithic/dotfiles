@@ -2,12 +2,13 @@
 #
 # Inject Widevine CDM into the framework. Strip + ad-hoc re-sign only the
 # helpers (base helper gets disable-library-validation so Widevine loads).
-# Main exec, framework, and Sparkle keep imput's original signatures —
-# required for 1Password desktop pairing (verifyClient allowlists imput's
-# team ID) and for hardened-runtime library validation between the main exec
-# and the framework. The outer bundle CodeResources hashes the helpers'
-# original _CodeSignature; replacing them breaks the outer seal, so first
-# launch per build needs one Gatekeeper "Open Anyway" click.
+# Main exec, main app Info.plist, framework, and Sparkle keep imput's original
+# signatures — required for 1Password desktop pairing (verifyClient allowlists
+# imput's team ID), TCC identity stability, and hardened-runtime library
+# validation between the main exec and the framework. The outer bundle
+# CodeResources hashes the helpers' original _CodeSignature; replacing them
+# breaks the outer seal, but the main executable's Developer ID signature stays
+# valid.
 {
   lib,
   pkgs,
@@ -77,12 +78,9 @@ stdenvNoCC.mkDerivation {
           mkdir -p "$FW/$VER/Libraries/WidevineCdm"
           cp -R "$WIDEVINE"/* "$FW/$VER/Libraries/WidevineCdm/"
 
-          # Add purpose strings for optional macOS permission prompts. These
-          # keys only explain access if Helium ever hits the corresponding APIs;
-          # they do not grant permission or force prompts by themselves.
-          /usr/bin/plutil -replace NSAppleEventsUsageDescription -string "Helium needs automation access when a feature asks to control another app on your behalf." "$HELIUM/Contents/Info.plist"
-          /usr/bin/plutil -replace NSInputMonitoringUsageDescription -string "Helium needs input monitoring access when a feature asks to observe global keyboard or mouse events outside the browser." "$HELIUM/Contents/Info.plist"
-          /usr/bin/plutil -replace NSScreenCaptureDescription -string "Helium needs screen capture access when a feature asks to share, record, or capture your screen." "$HELIUM/Contents/Info.plist"
+          # Do not edit Contents/Info.plist here. It is sealed by the main app's
+          # Developer ID signature; mutating it makes codesign report "invalid
+          # Info.plist" and can destabilize TCC permissions across rebuilds.
 
           # Clear quarantine xattrs (does NOT affect embedded LC_CODE_SIGNATURE).
           /usr/bin/xattr -cr "$HELIUM"

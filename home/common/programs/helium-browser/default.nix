@@ -82,28 +82,16 @@
       config.programs.helium-browser.package
     ];
 
-    # Chromium `ExtensionDeveloperModeSettings` policy did not surface in
-    # chrome://policy via NSUserDefaults, so mutate Secure Preferences directly.
-    home.activation.heliumBrowserEnableDeveloperMode = lib.mkIf config.programs.helium-browser.enable (
-      lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        HELIUM_PREFS="${config.home.homeDirectory}/Library/Application Support/net.imput.helium/Default/Secure Preferences"
-        if [ -f "$HELIUM_PREFS" ]; then
-          if [ "$(${pkgs.jq}/bin/jq -r '.extensions.ui.developer_mode // false' "$HELIUM_PREFS")" != "true" ]; then
-            echo "Enabling developer mode for Helium..."
-            $DRY_RUN_CMD cp "$HELIUM_PREFS" "$HELIUM_PREFS.bak"
-            $DRY_RUN_CMD ${pkgs.jq}/bin/jq '.extensions.ui.developer_mode = true' "$HELIUM_PREFS" > "$HELIUM_PREFS.tmp"
-            $DRY_RUN_CMD mv "$HELIUM_PREFS.tmp" "$HELIUM_PREFS"
-          fi
-        fi
-      ''
-    );
+    # Do not mutate Chromium profile JSON during activation. "Secure Preferences"
+    # is user data with integrity metadata; rewriting it outside Helium risks
+    # preference/profile resets. Enable extension developer mode manually if needed.
 
     # Install Helium.app to /Applications/ via rsync. All signing happens in
-    # the nix derivation's postFixup (ad-hoc, helpers only). See rsync flag
-    # rationale in pkgs/helium-browser.nix neighbours: no --inplace (preserve
-    # bundle dir inode for GK ExecPolicy cache); --checksum (nix mtime is
-    # epoch, launcher stub byte size is constant across minor versions);
-    # --delete (stale Versions/); --chmod=u+w (drop nix-store read-only).
+    # the nix derivation's postFixup (ad-hoc, helpers only). Keep the bundle
+    # and existing executable inodes stable for Gatekeeper/TCC caches: use
+    # --inplace with --checksum so nix-store epoch mtimes do not skip changed
+    # Chromium stubs; --delete removes stale Versions/; --chmod=u+w drops
+    # nix-store read-only bits for the next activation.
     home.activation.heliumBrowserInstallToApplications =
       lib.mkIf config.programs.helium-browser.enable
         (
@@ -115,8 +103,10 @@
               echo "helium-browser: source bundle missing at $SRC; skipping"
             elif [ ! -w /Applications ] && ! groups | tr ' ' '\n' | grep -qx admin; then
               echo "helium-browser: cannot write to /Applications/ (user not in admin group); skipping"
+            elif /usr/bin/pgrep -f '^/Applications/Helium\.app/Contents/MacOS/Helium$' >/dev/null 2>&1; then
+              echo "helium-browser: /Applications/Helium.app is running; skipping bundle update to avoid changing code identity under a live TCC client"
             else
-              $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -a --checksum --delete --chmod=u+w \
+              $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -a --inplace --checksum --delete --chmod=u+w \
                 "$SRC/" "$DST/" || {
                   echo "helium-browser: rsync to /Applications/ failed; existing bundle left in place"
                   exit 0
