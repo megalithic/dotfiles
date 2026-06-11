@@ -7,7 +7,10 @@ import type { AssistantMessage } from "@earendil-works/pi-ai";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import { execFile as execFileCb } from "node:child_process";
-import { promisify } from "node:util";
+import { appendFileSync, mkdirSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+import { inspect, promisify } from "node:util";
 
 const execFile = promisify(execFileCb);
 
@@ -91,6 +94,11 @@ function parseMultiPassStatus(status: string): MultiPassFooterStatus {
 interface McpFooterStatus {
   text: string;
   activeCount: number;
+  totalCount: number;
+}
+
+interface McpErrorFooterStatus {
+  text: string;
 }
 
 function formatMcpStatus(
@@ -103,7 +111,12 @@ function formatMcpStatus(
   const slashMatch = clean.match(/(\d+)\s*\/\s*(\d+)/);
   if (slashMatch?.[1] && slashMatch?.[2]) {
     const activeCount = Number.parseInt(slashMatch[1], 10);
-    return { text: ` ${slashMatch[1]}/${slashMatch[2]}`, activeCount };
+    const totalCount = Number.parseInt(slashMatch[2], 10);
+    return {
+      text: ` ${slashMatch[1]}/${slashMatch[2]}`,
+      activeCount,
+      totalCount,
+    };
   }
 
   const wordsMatch = clean.match(
@@ -111,10 +124,22 @@ function formatMcpStatus(
   );
   if (wordsMatch?.[1] && wordsMatch?.[2]) {
     const activeCount = Number.parseInt(wordsMatch[1], 10);
-    return { text: ` ${wordsMatch[1]}/${wordsMatch[2]}`, activeCount };
+    const totalCount = Number.parseInt(wordsMatch[2], 10);
+    return {
+      text: ` ${wordsMatch[1]}/${wordsMatch[2]}`,
+      activeCount,
+      totalCount,
+    };
   }
 
   return undefined;
+}
+
+function formatMcpErrorStatus(text: string): McpErrorFooterStatus | undefined {
+  const clean = sanitizeStatusText(text);
+  const [server, reason] = clean.split("|");
+  if (!server || !reason) return undefined;
+  return { text: ` ${server} ${reason}` };
 }
 
 async function fetchStarship(cwd: string): Promise<string> {
@@ -141,13 +166,143 @@ interface TokenCache {
   entryCount: number;
 }
 
+interface McpErrorInfo {
+  server: string;
+  reason: string;
+  message: string;
+  at: number;
+}
+
+interface McpErrorGuardState {
+  patched: boolean;
+  originalError?: typeof console.error;
+  lastError?: McpErrorInfo;
+  listeners: Set<(error: McpErrorInfo | undefined) => void>;
+}
+
+// @lat: [[pi-coding-agent#Runtime settings#MCP reconnect error containment]]
+const MCP_ERROR_GUARD_STATE = Symbol.for("pi.mcp-error-guard.state");
+const MCP_ERROR_STATUS_KEY = "mcp-error";
+const MCP_LOG_DIR = join(homedir(), ".local", "share", "pi", "logs");
+const MCP_LOG_FILE = join(MCP_LOG_DIR, "pi-mcp-adapter.log");
+
+function getMcpErrorGuardState(): McpErrorGuardState {
+  const root = globalThis as typeof globalThis & {
+    [MCP_ERROR_GUARD_STATE]?: McpErrorGuardState;
+  };
+  if (!root[MCP_ERROR_GUARD_STATE]) {
+    root[MCP_ERROR_GUARD_STATE] = { patched: false, listeners: new Set() };
+  }
+  return root[MCP_ERROR_GUARD_STATE];
+}
+
+function stringifyConsoleArg(arg: unknown): string {
+  if (arg instanceof Error) return arg.stack || arg.message;
+  if (typeof arg === "string") return arg;
+  return inspect(arg, { depth: 4, breakLength: 160 });
+}
+
+function summarizeMcpErrorReason(message: string): string {
+  if (/ECONNREFUSED|connection refused|connect failed/i.test(message)) {
+    return "conn refused";
+  }
+  if (/ETIMEDOUT|timeout|timed out/i.test(message)) return "timeout";
+  if (/ENOTFOUND|getaddrinfo/i.test(message)) return "dns failed";
+  if (/unauthori[sz]ed|forbidden|invalid token|401|403/i.test(message)) {
+    return "auth failed";
+  }
+  if (/OAuth|needs auth|authentication required/i.test(message)) {
+    return "auth required";
+  }
+  if (/fetch failed/i.test(message)) return "fetch failed";
+  if (/SseError|SSE error/i.test(message)) return "sse error";
+  return "error";
+}
+
+function parseMcpReconnectError(args: unknown[]): McpErrorInfo | undefined {
+  const first = typeof args[0] === "string" ? args[0] : "";
+  const match = first.match(/^MCP: Failed to reconnect to ([^:]+):/);
+  if (!match?.[1]) return undefined;
+
+  const message = args.map(stringifyConsoleArg).join(" ");
+  return {
+    server: match[1],
+    reason: summarizeMcpErrorReason(message),
+    message,
+    at: Date.now(),
+  };
+}
+
+function logMcpError(error: McpErrorInfo): void {
+  try {
+    mkdirSync(MCP_LOG_DIR, { recursive: true });
+    appendFileSync(
+      MCP_LOG_FILE,
+      JSON.stringify({
+        timestamp: new Date(error.at).toISOString(),
+        extension: "pi-mcp-adapter",
+        server: error.server,
+        reason: error.reason,
+        message: error.message,
+      }) + "\n",
+      "utf8",
+    );
+  } catch {
+    // Keep MCP reconnect noise out of the UI even if file logging fails.
+  }
+}
+
+function publishMcpError(state: McpErrorGuardState, error: McpErrorInfo): void {
+  state.lastError = error;
+  for (const listener of state.listeners) {
+    try {
+      listener(error);
+    } catch {
+      // Ignore stale UI listeners.
+    }
+  }
+}
+
+function patchMcpReconnectErrors(): void {
+  const state = getMcpErrorGuardState();
+  if (state.patched) return;
+
+  state.originalError = console.error.bind(console);
+  console.error = (...args: unknown[]) => {
+    const mcpError = parseMcpReconnectError(args);
+    if (mcpError) {
+      logMcpError(mcpError);
+      publishMcpError(state, mcpError);
+      return;
+    }
+    state.originalError?.(...args);
+  };
+  state.patched = true;
+}
+
 export default function (pi: ExtensionAPI) {
+  patchMcpReconnectErrors();
+
   pi.on("session_start", (_event, ctx) => {
     let cachedStarship = "";
     const tokenCache: TokenCache = {
       totalCost: 0,
       entryCount: 0,
     };
+    const mcpErrorGuardState = getMcpErrorGuardState();
+    const setMcpErrorStatus = (error: McpErrorInfo | undefined) => {
+      ctx.ui.setStatus(
+        MCP_ERROR_STATUS_KEY,
+        error ? `${error.server}|${error.reason}` : undefined,
+      );
+    };
+
+    mcpErrorGuardState.listeners.add(setMcpErrorStatus);
+    setMcpErrorStatus(mcpErrorGuardState.lastError);
+
+    pi.on("session_shutdown", () => {
+      mcpErrorGuardState.listeners.delete(setMcpErrorStatus);
+    });
 
     ctx.ui.setFooter((tui, theme, footerData) => {
       // Pre-fetch starship asynchronously, re-render when ready
@@ -284,10 +439,22 @@ export default function (pi: ExtensionAPI) {
           // Multi-pass owns the right side. Caveman never belongs in the footer.
           if (extensionStatuses.size > 0) {
             const excludedKeys = new Set<string>(["multi-pass", "caveman"]);
+            const rawMcpStatus = extensionStatuses.get("mcp") || "";
+            const parsedMcpStatus = formatMcpStatus("mcp", rawMcpStatus);
+            const mcpFullyConnected = parsedMcpStatus
+              ? parsedMcpStatus.activeCount >= parsedMcpStatus.totalCount
+              : false;
             const statusParts = Array.from(extensionStatuses.entries())
               .sort(([a], [b]) => a.localeCompare(b))
               .filter(([key]) => !excludedKeys.has(key))
               .map(([key, text]) => {
+                if (key === "mcp-error") {
+                  if (mcpFullyConnected) return "";
+                  const mcpErrorStatus = formatMcpErrorStatus(text);
+                  return mcpErrorStatus
+                    ? theme.fg("error", mcpErrorStatus.text)
+                    : "";
+                }
                 const mcpStatus = formatMcpStatus(key, text);
                 if (mcpStatus) {
                   const color = mcpStatus.activeCount > 0 ? "accent" : "dim";

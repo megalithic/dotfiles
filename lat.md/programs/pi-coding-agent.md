@@ -54,6 +54,12 @@ It drives default provider, enabled models, terminal behavior, subagent model ov
 
 `custom-footer.ts` replaces the default footer with a starship-backed cwd line plus compact token and model status. The right side of line 2 shows multi-pass routing as `({preset}){provider-or-failover-pool}/{model}/thinking_level`, derived from the `multi-pass` status string. Caveman status is suppressed and MCP status is reduced to ` {active}/{total}`, turning accent-blue when any server is active.
 
+### MCP reconnect error containment
+
+MCP reconnect failures are contained so repeating server errors do not corrupt Pi's interactive TUI output.
+
+`custom-footer.ts` patches `console.error` only for `MCP: Failed to reconnect to <server>:` messages, writes JSON lines to `~/.local/share/pi/logs/pi-mcp-adapter.log`, and suppresses the original console output. The footer exposes the captured failure through an internal `mcp-error` status rendered as red ` {server} {reason}` next to the compact ` n/N` MCP status. Reasons are short labels such as `conn refused`, `timeout`, `dns failed`, `auth failed`, `auth required`, `fetch failed`, and `sse error`. The red error is hidden once the parsed MCP status reports all configured servers connected.
+
 Local Pi models use the `llamacpp` OpenAI-compatible provider at `http://127.0.0.1:18080/v1` with `llamacpp/qwen3.6`, `llamacpp/deepseek14b`, and `llamacpp/gemma4` aliases instead of Ollama or oMLX. Activation removes redundant `package.json`, `package-lock.json`, and `node_modules` from `~/.pi/agent/extensions` because Pi's own resolver handles deps.
 
 Global MCP server config lives in `mcp.json`: command-backed `chrome-devtools`, remote `context7` with `CONTEXT7_API_KEY`, and remote `githits` with bearer auth from `GITHITS_API_KEY`. Local app-backed MCP servers such as Tidewave and Paper are not declared globally unless they are expected to be running, to avoid reconnect noise.
