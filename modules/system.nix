@@ -254,6 +254,10 @@
           SUHasLaunchedBefore = true;
           SUSendProfileInfo = false;
         };
+        "net.imput.helium" = {
+          SUAutomaticallyUpdate = false;
+          SUEnableAutomaticChecks = false;
+        };
         # Disabled: sandboxed app — see SANDBOXED APP PREFS note at end of CustomUserPreferences.
         # "com.flexibits.fantastical2.mac" = {
         #   SUAutomaticallyUpdate = false;
