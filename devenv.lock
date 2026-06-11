@@ -3,11 +3,11 @@
     "devenv": {
       "locked": {
         "dir": "src/modules",
-        "lastModified": 1779460760,
-        "narHash": "sha256-icE9NT38wxcdpozLZa0uS1lTYfuPAYxpIebOQrJBKXo=",
+        "lastModified": 1781117230,
+        "narHash": "sha256-0S8MbdvTw8ijL1ydWwbFmlt8R2GaS+sMj8zPKUfaFfo=",
         "owner": "cachix",
         "repo": "devenv",
-        "rev": "e5f1a41c245ddacb841321026570fa963cedab33",
+        "rev": "dec50ef767f48ccd3e2d17362eb3336cadba119c",
         "type": "github"
       },
       "original": {
@@ -20,11 +20,11 @@
     "devenv-base": {
       "flake": false,
       "locked": {
-        "lastModified": 1779294959,
-        "narHash": "sha256-f+tdn1CGfLfkmEc5ZB9wCDSk5c30qui8vZnLOXVWaFg=",
+        "lastModified": 1781141719,
+        "narHash": "sha256-6XU0mw8if4uktrIjEV+EVFbhyqyJIcT88c6l/QlsUhk=",
         "owner": "megalithic",
         "repo": "devenv-base",
-        "rev": "66ba7d03d707dd073b50de6dd04861e685a960f0",
+        "rev": "3deef4f4a76e51ef1a0f131b628faa93c33a25a4",
         "type": "github"
       },
       "original": {
@@ -140,11 +140,11 @@
     "treefmt-nix": {
       "flake": false,
       "locked": {
-        "lastModified": 1775636079,
-        "narHash": "sha256-pc20NRoMdiar8oPQceQT47UUZMBTiMdUuWrYu2obUP0=",
+        "lastModified": 1780220602,
+        "narHash": "sha256-eynAfOmbmxJnkp7YewvCEbShNnnYJ9gLLqkzsYtBPeM=",
         "owner": "numtide",
         "repo": "treefmt-nix",
-        "rev": "790751ff7fd3801feeaf96d7dc416a8d581265ba",
+        "rev": "db947814a175b7ca6ded66e21383d938df01c227",
         "type": "github"
       },
       "original": {
