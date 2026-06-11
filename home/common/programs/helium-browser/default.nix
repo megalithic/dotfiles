@@ -82,6 +82,18 @@
       config.programs.helium-browser.package
     ];
 
+    # Sparkle has replaced or repaired /Applications/Helium.app before. Force
+    # updater defaults during activation; targets.darwin.defaults alone was not
+    # enough to keep these keys false after Helium launched.
+    home.activation.heliumBrowserDisableSparkleUpdates =
+      lib.mkIf config.programs.helium-browser.enable
+        (
+          lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+            $DRY_RUN_CMD /usr/bin/defaults write net.imput.helium SUAutomaticallyUpdate -bool false
+            $DRY_RUN_CMD /usr/bin/defaults write net.imput.helium SUEnableAutomaticChecks -bool false
+          ''
+        );
+
     # Do not mutate Chromium profile JSON during activation. "Secure Preferences"
     # is user data with integrity metadata; rewriting it outside Helium risks
     # preference/profile resets. Enable extension developer mode manually if needed.
