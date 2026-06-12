@@ -72,7 +72,7 @@ in
     LC_CTYPE = lang;
     LC_ALL = lang;
     PAGER = "less -FirSwX";
-    EDITOR = "${pkgs.nvim-nightly}/bin/nvim";
+    EDITOR = "${pkgs.neovim-unwrapped}/bin/nvim";
     VISUAL = "$EDITOR";
     GIT_EDITOR = "$EDITOR";
     JJ_EDITOR = "$EDITOR";

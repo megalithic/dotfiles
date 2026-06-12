@@ -25,9 +25,8 @@ let
     inkscape # migrated from homebrew 2026-02-13
     # neovide # Native neovim GUI - potential future use for floating notes window
     obsidian
-    shade # Floating terminal panel for macOS (prebuilt from GitHub release v0.1.0)
     slack # migrated from homebrew 2026-02-13
-    spotify
+    # spotify
     # telegram-desktop
     zoom-us
   ];
@@ -38,24 +37,12 @@ let
   #   raycast      — zlib-wrapped DMG, brew-nix's 7zz can't unpack
   #   okta-verify  — .pkg with URL-encoded paths, cpio/gzip pipeline fails
   # Both stay in modules/brew.nix until upstream fixes packaging.
-  brewCaskPkgs =
-    (with pkgs.brewCasks; [
-      colorsnapper
-      contexts
-      homerow
-      kitty
-      mouseless
-      # protonvpn + proton-drive → moved to real homebrew (modules/brew.nix)
-      # VPN system extensions need stable bundle paths, not /nix/store copies
-      proton-drive
-      yubico-authenticator
-    ])
-    ++ [
-      # 1password + 1password-cli installed via real homebrew (modules/brew.nix)
-      # because brew-nix copies from /nix/store, which trips 1Password's
-      # anti-tamper / signature checks.
-      pkgs.brewCasks."obs@beta"
-    ];
+  brewCaskPkgs = [
+    # 1password + 1password-cli installed via real homebrew (modules/brew.nix)
+    # because brew-nix copies from /nix/store, which trips 1Password's
+    # anti-tamper / signature checks.
+    pkgs.brewCasks."obs@beta"
+  ];
 
   # ── cli tools ──────────────────────────────────────────────────────────────────
   # NOTE: Some tools are enabled via programs.* (auto-installs package):

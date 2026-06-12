@@ -775,9 +775,7 @@ function Transport.resolve_socket(config)
   local ranked = filter_cached_targets({ include_ephemeral = false, same_tmux_session = true })
   if ranked[1] then
     local local_pair_id = config.registry and config.registry.pair_id
-    if local_pair_id and ranked[1].pairId and local_pair_id ~= ranked[1].pairId then
-      return nil, "manifest-unpaired"
-    end
+    if local_pair_id and ranked[1].pairId and local_pair_id ~= ranked[1].pairId then return nil, "manifest-unpaired" end
     return ranked[1].path, "manifest-ranked"
   end
 
@@ -2973,45 +2971,42 @@ function M.setup(opts)
     local existing_idx, existing = compose_comment_at(bufnr, start_row)
 
     local filetype = vim.bo.filetype
-    vim.ui.input(
-      { prompt = "comment: ", default = existing and existing.note or nil },
-      function(input)
-        if input == nil then
-          vim.notify("pinvim: comment cancelled", vim.log.levels.INFO)
-          return
-        end
-        if vim.trim(input) == "" then
-          if existing_idx then
-            if existing.bufnr and existing.extmark then
-              pcall(vim.api.nvim_buf_del_extmark, existing.bufnr, compose_ns, existing.extmark)
-            end
-            table.remove(compose_queue, existing_idx)
-            vim.notify("pinvim: comment removed", vim.log.levels.INFO)
-          else
-            vim.notify("pinvim: comment cancelled", vim.log.levels.INFO)
-          end
-          return
-        end
-        if existing then
-          existing.note = input
-          place_compose_mark(existing)
-          vim.notify("pinvim: comment updated", vim.log.levels.INFO)
-          return
-        end
-        local item = {
-          type = "selection",
-          content = selection,
-          file = rel_path,
-          range = { start_row, end_row },
-          filetype = filetype,
-          note = input,
-          bufnr = bufnr,
-        }
-        table.insert(compose_queue, item)
-        place_compose_mark(item)
-        vim.notify(string.format("pinvim: queued comment %d", #compose_queue), vim.log.levels.INFO)
+    vim.ui.input({ prompt = "comment: ", default = existing and existing.note or nil }, function(input)
+      if input == nil then
+        vim.notify("pinvim: comment cancelled", vim.log.levels.INFO)
+        return
       end
-    )
+      if vim.trim(input) == "" then
+        if existing_idx then
+          if existing.bufnr and existing.extmark then
+            pcall(vim.api.nvim_buf_del_extmark, existing.bufnr, compose_ns, existing.extmark)
+          end
+          table.remove(compose_queue, existing_idx)
+          vim.notify("pinvim: comment removed", vim.log.levels.INFO)
+        else
+          vim.notify("pinvim: comment cancelled", vim.log.levels.INFO)
+        end
+        return
+      end
+      if existing then
+        existing.note = input
+        place_compose_mark(existing)
+        vim.notify("pinvim: comment updated", vim.log.levels.INFO)
+        return
+      end
+      local item = {
+        type = "selection",
+        content = selection,
+        file = rel_path,
+        range = { start_row, end_row },
+        filetype = filetype,
+        note = input,
+        bufnr = bufnr,
+      }
+      table.insert(compose_queue, item)
+      place_compose_mark(item)
+      vim.notify(string.format("pinvim: queued comment %d", #compose_queue), vim.log.levels.INFO)
+    end)
     return true
   end
 
@@ -3144,7 +3139,7 @@ function M.setup(opts)
       registry = vim.deepcopy(registry),
       editor_service = vim.deepcopy(editor_service),
       responsibilities = {
-        loader = "config/nvim/after/plugin/pi.lua",
+        loader = "config/nvim/after/plugin/pinvim.lua",
         module = "config/nvim/lua/pinvim.lua",
         bridge = "non-nvim ingress only while Hammerspoon/tell replacements land",
         extension = "home/common/programs/pi-coding-agent/extensions/pinvim.ts",

@@ -1,9 +1,6 @@
 # megabookpro - Personal laptop configuration
 # Host-specific settings that differ from common.nix
-{
-  pkgs,
-  ...
-}:
+{ pkgs, ... }:
 {
   # Host-specific system packages
   # Most tools should go to home-manager (home/common/packages.nix)
@@ -20,12 +17,6 @@
     google-cloud-sdk
 
     kanata
-  ];
-
-  # Host-specific homebrew casks (merged with modules/brew.nix)
-  # Add casks only needed on personal laptop here
-  homebrew.casks = [
-    "orcaslicer"
   ];
 
   # Personal laptop specific settings can go here

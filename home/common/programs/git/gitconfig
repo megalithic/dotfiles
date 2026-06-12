@@ -245,6 +245,28 @@
   set-prod-api = !git stash push -m "dev-use-prod-api"
   get-prod-api = !git stash apply stash^{/dev-use-prod-api}
 
+	uat = "!f() { \
+		branch=\"\"; msg=\"\"; \
+		while [ $# -gt 0 ]; do \
+			case \"$1\" in \
+				-b) branch=\"$2\"; shift 2 ;; \
+				-m) msg=\"$2\"; shift 2 ;; \
+				*) echo \"usage: git uat -b <branch> [-m <message>]\" >&2; return 1 ;; \
+			esac; \
+		done; \
+		[ -n \"$branch\" ] || branch=\"$(git symbolic-ref --quiet --short HEAD)\" || { echo \"git uat: detached HEAD, pass -b <branch>\" >&2; return 1; }; \
+		[ -n \"$msg\" ] || msg=\"staging $branch to uat\"; \
+		wt=\"${TMPDIR:-/tmp}/git-uat-$$\"; \
+		git fetch origin || return 1; \
+		git worktree add --detach \"$wt\" origin/staging || return 1; \
+		if git -C \"$wt\" merge --no-verify \"$branch\" -m \"$msg\" && git -C \"$wt\" push origin HEAD:staging; then \
+			git worktree remove --force \"$wt\"; \
+			echo \"git uat: merged $branch into staging and pushed (UAT deploy triggered)\"; \
+		else \
+			echo \"git uat: merge/push failed — worktree kept at $wt\" >&2; return 1; \
+		fi; \
+	}; f"
+
 [clean]
   requireForce = true
 

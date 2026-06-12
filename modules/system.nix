@@ -1,7 +1,4 @@
-{
-  username,
-  ...
-}:
+{ username, ... }:
 # NOTE: docs for nix-darwin found
 # https://daiderd.com/nix-darwin/manual/index.html
 # macOS user-specific defaults using home-manager's built-in support
@@ -480,7 +477,11 @@
     # Extend here with additional services (e.g., `login`) if we want biometric auth elsewhere.
   };
 
-  security.sudo.extraConfig = "${username}    ALL = (ALL) NOPASSWD: ALL";
+  # security.sudo.extraConfig = "${username}    ALL = (ALL) NOPASSWD: ALL";
+  security.sudo.extraConfig = ''
+    ${username} ALL=(root) NOPASSWD: \
+      /run/current-system/sw/bin/mas install *
+  '';
 
   # Apply symbolic hotkey changes immediately (without requiring logout)
   # REF:

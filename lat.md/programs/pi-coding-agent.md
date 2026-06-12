@@ -40,7 +40,7 @@ Tell is bidirectional: the sender includes `id` and `fromSocket` in the `pi.tell
 
 The task-pipeline commands use repo-scoped plan files under `~/.local/share/pi/plans/$(basename $PWD)/` and treat GRILL, TASK, PLAN, and ticket-context files as one progression. The `geo-workbench.ts` extension is a no-dependency browser UI for image geolocation that exposes `geo_lookup` and expects agents to call `geo_report`.
 
-`sentinel.ts` loads rules only from `extensions/sentinel-rules.json` at startup; a copied file with another name is inert until renamed or wired in. The hardcoded pipe/redirect hang guard in `sentinel.ts` blocks `bash` commands that pipe or redirect risky upstreams unless the call passes a `timeout` between 1 and 300 seconds. Investigation mode is also enforced in `sentinel.ts`: prompts containing `investigate`, `inspect`, or `audit` without `and fix`/`then fix` block write-capable tool calls and bash write workarounds until the user grants the same `override` flow used by confirm-tier sentinel rules.
+`sentinel.ts` loads rules only from `extensions/sentinel-rules.json` at startup; a copied file with another name is inert until renamed or wired in. The hardcoded pipe/redirect hang guard in `sentinel.ts` blocks `bash` commands that pipe or redirect risky upstreams unless the call passes a `timeout` between 1 and 300 seconds. Investigation mode is also enforced in `sentinel.ts`: prompts starting with imperative `investigate`, `inspect`, or `audit` block write-capable tool calls and bash write workarounds unless the prompt also includes clear implementation or approval intent, or the user grants the same `override` flow used by confirm-tier sentinel rules.
 
 The local `checkpoint.ts` extension is removed from the active profile; checkpoint and main-branch prompting come from the agent harness instead.
 
@@ -53,6 +53,8 @@ The local `checkpoint.ts` extension is removed from the active profile; checkpoi
 It drives default provider, enabled models, terminal behavior, subagent model overrides, and multi-sub presets. The `alt` scope includes the newest Anthropic aliases such as `alt-anthropic/claude-fable-5`; planner, reviewer, and oracle default to the latest Opus alias; worker defaults to the latest Sonnet alias; scout and context-builder keep small-model fallbacks before local `llamacpp/gemma4`. The shell command prefix forces noninteractive git behavior and enables tmux image handling through `PI_TMUX_IMAGES=1`.
 
 `custom-footer.ts` replaces the default footer with a starship-backed cwd line plus compact token and model status. The right side of line 2 shows multi-pass routing as `({preset}){provider-or-failover-pool}/{model}/thinking_level`, derived from the `multi-pass` status string. Caveman status is suppressed and MCP status is reduced to ` {active}/{total}`, turning accent-blue when any server is active.
+
+Extension footer statuses should be semantic and compact because `custom-footer.ts` owns separators, colors, and truncation. `pinvim` publishes no footer text until a Neovim peer is active, then sends a `pinvim.v1` record that the footer renders as ` {basename}` for a healthy link or ` {filename:line}` / ` {filename:start-end}` when attached Neovim context is pending. The icon is green for connected, yellow for a repaired 1:1 link, and red for stale peers.
 
 ### MCP reconnect error containment
 

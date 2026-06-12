@@ -58,6 +58,7 @@ Tools managed under `home/common/programs/`, one line each. Tools with their own
 | brave-browser-nightly                   | Chromium browser wrapper app                                       |
 | claude-code                             | parked until its old dependency is restored                        |
 | codex                                   | OpenAI Codex CLI via `programs.codex`                              |
+| colorsnapper / contexts                 | macOS GUI utilities from brew-nix casks                            |
 | csvlens                                 | CSV terminal viewer                                                |
 | desktoppr                               | wallpaper activation                                               |
 | devenv                                  | devenv integration; exports `DEVENV_TUI=false`                     |
@@ -91,6 +92,7 @@ Tools managed under `home/common/programs/`, one line each. Tools with their own
 | opnix                                   | 1Password-backed secrets — see [[architecture#Secrets management]] |
 | pi-coding-agent                         | Pi CLI and extensions — see [[pi-coding-agent]]                    |
 | process-compose                         | process orchestration                                              |
+| proton-drive                            | Proton Drive GUI app from brew-nix cask                            |
 | ripgrep                                 | search tool                                                        |
 | rust                                    | rustup + bacon toolchain                                           |
 | shade / shade-next                      | Hammerspoon launcher panels — see [[hammerspoon]]                  |
@@ -102,4 +104,5 @@ Tools managed under `home/common/programs/`, one line each. Tools with their own
 | tmux                                    | terminal multiplexer; layouts via `ftm`                            |
 | worktrunk                               | optional; imports only when its flake input exists                 |
 | yazi                                    | file manager + plugins                                             |
+| yubico-authenticator                    | Yubico Authenticator GUI app from brew-nix cask                    |
 | zoxide                                  | directory jumper                                                   |

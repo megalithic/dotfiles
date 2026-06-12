@@ -1,9 +1,11 @@
 {
   config,
   paths,
+  pkgs,
   ...
 }:
 {
+  home.packages = [ pkgs.brewCasks.hammerspoon ];
   xdg.configFile."hammerspoon" = {
     source = config.lib.mega.linkConfig "hammerspoon";
     force = true;

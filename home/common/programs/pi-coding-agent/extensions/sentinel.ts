@@ -978,8 +978,10 @@ function detectPipeOrRedirect(cmd: string): {
 
 // ── Investigation mode + Ticket-gated editing ────────────────────────────────
 
-const INVESTIGATE_RE = /\b(investigate|inspect|audit)\b/i;
-const FIX_INTENT_RE = /\b(and\s+fix|then\s+fix)\b/i;
+const INVESTIGATE_RE =
+  /^\s*(?:please\s+|can\s+you\s+|could\s+you\s+|would\s+you\s+)?(?:investigate|inspect|audit)\b/i;
+const FIX_INTENT_RE =
+  /\b(?:and\s+fix|then\s+fix|fix|implement|create|write|run\s+(?:it|that|those|them)|apply|commit|refactor|rewrite|change|update|delete|remove|trash|checkout|go\s+ahead|yes|yep|yeah|approved?)\b/i;
 // Ticket ID patterns:
 //   GitHub:  #123
 //   Jira:    PROJ-123

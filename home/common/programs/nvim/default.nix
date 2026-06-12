@@ -23,6 +23,8 @@
       .DS_Store
       .netrwhist
       dist/
+      .devenv/
+      .jj/
       node_modules/
       **/node_modules/
       wget-log
@@ -39,7 +41,7 @@
     enable = true;
     defaultEditor = true;
     sideloadInitLua = true;
-    package = pkgs.nvim-nightly;
+    package = pkgs.neovim-unwrapped;
     withPython3 = true;
     withNodeJs = true;
     withRuby = true;

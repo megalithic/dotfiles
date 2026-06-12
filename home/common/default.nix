@@ -27,7 +27,6 @@ in
     ./modules/settings-sync.nix
     ./packages.nix
     ./services.nix
-    ./accounts.nix
   ]
   ++ programImports;
 

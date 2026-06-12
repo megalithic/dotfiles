@@ -101,6 +101,36 @@ interface McpErrorFooterStatus {
   text: string;
 }
 
+interface PinvimFooterStatus {
+  status?: "connected" | "repaired" | "stale" | "error" | string;
+  label?: string;
+}
+
+function formatPinvimStatus(
+  text: string,
+  theme: { fg(name: string, text: string): string },
+): string | undefined {
+  const clean = sanitizeStatusText(text);
+  if (!clean.startsWith("pinvim.v1:")) return undefined;
+
+  try {
+    const parsed = JSON.parse(
+      clean.slice("pinvim.v1:".length),
+    ) as PinvimFooterStatus;
+    const label = sanitizeStatusText(parsed.label || "");
+    if (!label) return undefined;
+    const color =
+      parsed.status === "connected"
+        ? "success"
+        : parsed.status === "repaired"
+          ? "warning"
+          : "error";
+    return `${theme.fg(color, "")} ${label}`;
+  } catch {
+    return undefined;
+  }
+}
+
 function formatMcpStatus(
   key: string,
   text: string,
@@ -455,6 +485,9 @@ export default function (pi: ExtensionAPI) {
                     ? theme.fg("error", mcpErrorStatus.text)
                     : "";
                 }
+                if (key === "pinvim") {
+                  return formatPinvimStatus(text, theme) || "";
+                }
                 const mcpStatus = formatMcpStatus(key, text);
                 if (mcpStatus) {
                   const color = mcpStatus.activeCount > 0 ? "accent" : "dim";
@@ -467,7 +500,7 @@ export default function (pi: ExtensionAPI) {
               })
               .filter((text) => text.length > 0);
             if (statusParts.length > 0) {
-              const extStatus = statusParts.join(" ");
+              const extStatus = statusParts.join(theme.fg("dim", " │ "));
               statsLeft += theme.fg("dim", " │ ") + extStatus;
               if (visibleWidth(statsLeft) > width) {
                 statsLeft = truncateToWidth(statsLeft, width, "...");

@@ -24,6 +24,8 @@ Each Neovim process generates one `pairId` in `Registry.setup` (`nvim-<pid>-<has
 
 Pinvim also exposes a separate Neovim editor service over msgpack-RPC. Nvim stores the address in `PINVIM_NVIM_LISTEN_ADDRESS`, peer frames, and manifests, and reports it through `:PiStatus`, `:PiHealth`, `:PiInfo`, `:PiDoctor`, and `api.info()`. The Pi-side client discovers the address from PINVIM env, peer frames, manifests, or registry files; probes with non-blocking msgpack-RPC; and reports connected/stale/fallback state. When no editor service is connected, Pi reports `peer socket only` fallback instead of injecting guessed context. Pi-side timers and sockets use `unref()` so a missing editor address cannot keep short-lived Pi probes alive.
 
+Pi's footer status is intentionally compact: the `pinvim` status emits no footer when no Neovim peer is active, but reports one parseable record for stale or connected peers. The custom footer renders a green Neovim icon for a healthy exact `pairId` link, yellow for a non-exact repaired link, and red for stale peers. Attached context replaces the project label with `filename:line` or `filename:start-end`; repair details stay in `/pinvim-status`, `/pinvim-doctor`, and `/pinvim-info`, not the footer.
+
 ### Editor-service RPC surface
 
 The editor-service RPC surface lets Pi query or manipulate the active Neovim editor without tmux guessing.

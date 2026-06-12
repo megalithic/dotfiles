@@ -12,57 +12,28 @@
       url = "github:LnL7/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
-    homebrew-core = {
-      url = "github:homebrew/homebrew-core";
-      flake = false;
-    };
-    homebrew-cask = {
-      url = "github:homebrew/homebrew-cask";
-      flake = false;
-    };
-    homebrew-services = {
-      url = "github:homebrew/homebrew-services";
-      flake = false;
-    };
-    homebrew-bundle = {
-      url = "github:homebrew/homebrew-bundle";
-      flake = false;
-    };
-
-    # brew-nix: nix overlay for homebrew casks (replaces nix-homebrew casks)
-    brew-api = {
-      url = "github:BatteredBunny/brew-api";
-      flake = false;
-    };
     brew-nix = {
       url = "github:BatteredBunny/brew-nix";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.brew-api.follows = "brew-api";
-      inputs.nix-darwin.follows = "nix-darwin";
     };
-
+    brew-api = {
+      url = "github:BatteredBunny/brew-api";
+      flake = false;
+    };
     opnix = {
       url = "github:brizzbuzz/opnix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    # NOTE: you can pin to a specific show with neovim-nightly-overlay/<sha>
-    neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
     pi-nix = {
       url = "github:lukasl-dev/pi.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    devenv.url = "github:cachix/devenv";
     nh.url = "github:nix-community/nh";
     kanata-darwin = {
       url = "github:not-in-stock/kanata-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # FIXME: Shade build broken - GhosttyKit extraction issue (see overlays/default.nix)
-    # shade.url = "github:megalithic/shade";
-    # shade.inputs.nixpkgs.follows = "nixpkgs";
     yazi.url = "github:sxyazi/yazi";
     yazi-plugins = {
       url = "github:yazi-rs/plugins";
@@ -71,51 +42,28 @@
   };
 
   outputs =
-    { nixpkgs, ... }@inputs:
+    {
+      nixpkgs,
+      ...
+    }@inputs:
     let
-      arch = "aarch64-darwin";
-      version = "25.11";
+      system = "aarch64-darwin";
+      version = "26.05";
+      arch = system;
       username = "seth";
       lib = nixpkgs.lib.extend (import ./lib/default.nix inputs);
-      overlays = import ./overlays { inherit inputs lib; };
-      brew_config =
-        { username }:
-        {
-          nix-homebrew = {
-            enable = true;
-            enableRosetta = true;
-            autoMigrate = true;
-            mutableTaps = false;
-            user = username;
-            taps = {
-              "homebrew/homebrew-core" = inputs.homebrew-core;
-              "homebrew/homebrew-cask" = inputs.homebrew-cask;
-              "homebrew/homebrew-services" = inputs.homebrew-services;
-              "homebrew/homebrew-bundle" = inputs.homebrew-bundle;
-            };
-          };
-        };
+      pkgs = import nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+        config.allowUnfreePredicate = _: true;
+        overlays = (import ./overlays { inherit inputs; }) ++ [
+          (import ./pkgs { inherit lib; })
+        ];
+      };
 
       mkInit = import ./lib/mkInit.nix { inherit nixpkgs; };
-
-      mkDarwin = import ./lib/mkDarwin.nix {
-        inherit
-          inputs
-          lib
-          overlays
-          brew_config
-          version
-          ;
-      };
-
-      mkHome = import ./lib/mkHome.nix {
-        inherit
-          inputs
-          lib
-          overlays
-          version
-          ;
-      };
+      mkDarwin = import ./lib/mkDarwin.nix { inherit inputs lib; };
+      mkHome = import ./lib/mkHome.nix { inherit inputs lib; };
     in
     {
       apps."${arch}".default = mkInit {
@@ -124,19 +72,37 @@
       };
       darwinConfigurations.megabookpro = mkDarwin {
         hostname = "megabookpro";
-        inherit username;
+        inherit
+          username
+          version
+          system
+          ;
       };
       darwinConfigurations.workbookpro = mkDarwin {
         hostname = "workbookpro";
-        inherit username;
+        inherit
+          username
+          version
+          system
+          ;
       };
       homeConfigurations."${username}@megabookpro" = mkHome {
         hostname = "megabookpro";
-        inherit username;
+        inherit
+          username
+          pkgs
+          version
+          system
+          ;
       };
       homeConfigurations."${username}@workbookpro" = mkHome {
         hostname = "workbookpro";
-        inherit username;
+        inherit
+          username
+          pkgs
+          version
+          system
+          ;
       };
     };
 }

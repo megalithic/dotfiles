@@ -1,2 +1,0 @@
--- after/plugin/pi.lua
--- Compatibility stub. Active pinvim loader lives in after/plugin/pinvim.lua.

@@ -13,24 +13,16 @@
 {
   inputs,
   lib,
-  overlays,
-  version,
 }:
 {
   hostname,
   username,
-  system ? "aarch64-darwin",
+  version,
+  pkgs,
+  system,
 }:
 let
   paths = import ./paths.nix username;
-  pkgs = import inputs.nixpkgs {
-    inherit system;
-    inherit overlays;
-    config = {
-      allowUnfree = true;
-      allowUnfreePredicate = _: true;
-    };
-  };
 in
 inputs.home-manager.lib.homeManagerConfiguration {
   inherit pkgs;
@@ -40,7 +32,6 @@ inputs.home-manager.lib.homeManagerConfiguration {
       username
       hostname
       version
-      overlays
       lib
       paths
       ;

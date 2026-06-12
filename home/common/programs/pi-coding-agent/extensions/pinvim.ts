@@ -1031,25 +1031,55 @@ const formatExplicitContext = (
   return parts.join("\n");
 };
 
-const NEOVIM_ICON = "\x1b[38;2;87;161;67m\x1b[0m";
+type PinvimFooterState = "connected" | "repaired" | "stale";
 
-const formatPeerStatus = (): string => {
+const pinvimFooterStatusPrefix = "pinvim.v1:";
+
+const formatContextLabel = (payload: ExplicitSendPayload): string => {
+  const context = payload.context;
+  const file = context.file || context.absFile || context.kind || "context";
+  const basename = file.split("/").pop() || file;
+  if (context.selectionRange) {
+    const [start, end] = context.selectionRange;
+    return start === end
+      ? `${basename}:${start}`
+      : `${basename}:${start}-${end}`;
+  }
+  if (context.cursor?.line) return `${basename}:${context.cursor.line}`;
+  return basename;
+};
+
+const exactPairConnected = (peer: PeerIdentity): boolean =>
+  !!process.env.PINVIM_PAIR_ID && peer.pairId === process.env.PINVIM_PAIR_ID;
+
+const pinvimFooterState = (peer: PeerIdentity): PinvimFooterState => {
+  const health = getHealth();
+  if (health.heartbeatAgeSeconds !== null && health.heartbeatAgeSeconds >= 120)
+    return "stale";
+  if (exactPairConnected(peer)) return "connected";
+  return repairedAt ? "repaired" : "connected";
+};
+
+const formatFooterStatus = (): string => {
   const peer = getActivePeer();
   if (!peer) return "";
-  const label = peer.root || peer.cwd || peer.id;
-  return `│ ${NEOVIM_ICON} ${label.split("/").pop() || label}`;
+
+  const peerLabel = peer.root || peer.cwd || peer.id;
+  const label =
+    pendingContext?.label || peerLabel.split("/").pop() || peerLabel;
+  const status = pinvimFooterState(peer);
+
+  return `${pinvimFooterStatusPrefix}${JSON.stringify({ status, label })}`;
 };
 
-const formatPendingContextStatus = (): string => {
-  if (!pendingContext) return "";
-  const secondsLeft = Math.max(
-    Math.ceil((pendingContext.expiresAt - Date.now()) / 1000),
-    0,
-  );
-  return `│ nvim ctx:${pendingContext.label} ${secondsLeft}s`;
+const formatStatus = (): string => {
+  const peer = getActivePeer();
+  if (!peer) return "(no active peer)";
+  const peerLabel = peer.root || peer.cwd || peer.id;
+  const status = pinvimFooterState(peer);
+  const context = pendingContext ? `, context ${pendingContext.label}` : "";
+  return `${status}: ${peerLabel}${context}`;
 };
-
-const formatStatus = (): string => formatPeerStatus();
 
 const getHealth = (): PinvimHealth => {
   const activePeer = getActivePeer();
@@ -1248,12 +1278,7 @@ const refreshRepairCandidate = async (
   // Nvim manifests should never auto-adopt for pairing.
   // This is read-only for diagnostics and manual repair.
   repairCandidate = candidate || null;
-  if (latestCtx?.hasUI) {
-    latestCtx.ui.setStatus(
-      "pinvim-repair",
-      repairCandidate ? `│ repair:${repairCandidate.id}` : "",
-    );
-  }
+  updateStatus();
 };
 
 const peerAllowedForSocket = (
@@ -1450,8 +1475,9 @@ const updateStatus = (): void => {
   if (!ctx) return;
   try {
     if (!ctx.hasUI) return;
-    ctx.ui.setStatus("pinvim", formatStatus());
-    ctx.ui.setStatus("pinvim-context", formatPendingContextStatus());
+    ctx.ui.setStatus("pinvim", formatFooterStatus());
+    ctx.ui.setStatus("pinvim-context", undefined);
+    ctx.ui.setStatus("pinvim-repair", undefined);
   } catch {
     latestCtx = null;
   }
@@ -1474,14 +1500,9 @@ const attachPendingContext = (payload: ExplicitSendPayload): void => {
     pendingContextTimer = null;
   }
 
-  const fileLabel =
-    payload.context.file?.split("/").pop() ||
-    payload.context.absFile?.split("/").pop() ||
-    payload.context.kind ||
-    "context";
   pendingContext = {
     text: formatExplicitContext(payload, "attached"),
-    label: fileLabel,
+    label: formatContextLabel(payload),
     attachedAt: Date.now(),
     expiresAt: Date.now() + PENDING_CONTEXT_TTL_MS,
   };
@@ -1825,7 +1846,7 @@ const handleSocketPayload = (
       repairedAt = Date.now();
       repairReason = allowed.reason || "hello accepted";
       repairCandidate = null;
-      latestCtx?.ui?.setStatus?.("pinvim-repair", "");
+      updateStatus();
       latestCtx?.ui?.notify?.(
         `Pinvim peer repaired: ${payload.peer.id}`,
         "info",

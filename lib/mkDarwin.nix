@@ -12,14 +12,13 @@
 {
   inputs,
   lib,
-  overlays,
-  brew_config,
-  version,
+  ...
 }:
 {
   hostname,
   username,
-  system ? "aarch64-darwin",
+  version,
+  system,
   extraModules ? [ ],
 }:
 let
@@ -34,7 +33,6 @@ inputs.nix-darwin.lib.darwinSystem {
       username
       hostname
       version
-      overlays
       lib
       paths
       ;
@@ -45,9 +43,6 @@ inputs.nix-darwin.lib.darwinSystem {
 
   modules = [
     { system.configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null; }
-    { nixpkgs.overlays = overlays; }
-    { nixpkgs.config.allowUnfree = true; }
-    { nixpkgs.config.allowUnfreePredicate = _: true; }
     ../hosts/common.nix
     ../hosts/${hostname}.nix
     ../modules/system.nix
@@ -55,17 +50,6 @@ inputs.nix-darwin.lib.darwinSystem {
     ../modules/darwin/spotlight.nix
     inputs.kanata-darwin.darwinModules.default
     ../modules/darwin/kanata.nix
-    inputs.nix-homebrew.darwinModules.nix-homebrew
-    (brew_config { inherit username; })
-    (
-      { config, ... }:
-      {
-        homebrew.taps = map (key: builtins.replaceStrings [ "homebrew-" ] [ "" ] key) (
-          builtins.attrNames config.nix-homebrew.taps
-        );
-      }
-    )
-    (import ../modules/brew.nix)
   ]
   ++ extraModules;
 }
