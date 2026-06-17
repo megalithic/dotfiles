@@ -36,6 +36,31 @@ let
     };
   };
 
+  sesameVersion = "0.10.0";
+  sesame = pkgs.stdenvNoCC.mkDerivation {
+    pname = "sesame";
+    version = sesameVersion;
+
+    src = pkgs.fetchurl {
+      url = "https://github.com/aliou/sesame/releases/download/@aliou/sesame-cli@${sesameVersion}/sesame-darwin-arm64";
+      hash = "sha256-euh1FhInwYtjZ882Q6mDsnADcA834ILRr10fDahUxQA=";
+    };
+
+    dontUnpack = true;
+
+    installPhase = ''
+      install -Dm755 "$src" "$out/bin/sesame"
+    '';
+
+    meta = {
+      description = "BM25 search for Pi session files";
+      homepage = "https://github.com/aliou/sesame";
+      license = lib.licenses.mit;
+      mainProgram = "sesame";
+      platforms = [ "aarch64-darwin" ];
+    };
+  };
+
   isEnabledEntry = name: !(lib.hasPrefix "_" name);
 
   piPackageFiles = builtins.filter (name: lib.hasSuffix ".nix" name && isEnabledEntry name) (
@@ -88,7 +113,7 @@ let
     #   export BRAVE_API_KEY="$BRAVE_SEARCH_API_KEY"
     # fi
 
-    export PATH="$HOME/.pi/agent/bin:${plannotator}/bin:${pkgs."poppler-utils"}/bin:${pkgs.rtk}/bin:$PATH"
+    export PATH="$HOME/.pi/agent/bin:${sesame}/bin:${plannotator}/bin:${pkgs."poppler-utils"}/bin:${pkgs.rtk}/bin:$PATH"
     exec ${piPackage}/bin/pi "$@"
   '';
 
@@ -255,6 +280,7 @@ in
       (pkgs.writeShellScriptBin "work-tickets" (builtins.readFile ./scripts/work-tickets.sh))
       pkgs."poppler-utils"
       plannotator
+      sesame
       piAcpWrapper
       pinvim
       p
@@ -300,6 +326,33 @@ in
         done
         [ -d "$ext_dir/node_modules" ] && run rm -rf "$ext_dir/node_modules"
       '';
+    };
+  };
+
+  xdg.configFile."sesame/config.jsonc" = {
+    force = true;
+    text = ''
+      {
+        "piSessionPaths": ["${config.home.homeDirectory}/.pi/agent/sessions"]
+      }
+    '';
+  };
+
+  launchd.agents.sesame-session-indexer = {
+    enable = true;
+    config = {
+      ProgramArguments = [
+        "${sesame}/bin/sesame"
+        "watch"
+        "--interval"
+        "30"
+      ];
+      RunAtLoad = true;
+      KeepAlive = true;
+      StandardOutPath = "${config.home.homeDirectory}/.cache/sesame-session-indexer.log";
+      StandardErrorPath = "${config.home.homeDirectory}/.cache/sesame-session-indexer.log";
+      ProcessType = "Background";
+      LowPriorityIO = true;
     };
   };
 

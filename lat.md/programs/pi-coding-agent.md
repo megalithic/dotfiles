@@ -6,7 +6,7 @@ This file covers how Pi is packaged, wrapped, configured, and extended in this r
 
 Pi comes from the `pi-nix` flake input (`inputs.pi-nix.packages.${system}.coding-agent`) and is exposed through `programs.pi.coding-agent.package`.
 
-The local wrapper sets `PI_STATE_DIR`, creates socket, manifest, and pinvim state directories, sources OpNix env secrets from `XDG_CONFIG_HOME` when present, adds the Nix-managed Plannotator CLI, `poppler-utils`, and `rtk` to `PATH`, clears the one-shot `PIMUX_FROM_NVIM` marker, and delegates to the packaged Pi binary. The wrapper also duplicates the OpNix `LAT_LLM_*` derivation so non-interactive launches still get lat search config, and prepends `$HOME/.pi/agent/bin` to `PATH` so the patched `lat` binary resolves first.
+The local wrapper sets `PI_STATE_DIR`, creates socket, manifest, and pinvim state directories, sources OpNix env secrets from `XDG_CONFIG_HOME` when present, adds the Nix-managed Sesame and Plannotator CLIs, `poppler-utils`, and `rtk` to `PATH`, clears the one-shot `PIMUX_FROM_NVIM` marker, and delegates to the packaged Pi binary. The wrapper also duplicates the OpNix `LAT_LLM_*` derivation so non-interactive launches still get lat search config, and prepends `$HOME/.pi/agent/bin` to `PATH` so the patched `lat` binary resolves first.
 
 The main module auto-discovers non-underscore-prefixed local `./packages/*.nix`, `.ts` extensions, extension directories, `./agents/*.md`, skill directories under `./skills/`, and `./prompts/*.md`. Prefixing a path with `_` keeps it in source control while disabling it from the active profile.
 
@@ -39,6 +39,8 @@ The `/tell` extension replaces the shell-script tell skill for Pi-to-Pi guidance
 Tell is bidirectional: the sender includes `id` and `fromSocket` in the `pi.tell.v1` payload, and receivers in both `bridge.ts` and [[neovim-pinvim#Neovim and pinvim|pinvim.ts]] send a fire-and-forget `tell_ack` to that socket with the original id and receiver identity. Ack delivery uses a 500ms timeout, never blocks the receiving socket handler, and shows a sender-side notification when the ack arrives.
 
 The task-pipeline commands use repo-scoped plan files under `~/.local/share/pi/plans/$(basename $PWD)/` and treat GRILL, TASK, PLAN, and ticket-context files as one progression. The `geo-workbench.ts` extension is a no-dependency browser UI for image geolocation that exposes `geo_lookup` and expects agents to call `geo_report`.
+
+Session search has two paths: the legacy local `search_sessions` / `read_session` Pi tools from `search-sessions.ts`, and the Nix-managed Sesame CLI plus `sesame` skill. Home Manager installs `sesame`, writes `~/.config/sesame/config.jsonc` for `~/.pi/agent/sessions`, and runs `sesame-session-indexer` as `sesame watch --interval 30` so the SQLite FTS index stays warm.
 
 `sentinel.ts` loads rules only from `extensions/sentinel-rules.json` at startup; a copied file with another name is inert until renamed or wired in. The hardcoded pipe/redirect hang guard in `sentinel.ts` blocks `bash` commands that pipe or redirect risky upstreams unless the call passes a `timeout` between 1 and 300 seconds. Investigation mode is also enforced in `sentinel.ts`: prompts starting with imperative `investigate`, `inspect`, or `audit` block write-capable tool calls and bash write workarounds unless the prompt also includes clear implementation or approval intent, or the user grants the same `override` flow used by confirm-tier sentinel rules.
 
