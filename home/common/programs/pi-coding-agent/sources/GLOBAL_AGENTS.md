@@ -48,7 +48,7 @@ When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-f
 - Don't reorganize imports or rename variables unless explicitly asked to
 - Use existing patterns and conventions in the codebase — same error shapes, same file structure, same naming. Don't invent new approaches when there's already a working one.
 - Place tests next to the files they test, not in a separate test directory. Integration tests can be next to the stack/module they test.
-- When `lat.md/` exists in the project root, use `lat search` to understand the codebase before making changes. Update `lat.md/` to reflect any changes you make, and run `lat check` before finishing.
+- When `lat.md/` exists in the project root, use `lat search` to understand the codebase before making changes. Update `lat.md/` to reflect codebase changes, except for local-only paths under `.local_scripts/` or `.sandbox/`. Run `lat check` before finishing when lat docs changed.
 
 ## General workflow:
 
@@ -61,7 +61,10 @@ When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-f
 - Use natural language delegation: "use scout to understand X", "have worker implement Y", "run parallel reviewers"
 - Run parallel reviewers after every non-trivial implementation
 - Ask oracle for a second opinion before risky decisions
-- Manage tickets manually with tk when you need structured task tracking
+- Manage tickets with `tk` when you need structured task tracking
+  - `tk` is project-local via `devenv.nix` (not on global PATH). Always run as `devenv shell -- tk <subcommand>`
+  - Example: `devenv shell -- tk list`, `devenv shell -- tk create "title" -d "desc" --acceptance "1. ..." -t feature`
+  - Ticket files live in `.tickets/` as YAML-frontmatter markdown
 - For repetitive/verifiable tasks (fix all failing tests, migrate across many files, audit a codebase), use ralph-loop:
   - Write a RALPH.md defining completion criteria (max_iterations, completion_promise, stop_on_error)
   - Run `/ralph --path ./task` to loop until done
