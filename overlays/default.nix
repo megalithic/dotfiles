@@ -40,6 +40,15 @@
     #     '';
     # });
 
+    # neovim-nightly-overlay can run upstream functional tests while building
+    # from source; those tests are flaky in the Darwin Nix sandbox. Keep rebuilds
+    # focused on packaging.
+    nvim-nightly =
+      inputs.neovim-nightly-overlay.packages.${prev.stdenv.hostPlatform.system}.default.overrideAttrs
+        (_: {
+          doCheck = false;
+        });
+
     # llama-cpp: nodejs 24 hits a libuv kqueue assertion (Abort trap: 6) on darwin
     # during the webui `npm run build` teardown. Artifacts are already produced
     # when it aborts, but nix sees the non-zero exit. Pin nodejs_22 for the webui

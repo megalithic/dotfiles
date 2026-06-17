@@ -8,7 +8,7 @@ Pinvim ties together `config/nvim/lua/pinvim.lua`, `home/common/programs/pi-codi
 
 Neovim config tracks nightly API changes where small compatibility updates prevent startup warnings and flaky rebuilds.
 
-The local overlay exposes `pkgs.nvim-nightly` from `neovim-nightly-overlay` but disables its build-time checks, because upstream functional tests are flaky in the Darwin Nix sandbox. Autocmd callbacks prefer current `vim.*` APIs over deprecated aliases; yank highlighting uses `vim.hl.hl_op`, not `vim.hl.on_yank`. Escape handling does UI cleanup plus opportunistic autosave, but autosave only runs for real file buffers whose parent directory exists, since forcing `:update` on a missing-path buffer raises `E212`.
+The local overlay exposes `pkgs.nvim-nightly` from `neovim-nightly-overlay`, overrides its `neovim-src` input to Neovim's moving `nightly` tag, and disables its build-time checks because upstream functional tests are flaky in the Darwin Nix sandbox. Autocmd callbacks prefer current `vim.*` APIs over deprecated aliases; yank highlighting uses `vim.hl.hl_op`, not `vim.hl.on_yank`. Escape handling does UI cleanup plus opportunistic autosave, but autosave only runs for real file buffers whose parent directory exists, since forcing `:update` on a missing-path buffer raises `E212`.
 
 ## Pinvim registry and identity
 

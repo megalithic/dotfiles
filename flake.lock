@@ -42,7 +42,7 @@
     },
     "bun2nix": {
       "inputs": {
-        "flake-parts": "flake-parts",
+        "flake-parts": "flake-parts_2",
         "nixpkgs": [
           "pi-nix",
           "nixpkgs"
@@ -69,6 +69,27 @@
       }
     },
     "flake-parts": {
+      "inputs": {
+        "nixpkgs-lib": [
+          "neovim-nightly-overlay",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1778716662,
+        "narHash": "sha256-m1Yf0wZ8j1OHjTc2UwHwyQRSnNeSgLJOd7q5Y45hzi4=",
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "rev": "f7c1a2d347e4c52d5fb8d10cb4d94b5884e546fb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "type": "github"
+      }
+    },
+    "flake-parts_2": {
       "inputs": {
         "nixpkgs-lib": [
           "pi-nix",
@@ -204,6 +225,45 @@
       "original": {
         "owner": "rszyma",
         "repo": "kanata-tray",
+        "type": "github"
+      }
+    },
+    "neovim-nightly-overlay": {
+      "inputs": {
+        "flake-parts": "flake-parts",
+        "neovim-src": "neovim-src",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1781654693,
+        "narHash": "sha256-YSKAc5ZhQQZ7fEXG6cczmINqphNxOeCm9tR1n+EBG18=",
+        "owner": "nix-community",
+        "repo": "neovim-nightly-overlay",
+        "rev": "8bd517afcfe2bf8c1fe45d56f5eb6d4e680e6630",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "neovim-nightly-overlay",
+        "type": "github"
+      }
+    },
+    "neovim-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1781671488,
+        "narHash": "sha256-bRbl5TzNw9R00u0liH82O4uBFN2P1Qp7uR4g2+4px2E=",
+        "owner": "neovim",
+        "repo": "neovim",
+        "rev": "f50ec42da2e56f72cee22806afd3c3112201e4da",
+        "type": "github"
+      },
+      "original": {
+        "owner": "neovim",
+        "ref": "nightly",
+        "repo": "neovim",
         "type": "github"
       }
     },
@@ -360,6 +420,7 @@
         "brew-nix": "brew-nix",
         "home-manager": "home-manager",
         "kanata-darwin": "kanata-darwin",
+        "neovim-nightly-overlay": "neovim-nightly-overlay",
         "nh": "nh",
         "nix-darwin": "nix-darwin_2",
         "nixpkgs": "nixpkgs_2",

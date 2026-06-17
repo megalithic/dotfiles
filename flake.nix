@@ -25,6 +25,12 @@
       url = "github:brizzbuzz/opnix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    neovim-nightly-overlay = {
+      url = "github:nix-community/neovim-nightly-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+      # Track Neovim's moving nightly tag instead of overlay's raw default branch.
+      inputs.neovim-src.url = "github:neovim/neovim/nightly";
+    };
     pi-nix = {
       url = "github:lukasl-dev/pi.nix";
       inputs.nixpkgs.follows = "nixpkgs";

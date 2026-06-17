@@ -17,11 +17,11 @@
     "npm:pi-web-access",
     "npm:pi-subagents",
     "npm:pi-caveman",
+    "npm:@plannotator/pi-extension",
     "npm:pi-rtk-optimizer",
     "npm:@aliou/pi-synthetic"
   ],
   "enabledModels": [
-    "alt-anthropic/claude-fable-5",
     "alt-anthropic/claude-opus-4-8",
     "alt-anthropic/claude-opus-4-7",
     "alt-anthropic/claude-opus-4-6",
@@ -73,7 +73,6 @@
       "llamacpp/gemma4"
     ],
     "alt": [
-      "alt-anthropic/claude-fable-5",
       "alt-anthropic/claude-opus-4-8",
       "alt-anthropic/claude-opus-4-7",
       "alt-anthropic/claude-opus-4-6",
@@ -139,11 +138,6 @@
       {
         "name": "alt",
         "entries": [
-          {
-            "provider": "alt-anthropic",
-            "model": "claude-fable-5",
-            "enabled": true
-          },
           {
             "provider": "alt-anthropic",
             "model": "claude-opus-4-8",

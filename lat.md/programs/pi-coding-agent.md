@@ -6,7 +6,7 @@ This file covers how Pi is packaged, wrapped, configured, and extended in this r
 
 Pi comes from the `pi-nix` flake input (`inputs.pi-nix.packages.${system}.coding-agent`) and is exposed through `programs.pi.coding-agent.package`.
 
-The local wrapper sets `PI_STATE_DIR`, creates socket, manifest, and pinvim state directories, sources OpNix env secrets from `XDG_CONFIG_HOME` when present, adds `poppler-utils` and `rtk` to `PATH`, clears the one-shot `PIMUX_FROM_NVIM` marker, and delegates to the packaged Pi binary. The wrapper also duplicates the OpNix `LAT_LLM_*` derivation so non-interactive launches still get lat search config, and prepends `$HOME/.pi/agent/bin` to `PATH` so the patched `lat` binary resolves first.
+The local wrapper sets `PI_STATE_DIR`, creates socket, manifest, and pinvim state directories, sources OpNix env secrets from `XDG_CONFIG_HOME` when present, adds the Nix-managed Plannotator CLI, `poppler-utils`, and `rtk` to `PATH`, clears the one-shot `PIMUX_FROM_NVIM` marker, and delegates to the packaged Pi binary. The wrapper also duplicates the OpNix `LAT_LLM_*` derivation so non-interactive launches still get lat search config, and prepends `$HOME/.pi/agent/bin` to `PATH` so the patched `lat` binary resolves first.
 
 The main module auto-discovers non-underscore-prefixed local `./packages/*.nix`, `.ts` extensions, extension directories, `./agents/*.md`, skill directories under `./skills/`, and `./prompts/*.md`. Prefixing a path with `_` keeps it in source control while disabling it from the active profile.
 
@@ -14,7 +14,7 @@ The main module auto-discovers non-underscore-prefixed local `./packages/*.nix`,
 
 Pi runtime helper packages come from `settings.json` package entries and are refreshed by `pi update --extensions` after `just home`.
 
-Current entries include `npm:pi-mcp-adapter`, `npm:pi-web-access`, `npm:pi-subagents`, `npm:pi-caveman`, `npm:pi-rtk-optimizer`, and `npm:@aliou/pi-synthetic`. The old vendored NPM derivations under `packages/` are removed except for `pi-acp`.
+Current entries include `npm:pi-mcp-adapter`, `npm:pi-web-access`, `npm:pi-subagents`, `npm:pi-caveman`, `npm:@plannotator/pi-extension`, `npm:pi-rtk-optimizer`, and `npm:@aliou/pi-synthetic`. The old vendored NPM derivations under `packages/` are removed except for `pi-acp`.
 
 ## pi-acp adapter
 
@@ -50,7 +50,7 @@ The local `checkpoint.ts` extension is removed from the active profile; checkpoi
 
 `home/common/programs/pi-coding-agent/settings.json` is merged during activation.
 
-It drives default provider, enabled models, terminal behavior, subagent model overrides, and multi-sub presets. The `alt` scope includes the newest Anthropic aliases such as `alt-anthropic/claude-fable-5`; planner, reviewer, and oracle default to the latest Opus alias; worker defaults to the latest Sonnet alias; scout and context-builder keep small-model fallbacks before local `llamacpp/gemma4`. The shell command prefix forces noninteractive git behavior and enables tmux image handling through `PI_TMUX_IMAGES=1`.
+It drives default provider, enabled models, terminal behavior, subagent model overrides, and multi-sub presets. The `alt` scope includes current Anthropic Opus, Sonnet, and Haiku aliases; planner, reviewer, and oracle default to the latest Opus alias; worker defaults to the latest Sonnet alias; scout and context-builder keep small-model fallbacks before local `llamacpp/gemma4`. The shell command prefix forces noninteractive git behavior and enables tmux image handling through `PI_TMUX_IMAGES=1`.
 
 `custom-footer.ts` replaces the default footer with a starship-backed cwd line plus compact token and model status. The right side of line 2 shows multi-pass routing as `({preset}){provider-or-failover-pool}/{model}/thinking_level`, derived from the `multi-pass` status string. Caveman status is suppressed and MCP status is reduced to ` {active}/{total}`, turning accent-blue when any server is active.
 

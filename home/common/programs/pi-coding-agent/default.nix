@@ -12,6 +12,30 @@ let
 
   piStateDir = "${config.xdg.stateHome}/pi";
 
+  plannotatorVersion = "0.20.3";
+  plannotator = pkgs.stdenvNoCC.mkDerivation {
+    pname = "plannotator";
+    version = plannotatorVersion;
+
+    src = pkgs.fetchurl {
+      url = "https://github.com/backnotprop/plannotator/releases/download/v${plannotatorVersion}/plannotator-darwin-arm64";
+      hash = "sha256-gMGOKz6VeW6FkCtOPsktj3v0nfjr/L0SGVx4T6Ui/do=";
+    };
+
+    dontUnpack = true;
+
+    installPhase = ''
+      install -Dm755 "$src" "$out/bin/plannotator"
+    '';
+
+    meta = {
+      description = "CLI for reviewing and annotating plans";
+      homepage = "https://github.com/backnotprop/plannotator";
+      mainProgram = "plannotator";
+      platforms = [ "aarch64-darwin" ];
+    };
+  };
+
   isEnabledEntry = name: !(lib.hasPrefix "_" name);
 
   piPackageFiles = builtins.filter (name: lib.hasSuffix ".nix" name && isEnabledEntry name) (
@@ -64,7 +88,7 @@ let
     #   export BRAVE_API_KEY="$BRAVE_SEARCH_API_KEY"
     # fi
 
-    export PATH="$HOME/.pi/agent/bin:${pkgs."poppler-utils"}/bin:${pkgs.rtk}/bin:$PATH"
+    export PATH="$HOME/.pi/agent/bin:${plannotator}/bin:${pkgs."poppler-utils"}/bin:${pkgs.rtk}/bin:$PATH"
     exec ${piPackage}/bin/pi "$@"
   '';
 
@@ -230,6 +254,7 @@ in
     packages = [
       (pkgs.writeShellScriptBin "work-tickets" (builtins.readFile ./scripts/work-tickets.sh))
       pkgs."poppler-utils"
+      plannotator
       piAcpWrapper
       pinvim
       p
