@@ -74,8 +74,3 @@ When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-f
 
 - Use `.local_scripts/` for temporary verification scripts that shouldn't be committed
 - Scripts can be messy and repo-specific
-
-## Research, audit, and exploration docs:
-
-- Ad-hoc agent-generated documents (audits, research notes, mental-model writeups, investigation reports) go to `~/.local/share/pi/docs/$(basename $PWD)/`, mirroring the layout used by handoffs (`~/.local/share/pi/handoffs/$(basename $PWD)/`) and plans.
-- Use a descriptive filename, e.g. `helium-audit.md`, `widevine-research.md`. Companion artifacts (HTML, diagrams) sit next to the markdown with the same stem.
