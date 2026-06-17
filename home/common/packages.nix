@@ -33,14 +33,10 @@ let
 
   # GUI apps from brew-nix overlay (pkgs.brewCasks.*) — migrated from
   # nix-darwin homebrew.casks. Tokens with leading digits or '@' need
-  # string-keyed access. Excluded:
-  #   raycast      — zlib-wrapped DMG, brew-nix's 7zz can't unpack
-  #   okta-verify  — .pkg with URL-encoded paths, cpio/gzip pipeline fails
-  # Both stay in modules/brew.nix until upstream fixes packaging.
+  # string-keyed access. Handled elsewhere (not brewCasks):
+  #   okta-verify  — privileged .pkg installer, see modules/darwin/okta-verify.nix
+  #   1password    — nix-darwin programs._1password*, see modules/darwin/_1password.nix
   brewCaskPkgs = [
-    # 1password + 1password-cli installed via real homebrew (modules/brew.nix)
-    # because brew-nix copies from /nix/store, which trips 1Password's
-    # anti-tamper / signature checks.
     pkgs.brewCasks."obs@beta"
   ];
 

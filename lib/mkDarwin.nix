@@ -48,6 +48,8 @@ inputs.nix-darwin.lib.darwinSystem {
     ../modules/system.nix
     ../modules/darwin/services.nix
     ../modules/darwin/spotlight.nix
+    ../modules/darwin/_1password.nix
+    ../modules/darwin/okta-verify.nix
     inputs.kanata-darwin.darwinModules.default
     ../modules/darwin/kanata.nix
   ]

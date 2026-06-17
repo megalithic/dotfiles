@@ -208,4 +208,7 @@ in
   };
 
   nixpkgs.hostPlatform = arch;
+  # Allow unfree at the nix-darwin system level (matches the flake's `pkgs`).
+  # Needed e.g. for programs._1password pulling in the unfree 1password-cli.
+  nixpkgs.config.allowUnfree = true;
 }

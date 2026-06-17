@@ -87,7 +87,9 @@ stdenvNoCC.mkDerivation (finalAttrs: {
             pbzx - < "$payload" | cpio -i 2>/dev/null || true
           else
             echo "  (using gzip decompression)"
-            zcat "$payload" | cpio -i 2>/dev/null || true
+            # gzip -dc (not zcat): GNU zcat appends .gz to the filename and fails
+            # on a payload literally named "Payload" (no extension).
+            gzip -dc "$payload" | cpio -i 2>/dev/null || true
           fi
         }
 

@@ -13,6 +13,9 @@
       { path = "~/.gitconfig"; }
     ];
 
+    # 1Password GUI is installed by nix-darwin (programs._1password-gui) into
+    # /Applications; its anti-tamper checks require running from /Applications
+    # (it quits when run from ~/Applications or the nix store).
     settings.gpg.ssh.program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign";
     settings.gpg.ssh.allowedSignersFile = "~/.ssh/allowed_signers";
     settings.gpg.format = "ssh";
