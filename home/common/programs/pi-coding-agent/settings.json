@@ -19,7 +19,8 @@
     "npm:pi-caveman",
     "npm:@plannotator/pi-extension",
     "npm:pi-rtk-optimizer",
-    "npm:@aliou/pi-synthetic"
+    "npm:@aliou/pi-synthetic",
+    "npm:pi-bash-live-view"
   ],
   "enabledModels": [
     "alt-anthropic/claude-opus-4-8",

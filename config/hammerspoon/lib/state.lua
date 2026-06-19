@@ -135,6 +135,18 @@ end
 
 --- Reset hyper modal state
 function M.resetHypers()
+  if _G.Hypers then
+    local seen = {}
+    for _, hyper in pairs(_G.Hypers) do
+      if hyper and not seen[hyper] then
+        seen[hyper] = true
+        pcall(function()
+          if hyper.stop then hyper:stop() end
+        end)
+      end
+    end
+  end
+  _G.Hypers = {}
   M.hypers = {}
 end
 

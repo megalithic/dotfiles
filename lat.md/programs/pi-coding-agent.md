@@ -46,6 +46,18 @@ Session search has two paths: the legacy local `search_sessions` / `read_session
 
 The local `checkpoint.ts` extension is removed from the active profile; checkpoint and main-branch prompting come from the agent harness instead.
 
+`claude-code-use.ts` is a local fork of `@benvargas/pi-claude-code-use` kept aligned with upstream payload fixes while omitting companion-package auto-loading for packages not used here.
+
+### Claude Code subscription compatibility
+
+`claude-code-use.ts` makes Anthropic OAuth requests look like Claude Code use without loading unused companion packages.
+
+It rewrites Anthropic system prompt text from `pi itself`, `pi .md files`, and `pi packages` to CLI-neutral wording, then filters the outbound payload to Claude Code core tools, Anthropic typed tools, and already-MCP-prefixed tools. The OAuth model check intentionally accepts local `alt-anthropic` providers and `anthropic-messages` API models, not only the literal `anthropic` provider.
+
+The local fork keeps upstream `1.0.4` alias behavior for user-configured tools but drops built-in companion package registration for `pi-exa-mcp` and `pi-firecrawl`. Optional config files at `~/.pi/agent/extensions/pi-claude-code-use.json` or `<cwd>/.pi/extensions/pi-claude-code-use.json` may declare `toolAliases` as `[flatToolName, mcpAliasName]` pairs. Project config replaces the top-level global setting by shallow merge.
+
+Configured aliases are refreshed on `session_start` and `before_agent_start`. When an Anthropic OAuth model is active, aliases are auto-activated alongside their flat tool only if that alias tool already exists; user-selected aliases are preserved. On `message_end`, managed MCP alias `toolCall` names are rewritten back to their flat names before Pi resolves execution, while foreign MCP tools pass through untouched.
+
 `pinvim.ts` accepts `fill_prompt` frames from shade-next, sets the Pi editor text through `ctx.ui.setEditorText`, may focus the owning tmux pane, and never calls `sendUserMessage`, so remote fills cannot auto-submit.
 
 ## Runtime settings

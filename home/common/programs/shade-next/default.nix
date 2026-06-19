@@ -38,6 +38,7 @@ let
 
     [app]
     launch_hidden = true
+    live_debug = false
 
     [editor]
     nvim_host = true

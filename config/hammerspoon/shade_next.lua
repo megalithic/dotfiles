@@ -66,6 +66,31 @@ local function prefill(frag, text, route, focus)
   openActionUrl(frag, "prefill", { text = text or "", route = route, focus = focus and "1" or "0" })
 end
 
+local function fallbackContextText()
+  local app = hs.application.frontmostApplication()
+  if app and app:bundleID() == "io.shade.next" then app = nil end
+  local win = hs.window.frontmostWindow()
+  local lines = { "Context:" }
+  if app then
+    table.insert(lines, "- App: " .. (app:name() or "Unknown"))
+    if app:bundleID() then table.insert(lines, "- Bundle: " .. app:bundleID()) end
+  end
+  if win and win:title() and win:title() ~= "" then
+    table.insert(lines, "- Window: " .. win:title())
+  end
+  table.insert(lines, "")
+  table.insert(lines, "")
+  return table.concat(lines, "\n")
+end
+
+local function quickCaptureNote(frag, withContext)
+  -- shade-next owns context gathering. Hammerspoon only passes a lightweight
+  -- fallback because it sees the frontmost app before shade-next is focused.
+  local fallback = withContext and fallbackContextText() or nil
+  if sendControl(frag, "captureNote", { context = withContext, fallback_context = fallback, focus = true }) then return end
+  prefill(frag, fallback or "", "note", true)
+end
+
 local function binaryInstalled(frag)
   local bins = frag.launch and frag.launch.binaries
   if not bins then return false end
@@ -103,6 +128,14 @@ function M:init(_)
   -- hyper+enter -> launch/toggle shade-next through its native control channel.
   hyper:bind({}, "return", nil, function() toggle(frag) end)
   U.log.i("shade-next: bound hyper+return -> toggle " .. frag.app.bundle_id)
+
+  -- hyper+shift+n -> new quick-capture note.
+  hyper:bind({ "shift" }, "n", nil, function() quickCaptureNote(frag, false) end)
+  U.log.i("shade-next: bound hyper+shift+n -> quick capture note")
+
+  -- hyper+ctrl+n -> new context-filled quick-capture note.
+  hyper:bind({ "ctrl" }, "n", nil, function() quickCaptureNote(frag, true) end)
+  U.log.i("shade-next: bound hyper+ctrl+n -> context quick capture note")
 
   -- hyper+n -> enter shade-next route modal.
   hyper:bind({}, "n", nil, function() mode:toggle() end)

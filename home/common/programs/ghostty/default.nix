@@ -15,7 +15,10 @@
 
     # Don't use settings - we symlink the raw config file instead.
     # This preserves comments and allows editing without rebuild.
-    enableFishIntegration = true;
+    # Home Manager's fish integration sources $GHOSTTY_RESOURCES_DIR without
+    # checking the file exists. Keep our guarded source in the fish module instead
+    # so stale dev Ghostty paths do not break shell startup.
+    enableFishIntegration = false;
   };
 
   # Ghostty on macOS supports XDG config, so keep one canonical live link.

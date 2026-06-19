@@ -262,9 +262,8 @@ function M.loadShade()
       "return",
       function() shade.captureWithContext() end
     )
-    -- hyper+shift+n: enter legacy shade modal for advanced operations
-    -- hyper+n is reserved for shade-next routing.
-    :bind({ "shift" }, "n", function() shadeModality:toggle() end)
+    -- hyper+shift+n / hyper+ctrl+n are owned by shade-next quick capture.
+    -- Keep legacy shade modal available from bindings above, not a direct chord.
 end
 
 function M.loadNotifications()

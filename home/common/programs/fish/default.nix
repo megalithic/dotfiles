@@ -13,6 +13,7 @@ let
   completions = import ./completions.nix;
   keybindings = import ./keybindings.nix;
   theme = import ./theme.nix;
+  ghosttyFishIntegration = "${pkgs.ghostty-bin}/Applications/Ghostty.app/Contents/Resources/ghostty/shell-integration/fish/vendor_conf.d/ghostty-shell-integration.fish";
 in
 {
   programs.fish = {
@@ -41,6 +42,17 @@ in
     interactiveShellInit = ''
       ${keybindings}
       ${theme}
+
+      # Ghostty's own env can point at a deleted local dev build. Source only
+      # existing integration files, with the Nix package as fallback.
+      if set -q GHOSTTY_RESOURCES_DIR
+          set -l ghostty_fish_integration "$GHOSTTY_RESOURCES_DIR/shell-integration/fish/vendor_conf.d/ghostty-shell-integration.fish"
+          if test -f "$ghostty_fish_integration"
+              source "$ghostty_fish_integration"
+          else if test -f "${ghosttyFishIntegration}"
+              source "${ghosttyFishIntegration}"
+          end
+      end
     '';
 
     inherit functions;
