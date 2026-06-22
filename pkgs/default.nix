@@ -39,6 +39,9 @@ let
     let
       args = builtins.functionArgs (import path);
     in
-    prev.callPackage path (lib.optionalAttrs (args ? mkApp) { inherit mkApp; });
+    prev.callPackage path (
+      (lib.optionalAttrs (args ? mkApp) { inherit mkApp; })
+      // (lib.optionalAttrs (args ? mise) { inherit (prev) mise; })
+    );
 in
 lib.mapAttrs callLocalPackage (packageFiles ./.)

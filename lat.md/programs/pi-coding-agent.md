@@ -6,7 +6,7 @@ This file covers how Pi is packaged, wrapped, configured, and extended in this r
 
 Pi comes from the `pi-nix` flake input (`inputs.pi-nix.packages.${system}.coding-agent`) and is exposed through `programs.pi.coding-agent.package`.
 
-The local wrapper sets `PI_STATE_DIR`, creates socket, manifest, and pinvim state directories, sources OpNix env secrets from `XDG_CONFIG_HOME` when present, adds the Nix-managed Sesame and Plannotator CLIs, `poppler-utils`, and `rtk` to `PATH`, clears the one-shot `PIMUX_FROM_NVIM` marker, and delegates to the packaged Pi binary. The wrapper also duplicates the OpNix `LAT_LLM_*` derivation so non-interactive launches still get lat search config, and prepends `$HOME/.pi/agent/bin` to `PATH` so the patched `lat` binary resolves first.
+The local wrapper sets `PI_STATE_DIR`, creates socket, manifest, and pinvim state directories, sources OpNix env secrets from `XDG_CONFIG_HOME` when present, adds the Nix-managed Sesame and Plannotator CLIs, `poppler-utils`, and `rtk` to `PATH`, clears the one-shot `PIMUX_FROM_NVIM` marker, and delegates to the packaged Pi binary. The wrapper also duplicates the OpNix `LAT_LLM_*` derivation so non-interactive launches still get lat search config, prepends `$HOME/.pi/agent/bin` to `PATH` so the patched `lat` binary resolves first, and copies the local `patches/pi-bash-live-view/widget.ts` over the installed `pi-bash-live-view` widget when that package is present.
 
 The main module auto-discovers non-underscore-prefixed local `./packages/*.nix`, `.ts` extensions, extension directories, `./agents/*.md`, skill directories under `./skills/`, and `./prompts/*.md`. Prefixing a path with `_` keeps it in source control while disabling it from the active profile.
 
@@ -14,7 +14,9 @@ The main module auto-discovers non-underscore-prefixed local `./packages/*.nix`,
 
 Pi runtime helper packages come from `settings.json` package entries and are refreshed by `pi update --extensions` after `just home`.
 
-Current entries include `npm:pi-mcp-adapter`, `npm:pi-web-access`, `npm:pi-subagents`, `npm:pi-caveman`, `npm:@plannotator/pi-extension`, `npm:pi-rtk-optimizer`, and `npm:@aliou/pi-synthetic`. The old vendored NPM derivations under `packages/` are removed except for `pi-acp`.
+Current entries include `npm:pi-mcp-adapter`, `npm:pi-web-access`, `npm:pi-subagents`, `npm:pi-caveman`, `npm:@plannotator/pi-extension`, `npm:pi-rtk-optimizer`, `npm:@aliou/pi-synthetic`, and `github:sethmt/pi-bash-live-view`. The old vendored NPM derivations under `packages/` are removed except for `pi-acp`.
+
+The local `pi-bash-live-view` widget patch makes live PTY panes fit rendered lines by display cell width, preserving ANSI escape sequences while trimming wide glyphs, combining marks, zero-width joiners, and variation selectors before padding to the terminal width. This avoids the one-cell overflow crash seen when live output contains wide glyphs or ANSI-colored truncation edges.
 
 ## pi-acp adapter
 
@@ -42,7 +44,17 @@ The task-pipeline commands use repo-scoped plan files under `~/.local/share/pi/p
 
 Session search has two paths: the legacy local `search_sessions` / `read_session` Pi tools from `search-sessions.ts`, and the Nix-managed Sesame CLI plus `sesame` skill. Home Manager installs `sesame`, writes `~/.config/sesame/config.jsonc` for `~/.pi/agent/sessions`, and runs `sesame-session-indexer` as `sesame watch --interval 30` so the SQLite FTS index stays warm.
 
-`sentinel.ts` loads rules only from `extensions/sentinel-rules.json` at startup; a copied file with another name is inert until renamed or wired in. The hardcoded pipe/redirect hang guard in `sentinel.ts` blocks `bash` commands that pipe or redirect risky upstreams unless the call passes a `timeout` between 1 and 300 seconds. Investigation mode is also enforced in `sentinel.ts`: prompts starting with imperative `investigate`, `inspect`, or `audit` block write-capable tool calls and bash write workarounds unless the prompt also includes clear implementation or approval intent, or the user grants the same `override` flow used by confirm-tier sentinel rules.
+### Sentinel guardrail rules
+
+`sentinel.ts` is the single source of truth for Pi command guardrails, including former JSON rule tables.
+
+The extension now bundles interactive-command, always-interactive, and tool-correction tables directly; `extensions/sentinel-rules.json` is no longer installed or read at startup. The bundled tables cover interactive jj, docker, kubectl, Nix REPL, database shells, language REPLs, pagers, editors, and preferred-tool rewrites such as `find` to `fd`, `grep` to `rg`, `rm`/`rmdir` to `trash`, and `git` to `jj` inside jj repos.
+
+Specialized guards stay as code because they need context-specific parsing or side effects: jj editor/message flows, nix-managed writes, unsafe `nix build` output, secret tools and gatekeeper scans before push, push/deploy/ssh confirmation, package install confirmation, investigation-only prompts, and pipe/redirect hang prevention.
+
+The redundant `jj split -i` table rule was removed because the hardcoded `jj-split` rule blocks all `jj split` invocations. The disabled ticket-gate config path was removed with the JSON loader; investigation mode remains and blocks write-capable tool calls plus bash write workarounds for imperative `investigate`, `inspect`, or `audit` prompts unless the prompt includes implementation intent or the user grants the existing `override` flow.
+
+The pipe/redirect guard blocks `bash` commands that pipe or redirect risky upstreams unless the call passes a `timeout` between 1 and 300 seconds.
 
 The local `checkpoint.ts` extension is removed from the active profile; checkpoint and main-branch prompting come from the agent harness instead.
 

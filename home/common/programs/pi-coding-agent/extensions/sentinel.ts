@@ -6,9 +6,10 @@
  *   CONFIRM — blocked, user says "override"/"bypass"/"force" → UI select prompt
  *   REWRITE — blocked with clear message to use preferred tool
  *
- * Rules loaded from sentinel-rules.json (interactive commands, tool corrections).
- * Hardcoded rules remain for jj editor/message checks, secrets, nix-managed paths,
- * push/deploy/ssh, and package install guards.
+ * Rules are bundled in this extension so activation has one source of truth.
+ * Specialized logic remains for jj editor/message checks, secrets,
+ * nix-managed paths, push/deploy/ssh, package install guards, investigation mode,
+ * and pipe/redirect hang prevention.
  */
 import type {
   ExtensionAPI,
@@ -16,7 +17,7 @@ import type {
   ToolCallEventResult,
   InputEventResult,
 } from "@earendil-works/pi-coding-agent";
-import { readFileSync, existsSync } from "fs";
+import { existsSync } from "fs";
 import { join, dirname } from "path";
 import { execSync, spawnSync } from "child_process";
 
@@ -37,32 +38,143 @@ interface BlockedState {
   timestamp: number;
 }
 
-// ── Config types ─────────────────────────────────────────────────────────────
+// ── Bundled rules ────────────────────────────────────────────────────────────
 
-interface SubcommandEntry {
-  flags: string[];
-  reason: string;
-}
-interface InteractiveCommand {
-  _doc?: string;
-  subcommands: Record<string, SubcommandEntry>;
-}
-interface AlwaysInteractiveEntry {
-  reason: string;
-  unless_args?: boolean;
-}
-interface ToolCorrection {
-  use: string;
-  reason: string;
-  except_prefix?: string[];
-  only_if_root_dir?: string;
-}
-interface SentinelConfig {
-  interactive_commands: Record<string, InteractiveCommand>;
-  always_interactive: { commands: Record<string, AlwaysInteractiveEntry> };
-  tool_corrections: Record<string, ToolCorrection>;
-  ticket_gate?: boolean;
-}
+const INTERACTIVE_COMMANDS: Record<
+  string,
+  Record<string, { flags: string[]; reason: string }>
+> = {
+  jj: {
+    squash: {
+      flags: ["-i", "--interactive"],
+      reason: "Interactive diff selection. Use file paths instead.",
+    },
+    commit: {
+      flags: ["-i", "--interactive"],
+      reason: "Interactive diff selection. Use file paths instead.",
+    },
+    restore: {
+      flags: ["-i", "--interactive"],
+      reason: "Interactive diff selection. Use file paths instead.",
+    },
+  },
+  docker: {
+    exec: {
+      flags: ["-it", "-i", "--interactive"],
+      reason:
+        "Allocates interactive TTY. Use non-interactive: `docker exec <container> <cmd>`.",
+    },
+    run: {
+      flags: ["-it", "-i", "--interactive"],
+      reason:
+        "Allocates interactive TTY. Use non-interactive: `docker run <image> <cmd>`.",
+    },
+  },
+  kubectl: {
+    exec: {
+      flags: ["-it", "-i", "--stdin"],
+      reason:
+        "Opens interactive shell in pod. Use: `kubectl exec <pod> -- <cmd>`.",
+    },
+    run: {
+      flags: ["-it", "-i", "--stdin"],
+      reason:
+        "Opens interactive shell. Use: `kubectl run --rm --restart=Never <name> --image=<img> -- <cmd>`.",
+    },
+    attach: {
+      flags: ["-it", "-i", "--stdin"],
+      reason: "Attaches to running process. Use `kubectl logs` instead.",
+    },
+  },
+  nix: {
+    repl: {
+      flags: [],
+      reason: "Opens interactive REPL. Use `nix eval` instead.",
+    },
+  },
+  mysql: {
+    __base__: {
+      flags: [],
+      reason: 'Opens interactive shell. Use: `mysql -e "<query>"`.',
+    },
+  },
+  psql: {
+    __base__: {
+      flags: [],
+      reason: 'Opens interactive shell. Use: `psql -c "<query>"`.',
+    },
+  },
+  sqlite3: {
+    __base__: {
+      flags: [],
+      reason: "Opens interactive shell. Pass SQL directly or use `.read`.",
+    },
+  },
+  iex: {
+    __base__: {
+      flags: [],
+      reason: "Opens interactive REPL. Use `elixir -e` or `mix run --eval`.",
+    },
+  },
+  irb: {
+    __base__: {
+      flags: [],
+      reason: "Opens interactive REPL. Use `ruby -e`.",
+    },
+  },
+};
+
+const ALWAYS_INTERACTIVE_COMMANDS: Record<
+  string,
+  { reason: string; unlessArgs?: boolean }
+> = {
+  vim: { reason: "Use Write/Edit tool or heredoc.", unlessArgs: true },
+  nvim: { reason: "Use Write/Edit tool or heredoc.", unlessArgs: true },
+  nano: { reason: "Use Write/Edit tool or heredoc.", unlessArgs: true },
+  emacs: { reason: "Use Write/Edit tool or heredoc.", unlessArgs: true },
+  vi: { reason: "Use Write/Edit tool or heredoc.", unlessArgs: true },
+  less: { reason: "Use Read tool or `head`/`tail`." },
+  more: { reason: "Use Read tool or `head`/`tail`." },
+  top: { reason: "Use `ps aux` or `ps aux --sort=-%mem`." },
+  htop: { reason: "Use `ps aux` or `ps aux --sort=-%mem`." },
+  python: {
+    reason: "Opens REPL. Use `python -c` or `python script.py`.",
+    unlessArgs: true,
+  },
+  python3: {
+    reason: "Opens REPL. Use `python3 -c` or `python3 script.py`.",
+    unlessArgs: true,
+  },
+  node: {
+    reason: "Opens REPL. Use `node -e` or `node script.js`.",
+    unlessArgs: true,
+  },
+  lua: {
+    reason: "Opens REPL. Use `lua -e` or `lua script.lua`.",
+    unlessArgs: true,
+  },
+};
+
+const TOOL_CORRECTIONS: Record<
+  string,
+  {
+    use: string;
+    reason: string;
+    exceptPrefix?: string[];
+    onlyIfRootDir?: string;
+  }
+> = {
+  find: { use: "fd", reason: "Use `fd` instead of `find`." },
+  grep: { use: "rg", reason: "Use `rg` instead of `grep`." },
+  rm: { use: "trash", reason: "Use `trash` instead of `rm`." },
+  rmdir: { use: "trash", reason: "Use `trash` instead of `rmdir`." },
+  git: {
+    use: "jj",
+    reason: "Use `jj` instead of `git`.",
+    exceptPrefix: ["jj", "git"],
+    onlyIfRootDir: ".jj",
+  },
+};
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -246,7 +358,7 @@ function segmentTokens(cmd: string, ...prefix: string[]): string[] | null {
 
 /**
  * Check if a command has arguments beyond the command name itself.
- * Used for "unless_args" commands like python/node that are only
+ * Used for "unlessArgs" commands like python/node that are only
  * interactive when invoked bare (no script/flags).
  */
 function hasArgs(cmd: string, cmdName: string): boolean {
@@ -255,40 +367,16 @@ function hasArgs(cmd: string, cmdName: string): boolean {
   return tokens !== null && tokens.length > 1;
 }
 
-// ── Load config ──────────────────────────────────────────────────────────────
+// ── Build rules ──────────────────────────────────────────────────────────────
 
-function loadConfig(): SentinelConfig {
-  const configPath = join(
-    dirname(new URL(import.meta.url).pathname),
-    "sentinel-rules.json",
-  );
-  try {
-    const raw = readFileSync(configPath, "utf-8");
-    const config = JSON.parse(raw) as SentinelConfig;
-    log(`loaded config from ${configPath}`);
-    return config;
-  } catch (e) {
-    log(`failed to load config: ${e}`);
-    return {
-      interactive_commands: {},
-      always_interactive: { commands: {} },
-      tool_corrections: {},
-    };
-  }
-}
-
-// ── Build rules from config ──────────────────────────────────────────────────
-
-function buildRules(config: SentinelConfig): Rule[] {
+function buildRules(): Rule[] {
   const rules: Rule[] = [];
 
-  // ── HARD: interactive commands from config ──
+  // ── HARD: interactive commands ──
 
   // Subcommand + flag based (jj squash -i, docker exec -it, etc.)
-  for (const [tool, entry] of Object.entries(config.interactive_commands)) {
-    for (const [sub, subEntry] of Object.entries(entry.subcommands || {})) {
-      if (sub === "_doc") continue;
-
+  for (const [tool, subcommands] of Object.entries(INTERACTIVE_COMMANDS)) {
+    for (const [sub, subEntry] of Object.entries(subcommands)) {
       if (sub === "__base__") {
         // Bare command is interactive (mysql, psql, iex, etc.)
         // flags array empty = always interactive; non-empty = only with those flags
@@ -346,25 +434,22 @@ function buildRules(config: SentinelConfig): Rule[] {
   }
 
   // Always-interactive commands (editors, REPLs, pagers)
-  for (const [cmd, entry] of Object.entries(
-    config.always_interactive.commands,
-  )) {
-    if (cmd === "_doc") continue;
+  for (const [cmd, entry] of Object.entries(ALWAYS_INTERACTIVE_COMMANDS)) {
     rules.push({
       name: `${cmd}-interactive`,
       tier: "hard",
       tools: ["bash"],
       test: (c) => {
         if (!isCommand(c, cmd)) return false;
-        // If unless_args is set, only block when invoked bare (no arguments)
-        if (entry.unless_args) return !hasArgs(c, cmd);
+        // If unlessArgs is set, only block when invoked bare (no arguments)
+        if (entry.unlessArgs) return !hasArgs(c, cmd);
         return true;
       },
       reason: `⛔ ${entry.reason}`,
     });
   }
 
-  // ── HARD: jj editor rules (not in config — logic too specific) ──
+  // ── HARD: jj editor rules (logic too specific for table-driven rules) ──
 
   rules.push({
     name: "jj-describe-no-msg",
@@ -786,10 +871,9 @@ function buildRules(config: SentinelConfig): Rule[] {
     reason: "Use `jq .` instead of `python -m json.tool`.",
   });
 
-  // ── REWRITE: tool corrections from config ──
+  // ── REWRITE: tool corrections ──
 
-  for (const [blocked, correction] of Object.entries(config.tool_corrections)) {
-    if (blocked === "_doc") continue;
+  for (const [blocked, correction] of Object.entries(TOOL_CORRECTIONS)) {
     rules.push({
       name: `${blocked}→${correction.use}`,
       tier: "rewrite",
@@ -797,18 +881,18 @@ function buildRules(config: SentinelConfig): Rule[] {
       test: (cmd) => {
         if (!isCommand(cmd, blocked)) return false;
         // Exception: don't flag `git` when it's part of `jj git ...`
-        if (correction.except_prefix) {
-          if (isCommandPrefix(cmd, ...correction.except_prefix)) return false;
+        if (correction.exceptPrefix) {
+          if (isCommandPrefix(cmd, ...correction.exceptPrefix)) return false;
         }
         // Conditional: only apply if marker directory exists at repo root
-        if (correction.only_if_root_dir) {
+        if (correction.onlyIfRootDir) {
           try {
             const cwd = process.cwd();
             // Walk up to find repo root (look for .git or the marker dir)
             let dir = cwd;
             let found = false;
             while (dir !== dirname(dir)) {
-              if (existsSync(join(dir, correction.only_if_root_dir))) {
+              if (existsSync(join(dir, correction.onlyIfRootDir))) {
                 found = true;
                 break;
               }
@@ -976,25 +1060,12 @@ function detectPipeOrRedirect(cmd: string): {
 
 // ── Extension ────────────────────────────────────────────────────────────────
 
-// ── Investigation mode + Ticket-gated editing ────────────────────────────────
+// ── Investigation mode ───────────────────────────────────────────────────────
 
 const INVESTIGATE_RE =
   /^\s*(?:please\s+|can\s+you\s+|could\s+you\s+|would\s+you\s+)?(?:investigate|inspect|audit)\b/i;
 const FIX_INTENT_RE =
   /\b(?:and\s+fix|then\s+fix|fix|implement|create|write|run\s+(?:it|that|those|them)|apply|commit|refactor|rewrite|change|update|delete|remove|trash|checkout|go\s+ahead|yes|yep|yeah|approved?)\b/i;
-// Ticket ID patterns:
-//   GitHub:  #123
-//   Jira:    PROJ-123
-//   Linear:  ENG-123, TEAM-456 (same as Jira pattern)
-//   Asana:   https://app.asana.com/0/project/task (long numeric IDs)
-//   Asana:   asana:1234567890 (shorthand)
-//   Generic: tk-abc1234 (shorthand)
-const TICKET_ID_RE =
-  /\b(?:#(\d+)|([A-Z]+-\d+)|([a-z]+-[a-z0-9]{4,})|asana:(\d{5,}))\b|https:\/\/app\.asana\.com\/0\/\d+\/(\d+)/i;
-// Commands that "read" a ticket — lifts the gate
-const TICKET_READ_RE =
-  /\b(?:gh\s+issue\s+view|tk\s+show|jira\s+view|linear\s+issue\s+view|curl\s+.*app\.asana\.com)\b/;
-
 function investigationWriteKey(
   toolName: string,
   cmd: string,
@@ -1022,16 +1093,13 @@ function investigationWriteKey(
 }
 
 export default function (pi: ExtensionAPI) {
-  const config = loadConfig();
-  const rules = buildRules(config);
+  const rules = buildRules();
   log(`${rules.length} rules loaded`);
 
   // ── Session-aware state ──
   let investigationMode = false;
-  let pendingTicketId: string | null = null;
-  let ticketRead = false;
 
-  // Intercept user input: track investigation mode + ticket references
+  // Intercept user input: track investigation mode
   pi.on("input", async (event): Promise<void> => {
     // Reset investigation mode on every new user input
     investigationMode = false;
@@ -1045,19 +1113,6 @@ export default function (pi: ExtensionAPI) {
     if (INVESTIGATE_RE.test(text) && !FIX_INTENT_RE.test(text)) {
       investigationMode = true;
       log(`investigation mode: ON`);
-    }
-
-    // Detect ticket reference in user input (gated by config.ticket_gate)
-    if (config.ticket_gate !== false) {
-      const ticketMatch = text.match(TICKET_ID_RE);
-      if (ticketMatch) {
-        pendingTicketId = ticketMatch[0];
-        ticketRead = false;
-        log(`ticket gate: waiting for read of ${pendingTicketId}`);
-      } else {
-        pendingTicketId = null;
-        ticketRead = false;
-      }
     }
   });
 
@@ -1144,43 +1199,6 @@ export default function (pi: ExtensionAPI) {
       const cmd = ((input as any).command as string) || "";
       const path = ((input as any).path as string) || "";
       const timeout = (input as any).timeout as number | undefined;
-
-      // ── Ticket gate (gated by config.ticket_gate) ──
-      if (config.ticket_gate !== false) {
-        // Detect when agent reads the ticket
-        if (
-          pendingTicketId &&
-          !ticketRead &&
-          toolName === "bash" &&
-          typeof cmd === "string" &&
-          TICKET_READ_RE.test(cmd) &&
-          cmd.includes(pendingTicketId)
-        ) {
-          ticketRead = true;
-          log(`ticket gate: ${pendingTicketId} read — gate lifted`);
-        }
-
-        // Block edit/write until ticket is read
-        if (
-          pendingTicketId &&
-          !ticketRead &&
-          (toolName === "edit" || toolName === "write")
-        ) {
-          log(`TICKET-GATE: ${pendingTicketId} not read yet`);
-          return {
-            block: true,
-            reason:
-              `📋 **Read the ticket first**\n\n` +
-              `You referenced ticket \`${pendingTicketId}\` but haven't read it yet.\n\n` +
-              `Read it before making changes:\n` +
-              `- GitHub: \`gh issue view ${pendingTicketId}\`\n` +
-              `- Linear: \`linear issue view ${pendingTicketId}\`\n` +
-              `- Jira: \`jira view ${pendingTicketId}\`\n` +
-              `- Asana: fetch the task via API\n` +
-              `- Generic: \`tk show ${pendingTicketId}\``,
-          };
-        }
-      }
 
       // ── Investigation mode: block writes unless user explicitly overrides ──
       if (investigationMode) {

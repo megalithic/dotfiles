@@ -401,11 +401,11 @@
         "systems": "systems_3"
       },
       "locked": {
-        "lastModified": 1781942463,
-        "narHash": "sha256-Lk60AvPPQYd0FPXGjS+JA3fwZnfE6QILmUVbrAfFt1Q=",
+        "lastModified": 1782080524,
+        "narHash": "sha256-eqY/uXvtE08JXwva1U4bVjQ3WrE54zUGl280FeFJJ0A=",
         "owner": "lukasl-dev",
         "repo": "pi.nix",
-        "rev": "084e53e7d8d2f7fe00502dfbb83cb2a313396b9f",
+        "rev": "b30df12fb44074c0e668fd76a34dcf01ac7a2df8",
         "type": "github"
       },
       "original": {

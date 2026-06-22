@@ -50,59 +50,59 @@ A handful of programs have enough intricacy to warrant their own files instead o
 
 Tools managed under `home/common/programs/`, one line each. Tools with their own notable doc are linked above.
 
-| Tool                                    | What it manages                                                    |
-| --------------------------------------- | ------------------------------------------------------------------ |
-| aerc / mailmate                         | mail clients                                                       |
-| bash / fish                             | shells; fish is default and carries repo helpers                   |
-| bat                                     | cat replacement                                                    |
-| brave-browser-nightly                   | Chromium browser wrapper app                                       |
-| claude-code                             | parked until its old dependency is restored                        |
-| codex                                   | OpenAI Codex CLI via `programs.codex`                              |
-| colorsnapper / contexts                 | macOS GUI utilities from brew-nix casks                            |
-| csvlens                                 | CSV terminal viewer                                                |
-| desktoppr                               | wallpaper activation                                               |
-| devenv                                  | devenv integration; exports `DEVENV_TUI=false`                     |
-| direnv                                  | direnv + nix-direnv                                                |
-| discord                                 | chat app                                                           |
-| espanso                                 | text expander (config in `config/espanso/`)                        |
-| eza                                     | ls replacement                                                     |
-| fd                                      | find replacement                                                   |
-| firefox                                 | browser                                                            |
-| fzf                                     | fuzzy finder                                                       |
-| ghostty                                 | terminal emulator — see [[ghostty]]                                |
-| git                                     | git, signing, gitignore/tool-ignore, worktree helpers              |
-| hammerspoon                             | macOS automation — see [[hammerspoon]]                             |
-| handy                                   | macOS app (local nixpkgs backport)                                 |
-| helium-browser                          | primary browser — see [[helium]]                                   |
-| htop / k9s                              | process and Kubernetes TUIs                                        |
-| jj                                      | Jujutsu VCS                                                        |
-| jq                                      | JSON processor                                                     |
-| kanata / karabiner                      | keyboard remapping                                                 |
-| khard / notmuch / mbsync / msmtp / tiny | mail/contacts stack                                                |
-| kitty                                   | terminal emulator (config in `config/kitty/`)                      |
-| llama-cpp-local                         | local inference service and models                                 |
-| man                                     | manpage config                                                     |
-| meetingbar                              | calendar menu bar app                                              |
-| mise                                    | tool version manager                                               |
-| neomd                                   | markdown tooling                                                   |
-| nh                                      | nix helper                                                         |
-| nvim                                    | editor — see [[neovim-pinvim]]                                     |
-| obsidian                                | notes vault activation                                             |
-| ollama                                  | inert compatibility module (local inference uses llama.cpp)        |
-| opnix                                   | 1Password-backed secrets — see [[architecture#Secrets management]] |
-| pi-coding-agent                         | Pi CLI and extensions — see [[pi-coding-agent]]                    |
-| process-compose                         | process orchestration                                              |
-| proton-drive                            | Proton Drive GUI app from brew-nix cask                            |
-| ripgrep                                 | search tool                                                        |
-| rust                                    | rustup + bacon toolchain                                           |
-| shade / shade-next                      | Hammerspoon launcher panels — see [[hammerspoon]]                  |
-| slk                                     | Slack CLI (upstream static tarball package)                        |
-| ssh                                     | SSH config (1Password agent provides keys)                         |
-| starship                                | shell prompt                                                       |
-| surfingkeys                             | browser keyboard nav (enabled on Tidewave)                         |
-| television                              | fuzzy TUI                                                          |
-| tmux                                    | terminal multiplexer; layouts via `ftm`                            |
-| worktrunk                               | optional; imports only when its flake input exists                 |
-| yazi                                    | file manager + plugins                                             |
-| yubico-authenticator                    | Yubico Authenticator GUI app from brew-nix cask                    |
-| zoxide                                  | directory jumper                                                   |
+| Tool                                    | What it manages                                                     |
+| --------------------------------------- | ------------------------------------------------------------------- |
+| aerc / mailmate                         | mail clients                                                        |
+| bash / fish                             | shells; fish is default and carries repo helpers                    |
+| bat                                     | cat replacement                                                     |
+| brave-browser-nightly                   | Chromium browser wrapper app                                        |
+| claude-code                             | parked until its old dependency is restored                         |
+| codex                                   | OpenAI Codex CLI via `programs.codex`                               |
+| colorsnapper / contexts                 | macOS GUI utilities from brew-nix casks                             |
+| csvlens                                 | CSV terminal viewer                                                 |
+| desktoppr                               | wallpaper activation                                                |
+| devenv                                  | devenv integration; exports `DEVENV_TUI=false`                      |
+| direnv                                  | direnv + nix-direnv                                                 |
+| discord                                 | chat app                                                            |
+| espanso                                 | text expander (config in `config/espanso/`)                         |
+| eza                                     | ls replacement                                                      |
+| fd                                      | find replacement                                                    |
+| firefox                                 | browser                                                             |
+| fzf                                     | fuzzy finder                                                        |
+| ghostty                                 | terminal emulator — see [[ghostty]]                                 |
+| git                                     | git, signing, gitignore/tool-ignore, worktree helpers               |
+| hammerspoon                             | macOS automation — see [[hammerspoon]]                              |
+| handy                                   | macOS app (local nixpkgs backport)                                  |
+| helium-browser                          | primary browser — see [[helium]]                                    |
+| htop / k9s                              | process and Kubernetes TUIs                                         |
+| jj                                      | Jujutsu VCS                                                         |
+| jq                                      | JSON processor                                                      |
+| kanata / karabiner                      | keyboard remapping                                                  |
+| khard / notmuch / mbsync / msmtp / tiny | mail/contacts stack                                                 |
+| kitty                                   | terminal emulator (config in `config/kitty/`)                       |
+| llama-cpp-local                         | local inference service and models                                  |
+| man                                     | manpage config                                                      |
+| meetingbar                              | calendar menu bar app                                               |
+| mise                                    | tool version manager; local override uses tagged macOS binary asset |
+| neomd                                   | markdown tooling                                                    |
+| nh                                      | nix helper                                                          |
+| nvim                                    | editor — see [[neovim-pinvim]]                                      |
+| obsidian                                | notes vault activation                                              |
+| ollama                                  | inert compatibility module (local inference uses llama.cpp)         |
+| opnix                                   | 1Password-backed secrets — see [[architecture#Secrets management]]  |
+| pi-coding-agent                         | Pi CLI and extensions — see [[pi-coding-agent]]                     |
+| process-compose                         | process orchestration                                               |
+| proton-drive                            | Proton Drive GUI app from brew-nix cask                             |
+| ripgrep                                 | search tool                                                         |
+| rust                                    | rustup + bacon toolchain                                            |
+| shade / shade-next                      | Hammerspoon launcher panels — see [[hammerspoon]]                   |
+| slk                                     | Slack CLI (upstream static tarball package)                         |
+| ssh                                     | SSH config (1Password agent provides keys)                          |
+| starship                                | shell prompt                                                        |
+| surfingkeys                             | browser keyboard nav (enabled on Tidewave)                          |
+| television                              | fuzzy TUI                                                           |
+| tmux                                    | terminal multiplexer; layouts via `ftm`                             |
+| worktrunk                               | optional; imports only when its flake input exists                  |
+| yazi                                    | file manager + plugins                                              |
+| yubico-authenticator                    | Yubico Authenticator GUI app from brew-nix cask                     |
+| zoxide                                  | directory jumper                                                    |

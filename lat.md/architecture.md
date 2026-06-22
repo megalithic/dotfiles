@@ -37,7 +37,7 @@ Builders under `lib/`:
 
 `pkgs/default.nix` is one overlay that auto-discovers every non-`default.nix` `.nix` file under `pkgs/` recursively and exposes it by filename in the nixpkgs namespace.
 
-Each file is a single-package module. If a module's arguments include `mkApp`, the overlay injects the shared macOS app builder; otherwise it uses normal `callPackage`. Current custom packages include `helium-browser`, `brave-browser-nightly`, `bloom`, `slk`, `handy`, `tidewave`, `tidewave-cli`, `chrome-devtools-mcp`, and `cli/whisperkit-cli`.
+Each file is a single-package module. If a module's arguments include `mkApp`, the overlay injects the shared macOS app builder. If a same-name override such as `pkgs/mise.nix` needs the upstream package, the overlay injects `prev.mise` to avoid self-recursion. Otherwise it uses normal `callPackage`. `pkgs/mise.nix` deliberately consumes mise's tagged macOS release asset instead of rebuilding the Rust crate from source. Current custom packages include `mise`, `helium-browser`, `brave-browser-nightly`, `bloom`, `slk`, `handy`, `tidewave`, `tidewave-cli`, `chrome-devtools-mcp`, and `cli/whisperkit-cli`.
 
 External overlays and input aliases live separately in `overlays/default.nix`.
 

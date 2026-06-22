@@ -113,6 +113,13 @@ let
     #   export BRAVE_API_KEY="$BRAVE_SEARCH_API_KEY"
     # fi
 
+    # Patch pi-bash-live-view until upstream handles wide glyphs/ANSI truncation.
+    # Without this, PTY live view can render one cell past terminal width and crash Pi.
+    bash_live_view_widget="$HOME/.pi/agent/npm/node_modules/pi-bash-live-view/widget.ts"
+    if [ -f "$bash_live_view_widget" ]; then
+      cp ${./patches/pi-bash-live-view/widget.ts} "$bash_live_view_widget"
+    fi
+
     export PATH="$HOME/.pi/agent/bin:${sesame}/bin:${plannotator}/bin:${pkgs."poppler-utils"}/bin:${pkgs.rtk}/bin:$PATH"
     exec ${piPackage}/bin/pi "$@"
   '';
@@ -294,7 +301,6 @@ in
     file = {
       ".pi/agent/AGENTS.md".source = ./sources/GLOBAL_AGENTS.md;
       ".pi/agent/APPEND_SYSTEM.md".source = ./sources/APPEND_SYSTEM.md;
-      ".pi/agent/extensions/sentinel-rules.json".source = ./extensions/sentinel-rules.json;
       ".pi/agent/keybindings.json".source = ./keybindings.json;
       ".pi/agent/models.json".source = ./models.json;
       ".pi/agent/mcp.json".source = ./mcp.json;
