@@ -195,7 +195,7 @@ CriticalUpdateInstall = 1
 ScheduleFrequency = 1
 
 [bootstrap.macos.launchd.agents."com.megadots.espanso"]
-program = "/opt/homebrew/bin/espanso"
+program = "/Applications/Espanso.app/Contents/MacOS/espanso"
 args = ["launcher"]
 run_at_load = true
 stdout_path = "~/Library/Logs/espanso/stdout.log"

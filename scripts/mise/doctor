@@ -38,6 +38,78 @@ check_path mise/fnox/config.toml
 check_path config/nvim
 check_path home/common/programs/pi-coding-agent
 
+echo "---"
+echo "espanso:"
+
+# Check espanso config path (app support, not XDG)
+espanso_config="$HOME/Library/Application Support/espanso"
+if [ -L "$espanso_config" ]; then
+  final=$(readlink -f "$espanso_config" 2>/dev/null || true)
+  # Resolve against canonical ~/.dotfiles or current worktree
+  dots_repo="$HOME/.dotfiles/config/espanso"
+  if [ -n "$final" ] && { [ "$final" = "$dots_repo" ] || [ "$final" = "$(pwd)/config/espanso" ]; }; then
+    echo "ok: espanso config link -> config/espanso"
+  else
+    echo "attention: espanso config symlink target is $final, expected $dots_repo" >&2
+    fail=1
+  fi
+elif [ -e "$espanso_config" ]; then
+  echo "attention: espanso config exists but is not a symlink" >&2
+  fail=1
+else
+  echo "missing: espanso config ($espanso_config)" >&2
+  fail=1
+fi
+
+# Check espanso binary (Brew cask path, or any in PATH)
+espanso_bin=""
+if [ -x "/Applications/Espanso.app/Contents/MacOS/espanso" ]; then
+  espanso_bin="/Applications/Espanso.app/Contents/MacOS/espanso"
+  echo "ok: espanso cask binary"
+elif command -v espanso >/dev/null 2>&1; then
+  espanso_bin="$(command -v espanso)"
+  echo "ok: espanso in PATH ($espanso_bin)"
+else
+  echo "missing: espanso binary (install via Brew cask)" >&2
+  fail=1
+fi
+
+# Check espanso config path matches expected
+if [ -n "$espanso_bin" ]; then
+  actual_config=$("$espanso_bin" path config 2>/dev/null || true)
+  if [ "$actual_config" = "$espanso_config" ]; then
+    echo "ok: espanso config path matches ($actual_config)"
+  elif [ -n "$actual_config" ]; then
+    echo "attention: espanso reports config path $actual_config, expected $espanso_config" >&2
+    fail=1
+  fi
+  espanso_version=$("$espanso_bin" --version 2>/dev/null || true)
+  echo "ok: espanso version $espanso_version"
+fi
+
+# Check log directory
+log_dir="$HOME/Library/Logs/espanso"
+if [ -d "$log_dir" ]; then
+  echo "ok: espanso log dir"
+else
+  echo "missing: espanso log dir ($log_dir)" >&2
+  fail=1
+fi
+
+# Check current launchd agent (either Nix or mise label)
+espanso_loaded=false
+for label in com.federicoterzi.espanso com.megadots.espanso; do
+  if launchctl print "gui/$UID/$label" >/dev/null 2>&1; then
+    state=$(launchctl print "gui/$UID/$label" 2>/dev/null | grep "state = " | head -1 || true)
+    echo "ok: launchd agent $label ($state)"
+    espanso_loaded=true
+  fi
+done
+if ! $espanso_loaded; then
+  echo "attention: no espanso launchd agent loaded" >&2
+  fail=1
+fi
+
 scripts/mise/dotfile-preflight || fail=1
 
 if command -v mise >/dev/null 2>&1; then

@@ -1,6 +1,6 @@
 ---
 id: mbm-buez
-status: open
+status: closed
 deps: []
 links:
   [
@@ -32,3 +32,19 @@ Make espanso migration match current Home Manager behavior. Current Nix links co
 4. Add doctor/preflight checks for config path, executable path, launchd label, and espanso status.
 5. Run only non-destructive validation unless user approves starting/restarting espanso.
 6. Update lat.md/migration/mise-parity-checklist.md with final espanso status and validation command.
+
+## Notes
+
+**2026-06-23T13:13:17Z**
+
+Fixed espanso migration:
+
+1. Verified espanso is a Brew cask (not formula): binary at /Applications/Espanso.app/Contents/MacOS/espanso, not /opt/homebrew/bin/espanso.
+2. Added 'cask "espanso"' to mise/Brewfile.
+3. Fixed mise launchd agent program path from /opt/homebrew/bin/espanso to /Applications/Espanso.app/Contents/MacOS/espanso.
+4. Verified config path: ~/Library/Application Support/espanso (matches 'espanso path config' output).
+5. Dotfile target already correct from mbm-qkmx.
+6. Added comprehensive doctor checks: config symlink, binary path, espanso path/config/version, log dir, launchd agent (both Nix and mise labels).
+7. Log dir ~/Library/Logs/espanso/ must exist before launchd start (documented in checklist).
+8. Doctor confirms: config link OK, binary OK, config path match, version 2.3.0, log dir OK, Nix launchd agent running.
+   Validation: shellcheck clean, doctor espanso all-ok, lat_check passed. No destructive actions.
