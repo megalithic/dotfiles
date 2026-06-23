@@ -94,6 +94,12 @@ Global MCP server config lives in `mcp.json`: command-backed `chrome-devtools`, 
 
 Pi subagent orchestration comes from the `npm:pi-subagents` package; the old local `extensions/subagent/` implementation and vendored `packages/pi-subagents.nix` derivation are removed.
 
+## Nvim review routing
+
+`extensions/nvim-review.ts` registers `/piview [scope]` (`uncommitted`, `unpushed`, `branch`, `pr`, `ticket`, `worktrees`), which routes to the paired Neovim editor service via `globalThis.pinvimEditorService.query("review.open", { scope, cwd })`.
+
+It is distinct from `extensions/review.ts` (the `/review` pi-review-loop, which performs agent-driven checkout/snapshot reviews). `/piview` only targets the active paired Nvim and never scans manifests or steals pairs; it reports a clear fallback when no editor service is connected. The Nvim-side handler is documented in [[neovim-pinvim#Neovim and pinvim#Worktree-aware PiReview]].
+
 ## Preview command
 
 The Pi `/preview` extension is a thin command parser around the `preview-ai` executable.

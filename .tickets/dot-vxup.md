@@ -36,3 +36,9 @@ The workflow should list git worktrees with branch, path, dirty/staged/untracked
 8. `devenv shell -- nvim --headless '+lua require("pinvim").setup()' +qa` exits 0.
 9. Manual verification covers at least two worktrees and confirms reviews open in the selected cwd.
 10. lat.md documents the worktree-aware review behavior and isolation rules; `lat_check` passes.
+
+## Notes
+
+**2026-06-23T20:50:00Z**
+
+Implemented: `:PiReview worktrees` picker in `review.lua` enriches `git worktree list --porcelain` entries with dirty/staged/untracked counts from `git -C <path> status --porcelain`; `bin/pireview [scope] [worktree-path]` opens a new tmux window `review:<branch>` running `nvim +PiReview <scope>` and scrubs `PI_SOCKET`/`PINVIM_*` env. Verified headless: `list_worktrees()` returns 3 worktrees; `run("uncommitted", {cwd=<pinvim-rewrite worktree>})` switches the review to that worktree (`metadata().worktree` updates). `shellcheck`/`bash -n` clean on `bin/pireview`. `just home`, `nvim --headless ... +qa`, and `lat_check` pass. Criterion 9 cross-worktree dispatch verified headlessly via direct `run` with a second worktree's cwd; interactive `vim.ui.select` selection itself is a human gate.

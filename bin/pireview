@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# pireview: open a worktree-aware pinvim review in a new tmux window.
+#
+# Usage:
+#   pireview [scope] [worktree-path]
+#
+# scope: uncommitted (default) | unpushed | branch | pr | ticket | worktrees
+#
+# Creates a new tmux window named `review:<branch-or-ticket>` in the current
+# tmux session, scoped to the given worktree, and starts nvim with
+# `+PiReview <scope>`.
+#
+# Pairing safety: the new Nvim gets a clean pinvim env (no inherited
+# PI_SOCKET / PINVIM_PAIR_ID) so it never steals another Nvim/Pi pair.
+
+set -euo pipefail
+
+SCOPE="${1:-uncommitted}"
+WT_PATH="${2:-}"
+
+if [[ -z "${TMUX:-}" ]]; then
+  echo "pireview: must be run inside tmux" >&2
+  exit 1
+fi
+
+# Resolve worktree path: explicit arg, else current git toplevel, else cwd.
+if [[ -z "$WT_PATH" ]]; then
+  WT_PATH="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+fi
+if [[ ! -d "$WT_PATH" ]]; then
+  echo "pireview: worktree path not found: $WT_PATH" >&2
+  exit 1
+fi
+
+# Derive a window name from branch or ticket id.
+BRANCH="$(git -C "$WT_PATH" branch --show-current 2>/dev/null || true)"
+LABEL="${BRANCH:-review}"
+LABEL="${LABEL//\//-}"
+WINDOW_NAME="review:${LABEL}"
+
+# Clean pinvim env so the new Nvim does not steal an existing Pi pair.
+ENV_CLEAN=(
+  "env"
+  "-u" "PI_SOCKET"
+  "-u" "PINVIM_PAIR_ID"
+  "-u" "PINVIM_PARENT_ID"
+  "-u" "PINVIM_WORKSPACE_ID"
+  "-u" "PINVIM_INSTANCE_ID"
+  "-u" "PIMUX_FROM_NVIM"
+  "-u" "PINVIM_SESSION_ROLE"
+  "-u" "PINVIM_LINK_MODE"
+  "-u" "PINVIM_NESTED_ATTACH_ONLY"
+)
+
+tmux new-window -c "$WT_PATH" -n "$WINDOW_NAME" \
+  "${ENV_CLEAN[@]}" nvim "+PiReview ${SCOPE}"
+
+echo "pireview: opened '${WINDOW_NAME}' (${SCOPE}) in ${WT_PATH}"

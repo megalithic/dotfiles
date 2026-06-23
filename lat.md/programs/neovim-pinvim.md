@@ -2,7 +2,7 @@
 
 This file covers Neovim nightly compatibility plus pinvim, the Neovim↔Pi integration that links the editor to Pi sessions over sockets and an msgpack-RPC editor service.
 
-Pinvim ties together `config/nvim/lua/pinvim.lua`, `home/common/programs/pi-coding-agent/extensions/pinvim.ts`, `bin/pimux`, and tmux.
+Pinvim ties together `config/nvim/lua/pinvim.lua`, `config/nvim/lua/pinvim/review.lua`, `home/common/programs/pi-coding-agent/extensions/pinvim.ts`, `home/common/programs/pi-coding-agent/extensions/nvim-review.ts`, `bin/pimux`, `bin/pireview`, and tmux.
 
 ## Neovim nightly compatibility
 
@@ -80,3 +80,30 @@ Cases covered by code review plus manual tmux verification (no full multi-Neovim
 - Non-tmux peer — accepted only by exact `pairId` or explicit target mode.
 - `:PiTarget` — explicit override that does not rewrite pair ownership.
 - `fill_prompt` — prefills only; no claim, reclaim, or auto-submit.
+
+## Worktree-aware PiReview
+
+`config/nvim/lua/pinvim/review.lua` is the Nvim-side review orchestrator. It detects worktree root, branch, upstream, PR metadata, default base, and ticket id, then opens the right review surface for a requested scope.
+
+`:PiReview [scope]` (registered in `config/nvim/lua/pinvim.lua`) and the `<leader>gr{r,u,b,p,t,w}` keymaps dispatch through `require("pinvim.review").run(scope, opts)`:
+
+- `uncommitted` — `:CodeDiff` for the current worktree changes.
+- `unpushed` — `:CodeDiff` against `@{u}`; falls back to uncommitted with a warning when no upstream exists.
+- `branch` — `:CodeDiff` against the PR base ref, or `origin/main`/`main`/`master` as default base.
+- `pr` — `:Guh <pr-url>` via `justinmk/guh.nvim` (`config/nvim/lua/plugins/github.lua`); warns when no PR resolves. `guh.nvim` handles GitHub PR/issue/CI review only; local scopes stay on CodeDiff.
+- `ticket` — branch or uncommitted scope with ticket metadata attached.
+- `worktrees` — `vim.ui.select` picker over `git worktree list --porcelain`, enriched with dirty/staged/untracked counts from `git -C <path> status --porcelain`; selecting a worktree `tcd`s into it and reruns the chosen scope.
+
+`bin/pireview [scope] [worktree-path]` opens the same review in a new tmux window named `review:<branch-or-ticket>` in the current tmux session, starting Nvim with `+PiReview <scope>`. It scrubs inherited `PI_SOCKET`/`PINVIM_PAIR_ID`/`PINVIM_*` env so the new Nvim never steals another Nvim/Pi pair.
+
+### Review metadata in annotation flushes
+
+`require("pinvim.review").metadata()` returns the active review record or nil when no review is active. The record carries `scope`, `worktree`, `branch`, `upstream`, `base`, `pr`, and `ticket`.
+
+`:PiFlush` prepends a concise `Review scope` header from this record before the queued context and comments, so Pi knows which worktree/diff/ticket the annotations belong to. The existing `gpc`, visual `gpc`, `:PiComment`, `:PiComments`, and `:PiClear` primitives are unchanged outside review mode.
+
+### Pi-side `/piview` and `review.open` RPC
+
+`home/common/programs/pi-coding-agent/extensions/nvim-review.ts` registers the `/piview [scope]` Pi command, distinct from the pre-existing `/review` pi-review-loop (`extensions/review.ts`).
+
+`/piview` queries `globalThis.pinvimEditorService` with method `review.open` and `{ scope, cwd }`; the Nvim editor-service handler in `config/nvim/lua/pinvim.lua` delegates to `require("pinvim.review").run`. `/piview` never checks out branches, snapshots files, or scans manifests; it only targets the active paired Nvim and reports a clear fallback when no editor service is connected.

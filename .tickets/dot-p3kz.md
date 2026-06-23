@@ -32,3 +32,9 @@ This is only for GitHub PR review. Local uncommitted/unpushed review continues t
 5. `devenv shell -- just home` succeeds.
 6. `devenv shell -- nvim --headless '+lua require("pinvim").setup()' +qa` exits 0.
 7. Relevant lat.md section documents that `guh.nvim` handles PR scope while CodeDiff handles local scopes, and `lat_check` passes.
+
+## Notes
+
+**2026-06-23T20:50:00Z**
+
+Implemented in `config/nvim/lua/plugins/github.lua` (lazy on `:Guh`, keymaps `<leader>ghp` / `<leader>gh.`). Nvim 0.13 nightly meets the 0.13+ requirement; `gh` 2.94.0 is on PATH via nix. `guh.nvim` clones on first `:Guh` (verified headless: `:Guh` loads and emits `guh: Loading...` with no errors). lat.md (`neovim-pinvim.md`) documents the PR-vs-local scope split. `just home`, `nvim --headless ... +qa`, and `lat_check` pass.

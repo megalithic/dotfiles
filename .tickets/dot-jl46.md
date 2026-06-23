@@ -36,3 +36,9 @@ Current annotation primitives already exist: `gpc`, visual `gpc`, `:PiComment`, 
 8. `devenv shell -- bin/pinvim-protocol-smoke` passes.
 9. Manual verification: open `:PiReview uncommitted`, add normal and visual `gpc` comments, run `:PiFlush`, and confirm Pi receives review metadata plus comments.
 10. lat.md documents enriched review flush semantics; `lat_check` passes.
+
+## Notes
+
+**2026-06-23T20:50:00Z**
+
+Implemented in `config/nvim/lua/pinvim.lua` (`review_scope_header` added to `compose_flush`) reading `require("pinvim.review").metadata()`. Verified headless: `run("uncommitted")` populates `metadata()` with scope/worktree/branch/upstream/base/ticket; the flush path calls `review_scope_header()` before queued context (confirmed by grep at `pinvim.lua:3088`). Outside review mode `metadata()` is nil so `gpc`/`:PiComment`/`:PiComments`/`:PiClear` behave unchanged. `just home`, `nvim --headless ... +qa`, `bin/pinvim-protocol-smoke`, and `lat_check` pass. Criterion 9 (live `:PiFlush` to a running Pi) requires a connected Pi socket and is a human gate.

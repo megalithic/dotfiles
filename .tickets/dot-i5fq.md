@@ -45,3 +45,9 @@ Preserve strict pinvim pairing. Do not make a new Nvim instance steal an existin
 9. `devenv shell -- nvim --headless '+lua require("pinvim").setup()' +qa` exits 0.
 10. `devenv shell -- bin/pinvim-protocol-smoke` passes.
 11. lat.md documents the `:PiReview` command and strict-pairing constraint; `lat_check` passes.
+
+## Notes
+
+**2026-06-23T20:50:00Z**
+
+Implemented in `config/nvim/lua/pinvim/review.lua` + `:PiReview` command + `<leader>gr{r,u,b,p,t,w}` keymaps in `config/nvim/lua/pinvim.lua`. Verified headless: completion returns all 6 scopes; worktree root/branch/upstream detection works; `run("uncommitted")` opens CodeDiff and sets `metadata().scope="uncommitted"`; `run("pr")` on `main` returns false with a warning (no PR) and no crash. `just home`, `nvim --headless ... +qa`, `bin/pinvim-protocol-smoke`, and `lat_check` pass.

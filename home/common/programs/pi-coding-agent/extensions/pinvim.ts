@@ -410,7 +410,8 @@ type EditorMethod =
   | "reveal_file"
   | "reload_buffer"
   | "refresh_diagnostics"
-  | "checktime";
+  | "checktime"
+  | "review.open";
 
 interface EditorQueryResult {
   ok: boolean;

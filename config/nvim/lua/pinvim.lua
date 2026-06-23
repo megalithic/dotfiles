@@ -1518,6 +1518,16 @@ function EditorService.handle_request(api, config, method, params)
     return { ok = true }
   end
 
+  if method == "review.open" then
+    -- Pi-side /review -> open :PiReview in the paired Nvim (ticket dot-xooa).
+    -- Delegates to pinvim.review so scope detection stays Nvim-local.
+    local scope = params.scope or params.args or "uncommitted"
+    local ok, review = pcall(require, "pinvim.review")
+    if not ok then return { ok = false, error = "pinvim.review not available" } end
+    local ran = review.run(scope, { cwd = params.cwd })
+    return { ok = true, ran = ran, metadata = review.metadata() }
+  end
+
   error("unsupported pinvim editor method: " .. tostring(method))
 end
 
@@ -2138,6 +2148,16 @@ function Commands.setup(api, config)
     desc = "List queued pinvim comments in quickfix/trouble",
   })
 
+  vim.api.nvim_create_user_command("PiReview", function(command_opts)
+    local args = vim.trim(command_opts.args or "")
+    if args == "" then args = "uncommitted" end
+    require("pinvim.review").run(args)
+  end, {
+    nargs = "?",
+    complete = function() return require("pinvim.review").complete() end,
+    desc = "Open worktree-aware review (uncommitted|unpushed|branch|pr|ticket|worktrees)",
+  })
+
   vim.keymap.set(
     "n",
     "gpc",
@@ -2158,6 +2178,13 @@ function Commands.setup(api, config)
     function() api.restore_previous_target(nil, { notify = true }) end,
     { silent = true, desc = "pinvim restore previous parked target" }
   )
+
+  vim.keymap.set("n", "<leader>grr", function() require("pinvim.review").run("uncommitted") end, { desc = "review: uncommitted" })
+  vim.keymap.set("n", "<leader>gru", function() require("pinvim.review").run("unpushed") end, { desc = "review: unpushed" })
+  vim.keymap.set("n", "<leader>grb", function() require("pinvim.review").run("branch") end, { desc = "review: branch vs base" })
+  vim.keymap.set("n", "<leader>grp", function() require("pinvim.review").run("pr") end, { desc = "review: GitHub PR (guh)" })
+  vim.keymap.set("n", "<leader>grt", function() require("pinvim.review").run("ticket") end, { desc = "review: ticket-scoped" })
+  vim.keymap.set("n", "<leader>grw", function() require("pinvim.review").run("worktrees") end, { desc = "review: pick worktree" })
 
   local function spawn_ephemeral_with_cursor_context() api.spawn_ephemeral_split({ send_explicit_after = true }) end
 
@@ -3035,9 +3062,34 @@ function M.setup(opts)
     return true
   end
 
+  --- Build a concise `Review scope` header from active pinvim.review metadata.
+  --- Returns nil when no review session is active (ticket dot-jl46).
+  local function review_scope_header()
+    local ok, review = pcall(require, "pinvim.review")
+    if not ok then return nil end
+    local meta = review.metadata()
+    if not meta then return nil end
+    local lines = { string.format("Review scope: %s", meta.scope or "unknown") }
+    if meta.worktree then table.insert(lines, "Worktree: " .. meta.worktree) end
+    if meta.branch then table.insert(lines, "Branch: " .. meta.branch) end
+    if meta.upstream then table.insert(lines, "Upstream: " .. meta.upstream) end
+    if meta.base then table.insert(lines, "Base: " .. meta.base) end
+    if meta.pr and meta.pr.url then
+      table.insert(lines, string.format("PR: #%s %s", meta.pr.number or "?", meta.pr.url))
+    end
+    if meta.ticket then table.insert(lines, "Ticket: " .. meta.ticket) end
+    return table.concat(lines, "\n")
+  end
+
   function api.compose_flush(prompt)
     local function send_now(message)
       local parts = {}
+
+      local header = review_scope_header()
+      if header and header ~= "" then
+        table.insert(parts, header)
+        table.insert(parts, "")
+      end
 
       for idx, item in ipairs(compose_queue) do
         if item.type == "selection" then
