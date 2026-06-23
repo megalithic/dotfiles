@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
+# Install or repair Nix using the official NixOS installer.
+# Replaces the deprecated Determinate Systems installer.
+#   curl -sSfL https://artifacts.nixos.org/nix-installer | sh -s -- install --enable-flakes
 set -euo pipefail
 
 if command -v nix >/dev/null 2>&1 && { [ -x /nix/nix-installer ] || [ -x /nix/nix-installer/bin/nix-installer ]; }; then
-  echo "Determinate Nix appears installed."
+  echo "Nix appears installed (nix-installer marker found)."
   exit 0
 fi
 
 if command -v nix >/dev/null 2>&1; then
-  echo "nix exists, but Determinate installer marker not found. Review before reinstalling." >&2
-  echo "See https://docs.determinate.systems/" >&2
+  echo "nix exists, but nix-installer marker not found. Review before reinstalling." >&2
+  echo "See https://github.com/NixOS/nix-installer" >&2
   exit 1
 fi
 
-curl -fsSL https://install.determinate.systems/nix | sh -s -- install --determinate
+curl -sSfL https://artifacts.nixos.org/nix-installer | sh -s -- install --enable-flakes

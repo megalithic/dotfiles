@@ -312,7 +312,7 @@ description = "Install patched Helium with Widevine into /Applications"
 run = "scripts/mise/install-helium"
 
 [tasks."nix:ensure"]
-description = "Install or repair Determinate Nix, keeping Nix as project/devenv tool"
+description = "Install or repair Nix via official nix-installer (flakes enabled)"
 run = "scripts/mise/ensure-determinate-nix"
 
 [tasks."pi:setup"]
