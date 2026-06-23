@@ -1,8 +1,8 @@
 ---
 id: mbm-s5i1
-status: open
+status: closed
 deps: 4:1:deps: 4:1:deps: [, mbm-55qf, mbm-qkmx]
-links: []
+links: [mbm-77a2, mbm-sskn, mbm-9ov0]
 created: 2026-06-22T20:32:02Z
 type: bug
 priority: 2
@@ -26,3 +26,19 @@ File hints: mise.toml [bootstrap.packages], mise/Brewfile, scripts/mise/doctor, 
 4. `scripts/mise/doctor` reports the new package-name validation or documents why validation remains manual.
 5. `lat.md/migration/mise-bootstrap.md` is updated if ownership, package manager, or validation flow changes.
 6. `lat_check` passes.
+
+## Notes
+
+**2026-06-23T15:24:37Z**
+
+mise bootstrap --dry-run now passes all package resolution. Fixed:
+
+1. yubikey-manager → already resolved (brew:ykman, no action needed).
+2. Verified ALL brew: packages resolve: bash, blueutil, chafa, coreutils, curl, ffmpeg, fish, git, gnupg, imagemagick, llama.cpp (new), mas, openconnect, openssl@3, pinentry-mac, s3cmd, sox, sqlite, switchaudio-osx, tesseract, trash, ykman.
+3. Added brew:llama.cpp (fixes missing install source blocker — Brew formula includes llama-server).
+4. Added cask handy to Brewfile (researcher finding).
+5. Added cask okta-verify to Brewfile (from mbm-m0rs).
+6. Dry-run reaches expected fish conflict (real directory with mixed content — per-file reconciliation deferred): 'refusing to overwrite existing files: ~/.config/fish'. Resolution: manual backup then --force-dotfiles.
+7. mise tasks ls lists all 10 migration tasks.
+8. Checklist updated: dotfile safety row reflects dry-run status, llama.cpp install source resolved, cutover blocker checked.
+   lat_check passed.
