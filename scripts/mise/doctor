@@ -112,6 +112,10 @@ fi
 
 scripts/mise/dotfile-preflight || fail=1
 
+echo "---"
+echo "okta-verify:"
+scripts/mise/install-okta-verify || fail=1
+
 if command -v mise >/dev/null 2>&1; then
   mise --version || true
 fi

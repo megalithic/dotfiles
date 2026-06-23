@@ -19,6 +19,7 @@ cask "karabiner-elements"
 cask "mailmate"
 cask "meetingbar"
 cask "obsidian"
+cask "okta-verify"
 cask "orbstack"
 cask "proton-drive"
 cask "protonvpn"
@@ -29,7 +30,6 @@ cask "zoom"
 
 # Special-case apps still have scripts/notes:
 # - Helium: scripts/mise/install-helium preserves Widevine/signing/TCC behavior.
-# - Okta Verify: privileged pkg install may still need a dedicated installer script.
 # - Kanata: stable /usr/local/bin/kanata copy is a TCC workaround, not a cask.
 
 mas "Xcode", id: 497799835

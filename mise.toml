@@ -303,6 +303,10 @@ run = "scripts/mise/setup-pi"
 description = "Apply macOS defaults mise cannot represent yet"
 run = "scripts/mise/apply-macos-complex-defaults"
 
+[tasks."okta:check"]
+description = "Validate Okta Verify installation (installed via Brew cask)"
+run = "scripts/mise/install-okta-verify"
+
 [tasks."dotfiles:preflight"]
 description = "Classify current owners of mise dotfile targets without mutating files"
 run = "scripts/mise/dotfile-preflight"
