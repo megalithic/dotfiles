@@ -53,6 +53,15 @@ default_mode = "symlink"
 "~/.config/nvim" = "config/nvim"
 "~/.config/tmux" = "config/tmux"
 
+# -- generated fragments → committed static files (replaces Home Manager Nix interpolation) --
+"~/.local/share/hammerspoon/nix_path.lua" = "mise/fragments/hammerspoon/nix_path.lua"
+"~/.local/share/hammerspoon/fragments/shade-next.lua" = "mise/fragments/hammerspoon/shade-next.lua"
+"~/.local/share/tmux/nix.conf" = "mise/fragments/tmux/nix.conf"
+"~/.config/shade-next/config.toml" = "mise/fragments/shade-next/config.toml"
+"~/.config/sesame/config.jsonc" = "mise/fragments/sesame/config.jsonc"
+"~/.config/process-compose/shortcuts.yaml" = "mise/fragments/process-compose/shortcuts.yaml"
+"~/.config/process-compose/theme.yaml" = "mise/fragments/process-compose/theme.yaml"
+
 # -- kanata: individual .kbd files (parent dir has mutable state; daemon/bar migration deferred to mbm-ju5m) --
 "~/.config/kanata/macbook.kbd" = "config/kanata/macbook.kbd"
 "~/.config/kanata/macbook-disabled.kbd" = "config/kanata/macbook-disabled.kbd"

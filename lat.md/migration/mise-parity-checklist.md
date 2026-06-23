@@ -105,12 +105,34 @@ These paths point at the flake source copied into `/nix/store`, not the live che
 
 ### Generated Nix store files
 
-These paths are generated from Nix expressions and need a renderer, committed replacement file, or explicit manual/retained owner under mise.
+These paths are generated from Nix expressions and need a renderer, committed replacement file, or explicit manual/retained owner under mise. Full inventory and decisions documented in mbm-8afn.
 
-- Shell and session files: fish `config.fish`, `conf.d/*`, `functions/*`, `.bashrc`, `.bash_profile`, `.profile`.
-- Generated app/tool configs: `~/.config/starship.toml`, `shade/config.json`, `shade-next/config.toml`, `karabiner/karabiner.json`, `process-compose/*.yaml`, `slk/config.toml`, `surfingkeys/config.js`, `sesame/config.jsonc`, 1Password SSH agent config, `allowed_signers`.
-- Generated fragments: `~/.local/share/hammerspoon/nix_path.lua`, `~/.local/share/hammerspoon/fragments/shade-next.lua`, `~/.local/share/tmux/nix.conf`.
-- Package-generated config: Home Manager bat/fd/direnv/fontconfig/fish plugin files, Neovim plugin pack, browser external-extension JSON files, Helium/Brave dictionaries, MailMate keybindings/layouts, and keep files.
+#### Fragment inventory and migration decisions
+
+Seven fragments are ported to committed static files under `mise/fragments/`; the remaining items are retained under Nix, deferred, or handled by existing scripts.
+
+| Generated path                                        | Nix source                    | Migration decision                            | Target owner                                    |
+| ----------------------------------------------------- | ----------------------------- | --------------------------------------------- | ----------------------------------------------- |
+| `~/.local/share/hammerspoon/nix_path.lua`             | `hammerspoon/default.nix`     | Committed static file                         | `mise/fragments/hammerspoon/nix_path.lua`       |
+| `~/.local/share/hammerspoon/fragments/shade-next.lua` | `shade-next/default.nix`      | Committed static file                         | `mise/fragments/hammerspoon/shade-next.lua`     |
+| `~/.local/share/tmux/nix.conf`                        | `tmux/default.nix`            | Committed static file (fish path → Brew)      | `mise/fragments/tmux/nix.conf`                  |
+| `~/.config/shade-next/config.toml`                    | `shade-next/default.nix`      | Committed static file                         | `mise/fragments/shade-next/config.toml`         |
+| `~/.config/sesame/config.jsonc`                       | `pi-coding-agent/default.nix` | Committed static file                         | `mise/fragments/sesame/config.jsonc`            |
+| `~/.config/process-compose/shortcuts.yaml`            | `process-compose/default.nix` | Committed static file                         | `mise/fragments/process-compose/shortcuts.yaml` |
+| `~/.config/process-compose/theme.yaml`                | `process-compose/default.nix` | Committed static file                         | `mise/fragments/process-compose/theme.yaml`     |
+| `~/.config/shade/config.json`                         | `shade/default.nix`           | Nix-retained (deprecated for shade-next)      | Nix until removed                               |
+| `~/.config/starship.toml`                             | `starship/default.nix`        | Already static (verbatim copy)                | mise dotfile or Nix-retained                    |
+| `~/.config/karabiner/karabiner.json`                  | `karabiner/default.nix`       | Already static (verbatim copy)                | mise dotfile or Nix-retained                    |
+| `~/.ssh/allowed_signers`                              | nixpkgs HM 1Password module   | Nix-retained (key identity tied to 1Password) | Nix/manual                                      |
+| 1Password SSH agent config                            | nixpkgs HM module             | Nix-retained (requires 1Password GUI)         | Nix/manual                                      |
+| Fish `config.fish`, `conf.d/*`, `functions/*`         | `fish/default.nix`            | Deferred to per-file reconciliation           | Per-file reconciliation                         |
+| `~/.bashrc`, `~/.bash_profile`, `~/.profile`          | `bash/`                       | Deferred (not primary shell)                  | Nix-retained or manual                          |
+| Pi agent files                                        | `pi-coding-agent/default.nix` | Handled by `scripts/mise/setup-pi`            | setup-pi script                                 |
+| `~/.config/surfingkeys/config.js`                     | browser modules               | Deferred (not v1)                             | Manual/export                                   |
+| `~/.config/slk/config.toml`                           | `slk/default.nix`             | Deferred (not v1)                             | Nix-retained or manual                          |
+| HM bat/fd/direnv/fontconfig/fish plugins              | various HM modules            | Deferred (low priority)                       | Nix-retained or Brew-provided                   |
+
+Original generated list retained below for reference.
 
 ### Adoption rule
 
