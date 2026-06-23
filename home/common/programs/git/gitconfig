@@ -218,8 +218,7 @@
     | sed 's/^/  /';\
     }; f"
 
-  wt = !git worktree
-  # wt = !~/.dotfiles/bin/git-wt
+  wt = !wt
   ; rb = rebase
   ; rb = rebase -i
 
@@ -413,21 +412,6 @@
   selected = normal
   separator = red bold
   linenumber = normal
-
-[include]
-  # A local gitconfig, outside of version control.
-  # If the file doesn't exist it is silently ignored
-  # path = ~/.gitconfig_macos
-
-[include]
-  # A local gitconfig, outside of version control.
-  # If the file doesn't exist it is silently ignored
-  # path = ~/.gitconfig_linux
-
-[include]
-  # A local gitconfig, outside of version control.
-  # If the file doesn't exist it is silently ignored
-  # path = ~/.gitconfig_local
 
 [init]
 	defaultBranch = main

@@ -8,6 +8,12 @@ Hammerspoon owns macOS automation: window management, launcher panels, menubar s
 
 Hammerspoon's preflight adds `~/.local/share/hammerspoon` to Lua `package.path` so generated data-only fragments such as `fragments/shade-next.lua` can be required without editing the generated file.
 
+## Global app bindings
+
+Global app bindings stay data-driven so app launchers, local pass-through keys, and URL-scheme actions share one configuration surface instead of per-app binding code.
+
+`C.launchers` rows use `{ bundleID, bind, opts? }`: simple launchers omit `opts`, while `opts.passThrough`, `opts.focusOnly`, and `opts.urlSchemes` handle exceptions. Calendar 366 keeps `hyper+y` as the app toggle; `hyper+'` opens `cal366://add?type=event`; `hyper+shift+'` opens `cal366://add?type=task`.
+
 ## shade-next panel
 
 shade-next bindings are split between generated data and handwritten lifecycle code.

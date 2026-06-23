@@ -35,6 +35,10 @@
       url = "github:lukasl-dev/pi.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    worktrunk = {
+      url = "github:max-sixty/worktrunk";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nh.url = "github:nix-community/nh";
     kanata-darwin = {
       url = "github:not-in-stock/kanata-darwin";

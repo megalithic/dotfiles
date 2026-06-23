@@ -10,24 +10,31 @@ local summon = req("lib.summon")
 local enum = req("hs.fnutils")
 local utils = require("utils")
 
+local function unpackBind(bind)
+  local mods = {}
+  local key = bind
+
+  if type(bind) == "table" then
+    mods, key = table.unpack(bind)
+  end
+
+  return mods, key
+end
+
 function M.loadApps()
   local hyper = req("hyper", { id = "apps" }):start()
   enum.each(C.launchers, function(bindingTable)
-    local bundleID, globalBind, localBinds, focusOnly = table.unpack(bindingTable)
-    if globalBind ~= nil then
-      local key = globalBind
-      local mods = {}
-      local pressCount = nil
+    local bundleID, globalBind, opts = table.unpack(bindingTable)
+    opts = opts or {}
 
-      if type(key) == "table" then
-        mods, key, pressCount = table.unpack(globalBind)
-      end
+    if globalBind ~= nil then
+      local mods, key = unpackBind(globalBind)
 
       if string.match(bundleID, "noop") then
         hyper:bind(mods, key, function() end)
       else
         hyper:bind(mods, key, function()
-          if focusOnly ~= nil and focusOnly then
+          if opts.focusOnly then
             summon.focus(bundleID)
           else
             summon.toggle(bundleID)
@@ -36,18 +43,16 @@ function M.loadApps()
       end
     end
 
-    if localBinds then
-      enum.each(localBinds, function(binds)
-        local mods = {}
-        local key = binds
+    enum.each(opts.passThrough or {}, function(bind)
+      local mods, key = unpackBind(bind)
+      hyper:bindPassThrough(mods, key, bundleID)
+    end)
 
-        if type(binds) == "table" and #binds == 2 and type(binds[1]) == "table" then
-          mods, key = table.unpack(binds)
-        end
-
-        hyper:bindPassThrough(mods, key, bundleID)
-      end)
-    end
+    enum.each(opts.urlSchemes or {}, function(binding)
+      local bind, url = table.unpack(binding)
+      local mods, key = unpackBind(bind)
+      hyper:bind(mods, key, nil, function() hs.urlevent.openURL(url) end)
+    end)
   end)
 end
 

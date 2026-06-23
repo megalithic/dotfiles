@@ -20,6 +20,9 @@ let
     && (name != "worktrunk" || inputs ? worktrunk)
   ) (builtins.attrNames programEntries);
   programImports = map (name: ./programs/${name}) programModules;
+  worktrunkModuleImports = lib.optionals (inputs ? worktrunk) [
+    inputs.worktrunk.homeModules.default
+  ];
 in
 {
   imports = [
@@ -28,6 +31,7 @@ in
     ./packages.nix
     ./services.nix
   ]
+  ++ worktrunkModuleImports
   ++ programImports;
 
   home.username = username;

@@ -261,9 +261,9 @@ M.layouts = {
       { nil, 1, M.grid.center.large },
     },
   },
-  ["com.flexibits.fantastical2.mac"] = {
-    bundleID = "com.flexibits.fantastical2.mac",
-    name = "Fantastical",
+  ["com.nspektor.Calendar366.3"] = {
+    bundleID = "com.nspektor.Calendar366.3",
+    name = "Calendar 366",
     rules = {
       { nil, 1, M.grid.center.large },
     },
@@ -337,38 +337,47 @@ M.reservedHyperKeys = {
 M.lollygaggers = {
   --- [bundleID] = { hideAfter, quitAfter }
   ["org.hammerspoon.Hammerspoon"] = { 1, nil },
-  ["com.flexibits.fantastical2.mac"] = { 1, nil },
+  ["com.nspektor.Calendar366.3"] = { 1, nil },
   ["com.1password.1password"] = { 1, nil },
   -- ["com.spotify.client"] = { 1, nil },
   ["com.apple.Music"] = { 1, nil },
 }
 
 M.launchers = {
-  { BROWSER, "j", nil },
-  { TERMINAL, "k", { "`" } },
-  -- { "net.kovidgoyal.kitty", "k", nil },
-  { "com.apple.MobileSMS", "m", nil }, -- NOOP for now.. TODO: implement a binding feature that let's us require n-presses before we execute
-  { "com.apple.finder", "f", nil },
-  -- { "com.spotify.client", "p", nil },
-  { "com.apple.Music", "p", nil },
-  { "com.freron.MailMate", "e", nil },
-  -- { "com.flexibits.fantastical2.mac", "y", { "'" } },
-  { "com.apple.iCal", "y", { "'" } },
-  { "com.raycast.macos", "space", { "c" } },
-  -- { "com.brnbw.Tuna", nil, { "space" } },
-  -- { "Tuna", nil, { { { "shift", "cmd" }, "space" } } },
-  { "com.superultra.Homerow", nil, { ";" } },
-  { "com.tinyspeck.slackmacgap", "s", nil },
-  { "com.tdesktop.Telegram", "t", nil },
-  { "org.hammerspoon.Hammerspoon", "r", nil },
-  -- { "com.kapeli.dashdoc", { { "shift" }, "d" }, { "d" } },
-  { "com.electron.postbird", { { "shift" }, "p" }, nil },
-  { "com.1password.1password", "1", nil },
-  { "commonplace.canonize.app", nil, { { { "shift" }, "s" } } },
-  { "com.apple.dt.Xcode", "x", nil, true },
-  { "com.obsproject.obs-studio", "o", nil, true },
-  { "com.microsoft.VSCode", "v", nil, true },
-  -- { "com.culturedcode.ThingsMac", nil, { "return" } },
+  { BROWSER, "j" },
+  { TERMINAL, "k", { passThrough = { "`" } } },
+  -- { "net.kovidgoyal.kitty", "k" },
+  { "com.apple.MobileSMS", "m" }, -- NOOP for now.. TODO: implement a binding feature that let's us require n-presses before we execute
+  { "com.apple.finder", "f" },
+  -- { "com.spotify.client", "p" },
+  { "com.apple.Music", "p" },
+  { "com.freron.MailMate", "e" },
+  {
+    "com.nspektor.Calendar366.3",
+    "y",
+    {
+      urlSchemes = {
+        { "'", "cal366://add?type=event" },
+        { { { "shift" }, "'" }, "cal366://add?type=task" },
+      },
+    },
+  },
+  -- { "com.apple.iCal", "y", { passThrough = { "'" } } },
+  { "com.raycast.macos", "space", { passThrough = { "c" } } },
+  -- { "com.brnbw.Tuna", nil, { passThrough = { "space" } } },
+  -- { "Tuna", nil, { passThrough = { { { "shift", "cmd" }, "space" } } } },
+  { "com.superultra.Homerow", nil, { passThrough = { ";" } } },
+  { "com.tinyspeck.slackmacgap", "s" },
+  { "com.tdesktop.Telegram", "t" },
+  { "org.hammerspoon.Hammerspoon", "r" },
+  -- { "com.kapeli.dashdoc", { { "shift" }, "d" }, { passThrough = { "d" } } },
+  { "com.electron.postbird", { { "shift" }, "p" } },
+  { "com.1password.1password", "1" },
+  { "commonplace.canonize.app", nil, { passThrough = { { { "shift" }, "s" } } } },
+  { "com.apple.dt.Xcode", "x", { focusOnly = true } },
+  { "com.obsproject.obs-studio", "o", { focusOnly = true } },
+  { "com.microsoft.VSCode", "v", { focusOnly = true } },
+  -- { "com.culturedcode.ThingsMac", nil, { passThrough = { "return" } } },
 }
 
 M.dock = {
@@ -445,7 +454,7 @@ M.notifier = {
     -- Fantastical Calendar Alerts (TIME SENSITIVE = imminent, usually 1-minute warnings)
     -- NOTE: Notifications come from the helper app with team ID prefix, not main app
     {
-      name = "Fantastical Urgent Alerts",
+      name = "Calendar/Reminder Urgent Alerts",
       priority = 95,
       match = {
         bundleID = "85C27NK92C.com.flexibits.fantastical2.mac.helper",

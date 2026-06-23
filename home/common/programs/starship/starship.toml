@@ -154,7 +154,8 @@ format = "[$branch]($style)"
 style = "italic fg:#7c8377"     # 245
 
 [custom.git_branch]
-detect_folders = [".git", "!.jj"]
+when = "git rev-parse --is-inside-work-tree >/dev/null 2>&1 && ! jj root >/dev/null 2>&1"
+shell = ["bash", "--noprofile", "--norc"]
 command = "starship module git_branch"
 style = "italic fg:#7c8377"            # 245
 format = "[$output]($style)"
@@ -180,7 +181,8 @@ untracked = " [󱏘](fg:#eeeeee)"
 # untracked = "[󱏘${count}](fg:#7c8377)"
 
 [custom.git_status]
-detect_folders = [".git", "!.jj"]
+when = "git rev-parse --is-inside-work-tree >/dev/null 2>&1 && ! jj root >/dev/null 2>&1"
+shell = ["bash", "--noprofile", "--norc"]
 command = "starship module git_status"
 style = "#7c8377"
 format = '[$output](fg:$style)'

@@ -1,15 +1,11 @@
 # Worktrunk: Git worktree management CLI
 # https://github.com/max-sixty/worktrunk
-{
-  pkgs,
-  inputs,
-  ...
-}:
+{ pkgs, ... }:
 {
   programs.worktrunk = {
     enable = true;
-    # Use worktrunk-with-git-wt to install as git-wt subcommand (git wt <command>)
-    package = inputs.worktrunk.packages.${pkgs.stdenv.hostPlatform.system}.worktrunk-with-git-wt;
+    # Use nixpkgs' cached package; gitconfig maps `git wt <command>` to `wt <command>`.
+    package = pkgs.worktrunk;
     enableBashIntegration = true;
     enableZshIntegration = true;
     enableFishIntegration = true;
