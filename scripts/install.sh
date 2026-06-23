@@ -3,11 +3,43 @@
 # Paste into Terminal.app on a fresh or half-configured Mac:
 #   curl -sSfL https://raw.githubusercontent.com/megalithic/dotfiles/main/scripts/install.sh | bash
 #
+# Options:
+#   curl ... | bash -s -- --dir ~/custom/path          # custom clone target
+#   curl ... | bash -s -- --clone-mode backup           # backup existing dir
+#   curl ... | bash -s -- --clone-mode overwrite        # overwrite existing dir
+#   curl ... | bash -s -- --clone-mode skip             # skip clone if exists
+#   curl ... | bash -s -- --host megabookpro            # skip hostname prompt
+#
 # Safe to rerun: detects existing state, reports conflicts, asks before mutation.
 set -euo pipefail
 
 DOTFILES_REPO="https://github.com/megalithic/dotfiles"
 DOTFILES_DIR="$HOME/.dotfiles"
+CLONE_MODE="" # backup, overwrite, skip (empty = interactive)
+FORCE_HOST="" # skip hostname prompt if set
+
+# -- parse args --
+while [ $# -gt 0 ]; do
+  case "$1" in
+  --dir)
+    DOTFILES_DIR="${2:-$HOME/.dotfiles}"
+    shift 2
+    ;;
+  --clone-mode)
+    CLONE_MODE="${2:-}"
+    shift 2
+    ;;
+  --host)
+    FORCE_HOST="${2:-}"
+    shift 2
+    ;;
+  --help | -h)
+    echo "Usage: $0 [--dir <path>] [--clone-mode backup|overwrite|skip] [--host <name>]"
+    exit 0
+    ;;
+  *) shift ;;
+  esac
+done
 
 # -- helpers --
 say() { echo "░ :: $*"; }
@@ -46,10 +78,12 @@ confirm() {
 header
 
 CURRENT_HOST=$(hostname -s)
-say "Detected hostname: $CURRENT_HOST"
 
 HOST=""
-if [ "$CURRENT_HOST" = "megabookpro" ] || [ "$CURRENT_HOST" = "workbookpro" ]; then
+if [ -n "$FORCE_HOST" ]; then
+  HOST="$FORCE_HOST"
+  ok "Host override: $HOST"
+elif [ "$CURRENT_HOST" = "megabookpro" ] || [ "$CURRENT_HOST" = "workbookpro" ]; then
   HOST="$CURRENT_HOST"
   ok "Hostname matches known host: $HOST"
 else
@@ -59,7 +93,7 @@ else
   case "$REPLY" in
   megabookpro | workbookpro) HOST="$REPLY" ;;
   *)
-    say "Aborting. Set hostname first or choose a known host."
+    say "Aborting. Set hostname first or use --host <name>."
     exit 1
     ;;
   esac
@@ -95,20 +129,71 @@ if [ "$(uname -m)" = "arm64" ]; then
 fi
 
 # -- step 3: clone or update dotfiles --
+say "Dotfiles target: $DOTFILES_DIR"
+
+clone_repo() {
+  say "Cloning $DOTFILES_REPO → $DOTFILES_DIR..."
+  git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+}
+
 if [ -d "$DOTFILES_DIR/.git" ]; then
   ok "Dotfiles repo found at $DOTFILES_DIR"
   say "Pulling latest changes..."
   git -C "$DOTFILES_DIR" pull --ff-only || warn "Could not fast-forward; manual resolution may be needed"
+elif [ -d "$DOTFILES_DIR" ]; then
+  warn "$DOTFILES_DIR exists but is not a git repo."
+
+  resolve_mode() {
+    case "$CLONE_MODE" in
+    backup)
+      BACKUP="$DOTFILES_DIR.bak.$(date +%s)"
+      say "Backing up to $BACKUP..."
+      mv "$DOTFILES_DIR" "$BACKUP"
+      clone_repo
+      ;;
+    overwrite)
+      say "Overwriting $DOTFILES_DIR..."
+      rm -rf "$DOTFILES_DIR"
+      clone_repo
+      ;;
+    skip)
+      warn "Skipping clone (--clone-mode skip). Using existing directory."
+      ;;
+    *)
+      say "Options:"
+      say "  [b]ackup  — move existing to $DOTFILES_DIR.bak.<ts> then clone"
+      say "  [o]verwrite — delete existing and clone fresh"
+      say "  [s]kip     — use existing directory as-is"
+      REPLY=$(ask "Backup, overwrite, or skip? [b/o/s] " "")
+      case "$REPLY" in
+      b | B | backup)
+        CLONE_MODE=backup
+        resolve_mode
+        ;;
+      o | O | overwrite)
+        CLONE_MODE=overwrite
+        resolve_mode
+        ;;
+      s | S | skip)
+        CLONE_MODE=skip
+        resolve_mode
+        ;;
+      *)
+        warn "Invalid choice. Aborting."
+        exit 1
+        ;;
+      esac
+      ;;
+    esac
+  }
+  resolve_mode
 else
-  if [ -d "$DOTFILES_DIR" ]; then
-    BACKUP="$DOTFILES_DIR.bak.$(date +%s)"
-    warn "$DOTFILES_DIR exists but is not a git repo. Moving to $BACKUP"
-    mv "$DOTFILES_DIR" "$BACKUP"
-  fi
-  say "Cloning dotfiles to $DOTFILES_DIR..."
-  git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+  clone_repo
 fi
-cd "$DOTFILES_DIR"
+cd "$DOTFILES_DIR" || {
+  warn "Could not cd to $DOTFILES_DIR"
+  exit 1
+}
 
 # -- step 4: preflight --
 say "Running preflight checks..."
@@ -142,12 +227,22 @@ if ! confirm "Proceed with bootstrap?"; then
   exit 0
 fi
 
-# -- step 6: Homebrew --
+# -- step 6: Homebrew + mise --
 say "Ensuring Homebrew..."
 if [ -x "$DOTFILES_DIR/scripts/mise/ensure-homebrew" ]; then
   "$DOTFILES_DIR/scripts/mise/ensure-homebrew"
 else
   warn "ensure-homebrew not found — install manually"
+fi
+
+say "Installing mise via Homebrew..."
+if command -v mise >/dev/null 2>&1; then
+  ok "mise already installed: $(mise --version 2>/dev/null | head -1)"
+elif command -v brew >/dev/null 2>&1; then
+  brew install mise || warn "brew install mise failed"
+else
+  warn "Homebrew not available — install mise manually: https://mise.jdx.dev/getting-started.html"
+  exit 1
 fi
 
 # -- step 7: Nix --
@@ -159,19 +254,13 @@ fi
 # -- step 8: mise bootstrap --
 say "Running mise bootstrap..."
 
+MISE_VER=$(mise --version 2>/dev/null | head -1 | awk '{print $2}' || echo "0")
 MISE_MIN="2026.6.6"
-if command -v mise >/dev/null 2>&1; then
-  MISE_VER=$(mise --version 2>/dev/null | head -1 | awk '{print $2}' || echo "0")
-  if [ "$(printf '%s\n' "$MISE_MIN" "$MISE_VER" | sort -V | head -1)" != "$MISE_MIN" ]; then
-    warn "mise $MISE_VER is too old (need >= $MISE_MIN). Upgrade: brew upgrade mise"
-    exit 1
-  fi
-  ok "mise $MISE_VER"
-else
-  warn "mise not found. Install via: brew install mise"
-  warn "Then re-run this script."
+if [ "$(printf '%s\n' "$MISE_MIN" "$MISE_VER" | sort -V | head -1)" != "$MISE_MIN" ]; then
+  warn "mise $MISE_VER is too old (need >= $MISE_MIN). Upgrade: brew upgrade mise"
   exit 1
 fi
+ok "mise $MISE_VER"
 
 say "mise bootstrap (this may take a while)..."
 # Dry-run first to catch obvious issues

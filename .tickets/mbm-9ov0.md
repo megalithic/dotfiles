@@ -1,6 +1,6 @@
 ---
 id: mbm-9ov0
-status: open
+status: closed
 deps: 4:1:deps: 4:1:deps: 4:1:deps: 4:1:deps: 4:1:deps: [, mbm-55qf, mbm-qkmx, mbm-8afn, mbm-buez, mbm-c3sd]
 links: [mbm-buez, mbm-c3sd, mbm-ju5m, mbm-xqjv, mbm-m0rs, mbm-55qf, mbm-8afn, mbm-qkmx, mbm-77a2, mbm-sskn, mbm-s5i1]
 created: 2026-06-22T21:33:36Z
@@ -23,3 +23,25 @@ Replace the README Nix-first installation path with a Mac-first one-command boot
 5. Bootstrap is safe to rerun: repeated runs are idempotent or produce clear no-op/manual reports.
 6. Mac-first v1 is explicit; UGREEN NAS and Raspberry Pi/Home Assistant are documented as future platform goals, not blockers.
 7. No destructive bootstrap is run during implementation without explicit user approval.
+
+## Notes
+
+**2026-06-23T20:59:58Z**
+
+Implemented one-command mise bootstrap v1:
+
+1. README updated: single curl/bash one-liner, mise-first bootstrap documented, Nix retained for specific cases.
+2. scripts/install.sh — full entry point script:
+   - Detects hostname, prompts to confirm megabookpro/workbookpro
+   - Checks/installs CLT, accepts Xcode license, installs Rosetta 2
+   - Clones or updates ~/.dotfiles
+   - Runs dotfile-preflight (classifier) + doctor (preflight)
+   - Shows plan, asks confirmation before each phase
+   - Installs Homebrew → Nix (official installer) → mise bootstrap
+   - Post-bootstrap: apps, pi setup, fnox secrets, helium, complex defaults
+   - Sets ComputerName/HostName/LocalHostName
+   - Reports next steps (shell restart, fnox token, Okta, kanata)
+3. Idempotent: detects existing state, reports conflicts, skips installed components
+4. Non-destructive: all mutations behind confirmation prompts
+5. Mac-first v1; other platforms documented as future goals in README
+6. Shellcheck clean, lat_check passes, no destructive commands run.
