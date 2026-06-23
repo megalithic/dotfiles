@@ -73,6 +73,7 @@ default_mode = "symlink"
 "~/Library/Application Support/espanso" = "config/espanso"
 
 # -- store-flake-source files (currently Nix-store copies; mise links working-tree sources) --
+"~/.config/git/config" = "mise/fragments/git/config"
 "~/.gitconfig" = "home/common/programs/git/gitconfig"
 "~/.gitignore" = "home/common/programs/git/gitignore"
 "~/.ignore" = "home/common/programs/git/tool-ignore"
