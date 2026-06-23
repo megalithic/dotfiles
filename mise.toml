@@ -82,6 +82,14 @@ default_mode = "symlink"
 "~/.gitignore" = "home/common/programs/git/gitignore"
 "~/.ignore" = "home/common/programs/git/tool-ignore"
 
+# -- static tool configs (small, single-file configs previously Nix-store-backed) --
+"~/.config/bat/config" = "mise/dotfiles/bat/config"
+"~/.config/direnv/direnv.toml" = "mise/dotfiles/direnv/direnv.toml"
+"~/.config/starship.toml" = "home/common/programs/starship/starship.toml"
+"~/.config/karabiner/karabiner.json" = "home/common/programs/karabiner/karabiner.json"
+"~/.config/eza/theme.yml" = "mise/dotfiles/eza/theme.yml"
+"~/.config/ripgrep/rc" = "mise/dotfiles/ripgrep/rc"
+
 # -- symlink-each targets (existing mutable dirs, needs per-entry reconciliation) --
 "~/.local/bin" = { source = "mise/bin", mode = "symlink-each" }
 "~/bin" = { source = "bin", mode = "symlink-each" }
