@@ -1,0 +1,62 @@
+# Proposed replacement for /Users/seth/code/work/strive/verify-doctor/devenv.nix.
+# Existing repo already has a small mise.toml; this expands it toward devenv parity.
+
+min_version = { hard = "2026.6.6" }
+
+[settings]
+experimental = true
+auto_install = true
+
+[tools]
+elixir = "1.19.5-otp-28"
+erlang = "28.3.3"
+node = "24.11.1"
+postgres = "18"
+
+[env]
+_.file = ".env"
+RX_METRICS_PORT = "-1"
+PI_DISABLE_EMBEDDED = "1"
+PI_ELIXIR_DEBUG = "1"
+PI_ELIXIR_DEBUG_LOG = "/tmp/pi-elixir-debug.json"
+
+[bootstrap.packages]
+"brew:zxing-cpp" = "latest"
+"brew:onnxruntime" = "latest"
+
+[tasks.status]
+description = "Show project tool and service status"
+run = "scripts/mise/status"
+
+[tasks."app:setup"]
+description = "Install Hex/Rebar, fetch deps, assets, and setup database"
+run = "mix archive.install github hexpm/hex branch main --force && mix local.rebar --force && mix deps.get && mix assets.setup && mix ecto.create || mix ecto.drop; mix ecto.reset; MIX_ENV=test mix ecto.reset"
+
+[tasks."app:test"]
+description = "Run mix test"
+run = "mix test"
+
+[tasks."app:reset-db"]
+description = "Recreate dev/test databases"
+run = "mix ecto.reset && MIX_ENV=test mix ecto.reset"
+
+[tasks."services:postgres"]
+description = "Start postgres for local dev; replace with process-compose/launchd wrapper"
+run = "scripts/mise/postgres"
+
+[tasks."app:start"]
+description = "Start Phoenix with worktree-safe ports"
+run = "scripts/mise/start-phx"
+
+[tasks."worktree:setup"]
+description = "Initialize a new git worktree"
+depends = ["services:postgres"]
+run = "mise run app:setup"
+
+[tasks."worktree:services"]
+description = "Start app services for a worktree"
+run = "mise run app:start"
+
+[tasks."worktree:teardown"]
+description = "Stop services before removing a worktree"
+run = "scripts/mise/worktree-teardown"

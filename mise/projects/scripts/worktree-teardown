@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+state="${DEVENV_STATE:-$PWD/.devenv/state}"
+if [ -f "$state/phoenix.port" ]; then
+  phx_port="$(cat "$state/phoenix.port")"
+  lsof -tiTCP:"$phx_port" -sTCP:LISTEN 2>/dev/null | xargs -r kill 2>/dev/null || true
+  trash "$state/phoenix.port" 2>/dev/null || python3 - "$state/phoenix.port" <<'PY'
+import os, sys
+try:
+    os.unlink(sys.argv[1])
+except FileNotFoundError:
+    pass
+PY
+fi
+if [ -n "${SNAME:-}" ]; then
+  pkill -f -- "--sname ${SNAME}" 2>/dev/null || true
+fi
+if [ -d "$state/postgres" ]; then
+  pg_ctl -D "$state/postgres" stop -m fast >/dev/null 2>&1 || true
+fi
+echo "worktree:teardown complete"

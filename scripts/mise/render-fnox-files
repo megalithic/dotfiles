@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+secrets_dir="$config_home/fnox/secrets"
+mkdir -p "$secrets_dir/apple-developer"
+
+if ! command -v fnox >/dev/null 2>&1; then
+  echo "fnox missing; skip secret rendering" >&2
+  exit 0
+fi
+
+if [ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
+  if token="$(fnox get OP_SERVICE_ACCOUNT_TOKEN 2>/dev/null)" && [ -n "$token" ]; then
+    export OP_SERVICE_ACCOUNT_TOKEN="$token"
+  else
+    echo "OP_SERVICE_ACCOUNT_TOKEN unavailable; skip 1Password-backed secrets" >&2
+    exit 0
+  fi
+fi
+
+write_secret() {
+  local key="$1" path="$2" mode="${3:-0600}"
+  local tmp
+  tmp="$(mktemp)"
+  if fnox get "$key" > "$tmp"; then
+    install -m "$mode" "$tmp" "$path"
+  fi
+  trash "$tmp" 2>/dev/null || python3 - "$tmp" <<'PY'
+import os, sys
+try:
+    os.unlink(sys.argv[1])
+except FileNotFoundError:
+    pass
+PY
+}
+
+write_secret ENV_VARS_SH "$secrets_dir/env-vars.sh" 0600
+write_secret S3CFG "$HOME/.s3cfg" 0600
+write_secret APPLE_ID_EMAIL "$secrets_dir/apple-developer/apple-id" 0600
+write_secret APPLE_TEAM_ID "$secrets_dir/apple-developer/team-id" 0600
+write_secret APPLE_NOTARYTOOL_PASSWORD "$secrets_dir/apple-developer/notarytool-password" 0600
+
+if fnox get WORK_ENV_VARS_SH >/dev/null 2>&1; then
+  write_secret WORK_ENV_VARS_SH "$secrets_dir/work-env-vars.sh" 0600
+fi

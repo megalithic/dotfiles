@@ -1,0 +1,7 @@
+alias pic 'pi -c'
+alias pir 'pi -r'
+alias pis 'pinvim'
+alias pisock 'pinvim'
+alias ll 'eza -la --git --icons=auto'
+alias ls 'eza --icons=auto'
+alias cat 'bat'

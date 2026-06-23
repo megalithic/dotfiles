@@ -1,0 +1,25 @@
+[settings]
+experimental = true
+auto_install = true
+auto_env = true
+trusted_config_paths = ["~/.dotfiles", "~/code", "~/src"]
+idiomatic_version_file_enable_tools = ["node", "python", "ruby", "rust"]
+
+[settings.status]
+show_env = false
+show_tools = false
+
+[env]
+DOTS = "~/.dotfiles"
+CODE = "~/code"
+XDG_CONFIG_HOME = "~/.config"
+XDG_DATA_HOME = "~/.local/share"
+XDG_STATE_HOME = "~/.local/state"
+XDG_CACHE_HOME = "~/.cache"
+PI_STATE_DIR = "~/.local/state/pi"
+
+[shell_alias]
+pic = "pi -c"
+pir = "pi -r"
+pis = "pinvim"
+pisock = "pinvim"

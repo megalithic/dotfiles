@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+state="${DEVENV_STATE:-$PWD/.devenv/state}"
+mkdir -p "$state"
+pg_port="${PGPORT:-5432}"
+if [ -f "$state/postgres/postmaster.pid" ]; then
+  pg_port="$(sed -n '4p' "$state/postgres/postmaster.pid" 2>/dev/null || echo "$pg_port")"
+fi
+
+until pg_isready -h "${HOST:-127.0.0.1}" -p "$pg_port" -q; do
+  sleep 1
+done
+
+base_port="${PORT:-4000}"
+phx_port="$base_port"
+while lsof -iTCP:"$phx_port" -sTCP:LISTEN -t >/dev/null 2>&1; do
+  phx_port=$((phx_port + 1))
+done
+
+echo "$phx_port" > "$state/phoenix.port"
+export PGPORT="$pg_port"
+export PORT="$phx_port"
+exec iex --sname "${SNAME:-dev-$(basename "$PWD")}" -S mix phx.server

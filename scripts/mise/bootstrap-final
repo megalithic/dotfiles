@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+scripts/mise/ensure-homebrew
+scripts/mise/install-apps
+scripts/mise/install-pi-tools
+scripts/mise/render-fnox-files || true
+scripts/mise/setup-pi
+scripts/mise/apply-macos-complex-defaults
+scripts/mise/install-helium
+scripts/mise/doctor

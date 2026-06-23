@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export PATH="$HOME/.pi/agent/bin:$HOME/.local/bin:/opt/homebrew/bin:$PATH"
+exec sesame "$@"

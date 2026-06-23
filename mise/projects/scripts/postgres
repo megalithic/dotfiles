@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Minimal project-local Postgres launcher for mise migration prototypes.
+# Prefer replacing this with process-compose once per-project service behavior is proven.
+state="${DEVENV_STATE:-$PWD/.devenv/state}"
+pgdata="$state/postgres"
+mkdir -p "$pgdata"
+port="${PGPORT:-5432}"
+
+if [ ! -f "$pgdata/PG_VERSION" ]; then
+  initdb -D "$pgdata"
+fi
+
+if pg_ctl -D "$pgdata" status >/dev/null 2>&1; then
+  echo "postgres already running"
+  exit 0
+fi
+
+pg_ctl -D "$pgdata" -o "-k '$pgdata' -h 127.0.0.1 -p $port" -l "$state/postgres.log" start

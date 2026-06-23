@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Values mise bootstrap cannot express yet: nested defaults, symbolic hotkeys,
+# text replacements, and settings that need activateSettings.
+
+defaults write com.apple.WindowManager EnableStandardClickToShowDesktop -int 0
+defaults write com.apple.WindowManager StandardHideDesktopIcons -int 0
+defaults write com.apple.WindowManager HideDesktop -int 0
+defaults write com.apple.WindowManager StageManagerHideWidgets -int 0
+defaults write com.apple.WindowManager StandardHideWidgets -int 0
+defaults write com.apple.screensaver askForPassword -bool true
+defaults write com.apple.screensaver askForPasswordDelay -int 0
+defaults write com.apple.AdLib allowApplePersonalizedAdvertising -bool false
+defaults write com.apple.commerce AutoUpdate -bool true
+defaults write com.apple.ImageCapture disableHotPlug -bool true
+defaults write bluetoothaudiod "AAC Bitrate" -int 320
+defaults write bluetoothaudiod "Enable AAC codec" -bool true
+defaults write bluetoothaudiod "Enable AptX codec" -bool true
+
+# Full symbolic hotkey/text-replacement migration remains in design doc because
+# nested plist writes need a small deterministic renderer instead of ad hoc shell.
+/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u || true
+killall Dock >/dev/null 2>&1 || true
+killall Finder >/dev/null 2>&1 || true
