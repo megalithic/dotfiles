@@ -38,6 +38,9 @@ default_mode = "symlink"
 "brew:ykman" = "latest"
 
 [dotfiles]
+# -- shell init — bash support alongside fish --
+"~/.bashrc" = "mise/dotfiles/bash/fnox.sh"
+
 # -- mise-owned config (replaces Nix-generated file after explicit handoff) --
 "~/.config/mise/config.toml" = "mise/global.toml"
 
@@ -287,6 +290,14 @@ run = "scripts/mise/install-apps"
 [tasks."fnox:render"]
 description = "Render fnox/1Password secrets to legacy file paths"
 run = "scripts/mise/render-fnox-files"
+
+[tasks."fnox:check"]
+description = "Check fnox secrets are present without writing files"
+run = "scripts/mise/render-fnox-files --check"
+
+[tasks."fnox:dry-run"]
+description = "Show what fnox secrets would be written"
+run = "scripts/mise/render-fnox-files --dry-run"
 
 [tasks."helium:install"]
 description = "Install patched Helium with Widevine into /Applications"

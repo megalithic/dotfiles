@@ -1,46 +1,130 @@
 #!/usr/bin/env bash
+# Render fnox/1Password secrets to legacy output paths.
+# Replaces OpNix (home/common/programs/opnix/default.nix).
+#
+# Usage:
+#   scripts/mise/render-fnox-files           # render (skips if fnox/token missing)
+#   scripts/mise/render-fnox-files --check   # validate only, no writes
+#   scripts/mise/render-fnox-files --dry-run # show what would be written
 set -euo pipefail
 
+mode="${1:-render}"
 config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
 secrets_dir="$config_home/fnox/secrets"
-mkdir -p "$secrets_dir/apple-developer"
 
-if ! command -v fnox >/dev/null 2>&1; then
-  echo "fnox missing; skip secret rendering" >&2
-  exit 0
-fi
+log()  { echo "fnox: $*" >&2; }
+skip() { log "SKIP: $*"; }
 
-if [ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
-  if token="$(fnox get OP_SERVICE_ACCOUNT_TOKEN 2>/dev/null)" && [ -n "$token" ]; then
-    export OP_SERVICE_ACCOUNT_TOKEN="$token"
-  else
-    echo "OP_SERVICE_ACCOUNT_TOKEN unavailable; skip 1Password-backed secrets" >&2
-    exit 0
+# -- prerequisite checks --
+check_prereqs() {
+  local fail=0
+  if ! command -v fnox >/dev/null 2>&1; then
+    skip "fnox not installed (mise tool: fnox)"
+    return 1
   fi
-fi
+  if [ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
+    if token="$(fnox get OP_SERVICE_ACCOUNT_TOKEN 2>/dev/null)" && [ -n "$token" ]; then
+      export OP_SERVICE_ACCOUNT_TOKEN="$token"
+    else
+      skip "OP_SERVICE_ACCOUNT_TOKEN not available (set via fnox or env)"
+      return 1
+    fi
+  fi
+  return 0
+}
+
+# -- inventory of secrets and output paths --
+inventory() {
+  cat <<'EOF'
+ENV_VARS_SH            ~/.config/fnox/secrets/env-vars.sh               0600  fish, bash, zsh init, pi wrapper
+S3CFG                  ~/.s3cfg                                        0600  s3cmd
+APPLE_ID_EMAIL         ~/.config/fnox/secrets/apple-developer/apple-id  0600  fish, bash, zsh init, helium notarization
+APPLE_TEAM_ID          ~/.config/fnox/secrets/apple-developer/team-id   0600  fish, bash, zsh init, helium notarization
+APPLE_NOTARYTOOL_PASSWORD ~/.config/fnox/secrets/apple-developer/notarytool-password 0600  fish, bash, zsh init, helium notarization
+EOF
+}
 
 write_secret() {
   local key="$1" path="$2" mode="${3:-0600}"
-  local tmp
-  tmp="$(mktemp)"
-  if fnox get "$key" > "$tmp"; then
-    install -m "$mode" "$tmp" "$path"
-  fi
-  trash "$tmp" 2>/dev/null || python3 - "$tmp" <<'PY'
-import os, sys
-try:
-    os.unlink(sys.argv[1])
-except FileNotFoundError:
-    pass
-PY
+  local expanded_path="${path/#~\//$HOME/}"
+
+  case "$mode" in
+    check)
+      if [ -f "$expanded_path" ]; then
+        log "  ok: $expanded_path"
+      else
+        log "  missing: $expanded_path"
+        return 1
+      fi
+      ;;
+    dry-run)
+      log "  would write: $key → $expanded_path ($mode)"
+      ;;
+    render)
+      local tmp
+      tmp="$(mktemp)"
+      if fnox get "$key" > "$tmp" 2>/dev/null; then
+        mkdir -p "$(dirname "$expanded_path")"
+        install -m "$mode" "$tmp" "$expanded_path"
+        log "  wrote: $key → $expanded_path"
+      else
+        log "  failed: fnox get $key"
+      fi
+      rm -f "$tmp"
+      ;;
+  esac
 }
 
-write_secret ENV_VARS_SH "$secrets_dir/env-vars.sh" 0600
-write_secret S3CFG "$HOME/.s3cfg" 0600
-write_secret APPLE_ID_EMAIL "$secrets_dir/apple-developer/apple-id" 0600
-write_secret APPLE_TEAM_ID "$secrets_dir/apple-developer/team-id" 0600
-write_secret APPLE_NOTARYTOOL_PASSWORD "$secrets_dir/apple-developer/notarytool-password" 0600
-
-if fnox get WORK_ENV_VARS_SH >/dev/null 2>&1; then
-  write_secret WORK_ENV_VARS_SH "$secrets_dir/work-env-vars.sh" 0600
-fi
+# -- main --
+case "$mode" in
+  check|--check)
+    echo "fnox: checking prerequisites..."
+    check_prereqs || exit 0
+    echo "fnox: checking secret files..."
+    fail=0
+    write_secret ENV_VARS_SH "$secrets_dir/env-vars.sh" check || fail=1
+    write_secret S3CFG "$HOME/.s3cfg" check || fail=1
+    write_secret APPLE_ID_EMAIL "$secrets_dir/apple-developer/apple-id" check || fail=1
+    write_secret APPLE_TEAM_ID "$secrets_dir/apple-developer/team-id" check || fail=1
+    write_secret APPLE_NOTARYTOOL_PASSWORD "$secrets_dir/apple-developer/notarytool-password" check || fail=1
+    if fnox get WORK_ENV_VARS_SH >/dev/null 2>&1; then
+      write_secret WORK_ENV_VARS_SH "$secrets_dir/work-env-vars.sh" check || fail=1
+    fi
+    [ "$fail" -eq 0 ] && echo "fnox: all secrets present" || echo "fnox: some secrets missing" >&2
+    exit "$fail"
+    ;;
+  dry-run|--dry-run)
+    echo "fnox: DRY RUN — no files will be written"
+    check_prereqs || exit 0
+    write_secret ENV_VARS_SH "$secrets_dir/env-vars.sh" dry-run
+    write_secret S3CFG "$HOME/.s3cfg" dry-run
+    write_secret APPLE_ID_EMAIL "$secrets_dir/apple-developer/apple-id" dry-run
+    write_secret APPLE_TEAM_ID "$secrets_dir/apple-developer/team-id" dry-run
+    write_secret APPLE_NOTARYTOOL_PASSWORD "$secrets_dir/apple-developer/notarytool-password" dry-run
+    if fnox get WORK_ENV_VARS_SH >/dev/null 2>&1; then
+      write_secret WORK_ENV_VARS_SH "$secrets_dir/work-env-vars.sh" dry-run
+    fi
+    echo "fnox: dry-run complete"
+    ;;
+  render|"")
+    log "rendering secrets..."
+    check_prereqs || exit 0
+    mkdir -p "$secrets_dir/apple-developer"
+    write_secret ENV_VARS_SH "$secrets_dir/env-vars.sh" 0600
+    write_secret S3CFG "$HOME/.s3cfg" 0600
+    write_secret APPLE_ID_EMAIL "$secrets_dir/apple-developer/apple-id" 0600
+    write_secret APPLE_TEAM_ID "$secrets_dir/apple-developer/team-id" 0600
+    write_secret APPLE_NOTARYTOOL_PASSWORD "$secrets_dir/apple-developer/notarytool-password" 0600
+    if fnox get WORK_ENV_VARS_SH >/dev/null 2>&1; then
+      write_secret WORK_ENV_VARS_SH "$secrets_dir/work-env-vars.sh" 0600
+    fi
+    log "complete"
+    ;;
+  inventory|--inventory)
+    inventory
+    ;;
+  *)
+    echo "Usage: $0 [--check|--dry-run|--inventory]" >&2
+    exit 1
+    ;;
+esac
