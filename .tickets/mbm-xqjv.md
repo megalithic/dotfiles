@@ -1,6 +1,6 @@
 ---
 id: mbm-xqjv
-status: open
+status: closed
 deps: []
 links:
   [
@@ -50,3 +50,15 @@ Updated symlink research: added symlink ownership inventory to lat.md/migration/
 **2026-06-22T21:34:05Z**
 
 Created follow-up migration tickets: mbm-55qf symlink classifier, mbm-qkmx dotfile reconciliation, mbm-8afn generated fragments, mbm-ju5m kanata/kanata-bar, mbm-buez espanso, mbm-m0rs Okta Verify, mbm-c3sd 1Password validation, mbm-9ov0 one-command bootstrap. Linked them to this audit and added deps from mbm-s5i1/mbm-nhdu where classifier/reconcile blocks safe dry-run hardening.
+
+**2026-06-24T01:09:47Z**
+
+Audit closeout:
+
+- 8 of 10 cutover blockers now checked (previously 3).
+- Remaining 2 are explicitly deferred:
+  - Complex defaults renderer (symbolic hotkeys/text replacements) — deferred, script exists
+  - Workbookpro partial-install repair — deferred, depends on mbm-z03i hostname config
+- All 15 closed migration tickets implemented and validated.
+- Checklist rows reflect current state: safe/Nix-retained/deferred status for all items.
+- lat_check passes.

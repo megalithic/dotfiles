@@ -334,13 +334,13 @@ Every Home Manager program module needs a target decision even if its detailed r
 
 These items block destructive bootstrap on either MacBook Pro.
 
-- [ ] Dotfile adoption/backup policy for existing Nix-store links and real directories.
-- [ ] Kanata plus kanata-bar parity or explicit Nix-retained plan.
-- [ ] Espanso binary/config/launchd parity.
+- [x] Dotfile adoption/backup policy for existing Nix-store links and real directories.
+- [x] Kanata plus kanata-bar parity or explicit Nix-retained plan.
+- [x] Espanso binary/config/launchd parity.
 - [x] Okta Verify privileged installer plan.
 - [x] 1Password GUI/CLI/signing validation.
-- [ ] Fnox age recipient/token bootstrap and shell-loading parity.
+- [x] Fnox age recipient/token bootstrap and shell-loading parity.
 - [x] llama-server install source or explicit Nix-retained service.
-- [ ] Complex defaults renderer for symbolic hotkeys and text replacements, or manual retain decision.
-- [ ] Hammerspoon generated fragments and `bin/hs-reload` validation.
-- [ ] Workbookpro partial-install repair path.
+- [ ] Complex defaults renderer for symbolic hotkeys and text replacements, or manual retain decision (deferred).
+- [x] Hammerspoon generated fragments and `bin/hs-reload` validation.
+- [ ] Workbookpro partial-install repair path (deferred — depends on mbm-z03i hostname config).
