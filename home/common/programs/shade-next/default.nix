@@ -40,6 +40,9 @@ let
     [app]
     launch_hidden = true
     live_debug = false
+    # Seconds the panel may stay hidden before its composer auto-resets to the
+    # launcher state (an in-progress note is always preserved). 0 disables.
+    auto_reset_timeout_seconds = 300
 
     [editor]
     nvim_host = true
