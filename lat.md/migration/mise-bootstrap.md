@@ -29,6 +29,37 @@ Mise bootstrap is not a full nix-darwin or Home Manager clone.
 
 Keep special handling for privileged/system behavior: Determinate Nix install or repair, 1Password GUI placement in `/Applications`, Okta Verify package installation, kanata TCC-safe binary path, complex nested macOS plist writes, and any service that needs LaunchDaemons rather than user LaunchAgents.
 
+## Host-specific configuration
+
+Hostname-based branching uses `$(hostname -s)` in imperative scripts. `mise.toml` remains a single shared config; per-host differences are handled in scripts rather than config file variants.
+
+**Current overrides:**
+
+| Host          | Script                              | Behavior                                                               |
+| ------------- | ----------------------------------- | ---------------------------------------------------------------------- |
+| `workbookpro` | `scripts/mise/llama-server-launchd` | Higher `ctx_size` (32768), `parallel` (2), `models_max` (2) — more RAM |
+| `workbookpro` | `scripts/mise/render-fnox-files`    | Conditionally renders `WORK_ENV_VARS_SH` if the 1Password item exists  |
+| All           | `scripts/install.sh`                | Detects hostname, sets ComputerName/HostName/LocalHostName             |
+
+**Pattern for adding overrides:**
+
+```bash
+case "$(hostname -s)" in
+  workbookpro)
+    # work-specific settings
+    ;;
+  megabookpro)
+    # personal defaults (fallback)
+    ;;
+esac
+```
+
+**Future platforms** (documented, not implemented):
+
+- Linux (UGREEN NAS, Raspberry Pi/Home Assistant): platform detection via `uname -s` and `/etc/os-release`, following the AllySummers pattern
+- Platform-specific Brewfile variants, apt/pacman package lists
+- Platform-agnostic dotfiles with host-specific conf.d overrides
+
 ## Secrets
 
 Fnox becomes the user-land secret resolver and keeps 1Password as the vault.
