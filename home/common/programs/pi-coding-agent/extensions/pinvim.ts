@@ -985,10 +985,47 @@ const spawnReviewNvim = (
   return { ok: true, socket, worktree: root, workspaceId, pane };
 };
 
+interface FocusPaneResult {
+  ok: boolean;
+  pane?: string;
+  error?: string;
+}
+
+/**
+ * Focus the tmux pane hosting the paired review Nvim so the user lands in the
+ * review surface after `/piview`. Defaults to the active peer's pane; callers
+ * may pass an explicit pane id (e.g. a freshly spawned review pane).
+ */
+const focusReviewPane = (paneOverride?: string): FocusPaneResult => {
+  if (!process.env.TMUX) {
+    return { ok: false, error: "not in tmux" };
+  }
+  const pane = paneOverride || getActivePeer()?.tmux?.pane;
+  if (!pane) {
+    return { ok: false, error: "no paired Nvim pane known" };
+  }
+  // Select the window containing the pane first (no-op if same window), then
+  // the pane itself. Pane ids are global so they resolve across windows.
+  spawnSync("tmux", ["select-window", "-t", pane], { timeout: 800 });
+  const res = spawnSync("tmux", ["select-pane", "-t", pane], {
+    encoding: "utf-8",
+    timeout: 800,
+  });
+  if (res.status !== 0) {
+    return {
+      ok: false,
+      pane,
+      error: (res.stderr || "").trim() || "tmux select-pane failed",
+    };
+  }
+  return { ok: true, pane };
+};
+
 const pinvimEditorServiceApi = {
   query: editorServiceRequest,
   status: () => ({ ...editorService }),
   spawnReviewNvim,
+  focusReviewPane,
 };
 
 (

@@ -41,6 +41,15 @@ const SCOPES = [
 
 type Scope = (typeof SCOPES)[number];
 
+const SCOPE_DESCRIPTIONS: Record<Scope, string> = {
+  uncommitted: "Working tree changes not yet committed",
+  unpushed: "Commits on this branch not yet pushed",
+  branch: "Full branch diff against its base",
+  pr: "Open the PR review flow (Guh)",
+  ticket: "Changes associated with the active ticket",
+  worktrees: "Overview across all worktrees",
+};
+
 interface EditorServiceApi {
   query: (
     method: string,
@@ -59,6 +68,11 @@ interface EditorServiceApi {
     socket?: string;
     worktree?: string;
     workspaceId?: string;
+    pane?: string;
+    error?: string;
+  };
+  focusReviewPane: (paneOverride?: string) => {
+    ok: boolean;
     pane?: string;
     error?: string;
   };
@@ -92,8 +106,19 @@ export default function (pi: ExtensionAPI): void {
   pi.registerCommand("piview", {
     description:
       "Open worktree-aware :PiReview in the paired Neovim (uncommitted|unpushed|branch|pr|ticket|worktrees)",
+    getArgumentCompletions: (prefix: string) => {
+      const items = SCOPES.map((scope) => ({
+        value: scope,
+        label: scope,
+        description: SCOPE_DESCRIPTIONS[scope],
+      }));
+      const filtered = items.filter((item) =>
+        item.value.startsWith(prefix.trimStart()),
+      );
+      return filtered.length > 0 ? filtered : null;
+    },
     handler: async (args, ctx: ExtensionContext) => {
-      const raw = (args[0] || "uncommitted").trim();
+      const raw = args?.trim().split(/\s+/)[0] || "uncommitted";
       if (!isScope(raw)) {
         ctx.ui.notify(
           `piview: unknown scope '${raw}'. Valid: ${SCOPES.join(", ")}`,
@@ -130,6 +155,7 @@ export default function (pi: ExtensionAPI): void {
           );
           return;
         }
+        editorService.focusReviewPane(spawned.pane);
         ctx.ui.notify(
           `piview: spawned review Nvim (${scope}) in new pane; pairing to ${spawned.worktree}`,
           "info",
@@ -146,6 +172,8 @@ export default function (pi: ExtensionAPI): void {
         );
         return;
       }
+
+      editorService.focusReviewPane();
 
       const meta = result.metadata;
       const summary = meta
