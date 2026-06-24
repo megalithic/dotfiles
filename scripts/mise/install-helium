@@ -116,3 +116,16 @@ sudo rsync -a --inplace --checksum --delete --chmod=u+w "$work_app/" "$app_dst/"
 mkdir -p "$HOME/.local/bin"
 ln -sfn "$app_dst/Contents/MacOS/Helium" "$HOME/.local/bin/helium"
 echo "Helium ${version} installed with Widevine ${widevine_version}."
+
+# Helium reclaims the com.adobe.pdf default via LaunchServices on install.
+# Re-assert the preferred PDF handler (Preview). Idempotent.
+pdf_handler="com.apple.Preview"
+if command -v duti >/dev/null 2>&1; then
+  if [ "$(duti -x pdf 2>/dev/null | tail -1 || true)" != "$pdf_handler" ]; then
+    duti -s "$pdf_handler" com.adobe.pdf all \
+      && echo "Re-asserted PDF handler to $pdf_handler." \
+      || echo "duti failed to set PDF handler (non-fatal)."
+  fi
+else
+  echo "duti not found; skipping PDF handler re-assert."
+fi
