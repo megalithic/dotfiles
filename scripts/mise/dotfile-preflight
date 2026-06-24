@@ -1,0 +1,293 @@
+#!/usr/bin/env python3
+"""Read-only preflight for mise dotfile targets.
+
+Reads mise.toml [dotfiles], follows symlink chains for installed targets, and
+classifies current ownership before any bootstrap/adoption step mutates files.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+import stat
+import sys
+import tomllib
+from typing import Any
+
+REPO_FINAL = "repo-final"
+STORE_FLAKE_SOURCE = "store-flake-source"
+STORE_GENERATED = "store-generated"
+EXTERNAL_FINAL = "external-final"
+REAL_DIRECTORY = "real-directory"
+REAL_FILE = "real-file"
+MISSING = "missing"
+UNKNOWN_CONFLICT = "unknown/conflict"
+
+SAFE_CLASSES = {REPO_FINAL, MISSING}
+NEEDS_HANDLING_CLASSES = {
+    STORE_FLAKE_SOURCE,
+    STORE_GENERATED,
+    EXTERNAL_FINAL,
+    REAL_DIRECTORY,
+    REAL_FILE,
+}
+CONFLICT_CLASSES = {UNKNOWN_CONFLICT}
+
+# Inventory-only paths not yet in mise.toml [dotfiles] (empty when fully reconciled)
+KNOWN_INVENTORY: list[tuple[str, str]] = []
+
+
+def repo_root() -> Path:
+    start = Path.cwd().resolve()
+    for candidate in (start, *start.parents):
+        if (candidate / ".git").exists():
+            return candidate
+    raise SystemExit("error: not inside git worktree")
+
+
+def display_path(path: Path) -> str:
+    home = Path.home()
+    try:
+        return "~" + str(path).removeprefix(str(home)) if path.is_absolute() and path == home or home in path.parents else str(path)
+    except RuntimeError:
+        return str(path)
+
+
+def expand_target(value: str) -> Path:
+    return Path(os.path.expandvars(os.path.expanduser(value)))
+
+
+def source_value(value: Any) -> str:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict) and isinstance(value.get("source"), str):
+        return value["source"]
+    return ""
+
+
+def configured_dotfiles(config: dict[str, Any]) -> list[dict[str, Any]]:
+    dotfiles = config.get("dotfiles")
+    if not isinstance(dotfiles, dict):
+        raise SystemExit("error: mise.toml has no [dotfiles] table")
+    rows = []
+    for target, value in dotfiles.items():
+        source = source_value(value)
+        mode = value.get("mode", "symlink") if isinstance(value, dict) else "symlink"
+        rows.append({"target": target, "source": source, "mode": mode})
+    return rows
+
+
+def chain_for(path: Path) -> tuple[list[Path], str | None]:
+    chain = [path]
+    current = path
+    seen: set[Path] = set()
+
+    while True:
+        try:
+            st = os.lstat(current)
+        except FileNotFoundError:
+            if len(chain) == 1:
+                return chain, None
+            return chain, "broken symlink target"
+        except OSError as exc:
+            return chain, f"unreadable: {exc}"
+
+        if not stat.S_ISLNK(st.st_mode):
+            return chain, None
+
+        if current in seen:
+            return chain, "symlink loop"
+        seen.add(current)
+
+        try:
+            link_text = os.readlink(current)
+        except OSError as exc:
+            return chain, f"readlink failed: {exc}"
+
+        next_path = Path(link_text)
+        if not next_path.is_absolute():
+            next_path = current.parent / next_path
+        current = next_path.expanduser()
+        chain.append(current)
+
+
+def under(path: Path, root: Path) -> bool:
+    try:
+        path.resolve(strict=False).relative_to(root.resolve(strict=False))
+        return True
+    except ValueError:
+        return False
+
+
+def is_store_path(path: Path) -> bool:
+    return str(path).startswith("/nix/store/")
+
+
+def file_same_as_source(final: Path, source: Path) -> bool:
+    try:
+        if not final.is_file() or not source.is_file():
+            return False
+        return final.read_bytes() == source.read_bytes()
+    except OSError:
+        return False
+
+
+def dir_has_source_shape(final: Path, source: Path) -> bool:
+    try:
+        if not final.is_dir() or not source.is_dir():
+            return False
+        source_names = sorted(p.name for p in source.iterdir())
+        final_names = sorted(p.name for p in final.iterdir())
+        return source_names == final_names and bool(source_names)
+    except OSError:
+        return False
+
+
+def store_class(final: Path, source: Path, chain: list[Path]) -> str:
+    chain_text = " -> ".join(str(p) for p in chain)
+    final_text = str(final)
+    source_name = source.name
+    if "-source/" in chain_text or final_text.endswith("-source"):
+        return STORE_FLAKE_SOURCE
+    if source.exists() and (file_same_as_source(final, source) or dir_has_source_shape(final, source)):
+        return STORE_FLAKE_SOURCE
+    if source_name and source_name in final_text and source.exists() and source.is_file():
+        return STORE_FLAKE_SOURCE
+    return STORE_GENERATED
+
+
+def classify(target: Path, source: Path, roots: list[Path]) -> dict[str, Any]:
+    chain, error = chain_for(target)
+    final = chain[-1]
+
+    if error is not None:
+        return result(target, source, chain, UNKNOWN_CONFLICT, error)
+
+    if len(chain) == 1:
+        try:
+            st = os.lstat(target)
+        except FileNotFoundError:
+            return result(target, source, chain, MISSING, "target does not exist")
+        except OSError as exc:
+            return result(target, source, chain, UNKNOWN_CONFLICT, f"unreadable: {exc}")
+
+        if stat.S_ISDIR(st.st_mode):
+            return result(target, source, chain, REAL_DIRECTORY, "existing real directory")
+        if stat.S_ISREG(st.st_mode):
+            return result(target, source, chain, REAL_FILE, "existing real file")
+        return result(target, source, chain, UNKNOWN_CONFLICT, "existing special file")
+
+    if any(under(final, root) for root in roots):
+        return result(target, source, chain, REPO_FINAL, "symlink final target is inside repo checkout")
+    if is_store_path(final):
+        return result(target, source, chain, store_class(final, source, chain), "symlink final target is inside /nix/store")
+    if final.exists():
+        return result(target, source, chain, EXTERNAL_FINAL, "symlink final target is outside repo and store")
+    return result(target, source, chain, UNKNOWN_CONFLICT, "symlink final target missing")
+
+
+def result(target: Path, source: Path, chain: list[Path], cls: str, note: str) -> dict[str, Any]:
+    if cls in SAFE_CLASSES:
+        status = "safe"
+    elif cls in NEEDS_HANDLING_CLASSES:
+        status = "needs-handling"
+    else:
+        status = "conflict"
+    return {
+        "target": str(target),
+        "source": str(source),
+        "final": str(chain[-1]),
+        "chain": [str(p) for p in chain],
+        "class": cls,
+        "status": status,
+        "note": note,
+    }
+
+
+def print_table(rows: list[dict[str, Any]]) -> None:
+    headers = ["status", "class", "origin", "target", "source", "final"]
+    data = [
+        [
+            row["status"],
+            row["class"],
+            row["origin"],
+            display_path(Path(row["target"])),
+            row["source"],
+            display_path(Path(row["final"])),
+        ]
+        for row in rows
+    ]
+    widths = [len(header) for header in headers]
+    for line in data:
+        widths = [max(width, len(cell)) for width, cell in zip(widths, line, strict=True)]
+
+    fmt = "  ".join(f"{{:<{width}}}" for width in widths)
+    print(fmt.format(*headers))
+    print(fmt.format(*( "-" * width for width in widths)))
+    for line in data:
+        print(fmt.format(*line))
+
+    print("\nSymlink chains:")
+    for row in rows:
+        chain = " -> ".join(display_path(Path(p)) for p in row["chain"])
+        print(f"- {display_path(Path(row['target']))} ({row['origin']}): {chain}")
+        print(f"  {row['status']}: {row['class']} — {row['note']}")
+
+    counts: dict[str, int] = {}
+    for row in rows:
+        counts[row["status"]] = counts.get(row["status"], 0) + 1
+    summary = ", ".join(f"{key}={counts[key]}" for key in sorted(counts))
+    print(f"\nSummary: {summary}")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Classify current owners of mise [dotfiles] targets without mutating files.")
+    parser.add_argument("--json", action="store_true", help="emit JSON instead of text report")
+    args = parser.parse_args()
+
+    root = repo_root()
+    with (root / "mise.toml").open("rb") as f:
+        config = tomllib.load(f)
+
+    roots = [root]
+    primary = Path.home() / ".dotfiles"
+    if primary.exists() and primary.resolve(strict=False) != root.resolve(strict=False):
+        roots.append(primary)
+
+    rows = []
+    configured_targets = set()
+    for item in configured_dotfiles(config):
+        target = expand_target(item["target"])
+        configured_targets.add(str(target))
+        source = (root / item["source"]).resolve(strict=False) if item["source"] else root
+        row = classify(target, source, roots)
+        row["configured_target"] = item["target"]
+        row["configured_source"] = item["source"]
+        row["mode"] = item["mode"]
+        row["origin"] = "mise.toml"
+        rows.append(row)
+
+    for target_text, source_text in KNOWN_INVENTORY:
+        target = expand_target(target_text)
+        if str(target) in configured_targets:
+            continue
+        source = (root / source_text).resolve(strict=False)
+        row = classify(target, source, roots)
+        row["configured_target"] = target_text
+        row["configured_source"] = source_text
+        row["mode"] = "inventory-only"
+        row["origin"] = "inventory"
+        rows.append(row)
+
+    if args.json:
+        print(json.dumps(rows, indent=2, sort_keys=True))
+    else:
+        print_table(rows)
+
+    return 1 if any(row["status"] == "conflict" for row in rows) else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

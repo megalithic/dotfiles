@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export PI_STATE_DIR="${PI_STATE_DIR:-$HOME/.local/state/pi}"
+mkdir -p "$PI_STATE_DIR/sockets" "$PI_STATE_DIR/manifests" "$PI_STATE_DIR/pinvim"
+unset PIMUX_FROM_NVIM 2>/dev/null || true
+
+secrets_dir="${XDG_CONFIG_HOME:-$HOME/.config}/fnox/secrets"
+if [ -f "$secrets_dir/env-vars.sh" ]; then
+  # shellcheck disable=SC1090,SC1091
+  . "$secrets_dir/env-vars.sh"
+fi
+if [ -n "${SYNTHETIC_API_KEY:-}" ]; then
+  export LAT_LLM_KEY="$SYNTHETIC_API_KEY"
+  export LAT_LLM_BASE_URL="https://api.synthetic.new/openai/v1"
+  export LAT_LLM_MODEL="hf:nomic-ai/nomic-embed-text-v1.5"
+  export LAT_LLM_DIMENSIONS="768"
+fi
+
+export PATH="$HOME/.pi/agent/bin:$HOME/.local/bin:$HOME/bin:$HOME/.dotfiles/bin:$PATH"
+wrapper_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PATH=":$PATH:"
+PATH="${PATH//:$wrapper_dir:/:}"
+PATH="${PATH#:}"
+PATH="${PATH%:}"
+export PATH
+
+exec mise x npm:@earendil-works/pi-coding-agent -- pi "$@"

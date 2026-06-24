@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+host_name="$(hostname -s)"
+models_max=1
+ctx_size=8192
+parallel=1
+case "$host_name" in
+  workbookpro)
+    models_max=2
+    ctx_size=32768
+    parallel=2
+    ;;
+esac
+
+model_dir="${XDG_DATA_HOME:-$HOME/.local/share}/llama.cpp/models"
+log_dir="$HOME/Library/Logs/llama-cpp"
+mkdir -p "$model_dir" "$log_dir"
+
+export PATH="/opt/homebrew/bin:$HOME/.local/bin:$PATH"
+server="$(command -v llama-server || true)"
+if [ -z "$server" ] && [ -x /opt/homebrew/bin/llama-server ]; then
+  server=/opt/homebrew/bin/llama-server
+fi
+if [ -z "$server" ]; then
+  echo "llama-server missing; install llama.cpp or set PATH" >&2
+  exit 127
+fi
+
+exec "$server" \
+  --host 127.0.0.1 \
+  --port 18080 \
+  --models-dir "$model_dir" \
+  --models-max "$models_max" \
+  -c "$ctx_size" \
+  --parallel "$parallel" \
+  --cache-type-k q8_0 \
+  --cache-type-v q8_0 \
+  --flash-attn on \
+  --jinja \
+  --cont-batching

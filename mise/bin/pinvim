@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+unset PI_CODING_AGENT_DIR 2>/dev/null || true
+export PI_STATE_DIR="${PI_STATE_DIR:-$HOME/.local/state/pi}"
+mkdir -p "$PI_STATE_DIR/sockets" "$PI_STATE_DIR/manifests" "$PI_STATE_DIR/pinvim"
+
+if [ -n "${TMUX:-}" ]; then
+  PI_SESSION="$(tmux display-message -p '#{session_name}' 2>/dev/null || echo default)"
+  export PI_SESSION
+else
+  export PI_SESSION="default"
+fi
+
+exec pi "$@"

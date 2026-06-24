@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+agent="$HOME/.pi/agent"
+mkdir -p "$agent/extensions" "$agent/agents" "$agent/skills" "$agent/prompts" "$agent/bin" "$HOME/.local/bin"
+
+link_file() {
+  local src="$1" dst="$2"
+  mkdir -p "$(dirname "$dst")"
+  ln -sfn "$PWD/$src" "$dst"
+}
+
+link_dir_entries() {
+  local src_dir="$1" dst_dir="$2"
+  [ -d "$src_dir" ] || return 0
+  while IFS= read -r -d '' path; do
+    local name="${path#"$src_dir"/}"
+    case "$name" in _*) continue ;; esac
+    link_file "$path" "$dst_dir/$name"
+  done < <(fd -d 1 -t f -t d . "$src_dir" -0)
+}
+
+link_file home/common/programs/pi-coding-agent/sources/GLOBAL_AGENTS.md "$agent/AGENTS.md"
+link_file home/common/programs/pi-coding-agent/sources/APPEND_SYSTEM.md "$agent/APPEND_SYSTEM.md"
+link_file home/common/programs/pi-coding-agent/keybindings.json "$agent/keybindings.json"
+link_file home/common/programs/pi-coding-agent/models.json "$agent/models.json"
+link_file home/common/programs/pi-coding-agent/mcp.json "$agent/mcp.json"
+link_file home/common/programs/pi-coding-agent/settings.json "$agent/settings.nix-source.json"
+
+link_dir_entries home/common/programs/pi-coding-agent/extensions "$agent/extensions"
+link_dir_entries home/common/programs/pi-coding-agent/agents "$agent/agents"
+link_dir_entries home/common/programs/pi-coding-agent/skills "$agent/skills"
+link_dir_entries home/common/programs/pi-coding-agent/prompts "$agent/prompts"
+
+scripts/mise/install-pi-tools
+
+# Preserve user-managed settings.json, but seed it if missing.
+if [ ! -f "$agent/settings.json" ]; then
+  cp home/common/programs/pi-coding-agent/settings.json "$agent/settings.json"
+fi
+
+# Only update extensions if npm/node_modules don't exist yet (fresh install)
+if [ -d "$agent/npm/node_modules" ]; then
+  echo "Pi npm packages exist, skipping pi update."
+else
+  pi update --extensions >/dev/null 2>&1 || true
+fi

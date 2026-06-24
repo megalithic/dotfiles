@@ -1,0 +1,34 @@
+[settings]
+experimental = true
+auto_install = true
+auto_env = true
+trusted_config_paths = ["~/.dotfiles", "~/code", "~/src"]
+idiomatic_version_file_enable_tools = ["node", "python", "ruby", "rust"]
+
+[settings.status]
+show_env = false
+show_tools = false
+
+[tools]
+# Baseline Neovim language servers available outside project-specific mise configs.
+"github:nix-community/nixd" = "latest"
+"github:oxalica/nil" = "latest"
+"npm:@tailwindcss/language-server" = "latest"
+"npm:@vtsls/language-server" = "latest"
+"npm:typescript-language-server" = "latest"
+"npm:vscode-langservers-extracted" = "latest"
+
+[env]
+DOTS = "{{env.HOME}}/.dotfiles"
+CODE = "{{env.HOME}}/code"
+XDG_CONFIG_HOME = "{{env.HOME}}/.config"
+XDG_DATA_HOME = "{{env.HOME}}/.local/share"
+XDG_STATE_HOME = "{{env.HOME}}/.local/state"
+XDG_CACHE_HOME = "{{env.HOME}}/.cache"
+PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
+
+[shell_alias]
+pic = "pi -c"
+pir = "pi -r"
+pis = "pinvim"
+pisock = "pinvim"

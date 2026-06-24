@@ -1,0 +1,42 @@
+# Committed static replacement for Home Manager-generated shade-next config.
+# This replaces the Nix-interpolated config.toml that was generated with paths.
+
+[identity]
+binary = "shade-next"
+bundle_id = "io.shade.next"
+url_scheme = "shade-next://"
+
+[paths]
+notes_home = "/Users/seth/iclouddrive/Documents/_notes"
+captures_dir = "/Users/seth/iclouddrive/Documents/_notes/captures"
+data_home = "/Users/seth/.local/share/shade-next"
+state_home = "/Users/seth/.local/state/shade-next"
+repo = "/Users/seth/code/shade-next"
+debug_binary = "/Users/seth/code/shade-next/.build/debug/shade-next"
+release_binary = "/Users/seth/code/shade-next/.build/release/shade-next"
+
+[ui]
+font_family = "SF Pro Text"
+font_size = 22
+line_height = 1.3
+compact_width = 900
+compact_height = 104
+expanded_height = 560
+results_height = 480
+panel_padding = 24
+corner_radius = 24
+row_spacing = 6
+border_width = 1.0
+border_color = "#FFFFFF22"
+dim_unfocused = 0.5
+
+[keys]
+commit = "cmd+enter"
+search = "cmd+f"
+
+[app]
+launch_hidden = true
+live_debug = false
+
+[editor]
+nvim_host = true

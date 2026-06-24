@@ -21,24 +21,38 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/HEAD
 
 ## 🚀 Installation (manual)
 
-1. Install
-   [Determinate `nix`](https://github.com/DeterminateSystems/nix-installer).
+## Getting Started
+
+Paste into Terminal.app on a fresh or partially-configured Mac:
 
 ```bash
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --determinate
+curl -sSfL https://raw.githubusercontent.com/megalithic/dotfiles/main/scripts/install.sh | bash
 ```
 
-2. Source nix to run nix things
+This runs a **mise-first bootstrap** that:
 
-```bash
-source "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
-```
+- Detects your hostname (megabookpro or workbookpro) and sets macOS hostname fields
+- Installs Command Line Tools and accepts the Xcode license
+- Installs Homebrew, Nix (official nix-installer), and mise
+- Installs Brew packages, GUI apps, and dev tools via mise
+- Links dotfiles to `~/.config/` and `~/Library/Application Support/`
+- Sets macOS defaults, launchd agents, and shell configuration
+- Renders fnox/1Password secrets and installs Helium with Widevine
 
-3. Run the installer (this clones the repo to ~/.dotfiles)
+Safe to rerun — detects existing state and reports conflicts before mutating.
 
-```bash
-nix run github:megalithic/dotfiles
-```
+**Manual gates you may encounter:**
+
+- Xcode/MAS authentication (App Store sign-in)
+- Gatekeeper "Open Anyway" for 1Password and Helium on first launch
+- Okta Verify: `brew install --cask okta-verify` (separate step)
+- Kanata: still Nix-managed — run `just darwin`
+
+## Nix (retained for specific packages)
+
+Nix is retained for `devenv.nix`, external flakes, and the `megalithic/flakes` repo
+(consumed by mise's nix backend for complex packages like kanata and Helium).
+It is no longer the primary workstation orchestrator.
 
 ## Usage
 
