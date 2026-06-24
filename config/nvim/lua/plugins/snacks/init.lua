@@ -51,6 +51,19 @@ return {
     -- "madmaxieee/fff-snacks.nvim",
     lazy = true,
     dependencies = { "dmtrKovalenko/fff.nvim", "folke/snacks.nvim" },
+    init = function()
+      vim.api.nvim_create_user_command("HereFind", function()
+        local path = vim.fn.expand("%:p:h")
+        path = require("utils").strip_oil_prefix(path)
+        require("fff-snacks").find_files({ cwd = path })
+      end, { desc = "Find files in current directory" })
+
+      vim.api.nvim_create_user_command("HereGrep", function()
+        local path = vim.fn.expand("%:p:h")
+        path = require("utils").strip_oil_prefix(path)
+        require("fff-snacks").live_grep({ cwd = path })
+      end, { desc = "Grep in current directory" })
+    end,
     opts = {
       -- Snacks picker config for file picker
       -- find_files = {},

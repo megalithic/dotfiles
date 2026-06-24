@@ -146,3 +146,4 @@ deps
 .pi/todos
 **/.pi/todos
 .local_scripts
+.build/

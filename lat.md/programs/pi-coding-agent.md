@@ -100,6 +100,8 @@ Pi subagent orchestration comes from the `npm:pi-subagents` package; the old loc
 
 It is distinct from `extensions/review.ts` (the `/review` pi-review-loop, which performs agent-driven checkout/snapshot reviews). `/piview` only targets the active paired Nvim and never scans manifests or steals pairs; when no editor service is connected (bare Pi) it spawns a review Nvim that pairs back (see [[neovim-pinvim#Neovim and pinvim#Pi-initiated review spawn]]). The Nvim-side handler is documented in [[neovim-pinvim#Neovim and pinvim#Worktree-aware PiReview]].
 
+`pview [scope]` is the shell launcher for `/piview`: in a one-pane tmux window it runs `pinvim "/piview ..."` in place, while in a multi-pane window it opens a new tmux window first so the Pi-initiated review Nvim creates exactly one right-side split. Outside tmux it falls back to plain `p`. Fish completion mirrors the `/piview` scope list.
+
 ## Preview command
 
 The Pi `/preview` extension is a thin command parser around the `preview-ai` executable.

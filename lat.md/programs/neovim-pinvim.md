@@ -108,6 +108,8 @@ Cases covered by code review plus manual tmux verification (no full multi-Neovim
 
 `/piview` queries `globalThis.pinvimEditorService` with method `review.open` and `{ scope, cwd }`; the Nvim editor-service handler in `config/nvim/lua/pinvim.lua` delegates to `require("pinvim.review").run`. `/piview` never checks out branches, snapshots files, or scans manifests; it only targets the active paired Nvim.
 
+`pview [scope]` in `home/common/programs/pi-coding-agent/default.nix` launches Pi with `/piview` as the initial command. It never pre-splits Nvim itself; `/piview` owns the review Nvim spawn to avoid duplicate review panes. If the current tmux window already has multiple panes, `pview` first opens a new tmux window so the review split starts from a clean one-pane layout.
+
 ## Pi-initiated review spawn
 
 When no Nvim editor service is connected (bare Pi), `/piview` falls back to spawning a review Nvim that pairs back to the originating Pi, instead of bailing.

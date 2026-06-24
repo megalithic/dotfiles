@@ -280,6 +280,41 @@ let
   '';
 
   p = pkgs.writeShellScriptBin "p" ''exec ${pinvim}/bin/pinvim "$@"'';
+
+  piviewScopes = [
+    "uncommitted"
+    "unpushed"
+    "branch"
+    "pr"
+    "ticket"
+    "worktrees"
+  ];
+
+  piviewFishCompletions = lib.concatMapStringsSep "\n" (
+    scope:
+    "complete -c pview -f -a ${lib.escapeShellArg scope} -d ${lib.escapeShellArg "/piview ${scope}"}"
+  ) piviewScopes;
+
+  pview = pkgs.writeShellScriptBin "pview" ''
+    set -euo pipefail
+
+    if [[ -z "''${TMUX:-}" ]]; then
+      exec ${p}/bin/p
+    fi
+
+    prompt="/piview"
+    if [[ $# -gt 0 ]]; then
+      prompt="/piview $*"
+    fi
+
+    pane_count="$(${pkgs.tmux}/bin/tmux display-message -p '#{window_panes}' 2>/dev/null || printf '1')"
+    if [[ "$pane_count" =~ ^[0-9]+$ ]] && (( pane_count > 1 )); then
+      printf -v quoted_prompt '%q' "$prompt"
+      exec ${pkgs.tmux}/bin/tmux new-window -c "$PWD" -n "piview" "exec ${pinvim}/bin/pinvim $quoted_prompt"
+    fi
+
+    exec ${pinvim}/bin/pinvim "$prompt"
+  '';
 in
 {
   home = {
@@ -291,6 +326,7 @@ in
       piAcpWrapper
       pinvim
       p
+      pview
     ];
     sessionVariables = {
       PI_STATE_DIR = piStateDir;
@@ -379,11 +415,16 @@ in
   };
 
   programs = {
-    fish.shellAliases = {
-      pic = "pi -c"; # Continue last session
-      pir = "pi -r"; # Resume mode
-      pisock = "pinvim"; # pi with socket connection
-      pis = "pinvim"; # Short alias
+    fish = {
+      shellAliases = {
+        pic = "pi -c"; # Continue last session
+        pir = "pi -r"; # Resume mode
+        pisock = "pinvim"; # pi with socket connection
+        pis = "pinvim"; # Short alias
+      };
+      shellInit = ''
+        ${piviewFishCompletions}
+      '';
     };
     pi = {
       coding-agent = {
