@@ -9,6 +9,15 @@ idiomatic_version_file_enable_tools = ["node", "python", "ruby", "rust"]
 show_env = false
 show_tools = false
 
+[tools]
+# Baseline Neovim language servers available outside project-specific mise configs.
+"github:nix-community/nixd" = "latest"
+"github:oxalica/nil" = "latest"
+"npm:@tailwindcss/language-server" = "latest"
+"npm:@vtsls/language-server" = "latest"
+"npm:typescript-language-server" = "latest"
+"npm:vscode-langservers-extracted" = "latest"
+
 [env]
 DOTS = "{{env.HOME}}/.dotfiles"
 CODE = "{{env.HOME}}/code"

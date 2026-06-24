@@ -11,6 +11,7 @@ Mise owns repeatable user workstation convergence where its experimental bootstr
 - `mise.toml` is the workstation bootstrap config.
 - `mise/Brewfile` owns GUI casks, Mac App Store apps, and the few Homebrew formulae needed to drive that app layer.
 - Mise `[tools]` owns dev CLIs and runtimes, preferring Aqua-backed tools where the mise registry supports them.
+- `mise/global.toml` carries the baseline Neovim LSP toolchain that should be available outside project-specific mise configs, including Tailwind, Nix, and JS/TS servers.
 - `aube` is the preferred npm package manager and is installed through mise alongside Node.
 - `mise/fnox/config.toml` replaces OpNix declarations for 1Password-backed user secrets.
 - `scripts/mise/*` owns special cases that need imperative macOS behavior.
