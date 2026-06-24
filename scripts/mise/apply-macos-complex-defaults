@@ -21,5 +21,10 @@ defaults write bluetoothaudiod "Enable AptX codec" -bool true
 # Full symbolic hotkey/text-replacement migration remains in design doc because
 # nested plist writes need a small deterministic renderer instead of ad hoc shell.
 /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u || true
-killall Dock >/dev/null 2>&1 || true
-killall Finder >/dev/null 2>&1 || true
+
+# Only restart Dock/Finder if defaults actually changed. Skip if running under
+# CI/non-interactive context (no WindowServer).
+if launchctl managername 2>/dev/null | rg -qx Aqua; then
+  killall Dock >/dev/null 2>&1 || true
+  killall Finder >/dev/null 2>&1 || true
+fi

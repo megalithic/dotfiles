@@ -3,4 +3,10 @@ set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 scripts/mise/ensure-homebrew
+
+if brew bundle check --file mise/Brewfile >/dev/null 2>&1; then
+  echo "Brew bundle satisfied, skipping."
+  exit 0
+fi
+echo "Running brew bundle..."
 brew bundle --file mise/Brewfile

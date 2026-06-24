@@ -1,6 +1,6 @@
 ---
 id: mbm-nhdu
-status: open
+status: closed
 deps: 4:1:deps: [, mbm-55qf]
 links: []
 created: 2026-06-22T20:32:32Z
@@ -26,3 +26,18 @@ File hints: scripts/mise/ensure-determinate-nix, scripts/mise/ensure-homebrew, s
 4. Helium install path preserves the migration constraints: upstream release + local script, Widevine handling, signing/TCC safety, and no reinstall while app is running.
 5. `scripts/mise/doctor` checks prerequisites and reports missing tools/config without mutating state.
 6. Relevant docs in lat.md/migration/mise-bootstrap.md stay in sync; `lat_check` passes.
+
+## Notes
+
+**2026-06-24T00:01:30Z**
+
+Hardened all imperative scripts for safe repeated runs:
+
+1. install-apps: now runs 'brew bundle check' first, skips if satisfied.
+2. bootstrap-final: each step guarded by MISE*BOOTSTRAP_SKIP*\* env vars (BREW, PI, SECRETS, DEFAULTS, HELIUM). Skippable individually.
+3. apply-macos-complex-defaults: killall Dock/Finder only when WindowServer is present (Aqua domain check). Safe in CI/headless.
+4. setup-pi: skips 'pi update --extensions' if npm/node_modules already exist (fresh-install guard).
+5. pi-session-indexer: validates source script exists before exec.
+6. sesame-session-indexer: validates sesame binary exists before exec.
+   All scripts verified: set -euo pipefail, clear error messages, idempotent or guarded. llm-server-launchd already host-aware (workbookpro gets higher ctx_size/parallel).
+   Shellcheck clean on all 6 modified scripts. lat_check passes.

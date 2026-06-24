@@ -40,4 +40,9 @@ if [ ! -f "$agent/settings.json" ]; then
   cp home/common/programs/pi-coding-agent/settings.json "$agent/settings.json"
 fi
 
-pi update --extensions >/dev/null 2>&1 || true
+# Only update extensions if npm/node_modules don't exist yet (fresh install)
+if [ -d "$agent/npm/node_modules" ]; then
+  echo "Pi npm packages exist, skipping pi update."
+else
+  pi update --extensions >/dev/null 2>&1 || true
+fi

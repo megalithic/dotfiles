@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 export PATH="$HOME/.pi/agent/bin:$HOME/.local/bin:/opt/homebrew/bin:$PATH"
+
+if ! command -v sesame >/dev/null 2>&1; then
+  echo "sesame-session-indexer: sesame not found in PATH" >&2
+  exit 1
+fi
 exec sesame "$@"
