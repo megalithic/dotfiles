@@ -280,13 +280,13 @@ fnox = "latest"
 "npm:chrome-devtools-mcp" = "latest"
 
 [env]
-DOTS = "~/.dotfiles"
-CODE = "~/code"
-XDG_CONFIG_HOME = "~/.config"
-XDG_DATA_HOME = "~/.local/share"
-XDG_STATE_HOME = "~/.local/state"
-XDG_CACHE_HOME = "~/.cache"
-PI_STATE_DIR = "~/.local/state/pi"
+DOTS = "{{env.HOME}}/.dotfiles"
+CODE = "{{env.HOME}}/code"
+XDG_CONFIG_HOME = "{{env.HOME}}/.config"
+XDG_DATA_HOME = "{{env.HOME}}/.local/share"
+XDG_STATE_HOME = "{{env.HOME}}/.local/state"
+XDG_CACHE_HOME = "{{env.HOME}}/.cache"
+PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
 
 [tasks.bootstrap]
 description = "Run migration-only setup that mise cannot model declaratively"
