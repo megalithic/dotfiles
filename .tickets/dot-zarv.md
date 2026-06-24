@@ -47,3 +47,25 @@ Open questions to resolve before/refinement:
 9. `devenv shell -- bin/pinvim-protocol-smoke` passes, plus a new smoke case covers the adopted-identity claim path.
 10. Manual: from a bare Pi (no Nvim) in tmux, `/piview uncommitted` opens a review Nvim in a new pane, pairs back, and a `:PiFlush` from that Nvim reaches the original Pi.
 11. lat.md documents the Pi-initiated spawn review flow and the explicit gating mode; `lat_check` passes.
+
+## Notes
+
+**2026-06-23T23:50:00Z**
+
+Implemented approach A (direct pairing). `spawnReviewNvim` in `extensions/pinvim.ts` (exposed via `globalThis.pinvimEditorService.spawnReviewNvim`) is the spawn helper; `extensions/nvim-review.ts` falls back to it when no editor service is connected.
+
+Identity adoption: `workspace_id = stableHash16(realpath(root))` replicates Nvim's `stable_hash(normalize_path(resolve_root()))`; `parent.id` is read or created under `$PI_STATE_DIR/pinvim/<workspace_id>/` so the spawned Nvim's `Registry.setup` reuses it; `process.env.PINVIM_PARENT_ID`/`PINVIM_WORKSPACE_ID` are set on the Pi and passed to the spawned `nvim +PiReview <scope>` via `tmux split-window -e`.
+
+Gating: identity adoption only runs in the spawn path (unpaired Pi), re-adopts per spawn, and never alters an already-paired Pi's defaults.
+
+Verified:
+
+- Hash parity: Node `stableHash16` and Nvim `stable_hash` both produce `1b4ccb6a5746dca2` for `~/.dotfiles`.
+- `parent.id` reuse: Node writes `parent:<id>`, headless Nvim `Registry.setup` reads the same id (not regenerated), same workspace_id.
+- `bin/pinvim-review-spawn-smoke` formalizes the above and passes.
+- `just home`, `nvim --headless ... +qa`, `bin/pinvim-protocol-smoke`, `lat_check` all pass.
+- Extension loads in pi with no startup errors.
+
+Remaining human gate (AC #10): live tmux `/piview uncommitted` from a bare Pi → spawned Nvim pairs back → `:PiFlush` reaches the original Pi. Requires a real tmux + paired session.
+
+Caveat: during smoke development a buggy first run wrote to the real `~/.local/state/pi` dotfiles registry `parent.id` before `PI_STATE_DIR` isolation was fixed. The id rotated to a new valid value (Nvim reuses it going forward); no corruption, but any currently-paired `~/.dotfiles` session would need a restart to re-match. The committed smoke isolates state.

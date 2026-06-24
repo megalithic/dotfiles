@@ -106,4 +106,16 @@ Cases covered by code review plus manual tmux verification (no full multi-Neovim
 
 `home/common/programs/pi-coding-agent/extensions/nvim-review.ts` registers the `/piview [scope]` Pi command, distinct from the pre-existing `/review` pi-review-loop (`extensions/review.ts`).
 
-`/piview` queries `globalThis.pinvimEditorService` with method `review.open` and `{ scope, cwd }`; the Nvim editor-service handler in `config/nvim/lua/pinvim.lua` delegates to `require("pinvim.review").run`. `/piview` never checks out branches, snapshots files, or scans manifests; it only targets the active paired Nvim and reports a clear fallback when no editor service is connected.
+`/piview` queries `globalThis.pinvimEditorService` with method `review.open` and `{ scope, cwd }`; the Nvim editor-service handler in `config/nvim/lua/pinvim.lua` delegates to `require("pinvim.review").run`. `/piview` never checks out branches, snapshots files, or scans manifests; it only targets the active paired Nvim.
+
+## Pi-initiated review spawn
+
+When no Nvim editor service is connected (bare Pi), `/piview` falls back to spawning a review Nvim that pairs back to the originating Pi, instead of bailing.
+
+`spawnReviewNvim` in `extensions/pinvim.ts` (exposed via `globalThis.pinvimEditorService.spawnReviewNvim`) adopts the target worktree's pinvim registry identity so the incoming Nvim peer passes `peerAllowedForSocket` via `exactParentRegistry`:
+
+- `workspace_id = stableHash16(normalizePath(worktreeRoot))`, replicating Nvim's `stable_hash(normalize_path(resolve_root()))` (`sha256` of the realpath, first 16 hex chars).
+- It reads or creates `parent.id` under `$PI_STATE_DIR/pinvim/<workspace_id>/` so the spawned Nvim's `Registry.setup` reuses the same id (Nvim reads the file rather than regenerating).
+- It sets `process.env.PINVIM_PARENT_ID` and `PINVIM_WORKSPACE_ID` on the Pi, then `tmux split-window -e PI_SOCKET=... -e PINVIM_PARENT_ID=... -e PINVIM_WORKSPACE_ID=... nvim '+PiReview <scope>'` in the worktree root.
+
+Identity adoption is scoped to the spawn: it only runs when the Pi is unpaired, and re-adopts on each spawn so re-targeting a different worktree works. It never alters bare-pi defaults for an already-paired Pi. The deterministic core (hash parity + `parent.id` reuse) is covered by `bin/pinvim-review-spawn-smoke`; the live tmux spawn + paired round-trip is a human gate.

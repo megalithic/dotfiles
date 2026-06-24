@@ -19,7 +19,10 @@
  *   /piview worktrees
  *
  * Pairing safety: uses globalThis.pinvimEditorService, which targets only the
- * active paired Nvim. It never scans manifests or steals another Nvim pair.
+ * active paired Nvim. When no editor service is connected (bare Pi), `/piview`
+ * spawns a review Nvim in a new tmux pane that adopts the worktree registry
+ * identity and pairs back to this Pi (dot-zarv). It never scans manifests or
+ * steals another Nvim pair.
  */
 
 import type {
@@ -37,6 +40,29 @@ const SCOPES = [
 ] as const;
 
 type Scope = (typeof SCOPES)[number];
+
+interface EditorServiceApi {
+  query: (
+    method: string,
+    params: Record<string, unknown>,
+  ) => Promise<ReviewOpenResult>;
+  status: () => {
+    connected: boolean;
+    stale: boolean;
+    address: string | null;
+  };
+  spawnReviewNvim: (
+    scope: string,
+    worktreeCwd?: string,
+  ) => {
+    ok: boolean;
+    socket?: string;
+    worktree?: string;
+    workspaceId?: string;
+    pane?: string;
+    error?: string;
+  };
+}
 
 interface ReviewOpenResult {
   ok: boolean;
@@ -79,17 +105,7 @@ export default function (pi: ExtensionAPI): void {
 
       const editorService = (
         globalThis as unknown as {
-          pinvimEditorService?: {
-            query: (
-              method: string,
-              params: Record<string, unknown>,
-            ) => Promise<ReviewOpenResult>;
-            status: () => {
-              connected: boolean;
-              stale: boolean;
-              address: string | null;
-            };
-          };
+          pinvimEditorService?: EditorServiceApi;
         }
       ).pinvimEditorService;
 
@@ -103,9 +119,20 @@ export default function (pi: ExtensionAPI): void {
 
       const status = editorService.status();
       if (!status.connected || status.stale || !status.address) {
+        // No paired Nvim editor service: spawn a review Nvim that pairs back
+        // to this Pi (dot-zarv). The bare Pi adopts the worktree registry
+        // identity so the incoming Nvim peer is accepted.
+        const spawned = editorService.spawnReviewNvim(scope);
+        if (!spawned.ok) {
+          ctx.ui.notify(
+            `piview: could not spawn review Nvim: ${spawned.error || "unknown"}`,
+            "error",
+          );
+          return;
+        }
         ctx.ui.notify(
-          "piview: no connected Neovim editor service; falling back. Open :PiReview in Nvim directly.",
-          "warn",
+          `piview: spawned review Nvim (${scope}) in new pane; pairing to ${spawned.worktree}`,
+          "info",
         );
         return;
       }

@@ -98,7 +98,7 @@ Pi subagent orchestration comes from the `npm:pi-subagents` package; the old loc
 
 `extensions/nvim-review.ts` registers `/piview [scope]` (`uncommitted`, `unpushed`, `branch`, `pr`, `ticket`, `worktrees`), which routes to the paired Neovim editor service via `globalThis.pinvimEditorService.query("review.open", { scope, cwd })`.
 
-It is distinct from `extensions/review.ts` (the `/review` pi-review-loop, which performs agent-driven checkout/snapshot reviews). `/piview` only targets the active paired Nvim and never scans manifests or steals pairs; it reports a clear fallback when no editor service is connected. The Nvim-side handler is documented in [[neovim-pinvim#Neovim and pinvim#Worktree-aware PiReview]].
+It is distinct from `extensions/review.ts` (the `/review` pi-review-loop, which performs agent-driven checkout/snapshot reviews). `/piview` only targets the active paired Nvim and never scans manifests or steals pairs; when no editor service is connected (bare Pi) it spawns a review Nvim that pairs back (see [[neovim-pinvim#Neovim and pinvim#Pi-initiated review spawn]]). The Nvim-side handler is documented in [[neovim-pinvim#Neovim and pinvim#Worktree-aware PiReview]].
 
 ## Preview command
 

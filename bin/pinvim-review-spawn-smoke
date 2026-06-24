@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# pinvim-review-spawn-smoke: verify the dot-zarv adopted-identity claim path.
+#
+# A bare Pi that spawns a review Nvim must adopt the target worktree's pinvim
+# registry identity (parent.id + deterministic workspace_id) so the incoming
+# Nvim peer passes peerAllowedForSocket via exactParentRegistry.
+#
+# This smoke verifies the deterministic, headless core of that flow:
+#   1. Node-side identity adoption (stableHash16 + parent.id write) matches
+#      Nvim's stable_hash(normalize_path(resolve_root())) for the same root.
+#   2. A headless Nvim whose PI_STATE_DIR already contains that parent.id
+#      reuses it (Registry.setup reads, not regenerates) and computes the same
+#      workspace_id.
+#
+# The live tmux spawn + paired Nvim round-trip (AC #10) is a human gate.
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+root="${1:-$repo_root}"
+tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/pinvim-review-spawn-smoke.XXXXXX")"
+state_dir="$tmp_dir/state"
+
+cleanup() {
+  local status=$?
+  trash "$tmp_dir" 2>/dev/null || rm -rf "$tmp_dir"
+  exit "$status"
+}
+trap cleanup EXIT INT TERM
+
+# 1. Node-side: replicate spawnReviewNvim's identity adoption.
+PI_STATE_DIR="$state_dir" node -e '
+const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
+const root = fs.realpathSync(process.argv[1]).replace(/\/+$/, "");
+const wid = crypto.createHash("sha256").update(root).digest("hex").slice(0, 16);
+const regDir = path.join(process.env.PI_STATE_DIR, "pinvim", wid);
+const pidPath = path.join(regDir, "parent.id");
+fs.mkdirSync(regDir, { recursive: true });
+let parentId = "";
+try { parentId = fs.readFileSync(pidPath, "utf-8").trim(); } catch {
+  parentId = "parent:" + crypto.createHash("sha256").update(root + "\0" + String(Date.now()) + "\0" + String(process.pid)).digest("hex").slice(0, 16);
+  fs.writeFileSync(pidPath, parentId, "utf-8");
+}
+process.stdout.write(wid + "\n" + parentId + "\n");
+' "$root" >"$tmp_dir/node-identity.txt"
+
+NODE_WID=$(sed -n '1p' "$tmp_dir/node-identity.txt")
+NODE_PARENT_ID=$(sed -n '2p' "$tmp_dir/node-identity.txt")
+
+if [[ -z "$NODE_WID" || -z "$NODE_PARENT_ID" ]]; then
+  echo "review-spawn smoke: node identity adoption failed" >&2
+  cat "$tmp_dir/node-identity.txt" >&2
+  exit 1
+fi
+
+# 2. Headless Nvim: Registry.setup must reuse the pre-written parent.id and
+#    compute the same workspace_id.
+NVIM_OUT=$(PI_STATE_DIR="$state_dir" \
+  nvim --headless -u NONE \
+    --cmd "set runtimepath^=$repo_root/config/nvim" \
+    '+lua local api=require("pinvim").setup({transport={link_mode="test"},connection={reconnect_max_retries=0}}); local info=api.info(); io.stdout:write("wid="..tostring(info.registry.workspace_id).."\nparent="..tostring(info.registry.parent_id).."\n")' \
+    +qa 2>/dev/null || true)
+
+NVIM_WID=$(printf '%s\n' "$NVIM_OUT" | rg -o 'wid=[^\n]+' | head -1 | cut -d= -f2)
+NVIM_PARENT=$(printf '%s\n' "$NVIM_OUT" | rg -o 'parent=[^\n]+' | head -1 | cut -d= -f2)
+
+echo "node   wid=$NODE_WID parent=$NODE_PARENT_ID"
+echo "nvim  wid=$NVIM_WID parent=$NVIM_PARENT"
+
+if [[ "$NVIM_WID" != "$NODE_WID" ]]; then
+  echo "review-spawn smoke: workspace_id mismatch (node=$NODE_WID nvim=$NVIM_WID)" >&2
+  exit 1
+fi
+
+if [[ "$NVIM_PARENT" != "$NODE_PARENT_ID" ]]; then
+  echo "review-spawn smoke: parent.id not reused (node=$NODE_PARENT_ID nvim=$NVIM_PARENT)" >&2
+  exit 1
+fi
+
+echo "pinvim review-spawn smoke passed (adopted identity matches)"

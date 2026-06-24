@@ -18,6 +18,7 @@ import type {
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 import { execFile, spawnSync } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import fsp from "node:fs/promises";
 import net from "node:net";
@@ -850,9 +851,144 @@ const editorServiceRequest = (
   });
 };
 
+// =============================================================================
+// Pi-initiated review spawn (dot-zarv)
+//
+// When a bare Pi has no paired Nvim editor service, `/piview` can spawn a
+// review Nvim in a new tmux pane that pairs back to this Pi. The bare Pi adopts
+// the target worktree's pinvim registry identity (parent.id + deterministic
+// workspace_id) so the incoming Nvim peer passes peerAllowedForSocket via
+// exactParentRegistry. Identity adoption is scoped to this spawn: it only runs
+// when the Pi is unpaired, and re-adopts on each spawn so re-targeting works.
+// =============================================================================
+
+/** sha256(value).slice(0,16) — mirrors Nvim stable_hash in pinvim.lua. */
+const stableHash16 = (value: string): string =>
+  crypto.createHash("sha256").update(value).digest("hex").slice(0, 16);
+
+/** Resolve the worktree root for a cwd (git toplevel), else cwd itself. */
+const resolveWorktreeRoot = (cwd: string): string => {
+  try {
+    const res = spawnSync("git", ["rev-parse", "--show-toplevel"], {
+      cwd,
+      encoding: "utf-8",
+      timeout: 2000,
+    });
+    if (res.status === 0 && res.stdout) return res.stdout.trim();
+  } catch {
+    // fall through
+  }
+  return cwd;
+};
+
+/** realpath with trailing-slash strip — mirrors Nvim normalize_path. */
+const normalizePath = (p: string): string => {
+  try {
+    const real = fs.realpathSync(p);
+    return real.replace(/\/+$/, "") || real;
+  } catch {
+    return p.replace(/\/+$/, "") || p;
+  }
+};
+
+interface SpawnReviewResult {
+  ok: boolean;
+  socket?: string;
+  worktree?: string;
+  workspaceId?: string;
+  pane?: string;
+  error?: string;
+}
+
+/**
+ * Spawn a review Nvim in a new tmux pane that pairs back to this Pi.
+ *
+ * Adopts the target worktree's registry identity (creating parent.id if absent
+ * so the Nvim reuses it), sets this Pi's PINVIM_PARENT_ID/PINVIM_WORKSPACE_ID
+ * env so peerAllowedForSocket accepts the incoming peer via exactParentRegistry,
+ * and launches `nvim +PiReview <scope>` with PI_SOCKET pointing at this Pi.
+ */
+const spawnReviewNvim = (
+  scope: string,
+  worktreeCwd?: string,
+): SpawnReviewResult => {
+  if (!process.env.TMUX) {
+    return { ok: false, error: "piview spawn requires tmux" };
+  }
+  const socket = SOCKET_PATH;
+  if (!socket) {
+    return { ok: false, error: "pinvim socket not resolved" };
+  }
+
+  const cwd = worktreeCwd || process.cwd();
+  const root = normalizePath(resolveWorktreeRoot(cwd));
+  const workspaceId = stableHash16(root);
+  const registryDir = path.join(PI_STATE_DIR, "pinvim", workspaceId);
+  const parentIdPath = path.join(registryDir, "parent.id");
+
+  try {
+    fs.mkdirSync(registryDir, { recursive: true });
+  } catch {
+    // best-effort; Nvim will recreate
+  }
+
+  // Read or create parent.id so Nvim's Registry.setup reuses the same id.
+  let parentId = "";
+  try {
+    parentId = fs.readFileSync(parentIdPath, "utf-8").trim();
+  } catch {
+    parentId = `parent:${stableHash16(root + "\0" + String(Date.now()) + "\0" + String(process.pid))}`;
+    try {
+      fs.mkdirSync(path.dirname(parentIdPath), { recursive: true });
+      fs.writeFileSync(parentIdPath, parentId, "utf-8");
+    } catch {
+      return { ok: false, error: "could not write pinvim parent.id" };
+    }
+  }
+
+  // Adopt the worktree identity so the incoming Nvim peer is accepted.
+  process.env.PINVIM_PARENT_ID = parentId;
+  process.env.PINVIM_WORKSPACE_ID = workspaceId;
+
+  // Spawn nvim in a new tmux pane, pointing it at this Pi's socket + identity.
+  // tmux split-window -e KEY=VAL passes env to the new pane's process.
+  const nvimCmd = `nvim '+PiReview ${scope}'`;
+  const res = spawnSync(
+    "tmux",
+    [
+      "split-window",
+      "-h",
+      "-l",
+      "40%",
+      "-c",
+      root,
+      "-P",
+      "-F",
+      "#{pane_id}",
+      "-e",
+      `PI_SOCKET=${socket}`,
+      "-e",
+      `PINVIM_PARENT_ID=${parentId}`,
+      "-e",
+      `PINVIM_WORKSPACE_ID=${workspaceId}`,
+      nvimCmd,
+    ],
+    { encoding: "utf-8", timeout: 3000 },
+  );
+  const pane = res.stdout.trim();
+  if (res.status !== 0 || !pane) {
+    return {
+      ok: false,
+      error: `tmux split-window failed: ${res.stderr || "unknown"}`,
+    };
+  }
+  return { ok: true, socket, worktree: root, workspaceId, pane };
+};
+
 const pinvimEditorServiceApi = {
   query: editorServiceRequest,
   status: () => ({ ...editorService }),
+  spawnReviewNvim,
 };
 
 (
