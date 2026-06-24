@@ -14,7 +14,7 @@ The local overlay exposes `pkgs.nvim-nightly` from `neovim-nightly-overlay`, ove
 
 Pinvim creates a per-workspace registry under `$PI_STATE_DIR/pinvim/<workspace-hash>/` and exposes it through `:PiInfo` plus `require("pinvim").api.info()`.
 
-The workspace hash comes from the normalized project root, and `parent.id` persists durable parent identity. Each Neovim process gets an `instances/<nvim-instance-id>/` directory with Nvim-owned `main.intent.json`. Main-panel launches use registry-root `main.sock` and root-level `main.intent.json` as the durable parent-owned Pi target; when explicit `PI_SOCKET` or buffer-local targets are absent, that socket is the automatic fast path.
+The workspace hash comes from the normalized project root, and `parent.id` persists durable parent identity. Each Neovim process gets an `instances/<nvim-instance-id>/` directory with Nvim-owned `main.intent.json` and `main-<nvim-instance-id>.sock`. Main-panel launches use that instance socket as the durable Nvim-owned Pi target; the root-level `main.intent.json` mirrors the latest panel request for diagnostics, not cross-instance reuse. When explicit `PI_SOCKET` or buffer-local targets are absent, the instance socket is the automatic fast path.
 
 `:PiSplit` allocates an explicit child session under `children/<child-id>/` with a stable child id, dedicated `child.sock`, and an `intent.json` derived from `registry_base_record`. Child sockets never replace the main registry entry and never become automatic default reconnect targets.
 
@@ -42,9 +42,9 @@ Pinvim visual mappings use Neovim `x` mode, so Lua callbacks may run after Visua
 
 Selection capture should first try live Visual state, then fall back to `'<` and `'>` marks plus `visualmode()`. Selection-bearing actions (`gpa`, `gps`, `gpp`, `:PiSend`, `:PiAdd`) route through explicit-send payloads. `gpc` / `:PiComment` capture a selection or cursor line plus a typed annotation into the compose queue; `:PiFlush` renders the whole queue as one prompt. Queued comments place an extmark indicator on the first line; re-running `gpc` on a commented line edits it in place, and empty text deletes it. `:PiComments` loads queued comments into quickfix and opens trouble.nvim's `qflist` when available.
 
-`gpa` and `:PiSend` use `delivery = "attach"`, so Pi stores the latest context and injects it once into the next non-extension user prompt. `gps` uses `delivery = "prompt"`, sending context plus prompt immediately and starting a turn. Normal `gpp` opens or focuses a child Pi split and sends cursor/file context; visual `gpp` sends selection context; child context stays prompt-delivered. `<C-p>` toggles the main parent-owned PiPanel, never spawns a child, captures context before the split steals focus, sends it with attach delivery, and does not start a turn by itself.
+`gpa` and `:PiSend` use `delivery = "attach"`, so Pi stores the latest context and injects it once into the next non-extension user prompt. `gps` uses `delivery = "prompt"`, sending context plus prompt immediately and starting a turn. Normal `gpp` opens or focuses a child Pi split and sends cursor/file context; visual `gpp` sends selection context; child context stays prompt-delivered. `<C-p>` toggles the main PiPanel paired to that Neovim instance, never spawns a child, captures context before the split steals focus, sends it with attach delivery, and does not start a turn by itself.
 
-On restart, parent-owned sessions prefer the registry main socket and never auto-resume old ephemeral or child sockets. Explicit `:PiTarget <socket>` remains the manual override.
+On restart, main sessions prefer their instance main socket and never auto-resume old ephemeral, child, or other-instance sockets. Explicit `:PiTarget <socket>` remains the manual override.
 
 ### Attach-only context delivery
 
@@ -56,13 +56,13 @@ Pinvim attach delivery separates editor context capture from agent-turn creation
 
 Normal pinvim links are strictly paired: a Pi session belongs to exactly one Neovim, identified by `pairId`. Live Pi socket state in `pinvim.ts` is the ownership authority; the registry and manifests only mirror it for diagnostics.
 
-**Automatic socket resolution (Nvim side).** `Transport.resolve_socket` resolves in order: explicit `PI_SOCKET`, buffer-local `:PiTarget`, the registry main socket, then manifest-ranked candidates limited to the same tmux session. A manifest-ranked candidate is rejected (`manifest-unpaired`) when both sides carry a `pairId` and they differ, so auto-resolution only adopts the exact pair, the registry main, or an explicit target. There is no broad cwd/root manifest adoption in the normal path.
+**Automatic socket resolution (Nvim side).** `Transport.resolve_socket` resolves in order: explicit `PI_SOCKET`, buffer-local `:PiTarget`, the instance main socket, then manifest-ranked candidates limited to the same tmux session. A manifest-ranked candidate is rejected (`manifest-unpaired`) when both sides carry a `pairId` and they differ, so auto-resolution only adopts the exact pair, the instance main socket, or an explicit target. There is no broad cwd/root manifest adoption in the normal path.
 
 **Pi-side claim rules.** Pi requires a valid `hello` before accepting any data frame, and heartbeats before an accepted hello stay rejected. `peerAllowedForSocket` rejects attach-only nested sessions first, then parent/workspace/instance mismatches, then any `pairId` mismatch with a visible `mismatched pair identity` reason (even from the same tmux window). An exact `pairId` match is always accepted, including non-tmux peers and explicit target mode. Without a pair id, an exact parent/workspace registry match is accepted. A same-window score cannot steal a Pi that is still actively paired with a different live peer: such claims are blocked until the current peer is unpaired, gone, or its heartbeat is stale for more than 20 seconds (`STRICT_PAIR_STALE_SECONDS`).
 
 **Manifest discovery is diagnostic/manual only.** Nvim still writes `nvim-*.info` manifests under `$PI_STATE_DIR/manifests/` every five seconds (now including `pairId`); `VimLeavePre` cleans them up. `pinvim.ts` still scans manifests when no parent registry identity is present and the active peer is missing or stale, but the resulting `repairCandidate` is read-only for diagnostics (`/pinvim-doctor`, `/pinvim-status`) — normal flows never auto-adopt a scanned manifest for pairing. Candidates are still rejected when the pid is dead, the pid is an orphaned `nvim --embed`, the socket path is gone, or the tmux session differs. Pair state, relation (`attach-only`, `child`, `parent`, `no-parent`), and link mode appear in `:PiStatus`, `:PiHealth`, `/pinvim-status`, `/pinvim-health`, `/pinvim-info`, and the doctor commands.
 
-**pimux pair-aware reuse.** `bin/pimux` forwards `PINVIM_PAIR_ID` into the Pi pane and uses it for reuse decisions. `socket_pair_id` probes a socket's manifest `pairId`, and `socket_pair_matches` treats a socket as eligible only when there is no local pair id or the manifest pair id matches. `candidate_sockets` and `find_any_parked_pi_pane` skip panes paired with a different Neovim, while an explicit `--socket` target always wins and is never pair-filtered.
+**pimux pair-aware reuse.** `bin/pimux` forwards `PINVIM_PAIR_ID` into the Pi pane and uses it for reuse decisions. `socket_pair_id` probes a socket's manifest `pairId`, and `socket_pair_matches` treats a socket as eligible only when there is no local pair id or the manifest pair id matches. Unknown manifest pair ids are ineligible in strict mode. `candidate_sockets` and `find_any_parked_pi_pane` skip panes paired with a different Neovim, while explicit `--socket` targets identify the current Neovim's instance socket instead of a shared workspace socket.
 
 **Ownership neutrality.** `:PiTarget <socket>` is an explicit manual override: it sets the buffer-local target (checked before pair gating in `resolve_socket`) and never rewrites pair ownership. The shade-next `fill_prompt` remote-input path is ownership-neutral — it only prefills the editor and may focus the pane; it never runs `peerAllowedForSocket`, adds to `acceptedSockets`, claims or reclaims the pair, or auto-submits.
 
@@ -87,10 +87,10 @@ Cases covered by code review plus manual tmux verification (no full multi-Neovim
 
 `:PiReview [scope]` (registered in `config/nvim/lua/pinvim.lua`) and the `<leader>gr{r,u,b,p,t,w}` keymaps dispatch through `require("pinvim.review").run(scope, opts)`:
 
-- `uncommitted` — `:CodeDiff` for the current worktree changes.
-- `unpushed` — `:CodeDiff` against `@{u}`; falls back to uncommitted with a warning when no upstream exists.
-- `branch` — `:CodeDiff` against the PR base ref, or `origin/main`/`main`/`master` as default base.
-- `pr` — `:Guh <pr-url>` via `justinmk/guh.nvim` (`config/nvim/lua/plugins/github.lua`); warns when no PR resolves. `guh.nvim` handles GitHub PR/issue/CI review only; local scopes stay on CodeDiff.
+- `uncommitted` — `diffs.nvim` repository review against `HEAD`, showing staged, unstaged, and untracked current worktree changes.
+- `unpushed` — `diffs.nvim` repository review against `@{u}`; falls back to uncommitted with a warning when no upstream exists.
+- `branch` — `diffs.nvim` repository review against the PR base ref, or `origin/main`/`main`/`master` as default base.
+- `pr` — `:Guh <pr-url>` via `justinmk/guh.nvim` (`config/nvim/lua/plugins/github.lua`); warns when no PR resolves. `guh.nvim` handles GitHub PR/issue/CI review only; local scopes stay on `diffs.nvim`.
 - `ticket` — branch or uncommitted scope with ticket metadata attached.
 - `worktrees` — `vim.ui.select` picker over `git worktree list --porcelain`, enriched with dirty/staged/untracked counts from `git -C <path> status --porcelain`; selecting a worktree `tcd`s into it and reruns the chosen scope.
 

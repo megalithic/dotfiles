@@ -4,7 +4,9 @@ Hammerspoon owns macOS automation: window management, launcher panels, menubar s
 
 ## Reload safety
 
-**Hammerspoon must only be reloaded via `bin/hs-reload`.** Other reload paths — CLI `hs -c`, osascript, or a direct `hs.reload()` — crash Hammerspoon.
+**Hammerspoon must only be reloaded via `bin/hs-reload`.** Unsafe CLI reload paths can crash Hammerspoon.
+
+`bin/hs-reload` uses System Events to click Hammerspoon's File → Reload Config menu item and fails with an Accessibility-permission error instead of trying unsafe fallbacks. CLI `hs -c` menu selection and direct `hs.reload()` are both unsafe.
 
 Hammerspoon's preflight adds `~/.local/share/hammerspoon` to Lua `package.path` so generated data-only fragments such as `fragments/shade-next.lua` can be required without editing the generated file.
 
@@ -12,7 +14,7 @@ Hammerspoon's preflight adds `~/.local/share/hammerspoon` to Lua `package.path` 
 
 Global app bindings stay data-driven so app launchers, local pass-through keys, and URL-scheme actions share one configuration surface instead of per-app binding code.
 
-`C.launchers` rows use `{ bundleID, bind, opts? }`: simple launchers omit `opts`, while `opts.passThrough`, `opts.focusOnly`, and `opts.urlSchemes` handle exceptions. Calendar 366 keeps `hyper+y` as the app toggle; `hyper+'` opens `cal366://add?type=event`; `hyper+shift+'` opens `cal366://add?type=task`.
+`C.launchers` rows use `{ bundleID, bind, opts? }`: simple launchers omit `opts`, while `opts.passThrough`, `opts.focusOnly`, `opts.cycleWindows`, and `opts.urlSchemes` handle exceptions. When `opts.cycleWindows = true`, hitting the app binding while that app is focused cycles visible app windows rather than browser tabs. Fantastical keeps `hyper+y` as the app toggle; `hyper+'` opens `x-fantastical3://parse?sentence=`; `hyper+shift+'` opens `x-fantastical3://parse?reminder=1&sentence=`.
 
 ## shade-next panel
 

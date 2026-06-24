@@ -34,7 +34,9 @@ function M.loadApps()
         hyper:bind(mods, key, function() end)
       else
         hyper:bind(mods, key, function()
-          if opts.focusOnly then
+          if opts.cycleWindows then
+            summon.cycleWindows(bundleID)
+          elseif opts.focusOnly then
             summon.focus(bundleID)
           else
             summon.toggle(bundleID)

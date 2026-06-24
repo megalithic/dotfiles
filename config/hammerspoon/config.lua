@@ -261,9 +261,9 @@ M.layouts = {
       { nil, 1, M.grid.center.large },
     },
   },
-  ["com.nspektor.Calendar366.3"] = {
-    bundleID = "com.nspektor.Calendar366.3",
-    name = "Calendar 366",
+  ["com.flexibits.fantastical2.mac"] = {
+    bundleID = "com.flexibits.fantastical2.mac",
+    name = "Fantastical",
     rules = {
       { nil, 1, M.grid.center.large },
     },
@@ -337,14 +337,14 @@ M.reservedHyperKeys = {
 M.lollygaggers = {
   --- [bundleID] = { hideAfter, quitAfter }
   ["org.hammerspoon.Hammerspoon"] = { 1, nil },
-  ["com.nspektor.Calendar366.3"] = { 1, nil },
+  ["com.flexibits.fantastical2.mac"] = { 1, nil },
   ["com.1password.1password"] = { 1, nil },
   -- ["com.spotify.client"] = { 1, nil },
   ["com.apple.Music"] = { 1, nil },
 }
 
 M.launchers = {
-  { BROWSER, "j" },
+  { BROWSER, "j", { cycleWindows = true } },
   { TERMINAL, "k", { passThrough = { "`" } } },
   -- { "net.kovidgoyal.kitty", "k" },
   { "com.apple.MobileSMS", "m" }, -- NOOP for now.. TODO: implement a binding feature that let's us require n-presses before we execute
@@ -353,12 +353,12 @@ M.launchers = {
   { "com.apple.Music", "p" },
   { "com.freron.MailMate", "e" },
   {
-    "com.nspektor.Calendar366.3",
+    "com.flexibits.fantastical2.mac",
     "y",
     {
       urlSchemes = {
-        { "'", "cal366://add?type=event" },
-        { { { "shift" }, "'" }, "cal366://add?type=task" },
+        { "'", "x-fantastical3://parse?sentence=" },
+        { { { "shift" }, "'" }, "x-fantastical3://parse?reminder=1&sentence=" },
       },
     },
   },

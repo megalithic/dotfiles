@@ -5,9 +5,9 @@
 -- review metadata so annotation flushes (ticket dot-jl46) can attach context.
 --
 -- Scopes:
---   uncommitted  -> CodeDiff (current worktree changes)
---   unpushed     -> CodeDiff against @{u} (or clear fallback)
---   branch       -> CodeDiff against PR base / default base
+--   uncommitted  -> diffs.nvim review of current worktree changes
+--   unpushed     -> diffs.nvim review against @{u} (or clear fallback)
+--   branch       -> diffs.nvim review against PR base / default base
 --   pr           -> :Guh <current PR> via gh
 --   ticket       -> branch/uncommitted scope + ticket metadata
 --   worktrees    -> pick a worktree, then reopen review scoped to it
@@ -107,13 +107,21 @@ local function build_metadata(scope)
   }
 end
 
---- Open a CodeDiff review against `ref` (or uncommitted when ref is nil/empty).
-local function open_codediff(ref)
-  if ref and ref ~= "" then
-    vim.cmd("CodeDiff " .. vim.fn.fnameescape(ref))
-  else
-    vim.cmd("CodeDiff")
+--- Open a diffs.nvim repo review against `ref`.
+--- Uses HEAD for uncommitted scope so review shows staged, unstaged, and untracked changes.
+local function open_diffs_review(ref)
+  local ok, commands = pcall(require, "diffs.commands")
+  if not ok then
+    vim.notify("pinvim review: diffs.nvim is not available", vim.log.levels.ERROR)
+    return false
   end
+
+  local bufnr = commands.review({
+    base = (ref and ref ~= "") and ref or "HEAD",
+    repo = M.worktree_root(),
+    untracked = true,
+  })
+  return bufnr ~= nil
 end
 
 --- Open the GitHub PR review via guh.nvim.
@@ -155,22 +163,22 @@ function M.run(scope, opts)
 
   local ok = true
   if scope == "uncommitted" then
-    open_codediff(nil)
+    ok = open_diffs_review(nil)
   elseif scope == "unpushed" then
     local up = M.upstream()
     if not up then
       vim.notify("pinvim review: no upstream tracking branch; falling back to uncommitted", vim.log.levels.WARN)
-      open_codediff(nil)
+      ok = open_diffs_review(nil)
     else
-      open_codediff(up)
+      ok = open_diffs_review(up)
     end
   elseif scope == "branch" then
     local base = branch_base()
     if not base then
       vim.notify("pinvim review: could not determine base ref; falling back to uncommitted", vim.log.levels.WARN)
-      open_codediff(nil)
+      ok = open_diffs_review(nil)
     else
-      open_codediff(base)
+      ok = open_diffs_review(base)
     end
   elseif scope == "pr" then
     ok = open_guh(M.pr_metadata())
@@ -178,9 +186,9 @@ function M.run(scope, opts)
     -- Ticket scope: prefer branch diff, fall back to uncommitted, attach ticket metadata.
     local base = branch_base()
     if base then
-      open_codediff(base)
+      ok = open_diffs_review(base)
     else
-      open_codediff(nil)
+      ok = open_diffs_review(nil)
     end
   else
     vim.notify("pinvim review: unknown scope '" .. scope .. "'", vim.log.levels.ERROR)

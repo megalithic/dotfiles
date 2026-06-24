@@ -114,6 +114,55 @@ function obj.focus(appIdentifier)
   end
 end
 
+local function usableWindows(app)
+  local result = {}
+  if not app then return result end
+  for _, win in ipairs(app:allWindows() or {}) do
+    local ok, standard = pcall(function() return win:isStandard() end)
+    local visible = true
+    pcall(function() visible = win:isVisible() end)
+    if ok and standard and visible then table.insert(result, win) end
+  end
+  table.sort(result, function(a, b) return a:id() < b:id() end)
+  return result
+end
+
+function obj.cycleWindows(appIdentifier)
+  local app = findAppWithAlias(appIdentifier)
+  if not app then
+    launchOrFocusApp(appIdentifier)
+    hs.timer.doAfter(0.3, function()
+      local launchedApp = findAppWithAlias(appIdentifier)
+      if launchedApp then showIndicator(launchedApp:focusedWindow() or launchedApp:mainWindow()) end
+    end)
+    return
+  end
+
+  local wins = usableWindows(app)
+  if #wins == 0 then
+    obj.toggle(appIdentifier)
+    return
+  end
+
+  local focused = hs.window.focusedWindow()
+  local target = wins[1]
+  if focused and focused:application() and focused:application():bundleID() == app:bundleID() then
+    for idx, win in ipairs(wins) do
+      if win:id() == focused:id() then
+        target = wins[(idx % #wins) + 1]
+        break
+      end
+    end
+  else
+    target = app:focusedWindow() or app:mainWindow() or target
+  end
+
+  app:activate(true)
+  pcall(app.unhide, app)
+  pcall(target.focus, target)
+  hs.timer.doAfter(0.05, function() showIndicator(target) end)
+end
+
 -- Quickly move to and from a specific app
 -- (Thanks Teije)
 local previousApp = ""

@@ -39,6 +39,21 @@ return {
       -- end,
     },
   },
+  {
+    "barrettruth/diffs.nvim",
+    init = function()
+      vim.g.diffs = {
+        integrations = {
+          fugitive = true,
+          neogit = true,
+          neojj = false,
+          gitsigns = true,
+          committia = false,
+          telescope = false,
+        },
+      }
+    end,
+  },
 
   {
     "linrongbin16/gitlinker.nvim",
@@ -79,6 +94,7 @@ return {
       integrations = {
         diffview = true,
         mini_pick = true,
+        snacks = true,
       },
       graph_style = "kitty",
       process_spinner = "true",

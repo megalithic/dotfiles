@@ -31,6 +31,9 @@ return {
     },
     opts = {
       char_brightness = 1, -- disable auto-adjustment
+      diff = {
+        layout = "inline",
+      },
       explorer = {
         view_mode = "tree",
       },
@@ -161,6 +164,7 @@ return {
   },
   {
     "chpeters/annotator.nvim",
+    enabled = false,
     event = "VeryLazy",
     keys = {
       -- Document → Annotate

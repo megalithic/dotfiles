@@ -950,7 +950,8 @@ function Registry.setup(config)
     instance_root = instance_root,
     pair_id = pair_id,
     children_root = path_join(registry_root, "children"),
-    main_socket_path = path_join(registry_root, "main.sock"),
+    main_socket_path = path_join(instance_root, "main-" .. instance_id .. ".sock"),
+    main_session_socket_path = path_join(registry_root, "main.sock"),
     main_session_intent_path = path_join(registry_root, "main.intent.json"),
     main_session_runtime_path = path_join(registry_root, "main.runtime.json"),
     main_intent_path = path_join(instance_root, "main.intent.json"),
@@ -2255,8 +2256,8 @@ function Commands.setup(api, config)
       Transport.build_explicit_send(config, vim.tbl_extend("force", command_opts or {}, { delivery = "attach" }))
     api.clear_stale_target(true)
     api.ensure_panel_visible()
-    -- First-launch pi bootstrap can take several seconds before main.sock binds;
-    -- send_explicit_payload polls until connected or budget elapses.
+    -- First-launch pi bootstrap can take several seconds before the instance
+    -- main socket binds; send_explicit_payload polls until connected or budget elapses.
     api.send_explicit_payload(payload, { focus_after = false, await_connect_ms = 8000 })
   end
 
@@ -2676,8 +2677,12 @@ function M.setup(opts)
       PINVIM_INSTANCE_ID = registry and registry.instance_id or nil,
       PINVIM_REGISTRY_ROOT = registry and registry.workspace_root or nil,
       PINVIM_SESSION_ROLE = "child",
+      PINVIM_PAIR_ID = registry and registry.pair_id or vim.env.PINVIM_PAIR_ID,
       PINVIM_SESSION_ID = child_id,
       PI_SOCKET = child_socket,
+      TMUX = vim.env.TMUX,
+      TMUX_PANE = vim.env.TMUX_PANE,
+      PATH = vim.env.PATH,
     }
     if pane_id ~= "" then job_env.PIMUX_PANE = pane_id end
     local job = vim.fn.jobstart(cmd, { detach = true, env = job_env })
@@ -2741,9 +2746,13 @@ function M.setup(opts)
       PINVIM_WORKSPACE_ID = registry and registry.workspace_id or nil,
       PINVIM_INSTANCE_ID = registry and registry.instance_id or nil,
       PINVIM_REGISTRY_ROOT = registry and registry.workspace_root or nil,
+      PINVIM_PAIR_ID = registry and registry.pair_id or vim.env.PINVIM_PAIR_ID,
       PINVIM_SESSION_ROLE = "main",
       PINVIM_LINK_MODE = "main",
       PI_SOCKET = socket_path,
+      TMUX = vim.env.TMUX,
+      TMUX_PANE = vim.env.TMUX_PANE,
+      PATH = vim.env.PATH,
     }
     if pane_id ~= "" then job_env.PIMUX_PANE = pane_id end
     local job_opts = { detach = true, env = job_env }
@@ -2863,7 +2872,7 @@ function M.setup(opts)
 
     -- Poll for connection. Also drives ensure_connected so we cover the case
     -- where the socket file does not exist yet (e.g. PiPanel just spawned pi
-    -- and main.sock has not bound). Caller can pass `await_connect_ms` to
+    -- and the instance main socket has not bound). Caller can pass `await_connect_ms` to
     -- extend the budget for first-launch flows; default preserves prior 2s.
     local timer = vim.uv.new_timer()
     if not timer then

@@ -4,9 +4,33 @@
 
 set -euo pipefail
 
-# Get last load timestamp before reload
+find_hs() {
+  if command -v hs >/dev/null 2>&1; then
+    command -v hs
+    return 0
+  fi
+
+  local home_manager_hs="$HOME/Applications/Home Manager Apps/Hammerspoon.app/Contents/Frameworks/hs/hs"
+  if [[ -x "$home_manager_hs" ]]; then
+    printf '%s\n' "$home_manager_hs"
+    return 0
+  fi
+
+  local app_hs="/Applications/Hammerspoon.app/Contents/Frameworks/hs/hs"
+  if [[ -x "$app_hs" ]]; then
+    printf '%s\n' "$app_hs"
+    return 0
+  fi
+
+  return 1
+}
+
+HS_BIN=$(find_hs || true)
+
+# Get last load timestamp before reload.
 get_last_load() {
-  hs -c '
+  [[ -n "$HS_BIN" ]] || return 0
+  "$HS_BIN" -c '
     local c = hs.console.getConsole()
     local last
     for line in c:gmatch("[^\n]+") do
@@ -18,17 +42,38 @@ get_last_load() {
 
 before=$(get_last_load)
 
-# Trigger reload via menu (safe, doesn't crash IPC)
-osascript -e '
+# Trigger reload via menu (safe path). Do not use hs.reload() or hs-driven
+# selectMenuItem here; both can crash/kill Hammerspoon from CLI IPC.
+reload_err=$(mktemp -t hs-reload.XXXXXX)
+if ! osascript -e '
 tell application "System Events"
     tell process "Hammerspoon"
-        click menu item "Reload Config" of menu 1 of menu bar item 1 of menu bar 2
+        set reloaded to false
+        repeat with mb in menu bars
+            try
+                click menu item "Reload Config" of menu "File" of mb
+                set reloaded to true
+                exit repeat
+            end try
+        end repeat
+        if reloaded is false then error "Reload Config menu item not found"
     end tell
 end tell
-' >/dev/null 2>&1
+' >/dev/null 2>"$reload_err"; then
+  err=$(cat "$reload_err")
+  trash "$reload_err" 2>/dev/null || true
+  echo "✗ Reload click failed"
+  if [[ "$err" == *"not allowed assistive access"* || "$err" == *"-1719"* ]]; then
+    echo "System Events/osascript lacks Accessibility permission in this context."
+    echo "Grant Accessibility to /usr/bin/osascript, or run from an app/context that has it."
+  fi
+  [[ -n "$err" ]] && echo "$err"
+  exit 1
+fi
+trash "$reload_err" 2>/dev/null || true
 
 # Wait for new "hammerspork loaded" message (up to 10 seconds)
-for i in {1..20}; do
+for _ in {1..20}; do
   sleep 0.5
   after=$(get_last_load)
   if [[ -n "$after" && "$after" != "$before" ]]; then

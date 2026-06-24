@@ -74,6 +74,7 @@ mkdir -p "$SOCKET_DIR" "$PINVIM_REGISTRY_DIR"
 PINVIM_PAIR_ID="${PINVIM_PAIR_ID:-}"
 
 PINVIM_FORWARD_ENV=(
+  PINVIM_PAIR_ID
   PINVIM_PARENT_ID
   PINVIM_WORKSPACE_ID
   PINVIM_INSTANCE_ID
@@ -143,12 +144,13 @@ socket_pair_id() {
 }
 
 # dot-r0f8: a socket is pair-eligible when we have no pair id (legacy/no strict
-# pairing) or its manifest pair id matches this Nvim's pair id.
+# pairing) or its manifest pair id matches this Nvim's pair id. Unknown pair id
+# is not eligible in strict mode; otherwise another same-session Nvim can steal it.
 socket_pair_matches() {
   local sock="$1" sock_pair
   [[ -z "$PINVIM_PAIR_ID" ]] && return 0
   sock_pair=$(socket_pair_id "$sock")
-  [[ -z "$sock_pair" || "$sock_pair" == "$PINVIM_PAIR_ID" ]]
+  [[ "$sock_pair" == "$PINVIM_PAIR_ID" ]]
 }
 
 socket_for_window() {
