@@ -1,6 +1,6 @@
 ---
 id: mbm-i2na
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-06-23T14:08:01Z
@@ -39,3 +39,22 @@ Benefits:
 4. Custom packages removed from pkgs/default.nix in dotfiles repo (post-validation).
 5. mise.toml [tools] updated to reference flakes for migrated packages.
 6. lat.md/flakes.md documents the new repo, package list, and mise-nix usage.
+
+## Notes
+
+**2026-06-24T00:10:42Z**
+
+Prototyped megalithic/flakes repo at ~/code/flakes (local only):
+
+1. flake.nix imports dotfiles custom package overlay from pkgs/default.nix
+2. Exposes 8 packages: helium, brave-browser-nightly, bloom, handy, slk, tidewave, tidewave-cli, chrome-devtools-mcp
+3. Verified: nix flake show lists all packages, nix build .#helium — started building
+4. Only aarch64-darwin supported (macOS Apple Silicon)
+
+Next steps before GitHub push:
+
+- Add kanata + kanata-bar packages (need to extract from nix-darwin module)
+- Switch dotfiles input from local path to github:megalithic/dotfiles
+- Install jbadeau/mise-nix plugin
+- Test: mise install 'nix:helium@github+megalithic/flakes#helium'
+- Remove migrated packages from pkgs/default.nix (post-validation)
