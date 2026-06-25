@@ -28,7 +28,7 @@ let
     panel_padding = 24
     corner_radius = 24
     row_spacing = 6
-    background_color = "#262B31CC"
+    background_color = "#262B31F2"
     border_width = 1.0
     border_color = "#FFFFFF22"
     dim_unfocused = 0.5

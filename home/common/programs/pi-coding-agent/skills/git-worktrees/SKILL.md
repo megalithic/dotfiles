@@ -101,6 +101,15 @@ for file in "${worktree_core_files[@]}"; do
   fi
 done
 
+# GIT_WORKTREE: read by config/dev.exs & config/test.exs for the per-worktree DB suffix + port offset.
+# Append to the worktree's .env so mise (_.file = '.env') / direnv export it into every interactive
+# and login shell, and into mix/devenv subprocesses run from the worktree. Sanitize the name to
+# [A-Za-z0-9_-] (spaces, slashes, etc. -> '-') so it is a valid Postgres database-name suffix.
+if [ ! -f "$worktree_path/.env" ] || ! rg -q '^GIT_WORKTREE=' "$worktree_path/.env"; then
+  git_worktree=$(printf '%s' "$branch" | sed 's/[^A-Za-z0-9_-]/-/g')
+  printf 'GIT_WORKTREE=%s\n' "$git_worktree" >> "$worktree_path/.env"
+fi
+
 # Trust mise in the fresh worktree so its prompt never blocks setup/tmux.
 if [ -e "$worktree_path/mise.toml" ] || [ -e "$worktree_path/.mise.toml" ]; then
   mise trust "$worktree_path" 2>/dev/null || (cd "$worktree_path" && mise trust 2>/dev/null) || true
@@ -136,6 +145,14 @@ if ! tmux has-session -t "$tmux_session" 2>/dev/null; then
 fi
 ```
 
+## GIT_WORKTREE env var
+
+`config/dev.exs` and `config/test.exs` read `GIT_WORKTREE` to derive a per-worktree database-name suffix and a deterministic port offset. When it is unset (the main checkout) names and ports keep their plain base values, so concurrent worktrees get isolated databases and a collision-free port block.
+
+Set it per worktree by appending `GIT_WORKTREE=<worktree name>` to the worktree's own `.env`. The repo loads `.env` through mise (`[env] _.file = '.env'`), and direnv if present, so the variable is exported into every interactive and login shell in that directory and into `mix`/`devenv` subprocesses run there. The creation commands below do this idempotently right after copying core files (skipped if a `GIT_WORKTREE=` line already exists).
+
+The value is sanitized to `[A-Za-z0-9_-]` — spaces, slashes, and other characters are replaced with `-`, while existing `-` and `_` are kept — so a branch like `feat/new ui` yields `GIT_WORKTREE=feat-new-ui`, a valid Postgres database-name suffix.
+
 ## Commands
 
 ### New branch worktree
@@ -156,6 +173,10 @@ for file in "${worktree_core_files[@]}"; do
     fi
   fi
 done
+if [ ! -f "$worktree_path/.env" ] || ! rg -q '^GIT_WORKTREE=' "$worktree_path/.env"; then
+  git_worktree=$(printf '%s' "$branch" | sed 's/[^A-Za-z0-9_-]/-/g')
+  printf 'GIT_WORKTREE=%s\n' "$git_worktree" >> "$worktree_path/.env"
+fi
 if [ -e "$worktree_path/mise.toml" ] || [ -e "$worktree_path/.mise.toml" ]; then
   mise trust "$worktree_path" 2>/dev/null || (cd "$worktree_path" && mise trust 2>/dev/null) || true
 fi
@@ -221,6 +242,10 @@ for file in "${worktree_core_files[@]}"; do
     fi
   fi
 done
+if [ ! -f "$worktree_path/.env" ] || ! rg -q '^GIT_WORKTREE=' "$worktree_path/.env"; then
+  git_worktree=$(printf '%s' "$branch" | sed 's/[^A-Za-z0-9_-]/-/g')
+  printf 'GIT_WORKTREE=%s\n' "$git_worktree" >> "$worktree_path/.env"
+fi
 if [ -e "$worktree_path/mise.toml" ] || [ -e "$worktree_path/.mise.toml" ]; then
   mise trust "$worktree_path" 2>/dev/null || (cd "$worktree_path" && mise trust 2>/dev/null) || true
 fi

@@ -6,7 +6,7 @@
 }:
 {
   home.shellAliases = {
-    mc = ''XDG_CONFIG_HOME="$HOME/.dotfiles/.local_scripts" NVIM_APPNAME=mc-nvim nvim -O'';
+    mc = "NVIM_APPNAME=mc-nvim nvim -O";
   };
 
   # Use .vimrc for standard vim settings
@@ -28,6 +28,7 @@
       .netrwhist
       dist/
       .devenv/
+      .build/
       .jj/
       node_modules/
       **/node_modules/
@@ -37,6 +38,10 @@
     '';
     nvim = {
       source = config.lib.mega.linkConfig "nvim";
+      recursive = true;
+    };
+    mc-nvim = {
+      source = config.lib.mega.linkDotfile ".local_scripts/mc-nvim";
       recursive = true;
     };
   };

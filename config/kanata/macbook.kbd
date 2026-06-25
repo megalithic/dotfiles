@@ -67,7 +67,7 @@
 ;; ────────────────────────────────────────────────────────────────────────────
 (defalias
   ;; Caps lock: tap = escape, hold = control
-  escctrl (tap-hold $tap-time $hold-time esc lctl)
+  escctrl (tap-hold $tap-time 225 esc lctl)
 
   ;; ── Left hand home row mods ───────────────────────────────────────────────
   ;; a = cmd, s = shift, d = opt (when held)
@@ -84,7 +84,7 @@
 
   ;; ── Vim navigation layer ──────────────────────────────────────────────────
   ;; f = 'f' on tap, activates nav layer on hold
-  nav (tap-hold $tap-time $hold-time f (layer-while-held nav))
+  nav (tap-hold $tap-time 225 f (layer-while-held nav))
 
   ;; ── Space as hyper (DISABLED - too buggy) ──────────────────────────────────
   ;; spcf19 (tap-hold $tap-time $hold-time spc f19)

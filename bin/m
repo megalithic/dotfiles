@@ -17,106 +17,138 @@ if [[ -f .env ]]; then
   source .env
 fi
 
+sanitize_sname_part() {
+  local input="$1"
+  local sep="-"
+
+  if [[ "$input" == *"_"* ]]; then
+    sep="_"
+  fi
+
+  SANITIZE_SEP="$sep" perl -CS -Mutf8 -e '
+    use strict;
+    use warnings;
+    my $sep = $ENV{SANITIZE_SEP};
+    my $s = shift // "";
+    $s =~ s/([[:lower:][:digit:]])([[:upper:]])/$1$sep$2/g;
+    $s =~ s/([[:upper:]]+)([[:upper:]][[:lower:]])/$1$sep$2/g;
+    $s = lc $s;
+    if ($sep eq "_") {
+      $s =~ s/[^[:alnum:]]+/_/g;
+      $s =~ s/_+/_/g;
+      $s =~ s/^_+|_+$//g;
+    } else {
+      $s =~ s/[^[:alnum:]]+/-/g;
+      $s =~ s/-+/-/g;
+      $s =~ s/^-+|-+$//g;
+    }
+    print $s;
+  ' "$input"
+}
+
+default_sname() {
+  local base git_common_dir git_root sname worktree_name
+
+  base="$(basename "$PWD")"
+
+  if git_root="$(git rev-parse --show-toplevel 2>/dev/null)" &&
+    [[ -f "$git_root/.git" ]] &&
+    git_common_dir="$(git -C "$git_root" rev-parse --git-common-dir 2>/dev/null)"; then
+    if [[ "$git_common_dir" != /* ]]; then
+      git_common_dir="$git_root/$git_common_dir"
+    fi
+
+    base="$(basename "$(dirname "$git_common_dir")")"
+    worktree_name="$(basename "$git_root")"
+    sname="$(sanitize_sname_part "$base")-$(sanitize_sname_part "$worktree_name")"
+  else
+    sname="$(sanitize_sname_part "$base")"
+  fi
+
+  printf "%s" "$sname"
+}
+
 case $1 in
-"")
-  shift
-  if [[ -f mix.exs ]]; then
-    if [[ -z "$1" ]]; then
-      iex -S mix
-    else
-      if [[ "$1" == *"tern"* ]]; then
-        echo "iex --sname $1 --cookie ternit -S mix"
-        iex --sname $1 --cookie ternit -S mix
+  "")
+    shift
+    if [[ -f mix.exs ]]; then
+      if [[ -z "$1" ]]; then
+        iex -S mix
       else
         echo "iex --sname $1 -S mix"
         iex --sname $1 -S mix
       fi
-    fi
-  else
-    if [[ -z "$1" ]]; then
-      iex
     else
-      if [[ "$1" == *"tern"* ]]; then
-        echo "iex --sname $1 --cookie ternit"
-        iex --sname $1 --cookie ternit
+      if [[ -z "$1" ]]; then
+        iex
       else
         echo "iex --sname $1"
         iex --sname $1
       fi
     fi
-  fi
-  ;;
+    ;;
 
-new)
-  # if grep --quiet -E " new: \[" mix.exs; then
-  shift
-  mix archive.install hex phx_new 1.7.0-rc.2
-  mix phx.new . --app "$@"
-  # else
-  #   mix deps.get && mix compile
-  # fi
-  ;;
-
-setup)
-  if grep --quiet -E " setup: \[" mix.exs; then
+  new)
+    # if grep --quiet -E " new: \[" mix.exs; then
     shift
-    mix setup "$@"
-  else
-    mix deps.get && mix compile
-  fi
-  ;;
-d)
-  shift
-  if grep --quiet -E "ex_doc.*only: :docs" mix.exs; then
-    MIX_ENV=docs mix docs -f html --open "$@"
-  else
-    mix docs -f html --open "$@"
-  fi
-  ;;
+    mix archive.install hex phx_new 1.7.0-rc.2
+    mix phx.new . --app "$@"
+    # else
+    #   mix deps.get && mix compile
+    # fi
+    ;;
 
-s)
-  shift
-  if [[ -z "$1" ]]; then
-    echo "iex -S mix phx.server"
-    iex -S mix phx.server
-  else
-    if [[ "$1" == *"tern"* ]]; then
-      echo "iex --sname $1 --cookie ternit -S mix phx.server"
-      iex --sname $1 --cookie ternit -S mix phx.server
-    else
-      echo "iex --sname $1 -S mix phx.server"
-      iex --sname $1 -S mix phx.server
-    fi
-  fi
-  ;;
-
-f)
-  if [[ -f .formatter.exs ]]; then
-    inputs=$(grep "inputs:" .formatter.exs)
-
-    if [[ -n "$inputs" ]] && [[ "$inputs" != *"inputs: []"* ]]; then
+  setup)
+    if grep --quiet -E " setup: \[" mix.exs; then
       shift
-      mix format "$@"
+      mix setup "$@"
+    else
+      mix deps.get && mix compile
     fi
-  fi
-  ;;
+    ;;
+  d)
+    shift
+    if grep --quiet -E "ex_doc.*only: :docs" mix.exs; then
+      MIX_ENV=docs mix docs -f html --open "$@"
+    else
+      mix docs -f html --open "$@"
+    fi
+    ;;
 
-h)
-  printf -- "Usage: %s [subcommand]\n" "m"
-  printf -- "\n"
-  printf -- "Subcommands:\n"
-  printf -- "  h  This help text you're presently reading 😄\n"
-  printf -- "  d  generates and opens docs\n"
-  printf -- "  s  runs iex -S mix phx.server\n"
-  printf -- "  f  runs mix format\n"
-  printf -- "  setup  sets up the project\n"
-  printf -- "  _  runs iex with/without mix\n"
-  printf -- "\n"
+  s)
+    shift
+    sname="${1:-$(default_sname)}"
+    echo "iex --sname $sname -S mix phx.server"
+    iex --sname "$sname" -S mix phx.server
+    ;;
 
-  exit 0
-  ;;
+  f)
+    if [[ -f .formatter.exs ]]; then
+      inputs=$(grep "inputs:" .formatter.exs)
 
-*)
-  mix "$@"
-  ;;
+      if [[ -n "$inputs" ]] && [[ "$inputs" != *"inputs: []"* ]]; then
+        shift
+        mix format "$@"
+      fi
+    fi
+    ;;
+
+  h)
+    printf -- "Usage: %s [subcommand]\n" "m"
+    printf -- "\n"
+    printf -- "Subcommands:\n"
+    printf -- "  h  This help text you're presently reading 😄\n"
+    printf -- "  d  generates and opens docs\n"
+    printf -- "  s  runs iex -S mix phx.server\n"
+    printf -- "  f  runs mix format\n"
+    printf -- "  setup  sets up the project\n"
+    printf -- "  _  runs iex with/without mix\n"
+    printf -- "\n"
+
+    exit 0
+    ;;
+
+  *)
+    mix "$@"
+    ;;
 esac

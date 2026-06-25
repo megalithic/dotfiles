@@ -13,7 +13,6 @@ require("settings")
 require("utils")
 require("keymaps")
 require("options")
-require("autocmds")
 require("bootstrap")
 
 -- Setup lang system (ftplugin autocmds)

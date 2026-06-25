@@ -1,0 +1,163 @@
+#!/usr/bin/env elixir
+
+# Per-worktree DB/port isolation patcher for Elixir/Phoenix config files.
+#
+# AST-based (Igniter + Sourceror) so it only ever touches the *values* of
+# `database:` and `port:` config keys, never comments, strings, or unrelated
+# literals. Injects a preamble that derives a DB-name suffix and a deterministic
+# port offset from the GIT_WORKTREE env var, then:
+#
+#   * appends `#{worktree_suffix}` to every `database:` value
+#   * adds `+ worktree_port_offset` to app listen ports (4000-4999 only, so
+#     shared service ports like Postgres 5432 / Redis 6379 are left alone)
+#
+# When GIT_WORKTREE is unset (the main checkout) suffix="" and offset=0, so
+# names/ports keep their plain base values.
+#
+# Idempotent: the preamble is guarded by `worktree_suffix =`, and every value
+# transform skips values already referencing worktree_suffix / worktree_port_offset.
+#
+# Usage:
+#   elixir-worktree-isolation                 # dry-run diff on default files
+#   elixir-worktree-isolation --apply         # write changes
+#   elixir-worktree-isolation --apply config/dev.exs
+
+Mix.install([{:igniter, "~> 0.8"}])
+
+defmodule WorktreeIso do
+  alias Sourceror.Zipper
+  alias Igniter.Code.Common
+
+  @app_port_lo 4000
+  @app_port_hi 4999
+
+  # NOTE: a trailing comment line here would become a dangling Sourceror comment
+  # and drift into the middle of the file, so the block ends on a code node.
+  @preamble ~S'''
+  # worktree-isolation (managed): per-worktree DB suffix + deterministic port offset
+  # derived from GIT_WORKTREE. Unset (main checkout) => suffix "" and offset 0, so
+  # database names and ports keep their plain base values. Set GIT_WORKTREE=<name>
+  # in a worktree for isolated DBs and a collision-free port block.
+  worktree = System.get_env("GIT_WORKTREE")
+  worktree_suffix = if worktree, do: "_#{worktree}", else: ""
+  worktree_port_offset = if worktree, do: :erlang.phash2(worktree, 1000), else: 0
+  '''
+
+  def transform(zipper) do
+    zipper
+    |> add_preamble()
+    |> Zipper.traverse(&transform_node/1)
+  end
+
+  defp add_preamble(zipper) do
+    text = zipper |> Zipper.topmost_root() |> Sourceror.to_string()
+
+    if String.contains?(text, "worktree_suffix =") do
+      zipper
+    else
+      case Common.move_to(zipper, fn z ->
+             match?({:import, _, [{:__aliases__, _, [:Config]}]}, Zipper.node(z))
+           end) do
+        {:ok, z} -> Common.add_code(z, @preamble, placement: :before)
+        :error -> Common.add_code(zipper, @preamble, placement: :before)
+      end
+    end
+  end
+
+  defp transform_node(z) do
+    case Zipper.node(z) do
+      {{:__block__, _, [key]} = key_node, value} when key in [:database, :port] ->
+        case wrap(key, Sourceror.to_string(value)) do
+          {:ok, new_value} -> Zipper.replace(z, {key_node, new_value})
+          :unchanged -> z
+        end
+
+      _ ->
+        z
+    end
+  end
+
+  defp wrap(:database, text) do
+    cond do
+      String.contains?(text, "worktree_suffix") ->
+        :unchanged
+
+      # database: System.get_env("ENV", "default") -> suffix the default string
+      Regex.match?(~r/System\.get_env\([^,]+,\s*"/, text) ->
+        text
+        |> then(
+          &Regex.replace(~r/(System\.get_env\([^,]+,\s*")([^"]*)(")/, &1, "\\1\\2\#{worktree_suffix}\\3")
+        )
+        |> parsed(text)
+
+      # database: "literal" (optionally with #{...} interpolation) -> suffix leading literal
+      String.starts_with?(String.trim_leading(text), "\"") ->
+        text
+        |> then(&Regex.replace(~r/^(\s*"[^"#]*)/, &1, "\\1\#{worktree_suffix}"))
+        |> parsed(text)
+
+      true ->
+        :unchanged
+    end
+  end
+
+  defp wrap(:port, text) do
+    cond do
+      String.contains?(text, "worktree_port_offset") ->
+        :unchanged
+
+      # ... || "NNNN" fallback (PORT / LIVE_DEBUGGER_PORT style)
+      match?([_, _], Regex.run(~r/\|\|\s*"(\d+)"/, text)) ->
+        [_, n] = Regex.run(~r/\|\|\s*"(\d+)"/, text)
+
+        if app_port?(n) do
+          ~r/\|\|(\s*)"(\d+)"/
+          |> Regex.replace(text, fn full, sp, num ->
+            if app_port?(num),
+              do: "||" <> sp <> "\"\#{" <> num <> " + worktree_port_offset}\"",
+              else: full
+          end)
+          |> parsed(text)
+        else
+          :unchanged
+        end
+
+      # bare integer literal: port: NNNN
+      Regex.match?(~r/^\d+$/, String.trim(text)) and app_port?(String.trim(text)) ->
+        {:ok, Sourceror.parse_string!(String.trim(text) <> " + worktree_port_offset")}
+
+      true ->
+        :unchanged
+    end
+  end
+
+  defp app_port?(s) do
+    i = String.to_integer(s)
+    i >= @app_port_lo and i <= @app_port_hi
+  end
+
+  defp parsed(new, old) when new == old, do: :unchanged
+  defp parsed(new, _old), do: {:ok, Sourceror.parse_string!(new)}
+end
+
+# --- CLI ---
+args = System.argv()
+apply? = "--apply" in args
+
+files =
+  case Enum.reject(args, &(&1 == "--apply")) do
+    [] -> ["config/dev.exs", "config/test.exs"]
+    fs -> fs
+  end
+
+igniter =
+  Enum.reduce(files, Igniter.new(), fn file, igniter ->
+    Igniter.update_elixir_file(igniter, file, &WorktreeIso.transform/1, required?: false)
+  end)
+
+opts =
+  if apply?,
+    do: [yes: true, title: "worktree-isolation"],
+    else: [dry_run: true, title: "worktree-isolation"]
+
+Igniter.do_or_dry_run(igniter, opts)

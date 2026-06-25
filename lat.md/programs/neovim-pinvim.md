@@ -8,7 +8,7 @@ Pinvim ties together `config/nvim/lua/pinvim.lua`, `config/nvim/lua/pinvim/revie
 
 Neovim config tracks nightly API changes where small compatibility updates prevent startup warnings and flaky rebuilds.
 
-The local overlay exposes `pkgs.nvim-nightly` from `neovim-nightly-overlay`, overrides its `neovim-src` input to Neovim's moving `nightly` tag, and disables its build-time checks because upstream functional tests are flaky in the Darwin Nix sandbox. Autocmd callbacks prefer current `vim.*` APIs over deprecated aliases; yank highlighting uses `vim.hl.hl_op`, not `vim.hl.on_yank`. Escape handling does UI cleanup plus opportunistic autosave, but autosave only runs for real file buffers whose parent directory exists, since forcing `:update` on a missing-path buffer raises `E212`.
+The local overlay exposes `pkgs.nvim-nightly` from `neovim-nightly-overlay`, overrides its `neovim-src` input to Neovim's moving `nightly` tag, and disables its build-time checks because upstream functional tests are flaky in the Darwin Nix sandbox. Home Manager links the alternate `mc-nvim` appname config from `~/.dotfiles/.local_scripts/mc-nvim`; the `mc` alias starts Neovim with `NVIM_APPNAME=mc-nvim`. Autocmd callbacks prefer current `vim.*` APIs over deprecated aliases; yank highlighting uses `vim.hl.hl_op`, not `vim.hl.on_yank`. LSP progress echo notifications use the current `nvim_echo` progress opts, including a required `source` set to the LSP client name when available. Escape handling does UI cleanup plus opportunistic autosave, but autosave only runs for real file buffers whose parent directory exists, since forcing `:update` on a missing-path buffer raises `E212`.
 
 ## Pinvim registry and identity
 

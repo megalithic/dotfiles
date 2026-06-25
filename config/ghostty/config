@@ -17,7 +17,8 @@ working-directory = ~/.dotfiles
 
 minimum-contrast = 1.0
 
-bell-features = title,attention,border
+bell-features = title,attention
+# bell-features = title,attention,border
 
 # adjust-underline-thickness = 0.5
 # adjust-underline-thickness = -50%
