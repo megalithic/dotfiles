@@ -32,6 +32,16 @@ Fish carries repo workflow helpers and desktop integration environment variables
 
 Fish fzf Ctrl-T uses fzf's fish token parser, so the current path token becomes `$dir` and the Home Manager fzf `fileWidgetCommand` passes `$dir` as fd's explicit search path. Fish defines a `jj` wrapper that runs real `jj` inside jj repos, allows `jj git init`, and falls back to `git` with a hint in plain git repos. `PLUG_EDITOR` is exported as a `hammerspoon://nvim-open` URL so stack-trace links delegate final Neovim target resolution to Hammerspoon.
 
+Fish owns the Worktrunk integration locally instead of upstream's `wt config shell init fish` (which is disabled via `programs.worktrunk.enableFishIntegration = false`; bash/zsh stay on upstream). The local `wt` function in `functions.nix` receives the real binary path (`wtBin`) so it never recurses, and vendors upstream directive handling: it creates `WORKTRUNK_DIRECTIVE_CD_FILE` and `WORKTRUNK_DIRECTIVE_EXEC_FILE`, sets `WORKTRUNK_SHELL=fish`, then runs `cd` and `eval` on the directives so parent-shell cwd and `--execute` still work. On top of that it adds two local behaviors: implicit switch (`wt @` / `wt some-branch` become `wt switch …`, while known built-ins and `--help`/`--version` stay pass-through) and tmux targets (`-t/--target window|session`, parseable before `--` and in any position). Target mode forces `switch --no-cd --format=json`, parses `branch`/`path` from the JSON, and hands navigation to `bin/wt-tmux-target` so the calling shell's cwd never changes. Completions in `completions.nix` (also given `wtBin`) suggest worktree branches for explicit (`wt switch <TAB>`) and implicit (`wt <TAB>`) switch, plus `window`/`session` for `-t/--target`.
+
+## User bin scripts
+
+User scripts in `bin/` provide repo workflow shortcuts that are linked into `~/bin` by Home Manager.
+
+The `m` script wraps common Mix/Phoenix commands. Its `m s` Phoenix server command always starts a named IEx node: an explicit argument is used as-is; without an argument, the name is derived from the current directory basename, or from the main checkout basename plus linked-worktree directory basename when inside a Git worktree. Derived names are lowercased and use dashes unless the source name already uses underscores.
+
+Two scripts back the fish `wt` wrapper's tmux target mode. `wt-tmux-target --target window|session --branch <branch> --path <path>` derives a sanitized tmux name (non-`[A-Za-z0-9_.-]` collapsed to `-`, short `cksum` hash appended when sanitization changed the name). Session target creates or reuses a per-worktree session rooted at the worktree with `code` and `services` windows (idempotent — never duplicates windows or kills panes), switching the client inside tmux or attaching outside it. Window target creates or reuses a single current-session window inside tmux and degrades to session behavior outside tmux. `wt-tail-logs [branch]` feeds the `services` window: it polls `wt config state logs --format=json`, filters `.hook_output[]` by branch and `post-start`/`post-switch` hook, tails the discovered paths with `tail -F` (paths come from JSON metadata, never guessed), and prints a waiting message with retry when no logs exist yet. It only tails logs; it never starts services.
+
 ## Tmux layouts
 
 Tmux layout scripts are Bash-compatible session builders discovered by `ftm` from `TMUX_LAYOUTS`.
@@ -52,59 +62,59 @@ A handful of programs have enough intricacy to warrant their own files instead o
 
 Tools managed under `home/common/programs/`, one line each. Tools with their own notable doc are linked above.
 
-| Tool                                    | What it manages                                                                      |
-| --------------------------------------- | ------------------------------------------------------------------------------------ |
-| aerc / mailmate                         | mail clients                                                                         |
-| bash / fish                             | shells; fish is default and carries repo helpers                                     |
-| bat                                     | cat replacement                                                                      |
-| brave-browser-nightly                   | Chromium browser wrapper app                                                         |
-| claude-code                             | parked until its old dependency is restored                                          |
-| codex                                   | OpenAI Codex CLI via `programs.codex`                                                |
-| colorsnapper / contexts                 | macOS GUI utilities from brew-nix casks                                              |
-| csvlens                                 | CSV terminal viewer                                                                  |
-| desktoppr                               | wallpaper activation                                                                 |
-| devenv                                  | devenv integration; exports `DEVENV_TUI=false`                                       |
-| direnv                                  | direnv + nix-direnv                                                                  |
-| discord                                 | chat app                                                                             |
-| espanso                                 | text expander (config in `config/espanso/`)                                          |
-| eza                                     | ls replacement                                                                       |
-| fd                                      | find replacement                                                                     |
-| firefox                                 | browser                                                                              |
-| fzf                                     | fuzzy finder                                                                         |
-| ghostty                                 | terminal emulator — see [[ghostty]]                                                  |
-| git                                     | git, signing, gitignore/tool-ignore; `git wt` forwards to Worktrunk `wt`             |
-| hammerspoon                             | macOS automation — see [[hammerspoon]]                                               |
-| handy                                   | macOS app (local nixpkgs backport)                                                   |
-| helium-browser                          | primary browser — see [[helium]]                                                     |
-| htop / k9s                              | process and Kubernetes TUIs                                                          |
-| jj                                      | Jujutsu VCS                                                                          |
-| jq                                      | JSON processor                                                                       |
-| kanata / karabiner                      | keyboard remapping                                                                   |
-| khard / notmuch / mbsync / msmtp / tiny | mail/contacts stack                                                                  |
-| kitty                                   | terminal emulator (config in `config/kitty/`)                                        |
-| llama-cpp-local                         | local inference service and models                                                   |
-| man                                     | manpage config                                                                       |
-| meetingbar                              | calendar menu bar app                                                                |
-| mise                                    | tool version manager; local override uses tagged macOS binary asset                  |
-| neomd                                   | markdown tooling                                                                     |
-| nh                                      | nix helper                                                                           |
-| nvim                                    | editor — see [[neovim-pinvim]]                                                       |
-| obsidian                                | notes vault activation                                                               |
-| ollama                                  | inert compatibility module (local inference uses llama.cpp)                          |
-| opnix                                   | 1Password-backed secrets — see [[architecture#Secrets management]]                   |
-| pi-coding-agent                         | Pi CLI and extensions — see [[pi-coding-agent]]                                      |
-| process-compose                         | process orchestration                                                                |
-| proton-drive                            | Proton Drive GUI app from brew-nix cask                                              |
-| ripgrep                                 | search tool                                                                          |
-| rust                                    | rustup + bacon toolchain                                                             |
-| shade / shade-next                      | Hammerspoon launcher panels — see [[hammerspoon]]                                    |
-| slk                                     | Slack CLI (upstream static tarball package)                                          |
-| ssh                                     | SSH config (1Password agent provides keys)                                           |
-| starship                                | shell prompt; git modules use `git rev-parse` guards so `.git` file worktrees render |
-| surfingkeys                             | browser keyboard nav (enabled on Tidewave)                                           |
-| television                              | fuzzy TUI                                                                            |
-| tmux                                    | terminal multiplexer; layouts via `ftm`                                              |
-| worktrunk                               | worktree manager via upstream Home Manager module and cached `pkgs.worktrunk`        |
-| yazi                                    | file manager + plugins                                                               |
-| yubico-authenticator                    | Yubico Authenticator GUI app from brew-nix cask                                      |
-| zoxide                                  | directory jumper                                                                     |
+| Tool                                    | What it manages                                                                                                                               |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| aerc / mailmate                         | mail clients                                                                                                                                  |
+| bash / fish                             | shells; fish is default and carries repo helpers                                                                                              |
+| bat                                     | cat replacement                                                                                                                               |
+| brave-browser-nightly                   | Chromium browser wrapper app                                                                                                                  |
+| claude-code                             | parked until its old dependency is restored                                                                                                   |
+| codex                                   | OpenAI Codex CLI via `programs.codex`                                                                                                         |
+| colorsnapper / contexts                 | macOS GUI utilities from brew-nix casks                                                                                                       |
+| csvlens                                 | CSV terminal viewer                                                                                                                           |
+| desktoppr                               | wallpaper activation                                                                                                                          |
+| devenv                                  | devenv integration; exports `DEVENV_TUI=false`                                                                                                |
+| direnv                                  | direnv + nix-direnv                                                                                                                           |
+| discord                                 | chat app                                                                                                                                      |
+| espanso                                 | text expander (config in `config/espanso/`)                                                                                                   |
+| eza                                     | ls replacement                                                                                                                                |
+| fd                                      | find replacement                                                                                                                              |
+| firefox                                 | browser                                                                                                                                       |
+| fzf                                     | fuzzy finder                                                                                                                                  |
+| ghostty                                 | terminal emulator — see [[ghostty]]                                                                                                           |
+| git                                     | git, signing, gitignore/tool-ignore; `git wt` forwards to Worktrunk `wt`                                                                      |
+| hammerspoon                             | macOS automation — see [[hammerspoon]]                                                                                                        |
+| handy                                   | macOS app (local nixpkgs backport)                                                                                                            |
+| helium-browser                          | primary browser — see [[helium]]                                                                                                              |
+| htop / k9s                              | process and Kubernetes TUIs                                                                                                                   |
+| jj                                      | Jujutsu VCS                                                                                                                                   |
+| jq                                      | JSON processor                                                                                                                                |
+| kanata / karabiner                      | keyboard remapping                                                                                                                            |
+| khard / notmuch / mbsync / msmtp / tiny | mail/contacts stack                                                                                                                           |
+| kitty                                   | terminal emulator (config in `config/kitty/`)                                                                                                 |
+| llama-cpp-local                         | local inference service and models                                                                                                            |
+| man                                     | manpage config                                                                                                                                |
+| meetingbar                              | calendar menu bar app                                                                                                                         |
+| mise                                    | tool version manager; local override uses tagged macOS binary asset                                                                           |
+| neomd                                   | markdown tooling                                                                                                                              |
+| nh                                      | nix helper                                                                                                                                    |
+| nvim                                    | editor — see [[neovim-pinvim]]                                                                                                                |
+| obsidian                                | notes vault activation                                                                                                                        |
+| ollama                                  | inert compatibility module (local inference uses llama.cpp)                                                                                   |
+| opnix                                   | 1Password-backed secrets — see [[architecture#Secrets management]]                                                                            |
+| pi-coding-agent                         | Pi CLI and extensions — see [[pi-coding-agent]]                                                                                               |
+| process-compose                         | process orchestration                                                                                                                         |
+| proton-drive                            | Proton Drive GUI app from brew-nix cask                                                                                                       |
+| ripgrep                                 | search tool                                                                                                                                   |
+| rust                                    | rustup + bacon toolchain                                                                                                                      |
+| shade / shade-next                      | Hammerspoon launcher panels — see [[hammerspoon]]                                                                                             |
+| slk                                     | Slack CLI (upstream static tarball package)                                                                                                   |
+| ssh                                     | SSH config (1Password agent provides keys)                                                                                                    |
+| starship                                | shell prompt; git modules use `git rev-parse` guards so `.git` file worktrees render                                                          |
+| surfingkeys                             | browser keyboard nav (enabled on Tidewave)                                                                                                    |
+| television                              | fuzzy TUI                                                                                                                                     |
+| tmux                                    | terminal multiplexer; layouts via `ftm`                                                                                                       |
+| worktrunk                               | worktree manager (cached `pkgs.worktrunk`); fish integration owned locally — see Fish shell helpers, `bin/wt-tmux-target`, `bin/wt-tail-logs` |
+| yazi                                    | file manager + plugins                                                                                                                        |
+| yubico-authenticator                    | Yubico Authenticator GUI app from brew-nix cask                                                                                               |
+| zoxide                                  | directory jumper                                                                                                                              |

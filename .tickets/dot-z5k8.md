@@ -1,6 +1,6 @@
 ---
 id: dot-z5k8
-status: open
+status: closed
 deps: [dot-fvhz]
 links: []
 created: 2026-06-25T20:12:53Z

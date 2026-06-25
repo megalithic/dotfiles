@@ -1,6 +1,6 @@
 ---
 id: dot-l4fn
-status: open
+status: closed
 deps: [dot-963m, dot-184v, dot-r9fx]
 links: []
 created: 2026-06-25T20:12:53Z

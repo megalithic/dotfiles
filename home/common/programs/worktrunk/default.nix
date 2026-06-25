@@ -8,6 +8,10 @@
     package = pkgs.worktrunk;
     enableBashIntegration = true;
     enableZshIntegration = true;
-    enableFishIntegration = true;
+    # Fish integration is owned locally by a Home Manager `wt` fish function
+    # (home/common/programs/fish/functions.nix) that vendors upstream directive
+    # handling and adds implicit switch + tmux target modes. Disabling the
+    # upstream fish init avoids two competing `wt` functions racing.
+    enableFishIntegration = false;
   };
 }

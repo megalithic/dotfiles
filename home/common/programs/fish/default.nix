@@ -8,9 +8,12 @@ let
 
   aliases = import ./aliases.nix { inherit pkgs isDarwin; };
   abbr = import ./abbr.nix;
-  functions = import ./functions.nix { inherit isDarwin; };
+  functions = import ./functions.nix {
+    inherit isDarwin;
+    wtBin = "${pkgs.worktrunk}/bin/wt";
+  };
   plugins = import ./plugins.nix { inherit pkgs; };
-  completions = import ./completions.nix;
+  completions = import ./completions.nix { wtBin = "${pkgs.worktrunk}/bin/wt"; };
   keybindings = import ./keybindings.nix;
   theme = import ./theme.nix;
   ghosttyFishIntegration = "${pkgs.ghostty-bin}/Applications/Ghostty.app/Contents/Resources/ghostty/shell-integration/fish/vendor_conf.d/ghostty-shell-integration.fish";

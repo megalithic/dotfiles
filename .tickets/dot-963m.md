@@ -1,6 +1,6 @@
 ---
 id: dot-963m
-status: open
+status: closed
 deps: [dot-z5k8]
 links: []
 created: 2026-06-25T20:12:53Z

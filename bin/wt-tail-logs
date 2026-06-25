@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+#
+# wt-tail-logs — tail Worktrunk hook output logs for a branch (services window).
+#
+# Usage:
+#   wt-tail-logs [branch]
+#
+# Polls `wt config state logs --format=json` and selects `.hook_output[]`
+# entries for the requested branch whose hook is `post-start` or `post-switch`.
+# Tails the discovered log paths with `tail -F`. Never starts services.
+#
+# Log paths come from Worktrunk JSON metadata — paths are never guessed.
+
+set -uo pipefail
+
+branch="${1:-}"
+if [[ -z "$branch" ]]; then
+  branch="$(git branch --show-current 2>/dev/null || true)"
+fi
+if [[ -z "$branch" ]]; then
+  branch="$(wt switch @ --no-cd --no-hooks --format=json 2>/dev/null | jq -r '.branch // empty' 2>/dev/null || true)"
+fi
+if [[ -z "$branch" ]]; then
+  echo "wt-tail-logs: could not determine branch (pass one explicitly)" >&2
+  exit 2
+fi
+
+# Select post-start/post-switch hook log paths for $branch from Worktrunk JSON.
+find_logs() {
+  wt config state logs --format=json 2>/dev/null \
+    | jq -r --arg b "$branch" '
+        (.hook_output // [])
+        | map(select(.branch == $b))
+        | map(select((.hook // .name // "") | test("post-start|post-switch")))
+        | .[].path // empty
+      ' 2>/dev/null
+}
+
+echo "wt-tail-logs: watching post-start/post-switch hook logs for '$branch'…"
+
+while true; do
+  mapfile -t logs < <(find_logs | sort -u)
+  # Keep only paths that actually exist on disk.
+  existing=()
+  for f in "${logs[@]}"; do
+    [[ -n "$f" && -f "$f" ]] && existing+=("$f")
+  done
+
+  if [[ ${#existing[@]} -gt 0 ]]; then
+    echo "wt-tail-logs: tailing ${#existing[@]} log file(s):"
+    printf '  %s\n' "${existing[@]}"
+    exec tail -F "${existing[@]}"
+  fi
+
+  echo "wt-tail-logs: no hook logs yet for '$branch' — waiting…"
+  sleep 3
+done

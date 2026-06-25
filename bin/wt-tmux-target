@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+#
+# wt-tmux-target — tmux navigation helper for Worktrunk target mode.
+#
+# Usage:
+#   wt-tmux-target --target window|session --branch <branch> --path <worktree_path>
+#
+# session: create/reuse a per-worktree tmux session rooted at <path> with
+#          `code` and `services` windows. Inside tmux switch the client;
+#          outside tmux attach (creating if needed).
+# window:  inside tmux create/reuse a single current-session window rooted at
+#          <path>; outside tmux degrade to session behavior.
+#
+# The `services` window tails Worktrunk hook logs via `wt-tail-logs <branch>`.
+# It does not start services itself.
+
+set -euo pipefail
+
+target=""
+branch=""
+wpath=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --target)
+      target="${2:-}"
+      shift 2
+      ;;
+    --branch)
+      branch="${2:-}"
+      shift 2
+      ;;
+    --path)
+      wpath="${2:-}"
+      shift 2
+      ;;
+    *)
+      echo "wt-tmux-target: unknown argument: $1" >&2
+      exit 2
+      ;;
+  esac
+done
+
+if [[ "$target" != "window" && "$target" != "session" ]]; then
+  echo "wt-tmux-target: --target must be window|session" >&2
+  exit 2
+fi
+if [[ -z "$wpath" ]]; then
+  echo "wt-tmux-target: --path is required" >&2
+  exit 2
+fi
+if [[ ! -d "$wpath" ]]; then
+  echo "wt-tmux-target: path does not exist: $wpath" >&2
+  exit 2
+fi
+
+# Derive a base name from branch, falling back to worktree dir basename.
+raw_name="$branch"
+[[ -z "$raw_name" ]] && raw_name="$(basename "$wpath")"
+
+# Sanitize: non [A-Za-z0-9_.-] -> '-', collapse repeats, trim leading/trailing '-'.
+sanitized="$(printf '%s' "$raw_name" | sed -E 's/[^A-Za-z0-9_.-]+/-/g; s/-+/-/g; s/^-//; s/-$//')"
+[[ -z "$sanitized" ]] && sanitized="wt"
+
+# Append a short hash when sanitization changed the name (collision safety).
+name="$sanitized"
+if [[ "$sanitized" != "$raw_name" ]]; then
+  short_hash="$(printf '%s' "$raw_name" | cksum | cut -d' ' -f1 | tail -c 5)"
+  name="${sanitized}-${short_hash}"
+fi
+
+inside_tmux="false"
+[[ -n "${TMUX:-}" ]] && inside_tmux="true"
+
+services_cmd="wt-tail-logs $(printf '%q' "$branch")"
+
+# Ensure a window with the given name exists in the session, rooted at $wpath.
+# Reuses an existing window of the same name; never kills panes.
+ensure_window() {
+  local session="$1" window="$2" run_cmd="${3:-}"
+  if tmux list-windows -t "=${session}" -F '#W' 2>/dev/null | grep -qx -- "$window"; then
+    return 0
+  fi
+  if [[ -n "$run_cmd" ]]; then
+    tmux new-window -d -t "=${session}" -n "$window" -c "$wpath" "$run_cmd"
+  else
+    tmux new-window -d -t "=${session}" -n "$window" -c "$wpath"
+  fi
+}
+
+do_session() {
+  if ! tmux has-session -t "=${name}" 2>/dev/null; then
+    # First window becomes `code`.
+    tmux new-session -d -s "$name" -c "$wpath" -n code
+  fi
+  ensure_window "$name" code
+  ensure_window "$name" services "$services_cmd"
+
+  if [[ "$inside_tmux" == "true" ]]; then
+    tmux switch-client -t "=${name}"
+  else
+    tmux attach-session -t "=${name}"
+  fi
+}
+
+do_window() {
+  # Outside tmux there is no current session to add a window to.
+  if [[ "$inside_tmux" != "true" ]]; then
+    do_session
+    return
+  fi
+  local cur
+  cur="$(tmux display-message -p '#S')"
+  if tmux list-windows -t "=${cur}" -F '#W' 2>/dev/null | grep -qx -- "$name"; then
+    tmux select-window -t "=${cur}:${name}"
+  else
+    tmux new-window -t "=${cur}" -n "$name" -c "$wpath"
+  fi
+}
+
+case "$target" in
+  session) do_session ;;
+  window) do_window ;;
+esac

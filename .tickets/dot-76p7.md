@@ -1,6 +1,6 @@
 ---
 id: dot-76p7
-status: open
+status: closed
 deps: [dot-963m]
 links: []
 created: 2026-06-25T20:12:53Z
