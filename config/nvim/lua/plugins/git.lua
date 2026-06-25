@@ -46,10 +46,10 @@ return {
         integrations = {
           fugitive = true,
           neogit = true,
-          neojj = false,
+          -- neojj = false,
           gitsigns = true,
-          committia = false,
-          telescope = false,
+          committia = true,
+          -- telescope = false,
         },
       }
     end,
@@ -58,13 +58,17 @@ return {
   {
     "linrongbin16/gitlinker.nvim",
     cmd = "GitLink",
+    init = function()
+      vim.g.whichkeyAddSpec({ "<localleader>yg", group = " Github" })
+      vim.g.whichkeyAddSpec({ "<localleader>g", group = " Github" })
+    end,
     keys = {
-      { "<localleader>gof", "<cmd>GitLink!<cr>", mode = { "n", "x" }, desc = "copy file url" },
-      { "<localleader>gyf", "<cmd>GitLink<cr>", mode = { "n", "x" }, desc = "open file url" },
+      { "<localleader>gof", "<cmd>GitLink!<cr>", mode = { "n", "x" }, desc = "open file url" },
+      { "<localleader>ygf", "<cmd>GitLink<cr>", mode = { "n", "x" }, desc = "Committed file url" },
       { "<localleader>goc", "<cmd>GitLink! current_branch<cr>", mode = { "n", "x" }, desc = "open current branch url" },
-      { "<localleader>gyc", "<cmd>GitLink current_branch<cr>", mode = { "n", "x" }, desc = "copy current branch url" },
+      { "<localleader>ygc", "<cmd>GitLink current_branch<cr>", mode = { "n", "x" }, desc = "Committed branch url" },
       { "<localleader>gob", "<cmd>GitLink! blame<cr>", mode = { "n", "x" }, desc = "open blame url" },
-      { "<localleader>gyb", "<cmd>GitLink blame<cr>", mode = { "n", "x" }, desc = "copy blame url" },
+      { "<localleader>ygb", "<cmd>GitLink blame<cr>", mode = { "n", "x" }, desc = "Committed blame url" },
     },
     opts = {},
   },
@@ -73,12 +77,32 @@ return {
     "NeogitOrg/neogit",
     cmd = "Neogit",
     branch = "master",
-    dependencies = { "nvim-lua/plenary.nvim" },
+    dependencies = { "nvim-lua/plenary.nvim", "m00qek/baleia.nvim" },
     keys = {
       { "<leader>gg", function() require("neogit").open() end, desc = "neogit: open status" },
       { "<leader>gS", function() require("neogit").open() end, desc = "neogit: open status" },
       { "<localleader>gc", function() require("neogit").open({ "commit", "-v" }) end, desc = "neogit: commit" },
     },
+    init = function()
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "NeogitStatus",
+        callback = function()
+          local root = vim.fn.systemlist({ "git", "rev-parse", "--show-toplevel" })[1]
+          if vim.v.shell_error ~= 0 or not root or root == "" then return end
+
+          local remotes = table.concat(vim.fn.systemlist({ "git", "-C", root, "remote", "-v" }), "\n")
+          local is_megalithic = root:match("/megalithic[%.%-][^/]+")
+            or remotes:match("github%.com[:/]megalithic/")
+            or remotes:match("megalithic%.io")
+
+          if is_megalithic then
+            local ok, state = pcall(require, "neogit.lib.state")
+            if ok then state.set({ "margin", "details" }, false) end
+            vim.schedule(function() pcall(require("neogit").refresh) end)
+          end
+        end,
+      })
+    end,
     opts = {
       disable_signs = false,
       disable_hint = true,
@@ -92,10 +116,12 @@ return {
         hunk = { "󰐕", "󰍴" },
       },
       integrations = {
-        diffview = true,
-        mini_pick = true,
+        diffview = false,
+        codediff = true,
+        mini_pick = false,
         snacks = true,
       },
+      diff_viewer = "codediff",
       graph_style = "kitty",
       process_spinner = "true",
     },

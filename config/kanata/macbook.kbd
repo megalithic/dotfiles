@@ -47,7 +47,7 @@
   ;; hold-time: min duration before modifier activates
   ;; Increase hold-time for heavier typing (reduces false modifier triggers)
   tap-time 200
-  hold-time 225
+  hold-time 500
 
   ;; Keys that trigger early tap for same-hand rolls
   left-hand-keys (

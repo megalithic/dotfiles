@@ -3,6 +3,7 @@ return {
   init = function()
     vim.g.whichkeyAddSpec({ "<localleader>f", group = "󰈔 File" })
     vim.g.whichkeyAddSpec({ "<localleader>y", group = "󰅍 Yank" })
+    vim.g.whichkeyAddSpec({ "<localleader>yg", group = " Github" })
   end,
   opts = {
     navigation = { onlySameExtAsCurrentFile = false },

@@ -5,9 +5,9 @@
 -- review metadata so annotation flushes (ticket dot-jl46) can attach context.
 --
 -- Scopes:
---   uncommitted  -> diffs.nvim review of current worktree changes
---   unpushed     -> diffs.nvim review against @{u} (or clear fallback)
---   branch       -> diffs.nvim review against PR base / default base
+--   uncommitted  -> Neogit status + worktree diff of current worktree changes
+--   unpushed     -> Neogit status + diff against @{u} (or clear fallback)
+--   branch       -> Neogit status + diff against PR base / default base
 --   pr           -> :Guh <current PR> via gh
 --   ticket       -> branch/uncommitted scope + ticket metadata
 --   worktrees    -> pick a worktree, then reopen review scoped to it
@@ -21,6 +21,7 @@ local M = {}
 M.active = nil
 
 local SCOPES = { "uncommitted", "unpushed", "branch", "pr", "ticket", "worktrees" }
+local DIFF_MODES = { "status", "worktree", "staged", "unstaged", "range" }
 
 --- Run a shell command synchronously and return trimmed stdout lines.
 --- Returns (lines, ok). Never throws.
@@ -61,7 +62,9 @@ end
 --- Default base ref: main if it exists, else origin/main, else nil.
 function M.default_base()
   for _, ref in ipairs({ "main", "origin/main", "master", "origin/master" }) do
-    local out, ok = run_trim("git rev-parse --verify --quiet refs/heads/" .. ref .. " 2>/dev/null || git rev-parse --verify --quiet " .. ref)
+    local out, ok = run_trim(
+      "git rev-parse --verify --quiet refs/heads/" .. ref .. " 2>/dev/null || git rev-parse --verify --quiet " .. ref
+    )
     if ok and out ~= "" then return ref end
   end
   return nil
@@ -94,10 +97,11 @@ function M.ticket_id()
 end
 
 --- Build the active review metadata record for the given scope.
-local function build_metadata(scope)
+local function build_metadata(scope, diff_mode)
   local pr = M.pr_metadata()
   return {
     scope = scope,
+    diff_mode = diff_mode,
     worktree = M.worktree_root(),
     branch = M.branch(),
     upstream = M.upstream(),
@@ -107,21 +111,68 @@ local function build_metadata(scope)
   }
 end
 
---- Open a diffs.nvim repo review against `ref`.
---- Uses HEAD for uncommitted scope so review shows staged, unstaged, and untracked changes.
-local function open_diffs_review(ref)
-  local ok, commands = pcall(require, "diffs.commands")
+local function is_diff_mode(value)
+  for _, mode in ipairs(DIFF_MODES) do
+    if value == mode then return true end
+  end
+  return false
+end
+
+local function apply_megalithic_neogit_state(root)
+  local remotes = table.concat(vim.fn.systemlist({ "git", "-C", root, "remote", "-v" }), "\n")
+  local is_megalithic = root:match("/megalithic[%.%-][^/]+")
+    or remotes:match("github%.com[:/]megalithic/")
+    or remotes:match("megalithic%.io")
+
+  if not is_megalithic then return end
+
+  local ok, state = pcall(require, "neogit.lib.state")
+  if ok then state.set({ "margin", "details" }, false) end
+end
+
+local function open_neogit_diff(root, diff_mode, ref)
+  if not diff_mode or diff_mode == "status" then return true end
+
+  local ok_repo, repo = pcall(require, "neogit.lib.git.repository")
+  if ok_repo then repo.instance(root) end
+
+  if diff_mode == "worktree" then
+    require("neogit").action("diff", "worktree")()
+    return true
+  elseif diff_mode == "staged" then
+    require("neogit").action("diff", "staged")()
+    return true
+  elseif diff_mode == "unstaged" then
+    require("neogit").action("diff", "unstaged")()
+    return true
+  elseif diff_mode == "range" then
+    if not ref or ref == "" then
+      vim.notify("pinvim review: no base ref for range diff; showing Neogit status", vim.log.levels.WARN)
+      return true
+    end
+
+    local viewer = require("neogit.config").get_diff_viewer()
+    local integration = viewer == "codediff" and "neogit.integrations.codediff" or "neogit.integrations.diffview"
+    require(integration).open("range", ref .. "..HEAD")
+    return true
+  end
+
+  vim.notify("pinvim review: unknown diff mode '" .. tostring(diff_mode) .. "'", vim.log.levels.ERROR)
+  return false
+end
+
+--- Open a Neogit review surface, optionally launching Neogit's diff integration.
+local function open_neogit_review(ref, diff_mode)
+  local ok, neogit = pcall(require, "neogit")
   if not ok then
-    vim.notify("pinvim review: diffs.nvim is not available", vim.log.levels.ERROR)
+    vim.notify("pinvim review: neogit is not available", vim.log.levels.ERROR)
     return false
   end
 
-  local bufnr = commands.review({
-    base = (ref and ref ~= "") and ref or "HEAD",
-    repo = M.worktree_root(),
-    untracked = true,
-  })
-  return bufnr ~= nil
+  local root = M.worktree_root()
+  apply_megalithic_neogit_state(root)
+  neogit.open({ cwd = root })
+  return open_neogit_diff(root, diff_mode, ref)
 end
 
 --- Open the GitHub PR review via guh.nvim.
@@ -148,9 +199,7 @@ function M.run(scope, opts)
   opts = opts or {}
   scope = scope or "uncommitted"
 
-  if scope == "worktrees" then
-    return M.pick_worktree(opts)
-  end
+  if scope == "worktrees" then return M.pick_worktree(opts) end
 
   if opts.cwd and opts.cwd ~= "" and opts.cwd ~= M.worktree_root() then
     vim.cmd("tcd " .. vim.fn.fnameescape(opts.cwd))
@@ -161,34 +210,48 @@ function M.run(scope, opts)
     return false
   end
 
+  local diff_mode = opts.diff_mode
+  if diff_mode and not is_diff_mode(diff_mode) then
+    vim.notify("pinvim review: unknown diff mode '" .. diff_mode .. "'", vim.log.levels.ERROR)
+    return false
+  end
+
   local ok = true
   if scope == "uncommitted" then
-    ok = open_diffs_review(nil)
+    ok = open_neogit_review(nil, diff_mode or "worktree")
+    diff_mode = diff_mode or "worktree"
   elseif scope == "unpushed" then
     local up = M.upstream()
     if not up then
       vim.notify("pinvim review: no upstream tracking branch; falling back to uncommitted", vim.log.levels.WARN)
-      ok = open_diffs_review(nil)
+      ok = open_neogit_review(nil, diff_mode or "worktree")
+      diff_mode = diff_mode or "worktree"
     else
-      ok = open_diffs_review(up)
+      ok = open_neogit_review(up, diff_mode or "range")
+      diff_mode = diff_mode or "range"
     end
   elseif scope == "branch" then
     local base = branch_base()
     if not base then
       vim.notify("pinvim review: could not determine base ref; falling back to uncommitted", vim.log.levels.WARN)
-      ok = open_diffs_review(nil)
+      ok = open_neogit_review(nil, diff_mode or "worktree")
+      diff_mode = diff_mode or "worktree"
     else
-      ok = open_diffs_review(base)
+      ok = open_neogit_review(base, diff_mode or "range")
+      diff_mode = diff_mode or "range"
     end
   elseif scope == "pr" then
     ok = open_guh(M.pr_metadata())
+    diff_mode = diff_mode or "status"
   elseif scope == "ticket" then
     -- Ticket scope: prefer branch diff, fall back to uncommitted, attach ticket metadata.
     local base = branch_base()
     if base then
-      ok = open_diffs_review(base)
+      ok = open_neogit_review(base, diff_mode or "range")
+      diff_mode = diff_mode or "range"
     else
-      ok = open_diffs_review(nil)
+      ok = open_neogit_review(nil, diff_mode or "worktree")
+      diff_mode = diff_mode or "worktree"
     end
   else
     vim.notify("pinvim review: unknown scope '" .. scope .. "'", vim.log.levels.ERROR)
@@ -196,7 +259,7 @@ function M.run(scope, opts)
   end
 
   -- Record active review metadata (consumed by compose/flush, ticket dot-jl46).
-  if ok then M.active = build_metadata(scope) end
+  if ok then M.active = build_metadata(scope, diff_mode) end
   return ok
 end
 
@@ -276,24 +339,22 @@ function M.pick_worktree(opts)
     if not choice or not idx then return end
     local wt = worktrees[idx]
     local scope = opts.scope or "uncommitted"
-    M.run(scope, { cwd = wt.path })
+    M.run(scope, { cwd = wt.path, diff_mode = opts.diff_mode })
   end)
   return true
 end
 
 --- Public accessor for active review metadata (used by pinvim.lua flush).
-function M.metadata()
-  return M.active
-end
+function M.metadata() return M.active end
 
 --- Clear active review metadata (e.g. when review tab closes).
-function M.clear()
-  M.active = nil
-end
+function M.clear() M.active = nil end
 
 --- Completion list for :PiReview.
-function M.complete()
-  return SCOPES
+function M.complete(arglead)
+  local choices = vim.list_extend(vim.deepcopy(SCOPES), DIFF_MODES)
+  if not arglead or arglead == "" then return choices end
+  return vim.tbl_filter(function(choice) return choice:match("^" .. vim.pesc(arglead)) end, choices)
 end
 
 return M

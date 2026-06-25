@@ -14,6 +14,8 @@ The auto-import filters by directory shape and gates optional modules: `worktrun
 
 Home Manager package composition avoids direct `pkgs.poppler` plus `pkgs."poppler-utils"` installs; PDF CLI tools come from `poppler-utils`.
 
+Hunk is installed from the `hunk` flake input (`inputs.hunk.packages.${pkgs.stdenv.hostPlatform.system}.hunk`) rather than nixpkgs.
+
 GUI `.app` packages built through `mkApp` register in `config.mega.customApps`, and `mkAppActivation` copies or symlinks them into `/Applications` and links any exposed CLI binaries into `~/.local/bin`. Custom `mkApp` packages managed by a wrapper module should set `appLocation = "wrapper"` so the base package is not also added to `home.packages`.
 
 Local inference uses llama.cpp, not Ollama. `home/common/programs/llama-cpp-local/` owns the service, options, and model directory activation; `home/common/programs/ollama/` stays an inert compatibility module. `bin/llm-pull` defaults to the `llamacpp` backend and creates GGUF alias symlinks (`qwen3.6.gguf`, `deepseek14b.gguf`, `gemma4.gguf`) so `llama-server --models-dir` exposes the IDs Pi expects.

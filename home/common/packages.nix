@@ -1,6 +1,7 @@
 {
   pkgs,
   lib,
+  inputs,
   ...
 }:
 let
@@ -18,6 +19,8 @@ let
   homeManagerApps = builtins.filter (
     pkg: ((pkg.passthru or { }).appLocation or "home-manager") == "home-manager"
   ) customApps;
+
+  hunk = inputs.hunk.packages.${pkgs.stdenv.hostPlatform.system}.hunk;
 
   # Standard GUI apps from nixpkgs (not custom mkApp derivations)
   guiPkgs = with pkgs; [
@@ -65,6 +68,7 @@ let
     git-lfs
     gnupg
     gum
+    hunk
     imagemagickBig
     inetutils # telnet, ftp, etc.
     jq # JSON processor

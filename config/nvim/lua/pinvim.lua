@@ -910,6 +910,12 @@ local function legacy_registry_runtime(config)
   }
 end
 
+local function registry_socket_path(config, workspace_id, role, id)
+  local suffix = stable_hash(id or role or workspace_id):sub(1, 10)
+  local name = string.format("pinvim-%s-%s-%s.sock", workspace_id, role, suffix)
+  return path_join(config.transport.socket_dir, name)
+end
+
 function Registry.setup(config)
   local root = normalize_path(config.resolve_root()) or normalize_path(vim.uv.cwd()) or vim.uv.cwd()
   local workspace_id = stable_hash(root)
@@ -923,6 +929,7 @@ function Registry.setup(config)
   local existed = vim.uv.fs_stat(registry_root) ~= nil
   pcall(vim.fn.mkdir, path_join(registry_root, "instances"), "p")
   pcall(vim.fn.mkdir, path_join(registry_root, "children"), "p")
+  pcall(vim.fn.mkdir, config.transport.socket_dir, "p")
 
   local parent_path = path_join(registry_root, "parent.id")
   local parent_id = read_first_line(parent_path)
@@ -950,7 +957,7 @@ function Registry.setup(config)
     instance_root = instance_root,
     pair_id = pair_id,
     children_root = path_join(registry_root, "children"),
-    main_socket_path = path_join(instance_root, "main-" .. instance_id .. ".sock"),
+    main_socket_path = registry_socket_path(config, workspace_id, "main", instance_id),
     main_session_socket_path = path_join(registry_root, "main.sock"),
     main_session_intent_path = path_join(registry_root, "main.intent.json"),
     main_session_runtime_path = path_join(registry_root, "main.runtime.json"),
@@ -1049,7 +1056,7 @@ function Registry.allocate_child(registry, config, opts)
   local child = {
     id = child_id,
     root = child_root,
-    socket_path = path_join(child_root, "child.sock"),
+    socket_path = registry_socket_path(config, registry.workspace_id, "child", child_id),
     intent_path = path_join(child_root, "intent.json"),
     runtime_path = path_join(child_root, "runtime.json"),
   }
@@ -1525,7 +1532,7 @@ function EditorService.handle_request(api, config, method, params)
     local scope = params.scope or params.args or "uncommitted"
     local ok, review = pcall(require, "pinvim.review")
     if not ok then return { ok = false, error = "pinvim.review not available" } end
-    local ran = review.run(scope, { cwd = params.cwd })
+    local ran = review.run(scope, { cwd = params.cwd, diff_mode = params.diff_mode })
     return { ok = true, ran = ran, metadata = review.metadata() }
   end
 
@@ -2150,13 +2157,13 @@ function Commands.setup(api, config)
   })
 
   vim.api.nvim_create_user_command("PiReview", function(command_opts)
-    local args = vim.trim(command_opts.args or "")
-    if args == "" then args = "uncommitted" end
-    require("pinvim.review").run(args)
+    local args = vim.split(vim.trim(command_opts.args or ""), "%s+", { trimempty = true })
+    local scope = args[1] or "uncommitted"
+    require("pinvim.review").run(scope, { diff_mode = args[2] })
   end, {
-    nargs = "?",
-    complete = function() return require("pinvim.review").complete() end,
-    desc = "Open worktree-aware review (uncommitted|unpushed|branch|pr|ticket|worktrees)",
+    nargs = "*",
+    complete = function(arglead) return require("pinvim.review").complete(arglead) end,
+    desc = "Open worktree-aware review (uncommitted|unpushed|branch|pr|ticket|worktrees) with Neogit diff mode",
   })
 
   vim.keymap.set(
@@ -2180,12 +2187,42 @@ function Commands.setup(api, config)
     { silent = true, desc = "pinvim restore previous parked target" }
   )
 
-  vim.keymap.set("n", "<leader>grr", function() require("pinvim.review").run("uncommitted") end, { desc = "review: uncommitted" })
-  vim.keymap.set("n", "<leader>gru", function() require("pinvim.review").run("unpushed") end, { desc = "review: unpushed" })
-  vim.keymap.set("n", "<leader>grb", function() require("pinvim.review").run("branch") end, { desc = "review: branch vs base" })
-  vim.keymap.set("n", "<leader>grp", function() require("pinvim.review").run("pr") end, { desc = "review: GitHub PR (guh)" })
-  vim.keymap.set("n", "<leader>grt", function() require("pinvim.review").run("ticket") end, { desc = "review: ticket-scoped" })
-  vim.keymap.set("n", "<leader>grw", function() require("pinvim.review").run("worktrees") end, { desc = "review: pick worktree" })
+  vim.keymap.set(
+    "n",
+    "<leader>grr",
+    function() require("pinvim.review").run("uncommitted") end,
+    { desc = "review: uncommitted" }
+  )
+  vim.keymap.set(
+    "n",
+    "<leader>gru",
+    function() require("pinvim.review").run("unpushed") end,
+    { desc = "review: unpushed" }
+  )
+  vim.keymap.set(
+    "n",
+    "<leader>grb",
+    function() require("pinvim.review").run("branch") end,
+    { desc = "review: branch vs base" }
+  )
+  vim.keymap.set(
+    "n",
+    "<leader>grp",
+    function() require("pinvim.review").run("pr") end,
+    { desc = "review: GitHub PR (guh)" }
+  )
+  vim.keymap.set(
+    "n",
+    "<leader>grt",
+    function() require("pinvim.review").run("ticket") end,
+    { desc = "review: ticket-scoped" }
+  )
+  vim.keymap.set(
+    "n",
+    "<leader>grw",
+    function() require("pinvim.review").run("worktrees") end,
+    { desc = "review: pick worktree" }
+  )
 
   local function spawn_ephemeral_with_cursor_context() api.spawn_ephemeral_split({ send_explicit_after = true }) end
 
@@ -2791,7 +2828,13 @@ function M.setup(opts)
         vim.notify("pinvim: opening main pi split", vim.log.levels.INFO)
         vim.defer_fn(function()
           api.refresh_buffer_state()
-          api.ensure_connected(true)
+          local connect_attempts = 0
+          local function try_connect()
+            connect_attempts = connect_attempts + 1
+            if not conn.connected then api.ensure_connected(true) end
+            if not conn.connected and connect_attempts < 40 then vim.defer_fn(try_connect, 150) end
+          end
+          try_connect()
           -- Prefer the pane id pimux just activated; poll briefly for detached
           -- pimux paths, then fall back to direction-based focus.
           local focus_attempts = 0

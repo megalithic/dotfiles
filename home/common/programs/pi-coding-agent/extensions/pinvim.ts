@@ -906,11 +906,12 @@ interface SpawnReviewResult {
  * Adopts the target worktree's registry identity (creating parent.id if absent
  * so the Nvim reuses it), sets this Pi's PINVIM_PARENT_ID/PINVIM_WORKSPACE_ID
  * env so peerAllowedForSocket accepts the incoming peer via exactParentRegistry,
- * and launches `nvim +PiReview <scope>` with PI_SOCKET pointing at this Pi.
+ * and launches `nvim +PiReview <scope> [diffMode]` with PI_SOCKET pointing at this Pi.
  */
 const spawnReviewNvim = (
   scope: string,
   worktreeCwd?: string,
+  diffMode?: string,
 ): SpawnReviewResult => {
   if (!process.env.TMUX) {
     return { ok: false, error: "piview spawn requires tmux" };
@@ -952,7 +953,8 @@ const spawnReviewNvim = (
 
   // Spawn nvim in a new tmux pane, pointing it at this Pi's socket + identity.
   // tmux split-window -e KEY=VAL passes env to the new pane's process.
-  const nvimCmd = `nvim '+PiReview ${scope}'`;
+  const reviewArgs = [scope, diffMode].filter(Boolean).join(" ");
+  const nvimCmd = `nvim '+PiReview ${reviewArgs}'`;
   const res = spawnSync(
     "tmux",
     [

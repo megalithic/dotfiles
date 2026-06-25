@@ -17,6 +17,8 @@
  *   /piview pr
  *   /piview ticket
  *   /piview worktrees
+ *   /piview branch status     -> Neogit status only
+ *   /piview branch range      -> Neogit + diff range against branch base
  *
  * Pairing safety: uses globalThis.pinvimEditorService, which targets only the
  * active paired Nvim. When no editor service is connected (bare Pi), `/piview`
@@ -41,6 +43,16 @@ const SCOPES = [
 
 type Scope = (typeof SCOPES)[number];
 
+const DIFF_MODES = [
+  "status",
+  "worktree",
+  "staged",
+  "unstaged",
+  "range",
+] as const;
+
+type DiffMode = (typeof DIFF_MODES)[number];
+
 const SCOPE_DESCRIPTIONS: Record<Scope, string> = {
   uncommitted: "Working tree changes not yet committed",
   unpushed: "Commits on this branch not yet pushed",
@@ -54,7 +66,7 @@ interface EditorServiceApi {
   query: (
     method: string,
     params: Record<string, unknown>,
-  ) => Promise<ReviewOpenResult>;
+  ) => Promise<EditorQueryResult>;
   status: () => {
     connected: boolean;
     stale: boolean;
@@ -63,6 +75,7 @@ interface EditorServiceApi {
   spawnReviewNvim: (
     scope: string,
     worktreeCwd?: string,
+    diffMode?: string,
   ) => {
     ok: boolean;
     socket?: string;
@@ -76,6 +89,12 @@ interface EditorServiceApi {
     pane?: string;
     error?: string;
   };
+}
+
+interface EditorQueryResult {
+  ok: boolean;
+  result?: unknown;
+  error?: string;
 }
 
 interface ReviewOpenResult {
@@ -94,12 +113,17 @@ interface ReviewOpenResult {
       headRefName?: string;
     } | null;
     ticket?: string | null;
+    diff_mode?: string | null;
   } | null;
   error?: string;
 }
 
 function isScope(value: string): value is Scope {
   return (SCOPES as readonly string[]).includes(value);
+}
+
+function isDiffMode(value: string): value is DiffMode {
+  return (DIFF_MODES as readonly string[]).includes(value);
 }
 
 export default function (pi: ExtensionAPI): void {
@@ -118,7 +142,8 @@ export default function (pi: ExtensionAPI): void {
       return filtered.length > 0 ? filtered : null;
     },
     handler: async (args, ctx: ExtensionContext) => {
-      const raw = args?.trim().split(/\s+/)[0] || "uncommitted";
+      const parts = args?.trim().split(/\s+/).filter(Boolean) || [];
+      const raw = parts[0] || "uncommitted";
       if (!isScope(raw)) {
         ctx.ui.notify(
           `piview: unknown scope '${raw}'. Valid: ${SCOPES.join(", ")}`,
@@ -127,6 +152,15 @@ export default function (pi: ExtensionAPI): void {
         return;
       }
       const scope: Scope = raw;
+
+      const diffMode = parts[1];
+      if (diffMode && !isDiffMode(diffMode)) {
+        ctx.ui.notify(
+          `piview: unknown diff mode '${diffMode}'. Valid: ${DIFF_MODES.join(", ")}`,
+          "error",
+        );
+        return;
+      }
 
       const editorService = (
         globalThis as unknown as {
@@ -147,7 +181,11 @@ export default function (pi: ExtensionAPI): void {
         // No paired Nvim editor service: spawn a review Nvim that pairs back
         // to this Pi (dot-zarv). The bare Pi adopts the worktree registry
         // identity so the incoming Nvim peer is accepted.
-        const spawned = editorService.spawnReviewNvim(scope);
+        const spawned = editorService.spawnReviewNvim(
+          scope,
+          undefined,
+          diffMode,
+        );
         if (!spawned.ok) {
           ctx.ui.notify(
             `piview: could not spawn review Nvim: ${spawned.error || "unknown"}`,
@@ -163,11 +201,23 @@ export default function (pi: ExtensionAPI): void {
         return;
       }
 
-      const result = await editorService.query("review.open", { scope });
+      const response = await editorService.query("review.open", {
+        scope,
+        diff_mode: diffMode,
+      });
 
-      if (!result.ok) {
+      if (!response.ok) {
         ctx.ui.notify(
-          `piview: editor service rejected review.open: ${result.error || "unknown error"}`,
+          `piview: editor service rejected review.open: ${response.error || "unknown error"}`,
+          "error",
+        );
+        return;
+      }
+
+      const result = response.result as ReviewOpenResult | undefined;
+      if (!result?.ok) {
+        ctx.ui.notify(
+          `piview: review.open failed: ${result?.error || "unknown error"}`,
           "error",
         );
         return;
@@ -178,6 +228,7 @@ export default function (pi: ExtensionAPI): void {
       const meta = result.metadata;
       const summary = meta
         ? `piview: opened ${meta.scope} in Nvim` +
+          (meta.diff_mode ? ` diff=${meta.diff_mode}` : "") +
           (meta.branch ? ` [${meta.branch}]` : "") +
           (meta.ticket ? ` ticket=${meta.ticket}` : "")
         : "piview: review opened in Nvim";

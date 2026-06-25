@@ -14,9 +14,9 @@ The local overlay exposes `pkgs.nvim-nightly` from `neovim-nightly-overlay`, ove
 
 Pinvim creates a per-workspace registry under `$PI_STATE_DIR/pinvim/<workspace-hash>/` and exposes it through `:PiInfo` plus `require("pinvim").api.info()`.
 
-The workspace hash comes from the normalized project root, and `parent.id` persists durable parent identity. Each Neovim process gets an `instances/<nvim-instance-id>/` directory with Nvim-owned `main.intent.json` and `main-<nvim-instance-id>.sock`. Main-panel launches use that instance socket as the durable Nvim-owned Pi target; the root-level `main.intent.json` mirrors the latest panel request for diagnostics, not cross-instance reuse. When explicit `PI_SOCKET` or buffer-local targets are absent, the instance socket is the automatic fast path.
+The workspace hash comes from the normalized project root, and `parent.id` persists durable parent identity. Each Neovim process gets an `instances/<nvim-instance-id>/` directory with Nvim-owned `main.intent.json`. Main-panel launches use a short per-instance socket under `$PI_STATE_DIR/sockets/pinvim-<workspace>-main-<hash>.sock` as the durable Nvim-owned Pi target; sockets live outside the registry tree to stay under macOS Unix socket path limits. The root-level `main.intent.json` mirrors the latest panel request for diagnostics, not cross-instance reuse. When explicit `PI_SOCKET` or buffer-local targets are absent, the instance socket is the automatic fast path.
 
-`:PiSplit` allocates an explicit child session under `children/<child-id>/` with a stable child id, dedicated `child.sock`, and an `intent.json` derived from `registry_base_record`. Child sockets never replace the main registry entry and never become automatic default reconnect targets.
+`:PiSplit` allocates an explicit child session under `children/<child-id>/` with a stable child id, a short dedicated socket under `$PI_STATE_DIR/sockets/pinvim-<workspace>-child-<hash>.sock`, and an `intent.json` derived from `registry_base_record`. Child sockets never replace the main registry entry and never become automatic default reconnect targets.
 
 Pinvim peer identity carries `pairId`, `parentId`, `workspaceId`, `instanceId`, `registryRoot`, and `role` (`main`, `child`, or `nested`) in hello frames, acknowledgements, and manifests. The Pi extension mirrors those from PINVIM environment when present and rejects mismatched peers before falling back to tmux or root scoring.
 
@@ -42,7 +42,7 @@ Pinvim visual mappings use Neovim `x` mode, so Lua callbacks may run after Visua
 
 Selection capture should first try live Visual state, then fall back to `'<` and `'>` marks plus `visualmode()`. Selection-bearing actions (`gpa`, `gps`, `gpp`, `:PiSend`, `:PiAdd`) route through explicit-send payloads. `gpc` / `:PiComment` capture a selection or cursor line plus a typed annotation into the compose queue; `:PiFlush` renders the whole queue as one prompt. Queued comments place an extmark indicator on the first line; re-running `gpc` on a commented line edits it in place, and empty text deletes it. `:PiComments` loads queued comments into quickfix and opens trouble.nvim's `qflist` when available.
 
-`gpa` and `:PiSend` use `delivery = "attach"`, so Pi stores the latest context and injects it once into the next non-extension user prompt. `gps` uses `delivery = "prompt"`, sending context plus prompt immediately and starting a turn. Normal `gpp` opens or focuses a child Pi split and sends cursor/file context; visual `gpp` sends selection context; child context stays prompt-delivered. `<C-p>` toggles the main PiPanel paired to that Neovim instance, never spawns a child, captures context before the split steals focus, sends it with attach delivery, and does not start a turn by itself.
+`gpa` and `:PiSend` use `delivery = "attach"`, so Pi stores the latest context and injects it once into the next non-extension user prompt. `gps` uses `delivery = "prompt"`, sending context plus prompt immediately and starting a turn. Normal `gpp` opens or focuses a child Pi split and sends cursor/file context; visual `gpp` sends selection context; child context stays prompt-delivered. `<C-p>` toggles the main PiPanel paired to that Neovim instance, never spawns a child, captures context before the split steals focus, sends it with attach delivery, and does not start a turn by itself. `:PiPanel` polls briefly for the newly opened main socket before connecting, because Pi startup can lag behind tmux split creation.
 
 On restart, main sessions prefer their instance main socket and never auto-resume old ephemeral, child, or other-instance sockets. Explicit `:PiTarget <socket>` remains the manual override.
 
@@ -87,10 +87,10 @@ Cases covered by code review plus manual tmux verification (no full multi-Neovim
 
 `:PiReview [scope]` (registered in `config/nvim/lua/pinvim.lua`) and the `<leader>gr{r,u,b,p,t,w}` keymaps dispatch through `require("pinvim.review").run(scope, opts)`:
 
-- `uncommitted` — `diffs.nvim` repository review against `HEAD`, showing staged, unstaged, and untracked current worktree changes.
-- `unpushed` — `diffs.nvim` repository review against `@{u}`; falls back to uncommitted with a warning when no upstream exists.
-- `branch` — `diffs.nvim` repository review against the PR base ref, or `origin/main`/`main`/`master` as default base.
-- `pr` — `:Guh <pr-url>` via `justinmk/guh.nvim` (`config/nvim/lua/plugins/github.lua`); warns when no PR resolves. `guh.nvim` handles GitHub PR/issue/CI review only; local scopes stay on `diffs.nvim`.
+- `uncommitted` — Neogit status plus its configured diff integration (`worktree` by default), showing staged, unstaged, and untracked current worktree changes.
+- `unpushed` — Neogit status plus range diff against `@{u}`; falls back to uncommitted with a warning when no upstream exists.
+- `branch` — Neogit status plus range diff against the PR base ref, or `origin/main`/`main`/`master` as default base.
+- `pr` — `:Guh <pr-url>` via `justinmk/guh.nvim` (`config/nvim/lua/plugins/github.lua`); warns when no PR resolves. `guh.nvim` handles GitHub PR/issue/CI review only; local scopes stay on Neogit.
 - `ticket` — branch or uncommitted scope with ticket metadata attached.
 - `worktrees` — `vim.ui.select` picker over `git worktree list --porcelain`, enriched with dirty/staged/untracked counts from `git -C <path> status --porcelain`; selecting a worktree `tcd`s into it and reruns the chosen scope.
 
@@ -98,15 +98,15 @@ Cases covered by code review plus manual tmux verification (no full multi-Neovim
 
 ### Review metadata in annotation flushes
 
-`require("pinvim.review").metadata()` returns the active review record or nil when no review is active. The record carries `scope`, `worktree`, `branch`, `upstream`, `base`, `pr`, and `ticket`.
+`require("pinvim.review").metadata()` returns the active review record or nil when no review is active. The record carries `scope`, `diff_mode`, `worktree`, `branch`, `upstream`, `base`, `pr`, and `ticket`.
 
-`:PiFlush` prepends a concise `Review scope` header from this record before the queued context and comments, so Pi knows which worktree/diff/ticket the annotations belong to. The existing `gpc`, visual `gpc`, `:PiComment`, `:PiComments`, and `:PiClear` primitives are unchanged outside review mode.
+`:PiFlush` prepends a concise `Review scope` header from this record before the queued context and comments, so Pi knows which worktree/diff/ticket the annotations belong to. The metadata includes the active Neogit diff mode (`status`, `worktree`, `staged`, `unstaged`, or `range`). The existing `gpc`, visual `gpc`, `:PiComment`, `:PiComments`, and `:PiClear` primitives are unchanged outside review mode.
 
 ### Pi-side `/piview` and `review.open` RPC
 
-`home/common/programs/pi-coding-agent/extensions/nvim-review.ts` registers the `/piview [scope]` Pi command, distinct from the pre-existing `/review` pi-review-loop (`extensions/review.ts`).
+`home/common/programs/pi-coding-agent/extensions/nvim-review.ts` registers the `/piview [scope] [diff_mode]` Pi command, distinct from the pre-existing `/review` pi-review-loop (`extensions/review.ts`).
 
-`/piview` queries `globalThis.pinvimEditorService` with method `review.open` and `{ scope, cwd }`; the Nvim editor-service handler in `config/nvim/lua/pinvim.lua` delegates to `require("pinvim.review").run`. `/piview` never checks out branches, snapshots files, or scans manifests; it only targets the active paired Nvim.
+`/piview` queries `globalThis.pinvimEditorService` with method `review.open` and `{ scope, cwd, diff_mode }`; the Nvim editor-service handler in `config/nvim/lua/pinvim.lua` delegates to `require("pinvim.review").run`. `/piview [scope] [diff_mode]` accepts the same Neogit diff modes as `:PiReview`, so callers can open status-only or force a specific staged/unstaged/worktree/range view. `/piview` never checks out branches, snapshots files, or scans manifests; it only targets the active paired Nvim.
 
 `pview [scope]` in `home/common/programs/pi-coding-agent/default.nix` launches Pi with `/piview` as the initial command. It never pre-splits Nvim itself; `/piview` owns the review Nvim spawn to avoid duplicate review panes. If the current tmux window already has multiple panes, `pview` first opens a new tmux window so the review split starts from a clean one-pane layout.
 

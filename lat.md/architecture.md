@@ -6,7 +6,7 @@ This repo is a single-flake nix-darwin + Home Manager setup for macOS. One root 
 
 `flake.nix` pins `nixpkgs-unstable` and makes `home-manager` and `nix-darwin` follow it.
 
-Other inputs include `pi-nix`, `opnix`, `neovim-nightly-overlay`, `devenv`, `nh`, `kanata-darwin`, `yazi`, `nix-homebrew` plus the Homebrew taps, and `brew-nix` for cask and `mas` packaging.
+Other inputs include `pi-nix`, `opnix`, `neovim-nightly-overlay`, `devenv`, `hunk`, `nh`, `kanata-darwin`, `yazi`, `nix-homebrew` plus the Homebrew taps, and `brew-nix` for cask and `mas` packaging.
 
 Global constants live in the flake `let`: `arch = "aarch64-darwin"`, `version` (Home Manager/system state version), and `username = "seth"`. `lib` is `nixpkgs.lib` extended with `./lib/default.nix`, and `overlays` come from `./overlays`.
 

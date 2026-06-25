@@ -5,6 +5,10 @@
   ...
 }:
 {
+  home.shellAliases = {
+    mc = ''XDG_CONFIG_HOME="$HOME/.dotfiles/.local_scripts" NVIM_APPNAME=mc-nvim nvim -O'';
+  };
+
   # Use .vimrc for standard vim settings
   # xdg.configFile."nvim/.vimrc".source = nvim/.vimrc;
   # xdg.configFile."nvim/.vimrc".source = nvim-next/.vimrc;
