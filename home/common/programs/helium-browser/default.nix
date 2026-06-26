@@ -28,6 +28,11 @@
         "--disable-wake-on-wifi"
         "--no-pings"
         "--disable-features=OutdatedBuildDetector"
+        # CDP for media-presence meeting detection (lobby/joined DOM, tab
+        # lookup). Port 9223 to avoid clashing with Brave Nightly's 9222.
+        # Runtime-only flag: does not touch the bundle, so Gatekeeper /
+        # codesign / TCC identity / Widevine / 1Password are unaffected.
+        "--remote-debugging-port=9223"
       ];
 
       dictionaries = [ pkgs.hunspellDictsChromium.en_US ];

@@ -204,8 +204,11 @@
   helium = {
     description = "Launch Helium with declarative flags";
     body = ''
-      set -l helium /Applications/Helium.app/Contents/MacOS/Helium
-      if not test -x $helium
+      # Use the nix-built Widevine bundle (home-manager copyApps) rather than
+      # /Applications/Helium.app, which Sparkle auto-updates and strips of the
+      # injected Widevine CDM.
+      set -l helium "$HOME/Applications/Home Manager Apps/Helium.app/Contents/MacOS/Helium"
+      if not test -x "$helium"
         echo "Helium executable not found: $helium" >&2
         return 1
       end
@@ -219,6 +222,7 @@
         --disable-wake-on-wifi \
         --no-pings \
         --disable-features=OutdatedBuildDetector \
+        --remote-debugging-port=9223 \
         $argv \
         >/dev/null 2>&1 &
       disown
