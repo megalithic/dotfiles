@@ -72,7 +72,15 @@ fi
 inside_tmux="false"
 [[ -n "${TMUX:-}" ]] && inside_tmux="true"
 
-services_cmd="wt-tail-logs $(printf '%q' "$branch")"
+# If the project provides an executable services-cmd script, use it as the
+# services window command (works regardless of user's shell — kernel respects
+# the script's #! shebang). Otherwise fall back to tailing hook logs.
+services_cmd_file="$wpath/.config/services-cmd"
+if [[ -x "$services_cmd_file" ]]; then
+  services_cmd="$services_cmd_file"
+else
+  services_cmd="wt-tail-logs $(printf '%q' "$branch")"
+fi
 
 # Ensure a window with the given name exists in the session, rooted at $wpath.
 # Reuses an existing window of the same name; never kills panes.
@@ -93,6 +101,7 @@ do_session() {
     # First window becomes `code`.
     tmux new-session -d -s "$name" -c "$wpath" -n code
   fi
+  tmux setenv -t "=${name}" GIT_WORKTREE "$branch"
   ensure_window "$name" code
   ensure_window "$name" services "$services_cmd"
 
@@ -111,6 +120,7 @@ do_window() {
   fi
   local cur
   cur="$(tmux display-message -p '#S')"
+  tmux setenv -t "=${cur}" GIT_WORKTREE "$branch"
   if tmux list-windows -t "=${cur}" -F '#W' 2>/dev/null | grep -qx -- "$name"; then
     tmux select-window -t "=${cur}:${name}"
   else

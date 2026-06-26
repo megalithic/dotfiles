@@ -14,4 +14,8 @@
     # upstream fish init avoids two competing `wt` functions racing.
     enableFishIntegration = false;
   };
+
+  xdg.configFile."worktrunk/config.toml".text = ''
+    worktree-path = "{{ repo_path }}/.worktrees/{{ branch | sanitize }}"
+  '';
 }

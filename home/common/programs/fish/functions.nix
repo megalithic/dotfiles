@@ -142,6 +142,7 @@
           end
 
           wt-tmux-target --target $target --branch $branch --path $wpath
+          test -n "$branch"; and set -gx GIT_WORKTREE "$branch"
           return $status
       end
 
@@ -162,6 +163,9 @@
           cd -- "$tgt"
           set -l cd_exit $status
           test $exit_code -eq 0; and set exit_code $cd_exit
+          # Set GIT_WORKTREE so shells/services know the active worktree.
+          set -l wt_branch (git branch --show-current 2>/dev/null)
+          test -n "$wt_branch"; and set -gx GIT_WORKTREE "$wt_branch"
       end
 
       if test -s "$exec_file"
