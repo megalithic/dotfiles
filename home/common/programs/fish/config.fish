@@ -1,36 +1,23 @@
-# devenv shell respects $SHELL — make sure it's fish
-set -gx SHELL (which fish)
+# Interactive fish config. Keep portable: Nix-only setup lives in ~/.local/share/fish/nix.fish when present.
 
-# enable vi mode
+set -g fish_greeting
+
+set -l fish_bin (command -s fish)
+test -n "$fish_bin"; and set -gx SHELL "$fish_bin"
+
 fish_vi_key_bindings
 
-# clear screen + scrollback at startup (hides "Last login" after the fact)
-set -g fish_greeting
+# Clear screen + scrollback at startup (hides "Last login" after the fact).
 printf '\33c\e[3J'
 
-# # auto-activation: load devenv env into current fish on cd (no .envrc needed)
-# function __devenv_auto --on-variable PWD
-#     if test -f "$PWD/devenv.nix"; and not set -q __DEVENV_ACTIVE
-#         set -gx __DEVENV_ACTIVE "$PWD"
-#         # devenv print-dev-env outputs bash — extract exports, convert to fish
-#         devenv print-dev-env --no-tui 2>/dev/null | string match -r '^export .+' | while read -l line
-#             # line: export VAR='value' or export VAR="value" or export VAR=value
-#             set -l kv (string replace 'export ' '' -- $line)
-#             set -l key (string replace -r '=.*' '' -- $kv)
-#             set -l val (string replace -r '^[^=]+=' '' -- $kv)
-#             # strip surrounding quotes
-#             set val (string trim -c "'" -- $val)
-#             set val (string trim -c '"' -- $val)
-#             if test "$key" = PATH
-#                 # prepend devenv paths, don't replace
-#                 set -gx PATH (string split ':' -- $val) $PATH
-#             else
-#                 set -gx $key $val
-#             end
-#         end
-#     end
-#     # clear when leaving devenv dir
-#     if set -q __DEVENV_ACTIVE; and not string match -q "$__DEVENV_ACTIVE*" "$PWD"
-#         set -e __DEVENV_ACTIVE
-#     end
-# end
+set -l fish_config_dir (dirname (status --current-filename))
+
+for file in \
+    "$fish_config_dir/functions/_prompt_move_to_bottom.fish" \
+    "$fish_config_dir/functions/_prompt_reset_mouse.fish" \
+    "$fish_config_dir/interactive/keybindings.fish" \
+    "$fish_config_dir/interactive/theme.fish"
+    test -f "$file"; and source "$file"
+end
+
+_prompt_move_to_bottom

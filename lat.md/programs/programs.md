@@ -7,3 +7,4 @@ Per-program deep dives for the tools intricate enough to warrant their own file,
 - [[helium]] — declarative Darwin build with Widevine injection and custom re-signing for 1Password pairing.
 - [[hammerspoon]] — shade-next panel, `wm.lua` window management, miccheck menubar, and the `bin/hs-reload` rule.
 - [[ghostty]] — module-vs-raw-config split and bell-driven Pi notifications.
+- [[media-presence]] — Swift daemon detecting mic/camera/Meet presence, served to Hammerspoon over a Unix socket.

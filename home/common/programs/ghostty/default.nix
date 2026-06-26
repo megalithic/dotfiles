@@ -15,9 +15,8 @@
 
     # Don't use settings - we symlink the raw config file instead.
     # This preserves comments and allows editing without rebuild.
-    # Home Manager's fish integration sources $GHOSTTY_RESOURCES_DIR without
-    # checking the file exists. Keep our guarded source in the fish module instead
-    # so stale dev Ghostty paths do not break shell startup.
+    # Ghostty handles fish shell integration itself; no Home Manager or fish
+    # module sourcing is needed here.
     enableFishIntegration = false;
   };
 
