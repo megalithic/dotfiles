@@ -254,6 +254,9 @@
         "net.imput.helium" = {
           SUAutomaticallyUpdate = false;
           SUEnableAutomaticChecks = false;
+          SUScheduledCheckInterval = 0;
+          SUHasLaunchedBefore = true;
+          SUSendProfileInfo = false;
         };
         # Disabled: sandboxed app — see SANDBOXED APP PREFS note at end of CustomUserPreferences.
         # "com.flexibits.fantastical2.mac" = {
