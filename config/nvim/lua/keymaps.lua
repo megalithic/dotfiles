@@ -199,7 +199,7 @@ map({ "n", "x", "o" }, "t", repeatable.builtin_t_expr, { expr = true })
 map({ "n", "x", "o" }, "T", repeatable.builtin_T_expr, { expr = true })
 
 -- [[ pairs/delimiters ]] ------------------------------------------------------
--- Tab jumps between matching pairs (uses nvim-tree-pairs which is treesitter-aware)
+-- Tab / % jump between matching pairs (vim-matchup, treesitter-aware)
 map({ "n", "x", "o" }, "<Tab>", "%", { remap = true, desc = "Jump to matching pair" })
 
 -- [[ shade ]] -----------------------------------------------------------------

@@ -413,11 +413,15 @@ return {
     end,
   },
 
-  { "yorickpeterse/nvim-tree-pairs", event = "VeryLazy", opts = {} },
+  -- FIXME: nvim-tree-pairs disabled because its buffer-local % mapping
+  -- conflicts with <Tab> -> % remap (global→buffer-local recursion fails
+  -- in normal mode). vim-matchup handles % globally and supports the remap.
+  -- Revisit after keymaps.lua <Tab> is updated to avoid the recursion.
+  { "yorickpeterse/nvim-tree-pairs", enabled = false },
   {
     "andymass/vim-matchup",
-    -- Keep matchup, but defer it past file read so startup render is not blocked.
-    event = "VeryLazy",
+    -- Load at startup: FileType autocmd must be registered before initial
+    -- buffer, otherwise delimiter data is missing and % silently no-ops.
     init = function()
       vim.g.matchup_matchparen_nomode = "i"
       vim.g.matchup_delim_noskips = 1 -- recognize symbols within comments
