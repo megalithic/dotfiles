@@ -4,6 +4,7 @@
 - Always use `rg` instead of `grep` for searching for text in files/folders
 - Always use `fd` instead of `find` for finding files/folders
 - Always set the pi tool `timeout` parameter for shell commands that may run long or hang; especially just home/darwin/rebuild/validate, backgrounded executions, and command shapes sentinel flags as risky.
+- When the `pi-bash-live-view` extension is installed/active, always pass `usePTY: true` on the Bash tool for long-running or progress-heavy commands (build systems, just home/darwin/rebuild/validate, installers, test suites, devenv up) so the user gets the live terminal view. Do not pipe these through `| tail`/`| head` or swallow output, which hides the live view. Reserve plain (non-PTY) Bash for short, quiet, output-capture commands.
 - Always use `devenv` for developer environments
   - If a repo has a `justfile` and `devenv` is enabled, check the `just` recipes to see if there are equivalents available
   - When `devenv.nix` exists: `devenv shell -- <cmd>`, `devenv up`, `devenv tasks run <task>`
