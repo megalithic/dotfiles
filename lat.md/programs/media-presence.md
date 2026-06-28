@@ -2,7 +2,7 @@
 
 `tools/media-presenced/` is a standalone Swift daemon that detects meeting/AV presence and serves JSON events to Hammerspoon over a Unix socket.
 
-It is a tracked first-party SwiftPM package, portable across nix and mise, not yet nix-packaged or wired into Hammerspoon.
+It is a tracked first-party SwiftPM package, portable across nix and mise. It is nix-packaged (`pkgs/media-presenced.nix`) and run as a user LaunchAgent (`home/common/programs/media-presence/`); the Hammerspoon consumer is not yet wired.
 
 ## Why a daemon, not Hammerspoon Lua
 
@@ -30,14 +30,16 @@ The Unix socket (`~/.local/state/media-presence/sock`) is line-delimited JSON: b
 
 Events: `mic.on`/`mic.off`, `camera.on`/`camera.off`, `meeting.lobby`/`meeting.joined`/`meeting.left`, `screenshare.start`/`screenshare.stop`. Each line carries the full presence object (`micActive`, `micOwners`, `cameraActive`, `inMeeting`, `meetingState`, `sharing`, `meetingApp`, `meetingURL`, `meetingTitle`, `meetingTargetId`, `participants`, `inAppMic`, `inAppCamera`). Commands send one JSON line and read one reply: `{"cmd":"get"}` returns current presence; `{"cmd":"focus"}` focuses the meeting via CDP `Target.activateTarget` plus `NSRunningApplication.activate`, which hyper+z will call instead of the heuristic window finder.
 
-## Build
+## Build and packaging
 
-The nix store SDK shadows Xcode's via `SDKROOT`, so SwiftPM must be invoked with the Xcode SDK forced.
+Dev builds use SwiftPM with the Xcode SDK forced; the nix package compiles the sources directly with swiftc.
 
-Use `env -u SDKROOT DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer SDKROOT=<Xcode MacOSX.sdk> swift build -c release` with the Xcode toolchain swift. Binary lands at `.build/release/media-presenced`.
+For local dev the nix store SDK shadows Xcode's via `SDKROOT`, so use `env -u SDKROOT DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer SDKROOT=<Xcode MacOSX.sdk> swift build -c release` with the Xcode toolchain swift (binary at `.build/release/media-presenced`). The nix package (`pkgs/media-presenced.nix`) skips SwiftPM entirely — the package is zero-dependency, so it compiles `Sources/**/*.swift` with `swiftc` under nixpkgs `swift` + `apple-sdk_26` (needs `stdenv`, not `stdenvNoCC`, for `NIX_CC`), then ad-hoc signs for a stable code identity. `home/common/programs/media-presence/` installs it and a `launchd.agents.media-presenced` user agent (RunAtLoad + KeepAlive).
+
+The daemon needs no TCC grants: it reads device state (CoreAudio/CoreMediaIO IsRunningSomewhere), localhost CDP, and `NSRunningApplication.activate` — no `CGWindowList`, AX, or screencapture — so the agent runs with zero permission prompts.
 
 ## Status and remaining work
 
-Working vertical slice: Google Meet plus capture layer.
+Working: Google Meet plus capture layer, nix-packaged and running as a LaunchAgent.
 
-Not yet done: Slack huddle resolver, native-app (Zoom/Teams) resolver, camera owner attribution (currently on/off only), nix packaging plus LaunchAgent with its own TCC grant, and the Hammerspoon consumer that replaces `loadMeeting` and `watchers/camera.lua`.
+Not yet done: the Hammerspoon consumer that replaces `bindings.lua` `loadMeeting` and `watchers/camera.lua` (and repoints hyper+z to `{cmd:focus}`), Slack huddle resolver, native-app (Zoom/Teams) resolver, camera owner attribution (currently on/off only), and end-to-end live validation of `meeting.left`/screenshare-stop/lobby-to-joined transitions. Tracked in ticket dot-717t.
