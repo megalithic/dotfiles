@@ -2,13 +2,13 @@
 
 `tools/media-presenced/` is a standalone Swift daemon that detects meeting/AV presence and serves JSON events to Hammerspoon over a Unix socket.
 
-It is a tracked first-party SwiftPM package, portable across nix and mise. It is nix-packaged (`pkgs/media-presenced.nix`) and run as a user LaunchAgent (`home/common/programs/media-presence/`); the Hammerspoon consumer is not yet wired.
+It is a tracked first-party SwiftPM package, portable across nix and mise. It is nix-packaged (`pkgs/media-presenced.nix`) and run as a user LaunchAgent (`home/common/programs/media-presence/`). The Hammerspoon consumer (`watchers/media-presence.lua`) connects to the Unix socket and replaces `watchers/camera.lua` heuristics; hyper+z (`bindings.lua` `loadMeeting`) sends `{cmd:focus}` to the daemon.
 
 ## Why a daemon, not Hammerspoon Lua
 
 The daemon replaces heuristic Lua meeting logic with authoritative AV + CDP signals, and needs its own process for TCC correctness.
 
-The existing logic — `bindings.lua` `loadMeeting` (hyper+z) and `watchers/camera.lua` (DND/music-pause) — relies on camera+URL heuristics and window-size guessing. When AV/screen APIs are called from a terminal child, macOS attributes the request to the responsible app (the shell's host, e.g. Ghostty) and re-prompts even when already granted; a standalone process (eventually a LaunchAgent) gets its own TCC identity. Reading window titles via `CGWindowList`/System Events is avoided because it triggers Screen Recording prompts.
+The existing logic — `bindings.lua` `loadMeeting` (hyper+z) and `watchers/camera.lua` (DND/music-pause) — relied on camera+URL heuristics and window-size guessing. `watchers/media-presence.lua` replaces `camera.lua` with authoritative socket events, and hyper+z delegates to the daemon's `{cmd:focus}`. When AV/screen APIs are called from a terminal child, macOS attributes the request to the responsible app (the shell's host, e.g. Ghostty) and re-prompts even when already granted; a standalone process (eventually a LaunchAgent) gets its own TCC identity. Reading window titles via `CGWindowList`/System Events is avoided because it triggers Screen Recording prompts.
 
 ## Detection layers
 
@@ -28,7 +28,18 @@ This split lets `send()` run from any thread including `q` (a `q.sync` inside `s
 
 The Unix socket (`~/.local/state/media-presence/sock`) is line-delimited JSON: broadcast event lines plus request/reply commands.
 
-Events: `mic.on`/`mic.off`, `camera.on`/`camera.off`, `meeting.lobby`/`meeting.joined`/`meeting.left`, `screenshare.start`/`screenshare.stop`. Each line carries the full presence object (`micActive`, `micOwners`, `cameraActive`, `inMeeting`, `meetingState`, `sharing`, `meetingApp`, `meetingURL`, `meetingTitle`, `meetingTargetId`, `participants`, `inAppMic`, `inAppCamera`). Commands send one JSON line and read one reply: `{"cmd":"get"}` returns current presence; `{"cmd":"focus"}` focuses the meeting via CDP `Target.activateTarget` plus `NSRunningApplication.activate`, which hyper+z will call instead of the heuristic window finder.
+Events: `mic.on`/`mic.off`, `camera.on`/`camera.off`, `meeting.lobby`/`meeting.joined`/`meeting.left`, `screenshare.start`/`screenshare.stop`. Each line carries the full presence object (`micActive`, `micOwners`, `cameraActive`, `inMeeting`, `meetingState`, `sharing`, `meetingApp`, `meetingURL`, `meetingTitle`, `meetingTargetId`, `participants`, `inAppMic`, `inAppCamera`). Commands send one JSON line and read one reply: `{"cmd":"get"}` returns current presence; `{"cmd":"focus"}` focuses the meeting via CDP `Target.activateTarget` plus `NSRunningApplication.activate`, which hyper+z calls instead of the heuristic window finder.
+
+## Hammerspoon consumer
+
+`config/hammerspoon/watchers/media-presence.lua` connects to the socket via a persistent `nc -U` task, reads event lines from stdout, and dispatches:
+
+- `meeting.lobby` / `meeting.joined` → force push-to-talk mute (`miccheck.setPTTMode`), pause Apple Music
+- `meeting.left` → reset PTT mode
+- `screenshare.start` → enforce DND focus mode (`U.dnd(true, "meeting")`)
+- `screenshare.stop` → restore previous DND state
+
+`bindings.lua` `loadMeeting` (hyper+z) sends `{"cmd":"focus"}` to the daemon, which handles CDP target activation and app focusing.
 
 ## Build and packaging
 
@@ -40,6 +51,6 @@ The daemon needs no TCC grants: it reads device state (CoreAudio/CoreMediaIO IsR
 
 ## Status and remaining work
 
-Working: Google Meet plus capture layer, nix-packaged and running as a LaunchAgent.
+Working: Google Meet plus capture layer, nix-packaged and running as a LaunchAgent, Hammerspoon consumer wired (ptt mute, music pause, DND on screenshare, hyper+z repointed to `{cmd:focus}`).
 
-Not yet done: the Hammerspoon consumer that replaces `bindings.lua` `loadMeeting` and `watchers/camera.lua` (and repoints hyper+z to `{cmd:focus}`), Slack huddle resolver, native-app (Zoom/Teams) resolver, camera owner attribution (currently on/off only), and end-to-end live validation of `meeting.left`/screenshare-stop/lobby-to-joined transitions. Tracked in ticket dot-717t.
+Not yet done: Slack huddle resolver, native-app (Zoom/Teams) resolver, camera owner attribution (currently on/off only), and end-to-end live validation of `meeting.left`/screenshare-stop/lobby-to-joined transitions. Tracked in ticket dot-717t.

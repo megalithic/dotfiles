@@ -58,100 +58,12 @@ function M.loadApps()
   end)
 end
 
--- Generic meeting window finder
--- Searches for windows using U.app.isMeetingWindow for classification
--- Returns: window (if meeting found), nil (if no meeting)
--- IMPORTANT: Does NOT fall back to "any window" - only returns confirmed/likely meetings
-local function findMeetingWindow(app)
-  if not app then return nil end
-
-  local windows = app:allWindows()
-
-  -- Pass 1: Find a window CONFIRMED as a meeting by isMeetingWindow
-  -- This is the most reliable detection - explicit "yes this is a meeting"
-  for _, window in ipairs(windows) do
-    if window:isStandard() then
-      local isMeeting, reason = U.app.isMeetingWindow(app, window)
-      if isMeeting == true then
-        U.log.d(string.format("[meeting] Found confirmed meeting: %s (%s)", window:title(), reason))
-        return window
-      end
-    end
-  end
-
-  -- Pass 2: For UNKNOWN windows (nil, not false), use size heuristic
-  -- Only on external screen, only large windows - likely a video call
-  -- Skip if isMeetingWindow returned false (e.g., Teams main window)
-  for _, window in ipairs(windows) do
-    if window:isStandard() then
-      local isMeeting, reason = U.app.isMeetingWindow(app, window)
-      -- Only consider windows where detection was uncertain (nil), NOT explicitly false
-      if isMeeting == nil then
-        local windowScreen = window:screen()
-        local screenName = windowScreen and windowScreen:name() or ""
-        local isOnExternalScreen = screenName ~= C.displays.internal and screenName ~= ""
-        if isOnExternalScreen then
-          local frame = window:frame()
-          if frame.w >= 2000 and frame.h >= 1400 then
-            U.log.d(string.format("[meeting] Found likely meeting via size heuristic: %s", window:title()))
-            return window
-          end
-        end
-      end
-    end
-  end
-
-  -- NO Pass 3 fallback! If we can't confirm it's a meeting, return nil.
-  -- This prevents focusing Teams/Zoom/etc when they're running but not in a meeting.
-  U.log.d(string.format("[meeting] No meeting window found for %s", app:bundleID()))
-  return nil
-end
-
 function M.loadMeeting()
   req("hyper", { id = "meeting" }):start():bind({}, "z", nil, function()
-    -- Check native meeting apps in priority order
-    local meetingApps = {
-      "com.pop.pop.app", -- Pop
-      "us.zoom.xos", -- Zoom
-      "com.microsoft.teams2", -- Teams
-    }
-
-    -- Browser-based meeting URL patterns (regex patterns for JavaScript)
-    -- Used by osascript JavaScript, supports standard regex syntax
-    local meetingUrlPatterns = {
-      "meet.google.com",
-      "hangouts.google.com.call",
-      "www.valant.io",
-      "telehealth.px.athena.io",
-      -- Add more patterns as needed (e.g., "teams.microsoft.com", "whereby.com")
-    }
-
-    local targetWindow = nil
-
-    -- Check browser-based meetings as fallback
-    local urlPattern = table.concat(meetingUrlPatterns, "|")
-    if req("lib.interop.browser").hasTab(urlPattern) then
-      req("lib.interop.browser").jump(urlPattern)
-    else
-      -- Find first running meeting app with a valid meeting window
-      for _, bundleID in ipairs(meetingApps) do
-        local app = hs.application.find(bundleID)
-        if app then
-          targetWindow = findMeetingWindow(app)
-          if targetWindow then
-            break -- Found a meeting window, stop searching
-          end
-        end
-      end
-
-      -- Focus the meeting window if found
-      if targetWindow then
-        targetWindow:focus()
-      else
-        -- No meeting found
-        U.log.w("No active meeting window found")
-      end
-    end
+    -- Delegate to media-presenced daemon: CDP Target.activateTarget + NSRunningApplication.activate
+    local sock = os.getenv("HOME") .. "/.local/state/media-presence/sock"
+    local focusCmd = string.format("echo '{\"cmd\":\"focus\"}' | /usr/bin/nc -U %s", sock)
+    hs.task.new("/bin/sh", nil, { arguments = { "-c", focusCmd } }):start()
   end)
 end
 

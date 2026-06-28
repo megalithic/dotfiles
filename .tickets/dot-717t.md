@@ -1,6 +1,6 @@
 ---
 id: dot-717t
-status: open
+status: in_progress
 deps: []
 links: []
 created: 2026-06-26T21:03:08Z
@@ -23,6 +23,15 @@ Daemon must run as its own LaunchAgent with its own TCC identity so screen/autom
 1. nix package (pkgs/media-presenced.nix) building the Swift binary, wired into home-manager. 2. LaunchAgent runs it at login with its own Screen Recording/Automation TCC grant (no terminal re-prompts). 3. Hammerspoon consumer: connect to the Unix socket, dispatch events to ptt mute, music pause, DND/focus on screenshare.start/stop, and Slack status; replace watchers/camera.lua heuristics. 4. Repoint hyper+z (bindings.lua loadMeeting) to send {cmd:focus} to the daemon instead of window-size guessing. 5. Slack huddle resolver (capture signals + window/AX), validated live. 6. Native Zoom/Teams resolver. 7. Camera owner attribution (not just on/off). 8. Live-validate meeting.left, screenshare stop, and lobby->joined transitions end to end. 9. lat.md/programs/media-presence updated; lat check passes.
 
 ## Notes
+
+**2026-06-28T01:49Z**
+
+Criteria 3+4 implemented:
+
+- `config/hammerspoon/watchers/media-presence.lua`: persistent `nc -U` consumer, dispatches meeting.lobby/joined→PTT mute+music pause, meeting.left→reset, screenshare.start/stop→DND on/off, auto-reconnect on daemon restart
+- `config/hammerspoon/bindings.lua` `loadMeeting` (hyper+z): sends `{"cmd":"focus"}` to daemon socket, removed heuristic `findMeetingWindow` + window-size guessing
+- `config/hammerspoon/init.lua`: added "media-presence" to watchers list (replaces "camera")
+- `lat.md/programs/media-presence.md`: added Hammerspoon consumer section, updated status
 
 **2026-06-26T21:04:58Z**
 
