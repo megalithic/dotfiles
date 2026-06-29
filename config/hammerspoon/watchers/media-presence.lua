@@ -84,24 +84,23 @@ local function connect()
     task = nil
     scheduleReconnect()
     return true
-  end, {
-    arguments = { "-U", SOCKET },
-    streamCallback = function(task, stdout, stderr)
-      if stdout then
-        stdoutBuffer = stdoutBuffer .. stdout
-        while true do
-          local line, rest = readLine(stdoutBuffer)
-          if not line then break end
-          stdoutBuffer = rest
-          if #line > 0 then
-            local event, pPresence = parseEvent(line)
-            if event then handleEvent(event, pPresence) end
-          end
+  end, function(task, stdout, stderr)
+    if stdout then
+      stdoutBuffer = stdoutBuffer .. stdout
+      while true do
+        local line, rest = readLine(stdoutBuffer)
+        if not line then break end
+        stdoutBuffer = rest
+        if #line > 0 then
+          local event, pPresence = parseEvent(line)
+          if event then handleEvent(event, pPresence) end
         end
       end
-      return true
-    end,
-  })
+    end
+    return true
+  end)
+  task:setArguments({ "-U", SOCKET })
+  task:start()
 
   U.log.i("[media-presence] connected to daemon")
 end
