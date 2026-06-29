@@ -58,7 +58,7 @@ server.onCommand = { cmd, reply in
         reply(encodePresenceLine("get", engine.presence).trimmingCharacters(in: .newlines))
     case "focus":
         let p = engine.presence
-        if p.inMeeting && !p.meetingTargetId.isEmpty {
+        if !p.meetingTargetId.isEmpty {
             cdp.activateTarget(p.meetingTargetId)
             if let app = NSRunningApplication.runningApplications(withBundleIdentifier: p.meetingApp).first {
                 app.activate(options: [.activateAllWindows])
