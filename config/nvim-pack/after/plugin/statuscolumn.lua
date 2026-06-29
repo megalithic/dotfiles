@@ -1,0 +1,596 @@
+if not Plugin_enabled() then
+  vim.o.statuscolumn =
+    [[%C%=%4{&nu && v:virtnum <= 0 ? (&rnu ? (v:lnum == line('.') ? v:lnum . ' ' : v:relnum) : v:lnum) : ''}%{foldlevel(v:lnum) > foldlevel(v:lnum - 1) ? (foldclosed(v:lnum) == -1 ? "" : "") : " " }%=%s]]
+  return
+end
+
+mega.ui.statuscolumn = {}
+
+---@alias StringComponent {component: string, length: integer, priority: integer}
+---@alias ExtmarkSign {[1]: number, [2]: number, [3]: number, [4]: {sign_text: string, sign_hl_group: string}}
+
+local fn, v, api, opt = vim.fn, vim.v, vim.api, vim.opt
+local U = mega.u or {} -- Use the global utils with fallback
+local strwidth = vim.api.nvim_strwidth
+local fmt = string.format
+
+local MIN_SIGN_WIDTH, space = 1, " "
+local fcs = opt.fillchars:get()
+local fold_open = mega.ui.icons.misc.fold_open or fcs.foldopen or ""
+local fold_close = mega.ui.icons.misc.fold_close or fcs.foldclose or ""
+
+-- Diagnostic severity constants
+local severity = vim.diagnostic.severity
+
+-- Cache for expensive calls (cleared on relevant events)
+local cache = {
+  line_count = {}, -- bufnr -> line_count
+}
+
+local CLICK_END = "%X"
+local padding = " "
+
+-- Get line count with caching (expensive to call per-line)
+local function get_line_count(bufnr)
+  local count = cache.line_count[bufnr]
+  if not count then
+    count = api.nvim_buf_line_count(bufnr)
+    cache.line_count[bufnr] = count
+  end
+  return count
+end
+
+-- Clear cache on buffer changes
+vim.api.nvim_create_autocmd({ "BufWritePost", "TextChanged", "TextChangedI" }, {
+  group = vim.api.nvim_create_augroup("mega.statuscolumn.cache", { clear = true }),
+  callback = function(args) cache.line_count[args.buf] = nil end,
+})
+
+-- Set up highlight for wrap symbols (dimmed)
+vim.api.nvim_set_hl(0, "StatusColumnWrap", { link = "NonText" })
+
+-- Three-tier statuscolumn: full | minimal | none
+-- full:    signs + line numbers + wrap indicators + git signs + fold indicators.
+--          Full buffers stay full when inactive so column width stays stable.
+-- minimal: line numbers + wrap indicators only
+-- none:    empty statuscolumn
+
+local none_bts = { "terminal", "nofile", "input", "prompt" }
+local none_fts = {
+  "NeogitCommitMessage",
+  "NeogitCommitView",
+  "cmdline",
+  "NeogitRebaseTodo",
+  "NeogitStatus",
+  "NvimTree",
+  "Trouble",
+  "dap-repl",
+  "fidget",
+  "firenvim",
+  "fugitive",
+  "help",
+  "himalaya",
+  "lazy",
+  "list",
+  "log",
+  "man",
+  "megaterm",
+  "neo-tree",
+  "prompt",
+  "cmd",
+  "msg",
+  "pager",
+  "dialog",
+  "neotest-summary",
+  "oil",
+  "org",
+  "orgagenda",
+  "outputpanel",
+  "qf",
+  "quickfix",
+  "quickfixlist",
+  "startify",
+  "telescope",
+  "TelescopePrompt",
+  "TelescopeResults",
+  "terminal",
+  "toggleterm",
+  "undotree",
+  "vim-plug",
+  "vimwiki",
+  "snacks",
+}
+
+local minimal_fts = {
+  "gitcommit",
+  "jjdescription",
+  "markdown",
+  "markdown.mdx",
+}
+
+--- Resolve statuscolumn tier for a buffer.
+---@param filetype string
+---@param buftype string
+---@param is_active boolean
+---@return "full"|"minimal"|"none"
+local function resolve_tier(filetype, buftype, is_active)
+  if vim.g.shade_context then return "none" end
+  if vim.list_contains(none_fts, filetype) or vim.list_contains(none_bts, buftype) then return "none" end
+  if vim.list_contains(minimal_fts, filetype) then return "minimal" end
+  return "full"
+end
+
+---@return StringComponent
+local function separator() return { component = "%=", length = 0, priority = 0 } end
+
+---@param func_name string
+---@param id string
+---@return string
+local function get_click_start(func_name, id)
+  if not id then
+    vim.schedule(function()
+      local msg = fmt("An ID is needed to enable click handler %s to work", func_name)
+      vim.notify_once(msg, vim.log.levels.ERROR, { title = "Statusline" })
+    end)
+    return ""
+  end
+  return ("%%%d@%s@"):format(id, func_name)
+end
+
+--- Creates a spacer statusline component i.e. for padding
+--- or to represent an empty component
+--- @param size integer?
+--- @param opts table<string, any>?
+--- @return ComponentOpts?
+local function spacer(size, opts)
+  opts = opts or {}
+  local filler = opts.filler or " "
+  local priority = opts.priority or 0
+  if not size or size < 1 then return end
+  local spc = string.rep(filler, size)
+  return { { { spc } }, priority = priority, before = "", after = "" }
+end
+
+--- truncate with an ellipsis or if surrounded by quotes, replace contents of quotes with ellipsis
+--- @param str string
+--- @param max_size integer
+--- @return string
+local function truncate_str(str, max_size)
+  if not max_size or strwidth(str) < max_size then return str end
+  local match, count = str:gsub("(['\"]).*%1", "%1…%1")
+  return count > 0 and match or str:sub(1, max_size - 1) .. "…"
+end
+
+---@alias Chunks {[1]: string | number, [2]: string, max_size: integer?}[]
+
+---@param chunks Chunks
+---@return string
+local function chunks_to_string(chunks)
+  if not chunks or not vim.islist(chunks) then return "" end
+  local strings = U.fold(function(acc, item)
+    local text, hl = unpack(item)
+    if not U.falsy(text) then
+      if type(text) ~= "string" then text = tostring(text) end
+      if item.max_size then text = truncate_str(text, item.max_size) end
+      text = text:gsub("%%", "%%%1")
+      table.insert(acc, not U.falsy(hl) and ("%%#%s#%s%%*"):format(hl, text) or text)
+    end
+
+    return acc
+  end, chunks, {})
+  return table.concat(strings)
+end
+
+--- @class ComponentOpts
+--- @field [1] Chunks
+--- @field priority number
+--- @field click string
+--- @field before string
+--- @field after string
+--- @field id number
+--- @field max_size integer
+--- @field cond boolean | number | table | string,
+
+--- @param opts ComponentOpts
+--- @return StringComponent?
+local function component(opts)
+  assert(opts, "component options are required")
+  if opts.cond ~= nil and U.falsy(opts.cond) then return end
+
+  local item = opts[1]
+  if not vim.islist(item) then error(fmt("component options are required but got %s instead", vim.inspect(item))) end
+
+  if not opts.priority then opts.priority = 10 end
+  local before, after = opts.before or "", opts.after or padding
+
+  local item_str = chunks_to_string(item)
+  if strwidth(item_str) == 0 then return end
+
+  local click_start = opts.click and get_click_start(opts.click, tostring(opts.id)) or ""
+  local click_end = opts.click and CLICK_END or ""
+  local component_str = table.concat({ click_start, before, item_str, after, click_end })
+  return {
+    component = component_str,
+    length = api.nvim_eval_statusline(component_str, { maxwidth = 0 }).width,
+    priority = opts.priority,
+  }
+end
+
+local function sum_lengths(list)
+  return U.fold(function(acc, item) return acc + (item.length or 0) end, list, 0)
+end
+
+local function is_lowest(item, lowest)
+  -- if there hasn't been a lowest selected so far, then the item is the lowest
+  if not lowest or not lowest.length then return true end
+  -- if the item doesn't have a priority or a length, it is likely a special character so should never be the lowest
+  if not item.priority or not item.length then return false end
+  -- if the item has the same priority as the lowest, then if the item has a greater length it should become the lowest
+  if item.priority == lowest.priority then return item.length > lowest.length end
+  return item.priority > lowest.priority
+end
+
+--- Take the lowest priority items out of the statusline if we don't have
+--- space for them.
+--- TODO: currently this doesn't account for if an item that has a lower priority
+--- could be fit in instead
+--- @param statusline table
+--- @param spc number
+--- @param length number
+local function prioritize(statusline, spc, length)
+  length = length or sum_lengths(statusline)
+  if length <= spc then return statusline end
+  local lowest, index_to_remove
+  for idx, c in ipairs(statusline) do
+    if is_lowest(c, lowest) then
+      lowest, index_to_remove = c, idx
+    end
+  end
+  table.remove(statusline, index_to_remove)
+  return prioritize(statusline, spc, length - lowest.length)
+end
+
+--- @param sections ComponentOpts[][]
+--- @param available_space number?
+--- @return string
+local function display(sections, available_space)
+  local components = U.fold(function(acc, section, count)
+    if #section == 0 then
+      table.insert(acc, separator())
+      return acc
+    end
+    U.foreach(function(args, index)
+      if not args then return end
+      local ok, str = U.pcall("Error creating component", component, args)
+      if not ok then return end
+      table.insert(acc, str)
+      if #section == index and count ~= #sections then table.insert(acc, separator()) end
+    end, section)
+    return acc
+  end, sections)
+
+  local items = available_space and prioritize(components, available_space) or components
+  local str = vim.tbl_map(function(item) return item.component end, items)
+  return table.concat(str)
+end
+
+--- A helper class that allow collecting `...StringComponent`
+--- into sections that can then be added to each other
+--- i.e.
+--- ```lua
+--- section1:new(1, 2, 3) + section2:new(4, 5, 6) + section3(7, 8, 9)
+--- {1, 2, 3, 4, 5, 6, 7, 8, 9} -- <--
+--- ```
+---@class Section
+---@field __add fun(l:Section, r:Section): StringComponent[]
+---@field __index Section
+---@field new fun(...:StringComponent[]): Section
+local section = {}
+function section:new(...)
+  local o = { ... }
+  self.__index = self
+  self.__add = function(l, r)
+    local rt = { unpack(l) }
+    for _, v in ipairs(r) do
+      rt[#rt + 1] = v
+    end
+    return rt
+  end
+  return setmetatable(o, self)
+end
+
+local function fdm(lnum)
+  if fn.foldlevel(lnum) <= fn.foldlevel(lnum - 1) then return space end
+  return fn.foldclosed(lnum) == -1 and fold_open or fold_close
+end
+
+local function get_num_wraps(winnr)
+  -- Calculate the actual buffer width, accounting for splits, number columns, and other padding
+  -- local wrapped_lines = vim.api.nvim_win_call(winnr or 0, function()
+  local wrapped_lines = vim.api.nvim_win_call(winnr or 0, function()
+    -- local winid = vim.api.nvim_get_current_win()
+
+    -- get the width of the buffer
+    local winwidth = vim.api.nvim_win_get_width(winnr)
+    local numberwidth = vim.wo.number and vim.wo.numberwidth or 0
+    local signwidth = vim.fn.exists("*sign_define") == 1 and vim.fn.sign_getdefined() and 2 or 0
+    local foldwidth = vim.wo.foldcolumn or 0
+
+    -- subtract the number of empty spaces in your statuscol. I have
+    -- four extra spaces in mine, to enhance readability for me
+    local bufferwidth = winwidth - numberwidth - signwidth - foldwidth - 4
+
+    -- fetch the line and calculate its display width
+    local line = vim.fn.getline(vim.v.lnum)
+
+    -- subtract one to solve issue where the cursor is right on the edge of a line
+    -- and makes it so that the last line should be the end of the wraps but isn't
+    local line_length = vim.fn.strdisplaywidth(line) - 1
+
+    return math.floor(line_length / bufferwidth)
+  end)
+
+  return wrapped_lines
+end
+
+local function draw_wrap_symbols(winnr, virtnum, col_width)
+  local num_wraps = get_num_wraps(winnr)
+  local mode = vim.fn.mode()
+  local normalized_mode = vim.fn.strtrans(mode):lower():gsub("%W", "")
+  local line = ""
+
+  if virtnum == num_wraps then
+    line = "└"
+  else
+    line = "│"
+  end
+
+  -- Visual mode: highlight if in selection
+  if normalized_mode == "v" then
+    local ok, pos_list = pcall(vim.fn.getregionpos, vim.fn.getpos("v"), vim.fn.getpos("."), { type = mode, eol = true })
+    if ok and pos_list and #pos_list > 0 then
+      local s_row, e_row = pos_list[1][1][2], pos_list[#pos_list][2][2]
+      if vim.v.lnum >= s_row and vim.v.lnum <= e_row then return line, "CursorLineNr" end
+    end
+  end
+
+  -- Current line: use CursorLineNr, otherwise dimmed wrap highlight
+  if vim.fn.line(".") == vim.v.lnum then
+    return line, "CursorLineNr"
+  else
+    return line, "StatusColumnWrap"
+  end
+end
+
+---@param win integer
+---@param lnum integer
+---@param relnum integer
+---@param virtnum integer
+---@param line_count integer
+---@param is_active boolean
+---@return string, string? -- text, highlight group
+local function nr(win, lnum, relnum, virtnum, line_count, is_active)
+  local col_width = api.nvim_strwidth(tostring(line_count))
+
+  -- Handle wrapped lines
+  if virtnum and virtnum ~= 0 then
+    local line, hl = draw_wrap_symbols(win, virtnum, col_width)
+    return line, hl
+  end
+
+  -- When unfocused, always use absolute line numbers (ignore relativenumber)
+  local use_relative = is_active and vim.wo[win].relativenumber and not U.falsy(relnum)
+  -- Current line (relnum==0): show absolute number. Others: show relative.
+  local num = (use_relative and relnum ~= 0) and relnum or lnum
+
+  if line_count > 999 then col_width = col_width + 1 end
+  local ln = tostring(num):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
+  local num_width = col_width - api.nvim_strwidth(ln)
+  return string.rep(space, num_width) .. ln, nil
+end
+
+---@generic T:table<string, any>
+---@param t T the object to format
+---@param k string the key to format
+---@return T?
+local function format_text(t, k)
+  if t == nil then return end
+  local txt = (t and t[k]) and t[k]:gsub("%s", "") or ""
+  if #txt < 1 then return end
+  t[k] = txt
+  return t
+end
+
+---@param curbuf integer
+---@return StringComponent[], StringComponent[]
+local function extmark_signs(curbuf, lnum)
+  -- Guard against invalid buffer
+  if not curbuf or not api.nvim_buf_is_valid(curbuf) then return {}, {} end
+
+  lnum = lnum - 1
+  ---@type ExtmarkSign[]
+  local ok, signs = pcall(
+    api.nvim_buf_get_extmarks,
+    curbuf,
+    -1,
+    { lnum, 0 },
+    { lnum, -1 },
+    { details = true, type = "sign" }
+  )
+  if not ok or not signs then return {}, {} end
+
+  local sns = U.fold(function(acc, item)
+    item = format_text(item[4], "sign_text")
+    if not item then return acc end
+
+    local txt, hl = item.sign_text, item.sign_hl_group
+    -- local is_git = hl ~= nil and hl:match("^Git")
+    local is_git = hl ~= nil and (hl:match("^Git") or hl:match("^MiniDiff"))
+
+    -- Check if it's a diagnostic sign by highlight group
+    local is_diagnostic = hl
+      and (hl:match("^Diagnostic") or hl:match("Error$") or hl:match("Warn$") or hl:match("Info$") or hl:match("Hint$"))
+
+    -- For diagnostics: show icons for ERROR/WARN, skip HINT/INFO (use colored line numbers instead)
+    -- DiagnosticSignError, DiagnosticSignWarn get through; DiagnosticSignInfo, DiagnosticSignHint filtered
+    local is_hint_or_info = hl and (hl:match("Info") or hl:match("Hint"))
+
+    -- Skip nvim-lint text signs (single letters like E, W, H, I) but allow icon signs
+    local is_lint_text = txt and txt:match("^[EWHI]$")
+
+    local target = is_git and acc.git or acc.other
+
+    -- Include sign if:
+    -- - It's a git sign, OR
+    -- - It's NOT a diagnostic, OR
+    -- - It's a diagnostic ERROR/WARN (not hint/info) AND not a lint text sign
+    if is_git then
+      table.insert(target, { { { txt, hl } }, after = "" })
+    elseif not is_diagnostic then
+      table.insert(target, { { { txt, hl } }, after = "" })
+    elseif is_diagnostic and not is_hint_or_info and not is_lint_text then
+      table.insert(target, { { { txt, hl } }, after = "" })
+    end
+
+    return acc
+  end, signs, { git = {}, other = {} })
+
+  if #sns.git == 0 then sns.git = { spacer(1) } end
+  return sns.git, sns.other
+end
+
+--- Render minimal statuscolumn: line numbers + wrap indicators only
+function mega.ui.statuscolumn.render_minimal(is_active)
+  local lnum, relnum, virtnum = v.lnum, v.relnum, v.virtnum
+  local winnr = api.nvim_get_current_win()
+  local bufnr = api.nvim_win_get_buf(winnr)
+  local line_count = get_line_count(bufnr)
+
+  local ln_text, ln_hl = nr(winnr, lnum, relnum, virtnum, line_count, is_active)
+  if not ln_hl then ln_hl = is_active and "" or "StatusColumnInactiveLineNr" end
+
+  local ln_col = { ln_text, ln_hl }
+
+  return display({
+    section:new(spacer(1), {
+      {
+        ln_col,
+      },
+    }, spacer(1)),
+  })
+end
+
+--- Compute total displayed width of a list of ComponentOpts (signs/spacers).
+--- Walks each opts[1] chunks list and sums strwidth of chunk text.
+---@param opts_list table
+---@return integer
+local function chunks_total_width(opts_list)
+  local w = 0
+  for _, opts in ipairs(opts_list or {}) do
+    local chunks = opts and opts[1]
+    if chunks then
+      for _, c in ipairs(chunks) do
+        if c and c[1] then w = w + strwidth(tostring(c[1])) end
+      end
+    end
+  end
+  return w
+end
+
+--- Render full statuscolumn: signs + line numbers + wrap + git + folds
+---
+--- Width parity: active and inactive must produce statuscolumns of identical
+--- width so the line number does not shift on focus changes. Inactive reuses
+--- the active section layout but substitutes spacers of equivalent width for
+--- sign content (which is intentionally hidden in inactive windows).
+function mega.ui.statuscolumn.render_full(is_active)
+  local lnum, relnum, virtnum = v.lnum, v.relnum, v.virtnum
+  local winnr = api.nvim_get_current_win()
+  local bufnr = api.nvim_win_get_buf(winnr)
+  local line_count = get_line_count(bufnr)
+
+  local git_signs, other_signs = extmark_signs(bufnr, lnum)
+
+  while #other_signs < MIN_SIGN_WIDTH do
+    table.insert(other_signs, spacer(1))
+  end
+
+  -- Get line number text and optional highlight (for wrap symbols)
+  local ln_text, ln_hl = nr(winnr, lnum, relnum, virtnum, line_count, is_active)
+
+  -- Determine highlight: wrap symbols have their own hl, otherwise use inactive/active
+  if not ln_hl then ln_hl = is_active and "" or "StatusColumnInactiveLineNr" end
+
+  local ln_col = { ln_text, ln_hl }
+
+  -- Fold column (only for active buffers, only on real lines not virtual).
+  -- When absent (inactive or no fold), r2 still renders a 2-char placeholder
+  -- (empty component + spacer(2)) so r2 width matches the fold-present case
+  -- (fold_char(1) + spacer(1)).
+  local fold_col = nil
+  if is_active and (not virtnum or virtnum == 0) then
+    local fold_char = fdm(lnum)
+    if fold_char ~= space then fold_col = { { { fold_char, "FoldColumn" } }, after = "" } end
+  end
+
+  -- For inactive: build width-equivalent spacer placeholders for sign slots
+  -- so total column width matches active. git_signs always has width >= 1
+  -- (extmark_signs pads with spacer(1) when empty); other_signs is padded to
+  -- MIN_SIGN_WIDTH above.
+  local other_slot = is_active and other_signs or { spacer(chunks_total_width(other_signs)) }
+  -- local other_slot = is_active and other_signs or { spacer(chunks_total_width(other_signs)) }
+  local git_slot_components = is_active and git_signs or { spacer(chunks_total_width(git_signs)) }
+
+  local r1 = section:new(spacer(1), {
+    {
+      ln_col,
+    },
+  }, unpack(git_slot_components))
+  r1 = r1 + section:new(spacer(1))
+
+  -- Fold indicator or width-equivalent separator
+  local r2
+  if fold_col then
+    r2 = section:new(fold_col, spacer(1))
+  else
+    r2 = section:new({
+      {
+        { "", "LineNr" },
+      },
+      after = "",
+    }, spacer(2))
+  end
+
+  return display({
+    section:new(spacer(1)),
+    other_slot,
+    r1 + r2,
+  })
+end
+
+function mega.ui.statuscolumn.set(bufnr, is_active)
+  local buftype = vim.bo[bufnr].buftype
+  local filetype = vim.bo[bufnr].filetype
+  local tier = resolve_tier(filetype, buftype, is_active)
+
+  if tier == "none" then
+    vim.opt_local.statuscolumn = ""
+  elseif tier == "minimal" then
+    vim.opt_local.statuscolumn = is_active and [[%!v:lua.mega.ui.statuscolumn.render_minimal(v:true)]]
+      or [[%!v:lua.mega.ui.statuscolumn.render_minimal(v:false)]]
+  else -- full
+    vim.opt_local.statuscolumn = is_active and [[%!v:lua.mega.ui.statuscolumn.render_full(v:true)]]
+      or [[%!v:lua.mega.ui.statuscolumn.render_full(v:false)]]
+  end
+end
+
+Augroup("mega.ui.statuscolumn", {
+  {
+    event = { "BufEnter", "BufReadPost", "FileType", "FocusGained", "WinEnter", "TermLeave" },
+    command = function(args) mega.ui.statuscolumn.set(args.buf, true) end,
+  },
+  {
+    event = { "BufLeave", "WinLeave", "FocusLost" },
+    command = function(args) mega.ui.statuscolumn.set(args.buf, false) end,
+  },
+})

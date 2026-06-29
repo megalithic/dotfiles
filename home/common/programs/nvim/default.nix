@@ -7,6 +7,7 @@
 {
   home.shellAliases = {
     mc = "NVIM_APPNAME=mc-nvim nvim -O";
+    np = "NVIM_APPNAME=nvim-pack nvim";
   };
 
   # Use .vimrc for standard vim settings
@@ -16,6 +17,7 @@
   # Create folders for backups, swaps, and undo
   home.activation.makeNvimDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     mkdir -p $HOME/.config/nvim/backups $HOME/.config/nvim/swaps $HOME/.config/nvim/undo
+    mkdir -p $HOME/.config/nvim-pack/backups $HOME/.config/nvim-pack/swaps $HOME/.config/nvim-pack/undo
   '';
 
   xdg.configFile = {
@@ -42,6 +44,10 @@
     };
     mc-nvim = {
       source = config.lib.mega.linkDotfile ".local_scripts/mc-nvim";
+      recursive = true;
+    };
+    nvim-pack = {
+      source = config.lib.mega.linkConfig "nvim-pack";
       recursive = true;
     };
   };
