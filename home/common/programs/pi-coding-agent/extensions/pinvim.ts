@@ -388,6 +388,10 @@ const PENDING_CONTEXT_TTL_MS = 5 * 60 * 1000;
 let server: net.Server | null = null;
 let infoManifestPath: string | null = null;
 let editorServiceTimer: NodeJS.Timeout | null = null;
+let socketHealthTimer: NodeJS.Timeout | null = null;
+// Tracks the last bind target so rebind only fires when the path changed or
+// vanished. Avoids re-listening on every health tick when the socket is fine.
+let lastBoundPath: string | null = null;
 let editorServiceSocket: net.Socket | null = null;
 let editorServiceRequestId = 1;
 
@@ -2159,11 +2163,21 @@ const handleSocketPayload = (
   respondError(socket, "unsupported untyped pinvim payload; use explicit_send");
 };
 
-const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
-  if (!SOCKET_PATH || server || isNestedAttachOnly()) return;
+const bindSocketServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
+  if (!SOCKET_PATH || isNestedAttachOnly()) return;
 
   void (async () => {
-    if (!SOCKET_PATH || server) return;
+    if (!SOCKET_PATH) return;
+
+    // Close any existing server before rebinding.
+    if (server) {
+      try {
+        server.close();
+      } catch {
+        /* ignore */
+      }
+      server = null;
+    }
 
     await fsp.mkdir(path.dirname(SOCKET_PATH), { recursive: true });
 
@@ -2203,16 +2217,56 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
       });
     });
 
-    server.listen(SOCKET_PATH);
-    server.unref();
+    server.on("error", (err) => {
+      // Surface bind/listen failures instead of swallowing silently.
+      ctx.ui.notify?.(`Pinvim socket error: ${err.message}`, "error");
+      server = null;
+      lastBoundPath = null;
+    });
+
+    server.listen(SOCKET_PATH, () => {
+      lastBoundPath = SOCKET_PATH;
+      server?.unref();
+    });
     scheduleInfoManifest(true);
 
     if (ctx.hasUI) {
       ctx.ui.notify(`Pinvim socket listening: ${SOCKET_PATH}`, "info");
     }
-  })().catch(() => {
+  })().catch((err) => {
     // Socket setup is best-effort; pinvim commands still load without ingress.
+    ctx.ui.notify?.(`Pinvim socket bind failed: ${String(err)}`, "error");
   });
+};
+
+const SOCKET_HEALTH_INTERVAL_MS = 10_000;
+
+const checkSocketHealth = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
+  if (!SOCKET_PATH || isNestedAttachOnly()) return;
+  // Rebind only when the socket file is missing but we believe we have a server.
+  // A vanished path with a live fd means the listener is deaf (the root cause
+  // this guard exists for: a peer's VimLeavePre unlinked our path out from
+  // under us).
+  if (server && lastBoundPath === SOCKET_PATH && !fs.existsSync(SOCKET_PATH)) {
+    ctx.ui.notify?.(
+      `Pinvim socket vanished (${SOCKET_PATH}); rebinding listener`,
+      "warn",
+    );
+    bindSocketServer(pi, ctx);
+  }
+};
+
+const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
+  if (!SOCKET_PATH || server || isNestedAttachOnly()) return;
+
+  bindSocketServer(pi, ctx);
+
+  if (!socketHealthTimer) {
+    socketHealthTimer = setInterval(() => {
+      checkSocketHealth(pi, ctx);
+    }, SOCKET_HEALTH_INTERVAL_MS);
+    socketHealthTimer.unref();
+  }
 };
 
 // =============================================================================
@@ -2315,10 +2369,15 @@ export default function (pi: ExtensionAPI): void {
       clearInterval(editorServiceTimer);
       editorServiceTimer = null;
     }
+    if (socketHealthTimer) {
+      clearInterval(socketHealthTimer);
+      socketHealthTimer = null;
+    }
     editorServiceSocket?.destroy();
     editorServiceSocket = null;
     server?.close();
     server = null;
+    lastBoundPath = null;
 
     if (!isNestedAttachOnly() && SOCKET_PATH && fs.existsSync(SOCKET_PATH)) {
       try {
