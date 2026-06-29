@@ -32,14 +32,16 @@ Events: `mic.on`/`mic.off`, `camera.on`/`camera.off`, `meeting.lobby`/`meeting.j
 
 ## Hammerspoon consumer
 
-`config/hammerspoon/watchers/media-presence.lua` connects to the socket via a persistent `nc -U` task, reads event lines from stdout, and dispatches:
+`config/hammerspoon/watchers/media-presence.lua` polls the daemon every 3s via `nc -w 1 -U` with `{"cmd":"get"}`, detects state transitions by diffing successive snapshots, and dispatches:
 
-- `meeting.lobby` / `meeting.joined` → force push-to-talk mute (`miccheck.setPTTMode`), pause Apple Music
-- `meeting.left` → reset PTT mode
-- `screenshare.start` → enforce DND focus mode (`U.dnd(true, "meeting")`)
-- `screenshare.stop` → restore previous DND state
+- `inMeeting` false→true → force push-to-talk mute (`miccheck.setPTTMode`), pause Apple Music
+- `inMeeting` true→false → reset PTT mode
+- `sharing` false→true → enforce DND focus mode (`U.dnd(true, "meeting")`)
+- `sharing` true→false → restore previous DND state
 
-`bindings.lua` `loadMeeting` (hyper+z) sends `{"cmd":"focus"}` to the daemon, which handles CDP target activation and app focusing.
+`nc -w 1` (1s idle timeout) is required because plain `nc -U` hangs waiting for more data, preventing the `hs.task` exit callback from firing.
+
+`bindings.lua` `loadMeeting` (hyper+z) sends `{"cmd":"focus"}` to the daemon via the same `nc -w 1 -U` pattern; the daemon handles CDP target activation and app focusing.
 
 ## Build and packaging
 
