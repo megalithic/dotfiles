@@ -63,7 +63,7 @@ function M.loadMeeting()
     -- Delegate to media-presenced daemon: CDP Target.activateTarget + NSRunningApplication.activate
     local sock = os.getenv("HOME") .. "/.local/state/media-presence/sock"
     local focusCmd = string.format("echo '{\"cmd\":\"focus\"}' | /usr/bin/nc -U %s", sock)
-    hs.task.new("/bin/sh", nil, { arguments = { "-c", focusCmd } }):start()
+    hs.task.new("/bin/sh", nil, { "-c", focusCmd }):start()
   end)
 end
 
