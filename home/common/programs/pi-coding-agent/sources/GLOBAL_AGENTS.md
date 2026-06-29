@@ -30,9 +30,9 @@ When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-f
 - Pasted images appear as file paths; image data is replaced with a placeholder.
 - To analyze an image, run pi with a vision model via bash:
   ```bash
-  pi --no-session -p --model github-copilot/gemini-3-flash-preview -p @/path/to/image "describe this image in detail"
+  pi --no-session -p --model opencode/gemini-3-flash -p @/path/to/image "describe this image in detail"
   ```
-- For code/screenshots: `--model github-copilot/claude-haiku-4.5` gives more structured output.
+- For code/screenshots: `--model opencode/claude-haiku-4-5` gives more structured output.
 - The subagent runs stateless — it only has the `read` tool, can't modify files.
 - pi writes model output to stderr. Use `2>&1` when you need the output (e.g. calling pi from another pi). Only use `2>/dev/null` for fire-and-forget calls.
 
