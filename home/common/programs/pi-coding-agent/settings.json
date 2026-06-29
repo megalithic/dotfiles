@@ -20,7 +20,9 @@
     "npm:@plannotator/pi-extension",
     "npm:pi-rtk-optimizer",
     "npm:@aliou/pi-synthetic",
-    "npm:pi-bash-live-view"
+    "npm:pi-bash-live-view",
+    "npm:pi-mono-figma",
+    "npm:pi-mono-btw"
   ],
   "enabledModels": [
     "alt-anthropic/claude-opus-4-8",
