@@ -84,7 +84,7 @@ local function connect()
     task = nil
     scheduleReconnect()
     return true
-  end, function(task, stdout, stderr)
+  end, function(t, stdout, stderr)
     if stdout then
       stdoutBuffer = stdoutBuffer .. stdout
       while true do
@@ -98,8 +98,7 @@ local function connect()
       end
     end
     return true
-  end)
-  task:setArguments({ "-U", SOCKET })
+  end, { "-U", SOCKET })
   task:start()
 
   U.log.i("[media-presence] connected to daemon")
