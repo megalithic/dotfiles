@@ -16,7 +16,7 @@ local dndWasOn = false
 local function poll()
   if not hs.fs.attributes(SOCKET) then return end
 
-  local getCmd = string.format("echo '{\"cmd\":\"get\"}' | /usr/bin/nc -U %s", SOCKET)
+  local getCmd = string.format("echo '{\"cmd\":\"get\"}' | /usr/bin/nc -w 1 -U %s", SOCKET)
   hs.task.new("/bin/sh", function(exitCode, stdOut, _)
     if exitCode ~= 0 or not stdOut then return end
 
