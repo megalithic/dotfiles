@@ -1,4 +1,0 @@
-.build/
-*.o
-*.swiftmodule
-.DS_Store

@@ -1,22 +1,22 @@
 # media-presence
 
-`tools/media-presenced/` is a standalone Swift daemon that detects meeting/AV presence and serves JSON events to Hammerspoon over a Unix socket.
+`bin/media-presenced` is a single-file Swift daemon that detects meeting/AV presence and serves JSON events to Hammerspoon over a Unix socket.
 
-It is a tracked first-party SwiftPM package, portable across nix and mise. It is nix-packaged (`pkgs/media-presenced.nix`) and run as a user LaunchAgent (`home/common/programs/media-presence/`). The Hammerspoon consumer (`watchers/media-presence.lua`) connects to the Unix socket and replaces `watchers/camera.lua` heuristics; hyper+z (`bindings.lua` `loadMeeting`) sends `{cmd:focus}` to the daemon.
+It is an editable `#!/usr/bin/swift` script run as a user LaunchAgent (`home/common/programs/media-presence/`). The Hammerspoon consumer (`watchers/media-presence.lua`) connects to the Unix socket and replaces `watchers/camera.lua` heuristics; hyper+z (`bindings.lua` `loadMeeting`) sends `{cmd:focus}` to the daemon.
 
 ## Why a daemon, not Hammerspoon Lua
 
 The daemon replaces heuristic Lua meeting logic with authoritative AV + CDP signals, and needs its own process for TCC correctness.
 
-The existing logic — `bindings.lua` `loadMeeting` (hyper+z) and `watchers/camera.lua` (DND/music-pause) — relied on camera+URL heuristics and window-size guessing. `watchers/media-presence.lua` replaces `camera.lua` with authoritative socket events, and hyper+z delegates to the daemon's `{cmd:focus}`. When AV/screen APIs are called from a terminal child, macOS attributes the request to the responsible app (the shell's host, e.g. Ghostty) and re-prompts even when already granted; a standalone process (eventually a LaunchAgent) gets its own TCC identity. Reading window titles via `CGWindowList`/System Events is avoided because it triggers Screen Recording prompts.
+The existing logic — `bindings.lua` `loadMeeting` (hyper+z) and `watchers/camera.lua` (DND/music-pause) — relied on camera+URL heuristics and window-size guessing. `watchers/media-presence.lua` replaces `camera.lua` with authoritative socket events, and hyper+z delegates to the daemon's `{cmd:focus}`. When AV/screen APIs are called from a terminal child, macOS attributes the request to the responsible app (the shell's host, e.g. Ghostty) and re-prompts even when already granted; a standalone LaunchAgent avoids the terminal-host lifecycle. Reading window titles via `CGWindowList`/System Events is avoided because it triggers Screen Recording prompts.
 
 ## Detection layers
 
-Two layers: an OS-level capture layer (mic/camera) and a CDP-based Google Meet layer.
+Two layers: an OS-level capture layer (mic/camera) and a CDP-based browser meeting layer.
 
 The capture layer always works: microphone in-use plus owner via CoreAudio process objects (`kAudioHardwarePropertyProcessObjectList`, `kAudioProcessPropertyIsRunningInput`, `kAudioProcessPropertyPID`/`BundleID`), and camera in-use via CoreMediaIO `kAudioDevicePropertyDeviceIsRunningSomewhere`. Both install property listeners plus a 5s safety-net refresh.
 
-The meeting layer detects Google Meet through Chrome DevTools Protocol against Helium on port 9223. `Target.setDiscoverTargets` discovers `meet.google.com` page targets event-driven, then a debounced (1.2s) `Runtime.evaluate` classifies lobby vs joined (Leave-call vs Join-now button), in-app mic/camera state, screen-share (`You are presenting`), and participant names (from `Mute X's microphone` aria-labels). CDP is the authority because TCC/replayd logs are unreliable for already-granted apps. Meet fires `Target.targetInfoChanged` in a tight loop, so classify is debounced and deduped by url+title signature.
+The meeting layer detects supported browser meeting URLs through Chrome DevTools Protocol against Helium on port 9223. `Target.setDiscoverTargets` discovers `meet.google.com` and `telehealth.px.athena.io` page targets event-driven, then a debounced (1.2s) `Runtime.evaluate` classifies lobby vs joined (Leave-call/End-call vs Join-now/Join-visit button), in-app mic/camera state, screen-share (`You are presenting`/stop sharing), and Google Meet participant names (from `Mute X's microphone` aria-labels). CDP is the authority because TCC/replayd logs are unreliable for already-granted apps. Meet fires `Target.targetInfoChanged` in a tight loop, so classify is debounced and deduped by url+title signature.
 
 ## Concurrency
 
@@ -45,14 +45,14 @@ Events: `mic.on`/`mic.off`, `camera.on`/`camera.off`, `meeting.lobby`/`meeting.j
 
 ## Build and packaging
 
-Dev builds use SwiftPM with the Xcode SDK forced; the nix package compiles the sources directly with swiftc.
+There is no SwiftPM or nix package; `bin/media-presenced` is the source and executable.
 
-For local dev the nix store SDK shadows Xcode's via `SDKROOT`, so use `env -u SDKROOT DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer SDKROOT=<Xcode MacOSX.sdk> swift build -c release` with the Xcode toolchain swift (binary at `.build/release/media-presenced`). The nix package (`pkgs/media-presenced.nix`) skips SwiftPM entirely — the package is zero-dependency, so it compiles `Sources/**/*.swift` with `swiftc` under nixpkgs `swift` + `apple-sdk_26` (needs `stdenv`, not `stdenvNoCC`, for `NIX_CC`), then ad-hoc signs for a stable code identity. `home/common/programs/media-presence/` installs it and a `launchd.agents.media-presenced` user agent (RunAtLoad + KeepAlive).
+`home/common/programs/media-presence/` points launchd directly at `~/.dotfiles/bin/media-presenced` (RunAtLoad + KeepAlive). The script uses an absolute `#!/usr/bin/swift` shebang so launchd can run it with its minimal environment. If the nix store SDK shadows Xcode's in an interactive shell, verify with `env -i HOME="$HOME" PATH=/usr/bin:/bin:/usr/sbin:/sbin bin/media-presenced --snapshot`.
 
-The daemon needs no TCC grants: it reads device state (CoreAudio/CoreMediaIO IsRunningSomewhere), localhost CDP, and `NSRunningApplication.activate` — no `CGWindowList`, AX, or screencapture — so the agent runs with zero permission prompts.
+The daemon needs no TCC grants: it reads device state (CoreAudio/CoreMediaIO IsRunningSomewhere), localhost CDP, and `NSRunningApplication.activate` — no `CGWindowList`, AX, or screencapture — so the agent runs with zero permission prompts. Because this is a script, its process identity is the Swift interpreter; keep it free of TCC-sensitive APIs unless it becomes a compiled binary again.
 
 ## Status and remaining work
 
-Working: Google Meet plus capture layer, nix-packaged and running as a LaunchAgent, Hammerspoon consumer wired (ptt mute, music pause, DND on screenshare, hyper+z repointed to `{cmd:focus}`).
+Working: Google Meet, Athena telehealth, plus capture layer, running as a LaunchAgent from `bin/media-presenced`, Hammerspoon consumer wired (ptt mute, music pause, DND on screenshare, hyper+z repointed to `{cmd:focus}`).
 
 Not yet done: Slack huddle resolver, native-app (Zoom/Teams) resolver, camera owner attribution (currently on/off only), and end-to-end live validation of `meeting.left`/screenshare-stop/lobby-to-joined transitions. Tracked in ticket dot-717t.
