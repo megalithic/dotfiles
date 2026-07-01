@@ -1,6 +1,6 @@
 ---
 id: dot-0b8n
-status: open
+status: closed
 deps: [dot-gx9h, dot-wu29, dot-gvyg]
 links: []
 created: 2026-06-30T16:21:28Z

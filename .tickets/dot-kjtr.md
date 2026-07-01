@@ -1,6 +1,6 @@
 ---
 id: dot-kjtr
-status: open
+status: closed
 deps: [dot-wu29]
 links: []
 created: 2026-06-30T16:21:13Z

@@ -1,6 +1,6 @@
 ---
 id: dot-83ld
-status: open
+status: closed
 deps: [dot-4zab]
 links: []
 created: 2026-06-30T16:20:31Z

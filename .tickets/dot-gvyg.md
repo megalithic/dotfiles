@@ -1,6 +1,6 @@
 ---
 id: dot-gvyg
-status: open
+status: closed
 deps: [dot-kjtr]
 links: []
 created: 2026-06-30T16:21:21Z

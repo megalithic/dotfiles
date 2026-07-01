@@ -1,6 +1,6 @@
 ---
 id: dot-w2ut
-status: open
+status: closed
 deps: [dot-gbcl, dot-wjlb]
 links: []
 created: 2026-06-30T16:21:42Z

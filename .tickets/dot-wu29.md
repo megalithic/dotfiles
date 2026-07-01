@@ -1,6 +1,6 @@
 ---
 id: dot-wu29
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-06-30T16:21:07Z

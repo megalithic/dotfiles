@@ -20,10 +20,10 @@
   localSrc ? null,
 }:
 let
-  version = "0.12.5.1";
+  version = "0.13.4.1";
   remoteSrc = fetchurl {
     url = "https://github.com/imputnet/helium-macos/releases/download/${version}/helium_${version}_arm64-macos.dmg";
-    sha256 = "1pcrb1nxmcdpjrgc65066nsvf89mx5cshicdiv2aymzj8hwkl2xv";
+    sha256 = "nosha";
   };
 in
 stdenvNoCC.mkDerivation {

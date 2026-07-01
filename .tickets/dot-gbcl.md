@@ -1,6 +1,6 @@
 ---
 id: dot-gbcl
-status: open
+status: closed
 deps: [dot-83ld, dot-uiyi, dot-p1ak]
 links: []
 created: 2026-06-30T16:20:51Z

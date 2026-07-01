@@ -1,6 +1,6 @@
 ---
 id: dot-wjlb
-status: open
+status: closed
 deps: [dot-0b8n]
 links: []
 created: 2026-06-30T16:21:35Z
