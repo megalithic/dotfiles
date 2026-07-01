@@ -147,3 +147,9 @@ deps
 **/.pi/todos
 .local_scripts
 .build/
+
+# worktrunk per-repo project config + generated worktree runtime dir (local-only)
+wt.local.toml
+**/wt.local.toml
+.wt/
+**/.wt/

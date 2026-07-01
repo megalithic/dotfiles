@@ -7,6 +7,16 @@ function wt --description "Worktrunk wrapper: vendored directives + implicit swi
         return 127
     end
 
+    # Project config lives at <main-repo-root>/wt.local.toml (not .config/wt.toml).
+    # Worktrunk resolves WORKTRUNK_PROJECT_CONFIG_PATH cwd-relative, so we build
+    # an absolute path from the main worktree's git-common-dir — correct from any
+    # subdir or linked worktree. Empty when not inside a git repo.
+    set -l wt_env_prefix
+    set -l wt_gcd (git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
+    if test -n "$wt_gcd"
+        set wt_env_prefix WORKTRUNK_PROJECT_CONFIG_PATH=(path dirname $wt_gcd)/wt.local.toml
+    end
+
     # Split args at `--`: only our flags before it are parsed; everything from
     # `--` onward is forwarded verbatim (execute args).
     set -l pre
@@ -99,6 +109,11 @@ function wt --description "Worktrunk wrapper: vendored directives + implicit swi
         if not contains -- --no-cd $call_args
             set -a call_args --no-cd
         end
+        # Auto-approve project hooks so the approval prompt never poisons the
+        # JSON we capture below (content-hash approvals invalidate on edit).
+        if not contains -- --yes $call_args; and not contains -- -y $call_args
+            set -a call_args --yes
+        end
         set -l has_format false
         for a in $call_args
             if string match -q -- '--format*' $a
@@ -109,7 +124,7 @@ function wt --description "Worktrunk wrapper: vendored directives + implicit swi
         test "$has_format" = false; and set -a call_args --format=json
 
         # Capture stdout (JSON). stderr/human lines pass through to terminal.
-        set -l out ($wt_bin $call_args)
+        set -l out (env $wt_env_prefix $wt_bin $call_args)
         set -l rc $status
         if test $rc -ne 0
             return $rc
@@ -141,7 +156,7 @@ function wt --description "Worktrunk wrapper: vendored directives + implicit swi
     set -l exec_file (mktemp)
     # WORKTRUNK_SHELL=fish makes the binary escape the exec directive for
     # fish's `eval` (fish treats `\` inside '...' unlike POSIX).
-    env WORKTRUNK_DIRECTIVE_CD_FILE=$cd_file WORKTRUNK_DIRECTIVE_EXEC_FILE=$exec_file \
+    env $wt_env_prefix WORKTRUNK_DIRECTIVE_CD_FILE=$cd_file WORKTRUNK_DIRECTIVE_EXEC_FILE=$exec_file \
         WORKTRUNK_SHELL=fish \
         $wt_bin $call_args
     set -l exit_code $status
