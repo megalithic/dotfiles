@@ -69,13 +69,26 @@ if [[ "$sanitized" != "$raw_name" ]]; then
   name="${sanitized}-${short_hash}"
 fi
 
+# Derive repo name from the main repo root. Worktrees live at
+# <repo_root>/.worktrees/<branch>; strip that suffix to get the root.
+repo_root="$wpath"
+case "$wpath" in
+  */.worktrees/*) repo_root="${wpath%/.worktrees/*}" ;;
+esac
+repo="$(basename "$repo_root")"
+repo="$(printf '%s' "$repo" | sed -E 's/[^A-Za-z0-9_.-]+/-/g; s/-+/-/g; s/^-//; s/-$//')"
+[[ -z "$repo" ]] && repo="repo"
+
+# tmux session name is <repo>-<worktree>, e.g. rx-sm-spp-feature.
+session="${repo}-${name}"
+
 inside_tmux="false"
 [[ -n "${TMUX:-}" ]] && inside_tmux="true"
 
 # If the project provides an executable services-cmd script, use it as the
 # services window command (works regardless of user's shell — kernel respects
 # the script's #! shebang). Otherwise fall back to tailing hook logs.
-services_cmd_file="$wpath/.config/services-cmd"
+services_cmd_file="$wpath/.wt/services-cmd"
 if [[ -x "$services_cmd_file" ]]; then
   services_cmd="$services_cmd_file"
 else
@@ -97,18 +110,18 @@ ensure_window() {
 }
 
 do_session() {
-  if ! tmux has-session -t "=${name}" 2>/dev/null; then
+  if ! tmux has-session -t "=${session}" 2>/dev/null; then
     # First window becomes `code`.
-    tmux new-session -d -s "$name" -c "$wpath" -n code
+    tmux new-session -d -s "$session" -c "$wpath" -n code
   fi
-  tmux setenv -t "=${name}" GIT_WORKTREE "$branch"
-  ensure_window "$name" code
-  ensure_window "$name" services "$services_cmd"
+  tmux setenv -t "=${session}" GIT_WORKTREE "$branch"
+  ensure_window "$session" code
+  ensure_window "$session" services "$services_cmd"
 
   if [[ "$inside_tmux" == "true" ]]; then
-    tmux switch-client -t "=${name}"
+    tmux switch-client -t "=${session}"
   else
-    tmux attach-session -t "=${name}"
+    tmux attach-session -t "=${session}"
   fi
 }
 
