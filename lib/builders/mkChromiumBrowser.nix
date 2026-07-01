@@ -82,80 +82,6 @@ let
       '';
     };
 
-    # Declarative runtime flags generated from the structured options below are
-    # appended to `commandLineArgs` to form the effective wrapper args. See
-    # `effectiveArgs` in the config below.
-    remoteDebuggingPort = mkOption {
-      inherit visible;
-      type = types.nullOr types.port;
-      default = null;
-      example = 9223;
-      description = ''
-        Remote debugging port for ${name}. When set, appends
-        `--remote-debugging-port=<port>` to the wrapper command-line args.
-        Runtime-only flag; does not touch the app bundle, so Gatekeeper,
-        codesign, TCC identity, and 1Password pairing are unaffected.
-      '';
-    };
-
-    experimentalFeatures = {
-      enable = mkOption {
-        inherit visible;
-        type = types.listOf types.str;
-        default = [ ];
-        example = [
-          "FeatureA"
-          "FeatureB"
-        ];
-        description = ''
-          Chromium features to force-enable for ${name}. Appends
-          `--enable-features=FeatureA,FeatureB` (comma-joined) to the
-          wrapper args.
-        '';
-      };
-
-      disable = mkOption {
-        inherit visible;
-        type = types.listOf types.str;
-        default = [ ];
-        example = [ "OutdatedBuildDetector" ];
-        description = ''
-          Chromium features to force-disable for ${name}. Appends
-          `--disable-features=FeatureC` (comma-joined) to the wrapper args.
-        '';
-      };
-    };
-
-    # Deferred seam: native macOS accelerator (keyboard shortcut) overrides.
-    # Not wired into the wrapper yet — native shortcut customization is
-    # deferred. Defined now so browser modules can set it without error; it
-    # has no effect until the implementation lands.
-    customAccelerators = mkOption {
-      inherit visible;
-      type =
-        with types;
-        attrsOf (submodule {
-          options = {
-            added = mkOption {
-              type = listOf str;
-              default = [ ];
-              description = "Accelerators to add for this menu item.";
-            };
-            removed = mkOption {
-              type = listOf str;
-              default = [ ];
-              description = "Accelerators to remove for this menu item.";
-            };
-          };
-        });
-      default = { };
-      description = ''
-        Deferred seam for native macOS accelerator overrides on ${name}.
-        Not yet wired into the wrapper (native shortcut customization is
-        deferred). Setting it has no effect for now.
-      '';
-    };
-
     # macOS app bundle configuration
     appName = mkOption {
       inherit visible;
@@ -359,20 +285,6 @@ let
       # Bundle ID for defaults/preferences (separate from Application Support path)
       effectiveBundleId = if cfg.bundleId != null then cfg.bundleId else browser;
 
-      # Structured runtime flags generated from the declarative options above.
-      # Appended to the raw `commandLineArgs` to form the effective wrapper args.
-      generatedArgs =
-        (lib.optional (
-          cfg.remoteDebuggingPort != null
-        ) "--remote-debugging-port=${toString cfg.remoteDebuggingPort}")
-        ++ (lib.optional (
-          cfg.experimentalFeatures.enable != [ ]
-        ) "--enable-features=${lib.concatStringsSep "," cfg.experimentalFeatures.enable}")
-        ++ (lib.optional (
-          cfg.experimentalFeatures.disable != [ ]
-        ) "--disable-features=${lib.concatStringsSep "," cfg.experimentalFeatures.disable}");
-      effectiveArgs = cfg.commandLineArgs ++ generatedArgs;
-
       configDir =
         if pkgs.stdenv.isDarwin then
           "Library/Application Support/${darwinDir}"
@@ -417,7 +329,7 @@ let
         originalApp = originalAppPath;
         appName = browserName;
         inherit (cfg) executableName;
-        args = effectiveArgs;
+        args = cfg.commandLineArgs;
         inherit (cfg) iconFile;
         inherit (cfg.darwinWrapperApp) bundleId;
       };
@@ -427,7 +339,7 @@ let
       # e.g., "helium-custom" instead of "helium"
       cliWrapperName = "${cfg.package.pname or browser}-custom";
       cliWrapper =
-        if effectiveArgs != [ ] && cfg.package ? pname then
+        if cfg.commandLineArgs != [ ] && cfg.package ? pname then
           pkgs.runCommand "${cfg.package.name or cfg.package.pname}-cli-wrapped"
             {
               nativeBuildInputs = [ pkgs.makeWrapper ];
@@ -440,7 +352,7 @@ let
                 mkdir -p $out/bin
                 # Use different name to avoid collision with base package
                 makeWrapper ${cfg.package}/bin/${cfg.package.pname} $out/bin/${cliWrapperName} \
-                  --add-flags "${lib.escapeShellArgs effectiveArgs}"
+                  --add-flags "${lib.escapeShellArgs cfg.commandLineArgs}"
                 echo "Created CLI wrapper: ${cliWrapperName}"
               else
                 # Create empty output for packages without bin/
@@ -458,7 +370,7 @@ let
     lib.mkIf cfg.enable {
       # Expose wrapper package internally
       programs.${browser}.wrapperAppPackage = lib.mkIf (
-        pkgs.stdenv.isDarwin && cfg.darwinWrapperApp.enable && effectiveArgs != [ ]
+        pkgs.stdenv.isDarwin && cfg.darwinWrapperApp.enable && cfg.commandLineArgs != [ ]
       ) wrapperApp;
 
       # Add packages to home.packages with smart handling:
@@ -475,7 +387,7 @@ let
           pkgs.stdenv.isDarwin
           && cfg.darwinWrapperApp.enable
           && cfg.darwinWrapperApp.addToHomePackages
-          && effectiveArgs != [ ]
+          && cfg.commandLineArgs != [ ]
         ) wrapperApp;
       home.file =
         lib.listToAttrs (
