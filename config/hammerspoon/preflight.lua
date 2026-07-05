@@ -3,7 +3,10 @@ local fmt = string.format
 
 hs.allowAppleScript(true)
 hs.application.enableSpotlightForNameSearches(false)
-hs.autoLaunch(true)
+-- Launch-at-login handled by launchd agent (home/common/programs/hammerspoon).
+-- hs.autoLaunch pins a login item to the resolved /nix/store path, which goes
+-- stale after rebuilds and causes duplicate instances at startup.
+hs.autoLaunch(false)
 hs.automaticallyCheckForUpdates(true)
 hs.menuIcon(true)
 hs.dockIcon(true)

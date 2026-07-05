@@ -6,6 +6,25 @@
 }:
 {
   home.packages = [ pkgs.brewCasks.hammerspoon ];
+
+  # Launch at login via launchd instead of hs.autoLaunch. hs.autoLaunch
+  # registers a BTM login item with the resolved /nix/store path, which goes
+  # stale after every rebuild and races macOS window-resume into launching a
+  # second instance. `open -a` on the stable Home Manager Apps path dedups by
+  # bundle id and always launches the current generation.
+  launchd.agents.hammerspoon = {
+    enable = true;
+    config = {
+      Label = "org.hammerspoon.Hammerspoon.launcher";
+      ProgramArguments = [
+        "/usr/bin/open"
+        "-g"
+        "-a"
+        "${config.home.homeDirectory}/Applications/Home Manager Apps/Hammerspoon.app"
+      ];
+      RunAtLoad = true;
+    };
+  };
   xdg.configFile."hammerspoon" = {
     source = config.lib.mega.linkConfig "hammerspoon";
     force = true;
