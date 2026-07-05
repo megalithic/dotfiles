@@ -19,6 +19,12 @@
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/HEAD/scripts/install.sh)"
 ```
 
+## 🚀 Installation (automagical)
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/HEAD/bootstrap.sh)"
+```
+
 ## 🚀 Installation (manual)
 
 1. Install

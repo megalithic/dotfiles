@@ -1,0 +1,454 @@
+#:tombi schema.strict = false
+
+# Useful mise-based dotfiles repos and patterns:
+#
+# REFS:
+# https://github.com/sedalu/dotfiles - auto-env based on machine name, not just arch/os; and container based install :mindblown:
+# https://github.com/AllySummers/dotfiles - hk, pkl, usage releated stuff, too
+# https://github.com/hashiiiii/dotfiles
+# https://github.com/disrupted/dotfiles/blob/master/.config/mise/config.toml - tools i typically use
+# https://github.com/JJGadgets/Biohazard/blob/main/.mise.toml - lots of aqua use
+# https://github.com/disrupted/dotfiles/blob/master/.config/mise/config.toml - elixir related
+#
+[settings]
+experimental = true
+
+auto_install = true
+env_shell_expand = true
+
+# quiet = true
+# verbose = false
+
+activate_aggressive = true
+cargo.binstall = true
+color_theme = "everforest"
+github.use_git_credentials = true
+lockfile = true
+minimum_release_age = "1d"
+npm.package_manager = "aube"
+pin = true
+pipx.uvx = true
+task.monorepo_depth = 2
+
+[settings.status]
+show_env = true
+show_tools = true
+
+[deps.aube]
+auto = true
+
+[env]
+HK_MISE = "1"
+HK_HIDE_WHEN_DONE = "true"
+MISE_EXPERIMENTAL = "1"
+DOTS = "{{env.HOME}}/.dotfiles"
+DOTFILES_DIR = "{{env.HOME}}/.dotfiles"
+CODE = "{{env.HOME}}/code"
+XDG_CONFIG_HOME = "{{env.HOME}}/.config"
+XDG_DATA_HOME = "{{env.HOME}}/.local/share"
+XDG_STATE_HOME = "{{env.HOME}}/.local/state"
+XDG_CACHE_HOME = "{{env.HOME}}/.cache"
+PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
+
+# FNOX_AGE_KEY_FILE = "~/.config/fnox/age.txt"
+
+[bootstrap.packages]
+"brew:bash" = "latest"
+"brew:fish" = "latest"
+"brew:git" = "latest"
+"brew:zsh" = "latest"
+"brew:openssl@3" = "latest" # required by Python (ssl module) and networking Rust crates
+"brew:pkgconf" = "latest"   # helps compilers locate openssl and other libs when building from source
+
+# brew casks using mise's `brew-cask:<formulae>` notation
+"brew-cask:hammerspoon" = "latest"
+
+[dotfiles]
+# "~/.config" = "mise/config"
+"~/.pi" = "mise/config/pi-coding-agent"
+# "~/Library/Developer/Xcode/UserData/FontAndColorThemes/tokyo-night.xccolortheme" = ".config/xcode/tokyo-night.xccolortheme"
+"~/.config/mise/config.toml" = "mise/config/mise/global_config.toml"
+"~/.config/fnox/config.toml" = "mise/config/fnox/config.toml"
+"~/.config/fish" = "mise/config/fish"
+"~/.config/fzf" = "mise/config/fzf"
+"~/.config/jj/config.toml" = "mise/config/jj/config.toml"
+"~/.config/ghostty" = "mise/config/ghostty"
+"~/.config/hammerspoon" = "mise/config/hammerspoon"
+"~/.config/kitty" = "mise/config/kitty"
+"~/.config/nvim" = "mise/config/nvim"
+"~/.config/tmux" = "mise/config/tmux"
+
+# -- generated fragments → committed static files (replaces Home Manager Nix interpolation) --
+# "~/.local/share/hammerspoon/nix_path.lua" = "mise/fragments/hammerspoon/nix_path.lua"
+# "~/.local/share/hammerspoon/fragments/shade-next.lua" = "mise/fragments/hammerspoon/shade-next.lua"
+# "~/.local/share/tmux/nix.conf" = "mise/fragments/tmux/nix.conf"
+# "~/.config/shade-next/config.toml" = "mise/fragments/shade-next/config.toml"
+"~/.config/sesame/config.jsonc" = "mise/fragments/sesame/config.jsonc"
+# "~/.config/process-compose/shortcuts.yaml" = "mise/fragments/process-compose/shortcuts.yaml"
+# "~/.config/process-compose/theme.yaml" = "mise/fragments/process-compose/theme.yaml"
+
+# -- kanata: individual .kbd files (parent dir has mutable state; daemon/bar migration deferred to mbm-ju5m) --
+"~/.config/kanata/macbook.kbd" = "config/kanata/macbook.kbd"
+"~/.config/kanata/macbook-disabled.kbd" = "config/kanata/macbook-disabled.kbd"
+
+# -- SSH: individual files (directory holds mutable keys/known_hosts; allowed_signers is store-generated, deferred to mbm-8afn) --
+"~/.ssh/config" = "config/ssh/config"
+
+# -- espanso: app support path, not XDG config (validated repo-final link chain) --
+"~/Library/Application Support/espanso" = "config/espanso"
+
+# -- store-flake-source files (currently Nix-store copies; mise links working-tree sources) --
+# "~/.config/git/config" = "mise/fragments/git/config"
+"~/.gitconfig" = "home/git/gitconfig"
+"~/.gitignore" = "home/git/gitignore"
+"~/.ignore" = "home/git/tool-ignore"
+
+# -- static tool configs (small, single-file configs previously Nix-store-backed) --
+"~/.config/bat/config" = "mise/config/bat/config"
+"~/.config/direnv/direnv.toml" = "mise/config/direnv/direnv.toml"
+"~/.config/starship.toml" = "mise/config/starship/starship.toml"
+"~/.config/karabiner/karabiner.json" = "mise/config/karabiner/karabiner.json"
+"~/.config/eza/theme.yml" = "mise/config/eza/theme.yml"
+"~/.config/ripgrep/rc" = "mise/config/ripgrep/rc"
+"~/.config/ripgrep/ignore" = "mise/config/fd/ignore"
+
+# -- symlink-each targets (existing mutable dirs, needs per-entry reconciliation) --
+"~/.local/bin" = { source = "bin", mode = "symlink-each" }
+"~/bin" = { source = "bin", mode = "symlink-each" }
+
+
+# Curated sections: semantic keys mise maps to canonical defaults writes.
+[bootstrap.macos.dock]
+autohide = true
+orientation = "bottom"
+tilesize = 60
+magnification = false
+show_recents = false
+mru_spaces = false
+
+[bootstrap.macos.finder]
+show_all_files = true
+show_pathbar = true
+show_status_bar = true
+show_extensions_warning = false
+preferred_view_style = "list"
+
+[bootstrap.macos.keyboard]
+key_repeat = 6
+initial_key_repeat = 25
+press_and_hold = false
+fn_state = false
+
+[bootstrap.macos.trackpad]
+tap_to_click = true
+three_finger_drag = true
+
+[bootstrap.macos.defaults.NSGlobalDomain]
+AppleInterfaceStyle = "Dark"
+AppleICUForce24HourTime = true
+AppleKeyboardUIMode = 3
+ApplePressAndHoldEnabled = false
+AppleShowScrollBars = "WhenScrolling"
+NSAutomaticCapitalizationEnabled = false
+NSAutomaticDashSubstitutionEnabled = false
+NSAutomaticPeriodSubstitutionEnabled = false
+NSAutomaticQuoteSubstitutionEnabled = false
+NSAutomaticSpellingCorrectionEnabled = false
+NSAutomaticWindowAnimationsEnabled = false
+NSDocumentSaveNewDocumentsToCloud = false
+NSNavPanelExpandedStateForSaveMode = true
+NSNavPanelExpandedStateForSaveMode2 = true
+NSWindowResizeTime = 0.001
+PMPrintingExpandedStateForPrint = true
+PMPrintingExpandedStateForPrint2 = true
+"com.apple.keyboard.fnState" = false
+"com.apple.swipescrolldirection" = false
+"com.apple.trackpad.scaling" = 3.0
+
+[bootstrap.macos.defaults."com.apple.finder"]
+AppleShowAllExtensions = true
+AppleShowAllFiles = true
+FXDefaultSearchScope = "SCcf"
+FXEnableExtensionChangeWarning = false
+FXPreferredViewStyle = "Nlsv"
+NewWindowTarget = "Home"
+QuitMenuItem = true
+ShowExternalHardDrivesOnDesktop = true
+ShowHardDrivesOnDesktop = false
+ShowMountedServersOnDesktop = false
+ShowPathbar = true
+ShowRemovableMediaOnDesktop = true
+ShowStatusBar = true
+_FXShowPosixPathInTitle = true
+_FXSortFoldersFirst = true
+
+[bootstrap.macos.defaults."com.apple.dock"]
+autohide = true
+"autohide-time-modifier" = 0.7
+"expose-animation-duration" = 0.0
+launchanim = false
+magnification = false
+mineffect = "scale"
+"minimize-to-application" = true
+"mru-spaces" = false
+orientation = "bottom"
+"show-process-indicators" = true
+"show-recents" = false
+"static-only" = true
+tilesize = 60
+
+[bootstrap.macos.defaults."com.apple.screencapture"]
+location = "~/__screenshots"
+type = "png"
+"disable-shadow" = true
+
+[bootstrap.macos.defaults."com.apple.LaunchServices"]
+LSQuarantine = false
+
+[bootstrap.macos.defaults."com.apple.desktopservices"]
+DSDontWriteNetworkStores = true
+DSDontWriteUSBStores = true
+
+[bootstrap.macos.defaults."com.apple.print.PrintingPrefs"]
+"Quit When Finished" = true
+
+[bootstrap.macos.defaults."com.mitchellh.ghostty"]
+SUAutomaticallyUpdate = false
+SUEnableAutomaticChecks = false
+SUHasLaunchedBefore = true
+SUSendProfileInfo = false
+
+[bootstrap.macos.defaults."net.imput.helium"]
+SUAutomaticallyUpdate = false
+SUEnableAutomaticChecks = false
+
+[bootstrap.macos.defaults."org.hammerspoon.Hammerspoon"]
+MJConfigFile = "~/.config/hammerspoon/init.lua"
+
+[bootstrap.macos.defaults."com.apple.SoftwareUpdate"]
+AutomaticCheckEnabled = true
+AutomaticDownload = 1
+CriticalUpdateInstall = 1
+ScheduleFrequency = 1
+
+[bootstrap.macos.launchd.agents."com.megadots.espanso"]
+program = "/Applications/Espanso.app/Contents/MacOS/espanso"
+args = ["launcher"]
+run_at_load = true
+stdout_path = "~/Library/Logs/espanso/stdout.log"
+stderr_path = "~/Library/Logs/espanso/stderr.log"
+
+[bootstrap.macos.launchd.agents."com.megadots.llama-cpp"]
+program = "~/.dotfiles/scripts/mise/llama-server-launchd"
+run_at_load = true
+keep_alive = true
+stdout_path = "~/Library/Logs/llama-cpp/stdout.log"
+stderr_path = "~/Library/Logs/llama-cpp/stderr.log"
+
+[bootstrap.macos.launchd.agents."com.megadots.sesame-session-indexer"]
+program = "~/.dotfiles/scripts/mise/sesame-session-indexer"
+args = ["watch", "--interval", "30"]
+run_at_load = true
+keep_alive = true
+stdout_path = "~/.cache/sesame-session-indexer.log"
+stderr_path = "~/.cache/sesame-session-indexer.log"
+
+# [bootstrap.macos.keyboard]
+# key_repeat = 2
+# initial_key_repeat = 15
+#
+# [bootstrap.macos.finder]
+# show_pathbar = true
+#
+# [bootstrap.macos.trackpad]
+# tap_to_click = true
+#
+# # Raw writes for keys with no curated section. Captured from this machine's current
+# # state — only settings that differ from macOS factory defaults.
+# [bootstrap.macos.defaults]
+# "NSGlobalDomain" = { ApplePressAndHoldEnabled = false, AppleShowAllExtensions = true, "com.apple.mouse.scaling" = 2.5, "com.apple.trackpad.scaling" = 0.875, "com.apple.swipescrolldirection" = false, AppleInterfaceStyle = "Dark" }
+# "com.apple.finder" = { AppleShowAllFiles = true, ShowStatusBar = true, FXPreferredViewStyle = "Nlsv" }
+# "com.apple.dock" = { tilesize = 52.0 }
+# "com.apple.WindowManager" = { EnableStandardClickToShowDesktop = false }
+
+[bootstrap.hooks.pre-dotfiles]
+run = "git -C {{config_root}} submodule update --init"
+
+[bootstrap.hooks.post-defaults]
+run = "killall Finder SystemUIServer Dock || true"
+
+[bootstrap.user]
+login_shell = "/opt/homebrew/bin/fish"
+
+[tasks.bootstrap]
+run = [
+  "git -C {{config_root}} submodule update --init",
+  "brew bundle --file={{config_root}}/Brewfile",
+  "pre-commit install --install-hooks",
+]
+
+[plugins]
+nix = "https://github.com/jbadeau/mise-nix.git"
+
+[tools]
+# aqua
+"aqua:artempyanykh/marksman" = "latest"
+"aqua:astral-sh/ruff" = "latest"
+"aqua:docker/compose" = "latest"
+"aqua:mvdan/sh" = "latest"
+# github
+"github:dandavison/delta" = "latest"
+"github:Feel-ix-343/markdown-oxide" = "latest"
+"github:jesseduffield/lazygit" = "latest"
+"github:noworrieseh/macdisp" = "latest"
+"github:rtk-ai/rtk" = "latest"
+# cargo
+"cargo:forgejo-cli" = "latest"
+# go
+"go:golang.org/x/tools/gopls" = "latest"
+# npm
+"npm:bash-language-server" = "latest"
+"npm:biome" = "latest"
+"npm:chrome-devtools-mcp" = "latest"
+"npm:httpyac" = "latest"
+"npm:@earendil-works/pi-coding-agent" = "latest"
+"npm:prettier" = "latest"
+"npm:pyright" = "latest"
+"npm:typescript" = "latest"
+"npm:typescript-language-server" = "latest"
+"npm:vscode-langservers-extracted" = "latest"
+# ubi
+# -
+# bare
+age = "latest"
+bun = "latest"
+claude = "latest"
+cargo-binstall = "latest"
+"cargo:emmylua_ls" = "latest"
+"cargo:emmylua_check" = "latest"
+"github:EmmyLuaLs/emmylua-analyzer-rust" = "latest"
+difftastic = "latest"
+eza = "latest"
+fd = "latest"
+fzf = "latest"
+gh = "latest"
+gitleaks = "latest"
+glow = "latest"
+go = "latest"
+gofumpt = "latest"
+golangci-lint-langserver = "latest"
+gum = "latest"
+hunk = "latest"
+hk = "latest"
+imagemagick = "latest"
+jq = "latest"
+jj = "latest"
+"llama.cpp" = { version = "9873", version_prefix = "b" }
+lua-language-server = "3"
+neovim = "nightly"
+node = "latest"
+ollama = "0.31.1"
+pipx = "latest"
+"pipx:uv" = "latest"
+pitchfork = "latest"
+prettier = "latest"
+python = "latest"
+ripgrep = "latest"
+rust = "latest"
+shellcheck = "latest"
+shfmt = "latest"
+tmux = "latest"
+tokei = "latest"
+tree-sitter = "latest"
+usage = "latest"
+uv = "latest"
+zoxide = "latest"
+
+# hk linters (see hk.pkl); typos/yamlfmt ship no shell completions, so they stay bare.
+# gitleaks, rumdl, and ryl get completion postinstall hooks below.
+typos = "latest"
+yamlfmt = "latest"
+
+# Sub-table tools (with postinstall hooks or extra options)
+[tools."aqua:tamasfe/taplo"]
+version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions completions {}"
+
+# ryl — the YAML linter (replaces yamlfmt's -lint role; see hk.pkl).
+[tools."aqua:owenlamont/ryl"]
+version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions --generate-completions {}"
+
+[tools."github:ryanoasis/nerd-fonts"]
+version = "latest"
+asset_pattern = "JetBrainsMono.tar.xz"
+postinstall = "$DOTFILES_DIR/mise/hooks/install-fonts.sh"
+
+# [tools."go:github.com/go-delve/delve/cmd/dlv"]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions completion {}"
+
+[tools."http:ghostty"]
+version = "1.2.3"
+postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
+platforms.macos-arm64.url = "https://release.files.ghostty.org/{{version}}/Ghostty.dmg"
+
+# [tools."http:cmux"]
+# version = "0.64.4"
+# postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
+# platforms.macos-arm64.url = "https://github.com/manaflow-ai/cmux/releases/download/v{{version}}/cmux-macos.dmg"
+
+# [tools.bat]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions --completion {}"
+
+# [tools.fd]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions --gen-completions {}"
+
+[tools.fnox]
+version = "latest"
+# postinstall = """
+# $DOTFILES_DIR/mise/hooks/completions completion {}
+# rm -f ${XDG_CACHE_HOME:-$HOME/.cache}/zsh/init/fnox.zsh ${XDG_CACHE_HOME:-$HOME/.cache}/bash/init/fnox.bash
+# """
+
+# [tools.fzf]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions --{}"
+
+# [tools.gitleaks]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions completion {}"
+
+# [tools.golangci-lint]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions completion {}"
+#
+# [tools.helix]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/helix-postinstall {}"
+
+# [tools.ollama]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/ollama-postinstall"
+
+# [tools.ripgrep]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions --tool rg --generate complete-{}"
+
+# [tools.rumdl]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions completions {}"
+
+# [tools.starship]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions completions {}"
+
+# [tools.xh]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions --generate complete-{}"
+
+# [tools.yq]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions completion {}"

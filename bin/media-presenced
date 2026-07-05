@@ -555,16 +555,23 @@ final class PresenceEngine {
     var onEvent: ((_ event: String, _ presence: Presence) -> Void)?
 
     private let meetBundle = "net.imput.helium"  // browser hosting Meet tabs
+    private let cameraActiveFallbackURLPrefixes = [
+        "https://telehealth.px.athena.io/",
+    ]
+    private let cameraActiveFallbackState = "camera-active"
 
     func applyCapture(_ c: CaptureState) {
         var p = presence
         let micWas = p.micActive, camWas = p.cameraActive
+        let inMeetingWas = p.inMeeting, stateWas = p.meetingState
         p.micActive = c.micActive
         p.micOwners = c.micOwners.map { $0.bundleID }
         p.cameraActive = c.cameraActive
+        applyCameraActiveFallback(&p)
         commit(p)
         if p.micActive != micWas { emit(p.micActive ? "mic.on" : "mic.off") }
         if p.cameraActive != camWas { emit(p.cameraActive ? "camera.on" : "camera.off") }
+        emitMeetingStateEvents(from: inMeetingWas, stateWas)
     }
 
     func applyMeet(_ event: String, _ m: MeetState) {
@@ -580,13 +587,17 @@ final class PresenceEngine {
                 emit("meeting.left")
             }
         case "meet.appeared":
+            let inMeetingWas = p.inMeeting, stateWas = p.meetingState
             p.meetingApp = meetBundle
             p.meetingTargetId = m.targetId
             p.meetingURL = m.url
             p.meetingTitle = m.title
+            applyCameraActiveFallback(&p)
             commit(p)
+            emitMeetingStateEvents(from: inMeetingWas, stateWas)
         case "meet.state":
             let stateWas = p.meetingState
+            let inMeetingWas = p.inMeeting
             let sharingWas = p.sharing
             p.meetingApp = meetBundle
             p.meetingTargetId = m.targetId
@@ -598,11 +609,9 @@ final class PresenceEngine {
             p.participants = m.dom.participants
             p.inAppMic = m.dom.micSelf
             p.inAppCamera = m.dom.camSelf
+            applyCameraActiveFallback(&p)
             commit(p)
-            if p.meetingState != stateWas {
-                if p.meetingState == "lobby" { emit("meeting.lobby") }
-                if p.meetingState == "joined" { emit("meeting.joined") }
-            }
+            emitMeetingStateEvents(from: inMeetingWas, stateWas)
             if p.sharing != sharingWas { emit(p.sharing ? "screenshare.start" : "screenshare.stop") }
         default:
             break
@@ -615,6 +624,43 @@ final class PresenceEngine {
         p.meetingApp = ""; p.meetingURL = ""; p.meetingTitle = ""; p.meetingTargetId = ""
         p.participants = []; p.inAppMic = "?"; p.inAppCamera = "?"
         return p
+    }
+
+    private func applyCameraActiveFallback(_ p: inout Presence) {
+        let matchesFallbackURL = cameraActiveFallbackURLPrefixes.contains { p.meetingURL.hasPrefix($0) }
+        guard matchesFallbackURL else {
+            if p.meetingState == cameraActiveFallbackState {
+                p.inMeeting = false
+                p.meetingState = "idle"
+                p.inAppCamera = "?"
+            }
+            return
+        }
+
+        let hasExplicitMeetingState = (p.meetingState == "lobby" || p.meetingState == "joined")
+        if hasExplicitMeetingState { return }
+
+        if p.cameraActive {
+            p.inMeeting = true
+            p.meetingState = cameraActiveFallbackState
+            if p.inAppCamera == "?" { p.inAppCamera = "on" }
+        } else if p.meetingState == cameraActiveFallbackState {
+            p.inMeeting = false
+            p.meetingState = "idle"
+            p.inAppCamera = "?"
+        }
+    }
+
+    private func emitMeetingStateEvents(from inMeetingWas: Bool, _ stateWas: String) {
+        let p = presence
+        if !inMeetingWas && p.inMeeting {
+            emit(p.meetingState == "lobby" ? "meeting.lobby" : "meeting.joined")
+        } else if inMeetingWas && !p.inMeeting {
+            emit("meeting.left")
+        } else if p.meetingState != stateWas {
+            if p.meetingState == "lobby" { emit("meeting.lobby") }
+            if p.meetingState == "joined" || p.meetingState == cameraActiveFallbackState { emit("meeting.joined") }
+        }
     }
 
     private func commit(_ p: Presence) { presence = p }

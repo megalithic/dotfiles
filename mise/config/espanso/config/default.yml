@@ -1,0 +1,20 @@
+# search_shortcut: META+F2
+# toggle_key: RIGHT_SHIFT
+# search_shortcut: off
+# show_icon: false
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/espanso/espanso/dev/schemas/config.schema.json
+# DOCS https://espanso.org/docs/configuration/options/
+#───────────────────────────────────────────────────────────────────────────────
+search_trigger: OFF
+search_shortcut: OFF
+
+show_icon: true
+show_notifications: true
+auto_restart: true
+
+undo_backspace: false # backspace undos expansion
+backend: auto
+
+extra_includes:
+  - ../match/spelling.yml

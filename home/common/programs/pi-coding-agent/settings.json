@@ -25,9 +25,9 @@
     "npm:pi-mono-btw"
   ],
   "enabledModels": [
+    "alt-anthropic/claude-fable-5",
     "alt-anthropic/claude-opus-4-8",
-    "alt-anthropic/claude-opus-4-7",
-    "alt-anthropic/claude-opus-4-6",
+    "alt-anthropic/claude-sonnet-5",
     "alt-anthropic/claude-sonnet-4-6",
     "alt-anthropic/claude-haiku-4-5",
     "alt-codex/gpt-5.5",
@@ -42,13 +42,12 @@
     "opencode-go/kimi-k2.6",
     "opencode-go/deepseek-v4-pro",
     "opencode-go/deepseek-v4-flash",
-    "opencode-go/mimo-v2.5",
     "opencode-go/mimo-v2.5-pro",
+    "opencode-go/mimo-v2.5",
     "opencode-go/minimax-m3",
     "opencode-go/minimax-m2.7",
     "opencode-go/qwen3.7-max",
     "opencode-go/qwen3.7-plus",
-    "opencode-go/qwen3.6-plus",
     "openai-codex/gpt-5.5",
     "openai-codex/gpt-5.4",
     "openai-codex/gpt-5.4-mini",
@@ -57,7 +56,6 @@
     "synthetic/syn:small:text",
     "synthetic/syn:large:vision",
     "synthetic/syn:small:vision",
-    "llamacpp/qwen3.6",
     "llamacpp/deepseek14b",
     "llamacpp/gemma4"
   ],
@@ -82,9 +80,9 @@
       "llamacpp/gemma4"
     ],
     "alt": [
+      "alt-anthropic/claude-fable-5",
       "alt-anthropic/claude-opus-4-8",
-      "alt-anthropic/claude-opus-4-7",
-      "alt-anthropic/claude-opus-4-6",
+      "alt-anthropic/claude-sonnet-5",
       "alt-anthropic/claude-sonnet-4-6",
       "alt-anthropic/claude-haiku-4-5",
       "alt-codex/gpt-5.5",
@@ -154,12 +152,7 @@
           },
           {
             "provider": "alt-anthropic",
-            "model": "claude-opus-4-7",
-            "enabled": true
-          },
-          {
-            "provider": "alt-anthropic",
-            "model": "claude-opus-4-6",
+            "model": "claude-sonnet-5",
             "enabled": true
           },
           {
@@ -203,29 +196,17 @@
     "agentOverrides": {
       "planner": {
         "model": "alt-anthropic/claude-opus-4-8",
-        "fallbackModels": [
-          "alt-anthropic/claude-opus-4-7",
-          "openai-codex/gpt-5.5",
-          "synthetic/syn:large:text"
-        ],
+        "fallbackModels": ["openai-codex/gpt-5.5", "synthetic/syn:large:text"],
         "thinking": "medium"
       },
       "reviewer": {
         "model": "alt-anthropic/claude-opus-4-8",
-        "fallbackModels": [
-          "alt-anthropic/claude-opus-4-7",
-          "openai-codex/gpt-5.5",
-          "synthetic/syn:large:text"
-        ],
+        "fallbackModels": ["openai-codex/gpt-5.5", "synthetic/syn:large:text"],
         "thinking": "medium"
       },
       "oracle": {
         "model": "alt-anthropic/claude-opus-4-8",
-        "fallbackModels": [
-          "alt-anthropic/claude-opus-4-7",
-          "openai-codex/gpt-5.5",
-          "synthetic/syn:large:text"
-        ]
+        "fallbackModels": ["openai-codex/gpt-5.5", "synthetic/syn:large:text"]
       },
       "worker": {
         "model": "alt-anthropic/claude-sonnet-4-6",
@@ -236,7 +217,7 @@
         ]
       },
       "researcher": {
-        "model": "alt-anthropic/claude-sonnet-4-6",
+        "model": "alt-anthropic/claude-sonnet-5",
         "fallbackModels": [
           "alt-codex/gpt-5.5",
           "alt-codex/gpt-5.4",

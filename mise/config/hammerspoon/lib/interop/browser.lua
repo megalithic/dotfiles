@@ -1,0 +1,323 @@
+local wm = require("wm")
+local enum = require("hs.fnutils")
+local fmt = string.format
+
+local obj = {}
+obj.__index = obj
+obj.name = "browser"
+
+-- App names for browsers that support JavaScript automation
+-- The nix-wrapped version has the same app name as the original
+-- @lat: [[lat.md#Helium browser launch path]]
+local supportedBrowsers = {
+  "Helium",
+  "Chromium",
+  "Brave Browser Nightly",
+  "Brave Browser Dev",
+  "Brave Browser",
+  "Brave Browser Beta",
+  "Safari",
+}
+
+-- Bundle IDs to try when BROWSER global doesn't match a running app
+-- Nix wrappers launch the real app, so we need original bundle IDs
+local browserBundleIDs = {
+  "net.imput.helium",
+  "com.brave.Browser.nightly",
+  "com.brave.Browser.dev",
+  "com.brave.Browser",
+  "com.brave.Browser.beta",
+  "org.chromium.Chromium",
+  "com.apple.Safari",
+}
+
+local dbg = function(str, ...)
+  str = string.format(":: [%s] %s", "browser", str)
+  if true then
+    return print(string.format(str, ...))
+  end
+end
+
+-- Find a running browser app, trying BROWSER global first, then fallbacks
+local function findMenuItemPath(app, titleParts)
+  local function containsAll(title)
+    title = string.lower(title or "")
+    for _, part in ipairs(titleParts) do
+      if not title:find(part, 1, true) then return false end
+    end
+    return true
+  end
+
+  local function walk(items, path)
+    for _, item in ipairs(items or {}) do
+      local title = item.AXTitle or ""
+      local nextPath = path
+
+      if title ~= "" then
+        nextPath = { table.unpack(path) }
+        table.insert(nextPath, title)
+        if item.AXEnabled ~= false and containsAll(title) then return nextPath end
+      end
+
+      if not item.AXTitle and #item > 0 then
+        local found = walk(item, nextPath)
+        if found then return found end
+      end
+
+      for _, child in ipairs(item.AXChildren or {}) do
+        local found = child.AXTitle and walk({ child }, nextPath) or walk(child, nextPath)
+        if found then return found end
+      end
+    end
+
+    return nil
+  end
+
+  return walk(app:getMenuItems(), {})
+end
+
+local function selectMenuItemContaining(app, titleParts)
+  local path = findMenuItemPath(app, titleParts)
+  if not path then return false end
+  return app:selectMenuItem(path)
+end
+
+local function findBrowser()
+  -- Try BROWSER global first
+  local app = hs.application.get(BROWSER)
+  if app and enum.contains(supportedBrowsers, app:name()) then
+    return app
+  end
+
+  -- Try fallback bundle IDs
+  for _, bundleID in ipairs(browserBundleIDs) do
+    app = hs.application.get(bundleID)
+    if app and enum.contains(supportedBrowsers, app:name()) then
+      return app
+    end
+  end
+
+  -- Last resort: frontmost app if it's a browser
+  app = hs.application.frontmostApplication()
+  if app and enum.contains(supportedBrowsers, app:name()) then
+    return app
+  end
+
+  return nil
+end
+
+function obj.tabCount()
+  local app = findBrowser()
+
+  if app then
+    local _bool, count, _desc = hs.osascript.javascript([[
+      const browser = new Application("/Applications/]] .. app:name() .. [[.app")
+      let count = 0;
+
+      if(browser.running())
+      for (i in browser.windows) count += browser.windows[i].tabs.length;
+
+      count
+    ]])
+    return count
+  end
+
+  return nil
+end
+
+function obj.hasTab(url)
+  local app = findBrowser()
+
+  if app then
+    url = string.gsub(url, "/", "\\/")
+    local _status, hasTab, _descriptor = hs.osascript.javascript([[
+    (function() {
+      var browser = Application(']] .. app:name() .. [[');
+      const foundTab = browser.windows().filter((win) => {
+        const tabIndex = win.tabs().findIndex(tab => tab.url().match(/]] .. url .. [[/));
+        return tabIndex !== -1
+      })
+
+      return foundTab.length > 0;
+    })();
+    ]])
+
+    return hasTab
+  end
+
+  return false
+end
+
+-- function obj.hasHighlightedText()
+--   local app = hs.application.get(BROWSER) or hs.application.frontmostApplication()
+
+--   if app and enum.contains(supportedBrowsers, app:name()) then
+--     local _status, hasHighlightedText, _descriptor = hs.osascript.javascript([[
+--     (function() {
+--       var browser = Application(']] .. app:name() .. [[');
+--       const highlightedText = browser.windows().filter((win) => {
+--         const tabIndex = win.tabs().findIndex(tab => tab.url().match(/]] .. url .. [[/));
+--         return tabIndex !== -1
+--       })
+
+--       return highlightedText.baseOffset > 0;
+--     })();
+--     ]])
+
+--     return hasTab
+--   end
+
+--   return false
+-- end
+
+function obj.jump(url)
+  local app = findBrowser()
+
+  if app then
+    -- win.tabs().findIndex(tab => tab.url().match(/]] .. string.gsub(url, "/", "\\/") .. [[/));
+    -- win.tabs().findIndex(tab => tab.url().match(/]] .. url .. [[/));
+    local success, jumpedTab, output = hs.osascript.javascript([[
+    (function() {
+      var browser = Application(']] .. app:name() .. [[');
+      var foundTabUrl = "";
+      browser.activate();
+      const foundTab = browser.windows().find((win) => {
+        const tabIndex = win.tabs().findIndex(tab =>  {
+          if (tab.url().match(/]] .. url .. [[/) !== null)
+            foundTabUrl = tab.url();
+          return tab.url().match(/]] .. url .. [[/) !== null;
+        });
+        if (tabIndex !== -1) win.activeTabIndex = (tabIndex + 1);
+
+        return tabIndex !== -1
+      })
+
+      return foundTabUrl;
+    })();
+    ]])
+
+    U.log.i(fmt("[RUN] %s.jump/%s (%s)", obj.name, app:bundleID(), jumpedTab or url))
+    return jumpedTab
+  else
+    return nil
+  end
+end
+
+function obj:splitTab(to_next_screen)
+  -- Move current window to the left half
+  if not to_next_screen then
+    wm.place(C.grid.halves.left)
+  end
+
+  hs.timer.doAfter(0.25, function()
+    local app = findBrowser()
+
+    if app then
+      if not selectMenuItemContaining(app, { "move", "tab", "new", "window" }) then
+        U.log.w(fmt("[RUN] %s.splitTab/%s missing move-tab menu item", obj.name, app:bundleID()))
+        return
+      end
+
+      -- Move the split tab to the right of the screen
+      if to_next_screen then
+        app:selectMenuItem({ "Window", fmt("Move to %s", C.displays.internal) })
+        wm.place(C.grid.full)
+        U.log.i(fmt("[RUN] %s.splitTab/%s (next screen, full)", obj.name, app:bundleID()))
+      else
+        wm.place(C.grid.halves.right)
+        U.log.i(fmt("[RUN] %s.splitTab/%s (same screen, half)", obj.name, app:bundleID()))
+      end
+    else
+      U.log.w(fmt("[RUN] %s.splitTab/%s unsupported browser", obj.name, app:bundleID()))
+    end
+  end)
+end
+
+function obj.killTabsByDomain(domain)
+  local app = findBrowser()
+  if app then
+    -- if (tab.url().match(/]] .. string.gsub(domain, "/", "\\/") .. [[/)) {
+    -- if (tab.url().match(/]] .. domain .. [[/)) {
+    hs.osascript.javascript([[
+    (function() {
+      var browser = Application(']] .. app:name() .. [[');
+      browser.activate();
+      for (win of browser.windows()) {
+        for (tab of win.tabs()) {
+          if (tab.url().match(/]] .. string.gsub(domain, "/", "\\/") .. [[/)) {
+            console.log("found tab to kill", tab.url())
+            tab.close()
+          }
+        }
+      }
+    })();
+    ]])
+  end
+end
+
+function obj.updateTabCountMenubar()
+  tabCountMenubar = hs.menubar.new(true)
+  local previousCount = -1
+  -- local countDir = "-"
+  local tab_icon = "󰓩" -- alts: 
+  local function updateOpenTabs()
+    local count = obj.tabCount()
+
+    if count ~= previousCount then
+      if count > previousCount and previousCount ~= -1 then
+        countDir = ""
+        tab_icon = "󰝜"
+      end
+      if count < previousCount then
+        countDir = ""
+        tab_icon = "󰭋"
+      end
+
+      previousCount = count
+    end
+
+    MAX_TABS_COUNT = 50
+    local text_color = tonumber(count) >= MAX_TABS_COUNT and { hex = "#c43e1f" } or { hex = "#eeeeee" }
+
+    local tab_text = req("hs.styledtext").new(string.format("%s %s", tab_icon, count), {
+      color = text_color,
+      font = { name = DefaultFont.name, size = 13 },
+    })
+
+    if tonumber(count) < MAX_TABS_COUNT then
+      tab_text = ""
+    end
+
+    tabCountMenubar:setTitle(tab_text)
+  end
+
+  if tabCountMenubar then
+    -- if you don't assign to a global the timer will be garbage collected
+    tabCountMenubarUpdater = hs.timer.doEvery(5, updateOpenTabs)
+  end
+end
+
+function obj:init()
+  -- info(fmt("[INIT] %s", self.name))
+
+  return self
+end
+
+function obj:start()
+  -- self.updateTabCountMenubar()
+  return self
+end
+
+function obj:stop()
+  -- if tabCountMenubar then
+  --   tabCountMenubar:delete()
+  --   tabCountMenubar = nil
+  -- end
+
+  -- if tabCountMenubarUpdater then tabCountMenubarUpdater:stop() end
+
+  return self
+end
+
+return obj
+-- return obj:init()

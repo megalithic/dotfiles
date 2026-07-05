@@ -17,17 +17,17 @@ return {
       { "<leader>gdd", "<cmd>CodeDiff file HEAD<cr>", desc = "Document [D]iff (CodeDiff)" },
       { "<leader>gdD", "<cmd>CodeDiff file main<cr>", desc = "Document [D]iff main (CodeDiff)" },
 
-      {
-        "<leader>wgb",
-        function()
-          vim.ui.input({ prompt = "Compare against branch: " }, function(branch)
-            if branch and branch ~= "" then vim.cmd("CodeDiff " .. branch) end
-          end)
-        end,
-        desc = "Compare [B]ranch (CodeDiff)",
-      },
-
-      { "<leader>wgpm", "<cmd>CodeDiff merge<cr>", desc = "[M]erge conflicts (CodeDiff)" },
+      -- {
+      --   "<leader>wgb",
+      --   function()
+      --     vim.ui.input({ prompt = "Compare against branch: " }, function(branch)
+      --       if branch and branch ~= "" then vim.cmd("CodeDiff " .. branch) end
+      --     end)
+      --   end,
+      --   desc = "Compare [B]ranch (CodeDiff)",
+      -- },
+      --
+      -- { "<leader>wgpm", "<cmd>CodeDiff merge<cr>", desc = "[M]erge conflicts (CodeDiff)" },
     },
     opts = {
       char_brightness = 1, -- disable auto-adjustment
@@ -103,22 +103,58 @@ return {
     config = function(_, opts)
       require("codediff").setup(opts)
 
-      -- Hook into set_tab_keymap to re-apply gf on explorer buffers.
-      -- The view keymaps set gf tab-wide via set_tab_keymap, but the handler
-      -- silently returns for non-diff buffers (explorer, history). This intercepts
-      -- that call and overrides gf on explorer buffers to open the selected file
-      -- in the previous tab.
+      -- Hook into set_tab_keymap to re-apply local integrations on CodeDiff
+      -- buffers after CodeDiff installs tab-local mappings.
       local lifecycle = require("codediff.ui.lifecycle")
       local orig_set_tab_keymap = lifecycle.set_tab_keymap
+
+      local function remove_which_key_g_trigger(bufnr, mode)
+        for _, map in ipairs(vim.api.nvim_buf_get_keymap(bufnr, mode)) do
+          if map.lhs == "g" and map.desc == "which-key-trigger" then
+            pcall(vim.api.nvim_buf_del_keymap, bufnr, mode, "g")
+            return
+          end
+        end
+      end
+
+      local function apply_pinvim_comment_keymaps(session)
+        local ok, pinvim = pcall(require, "pinvim")
+        if not (ok and pinvim.api and pinvim.api.compose_comment) then return end
+
+        local seen = {}
+        for _, bufnr in ipairs({ session.original_bufnr, session.modified_bufnr }) do
+          if bufnr and not seen[bufnr] and vim.api.nvim_buf_is_valid(bufnr) then
+            seen[bufnr] = true
+            remove_which_key_g_trigger(bufnr, "n")
+            remove_which_key_g_trigger(bufnr, "x")
+            vim.keymap.set("n", "gpc", function() pinvim.api.compose_comment() end, {
+              buffer = bufnr,
+              desc = "pinvim comment on cursor line (queued)",
+              noremap = true,
+              silent = true,
+              nowait = true,
+            })
+            vim.keymap.set("x", "gpc", function() pinvim.api.compose_comment({ range = true }) end, {
+              buffer = bufnr,
+              desc = "pinvim comment on selection (queued)",
+              noremap = true,
+              silent = true,
+              nowait = true,
+            })
+          end
+        end
+      end
 
       lifecycle.set_tab_keymap = function(tabpage, mode, lhs, rhs, keymap_opts)
         orig_set_tab_keymap(tabpage, mode, lhs, rhs, keymap_opts)
 
-        if lhs ~= "gf" or mode ~= "n" then return end
-
         local active_diffs = require("codediff.ui.lifecycle.session").get_active_diffs()
         local session = active_diffs[tabpage]
         if not session then return end
+
+        apply_pinvim_comment_keymaps(session)
+
+        if lhs ~= "gf" or mode ~= "n" then return end
 
         local explorer = session.explorer
         if not explorer or not explorer.bufnr or not vim.api.nvim_buf_is_valid(explorer.bufnr) then return end
@@ -161,27 +197,5 @@ return {
         })
       end
     end,
-  },
-  {
-    "chpeters/annotator.nvim",
-    enabled = false,
-    event = "VeryLazy",
-    keys = {
-      -- Document → Annotate
-      { "<leader>daa", function() require("annotator").add() end, desc = "[A]dd" },
-      { "<leader>daa", function() require("annotator").add_visual() end, desc = "[A]dd", mode = "v" },
-      { "<leader>das", function() require("annotator").suggest() end, desc = "[S]uggest rewrite" },
-      { "<leader>das", function() require("annotator").suggest_visual() end, desc = "[S]uggest rewrite", mode = "v" },
-      -- { "<leader>dam", function() require("annotator").mark_delete() end, desc = "[M]ark for deletion" },
-      -- { "<leader>dam", function() require("annotator").mark_delete_visual() end, desc = "[M]ark for deletion", mode = "v" },
-      { "<leader>dad", function() require("annotator").delete() end, desc = "[D]elete annotation" },
-      { "<leader>dae", function() require("annotator").edit() end, desc = "[E]dit annotation" },
-      { "<leader>daL", function() require("annotator").list() end, desc = "[L]ist annotations" },
-      { "<leader>daE", function() require("annotator").export() end, desc = "[E]xport annotations" },
-    },
-    opts = {
-      mappings = false,
-      storage = "state",
-    },
   },
 }

@@ -85,11 +85,19 @@ session="${repo}-${name}"
 inside_tmux="false"
 [[ -n "${TMUX:-}" ]] && inside_tmux="true"
 
-# If the project provides an executable services-cmd script, use it as the
-# services window command (works regardless of user's shell — kernel respects
-# the script's #! shebang). Otherwise fall back to tailing hook logs.
-services_cmd_file="$wpath/.wt/services-cmd"
-if [[ -x "$services_cmd_file" ]]; then
+# The project's pre-start hook generates a services script in the worktree's
+# PRIVATE git dir (.git/worktrees/<name>/wt-services-cmd) — never the working
+# tree, so it can't be committed and is removed with the worktree. If it's
+# missing (an existing worktree that predates the hook, or never ran pre-start),
+# bootstrap it by running the project's pre-start hook against this worktree.
+# Falls back to tailing hook logs when no project script is available.
+gitdir="$(git -C "$wpath" rev-parse --absolute-git-dir 2>/dev/null)"
+services_cmd_file="${gitdir:+$gitdir/wt-services-cmd}"
+if [[ -n "$gitdir" && ! -f "$services_cmd_file" ]]; then
+  WORKTRUNK_PROJECT_CONFIG_PATH="$repo_root/wt.local.toml" \
+    wt -C "$wpath" hook pre-start -y >/dev/null 2>&1 || true
+fi
+if [[ -n "$services_cmd_file" && -x "$services_cmd_file" ]]; then
   services_cmd="$services_cmd_file"
 else
   services_cmd="wt-tail-logs $(printf '%q' "$branch")"

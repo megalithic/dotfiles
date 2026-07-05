@@ -1,0 +1,138 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/espanso/espanso/dev/schemas/match.schema.json
+#───────────────────────────────────────────────────────────────────────────────
+---
+# espanso match file
+
+# For a complete introduction, visit the official docs at: https://espanso.org/docs/
+
+# You can use this file to define the base matches (aka snippets)
+# that will be available in every application when using espanso.
+
+# Matches are substitution rules: when you type the "trigger" string
+# it gets replaced by the "replace" string.
+matches:
+  # - {trigger: '->', replace: →, word: true} # unicode arrow
+  # - {trigger: ' mm', replace: ' 🙈'}
+
+  - trigger: "::date"
+    replace: "{{date}}"
+    vars:
+      - name: date
+        type: date
+        params:
+          format: "%m/%d/%Y"
+
+  - trigger: "::isodate"
+    replace: "{{date}}"
+    vars:
+      - name: date
+        type: date
+        params:
+          format: "%Y-%m-%d"
+
+  - trigger: "::time"
+    replace: "{{time}}"
+    vars:
+      - name: time
+        type: date
+        params:
+          format: "%X"
+
+  - trigger: ":flip"
+    replace: "(ノ°Д°）ノ︵ ┻━┻"
+
+  - trigger: "::ip"
+    replace: "{{ip}}"
+    vars:
+      - name: ip
+        type: shell
+        params:
+          cmd: "curl ifconfig.me"
+
+  - { trigger: "<3", replace: "🩶" } # use grey haeart instead of red one
+  - { trigger: ":shrug", replace: "🤷🏻‍♂️" }
+  - trigger: ":wave"
+    replace: 👋
+
+  - trigger: ":heart"
+    replace: ❤️
+
+  - trigger: ":up"
+    replace: 👍
+
+  - trigger: ":thumb"
+    replace: 👍
+
+  - trigger: ":+1"
+    replace: 👍
+
+  - trigger: ":thumbsup"
+    replace: 👍
+
+  - trigger: ":-1"
+    replace: 👎
+
+  - trigger: ":thumbsdown"
+    replace: 👎
+
+  - trigger: ":strong"
+    replace: 💪
+
+  - trigger: ":pray"
+    replace: 🙏
+
+  - trigger: ":rock"
+    replace: 🤘
+
+  - trigger: ":rofl"
+    replace: 🤣
+
+  - trigger: ":lol"
+    replace: 😂
+
+  - trigger: ":poop"
+    replace: 💩
+
+  - trigger: ":100"
+    replace: 💯
+
+  - trigger: ":eyes"
+    replace: 👀
+
+  - trigger: ":facepalm"
+    replace: 🤦
+
+  - trigger: ":hands"
+    replace: 🙌🏼
+
+  - trigger: ":smile"
+    replace: "😃"
+
+  - trigger: ":cry"
+    replace: "😢"
+
+  - trigger: ":hmm"
+    replace: "🤔"
+
+  - trigger: ":think"
+    replace: "🤔"
+
+  - trigger: ":yay"
+    replace: "🎉"
+
+  - trigger: "Rene "
+    replace: "René"
+  - trigger: ":rene"
+    replace: "René"
+  # - trigger: ":zoom:"
+  #   replace: "https://whereby.com/sethmesser"
+  # - trigger: ":meet:"
+  #   replace: "https://whereby.com/sethmesser"
+  - trigger: ":pop"
+    replace: "https://pop.com/j/953-644-320"
+
+  - trigger: ":meet"
+    replace: "https://meet.google.com/kry-nbrg-rmy"
+
+  - trigger: ":tm"
+    replace: "™"

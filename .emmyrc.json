@@ -18,6 +18,8 @@
     "version": "LuaJIT",
     "INFO": "`?/lua/` is needed to pick up nvim plugins that are not in `./lua` relative to this emmyrc.json",
     "requirePattern": [
+      "?.lua",
+      "?/init.lua",
       "lua/?.lua",
       "lua/?/init.lua",
       "?/lua/?.lua",
@@ -27,16 +29,21 @@
   "workspace": {
     "library": [
       "$VIMRUNTIME",
-      "$DOTS/config/hammerspoon",
-      "$DOTS/config/hammerspoon/annotations",
-      "$DOTS/config/nvim",
-      "$DOTS/config/mvim",
-      "$DOTS/config/nvim_min",
-      "$HOME/.local/share/nvim/lazy",
-      "${3rd}/luv/library"
+      "{env:DOTS}/config/hammerspoon",
+      "{env:DOTS}/config/hammerspoon/annotations",
+      "{env:DOTS}/config/nvim",
+      "{env:HOME}/.local/share/nvim/lazy",
+      "${3rd}/luv/library",
+      "${workspaceFolder}/home/configs/neovim/nvim/lua",
+      "{env:HOME}/.config/nvim/lua"
     ],
-    "ignoreGlobs": ["**/*_spec.lua"],
-    "ignoreDir": ["**/.config/nvim/undo/", ".direnv"]
+    "ignoreGlobs": ["**/*_spec.lua", "lat.md/.cache/**"],
+    "ignoreDir": [
+      "**/.config/nvim/undo/",
+      ".direnv",
+      ".devenv",
+      ".local_scripts"
+    ]
   },
   "diagnostics": {
     "disable": ["unnecessary-if"],

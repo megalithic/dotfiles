@@ -1,0 +1,9 @@
+# DOCS https://github.com/crate-ci/typos/blob/master/docs/reference.md
+#───────────────────────────────────────────────────────────────────────────────
+
+# ignore these files
+[files]
+extend-exclude = ["spelling.yml"]
+
+[default.extend-words]
+nversion = "nversion" # snippet name

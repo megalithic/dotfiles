@@ -1,0 +1,3 @@
+# Early-init mise settings — must live here, not in config.toml.
+# auto_env loads platform-specific configs (e.g. config.macos.toml on macOS).
+auto_env = true

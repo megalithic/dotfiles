@@ -15,11 +15,13 @@ set -l fish_config_dir (dirname (status --current-filename))
 for file in \
     "$fish_config_dir/functions/_prompt_move_to_bottom.fish" \
     "$fish_config_dir/functions/_prompt_reset_mouse.fish" \
+    "$fish_config_dir/functions/_fzf_tab.fish" \
     "$fish_config_dir/interactive/aliases.fish" \
     "$fish_config_dir/interactive/abbreviations.fish" \
     "$fish_config_dir/interactive/completions.fish" \
     "$fish_config_dir/interactive/keybindings.fish" \
     "$fish_config_dir/interactive/theme.fish"
+
     test -f "$file"; and source "$file"
 end
 
