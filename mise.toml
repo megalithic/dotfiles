@@ -1,0 +1,337 @@
+min_version = { hard = "2026.6.6" }
+
+[settings]
+experimental = true
+auto_install = true
+auto_env = true
+idiomatic_version_file_enable_tools = ["node", "python", "ruby", "rust"]
+
+[settings.dotfiles]
+root = "."
+default_mode = "symlink"
+
+[bootstrap.brew.taps]
+"cachix/tap" = "https://github.com/cachix/homebrew-tap"
+
+[bootstrap.packages]
+"brew:bash" = "latest"
+"brew:blueutil" = "latest"
+"brew:chafa" = "latest"
+"brew:coreutils" = "latest"
+"brew:curl" = "latest"
+"brew:duti" = "latest"
+"brew:ffmpeg" = "latest"
+"brew:fish" = "latest"
+"brew:git" = "latest"
+"brew:gnupg" = "latest"
+"brew:imagemagick" = "latest"
+"brew:llama.cpp" = "latest"
+"brew:mas" = "latest"
+"brew:openconnect" = "latest"
+"brew:openssl@3" = "latest"
+"brew:pinentry-mac" = "latest"
+"brew:s3cmd" = "latest"
+"brew:sox" = "latest"
+"brew:sqlite" = "latest"
+"brew:switchaudio-osx" = "latest"
+"brew:tesseract" = "latest"
+"brew:trash" = "latest"
+"brew:ykman" = "latest"
+
+[dotfiles]
+# -- shell init — bash support alongside fish --
+"~/.bashrc" = "mise/dotfiles/bash/fnox.sh"
+
+# -- mise-owned config (replaces Nix-generated file after explicit handoff) --
+"~/.config/mise/config.toml" = "mise/global.toml"
+
+# -- fnox secrets (safe to create, no current installed target) --
+"~/.config/fnox/config.toml" = "mise/fnox/config.toml"
+
+# -- fish shell (partial: real dir with store-linked children + mutable state; per-file reconciliation deferred to mbm-8afn) --
+"~/.config/fish" = "mise/dotfiles/fish"
+
+# -- repo-final config links (resolve through HM store links back to config/*) --
+"~/.config/ghostty" = "config/ghostty"
+"~/.config/hammerspoon" = "config/hammerspoon"
+"~/.config/kitty" = "config/kitty"
+"~/.config/nvim" = "config/nvim"
+"~/.config/tmux" = "config/tmux"
+
+# -- generated fragments → committed static files (replaces Home Manager Nix interpolation) --
+"~/.local/share/hammerspoon/nix_path.lua" = "mise/fragments/hammerspoon/nix_path.lua"
+"~/.local/share/hammerspoon/fragments/shade-next.lua" = "mise/fragments/hammerspoon/shade-next.lua"
+"~/.local/share/tmux/nix.conf" = "mise/fragments/tmux/nix.conf"
+"~/.config/shade-next/config.toml" = "mise/fragments/shade-next/config.toml"
+"~/.config/sesame/config.jsonc" = "mise/fragments/sesame/config.jsonc"
+"~/.config/process-compose/shortcuts.yaml" = "mise/fragments/process-compose/shortcuts.yaml"
+"~/.config/process-compose/theme.yaml" = "mise/fragments/process-compose/theme.yaml"
+
+# -- kanata: individual .kbd files (parent dir has mutable state; daemon/bar migration deferred to mbm-ju5m) --
+"~/.config/kanata/macbook.kbd" = "config/kanata/macbook.kbd"
+"~/.config/kanata/macbook-disabled.kbd" = "config/kanata/macbook-disabled.kbd"
+
+# -- SSH: individual files (directory holds mutable keys/known_hosts; allowed_signers is store-generated, deferred to mbm-8afn) --
+"~/.ssh/config" = "config/ssh/config"
+
+# -- espanso: app support path, not XDG config (validated repo-final link chain) --
+"~/Library/Application Support/espanso" = "config/espanso"
+
+# -- store-flake-source files (currently Nix-store copies; mise links working-tree sources) --
+"~/.config/git/config" = "mise/fragments/git/config"
+"~/.gitconfig" = "home/common/programs/git/gitconfig"
+"~/.gitignore" = "home/common/programs/git/gitignore"
+"~/.ignore" = "home/common/programs/git/tool-ignore"
+
+# -- static tool configs (small, single-file configs previously Nix-store-backed) --
+"~/.config/bat/config" = "mise/dotfiles/bat/config"
+"~/.config/direnv/direnv.toml" = "mise/dotfiles/direnv/direnv.toml"
+"~/.config/starship.toml" = "home/common/programs/starship/starship.toml"
+"~/.config/karabiner/karabiner.json" = "home/common/programs/karabiner/karabiner.json"
+"~/.config/eza/theme.yml" = "mise/dotfiles/eza/theme.yml"
+"~/.config/ripgrep/rc" = "mise/dotfiles/ripgrep/rc"
+
+# -- symlink-each targets (existing mutable dirs, needs per-entry reconciliation) --
+"~/.local/bin" = { source = "mise/bin", mode = "symlink-each" }
+"~/bin" = { source = "bin", mode = "symlink-each" }
+
+[bootstrap.macos.dock]
+autohide = true
+orientation = "bottom"
+tilesize = 60
+magnification = false
+show_recents = false
+mru_spaces = false
+
+[bootstrap.macos.finder]
+show_all_files = true
+show_pathbar = true
+show_status_bar = true
+show_extensions_warning = false
+preferred_view_style = "list"
+
+[bootstrap.macos.keyboard]
+key_repeat = 6
+initial_key_repeat = 25
+press_and_hold = false
+fn_state = false
+
+[bootstrap.macos.trackpad]
+tap_to_click = true
+three_finger_drag = true
+
+[bootstrap.macos.defaults.NSGlobalDomain]
+AppleInterfaceStyle = "Dark"
+AppleICUForce24HourTime = true
+AppleKeyboardUIMode = 3
+ApplePressAndHoldEnabled = false
+AppleShowScrollBars = "WhenScrolling"
+NSAutomaticCapitalizationEnabled = false
+NSAutomaticDashSubstitutionEnabled = false
+NSAutomaticPeriodSubstitutionEnabled = false
+NSAutomaticQuoteSubstitutionEnabled = false
+NSAutomaticSpellingCorrectionEnabled = false
+NSAutomaticWindowAnimationsEnabled = false
+NSDocumentSaveNewDocumentsToCloud = false
+NSNavPanelExpandedStateForSaveMode = true
+NSNavPanelExpandedStateForSaveMode2 = true
+NSWindowResizeTime = 0.001
+PMPrintingExpandedStateForPrint = true
+PMPrintingExpandedStateForPrint2 = true
+"com.apple.keyboard.fnState" = false
+"com.apple.swipescrolldirection" = false
+"com.apple.trackpad.scaling" = 3.0
+
+[bootstrap.macos.defaults."com.apple.finder"]
+AppleShowAllExtensions = true
+AppleShowAllFiles = true
+FXDefaultSearchScope = "SCcf"
+FXEnableExtensionChangeWarning = false
+FXPreferredViewStyle = "Nlsv"
+NewWindowTarget = "Home"
+QuitMenuItem = true
+ShowExternalHardDrivesOnDesktop = true
+ShowHardDrivesOnDesktop = false
+ShowMountedServersOnDesktop = false
+ShowPathbar = true
+ShowRemovableMediaOnDesktop = true
+ShowStatusBar = true
+_FXShowPosixPathInTitle = true
+_FXSortFoldersFirst = true
+
+[bootstrap.macos.defaults."com.apple.dock"]
+autohide = true
+"autohide-time-modifier" = 0.7
+"expose-animation-duration" = 0.0
+launchanim = false
+magnification = false
+mineffect = "scale"
+"minimize-to-application" = true
+"mru-spaces" = false
+orientation = "bottom"
+"show-process-indicators" = true
+"show-recents" = false
+"static-only" = true
+tilesize = 60
+
+[bootstrap.macos.defaults."com.apple.screencapture"]
+location = "~/__screenshots"
+type = "png"
+"disable-shadow" = true
+
+[bootstrap.macos.defaults."com.apple.LaunchServices"]
+LSQuarantine = false
+
+[bootstrap.macos.defaults."com.apple.desktopservices"]
+DSDontWriteNetworkStores = true
+DSDontWriteUSBStores = true
+
+[bootstrap.macos.defaults."com.apple.print.PrintingPrefs"]
+"Quit When Finished" = true
+
+[bootstrap.macos.defaults."com.mitchellh.ghostty"]
+SUAutomaticallyUpdate = false
+SUEnableAutomaticChecks = false
+SUHasLaunchedBefore = true
+SUSendProfileInfo = false
+
+[bootstrap.macos.defaults."net.imput.helium"]
+SUAutomaticallyUpdate = false
+SUEnableAutomaticChecks = false
+
+[bootstrap.macos.defaults."org.hammerspoon.Hammerspoon"]
+MJConfigFile = "~/.config/hammerspoon/init.lua"
+
+[bootstrap.macos.defaults."com.apple.SoftwareUpdate"]
+AutomaticCheckEnabled = true
+AutomaticDownload = 1
+CriticalUpdateInstall = 1
+ScheduleFrequency = 1
+
+[bootstrap.macos.launchd.agents."com.megadots.espanso"]
+program = "/Applications/Espanso.app/Contents/MacOS/espanso"
+args = ["launcher"]
+run_at_load = true
+stdout_path = "~/Library/Logs/espanso/stdout.log"
+stderr_path = "~/Library/Logs/espanso/stderr.log"
+
+[bootstrap.macos.launchd.agents."com.megadots.llama-cpp"]
+program = "~/.dotfiles/scripts/mise/llama-server-launchd"
+run_at_load = true
+keep_alive = true
+stdout_path = "~/Library/Logs/llama-cpp/stdout.log"
+stderr_path = "~/Library/Logs/llama-cpp/stderr.log"
+
+[bootstrap.macos.launchd.agents."com.megadots.pi-session-indexer"]
+program = "~/.dotfiles/scripts/mise/pi-session-indexer"
+run_at_load = true
+start_interval = 7200
+stdout_path = "~/.cache/pi-session-indexer.log"
+stderr_path = "~/.cache/pi-session-indexer.log"
+
+[bootstrap.macos.launchd.agents."com.megadots.sesame-session-indexer"]
+program = "~/.dotfiles/scripts/mise/sesame-session-indexer"
+args = ["watch", "--interval", "30"]
+run_at_load = true
+keep_alive = true
+stdout_path = "~/.cache/sesame-session-indexer.log"
+stderr_path = "~/.cache/sesame-session-indexer.log"
+
+[bootstrap.user]
+login_shell = "/opt/homebrew/bin/fish"
+
+[tools]
+node = "24.11.1"
+python = "3.13"
+rust = "latest"
+aube = "latest"
+fnox = "latest"
+"aqua:1password/cli" = "latest"
+"aqua:astral-sh/uv" = "latest"
+"aqua:aws/aws-cli" = "latest"
+"aqua:BurntSushi/ripgrep" = "latest"
+"aqua:casey/just" = "latest"
+"aqua:charmbracelet/gum" = "latest"
+"aqua:cli/cli" = "latest"
+"aqua:dandavison/delta" = "latest"
+"aqua:derailed/k9s" = "latest"
+"aqua:FiloSottile/age" = "latest"
+"aqua:git-lfs/git-lfs" = "latest"
+"aqua:helm/helm" = "latest"
+"aqua:JohnnyMorganz/StyLua" = "latest"
+"aqua:jqlang/jq" = "latest"
+"aqua:junegunn/fzf" = "latest"
+"aqua:koalaman/shellcheck" = "latest"
+"aqua:kubernetes/kubernetes/kubectl" = "latest"
+"aqua:LuaLS/lua-language-server" = "latest"
+"aqua:mikefarah/yq" = "latest"
+"aqua:mvdan/sh" = "latest"
+"aqua:pnpm/pnpm" = "latest"
+"aqua:pre-commit/pre-commit" = "latest"
+"aqua:sharkdp/bat" = "latest"
+"aqua:sharkdp/fd" = "latest"
+"aqua:starship/starship" = "latest"
+"aqua:tmux/tmux-builds" = "latest"
+"aqua:Wilfred/difftastic" = "latest"
+"aqua:ajeetdsouza/zoxide" = "latest"
+"npm:@earendil-works/pi-coding-agent" = "latest"
+"npm:@anthropic-ai/claude-code" = "latest"
+"npm:@openai/codex" = "latest"
+"npm:chrome-devtools-mcp" = "latest"
+
+[env]
+DOTS = "{{env.HOME}}/.dotfiles"
+CODE = "{{env.HOME}}/code"
+XDG_CONFIG_HOME = "{{env.HOME}}/.config"
+XDG_DATA_HOME = "{{env.HOME}}/.local/share"
+XDG_STATE_HOME = "{{env.HOME}}/.local/state"
+XDG_CACHE_HOME = "{{env.HOME}}/.cache"
+PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
+
+[tasks.bootstrap]
+description = "Run migration-only setup that mise cannot model declaratively"
+run = "scripts/mise/bootstrap-final"
+
+[tasks."apps:install"]
+description = "Install Homebrew casks and Mac App Store apps"
+run = "scripts/mise/install-apps"
+
+[tasks."fnox:render"]
+description = "Render fnox/1Password secrets to legacy file paths"
+run = "scripts/mise/render-fnox-files"
+
+[tasks."fnox:check"]
+description = "Check fnox secrets are present without writing files"
+run = "scripts/mise/render-fnox-files --check"
+
+[tasks."fnox:dry-run"]
+description = "Show what fnox secrets would be written"
+run = "scripts/mise/render-fnox-files --dry-run"
+
+[tasks."helium:install"]
+description = "Install patched Helium with Widevine into /Applications"
+run = "scripts/mise/install-helium"
+
+[tasks."nix:ensure"]
+description = "Install or repair Nix via official nix-installer (flakes enabled)"
+run = "scripts/mise/ensure-determinate-nix"
+
+[tasks."pi:setup"]
+description = "Link Pi extensions/skills/settings and install Pi helper binaries"
+run = "scripts/mise/setup-pi"
+
+[tasks."macos:complex-defaults"]
+description = "Apply macOS defaults mise cannot represent yet"
+run = "scripts/mise/apply-macos-complex-defaults"
+
+[tasks."okta:check"]
+description = "Validate Okta Verify installation (installed via Brew cask)"
+run = "scripts/mise/install-okta-verify"
+
+[tasks."dotfiles:preflight"]
+description = "Classify current owners of mise dotfile targets without mutating files"
+run = "scripts/mise/dotfile-preflight"
+
+[tasks.doctor]
+description = "Check mise bootstrap migration state"
+run = "scripts/mise/doctor"

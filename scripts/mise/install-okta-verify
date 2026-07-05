@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Validate Okta Verify installation — installed via Brew cask or Nix.
+# Brew cask handles the privileged .pkg install (sudo /usr/sbin/installer).
+# This script only checks presence; it does not install.
+set -euo pipefail
+
+validate() {
+  local fail=0
+
+  if /usr/sbin/pkgutil --pkg-info com.okta.mobile >/dev/null 2>&1; then
+    local ver
+    ver="$(/usr/sbin/pkgutil --pkg-info com.okta.mobile 2>/dev/null | /usr/bin/awk '/^version:/ {print $2}')"
+    echo "ok: pkgutil receipt com.okta.mobile (version $ver)"
+  else
+    echo "missing: pkgutil receipt com.okta.mobile" >&2
+    fail=1
+  fi
+
+  if [ -d "/Applications/Okta Verify.app" ]; then
+    echo "ok: /Applications/Okta Verify.app"
+  else
+    echo "missing: /Applications/Okta Verify.app" >&2
+    fail=1
+  fi
+
+  # Critical LaunchDaemon for device access authentication
+  local auth_plist="/Library/LaunchDaemons/com.okta.authentication.service.plist"
+  if [ -f "$auth_plist" ] || [ -L "$auth_plist" ]; then
+    echo "ok: $auth_plist"
+  else
+    echo "missing: $auth_plist (critical for device access)" >&2
+    fail=1
+  fi
+
+  # Optional LaunchDaemons (may not exist in all versions)
+  for plist in \
+    /Library/LaunchDaemons/com.okta.autoupdate.daemon.plist \
+    /Library/LaunchDaemons/com.okta.deviceaccess.servicedaemon.plist; do
+    if [ -f "$plist" ] || [ -L "$plist" ]; then
+      echo "ok: $plist (optional)"
+    fi
+  done
+
+  # SecurityAgentPlugin may not exist in all versions
+  local sap="/Library/Security/SecurityAgentPlugins/OktaDAAuthPlugin.bundle"
+  if [ -d "$sap" ]; then
+    echo "ok: SecurityAgentPlugin"
+  fi
+
+  return "$fail"
+}
+
+validate

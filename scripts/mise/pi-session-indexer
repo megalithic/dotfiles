@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+src="$HOME/.dotfiles/home/common/programs/pi-coding-agent/scripts/build-session-index.sh"
+if [ ! -x "$src" ]; then
+  echo "pi-session-indexer: source script missing: $src" >&2
+  exit 1
+fi
+exec "$src"

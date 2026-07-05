@@ -32,6 +32,8 @@ result
 .init.local.lua
 .direnv
 .mise.local.toml
+fnox.local.toml
+mise/fnox/*.local.toml
 
 todo.txt
 

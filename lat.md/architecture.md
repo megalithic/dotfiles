@@ -47,6 +47,8 @@ Apps that need live-editable config use out-of-store symlinks into `config/` rat
 
 `config/` holds `hammerspoon/`, `nvim/`, `tmux/`, `ghostty/`, `kitty/`, `kanata/`, `espanso/`, and `ssh/`. Program modules under `home/common/programs/<tool>/` own the symlink wiring. Config fragments that need nix-interpolated values are generated into `~/.local/share/...` and sourced from the live config, keeping the editable tree in `config/`.
 
+These links can look like plain Nix-store links when inspected at the installed path. Home Manager creates a visible link into `...-home-manager-files`, which points to an `hm_*` store path, which may itself be a symlink created by `mkOutOfStoreSymlink` back to `~/.dotfiles/config/...`. Follow the full chain before deciding whether a path is immutable Nix output or live repo config. The migration inventory in [[mise-parity-checklist#Symlink ownership inventory]] records the current split.
+
 ## Rebuild commands
 
 Rebuild recipes keep nix-darwin and Home Manager switches separate while still allowing one full sync path.

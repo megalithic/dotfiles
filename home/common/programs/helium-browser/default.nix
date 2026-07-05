@@ -119,5 +119,26 @@
             fi
           ''
         );
+
+    # Helium's Info.plist claims com.adobe.pdf as a Viewer, and the bundle
+    # re-registration above lets it reclaim the PDF default in LaunchServices.
+    # The main Info.plist is sealed by Helium's Developer ID signature, so we
+    # cannot strip the claim without breaking TCC/Widevine. Instead, re-assert
+    # the preferred PDF handler after install. Idempotent.
+    home.activation.heliumBrowserReassertPdfHandler = lib.mkIf config.programs.helium-browser.enable (
+      lib.hm.dag.entryAfter [ "heliumBrowserInstallToApplications" ] ''
+        PDF_HANDLER="com.apple.Preview"
+        if [ -x "${pkgs.duti}/bin/duti" ]; then
+          current="$(${pkgs.duti}/bin/duti -x pdf 2>/dev/null | tail -1 || true)"
+          if [ "$current" != "$PDF_HANDLER" ]; then
+            $DRY_RUN_CMD ${pkgs.duti}/bin/duti -s "$PDF_HANDLER" com.adobe.pdf all \
+              && echo "helium-browser: re-asserted PDF handler to $PDF_HANDLER" \
+              || echo "helium-browser: duti failed to set PDF handler (non-fatal)"
+          fi
+        else
+          echo "helium-browser: duti not found; skipping PDF handler re-assert"
+        fi
+      ''
+    );
   };
 }

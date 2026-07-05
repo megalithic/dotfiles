@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+if [ "${MISE_BOOTSTRAP_SKIP_BREW:-}" != "1" ]; then
+  scripts/mise/ensure-homebrew
+  scripts/mise/install-apps
+else
+  echo "Skipping Homebrew (MISE_BOOTSTRAP_SKIP_BREW=1)"
+fi
+
+if [ "${MISE_BOOTSTRAP_SKIP_PI:-}" != "1" ]; then
+  scripts/mise/install-pi-tools
+  scripts/mise/setup-pi
+else
+  echo "Skipping Pi setup (MISE_BOOTSTRAP_SKIP_PI=1)"
+fi
+
+if [ "${MISE_BOOTSTRAP_SKIP_SECRETS:-}" != "1" ]; then
+  scripts/mise/render-fnox-files || true
+else
+  echo "Skipping fnox secrets (MISE_BOOTSTRAP_SKIP_SECRETS=1)"
+fi
+
+if [ "${MISE_BOOTSTRAP_SKIP_DEFAULTS:-}" != "1" ]; then
+  scripts/mise/apply-macos-complex-defaults
+else
+  echo "Skipping macOS defaults (MISE_BOOTSTRAP_SKIP_DEFAULTS=1)"
+fi
+
+if [ "${MISE_BOOTSTRAP_SKIP_HELIUM:-}" != "1" ]; then
+  scripts/mise/install-helium
+else
+  echo "Skipping Helium (MISE_BOOTSTRAP_SKIP_HELIUM=1)"
+fi
+
+scripts/mise/doctor

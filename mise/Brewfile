@@ -1,0 +1,37 @@
+# Homebrew GUI/MAS layer for mise bootstrap migration.
+# Keep formulae that need strict versions in mise [tools] or custom scripts, not here.
+
+tap "cachix/tap"
+
+brew "mas"
+
+# GUI apps that were Home Manager/nix-darwin packages or app modules.
+cask "1password"
+cask "brave-browser@nightly"
+cask "discord"
+cask "espanso"
+cask "firefox"
+cask "ghostty"
+cask "hammerspoon"
+cask "handy"
+cask "iina"
+cask "inkscape"
+cask "karabiner-elements"
+cask "mailmate"
+cask "macshot"
+cask "meetingbar"
+cask "obsidian"
+cask "okta-verify"
+cask "orbstack"
+cask "proton-drive"
+cask "protonvpn"
+cask "raycast"
+cask "slack"
+cask "yubico-authenticator"
+cask "zoom"
+
+# Special-case apps still have scripts/notes:
+# - Helium: scripts/mise/install-helium preserves Widevine/signing/TCC behavior.
+# - Kanata: stable /usr/local/bin/kanata copy is a TCC workaround, not a cask.
+
+mas "Xcode", id: 497799835

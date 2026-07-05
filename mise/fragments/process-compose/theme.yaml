@@ -1,0 +1,28 @@
+style:
+  body:
+    bgColor: "#2e353c"
+    fgColor: "#d3c6aa"
+    borderColor: "#475258"
+    secondaryTextColor: "#859289"
+    tertiaryTextColor: "#7a8478"
+  stat_table:
+    keyFgColor: "#a7c080"
+    valueFgColor: "#d3c6aa"
+    logoColor: "#7fbbb3"
+  proc_table:
+    fgColor: "#d3c6aa"
+    fgWarning: "#dbbc7f"
+    fgPending: "#7fbbb3"
+    fgCompleted: "#a7c080"
+    fgError: "#e67e80"
+  help:
+    fgColor: "#d3c6aa"
+    keyColor: "#a7c080"
+  dialog:
+    bgColor: "#343f44"
+    fgColor: "#d3c6aa"
+    buttonBgColor: "#475258"
+    buttonFgColor: "#d3c6aa"
+    labelFgColor: "#a7c080"
+    fieldBgColor: "#2e353c"
+    fieldFgColor: "#d3c6aa"

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+basename "$PWD"
+echo " elixir  $(elixir --version 2>/dev/null | awk '/Elixir/{print $2; exit}' || echo missing)"
+echo " erlang  $(erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell 2>/dev/null | tr -d '"' || echo missing)"
+echo " node    $(node --version 2>/dev/null || echo missing)"
+if [ -f .devenv/state/postgres/postmaster.pid ]; then
+  pg_port="$(sed -n '4p' .devenv/state/postgres/postmaster.pid 2>/dev/null || true)"
+  echo " pg      ${pg_port:+:$pg_port }(.devenv state)"
+elif [ -n "${PGPORT:-}" ]; then
+  echo " pg      :$PGPORT"
+else
+  echo " pg      unknown"
+fi
+if [ -f .devenv/state/phoenix.port ]; then
+  echo " phoenix :$(cat .devenv/state/phoenix.port)"
+fi

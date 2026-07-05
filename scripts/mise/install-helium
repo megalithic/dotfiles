@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+version="0.12.5.1"
+dmg_url="https://github.com/imputnet/helium-macos/releases/download/${version}/helium_${version}_arm64-macos.dmg"
+dmg_sha256="bb0b3a3944f257afc48e8d45a859e93521b7b5350614c35e96b7b1da6d5899dd"
+app_dst="/Applications/Helium.app"
+
+if pgrep -f '^/Applications/Helium\.app/Contents/MacOS/Helium$' >/dev/null 2>&1; then
+  echo "Helium running; skip app update to preserve TCC/code identity while live."
+  exit 0
+fi
+
+tmp="$(mktemp -d)"
+cleanup() {
+  if command -v trash >/dev/null 2>&1; then
+    trash "$tmp" >/dev/null 2>&1 || true
+  else
+    python3 - "$tmp" <<'PY'
+import shutil, sys
+shutil.rmtree(sys.argv[1], ignore_errors=True)
+PY
+  fi
+}
+trap cleanup EXIT
+
+dmg="$tmp/helium.dmg"
+curl -fsSL "$dmg_url" -o "$dmg"
+actual="$(shasum -a 256 "$dmg" | awk '{print $1}')"
+if [ "$actual" != "$dmg_sha256" ]; then
+  echo "Helium dmg hash mismatch: $actual" >&2
+  exit 1
+fi
+
+mnt="$tmp/mnt"
+mkdir -p "$mnt"
+hdiutil attach "$dmg" -nobrowse -readonly -mountpoint "$mnt" >/dev/null
+trap 'hdiutil detach "$mnt" >/dev/null 2>&1 || true; cleanup' EXIT
+src_app="$(/usr/bin/find "$mnt" -maxdepth 2 -name 'Helium.app' -type d -print -quit)"
+if [ -z "$src_app" ]; then
+  echo "Helium.app not found in dmg" >&2
+  exit 1
+fi
+work_app="$tmp/Helium.app"
+cp -R "$src_app" "$work_app"
+hdiutil detach "$mnt" >/dev/null
+trap cleanup EXIT
+
+widevine="$tmp/widevine"
+mkdir -p "$widevine"
+curl -fsSL "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/toolkit/content/gmp-sources/widevinecdm.json" \
+  | python3 -c 'import json, sys; d=json.load(sys.stdin); v=d["vendors"]["gmp-widevinecdm"]["platforms"]["Darwin_aarch64-gcc3"]; print(v["fileUrl"], v["hashValue"], d["vendors"]["gmp-widevinecdm"]["version"], sep="|")' \
+  > "$widevine/info"
+IFS='|' read -r widevine_url widevine_hash widevine_version < "$widevine/info"
+curl -fsSL "$widevine_url" -o "$widevine/WidevineCdm.crx"
+widevine_actual="$(shasum -a 512 "$widevine/WidevineCdm.crx" | awk '{print $1}')"
+if [ "$widevine_actual" != "$widevine_hash" ]; then
+  echo "Widevine hash mismatch" >&2
+  exit 1
+fi
+python3 - "$widevine/WidevineCdm.crx" "$widevine/WidevineCdm.zip" <<'PY'
+import struct, sys
+src, dst = sys.argv[1:3]
+with open(src, 'rb') as f:
+    f.seek(8)
+    offset = 12 + struct.unpack('<I', f.read(4))[0]
+    f.seek(offset)
+    data = f.read()
+with open(dst, 'wb') as f:
+    f.write(data)
+PY
+unzip -oq "$widevine/WidevineCdm.zip" -d "$widevine/extract"
+
+fw_root="$work_app/Contents/Frameworks/Helium Framework.framework"
+fw_ver="$(/bin/ls "$fw_root/Versions" | awk '/^[0-9]/{print; exit}')"
+widevine_dst="$fw_root/Versions/$fw_ver/Libraries/WidevineCdm"
+mkdir -p "$widevine_dst"
+rsync -a "$widevine/extract/" "$widevine_dst/"
+/usr/bin/xattr -cr "$work_app"
+
+for helper in "$fw_root/Versions/$fw_ver/Helpers/"*.app; do
+  if [ -d "$helper/Contents/_CodeSignature" ]; then
+    python3 - "$helper/Contents/_CodeSignature" <<'PY'
+import shutil, sys
+shutil.rmtree(sys.argv[1], ignore_errors=True)
+PY
+  fi
+done
+
+ents="$tmp/helper-entitlements.plist"
+cat > "$ents" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.cs.disable-library-validation</key>
+  <true/>
+</dict>
+</plist>
+PLIST
+
+for helper in "$fw_root/Versions/$fw_ver/Helpers/"*.app; do
+  name="$(basename "$helper" .app)"
+  if [ "$name" = "Helium Helper" ]; then
+    /usr/bin/codesign --force --sign - --options=runtime,kill,restrict --entitlements "$ents" "$helper"
+  else
+    /usr/bin/codesign --force --sign - "$helper"
+  fi
+done
+
+if [ ! -w /Applications ] && ! groups | tr ' ' '\n' | rg -qx admin; then
+  echo "Need admin write to /Applications" >&2
+  exit 1
+fi
+sudo rsync -a --inplace --checksum --delete --chmod=u+w "$work_app/" "$app_dst/"
+mkdir -p "$HOME/.local/bin"
+ln -sfn "$app_dst/Contents/MacOS/Helium" "$HOME/.local/bin/helium"
+echo "Helium ${version} installed with Widevine ${widevine_version}."
+
+# Helium reclaims the com.adobe.pdf default via LaunchServices on install.
+# Re-assert the preferred PDF handler (Preview). Idempotent.
+pdf_handler="com.apple.Preview"
+if command -v duti >/dev/null 2>&1; then
+  if [ "$(duti -x pdf 2>/dev/null | tail -1 || true)" != "$pdf_handler" ]; then
+    duti -s "$pdf_handler" com.adobe.pdf all \
+      && echo "Re-asserted PDF handler to $pdf_handler." \
+      || echo "duti failed to set PDF handler (non-fatal)."
+  fi
+else
+  echo "duti not found; skipping PDF handler re-assert."
+fi
