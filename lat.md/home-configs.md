@@ -91,7 +91,7 @@ Tools managed under `home/common/programs/`, one line each. Tools with their own
 | handy                                   | macOS app (local nixpkgs backport)                                                                                                            |
 | helium-browser                          | primary browser — see [[helium]]                                                                                                              |
 | htop / k9s                              | process and Kubernetes TUIs                                                                                                                   |
-| jj                                      | Jujutsu VCS                                                                                                                                   |
+| jj                                      | Jujutsu VCS. Live setup layers the HM-rendered `~/.config/jj/config.toml` over an unmanaged `~/.jjconfig.toml` (carries the unwired `templates.nix` content). `mise/config/jj/` is the independent non-nix twin: one merged `config.toml`, effective-config-identical; see its `AGENTS.md` |
 | jq                                      | JSON processor                                                                                                                                |
 | kanata / karabiner                      | keyboard remapping                                                                                                                            |
 | khard / notmuch / mbsync / msmtp / tiny | mail/contacts stack                                                                                                                           |
