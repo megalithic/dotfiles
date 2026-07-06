@@ -49,9 +49,14 @@ XDG_DATA_HOME = "{{env.HOME}}/.local/share"
 XDG_STATE_HOME = "{{env.HOME}}/.local/state"
 XDG_CACHE_HOME = "{{env.HOME}}/.cache"
 PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
+# GitHub token for the private helium tap (brew-cask + gh). Sourced from the
+# op://Crypt/env item (notesPlain), same secret fnox/opnix render to env-vars.sh.
+# fnox render (`mise run fnox:render`) first, opnix fallback during transition.
+HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env-vars.sh ]; then . ~/.config/fnox/secrets/env-vars.sh; elif [ -f ~/.config/opnix/secrets/env-vars.sh ]; then . ~/.config/opnix/secrets/env-vars.sh; fi; printf %s $HOMEBREW_GITHUB_API_TOKEN") }}'
 
-# FNOX_AGE_KEY_FILE = "~/.config/fnox/age.txt"
 
+[bootstrap.brew.taps]
+"megalithic/helium" = "https://github.com/megalithic/helium-macos-releases"
 [bootstrap.packages]
 "brew:bash" = "latest"
 "brew:fish" = "latest"
@@ -63,6 +68,8 @@ PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
 
 # brew casks using mise's `brew-cask:<formulae>` notation
 "brew-cask:hammerspoon" = "latest"
+# private repo; until then install via real `brew install --cask helium`.
+"brew-cask:megalithic/helium/helium" = "latest"
 
 [dotfiles]
 # "~/.config" = "mise/config"
