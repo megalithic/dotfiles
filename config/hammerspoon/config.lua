@@ -344,7 +344,10 @@ M.lollygaggers = {
 }
 
 M.launchers = {
-  { BROWSER, "j", { cycleWindows = true } },
+  -- launchCommand: cold-start only — LaunchServices forwards no flags, so a
+  -- detaching launcher script provides them (CDP 9223 for media-presenced +
+  -- chrome-devtools-attach). Running app keeps normal cycle/focus behavior.
+  { BROWSER, "j", { cycleWindows = true, launchCommand = os.getenv("HOME") .. "/bin/helium-launch" } },
   { TERMINAL, "k", { passThrough = { "`" } } },
   -- { "net.kovidgoyal.kitty", "k" },
   { "com.apple.MobileSMS", "m" }, -- NOOP for now.. TODO: implement a binding feature that let's us require n-presses before we execute

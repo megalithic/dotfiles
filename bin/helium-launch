@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Launch Helium with declarative flags — single source of truth for the flag
+# set. Consumers: fish `helium` function and Hammerspoon's launcher cold start
+# (config.lua `launchCommand` opt on the hyper+j binding).
+#
+# Targets /Applications/Helium.app: the signed megalithic/helium-macos-releases
+# build (Widevine baked in, Sparkle disabled via nix-darwin defaults).
+# Detaches the browser (nohup + background) and exits immediately so callers
+# like hs.task don't tie the browser's lifetime to theirs.
+set -euo pipefail
+
+HELIUM="/Applications/Helium.app/Contents/MacOS/Helium"
+if [ ! -x "$HELIUM" ]; then
+  echo "Helium executable not found: $HELIUM" >&2
+  exit 1
+fi
+
+# --remote-debugging-port=9223: CDP for media-presenced meeting detection and
+# the chrome-devtools-attach MCP server. 9223 avoids Brave Nightly's 9222.
+nohup "$HELIUM" \
+  --no-first-run \
+  --no-default-browser-check \
+  --hide-crashed-bubble \
+  --ignore-gpu-blocklist \
+  --disable-breakpad \
+  --disable-wake-on-wifi \
+  --no-pings \
+  --disable-features=OutdatedBuildDetector \
+  --remote-debugging-port=9223 \
+  "$@" >/dev/null 2>&1 &
+
+disown
