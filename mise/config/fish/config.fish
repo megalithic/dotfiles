@@ -10,6 +10,11 @@ if status is-interactive
 
     fish_vi_key_bindings
 
+    # fzf key bindings (ctrl-t, ctrl-r, alt-c). Must run after fish_vi_key_bindings:
+    # switching binding sets resets bindings and would wipe these.
+    # fzf-tmux stays disabled (history-dropping fifo race); widgets run inline.
+    command -sq fzf; and fzf --fish | source
+
     # Clear screen + scrollback at startup (hides "Last login" after the fact).
     printf '\33c\e[3J'
 

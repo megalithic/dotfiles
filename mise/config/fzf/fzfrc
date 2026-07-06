@@ -1,0 +1,36 @@
+--border-label=' '
+--input-label=' '
+--header-label=' '
+--inline-info
+--ansi
+--highlight-line
+--info=inline-right
+--no-border
+--border=none
+--reverse
+--extended
+--cycle
+--preview-window=right:60%:wrap
+--preview='preview {}'
+--margin=0,0
+--padding=1,0
+--bind=ctrl-j:ignore,ctrl-k:ignore
+--bind=ctrl-j:down,ctrl-k:up
+--bind=ctrl-b:preview-up,ctrl-f:preview-down
+--bind=ctrl-u:abort
+--bind=ctrl-c:abort
+--bind=esc:abort
+--bind=?:toggle-preview
+--bind='ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
+--bind='ctrl-o:execute(nvim {})+abort'
+--height=25%
+--prompt=' '
+--pointer='▌'
+--header=''
+--marker='󰛄'
+--scrollbar='▌▐'
+--color=bg:-1,bg+:#37464e,spinner:#8ec07c,hl:#fabd2f,gutter:#3c474d
+--color=fg:#d8caac,fg+:#fbf1c7,header:#83a598,info:#fabd2f,pointer:#8ec07c
+--color=marker:#d39bb6,prompt:#fabd2f,hl+:#e67e80
+--color=border:#2f3d44,label:#c0caf5,query:#aeaeae
+--color=preview-border:#415c6d
