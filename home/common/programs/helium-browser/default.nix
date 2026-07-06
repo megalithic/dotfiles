@@ -16,11 +16,9 @@
   config = {
     programs.helium-browser = {
       enable = true;
-      # Signed + notarized release from megalithic/helium-macos-releases
-      # (Widevine baked in, no local re-signing). Legacy Widevine-injection
-      # package remains at pkgs.helium-browser. DMG must be pre-seeded:
-      # bin/helium-prefetch <version>.
-      package = pkgs.helium-browser-signed;
+      # Default package = pkgs.helium-browser: the signed + notarized release
+      # from megalithic/helium-macos-releases (Widevine baked in, no local
+      # re-signing). DMG must be pre-seeded: bin/helium-prefetch <version>.
       bundleId = "net.imput.helium";
       applicationSupportDir = "net.imput.helium";
 
@@ -113,7 +111,9 @@
               echo "helium-browser: source bundle missing at $SRC; skipping"
             elif [ ! -w /Applications ] && ! groups | tr ' ' '\n' | grep -qx admin; then
               echo "helium-browser: cannot write to /Applications/ (user not in admin group); skipping"
-            elif /usr/bin/pgrep -f '^/Applications/Helium\.app/Contents/MacOS/Helium$' >/dev/null 2>&1; then
+            # ( |$): helium-launch cold starts append Chromium flags, so the
+            # exec path is followed by args, not end-of-line.
+            elif /usr/bin/pgrep -f '^/Applications/Helium\.app/Contents/MacOS/Helium( |$)' >/dev/null 2>&1; then
               echo "helium-browser: /Applications/Helium.app is running; skipping bundle update to avoid changing code identity under a live TCC client"
             else
               $DRY_RUN_CMD ${pkgs.rsync}/bin/rsync -a --inplace --checksum --delete --chmod=u+w \

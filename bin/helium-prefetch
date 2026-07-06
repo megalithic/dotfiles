@@ -3,7 +3,7 @@
 # megalithic/helium-macos-releases repo.
 #
 # The nix-daemon cannot authenticate to GitHub (fixed-output derivations read
-# impure env from the daemon, not the user's shell), so pkgs/helium-browser-signed.nix
+# impure env from the daemon, not the user's shell), so pkgs/helium-browser.nix
 # uses requireFile and this script pre-seeds the exact fixed-output store path
 # via gh (user-level auth) + nix-prefetch-url.
 #
@@ -56,6 +56,6 @@ store_path=$(nix-prefetch-url --print-path --name "$dmg" "file://$tmp/$dmg" | ta
 
 echo ":: Seeded: $store_path"
 echo
-echo "For pkgs/helium-browser-signed.nix:"
+echo "For pkgs/helium-browser.nix:"
 echo "  version = \"$version\";"
 echo "  sha256  = \"$actual\";"

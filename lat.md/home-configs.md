@@ -58,7 +58,7 @@ A handful of programs have enough intricacy to warrant their own files instead o
 
 - [[pi-coding-agent]] — Pi packaging, wrapper, runtime settings, extensions, and the `pi-acp` adapter.
 - [[neovim-pinvim]] — Neovim nightly notes plus the pinvim registry, editor-service RPC, context delivery, and peer repair.
-- [[helium]] — declarative Darwin build with Widevine, custom re-signing for 1Password pairing, rsync install, and Hammerspoon launch path.
+- [[helium]] — signed + notarized private-repo releases with Widevine baked in, requireFile prefetch, rsync install, and Hammerspoon launch path.
 - [[hammerspoon]] — shade-next panel, `wm.lua` window management, miccheck menubar, and the `bin/hs-reload` rule.
 - [[ghostty]] — module-vs-raw-config split and bell-driven Pi notifications.
 
