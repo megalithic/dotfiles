@@ -147,6 +147,7 @@ deps
 **/.pi/todos
 .pi-subagents
 .local_scripts
+.local/
 .build/
 
 # worktrunk per-repo project config (local-only)
