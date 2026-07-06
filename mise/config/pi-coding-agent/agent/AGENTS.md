@@ -3,8 +3,7 @@
 - Always use `trash` instead of `rm` for file deletion
 - Always use `rg` instead of `grep` for searching for text in files/folders
 - Always use `fd` instead of `find` for finding files/folders
-- Always set the pi tool `timeout` parameter for shell commands that may run long or hang; especially just home/darwin/rebuild/validate, backgrounded executions, and command shapes sentinel flags as risky.
-- When the `pi-bash-live-view` extension is installed/active, always pass `usePTY: true` on the Bash tool for long-running or progress-heavy commands (build systems, just home/darwin/rebuild/validate, installers, test suites, devenv up) so the user gets the live terminal view. Do not pipe these through `| tail`/`| head` or swallow output, which hides the live view. Reserve plain (non-PTY) Bash for short, quiet, output-capture commands.
+- Always set the pi tool `timeout` parameter for Bash tool call for commands that may run long or hang; especially `mise <command>`, `nix <command>`, `just <command>`, backgrounded executions, and command shapes sentinel flags as risky.
 - Always use `devenv` for developer environments
   - If a repo has a `justfile` and `devenv` is enabled, check the `just` recipes to see if there are equivalents available
   - When `devenv.nix` exists: `devenv shell -- <cmd>`, `devenv up`, `devenv tasks run <task>`
@@ -12,7 +11,15 @@
   - When setup gets complex, create `devenv.nix`
   - Don't bypass devenv with global installs
   - `devenv search <query>` to find packages and options
+- Otherwise, if `mise.toml`, `mise.local.toml`, or similar root file markers are available, and no devenv.nix exists, use `mise` related tasks and toolchain commands.
 - When working with external libraries, use MCP tools (`context7`, `githits`) to look up docs and examples instead of guessing APIs
+
+### Command Execution
+
+- For long-running or progress-heavy commands (`mise <command>`, `nix build`, rebuilds, package installs, tests), run the command directly with PTY/live output when available (pass `usePTY: true` parameter for the Bash tool call).
+- Do not pipe long-running commands through `tail`, `grep`, `head`, or `sed` while they run; those filters can buffer or hide output from `pi-bash-live-view`.
+- If output needs filtering, run the command first and inspect logs or captured output afterward.
+- Short, finite inspection commands may still use pipes when live progress is not useful.
 
 ## Writing
 
@@ -59,22 +66,20 @@ When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-f
 - Work incrementally: complete step → verify → commit. Only commit when a step is fully working.
 - When user says "investigate", "check", "inspect", or "audit", only investigate and report findings. Don't implement changes unless explicitly told to.
 - Delegate complex tasks through pi-subagents: scout → plan → implement → review → fix
-- Use natural language delegation: "use scout to understand X", "have worker implement Y", "run parallel reviewers"
 - Run parallel reviewers after every non-trivial implementation
 - Ask oracle for a second opinion before risky decisions
+
+## Local development scripts:
+
+- Use .local_scripts/ for temporary, messy, repo-specific scripts that shouldn't be committed
+
+## Task tracking:
+
 - Manage tickets with `tk` when you need structured task tracking
   - `tk` is project-local via `devenv.nix` (not on global PATH). Always run as `devenv shell -- tk <subcommand>`
   - Example: `devenv shell -- tk list`, `devenv shell -- tk create "title" -d "desc" --acceptance "1. ..." -t feature`
   - Ticket files live in `.tickets/` as YAML-frontmatter markdown
-- For repetitive/verifiable tasks (fix all failing tests, migrate across many files, audit a codebase), use ralph-loop:
-  - Write a RALPH.md defining completion criteria (max_iterations, completion_promise, stop_on_error)
-  - Run `/ralph --path ./task` to loop until done
-  - Read the ralph-loop skill for details on guardrails, completion gating, and iteration patterns
 
-## Local development scripts:
-
-- Use `.local_scripts/` for temporary verification scripts that shouldn't be committed
-- Scripts can be messy and repo-specific
 
 ## Research, audit, and exploration docs:
 
