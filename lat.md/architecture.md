@@ -59,9 +59,11 @@ Both recipes accept `--dry-run` for build-only validation and `--skip-sync` when
 
 The repo devenv entry uses shell hooks plus direnv support, and generated caches stay ignored.
 
-Home Manager exports `DEVENV_TUI=false` from `home/common/programs/devenv/default.nix` so direnv-triggered `devenv direnv-export` stays non-interactive. The root `.envrc` drives direnv workflows, and repo-local `.devenv` and `.direnv` plus `.local_scripts/` are ignored.
+Home Manager exports `DEVENV_TUI=false` from `home/common/programs/devenv/default.nix` so direnv-triggered `devenv direnv-export` stays non-interactive. The root `.envrc` drives direnv workflows with `eval "$(devenv direnvrc)"` and `use devenv`.
 
-Unused flake inputs should be removed from `flake.lock` after their `flake.nix` references are gone.
+`devenv.yaml` imports the shared `devenv-base` module and pins GitHub-hosted devenv inputs with `git+ssh://git@github.com/...` URLs. This keeps `devenv update`, `devenv shell`, and direnv activation working with the global gitconfig rewrite from `https://github.com/` to SSH, and lets the private `megalithic/devenv-base` repo fetch through normal SSH auth.
+
+Repo-local `.devenv` and `.direnv` plus `.local_scripts/` are ignored. Unused flake inputs should be removed from `flake.lock` after their `flake.nix` references are gone.
 
 ## Secrets management
 

@@ -1,0 +1,18 @@
+inputs:
+  devenv:
+    url: git+ssh://git@github.com/cachix/devenv.git?dir=src/modules
+  devenv-base:
+    url: git+ssh://git@github.com/megalithic/devenv-base.git
+    flake: false
+  git-hooks:
+    url: git+ssh://git@github.com/cachix/git-hooks.nix.git
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
+  nixpkgs:
+    url: git+ssh://git@github.com/cachix/devenv-nixpkgs.git?ref=rolling
+  treefmt-nix:
+    url: git+ssh://git@github.com/numtide/treefmt-nix.git
+    flake: false
+imports:
+  - devenv-base
