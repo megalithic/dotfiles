@@ -1,20 +1,28 @@
-# Global fnox config for the mise bootstrap migration.
-# Replace AGE_RECIPIENT before first real use, then store OP_SERVICE_ACCOUNT_TOKEN
-# with `fnox set OP_SERVICE_ACCOUNT_TOKEN ops_... --provider age`.
+#:schema https://fnox.jdx.dev/schema.json
+# Global fnox config — linked to ~/.config/fnox/config.toml by the mise
+# dotfiles table (_mise.toml). Non-nix twin of home/common/programs/opnix.
+#
+# Auth: op CLI with 1Password desktop-app integration (biometric); no
+# service-account token needed on this machine. For headless/CI use, bootstrap
+# OP_SERVICE_ACCOUNT_TOKEN with an age provider per
+# https://fnox.jdx.dev/providers/1password.html.
 
 [providers]
-# age = { type = "age", recipients = ["AGE_RECIPIENT_REPLACE_ME"] }
 onepass = { type = "1password", vault = "Crypt" }
 
 [secrets]
-# Bootstrap token. Keep encrypted with age, never plaintext in git.
-# OP_SERVICE_ACCOUNT_TOKEN = { provider = "age", value = "..." }
+# File-shaped blobs: env = false keeps them out of `fnox exec` / shell
+# activation; read them with `fnox get`. ENV_VARS_SH is rendered to
+# ~/.config/fnox/secrets/env-vars.sh by `mise run fnox:render` (sourced by
+# fish conf.d/fnox.fish, the pi wrapper, and the mise [env] template).
+ENV_VARS_SH = { provider = "onepass", value = "op://Crypt/env/notesPlain", env = false }
+S3CFG = { provider = "onepass", value = "op://Crypt/s3cfg/notesPlain", env = false }
 
-ENV_VARS_SH = { provider = "onepass", value = "op://Crypt/env/notesPlain" }
-S3CFG = { provider = "onepass", value = "op://Crypt/s3cfg/notesPlain" }
-APPLE_ID_EMAIL = { provider = "onepass", value = "op://Crypt/apple-developer/username" }
-APPLE_TEAM_ID = { provider = "onepass", value = "op://Crypt/apple-developer/Section_6qgogrdycnlqc4x7ngqwchlyvi/team id" }
-APPLE_NOTARYTOOL_PASSWORD = { provider = "onepass", value = "op://Crypt/apple-developer/Section_6qgogrdycnlqc4x7ngqwchlyvi/notarytool app password" }
+# On-demand single values: `fnox get APPLE_TEAM_ID`. env = false so shell
+# activation doesn't hit 1Password on every new shell for rarely-used secrets.
+APPLE_ID_EMAIL = { provider = "onepass", value = "op://Crypt/apple-developer/username", env = false }
+APPLE_TEAM_ID = { provider = "onepass", value = "op://Crypt/apple-developer/Section_6qgogrdycnlqc4x7ngqwchlyvi/team id", env = false }
+APPLE_NOTARYTOOL_PASSWORD = { provider = "onepass", value = "op://Crypt/apple-developer/Section_6qgogrdycnlqc4x7ngqwchlyvi/notarytool app password", env = false }
 
 # Re-enable after the work item moves to a known vault.
-# WORK_ENV_VARS_SH = { provider = "onepass", value = "op://Work/workbookpro-vars/shell-exports" }
+# WORK_ENV_VARS_SH = { provider = "onepass", value = "op://Work/workbookpro-vars/shell-exports", env = false }

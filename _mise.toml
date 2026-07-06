@@ -311,7 +311,12 @@ run = [
   "git -C {{config_root}} submodule update --init",
   "brew bundle --file={{config_root}}/Brewfile",
   "pre-commit install --install-hooks",
+  "mise run fnox:render",
 ]
+
+[tasks."fnox:render"]
+description = "Render fnox file-shaped secrets (env-vars.sh) to ~/.config/fnox/secrets"
+run = "{{config_root}}/mise/scripts/fnox-render-secrets"
 
 [tasks."pi:setup"]
 description = "Idempotent pi agent setup: pinned tools, settings merge, pi-acp build, extension seed"
