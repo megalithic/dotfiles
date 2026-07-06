@@ -82,6 +82,12 @@ repo="$(printf '%s' "$repo" | sed -E 's/[^A-Za-z0-9_.-]+/-/g; s/-+/-/g; s/^-//; 
 # tmux session name is <repo>-<worktree>, e.g. rx-sm-spp-feature.
 session="${repo}-${name}"
 
+# Canonical GIT_WORKTREE id: {repo}-{branch-slug} with non [A-Za-z0-9_]
+# squashed to '-'. Must stay in sync with wt.fish _wt_worktree_id and the
+# mise.local.toml GIT_WORKTREE derivation (ports/DB names hash this value).
+canonical_slug="$(printf '%s' "$raw_name" | sed -E 's/[^A-Za-z0-9_]+/-/g; s/-+/-/g; s/^-//; s/-$//')"
+worktree_id="${repo}-${canonical_slug}"
+
 inside_tmux="false"
 [[ -n "${TMUX:-}" ]] && inside_tmux="true"
 
@@ -122,7 +128,7 @@ do_session() {
     # First window becomes `code`.
     tmux new-session -d -s "$session" -c "$wpath" -n code
   fi
-  tmux setenv -t "=${session}" GIT_WORKTREE "$branch"
+  tmux setenv -t "=${session}" GIT_WORKTREE "$worktree_id"
   ensure_window "$session" code
   ensure_window "$session" services "$services_cmd"
 
@@ -141,7 +147,7 @@ do_window() {
   fi
   local cur
   cur="$(tmux display-message -p '#S')"
-  tmux setenv -t "=${cur}" GIT_WORKTREE "$branch"
+  tmux setenv -t "=${cur}" GIT_WORKTREE "$worktree_id"
   if tmux list-windows -t "=${cur}" -F '#W' 2>/dev/null | grep -qx -- "$name"; then
     tmux select-window -t "=${cur}:${name}"
   else

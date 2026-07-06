@@ -1,3 +1,15 @@
+function _wt_worktree_id --description 'Canonical GIT_WORKTREE id: {repo}-{branch-slug}' --argument-names branch
+    # Slug: non [A-Za-z0-9_] runs squashed to "-", trimmed. Must stay in sync
+    # with the GIT_WORKTREE derivation in mise.local.toml / phx-port scripts.
+    test -n "$branch"; or return 1
+    set -l gcd (git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
+    test -n "$gcd"; or return 1
+    set -l repo (path basename (path dirname $gcd))
+    set -l slug (string replace -ra -- '[^A-Za-z0-9_]+' '-' $branch | string trim -c '-')
+    test -n "$slug"; or return 1
+    printf '%s-%s' $repo $slug
+end
+
 function wt --description "Worktrunk wrapper: vendored directives + implicit switch + tmux targets"
     set -l wt_bin "$WORKTRUNK_BIN"
     # WORKTRUNK_BIN overrides the binary (e.g. for testing dev builds).
@@ -37,12 +49,14 @@ function wt --description "Worktrunk wrapper: vendored directives + implicit swi
                 set seen_ddash true
                 set -a post $a
             case -t --target
-                set i (math $i + 1)
-                if test $i -gt $n
-                    echo "wt: $a requires a value (window|session)" >&2
-                    return 2
+                # Value is optional: consume it only when it is an explicit
+                # window|session; otherwise default to session.
+                if test (math $i + 1) -le $n; and contains -- $argv[(math $i + 1)] window session
+                    set i (math $i + 1)
+                    set target $argv[$i]
+                else
+                    set target session
                 end
-                set target $argv[$i]
             case '--target=*'
                 set target (string replace -- '--target=' "" $a)
             case '-t=*'
@@ -147,8 +161,17 @@ function wt --description "Worktrunk wrapper: vendored directives + implicit swi
         end
 
         wt-tmux-target --target $target --branch $branch --path $wpath
-        test -n "$branch"; and set -gx GIT_WORKTREE "$branch"
-        return $status
+        set -l tmux_rc $status
+        # Canonical worktree identity ({repo}-{branch-slug}) for ports/DBs;
+        # erased when the target is the main checkout.
+        set -l main_root (path dirname (git rev-parse --path-format=absolute --git-common-dir 2>/dev/null))
+        if test "$wpath" = "$main_root"
+            set -ge GIT_WORKTREE
+        else
+            set -l wt_id (_wt_worktree_id $branch)
+            test -n "$wt_id"; and set -gx GIT_WORKTREE "$wt_id"
+        end
+        return $tmux_rc
     end
 
     # ---- Normal mode: vendored upstream directive handling ----
@@ -168,9 +191,14 @@ function wt --description "Worktrunk wrapper: vendored directives + implicit swi
         cd -- "$tgt"
         set -l cd_exit $status
         test $exit_code -eq 0; and set exit_code $cd_exit
-        # Set GIT_WORKTREE so shells/services know the active worktree.
-        set -l wt_branch (git branch --show-current 2>/dev/null)
-        test -n "$wt_branch"; and set -gx GIT_WORKTREE "$wt_branch"
+        # Set GIT_WORKTREE ({repo}-{branch-slug}) so shells/services know the
+        # active worktree; erased when back in the main checkout.
+        if string match -q '*/worktrees/*' (git rev-parse --git-dir 2>/dev/null)
+            set -l wt_id (_wt_worktree_id (git branch --show-current 2>/dev/null))
+            test -n "$wt_id"; and set -gx GIT_WORKTREE "$wt_id"
+        else
+            set -ge GIT_WORKTREE
+        end
     end
 
     if test -s "$exec_file"

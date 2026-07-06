@@ -38,7 +38,14 @@ defmodule WorktreeIso do
   # derived from GIT_WORKTREE. Unset (main checkout) => suffix "" and offset 0, so
   # database names and ports keep their plain base values. Set GIT_WORKTREE=<name>
   # in a worktree for isolated DBs and a collision-free port block.
-  worktree = System.get_env("GIT_WORKTREE")
+  # Empty string is treated as unset: env managers (mise) may export the var
+  # unconditionally, and "" is truthy in Elixir.
+  worktree =
+    case System.get_env("GIT_WORKTREE") do
+      w when w in [nil, ""] -> nil
+      w -> w
+    end
+
   worktree_suffix = if worktree, do: "_#{worktree}", else: ""
   worktree_port_offset = if worktree, do: :erlang.phash2(worktree, 1000), else: 0
   '''
