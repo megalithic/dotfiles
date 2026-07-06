@@ -2,7 +2,7 @@
 
 Helium is the primary browser, with unusually intricate packaging: the Nix build injects Widevine DRM and re-signs helper bundles so DRM playback and 1Password desktop pairing both keep working.
 
-The package is `pkgs/helium-browser.nix`; the Home Manager module is `home/common/programs/helium-browser/`.
+The package is `pkgs/helium-browser.nix`; the Home Manager module is `home/common/programs/helium-browser/`. A parallel signed-release package, `pkgs/helium-browser-signed.nix`, consumes pre-signed DMGs from a private releases repo and needs none of the injection/re-signing machinery.
 
 ## Declarative Darwin build
 
@@ -15,6 +15,16 @@ The Widevine CDM goes into `Helium Framework.framework/Versions/<v>/Libraries/Wi
 The main exec, `Helium Framework.framework`, and `Sparkle.framework` keep imput LLC's original signatures (`S4Q33XPHB4`) untouched, because 1Password's `verifyClient` allowlists imput's team ID for desktop pairing and hardened-runtime library validation between the main exec and framework requires same-team signatures.
 
 Replacing the helper `_CodeSignature` dirs breaks the outer bundle seal, so the first launch per build needs one Gatekeeper "Open Anyway" click in System Settings → Privacy & Security; later launches reuse the cached `ExecPolicy` override keyed by bundle directory inode. The extension update URL reads Chromium prodversion from the framework's `Versions/` directory at eval time via `builtins.readDir`, staying in sync with the package automatically.
+
+## Signed release package
+
+`pkgs/helium-browser-signed.nix` unpacks DMGs from the private `megalithic/helium-macos-releases` repo, whose CI builds Helium with Widevine already injected, then Developer ID signs (team `3ZJ3F5RFBZ`) and notarizes the bundle.
+
+Because the bundle arrives fully signed, the package does no Widevine injection and no re-signing: `dontFixup` and `dontPatchShebangs` keep bytes identical, the deep codesign seal survives 7zz extraction, and Gatekeeper accepts with no per-build "Open Anyway" click. The nix-daemon cannot fetch the private asset (fixed-output `impureEnvVars`/`netrcPhase` read the daemon's env, not the user's shell, and Determinate Nix ignores `impure-env`), so `src` is a `requireFile` and `bin/helium-prefetch` pre-seeds the exact fixed-output store path via authenticated `gh` plus `nix-prefetch-url --name`, verifying the release's `.sha256` asset first. Version bumps update `version`/`sha256` in the package and re-run the prefetch.
+
+The signing team differs from imput's (`S4Q33XPHB4`), which 1Password's pairing allowlist keyed on, so the signed build needs a custom trusted-browser entry: `bin/helium-1password-trust` merges a `browsers.other-trusted-apps` entry (base64url bundle id → codesign requirement pinned to the team OU) into 1Password's `settings.json`, mirroring what Settings → Browser → Add Browser writes. 1Password must be fully quit when it runs or it rewrites `settings.json` from memory. Both scripts serve the nix config (`~/bin` via Home Manager) and the mise config (`[dotfiles]` symlink-each of `bin/`).
+
+`programs.helium-browser.package` still defaults to the legacy `pkgs.helium-browser`; adopting the signed build means pointing it at `pkgs.helium-browser-signed`. Until then, `just home` rsyncs the legacy build back over `/Applications/Helium.app`, which is a Chromium profile-downgrade hazard after the newer signed version has run.
 
 ## Home Manager install
 

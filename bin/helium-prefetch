@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Seed the nix store with a Helium release DMG from the private
+# megalithic/helium-macos-releases repo.
+#
+# The nix-daemon cannot authenticate to GitHub (fixed-output derivations read
+# impure env from the daemon, not the user's shell), so pkgs/helium-browser-signed.nix
+# uses requireFile and this script pre-seeds the exact fixed-output store path
+# via gh (user-level auth) + nix-prefetch-url.
+#
+# Usage:
+#   helium-prefetch            # latest release
+#   helium-prefetch 0.14.2.1   # specific tag
+set -euo pipefail
+
+REPO="megalithic/helium-macos-releases"
+
+version="${1:-}"
+if [ -z "$version" ]; then
+  version=$(gh api "repos/$REPO/releases/latest" --jq .tag_name)
+  echo ":: Latest release: $version"
+fi
+
+dmg="helium_${version}_arm64-macos.dmg"
+
+echo ":: Looking up assets for $version..."
+assets=$(gh api "repos/$REPO/releases/tags/$version" --jq '.assets[] | "\(.name) \(.id)"')
+dmg_id=$(awk -v n="$dmg" '$1 == n { print $2 }' <<<"$assets")
+sha_id=$(awk -v n="$dmg.sha256" '$1 == n { print $2 }' <<<"$assets")
+
+if [ -z "$dmg_id" ]; then
+  echo "!! No asset named $dmg in release $version" >&2
+  exit 1
+fi
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+echo ":: Downloading $dmg..."
+gh api -H "Accept: application/octet-stream" "repos/$REPO/releases/assets/$dmg_id" >"$tmp/$dmg"
+
+actual=$(shasum -a 256 "$tmp/$dmg" | awk '{ print $1 }')
+
+if [ -n "$sha_id" ]; then
+  expected=$(gh api -H "Accept: application/octet-stream" "repos/$REPO/releases/assets/$sha_id" | awk '{ print $1 }')
+  if [ "$actual" != "$expected" ]; then
+    echo "!! sha256 mismatch: expected $expected, got $actual" >&2
+    exit 1
+  fi
+  echo ":: sha256 verified: $actual"
+else
+  echo ":: No .sha256 asset published; downloaded sha256: $actual"
+fi
+
+echo ":: Seeding nix store..."
+store_path=$(nix-prefetch-url --print-path --name "$dmg" "file://$tmp/$dmg" | tail -1)
+
+echo ":: Seeded: $store_path"
+echo
+echo "For pkgs/helium-browser-signed.nix:"
+echo "  version = \"$version\";"
+echo "  sha256  = \"$actual\";"
