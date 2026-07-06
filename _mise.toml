@@ -69,7 +69,7 @@ HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env
 # brew casks using mise's `brew-cask:<formulae>` notation
 "brew-cask:hammerspoon" = "latest"
 # private repo; until then install via real `brew install --cask helium`.
-# After install, pair with 1Password: `mise run helium:1password-trust` (1Password quit).
+# After install, verify 1Password pairing: `mise run helium:1password-trust`.
 "brew-cask:megalithic/helium/helium" = "latest"
 
 [dotfiles]
@@ -333,7 +333,7 @@ description = "Idempotent pi agent setup: pinned tools, settings merge, pi-acp b
 run = "{{config_root}}/mise/config/pi-coding-agent/scripts/setup"
 
 [tasks."helium:1password-trust"]
-description = "Trust /Applications/Helium.app in 1Password (browsers.other-trusted-apps in settings.json); quit 1Password first"
+description = "Check 1Password trusts /Applications/Helium.app; prints GUI Add Browser steps if not (setting is tamper-protected, not writable)"
 run = "{{config_root}}/bin/helium-1password-trust"
 
 [plugins]

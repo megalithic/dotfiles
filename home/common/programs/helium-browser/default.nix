@@ -16,6 +16,11 @@
   config = {
     programs.helium-browser = {
       enable = true;
+      # Signed + notarized release from megalithic/helium-macos-releases
+      # (Widevine baked in, no local re-signing). Legacy Widevine-injection
+      # package remains at pkgs.helium-browser. DMG must be pre-seeded:
+      # bin/helium-prefetch <version>.
+      package = pkgs.helium-browser-signed;
       bundleId = "net.imput.helium";
       applicationSupportDir = "net.imput.helium";
 
