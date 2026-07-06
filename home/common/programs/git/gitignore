@@ -145,6 +145,7 @@ deps
 
 .pi/todos
 **/.pi/todos
+.pi-subagents
 .local_scripts
 .build/
 
