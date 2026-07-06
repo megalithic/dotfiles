@@ -4,6 +4,7 @@ set -eu
 
 DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-https://github.com/megalithic/dotfiles.git}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+FORCE_HOST="${HOST:-}" # skip hostname prompt if set
 
 COLOR_RESET="$(printf '\033[0m')"
 COLOR_BLUE="$(printf '\033[34m')"
@@ -47,15 +48,12 @@ ask() {
 confirm() {
   confirm_ans=$(ask "$1 [y/N] " "n")
   case "$confirm_ans" in
-    y | Y | yes | YES) return 0 ;;
-    *) return 1 ;;
+  y | Y | yes | YES) return 0 ;;
+  *) return 1 ;;
   esac
 }
 
-# -- step 1: header and hostname --
 header
-
-# CURRENT_HOST=$(uname -n | cut -d. -f1)
 
 [ "$(uname -s)" = "Darwin" ] || die "macOS only."
 [ "$(id -u)" -ne 0 ] || die "Do not run as root."
@@ -146,6 +144,56 @@ fi
 #   exit 1
 # }
 
+CURRENT_HOST=$(uname -n | cut -d. -f1)
+HOST=""
+if [ -n "$FORCE_HOST" ]; then
+  HOST="$FORCE_HOST"
+  ok "Host override: $HOST"
+elif [ "$CURRENT_HOST" = "megabookpro" ] || [ "$CURRENT_HOST" = "workbookpro" ]; then
+  HOST="$CURRENT_HOST"
+  ok "Hostname matches known host: $HOST"
+else
+  warn "Unknown hostname: $CURRENT_HOST"
+  say "Known hosts: megabookpro (personal), workbookpro (work)"
+  REPLY=$(ask "Which host is this? [megabookpro/workbookpro] " "")
+  case "$REPLY" in
+  megabookpro | workbookpro) HOST="$REPLY" ;;
+  *)
+    say "Aborting. Set hostname first or use --host <name>."
+    exit 1
+    ;;
+  esac
+fi
+
+# -- step 2: Command Line Tools --
+say "Checking Command Line Tools..."
+if xcode-select -p >/dev/null 2>&1; then
+  ok "CLT installed: $(xcode-select -p)"
+else
+  warn "Command Line Tools not installed."
+  say "Installing CLT (this opens a GUI dialog — follow the prompts)..."
+  xcode-select --install
+  say "Waiting for CLT installation to complete..."
+  until xcode-select -p >/dev/null 2>&1; do sleep 5; done
+  ok "CLT installed"
+fi
+
+if ! xcodebuild -license check >/dev/null 2>&1; then
+  warn "Xcode license not accepted."
+  sudo xcodebuild -license accept
+  ok "Xcode license accepted"
+fi
+
+# Rosetta 2 (Apple Silicon only)
+if [ "$(uname -m)" = "arm64" ]; then
+  if /usr/bin/pgrep -q oahd 2>/dev/null; then
+    ok "Rosetta 2 installed"
+  else
+    say "Installing Rosetta 2..."
+    softwareupdate --install-rosetta --agree-to-license
+  fi
+fi
+
 if [ -d "$DOTFILES_DIR/.git" ]; then
   info "Updating $DOTFILES_DIR..."
   git -C "$DOTFILES_DIR" pull --ff-only || info "Skipped pull (local changes or diverged branch)."
@@ -173,7 +221,6 @@ cd "$DOTFILES_DIR" || {
   info "Running mise bootstrap..."
   mise bootstrap --yes && ok "done bootstrapping."
 
-  # --- verify ----------------------------
   info "Running health checks..."
 
   if mise run doctor; then
