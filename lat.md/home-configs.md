@@ -86,7 +86,7 @@ Tools managed under `home/common/programs/`, one line each. Tools with their own
 | firefox                                 | browser                                                                                                                                       |
 | fzf                                     | fuzzy finder                                                                                                                                  |
 | ghostty                                 | terminal emulator — see [[ghostty]]                                                                                                           |
-| git                                     | git, signing, gitignore/tool-ignore; `git wt` forwards to Worktrunk `wt`                                                                      |
+| git                                     | git, signing, gitignore/tool-ignore; `git wt` forwards to Worktrunk `wt`. `mise/config/git/` is the independent non-nix twin for the staged mise migration (XDG-native: single merged `~/.config/git/config` + `ignore`, no `~/.gitconfig`; see its `AGENTS.md`) |
 | hammerspoon                             | macOS automation — see [[hammerspoon]]                                                                                                        |
 | handy                                   | macOS app (local nixpkgs backport)                                                                                                            |
 | helium-browser                          | primary browser — see [[helium]]                                                                                                              |

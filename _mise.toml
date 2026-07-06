@@ -124,11 +124,13 @@ HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env
 # -- espanso: app support path, not XDG config (validated repo-final link chain) --
 "~/Library/Application Support/espanso" = "config/espanso"
 
-# -- store-flake-source files (currently Nix-store copies; mise links working-tree sources) --
-# "~/.config/git/config" = "mise/fragments/git/config"
-"~/.gitconfig" = "home/git/gitconfig"
-"~/.gitignore" = "home/git/gitignore"
-"~/.ignore" = "home/git/tool-ignore"
+# -- git: XDG-native; single merged config, ignore is git's default excludes path.
+#    No ~/.gitconfig or ~/.gitignore in the mise world (HM-era split collapsed).
+#    NOTE: while nix still owns ~/.gitconfig it wins per-key over the XDG file;
+#    values are identical today — mirror edits until the HM git module is dropped. --
+"~/.config/git/config" = "mise/config/git/config"
+"~/.config/git/ignore" = "mise/config/git/ignore"
+"~/.ignore" = "mise/config/git/tool-ignore"
 
 # -- static tool configs (small, single-file configs previously Nix-store-backed) --
 "~/.config/bat/config" = "mise/config/bat/config"
@@ -379,6 +381,7 @@ eza = "latest"
 fd = "latest"
 fzf = "latest"
 gh = "latest"
+git-lfs = "latest"
 gitleaks = "latest"
 glow = "latest"
 go = "latest"

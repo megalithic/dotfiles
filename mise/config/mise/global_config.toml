@@ -1,5 +1,16 @@
 # Mirrored into the VM at ~/.config/mise/config.toml during provisioning.
 # Keep roughly in sync with your host ~/.config/mise/config.toml.
+
+# Shared env vars — `mise activate` exports these identically in bash, zsh, and
+# fish. Replaces nix-darwin's hosts/common.nix environment.variables.
+# Caveat: GUI/launchd apps don't inherit them (same as the nix setup).
+[env]
+EDITOR = "nvim"
+VISUAL = "nvim"
+GIT_EDITOR = "nvim"
+JJ_EDITOR = "nvim"
+MANPAGER = "nvim +Man!"
+
 [tools]
 bat = "latest"
 delta = "latest"

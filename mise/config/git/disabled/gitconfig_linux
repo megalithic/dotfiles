@@ -1,0 +1,6 @@
+# vim:foldenable:foldmethod=marker:ft=gitconfig
+
+# linux-specific config things (presumably on my work instance):
+[credential "https://github.com"]
+  helper =
+  helper = !/home/linuxbrew/.linuxbrew/bin/gh auth git-credential
