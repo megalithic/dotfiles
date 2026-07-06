@@ -37,3 +37,9 @@ end
 
 alias !! 'eval $history[1]'
 alias clear 'clear && _prompt_move_to_bottom'
+
+# Pi coding agent
+alias pic 'pi -c' # Continue last session
+alias pir 'pi -r' # Resume mode
+alias pisock pinvim # pi with socket connection
+alias pis pinvim # Short alias

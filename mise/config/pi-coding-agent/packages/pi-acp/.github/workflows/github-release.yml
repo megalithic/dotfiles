@@ -1,0 +1,45 @@
+name: Create GitHub Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate release notes
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          PREV_TAG=$(git describe --tags --abbrev=0 "${GITHUB_SHA}^" 2>/dev/null || echo "")
+
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..${GITHUB_SHA}"
+            CHANGELOG_URL="https://github.com/${GITHUB_REPOSITORY}/compare/${PREV_TAG}...${TAG}"
+          else
+            RANGE="${TAG}"
+            CHANGELOG_URL="https://github.com/${GITHUB_REPOSITORY}/commits/${TAG}"
+          fi
+
+          {
+            echo "## Changes"
+            echo ""
+            git log --pretty=format:"- %s (%h)" "$RANGE"
+            echo ""
+            echo ""
+            echo "[Full Changelog](${CHANGELOG_URL})"
+          } > release-notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          body_path: release-notes.md

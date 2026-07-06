@@ -41,3 +41,8 @@ complete -c wt -n __fish_use_subcommand -f -a '(__fish_wt_worktrees)' -d Worktre
 
 # Local tmux target option.
 complete -c wt -s t -l target -x -a 'window session' -d 'tmux target'
+
+# Pi /piview scopes (pview wrapper)
+for scope in uncommitted unpushed branch pr ticket worktrees
+    complete -c pview -f -a $scope -d "/piview $scope"
+end

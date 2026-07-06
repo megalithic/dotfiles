@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# `mise run pi:setup` — idempotent imperative pieces of the pi setup that the
+# declarative [dotfiles] section can't express:
+#   1. pinned helper binaries (sesame, plannotator) into ~/.pi/agent/bin
+#   2. settings.json merge (preserves keys pi manages at runtime)
+#   3. vendored pi-acp build (node/npm via mise)
+#   4. cleanup of redundant extension deps (pi's jiti resolves these internally)
+#   5. first-run seed of pi npm runtime packages
+set -euo pipefail
+
+dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
+pi_src="$dotfiles/mise/config/pi-coding-agent"
+agent="$HOME/.pi/agent"
+
+export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:$PATH"
+
+mkdir -p "$agent" "$agent/bin"
+
+# 1. pinned helper binaries
+"$pi_src/scripts/install-pi-tools"
+
+# 2. merge managed settings into ~/.pi/agent/settings.json
+bash "$pi_src/scripts/merge-settings.sh" "$pi_src/agent/settings.json"
+
+# 3. build vendored pi-acp when dist is missing or stale
+acp="$pi_src/packages/pi-acp"
+if [ ! -f "$acp/dist/index.js" ] ||
+  [ -n "$(find "$acp/src" "$acp/package.json" -newer "$acp/dist/index.js" -print -quit 2>/dev/null)" ]; then
+  echo "building pi-acp..."
+  (cd "$acp" && npm ci --no-audit --no-fund && npm run build)
+fi
+
+# 4. clean up redundant extension deps
+for f in "$agent/extensions/package.json" "$agent/extensions/package-lock.json"; do
+  if [ -f "$f" ]; then rm "$f"; fi
+done
+if [ -d "$agent/extensions/node_modules" ]; then rm -rf "$agent/extensions/node_modules"; fi
+
+# 5. seed pi runtime packages (settings.json "packages" entries) on fresh installs
+if [ -d "$agent/npm/node_modules" ]; then
+  echo "pi npm packages exist, skipping pi update."
+else
+  "$pi_src/bin/pi" update --extensions || true
+fi
+
+echo "pi:setup done."

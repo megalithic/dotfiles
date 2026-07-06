@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# ACP adapter wrapper (Tidewave etc.). Runs the vendored pi-acp build.
+# Build it with: mise run pi:setup
+set -euo pipefail
+
+dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
+acp_root="$dotfiles/mise/config/pi-coding-agent/packages/pi-acp"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+export PI_ACP_PI_COMMAND="${PI_ACP_PI_COMMAND:-$script_dir/pi}"
+export PI_ACP_ENABLE_EMBEDDED_CONTEXT="${PI_ACP_ENABLE_EMBEDDED_CONTEXT:-true}"
+export PI_PROFILE="${PI_PROFILE:-alt}"
+export PI_PROFILE_SOURCE="${PI_PROFILE_SOURCE:-profile-flag}"
+export PI_ACP_MODEL_PREFIXES="${PI_ACP_MODEL_PREFIXES:-alt-anthropic,alt-codex}"
+
+# node comes from mise; GUI apps launching pi-acp have no shell init.
+export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:$PATH"
+
+if [ ! -f "$acp_root/dist/index.js" ]; then
+  echo "pi-acp is not built. Run: mise run pi:setup" >&2
+  exit 1
+fi
+
+exec node "$acp_root/dist/index.js" "$@"

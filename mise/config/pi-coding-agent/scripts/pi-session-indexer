@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Launchd entrypoint: build the legacy JSON session index.
+# Needs rg + jq; launchd has a minimal PATH, so add mise shims and brew.
+set -euo pipefail
+export PATH="$HOME/.pi/agent/bin:${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:/usr/bin:/bin:$PATH"
+
+dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
+exec bash "$dotfiles/mise/config/pi-coding-agent/scripts/build-session-index.sh"

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Shell launcher for the Pi /piview review command. Port of the HM pview wrapper.
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ -z ${TMUX:-} ]]; then
+  exec "$script_dir/p"
+fi
+
+prompt="/piview"
+if [[ $# -gt 0 ]]; then
+  prompt="/piview $*"
+fi
+
+pane_count="$(tmux display-message -p '#{window_panes}' 2>/dev/null || printf '1')"
+if [[ $pane_count =~ ^[0-9]+$ ]] && ((pane_count > 1)); then
+  printf -v quoted_prompt '%q' "$prompt"
+  exec tmux new-window -c "$PWD" -n "piview" "exec $script_dir/pinvim $quoted_prompt"
+fi
+
+exec "$script_dir/pinvim" "$prompt"

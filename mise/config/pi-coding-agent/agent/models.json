@@ -1,0 +1,42 @@
+{
+  "providers": {
+    "llamacpp": {
+      "baseUrl": "http://127.0.0.1:18080/v1",
+      "apiKey": "llamacpp",
+      "api": "openai-completions",
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false
+      },
+      "models": [
+        {
+          "id": "qwen3.6",
+          "reasoning": true,
+          "input": ["text"],
+          "contextWindow": 32768,
+          "maxTokens": 8192,
+          "compat": {
+            "thinkingFormat": "qwen-chat-template"
+          }
+        },
+        {
+          "id": "deepseek14b",
+          "reasoning": true,
+          "input": ["text"],
+          "contextWindow": 32768,
+          "maxTokens": 8192,
+          "compat": {
+            "thinkingFormat": "deepseek"
+          }
+        },
+        {
+          "id": "gemma4",
+          "reasoning": false,
+          "input": ["text", "image"],
+          "contextWindow": 32768,
+          "maxTokens": 8192
+        }
+      ]
+    }
+  }
+}

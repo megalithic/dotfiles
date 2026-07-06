@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Mise-managed pi wrapper. Non-nix replacement for the Home Manager piWrapper
+# in home/common/programs/pi-coding-agent/default.nix.
+set -euo pipefail
+
+dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
+pi_src="$dotfiles/mise/config/pi-coding-agent"
+
+export PI_STATE_DIR="${PI_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/pi}"
+mkdir -p "$PI_STATE_DIR/sockets" "$PI_STATE_DIR/manifests" "$PI_STATE_DIR/pinvim"
+unset PIMUX_FROM_NVIM 2>/dev/null || true
+
+# Secrets: fnox first (mise world), opnix fallback during transition.
+config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+for secrets in "$config_home/fnox/secrets/env-vars.sh" "$config_home/opnix/secrets/env-vars.sh"; do
+  if [ -f "$secrets" ]; then
+    # shellcheck disable=SC1090
+    . "$secrets"
+    break
+  fi
+done
+
+# Derive lat.md semantic-search config from synthetic key (single source of
+# truth) so pi sessions launched outside interactive shells still see LAT_LLM_*.
+if [ -n "${SYNTHETIC_API_KEY:-}" ]; then
+  export LAT_LLM_KEY="$SYNTHETIC_API_KEY"
+  export LAT_LLM_BASE_URL="https://api.synthetic.new/openai/v1"
+  export LAT_LLM_MODEL="hf:nomic-ai/nomic-embed-text-v1.5"
+  export LAT_LLM_DIMENSIONS="768"
+fi
+
+# Patch pi-bash-live-view until upstream handles wide glyphs/ANSI truncation.
+# Without this, PTY live view can render one cell past terminal width and crash Pi.
+widget="$HOME/.pi/agent/npm/node_modules/pi-bash-live-view/widget.ts"
+widget_patch="$pi_src/patches/pi-bash-live-view/widget.ts"
+if [ -f "$widget" ] && [ -f "$widget_patch" ] && ! cmp -s "$widget_patch" "$widget"; then
+  cp "$widget_patch" "$widget"
+fi
+
+# PATH: patched lat + pinned helper binaries first, then mise shims and brew
+# for non-interactive launch contexts (GUI, launchd) that lack shell init.
+export PATH="$HOME/.pi/agent/bin:${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:$PATH"
+
+# `mise x` prepends the npm tool's own bin dir, so the real pi binary wins
+# over this wrapper regardless of PATH ordering — no recursion possible.
+exec mise x "npm:@earendil-works/pi-coding-agent" -- pi "$@"

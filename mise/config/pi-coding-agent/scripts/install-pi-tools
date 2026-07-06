@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Install pinned pi helper binaries into ~/.pi/agent/bin (idempotent, hash-verified).
+# Non-nix replacement for the sesame/plannotator derivations in the HM module.
+set -euo pipefail
+
+bin_dir="$HOME/.pi/agent/bin"
+mkdir -p "$bin_dir"
+
+download_bin() {
+  local name="$1" url="$2" sha256="$3"
+  local dst="$bin_dir/$name" tmp actual
+  if [ -x "$dst" ]; then
+    actual="$(shasum -a 256 "$dst" | awk '{print $1}')"
+    [ "$actual" = "$sha256" ] && return 0
+  fi
+  tmp="$(mktemp)"
+  curl -fsSL "$url" -o "$tmp"
+  actual="$(shasum -a 256 "$tmp" | awk '{print $1}')"
+  if [ "$actual" != "$sha256" ]; then
+    echo "$name hash mismatch: expected $sha256 got $actual" >&2
+    rm -f "$tmp"
+    exit 1
+  fi
+  install -m 0755 "$tmp" "$dst"
+  rm -f "$tmp"
+  echo "installed $name -> $dst"
+}
+
+# sesame 0.10.0 (BM25 search for Pi session files)
+download_bin sesame \
+  "https://github.com/aliou/sesame/releases/download/@aliou/sesame-cli@0.10.0/sesame-darwin-arm64" \
+  "7ae875161227c18b6367cf3643a983b27003700f37e082d1af5d1f0da854c500"
+
+# plannotator 0.20.3 (plan review/annotation UI)
+download_bin plannotator \
+  "https://github.com/backnotprop/plannotator/releases/download/v0.20.3/plannotator-darwin-arm64" \
+  "80c18e2b3e95796e85902b4e3ec92d8f7bf49df8ebfcbd12195c784fa522fdda"

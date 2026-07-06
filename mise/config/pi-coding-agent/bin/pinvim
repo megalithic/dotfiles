@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# Mise-managed pinvim launcher. Port of the Home Manager pinvim wrapper.
+# Resolves profile, guards nested Pi-pane launches, then delegates to pi.
+
+dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
+pi_src="$dotfiles/mise/config/pi-coding-agent"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Clear conflicting env from previous pinvim sessions
+unset PI_CODING_AGENT_DIR 2>/dev/null || true
+
+# Parse --profile flag and collect pi args
+EXPLICIT_PROFILE=""
+PI_ARGS=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --profile)
+      if [[ -z "${2:-}" || "$2" == --* ]]; then
+        echo "Warning: --profile requires a profile name" >&2
+        shift
+      else
+        EXPLICIT_PROFILE="$2"
+        shift 2
+      fi
+      ;;
+    *)
+      PI_ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
+# Runtime state — pinvim.ts derives sockets/, manifests/, and pinvim/ from this.
+export PI_STATE_DIR="${PI_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/pi}"
+mkdir -p "$PI_STATE_DIR/sockets" "$PI_STATE_DIR/manifests" "$PI_STATE_DIR/pinvim"
+
+# node (profile resolver) comes from mise; keep shims available for
+# non-interactive launch contexts.
+export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:$PATH"
+
+# Detect session name (pinvim.ts handles socket)
+if [ -n "${TMUX:-}" ]; then
+  PI_SESSION=$(tmux display-message -p '#{session_name}')
+else
+  PI_SESSION="default"
+fi
+export PI_SESSION
+
+# If pinvim is started from an existing Pi pane, inherited main-session
+# pinvim env must not rebind or unlink the original Nvim-owned socket.
+CURRENT_CMD=""
+START_CMD=""
+PANE_TITLE=""
+if [ -n "${TMUX:-}" ]; then
+  CURRENT_CMD=$(tmux display-message -p '#{pane_current_command}' 2>/dev/null || true)
+  START_CMD=$(tmux display-message -p '#{pane_start_command}' 2>/dev/null || true)
+  PANE_TITLE=$(tmux display-message -p '#{pane_title}' 2>/dev/null || true)
+fi
+if [ "${PIMUX_FROM_NVIM:-}" != "1" ] &&
+  [ "${PINVIM_SESSION_ROLE:-}" != "child" ] &&
+  [ -n "${PINVIM_PARENT_ID:-}${PINVIM_WORKSPACE_ID:-}${PINVIM_INSTANCE_ID:-}${PI_SOCKET:-}" ] &&
+  { [ "$CURRENT_CMD" = "pi" ] || [ "$CURRENT_CMD" = "pinvim" ] || [[ $START_CMD == *"pinvim"* ]] || [[ $START_CMD == *" pi"* ]] || [[ $PANE_TITLE == π* ]] || [[ $PANE_TITLE == pi* ]]; }; then
+  export PINVIM_NESTED_ATTACH_ONLY=1
+  export PINVIM_SESSION_ROLE="nested"
+  export PINVIM_LINK_MODE="attach-only"
+  unset PI_SOCKET 2>/dev/null || true
+fi
+
+# Profile detection: --profile > explicit envs > tmux > directoryProfiles > mega
+SETTINGS_PATH="$HOME/.pi/agent/settings.json"
+RESOLVER="$pi_src/scripts/resolve-pinvim-profile.mjs"
+RESOLVER_ARGS=(--settings "$SETTINGS_PATH" --cwd "$(pwd)" --session "$PI_SESSION")
+if [ -n "$EXPLICIT_PROFILE" ]; then
+  RESOLVER_ARGS+=(--explicit-profile "$EXPLICIT_PROFILE")
+fi
+eval "$(node "$RESOLVER" "${RESOLVER_ARGS[@]}")"
+
+# Delegate to pi wrapper (which handles secrets, PATH, state dirs)
+exec "$script_dir/pi" "${PI_ARGS[@]}"

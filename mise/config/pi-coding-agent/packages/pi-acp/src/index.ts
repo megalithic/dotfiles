@@ -1,0 +1,127 @@
+import { AgentSideConnection, ndJsonStream } from '@agentclientprotocol/sdk'
+import { PiAcpAgent } from './acp/agent.js'
+import { getPiCommand, shouldUseShellForPiCommand } from './pi-rpc/command.js'
+
+/**
+ * Normalize incoming ACP JSON-RPC messages from Tidewave and other clients
+ * that may use non-standard field names.
+ *
+ * Known quirks:
+ * - Tidewave sends `content` instead of `prompt` in session/prompt.
+ *   The ACP spec requires `prompt` (array of ContentBlock).
+ */
+function normalizeAcpMessage(line: string): string {
+  try {
+    const msg = JSON.parse(line)
+    if (
+      msg?.method === 'session/prompt' &&
+      msg?.params &&
+      !Array.isArray(msg.params.prompt) &&
+      Array.isArray(msg.params.content)
+    ) {
+      msg.params.prompt = msg.params.content
+      delete msg.params.content
+      return JSON.stringify(msg)
+    }
+  } catch {
+    // not valid JSON, pass through
+  }
+  return line
+}
+// Terminal Auth entrypoint. The ACP client launches the agent with `--terminal-login`.
+if (process.argv.includes('--terminal-login')) {
+  const { spawnSync } = await import('node:child_process')
+  const cmd = getPiCommand(process.env.PI_ACP_PI_COMMAND)
+  const res = spawnSync(cmd, [], {
+    stdio: 'inherit',
+    env: process.env,
+    shell: shouldUseShellForPiCommand(cmd)
+  })
+
+  if ((res as any).error && (res as any).error.code === 'ENOENT') {
+    process.stderr.write(
+      `pi-acp: could not start pi (command not found: ${cmd}). Install it via \`npm install -g @earendil-works/pi-coding-agent\` or ensure \`pi\` is on your PATH.\n`
+    )
+    process.exit(1)
+  }
+
+  process.exit(typeof res.status === 'number' ? res.status : 1)
+}
+
+const input = new WritableStream<Uint8Array>({
+  write(chunk) {
+    return new Promise<void>(resolve => {
+      if ((process.stdout as any).destroyed || !process.stdout.writable) return resolve()
+
+      try {
+        process.stdout.write(chunk, err => {
+          void err
+          resolve()
+        })
+      } catch {
+        // Common: ERR_STREAM_DESTROYED ("Cannot call write after a stream was destroyed").
+        resolve()
+      }
+    })
+  }
+})
+
+const output = new ReadableStream<Uint8Array>({
+  start(controller) {
+    const encoder = new TextEncoder()
+    let buffer = ''
+    process.stdin.on('data', (chunk: Buffer) => {
+      buffer += chunk.toString()
+      const lines = buffer.split('\n')
+      // Keep the last (possibly incomplete) fragment in the buffer
+      buffer = lines.pop()!
+      for (const line of lines) {
+        const normalized = normalizeAcpMessage(line)
+        controller.enqueue(encoder.encode(normalized + '\n'))
+      }
+    })
+    process.stdin.on('end', () => {
+      // Flush any remaining buffered data
+      if (buffer.trim()) {
+        const normalized = normalizeAcpMessage(buffer)
+        controller.enqueue(encoder.encode(normalized + '\n'))
+      }
+      controller.close()
+    })
+    process.stdin.on('error', err => controller.error(err))
+  }
+})
+
+const stream = ndJsonStream(input, output)
+
+const agent = new AgentSideConnection(conn => new PiAcpAgent(conn), stream)
+
+function shutdown() {
+  try {
+    // Best-effort: dispose session subprocesses when the client disconnects.
+    ;(agent as any)?.agent?.dispose?.()
+  } catch {
+    // ignore
+  }
+  try {
+    process.exit(0)
+  } catch {
+    // ignore
+  }
+}
+
+process.stdin.on('end', shutdown)
+process.stdin.on('close', shutdown)
+
+process.stdin.resume()
+process.on('SIGINT', shutdown)
+process.on('SIGTERM', shutdown)
+
+// Avoid crashing if the client closes stdout early.
+process.stdout.on('error', () => {
+  try {
+    process.exit(0)
+  } catch {
+    // ignore
+  }
+})

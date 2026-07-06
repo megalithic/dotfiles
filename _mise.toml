@@ -59,13 +59,32 @@ PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
 "brew:zsh" = "latest"
 "brew:openssl@3" = "latest" # required by Python (ssl module) and networking Rust crates
 "brew:pkgconf" = "latest"   # helps compilers locate openssl and other libs when building from source
+"brew:poppler" = "latest"   # pdftotext etc. — pi wrapper expects poppler-utils on PATH
 
 # brew casks using mise's `brew-cask:<formulae>` notation
 "brew-cask:hammerspoon" = "latest"
 
 [dotfiles]
 # "~/.config" = "mise/config"
-"~/.pi" = "mise/config/pi-coding-agent"
+
+# -- pi coding agent: managed subset of ~/.pi/agent; runtime state (sessions/,
+#    npm/, auth.json, settings.json) stays unmanaged. settings.json is merged
+#    by `mise run pi:setup`, not linked. --
+"~/.pi/agent/AGENTS.md" = "mise/config/pi-coding-agent/agent/AGENTS.md"
+"~/.pi/agent/APPEND_SYSTEM.md" = "mise/config/pi-coding-agent/agent/APPEND_SYSTEM.md"
+"~/.pi/agent/keybindings.json" = "mise/config/pi-coding-agent/agent/keybindings.json"
+"~/.pi/agent/models.json" = "mise/config/pi-coding-agent/agent/models.json"
+"~/.pi/agent/mcp.json" = "mise/config/pi-coding-agent/agent/mcp.json"
+"~/.pi/agent/extensions" = { source = "mise/config/pi-coding-agent/agent/extensions", mode = "symlink-each" }
+"~/.pi/agent/skills" = { source = "mise/config/pi-coding-agent/agent/skills", mode = "symlink-each" }
+"~/.pi/agent/prompts" = { source = "mise/config/pi-coding-agent/agent/prompts", mode = "symlink-each" }
+"~/.pi/agent/agents" = { source = "mise/config/pi-coding-agent/agent/agents", mode = "symlink-each" }
+"~/.local/bin/pi" = "mise/config/pi-coding-agent/bin/pi"
+"~/.local/bin/pinvim" = "mise/config/pi-coding-agent/bin/pinvim"
+"~/.local/bin/p" = "mise/config/pi-coding-agent/bin/p"
+"~/.local/bin/pview" = "mise/config/pi-coding-agent/bin/pview"
+"~/.local/bin/pi-acp" = "mise/config/pi-coding-agent/bin/pi-acp"
+"~/.local/bin/work-tickets" = "mise/config/pi-coding-agent/bin/work-tickets"
 # "~/Library/Developer/Xcode/UserData/FontAndColorThemes/tokyo-night.xccolortheme" = ".config/xcode/tokyo-night.xccolortheme"
 "~/.config/mise/config.toml" = "mise/config/mise/global_config.toml"
 "~/.config/fnox/config.toml" = "mise/config/fnox/config.toml"
@@ -83,7 +102,7 @@ PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
 # "~/.local/share/hammerspoon/fragments/shade-next.lua" = "mise/fragments/hammerspoon/shade-next.lua"
 # "~/.local/share/tmux/nix.conf" = "mise/fragments/tmux/nix.conf"
 # "~/.config/shade-next/config.toml" = "mise/fragments/shade-next/config.toml"
-"~/.config/sesame/config.jsonc" = "mise/fragments/sesame/config.jsonc"
+"~/.config/sesame/config.jsonc" = { source = "mise/fragments/sesame/config.jsonc", mode = "template" }
 # "~/.config/process-compose/shortcuts.yaml" = "mise/fragments/process-compose/shortcuts.yaml"
 # "~/.config/process-compose/theme.yaml" = "mise/fragments/process-compose/theme.yaml"
 
@@ -246,12 +265,19 @@ stdout_path = "~/Library/Logs/llama-cpp/stdout.log"
 stderr_path = "~/Library/Logs/llama-cpp/stderr.log"
 
 [bootstrap.macos.launchd.agents."com.megadots.sesame-session-indexer"]
-program = "~/.dotfiles/scripts/mise/sesame-session-indexer"
+program = "~/.dotfiles/mise/config/pi-coding-agent/scripts/sesame-session-indexer"
 args = ["watch", "--interval", "30"]
 run_at_load = true
 keep_alive = true
 stdout_path = "~/.cache/sesame-session-indexer.log"
 stderr_path = "~/.cache/sesame-session-indexer.log"
+
+[bootstrap.macos.launchd.agents."com.megadots.pi-session-indexer"]
+program = "~/.dotfiles/mise/config/pi-coding-agent/scripts/pi-session-indexer"
+run_at_load = true
+start_interval = 7200
+stdout_path = "~/.cache/pi-session-indexer.log"
+stderr_path = "~/.cache/pi-session-indexer.log"
 
 # [bootstrap.macos.keyboard]
 # key_repeat = 2
@@ -286,6 +312,10 @@ run = [
   "brew bundle --file={{config_root}}/Brewfile",
   "pre-commit install --install-hooks",
 ]
+
+[tasks."pi:setup"]
+description = "Idempotent pi agent setup: pinned tools, settings merge, pi-acp build, extension seed"
+run = "{{config_root}}/mise/config/pi-coding-agent/scripts/setup"
 
 [plugins]
 nix = "https://github.com/jbadeau/mise-nix.git"

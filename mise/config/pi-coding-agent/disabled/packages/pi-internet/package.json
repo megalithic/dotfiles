@@ -1,0 +1,8 @@
+{
+  "name": "pi-internet-wrapper",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "pi-internet": "github:JJGO/pi-internet"
+  }
+}

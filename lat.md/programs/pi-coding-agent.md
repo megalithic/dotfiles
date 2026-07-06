@@ -2,6 +2,14 @@
 
 This file covers how Pi is packaged, wrapped, configured, and extended in this repo. The module lives at `home/common/programs/pi-coding-agent/`.
 
+## Parallel mise configuration
+
+`mise/config/pi-coding-agent/` is an independent non-nix twin of the Home Manager module for the staged mise migration (`_mise.toml`, inactive until renamed). It is a copy, not shared source: changes must be mirrored manually while both exist.
+
+The mise tree keeps the same behavior with different mechanics: `agent/` holds the managed subset of `~/.pi/agent` applied through `[dotfiles]` symlink and `symlink-each` entries; `bin/` holds plain-bash ports of the `pi`, `pinvim`, `p`, `pview`, `pi-acp`, and `work-tickets` wrappers linked into `~/.local/bin`; `scripts/setup` is the `pi:setup` mise task covering the imperative pieces (sha256-pinned sesame/plannotator installs into `~/.pi/agent/bin`, jq settings merge, local `npm ci && npm run build` of the vendored pi-acp, extension-deps cleanup, first-run `pi update --extensions`). The `pi` wrapper resolves the CLI through `mise x npm:@earendil-works/pi-coding-agent -- pi`, prefers fnox secrets with an opnix fallback, and applies the same live-view widget patch. Disabled entries live in `disabled/` instead of using the `_` name-prefix convention because `symlink-each` links every entry. Session indexers are declared as `[bootstrap.macos.launchd.agents]` in `_mise.toml`.
+
+The mise dotfiles must not be applied while Home Manager still owns `~/.pi/agent/*`; mise re-points HM symlinks and the next `just home` points them back.
+
 ## Package source and wrapper
 
 Pi comes from the `pi-nix` flake input (`inputs.pi-nix.packages.${system}.coding-agent`) and is exposed through `programs.pi.coding-agent.package`.
