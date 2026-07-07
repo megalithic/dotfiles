@@ -118,7 +118,7 @@ Tools managed under `home/common/programs/`, one line each. Tools with their own
 | surfingkeys                             | browser keyboard nav (enabled on Tidewave)                                                                                                    |
 | television                              | fuzzy TUI                                                                                                                                     |
 | tmux                                    | terminal multiplexer; layouts via `ftm`                                                                                                       |
-| worktrunk                               | worktree manager (cached `pkgs.worktrunk`); fish integration owned locally — see Fish shell helpers, `bin/wt-tmux-target`, `bin/wt-tail-logs` |
+| worktrunk                               | worktree manager (cached `pkgs.worktrunk`); `mise/config/worktrunk/` is the independent non-nix twin (config.toml + `[tools]` entry; see its `AGENTS.md`); fish integration owned locally — see Fish shell helpers, `bin/wt-tmux-target`, `bin/wt-tail-logs` |
 | yazi                                    | file manager + plugins                                                                                                                        |
 | yubico-authenticator                    | Yubico Authenticator GUI app from brew-nix cask                                                                                               |
 | zoxide                                  | directory jumper                                                                                                                              |

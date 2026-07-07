@@ -99,6 +99,8 @@ HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env
 "~/.config/fish" = "mise/config/fish"
 "~/.config/fzf" = "mise/config/fzf"
 "~/.config/jj/config.toml" = "mise/config/jj/config.toml"
+# worktrunk: per-file — approvals.toml{,.lock} in the same dir are mutable runtime state
+"~/.config/worktrunk/config.toml" = "mise/config/worktrunk/config.toml"
 "~/.config/ghostty" = "mise/config/ghostty"
 "~/.config/hammerspoon" = "mise/config/hammerspoon"
 "~/.config/kitty" = "mise/config/kitty"
@@ -412,6 +414,7 @@ tokei = "latest"
 tree-sitter = "latest"
 usage = "latest"
 uv = "latest"
+worktrunk = "latest"
 zoxide = "latest"
 
 # hk linters (see hk.pkl); typos/yamlfmt ship no shell completions, so they stay bare.
