@@ -11,6 +11,10 @@
 //     hot-plug, and when another app flips mute behind our back.
 //   - Menubar: white slashed mic when muted, white mic on red pill when hot.
 //     Menu picks the mode; Quit unmutes everything and exits.
+//   - Subscribes to media-presenced's socket (~/.local/state/media-presence/sock)
+//     when available: any inMeeting transition forces push-to-talk mode, so
+//     meetings never start with a hot mic. Reconnects every 5s; miccheck works
+//     standalone when the presence daemon is absent. Disable with --no-presence.
 //   - Unix socket (~/.local/state/miccheck/sock) accepts line-delimited JSON:
 //       {"cmd":"get"}                                  -> {"ok":true,"mode":...,"live":...}
 //       {"cmd":"set-mode","mode":"push-to-talk"}       -> {"ok":true}
@@ -251,10 +255,19 @@ final class ChordMonitor {
     private var pending: DispatchWorkItem?
     private(set) var active = false
 
+    private var requestedAccess = false
+
     func start() -> Bool {
-        if !CGPreflightListenEventAccess() {
-            log("input-monitoring not granted; requesting (approve in System Settings, then restart agent)")
-            _ = CGRequestListenEventAccess()
+        // tapCreate can succeed without Input Monitoring yet deliver zero
+        // events (silent failure). Gate on the preflight so the retry loop
+        // keeps polling until the grant actually exists.
+        guard CGPreflightListenEventAccess() else {
+            if !requestedAccess {
+                requestedAccess = true
+                log("input-monitoring not granted; requesting (approve in System Settings)")
+                _ = CGRequestListenEventAccess()
+            }
+            return false
         }
         let mask = (CGEventMask(1) << CGEventType.flagsChanged.rawValue)
             | (CGEventMask(1) << CGEventType.keyDown.rawValue)
@@ -437,6 +450,113 @@ final class SocketServer {
     }
 }
 
+// MARK: - PresenceClient
+//
+// Client for media-presenced's unix socket. Every broadcast line carries the
+// full presence object; we watch inMeeting transitions and force push-to-talk
+// so meetings never start with a hot mic (the job Hammerspoon's
+// watchers/media-presence.lua used to do via miccheck.setPTTMode). Music
+// pause / DND stay in Hammerspoon. Reconnects with a 5s backoff.
+
+final class PresenceClient {
+    private let path: String
+    private let q = DispatchQueue(label: "miccheck.presence")
+    private var fd: Int32 = -1
+    private var source: DispatchSourceRead?
+    private var buffer = Data()
+    private var lastInMeeting: Bool?
+    private var loggedWaiting = false
+
+    /// Called on main with the new inMeeting value (transitions only).
+    var onMeetingTransition: ((Bool) -> Void)?
+
+    init(path: String) { self.path = path }
+
+    func start() { q.async { self.connect() } }
+
+    private func connect() {
+        fd = socket(AF_UNIX, SOCK_STREAM, 0)
+        guard fd >= 0 else { scheduleReconnect(); return }
+
+        var addr = sockaddr_un()
+        addr.sun_family = sa_family_t(AF_UNIX)
+        let cap = MemoryLayout.size(ofValue: addr.sun_path)
+        let bytes = Array(path.utf8)
+        guard bytes.count < cap else { close(fd); fd = -1; return }
+        withUnsafeMutablePointer(to: &addr.sun_path) { ptr in
+            ptr.withMemoryRebound(to: CChar.self, capacity: cap) { dst in
+                for i in 0..<bytes.count { dst[i] = CChar(bitPattern: bytes[i]) }
+                dst[bytes.count] = 0
+            }
+        }
+        let len = socklen_t(MemoryLayout<sockaddr_un>.size)
+        let ok = withUnsafePointer(to: &addr) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { Darwin.connect(fd, $0, len) }
+        }
+        guard ok == 0 else {
+            close(fd)
+            fd = -1
+            if !loggedWaiting {
+                loggedWaiting = true
+                log("presence: media-presenced socket unavailable at \(path); retrying every 5s")
+            }
+            scheduleReconnect()
+            return
+        }
+
+        loggedWaiting = false
+        buffer = Data()
+        let src = DispatchSource.makeReadSource(fileDescriptor: fd, queue: q)
+        src.setEventHandler { [weak self] in self?.readData() }
+        src.setCancelHandler { [fd = self.fd] in if fd >= 0 { close(fd) } }
+        source = src
+        src.resume()
+
+        // Seed current state so we only react to real transitions.
+        let get = Array("{\"cmd\":\"get\"}\n".utf8)
+        _ = get.withUnsafeBytes { Foundation.write(fd, $0.baseAddress, get.count) }
+        log("presence: connected to \(path)")
+    }
+
+    private func disconnect() {
+        source?.cancel()
+        source = nil
+        fd = -1
+        lastInMeeting = nil
+    }
+
+    private func scheduleReconnect() {
+        q.asyncAfter(deadline: .now() + 5) { [weak self] in self?.connect() }
+    }
+
+    private func readData() {
+        var tmp = [UInt8](repeating: 0, count: 4096)
+        let n = Foundation.read(fd, &tmp, tmp.count)
+        if n <= 0 {
+            log("presence: disconnected; reconnecting")
+            disconnect()
+            scheduleReconnect()
+            return
+        }
+        buffer.append(contentsOf: tmp[0..<n])
+        while let idx = buffer.firstIndex(of: 0x0A) {
+            let line = buffer.subdata(in: buffer.startIndex..<idx)
+            buffer.removeSubrange(buffer.startIndex...idx)
+            handleLine(line)
+        }
+    }
+
+    private func handleLine(_ line: Data) {
+        guard let obj = try? JSONSerialization.jsonObject(with: line) as? [String: Any],
+              let inMeeting = obj["inMeeting"] as? Bool else { return }
+        guard lastInMeeting != inMeeting else { return }
+        let prev = lastInMeeting
+        lastInMeeting = inMeeting
+        guard prev != nil else { return } // first snapshot seeds only
+        DispatchQueue.main.async { self.onMeetingTransition?(inMeeting) }
+    }
+}
+
 // MARK: - Icons
 
 private extension NSImage {
@@ -490,6 +610,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let chord = ChordMonitor()
     private var hotkey: HotKey?
     private var server: SocketServer?
+    private var presence: PresenceClient?
     private var statusItem: NSStatusItem!
     private var tapRetryTimer: Timer?
     private var signalSources: [DispatchSourceSignal] = []
@@ -504,6 +625,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let args = CommandLine.arguments
         if let i = args.firstIndex(of: "--socket"), i + 1 < args.count { path = args[i + 1] }
         return path
+    }()
+
+    private let presenceSocketPath: String? = {
+        let args = CommandLine.arguments
+        if args.contains("--no-presence") { return nil }
+        if let i = args.firstIndex(of: "--presence-socket"), i + 1 < args.count { return args[i + 1] }
+        return NSHomeDirectory() + "/.local/state/media-presence/sock"
     }()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -532,6 +660,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             log("socket listening at \(socketPath)")
         } catch {
             log("socket failed: \(error)")
+        }
+
+        if let presencePath = presenceSocketPath {
+            let client = PresenceClient(path: presencePath)
+            client.onMeetingTransition = { [weak self] inMeeting in
+                guard let self else { return }
+                log("presence: inMeeting=\(inMeeting) -> push-to-talk")
+                self.setMode(.pushToTalk)
+            }
+            client.start()
+            presence = client
         }
 
         installSignalHandlers()
@@ -602,7 +741,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             log("event tap active")
             return
         }
-        log("event tap unavailable (grant Input Monitoring to miccheckd, then it retries every 5s)")
+        log("event tap waiting for Input Monitoring grant (retrying every 5s; if the chord stays dead after granting, kickstart the agent)")
         tapRetryTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] t in
             guard let self else { t.invalidate(); return }
             if self.chord.start() {

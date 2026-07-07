@@ -339,6 +339,16 @@ start_interval = 7200
 stdout_path = "~/.cache/pi-session-indexer.log"
 stderr_path = "~/.cache/pi-session-indexer.log"
 
+# media-presence: meeting/AV presence daemon (bin/media-presenced, single-file
+# swift script, no build step). Defaults match the nix agent's args
+# (--socket ~/.local/state/media-presence/sock --cdp-port 9223).
+[bootstrap.macos.launchd.agents."com.megadots.media-presenced"]
+program = "~/.dotfiles/bin/media-presenced"
+run_at_load = true
+keep_alive = true
+stdout_path = "~/Library/Logs/media-presence/stdout.log"
+stderr_path = "~/Library/Logs/media-presence/stderr.log"
+
 # miccheck: menubar push-to-talk/push-to-mute app (bin/miccheck.swift).
 # Wrapper checks the compiled binary exists (built by `mise run miccheck:setup`).
 [bootstrap.macos.launchd.agents."com.megadots.miccheck"]
