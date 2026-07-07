@@ -64,6 +64,7 @@ format = "$number$symbol"
 
 
 [custom.nix_shell]
+ignore_timeout = true
 symbol = "󱄅"
 # shell = ["bash", "--noprofile", "--norc"]
 command = '''
@@ -79,6 +80,7 @@ when = "[[ -n $IN_NIX_SHELL ]]"
 # format = '[[󱄅](#ffffff) $name$state](#aaaaaa) '
 
 [custom.sudo]
+ignore_timeout = true
 # shell = ["bash", "--noprofile", "--norc"]
 description = "valid sudo timestamp marker"
 command = "echo -n ''"
