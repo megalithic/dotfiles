@@ -12,11 +12,33 @@ The existing logic — `bindings.lua` `loadMeeting` (hyper+z) and `watchers/came
 
 ## Detection layers
 
-Two layers: an OS-level capture layer (mic/camera) and a CDP-based browser meeting layer.
+Three layers: an OS-level capture layer (mic/camera), a CDP-based browser meeting layer, and a Slack huddle resolver plus a replayd-based screenshare resolver.
 
 The capture layer always works: microphone in-use plus owner via CoreAudio process objects (`kAudioHardwarePropertyProcessObjectList`, `kAudioProcessPropertyIsRunningInput`, `kAudioProcessPropertyPID`/`BundleID`), and camera in-use via CoreMediaIO `kAudioDevicePropertyDeviceIsRunningSomewhere`. Both install property listeners plus a 5s safety-net refresh.
 
 The meeting layer detects supported browser meeting URLs through Chrome DevTools Protocol against Helium on port 9223. `Target.setDiscoverTargets` discovers `meet.google.com` and `telehealth.px.athena.io` page targets event-driven, then a debounced (1.2s) `Runtime.evaluate` classifies lobby vs joined (Leave-call/End-call vs Join-now/Join-visit button), in-app mic/camera state, screen-share (`You are presenting`/stop sharing), and Google Meet participant names (from `Mute X's microphone` aria-labels). CDP is the authority because TCC/replayd logs are unreliable for already-granted apps. Meet fires `Target.targetInfoChanged` in a tight loop, so classify is debounced and deduped by url+title signature. Some meeting URLs (currently Athena telehealth) can fall back to `meetingState: camera-active`: if the URL prefix matches the fallback list and macOS reports the camera active, the daemon treats the page as an active meeting even when DOM classification is unknown.
+
+### Slack huddle resolver
+
+When the capture layer detects a mic owner whose bundle ID starts with `com.tinyspeck.slackmacgap` (the Slack app or its helper), the engine treats it as a meeting.
+
+This sets `inMeeting=true`, `meetingApp="com.tinyspeck.slackmacgap"`, `meetingState="joined"`. This triggers miccheckd's push-to-talk enforcement for Slack huddles without any CDP involvement. No video required — the mic-owner signal alone is sufficient (validated live 2026-07-07).
+
+The engine fuses Slack and CDP meeting sources: CDP takes priority when both are active (hyper+z focus works for browser meetings but not for Slack), so meetingApp stays on Helium while a Meet tab is also in a meeting. When Slack is the sole meeting source, `meetingApp` and `inMeeting` reflect the huddle, and `meeting.left` fires when the Slack mic owner disappears.
+
+### Screenshare resolver (sender-side)
+
+A `ScreenshareMonitor` spawns an OSLog stream (`/usr/bin/log stream --predicate` filtering on `process == "replayd"` and `subsystem CONTAINS[c] "screencapturekit"`). No TCC grants are required for log-stream access.
+
+**Start**: `SCScreenCaptureSession startWithError:` or `updateScreenCaptureDidStart:` sets `sharing=true`.
+
+**Heartbeat**: `updateExistingDisplayStreamCapturesWithAuditTokenValues:` fires every ~10s while capturing. The monitor resets a watchdog timer on each heartbeat.
+
+**Stop**: when the heartbeat gap exceeds 25s, `sharing` flips to `false`. Method-name stop events (`stopAndInvalidateWithStreamData:userStopped:`) are captured as hints but are not authoritative — Slack renegotiates streams during startup, producing spurious stop-then-restart sequences that would false-fire. The heartbeat-gap discriminator avoids this.
+
+Attribution via replayd client PID → bundle ID (`processNewConnection ... PID: <pid>`) is noted for future enhancement.
+
+Sharing transitions emit `screenshare.start`/`screenshare.stop`, which Hammerspoon's watcher translates to DND enforcement — closing the huddle-screenshare → DND gap.
 
 ## Concurrency
 
@@ -54,6 +76,8 @@ The daemon needs no TCC grants: it reads device state (CoreAudio/CoreMediaIO IsR
 
 ## Status and remaining work
 
-Working: Google Meet, Athena telehealth, plus capture layer, running as a LaunchAgent from `bin/media-presenced`, Hammerspoon consumer wired (ptt mute, music pause, DND on screenshare, hyper+z repointed to `{cmd:focus}`).
+Working: Google Meet, Athena telehealth, Slack huddle resolver (capture-layer mic owner), screenshare resolver (replayd heartbeat), capture layer, running as a LaunchAgent from `bin/media-presenced`.
 
-Not yet done: Slack huddle resolver, native-app (Zoom/Teams) resolver, camera owner attribution (currently on/off only), and end-to-end live validation of `meeting.left`/screenshare-stop/lobby-to-joined transitions. Tracked in ticket dot-717t.
+Also working: Hammerspoon consumer wired (ptt mute, music pause, DND on screenshare, hyper+z repointed to `{cmd:focus}`).
+
+Not yet done: native-app (Zoom/Teams) resolver, camera owner attribution (currently on/off only), and end-to-end live validation of `meeting.left`/screenshare-stop/lobby-to-joined transitions. Tracked in ticket dot-717t.

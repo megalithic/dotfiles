@@ -8,7 +8,7 @@ Hold cmd+opt to activate the chord: unmute in push-to-talk mode, mute in push-to
 
 The chord starts only on an exact cmd+opt (no shift/ctrl) and arms a 500ms debounce; any keyDown other than `p` during the debounce cancels activation so chords like cmd+opt+space never trip the mic. Once active, adding shift keeps the mic hot — this lets a Handy.app transcription chord (cmd+opt+shift) run while the mic stays open. Releasing cmd or opt (or adding ctrl) ends the chord. cmd+opt+p is a Carbon `RegisterEventHotKey` (swallowed system-wide); the chord itself uses a listen-only CGEvent tap on flagsChanged+keyDown, which requires an Input Monitoring TCC grant.
 
-`CGEvent.tapCreate` succeeds even without the grant but then silently delivers zero events, so startup gates on `CGPreflightListenEventAccess()` and retries every 5s until the grant exists (requesting it once). This self-heals the launch-before-grant case; if events still never arrive after granting, kickstart the agent.
+`CGEvent.tapCreate` succeeds even without the grant but then silently delivers zero events, so startup tries the tap directly — `CGPreflightListenEventAccess()` is known to return stale false even after the TCC grant exists (Daniel Raffel 2026-02, Standlock production probe pattern). If the tap creation fails, we request access and retry every 5s until it succeeds.
 
 ## Mute semantics
 

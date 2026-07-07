@@ -527,19 +527,144 @@ final class CDPClient: NSObject, URLSessionWebSocketDelegate {
     }
 }
 
+// MARK: - Screenshare (replayd log stream)
+// No TCC needed: log stream predicates on replayd/ScreenCaptureKit
+// require no grants. Detects sender-side screen sharing via the replayd
+// heartbeat pattern validated 2026-07-07 in a live Slack huddle capture.
+//
+// Start: SCScreenCaptureSession startWithError / updateScreenCaptureDidStart
+// Heartbeat (10s): updateExistingDisplayStreamCapturesWithAuditTokenValues
+// Stop: heartbeat gap > 25s (method-name stops unreliable — Slack churns)
+
+final class ScreenshareMonitor {
+    var onSharingChanged: ((Bool) -> Void)?
+
+    private let queue = DispatchQueue(label: "media-presenced.screenshare")
+    private var process: Process?
+    private var heartbeatTimer: DispatchSourceTimer?
+    private var lastHeartbeat = Date.distantPast
+    private var sharing = false
+    private let heartbeatTimeout: TimeInterval = 25
+
+    func start() {
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: "/usr/bin/log")
+        proc.arguments = [
+            "stream",
+            "--style", "compact",
+            "--predicate",
+            "(process == \"replayd\") OR (subsystem CONTAINS[c] \"screencapturekit\")",
+        ]
+        let pipe = Pipe()
+        proc.standardOutput = pipe
+        proc.standardError = FileHandle.nullDevice
+        proc.terminationHandler = { [weak self] _ in
+            self?.queue.async { self?.restartAfterDelay() }
+        }
+        do {
+            try proc.run()
+            process = proc
+        } catch {
+            restartAfterDelay()
+            return
+        }
+        readPipe(pipe)
+        startHeartbeatWatchdog()
+    }
+
+    func stop() {
+        heartbeatTimer?.cancel()
+        heartbeatTimer = nil
+        process?.terminate()
+        process = nil
+        // Don't emit false on teardown — caller will handle.
+    }
+
+    private func restartAfterDelay() {
+        guard process != nil else { return } // already stopped
+        queue.asyncAfter(deadline: .now() + 10) { [weak self] in self?.start() }
+    }
+
+    // MARK: log parsing
+
+    private func readPipe(_ pipe: Pipe) {
+        pipe.fileHandleForReading.readabilityHandler = { [weak self] h in
+            guard let self else { return }
+            let data = h.availableData
+            guard !data.isEmpty else { return }
+            self.queue.async { self.handleData(data) }
+        }
+    }
+
+    private func handleData(_ data: Data) {
+        guard let text = String(data: data, encoding: .utf8) else { return }
+        for line in text.components(separatedBy: "\n") where !line.isEmpty {
+            parseLine(line)
+        }
+    }
+
+    private func parseLine(_ line: String) {
+        if line.contains("SCScreenCaptureSession startWithError:") ||
+           line.contains("updateScreenCaptureDidStart:") {
+            setSharing(true)
+        }
+        if line.contains("updateExistingDisplayStreamCaptures") {
+            lastHeartbeat = Date()
+        }
+        // Method-name stop is a hint but not authoritative — heartbeat gap is.
+        if line.contains("stopAndInvalidateWithStreamData:userStopped:") {
+            // Record the stop time; if heartbeat doesn't resume within
+            // heartbeatTimeout, the watchdog will flip sharing.
+            lastHeartbeat = Date.distantPast // force watchdog to reevaluate
+        }
+    }
+
+    // MARK: heartbeat watchdog
+
+    private func startHeartbeatWatchdog() {
+        let t = DispatchSource.makeTimerSource(queue: queue)
+        t.schedule(deadline: .now() + heartbeatTimeout, repeating: 5)
+        t.setEventHandler { [weak self] in self?.checkHeartbeat() }
+        t.resume()
+        heartbeatTimer = t
+    }
+
+    private func checkHeartbeat() {
+        let elapsed = Date().timeIntervalSince(lastHeartbeat)
+        if sharing && elapsed > heartbeatTimeout {
+            setSharing(false)
+        }
+        // If not sharing but the lastHeartbeat was recent (< heartbeatTimeout),
+        // we might have missed a start signal.  Don't auto-restart — start
+        // must be explicit.
+    }
+
+    private func setSharing(_ newSharing: Bool) {
+        guard sharing != newSharing else { return }
+        sharing = newSharing
+        if newSharing {
+            lastHeartbeat = Date()
+        }
+        let msg = "screenshare: \(newSharing ? "start" : "stop")"
+        FileHandle.standardError.write(Data((msg + "\n").utf8))
+        DispatchQueue.main.async { [weak self] in
+            self?.onSharingChanged?(newSharing)
+        }
+    }
+}
+
 // MARK: - State
-// State machine: fuse capture layer (mic/cam) + CDP layer (Meet) into a single
-// presence model, emit discrete events, and expose the "current meeting" record
-// that Hammerspoon's hyper+z uses to focus the right window/tab.
+// State machine: fuse capture layer (mic/cam) + CDP layer (Meet) + Slack
+// huddle resolver + screenshare resolver into a single presence model.
 
 struct Presence: Codable, Equatable {
     // capture layer
     var micActive = false
     var micOwners: [String] = []        // bundle ids
     var cameraActive = false
-    // meeting layer (browser meeting URLs via CDP)
-    var inMeeting = false               // lobby or joined
-    var meetingState = "idle"           // idle | lobby | joined
+    // meeting layer (CDP + Slack huddle)
+    var inMeeting = false               // any meeting source active
+    var meetingState = "idle"           // idle | lobby | joined | camera-active
     var sharing = false
     var meetingApp = ""                 // bundle id owning the meeting
     var meetingURL = ""
@@ -554,11 +679,16 @@ final class PresenceEngine {
     private(set) var presence = Presence()
     var onEvent: ((_ event: String, _ presence: Presence) -> Void)?
 
-    private let meetBundle = "net.imput.helium"  // browser hosting Meet tabs
+    private let meetBundle = "net.imput.helium"
+    private let slackBundle = "com.tinyspeck.slackmacgap"
     private let cameraActiveFallbackURLPrefixes = [
         "https://telehealth.px.athena.io/",
     ]
     private let cameraActiveFallbackState = "camera-active"
+
+    // Source-level flags (engine-private; "inMeeting" is derived from these).
+    private var cdpMeetingActive = false
+    private var slackHuddleActive = false
 
     func applyCapture(_ c: CaptureState) {
         var p = presence
@@ -567,6 +697,11 @@ final class PresenceEngine {
         p.micActive = c.micActive
         p.micOwners = c.micOwners.map { $0.bundleID }
         p.cameraActive = c.cameraActive
+
+        // Slack huddle resolver: if mic owner has Slack bundle, treat as meeting.
+        slackHuddleActive = c.micOwners.contains { $0.bundleID.hasPrefix(slackBundle) }
+        reconcileMeeting(&p)
+
         applyCameraActiveFallback(&p)
         commit(p)
         if p.micActive != micWas { emit(p.micActive ? "mic.on" : "mic.off") }
@@ -578,37 +713,46 @@ final class PresenceEngine {
         var p = presence
         switch event {
         case "meet.left":
-            // Only clear if this was the tracked meeting target (or none tracked).
             if p.meetingTargetId.isEmpty || p.meetingTargetId == m.targetId {
                 let wasSharing = p.sharing
-                p = clearMeeting(p)
+                cdpMeetingActive = false
+                p.inAppMic = "?"
+                p.inAppCamera = "?"
+                p.participants = []
+                p.meetingURL = ""
+                p.meetingTitle = ""
+                p.meetingTargetId = ""
+                reconcileMeeting(&p)
                 commit(p)
                 if wasSharing { emit("screenshare.stop") }
                 emit("meeting.left")
             }
         case "meet.appeared":
             let inMeetingWas = p.inMeeting, stateWas = p.meetingState
-            p.meetingApp = meetBundle
             p.meetingTargetId = m.targetId
             p.meetingURL = m.url
             p.meetingTitle = m.title
-            applyCameraActiveFallback(&p)
+            // Don't overwrite meetingApp if slack has it; meet takes priority below.
+            if !slackHuddleActive { p.meetingApp = meetBundle }
+            reconcileMeeting(&p)
             commit(p)
             emitMeetingStateEvents(from: inMeetingWas, stateWas)
         case "meet.state":
             let stateWas = p.meetingState
             let inMeetingWas = p.inMeeting
             let sharingWas = p.sharing
-            p.meetingApp = meetBundle
             p.meetingTargetId = m.targetId
             p.meetingURL = m.url
             p.meetingTitle = m.title
-            p.meetingState = m.dom.state            // lobby | joined | unknown
-            p.inMeeting = (m.dom.state == "lobby" || m.dom.state == "joined")
-            p.sharing = m.dom.presenting
             p.participants = m.dom.participants
             p.inAppMic = m.dom.micSelf
             p.inAppCamera = m.dom.camSelf
+            cdpMeetingActive = (m.dom.state == "lobby" || m.dom.state == "joined")
+            p.meetingState = m.dom.state
+            p.sharing = m.dom.presenting
+            // CDP meeting always wins meetingApp when active.
+            if cdpMeetingActive { p.meetingApp = meetBundle }
+            reconcileMeeting(&p)
             applyCameraActiveFallback(&p)
             commit(p)
             emitMeetingStateEvents(from: inMeetingWas, stateWas)
@@ -618,12 +762,34 @@ final class PresenceEngine {
         }
     }
 
-    private func clearMeeting(_ p: Presence) -> Presence {
-        var p = p
-        p.inMeeting = false; p.meetingState = "idle"; p.sharing = false
-        p.meetingApp = ""; p.meetingURL = ""; p.meetingTitle = ""; p.meetingTargetId = ""
-        p.participants = []; p.inAppMic = "?"; p.inAppCamera = "?"
-        return p
+    /// Accept sharing boolean from the screenshare monitor (replayd log stream).
+    /// Only touches sharing; meeting state is unchanged.
+    func applyScreenshare(_ sharing: Bool) {
+        guard presence.sharing != sharing else { return }
+        var p = presence
+        p.sharing = sharing
+        commit(p)
+        emit(sharing ? "screenshare.start" : "screenshare.stop")
+    }
+
+    // MARK: reconciliation
+
+    /// Derive inMeeting / meetingApp from the source flags.
+    /// CDP takes priority over Slack when both are active (focus works).
+    private func reconcileMeeting(_ p: inout Presence) {
+        let oldInMeeting = p.inMeeting
+        p.inMeeting = cdpMeetingActive || slackHuddleActive
+        if !cdpMeetingActive && slackHuddleActive {
+            p.meetingApp = slackBundle
+            // Slack huddles always count as "joined" (mic owner = in call).
+            if p.meetingState == "idle" { p.meetingState = "joined" }
+        }
+        if !cdpMeetingActive && !slackHuddleActive {
+            p.meetingState = "idle"
+            p.meetingApp = ""
+        }
+        // If only CDP active, meetingApp is already set correctly.
+        _ = oldInMeeting
     }
 
     private func applyCameraActiveFallback(_ p: inout Presence) {
@@ -726,6 +892,7 @@ do {
 let engine = PresenceEngine()
 let capture = CaptureMonitor()
 let cdp = CDPClient(port: cdpPort)
+let screenshare = ScreenshareMonitor()
 let server = SocketServer(path: socketPath)
 
 func log(_ s: String) { FileHandle.standardError.write(Data((s + "\n").utf8)) }
@@ -738,6 +905,7 @@ engine.onEvent = { event, presence in
 
 capture.onChange = { state in engine.applyCapture(state) }
 cdp.onMeet = { event, state in engine.applyMeet(event, state) }
+screenshare.onSharingChanged = { sharing in engine.applyScreenshare(sharing) }
 
 server.onCommand = { cmd, reply in
     guard let data = cmd.data(using: .utf8),
@@ -774,6 +942,7 @@ do {
 
 capture.start()
 cdp.start()
+screenshare.start()
 log("media-presenced: started (cdp port \(cdpPort))")
 
 // Periodic capture refresh as a safety net (listeners cover most transitions).
