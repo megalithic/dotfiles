@@ -49,6 +49,19 @@
           doCheck = false;
         });
 
+    # tmux 3.6a has a macOS-arm64 grid-history corruption bug that SIGABRTs the
+    # whole server on copy-mode entry (tmux/tmux#4962, fixed on master before
+    # 3.7). Pin 3.7b until the flake's nixpkgs ships >= 3.7b, then remove.
+    tmux = prev.tmux.overrideAttrs (_: rec {
+      version = "3.7b";
+      src = prev.fetchzip {
+        url = "https://github.com/tmux/tmux/archive/refs/tags/${version}.tar.gz";
+        hash = "sha256-CTq06XP997M0ODxQihTq34dI9H6jSRLUXLYuTWOwDpc=";
+      };
+      # 3.6a-era patch (control-notify-uninitialized) is upstream in 3.7b
+      patches = [ ];
+    });
+
     # llama-cpp: nodejs 24 hits a libuv kqueue assertion (Abort trap: 6) on darwin
     # during the webui `npm run build` teardown. Artifacts are already produced
     # when it aborts, but nix sees the non-zero exit. Pin nodejs_22 for the webui

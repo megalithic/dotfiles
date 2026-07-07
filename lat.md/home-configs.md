@@ -117,7 +117,7 @@ Tools managed under `home/common/programs/`, one line each. Tools with their own
 | starship                                | shell prompt; git modules use `git rev-parse` guards so `.git` file worktrees render                                                          |
 | surfingkeys                             | browser keyboard nav (enabled on Tidewave)                                                                                                    |
 | television                              | fuzzy TUI                                                                                                                                     |
-| tmux                                    | terminal multiplexer; layouts via `ftm`                                                                                                       |
+| tmux                                    | terminal multiplexer; layouts via `ftm`; pinned 3.7b via overlay (macOS-arm64 copy-mode crash, tmux/tmux#4962) until nixpkgs ships >= 3.7b; resurrect/continuum autosave for crash recovery |
 | worktrunk                               | worktree manager (cached `pkgs.worktrunk`); `mise/config/worktrunk/` is the independent non-nix twin (config.toml + `[tools]` entry; see its `AGENTS.md`); fish integration owned locally — see Fish shell helpers, `bin/wt-tmux-target`, `bin/wt-tail-logs` |
 | yazi                                    | file manager + plugins                                                                                                                        |
 | yubico-authenticator                    | Yubico Authenticator GUI app from brew-nix cask                                                                                               |
