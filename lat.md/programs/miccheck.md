@@ -36,9 +36,9 @@ Commands: `{"cmd":"get"}` → `{"ok":true,"mode":...,"live":...}`; `{"cmd":"set-
 
 ## Build and packaging
 
-Unlike [[media-presence#Build and packaging|media-presenced]], miccheck is compiled: `bin/miccheck-build` runs `swiftc` on `bin/miccheck.swift` and installs an ad-hoc-signed binary at `~/.local/bin/miccheckd`.
+Unlike [[media-presence#Build and packaging|media-presenced]], miccheck is compiled: `bin/miccheck-build` runs `swiftc` on `bin/miccheck.swift` and installs a signed binary at `~/.local/bin/miccheckd`.
 
-A stable path + signature keeps the Input Monitoring TCC grant attached to the binary (the kanata pattern); rebuilding changes the code hash, so macOS may require re-approving Input Monitoring afterward. The build script unsets nix `SDKROOT`/`DEVELOPER_DIR` and resolves the SDK via `/usr/bin/xcrun` because the nix apple-sdk mismatches the system Swift toolchain.
+Signing uses a Developer ID Application identity (auto-detected; override with `MICCHECK_CODESIGN_IDENTITY`) with the fixed identifier `com.megadots.miccheck` and hardened runtime. TCC pins grants to the designated requirement (identifier + cert + team), so Input Monitoring survives rebuilds. Without an identity the script falls back to ad-hoc signing, where every rebuild changes the code hash and the stale TCC row must be **removed** (not toggled) in System Settings before a fresh prompt can fire. The build script unsets nix `SDKROOT`/`DEVELOPER_DIR` and resolves the SDK via `/usr/bin/xcrun` because the nix apple-sdk mismatches the system Swift toolchain.
 
 Both config systems run the same wrapper `bin/miccheck-launchd`, which exits with a helpful error when the binary is missing:
 

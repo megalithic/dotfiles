@@ -1,14 +1,22 @@
 #!/usr/bin/env bash
-# Compile bin/miccheck.swift to a stable, ad-hoc-signed binary at
-# ~/.local/bin/miccheckd. A stable path + signature keeps the Input
-# Monitoring TCC grant attached to the binary (kanata pattern).
+# Compile bin/miccheck.swift to a stably-signed binary at ~/.local/bin/miccheckd.
 #
-# Note: rebuilding changes the code hash, so macOS may require re-approving
-# Input Monitoring for miccheckd after a rebuild.
+# Signing: prefers a Developer ID Application identity (override with
+# MICCHECK_CODESIGN_IDENTITY) with a fixed identifier. TCC pins grants to
+# cert + identifier, so Input Monitoring survives rebuilds. Falls back to
+# ad-hoc signing (grant re-approval needed after every rebuild) when no
+# identity exists.
 set -euo pipefail
 
 SRC="${DOTFILES:-$HOME/.dotfiles}/bin/miccheck.swift"
 OUT="$HOME/.local/bin/miccheckd"
+IDENTIFIER="com.megadots.miccheck"
+
+IDENTITY="${MICCHECK_CODESIGN_IDENTITY:-}"
+if [[ -z "$IDENTITY" ]]; then
+  IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null \
+    | sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -1)"
+fi
 
 mkdir -p "$(dirname "$OUT")"
 TMP="$(mktemp -d)"
@@ -21,7 +29,13 @@ unset SDKROOT DEVELOPER_DIR
 SDKROOT="$(/usr/bin/xcrun --sdk macosx --show-sdk-path)"
 export SDKROOT
 /usr/bin/xcrun swiftc -O -o "$TMP/miccheckd" "$SRC"
-codesign -f -s - "$TMP/miccheckd"
+if [[ -n "$IDENTITY" ]]; then
+  echo "signing with: $IDENTITY (identifier $IDENTIFIER)"
+  codesign -f --timestamp --options runtime -i "$IDENTIFIER" -s "$IDENTITY" "$TMP/miccheckd"
+else
+  echo "warning: no Developer ID identity found; ad-hoc signing (TCC grant will not survive rebuilds)" >&2
+  codesign -f -i "$IDENTIFIER" -s - "$TMP/miccheckd"
+fi
 mv -f "$TMP/miccheckd" "$OUT"
 echo "built $OUT"
 echo "restart agent:"

@@ -22,7 +22,8 @@
 //       {"cmd":"toggle-mode"}                          -> {"ok":true,"mode":...}
 //       {"cmd":"quit"}                                 -> {"ok":true}
 //
-// Build: bin/miccheck-build (swiftc -> ~/.local/bin/miccheckd, ad-hoc signed).
+// Build: bin/miccheck-build (swiftc -> ~/.local/bin/miccheckd, Developer ID
+// signed with a stable identifier so TCC grants survive rebuilds).
 // Requires Input Monitoring (TCC) for the listen-only CGEvent tap.
 
 import AppKit
