@@ -10,6 +10,8 @@ The mise tree keeps the same behavior with different mechanics: `agent/` holds t
 
 The mise dotfiles must not be applied while Home Manager still owns `~/.pi/agent/*`; mise re-points HM symlinks and the next `just home` points them back.
 
+The root `_mise.toml` `[tools]` table prefers canonical mise registry aliases for user-facing tools and keeps backend-qualified names only when the registry has no alias or a specific package source is required.
+
 ## Package source and wrapper
 
 Pi comes from the `pi-nix` flake input (`inputs.pi-nix.packages.${system}.coding-agent`) and is exposed through `programs.pi.coding-agent.package`.

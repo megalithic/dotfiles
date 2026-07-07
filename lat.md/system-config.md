@@ -26,6 +26,8 @@ Homebrew is the last-resort path for casks and apps that resist Nix packaging. `
 
 `modules/brew.nix` declares Homebrew casks and `homebrew.masApps` for Mac App Store apps. `brew-nix` provides a cask overlay used for `mas` packaging.
 
+The staged mise bootstrap mirrors this through `_mise.toml` `[bootstrap.packages]`: Homebrew entries use `brew:`/`brew-cask:` prefixes, and Mac App Store apps use `mas:<app id>` entries such as Fantastical (`mas:975937182`).
+
 ## Darwin modules
 
 `modules/` holds the nix-darwin modules. Custom kanata support also comes from the `kanata-darwin` flake input.
