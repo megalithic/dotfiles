@@ -259,17 +259,10 @@ final class ChordMonitor {
     private var requestedAccess = false
 
     func start() -> Bool {
-        // tapCreate can succeed without Input Monitoring yet deliver zero
-        // events (silent failure). Gate on the preflight so the retry loop
-        // keeps polling until the grant actually exists.
-        guard CGPreflightListenEventAccess() else {
-            if !requestedAccess {
-                requestedAccess = true
-                log("input-monitoring not granted; requesting (approve in System Settings)")
-                _ = CGRequestListenEventAccess()
-            }
-            return false
-        }
+        // CGPreflightListenEventAccess() is known to return stale false even
+        // after the TCC grant exists. Skip it; trust tapCreate as the real
+        // permission gate. Standlock's probe pattern: if tapCreate returns
+        // a tap, permission is truly granted.
         let mask = (CGEventMask(1) << CGEventType.flagsChanged.rawValue)
             | (CGEventMask(1) << CGEventType.keyDown.rawValue)
         let refcon = Unmanaged.passUnretained(self).toOpaque()
@@ -284,7 +277,14 @@ final class ChordMonitor {
                 return Unmanaged.passUnretained(event)
             },
             userInfo: refcon
-        ) else { return false }
+        ) else {
+            if !requestedAccess {
+                requestedAccess = true
+                log("input-monitoring not granted; requesting (approve in System Settings)")
+                _ = CGRequestListenEventAccess()
+            }
+            return false
+        }
 
         self.tap = tap
         let src = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
