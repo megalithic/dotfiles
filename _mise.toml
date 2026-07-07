@@ -9,6 +9,7 @@
 # https://github.com/disrupted/dotfiles/blob/master/.config/mise/config.toml - tools i typically use
 # https://github.com/JJGadgets/Biohazard/blob/main/.mise.toml - lots of aqua use
 # https://github.com/disrupted/dotfiles/blob/master/.config/mise/config.toml - elixir related
+# https://github.com/AxlAlm/neovim-setup/blob/master/mise/README.md - language mise configs (not tmpl, manual cp)
 #
 [settings]
 experimental = true
@@ -53,10 +54,38 @@ PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
 # op://Crypt/env item (notesPlain), same secret fnox/opnix render to env-vars.sh.
 # fnox render (`mise run fnox:render`) first, opnix fallback during transition.
 HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env-vars.sh ]; then . ~/.config/fnox/secrets/env-vars.sh; elif [ -f ~/.config/opnix/secrets/env-vars.sh ]; then . ~/.config/opnix/secrets/env-vars.sh; fi; printf %s $HOMEBREW_GITHUB_API_TOKEN") }}'
+EDITOR = "nvim"
+VISUAL = "nvim"
+GIT_EDITOR = "nvim"
+JJ_EDITOR = "nvim"
+MANPAGER = "nvim +Man!"
 
+# Cross-shell aliases. Duplicated in mise/config/mise/global_config.toml
+# because mise has no general config include for shell aliases.
+[shell_alias]
+ls = "eza --all --group-directories-first --color=always --hyperlink"
+l = "eza --all --long --color=always --color-scale=all --group-directories-first --sort=type --hyperlink --icons=always --octal-permissions"
+ll = "eza -lahF --group-directories-first --color=always --icons=always --hyperlink"
+la = "eza -lahF --group-directories-first --color=always --icons=always --hyperlink"
+tree = "eza --tree --color=always"
+rm = "trash -v"
+q = "exit"
+",q" = "exit"
+":q" = "exit"
+":Q" = "exit"
+":e" = "nvim"
+mega = "ftm mega"
+copy = "pbcopy"
+paste = "pbpaste"
+cat = "bat"
+pic = "pi -c"
+pir = "pi -r"
+pisock = "pinvim"
+pis = "pinvim"
 
 [bootstrap.brew.taps]
 "megalithic/helium" = "https://github.com/megalithic/helium-macos-releases"
+
 [bootstrap.packages]
 "brew:bash" = "latest"
 "brew:fish" = "latest"
@@ -104,6 +133,11 @@ HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env
 "~/.config/mise/config.toml" = "mise/config/mise/global_config.toml"
 "~/.config/fnox/config.toml" = "mise/config/fnox/config.toml"
 "~/.config/fish" = "mise/config/fish"
+"~/.profile" = "mise/config/bash/profile"
+"~/.bashrc" = "mise/config/bash/bashrc"
+"~/.bash_profile" = "mise/config/bash/bash_profile"
+"~/.zshrc" = "mise/config/zsh/zshrc"
+"~/.zprofile" = "mise/config/zsh/zprofile"
 "~/.config/fzf" = "mise/config/fzf"
 "~/.config/jj/config.toml" = "mise/config/jj/config.toml"
 # worktrunk: per-file — approvals.toml{,.lock} in the same dir are mutable runtime state
@@ -352,7 +386,6 @@ login_shell = "/opt/homebrew/bin/fish"
 [tasks.bootstrap]
 run = [
   "git -C {{config_root}} submodule update --init",
-  "brew bundle --file={{config_root}}/Brewfile",
   "pre-commit install --install-hooks",
   "mise run fnox:render",
 ]
@@ -400,6 +433,7 @@ nix = "https://github.com/jbadeau/mise-nix.git"
 "npm:@earendil-works/pi-coding-agent" = "latest"
 "npm:prettier" = "latest"
 "npm:pyright" = "latest"
+"npm:trash-cli" = "latest"
 "npm:typescript" = "latest"
 "npm:typescript-language-server" = "latest"
 "npm:vscode-langservers-extracted" = "latest"
@@ -407,6 +441,7 @@ nix = "https://github.com/jbadeau/mise-nix.git"
 # -
 # bare
 age = "latest"
+bat = "latest"
 bun = "latest"
 claude = "latest"
 cargo-binstall = "latest"

@@ -11,6 +11,29 @@ GIT_EDITOR = "nvim"
 JJ_EDITOR = "nvim"
 MANPAGER = "nvim +Man!"
 
+# Cross-shell aliases. mise renders these for bash, fish, zsh, and xonsh
+# through `mise activate` / `mise hook-env`.
+[shell_alias]
+ls = "eza --all --group-directories-first --color=always --hyperlink"
+l = "eza --all --long --color=always --color-scale=all --group-directories-first --sort=type --hyperlink --icons=always --octal-permissions"
+ll = "eza -lahF --group-directories-first --color=always --icons=always --hyperlink"
+la = "eza -lahF --group-directories-first --color=always --icons=always --hyperlink"
+tree = "eza --tree --color=always"
+rm = "trash -v"
+q = "exit"
+",q" = "exit"
+":q" = "exit"
+":Q" = "exit"
+":e" = "nvim"
+mega = "ftm mega"
+copy = "pbcopy"
+paste = "pbpaste"
+cat = "bat"
+pic = "pi -c"
+pir = "pi -r"
+pisock = "pinvim"
+pis = "pinvim"
+
 [tools]
 bat = "latest"
 delta = "latest"

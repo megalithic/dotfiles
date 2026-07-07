@@ -19,7 +19,7 @@ Applied through the repo-root `_mise.toml`:
 | `pkgs.worktrunk` binary | `[tools]` `worktrunk` |
 | `xdg.configFile worktrunk/config.toml` (worktree-path template) | this dir's `config.toml` |
 | `enableFishIntegration = false` + local `wt` fish function (vendored directives, implicit switch, tmux targets) | already migrated: `mise/config/fish/functions/wt.fish` + completions |
-| `enableBashIntegration/ZshIntegration` (`eval "$(wt config shell init bash|zsh)"` in rc files) | **deferred** — `mise/config/bash/` is empty; wire the eval line when bash/zsh configs migrate |
+| `enableBashIntegration/ZshIntegration` (`eval "$(wt config shell init bash|zsh)"` in rc files) | migrated: `mise/config/bash/bashrc` and `mise/config/zsh/zshrc` run the upstream init after `mise activate` |
 | gitconfig `wt = !wt` alias | already migrated: `mise/config/git/config` |
 | global ignore `wt.local.toml`, `.worktrees/` (via tool-ignore) | already migrated: `mise/config/git/ignore` + `tool-ignore` |
 

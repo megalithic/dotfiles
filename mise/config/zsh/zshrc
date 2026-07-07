@@ -1,0 +1,45 @@
+# Standalone zsh config for mise-managed dotfiles.
+
+# Load rendered file-shaped secrets (fnox first, legacy opnix fallback during migration).
+if [ -f "$HOME/.config/fnox/secrets/env-vars.sh" ]; then
+  source "$HOME/.config/fnox/secrets/env-vars.sh"
+elif [ -f "$HOME/.config/opnix/secrets/env-vars.sh" ]; then
+  source "$HOME/.config/opnix/secrets/env-vars.sh"
+fi
+if [ -n "${SYNTHETIC_API_KEY:-}" ]; then
+  export LAT_LLM_KEY="$SYNTHETIC_API_KEY"
+  export LAT_LLM_BASE_URL="https://api.synthetic.new/openai/v1"
+  export LAT_LLM_MODEL="hf:nomic-ai/nomic-embed-text-v1.5"
+  export LAT_LLM_DIMENSIONS="768"
+fi
+[ -f "$HOME/.config/fnox/secrets/work-env-vars.sh" ] && source "$HOME/.config/fnox/secrets/work-env-vars.sh"
+[ -f "$HOME/.config/opnix/secrets/work-env-vars.sh" ] && source "$HOME/.config/opnix/secrets/work-env-vars.sh"
+
+case $- in
+  *i*) ;;
+  *) return ;;
+esac
+
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate zsh)"
+fi
+
+if command -v fzf >/dev/null 2>&1; then
+  eval "$(fzf --zsh)"
+fi
+
+if command -v wt >/dev/null 2>&1; then
+  eval "$(wt config shell init zsh)"
+fi
+
+if command -v direnv >/dev/null 2>&1; then
+  eval "$(direnv hook zsh)"
+fi
+
+if [ "${TERM:-}" != "dumb" ] && command -v starship >/dev/null 2>&1; then
+  eval "$(starship init zsh)"
+fi
+
+if command -v zoxide >/dev/null 2>&1; then
+  eval "$(zoxide init zsh)"
+fi

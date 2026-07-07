@@ -30,7 +30,7 @@ Examples: git files under `home/common/programs/git/`, ripgrep config under `rip
 
 Fish carries repo workflow helpers and desktop integration environment variables.
 
-Fish config is kept as portable fish files under `home/common/programs/fish/`: `config.fish`, `conf.d/*.fish`, `functions/*.fish`, and `interactive/*.fish`. Home Manager installs these files and only generates `~/.local/share/fish/nix.fish` for Nix-specific PATH setup.
+Fish config is kept as portable fish files under `home/common/programs/fish/`: `config.fish`, `conf.d/*.fish`, `functions/*.fish`, and `interactive/*.fish`. Home Manager installs these files and only generates `~/.local/share/fish/nix.fish` for Nix-specific PATH setup. The standalone mise tree activates mise from `mise/config/fish/conf.d/mise.fish`, keeps fish-only aliases in `mise/config/fish/interactive/aliases.fish`, and duplicates shared shell aliases in both `_mise.toml` and `mise/config/mise/global_config.toml` `[shell_alias]` sections because mise has no general include for shell aliases. `_mise.toml` also links `~/.profile`, `~/.bashrc`, `~/.bash_profile`, `~/.zshrc`, and `~/.zprofile` from `mise/config/bash/` and `mise/config/zsh/` so bash/zsh get the same mise hook plus upstream Worktrunk init.
 
 Fish fzf Ctrl-T uses fzf's fish token parser, so the current path token becomes `$dir` and the Home Manager fzf `fileWidgetCommand` passes `$dir` as fd's explicit search path. Fish defines a `jj` wrapper that runs real `jj` inside jj repos, allows `jj git init`, and falls back to `git` with a hint in plain git repos. `PLUG_EDITOR` is exported as a `hammerspoon://nvim-open` URL so stack-trace links delegate final Neovim target resolution to Hammerspoon.
 
