@@ -70,6 +70,7 @@ Tools managed under `home/common/programs/`, one line each. Tools with their own
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | aerc / mailmate                         | mail clients                                                                                                                                  |
 | bash / fish                             | shells; fish is default and carries repo helpers                                                                                              |
+| atuin                                  | shell history search/sync; mise-only config in `mise/config/atuin/`; complements zoxide (history search, not directory jumping)                |
 | bat                                     | cat replacement                                                                                                                               |
 | brave-browser-nightly                   | Chromium browser wrapper app                                                                                                                  |
 | claude-code                             | parked until its old dependency is restored                                                                                                   |

@@ -1,0 +1,66 @@
+#:schema https://raw.githubusercontent.com/atuinsh/atuin/main/atuin/config-schema.json
+
+# Atuin stores shell history in SQLite and powers Ctrl-R search across bash,
+# zsh, and fish. Local-first by default: history is saved locally; sync can be
+# enabled after `atuin register`/`atuin login` by setting auto_sync = true.
+
+data_dir = "~/.local/share/atuin"
+
+# Disable background network behavior until an account/key is explicitly set up.
+auto_sync = false
+update_check = false
+sync_address = "https://api.atuin.sh"
+sync_frequency = "10m"
+
+# Search UX: Ctrl-R opens fuzzy history scoped to the current git workspace when
+# possible, falling back to global history otherwise.
+search_mode = "fuzzy"
+filter_mode = "workspace"
+workspaces = true
+filter_mode_shell_up_key_binding = "directory"
+search_mode_shell_up_key_binding = "fuzzy"
+style = "compact"
+inline_height = 20
+show_preview = true
+max_preview_height = 8
+show_tabs = true
+show_help = true
+enter_accept = true
+
+# Keep normal shell history secrets out. Atuin also has a built-in secrets_filter
+# that catches common tokens (GitHub, Slack, Stripe, AWS, etc.).
+secrets_filter = true
+history_filter = [
+  "^op .*",
+  "^security .*",
+  "^pass .*",
+  "^gpg .*--decrypt",
+  ".*TOKEN=.*",
+  ".*PASSWORD=.*",
+  ".*SECRET=.*",
+]
+cwd_filter = [
+  '/\.ssh($|/)',
+  '/\.config/(opnix|fnox)/secrets($|/)',
+]
+
+[stats]
+common_subcommands = [
+  "cargo",
+  "docker",
+  "git",
+  "gh",
+  "jj",
+  "just",
+  "kubectl",
+  "mise",
+  "nix",
+  "npm",
+  "pnpm",
+  "tmux",
+]
+common_prefix = ["sudo", "env", "command"]
+ignored_commands = ["cd", "ls", "pwd", "clear", "exit"]
+
+[sync]
+records = true

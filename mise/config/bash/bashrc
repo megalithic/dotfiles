@@ -243,6 +243,11 @@ if command -v fzf >/dev/null 2>&1; then
   eval "$(fzf --bash)"
 fi
 
+# Atuin owns Ctrl-R; keep native up-arrow behavior.
+if command -v atuin >/dev/null 2>&1; then
+  eval "$(atuin init bash --disable-up-arrow --disable-ai)"
+fi
+
 if command -v wt >/dev/null 2>&1; then
   eval "$(wt config shell init bash)"
 fi

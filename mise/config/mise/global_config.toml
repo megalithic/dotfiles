@@ -35,6 +35,7 @@ pisock = "pinvim"
 pis = "pinvim"
 
 [tools]
+atuin = "latest"
 bat = "latest"
 delta = "latest"
 duckdb = "latest"
