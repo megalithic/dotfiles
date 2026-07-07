@@ -73,7 +73,6 @@ local watchers = { "audio", "dock", "app", "notification", "url", "pasteboard", 
 
 req("bindings")
 req("watchers", { watchers = watchers })
-req("miccheck", { model = "large-v3", languages = { "en" } }):start()
 req("quitter"):start()
 req("clipper") -- Auto-inits via req(), starts pasteboard watcher
 -- Load shade-next last so its Hyper overrides win for shared chords such as
@@ -86,7 +85,6 @@ overrides.setupNotifyOverride(HUD) -- Replace hs.notify with custom HUD
 overrides.setupReloadCleanup({
   stopWatchers = function()
     require("watchers"):stop({ watchers = watchers })
-    require("miccheck"):stop()
     require("quitter"):stop()
     require("clipper"):stop()
   end,
@@ -94,7 +92,6 @@ overrides.setupReloadCleanup({
 
 hs.shutdownCallback = function()
   require("watchers"):stop({ watchers = watchers })
-  require("miccheck"):stop()
   require("quitter"):stop()
   require("clipper"):stop()
   if N and N.cleanup then N.cleanup() end

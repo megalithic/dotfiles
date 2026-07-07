@@ -38,9 +38,9 @@ App and window watchers run layout rules on launch and window creation (not `mai
 
 ## Miccheck menubar
 
-Miccheck menubar state lives in `config/hammerspoon/miccheck.lua` and now handles push-to-talk and mute only.
+The old `miccheck.lua` module is gone; push-to-talk/push-to-mute now lives in the standalone [[miccheck]] menubar app, and Hammerspoon only sends it mode commands.
 
-Push-to-dictate and push-to-record are fully disabled: their functions are stubbed to no-ops, the `cmd+opt+shift` eventtap branch and `ptdToggle` hotkey are removed, whisper is `nil` at init, and the menubar omits dictation entries. Muted state shows a white slashed-mic glyph on the transparent menubar; unmuted passthrough uses a white mic glyph on a rounded red pill so the hot-mic state stays visible. Legacy recording/processing HUD renderers remain but are unreachable.
+`config/hammerspoon/lib/micctl.lua` is the socket client (`setPTTMode`, `toggleMode`); `watchers/camera.lua`, `watchers/media-presence.lua`, and `contexts/co.detail.mac.lua` call it where they previously required the Lua module. The eventtap, menubar icon, hotkeys, and mute logic all moved into the compiled Swift app.
 
 ## Clipper and utilities
 

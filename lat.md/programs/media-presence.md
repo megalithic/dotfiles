@@ -34,7 +34,7 @@ Events: `mic.on`/`mic.off`, `camera.on`/`camera.off`, `meeting.lobby`/`meeting.j
 
 `config/hammerspoon/watchers/media-presence.lua` polls the daemon every 3s via `nc -w 1 -U` with `{"cmd":"get"}`, detects state transitions by diffing successive snapshots, and dispatches:
 
-- `inMeeting` false→true → force push-to-talk mute (`miccheck.setPTTMode`), pause Apple Music
+- `inMeeting` false→true → force push-to-talk mute (via [[miccheck]]'s socket through `lib/micctl.lua`), pause Apple Music
 - `inMeeting` true→false → reset PTT mode
 - `sharing` false→true → enforce DND focus mode (`U.dnd(true, "meeting")`)
 - `sharing` true→false → restore previous DND state

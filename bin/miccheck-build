@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Compile bin/miccheck.swift to a stable, ad-hoc-signed binary at
+# ~/.local/bin/miccheckd. A stable path + signature keeps the Input
+# Monitoring TCC grant attached to the binary (kanata pattern).
+#
+# Note: rebuilding changes the code hash, so macOS may require re-approving
+# Input Monitoring for miccheckd after a rebuild.
+set -euo pipefail
+
+SRC="${DOTFILES:-$HOME/.dotfiles}/bin/miccheck.swift"
+OUT="$HOME/.local/bin/miccheckd"
+
+mkdir -p "$(dirname "$OUT")"
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+echo "compiling $SRC ..."
+# Nix shells export SDKROOT/DEVELOPER_DIR pointing at the nix apple-sdk, which
+# mismatches the system Swift toolchain. Force the Xcode CLT SDK.
+unset SDKROOT DEVELOPER_DIR
+SDKROOT="$(/usr/bin/xcrun --sdk macosx --show-sdk-path)"
+export SDKROOT
+/usr/bin/xcrun swiftc -O -o "$TMP/miccheckd" "$SRC"
+codesign -f -s - "$TMP/miccheckd"
+mv -f "$TMP/miccheckd" "$OUT"
+echo "built $OUT"
+echo "restart agent:"
+echo "  nix:  launchctl kickstart -k gui/$(id -u)/org.nix-community.home.miccheck"
+echo "  mise: launchctl kickstart -k gui/$(id -u)/com.megadots.miccheck"

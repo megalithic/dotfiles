@@ -41,38 +41,6 @@ M.notification = {
 M.hypers = {}
 
 --------------------------------------------------------------------------------
--- MICCHECK STATE (push-to-talk voice control; dictation disabled)
---------------------------------------------------------------------------------
-
-M.miccheck = {
-  -- Mode states
-  pttMode = "push-to-talk",  -- "push-to-talk", "push-to-mute", "disabled"
-  ptdMode = "disabled",      -- dictation/recording is handled by a separate app
-
-  -- Current activity state (for icon priority)
-  isRecording = false,   -- Legacy dictation state; kept false
-  isProcessing = false,  -- Legacy transcription state; kept false
-  isUnmuted = false,     -- PTT key held / mic unmuted
-
-  -- UI elements
-  menubar = nil,         -- Menubar item
-
-  -- Hotkeys (stored for cleanup)
-  hotkeys = {
-    modifierTap = nil,   -- eventtap for cmd+opt (PTT)
-    pttToggle = nil,     -- cmd+opt+p
-  },
-
-  -- Watcher hooks (callbacks registered by other modules)
-  hooks = {
-    onMuteChange = {},   -- Called when mute state changes
-    onRecordStart = {},  -- Called when recording starts
-    onRecordEnd = {},    -- Called when recording ends
-    onTranscribe = {},   -- Called when transcription completes
-  },
-}
-
---------------------------------------------------------------------------------
 -- HELPER FUNCTIONS
 --------------------------------------------------------------------------------
 
@@ -150,50 +118,14 @@ function M.resetHypers()
   M.hypers = {}
 end
 
---- Reset miccheck state (stop hotkeys, delete menubar, clear hooks)
-function M.resetMiccheck()
-  -- Stop all hotkeys and eventtaps
-  for name, binding in pairs(M.miccheck.hotkeys) do
-    if binding then
-      -- Try eventtap stop first (for modifierTap, keyDownTap, etc.)
-      pcall(function() binding:stop() end)
-      -- Then try hotkey delete (for pttToggle, etc.)
-      pcall(function() binding:delete() end)
-      M.miccheck.hotkeys[name] = nil
-    end
-  end
-
-  -- Delete menubar
-  if M.miccheck.menubar then
-    pcall(function() M.miccheck.menubar:delete() end)
-    M.miccheck.menubar = nil
-  end
-
-  -- Reset activity state (keep mode preferences)
-  M.miccheck.isRecording = false
-  M.miccheck.isProcessing = false
-  M.miccheck.isUnmuted = false
-
-  -- Clear hooks
-  M.miccheck.hooks = {
-    onMuteChange = {},
-    onRecordStart = {},
-    onRecordEnd = {},
-    onTranscribe = {},
-  }
-end
-
 --- Reset a specific namespace by name
----@param namespace "notification"|"hypers"|"miccheck"|"all" Namespace to reset
+---@param namespace "notification"|"hypers"|"all" Namespace to reset
 function M.reset(namespace)
   if namespace == "notification" or namespace == "all" then
     M.resetNotification()
   end
   if namespace == "hypers" or namespace == "all" then
     M.resetHypers()
-  end
-  if namespace == "miccheck" or namespace == "all" then
-    M.resetMiccheck()
   end
 end
 

@@ -37,14 +37,14 @@ local function poll()
     -- meeting start: idle/lobby → joined
     if p.inMeeting and not wasInMeeting then
       U.log.i("[media-presence] meeting started → PTT mute + music paused")
-      pcall(function() require("miccheck").setPTTMode("push-to-talk") end)
+      pcall(function() require("lib.micctl").setPTTMode("push-to-talk") end)
       pcall(function() hs.osascript.applescript('tell application "Music" to pause') end)
     end
 
     -- meeting end: joined/lobby → idle
     if not p.inMeeting and wasInMeeting then
       U.log.i("[media-presence] meeting ended → PTT reset")
-      pcall(function() require("miccheck").setPTTMode("push-to-talk") end)
+      pcall(function() require("lib.micctl").setPTTMode("push-to-talk") end)
     end
 
     -- screenshare start

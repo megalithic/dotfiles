@@ -339,6 +339,15 @@ start_interval = 7200
 stdout_path = "~/.cache/pi-session-indexer.log"
 stderr_path = "~/.cache/pi-session-indexer.log"
 
+# miccheck: menubar push-to-talk/push-to-mute app (bin/miccheck.swift).
+# Wrapper checks the compiled binary exists (built by `mise run miccheck:setup`).
+[bootstrap.macos.launchd.agents."com.megadots.miccheck"]
+program = "~/.dotfiles/bin/miccheck-launchd"
+run_at_load = true
+keep_alive = true
+stdout_path = "~/Library/Logs/miccheck/stdout.log"
+stderr_path = "~/Library/Logs/miccheck/stderr.log"
+
 # kanata launchd agents run through wrapper scripts because mise expands `~`
 # only in program/stdout/stderr paths, not in args.
 [bootstrap.macos.launchd.agents."org.kanata.daemon"]
@@ -407,6 +416,10 @@ run = "{{config_root}}/bin/helium-1password-trust"
 [tasks."kanata:setup"]
 description = "Install/activate Karabiner VirtualHID glue and restart mise-managed kanata services"
 run = "{{config_root}}/mise/scripts/kanata-setup"
+
+[tasks."miccheck:setup"]
+description = "Compile bin/miccheck.swift to ~/.local/bin/miccheckd (push-to-talk menubar app)"
+run = "{{config_root}}/bin/miccheck-build"
 
 [plugins]
 nix = "https://github.com/jbadeau/mise-nix.git"

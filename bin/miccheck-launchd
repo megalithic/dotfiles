@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Launchd entrypoint for miccheckd (menubar push-to-talk/push-to-mute app).
+# The stable binary is installed by bin/miccheck-build.
+set -euo pipefail
+
+BIN="$HOME/.local/bin/miccheckd"
+
+if [[ ! -x "$BIN" ]]; then
+  echo "miccheck-launchd: $BIN missing; run: ~/.dotfiles/bin/miccheck-build (or: mise run miccheck:setup)" >&2
+  exit 1
+fi
+
+exec "$BIN" --socket "$HOME/.local/state/miccheck/sock"
