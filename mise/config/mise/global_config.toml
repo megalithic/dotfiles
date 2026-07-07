@@ -5,10 +5,10 @@
 # fish. Replaces nix-darwin's hosts/common.nix environment.variables.
 # Caveat: GUI/launchd apps don't inherit them (same as the nix setup).
 [env]
-EDITOR = "nvim"
-VISUAL = "nvim"
-GIT_EDITOR = "nvim"
-JJ_EDITOR = "nvim"
+EDITOR = "nvim -O"
+VISUAL = "nvim -O"
+GIT_EDITOR = "nvim -O"
+JJ_EDITOR = "nvim -O"
 MANPAGER = "nvim +Man!"
 
 # Cross-shell aliases. mise renders these for bash, fish, zsh, and xonsh
@@ -45,4 +45,5 @@ lazydocker = "latest"
 node = "latest"
 pnpm = "10"
 tmux = "latest"
+sqlite = "latest"
 fd = "latest"

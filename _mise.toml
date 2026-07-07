@@ -54,10 +54,10 @@ PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
 # op://Crypt/env item (notesPlain), same secret fnox/opnix render to env-vars.sh.
 # fnox render (`mise run fnox:render`) first, opnix fallback during transition.
 HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env-vars.sh ]; then . ~/.config/fnox/secrets/env-vars.sh; elif [ -f ~/.config/opnix/secrets/env-vars.sh ]; then . ~/.config/opnix/secrets/env-vars.sh; fi; printf %s $HOMEBREW_GITHUB_API_TOKEN") }}'
-EDITOR = "nvim"
-VISUAL = "nvim"
-GIT_EDITOR = "nvim"
-JJ_EDITOR = "nvim"
+EDITOR = "nvim -O"
+VISUAL = "nvim -O"
+GIT_EDITOR = "nvim -O"
+JJ_EDITOR = "nvim -O"
 MANPAGER = "nvim +Man!"
 
 # Cross-shell aliases. Duplicated in mise/config/mise/global_config.toml
@@ -87,6 +87,7 @@ pis = "pinvim"
 "megalithic/helium" = "https://github.com/megalithic/helium-macos-releases"
 
 [bootstrap.packages]
+"mas" = "latest"
 "brew:bash" = "latest"
 "brew:fish" = "latest"
 "brew:git" = "latest"
@@ -467,11 +468,11 @@ hk = "latest"
 imagemagick = "latest"
 jq = "latest"
 jj = "latest"
-"llama.cpp" = { version = "9873", version_prefix = "b" }
+"llama.cpp" = "latest"
 lua-language-server = "3"
 neovim = "nightly"
 node = "latest"
-ollama = "0.31.1"
+ollama = "latest"
 pipx = "latest"
 "pipx:uv" = "latest"
 pitchfork = "latest"
