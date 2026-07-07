@@ -36,8 +36,11 @@ git/
 - Machine-local/untracked settings go in `~/.config/git/config.local` (already
   included from `config`); never edit the symlinked files in place.
 - Signing needs 1Password installed in `/Applications` (op-ssh-sign lives in
-  the app bundle) and `~/.ssh/allowed_signers` for verification (`git log
-  --show-signature`); allowed_signers materialization is tracked separately.
+  the app bundle; `brew-cask:1password` in `[bootstrap.packages]`) and
+  `~/.ssh/allowed_signers` for verification (`git log --show-signature`;
+  linked from `mise/config/ssh/allowed_signers`). The agent's key selection
+  comes from `~/.config/1Password/ssh/agent.toml`
+  (`mise/config/1password/agent.toml`).
 - Runtime deps referenced by `config`: delta (pager), git-lfs (filter), nvim
   (editor + codediff diff/merge tool), fzf (`cof` alias), worktrunk (`wt`
   alias), brew git contrib (`jump` alias). All but worktrunk are in

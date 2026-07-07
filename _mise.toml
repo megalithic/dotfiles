@@ -67,6 +67,12 @@ HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env
 "brew:poppler" = "latest"   # pdftotext etc. — pi wrapper expects poppler-utils on PATH
 
 # brew casks using mise's `brew-cask:<formulae>` notation
+# 1password must live in /Applications (anti-tamper; op-ssh-sign for git/jj
+# signing ships in the app bundle). 1password-cli provides `op` with app
+# integration (biometric auth) — together these replace nix-darwin's
+# programs._1password{,-gui}.
+"brew-cask:1password" = "latest"
+"brew-cask:1password-cli" = "latest"
 "brew-cask:hammerspoon" = "latest"
 # private repo; until then install via real `brew install --cask helium`.
 # After install, verify 1Password pairing: `mise run helium:1password-trust`.
@@ -120,8 +126,12 @@ HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env
 "~/.config/kanata/macbook.kbd" = "config/kanata/macbook.kbd"
 "~/.config/kanata/macbook-disabled.kbd" = "config/kanata/macbook-disabled.kbd"
 
-# -- SSH: individual files (directory holds mutable keys/known_hosts; allowed_signers is store-generated, deferred to mbm-8afn) --
+# -- SSH: individual files (directory holds mutable keys/known_hosts) --
 "~/.ssh/config" = "config/ssh/config"
+"~/.ssh/allowed_signers" = "mise/config/ssh/allowed_signers"
+# 1Password SSH agent key selection (vault/item); GUI+CLI come from the
+# brew casks in [bootstrap.packages], replacing nix-darwin's _1password module.
+"~/.config/1Password/ssh/agent.toml" = "mise/config/1password/agent.toml"
 
 # -- espanso: app support path, not XDG config (validated repo-final link chain) --
 "~/Library/Application Support/espanso" = "config/espanso"

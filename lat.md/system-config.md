@@ -38,6 +38,8 @@ Homebrew is the last-resort path for casks and apps that resist Nix packaging. `
 
 It sets `programs._1password.enable = true` and `programs._1password-gui.enable = true`. The GUI module rsyncs `pkgs._1password-gui` to `/Applications/1Password.app` as `root:wheel r-xr-xr-x`; the CLI module installs `op` to `/usr/local/bin/op`. `nixpkgs.config.allowUnfree = true` in `hosts/common.nix` is required at the system level (the flake's `pkgs` already had it, but system nixpkgs did not).
 
+For the staged mise migration, `_mise.toml` replaces this module with the `1password` + `1password-cli` brew casks (`[bootstrap.packages]`) and links `~/.config/1Password/ssh/agent.toml` from `mise/config/1password/agent.toml`.
+
 The GUI **must** live in `/Applications` — 1Password's anti-tamper logic quits the app when launched from `~/Applications/Home Manager Apps/` or the nix store. So unlike Hammerspoon/Raycast/ProtonVPN (Home Manager `copyApps` into `~/Applications/Home Manager Apps/`), 1Password is a system module. Git and jj SSH signing point at `/Applications/1Password.app/Contents/MacOS/op-ssh-sign` (the full GUI bundle ships `op-ssh-sign`); do not point them at the Home Manager Apps path.
 
 ### "1Password.app is damaged" gotcha (first-launch Gatekeeper false positive)

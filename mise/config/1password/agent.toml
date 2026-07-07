@@ -1,0 +1,3 @@
+[[ssh-keys]]
+vault = "Crypt"
+item = "megaenv_ssh_key"

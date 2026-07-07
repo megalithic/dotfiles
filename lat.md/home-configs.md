@@ -113,7 +113,7 @@ Tools managed under `home/common/programs/`, one line each. Tools with their own
 | rust                                    | rustup + bacon toolchain                                                                                                                      |
 | shade / shade-next                      | Hammerspoon launcher panels — see [[hammerspoon]]                                                                                             |
 | slk                                     | Slack CLI (upstream static tarball package)                                                                                                   |
-| ssh                                     | SSH config (1Password agent provides keys)                                                                                                    |
+| ssh                                     | SSH config (1Password agent provides keys). mise twins: `mise/config/ssh/allowed_signers` and `mise/config/1password/agent.toml` replace the HM-generated files for the staged mise migration                                                                                                    |
 | starship                                | shell prompt; git modules use `git rev-parse` guards so `.git` file worktrees render                                                          |
 | surfingkeys                             | browser keyboard nav (enabled on Tidewave)                                                                                                    |
 | television                              | fuzzy TUI                                                                                                                                     |
