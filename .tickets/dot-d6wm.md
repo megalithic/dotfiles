@@ -1,6 +1,6 @@
 ---
 id: dot-d6wm
-status: open
+status: closed
 deps: [dot-3t42]
 links: []
 created: 2026-05-18T13:46:06Z
