@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Launchd entrypoint: run kanata as root via sudo NOPASSWD.
+# The stable binary and sudoers entry are installed by mise/scripts/kanata-setup.
+set -euo pipefail
+
+KANATA_BIN="/usr/local/bin/kanata"
+KANATA_CONFIG="$HOME/.config/kanata/kanata.kbd"
+
+if [[ ! -x "$KANATA_BIN" ]]; then
+  echo "kanata-launchd: $KANATA_BIN missing; run: mise run kanata:setup" >&2
+  exit 1
+fi
+if [[ ! -e "$KANATA_CONFIG" ]]; then
+  echo "kanata-launchd: $KANATA_CONFIG missing; run: mise run kanata:setup" >&2
+  exit 1
+fi
+
+exec /usr/bin/sudo "$KANATA_BIN" --cfg "$KANATA_CONFIG" --nodelay --port 5829

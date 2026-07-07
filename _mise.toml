@@ -65,6 +65,7 @@ HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env
 "brew:openssl@3" = "latest" # required by Python (ssl module) and networking Rust crates
 "brew:pkgconf" = "latest"   # helps compilers locate openssl and other libs when building from source
 "brew:poppler" = "latest"   # pdftotext etc. — pi wrapper expects poppler-utils on PATH
+"brew:kanata" = "latest"    # keyboard remapper; setup task copies it to stable /usr/local/bin/kanata
 
 # brew casks using mise's `brew-cask:<formulae>` notation
 # 1password must live in /Applications (anti-tamper; op-ssh-sign for git/jj
@@ -122,9 +123,10 @@ HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env
 # "~/.config/process-compose/shortcuts.yaml" = "mise/fragments/process-compose/shortcuts.yaml"
 # "~/.config/process-compose/theme.yaml" = "mise/fragments/process-compose/theme.yaml"
 
-# -- kanata: individual .kbd files (parent dir has mutable state; daemon/bar migration deferred to mbm-ju5m) --
+# -- kanata: individual .kbd files (parent dir has mutable state; active kanata.kbd is mutable) --
 "~/.config/kanata/macbook.kbd" = "config/kanata/macbook.kbd"
 "~/.config/kanata/macbook-disabled.kbd" = "config/kanata/macbook-disabled.kbd"
+"~/.config/kanata/icons" = "config/kanata/icons"
 
 # -- SSH: individual files (directory holds mutable keys/known_hosts) --
 "~/.ssh/config" = "config/ssh/config"
@@ -301,6 +303,22 @@ start_interval = 7200
 stdout_path = "~/.cache/pi-session-indexer.log"
 stderr_path = "~/.cache/pi-session-indexer.log"
 
+# kanata launchd agents run through wrapper scripts because mise expands `~`
+# only in program/stdout/stderr paths, not in args.
+[bootstrap.macos.launchd.agents."org.kanata.daemon"]
+program = "~/.dotfiles/mise/scripts/kanata-launchd"
+run_at_load = true
+keep_alive = true
+stdout_path = "/tmp/kanata.log"
+stderr_path = "/tmp/kanata.err"
+
+[bootstrap.macos.launchd.agents."com.kanata-bar.ui"]
+program = "~/.dotfiles/mise/scripts/kanata-bar-launchd"
+run_at_load = true
+keep_alive = false
+stdout_path = "/tmp/kanata-bar.log"
+stderr_path = "/tmp/kanata-bar.err"
+
 # [bootstrap.macos.keyboard]
 # key_repeat = 2
 # initial_key_repeat = 15
@@ -325,6 +343,9 @@ run = "git -C {{config_root}} submodule update --init"
 [bootstrap.hooks.post-defaults]
 run = "killall Finder SystemUIServer Dock || true"
 
+[bootstrap.hooks.post-tools]
+run = "mise run kanata:setup"
+
 [bootstrap.user]
 login_shell = "/opt/homebrew/bin/fish"
 
@@ -347,6 +368,10 @@ run = "{{config_root}}/mise/config/pi-coding-agent/scripts/setup"
 [tasks."helium:1password-trust"]
 description = "Check 1Password trusts /Applications/Helium.app; prints GUI Add Browser steps if not (setting is tamper-protected, not writable)"
 run = "{{config_root}}/bin/helium-1password-trust"
+
+[tasks."kanata:setup"]
+description = "Install/activate Karabiner VirtualHID glue and restart mise-managed kanata services"
+run = "{{config_root}}/mise/scripts/kanata-setup"
 
 [plugins]
 nix = "https://github.com/jbadeau/mise-nix.git"
@@ -455,6 +480,14 @@ postinstall = "$DOTFILES_DIR/mise/hooks/install-fonts.sh"
 version = "1.2.3"
 postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
 platforms.macos-arm64.url = "https://release.files.ghostty.org/{{version}}/Ghostty.dmg"
+
+[tools."http:kanata-bar"]
+version = "1.1.1"
+checksum = "sha256:76c7cf89f4fea4ec4e136fd47d0cf2ba0c2ea926e898a3fa0f90dea3ec15c9ec"
+os = ["macos"]
+strip_components = 0
+platforms.macos-arm64.url = "https://github.com/not-in-stock/kanata-bar/releases/download/v{{version}}/kanata-bar.app.zip"
+platforms.macos-x64.url = "https://github.com/not-in-stock/kanata-bar/releases/download/v{{version}}/kanata-bar.app.zip"
 
 # [tools."http:cmux"]
 # version = "0.64.4"

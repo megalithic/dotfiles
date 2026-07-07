@@ -32,6 +32,18 @@ Homebrew is the last-resort path for casks and apps that resist Nix packaging. `
 
 `system.nix` covers core system settings, `brew.nix` covers Homebrew, and `darwin/` holds `kanata.nix`, `services.nix`, `spotlight.nix`, `_1password.nix`, and `okta-verify.nix`.
 
+## Kanata on macOS
+
+Kanata needs Karabiner DriverKit VirtualHIDDevice on macOS; installing only `kanata` and `kanata-bar` is not enough.
+
+The nix path keeps using the `kanata-darwin` flake plus `modules/darwin/kanata.nix`. It installs and activates the Karabiner DriverKit package, runs the VirtualHID daemon, copies kanata to stable `/usr/local/bin/kanata`, starts kanata as a launchd user agent through sudo, and runs kanata-bar as a UI client.
+
+The staged mise path mirrors that design without changing the nix modules. `_mise.toml` installs `kanata` through Homebrew bootstrap packages and `kanata-bar` through mise's `http:` backend (pinned version + sha256), links the `.kbd` profiles and layer icons, declares mise-managed launchd agents, and runs `mise/scripts/kanata-setup` from the `post-tools` bootstrap hook for privileged macOS glue. That script installs/activates the Karabiner VirtualHID `.pkg`, writes the system VirtualHID LaunchDaemon, copies Homebrew's kanata to stable `/usr/local/bin/kanata`, writes the sudoers entry, writes `~/.config/kanata-bar/config.toml`, warns when nix-managed kanata agents are still loaded, and only moves stale `org.nixos.*` helper LaunchDaemons aside when they point at missing Nix store paths.
+
+The launchd agents run through `mise/scripts/kanata-launchd` and `mise/scripts/kanata-bar-launchd` wrapper scripts because mise expands `~` only in launchd `program`/`stdout_path`/`stderr_path`, never in `args`; the kanata-bar wrapper also resolves the versioned `http:kanata-bar` install path so `[tools]` version bumps need no agent edits. mise prefixes bootstrap launchd labels with `dev.mise.`, so the live agents are `dev.mise.org.kanata.daemon` and `dev.mise.com.kanata-bar.ui`.
+
+Both `config/kanata/macbook.kbd` and `config/kanata/macbook-disabled.kbd` are scoped to `"Apple Internal Keyboard / Trackpad"`; external Leeloo/ZMK state only selects which internal-keyboard profile is active.
+
 ## 1Password (GUI + CLI)
 
 `modules/darwin/_1password.nix` enables the GUI and CLI via nix-darwin **system** options; there is no Home Manager equivalent.

@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Launchd entrypoint: run the mise-installed kanata-bar UI client.
+# Resolves the versioned http:kanata-bar install path so version bumps in
+# _mise.toml [tools] do not require launchd agent edits.
+set -euo pipefail
+export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:/usr/bin:/bin:$PATH"
+
+app_bin=""
+if command -v mise >/dev/null 2>&1; then
+  install_path="$(mise where http:kanata-bar 2>/dev/null || true)"
+  if [[ -n "$install_path" && -x "${install_path}/Kanata Bar.app/Contents/MacOS/kanata-bar" ]]; then
+    app_bin="${install_path}/Kanata Bar.app/Contents/MacOS/kanata-bar"
+  fi
+fi
+
+if [[ -z "$app_bin" ]]; then
+  installs_dir="${XDG_DATA_HOME:-$HOME/.local/share}/mise/installs/http-kanata-bar"
+  for candidate in "$installs_dir"/*/"Kanata Bar.app/Contents/MacOS/kanata-bar"; do
+    if [[ -x "$candidate" ]]; then
+      app_bin="$candidate"
+      break
+    fi
+  done
+fi
+
+if [[ -z "$app_bin" ]]; then
+  echo "kanata-bar-launchd: kanata-bar not found; run: mise install http:kanata-bar" >&2
+  exit 1
+fi
+
+exec "$app_bin" --config-file "$HOME/.config/kanata-bar/config.toml"

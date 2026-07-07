@@ -1,0 +1,335 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Idempotent macOS glue for the mise-managed kanata stack.
+# Tool ownership:
+#   - mise bootstrap packages installs Homebrew's kanata formula.
+#   - mise's http backend installs kanata-bar into ~/.local/share/mise.
+#   - This script installs/activates the required Karabiner VirtualHID pkg,
+#     writes privileged launchd/sudoers pieces, and points configs at the
+#     mise/dotfiles-managed files.
+
+DRIVER_VERSION="6.10.0"
+DRIVER_URL="https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/releases/download/v${DRIVER_VERSION}/Karabiner-DriverKit-VirtualHIDDevice-${DRIVER_VERSION}.pkg"
+DRIVER_SHA256="e1317d7fe68ad2d559cf41018c2bc6709e178d13bdb5f85ee30f3deaf4817966"
+DRIVER_PKG_ID="org.pqrs.Karabiner-DriverKit-VirtualHIDDevice"
+DRIVER_MANAGER="/Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Manager"
+VHID_DAEMON_LABEL="org.pqrs.Karabiner-VirtualHIDDevice-Daemon"
+VHID_DAEMON_BIN="/Library/Application Support/org.pqrs/Karabiner-DriverKit-VirtualHIDDevice/Applications/Karabiner-VirtualHIDDevice-Daemon.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Daemon"
+VHID_DAEMON_PLIST="/Library/LaunchDaemons/${VHID_DAEMON_LABEL}.plist"
+
+KANATA_STABLE_BIN="/usr/local/bin/kanata"
+KANATA_CONFIG_DIR="${HOME}/.config/kanata"
+KANATA_ACTIVE_CONFIG="${KANATA_CONFIG_DIR}/kanata.kbd"
+KANATA_DEFAULT_CONFIG="${KANATA_CONFIG_DIR}/macbook.kbd"
+KANATA_BAR_CONFIG_DIR="${HOME}/.config/kanata-bar"
+KANATA_BAR_CONFIG="${KANATA_BAR_CONFIG_DIR}/config.toml"
+KANATA_BAR_TOOL="http:kanata-bar"
+# mise prefixes bootstrap-managed LaunchAgent labels with dev.mise.
+KANATA_DAEMON_LABEL="dev.mise.org.kanata.daemon"
+KANATA_BAR_LABEL="dev.mise.com.kanata-bar.ui"
+
+DOTFILES_DIR="${DOTFILES_DIR:-${HOME}/.dotfiles}"
+KANATA_ICONS_DIR="${KANATA_CONFIG_DIR}/icons"
+USER_NAME="$(id -un)"
+USER_ID="$(id -u)"
+TMP_ROOT="${TMPDIR:-/tmp}/kanata-setup.$$"
+
+cleanup() {
+  rm -rf "$TMP_ROOT"
+}
+trap cleanup EXIT
+
+say() { printf 'kanata: %s\n' "$*"; }
+warn() { printf 'kanata: warning: %s\n' "$*" >&2; }
+die() {
+  printf 'kanata: error: %s\n' "$*" >&2
+  exit 1
+}
+
+need_macos() {
+  [[ "$(uname -s)" == "Darwin" ]] || die "macOS only"
+}
+
+need_sudo() {
+  if [[ "$(id -u)" -eq 0 ]]; then
+    die "run as your user, not root"
+  fi
+  sudo -v
+}
+
+sha256_file() {
+  /usr/bin/shasum -a 256 "$1" | awk '{print $1}'
+}
+
+download_verified() {
+  local url="$1" expected_sha="$2" dest="$3"
+  say "downloading ${url}"
+  /usr/bin/curl -fL --retry 3 --connect-timeout 20 --output "$dest" "$url"
+  local actual_sha
+  actual_sha="$(sha256_file "$dest")"
+  [[ "$actual_sha" == "$expected_sha" ]] || die "checksum mismatch for ${url}: expected ${expected_sha}, got ${actual_sha}"
+}
+
+install_driver_pkg() {
+  local installed_version=""
+  installed_version="$(/usr/sbin/pkgutil --pkg-info "$DRIVER_PKG_ID" 2>/dev/null | awk '/^version:/ {print $2}' || true)"
+
+  if [[ "$installed_version" == "$DRIVER_VERSION" && -x "$DRIVER_MANAGER" ]]; then
+    say "Karabiner DriverKit VirtualHIDDevice ${DRIVER_VERSION} already installed"
+  else
+    mkdir -p "$TMP_ROOT"
+    local pkg="${TMP_ROOT}/Karabiner-DriverKit-VirtualHIDDevice-${DRIVER_VERSION}.pkg"
+    download_verified "$DRIVER_URL" "$DRIVER_SHA256" "$pkg"
+    say "installing Karabiner DriverKit VirtualHIDDevice ${DRIVER_VERSION} (current: ${installed_version:-none})"
+    sudo /usr/sbin/installer -pkg "$pkg" -target /
+  fi
+
+  if [[ -x "$DRIVER_MANAGER" ]]; then
+    if sudo "$DRIVER_MANAGER" activate >/dev/null 2>&1; then
+      say "requested Karabiner VirtualHID activation"
+    else
+      warn "driver activation command returned non-zero; approve Driver Extensions in System Settings if prompted"
+    fi
+  else
+    die "Karabiner VirtualHID manager missing after install: $DRIVER_MANAGER"
+  fi
+}
+
+write_vhid_daemon_plist() {
+  mkdir -p "$TMP_ROOT"
+  local plist="${TMP_ROOT}/${VHID_DAEMON_LABEL}.plist"
+  cat >"$plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>${VHID_DAEMON_LABEL}</string>
+  <key>Program</key>
+  <string>${VHID_DAEMON_BIN}</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+</dict>
+</plist>
+PLIST
+
+  /usr/bin/plutil -lint "$plist" >/dev/null
+
+  local changed=0
+  if [[ ! -f "$VHID_DAEMON_PLIST" ]] || ! /usr/bin/cmp -s "$plist" "$VHID_DAEMON_PLIST"; then
+    changed=1
+    say "installing ${VHID_DAEMON_PLIST}"
+    sudo /usr/bin/install -m 0644 -o root -g wheel "$plist" "$VHID_DAEMON_PLIST"
+  else
+    say "${VHID_DAEMON_PLIST} already current"
+  fi
+
+  if [[ "$changed" -eq 1 ]] && sudo /bin/launchctl print "system/${VHID_DAEMON_LABEL}" >/dev/null 2>&1; then
+    sudo /bin/launchctl bootout "system/${VHID_DAEMON_LABEL}" >/dev/null 2>&1 || true
+  fi
+
+  if sudo /bin/launchctl print "system/${VHID_DAEMON_LABEL}" >/dev/null 2>&1; then
+    sudo /bin/launchctl kickstart -k "system/${VHID_DAEMON_LABEL}" >/dev/null 2>&1 || true
+  else
+    sudo /bin/launchctl bootstrap system "$VHID_DAEMON_PLIST" >/dev/null 2>&1 || true
+    sudo /bin/launchctl enable "system/${VHID_DAEMON_LABEL}" >/dev/null 2>&1 || true
+  fi
+
+  if sudo /bin/launchctl print "system/${VHID_DAEMON_LABEL}" >/dev/null 2>&1; then
+    say "VirtualHID daemon registered"
+  else
+    warn "VirtualHID daemon not visible in launchctl; check ${VHID_DAEMON_PLIST}"
+  fi
+}
+
+realpath_python() {
+  /usr/bin/python3 - "$1" <<'PY'
+import os, sys
+print(os.path.realpath(sys.argv[1]))
+PY
+}
+
+install_stable_kanata() {
+  local brew_bin src
+  brew_bin="$(command -v brew || true)"
+  [[ -n "$brew_bin" ]] || die "Homebrew not found; run bootstrap first"
+  src="$($brew_bin --prefix)/bin/kanata"
+  [[ -x "$src" ]] || die "Homebrew kanata not found at ${src}; run 'mise bootstrap packages apply --yes' or 'brew install kanata'"
+
+  local src_real new_ver old_ver
+  src_real="$(realpath_python "$src")"
+  if [[ "$src_real" == "$KANATA_STABLE_BIN" ]]; then
+    say "Homebrew kanata already uses stable path ${KANATA_STABLE_BIN}"
+    return
+  fi
+  new_ver="$($src_real --version 2>/dev/null | head -1 || true)"
+  old_ver=""
+  if [[ -x "$KANATA_STABLE_BIN" && ! -L "$KANATA_STABLE_BIN" ]]; then
+    old_ver="$($KANATA_STABLE_BIN --version 2>/dev/null | head -1 || true)"
+  fi
+
+  if [[ ! -x "$KANATA_STABLE_BIN" || -L "$KANATA_STABLE_BIN" || "$new_ver" != "$old_ver" ]]; then
+    say "copying kanata to ${KANATA_STABLE_BIN} (${old_ver:-none} -> ${new_ver:-unknown})"
+    sudo /usr/bin/install -m 0755 "$src_real" "$KANATA_STABLE_BIN"
+  else
+    say "${KANATA_STABLE_BIN} already at ${old_ver}"
+  fi
+}
+
+write_sudoers() {
+  mkdir -p "$TMP_ROOT"
+  local sudoers="${TMP_ROOT}/kanata-sudoers"
+  cat >"$sudoers" <<SUDOERS
+${USER_NAME} ALL=(root) NOPASSWD: ${KANATA_STABLE_BIN}, /usr/bin/pkill -x kanata
+SUDOERS
+  sudo /usr/sbin/visudo -cf "$sudoers" >/dev/null
+  sudo /usr/bin/install -m 0440 -o root -g wheel "$sudoers" /etc/sudoers.d/kanata
+  say "sudoers entry installed at /etc/sudoers.d/kanata"
+}
+
+ensure_kanata_config() {
+  /bin/mkdir -p "$KANATA_CONFIG_DIR"
+  if [[ ! -e "$KANATA_ACTIVE_CONFIG" ]]; then
+    /bin/ln -sf "$KANATA_DEFAULT_CONFIG" "$KANATA_ACTIVE_CONFIG"
+    say "created ${KANATA_ACTIVE_CONFIG} -> ${KANATA_DEFAULT_CONFIG}"
+  elif [[ -L "$KANATA_ACTIVE_CONFIG" && ! -e "$KANATA_ACTIVE_CONFIG" ]]; then
+    local backup
+    backup="${KANATA_ACTIVE_CONFIG}.broken.$(/bin/date +%Y%m%d%H%M%S)"
+    /bin/mv "$KANATA_ACTIVE_CONFIG" "$backup"
+    /bin/ln -sf "$KANATA_DEFAULT_CONFIG" "$KANATA_ACTIVE_CONFIG"
+    say "replaced broken ${KANATA_ACTIVE_CONFIG} symlink (backup: ${backup})"
+  else
+    say "${KANATA_ACTIVE_CONFIG} already present"
+  fi
+}
+
+kanata_bar_app_path() {
+  local install_path=""
+  install_path="$(mise where "$KANATA_BAR_TOOL" 2>/dev/null || true)"
+  [[ -n "$install_path" ]] || return 1
+  if [[ -d "${install_path}/Kanata Bar.app" ]]; then
+    printf '%s\n' "${install_path}/Kanata Bar.app"
+    return 0
+  fi
+  /usr/bin/find "$install_path" -maxdepth 3 -name 'Kanata Bar.app' -type d -print -quit 2>/dev/null
+}
+
+validate_kanata_bar_tool() {
+  local app_path=""
+  app_path="$(kanata_bar_app_path || true)"
+  [[ -n "$app_path" && -x "${app_path}/Contents/MacOS/kanata-bar" ]] || die "kanata-bar not installed by mise; run 'mise install ${KANATA_BAR_TOOL}'"
+  say "kanata-bar installed by mise at ${app_path}"
+}
+
+write_kanata_bar_config() {
+  /bin/mkdir -p "$KANATA_BAR_CONFIG_DIR"
+  local icons_dir="$KANATA_ICONS_DIR"
+  if [[ ! -d "$icons_dir" && -d "${DOTFILES_DIR}/config/kanata/icons" ]]; then
+    icons_dir="${DOTFILES_DIR}/config/kanata/icons"
+  fi
+
+  mkdir -p "$TMP_ROOT"
+  local config="${TMP_ROOT}/kanata-bar-config.toml"
+  cat >"$config" <<TOML
+[kanata]
+path = "${KANATA_STABLE_BIN}"
+config = "${KANATA_ACTIVE_CONFIG}"
+port = 5829
+extra_args = ["--nodelay"]
+
+[kanata_bar]
+autostart_kanata = false
+autorestart_kanata = false
+icons_dir = "${icons_dir}"
+TOML
+  /usr/bin/install -m 0644 "$config" "$KANATA_BAR_CONFIG"
+  say "kanata-bar config installed at ${KANATA_BAR_CONFIG}"
+}
+
+move_stale_nixos_plist_if_broken() {
+  local label="$1"
+  local plist="/Library/LaunchDaemons/${label}.plist"
+  [[ -f "$plist" ]] || return 0
+
+  local command_text missing=""
+  command_text="$(/usr/bin/plutil -extract ProgramArguments.2 raw -o - "$plist" 2>/dev/null || true)"
+  missing="$(printf '%s\n' "$command_text" | /usr/bin/sed -n 's/.*exec \([^ ]*\/nix\/store[^ ]*\).*/\1/p')"
+  [[ -n "$missing" ]] || missing="$(printf '%s\n' "$command_text" | /usr/bin/sed -n 's/.*exec \(\/nix\/store[^ ]*\).*/\1/p')"
+
+  if [[ -n "$missing" && ! -e "$missing" ]]; then
+    local disabled_dir="/Library/LaunchDaemons.disabled"
+    local backup
+    backup="${disabled_dir}/${label}.plist.disabled.$(/bin/date +%Y%m%d%H%M%S)"
+    say "moving stale broken ${plist} aside (missing ${missing})"
+    sudo /bin/launchctl bootout "system/${label}" >/dev/null 2>&1 || true
+    sudo /bin/mkdir -p "$disabled_dir"
+    sudo /bin/mv "$plist" "$backup"
+  fi
+}
+
+cleanup_stale_nix_helpers() {
+  move_stale_nixos_plist_if_broken "org.nixos.start_karabiner_daemons"
+  move_stale_nixos_plist_if_broken "org.nixos.setsuid_karabiner_session_monitor"
+}
+
+warn_if_nix_agents_active() {
+  # Parallel nix/mise setup: nix-darwin owns org.kanata.daemon and
+  # com.kanata-bar.ui until the mise world takes over. Running both stacks
+  # would start two kanata processes fighting over the keyboard.
+  local label
+  for label in "org.kanata.daemon" "com.kanata-bar.ui"; do
+    if /bin/launchctl print "gui/${USER_ID}/${label}" >/dev/null 2>&1; then
+      warn "nix-managed ${label} agent is still loaded; do not apply mise launchd agents while nix owns kanata"
+    fi
+  done
+}
+
+kickstart_user_agents() {
+  if /bin/launchctl print "gui/${USER_ID}/${KANATA_DAEMON_LABEL}" >/dev/null 2>&1; then
+    /bin/launchctl kickstart -k "gui/${USER_ID}/${KANATA_DAEMON_LABEL}" >/dev/null 2>&1 || true
+    say "kickstarted ${KANATA_DAEMON_LABEL}"
+  else
+    warn "${KANATA_DAEMON_LABEL} LaunchAgent not loaded yet; run 'mise bootstrap launchd apply --yes'"
+  fi
+
+  if /bin/launchctl print "gui/${USER_ID}/${KANATA_BAR_LABEL}" >/dev/null 2>&1; then
+    /bin/launchctl kickstart -k "gui/${USER_ID}/${KANATA_BAR_LABEL}" >/dev/null 2>&1 || true
+    say "kickstarted ${KANATA_BAR_LABEL}"
+  else
+    warn "${KANATA_BAR_LABEL} LaunchAgent not loaded yet; run 'mise bootstrap launchd apply --yes'"
+  fi
+}
+
+print_manual_notes() {
+  if ! /usr/bin/systemextensionsctl list 2>/dev/null | /usr/bin/grep -q 'org.pqrs.Karabiner-DriverKit-VirtualHIDDevice.*\[activated enabled\]'; then
+    warn "Karabiner DriverKit extension may still need approval"
+    warn "Open System Settings > General > Login Items & Extensions > Driver Extensions, then enable org.pqrs.Karabiner-DriverKit-VirtualHIDDevice"
+  fi
+
+  say "setup complete"
+  say "verify: systemextensionsctl list | grep -i Karabiner"
+  say "verify: launchctl print system/${VHID_DAEMON_LABEL}"
+  say "verify: launchctl print gui/${USER_ID}/${KANATA_DAEMON_LABEL}"
+  say "verify: launchctl print gui/${USER_ID}/${KANATA_BAR_LABEL}"
+}
+
+main() {
+  need_macos
+  need_sudo
+  install_driver_pkg
+  write_vhid_daemon_plist
+  install_stable_kanata
+  write_sudoers
+  ensure_kanata_config
+  validate_kanata_bar_tool
+  write_kanata_bar_config
+  cleanup_stale_nix_helpers
+  warn_if_nix_agents_active
+  kickstart_user_agents
+  print_manual_notes
+}
+
+main "$@"
