@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# tmux-resurrect save_command_strategy with exact pi session capture.
+#
+# Default `ps` behavior for every pane, except panes running `pi`: those are
+# rewritten to `pi --session <uuid>` using the @pi_session_id pane option
+# (tagged live by the resurrect-tag.ts pi extension), falling back to `pi -c`
+# (continue most recent session for the pane's cwd) when no tag exists.
+#
+# Restore side pairs with the inline strategy `"pi->pinvim *"` in
+# config/tmux/plugins.tmux.conf, which relaunches via pinvim (profile
+# resolution) passing the saved args through.
+#
+# plugins.tmux.conf symlinks this file into the resurrect plugin as
+# save_command_strategies/pi_session.sh and sets
+# @resurrect-save-command-strategy 'pi_session'.
+
+PANE_PID="$1"
+[ -n "$PANE_PID" ] || exit 0
+
+full_command="$(ps -ao "ppid,args" | sed 's/^ *//' | grep "^${PANE_PID} " | cut -d' ' -f2-)"
+
+case "$full_command" in
+  pi | "pi "*)
+    pane_id="$(tmux list-panes -a -F '#{pane_pid} #{pane_id}' |
+      awk -v pid="$PANE_PID" '$1 == pid { print $2; exit }')"
+    session_id=""
+    if [ -n "$pane_id" ]; then
+      session_id="$(tmux show-options -pqv -t "$pane_id" @pi_session_id 2>/dev/null)"
+    fi
+    if [ -n "$session_id" ]; then
+      echo "pi --session $session_id"
+    else
+      echo "pi -c"
+    fi
+    ;;
+  *)
+    echo "$full_command"
+    ;;
+esac
