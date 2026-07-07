@@ -16,11 +16,11 @@ Continue `bin/media-presenced` (single-file Swift daemon). Working vertical slic
 
 ## Design
 
-Daemon must run as its own LaunchAgent so lifecycle is independent from the terminal host. CDP is authority for Meet/Athena telehealth (TCC/replayd logs unreliable for already-granted apps). Avoid CGWindowList/System Events window-title reads (trigger Screen Recording prompts). Helium launched with --remote-debugging-port=9223. The daemon is now an editable `#!/usr/bin/swift` script, not a nix-built binary.
+Daemon must run as its own LaunchAgent so lifecycle is independent from the terminal host. CDP is authority for Meet/Athena telehealth (TCC/replayd logs unreliable for already-granted apps). Avoid CGWindowList/System Events window-title reads (trigger Screen Recording prompts). Helium launched with --remote-debugging-port=9223 (confirmed working 2026-07-06: bin/helium-launch carries the flag on every fish/hyper+j cold start; CDP /json/version verified). The daemon is now an editable `#!/usr/bin/swift` script, not a nix-built binary.
 
 ## Acceptance Criteria
 
-1. Single-file Swift script at `bin/media-presenced`, wired into home-manager LaunchAgent. 2. LaunchAgent runs it at login without terminal-host re-prompts. 3. Hammerspoon consumer: connect to the Unix socket, dispatch events to ptt mute, music pause, DND/focus on screenshare.start/stop, and Slack status; replace watchers/camera.lua heuristics. 4. Repoint hyper+z (bindings.lua loadMeeting) to send {cmd:focus} to the daemon instead of window-size guessing. 5. Slack huddle resolver (capture signals + window/AX), validated live. 6. Native Zoom/Teams resolver. 7. Camera owner attribution (not just on/off). 8. Live-validate meeting.left, screenshare stop, and lobby->joined transitions end to end. 9. lat.md/programs/media-presence updated; lat check passes.
+1. Single-file Swift script at `bin/media-presenced`, wired into home-manager LaunchAgent. 2. LaunchAgent runs it at login without terminal-host re-prompts. 3. Hammerspoon consumer: connect to the Unix socket, dispatch events to ptt mute, music pause, DND/focus on screenshare.start/stop, and Slack status; replace watchers/camera.lua heuristics. 4. Repoint hyper+z (bindings.lua loadMeeting) to send {cmd:focus} to the daemon instead of window-size guessing. 5. Slack huddle resolver (capture signals + window/AX), validated live — including huddle video on/off and huddle screensharing start/stop detection end to end. 6. Native Zoom/Teams resolver. 7. Camera owner attribution (not just on/off). 8. Live-validate meeting.left, screenshare stop, and lobby->joined transitions end to end. 9. lat.md/programs/media-presence updated; lat check passes.
 
 ## Notes
 
@@ -40,3 +40,7 @@ Criteria 3+4 implemented:
 **2026-06-26T21:04:58Z**
 
 mise-bootstrap-migration notes (superseded by `bin/media-presenced`): the daemon source is now a portable single-file Swift script. Remaining portability work is only launch setup and ensuring Helium starts with `--remote-debugging-port=9223` outside nix.
+
+**2026-07-07T12:44:28Z**
+
+Scope transition: next focus is Slack huddle monitoring testing — huddle video on/off and huddle screensharing start/stop (criterion 5, expanded). CDP 9223 prerequisite is confirmed working: hyper+j/fish cold starts route through bin/helium-launch with --remote-debugging-port=9223 (signed Helium 0.14.2.1, /json/version verified live).
