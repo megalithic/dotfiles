@@ -680,7 +680,11 @@ final class PresenceEngine {
     var onEvent: ((_ event: String, _ presence: Presence) -> Void)?
 
     private let meetBundle = "net.imput.helium"
-    private let slackBundle = "com.tinyspeck.slackmacgap"
+    // Exact bundle-id match — prefix would false-match com.tinyspeck.slackmacgapbeta.
+    private let slackAppBundles: Set<String> = [
+        "com.tinyspeck.slackmacgap",
+        "com.tinyspeck.slackmacgap.helper",
+    ]
     private let cameraActiveFallbackURLPrefixes = [
         "https://telehealth.px.athena.io/",
     ]
@@ -689,6 +693,8 @@ final class PresenceEngine {
     // Source-level flags (engine-private; "inMeeting" is derived from these).
     private var cdpMeetingActive = false
     private var slackHuddleActive = false
+    private var cdpSharing = false          // from Meet DOM presenting
+    private var replaydSharing = false      // from OSLog screen capture
 
     func applyCapture(_ c: CaptureState) {
         var p = presence
@@ -699,8 +705,8 @@ final class PresenceEngine {
         p.cameraActive = c.cameraActive
 
         // Slack huddle resolver: if mic owner has Slack bundle, treat as meeting.
-        slackHuddleActive = c.micOwners.contains { $0.bundleID.hasPrefix(slackBundle) }
-        reconcileMeeting(&p)
+        slackHuddleActive = c.micOwners.contains { slackAppBundles.contains($0.bundleID) }
+        reconcileDerived(&p)
 
         applyCameraActiveFallback(&p)
         commit(p)
@@ -716,15 +722,16 @@ final class PresenceEngine {
             if p.meetingTargetId.isEmpty || p.meetingTargetId == m.targetId {
                 let wasSharing = p.sharing
                 cdpMeetingActive = false
+                cdpSharing = false
                 p.inAppMic = "?"
                 p.inAppCamera = "?"
                 p.participants = []
                 p.meetingURL = ""
                 p.meetingTitle = ""
                 p.meetingTargetId = ""
-                reconcileMeeting(&p)
+                reconcileDerived(&p)
                 commit(p)
-                if wasSharing { emit("screenshare.stop") }
+                if wasSharing && !p.sharing { emit("screenshare.stop") }
                 emit("meeting.left")
             }
         case "meet.appeared":
@@ -734,7 +741,7 @@ final class PresenceEngine {
             p.meetingTitle = m.title
             // Don't overwrite meetingApp if slack has it; meet takes priority below.
             if !slackHuddleActive { p.meetingApp = meetBundle }
-            reconcileMeeting(&p)
+            reconcileDerived(&p)
             commit(p)
             emitMeetingStateEvents(from: inMeetingWas, stateWas)
         case "meet.state":
@@ -748,11 +755,11 @@ final class PresenceEngine {
             p.inAppMic = m.dom.micSelf
             p.inAppCamera = m.dom.camSelf
             cdpMeetingActive = (m.dom.state == "lobby" || m.dom.state == "joined")
+            cdpSharing = m.dom.presenting
             p.meetingState = m.dom.state
-            p.sharing = m.dom.presenting
             // CDP meeting always wins meetingApp when active.
             if cdpMeetingActive { p.meetingApp = meetBundle }
-            reconcileMeeting(&p)
+            reconcileDerived(&p)
             applyCameraActiveFallback(&p)
             commit(p)
             emitMeetingStateEvents(from: inMeetingWas, stateWas)
@@ -765,23 +772,26 @@ final class PresenceEngine {
     /// Accept sharing boolean from the screenshare monitor (replayd log stream).
     /// Only touches sharing; meeting state is unchanged.
     func applyScreenshare(_ sharing: Bool) {
-        guard presence.sharing != sharing else { return }
+        guard replaydSharing != sharing else { return }
+        let wasSharing = presence.sharing
+        replaydSharing = sharing
         var p = presence
-        p.sharing = sharing
+        reconcileDerived(&p)
+        applyCameraActiveFallback(&p)
         commit(p)
-        emit(sharing ? "screenshare.start" : "screenshare.stop")
+        if p.sharing != wasSharing { emit(p.sharing ? "screenshare.start" : "screenshare.stop") }
     }
 
     // MARK: reconciliation
 
-    /// Derive inMeeting / meetingApp from the source flags.
+    /// Derive inMeeting / meetingApp / sharing from the source flags.
     /// CDP takes priority over Slack when both are active (focus works).
-    private func reconcileMeeting(_ p: inout Presence) {
+    private func reconcileDerived(_ p: inout Presence) {
         let oldInMeeting = p.inMeeting
         p.inMeeting = cdpMeetingActive || slackHuddleActive
+        p.sharing = cdpSharing || replaydSharing
         if !cdpMeetingActive && slackHuddleActive {
-            p.meetingApp = slackBundle
-            // Slack huddles always count as "joined" (mic owner = in call).
+            p.meetingApp = "com.tinyspeck.slackmacgap"
             if p.meetingState == "idle" { p.meetingState = "joined" }
         }
         if !cdpMeetingActive && !slackHuddleActive {
@@ -944,6 +954,18 @@ capture.start()
 cdp.start()
 screenshare.start()
 log("media-presenced: started (cdp port \(cdpPort))")
+
+// Signal handlers: clean up log-stream child on SIGTERM / SIGINT.
+for sig in [SIGTERM, SIGINT] {
+    signal(sig, SIG_IGN)
+    let src = DispatchSource.makeSignalSource(signal: sig, queue: .main)
+    src.setEventHandler {
+        log("media-presenced: shutting down")
+        screenshare.stop()
+        exit(0)
+    }
+    src.resume()
+}
 
 // Periodic capture refresh as a safety net (listeners cover most transitions).
 let refreshTimer = DispatchSource.makeTimerSource(queue: .global())
