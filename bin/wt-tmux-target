@@ -131,6 +131,9 @@ do_session() {
   tmux setenv -t "=${session}" GIT_WORKTREE "$worktree_id"
   ensure_window "$session" code
   ensure_window "$session" services "$services_cmd"
+  # Keep the services window alive when its command exits (e.g. server boot
+  # crash) so the error output stays visible. Rerun with `tmux respawn-pane`.
+  tmux set-option -w -t "=${session}:services" remain-on-exit on 2>/dev/null || true
 
   if [[ "$inside_tmux" == "true" ]]; then
     tmux switch-client -t "=${session}"
