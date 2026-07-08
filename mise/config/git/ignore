@@ -130,6 +130,7 @@ _deps
 .workspaces
 **/.workspaces
 .worktrees
+.worktreeinclude
 
 **/erl_crash.dump
 obsidian/.obsidian
