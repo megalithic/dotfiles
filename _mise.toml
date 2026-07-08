@@ -85,11 +85,11 @@ pir = "pi -r"
 pisock = "pinvim"
 pis = "pinvim"
 
-[bootstrap.brew.taps]
-"megalithic/helium" = "https://github.com/megalithic/helium-macos-releases"
+# (no [bootstrap.brew.taps]: the only tapped cask, helium, installs through real
+# brew in the post-packages hook, which taps megalithic/helium itself)
 
 [bootstrap.packages]
-"mas" = "latest"
+"brew:mas" = "latest"       # mas CLI itself (brew manager runs before mas manager)
 "mas:975937182" = "latest"  # Fantastical
 "brew:bash" = "latest"
 "brew:fish" = "latest"
@@ -105,12 +105,14 @@ pis = "pinvim"
 # signing ships in the app bundle). 1password-cli provides `op` with app
 # integration (biometric auth) — together these replace nix-darwin's
 # programs._1password{,-gui}.
+# 1password-cli and hammerspoon cannot go here: mise's brew-cask backend
+# supports app-bundle-only casks and both ship a `binary` artifact (op; hs
+# CLI) — installed via real brew in [bootstrap.hooks.post-packages] instead.
 "brew-cask:1password" = "latest"
-"brew-cask:1password-cli" = "latest"
-"brew-cask:hammerspoon" = "latest"
-# private repo; until then install via real `brew install --cask helium`.
+# helium cannot go here either: mise fetches cask metadata unauthenticated from
+# raw.githubusercontent (api/cask/<token>.json), which a private tap can't serve,
+# and the cask's custom download strategy needs real brew — see post-packages hook.
 # After install, verify 1Password pairing: `mise run helium:1password-trust`.
-"brew-cask:megalithic/helium/helium" = "latest"
 
 [dotfiles]
 # "~/.config" = "mise/config"
@@ -187,6 +189,10 @@ pis = "pinvim"
 
 # -- static tool configs (small, single-file configs previously Nix-store-backed) --
 "~/.config/bat/config" = "mise/config/bat/config"
+# bat theme/syntax referenced by config (--theme=everforest, ghostty map-syntax);
+# run `bat cache --build` if these change
+"~/.config/bat/themes/everforest.tmTheme" = "mise/config/bat/themes/everforest.tmTheme"
+"~/.config/bat/syntaxes/ghostty.sublime-syntax" = "mise/config/bat/syntaxes/ghostty.sublime-syntax"
 "~/.config/direnv/direnv.toml" = "mise/config/direnv/direnv.toml"
 "~/.config/starship.toml" = "mise/config/starship/starship.toml"
 "~/.config/karabiner/karabiner.json" = "mise/config/karabiner/karabiner.json"
@@ -394,6 +400,16 @@ stderr_path = "/tmp/kanata-bar.err"
 # "com.apple.finder" = { AppleShowAllFiles = true, ShowStatusBar = true, FXPreferredViewStyle = "Nlsv" }
 # "com.apple.dock" = { tilesize = 52.0 }
 # "com.apple.WindowManager" = { EnableStandardClickToShowDesktop = false }
+
+[bootstrap.hooks.post-packages]
+# Casks mise's brew-cask backend can't handle, installed via real brew:
+# - 1password-cli, hammerspoon: ship `binary` artifacts (backend is app-bundle only)
+# - helium: private tap (no unauthenticated api/cask JSON) + custom download strategy
+run = [
+  "command -v op >/dev/null 2>&1 || brew install --cask 1password-cli",
+  "[ -d /Applications/Hammerspoon.app ] || brew install --cask hammerspoon",
+  "[ -d /Applications/Helium.app ] || { brew tap megalithic/helium https://github.com/megalithic/helium-macos-releases; brew install --cask megalithic/helium/helium; }",
+]
 
 [bootstrap.hooks.pre-dotfiles]
 run = "git -C {{config_root}} submodule update --init"

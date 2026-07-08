@@ -1,0 +1,7 @@
+[global]
+hide_env_diff = true
+load_dotenv = true
+warn_timeout = 0
+
+[whitelist]
+prefix = ["/Users/seth"]
