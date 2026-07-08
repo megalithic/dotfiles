@@ -1,26 +1,39 @@
 #!/bin/sh
 
-self_dir=$(CDPATH=; cd "$(dirname "$0")" 2>/dev/null && pwd -P)
-old_path=${PATH:-}
-new_path=
+# Wrapper around starship that forwards fish's job count via STARSHIP_JOBS_COUNT.
+#
+# Finds the real starship by scanning PATH and skipping any candidate that is
+# this same file (checked with -ef, which follows symlinks). A plain
+# "strip our dir from PATH" is not enough: ~/bin and ~/.dotfiles/bin are the
+# same directory via symlinks, so the wrapper used to find itself through the
+# other path and exec-loop forever, pegging the CPU.
 
+# Depth guard: belt-and-suspenders against any remaining exec loop.
+_depth=${_STARSHIP_WRAPPER_DEPTH:-0}
+if [ "$_depth" -ge 10 ]; then
+  printf '%s: wrapper recursion detected (depth %s), giving up\n' "${0##*/}" "$_depth" >&2
+  exit 1
+fi
+_STARSHIP_WRAPPER_DEPTH=$((_depth + 1))
+export _STARSHIP_WRAPPER_DEPTH
+
+real_starship=
 IFS=:
-for dir in $old_path; do
-  if [ "$dir" = "$self_dir" ]; then
+for dir in ${PATH:-}; do
+  [ -n "$dir" ] || continue
+  candidate=$dir/starship
+  [ -x "$candidate" ] || continue
+  # Skip ourselves, no matter which symlinked path we were invoked through.
+  if [ "$candidate" -ef "$0" ]; then
     continue
   fi
-
-  if [ -z "$new_path" ]; then
-    new_path=$dir
-  else
-    new_path=$new_path:$dir
-  fi
+  real_starship=$candidate
+  break
 done
 unset IFS
 
-real_starship=$(PATH=$new_path command -v starship 2>/dev/null)
 if [ -z "$real_starship" ]; then
-  printf '%s: real starship not found after removing %s from PATH\n' "${0##*/}" "$self_dir" >&2
+  printf '%s: real starship not found in PATH\n' "${0##*/}" >&2
   exit 127
 fi
 
