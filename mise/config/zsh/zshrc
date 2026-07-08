@@ -33,7 +33,26 @@ if command -v atuin >/dev/null 2>&1; then
   eval "$(atuin init zsh --disable-up-arrow --disable-ai)"
 fi
 
-if command -v wt >/dev/null 2>&1; then
+# Worktrunk: thin glue around the shell-agnostic ~/.dotfiles/bin/wt (all logic
+# lives there); this function only cds, sources env, and evals exec directives.
+if [ -x "$HOME/.dotfiles/bin/wt" ]; then
+  wt() {
+    local d rc
+    d="$(mktemp -d)" || return 1
+    WT_SHELL=posix WT_CD_FILE="$d/cd" WT_ENV_FILE="$d/env" WT_EXEC_FILE="$d/exec" \
+      "$HOME/.dotfiles/bin/wt" "$@"
+    rc=$?
+    if [ -s "$d/cd" ]; then
+      cd -- "$(cat "$d/cd")" || { [ $rc -eq 0 ] && rc=$?; }
+    fi
+    [ -s "$d/env" ] && . "$d/env"
+    if [ -s "$d/exec" ]; then
+      eval "$(cat "$d/exec")" || { [ $rc -eq 0 ] && rc=$?; }
+    fi
+    command rm -rf "$d"
+    return $rc
+  }
+elif command -v wt >/dev/null 2>&1; then
   eval "$(wt config shell init zsh)"
 fi
 

@@ -1,0 +1,315 @@
+#!/usr/bin/env bash
+# wt — shell-agnostic Worktrunk wrapper core.
+#
+# Holds all the logic that used to live in the fish `wt` function:
+#   - resolves WORKTRUNK_PROJECT_CONFIG_PATH to <main-repo-root>/wt.local.toml
+#   - implicit `switch` for `wt <branch>`
+#   - auto `--create` when the branch exists neither locally nor on origin
+#   - auto `--yes` (project hook approval)
+#   - targets (-t/--target session|window|cd) via wt-tmux-target;
+#     switch flows default to `session`, `cd` restores plain cd-in-shell
+#   - GIT_WORKTREE id derivation ({repo}-{branch-slug}), matching mise's
+#     self-derivation in mise.local.toml
+#
+# A child process cannot cd the parent shell or set its env, so thin per-shell
+# wrappers call this script with:
+#   WT_SHELL      fish|posix (directive/env-file syntax; default posix)
+#   WT_CD_FILE    script writes the final cd target path here
+#   WT_ENV_FILE   script writes GIT_WORKTREE set/unset commands here
+#   WT_EXEC_FILE  script copies Worktrunk exec directives here
+# The wrapper then cds/sources. Without those env vars the script still works;
+# it prints the worktree path instead of cd-ing and evals exec directives
+# itself with sh.
+
+# ---- locate the real Worktrunk binary (skip this script) -------------------
+self="$(realpath "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
+wt_bin="${WORKTRUNK_BIN:-}"
+if [ -z "$wt_bin" ]; then
+  while IFS= read -r cand; do
+    [ -x "$cand" ] || continue
+    r="$(realpath "$cand" 2>/dev/null || echo "$cand")"
+    [ "$r" = "$self" ] && continue
+    wt_bin="$cand"
+    break
+  done < <(type -ap wt)
+fi
+if [ -z "$wt_bin" ]; then
+  echo "wt: could not find Worktrunk binary on PATH" >&2
+  exit 127
+fi
+
+# ---- project config: <main-repo-root>/wt.local.toml ------------------------
+gcd="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
+if [ -n "$gcd" ]; then
+  WORKTRUNK_PROJECT_CONFIG_PATH="$(dirname "$gcd")/wt.local.toml"
+  export WORKTRUNK_PROJECT_CONFIG_PATH
+fi
+
+# ---- helpers ----------------------------------------------------------------
+# {repo}-{branch-slug}; slug = non [A-Za-z0-9_] squashed to "-", trimmed.
+worktree_id() { # $1 = worktree path
+  local br repo slug
+  br="$(git -C "$1" branch --show-current 2>/dev/null)"
+  [ -n "$br" ] || br="$(basename "$1")"
+  repo="$(basename "$(dirname "$(git -C "$1" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)")")"
+  slug="$(printf '%s' "$br" | tr -c 'A-Za-z0-9_' '-' | sed -e 's/--*/-/g' -e 's/^-//' -e 's/-*$//')"
+  printf '%s-%s' "$repo" "$slug"
+}
+
+write_env() { # $1 = set|unset, $2 = value (for set)
+  [ -n "${WT_ENV_FILE:-}" ] || return 0
+  case "${WT_SHELL:-posix}" in
+    fish)
+      if [ "$1" = set ]; then
+        printf "set -gx GIT_WORKTREE '%s'\n" "$2" >"$WT_ENV_FILE"
+      else
+        printf 'set -ge GIT_WORKTREE\n' >"$WT_ENV_FILE"
+      fi
+      ;;
+    *)
+      if [ "$1" = set ]; then
+        printf "export GIT_WORKTREE='%s'\n" "$2" >"$WT_ENV_FILE"
+      else
+        printf 'unset GIT_WORKTREE\n' >"$WT_ENV_FILE"
+      fi
+      ;;
+  esac
+}
+
+emit_cd() { # $1 = target path
+  if [ -n "${WT_CD_FILE:-}" ]; then
+    printf '%s\n' "$1" >"$WT_CD_FILE"
+  else
+    echo "wt: worktree at $1 (no shell wrapper active; cd manually)" >&2
+  fi
+}
+
+# ---- split args at `--`; parse -t/--target ----------------------------------
+pre=()
+post=()
+seen_ddash=false
+target=""
+argv=("$@")
+n=$#
+i=0
+while [ "$i" -lt "$n" ]; do
+  a="${argv[$i]}"
+  if [ "$seen_ddash" = true ]; then
+    post+=("$a")
+    i=$((i + 1))
+    continue
+  fi
+  case "$a" in
+    --)
+      seen_ddash=true
+      post+=("$a")
+      ;;
+    -t | --target)
+      # Value is optional: consume only an explicit session|window|cd.
+      nxt=$((i + 1))
+      if [ "$nxt" -lt "$n" ] && { [ "${argv[$nxt]}" = window ] || [ "${argv[$nxt]}" = session ] || [ "${argv[$nxt]}" = cd ]; }; then
+        i="$nxt"
+        target="${argv[$i]}"
+      else
+        target=session
+      fi
+      ;;
+    --target=*) target="${a#--target=}" ;;
+    -t=*) target="${a#-t=}" ;;
+    *) pre+=("$a") ;;
+  esac
+  i=$((i + 1))
+done
+
+if [ -n "$target" ] && [ "$target" != window ] && [ "$target" != session ] && [ "$target" != cd ]; then
+  echo "wt: invalid target '$target' (expected session|window|cd)" >&2
+  exit 2
+fi
+
+# ---- first non-flag token = potential subcommand -----------------------------
+builtins="switch list remove merge select step hook config"
+first_cmd=""
+for t in ${pre[@]+"${pre[@]}"}; do
+  case "$t" in -*) continue ;; esac
+  first_cmd="$t"
+  break
+done
+
+help_or_version=false
+for t in ${pre[@]+"${pre[@]}"}; do
+  case "$t" in --help | -h | --version | -V) help_or_version=true ;; esac
+done
+[ "$first_cmd" = help ] && help_or_version=true
+
+is_builtin=false
+for b in $builtins; do
+  [ "$first_cmd" = "$b" ] && is_builtin=true
+done
+
+# ---- implicit `switch` --------------------------------------------------------
+inject_switch=false
+if [ "$help_or_version" = false ]; then
+  if [ -n "$target" ]; then
+    [ "$is_builtin" = false ] && inject_switch=true
+  elif [ "$is_builtin" = false ] && [ "${#pre[@]}" -gt 0 ]; then
+    inject_switch=true
+  fi
+fi
+
+# Default target: switch flows (explicit `wt switch` or implicit `wt <branch>`)
+# open a per-worktree tmux session unless overridden. `-t cd` restores the
+# plain cd-in-shell behavior. Other builtins (list, remove, ...) never target.
+target_defaulted=false
+if [ -z "$target" ] && [ "$help_or_version" = false ]; then
+  if [ "$inject_switch" = true ] || [ "$first_cmd" = switch ]; then
+    target=session
+    target_defaulted=true
+  fi
+fi
+[ "$target" = cd ] && target=""
+
+call_args=()
+[ "$inject_switch" = true ] && call_args+=(switch)
+call_args+=(${pre[@]+"${pre[@]}"})
+call_args+=(${post[@]+"${post[@]}"})
+
+has_arg() { # $1 = needle, rest = haystack
+  local needle="$1"
+  shift
+  local x
+  for x in "$@"; do [ "$x" = "$needle" ] && return 0; done
+  return 1
+}
+
+# ---- auto --create when branch doesn't exist (local or origin) ---------------
+if has_arg switch ${call_args[@]+"${call_args[@]}"}; then
+  branch_arg=""
+  seen_switch=false
+  for a in ${call_args[@]+"${call_args[@]}"}; do
+    if [ "$seen_switch" = true ]; then
+      case "$a" in -*) ;; *)
+        branch_arg="$a"
+        break
+        ;;
+      esac
+    fi
+    [ "$a" = switch ] && seen_switch=true
+  done
+
+  if [ -n "$branch_arg" ]; then
+    skip=false
+    # Shortcuts, PR/MR refs, URLs, path-like args.
+    case "$branch_arg" in
+      ^ | - | @) skip=true ;;
+      pr:* | mr:*) skip=true ;;
+      http://* | https://*) skip=true ;;
+      .* | /*) skip=true ;;
+    esac
+    if [ "$skip" = false ]; then
+      branch_exists=false
+      git rev-parse --verify "$branch_arg" >/dev/null 2>&1 && branch_exists=true
+      [ "$branch_exists" = false ] && git rev-parse --verify "origin/$branch_arg" >/dev/null 2>&1 && branch_exists=true
+      if [ "$branch_exists" = false ] &&
+        ! has_arg --create ${call_args[@]+"${call_args[@]}"} &&
+        ! has_arg -c ${call_args[@]+"${call_args[@]}"}; then
+        new_args=()
+        for a in ${call_args[@]+"${call_args[@]}"}; do
+          new_args+=("$a")
+          [ "$a" = switch ] && new_args+=(--create)
+        done
+        call_args=(${new_args[@]+"${new_args[@]}"})
+      fi
+    fi
+  fi
+fi
+
+# ---- auto --yes (hook approval hashes churn; --yes is the stable choice) ------
+if [ "$help_or_version" = false ]; then
+  if ! has_arg --yes ${call_args[@]+"${call_args[@]}"} && ! has_arg -y ${call_args[@]+"${call_args[@]}"}; then
+    call_args+=(--yes)
+  fi
+fi
+
+# ---- target mode: Worktrunk owns the worktree, tmux helper owns nav ----------
+if [ -n "$target" ]; then
+  if ! has_arg switch ${call_args[@]+"${call_args[@]}"}; then
+    call_args=(switch ${call_args[@]+"${call_args[@]}"})
+  fi
+  has_arg --no-cd ${call_args[@]+"${call_args[@]}"} || call_args+=(--no-cd)
+  has_format=false
+  for a in ${call_args[@]+"${call_args[@]}"}; do
+    case "$a" in --format*) has_format=true ;; esac
+  done
+  [ "$has_format" = false ] && call_args+=(--format=json)
+
+  # Capture stdout (JSON); stderr passes through to the terminal.
+  out="$("$wt_bin" "${call_args[@]}")" || exit $?
+
+  branch=""
+  wpath=""
+  while IFS= read -r line; do
+    p="$(printf '%s' "$line" | jq -r '.path // empty' 2>/dev/null)"
+    if [ -n "$p" ]; then
+      wpath="$p"
+      branch="$(printf '%s' "$line" | jq -r '.branch // empty' 2>/dev/null)"
+    fi
+  done <<<"$out"
+  if [ -z "$wpath" ]; then
+    echo "wt: could not parse worktree path from Worktrunk JSON" >&2
+    printf '%s\n' "$out" >&2
+    exit 1
+  fi
+
+  main_root="$(dirname "$gcd")"
+  # Defaulted session target + destination is the main checkout -> plain cd.
+  # An explicit -t session|window still opens tmux for main.
+  if [ "$target_defaulted" = true ] && [ "$wpath" = "$main_root" ]; then
+    emit_cd "$wpath"
+    write_env unset
+    exit 0
+  fi
+
+  wt-tmux-target --target "$target" --branch "$branch" --path "$wpath"
+  tmux_rc=$?
+
+  if [ "$wpath" = "$main_root" ]; then
+    write_env unset
+  else
+    write_env set "$(worktree_id "$wpath")"
+  fi
+  exit "$tmux_rc"
+fi
+
+# ---- normal mode: directive files -------------------------------------------
+cd_file="$(mktemp)"
+exec_file="$(mktemp)"
+directive_env=(WORKTRUNK_DIRECTIVE_CD_FILE="$cd_file" WORKTRUNK_DIRECTIVE_EXEC_FILE="$exec_file")
+# WORKTRUNK_SHELL=fish makes the binary escape exec directives for fish eval.
+[ "${WT_SHELL:-posix}" = fish ] && directive_env+=(WORKTRUNK_SHELL=fish)
+
+env "${directive_env[@]}" "$wt_bin" ${call_args[@]+"${call_args[@]}"}
+exit_code=$?
+
+if [ -s "$cd_file" ]; then
+  tgt="$(sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' "$cd_file")"
+  emit_cd "$tgt"
+  # GIT_WORKTREE ({repo}-{branch-slug}) for shells/services; erased in main.
+  gd="$(git -C "$tgt" rev-parse --git-dir 2>/dev/null)"
+  case "$gd" in
+    */worktrees/*) write_env set "$(worktree_id "$tgt")" ;;
+    *) write_env unset ;;
+  esac
+fi
+
+if [ -s "$exec_file" ]; then
+  if [ -n "${WT_EXEC_FILE:-}" ]; then
+    cat "$exec_file" >"$WT_EXEC_FILE"
+  else
+    eval "$(cat "$exec_file")"
+    src_exit=$?
+    [ "$exit_code" -eq 0 ] && exit_code=$src_exit
+  fi
+fi
+
+rm -f "$cd_file" "$exec_file"
+exit "$exit_code"
