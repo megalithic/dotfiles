@@ -5,6 +5,8 @@ set -eu
 DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-https://github.com/megalithic/dotfiles.git}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 FORCE_HOST="${HOST:-}" # skip hostname prompt if set
+FORCE=0                # --force: pass force flags to all sub-commands
+DRY_RUN=0              # --dry-run: pass dry-run flags to all sub-commands; skip other mutations
 
 COLOR_RESET="$(printf '\033[0m')"
 COLOR_BLUE="$(printf '\033[34m')"
@@ -53,6 +55,56 @@ confirm() {
   esac
 }
 
+# run a mutating command, or print it in dry-run mode
+run() {
+  if [ "$DRY_RUN" = 1 ]; then
+    info "[dry-run] would run: $*"
+  else
+    "$@"
+  fi
+}
+
+usage() {
+  printf 'usage: bootstrap.sh [--force] [--dry-run] [--host <name>]\n'
+  printf '  --force        overwrite conflicting dotfile targets (mise dotfiles apply --force,\n'
+  printf '                 mise bootstrap --force-dotfiles)\n'
+  printf '  --dry-run, -n  print what would happen; mise sub-commands run in their dry-run modes\n'
+  printf '  --host <name>  skip hostname prompt (megabookpro | workbookpro)\n'
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+  --force) FORCE=1 ;;
+  --dry-run | -n) DRY_RUN=1 ;;
+  --host)
+    shift
+    [ $# -gt 0 ] || die "--host requires a value"
+    FORCE_HOST="$1"
+    ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  *)
+    usage >&2
+    die "Unknown argument: $1"
+    ;;
+  esac
+  shift
+done
+
+# flags forwarded to mise sub-commands (word-split on purpose; flags contain no spaces)
+MISE_DOTFILES_FLAGS=""
+MISE_BOOTSTRAP_FLAGS=""
+if [ "$FORCE" = 1 ]; then
+  MISE_DOTFILES_FLAGS="$MISE_DOTFILES_FLAGS --force"
+  MISE_BOOTSTRAP_FLAGS="$MISE_BOOTSTRAP_FLAGS --force-dotfiles"
+fi
+if [ "$DRY_RUN" = 1 ]; then
+  MISE_DOTFILES_FLAGS="$MISE_DOTFILES_FLAGS --dry-run"
+  MISE_BOOTSTRAP_FLAGS="$MISE_BOOTSTRAP_FLAGS --dry-run"
+fi
+
 header
 
 [ "$(uname -s)" = "Darwin" ] || die "macOS only."
@@ -62,9 +114,13 @@ xcode-select -p >/dev/null 2>&1 ||
   die "Xcode Command Line Tools required. Run: xcode-select --install"
 
 if ! command -v brew >/dev/null 2>&1; then
-  info "Installing Homebrew..."
-  NONINTERACTIVE=1 /bin/bash -c \
-    "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  if [ "$DRY_RUN" = 1 ]; then
+    info "[dry-run] would install Homebrew"
+  else
+    info "Installing Homebrew..."
+    NONINTERACTIVE=1 /bin/bash -c \
+      "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  fi
 fi
 
 if [ -x /opt/homebrew/bin/brew ]; then
@@ -74,6 +130,9 @@ elif [ -x /usr/local/bin/brew ]; then
 fi
 
 if ! command -v mise >/dev/null 2>&1; then
+  if [ "$DRY_RUN" = 1 ]; then
+    die "[dry-run] mise not installed; dry-run needs mise to preview sub-commands"
+  fi
   info "Installing mise..."
   brew install mise
 fi
@@ -180,7 +239,7 @@ fi
 
 if ! xcodebuild -license check >/dev/null 2>&1; then
   warn "Xcode license not accepted."
-  sudo xcodebuild -license accept
+  run sudo xcodebuild -license accept
   ok "Xcode license accepted"
 fi
 
@@ -190,14 +249,15 @@ if [ "$(uname -m)" = "arm64" ]; then
     ok "Rosetta 2 installed"
   else
     say "Installing Rosetta 2..."
-    softwareupdate --install-rosetta --agree-to-license
+    run softwareupdate --install-rosetta --agree-to-license
   fi
 fi
 
 if [ -d "$DOTFILES_DIR/.git" ]; then
   info "Updating $DOTFILES_DIR..."
-  git -C "$DOTFILES_DIR" pull --ff-only || info "Skipped pull (local changes or diverged branch)."
+  run git -C "$DOTFILES_DIR" pull --ff-only || info "Skipped pull (local changes or diverged branch)."
 else
+  [ "$DRY_RUN" = 1 ] && die "[dry-run] $DOTFILES_DIR is not a clone; dry-run needs an existing checkout"
   info "Cloning into $DOTFILES_DIR..."
   mkdir -p "$(dirname "$DOTFILES_DIR")"
   git clone --recurse-submodules "$DOTFILES_REPO_URL" "$DOTFILES_DIR"
@@ -205,28 +265,33 @@ fi
 
 # Pre-apply dotfiles so the global ~/.config/mise/config.toml ([tools]) is in place before
 # `mise bootstrap` resolves tools on a first-ever run. Cheap + idempotent — keep it.
-cd "$DOTFILES_DIR" || {
-  warn "Unable to change to $DOTFILES_DIR"
-  exit 1
-} && {
-  info "Trusting mise config..."
-  mise trust
+# NOTE: plain sequential statements — wrapping these in `cd || { } && { }`
+# suppresses `set -e` inside the block, letting mise failures slip through.
+cd "$DOTFILES_DIR" || die "Unable to change to $DOTFILES_DIR"
 
-  info "Initializing submodules..."
-  git -C "$DOTFILES_DIR" submodule update --init && ok "done initializing submodules."
+info "Trusting mise config..."
+mise trust # needed even in dry-run so mise can read the config
 
-  info "Applying dotfiles..."
-  mise dotfiles apply --yes && ok "done applying dotfiles."
+info "Initializing submodules..."
+run git -C "$DOTFILES_DIR" submodule update --init
+ok "done initializing submodules."
 
-  info "Running mise bootstrap..."
-  mise bootstrap --yes && ok "done bootstrapping."
+info "Applying dotfiles..."
+# shellcheck disable=SC2086 # intentional word-splitting of flag strings
+mise dotfiles apply --yes $MISE_DOTFILES_FLAGS
+ok "done applying dotfiles."
 
-  info "Running health checks..."
+info "Running mise bootstrap..."
+# shellcheck disable=SC2086 # intentional word-splitting of flag strings
+mise bootstrap --yes $MISE_BOOTSTRAP_FLAGS
+ok "done bootstrapping."
 
-  if mise run doctor; then
-    info "Done. Restart your terminal (login shell is now fish)."
-  else
-    warn "Finished, but some of the health checks failed."
-    info " Run 'mise run doctor' to investigate."
-  fi
-}
+if [ "$DRY_RUN" = 1 ]; then
+  info "[dry-run] would run: mise run doctor"
+  info "[dry-run] done."
+elif mise run doctor; then
+  info "Done. Restart your terminal (login shell is now fish)."
+else
+  warn "Finished, but some of the health checks failed."
+  info " Run 'mise run doctor' to investigate."
+fi
