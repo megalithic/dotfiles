@@ -115,6 +115,64 @@ function wt --description "Worktrunk wrapper: vendored directives + implicit swi
     end
     set -a call_args $post
 
+    # Auto-inject --create when branch doesn't exist (local or remote).
+    # Only when switch is in play — user ran `wt <branch>` without builtin.
+    if contains -- switch $call_args
+        set -l branch_arg ""
+        set -l seen_switch false
+        for a in $call_args
+            if test "$seen_switch" = true
+                if not string match -q -- '-*' $a
+                    set branch_arg $a
+                    break
+                end
+            end
+            if test "$a" = "switch"
+                set seen_switch true
+            end
+        end
+
+        if test -n "$branch_arg"
+            # Skip shortcuts, PR/MR refs, URLs, and path-like args.
+            if not contains -- $branch_arg ^ - @
+                if not string match -qr -- '^(pr|mr):' $branch_arg
+                    if not string match -q -- 'https?://' $branch_arg
+                        if not string match -q -- '^[./]' $branch_arg
+                            set -l branch_exists false
+                            git rev-parse --verify "$branch_arg" >/dev/null 2>&1; and set branch_exists true
+                            test "$branch_exists" = false; and git rev-parse --verify "origin/$branch_arg" >/dev/null 2>&1; and set branch_exists true
+
+                            if test "$branch_exists" = false
+                                if not contains -- --create $call_args; and not contains -- -c $call_args
+                                    # Insert --create right after 'switch'.
+                                    set -l new_args
+                                    for a in $call_args
+                                        set -a new_args $a
+                                        if test "$a" = "switch"
+                                            set -a new_args --create
+                                        end
+                                    end
+                                    set call_args $new_args
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    # Auto-approve project hooks/aliases (both modes). Worktrunk's content-hash
+    # approvals invalidate whenever a hook template changes (we edit wt.local.toml
+    # from dotfiles), so stored approvals re-prompt constantly; --yes is the
+    # stable choice. In target mode it also keeps the approval prompt from
+    # poisoning the JSON we capture below. Skipped for help/version.
+    if test "$help_or_version" = false
+        if not contains -- --yes $call_args; and not contains -- -y $call_args
+            set -a call_args --yes
+        end
+    end
+
     # ---- Target mode: Worktrunk owns the worktree, tmux helper owns nav ----
     if test -n "$target"
         if not contains -- switch $call_args
@@ -122,11 +180,6 @@ function wt --description "Worktrunk wrapper: vendored directives + implicit swi
         end
         if not contains -- --no-cd $call_args
             set -a call_args --no-cd
-        end
-        # Auto-approve project hooks so the approval prompt never poisons the
-        # JSON we capture below (content-hash approvals invalidate on edit).
-        if not contains -- --yes $call_args; and not contains -- -y $call_args
-            set -a call_args --yes
         end
         set -l has_format false
         for a in $call_args
