@@ -411,7 +411,7 @@ M.dock = {
     connected = "macbook-disabled.kbd", -- Disable internal when Leeloo connected
     disconnected = "macbook.kbd", -- Normal config when Leeloo disconnected
     configPath = os.getenv("HOME") .. "/.config/kanata",
-    daemonLabel = "org.nixos.kanata",
+    daemonLabel = "org.kanata.daemon",
   },
   docked = {
     wifi = "off",

@@ -7,6 +7,7 @@ M.is_docked = nil
 M.is_keyboard_connected = nil -- tracks combined USB + BT keyboard state
 M.bt_last_connected = nil -- tracks last known BT connection state
 M.defaultWifiDevice = "en0"
+M._switch_lock = false -- prevents concurrent kanata restarts
 
 local function wifiDevice()
   local device = U.run(U.bin("network-status -f -d wifi", true))
@@ -62,23 +63,31 @@ local function switchKanataProfile(profile)
     return
   end
 
-  U.log.df("Switching Kanata profile to: %s", profile)
+  -- Serialize kanata restarts to prevent overlapping kill/start cycles
+  if M._switch_lock then
+    U.log.w("Kanata switch already in progress, skipping")
+    return
+  end
+  M._switch_lock = true
+
+  U.log.of("Switching Kanata profile to: %s", profile)
 
   -- Update the main kanata.kbd symlink to point to the new profile
   U.run(fmt("ln -sf %s %s", profilePath, mainConfig), true)
 
-  -- Restart kanata daemon via launchctl
-  -- The daemon runs as a user agent with sudo, so we use gui domain
+  -- Restart kanata daemon via launchctl kickstart -k
   local uid = U.run("id -u", true):gsub("%s+", "")
-  U.run(fmt("launchctl kickstart -k gui/%s/org.kanata.daemon", uid), true)
+  local label = C.dock.kanata.daemonLabel or "org.kanata.daemon"
+  U.run(fmt("launchctl kickstart -k gui/%s/%s", uid, label), true)
 
-  -- Wait briefly for kanata to restart, then verify
+  -- Verify restart (use launchctl print, not pgrep — kanata runs as root)
   hs.timer.doAfter(2, function()
-    local isRunning = U.run("pgrep -x kanata", true)
-    if isRunning and isRunning ~= "" then
-      U.log.df("Kanata profile switched to %s (PID: %s)", profile, isRunning:gsub("%s+", ""))
+    M._switch_lock = false
+    local state = U.run(fmt("launchctl print gui/%s/%s 2>/dev/null", uid, label), true)
+    local isRunning = state and state:match("state = running") ~= nil
+    if isRunning then
+      U.log.of("Kanata profile switched to %s", profile)
     else
-      -- Check logs for errors
       local lastErr = U.run("tail -3 /tmp/kanata.err 2>/dev/null", true)
       U.log.wf("Kanata did not restart. Last error: %s", lastErr or "no log")
     end
@@ -99,13 +108,13 @@ local function keyboardChangedState(state, source)
     end
     M.is_keyboard_connected = false
     if was_connected ~= false then
-      U.log.df("External keyboard disconnected (via %s)", source)
+      U.log.of("⌨️ External keyboard disconnected (via %s)", source)
       if C.dock.kanata.enabled then switchKanataProfile(C.dock.kanata.disconnected) end
     end
   elseif state == "added" then
     M.is_keyboard_connected = true
     if was_connected ~= true then
-      U.log.df("External keyboard connected — %s (via %s)", C.dock.keyboard.productName, source)
+      U.log.of("⌨️ External keyboard connected — %s (via %s)", C.dock.keyboard.productName, source)
       if C.dock.kanata.enabled then switchKanataProfile(C.dock.kanata.connected) end
     end
   else
@@ -135,9 +144,13 @@ end
 function M.isExternalKeyboardBT()
   local name = C.dock.keyboard.productName
   if not name or not C.dock.keyboard.bluetoothAddress then return false end
-  -- hidutil is fast (~90ms) and works for BLE devices (blueutil doesn't)
-  local result = U.run(fmt("hidutil list 2>/dev/null | grep -c 'Bluetooth Low Energy.*%s'", name), true)
-  return result and tonumber(result) ~= nil and tonumber(result) > 0
+  -- hidutil works for BLE devices (blueutil doesn't)
+  local result = U.run(fmt("hidutil list 2>/dev/null | grep -ci 'Bluetooth Low Energy.*%s'", name), true)
+  if not result then return false end
+  -- Strip ANSI escape sequences (hidutil outputs terminal cursor codes) and whitespace
+  local cleaned = result:gsub("\27%[[%d;]*[a-zA-Z]", ""):gsub("%s+", "")
+  local count = tonumber(cleaned)
+  return count ~= nil and count > 0
 end
 
 function M.isExternalKeyboardConnected()
