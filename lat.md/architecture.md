@@ -79,7 +79,7 @@ The OpNix module also derives `LAT_LLM_*` environment for `lat search`, and the 
 
 Git hooks are managed by prek from the generated `.pre-commit-config.yaml`.
 
-Global git tooling ignores `.worktrees/` through `home/common/programs/git/tool-ignore`. The active hooks check merge conflicts, secrets, Nix dead code and style, shell scripts, formatting, and commit-message convention. The typos hook is disabled in `devenv.nix`, and treefmt is configured so this repo's local formatter choices override imported defaults.
+Global git tooling ignores `.worktrees/` through `home/common/programs/git/tool-ignore`; global Git excludes also ignore `.worktrees/` and `.worktreeinclude` in both the nix (`home/common/programs/git/gitignore`) and mise (`mise/config/git/ignore`) config trees. The active hooks check merge conflicts, secrets, Nix dead code and style, shell scripts, formatting, and commit-message convention. The typos hook is disabled in `devenv.nix`, and treefmt is configured so this repo's local formatter choices override imported defaults.
 
 `statix.toml` disables the `repeated_keys` lint because repeated top-level Nix module keys are intentional: related Home Manager and nix-darwin options stay near the context that explains them.
 
