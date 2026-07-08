@@ -3,6 +3,7 @@
 # Useful mise-based dotfiles repos and patterns:
 #
 # REFS:
+# https://github.com/kryota-dev/dotfiles - uses tart and macos vms to test mise bootstrap runs
 # https://github.com/sedalu/dotfiles - auto-env based on machine name, not just arch/os; and container based install :mindblown:
 # https://github.com/AllySummers/dotfiles - hk, pkl, usage releated stuff, too
 # https://github.com/hashiiiii/dotfiles
@@ -442,7 +443,7 @@ nix = "https://github.com/jbadeau/mise-nix.git"
 "aqua:astral-sh/ruff" = "latest"
 "aqua:docker/compose" = "latest"
 "aqua:mvdan/sh" = "latest"
-"aqua:remoteoss/dexter" = "latest" # mise registry has no bare dexter alias
+"aqua:remoteoss/dexter" = "latest"         # mise registry has no bare dexter alias
 "aqua:tidewave-ai/tidewave_app" = "latest"
 # github
 "github:EmmyLuaLs/emmylua-analyzer-rust" = "latest"
