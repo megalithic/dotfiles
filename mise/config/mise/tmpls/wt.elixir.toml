@@ -1,0 +1,55 @@
+# Worktrunk project config for rx (local-only, gitignored).
+#
+# Read via WORKTRUNK_PROJECT_CONFIG_PATH=<main-repo-root>/wt.local.toml, which
+# the `wt` fish wrapper sets automatically (resolved from the main worktree's
+# git-common-dir). Worktrunk's hardcoded default is .config/wt.toml; this file
+# replaces that location.
+#
+# pre-start runs once when a new worktree is created (blocking). It is also
+# re-runnable on demand (wt-tmux-target bootstraps existing worktrees with it),
+# so every step here is idempotent and non-destructive:
+#   - copy the gitignored env files from the main checkout ONLY if missing
+#   - trust them for direnv + mise
+#   - write the services script into the worktree's PRIVATE git dir
+#     (.git/worktrees/<name>/), never the working tree, so nothing can be
+#     accidentally committed and it is auto-removed with the worktree.
+#
+# The heavy setup (deps, assets, DB resets) runs in the tmux `services` window
+# via that script, guarded by a one-time marker so reopening a worktree only
+# restarts the server and never re-runs `ecto.reset`.
+[pre-start]
+mise-trust = "mise trust" # Execute mise trust before creating a worktree
+# Write the services command into the worktree's PRIVATE git dir
+# (.git/worktrees/<name>/wt-services-cmd). wt-tmux-target runs it in the
+# `services` window of the per-worktree tmux session. Idempotent; skipped
+# in the main checkout.
+services-cmd = '''
+gitdir="$(git rev-parse --absolute-git-dir)"
+case "$gitdir" in */worktrees/*) ;; *) exit 0 ;; esac
+cat > "$gitdir/wt-services-cmd" <<'EOF'
+#!/usr/bin/env bash
+# Keep the tmux services window usable when the server exits/crashes:
+# show the exit status, drop to an interactive shell for fixing/rerunning.
+mise run start:server
+echo "[services] start:server exited ($?) - dropping to shell"
+exec fish
+EOF
+chmod +x "$gitdir/wt-services-cmd"
+'''
+
+[post-start]
+copy = "wt step copy-ignored" # Copy ignored files after creating a worktree
+
+# [post-create]
+# install = """
+#
+# """
+# env = "wt step copy-ignored"
+
+# NOTE: no [post-switch] services hook — `mise run start:server` boots iex and
+# would block the wt command. The services tmux window (wt-tmux-target) runs
+# it via the pre-start-generated wt-services-cmd instead.
+
+# Dev server URL column in `wt list` (dimmed when the port is not listening).
+[list]
+url = "http://localhost:{{ branch | hash_port }}"

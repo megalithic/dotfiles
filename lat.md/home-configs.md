@@ -26,6 +26,8 @@ Tool-specific dotfiles and XDG links live beside their owning Home Manager modul
 
 Examples: git files under `home/common/programs/git/`, ripgrep config under `ripgrep/`, Yazi plugins under `yazi/`. Apps that need live-editable config use out-of-store symlinks into the repo `config/` tree (see [[architecture#Out-of-store config symlinks]]). VS Code is not installed; Neovim is the editor path.
 
+Standalone mise project templates live under `mise/config/mise/tmpls/`. `shopify.toml` bootstraps Shopify theme work with Node LTS, Shopify CLI, local npm editor dependencies, Biome for supported web files, Theme Check, Liquid Prettier, `shopify.theme.toml` environments, and local dev tasks. Global `gen:<template>` mise tasks (duplicated in both the nix `globalConfig` and the mise-twin `global_config.toml`) run `bin/mise-tmpl-gen`, which copies a template to `<target>/mise.local.toml` idempotently: byte-identical destinations are untouched, differing ones replaced, and the result is `mise trust`ed. Both global Git excludes ignore `mise.local.toml` because generated local project configs should stay untracked.
+
 ## Fish shell helpers
 
 Fish carries repo workflow helpers and desktop integration environment variables.
@@ -41,6 +43,8 @@ Fish owns the Worktrunk integration locally instead of upstream's `wt config she
 ## User bin scripts
 
 User scripts in `bin/` provide repo workflow shortcuts that are linked into `~/bin` by Home Manager.
+
+`fancy_numbers` is a POSIX `sh` helper that preserves non-digits and renders digits as superscript glyphs by default, or subscript glyphs with `-v sub`/`--variant sub`; tmux and Starship prompt count renderers call it. The `starship` wrapper preserves the real Starship CLI behavior while exporting `STARSHIP_JOBS_COUNT` from `starship prompt --jobs …` so the custom jobs module can render that count through `fancy_numbers`.
 
 The `m` script wraps common Mix/Phoenix commands. Its `m s` Phoenix server command always starts a named IEx node: an explicit argument is used as-is; without an argument, the name is derived from the current directory basename, or from the main checkout basename plus linked-worktree directory basename when inside a Git worktree. Derived names are lowercased and use dashes unless the source name already uses underscores.
 

@@ -21,7 +21,7 @@ return {
   },
 
   formatters = {
-    json = { "jq" },
-    jsonc = { "prettier" },
+    json = { "biome", "jq", stop_after_first = true },
+    jsonc = { "biome", "prettier", stop_after_first = true },
   },
 }

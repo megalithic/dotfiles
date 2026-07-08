@@ -34,6 +34,21 @@ pir = "pi -r"
 pisock = "pinvim"
 pis = "pinvim"
 
+# Global tasks: copy a language template from mise/config/mise/tmpls/ into a
+# project as mise.local.toml. Run from a project root: `mise run gen:shopify`
+# or `mise run gen:elixir -- /path/to/project`. Script lives in repo bin/
+# (linked onto PATH). Duplicated in home/common/programs/mise/default.nix
+# globalConfig (nix twin).
+[tasks."gen:elixir"]
+description = "Copy the elixir mise template to [target-dir]/mise.local.toml (default: cwd)"
+dir = "{{cwd}}"
+run = "mise-tmpl-gen elixir"
+
+[tasks."gen:shopify"]
+description = "Copy the shopify mise template to [target-dir]/mise.local.toml (default: cwd)"
+dir = "{{cwd}}"
+run = "mise-tmpl-gen shopify"
+
 [tools]
 atuin = "latest"
 bat = "latest"

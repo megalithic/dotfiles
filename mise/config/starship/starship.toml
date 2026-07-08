@@ -10,7 +10,7 @@ $cmd_duration\
 $line_break\
 ${custom.nix_shell}\
 ${custom.sudo}\
-$jobs\
+${custom.jobs}\
 $status\
 $character"""
 
@@ -49,9 +49,23 @@ min_time = 500
 format = "$symbol "
 success_symbol = "[›](bold green)"
 error_symbol = "[›](bold red)"
-# vicmd_symbol = "[](bold fg:white,bg:#614b51)"
+vicmd_symbol = "[](bold fg:white,bg:#614b51)"
+
+[custom.jobs]
+ignore_timeout = true
+description = "background job count with fancy number glyphs"
+shell = ["sh"]
+symbol = "󰄉" # 
+command = '''
+  fancy_numbers "${STARSHIP_JOBS_COUNT:-0}"
+'''
+when = '''
+  [ "${STARSHIP_JOBS_COUNT:-0}" -ge 1 ] 2>/dev/null
+'''
+format = "$output[$symbol](white dimmed)"
 
 [jobs]
+disabled = true
 symbol = "󰄉(white dimmed)" # 
 number_threshold = 1
 symbol_threshold = 1
@@ -157,9 +171,9 @@ style = "italic fg:#7c8377"     # 245
 
 [custom.git_branch]
 when = "git rev-parse --is-inside-work-tree >/dev/null 2>&1 && ! jj root >/dev/null 2>&1"
-shell = ["bash", "--noprofile", "--norc"]
+shell = ["sh"]
 command = "starship module git_branch"
-style = "italic fg:#7c8377"            # 245
+style = "italic fg:#7c8377"                                                               # 245
 format = "[$output]($style)"
 
 [git_status]
@@ -184,8 +198,8 @@ untracked = " [󱏘](fg:#eeeeee)"
 
 [custom.git_status]
 when = "git rev-parse --is-inside-work-tree >/dev/null 2>&1 && ! jj root >/dev/null 2>&1"
-shell = ["bash", "--noprofile", "--norc"]
-command = "starship module git_status"
+shell = ["sh"]
+command = "starship module git_status | fancy_numbers"
 style = "#7c8377"
 format = '[$output](fg:$style)'
 

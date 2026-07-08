@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Copy a mise language template into a project as mise.local.toml.
+#
+# Usage:
+#   mise-tmpl-gen <template> [target-dir]
+#
+# Templates live in $MISE_TMPL_DIR (default ~/.dotfiles/mise/config/mise/tmpls)
+# as <template>.toml. Target defaults to the directory the mise task was run
+# from (MISE_ORIGINAL_CWD), falling back to $PWD.
+#
+# Idempotent: byte-identical destinations are left untouched; differing
+# destinations are replaced with a notice. The result is `mise trust`ed.
+set -euo pipefail
+
+tmpl_dir="${MISE_TMPL_DIR:-$HOME/.dotfiles/mise/config/mise/tmpls}"
+
+usage() {
+  echo "usage: mise-tmpl-gen <template> [target-dir]" >&2
+  echo "templates in $tmpl_dir:" >&2
+  for f in "$tmpl_dir"/*.toml; do
+    [ -e "$f" ] || continue
+    echo "  $(basename "${f%.toml}")" >&2
+  done
+}
+
+if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+  usage
+  exit 2
+fi
+
+name="$1"
+src="$tmpl_dir/$name.toml"
+if [ ! -f "$src" ]; then
+  echo "error: unknown template '$name' ($src not found)" >&2
+  usage
+  exit 1
+fi
+
+target="${2:-${MISE_ORIGINAL_CWD:-$PWD}}"
+if [ ! -d "$target" ]; then
+  echo "error: target directory '$target' does not exist" >&2
+  exit 1
+fi
+dest="$target/mise.local.toml"
+
+if [ -f "$dest" ] && cmp -s "$src" "$dest"; then
+  echo "up-to-date: $dest"
+else
+  if [ -f "$dest" ]; then
+    echo "replacing (differs from template): $dest"
+  else
+    echo "created: $dest"
+  fi
+  cp "$src" "$dest"
+fi
+
+if command -v mise >/dev/null 2>&1; then
+  mise trust "$dest" >/dev/null 2>&1 || true
+fi

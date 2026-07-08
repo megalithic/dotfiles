@@ -153,3 +153,7 @@ deps
 # worktrunk per-repo project config (local-only)
 wt.local.toml
 **/wt.local.toml
+
+# mise per-repo local config (local-only)
+mise.local.toml
+**/mise.local.toml

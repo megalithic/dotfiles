@@ -1,0 +1,371 @@
+min_version = "2024.9.5"
+
+[env]
+# Keep project-local CLIs first so Neovim/conform and shell commands use the
+# same Shopify, Biome, Prettier, and Liquid plugin versions as CI.
+_.path = ["{{ config_root }}/node_modules/.bin"]
+
+# Optional local credentials. Keep .env.local out of git.
+_.file = [
+  { path = ".env", tools = true, redact = true },
+  { path = ".env.local", tools = true, redact = true },
+]
+
+SHOPIFY_CLI_NO_ANALYTICS = { default = "1" }
+SHOPIFY_THEME_ENV = { default = "default" }
+SHOPIFY_THEME_HOST = { default = "127.0.0.1" }
+SHOPIFY_THEME_PORT = { default = "9292" }
+SHOPIFY_THEME_LIVE_RELOAD = { default = "hot-reload" }
+SHOPIFY_THEME_NAME = "{{ config_root | basename }}"
+
+[tools]
+node = "lts"
+"npm:@shopify/cli" = "latest"
+"npm:@biomejs/biome" = "latest"
+"npm:prettier" = "latest"
+"npm:@shopify/prettier-plugin-liquid" = "latest"
+
+[deps.npm]
+auto = true
+
+[tasks.preflight]
+description = "Trust config, install tools, and bootstrap Shopify theme tooling"
+shell = "bash -c"
+run = '''
+mise trust
+mise install
+mise run bootstrap
+mise run install
+'''
+
+[tasks.setup]
+description = "Initial local Shopify theme setup"
+depends = ["preflight"]
+
+[tasks.bootstrap]
+description = "Generate safe default Shopify, Theme Check, Biome, Prettier, gitignore, and package files"
+shell = "bash -c"
+run = '''
+set -euo pipefail
+
+write_if_missing() {
+  local path="$1"
+  if [ -e "$path" ]; then
+    echo "exists: $path"
+    return 0
+  fi
+  mkdir -p "$(dirname "$path")"
+  cat > "$path"
+  echo "created: $path"
+}
+
+ensure_line() {
+  local path="$1"
+  local line="$2"
+  touch "$path"
+  if ! awk -v wanted="$line" '$0 == wanted { found = 1 } END { exit(found ? 0 : 1) }' "$path"; then
+    printf "%s\n" "$line" >> "$path"
+    echo "added to $path: $line"
+  fi
+}
+
+project_name="$(basename "$PWD" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9._-]/-/g' -e 's/--*/-/g' -e 's/^[._-]*//' -e 's/[._-]*$//')"
+[ -n "$project_name" ] || project_name="shopify-theme"
+store="${SHOPIFY_FLAG_STORE:-example.myshopify.com}"
+
+write_if_missing package.json <<EOF
+{
+  "name": "$project_name",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "shopify theme dev",
+    "check": "biome check . && shopify theme check && prettier --check \"**/*.liquid\"",
+    "format": "biome check --write . && prettier --write \"**/*.liquid\"",
+    "format:check": "biome check . && prettier --check \"**/*.liquid\""
+  },
+  "devDependencies": {
+    "@biomejs/biome": "latest",
+    "@shopify/cli": "latest",
+    "@shopify/prettier-plugin-liquid": "latest",
+    "prettier": "latest"
+  }
+}
+EOF
+
+write_if_missing biome.json <<'EOF'
+{
+  "$schema": "https://biomejs.dev/schemas/latest/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!**/*.liquid",
+      "!node_modules",
+      "!coverage",
+      "!dist",
+      "!.local",
+      "!.shopify",
+      "!.theme-check-cache"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "asNeeded",
+      "trailingCommas": "all"
+    }
+  }
+}
+EOF
+
+write_if_missing .prettierrc.json <<'EOF'
+{
+  "plugins": ["@shopify/prettier-plugin-liquid"],
+  "printWidth": 120,
+  "tabWidth": 2,
+  "useTabs": false,
+  "singleQuote": true,
+  "liquidSingleQuote": true,
+  "embeddedSingleQuote": true,
+  "htmlWhitespaceSensitivity": "css",
+  "singleLineLinkTags": false,
+  "indentSchema": true,
+  "overrides": [
+    {
+      "files": "*.liquid",
+      "options": {
+        "parser": "liquid-html"
+      }
+    }
+  ]
+}
+EOF
+
+write_if_missing .prettierignore <<'EOF'
+node_modules
+coverage
+dist
+.local
+.shopify
+.theme-check-cache
+EOF
+
+write_if_missing .theme-check.yml <<'EOF'
+extends: theme-check:recommended
+
+ignore:
+  - node_modules/**
+  - coverage/**
+  - dist/**
+  - .local/**
+  - .shopify/**
+EOF
+
+write_if_missing .shopifyignore <<'EOF'
+# Repo-only files. Shopify CLI excludes these from dev/push/pull/share.
+.git/
+.github/
+.jj/
+.local/
+.pi/
+.mise.toml
+mise.toml
+mise.local.toml
+.env
+.env.*
+AGENTS.md
+README.md
+node_modules/
+coverage/
+dist/
+package.json
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+biome.json
+.prettierrc*
+.prettierignore
+.theme-check.yml
+.theme-check.yaml
+EOF
+
+write_if_missing shopify.theme.toml <<EOF
+# Shopify CLI theme environments.
+# Docs: https://shopify.dev/docs/storefronts/themes/tools/cli/environments
+#
+# Store credentials stay outside this file:
+#   - browser auth: run a Shopify CLI command and log in
+#   - Theme Access token: set SHOPIFY_CLI_THEME_TOKEN in .env.local
+
+[environments.default]
+store = "$store"
+# theme = "1234567890"
+# ignore = ["config/settings_data.json"]
+
+[environments.staging]
+store = "$store"
+# theme = "1234567890"
+
+[environments.production]
+store = "$store"
+# theme = "1234567890"
+EOF
+
+write_if_missing .env.example <<'EOF'
+# Copy to .env.local and fill values for this machine.
+SHOPIFY_FLAG_STORE=example.myshopify.com
+# Optional Theme Access password / Admin API token for non-browser auth.
+SHOPIFY_CLI_THEME_TOKEN=
+# Optional password-protected storefront password.
+SHOPIFY_FLAG_STORE_PASSWORD=
+EOF
+
+ensure_line .gitignore "mise.local.toml"
+ensure_line .gitignore "node_modules/"
+ensure_line .gitignore ".env.local"
+ensure_line .gitignore ".env.*.local"
+ensure_line .gitignore ".local/"
+ensure_line .gitignore ".shopify/"
+ensure_line .gitignore ".theme-check-cache/"
+
+printf '\nNext:\n'
+printf '  1. Copy .env.example to .env.local and set SHOPIFY_FLAG_STORE.\n'
+printf '  2. Run `mise run install`.\n'
+printf '  3. Pull an existing theme with `mise run theme:pull -- --store your-store.myshopify.com`,\n'
+printf '     or initialize one with `mise run theme:init -- my-theme`.\n'
+printf '  4. Run `mise run dev` and open http://127.0.0.1:%s.\n' "${SHOPIFY_THEME_PORT:-9292}"
+'''
+
+[tasks.install]
+description = "Install local npm dev dependencies for Shopify CLI, Biome, Prettier, and Liquid formatting"
+run = "npm install"
+
+[tasks.dev]
+description = "Start Shopify theme dev server with hot reload"
+raw_args = true
+run = 'shopify theme dev --environment "$SHOPIFY_THEME_ENV" --host "$SHOPIFY_THEME_HOST" --port "$SHOPIFY_THEME_PORT" --live-reload "$SHOPIFY_THEME_LIVE_RELOAD"'
+
+[tasks."start:server"]
+description = "Start Shopify theme dev server"
+depends = ["dev"]
+
+[tasks."theme:init"]
+description = "Initialize a new Shopify theme (usually run before copying this template into the theme root)"
+raw_args = true
+run = "shopify theme init"
+
+[tasks."theme:pull"]
+description = "Pull an existing Shopify theme into this directory"
+raw_args = true
+run = 'shopify theme pull --environment "$SHOPIFY_THEME_ENV"'
+
+[tasks."theme:info"]
+description = "Show current Shopify theme/store context"
+raw_args = true
+run = 'shopify theme info --environment "$SHOPIFY_THEME_ENV"'
+
+[tasks."theme:check"]
+description = "Run Shopify Theme Check"
+raw_args = true
+run = 'shopify theme check --environment "$SHOPIFY_THEME_ENV"'
+
+[tasks.check]
+description = "Run Biome, Theme Check, and Liquid Prettier checks"
+depends = ["theme:check", "format:check"]
+
+[tasks.format]
+description = "Format JS/TS/JSON/CSS with Biome, then Liquid with Prettier"
+shell = "bash -c"
+run = '''
+biome check --write .
+prettier --write "**/*.liquid"
+'''
+
+[tasks."format:check"]
+description = "Check Biome-managed files and Liquid formatting without writing"
+shell = "bash -c"
+run = '''
+biome check .
+prettier --check "**/*.liquid"
+'''
+
+[tasks."theme:push"]
+description = "Push theme changes to Shopify"
+raw_args = true
+run = 'shopify theme push --environment "$SHOPIFY_THEME_ENV"'
+
+[tasks."theme:push-unpublished"]
+description = "Push theme as a new unpublished theme"
+raw_args = true
+run = 'shopify theme push --environment "$SHOPIFY_THEME_ENV" --unpublished'
+
+[tasks."theme:share"]
+description = "Create a shareable preview link"
+raw_args = true
+run = 'shopify theme share --environment "$SHOPIFY_THEME_ENV"'
+
+[tasks."theme:publish"]
+description = "Publish a pushed theme"
+raw_args = true
+run = 'shopify theme publish --environment "$SHOPIFY_THEME_ENV"'
+
+[tasks.doctor]
+description = "Print Shopify local development diagnostics"
+shell = "bash -c"
+run = '''
+set -euo pipefail
+printf "node: "; node --version
+printf "npm: "; npm --version
+printf "shopify: "; shopify version
+printf "biome: "; biome --version
+printf "prettier: "; prettier --version
+printf "theme env: %s\n" "$SHOPIFY_THEME_ENV"
+printf "theme host: %s\n" "$SHOPIFY_THEME_HOST"
+printf "theme port: %s\n" "$SHOPIFY_THEME_PORT"
+printf "theme live reload: %s\n" "$SHOPIFY_THEME_LIVE_RELOAD"
+if [ -f shopify.theme.toml ]; then
+  echo "shopify.theme.toml: present"
+else
+  echo "shopify.theme.toml: missing (run mise run bootstrap)"
+fi
+if [ -f .theme-check.yml ] || [ -f .theme-check.yaml ]; then
+  echo "theme check config: present"
+else
+  echo "theme check config: missing (run shopify theme check --init or mise run bootstrap)"
+fi
+if [ -f biome.json ] || [ -f biome.jsonc ]; then
+  echo "biome config: present"
+else
+  echo "biome config: missing (run mise run bootstrap)"
+fi
+if [ -f .prettierrc.json ] || [ -f .prettierrc ] || [ -f prettier.config.js ]; then
+  echo "prettier config: present (Liquid only)"
+else
+  echo "prettier config: missing (run mise run bootstrap)"
+fi
+'''

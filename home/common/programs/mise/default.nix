@@ -18,6 +18,21 @@
         description = "Apply per-worktree DB/port isolation to Phoenix config/dev.exs and config/test.exs";
         run = "elixir-worktree-isolation";
       };
+      # Global tasks: copy a language template from mise/config/mise/tmpls/
+      # into a project as mise.local.toml. Run from a project root:
+      # `mise run gen:shopify` or `mise run gen:elixir -- /path/to/project`.
+      # Script lives in repo bin/ (on PATH in both nix and mise worlds).
+      # Duplicated in mise/config/mise/global_config.toml (mise twin).
+      tasks."gen:elixir" = {
+        description = "Copy the elixir mise template to [target-dir]/mise.local.toml (default: cwd)";
+        dir = "{{cwd}}";
+        run = "mise-tmpl-gen elixir";
+      };
+      tasks."gen:shopify" = {
+        description = "Copy the shopify mise template to [target-dir]/mise.local.toml (default: cwd)";
+        dir = "{{cwd}}";
+        run = "mise-tmpl-gen shopify";
+      };
     };
   };
 
@@ -26,4 +41,5 @@
     source = ./scripts/elixir-worktree-isolation;
     executable = true;
   };
+
 }

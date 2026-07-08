@@ -489,7 +489,10 @@ refresh_tmux_context_async = function(callback)
     }
   end
 
-  vim.system(cmd, { text = true }, function(result)
+  -- pcall: tmux can vanish from PATH transiently (e.g. home-manager switch
+  -- swaps ~/.nix-profile) and vim.system raises ENOENT on spawn failure.
+  -- Degrade to the cached/last-known context instead of a visible error.
+  local ok = pcall(vim.system, cmd, { text = true }, function(result)
     local context = result.code == 0 and parse_tmux_context(vim.trim(result.stdout or "")) or {}
     vim.schedule(function()
       local callbacks = tmux_context_cache.callbacks or {}
@@ -499,6 +502,14 @@ refresh_tmux_context_async = function(callback)
       end
     end)
   end)
+  if not ok then
+    local context = tmux_context_cache.value or {}
+    local callbacks = tmux_context_cache.callbacks or {}
+    tmux_context_cache = { at = vim.uv.now(), value = context, running = false, callbacks = {} }
+    for _, cb in ipairs(callbacks) do
+      pcall(cb, context)
+    end
+  end
 end
 
 local function current_tmux_context()

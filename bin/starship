@@ -1,0 +1,51 @@
+#!/bin/sh
+
+self_dir=$(CDPATH=; cd "$(dirname "$0")" 2>/dev/null && pwd -P)
+old_path=${PATH:-}
+new_path=
+
+IFS=:
+for dir in $old_path; do
+  if [ "$dir" = "$self_dir" ]; then
+    continue
+  fi
+
+  if [ -z "$new_path" ]; then
+    new_path=$dir
+  else
+    new_path=$new_path:$dir
+  fi
+done
+unset IFS
+
+real_starship=$(PATH=$new_path command -v starship 2>/dev/null)
+if [ -z "$real_starship" ]; then
+  printf '%s: real starship not found after removing %s from PATH\n' "${0##*/}" "$self_dir" >&2
+  exit 127
+fi
+
+if [ "${1:-}" = "prompt" ]; then
+  shift
+  set -- prompt "$@"
+
+  prev=
+  for arg do
+    if [ "$prev" = "--jobs" ]; then
+      STARSHIP_JOBS_COUNT=$arg
+      export STARSHIP_JOBS_COUNT
+      break
+    fi
+
+    case "$arg" in
+      --jobs=*)
+        STARSHIP_JOBS_COUNT=${arg#--jobs=}
+        export STARSHIP_JOBS_COUNT
+        break
+        ;;
+    esac
+
+    prev=$arg
+  done
+fi
+
+exec "$real_starship" "$@"

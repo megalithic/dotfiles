@@ -24,6 +24,7 @@ local parsers = {
 
   -- Web
   "html",
+  "liquid",
   "css",
   "scss",
   "javascript",
