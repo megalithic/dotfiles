@@ -38,6 +38,13 @@ bind -M insert ctrl-b fzf-jj-bookmarks
 bind -M normal ctrl-b fzf-jj-bookmarks
 bind -M default ctrl-b fzf-jj-bookmarks
 
+# Tab-completion via fzf (functions/_fzf_tab.fish defines __fzf_complete).
+# shift-tab falls back to fish's native completion pager.
+bind -M insert tab __fzf_complete
+bind -M default tab __fzf_complete
+bind -M insert shift-tab complete
+bind -M default shift-tab complete
+
 # Bang shortcuts for `!!` and `!$`.
 bind ! bind_bang
 bind '$' bind_dollar
