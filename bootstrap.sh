@@ -36,11 +36,15 @@ header() {
   printf '\n'
 }
 
+ensure_tty() {
+  if ! { : </dev/tty; } 2>/dev/null; then
+    die "$1 requires an interactive terminal; pass --host <name> or set HOST=<name>"
+  fi
+}
+
 ask_tty() {
   ask_prompt="$1"
-  if ! { : </dev/tty; } 2>/dev/null; then
-    die "$ask_prompt requires an interactive terminal; pass --host <name> or set HOST=<name>"
-  fi
+  ensure_tty "$ask_prompt"
   while :; do
     printf ' [?] %s ' "$ask_prompt" >/dev/tty
     IFS= read -r ask_reply </dev/tty || die "Could not read response from terminal"
@@ -49,8 +53,18 @@ ask_tty() {
       printf '%s\n' "$ask_reply"
       return 0
     fi
-    warn "Response required. Type a hostname, e.g. workbookpro."
+    warn "Response required."
   done
+}
+
+ask_tty_default() {
+  ask_prompt="$1"
+  ask_default="$2"
+  ensure_tty "$ask_prompt"
+  printf ' [?] %s ' "$ask_prompt" >/dev/tty
+  IFS= read -r ask_reply </dev/tty || die "Could not read response from terminal"
+  ask_reply=$(printf '%s' "$ask_reply" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+  printf '%s\n' "${ask_reply:-$ask_default}"
 }
 
 normalize_hostname() {
@@ -97,6 +111,42 @@ run() {
   else
     "$@"
   fi
+}
+
+update_dotfiles_checkout() {
+  info "Updating $DOTFILES_DIR..."
+  if run git -C "$DOTFILES_DIR" pull --ff-only; then
+    return 0
+  fi
+
+  while :; do
+    warn "Could not update $DOTFILES_DIR with its configured remote."
+    say "If SSH auth needs attention, unlock/fix it now, then retry."
+    say "Options:"
+    say "  [r]etry configured remote"
+    say "  [h]ttps fallback using $DOTFILES_REPO_URL"
+    say "  [s]tash local changes, then use HTTPS fallback"
+    say "  [a]bort"
+    UPDATE_CHOICE=$(ask_tty "Update action [r/h/s/a]:")
+    case "$UPDATE_CHOICE" in
+    r | R | retry)
+      git -C "$DOTFILES_DIR" pull --ff-only && return 0
+      ;;
+    h | H | https)
+      GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 git -C "$DOTFILES_DIR" pull --ff-only "$DOTFILES_REPO_URL" HEAD && return 0
+      ;;
+    s | S | stash)
+      git -C "$DOTFILES_DIR" stash push -u -m "bootstrap before update $(date +%Y%m%d-%H%M%S)" || warn "Stash failed."
+      GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 git -C "$DOTFILES_DIR" pull --ff-only "$DOTFILES_REPO_URL" HEAD && return 0
+      ;;
+    a | A | abort)
+      die "Could not update $DOTFILES_DIR; fix git auth/local changes and retry"
+      ;;
+    *)
+      warn "Choose r, h, s, or a."
+      ;;
+    esac
+  done
 }
 
 usage() {
@@ -259,7 +309,7 @@ else
     [ -n "$HOST" ] || die "--host cannot be empty after normalization"
     ok "Host override: $HOST"
   else
-    REPLY=$(ask_tty "Hostname (current: $CURRENT_HOST; type desired hostname):")
+    REPLY=$(ask_tty_default "Hostname [$CURRENT_HOST]:" "$CURRENT_HOST")
     HOST=$(normalize_hostname "$REPLY")
     [ -n "$HOST" ] || die "Hostname cannot be empty after normalization"
   fi
@@ -304,11 +354,7 @@ if [ "$(uname -m)" = "arm64" ]; then
 fi
 
 if [ -d "$DOTFILES_DIR/.git" ]; then
-  info "Updating $DOTFILES_DIR..."
-  if ! run git -C "$DOTFILES_DIR" pull --ff-only; then
-    info "Default remote pull failed; retrying via $DOTFILES_REPO_URL without global git config..."
-    GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 git -C "$DOTFILES_DIR" pull --ff-only "$DOTFILES_REPO_URL" HEAD || die "Could not update $DOTFILES_DIR; fix git auth/local changes and retry"
-  fi
+  update_dotfiles_checkout
 else
   [ "$DRY_RUN" = 1 ] && die "[dry-run] $DOTFILES_DIR is not a clone; dry-run needs an existing checkout"
   info "Cloning into $DOTFILES_DIR..."
