@@ -416,33 +416,75 @@ if ! mise dotfiles apply --yes $MISE_DOTFILES_FLAGS; then
 fi
 ok "done applying dotfiles."
 
-run_mise_bootstrap() {
+MISE_BOOTSTRAP_LOG="${TMPDIR:-/tmp}/bootstrap-mise-$$.log"
+MISE_BOOTSTRAP_STATUS="${TMPDIR:-/tmp}/bootstrap-mise-$$.status"
+
+# Run mise bootstrap while capturing output so failures can be inspected.
+attempt_mise_bootstrap() {
   # shellcheck disable=SC2086 # intentional word-splitting of flag strings
-  mise bootstrap --yes $MISE_BOOTSTRAP_FLAGS && return 0
+  # `|| printf` keeps `set -e` from killing the subshell before status is written
+  {
+    mise bootstrap --yes $MISE_BOOTSTRAP_FLAGS 2>&1 &&
+      printf '%s' 0 >"$MISE_BOOTSTRAP_STATUS" ||
+      printf '%s' "$?" >"$MISE_BOOTSTRAP_STATUS"
+  } | tee "$MISE_BOOTSTRAP_LOG"
+  [ "$(cat "$MISE_BOOTSTRAP_STATUS" 2>/dev/null)" = 0 ]
+}
+
+# If mise failed renaming an app bundle in /Applications, try moving it aside
+# with sudo. This rescues root-owned bundles (previous installer/MDM). It does
+# NOT rescue the App Management TCC block — macOS attributes sudo'd commands to
+# the spawning terminal, so TCC denies root exactly the same.
+sudo_rescue_app_rename() {
+  blocked=$(sed -n 's/.*failed rename: \(\/Applications\/[^ ]*\.app\) ->.*/\1/p' "$MISE_BOOTSTRAP_LOG" | head -1)
+  [ -n "$blocked" ] || return 1
+  [ -e "$blocked" ] || return 1
+  warn "mise could not rename $blocked; trying with sudo..."
+  if run sudo mv "$blocked" "${blocked%.app}.pre-mise-$(date +%s).app"; then
+    ok "Moved aside with sudo (kept as backup); retrying mise bootstrap."
+    return 0
+  fi
+  warn "sudo could not rename it either — that confirms the App Management TCC block (sudo cannot bypass TCC)."
+  return 1
+}
+
+run_mise_bootstrap() {
+  attempt_mise_bootstrap && return 0
+  if sudo_rescue_app_rename; then
+    attempt_mise_bootstrap && return 0
+  fi
   while :; do
     warn "mise bootstrap failed."
     say "'Permission denied' under /Applications usually means this terminal lacks"
     say "the App Management permission. Opening System Settings at that pane..."
     open "x-apple.systempreferences:com.apple.preference.security?Privacy_AppBundles" 2>/dev/null ||
       say "(open System Settings -> Privacy & Security -> App Management manually)"
-    say "Enable it for this terminal and quit the affected app. If macOS shows no"
-    say "toggle for this terminal, retry once — the OS prompt fires on the attempt."
-    say "If retry still fails after granting, restart the terminal and re-run."
-    say "Root-owned bundles (ls -ld /Applications/<App>.app) need sudo removal first."
+    say "Enable it for this terminal. IMPORTANT: the grant only applies to a fresh"
+    say "terminal process — after toggling, fully quit this terminal app (Cmd+Q),"
+    say "reopen it, and re-run this bootstrap; retrying here will fail again."
+    say "If no toggle appears (MDM-managed work machine), delete the affected app"
+    say "via Finder (drag to Trash), then retry here."
     say "Options:"
-    say "  [r]etry mise bootstrap"
+    say "  [r]etry mise bootstrap (after Finder-deleting the app)"
+    say "  [c]ontinue without finishing mise bootstrap"
     say "  [a]bort"
-    BOOTSTRAP_CHOICE=$(ask_tty "Bootstrap action [r/a]:")
+    BOOTSTRAP_CHOICE=$(ask_tty "Bootstrap action [r/c/a]:")
     case "$BOOTSTRAP_CHOICE" in
     r | R | retry)
-      # shellcheck disable=SC2086
-      mise bootstrap --yes $MISE_BOOTSTRAP_FLAGS && return 0
+      attempt_mise_bootstrap && return 0
+      if sudo_rescue_app_rename; then
+        attempt_mise_bootstrap && return 0
+      fi
+      ;;
+    c | C | continue)
+      warn "Continuing with mise bootstrap unfinished; re-run bootstrap.sh (or 'mise bootstrap') after fixing permissions."
+      return 0
       ;;
     a | A | abort)
       die "mise bootstrap failed"
       ;;
     *)
-      warn "Choose r or a."
+      warn "Choose r, c, or a."
       ;;
     esac
   done
