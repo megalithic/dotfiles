@@ -156,8 +156,16 @@ ensure_dotfiles_branch() {
   run git -C "$DOTFILES_DIR" checkout "$checkout_branch"
 }
 
+# Auto-stash local changes so checkout/pull never abort on a dirty tree.
+# Recover later with: git -C ~/.dotfiles stash list / stash pop
+stash_dotfiles_changes() {
+  [ -n "$(git -C "$DOTFILES_DIR" status --porcelain 2>/dev/null)" ] || return 0
+  warn "$DOTFILES_DIR has local changes; stashing them (recover with 'git stash pop')."
+  run git -C "$DOTFILES_DIR" stash push -u -m "bootstrap auto-stash $(date +%Y%m%d-%H%M%S)"
+}
+
 pull_dotfiles() {
-  ensure_dotfiles_branch && run git -C "$DOTFILES_DIR" pull --ff-only
+  stash_dotfiles_changes && ensure_dotfiles_branch && run git -C "$DOTFILES_DIR" pull --ff-only
 }
 
 update_dotfiles_checkout() {
