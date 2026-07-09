@@ -12,6 +12,11 @@
 #   <lang>/wt.local.toml     -> <target>/.config/wt.toml   (Worktrunk default)
 #   <lang>/scripts/*         -> <target>/.config/scripts/*
 #
+# wt mode also ensures <target>/.worktreeinclude lists .config/ (plus .env,
+# .envrc) so Worktrunk's `wt step copy-ignored` copies the generated .config/
+# into each new worktree. Additive: existing entries (build caches, deps) are
+# never removed.
+#
 # The `scripts/` dir is copied for both modes so the generated .config/ is
 # self-contained (tasks/hooks reference .config/scripts/*.sh). Target defaults
 # to the directory the mise task was run from (MISE_ORIGINAL_CWD), else $PWD.
@@ -106,6 +111,22 @@ if [ -d "$scripts_src" ]; then
     [ -f "$s" ] || continue
     copy_file "$s" "$scripts_dest/$(basename "$s")" 0755
   done
+fi
+
+# wt mode: keep the .worktreeinclude allowlist in sync so copy-ignored brings
+# the generated .config/ (and env files) into new worktrees. Additive only.
+if [ "$mode" = "wt" ]; then
+  wi="$target/.worktreeinclude"
+  touch "$wi"
+  wi_changed=0
+  for entry in ".config/" ".env" ".envrc"; do
+    if ! grep -qxF "$entry" "$wi"; then
+      printf '%s\n' "$entry" >>"$wi"
+      echo "worktreeinclude += $entry"
+      wi_changed=1
+    fi
+  done
+  [ "$wi_changed" -eq 0 ] && echo "worktreeinclude up-to-date: $wi"
 fi
 
 if command -v mise >/dev/null 2>&1 && [ "$dest_name" = "mise.toml" ]; then
