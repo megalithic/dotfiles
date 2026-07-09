@@ -198,26 +198,4 @@ return {
       end
     end,
   },
-  {
-    "chpeters/annotator.nvim",
-    enabled = false,
-    event = "VeryLazy",
-    keys = {
-      -- Document → Annotate
-      { "<leader>daa", function() require("annotator").add() end, desc = "[A]dd" },
-      { "<leader>daa", function() require("annotator").add_visual() end, desc = "[A]dd", mode = "v" },
-      { "<leader>das", function() require("annotator").suggest() end, desc = "[S]uggest rewrite" },
-      { "<leader>das", function() require("annotator").suggest_visual() end, desc = "[S]uggest rewrite", mode = "v" },
-      -- { "<leader>dam", function() require("annotator").mark_delete() end, desc = "[M]ark for deletion" },
-      -- { "<leader>dam", function() require("annotator").mark_delete_visual() end, desc = "[M]ark for deletion", mode = "v" },
-      { "<leader>dad", function() require("annotator").delete() end, desc = "[D]elete annotation" },
-      { "<leader>dae", function() require("annotator").edit() end, desc = "[E]dit annotation" },
-      { "<leader>daL", function() require("annotator").list() end, desc = "[L]ist annotations" },
-      { "<leader>daE", function() require("annotator").export() end, desc = "[E]xport annotations" },
-    },
-    opts = {
-      mappings = false,
-      storage = "state",
-    },
-  },
 }

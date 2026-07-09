@@ -55,7 +55,7 @@ local jj_opts = {
 return {
   "nvim-mini/mini.diff",
   event = "VeryLazy",
-  enabled = false,
+  -- enabled = false,
   config = function()
     require("mini.diff").setup({
       view = {
