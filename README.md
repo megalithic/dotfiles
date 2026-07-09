@@ -25,6 +25,15 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/HEAD
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/HEAD/bootstrap.sh)"
 ```
 
+Pass flags after `--` (it fills `$0`; everything after reaches the script):
+
+```bash
+# overwrite conflicting dotfile targets, preview, or preset hostname
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/HEAD/bootstrap.sh)" -- --force
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/HEAD/bootstrap.sh)" -- --dry-run
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/HEAD/bootstrap.sh)" -- --host workbookpro
+```
+
 ## 🚀 Installation (manual)
 
 1. Install

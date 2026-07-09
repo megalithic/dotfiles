@@ -375,7 +375,13 @@ ok "done initializing submodules."
 
 info "Applying dotfiles..."
 # shellcheck disable=SC2086 # intentional word-splitting of flag strings
-mise dotfiles apply --yes $MISE_DOTFILES_FLAGS
+if ! mise dotfiles apply --yes $MISE_DOTFILES_FLAGS; then
+  warn "dotfiles apply refused to overwrite existing files."
+  say "Re-run with --force to overwrite them, e.g.:"
+  # shellcheck disable=SC2016 # literal one-liner for the user to copy
+  say '  bash -c "$(curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/HEAD/bootstrap.sh)" -- --force'
+  die "dotfiles apply failed"
+fi
 ok "done applying dotfiles."
 
 info "Running mise bootstrap..."
