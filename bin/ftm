@@ -71,6 +71,20 @@ function strip_markers() {
   printf '%s' "$s"
 }
 
+# -- resolve a session name to its id ($N). tmux target parsing mangles names
+#    with a leading dot (reads it as a window separator; "=" doesn't help), so
+#    every tmux command targeting an existing session goes through ids.
+function session_id_for() {
+  local name="$1" line
+  while IFS= read -r line; do
+    if [[ ${line#* } == "$name" ]]; then
+      printf '%s' "${line%% *}"
+      return 0
+    fi
+  done < <(tmux list-sessions -F '#{session_id} #{session_name}' 2>/dev/null)
+  return 1
+}
+
 # -- pre-defined layout names (one glob, no subshells)
 function get_layouts() {
   local f
@@ -121,9 +135,10 @@ function print_list() {
 
 # -- change to the given existing session
 function to_session() {
-  local session
+  local session sid
   session="$(strip_markers "$1")"
-  tmux "$change" -t "$session" ';' refresh-client
+  sid="$(session_id_for "$session")" || return 1
+  tmux "$change" -t "$sid" ';' refresh-client
 }
 
 # -- new session with pre-defined layout, OR just new basic tmux session
@@ -190,9 +205,11 @@ function fuzzy_find() {
 
   # -- picker actions; reload regenerates the annotated list so markers stay correct
   # shellcheck disable=SC2016 # fzf action templates: {} and $() expand in fzf's shell, not here
-  local kill_action='execute-silent(tmux kill-session -t "$(printf %s {} | sed -E "s/ \*( π)?$//")")+reload(ftm --list)' \
-    rename_action='execute(session=$(printf %s {} | sed -E "s/ \*( π)?$//"); printf >&2 "New session name: "; read -r name; tmux rename-session -t "${session}" "${name}")+reload(ftm --list)' \
-    pinvim_action='execute-silent(session=$(printf %s {} | sed -E "s/ \*( π)?$//"); tmux switch-client -t "${session}" && PIMUX_PANE=$(tmux display-message -p "#{pane_id}") pimux)+accept'
+  # "=" prefix forces exact session-name match (names like .dotfiles-... otherwise
+  # trip tmux's target parser, which treats a leading dot as a window separator)
+  local kill_action='execute-silent(tmux-kill-session "$(printf %s {} | sed -E "s/ \*( π)?$//")")+reload(ftm --list)' \
+    rename_action='execute(session=$(printf %s {} | sed -E "s/ \*( π)?$//"); printf >&2 "New session name: "; read -r name; tmux rename-session -t "$(ftm --id="$session")" "${name}")+reload(ftm --list)' \
+    pinvim_action='execute-silent(session=$(printf %s {} | sed -E "s/ \*( π)?$//"); tmux switch-client -t "$(ftm --id="$session")" && PIMUX_PANE=$(tmux display-message -p "#{pane_id}") pimux)+accept'
 
   # native fzf tmux popup unless we're already inside one (-p)
   [[ $POPUP == "true" ]] || fzf_extra_args+=(--tmux "bottom,22%")
@@ -245,6 +262,11 @@ while getopts "phs:-:" OPTION; do
       # internal: annotated list for fzf reload binds
       print_list "$(tmux display-message -p '#S' 2>/dev/null || true)"
       exit 0
+      ;;
+    id=*)
+      # internal: session name -> id for picker actions
+      session_id_for "${OPTARG#id=}"
+      exit $?
       ;;
     help) __help ;;
     *)

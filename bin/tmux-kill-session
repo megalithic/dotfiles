@@ -13,14 +13,34 @@ if [ -z "$kill_session" ]; then
   exit 1
 fi
 
+# resolve session names to ids ($N): tmux target parsing mangles names with a
+# leading dot (reads it as a window separator; "=" doesn't help), ids are immune
+session_id_for() {
+  tmux list-sessions -F '#{session_id} #{session_name}' 2>/dev/null |
+    while IFS=' ' read -r id name; do
+      if [ "$name" = "$1" ]; then
+        printf '%s' "$id"
+        break
+      fi
+    done
+}
+
+kill_sid=$(session_id_for "$kill_session")
+if [ -z "$kill_sid" ]; then
+  echo "tmux-kill-session: no session named '$kill_session'" >&2
+  exit 1
+fi
+
 # don't kill the session we're about to switch to
 if [ "$kill_session" = "$switch_session" ]; then
   switch_session=""
 fi
 
 # switch client to another session before killing
-if [ -n "$switch_session" ] && tmux has-session -t "$switch_session" 2>/dev/null; then
-  tmux switch-client -t "$switch_session"
+switch_sid=""
+[ -n "$switch_session" ] && switch_sid=$(session_id_for "$switch_session")
+if [ -n "$switch_sid" ]; then
+  tmux switch-client -t "$switch_sid"
 else
   tmux switch-client -n 2>/dev/null || true
 fi
@@ -28,8 +48,8 @@ fi
 # stop devenv processes if the session has a devenv project
 # use DEVENV_CWD session env (set by layouts) for reliable project root,
 # falling back to pane current path
-devenv_cwd=$(tmux showenv -t "$kill_session" DEVENV_CWD 2>/dev/null | cut -d= -f2) ||
-  devenv_cwd=$(tmux display-message -t "$kill_session" -p '#{pane_current_path}' 2>/dev/null) ||
+devenv_cwd=$(tmux showenv -t "$kill_sid" DEVENV_CWD 2>/dev/null | cut -d= -f2) ||
+  devenv_cwd=$(tmux display-message -t "$kill_sid" -p '#{pane_current_path}' 2>/dev/null) ||
   devenv_cwd=""
 
 if [ -n "$devenv_cwd" ] && [ -f "$devenv_cwd/devenv.nix" ]; then
@@ -38,4 +58,4 @@ if [ -n "$devenv_cwd" ] && [ -f "$devenv_cwd/devenv.nix" ]; then
 fi
 
 # kill the session
-tmux kill-session -t "$kill_session"
+tmux kill-session -t "$kill_sid"
