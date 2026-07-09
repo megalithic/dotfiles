@@ -101,6 +101,11 @@ ensure_mise_version() {
     fi
     info "Upgrading mise ($current_mise_version -> >= $MIN_MISE_VERSION)..."
     brew upgrade mise || brew install mise
+    hash -r 2>/dev/null || true
+    current_mise_version=$(mise_version)
+    if version_lt "$current_mise_version" "$MIN_MISE_VERSION"; then
+      die "mise is still $current_mise_version (< $MIN_MISE_VERSION); $(command -v mise) may shadow brew's mise. Run 'brew update && brew upgrade mise', remove stale mise binaries, then retry."
+    fi
   fi
 }
 
@@ -113,9 +118,28 @@ run() {
   fi
 }
 
+dotfiles_default_branch() {
+  default_branch=$(git -C "$DOTFILES_DIR" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')
+  printf '%s' "${default_branch:-main}"
+}
+
+# `git pull` refuses to run on a detached HEAD; check out the default branch first.
+ensure_dotfiles_branch() {
+  if git -C "$DOTFILES_DIR" symbolic-ref -q HEAD >/dev/null 2>&1; then
+    return 0
+  fi
+  checkout_branch=$(dotfiles_default_branch)
+  warn "$DOTFILES_DIR is on a detached HEAD; checking out $checkout_branch."
+  run git -C "$DOTFILES_DIR" checkout "$checkout_branch"
+}
+
+pull_dotfiles() {
+  ensure_dotfiles_branch && run git -C "$DOTFILES_DIR" pull --ff-only
+}
+
 update_dotfiles_checkout() {
   info "Updating $DOTFILES_DIR..."
-  if run git -C "$DOTFILES_DIR" pull --ff-only; then
+  if pull_dotfiles; then
     return 0
   fi
 
@@ -130,14 +154,16 @@ update_dotfiles_checkout() {
     UPDATE_CHOICE=$(ask_tty "Update action [r/h/s/a]:")
     case "$UPDATE_CHOICE" in
     r | R | retry)
-      git -C "$DOTFILES_DIR" pull --ff-only && return 0
+      pull_dotfiles && return 0
       ;;
     h | H | https)
-      GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 git -C "$DOTFILES_DIR" pull --ff-only "$DOTFILES_REPO_URL" HEAD && return 0
+      ensure_dotfiles_branch &&
+        GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 git -C "$DOTFILES_DIR" pull --ff-only "$DOTFILES_REPO_URL" HEAD && return 0
       ;;
     s | S | stash)
       git -C "$DOTFILES_DIR" stash push -u -m "bootstrap before update $(date +%Y%m%d-%H%M%S)" || warn "Stash failed."
-      GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 git -C "$DOTFILES_DIR" pull --ff-only "$DOTFILES_REPO_URL" HEAD && return 0
+      ensure_dotfiles_branch &&
+        GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 git -C "$DOTFILES_DIR" pull --ff-only "$DOTFILES_REPO_URL" HEAD && return 0
       ;;
     a | A | abort)
       die "Could not update $DOTFILES_DIR; fix git auth/local changes and retry"
