@@ -34,6 +34,8 @@ Send a task to another pi agent running in a tmux session:
 ~/.dotfiles/home/common/programs/pi-coding-agent/skills/tell/scripts/tell.sh mega:0 "do something"      # Target mega session, window 0
 ```
 
+**Modern `/tell` and `tell_pi` routing:** Prefer the Pi extension over this legacy script. It discovers live Pi manifests and sockets, excludes the originating instance from implicit selection, and hard-errors when an explicit target is missing, ambiguous, or busy/unreachable. In non-interactive tool calls, it never opens selector UI or falls back to the current instance; errors list reachable non-current candidates.
+
 **Multi-instance support:** If a session has multiple pi instances (e.g., `mega:0` and `mega:agent`), the tell skill will:
 
 1. If `session:window` specified → use that socket directly
