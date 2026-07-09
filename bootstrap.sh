@@ -132,6 +132,36 @@ ensure_mise_version() {
   ok "mise $current_mise_version"
 }
 
+# Unlink a symlink that points into the read-only /nix/store; its parent dir
+# is writable even though the target is not.
+remove_store_link() {
+  [ -L "$1" ] || return 0
+  case "$(readlink "$1")" in
+  /nix/store/*)
+    info "Removing nix-managed symlink: $1"
+    run rm -f "$1"
+    ;;
+  esac
+}
+
+# Home Manager leaves symlinks into /nix/store at paths mise manages;
+# `mise dotfiles apply --force` tries to rm *through* dir symlinks and dies
+# with EACCES in the store. Unlink store symlinks at managed targets (and one
+# level inside real dirs, for symlink-each entries) before applying.
+clean_nix_managed_targets() {
+  [ -d /nix/store ] || return 0
+  sed -n '/^\[dotfiles\]/,/^\[/s/^"\(~\/[^"]*\)".*/\1/p' "$DOTFILES_DIR/_mise.toml" |
+    while IFS= read -r target; do
+      path="$HOME${target#\~}"
+      remove_store_link "$path"
+      if [ -d "$path" ] && [ ! -L "$path" ]; then
+        for entry in "$path"/* "$path"/.[!.]*; do
+          remove_store_link "$entry"
+        done
+      fi
+    done
+}
+
 # run a mutating command, or print it in dry-run mode
 run() {
   if [ "$DRY_RUN" = 1 ]; then
@@ -372,6 +402,8 @@ mise trust # needed even in dry-run so mise can read the config
 info "Initializing submodules..."
 run git -C "$DOTFILES_DIR" submodule update --init
 ok "done initializing submodules."
+
+clean_nix_managed_targets
 
 info "Applying dotfiles..."
 # shellcheck disable=SC2086 # intentional word-splitting of flag strings
