@@ -36,24 +36,21 @@ header() {
   printf '\n'
 }
 
-ask() {
+ask_tty() {
   ask_prompt="$1"
-  ask_default="${2:-}"
-  if [ -t 0 ]; then
-    printf ' [?] %s ' "$ask_prompt" >&2
-    read -r ask_reply
-    printf '%s\n' "${ask_reply:-$ask_default}"
-  else
-    printf '%s\n' "$ask_default"
+  if ! { : </dev/tty; } 2>/dev/null; then
+    die "$ask_prompt requires an interactive terminal; pass --host <name> or set HOST=<name>"
   fi
-}
-
-confirm() {
-  confirm_ans=$(ask "$1 [y/N] " "n")
-  case "$confirm_ans" in
-  y | Y | yes | YES) return 0 ;;
-  *) return 1 ;;
-  esac
+  while :; do
+    printf ' [?] %s ' "$ask_prompt" >/dev/tty
+    IFS= read -r ask_reply </dev/tty || die "Could not read response from terminal"
+    ask_reply=$(printf '%s' "$ask_reply" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    if [ -n "$ask_reply" ]; then
+      printf '%s\n' "$ask_reply"
+      return 0
+    fi
+    warn "Response required. Type a hostname, e.g. workbookpro."
+  done
 }
 
 normalize_hostname() {
@@ -242,27 +239,37 @@ ensure_mise_version
 #   exit 1
 # }
 
-CURRENT_HOST=$(normalize_hostname "$(uname -n | cut -d. -f1)")
 HOST=""
-if [ -n "$FORCE_HOST" ]; then
-  HOST=$(normalize_hostname "$FORCE_HOST")
-  [ -n "$HOST" ] || die "--host cannot be empty after normalization"
-  ok "Host override: $HOST"
-else
-  REPLY=$(ask "Hostname [$CURRENT_HOST]:" "$CURRENT_HOST")
-  HOST=$(normalize_hostname "$REPLY")
-  [ -n "$HOST" ] || die "Hostname cannot be empty after normalization"
-fi
-
-if [ "$HOST" != "$CURRENT_HOST" ]; then
-  say "Switching macOS hostname: $CURRENT_HOST -> $HOST"
-  run sudo scutil --set ComputerName "$HOST"
-  run sudo scutil --set LocalHostName "$HOST"
-  run sudo scutil --set HostName "$HOST"
-  run sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$HOST"
-  if [ "$DRY_RUN" = 1 ]; then
+if [ "$DRY_RUN" = 1 ]; then
+  if [ -n "$FORCE_HOST" ]; then
+    HOST=$(normalize_hostname "$FORCE_HOST")
+    [ -n "$HOST" ] || die "--host cannot be empty after normalization"
     info "[dry-run] would set hostname to $HOST"
+    run sudo scutil --set ComputerName "$HOST"
+    run sudo scutil --set LocalHostName "$HOST"
+    run sudo scutil --set HostName "$HOST"
+    run sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$HOST"
   else
+    info "[dry-run] skipping hostname prompt/change; pass --host <name> to preview hostname change"
+  fi
+else
+  CURRENT_HOST=$(normalize_hostname "$(uname -n | cut -d. -f1)")
+  if [ -n "$FORCE_HOST" ]; then
+    HOST=$(normalize_hostname "$FORCE_HOST")
+    [ -n "$HOST" ] || die "--host cannot be empty after normalization"
+    ok "Host override: $HOST"
+  else
+    REPLY=$(ask_tty "Hostname (current: $CURRENT_HOST; type desired hostname):")
+    HOST=$(normalize_hostname "$REPLY")
+    [ -n "$HOST" ] || die "Hostname cannot be empty after normalization"
+  fi
+
+  if [ "$HOST" != "$CURRENT_HOST" ]; then
+    say "Switching macOS hostname: $CURRENT_HOST -> $HOST"
+    run sudo scutil --set ComputerName "$HOST"
+    run sudo scutil --set LocalHostName "$HOST"
+    run sudo scutil --set HostName "$HOST"
+    run sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$HOST"
     ok "Hostname set to $HOST"
   fi
 fi
@@ -299,8 +306,8 @@ fi
 if [ -d "$DOTFILES_DIR/.git" ]; then
   info "Updating $DOTFILES_DIR..."
   if ! run git -C "$DOTFILES_DIR" pull --ff-only; then
-    info "Default remote pull failed; retrying via $DOTFILES_REPO_URL..."
-    git -C "$DOTFILES_DIR" pull --ff-only "$DOTFILES_REPO_URL" HEAD || die "Could not update $DOTFILES_DIR; fix git auth/local changes and retry"
+    info "Default remote pull failed; retrying via $DOTFILES_REPO_URL without global git config..."
+    GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 git -C "$DOTFILES_DIR" pull --ff-only "$DOTFILES_REPO_URL" HEAD || die "Could not update $DOTFILES_DIR; fix git auth/local changes and retry"
   fi
 else
   [ "$DRY_RUN" = 1 ] && die "[dry-run] $DOTFILES_DIR is not a clone; dry-run needs an existing checkout"
