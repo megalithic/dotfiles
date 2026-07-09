@@ -91,24 +91,45 @@ EOF
   [ "${a_patch:-0}" -lt "${b_patch:-0}" ]
 }
 
+# Standalone installer works even when Homebrew is nix-managed (taps pinned
+# read-only in /nix/store make `brew update`/`brew upgrade` a no-op there).
+install_mise_standalone() {
+  info "Installing mise to ~/.local/bin via https://mise.run..."
+  MISE_INSTALL_PATH="$HOME/.local/bin/mise" sh -c "$(curl -fsSL https://mise.run)" || {
+    warn "Standalone mise install failed."
+    return 1
+  }
+  PATH="$HOME/.local/bin:$PATH"
+  export PATH
+  hash -r 2>/dev/null || true
+}
+
 ensure_mise_version() {
   current_mise_version=$(mise_version)
   [ -n "$current_mise_version" ] || die "Unable to determine mise version"
-  if version_lt "$current_mise_version" "$MIN_MISE_VERSION"; then
-    if [ "$DRY_RUN" = 1 ]; then
-      info "[dry-run] mise $current_mise_version is older than $MIN_MISE_VERSION; would upgrade mise"
-      die "dry-run cannot preview mise bootstrap with old mise; upgrade mise first or run without --dry-run"
-    fi
-    info "Upgrading mise ($current_mise_version -> >= $MIN_MISE_VERSION)..."
-    info "Refreshing Homebrew formula index (brew update)..."
-    brew update || warn "brew update failed; upgrade may use a stale formula index."
-    brew upgrade mise || brew install mise
-    hash -r 2>/dev/null || true
-    current_mise_version=$(mise_version)
-    if version_lt "$current_mise_version" "$MIN_MISE_VERSION"; then
-      die "mise is still $current_mise_version (< $MIN_MISE_VERSION); $(command -v mise) may not be brew's mise ($(brew --prefix 2>/dev/null)/bin/mise). Remove stale mise binaries from PATH and retry."
-    fi
+  version_lt "$current_mise_version" "$MIN_MISE_VERSION" || return 0
+  if [ "$DRY_RUN" = 1 ]; then
+    info "[dry-run] mise $current_mise_version is older than $MIN_MISE_VERSION; would upgrade mise"
+    die "dry-run cannot preview mise bootstrap with old mise; upgrade mise first or run without --dry-run"
   fi
+  info "Upgrading mise ($current_mise_version -> >= $MIN_MISE_VERSION)..."
+  info "Refreshing Homebrew formula index (brew update)..."
+  if brew update; then
+    brew upgrade mise || brew install mise || warn "brew could not upgrade mise."
+  else
+    warn "brew update failed (Homebrew may be nix-managed/read-only); skipping brew upgrade."
+  fi
+  hash -r 2>/dev/null || true
+  current_mise_version=$(mise_version)
+  if version_lt "$current_mise_version" "$MIN_MISE_VERSION"; then
+    warn "Homebrew could not provide mise >= $MIN_MISE_VERSION; falling back to standalone installer."
+    install_mise_standalone
+    current_mise_version=$(mise_version)
+  fi
+  if version_lt "$current_mise_version" "$MIN_MISE_VERSION"; then
+    die "mise is still $current_mise_version (< $MIN_MISE_VERSION) at $(command -v mise); remove stale mise binaries from PATH and retry."
+  fi
+  ok "mise $current_mise_version"
 }
 
 # run a mutating command, or print it in dry-run mode
@@ -247,7 +268,8 @@ if ! command -v mise >/dev/null 2>&1; then
     die "[dry-run] mise not installed; dry-run needs mise to preview sub-commands"
   fi
   info "Installing mise..."
-  brew install mise
+  brew install mise || install_mise_standalone
+  command -v mise >/dev/null 2>&1 || die "mise installation failed"
 fi
 ensure_mise_version
 
