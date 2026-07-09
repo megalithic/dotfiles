@@ -1,0 +1,33 @@
+#!/bin/sh
+# Post-bootstrap health checks for the mise-managed dotfiles world.
+# Run via `mise run doctor` (bootstrap.sh calls it as the final step).
+# shellcheck disable=SC2088,SC2016  # ~ in check labels is display text; $ in single quotes is deferred on purpose
+set -u
+
+fail=0
+
+check() {
+  check_label="$1"
+  shift
+  if "$@" >/dev/null 2>&1; then
+    printf ' [ok] %s\n' "$check_label"
+  else
+    printf ' [!!] %s\n' "$check_label"
+    fail=1
+  fi
+}
+
+check "brew on PATH" command -v brew
+check "mise on PATH" command -v mise
+check "fish installed" command -v fish
+check "fish is login shell" sh -c 'dscl . -read "/Users/$USER" UserShell | grep -q fish'
+check "~/.config/fish linked" test -L "$HOME/.config/fish"
+check "~/.config/git/config linked" test -L "$HOME/.config/git/config"
+check "~/.local/bin/pi linked" test -e "$HOME/.local/bin/pi"
+check "no missing mise tools" sh -c 'test -z "$(mise ls --missing 2>/dev/null)"'
+
+if [ "$fail" = 1 ]; then
+  printf ' some checks failed\n' >&2
+  exit 1
+fi
+printf ' all checks passed\n'

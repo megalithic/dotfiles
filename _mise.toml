@@ -430,6 +430,10 @@ run = [
   "mise run fnox:render",
 ]
 
+[tasks.doctor]
+description = "Post-bootstrap health checks (bootstrap.sh runs this last)"
+run = "{{config_root}}/mise/scripts/doctor"
+
 [tasks."fnox:render"]
 description = "Render fnox file-shaped secrets (env-vars.sh) to ~/.config/fnox/secrets"
 run = "{{config_root}}/mise/scripts/fnox-render-secrets"

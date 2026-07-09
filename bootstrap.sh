@@ -225,7 +225,11 @@ if [ "$HOST" != "$CURRENT_HOST" ]; then
   run sudo scutil --set LocalHostName "$HOST"
   run sudo scutil --set HostName "$HOST"
   run sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$HOST"
-  ok "Hostname set to $HOST"
+  if [ "$DRY_RUN" = 1 ]; then
+    info "[dry-run] would set hostname to $HOST"
+  else
+    ok "Hostname set to $HOST"
+  fi
 fi
 
 # -- step 2: Command Line Tools --
@@ -272,6 +276,11 @@ fi
 # NOTE: plain sequential statements — wrapping these in `cd || { } && { }`
 # suppresses `set -e` inside the block, letting mise failures slip through.
 cd "$DOTFILES_DIR" || die "Unable to change to $DOTFILES_DIR"
+
+# The staged mise config is named _mise.toml so it stays inactive on
+# nix-managed machines; point mise at it explicitly for the bootstrap run.
+MISE_OVERRIDE_CONFIG_FILENAMES="_mise.toml"
+export MISE_OVERRIDE_CONFIG_FILENAMES
 
 info "Trusting mise config..."
 mise trust # needed even in dry-run so mise can read the config
