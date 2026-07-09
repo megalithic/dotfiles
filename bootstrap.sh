@@ -416,18 +416,40 @@ if ! mise dotfiles apply --yes $MISE_DOTFILES_FLAGS; then
 fi
 ok "done applying dotfiles."
 
+run_mise_bootstrap() {
+  # shellcheck disable=SC2086 # intentional word-splitting of flag strings
+  mise bootstrap --yes $MISE_BOOTSTRAP_FLAGS && return 0
+  while :; do
+    warn "mise bootstrap failed."
+    say "'Permission denied' under /Applications usually means this terminal lacks"
+    say "the App Management permission. Opening System Settings at that pane..."
+    open "x-apple.systempreferences:com.apple.preference.security?Privacy_AppBundles" 2>/dev/null ||
+      say "(open System Settings -> Privacy & Security -> App Management manually)"
+    say "Enable it for this terminal and quit the affected app. If macOS shows no"
+    say "toggle for this terminal, retry once — the OS prompt fires on the attempt."
+    say "If retry still fails after granting, restart the terminal and re-run."
+    say "Root-owned bundles (ls -ld /Applications/<App>.app) need sudo removal first."
+    say "Options:"
+    say "  [r]etry mise bootstrap"
+    say "  [a]bort"
+    BOOTSTRAP_CHOICE=$(ask_tty "Bootstrap action [r/a]:")
+    case "$BOOTSTRAP_CHOICE" in
+    r | R | retry)
+      # shellcheck disable=SC2086
+      mise bootstrap --yes $MISE_BOOTSTRAP_FLAGS && return 0
+      ;;
+    a | A | abort)
+      die "mise bootstrap failed"
+      ;;
+    *)
+      warn "Choose r or a."
+      ;;
+    esac
+  done
+}
+
 info "Running mise bootstrap..."
-# shellcheck disable=SC2086 # intentional word-splitting of flag strings
-if ! mise bootstrap --yes $MISE_BOOTSTRAP_FLAGS; then
-  warn "mise bootstrap failed."
-  say "If an app install failed with 'Permission denied' renaming under /Applications:"
-  say "  - grant your terminal the App Management permission:"
-  say "      System Settings -> Privacy & Security -> App Management"
-  say "  - quit the affected app, then re-run this bootstrap"
-  say "  - if the bundle is root-owned (ls -ld /Applications/<App>.app), remove it"
-  say "    with sudo first"
-  die "mise bootstrap failed"
-fi
+run_mise_bootstrap
 ok "done bootstrapping."
 
 if [ "$DRY_RUN" = 1 ]; then
