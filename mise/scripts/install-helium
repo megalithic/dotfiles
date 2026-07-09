@@ -1,0 +1,98 @@
+#!/bin/sh
+# Install Helium.app from the private megalithic/helium-macos-releases repo.
+#
+# Downloads the latest release DMG straight from the GitHub releases API —
+# no brew tap needed (nix-homebrew pins /opt/homebrew/Library/Taps read-only,
+# so `brew tap` fails on nix-managed machines). Verifies the published sha256.
+#
+# Env:
+#   HOMEBREW_GITHUB_API_TOKEN / GITHUB_TOKEN  auth for the private repo (required)
+#   HELIUM_INSTALL_DIR                        target dir (default /Applications)
+set -eu
+
+REPO="megalithic/helium-macos-releases"
+INSTALL_DIR="${HELIUM_INSTALL_DIR:-/Applications}"
+APP="$INSTALL_DIR/Helium.app"
+
+[ -d "$APP" ] && {
+  echo "install-helium: $APP already installed"
+  exit 0
+}
+
+TOKEN="${HOMEBREW_GITHUB_API_TOKEN:-${GITHUB_TOKEN:-}}"
+[ -n "$TOKEN" ] || {
+  echo "install-helium: HOMEBREW_GITHUB_API_TOKEN or GITHUB_TOKEN required for private releases repo" >&2
+  exit 1
+}
+
+ARCH=$(uname -m) # arm64 / x86_64
+WORKDIR=$(mktemp -d "${TMPDIR:-/tmp}/install-helium.XXXXXX")
+MOUNTPOINT="$WORKDIR/mnt"
+cleanup() {
+  [ -d "$MOUNTPOINT" ] && hdiutil detach "$MOUNTPOINT" -quiet 2>/dev/null
+  rm -rf "$WORKDIR"
+}
+trap cleanup EXIT INT TERM
+
+api() {
+  curl -fsSL \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Accept: ${1}" \
+    "$2"
+}
+
+echo "install-helium: resolving latest release..."
+RELEASE_JSON="$WORKDIR/release.json"
+api "application/vnd.github+json" "https://api.github.com/repos/$REPO/releases/latest" >"$RELEASE_JSON"
+
+# Pull "<asset id> <asset name>" pairs out of the release JSON without jq:
+# in each asset object "id" precedes "name", so remember the last id seen.
+asset_id_for() {
+  tr ',' '\n' <"$RELEASE_JSON" | awk -v want="$1" '
+    /"id":/ { gsub(/[^0-9]/, ""); id = $0 }
+    /"name":/ { gsub(/.*"name": *"|".*/, ""); if ($0 == want) { print id; exit } }
+  '
+}
+
+DMG_NAME=$(tr ',' '\n' <"$RELEASE_JSON" |
+  sed -n 's/.*"name": *"\(helium_[^"]*_'"$ARCH"'-macos\.dmg\)".*/\1/p' | head -1)
+[ -n "$DMG_NAME" ] || {
+  echo "install-helium: no $ARCH DMG asset in latest release" >&2
+  exit 1
+}
+
+DMG_ID=$(asset_id_for "$DMG_NAME")
+SHA_ID=$(asset_id_for "$DMG_NAME.sha256")
+[ -n "$DMG_ID" ] || {
+  echo "install-helium: could not resolve asset id for $DMG_NAME" >&2
+  exit 1
+}
+
+echo "install-helium: downloading $DMG_NAME..."
+api "application/octet-stream" "https://api.github.com/repos/$REPO/releases/assets/$DMG_ID" >"$WORKDIR/$DMG_NAME"
+
+if [ -n "$SHA_ID" ]; then
+  api "application/octet-stream" "https://api.github.com/repos/$REPO/releases/assets/$SHA_ID" >"$WORKDIR/$DMG_NAME.sha256"
+  echo "install-helium: verifying sha256..."
+  (cd "$WORKDIR" && shasum -a 256 -c "$DMG_NAME.sha256" >/dev/null) || {
+    echo "install-helium: sha256 verification FAILED for $DMG_NAME" >&2
+    exit 1
+  }
+else
+  echo "install-helium: warning: no .sha256 asset published; skipping verification" >&2
+fi
+
+echo "install-helium: mounting and copying to $INSTALL_DIR..."
+mkdir -p "$MOUNTPOINT"
+hdiutil attach "$WORKDIR/$DMG_NAME" -nobrowse -quiet -mountpoint "$MOUNTPOINT"
+SRC_APP=$(find "$MOUNTPOINT" -maxdepth 1 -name '*.app' | head -1)
+[ -n "$SRC_APP" ] || {
+  echo "install-helium: no .app found in DMG" >&2
+  exit 1
+}
+mkdir -p "$INSTALL_DIR"
+cp -R "$SRC_APP" "$APP"
+hdiutil detach "$MOUNTPOINT" -quiet
+rmdir "$MOUNTPOINT" 2>/dev/null || true
+
+echo "install-helium: installed $APP"

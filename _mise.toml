@@ -87,8 +87,9 @@ pir = "pi -r"
 pisock = "pinvim"
 pis = "pinvim"
 
-# (no [bootstrap.brew.taps]: the only tapped cask, helium, installs through real
-# brew in the post-packages hook, which taps megalithic/helium itself)
+# (no [bootstrap.brew.taps]: helium installs via mise/scripts/install-helium in
+# the post-packages hook — direct GitHub releases download, no tap; brew taps
+# are read-only under nix-homebrew anyway)
 
 [bootstrap.packages]
 "brew:mas" = "latest"       # mas CLI itself (brew manager runs before mas manager)
@@ -112,8 +113,10 @@ pis = "pinvim"
 # CLI) — installed via real brew in [bootstrap.hooks.post-packages] instead.
 "brew-cask:1password" = "latest"
 # helium cannot go here either: mise fetches cask metadata unauthenticated from
-# raw.githubusercontent (api/cask/<token>.json), which a private tap can't serve,
-# and the cask's custom download strategy needs real brew — see post-packages hook.
+# raw.githubusercontent (api/cask/<token>.json), which a private tap can't serve.
+# It installs via mise/scripts/install-helium (authenticated GitHub releases API
+# download + sha256 verify) in the post-packages hook — `brew tap` is not usable
+# on nix-managed machines (taps pinned read-only in /nix/store).
 # After install, verify 1Password pairing: `mise run helium:1password-trust`.
 
 [dotfiles]
@@ -406,11 +409,12 @@ stderr_path = "/tmp/kanata-bar.err"
 [bootstrap.hooks.post-packages]
 # Casks mise's brew-cask backend can't handle, installed via real brew:
 # - 1password-cli, hammerspoon: ship `binary` artifacts (backend is app-bundle only)
-# - helium: private tap (no unauthenticated api/cask JSON) + custom download strategy
+# - helium: private releases repo; installed by script (GitHub API download +
+#   sha256 verify) because `brew tap` fails on nix-managed machines
 run = [
   "command -v op >/dev/null 2>&1 || brew install --cask 1password-cli",
   "[ -d /Applications/Hammerspoon.app ] || brew install --cask hammerspoon",
-  "[ -d /Applications/Helium.app ] || { brew tap megalithic/helium https://github.com/megalithic/helium-macos-releases; brew install --cask megalithic/helium/helium; }",
+  "{{config_root}}/mise/scripts/install-helium",
 ]
 
 [bootstrap.hooks.pre-dotfiles]
