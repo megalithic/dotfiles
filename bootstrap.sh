@@ -100,11 +100,13 @@ ensure_mise_version() {
       die "dry-run cannot preview mise bootstrap with old mise; upgrade mise first or run without --dry-run"
     fi
     info "Upgrading mise ($current_mise_version -> >= $MIN_MISE_VERSION)..."
+    info "Refreshing Homebrew formula index (brew update)..."
+    brew update || warn "brew update failed; upgrade may use a stale formula index."
     brew upgrade mise || brew install mise
     hash -r 2>/dev/null || true
     current_mise_version=$(mise_version)
     if version_lt "$current_mise_version" "$MIN_MISE_VERSION"; then
-      die "mise is still $current_mise_version (< $MIN_MISE_VERSION); $(command -v mise) may shadow brew's mise. Run 'brew update && brew upgrade mise', remove stale mise binaries, then retry."
+      die "mise is still $current_mise_version (< $MIN_MISE_VERSION); $(command -v mise) may not be brew's mise ($(brew --prefix 2>/dev/null)/bin/mise). Remove stale mise binaries from PATH and retry."
     fi
   fi
 }
