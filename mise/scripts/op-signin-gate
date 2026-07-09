@@ -1,0 +1,40 @@
+#!/bin/sh
+# Interactive gate: block until the 1Password CLI (`op`) is usable.
+#
+# On a fresh machine `op` needs the desktop app signed in with
+# Settings -> Developer -> "Integrate with 1Password CLI" enabled — that's a
+# GUI step that cannot be automated. This gate opens the app, explains the
+# steps, and polls `op whoami` until it succeeds (each attempt triggers the
+# integration/biometric prompt once integration is on).
+#
+# Non-interactive contexts (no tty): fail fast instead of hanging.
+set -eu
+
+command -v op >/dev/null 2>&1 || {
+  echo "op-signin-gate: 'op' CLI not installed (bootstrap installs it via brew cask 1password-cli)" >&2
+  exit 1
+}
+
+if op whoami >/dev/null 2>&1; then
+  echo "op-signin-gate: op is signed in"
+  exit 0
+fi
+
+if ! { : </dev/tty; } 2>/dev/null; then
+  echo "op-signin-gate: op not signed in and no tty to wait on; sign in to 1Password, enable CLI integration, then re-run" >&2
+  exit 1
+fi
+
+open -a 1Password 2>/dev/null || true
+echo "op-signin-gate: 1Password CLI is not signed in yet."
+echo "  1. Sign in to the 1Password app (just opened)"
+echo "  2. 1Password -> Settings -> Developer -> enable 'Integrate with 1Password CLI'"
+while :; do
+  printf 'op-signin-gate: press Enter to test again (ctrl-c to abort)... ' >/dev/tty
+  IFS= read -r _ </dev/tty || exit 1
+  if op whoami >/dev/null 2>&1; then
+    echo "op-signin-gate: op is signed in"
+    exit 0
+  fi
+  echo "op-signin-gate: op still not available; check the steps above."
+done

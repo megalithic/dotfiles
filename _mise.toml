@@ -409,13 +409,12 @@ stderr_path = "/tmp/kanata-bar.err"
 [bootstrap.hooks.post-packages]
 # Casks mise's brew-cask backend can't handle, installed via real brew:
 # - 1password-cli, hammerspoon: ship `binary` artifacts (backend is app-bundle only)
-# - helium: private releases repo; installed by script (GitHub API download +
-#   sha256 verify) because `brew tap` fails on nix-managed machines
+# (helium is NOT here: it needs the GitHub token, which needs op signin +
+#  fnox render — see [tasks.bootstrap] for the ordered chain)
+# hooks: no template expansion, cwd = config root, [env] not applied
 run = [
   "command -v op >/dev/null 2>&1 || brew install --cask 1password-cli",
   "[ -d /Applications/Hammerspoon.app ] || brew install --cask hammerspoon",
-  # hooks: no template expansion, cwd = config root, [env] not applied
-  "./mise/scripts/install-helium",
 ]
 
 [bootstrap.hooks.pre-dotfiles]
@@ -430,11 +429,17 @@ run = "mise run kanata:setup"
 [bootstrap.user]
 login_shell = "/opt/homebrew/bin/fish"
 
+# Runs at step 8 of `mise bootstrap`, after [tools] (fnox available) and after
+# post-packages installed 1Password + op. Secrets chain, in order:
+# op signin (interactive gate) -> fnox render -> helium install (needs the
+# rendered HOMEBREW_GITHUB_API_TOKEN for the private releases repo).
 [tasks.bootstrap]
 run = [
   "git -C {{config_root}} submodule update --init",
   "pre-commit install --install-hooks",
+  "mise run op:signin",
   "mise run fnox:render",
+  "mise run helium:install",
 ]
 
 [tasks.doctor]
@@ -444,6 +449,14 @@ run = "{{config_root}}/mise/scripts/doctor"
 [tasks."fnox:render"]
 description = "Render fnox file-shaped secrets (env-vars.sh) to ~/.config/fnox/secrets"
 run = "{{config_root}}/mise/scripts/fnox-render-secrets"
+
+[tasks."op:signin"]
+description = "Interactive gate: wait until the 1Password CLI (op) is signed in with app integration"
+run = "{{config_root}}/mise/scripts/op-signin-gate"
+
+[tasks."helium:install"]
+description = "Install Helium.app from the private releases repo (GitHub API download + sha256 verify)"
+run = "{{config_root}}/mise/scripts/install-helium"
 
 [tasks."pi:setup"]
 description = "Idempotent pi agent setup: pinned tools, settings merge, pi-acp build, extension seed"
