@@ -5,7 +5,7 @@ set -euo pipefail
 export PATH="$HOME/.pi/agent/bin:${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:/usr/bin:/bin:$PATH"
 
 if ! command -v sesame >/dev/null 2>&1; then
-  echo "sesame-session-indexer: sesame not found; run: mise run pi:setup" >&2
+  echo "sesame-session-indexer: sesame not found; run: mise run setup:pi" >&2
   exit 1
 fi
 exec sesame "$@"

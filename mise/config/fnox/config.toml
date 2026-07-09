@@ -13,7 +13,7 @@ onepass = { type = "1password", vault = "Crypt" }
 [secrets]
 # File-shaped blobs: env = false keeps them out of `fnox exec` / shell
 # activation; read them with `fnox get`. ENV_VARS_SH is rendered to
-# ~/.config/fnox/secrets/env-vars.sh by `mise run fnox:render` (sourced by
+# ~/.config/fnox/secrets/env-vars.sh by `mise run setup:fnox:render` (sourced by
 # fish conf.d/fnox.fish, the pi wrapper, and the mise [env] template).
 ENV_VARS_SH = { provider = "onepass", value = "op://Crypt/env/notesPlain", env = false }
 S3CFG = { provider = "onepass", value = "op://Crypt/s3cfg/notesPlain", env = false }

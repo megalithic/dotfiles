@@ -1,5 +1,5 @@
 # fnox: 1Password-backed secrets (non-nix twin of the opnix shell init).
-# env-vars.sh is rendered by `mise run fnox:render`; refresh it there when
+# env-vars.sh is rendered by `mise run setup:fnox:render`; refresh it there when
 # op://Crypt/env changes.
 status is-interactive; or exit
 

@@ -6,7 +6,7 @@ set -euo pipefail
 BIN="$HOME/.local/bin/miccheckd"
 
 if [[ ! -x "$BIN" ]]; then
-  echo "miccheck-launchd: $BIN missing; run: ~/.dotfiles/bin/miccheck-build (or: mise run miccheck:setup)" >&2
+  echo "miccheck-launchd: $BIN missing; run: ~/.dotfiles/bin/miccheck-build (or: mise run setup:miccheck)" >&2
   exit 1
 fi
 

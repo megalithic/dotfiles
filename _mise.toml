@@ -56,7 +56,7 @@ XDG_CACHE_HOME = "{{env.HOME}}/.cache"
 PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
 # GitHub token for the private helium tap (brew-cask + gh). Sourced from the
 # op://Crypt/env item (notesPlain), same secret fnox/opnix render to env-vars.sh.
-# fnox render (`mise run fnox:render`) first, opnix fallback during transition.
+# fnox render (`mise run setup:fnox:render`) first, opnix fallback during transition.
 HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env-vars.sh ]; then . ~/.config/fnox/secrets/env-vars.sh; elif [ -f ~/.config/opnix/secrets/env-vars.sh ]; then . ~/.config/opnix/secrets/env-vars.sh; fi; printf %s $HOMEBREW_GITHUB_API_TOKEN") }}'
 EDITOR = "nvim -O"
 VISUAL = "nvim -O"
@@ -124,7 +124,7 @@ pis = "pinvim"
 
 # -- pi coding agent: managed subset of ~/.pi/agent; runtime state (sessions/,
 #    npm/, auth.json, settings.json) stays unmanaged. settings.json is merged
-#    by `mise run pi:setup`, not linked. --
+#    by `mise run setup:pi`, not linked. --
 "~/.pi/agent/AGENTS.md" = "mise/config/pi-coding-agent/agent/AGENTS.md"
 "~/.pi/agent/APPEND_SYSTEM.md" = "mise/config/pi-coding-agent/agent/APPEND_SYSTEM.md"
 "~/.pi/agent/keybindings.json" = "mise/config/pi-coding-agent/agent/keybindings.json"
@@ -364,7 +364,7 @@ stdout_path = "~/Library/Logs/media-presence/stdout.log"
 stderr_path = "~/Library/Logs/media-presence/stderr.log"
 
 # miccheck: menubar push-to-talk/push-to-mute app (bin/miccheck.swift).
-# Wrapper checks the compiled binary exists (built by `mise run miccheck:setup`).
+# Wrapper checks the compiled binary exists (built by `mise run setup:miccheck`).
 [bootstrap.macos.launchd.agents."com.megadots.miccheck"]
 program = "~/.dotfiles/bin/miccheck-launchd"
 run_at_load = true
@@ -424,7 +424,7 @@ run = "git submodule update --init" # cwd = config root; hooks don't expand temp
 run = "killall Finder SystemUIServer Dock || true"
 
 [bootstrap.hooks.post-tools]
-run = "mise run kanata:setup"
+run = "mise run setup:kanata"
 
 [bootstrap.user]
 login_shell = "/opt/homebrew/bin/fish"
@@ -437,42 +437,52 @@ login_shell = "/opt/homebrew/bin/fish"
 run = [
   "git -C {{config_root}} submodule update --init",
   "pre-commit install --install-hooks",
-  "mise run op:signin",
-  "mise run fnox:render",
-  "mise run helium:install",
+  "mise run setup:op:signin",
+  "mise run setup:fnox:render",
+  "mise run setup:helium:install",
 ]
 
 [tasks.doctor]
 description = "Post-bootstrap health checks (bootstrap.sh runs this last)"
 run = "{{config_root}}/mise/scripts/doctor"
 
-[tasks."fnox:render"]
+# -- setup:* namespace: bootstrap/provisioning tasks. Old names kept as
+#    aliases so existing docs/scripts/muscle memory keep working. --
+
+[tasks."setup:fnox:render"]
+alias = "fnox:render"
 description = "Render fnox file-shaped secrets (env-vars.sh) to ~/.config/fnox/secrets"
 run = "{{config_root}}/mise/scripts/fnox-render-secrets"
 
-[tasks."op:signin"]
+[tasks."setup:op:signin"]
+alias = "op:signin"
 description = "Interactive gate: wait until the 1Password CLI (op) is signed in with app integration"
 run = "{{config_root}}/mise/scripts/op-signin-gate"
 
-[tasks."helium:install"]
+[tasks."setup:helium:install"]
+alias = "helium:install"
 description = "Install Helium.app from the private releases repo (GitHub API download + sha256 verify)"
 run = "{{config_root}}/mise/scripts/install-helium"
 
-[tasks."pi:setup"]
+[tasks."setup:pi"]
+alias = "pi:setup"
 description = "Idempotent pi agent setup: pinned tools, settings merge, pi-acp build, extension seed"
 run = "{{config_root}}/mise/config/pi-coding-agent/scripts/setup"
 
-[tasks."helium:1password-trust"]
-description = "Check 1Password trusts /Applications/Helium.app; prints GUI Add Browser steps if not (setting is tamper-protected, not writable)"
-run = "{{config_root}}/bin/helium-1password-trust"
-
-[tasks."kanata:setup"]
+[tasks."setup:kanata"]
+alias = "kanata:setup"
 description = "Install/activate Karabiner VirtualHID glue and restart mise-managed kanata services"
 run = "{{config_root}}/mise/scripts/kanata-setup"
 
-[tasks."miccheck:setup"]
+[tasks."setup:miccheck"]
+alias = "miccheck:setup"
 description = "Compile bin/miccheck.swift to ~/.local/bin/miccheckd (push-to-talk menubar app)"
 run = "{{config_root}}/bin/miccheck-build"
+
+# checker, not setup — stays outside the namespace
+[tasks."helium:1password-trust"]
+description = "Check 1Password trusts /Applications/Helium.app; prints GUI Add Browser steps if not (setting is tamper-protected, not writable)"
+run = "{{config_root}}/bin/helium-1password-trust"
 
 [plugins]
 nix = "https://github.com/jbadeau/mise-nix.git"

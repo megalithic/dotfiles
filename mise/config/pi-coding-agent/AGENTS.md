@@ -50,7 +50,7 @@ pi-coding-agent/
 
 ```sh
 mise bootstrap dotfiles apply          # symlinks (agent files, bin wrappers)
-mise run pi:setup                      # tools, settings merge, pi-acp build
+mise run setup:pi                      # tools, settings merge, pi-acp build
 mise bootstrap macos launchd-agents apply  # session indexers
 ```
 

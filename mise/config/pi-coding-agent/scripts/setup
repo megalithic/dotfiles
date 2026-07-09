@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# `mise run pi:setup` — idempotent imperative pieces of the pi setup that the
+# `mise run setup:pi` — idempotent imperative pieces of the pi setup that the
 # declarative [dotfiles] section can't express:
 #   1. pinned helper binaries (sesame, plannotator) into ~/.pi/agent/bin
 #   2. settings.json merge (preserves keys pi manages at runtime)

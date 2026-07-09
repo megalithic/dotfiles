@@ -56,5 +56,5 @@ result
 .handoff/
 _plans/
 
-# pi-acp is built locally by `mise run pi:setup`
+# pi-acp is built locally by `mise run setup:pi`
 mise/config/pi-coding-agent/packages/pi-acp/dist/

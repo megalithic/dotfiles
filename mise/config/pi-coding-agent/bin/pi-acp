@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ACP adapter wrapper (Tidewave etc.). Runs the vendored pi-acp build.
-# Build it with: mise run pi:setup
+# Build it with: mise run setup:pi
 set -euo pipefail
 
 dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
@@ -17,7 +17,7 @@ export PI_ACP_MODEL_PREFIXES="${PI_ACP_MODEL_PREFIXES:-alt-anthropic,alt-codex}"
 export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:$PATH"
 
 if [ ! -f "$acp_root/dist/index.js" ]; then
-  echo "pi-acp is not built. Run: mise run pi:setup" >&2
+  echo "pi-acp is not built. Run: mise run setup:pi" >&2
   exit 1
 fi
 
