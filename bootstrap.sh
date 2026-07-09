@@ -104,6 +104,26 @@ install_mise_standalone() {
   hash -r 2>/dev/null || true
 }
 
+# nix-homebrew pins Homebrew taps as symlinks into /nix/store. After nix is
+# uninstalled (or while it's read-only) those links break `brew update` and
+# `brew tap` with 'Permission denied'. Unlink them; brew works API-based
+# without any taps and re-clones real ones on demand.
+repair_nix_pinned_taps() {
+  brew_repo=$(brew --repository 2>/dev/null) || return 0
+  [ -n "$brew_repo" ] || return 0
+  taps_dir="$brew_repo/Library/Taps"
+  for tap_path in "$taps_dir" "$taps_dir"/* "$taps_dir"/*/*; do
+    [ -L "$tap_path" ] || continue
+    case "$(readlink "$tap_path")" in
+    /nix/store/*)
+      warn "Removing nix-pinned Homebrew tap link: $tap_path"
+      run rm -f "$tap_path"
+      ;;
+    esac
+  done
+  [ -d "$taps_dir" ] || run mkdir -p "$taps_dir"
+}
+
 ensure_mise_version() {
   current_mise_version=$(mise_version)
   [ -n "$current_mise_version" ] || die "Unable to determine mise version"
@@ -113,6 +133,7 @@ ensure_mise_version() {
     die "dry-run cannot preview mise bootstrap with old mise; upgrade mise first or run without --dry-run"
   fi
   info "Upgrading mise ($current_mise_version -> >= $MIN_MISE_VERSION)..."
+  repair_nix_pinned_taps
   info "Refreshing Homebrew formula index (brew update)..."
   if brew update; then
     brew upgrade mise || brew install mise || warn "brew could not upgrade mise."
@@ -311,6 +332,9 @@ if [ -x /opt/homebrew/bin/brew ]; then
 elif [ -x /usr/local/bin/brew ]; then
   eval "$(/usr/local/bin/brew shellenv)"
 fi
+
+# heal nix-homebrew leftovers before anything uses brew (cheap, idempotent)
+repair_nix_pinned_taps
 
 if ! command -v mise >/dev/null 2>&1; then
   if [ "$DRY_RUN" = 1 ]; then
