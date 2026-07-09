@@ -151,13 +151,9 @@ deps
 .local/
 .build/
 
-# worktrunk per-repo project config (local-only)
-wt.local.toml
-**/wt.local.toml
-
-# mise per-repo local config (local-only)
-mise.local.toml
-**/mise.local.toml
+# Project-local config dirs (Worktrunk .config/wt.toml, mise .config/mise.local.toml, etc.)
+.config/
+**/.config/
 
 # Local (untracked) Claude Code project settings
 **/.claude/settings.local.json

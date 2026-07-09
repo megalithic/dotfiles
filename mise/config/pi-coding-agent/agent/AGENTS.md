@@ -11,7 +11,7 @@
   - When setup gets complex, create `devenv.nix`
   - Don't bypass devenv with global installs
   - `devenv search <query>` to find packages and options
-- Otherwise, if `mise.toml`, `mise.local.toml`, or similar root file markers are available, and no devenv.nix exists, use `mise` related tasks and toolchain commands.
+- Otherwise, if `mise.toml`, `.config/mise.local.toml`, or similar root file markers are available, and no devenv.nix exists, use `mise` related tasks and toolchain commands.
 - When working with external libraries, use MCP tools (`context7`, `githits`) to look up docs and examples instead of guessing APIs
 
 ### Command Execution

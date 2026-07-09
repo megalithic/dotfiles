@@ -1,0 +1,124 @@
+min_version = "2024.9.5"
+
+[env]
+# Keep project-local CLIs first so Neovim/conform and shell commands use the
+# same Shopify, Biome, Prettier, and Liquid plugin versions as CI.
+_.path = ["{{ config_root }}/node_modules/.bin"]
+
+# Optional local credentials. Keep .env.local out of git.
+_.file = [
+  { path = ".env", tools = true, redact = true },
+  { path = ".env.local", tools = true, redact = true },
+]
+
+SHOPIFY_CLI_NO_ANALYTICS = { default = "1" }
+SHOPIFY_THEME_ENV = { default = "default" }
+SHOPIFY_THEME_HOST = { default = "127.0.0.1" }
+SHOPIFY_THEME_PORT = { default = "9292" }
+SHOPIFY_THEME_LIVE_RELOAD = { default = "hot-reload" }
+SHOPIFY_THEME_NAME = "{{ config_root | basename }}"
+
+[tools]
+node = "lts"
+"npm:@shopify/cli" = "latest"
+"npm:@biomejs/biome" = "latest"
+"npm:prettier" = "latest"
+"npm:@shopify/prettier-plugin-liquid" = "latest"
+
+[deps.npm]
+auto = true
+
+[tasks.preflight]
+description = "Trust config, install tools, and bootstrap Shopify theme tooling"
+shell = "bash -c"
+run = '''
+mise trust
+mise install
+mise run bootstrap
+mise run install
+'''
+
+[tasks.setup]
+description = "Initial local Shopify theme setup"
+depends = ["preflight"]
+
+[tasks.bootstrap]
+description = "Generate safe default Shopify, Theme Check, Biome, Prettier, gitignore, and package files"
+run = "bash .config/scripts/bootstrap.sh"
+
+[tasks.install]
+description = "Install local npm dev dependencies for Shopify CLI, Biome, Prettier, and Liquid formatting"
+run = "npm install"
+
+[tasks.dev]
+description = "Start Shopify theme dev server with hot reload"
+raw_args = true
+run = 'shopify theme dev --environment "$SHOPIFY_THEME_ENV" --host "$SHOPIFY_THEME_HOST" --port "$SHOPIFY_THEME_PORT" --live-reload "$SHOPIFY_THEME_LIVE_RELOAD"'
+
+[tasks."start:server"]
+description = "Start Shopify theme dev server"
+depends = ["dev"]
+
+[tasks."theme:init"]
+description = "Initialize a new Shopify theme (usually run before copying this template into the theme root)"
+raw_args = true
+run = "shopify theme init"
+
+[tasks."theme:pull"]
+description = "Pull an existing Shopify theme into this directory"
+raw_args = true
+run = 'shopify theme pull --environment "$SHOPIFY_THEME_ENV"'
+
+[tasks."theme:info"]
+description = "Show current Shopify theme/store context"
+raw_args = true
+run = 'shopify theme info --environment "$SHOPIFY_THEME_ENV"'
+
+[tasks."theme:check"]
+description = "Run Shopify Theme Check"
+raw_args = true
+run = 'shopify theme check --environment "$SHOPIFY_THEME_ENV"'
+
+[tasks.check]
+description = "Run Biome, Theme Check, and Liquid Prettier checks"
+depends = ["theme:check", "format:check"]
+
+[tasks.format]
+description = "Format JS/TS/JSON/CSS with Biome, then Liquid with Prettier"
+shell = "bash -c"
+run = '''
+biome check --write .
+prettier --write "**/*.liquid"
+'''
+
+[tasks."format:check"]
+description = "Check Biome-managed files and Liquid formatting without writing"
+shell = "bash -c"
+run = '''
+biome check .
+prettier --check "**/*.liquid"
+'''
+
+[tasks."theme:push"]
+description = "Push theme changes to Shopify"
+raw_args = true
+run = 'shopify theme push --environment "$SHOPIFY_THEME_ENV"'
+
+[tasks."theme:push-unpublished"]
+description = "Push theme as a new unpublished theme"
+raw_args = true
+run = 'shopify theme push --environment "$SHOPIFY_THEME_ENV" --unpublished'
+
+[tasks."theme:share"]
+description = "Create a shareable preview link"
+raw_args = true
+run = 'shopify theme share --environment "$SHOPIFY_THEME_ENV"'
+
+[tasks."theme:publish"]
+description = "Publish a pushed theme"
+raw_args = true
+run = 'shopify theme publish --environment "$SHOPIFY_THEME_ENV"'
+
+[tasks.doctor]
+description = "Print Shopify local development diagnostics"
+run = "bash .config/scripts/doctor.sh"

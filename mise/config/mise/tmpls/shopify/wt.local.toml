@@ -1,0 +1,32 @@
+# Worktrunk project config for Shopify themes (local-only, gitignored).
+#
+# Generated to <repo>/.config/wt.toml (Worktrunk's default project config
+# path; the wrapper leaves Worktrunk's default resolution intact).
+#
+# Mirrors the Elixir template's hook shape. Task names referenced here
+# (bootstrap, install, start:server) all exist in the shopify mise template.
+#
+# pre-start runs once when a new worktree is created (blocking) and is
+# re-runnable on demand, so every step is idempotent and non-destructive.
+[pre-start]
+mise-trust = "mise trust" # Execute mise trust before creating a worktree
+# Install the services runner into the worktree's PRIVATE git dir
+# (.git/worktrees/<name>/wt-services-cmd) from the MAIN checkout's
+# .config/scripts/wt-services-cmd.sh (the new worktree's .config/ is not
+# copied until post-start). wt-tmux-target runs it in the `services` window.
+# Idempotent; skipped in the main checkout.
+services-cmd = '''
+gitdir="$(git rev-parse --absolute-git-dir)"
+case "$gitdir" in */worktrees/*) ;; *) exit 0 ;; esac
+main="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
+src="$main/.config/scripts/wt-services-cmd.sh"
+[ -f "$src" ] && install -m 0755 "$src" "$gitdir/wt-services-cmd"
+'''
+
+[post-start]
+copy = "wt step copy-ignored" # Copy ignored files (incl. .config/) after creating a worktree
+
+# Dev server URL column in `wt list`. Shopify theme dev uses a fixed port
+# (SHOPIFY_THEME_PORT, default 9292), so the URL is not per-branch.
+[list]
+url = "http://127.0.0.1:9292"

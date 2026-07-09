@@ -30,7 +30,7 @@ devenv.local.nix
 .projections.json
 .init.local.lua
 .direnv
-.mise.local.toml
+.config/
 
 todo.txt
 

@@ -2,14 +2,14 @@
 # wt — shell-agnostic Worktrunk wrapper core.
 #
 # Holds all the logic that used to live in the fish `wt` function:
-#   - resolves WORKTRUNK_PROJECT_CONFIG_PATH to <main-repo-root>/wt.local.toml
 #   - implicit `switch` for `wt <branch>`
 #   - auto `--create` when the branch exists neither locally nor on origin
 #   - auto `--yes` (project hook approval)
 #   - targets (-t/--target session|window|cd) via wt-tmux-target;
 #     switch flows default to `session`, `cd` restores plain cd-in-shell
-#   - GIT_WORKTREE id derivation ({repo}-{branch-slug}), matching mise's
-#     self-derivation in mise.local.toml
+#   - GIT_WORKTREE id derivation ({repo}-{branch-slug}) — the single source of
+#     truth, queryable via `wt id [path]` (aka `wt --worktree-id`). Project
+#     mise configs call this instead of re-deriving the id themselves.
 #
 # A child process cannot cd the parent shell or set its env, so thin per-shell
 # wrappers call this script with:
@@ -20,6 +20,35 @@
 # The wrapper then cds/sources. Without those env vars the script still works;
 # it prints the worktree path instead of cd-ing and evals exec directives
 # itself with sh.
+
+# ---- worktree-id derivation (single source of truth) ------------------------
+# {repo}-{branch-slug}, repo prefix kept for the tmux session switcher.
+# Both segments sanitized to [A-Za-z0-9_] (everything else → "-", repeats
+# collapsed, ends trimmed), so the id — and the db names derived from it —
+# only ever contain alphanumerics, underscores and dashes.
+worktree_id() { # $1 = worktree path
+  local br repo slug
+  br="$(git -C "$1" branch --show-current 2>/dev/null)"
+  [ -n "$br" ] || br="$(basename "$1")"
+  repo="$(basename "$(dirname "$(git -C "$1" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)")")"
+  repo="$(printf '%s' "$repo" | tr -c 'A-Za-z0-9_' '-' | sed -e 's/--*/-/g' -e 's/^-//' -e 's/-*$//')"
+  slug="$(printf '%s' "$br" | tr -c 'A-Za-z0-9_' '-' | sed -e 's/--*/-/g' -e 's/^-//' -e 's/-*$//')"
+  printf '%s-%s' "$repo" "$slug"
+}
+
+# `wt id [path]` / `wt --worktree-id [path]`: print the GIT_WORKTREE id and exit
+# without touching Worktrunk. Consumed by project mise configs so id derivation
+# lives in exactly one place. Empty output outside a linked worktree (main
+# checkout) so config treats it as "no worktree". Respects a pre-set
+# GIT_WORKTREE (echoes it verbatim).
+if [ "${1:-}" = id ] || [ "${1:-}" = --worktree-id ]; then
+  q_path="${2:-$PWD}"
+  if [ -n "${GIT_WORKTREE:-}" ]; then printf '%s' "$GIT_WORKTREE"; exit 0; fi
+  q_gd="$(git -C "$q_path" rev-parse --git-dir 2>/dev/null)" || exit 0
+  case "$q_gd" in */worktrees/*) ;; *) exit 0 ;; esac
+  worktree_id "$q_path"
+  exit 0
+fi
 
 # ---- locate the real Worktrunk binary (skip this script) -------------------
 self="$(realpath "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
@@ -38,23 +67,8 @@ if [ -z "$wt_bin" ]; then
   exit 127
 fi
 
-# ---- project config: <main-repo-root>/wt.local.toml ------------------------
-gcd="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
-if [ -n "$gcd" ]; then
-  WORKTRUNK_PROJECT_CONFIG_PATH="$(dirname "$gcd")/wt.local.toml"
-  export WORKTRUNK_PROJECT_CONFIG_PATH
-fi
-
 # ---- helpers ----------------------------------------------------------------
-# {repo}-{branch-slug}; slug = non [A-Za-z0-9_] squashed to "-", trimmed.
-worktree_id() { # $1 = worktree path
-  local br repo slug
-  br="$(git -C "$1" branch --show-current 2>/dev/null)"
-  [ -n "$br" ] || br="$(basename "$1")"
-  repo="$(basename "$(dirname "$(git -C "$1" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)")")"
-  slug="$(printf '%s' "$br" | tr -c 'A-Za-z0-9_' '-' | sed -e 's/--*/-/g' -e 's/^-//' -e 's/-*$//')"
-  printf '%s-%s' "$repo" "$slug"
-}
+gcd="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
 
 write_env() { # $1 = set|unset, $2 = value (for set)
   [ -n "${WT_ENV_FILE:-}" ] || return 0

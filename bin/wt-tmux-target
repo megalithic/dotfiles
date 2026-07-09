@@ -84,7 +84,7 @@ session="${repo}-${name}"
 
 # Canonical GIT_WORKTREE id: {repo}-{branch-slug} with non [A-Za-z0-9_]
 # squashed to '-'. Must stay in sync with wt.fish _wt_worktree_id and the
-# mise.local.toml GIT_WORKTREE derivation (ports/DB names hash this value).
+# .config/mise.local.toml GIT_WORKTREE derivation (ports/DB names hash this value).
 canonical_slug="$(printf '%s' "$raw_name" | sed -E 's/[^A-Za-z0-9_]+/-/g; s/-+/-/g; s/^-//; s/-$//')"
 worktree_id="${repo}-${canonical_slug}"
 
@@ -100,8 +100,7 @@ inside_tmux="false"
 gitdir="$(git -C "$wpath" rev-parse --absolute-git-dir 2>/dev/null)"
 services_cmd_file="${gitdir:+$gitdir/wt-services-cmd}"
 if [[ -n "$gitdir" && ! -f "$services_cmd_file" ]]; then
-  WORKTRUNK_PROJECT_CONFIG_PATH="$repo_root/wt.local.toml" \
-    wt -C "$wpath" hook pre-start -y >/dev/null 2>&1 || true
+  wt -C "$wpath" hook pre-start -y >/dev/null 2>&1 || true
 fi
 if [[ -n "$services_cmd_file" && -x "$services_cmd_file" ]]; then
   services_cmd="$services_cmd_file"

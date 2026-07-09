@@ -1,25 +1,33 @@
 #!/usr/bin/env bash
-# Copy a mise language template into a project as mise.local.toml.
+# Copy a language template into a project's .config/.
 #
 # Usage:
-#   mise-tmpl-gen <template> [target-dir]
+#   mise-tmpl-gen <lang>       [target-dir]   # mise config + scripts
+#   mise-tmpl-gen wt.<lang>    [target-dir]   # Worktrunk config + scripts
 #
 # Templates live in $MISE_TMPL_DIR (default ~/.dotfiles/mise/config/mise/tmpls)
-# as <template>.toml. Target defaults to the directory the mise task was run
-# from (MISE_ORIGINAL_CWD), falling back to $PWD.
+# under language subdirs. The dest drops the ".local" segment so mise and
+# Worktrunk file patterns match:
+#   <lang>/mise.local.toml   -> <target>/.config/mise.toml
+#   <lang>/wt.local.toml     -> <target>/.config/wt.toml   (Worktrunk default)
+#   <lang>/scripts/*         -> <target>/.config/scripts/*
+#
+# The `scripts/` dir is copied for both modes so the generated .config/ is
+# self-contained (tasks/hooks reference .config/scripts/*.sh). Target defaults
+# to the directory the mise task was run from (MISE_ORIGINAL_CWD), else $PWD.
 #
 # Idempotent: byte-identical destinations are left untouched; differing
-# destinations are replaced with a notice. The result is `mise trust`ed.
+# destinations are replaced with a notice. mise configs are `mise trust`ed.
 set -euo pipefail
 
 tmpl_dir="${MISE_TMPL_DIR:-$HOME/.dotfiles/mise/config/mise/tmpls}"
 
 usage() {
-  echo "usage: mise-tmpl-gen <template> [target-dir]" >&2
-  echo "templates in $tmpl_dir:" >&2
-  for f in "$tmpl_dir"/*.toml; do
-    [ -e "$f" ] || continue
-    echo "  $(basename "${f%.toml}")" >&2
+  echo "usage: mise-tmpl-gen <lang|wt.lang> [target-dir]" >&2
+  echo "languages in $tmpl_dir:" >&2
+  for d in "$tmpl_dir"/*/; do
+    [ -d "$d" ] || continue
+    echo "  $(basename "$d")" >&2
   done
 }
 
@@ -29,10 +37,34 @@ if [ $# -lt 1 ] || [ $# -gt 2 ]; then
 fi
 
 name="$1"
-src="$tmpl_dir/$name.toml"
-if [ ! -f "$src" ]; then
-  echo "error: unknown template '$name' ($src not found)" >&2
+mode="mise"
+lang="$name"
+case "$name" in
+  wt.*)
+    mode="wt"
+    lang="${name#wt.}"
+    ;;
+esac
+
+lang_dir="$tmpl_dir/$lang"
+if [ ! -d "$lang_dir" ]; then
+  echo "error: unknown language '$lang' ($lang_dir not found)" >&2
   usage
+  exit 1
+fi
+
+case "$mode" in
+  wt)
+    src="$lang_dir/wt.local.toml"
+    dest_name="wt.toml"
+    ;;
+  *)
+    src="$lang_dir/mise.local.toml"
+    dest_name="mise.toml"
+    ;;
+esac
+if [ ! -f "$src" ]; then
+  echo "error: template '$src' not found" >&2
   exit 1
 fi
 
@@ -41,19 +73,41 @@ if [ ! -d "$target" ]; then
   echo "error: target directory '$target' does not exist" >&2
   exit 1
 fi
-dest="$target/mise.local.toml"
+dest_dir="$target/.config"
+dest="$dest_dir/$dest_name"
+mkdir -p "$dest_dir"
 
-if [ -f "$dest" ] && cmp -s "$src" "$dest"; then
-  echo "up-to-date: $dest"
-else
-  if [ -f "$dest" ]; then
-    echo "replacing (differs from template): $dest"
-  else
-    echo "created: $dest"
+# copy_file SRC DEST [mode] — idempotent copy with a status notice.
+copy_file() {
+  local s="$1" d="$2" m="${3:-}"
+  if [ -f "$d" ] && cmp -s "$s" "$d"; then
+    echo "up-to-date: $d"
+    return 0
   fi
-  cp "$src" "$dest"
+  if [ -f "$d" ]; then
+    echo "replacing (differs from template): $d"
+  else
+    echo "created: $d"
+  fi
+  cp "$s" "$d"
+  [ -n "$m" ] && chmod "$m" "$d"
+  return 0
+}
+
+copy_file "$src" "$dest"
+
+# Always sync the language's scripts/ into .config/scripts/ so the generated
+# config is self-contained. Executable bits preserved.
+scripts_src="$lang_dir/scripts"
+if [ -d "$scripts_src" ]; then
+  scripts_dest="$dest_dir/scripts"
+  mkdir -p "$scripts_dest"
+  for s in "$scripts_src"/*; do
+    [ -f "$s" ] || continue
+    copy_file "$s" "$scripts_dest/$(basename "$s")" 0755
+  done
 fi
 
-if command -v mise >/dev/null 2>&1; then
+if command -v mise >/dev/null 2>&1 && [ "$dest_name" = "mise.toml" ]; then
   mise trust "$dest" >/dev/null 2>&1 || true
 fi
