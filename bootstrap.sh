@@ -39,7 +39,7 @@ ask() {
   ask_prompt="$1"
   ask_default="${2:-}"
   if [ -t 0 ]; then
-    printf ' [?] %s ' "$ask_prompt"
+    printf ' [?] %s ' "$ask_prompt" >&2
     read -r ask_reply
     printf '%s\n' "${ask_reply:-$ask_default}"
   else
