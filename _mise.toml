@@ -414,11 +414,12 @@ stderr_path = "/tmp/kanata-bar.err"
 run = [
   "command -v op >/dev/null 2>&1 || brew install --cask 1password-cli",
   "[ -d /Applications/Hammerspoon.app ] || brew install --cask hammerspoon",
-  "{{config_root}}/mise/scripts/install-helium",
+  # hooks: no template expansion, cwd = config root, [env] not applied
+  "./mise/scripts/install-helium",
 ]
 
 [bootstrap.hooks.pre-dotfiles]
-run = "git -C {{config_root}} submodule update --init"
+run = "git submodule update --init" # cwd = config root; hooks don't expand templates
 
 [bootstrap.hooks.post-defaults]
 run = "killall Finder SystemUIServer Dock || true"

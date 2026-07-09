@@ -448,13 +448,11 @@ sudo_rescue_app_rename() {
   return 1
 }
 
-run_mise_bootstrap() {
-  attempt_mise_bootstrap && return 0
-  if sudo_rescue_app_rename; then
-    attempt_mise_bootstrap && return 0
-  fi
-  while :; do
-    warn "mise bootstrap failed."
+# Print failure guidance that matches what actually went wrong, based on the
+# captured mise output — only the /Applications permission case is TCC.
+explain_mise_bootstrap_failure() {
+  if grep -q 'failed rename: /Applications/.*Permission denied\|failed rename: /Applications/' "$MISE_BOOTSTRAP_LOG" 2>/dev/null &&
+    grep -q 'Permission denied' "$MISE_BOOTSTRAP_LOG" 2>/dev/null; then
     say "'Permission denied' under /Applications usually means this terminal lacks"
     say "the App Management permission. Opening System Settings at that pane..."
     open "x-apple.systempreferences:com.apple.preference.security?Privacy_AppBundles" 2>/dev/null ||
@@ -464,8 +462,26 @@ run_mise_bootstrap() {
     say "reopen it, and re-run this bootstrap; retrying here will fail again."
     say "If no toggle appears (MDM-managed work machine), delete the affected app"
     say "via Finder (drag to Trash), then retry here."
+    return 0
+  fi
+  say "Errors from mise:"
+  grep 'ERROR' "$MISE_BOOTSTRAP_LOG" 2>/dev/null | tail -5 | while IFS= read -r line; do
+    say "  $line"
+  done
+  say "Full log: $MISE_BOOTSTRAP_LOG (re-run with MISE_VERBOSE=1 for more)."
+  say "Fix the underlying issue, then retry."
+}
+
+run_mise_bootstrap() {
+  attempt_mise_bootstrap && return 0
+  if sudo_rescue_app_rename; then
+    attempt_mise_bootstrap && return 0
+  fi
+  while :; do
+    warn "mise bootstrap failed."
+    explain_mise_bootstrap_failure
     say "Options:"
-    say "  [r]etry mise bootstrap (after Finder-deleting the app)"
+    say "  [r]etry mise bootstrap"
     say "  [c]ontinue without finishing mise bootstrap"
     say "  [a]bort"
     BOOTSTRAP_CHOICE=$(ask_tty "Bootstrap action [r/c/a]:")

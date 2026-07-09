@@ -19,9 +19,19 @@ APP="$INSTALL_DIR/Helium.app"
   exit 0
 }
 
+# mise bootstrap hooks don't receive [env], so source the rendered secrets
+# (fnox first, opnix fallback) when no token is in the environment already.
 TOKEN="${HOMEBREW_GITHUB_API_TOKEN:-${GITHUB_TOKEN:-}}"
+if [ -z "$TOKEN" ]; then
+  for secrets in "$HOME/.config/fnox/secrets/env-vars.sh" "$HOME/.config/opnix/secrets/env-vars.sh"; do
+    # shellcheck disable=SC1090
+    [ -f "$secrets" ] && . "$secrets" && break
+  done
+  TOKEN="${HOMEBREW_GITHUB_API_TOKEN:-${GITHUB_TOKEN:-}}"
+fi
 [ -n "$TOKEN" ] || {
   echo "install-helium: HOMEBREW_GITHUB_API_TOKEN or GITHUB_TOKEN required for private releases repo" >&2
+  echo "install-helium: render secrets first (mise run fnox:render) or export GITHUB_TOKEN" >&2
   exit 1
 }
 
