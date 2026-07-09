@@ -1,4 +1,12 @@
 [env]
+# Load local env files so `mise run` tasks (e.g. the tmux services window)
+# get the same vars as a direnv/.envrc shell — secrets plus dev toggles like
+# RX_METRICS_PORT=-1. Keep .env / .env.local out of git.
+_.file = [
+  { path = ".env", tools = true, redact = true },
+  { path = ".env.local", tools = true, redact = true },
+]
+
 # ── Shared postgres: ONE instance, hosted in the main repo ─────────────
 # .worktreeinclude copies this file into each worktree, so anchor paths to
 # the MAIN repo root via git-common-dir (not config_root, which would point
@@ -78,3 +86,24 @@ run = "bash .config/scripts/start-db.sh"
 description = "Start web server"
 depends = ["start:db"]
 run = "m s"
+
+[tasks.logs]
+description = "Show the last services-window log output (.local/log/services.log), ANSI stripped"
+shell = "bash -c"
+run = '''
+f=.local/log/services.log
+if [ -f "$f" ]; then
+  tail -n 500 "$f" | perl -pe 's/\e\[[0-9;?]*[ -\/]*[@-~]//g; s/\e\][^\a]*(?:\a|\e\\\\)//g; s/\r//g'
+else
+  echo "no services log yet: $f (open the services window or run mise run start:server)"
+fi
+'''
+
+[tasks."logs:follow"]
+description = "Follow the services-window log (.local/log/services.log), ANSI stripped"
+shell = "bash -c"
+run = '''
+f=.local/log/services.log
+mkdir -p "$(dirname "$f")"; touch "$f"
+tail -n 100 -f "$f" | perl -pe 's/\e\[[0-9;?]*[ -\/]*[@-~]//g; s/\e\][^\a]*(?:\a|\e\\\\)//g; s/\r//g'
+'''

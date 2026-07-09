@@ -122,3 +122,24 @@ run = 'shopify theme publish --environment "$SHOPIFY_THEME_ENV"'
 [tasks.doctor]
 description = "Print Shopify local development diagnostics"
 run = "bash .config/scripts/doctor.sh"
+
+[tasks.logs]
+description = "Show the last services-window log output (.local/log/services.log), ANSI stripped"
+shell = "bash -c"
+run = '''
+f=.local/log/services.log
+if [ -f "$f" ]; then
+  tail -n 500 "$f" | perl -pe 's/\e\[[0-9;?]*[ -\/]*[@-~]//g; s/\e\][^\a]*(?:\a|\e\\\\)//g; s/\r//g'
+else
+  echo "no services log yet: $f (open the services window or run mise run start:server)"
+fi
+'''
+
+[tasks."logs:follow"]
+description = "Follow the services-window log (.local/log/services.log), ANSI stripped"
+shell = "bash -c"
+run = '''
+f=.local/log/services.log
+mkdir -p "$(dirname "$f")"; touch "$f"
+tail -n 100 -f "$f" | perl -pe 's/\e\[[0-9;?]*[ -\/]*[@-~]//g; s/\e\][^\a]*(?:\a|\e\\\\)//g; s/\r//g'
+'''
