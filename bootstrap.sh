@@ -4,7 +4,7 @@ set -eu
 
 DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-https://github.com/megalithic/dotfiles.git}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
-FORCE_HOST="${HOST:-}" # skip hostname prompt if set
+FORCE_HOST="${HOST:-}" # desired hostname; skip hostname prompt if set
 FORCE=0                # --force: pass force flags to all sub-commands
 DRY_RUN=0              # --dry-run: pass dry-run flags to all sub-commands; skip other mutations
 
@@ -55,6 +55,10 @@ confirm() {
   esac
 }
 
+normalize_hostname() {
+  printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9-' '-' | sed 's/--*/-/g;s/^-//;s/-$//'
+}
+
 # run a mutating command, or print it in dry-run mode
 run() {
   if [ "$DRY_RUN" = 1 ]; then
@@ -69,7 +73,7 @@ usage() {
   printf '  --force        overwrite conflicting dotfile targets (mise dotfiles apply --force,\n'
   printf '                 mise bootstrap --force-dotfiles)\n'
   printf '  --dry-run, -n  print what would happen; mise sub-commands run in their dry-run modes\n'
-  printf '  --host <name>  skip hostname prompt (megabookpro | workbookpro)\n'
+  printf '  --host <name>  set macOS hostname and skip prompt\n'
 }
 
 while [ $# -gt 0 ]; do
@@ -203,25 +207,25 @@ fi
 #   exit 1
 # }
 
-CURRENT_HOST=$(uname -n | cut -d. -f1)
+CURRENT_HOST=$(normalize_hostname "$(uname -n | cut -d. -f1)")
 HOST=""
 if [ -n "$FORCE_HOST" ]; then
-  HOST="$FORCE_HOST"
+  HOST=$(normalize_hostname "$FORCE_HOST")
+  [ -n "$HOST" ] || die "--host cannot be empty after normalization"
   ok "Host override: $HOST"
-elif [ "$CURRENT_HOST" = "megabookpro" ] || [ "$CURRENT_HOST" = "workbookpro" ]; then
-  HOST="$CURRENT_HOST"
-  ok "Hostname matches known host: $HOST"
 else
-  warn "Unknown hostname: $CURRENT_HOST"
-  say "Known hosts: megabookpro (personal), workbookpro (work)"
-  REPLY=$(ask "Which host is this? [megabookpro/workbookpro] " "")
-  case "$REPLY" in
-  megabookpro | workbookpro) HOST="$REPLY" ;;
-  *)
-    say "Aborting. Set hostname first or use --host <name>."
-    exit 1
-    ;;
-  esac
+  REPLY=$(ask "Hostname [$CURRENT_HOST]:" "$CURRENT_HOST")
+  HOST=$(normalize_hostname "$REPLY")
+  [ -n "$HOST" ] || die "Hostname cannot be empty after normalization"
+fi
+
+if [ "$HOST" != "$CURRENT_HOST" ]; then
+  say "Switching macOS hostname: $CURRENT_HOST -> $HOST"
+  run sudo scutil --set ComputerName "$HOST"
+  run sudo scutil --set LocalHostName "$HOST"
+  run sudo scutil --set HostName "$HOST"
+  run sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$HOST"
+  ok "Hostname set to $HOST"
 fi
 
 # -- step 2: Command Line Tools --

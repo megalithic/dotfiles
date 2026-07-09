@@ -10,6 +10,8 @@ This file covers the nix-darwin layer: shared host settings, per-host overrides,
 
 Bootstrap-critical packages stay in `hosts/common.nix` `environment.systemPackages` because they are needed before Home Manager runs: `just`, `git`, `curl`, `vim`, plus core archive and nix tooling.
 
+`bootstrap.sh` is also the first mise bootstrap path. It resolves the intended macOS hostname before applying dotfiles or running `mise bootstrap`; `--host <name>` or the prompt can switch `ComputerName`, `LocalHostName`, `HostName`, and NetBIOSName with `scutil`/`defaults`.
+
 ## Determinate Nix integration
 
 `nix.enable = false` because Determinate Nix owns `/etc/nix/nix.conf`.
