@@ -2,6 +2,10 @@
 # POSIX sh only — no bashisms; runs on stock macOS before anything is installed.
 set -eu
 
+# Human-readable version stamp — bump whenever this script changes so remote
+# runs (curl | sh) show which revision they got.
+BOOTSTRAP_UPDATED="2026-07-09 16:46 EDT"
+
 DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-https://github.com/megalithic/dotfiles.git}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 FORCE_HOST="${HOST:-}" # desired hostname; skip hostname prompt if set
@@ -32,6 +36,7 @@ header() {
   printf ' │││├┤ │ ┬├─┤│  │ │ ├─┤││   dotfiles\n'
   printf ' ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘\n'
   printf '\n'
+  printf ' updated: %s\n' "$BOOTSTRAP_UPDATED"
   printf ' bootstrapping...\n'
   printf '\n'
 }
