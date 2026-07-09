@@ -7,6 +7,7 @@ DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 FORCE_HOST="${HOST:-}" # desired hostname; skip hostname prompt if set
 FORCE=0                # --force: pass force flags to all sub-commands
 DRY_RUN=0              # --dry-run: pass dry-run flags to all sub-commands; skip other mutations
+MIN_MISE_VERSION="2026.6.10"
 
 COLOR_RESET="$(printf '\033[0m')"
 COLOR_BLUE="$(printf '\033[34m')"
@@ -57,6 +58,39 @@ confirm() {
 
 normalize_hostname() {
   printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9-' '-' | sed 's/--*/-/g;s/^-//;s/-$//'
+}
+
+mise_version() {
+  mise --version | awk '{ for (i = 1; i <= NF; i++) if ($i ~ /^[0-9]+[.][0-9]+[.][0-9]+$/) { print $i; exit } }'
+}
+
+version_lt() {
+  version_a=$1
+  version_b=$2
+  IFS=. read -r a_major a_minor a_patch <<EOF
+$version_a
+EOF
+  IFS=. read -r b_major b_minor b_patch <<EOF
+$version_b
+EOF
+  [ "${a_major:-0}" -lt "${b_major:-0}" ] && return 0
+  [ "${a_major:-0}" -gt "${b_major:-0}" ] && return 1
+  [ "${a_minor:-0}" -lt "${b_minor:-0}" ] && return 0
+  [ "${a_minor:-0}" -gt "${b_minor:-0}" ] && return 1
+  [ "${a_patch:-0}" -lt "${b_patch:-0}" ]
+}
+
+ensure_mise_version() {
+  current_mise_version=$(mise_version)
+  [ -n "$current_mise_version" ] || die "Unable to determine mise version"
+  if version_lt "$current_mise_version" "$MIN_MISE_VERSION"; then
+    if [ "$DRY_RUN" = 1 ]; then
+      info "[dry-run] mise $current_mise_version is older than $MIN_MISE_VERSION; would upgrade mise"
+      die "dry-run cannot preview mise bootstrap with old mise; upgrade mise first or run without --dry-run"
+    fi
+    info "Upgrading mise ($current_mise_version -> >= $MIN_MISE_VERSION)..."
+    brew upgrade mise || brew install mise
+  fi
 }
 
 # run a mutating command, or print it in dry-run mode
@@ -140,6 +174,7 @@ if ! command -v mise >/dev/null 2>&1; then
   info "Installing mise..."
   brew install mise
 fi
+ensure_mise_version
 
 # clone_repo() {
 #   info "Cloning $DOTFILES_REPO into $DOTFILES_DIR..."
@@ -263,7 +298,10 @@ fi
 
 if [ -d "$DOTFILES_DIR/.git" ]; then
   info "Updating $DOTFILES_DIR..."
-  run git -C "$DOTFILES_DIR" pull --ff-only || info "Skipped pull (local changes or diverged branch)."
+  if ! run git -C "$DOTFILES_DIR" pull --ff-only; then
+    info "Default remote pull failed; retrying via $DOTFILES_REPO_URL..."
+    git -C "$DOTFILES_DIR" pull --ff-only "$DOTFILES_REPO_URL" HEAD || die "Could not update $DOTFILES_DIR; fix git auth/local changes and retry"
+  fi
 else
   [ "$DRY_RUN" = 1 ] && die "[dry-run] $DOTFILES_DIR is not a clone; dry-run needs an existing checkout"
   info "Cloning into $DOTFILES_DIR..."
@@ -276,6 +314,7 @@ fi
 # NOTE: plain sequential statements — wrapping these in `cd || { } && { }`
 # suppresses `set -e` inside the block, letting mise failures slip through.
 cd "$DOTFILES_DIR" || die "Unable to change to $DOTFILES_DIR"
+[ -f _mise.toml ] || die "Missing $DOTFILES_DIR/_mise.toml; checkout is stale or incomplete"
 
 # The staged mise config is named _mise.toml so it stays inactive on
 # nix-managed machines; point mise at it explicitly for the bootstrap run.

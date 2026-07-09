@@ -1,5 +1,7 @@
 #:tombi schema.strict = false
 
+min_version = "2026.6.10"
+
 # Useful mise-based dotfiles repos and patterns:
 #
 # REFS:
