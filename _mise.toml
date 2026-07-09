@@ -324,6 +324,8 @@ AutomaticDownload = 1
 CriticalUpdateInstall = 1
 ScheduleFrequency = 1
 
+# Espanso.app installed by the post-packages hook (brew cask) — agent breaks
+# with launchctl EIO if the app is missing when this loads.
 [bootstrap.macos.launchd.agents."com.megadots.espanso"]
 program = "/Applications/Espanso.app/Contents/MacOS/espanso"
 args = ["launcher"]
@@ -415,6 +417,8 @@ stderr_path = "/tmp/kanata-bar.err"
 run = [
   "command -v op >/dev/null 2>&1 || brew install --cask 1password-cli",
   "[ -d /Applications/Hammerspoon.app ] || brew install --cask hammerspoon",
+  # espanso ships app + binary artifacts; its launchd agent below depends on it
+  "[ -d /Applications/Espanso.app ] || brew install --cask espanso",
 ]
 
 [bootstrap.hooks.post-defaults]
