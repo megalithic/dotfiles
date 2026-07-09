@@ -4,7 +4,7 @@ set -eu
 
 # Human-readable version stamp — bump whenever this script changes so remote
 # runs (curl | sh) show which revision they got.
-BOOTSTRAP_UPDATED="2026-07-09 16:46 EDT"
+BOOTSTRAP_UPDATED="2026-07-09 17:10 EDT"
 
 DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-https://github.com/megalithic/dotfiles.git}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
@@ -326,7 +326,10 @@ if ! command -v brew >/dev/null 2>&1; then
   if [ "$DRY_RUN" = 1 ]; then
     info "[dry-run] would install Homebrew"
   else
-    info "Installing Homebrew..."
+    info "Installing Homebrew (needs an administrator password)..."
+    id -Gn | grep -qw admin || die "Homebrew install requires an administrator account; $(id -un) is not in the admin group"
+    # NONINTERACTIVE installs refuse to prompt for sudo — cache credentials first
+    sudo -v || die "sudo authentication failed; Homebrew install needs it"
     NONINTERACTIVE=1 /bin/bash -c \
       "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   fi
