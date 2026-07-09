@@ -417,9 +417,6 @@ run = [
   "[ -d /Applications/Hammerspoon.app ] || brew install --cask hammerspoon",
 ]
 
-[bootstrap.hooks.pre-dotfiles]
-run = "git submodule update --init" # cwd = config root; hooks don't expand templates
-
 [bootstrap.hooks.post-defaults]
 run = "killall Finder SystemUIServer Dock || true"
 
@@ -435,7 +432,6 @@ login_shell = "/opt/homebrew/bin/fish"
 # rendered HOMEBREW_GITHUB_API_TOKEN for the private releases repo).
 [tasks.bootstrap]
 run = [
-  "git -C {{config_root}} submodule update --init",
   "pre-commit install --install-hooks",
   "mise run setup:op:signin",
   "mise run setup:fnox:render",

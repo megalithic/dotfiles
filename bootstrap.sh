@@ -282,8 +282,19 @@ header
 [ "$(uname -s)" = "Darwin" ] || die "macOS only."
 [ "$(id -u)" -ne 0 ] || die "Do not run as root."
 
-xcode-select -p >/dev/null 2>&1 ||
-  die "Xcode Command Line Tools required. Run: xcode-select --install"
+# CLT first: everything below (brew, git, compilers) depends on it.
+if xcode-select -p >/dev/null 2>&1; then
+  ok "CLT installed: $(xcode-select -p)"
+elif [ "$DRY_RUN" = 1 ]; then
+  die "[dry-run] Xcode Command Line Tools required. Run: xcode-select --install"
+else
+  warn "Command Line Tools not installed."
+  say "Installing CLT (this opens a GUI dialog — follow the prompts)..."
+  xcode-select --install
+  say "Waiting for CLT installation to complete..."
+  until xcode-select -p >/dev/null 2>&1; do sleep 5; done
+  ok "CLT installed"
+fi
 
 if ! command -v brew >/dev/null 2>&1; then
   if [ "$DRY_RUN" = 1 ]; then
@@ -346,19 +357,6 @@ else
   fi
 fi
 
-# -- step 2: Command Line Tools --
-say "Checking Command Line Tools..."
-if xcode-select -p >/dev/null 2>&1; then
-  ok "CLT installed: $(xcode-select -p)"
-else
-  warn "Command Line Tools not installed."
-  say "Installing CLT (this opens a GUI dialog — follow the prompts)..."
-  xcode-select --install
-  say "Waiting for CLT installation to complete..."
-  until xcode-select -p >/dev/null 2>&1; do sleep 5; done
-  ok "CLT installed"
-fi
-
 if ! xcodebuild -license check >/dev/null 2>&1; then
   warn "Xcode license not accepted."
   run sudo xcodebuild -license accept
@@ -381,7 +379,7 @@ else
   [ "$DRY_RUN" = 1 ] && die "[dry-run] $DOTFILES_DIR is not a clone; dry-run needs an existing checkout"
   info "Cloning into $DOTFILES_DIR..."
   mkdir -p "$(dirname "$DOTFILES_DIR")"
-  git clone --recurse-submodules "$DOTFILES_REPO_URL" "$DOTFILES_DIR"
+  git clone "$DOTFILES_REPO_URL" "$DOTFILES_DIR"
 fi
 
 # Pre-apply dotfiles so the global ~/.config/mise/config.toml ([tools]) is in place before
@@ -398,10 +396,6 @@ export MISE_OVERRIDE_CONFIG_FILENAMES
 
 info "Trusting mise config..."
 mise trust # needed even in dry-run so mise can read the config
-
-info "Initializing submodules..."
-run git -C "$DOTFILES_DIR" submodule update --init
-ok "done initializing submodules."
 
 clean_nix_managed_targets
 
