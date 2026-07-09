@@ -30,6 +30,8 @@ cat > "$gitdir/wt-services-cmd" <<'EOF'
 #!/usr/bin/env bash
 # Keep the tmux services window usable when the server exits/crashes:
 # show the exit status, drop to an interactive shell for fixing/rerunning.
+mise run bootstrap
+mise run setup
 mise run start:server
 echo "[services] start:server exited ($?) - dropping to shell"
 exec fish
