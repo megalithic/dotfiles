@@ -418,7 +418,16 @@ ok "done applying dotfiles."
 
 info "Running mise bootstrap..."
 # shellcheck disable=SC2086 # intentional word-splitting of flag strings
-mise bootstrap --yes $MISE_BOOTSTRAP_FLAGS
+if ! mise bootstrap --yes $MISE_BOOTSTRAP_FLAGS; then
+  warn "mise bootstrap failed."
+  say "If an app install failed with 'Permission denied' renaming under /Applications:"
+  say "  - grant your terminal the App Management permission:"
+  say "      System Settings -> Privacy & Security -> App Management"
+  say "  - quit the affected app, then re-run this bootstrap"
+  say "  - if the bundle is root-owned (ls -ld /Applications/<App>.app), remove it"
+  say "    with sudo first"
+  die "mise bootstrap failed"
+fi
 ok "done bootstrapping."
 
 if [ "$DRY_RUN" = 1 ]; then
