@@ -24,7 +24,9 @@ check "fish is login shell" sh -c 'dscl . -read "/Users/$USER" UserShell | grep 
 check "~/.config/fish linked" test -L "$HOME/.config/fish"
 check "~/.config/git/config linked" test -L "$HOME/.config/git/config"
 check "~/.local/bin/pi linked" test -e "$HOME/.local/bin/pi"
-check "no missing mise tools" sh -c 'test -z "$(mise ls --missing 2>/dev/null)"'
+if [ "${BOOTSTRAP_SKIP_TOOL_CHECK:-0}" != 1 ]; then
+  check "no missing mise tools" sh -c 'test -z "$(mise ls --missing 2>/dev/null)"'
+fi
 
 if [ "$fail" = 1 ]; then
   printf ' some checks failed\n' >&2

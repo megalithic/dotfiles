@@ -415,7 +415,8 @@ login_shell = "/opt/homebrew/bin/fish"
 # rendered HOMEBREW_GITHUB_API_TOKEN for the private releases repo).
 [tasks.bootstrap]
 run = [
-  "pre-commit install --install-hooks",
+  "command -v pre-commit >/dev/null 2>&1 && pre-commit install --install-hooks || true",
+  "mise install fnox --locked",
   "mise run setup:op:signin",
   "mise run setup:fnox:render",
   "mise run setup:helium:install",

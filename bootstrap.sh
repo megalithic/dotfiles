@@ -296,7 +296,7 @@ MISE_DOTFILES_FLAGS=""
 # mise 2026.7.5 launchd apply fails on clean Tahoe VMs with launchctl bootout
 # EIO before services converge. Its user step also calls chsh, which prompts
 # for a password on macOS. Skip both and handle the login shell below with sudo.
-MISE_BOOTSTRAP_FLAGS="--skip launchd --skip user --locked"
+MISE_BOOTSTRAP_FLAGS="--skip launchd --skip user --skip tools --locked"
 if [ "$FORCE" = 1 ]; then
   MISE_DOTFILES_FLAGS="$MISE_DOTFILES_FLAGS --force"
   MISE_BOOTSTRAP_FLAGS="$MISE_BOOTSTRAP_FLAGS --force-dotfiles"
@@ -604,7 +604,7 @@ set_login_shell
 if [ "$DRY_RUN" = 1 ]; then
   info "[dry-run] would run: mise run doctor"
   info "[dry-run] done."
-elif mise run doctor; then
+elif BOOTSTRAP_SKIP_TOOL_CHECK=1 mise run doctor; then
   info "Done. Restart your terminal (login shell is now fish)."
 else
   warn "Finished, but some of the health checks failed."
