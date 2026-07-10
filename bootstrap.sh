@@ -4,7 +4,7 @@ set -eu
 
 # Human-readable version stamp — bump whenever this script changes so remote
 # runs (curl | sh) show which revision they got.
-BOOTSTRAP_UPDATED="2026-07-10 09:54 EST"
+BOOTSTRAP_UPDATED="2026-07-10 14:24 EDT"
 
 DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-https://github.com/megalithic/dotfiles.git}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
@@ -12,6 +12,7 @@ FORCE_HOST="${HOST:-}" # desired hostname; skip hostname prompt if set
 FORCE=0                # --force: pass force flags to all sub-commands
 DRY_RUN=0              # --dry-run: pass dry-run flags to all sub-commands; skip other mutations
 MIN_MISE_VERSION="2026.6.10"
+BOOTSTRAP_INSTALL_ROSETTA="${BOOTSTRAP_INSTALL_ROSETTA:-0}"
 
 COLOR_RESET="$(printf '\033[0m')"
 COLOR_BLUE="$(printf '\033[34m')"
@@ -426,13 +427,17 @@ case "$xcode_license_check" in
   ;;
 esac
 
-# Rosetta 2 (Apple Silicon only)
+# Rosetta is optional for this bootstrap path: Homebrew and mise install native
+# arm64 packages on Apple Silicon. Keep it opt-in because Tahoe's successful
+# Rosetta installer prints Apple Package Authoring Error noise.
 if [ "$(uname -m)" = "arm64" ]; then
   if /usr/bin/pgrep -q oahd 2>/dev/null; then
     ok "Rosetta 2 installed"
-  else
+  elif [ "$BOOTSTRAP_INSTALL_ROSETTA" = 1 ]; then
     say "Installing Rosetta 2..."
     run softwareupdate --install-rosetta --agree-to-license
+  else
+    info "Skipping Rosetta 2 install (set BOOTSTRAP_INSTALL_ROSETTA=1 to install)."
   fi
 fi
 
