@@ -390,7 +390,7 @@ run = [
   "command -v op >/dev/null 2>&1 || brew install --cask 1password-cli",
   "[ -d /Applications/Hammerspoon.app ] || brew install --cask hammerspoon",
   "[ -d /Applications/Espanso.app ] || brew install --cask espanso",
-  "{{config_root}}/mise/scripts/espanso-service",
+  "./mise/scripts/espanso-service",
 ]
 
 [bootstrap.hooks.post-defaults]
