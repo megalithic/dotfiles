@@ -4,7 +4,7 @@ set -eu
 
 # Human-readable version stamp — bump whenever this script changes so remote
 # runs (curl | sh) show which revision they got.
-BOOTSTRAP_UPDATED="2026-07-09 17:35 EDT"
+BOOTSTRAP_UPDATED="2026-07-09 18:15 EDT"
 
 DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-https://github.com/megalithic/dotfiles.git}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
@@ -498,28 +498,9 @@ explain_mise_bootstrap_failure() {
   say "Fix the underlying issue, then retry."
 }
 
-# If mise failed to bootout a launchd agent (stale/broken registration, e.g.
-# an agent loaded while its program was missing), bootout by label and remove
-# the plist so the retry re-registers it cleanly.
-rescue_stuck_launchd_agent() {
-  # shellcheck disable=SC2016 # backticks are literal text in mise's error output
-  agent_plist=$(sed -n 's/.*`launchctl bootout gui\/[0-9]* \([^`]*\.plist\)` failed.*/\1/p' "$MISE_BOOTSTRAP_LOG" | head -1)
-  [ -n "$agent_plist" ] || return 1
-  agent_label=$(basename "$agent_plist" .plist)
-  warn "launchd agent $agent_label is stuck; removing it for a clean re-register."
-  launchctl bootout "gui/$(id -u)/$agent_label" 2>/dev/null || true
-  run rm -f "$agent_plist"
-}
-
-mise_bootstrap_rescues() {
-  sudo_rescue_app_rename && return 0
-  rescue_stuck_launchd_agent && return 0
-  return 1
-}
-
 run_mise_bootstrap() {
   attempt_mise_bootstrap && return 0
-  if mise_bootstrap_rescues; then
+  if sudo_rescue_app_rename; then
     attempt_mise_bootstrap && return 0
   fi
   while :; do
@@ -533,7 +514,7 @@ run_mise_bootstrap() {
     case "$BOOTSTRAP_CHOICE" in
     r | R | retry)
       attempt_mise_bootstrap && return 0
-      if mise_bootstrap_rescues; then
+      if sudo_rescue_app_rename; then
         attempt_mise_bootstrap && return 0
       fi
       ;;

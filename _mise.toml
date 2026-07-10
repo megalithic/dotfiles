@@ -380,24 +380,6 @@ keep_alive = false
 stdout_path = "/tmp/kanata-bar.log"
 stderr_path = "/tmp/kanata-bar.err"
 
-# [bootstrap.macos.keyboard]
-# key_repeat = 2
-# initial_key_repeat = 15
-#
-# [bootstrap.macos.finder]
-# show_pathbar = true
-#
-# [bootstrap.macos.trackpad]
-# tap_to_click = true
-#
-# # Raw writes for keys with no curated section. Captured from this machine's current
-# # state — only settings that differ from macOS factory defaults.
-# [bootstrap.macos.defaults]
-# "NSGlobalDomain" = { ApplePressAndHoldEnabled = false, AppleShowAllExtensions = true, "com.apple.mouse.scaling" = 2.5, "com.apple.trackpad.scaling" = 0.875, "com.apple.swipescrolldirection" = false, AppleInterfaceStyle = "Dark" }
-# "com.apple.finder" = { AppleShowAllFiles = true, ShowStatusBar = true, FXPreferredViewStyle = "Nlsv" }
-# "com.apple.dock" = { tilesize = 52.0 }
-# "com.apple.WindowManager" = { EnableStandardClickToShowDesktop = false }
-
 [bootstrap.hooks.post-packages]
 # Casks mise's brew-cask backend can't handle, installed via real brew:
 # - 1password-cli, hammerspoon: ship `binary` artifacts (backend is app-bundle only)
