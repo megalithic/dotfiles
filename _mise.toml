@@ -460,9 +460,6 @@ run = "{{config_root}}/bin/miccheck-build"
 description = "Check 1Password trusts /Applications/Helium.app; prints GUI Add Browser steps if not (setting is tamper-protected, not writable)"
 run = "{{config_root}}/bin/helium-1password-trust"
 
-[plugins]
-nix = "https://github.com/jbadeau/mise-nix.git"
-
 [tools]
 # aqua
 "aqua:artempyanykh/marksman" = "latest"
