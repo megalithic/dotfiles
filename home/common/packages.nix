@@ -48,6 +48,7 @@ let
   #   bat, eza, fd, ripgrep, starship, zoxide, mise, k9s
   cliPkgs = with pkgs; [
     amber
+    apfel-llm # Apple Intelligence CLI/server — shade-next compact_ai interpreter
     argc
     awscli2
     bash # macOS ships with ancient bash
