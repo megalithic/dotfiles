@@ -132,22 +132,34 @@ fi
 
 (tart run "${TART_RUN_ARGS[@]}" "$VM" >"$RUN_LOG" 2>&1 &)
 
-IP=""
-for _ in $(seq 1 240); do
-  IP=$(tart ip "$VM" 2>/dev/null || true)
-  if [ -n "$IP" ] && sshpass -p "$GUEST_PASS" ssh \
+ssh_probe() {
+  sshpass -p "$GUEST_PASS" ssh \
     -o StrictHostKeyChecking=no \
     -o UserKnownHostsFile=/dev/null \
-    -o PreferredAuthentications=keyboard-interactive,password \
+    -o "PreferredAuthentications=keyboard-interactive,password" \
     -o PubkeyAuthentication=no \
     -o ConnectTimeout=5 \
-    "$GUEST_USER@$IP" 'true' >/dev/null 2>&1; then
-    break
+    "$GUEST_USER@$1" 'true' >/dev/null 2>&1
+}
+
+# Right after boot, sshd accepts one auth and then flakes while login services
+# settle. Require two consecutive successful auths a few seconds apart before
+# treating the guest as ready.
+IP=""
+READY=0
+for _ in $(seq 1 240); do
+  IP=$(tart ip "$VM" 2>/dev/null || true)
+  if [ -n "$IP" ] && ssh_probe "$IP"; then
+    sleep 5
+    if ssh_probe "$IP"; then
+      READY=1
+      break
+    fi
   fi
   sleep 2
 done
 
-if [ -z "$IP" ]; then
+if [ "$READY" -ne 1 ]; then
   echo "VM never became reachable over SSH; Tart log: $RUN_LOG" >&2
   exit 1
 fi
