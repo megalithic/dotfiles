@@ -85,6 +85,10 @@ run = "bash .config/scripts/start-db.sh"
 [tasks."start:server"]
 description = "Start web server"
 depends = ["start:db"]
+# raw connects stdin/stdout/stderr straight to the terminal. Without it mise
+# captures the task's stdio, so `iex -S mix phx.server` sees no TTY on stdin,
+# hits EOF, and exits 0 immediately instead of staying foregrounded.
+raw = true
 run = "m s"
 
 [tasks.logs]
