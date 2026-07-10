@@ -3,9 +3,9 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-usage: scripts/test-bootstrap-tart.sh [--mode local|remote] [--seed <vm>] [--vm <name>] [--host <hostname>] [--keep]
+usage: scripts/test-bootstrap-tart.sh [--mode local|remote] [--seed <vm>] [--vm <name>] [--host <hostname>] [--keep] [--interactive] [--allow-human-gate]
 
-Runs bootstrap.sh inside a disposable Tart macOS VM.
+Runs bootstrap.sh inside a disposable Tart macOS VM. Defaults to noninteractive SSH so prompts fail fast instead of spinning.
 
 Modes:
   local   Test the current committed checkout through a read-only Tart mount.
@@ -21,6 +21,8 @@ Required guest credentials use Cirrus Tart defaults: admin / admin.
 EOF
 }
 
+ORIGINAL_ARGS=("$@")
+
 MODE=local
 SEED=tahoe-bootstrap-seed
 VM="dotfiles-bootstrap-$(date +%Y%m%d-%H%M%S)"
@@ -28,6 +30,8 @@ GUEST_HOST=workbookpro
 KEEP=0
 GUEST_USER="admin"
 GUEST_PASS="admin"
+INTERACTIVE=0
+ALLOW_HUMAN_GATE=0
 REMOTE_BOOTSTRAP_URL="https://raw.githubusercontent.com/megalithic/dotfiles/HEAD/bootstrap.sh"
 REMOTE_REPO_URL="https://github.com/megalithic/dotfiles.git"
 
@@ -51,6 +55,12 @@ while [ $# -gt 0 ]; do
     ;;
   --keep)
     KEEP=1
+    ;;
+  --interactive)
+    INTERACTIVE=1
+    ;;
+  --allow-human-gate)
+    ALLOW_HUMAN_GATE=1
     ;;
   -h | --help)
     usage
@@ -76,7 +86,7 @@ esac
 if ! command -v tart >/dev/null 2>&1 || ! command -v sshpass >/dev/null 2>&1; then
   if command -v nix >/dev/null 2>&1; then
     export NIXPKGS_ALLOW_UNFREE=1
-    exec nix shell --impure nixpkgs#tart nixpkgs#sshpass -c "$0" "$@"
+    exec nix shell --impure nixpkgs#tart nixpkgs#sshpass -c "$0" "${ORIGINAL_ARGS[@]}"
   fi
   echo "missing tart or sshpass, and nix is unavailable" >&2
   exit 127
@@ -103,6 +113,8 @@ echo "mode: $MODE"
 echo "seed: $SEED"
 echo "vm:   $VM"
 echo "logs: $LOG_DIR"
+echo "interactive: $INTERACTIVE"
+echo "allow_human_gate: $ALLOW_HUMAN_GATE"
 
 if ! tart list | awk '{print $2}' | grep -qx "$SEED"; then
   echo "seed '$SEED' missing; pulling Tahoe vanilla image"
@@ -139,7 +151,11 @@ if [ -z "$IP" ]; then
 fi
 
 echo "ip: $IP"
-SSH_BASE=(sshpass -p "$GUEST_PASS" ssh -tt
+SSH_TTY_FLAGS=()
+if [ "$INTERACTIVE" -eq 1 ]; then
+  SSH_TTY_FLAGS=(-tt)
+fi
+SSH_BASE=(sshpass -p "$GUEST_PASS" ssh "${SSH_TTY_FLAGS[@]}"
   -o StrictHostKeyChecking=no
   -o UserKnownHostsFile=/dev/null
   "$GUEST_USER@$IP")
@@ -174,6 +190,11 @@ STATUS=${PIPESTATUS[0]}
 set -e
 
 if [ "$STATUS" -ne 0 ]; then
+  if [ "$ALLOW_HUMAN_GATE" -eq 1 ] && grep -q "op-signin-gate: op not signed in and no tty" "$BOOTSTRAP_LOG"; then
+    echo "bootstrap reached expected 1Password human gate after noninteractive phases"
+    echo "bootstrap log: $BOOTSTRAP_LOG"
+    exit 0
+  fi
   echo "bootstrap failed with status $STATUS" >&2
   echo "bootstrap log: $BOOTSTRAP_LOG" >&2
   exit "$STATUS"

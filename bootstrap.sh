@@ -4,7 +4,7 @@ set -eu
 
 # Human-readable version stamp — bump whenever this script changes so remote
 # runs (curl | sh) show which revision they got.
-BOOTSTRAP_UPDATED="2026-07-10 09:18 EDT"
+BOOTSTRAP_UPDATED="2026-07-10 09:54 EST"
 
 DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-https://github.com/megalithic/dotfiles.git}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
@@ -140,8 +140,8 @@ ensure_mise_version() {
   info "Upgrading mise ($current_mise_version -> >= $MIN_MISE_VERSION)..."
   repair_nix_pinned_taps
   info "Refreshing Homebrew formula index (brew update)..."
-  if brew update; then
-    brew upgrade mise || brew install mise || warn "brew could not upgrade mise."
+  if HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew update; then
+    HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew upgrade mise || HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install mise || warn "brew could not upgrade mise."
   else
     warn "brew update failed (Homebrew may be nix-managed/read-only); skipping brew upgrade."
   fi
@@ -293,7 +293,10 @@ done
 
 # flags forwarded to mise sub-commands (word-split on purpose; flags contain no spaces)
 MISE_DOTFILES_FLAGS=""
-MISE_BOOTSTRAP_FLAGS=""
+# mise 2026.7.5 launchd apply fails on clean Tahoe VMs with launchctl bootout
+# EIO before services converge. Skip native launchd during first bootstrap;
+# custom agents are safer to start manually/post-bootstrap after GUI approvals.
+MISE_BOOTSTRAP_FLAGS="--skip launchd"
 if [ "$FORCE" = 1 ]; then
   MISE_DOTFILES_FLAGS="$MISE_DOTFILES_FLAGS --force"
   MISE_BOOTSTRAP_FLAGS="$MISE_BOOTSTRAP_FLAGS --force-dotfiles"
@@ -308,18 +311,37 @@ header
 [ "$(uname -s)" = "Darwin" ] || die "macOS only."
 [ "$(id -u)" -ne 0 ] || die "Do not run as root."
 
+install_clt_noninteractive() {
+  clt_marker="/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress"
+  run touch "$clt_marker"
+  clt_label=$(softwareupdate --list 2>&1 |
+    sed -n 's/^[[:space:]]*\* Label: \(Command Line Tools for Xcode.*\)$/\1/p' |
+    tail -1)
+  if [ -z "$clt_label" ]; then
+    run rm -f "$clt_marker"
+    die "Could not find Command Line Tools in softwareupdate catalog"
+  fi
+  info "Installing $clt_label via softwareupdate..."
+  if ! run sudo softwareupdate --install "$clt_label" --verbose; then
+    run rm -f "$clt_marker"
+    die "Command Line Tools install failed"
+  fi
+  run rm -f "$clt_marker"
+  if [ -d /Library/Developer/CommandLineTools ]; then
+    run sudo xcode-select --switch /Library/Developer/CommandLineTools
+  fi
+  xcode-select -p >/dev/null 2>&1 || die "Command Line Tools install did not complete"
+}
+
 # CLT first: everything below (brew, git, compilers) depends on it.
 if xcode-select -p >/dev/null 2>&1; then
   ok "CLT installed: $(xcode-select -p)"
 elif [ "$DRY_RUN" = 1 ]; then
-  die "[dry-run] Xcode Command Line Tools required. Run: xcode-select --install"
+  die "[dry-run] Xcode Command Line Tools required. Run without --dry-run to install via softwareupdate"
 else
-  warn "Command Line Tools not installed."
-  say "Installing CLT (this opens a GUI dialog — follow the prompts)..."
-  xcode-select --install
-  say "Waiting for CLT installation to complete..."
-  until xcode-select -p >/dev/null 2>&1; do sleep 5; done
-  ok "CLT installed"
+  info "Command Line Tools not installed; installing now."
+  install_clt_noninteractive
+  ok "CLT installed: $(xcode-select -p)"
 fi
 
 if ! command -v brew >/dev/null 2>&1; then
@@ -330,7 +352,7 @@ if ! command -v brew >/dev/null 2>&1; then
     id -Gn | grep -qw admin || die "Homebrew install requires an administrator account; $(id -un) is not in the admin group"
     # NONINTERACTIVE installs refuse to prompt for sudo — cache credentials first
     sudo -v || die "sudo authentication failed; Homebrew install needs it"
-    NONINTERACTIVE=1 /bin/bash -c \
+    NONINTERACTIVE=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 /bin/bash -c \
       "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   fi
 fi
@@ -349,7 +371,7 @@ if ! command -v mise >/dev/null 2>&1; then
     die "[dry-run] mise not installed; dry-run needs mise to preview sub-commands"
   fi
   info "Installing mise..."
-  brew install mise || install_mise_standalone
+  HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install mise || install_mise_standalone
   command -v mise >/dev/null 2>&1 || die "mise installation failed"
 fi
 ensure_mise_version
@@ -389,11 +411,20 @@ else
   fi
 fi
 
-if ! xcodebuild -license check >/dev/null 2>&1; then
+xcode_license_check=$(xcodebuild -license check 2>&1 || true)
+case "$xcode_license_check" in
+*"requires Xcode"*"CommandLineTools"*)
+  info "Skipping Xcode license check (CLT-only install)."
+  ;;
+"")
+  :
+  ;;
+*)
   warn "Xcode license not accepted."
   run sudo xcodebuild -license accept
   ok "Xcode license accepted"
-fi
+  ;;
+esac
 
 # Rosetta 2 (Apple Silicon only)
 if [ "$(uname -m)" = "arm64" ]; then
@@ -474,6 +505,19 @@ sudo_rescue_app_rename() {
   return 1
 }
 
+# mise launchd registration can trip over stale or half-written plists on first
+# bootstrap. When bootout fails, remove the stale registration target and retry.
+rescue_stuck_launchd_agent() {
+  plist=$(sed -n 's/.*launchctl bootout gui\/[0-9][0-9]* \([^`]*\.plist\).*/\1/p' "$MISE_BOOTSTRAP_LOG" | head -1)
+  [ -n "$plist" ] || return 1
+  label=$(basename "$plist" .plist)
+  warn "mise could not bootout stale launchd agent $label; removing stale registration target..."
+  run launchctl bootout "gui/$(id -u)/$label" 2>/dev/null || true
+  [ ! -e "$plist" ] || run rm -f "$plist"
+  ok "Cleared stale launchd agent $label; retrying mise bootstrap."
+  return 0
+}
+
 # Print failure guidance that matches what actually went wrong, based on the
 # captured mise output — only the /Applications permission case is TCC.
 explain_mise_bootstrap_failure() {
@@ -500,8 +544,12 @@ explain_mise_bootstrap_failure() {
 
 run_mise_bootstrap() {
   attempt_mise_bootstrap && return 0
-  if sudo_rescue_app_rename; then
+  if sudo_rescue_app_rename || rescue_stuck_launchd_agent; then
     attempt_mise_bootstrap && return 0
+  fi
+  if ! { : </dev/tty; } 2>/dev/null; then
+    explain_mise_bootstrap_failure
+    die "mise bootstrap failed in non-interactive mode"
   fi
   while :; do
     warn "mise bootstrap failed."
@@ -514,7 +562,7 @@ run_mise_bootstrap() {
     case "$BOOTSTRAP_CHOICE" in
     r | R | retry)
       attempt_mise_bootstrap && return 0
-      if sudo_rescue_app_rename; then
+      if sudo_rescue_app_rename || rescue_stuck_launchd_agent; then
         attempt_mise_bootstrap && return 0
       fi
       ;;

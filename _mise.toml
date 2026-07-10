@@ -92,8 +92,9 @@ pis = "pinvim"
 # are read-only under nix-homebrew anyway)
 
 [bootstrap.packages]
-"brew:mas" = "latest"       # mas CLI itself (brew manager runs before mas manager)
-"mas:975937182" = "latest"  # Fantastical
+# Mac App Store apps are intentionally excluded from clean bootstrap: MAS needs
+# an interactive Apple Account session and triggers GUI sign-in on fresh macOS.
+# Install Fantastical manually after signing into the App Store.
 "brew:bash" = "latest"
 "brew:fish" = "latest"
 "brew:git" = "latest"
@@ -324,10 +325,10 @@ AutomaticDownload = 1
 CriticalUpdateInstall = 1
 ScheduleFrequency = 1
 
-# espanso launchd agent is managed by the post-packages hook
-# (mise/scripts/espanso-service), not by mise's launchd-agents step —
-# brew services doesn't support casks, so the hook owns install+load
-# atomically, avoiding the timing gap where a stale registration EIOs.
+# espanso LaunchAgent plist is written by the post-packages hook
+# (mise/scripts/espanso-service), not by mise's launchd-agents step.
+# It is not loaded during clean bootstrap because first app launch triggers a
+# Gatekeeper GUI prompt; start it manually after approving Espanso.
 
 [bootstrap.macos.launchd.agents."com.megadots.llama-cpp"]
 program = "~/.dotfiles/scripts/mise/llama-server-launchd"
@@ -387,9 +388,9 @@ stderr_path = "/tmp/kanata-bar.err"
 #  fnox render — see [tasks.bootstrap] for the ordered chain)
 # hooks: no template expansion, cwd = config root, [env] not applied
 run = [
-  "command -v op >/dev/null 2>&1 || brew install --cask 1password-cli",
-  "[ -d /Applications/Hammerspoon.app ] || brew install --cask hammerspoon",
-  "[ -d /Applications/Espanso.app ] || brew install --cask espanso",
+  "command -v op >/dev/null 2>&1 || HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask 1password-cli",
+  "[ -d /Applications/Hammerspoon.app ] || HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask hammerspoon",
+  "[ -d /Applications/Espanso.app ] || HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask espanso",
   "./mise/scripts/espanso-service",
 ]
 

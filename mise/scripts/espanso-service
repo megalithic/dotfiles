@@ -1,5 +1,5 @@
 #!/bin/sh
-# Start Espanso as a user LaunchAgent. Called from the post-packages hook
+# Install Espanso's user LaunchAgent plist. Called from the post-packages hook
 # right after the cask install, so the binary is guaranteed to exist.
 #
 # brew services doesn't support casks, so we manage the plist ourselves —
@@ -12,12 +12,6 @@ APP="/Applications/Espanso.app"
 
 LABEL="dev.mise.com.megadots.espanso"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
-
-# Idempotent: if already loaded with matching plist, nothing to do.
-if launchctl list "$LABEL" >/dev/null 2>&1; then
-  echo "espanso-service: already loaded"
-  exit 0
-fi
 
 mkdir -p "$(dirname "$PLIST")"
 
@@ -45,5 +39,18 @@ cat > "$PLIST" <<PLISTEOF
 PLISTEOF
 
 mkdir -p "$HOME/Library/Logs/espanso"
-launchctl bootstrap "gui/$(id -u)" "$PLIST"
-echo "espanso-service: loaded"
+
+# Do not launch Espanso during bootstrap by default. First launch of a cask app
+# triggers a Gatekeeper GUI prompt ("Espanso is an app downloaded from the
+# Internet") on clean macOS, which breaks noninteractive bootstrap. The plist is
+# ready; user starts it after first approving/opening the app.
+if [ "${ESPANSO_START_NOW:-0}" = 1 ]; then
+  if launchctl list "$LABEL" >/dev/null 2>&1; then
+    echo "espanso-service: already loaded"
+  else
+    launchctl bootstrap "gui/$(id -u)" "$PLIST"
+    echo "espanso-service: loaded"
+  fi
+else
+  echo "espanso-service: installed plist (not loaded; first app launch is manual)"
+fi
