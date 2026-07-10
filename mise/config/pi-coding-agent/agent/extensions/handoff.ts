@@ -10,18 +10,24 @@
  *   /handoff execute phase one of the plan
  *   /handoff check other places that need this fix
  *
- * The generated prompt appears as a draft in the editor for review/editing.
+ * The generated prompt opens in your $EDITOR for review/editing (falls back
+ * to pi's built-in TUI editor if no EDITOR or VISUAL env var is set).
  */
+
+import { spawnSync } from "node:child_process";
+import { readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 import { complete, type Message } from "@earendil-works/pi-ai";
 import type {
-  ExtensionAPI,
-  SessionEntry,
+	ExtensionAPI,
+	SessionEntry,
 } from "@earendil-works/pi-coding-agent";
 import {
-  BorderedLoader,
-  convertToLlm,
-  serializeConversation,
+	BorderedLoader,
+	convertToLlm,
+	serializeConversation,
 } from "@earendil-works/pi-coding-agent";
 
 const SYSTEM_PROMPT = `You are a context transfer assistant. Given a conversation history and the user's goal for a new thread, generate a focused prompt that:
@@ -47,183 +53,209 @@ Files involved:
 [Clear description of what to do next based on user's goal]`;
 
 export default function (pi: ExtensionAPI) {
-  pi.registerCommand("handoff", {
-    description: "Transfer context to a new focused session",
-    handler: async (args, ctx) => {
-      if (!ctx.hasUI) {
-        ctx.ui.notify("handoff requires interactive mode", "error");
-        return;
-      }
+	pi.registerCommand("handoff", {
+		description: "Transfer context to a new focused session",
+		handler: async (args, ctx) => {
+			if (!ctx.hasUI) {
+				ctx.ui.notify("handoff requires interactive mode", "error");
+				return;
+			}
 
-      if (!ctx.model) {
-        ctx.ui.notify("No model selected", "error");
-        return;
-      }
+			if (!ctx.model) {
+				ctx.ui.notify("No model selected", "error");
+				return;
+			}
 
-      const goal = args.trim();
-      if (!goal) {
-        ctx.ui.notify("Usage: /handoff <goal for new thread>", "error");
-        return;
-      }
+			const goal = args.trim();
+			if (!goal) {
+				ctx.ui.notify("Usage: /handoff <goal for new thread>", "error");
+				return;
+			}
 
-      // Gather conversation context from current branch
-      const branch = ctx.sessionManager.getBranch();
-      const messages = branch
-        .filter(
-          (entry): entry is SessionEntry & { type: "message" } =>
-            entry.type === "message",
-        )
-        .map((entry) => entry.message);
+			// Gather conversation context from current branch
+			const branch = ctx.sessionManager.getBranch();
+			const messages = branch
+				.filter(
+					(entry): entry is SessionEntry & { type: "message" } =>
+						entry.type === "message",
+				)
+				.map((entry) => entry.message);
 
-      if (messages.length === 0) {
-        ctx.ui.notify("No conversation to hand off", "error");
-        return;
-      }
+			if (messages.length === 0) {
+				ctx.ui.notify("No conversation to hand off", "error");
+				return;
+			}
 
-      // Convert to LLM format and serialize
-      const llmMessages = convertToLlm(messages);
-      const conversationText = serializeConversation(llmMessages);
-      const currentSessionFile = ctx.sessionManager.getSessionFile();
+			// Convert to LLM format and serialize
+			const llmMessages = convertToLlm(messages);
+			const conversationText = serializeConversation(llmMessages);
+			const currentSessionFile = ctx.sessionManager.getSessionFile();
 
-      // Build the chain of parent sessions
-      const sessionChain: string[] = currentSessionFile
-        ? [currentSessionFile]
-        : [];
-      const header = ctx.sessionManager.getHeader();
-      let parentSession = header?.parentSession;
-      while (parentSession) {
-        sessionChain.push(parentSession);
-        // Try to read parent's header to find its parent
-        try {
-          const { stdout } = await pi.exec("head", ["-1", parentSession]);
-          const parentHeader = JSON.parse(stdout);
-          parentSession = parentHeader.parentSession;
-        } catch {
-          break;
-        }
-      }
+			// Build the chain of parent sessions
+			const sessionChain: string[] = currentSessionFile
+				? [currentSessionFile]
+				: [];
+			const header = ctx.sessionManager.getHeader();
+			let parentSession = header?.parentSession;
+			while (parentSession) {
+				sessionChain.push(parentSession);
+				// Try to read parent's header to find its parent
+				try {
+					const { stdout } = await pi.exec("head", ["-1", parentSession]);
+					const parentHeader = JSON.parse(stdout);
+					parentSession = parentHeader.parentSession;
+				} catch {
+					break;
+				}
+			}
 
-      // Generate the handoff prompt with loader UI
-      const result = await ctx.ui.custom<{
-        text: string | null;
-        error?: string;
-      }>((tui, theme, _kb, done) => {
-        const loader = new BorderedLoader(
-          tui,
-          theme,
-          `Generating handoff prompt...`,
-        );
-        loader.onAbort = () => done({ text: null });
+			// Generate the handoff prompt with loader UI
+			const result = await ctx.ui.custom<{
+				text: string | null;
+				error?: string;
+			}>((tui, theme, _kb, done) => {
+				const loader = new BorderedLoader(
+					tui,
+					theme,
+					`Generating handoff prompt...`,
+				);
+				loader.onAbort = () => done({ text: null });
 
-        const doGenerate = async () => {
-          // pi 0.78+: getApiKey(model) renamed to getApiKeyAndHeaders(model)
-          // returning a Result<{ apiKey, headers, ... }> with ok/error discriminator.
-          const authResult = await ctx.modelRegistry.getApiKeyAndHeaders(
-            ctx.model!,
-          );
-          if (!authResult.ok) {
-            throw new Error(authResult.error);
-          }
-          const apiKey = authResult.apiKey;
-          const headers = authResult.headers;
+				const doGenerate = async () => {
+					// pi 0.78+: getApiKey(model) renamed to getApiKeyAndHeaders(model)
+					// returning a Result<{ apiKey, headers, ... }> with ok/error discriminator.
+					const authResult = await ctx.modelRegistry.getApiKeyAndHeaders(
+						ctx.model!,
+					);
+					if (!authResult.ok) {
+						throw new Error(authResult.error);
+					}
+					const apiKey = authResult.apiKey;
+					const headers = authResult.headers;
 
-          const userMessage: Message = {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: `## Conversation History\n\n${conversationText}\n\n## User's Goal for New Thread\n\n${goal}`,
-              },
-            ],
-            timestamp: Date.now(),
-          };
+					const userMessage: Message = {
+						role: "user",
+						content: [
+							{
+								type: "text",
+								text: `## Conversation History\n\n${conversationText}\n\n## User's Goal for New Thread\n\n${goal}`,
+							},
+						],
+						timestamp: Date.now(),
+					};
 
-          const response = await complete(
-            ctx.model!,
-            { systemPrompt: SYSTEM_PROMPT, messages: [userMessage] },
-            { apiKey, headers, signal: loader.signal },
-          );
+					const response = await complete(
+						ctx.model!,
+						{ systemPrompt: SYSTEM_PROMPT, messages: [userMessage] },
+						{ apiKey, headers, signal: loader.signal },
+					);
 
-          if (response.stopReason === "aborted") {
-            return { text: null };
-          }
+					if (response.stopReason === "aborted") {
+						return { text: null };
+					}
 
-          if (response.stopReason === "error") {
-            return {
-              text: null,
-              error: response.errorMessage || "Unknown error",
-            };
-          }
+					if (response.stopReason === "error") {
+						return {
+							text: null,
+							error: response.errorMessage || "Unknown error",
+						};
+					}
 
-          const textContent = response.content
-            .filter(
-              (c): c is { type: "text"; text: string } => c.type === "text",
-            )
-            .map((c) => c.text)
-            .join("\n");
+					const textContent = response.content
+						.filter(
+							(c): c is { type: "text"; text: string } => c.type === "text",
+						)
+						.map((c) => c.text)
+						.join("\n");
 
-          if (!textContent) {
-            return {
-              text: null,
-              error: `No text in response. Stop reason: ${response.stopReason}, content types: ${response.content.map((c) => c.type).join(", ")}`,
-            };
-          }
+					if (!textContent) {
+						return {
+							text: null,
+							error: `No text in response. Stop reason: ${response.stopReason}, content types: ${response.content.map((c) => c.type).join(", ")}`,
+						};
+					}
 
-          return { text: textContent };
-        };
+					return { text: textContent };
+				};
 
-        doGenerate()
-          .then(done)
-          .catch((err) => {
-            done({ text: null, error: err.message || String(err) });
-          });
+				doGenerate()
+					.then(done)
+					.catch((err) => {
+						done({ text: null, error: err.message || String(err) });
+					});
 
-        return loader;
-      });
+				return loader;
+			});
 
-      if (result.error) {
-        ctx.ui.notify(`Handoff failed: ${result.error}`, "error");
-        return;
-      }
+			if (result.error) {
+				ctx.ui.notify(`Handoff failed: ${result.error}`, "error");
+				return;
+			}
 
-      if (result.text === null) {
-        ctx.ui.notify("Cancelled", "info");
-        return;
-      }
+			if (result.text === null) {
+				ctx.ui.notify("Cancelled", "info");
+				return;
+			}
 
-      // Build session history section
-      const historySection =
-        sessionChain.length > 0
-          ? `\n\n## Session History\nPrevious sessions (most recent first):\n${sessionChain.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n\nUse \`pi --session <path>\` to review any session if needed.`
-          : "";
+			// Build session history section
+			const historySection =
+				sessionChain.length > 0
+					? `\n\n## Session History\nPrevious sessions (most recent first):\n${sessionChain.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n\nUse \`pi --session <path>\` to review any session if needed.`
+					: "";
 
-      const promptWithHistory = result.text + historySection;
+			const promptWithHistory = result.text + historySection;
 
-      // Let user edit the generated prompt
-      const editedPrompt = await ctx.ui.editor(
-        "Edit handoff prompt",
-        promptWithHistory,
-      );
+			// Open the generated prompt in the user's external $EDITOR so they can
+			// edit it without risk of accidentally clearing it via keybindings.
+			// Falls back to pi's built-in TUI editor if no EDITOR/VISUAL is set.
+			const editor = process.env.EDITOR || process.env.VISUAL;
+			let editedPrompt: string | undefined;
 
-      if (editedPrompt === undefined) {
-        ctx.ui.notify("Cancelled", "info");
-        return;
-      }
+			if (editor) {
+				const tmpFile = join(tmpdir(), `pi-handoff-${Date.now()}.md`);
+				writeFileSync(tmpFile, promptWithHistory, "utf-8");
 
-      // Create new session with parent tracking. After replacement, only use
-      // the fresh ctx passed to withSession; old command ctx is stale.
-      const newSessionResult = await ctx.newSession({
-        parentSession: currentSessionFile,
-        withSession: async (ctx) => {
-          // Set the edited prompt in the main editor for submission
-          ctx.ui.setEditorText(editedPrompt);
-          ctx.ui.notify("Handoff ready. Submit when ready.", "info");
-        },
-      });
+				const result = spawnSync(editor, [tmpFile], { stdio: "inherit" });
 
-      if (newSessionResult.cancelled) {
-        ctx.ui.notify("New session cancelled", "info");
-      }
-    },
-  });
+				if (result.error) {
+					ctx.ui.notify(`Editor failed: ${result.error.message}`, "error");
+					unlinkSync(tmpFile);
+					return;
+				}
+
+				editedPrompt = readFileSync(tmpFile, "utf-8");
+				unlinkSync(tmpFile);
+
+				if (editedPrompt === promptWithHistory) {
+					ctx.ui.notify("Cancelled (no changes saved)", "info");
+					return;
+				}
+			} else {
+				editedPrompt = await ctx.ui.editor(
+					"Edit handoff prompt",
+					promptWithHistory,
+				);
+			}
+
+			if (editedPrompt === undefined) {
+				ctx.ui.notify("Cancelled", "info");
+				return;
+			}
+
+			// Create new session with parent tracking. After replacement, only use
+			// the fresh ctx passed to withSession; old command ctx is stale.
+			const newSessionResult = await ctx.newSession({
+				parentSession: currentSessionFile,
+				withSession: async (ctx) => {
+					// Set the edited prompt in the main editor for submission
+					ctx.ui.setEditorText(editedPrompt);
+					ctx.ui.notify("Handoff ready. Submit when ready.", "info");
+				},
+			});
+
+			if (newSessionResult.cancelled) {
+				ctx.ui.notify("New session cancelled", "info");
+			}
+		},
+	});
 }
