@@ -177,6 +177,16 @@ M.layouts = {
       { "", 2, M.grid.full },
     },
   },
+  ["io.canarymail.mac"] = {
+    bundleID = "io.canarymail.mac",
+    name = "Canary Mail",
+    rules = {
+      -- Named windows take precedence over the catch-all below.
+      { "Inbox - All", 2, M.grid.full },
+      -- Compose windows, individual message viewers, etc.
+      { "", 2, M.grid.halves.right },
+    },
+  },
   ["com.freron.MailMate"] = {
     bundleID = "com.freron.MailMate",
     name = "MailMate",
@@ -186,7 +196,7 @@ M.layouts = {
       { "Unread", 2, M.grid.full },
       { "All Messages", 2, M.grid.full },
       -- Compose windows, individual message viewers, etc.
-      { "", 2, M.grid.halves.left },
+      { "", 2, M.grid.halves.right },
     },
   },
   ["com.apple.finder"] = {
@@ -355,6 +365,7 @@ M.launchers = {
   -- { "com.spotify.client", "p" },
   { "com.apple.Music", "p" },
   { "com.freron.MailMate", "e" },
+  { "io.canarymail.mac", "e" },
   {
     "com.flexibits.fantastical2.mac",
     "y",
@@ -374,11 +385,11 @@ M.launchers = {
   { "com.tdesktop.Telegram", "t" },
   { "org.hammerspoon.Hammerspoon", "r" },
   -- { "com.kapeli.dashdoc", { { "shift" }, "d" }, { passThrough = { "d" } } },
-  { "com.electron.postbird", { { "shift" }, "p" } },
+  -- { "com.electron.postbird", { { "shift" }, "p" } },
   { "com.1password.1password", "1" },
-  { "commonplace.canonize.app", nil, { passThrough = { { { "shift" }, "s" } } } },
+  -- { "commonplace.canonize.app", nil, { passThrough = { { { "shift" }, "s" } } } },
   { "com.apple.dt.Xcode", "x", { focusOnly = true } },
-  { "com.obsproject.obs-studio", "o", { focusOnly = true } },
+  -- { "com.obsproject.obs-studio", "o", { focusOnly = true } },
   { "com.microsoft.VSCode", "v", { focusOnly = true } },
   -- { "com.culturedcode.ThingsMac", nil, { passThrough = { "return" } } },
 }
