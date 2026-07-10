@@ -138,6 +138,8 @@ for _ in $(seq 1 240); do
   if [ -n "$IP" ] && sshpass -p "$GUEST_PASS" ssh \
     -o StrictHostKeyChecking=no \
     -o UserKnownHostsFile=/dev/null \
+    -o PreferredAuthentications=password \
+    -o PubkeyAuthentication=no \
     -o ConnectTimeout=5 \
     "$GUEST_USER@$IP" 'true' >/dev/null 2>&1; then
     break
@@ -158,6 +160,8 @@ fi
 SSH_BASE=(sshpass -p "$GUEST_PASS" ssh "${SSH_TTY_FLAGS[@]}"
   -o StrictHostKeyChecking=no
   -o UserKnownHostsFile=/dev/null
+  -o PreferredAuthentications=password
+  -o PubkeyAuthentication=no
   "$GUEST_USER@$IP")
 
 # shellcheck disable=SC2016 # remote shell expands command substitutions
