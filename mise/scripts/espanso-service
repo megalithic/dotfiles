@@ -1,0 +1,49 @@
+#!/bin/sh
+# Start Espanso as a user LaunchAgent. Called from the post-packages hook
+# right after the cask install, so the binary is guaranteed to exist.
+#
+# brew services doesn't support casks, so we manage the plist ourselves —
+# but in the hook (atomic with install), not mise's launchd-agents step
+# (which runs later and hits bootout EIO on stale/broken registrations).
+set -eu
+
+APP="/Applications/Espanso.app"
+[ -d "$APP" ] || { echo "espanso-service: $APP not installed; skip" >&2; exit 0; }
+
+LABEL="dev.mise.com.megadots.espanso"
+PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
+
+# Idempotent: if already loaded with matching plist, nothing to do.
+if launchctl list "$LABEL" >/dev/null 2>&1; then
+  echo "espanso-service: already loaded"
+  exit 0
+fi
+
+mkdir -p "$(dirname "$PLIST")"
+
+cat > "$PLIST" <<PLISTEOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+ "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>$LABEL</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$APP/Contents/MacOS/espanso</string>
+    <string>launcher</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>$HOME/Library/Logs/espanso/stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>$HOME/Library/Logs/espanso/stderr.log</string>
+</dict>
+</plist>
+PLISTEOF
+
+mkdir -p "$HOME/Library/Logs/espanso"
+launchctl bootstrap "gui/$(id -u)" "$PLIST"
+echo "espanso-service: loaded"
