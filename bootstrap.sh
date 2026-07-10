@@ -294,9 +294,9 @@ done
 # flags forwarded to mise sub-commands (word-split on purpose; flags contain no spaces)
 MISE_DOTFILES_FLAGS=""
 # mise 2026.7.5 launchd apply fails on clean Tahoe VMs with launchctl bootout
-# EIO before services converge. Skip native launchd during first bootstrap;
-# custom agents are safer to start manually/post-bootstrap after GUI approvals.
-MISE_BOOTSTRAP_FLAGS="--skip launchd"
+# EIO before services converge. Its user step also calls chsh, which prompts
+# for a password on macOS. Skip both and handle the login shell below with sudo.
+MISE_BOOTSTRAP_FLAGS="--skip launchd --skip user"
 if [ "$FORCE" = 1 ]; then
   MISE_DOTFILES_FLAGS="$MISE_DOTFILES_FLAGS --force"
   MISE_BOOTSTRAP_FLAGS="$MISE_BOOTSTRAP_FLAGS --force-dotfiles"
@@ -580,9 +580,26 @@ run_mise_bootstrap() {
   done
 }
 
+set_login_shell() {
+  fish_path="/opt/homebrew/bin/fish"
+  [ -x "$fish_path" ] || fish_path="$(command -v fish 2>/dev/null || true)"
+  [ -n "$fish_path" ] || die "fish is not installed; cannot set login shell"
+  if ! grep -qx "$fish_path" /etc/shells 2>/dev/null; then
+    info "Adding $fish_path to /etc/shells..."
+    printf '%s\n' "$fish_path" | run sudo tee -a /etc/shells >/dev/null
+  fi
+  current_shell=$(dscl . -read "/Users/$(id -un)" UserShell 2>/dev/null | awk '{print $2}')
+  if [ "$current_shell" != "$fish_path" ]; then
+    info "Setting login shell to $fish_path..."
+    run sudo dscl . -change "/Users/$(id -un)" UserShell "$current_shell" "$fish_path"
+  fi
+  ok "login shell: $fish_path"
+}
+
 info "Running mise bootstrap..."
 run_mise_bootstrap
 ok "done bootstrapping."
+set_login_shell
 
 if [ "$DRY_RUN" = 1 ]; then
   info "[dry-run] would run: mise run doctor"
