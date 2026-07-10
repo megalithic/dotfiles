@@ -296,7 +296,7 @@ MISE_DOTFILES_FLAGS=""
 # mise 2026.7.5 launchd apply fails on clean Tahoe VMs with launchctl bootout
 # EIO before services converge. Its user step also calls chsh, which prompts
 # for a password on macOS. Skip both and handle the login shell below with sudo.
-MISE_BOOTSTRAP_FLAGS="--skip launchd --skip user --skip tools --locked"
+MISE_BOOTSTRAP_FLAGS="--skip launchd --skip user --skip tools --skip task --locked"
 if [ "$FORCE" = 1 ]; then
   MISE_DOTFILES_FLAGS="$MISE_DOTFILES_FLAGS --force"
   MISE_BOOTSTRAP_FLAGS="$MISE_BOOTSTRAP_FLAGS --force-dotfiles"
@@ -596,15 +596,35 @@ set_login_shell() {
   ok "login shell: $fish_path"
 }
 
+run_first_bootstrap_task() {
+  if [ "$DRY_RUN" = 1 ]; then
+    info "[dry-run] would run first-bootstrap task chain (fnox install, op gate, fnox render, Helium install)"
+    return 0
+  fi
+  info "Running first-bootstrap task chain..."
+  if command -v pre-commit >/dev/null 2>&1; then
+    run pre-commit install --install-hooks
+  fi
+  run env MISE_AUTO_INSTALL=0 mise install --locked fnox
+  fnox_dir=$(mise where fnox 2>/dev/null || true)
+  [ -n "$fnox_dir" ] || die "fnox installed but mise cannot locate it"
+  PATH="$fnox_dir/bin:$PATH"
+  export PATH
+  run ./mise/scripts/op-signin-gate
+  run ./mise/scripts/fnox-render-secrets
+  run ./mise/scripts/install-helium
+}
+
 info "Running mise bootstrap..."
 run_mise_bootstrap
 ok "done bootstrapping."
 set_login_shell
+run_first_bootstrap_task
 
 if [ "$DRY_RUN" = 1 ]; then
-  info "[dry-run] would run: mise run doctor"
+  info "[dry-run] would run: ./mise/scripts/doctor"
   info "[dry-run] done."
-elif BOOTSTRAP_SKIP_TOOL_CHECK=1 mise run doctor; then
+elif BOOTSTRAP_SKIP_TOOL_CHECK=1 ./mise/scripts/doctor; then
   info "Done. Restart your terminal (login shell is now fish)."
 else
   warn "Finished, but some of the health checks failed."
