@@ -102,6 +102,7 @@ pis = "pinvim"
 "brew:openssl@3" = "latest" # required by Python (ssl module) and networking Rust crates
 "brew:pkgconf" = "latest"   # helps compilers locate openssl and other libs when building from source
 "brew:poppler" = "latest"   # pdftotext etc. — pi wrapper expects poppler-utils on PATH
+"brew:apfel" = "latest"     # Apple Intelligence CLI/server — shade-next compact_ai interpreter
 "brew:kanata" = "latest"    # keyboard remapper; setup task copies it to stable /usr/local/bin/kanata
 
 # brew casks using mise's `brew-cask:<formulae>` notation

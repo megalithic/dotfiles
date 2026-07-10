@@ -50,7 +50,7 @@ let
     [compact_ai]
     # Local apfel interpreter for compact input (advisory highlights only;
     # never auto-commits). Requires apfel + Apple Intelligence.
-    enabled = false
+    enabled = true
     provider = "apfel"
     # assist = auto on low-confidence input; manual = explicit trigger only.
     mode = "assist"
