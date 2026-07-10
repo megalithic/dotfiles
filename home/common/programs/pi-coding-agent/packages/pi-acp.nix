@@ -8,7 +8,7 @@ buildNpmPackage {
 
   src = ./pi-acp;
 
-  npmDepsHash = "sha256-EmzhcvVzrirlKh57Tl4BKVG4XLkAgdaYgdhMfpZVbRI=";
+  npmDepsHash = "sha256-XwF45KUPQ0rKQFI1mikXNz172YenyysINe18sBegRXw=";
 
   meta = {
     description = "ACP adapter for pi coding agent (vendored with Tidewave patches)";
