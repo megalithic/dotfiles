@@ -83,13 +83,13 @@ M.handlers = {
     end,
   },
 
-  -- Figma: open in desktop app (handles /file/, /design/, /proto/, /board/, etc.)
+  -- Figma: app URLs go to desktop app; auth/app_auth stays in browser.
   {
     name = "Figma",
     pattern = "figma%.com/",
     action = function(url, sourceBundle, focusContext)
-      -- Convert web URL to figma:// protocol
-      -- Format: https://www.figma.com/file/... -> figma://file/...
+      if url:lower():match("figma%.com/[^?#]*auth[^?#]*") then return false end
+
       local uri = url:gsub("https?://[^/]*figma%.com/", "figma://")
       U.log.f("[%s] Figma: redirecting to %s", M.name, uri)
       hs.urlevent.openURL(uri)
@@ -694,10 +694,13 @@ local function handleHttpCallback(scheme, host, params, fullURL, senderPID)
 
     if type(handler.action) == "function" then
       -- Custom handler function - pass focus context as 3rd arg
-      local ok, err = pcall(handler.action, fullURL, sourceBundle, focusContext)
+      local ok, handled = pcall(handler.action, fullURL, sourceBundle, focusContext)
       if not ok then
-        U.log.ef("[%s] Handler '%s' error: %s", M.name, handler.name, tostring(err))
+        U.log.ef("[%s] Handler '%s' error: %s", M.name, handler.name, tostring(handled))
         -- Fallback: open in default browser
+        openUrlWithApp(fullURL, BROWSER)
+      elseif handled == false then
+        U.log.df("[%s] Handler '%s' passed through to %s", M.name, handler.name, BROWSER)
         openUrlWithApp(fullURL, BROWSER)
       end
     elseif type(handler.action) == "string" then

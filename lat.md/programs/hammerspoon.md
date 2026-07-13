@@ -16,6 +16,12 @@ Global app bindings stay data-driven so app launchers, local pass-through keys, 
 
 `C.launchers` rows use `{ bundleID, bind, opts? }`: simple launchers omit `opts`, while `opts.passThrough`, `opts.focusOnly`, `opts.cycleWindows`, `opts.urlSchemes`, and `opts.launchCommand` handle exceptions. `opts.launchCommand` (string or argv table) replaces the LaunchServices cold start with a detaching launcher script — LaunchServices forwards no command-line flags, so launchers that need them (Helium's CDP port via `bin/helium-launch`) spawn the script through `hs.task`; focus/cycle of an already-running app never respawns. When `opts.cycleWindows = true`, hitting the app binding while that app is focused cycles visible app windows rather than browser tabs. Fantastical keeps `hyper+y` as the app toggle; `hyper+'` opens `x-fantastical3://parse?sentence=`; `hyper+shift+'` opens `x-fantastical3://parse?reminder=1&sentence=`.
 
+## URL routing
+
+Hammerspoon can act as the HTTP/S handler for app deep links while preserving browser auth flows.
+
+`config/hammerspoon/watchers/url.lua` redirects Figma web URLs to `figma://...`, but paths containing `auth` such as `/app_auth` pass through to the browser.
+
 ## shade-next panel
 
 shade-next bindings are split between generated data and handwritten lifecycle code.
