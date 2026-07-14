@@ -12,9 +12,15 @@ The chord starts only on an exact cmd+opt (no shift/ctrl) and arms a 500ms debou
 
 ## Mute semantics
 
-Muted state mutes **all** input devices; live state unmutes only the default input device.
+Muted state mutes **all** input devices; live state unmutes only the default input device (whatever CoreAudio reports as `kAudioHardwarePropertyDefaultInputDevice` — nothing is hardcoded).
 
-CoreAudio listeners re-apply the desired state when the default input changes, when devices hot-plug, and when another app flips a device's mute property behind the app's back (50ms debounced). Devices without a mute property fall back to zeroing input volume and restoring the saved value on unmute. On quit (menu Quit, SIGTERM, or socket `quit`) every input is unmuted so nothing stays hardware-muted.
+On startup, `AudioController.start()` logs the current default (`default input: <name> (id <id>)`). CoreAudio listeners re-apply the desired state when the default input changes, when devices hot-plug, and when another app flips a device's mute property behind the app's back (50ms debounced). Devices without a mute property fall back to zeroing input volume and restoring the saved value on unmute. On quit (menu Quit, SIGTERM, or socket `quit`) every input is unmuted so nothing stays hardware-muted.
+
+### Input volume floor
+
+While the mic is live on the default device, `AudioController` pushes every `kAudioDevicePropertyVolumeScalar` element (main, 1, 2) below 0.55 up to that floor.
+
+Some USB mics drift to an inaudible input volume on their own (the Samson GoMic routinely sits at ~17% with no user action); a low scalar leaves the mic technically unmuted but captured almost silently, which broke Handy.app transcription. Scalars at or above the floor are left alone, so the floor never overrides a louder manual setting. The floor re-applies on every state refresh (device change, hot-plug, mute-flip-behind-back, chord transitions), so drift back low is re-boosted automatically. The floor only touches the default device — other inputs stay muted and untouched. CoreAudio quantizes scalar step, so the effective value is the nearest discrete step above 0.55 (e.g. 0.5625 on the GoMic).
 
 ## Menubar
 

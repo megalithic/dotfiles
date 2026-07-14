@@ -115,6 +115,12 @@ private func caDeviceName(_ dev: AudioObjectID) -> String {
 // Listeners re-apply the desired state when the default input changes, the
 // device list changes, or another app flips a mute property.
 
+/// Devices whose input volume has drifted low stay inaudible even when
+/// unmuted (Samson GoMic routinely sits at ~17% with no user interaction).
+/// When the mic goes live on the default input we push every volume scalar
+/// below this floor up to it; scalars already at or above are left alone.
+private let minLiveVolume: Float32 = 0.55
+
 final class AudioController {
     private let q = DispatchQueue(label: "miccheck.audio")
     private var desiredLive = false
@@ -133,6 +139,11 @@ final class AudioController {
             var devsAddr = caAddr(kAudioHardwarePropertyDevices)
             AudioObjectAddPropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &devsAddr, q, changeBlock)
             refreshDeviceListeners()
+            if let def = defaultInput() {
+                log("default input: \(caDeviceName(def)) (id \(def))")
+            } else {
+                log("default input: none")
+            }
         }
     }
 
@@ -194,6 +205,25 @@ final class AudioController {
         for dev in inputDevices() {
             let wantMuted = !(desiredLive && dev == def)
             setDeviceMuted(dev, wantMuted)
+            // Keep a drifted-low default input audible while live. Only the
+            // default device is unmuted while live, so only boost that one;
+            // other inputs stay muted and untouched.
+            if desiredLive, dev == def {
+                ensureMinVolume(dev)
+            }
+        }
+    }
+
+    private func ensureMinVolume(_ dev: AudioObjectID) {
+        let elements: [AudioObjectPropertyElement] = [kAudioObjectPropertyElementMain, 1, 2]
+        for el in elements {
+            var addr = caAddr(kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeInput, el)
+            guard let v = caGetFloat32(dev, &addr) else { continue }
+            if v < minLiveVolume {
+                if caSetFloat32(dev, &addr, minLiveVolume) {
+                    log("input volume floor: \(caDeviceName(dev)) ch\(el) \(v) -> \(minLiveVolume)")
+                }
+            }
         }
     }
 
