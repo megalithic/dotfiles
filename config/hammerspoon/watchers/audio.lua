@@ -1,4 +1,3 @@
-local fmt = string.format
 local enum = require("hs.fnutils")
 
 local M = {}
@@ -37,19 +36,25 @@ local function output()
   end)
 
   if found and device then
-    device:setDefaultOutputDevice()
-    local status = hs.execute(fmt("SwitchAudioSource -t output -s '%s' &", device:name()), true)
-    local icon = device:name() == "megabose" and "🎧 " or "🔈 "
-    icon = device:name() == "Seth R-Phonak hearing aid" and "📢 " or icon
+    local name = device:name()
+    local current = hs.audiodevice.current()
+    if current and current.name == name then
+      device = nil
+      return false
+    end
 
-    U.log.of("%s%s", icon, string.gsub(status, "^%s*(.-)%s*$", "%1"))
+    device:setDefaultOutputDevice()
+    local icon = name == "megabose" and "🎧 " or "🔈 "
+    icon = name == "Seth R-Phonak hearing aid" and "📢 " or icon
+
+    U.log.of('%soutput audio device set to "%s"', icon, name)
     device = nil
 
-    return 0
+    return true
   end
 
   U.log.w("unable to set a default output device.")
-  return 1
+  return nil
 end
 
 local function input()
@@ -62,60 +67,54 @@ local function input()
   end)
 
   if found and device then
-    device:setDefaultInputDevice()
-    local status = hs.execute(fmt("SwitchAudioSource -t input -s '%s' &", device:name()), true)
-    local icon = device:name() == "Samson GoMic" and "🎙️ " or ""
-    icon = device:name() == "Seth R-Phonak hearing aid" and "📢 " or icon
+    local name = device:name()
+    local current = hs.audiodevice.current(true)
+    if current and current.name == name then
+      device = nil
+      return false
+    end
 
-    U.log.of("%s%s", icon, string.gsub(status, "^%s*(.-)%s*$", "%1"))
-    -- U.log.of("%s", string.gsub(status, "^%s*(.-)%s*$", "%1"))
+    device:setDefaultInputDevice()
+    local icon = name == "Samson GoMic" and "🎙️ " or ""
+    icon = name == "Seth R-Phonak hearing aid" and "📢 " or icon
+
+    U.log.of('%sinput audio device set to "%s"', icon, name)
     device = nil
 
-    return 0
+    return true
   end
 
   U.log.w("unable to set a default input device.")
-  return 1
+  return nil
 end
 
-local lastProcessedTime = 0
-local DEBOUNCE_INTERVAL = 0.5 -- 500ms - ignore events within this window
+local DEBOUNCE_INTERVAL = 1.0 -- device events arrive in bursts; process after quiet period
+local debounceTimer = nil
+
+local function processAudioDeviceChanged()
+  -- Wrap in pcall for error handling
+  local ok, err = pcall(function()
+    local iChanged = input()
+    local oChanged = output()
+
+    if oChanged == nil and iChanged == nil then U.log.w("unable to set input or output devices") end
+
+    -- Fire hooks only when defaults actually changed.
+    if iChanged then fireHooks(M.hooks.onInputDeviceChange) end
+    if oChanged then fireHooks(M.hooks.onOutputDeviceChange) end
+  end)
+
+  if not ok then U.log.e("failed to change device: %s", tostring(err)) end
+end
 
 local function audioDeviceChanged(arg)
-  -- Add debug logging to see all events
+  if arg ~= "dev#" then return end
 
-  if arg == "dev#" then
-    local now = hs.timer.secondsSinceEpoch()
-    local timeSinceLastProcess = now - lastProcessedTime
-
-    -- Debounce: ignore events that occur too soon after the last one
-    if timeSinceLastProcess < DEBOUNCE_INTERVAL then return end
-
-    lastProcessedTime = now
-
-    local oRetval = 1
-    local iRetval = 1
-
-    -- Wrap in pcall for error handling
-    local ok, err = pcall(function()
-      iRetval = input()
-      oRetval = output()
-
-      if oRetval == 1 and iRetval == 1 then
-        U.log.w("unable to set input or output devices. input: " .. iRetval .. ", output: " .. oRetval)
-      end
-
-      -- Fire hooks for device changes
-      if iRetval == 0 then
-        fireHooks(M.hooks.onInputDeviceChange)
-      end
-      if oRetval == 0 then
-        fireHooks(M.hooks.onOutputDeviceChange)
-      end
-    end)
-
-    if not ok then U.log.e("failed to change device: %s", tostring(err)) end
-  end
+  if debounceTimer then debounceTimer:stop() end
+  debounceTimer = hs.timer.doAfter(DEBOUNCE_INTERVAL, function()
+    debounceTimer = nil
+    processAudioDeviceChanged()
+  end)
 end
 
 local function showCurrentlyConnected()

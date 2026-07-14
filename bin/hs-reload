@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Safe Hammerspoon reload - uses menu click, waits for "hammerspork loaded"
-# Avoids hs.reload() via IPC which crashes the Lua interpreter
+# Safe Hammerspoon reload.
+# Preferred path: open hammerspoon://hs-reload so Hammerspoon reloads itself.
+# Avoids hs CLI IPC reload/selectMenuItem paths, which can crash Lua.
 
 set -euo pipefail
 
@@ -27,7 +28,7 @@ find_hs() {
 
 HS_BIN=$(find_hs || true)
 
-# Get last load timestamp before reload.
+# Get last load timestamp before reload. This is read-only IPC, not reload IPC.
 get_last_load() {
   [[ -n "$HS_BIN" ]] || return 0
   "$HS_BIN" -c '
@@ -42,8 +43,21 @@ get_last_load() {
 
 before=$(get_last_load)
 
-# Trigger reload via menu (safe path). Do not use hs.reload() or hs-driven
-# selectMenuItem here; both can crash/kill Hammerspoon from CLI IPC.
+# Preferred safe path: URL event handled inside Hammerspoon.
+# Requires config/hammerspoon/init.lua to bind hs.urlevent "hs-reload".
+if /usr/bin/open -g 'hammerspoon://hs-reload' >/dev/null 2>&1; then
+  for _ in {1..20}; do
+    sleep 0.5
+    after=$(get_last_load)
+    if [[ -n "$after" && "$after" != "$before" ]]; then
+      echo "✓ Reloaded"
+      exit 0
+    fi
+  done
+fi
+
+# Fallback for first install / stale running config without URL handler.
+# This uses macOS Accessibility; do not replace it with hs CLI selectMenuItem.
 reload_err=$(mktemp -t hs-reload.XXXXXX)
 if ! osascript -e '
 tell application "System Events"
@@ -62,17 +76,18 @@ end tell
 ' >/dev/null 2>"$reload_err"; then
   err=$(cat "$reload_err")
   trash "$reload_err" 2>/dev/null || true
-  echo "✗ Reload click failed"
-  if [[ "$err" == *"not allowed assistive access"* || "$err" == *"-1719"* ]]; then
-    echo "System Events/osascript lacks Accessibility permission in this context."
-    echo "Grant Accessibility to /usr/bin/osascript, or run from an app/context that has it."
+  echo "✗ Reload failed"
+  echo "URL reload did not complete. Running Hammerspoon may not have the hs-reload URL handler loaded yet."
+  if [[ "$err" == *"not allowed assistive access"* || "$err" == *"-1719"* || "$err" == *"-25211"* ]]; then
+    echo "Fallback menu click also failed: /usr/bin/osascript lacks Accessibility permission in this context."
+    echo "One-time fix: click Hammerspoon → File → Reload Config manually, then rerun bin/hs-reload."
+  elif [[ -n "$err" ]]; then
+    echo "$err"
   fi
-  [[ -n "$err" ]] && echo "$err"
   exit 1
 fi
 trash "$reload_err" 2>/dev/null || true
 
-# Wait for new "hammerspork loaded" message (up to 10 seconds)
 for _ in {1..20}; do
   sleep 0.5
   after=$(get_last_load)

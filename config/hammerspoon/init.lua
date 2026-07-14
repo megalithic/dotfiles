@@ -82,13 +82,20 @@ req("shade_next") -- inert until shade-next is installed
 local overrides = require("overrides")
 overrides.setupAlertOverride(HUD) -- Replace hs.alert with custom HUD
 overrides.setupNotifyOverride(HUD) -- Replace hs.notify with custom HUD
+
+local function stopBeforeReload()
+  require("watchers"):stop({ watchers = watchers })
+  require("quitter"):stop()
+  require("clipper"):stop()
+end
+
 overrides.setupReloadCleanup({
-  stopWatchers = function()
-    require("watchers"):stop({ watchers = watchers })
-    require("quitter"):stop()
-    require("clipper"):stop()
-  end,
+  stopWatchers = stopBeforeReload,
 })
+
+hs.urlevent.bind("hs-reload", function()
+  hs.reload()
+end)
 
 hs.shutdownCallback = function()
   require("watchers"):stop({ watchers = watchers })

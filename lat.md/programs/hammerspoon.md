@@ -6,9 +6,9 @@ Hammerspoon owns macOS automation: window management, launcher panels, menubar s
 
 **Hammerspoon must only be reloaded via `bin/hs-reload`.** Unsafe CLI reload paths can crash Hammerspoon.
 
-`bin/hs-reload` uses System Events to click Hammerspoon's File → Reload Config menu item and fails with an Accessibility-permission error instead of trying unsafe fallbacks. CLI `hs -c` menu selection and direct `hs.reload()` are both unsafe.
+`bin/hs-reload` prefers `open -g hammerspoon://hs-reload`, which Hammerspoon handles inside its own process by calling the wrapped `hs.reload()` cleanup path. It does not use `hs` CLI reload or `hs` CLI menu selection, because those IPC paths can crash/kill Hammerspoon while reloading.
 
-Hammerspoon's preflight adds `~/.local/share/hammerspoon` to Lua `package.path` so generated data-only fragments such as `fragments/shade-next.lua` can be required without editing the generated file.
+If the running config is too old to have the URL handler, `bin/hs-reload` falls back to a System Events menu click and fails with an Accessibility-permission error instead of trying unsafe IPC fallbacks. Hammerspoon's preflight adds `~/.local/share/hammerspoon` to Lua `package.path` so generated data-only fragments such as `fragments/shade-next.lua` can be required without editing the generated file.
 
 ## Global app bindings
 
@@ -47,6 +47,12 @@ App and window watchers run layout rules on launch and window creation (not `mai
 The old `miccheck.lua` module is gone; push-to-talk/push-to-mute now lives in the standalone [[miccheck]] menubar app, and Hammerspoon only sends it mode commands.
 
 `config/hammerspoon/lib/micctl.lua` is the socket client (`setPTTMode`, `toggleMode`); `watchers/camera.lua`, `watchers/media-presence.lua`, and `contexts/co.detail.mac.lua` call it where they previously required the Lua module. The eventtap, menubar icon, hotkeys, and mute logic all moved into the compiled Swift app.
+
+## Audio device watcher
+
+`config/hammerspoon/watchers/audio.lua` selects preferred audio devices after debounced `hs.audiodevice.watcher` events.
+
+It uses a trailing timer for `dev#` bursts, calls Hammerspoon's `hs.audiodevice` API, and logs deterministic device-change messages only when the default device actually changes. It intentionally does not shell out to `SwitchAudioSource` for status text because shell output can include terminal control sequences when Hammerspoon runs inside a console/tmux-shaped environment.
 
 ## Clipper and utilities
 
