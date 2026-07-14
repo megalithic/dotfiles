@@ -42,12 +42,20 @@ auto_reset_timeout_seconds = 300
 [editor]
 nvim_host = true
 
-[compact_ai]
-# Local apfel interpreter for compact input (advisory highlights only;
-# never auto-commits). Requires apfel + Apple Intelligence.
+[agent]
+# Local launcher agent. Deterministic routing runs first; low-confidence
+# route classification uses direct HTTP to local llama-server + gemma4.
+# Do not invoke pi per request on the hot typing path.
 enabled = true
-provider = "apfel"
+provider = "openai_compatible"
 # assist = auto on low-confidence input; manual = explicit trigger only.
 mode = "assist"
-# Interpreter budget; app clamps to 500-1500ms.
+# Agent budget; app clamps to 500-1500ms.
 timeout_ms = 1200
+
+[agent.openai_compatible]
+base_url = "http://127.0.0.1:18080/v1"
+model = "gemma4"
+route_max_tokens = 8
+answer_max_tokens = 128
+temperature = 0
