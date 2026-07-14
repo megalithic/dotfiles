@@ -542,9 +542,11 @@ final class ScreenshareMonitor {
     private let queue = DispatchQueue(label: "media-presenced.screenshare")
     private var process: Process?
     private var heartbeatTimer: DispatchSourceTimer?
+    private var pendingStart: DispatchWorkItem?
     private var lastHeartbeat = Date.distantPast
     private var sharing = false
     private let heartbeatTimeout: TimeInterval = 25
+    private let startDebounce: TimeInterval = 1.5
 
     func start() {
         let proc = Process()
@@ -604,11 +606,22 @@ final class ScreenshareMonitor {
     }
 
     private func parseLine(_ line: String) {
-        if line.contains("SCScreenCaptureSession startWithError:") ||
-           line.contains("updateScreenCaptureDidStart:") {
-            setSharing(true)
+        if line.contains("SCScreenShotSession") || line.contains("isScreenshotConfiguration") {
+            cancelPendingStart()
+            return
         }
-        if line.contains("updateExistingDisplayStreamCaptures") {
+
+        if line.contains("updateScreenCaptureDidStart:") && line.contains("hasStarted=0") {
+            cancelPendingStart()
+            if sharing { setSharing(false) }
+            return
+        }
+
+        if line.contains("SCScreenCaptureSession startWithError:") ||
+           (line.contains("updateScreenCaptureDidStart:") && line.contains("hasStarted=1")) {
+            scheduleStart()
+        }
+        if sharing && line.contains("updateExistingDisplayStreamCaptures") {
             lastHeartbeat = Date()
         }
         // Method-name stop is a hint but not authoritative — heartbeat gap is.
@@ -617,6 +630,18 @@ final class ScreenshareMonitor {
             // heartbeatTimeout, the watchdog will flip sharing.
             lastHeartbeat = Date.distantPast // force watchdog to reevaluate
         }
+    }
+
+    private func scheduleStart() {
+        pendingStart?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.setSharing(true) }
+        pendingStart = work
+        queue.asyncAfter(deadline: .now() + startDebounce, execute: work)
+    }
+
+    private func cancelPendingStart() {
+        pendingStart?.cancel()
+        pendingStart = nil
     }
 
     // MARK: heartbeat watchdog

@@ -9,8 +9,8 @@ local POLL_INTERVAL = 3 -- seconds between polls
 local timer = nil
 local prev = nil -- previous presence snapshot, used for edge detection
 
--- Previous DND state before screenshare forced it
-local dndWasOn = false
+-- Whether this watcher enabled DND for an active meeting screenshare.
+local dndForced = false
 
 --- Poll the daemon for current presence, detect transitions, dispatch actions.
 local function poll()
@@ -50,17 +50,19 @@ local function poll()
         pcall(function() hs.osascript.applescript('tell application "Music" to pause') end)
       end
 
-      -- screenshare start
-      if p.sharing and not wasSharing then
-        dndWasOn = false
+      -- screenshare start: only enforce DND for meeting screenshares.
+      -- replayd also logs one-shot screenshots as ScreenCaptureKit activity.
+      if p.sharing and p.inMeeting and not dndForced then
+        dndForced = true
         U.dnd(true, "meeting")
-        U.log.i("[media-presence] screenshare started → DND on")
+        U.log.i("[media-presence] meeting screenshare started → DND on")
       end
 
-      -- screenshare stop
-      if not p.sharing and wasSharing then
-        if not dndWasOn then U.dnd(false) end
-        U.log.i("[media-presence] screenshare stopped → DND restored")
+      -- screenshare stop or meeting exit: restore only if we forced DND.
+      if dndForced and (not p.sharing or not p.inMeeting) then
+        dndForced = false
+        U.dnd(false)
+        U.log.i("[media-presence] meeting screenshare stopped → DND restored")
       end
 
       -- Log state changes
@@ -82,6 +84,7 @@ end
 function M:start()
   U.log.i("[media-presence] starting watcher (polling every " .. POLL_INTERVAL .. "s)")
   prev = nil
+  dndForced = false
   poll() -- immediate first poll
   timer = hs.timer.doEvery(POLL_INTERVAL, poll)
 end
@@ -93,6 +96,7 @@ function M:stop()
     timer = nil
   end
   prev = nil
+  dndForced = false
 end
 
 return M

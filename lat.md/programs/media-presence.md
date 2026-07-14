@@ -30,11 +30,11 @@ The engine fuses Slack and CDP meeting sources: CDP takes priority when both are
 
 A `ScreenshareMonitor` spawns an OSLog stream (`/usr/bin/log stream --predicate` filtering on `process == "replayd"` and `subsystem CONTAINS[c] "screencapturekit"`). No TCC grants are required for log-stream access.
 
-**Start**: `SCScreenCaptureSession startWithError:` or `updateScreenCaptureDidStart:` sets `sharing=true`.
+**Start**: `SCScreenCaptureSession startWithError:` or `updateScreenCaptureDidStart: hasStarted=1` schedules `sharing=true` after a short debounce. One-shot screenshots also hit replayd/ScreenCaptureKit; screenshot session lines (`SCScreenShotSession` / `isScreenshotConfiguration`) cancel the pending start so screenshots do not look like active sharing.
 
-**Heartbeat**: `updateExistingDisplayStreamCapturesWithAuditTokenValues:` fires every ~10s while capturing. The monitor resets a watchdog timer on each heartbeat.
+**Heartbeat**: `updateExistingDisplayStreamCapturesWithAuditTokenValues:` fires every ~10s while capturing. The monitor resets a watchdog timer on each heartbeat only after sharing has started.
 
-**Stop**: when the heartbeat gap exceeds 25s, `sharing` flips to `false`. Method-name stop events (`stopAndInvalidateWithStreamData:userStopped:`) are captured as hints but are not authoritative — Slack renegotiates streams during startup, producing spurious stop-then-restart sequences that would false-fire. The heartbeat-gap discriminator avoids this.
+**Stop**: `updateScreenCaptureDidStart: hasStarted=0` stops sharing immediately, and heartbeat gaps over 25s also flip `sharing=false`. Method-name stop events (`stopAndInvalidateWithStreamData:userStopped:`) are captured as hints but are not authoritative — Slack renegotiates streams during startup, producing spurious stop-then-restart sequences that would false-fire. The heartbeat-gap discriminator avoids this.
 
 Attribution via replayd client PID → bundle ID (`processNewConnection ... PID: <pid>`) is noted for future enhancement.
 
@@ -57,8 +57,8 @@ Events: `mic.on`/`mic.off`, `camera.on`/`camera.off`, `meeting.lobby`/`meeting.j
 `config/hammerspoon/watchers/media-presence.lua` polls the daemon every 3s via `nc -w 1 -U` with `{"cmd":"get"}`, detects state transitions by diffing successive snapshots, and dispatches:
 
 - `inMeeting` false→true → pause Apple Music
-- `sharing` false→true → enforce DND focus mode (`U.dnd(true, "meeting")`)
-- `sharing` true→false → restore previous DND state
+- `sharing && inMeeting` while DND not already forced → enforce DND focus mode (`U.dnd(true, "meeting")`)
+- `sharing` false or `inMeeting` false after this watcher forced DND → restore DND
 
 PTT mode enforcement moved out of this watcher: [[miccheck#Presence integration|miccheckd subscribes to the daemon's socket directly]] and forces push-to-talk on `inMeeting` transitions. Hammerspoon can still set modes manually via `lib/micctl.lua`.
 
