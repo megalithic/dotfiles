@@ -124,7 +124,7 @@ fi
 tart clone "$SEED" "$VM"
 tart set "$VM" --cpu 4 --memory 8192
 
-TART_RUN_ARGS=()
+TART_RUN_ARGS=(--no-graphics)
 if [ "$MODE" = local ]; then
   # Tart exposes this inside macOS guests at /Volumes/My Shared Files/dotfiles.
   TART_RUN_ARGS+=(--dir="dotfiles:$REPO_ROOT:ro")

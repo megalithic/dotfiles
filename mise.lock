@@ -224,9 +224,9 @@ checksum = "sha256:de0336e800b2af9a40bdd694b03870ac4a848161b35c8a2325704f123f185
 url = "https://conda.anaconda.org/conda-forge/osx-arm64/libintl-0.25.1-h493aca8_0.conda"
 checksum = "sha256:99d2cebcd8f84961b86784451b010f5f0a795ed1c08f1e7c76fbb3c22abf021a"
 
-[conda-packages.macos-arm64."libjpeg-turbo-3.1.4.1-h84a0fba_0"]
-url = "https://conda.anaconda.org/conda-forge/osx-arm64/libjpeg-turbo-3.1.4.1-h84a0fba_0.conda"
-checksum = "sha256:17e035ae6a520ff6a6bb5dd93a4a7c3895891f4f9743bcb8c6ef607445a31cd0"
+[conda-packages.macos-arm64."libjpeg-turbo-3.2.0-h84a0fba_0"]
+url = "https://conda.anaconda.org/conda-forge/osx-arm64/libjpeg-turbo-3.2.0-h84a0fba_0.conda"
+checksum = "sha256:e2b4fce7cf48705dc182a0aa6c478a47b16202aeb712242caf9c9ab6a19778fa"
 
 [conda-packages.macos-arm64."libjxl-0.12.0-h934fa54_1"]
 url = "https://conda.anaconda.org/conda-forge/osx-arm64/libjxl-0.12.0-h934fa54_1.conda"
@@ -523,6 +523,10 @@ backend = "cargo:emmylua_check"
 version = "0.23.2"
 backend = "cargo:emmylua_ls"
 
+[[tools."cargo:eza"]]
+version = "0.23.4"
+backend = "cargo:eza"
+
 [[tools."cargo:forgejo-cli"]]
 version = "0.5.0"
 backend = "cargo:forgejo-cli"
@@ -530,10 +534,6 @@ backend = "cargo:forgejo-cli"
 [[tools."cargo:jj-vine"]]
 version = "0.5.3"
 backend = "cargo:jj-vine"
-
-[[tools."cargo:lukerandall/shade"]]
-version = "HEAD"
-backend = "cargo:lukerandall/shade"
 
 [[tools."cargo:tree-sitter-cli"]]
 version = "0.26.10"
@@ -613,10 +613,6 @@ backend = "aqua:expert-lsp/expert"
 [tools.expert."platforms.macos-arm64"]
 checksum = "sha256:25970564b6094e56b7bcccae18d305cdad51c82f7de6e5004fb88f08a3ba1cde"
 url = "https://github.com/expert-lsp/expert/releases/download/v0.1.5/expert_darwin_arm64"
-
-[[tools.eza]]
-version = "0.23.5"
-backend = "asdf:eza"
 
 [[tools.fd]]
 version = "10.4.2"
@@ -878,7 +874,6 @@ conda_deps = [
     "libraw-0.22.1-h2d05ff4_0",
     "libpng-1.6.58-h132b30e_0",
     "liblzma-5.8.3-h8088a28_0",
-    "libjpeg-turbo-3.1.4.1-h84a0fba_0",
     "libglib-2.88.2-ha08bb59_0",
     "graphviz-14.1.2-hec8c438_0",
     "giflib-5.2.2-h93a5062_0",
@@ -904,6 +899,7 @@ conda_deps = [
     "libheif-1.23.0-gpl_h949768f_100",
     "libde265-1.1.1-h3feff0a_0",
     "dav1d-1.2.1-hb547adb_0",
+    "libjpeg-turbo-3.2.0-h84a0fba_0",
     "libjxl-0.12.0-h934fa54_1",
     "libhwy-1.4.0-ha332bbd_0",
     "libxml2-2.15.3-h5654f7c_0",
