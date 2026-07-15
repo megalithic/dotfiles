@@ -306,6 +306,7 @@ final class CDPClient: NSObject, URLSessionWebSocketDelegate {
     let host: String
     let port: Int
     var onMeet: ((_ event: String, _ state: MeetState) -> Void)?
+    var onDebug: ((String) -> Void)?
 
     private var session: URLSession!
     private var ws: URLSessionWebSocketTask?
@@ -313,10 +314,14 @@ final class CDPClient: NSObject, URLSessionWebSocketDelegate {
     private let lock = NSLock()
     private var nextID = 0
     private var pending: [Int: (Any?) -> Void] = [:]
+    private var pendingTimeouts: [Int: DispatchWorkItem] = [:]
+    private let pendingTimeout: TimeInterval = 5
 
     private let q = DispatchQueue(label: "media-presenced.cdp")  // owns `known`
     private var known: [String: TargetEntry] = [:]
     private var reconnectWork: DispatchWorkItem?
+    private var lastTargetRefresh = Date.distantPast
+    private let targetRefreshThrottle: TimeInterval = 2
 
     private static let meetingHosts: Set<String> = [
         "meet.google.com",
@@ -366,6 +371,33 @@ final class CDPClient: NSObject, URLSessionWebSocketDelegate {
         send("Target.activateTarget", ["targetId": targetId])
     }
 
+    /// Event-driven rescan for Meet tabs when capture state changes without a
+    /// matching Target.targetInfoChanged event (same-tab Meet rejoin/SPAs).
+    func refreshMeetingTargets(reason: String) {
+        q.async { [weak self] in
+            guard let self else { return }
+            let now = Date()
+            guard now.timeIntervalSince(self.lastTargetRefresh) >= self.targetRefreshThrottle else { return }
+            self.lastTargetRefresh = now
+            self.onDebug?("cdp: refresh meeting targets (\(reason))")
+            self.send("Target.getTargets") { [weak self] result in
+                guard let self,
+                      let r = result as? [String: Any],
+                      let infos = r["targetInfos"] as? [[String: Any]] else { return }
+                self.q.async { [weak self] in
+                    guard let self else { return }
+                    for info in infos where (info["type"] as? String) == "page" {
+                        let url = (info["url"] as? String) ?? ""
+                        guard Self.isMeetingURL(url) else { continue }
+                        let tid = (info["targetId"] as? String) ?? ""
+                        let title = (info["title"] as? String) ?? ""
+                        self.onTargetQ(tid: tid, url: url, title: title, isMeeting: true, created: false)
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: connection
 
     private func scheduleReconnect() {
@@ -399,14 +431,40 @@ final class CDPClient: NSObject, URLSessionWebSocketDelegate {
     @discardableResult
     private func send(_ method: String, _ params: [String: Any] = [:], sessionId: String? = nil,
                       completion: ((Any?) -> Void)? = nil) -> Int {
-        lock.lock(); nextID += 1; let id = nextID
-        if let c = completion { pending[id] = c }
+        var msg: [String: Any]
+        lock.lock()
+        nextID += 1
+        let id = nextID
+        msg = ["id": id, "method": method, "params": params]
         lock.unlock()
-        var msg: [String: Any] = ["id": id, "method": method, "params": params]
         if let sessionId { msg["sessionId"] = sessionId }
         guard let data = try? JSONSerialization.data(withJSONObject: msg),
-              let str = String(data: data, encoding: .utf8) else { return id }
-        ws?.send(.string(str)) { _ in }
+              let str = String(data: data, encoding: .utf8),
+              let ws else { return id }
+        if let c = completion {
+            let timeout = DispatchWorkItem { [weak self] in
+                guard let self else { return }
+                self.lock.lock()
+                let cb = self.pending.removeValue(forKey: id)
+                self.pendingTimeouts.removeValue(forKey: id)
+                self.lock.unlock()
+                cb?(nil)
+            }
+            lock.lock()
+            pending[id] = c
+            pendingTimeouts[id] = timeout
+            lock.unlock()
+            q.asyncAfter(deadline: .now() + pendingTimeout, execute: timeout)
+        }
+        ws.send(.string(str)) { [weak self] error in
+            guard let self, error != nil else { return }
+            self.lock.lock()
+            let cb = self.pending.removeValue(forKey: id)
+            let timeout = self.pendingTimeouts.removeValue(forKey: id)
+            self.lock.unlock()
+            timeout?.cancel()
+            cb?(nil)
+        }
         return id
     }
 
@@ -428,7 +486,11 @@ final class CDPClient: NSObject, URLSessionWebSocketDelegate {
 
     private func handle(_ obj: [String: Any]) {
         if let id = obj["id"] as? Int {
-            lock.lock(); let cb = pending.removeValue(forKey: id); lock.unlock()
+            lock.lock()
+            let cb = pending.removeValue(forKey: id)
+            let timeout = pendingTimeouts.removeValue(forKey: id)
+            lock.unlock()
+            timeout?.cancel()
             cb?(obj["result"])
             return
         }
@@ -938,8 +1000,15 @@ engine.onEvent = { event, presence in
     FileHandle.standardOutput.write(Data(line.utf8))
 }
 
-capture.onChange = { state in engine.applyCapture(state) }
+capture.onChange = { state in
+    engine.applyCapture(state)
+    let heliumMicActive = state.micOwners.contains { $0.bundleID == "net.imput.helium" || $0.bundleID == "net.imput.helium.helper" }
+    if heliumMicActive && !engine.presence.inMeeting {
+        cdp.refreshMeetingTargets(reason: "helium_mic_active_without_meeting")
+    }
+}
 cdp.onMeet = { event, state in engine.applyMeet(event, state) }
+cdp.onDebug = { message in log(message) }
 screenshare.onSharingChanged = { sharing in engine.applyScreenshare(sharing) }
 
 server.onCommand = { cmd, reply in
