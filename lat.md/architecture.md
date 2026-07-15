@@ -47,6 +47,20 @@ Apps that need live-editable config use out-of-store symlinks into `config/` rat
 
 `config/` holds `hammerspoon/`, `nvim/`, `tmux/`, `ghostty/`, `kitty/`, `kanata/`, `espanso/`, and `ssh/`. Program modules under `home/common/programs/<tool>/` own the symlink wiring. Config fragments that need nix-interpolated values are generated into `~/.local/share/...` and sourced from the live config, keeping the editable tree in `config/`.
 
+## Parallel mise migration
+
+Nix/Home Manager and mise coexist during migration. `_mise.toml` `[dotfiles]` is mise's ownership map; inspect each mapping before changing a config.
+
+Literal copy twins require recursive diff and deliberate sync on each related change: `config/` and `mise/config/` currently include Hammerspoon, Neovim, tmux, Kitty, Ghostty, and Pi. The active Nix-side tree remains source of truth unless a program section records another owner or divergence. [[programs/hammerspoon#Hammerspoon#Parallel mise configuration|Hammerspoon]] documents its required kanata launchd-label difference.
+
+Generated Nix files and static mise files, including fish, git, SSH/1Password, and other per-file mappings, require behavior parity rather than byte equality. Shared-source mappings, including Kanata, Espanso, and selected SSH paths, link same repository files and must not be copied. Update this policy and program documentation whenever ownership or a divergence changes; run `devenv shell -- lat check` after doc changes.
+
+## Mise GUI app migration
+
+Mise installs only casks its current bootstrap backend can reproduce; app-only casks belong in `[bootstrap.packages]`, while casks with binary, package, completion, preflight, or privileged artifacts retain explicit handling.
+
+The mise 2026.6.12 audit verified Homebrew casks for every tracked GUI app. Declarative app-only casks cover Discord, Handy, MeetingBar, ColorSnapper, Contexts, Slack, Proton Drive, Proton VPN, Raycast, Yubico Authenticator, and 1Password. Hammerspoon and Espanso retain real-Brew hooks because their casks ship binaries. Ghostty, IINA, Inkscape, Obsidian, MailMate, OBS beta, and Kitty have unsupported extra artifacts; Zoom and Okta Verify require package installation, with Okta's privileged postinstall remaining Nix-owned. Brave Nightly needs its Nix Chromium wrapper and flags; Tidewave has no cask; Helium must use [[helium#Helium browser|its authenticated private-release installer]]. Do not replace any special path with `brew-cask:` without re-auditing backend support and matching its activation semantics.
+
 ## Rebuild commands
 
 Rebuild recipes keep nix-darwin and Home Manager switches separate while still allowing one full sync path.

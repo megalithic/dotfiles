@@ -39,5 +39,5 @@ tmux -2 select-pane -t "$SESSION":2.1
 
 tmux setenv -t "${SESSION}" 'DEVENV_CWD' "${CWD}"
 tmux setenv -t "${SESSION}" 'SESSION_ICON' "${SESSION_ICON}"
-# tmux setenv -t "${SESSION}" 'SESSION_FG' "${SESSION_FG}"
+tmux setenv -t "${SESSION}" 'SESSION_FG' "${SESSION_FG}"
 # tmux setenv -t "${SESSION}" 'SESSION_BG' "${SESSION_BG}"

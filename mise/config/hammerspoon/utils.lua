@@ -296,13 +296,14 @@ function M.logger(msg, level, moduleName)
   }
 
   if level == "DEBUG" then
+    local src = full_path:gsub(".*/", "")
     hs.console.printStyledtext(
       stext(
         M.ts()
           .. " ("
-          .. w.short_src:gsub(".*/", "")
+          .. src
           .. ":"
-          .. w.currentline
+          .. currentline
           .. ") => ["
           .. fname
           .. "] "

@@ -120,6 +120,19 @@ pis = "pinvim"
 # download + sha256 verify) in the post-packages hook — `brew tap` is not usable
 # on nix-managed machines (taps pinned read-only in /nix/store).
 # After install, verify 1Password pairing: `mise run helium:1password-trust`.
+# App-only casks supported by mise 2026.6.12. Keep apps with binary, pkg,
+# preflight, completion, custom-wrapper, or private-release semantics out of this
+# table; their ownership is documented in lat.md/architecture.md.
+"brew-cask:colorsnapper" = "latest"
+"brew-cask:contexts" = "latest"
+"brew-cask:discord" = "latest"
+"brew-cask:handy" = "latest"
+"brew-cask:meetingbar" = "latest"
+"brew-cask:proton-drive" = "latest"
+"brew-cask:protonvpn" = "latest"
+"brew-cask:raycast" = "latest"
+"brew-cask:slack" = "latest"
+"brew-cask:yubico-authenticator" = "latest"
 
 [dotfiles]
 # "~/.config" = "mise/config"

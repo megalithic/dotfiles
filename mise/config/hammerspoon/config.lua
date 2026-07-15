@@ -177,6 +177,16 @@ M.layouts = {
       { "", 2, M.grid.full },
     },
   },
+  ["io.canarymail.mac"] = {
+    bundleID = "io.canarymail.mac",
+    name = "Canary Mail",
+    rules = {
+      -- Named windows take precedence over the catch-all below.
+      { "Inbox - All", 2, M.grid.full },
+      -- Compose windows, individual message viewers, etc.
+      { "", 2, M.grid.halves.right },
+    },
+  },
   ["com.freron.MailMate"] = {
     bundleID = "com.freron.MailMate",
     name = "MailMate",
@@ -186,7 +196,7 @@ M.layouts = {
       { "Unread", 2, M.grid.full },
       { "All Messages", 2, M.grid.full },
       -- Compose windows, individual message viewers, etc.
-      { "", 2, M.grid.halves.left },
+      { "", 2, M.grid.halves.right },
     },
   },
   ["com.apple.finder"] = {
@@ -344,7 +354,10 @@ M.lollygaggers = {
 }
 
 M.launchers = {
-  { BROWSER, "j", { cycleWindows = true } },
+  -- launchCommand: cold-start only — LaunchServices forwards no flags, so a
+  -- detaching launcher script provides them (CDP 9223 for media-presenced +
+  -- chrome-devtools-attach). Running app keeps normal cycle/focus behavior.
+  { BROWSER, "j", { cycleWindows = true, launchCommand = os.getenv("HOME") .. "/bin/helium-launch" } },
   { TERMINAL, "k", { passThrough = { "`" } } },
   -- { "net.kovidgoyal.kitty", "k" },
   { "com.apple.MobileSMS", "m" }, -- NOOP for now.. TODO: implement a binding feature that let's us require n-presses before we execute
@@ -352,6 +365,7 @@ M.launchers = {
   -- { "com.spotify.client", "p" },
   { "com.apple.Music", "p" },
   { "com.freron.MailMate", "e" },
+  { "io.canarymail.mac", "e" },
   {
     "com.flexibits.fantastical2.mac",
     "y",
@@ -371,11 +385,11 @@ M.launchers = {
   { "com.tdesktop.Telegram", "t" },
   { "org.hammerspoon.Hammerspoon", "r" },
   -- { "com.kapeli.dashdoc", { { "shift" }, "d" }, { passThrough = { "d" } } },
-  { "com.electron.postbird", { { "shift" }, "p" } },
+  -- { "com.electron.postbird", { { "shift" }, "p" } },
   { "com.1password.1password", "1" },
-  { "commonplace.canonize.app", nil, { passThrough = { { { "shift" }, "s" } } } },
+  -- { "commonplace.canonize.app", nil, { passThrough = { { { "shift" }, "s" } } } },
   { "com.apple.dt.Xcode", "x", { focusOnly = true } },
-  { "com.obsproject.obs-studio", "o", { focusOnly = true } },
+  -- { "com.obsproject.obs-studio", "o", { focusOnly = true } },
   { "com.microsoft.VSCode", "v", { focusOnly = true } },
   -- { "com.culturedcode.ThingsMac", nil, { passThrough = { "return" } } },
 }
@@ -408,7 +422,11 @@ M.dock = {
     connected = "macbook-disabled.kbd", -- Disable internal when Leeloo connected
     disconnected = "macbook.kbd", -- Normal config when Leeloo disconnected
     configPath = os.getenv("HOME") .. "/.config/kanata",
-    daemonLabel = "org.nixos.kanata",
+    -- INTENTIONAL mise/nix divergence: mise prefixes bootstrap launchd labels
+    -- with `dev.mise.` (see mise/scripts/kanata-setup); nix-darwin's real
+    -- label is bare `org.kanata.daemon` (config/hammerspoon/config.lua). Do
+    -- not overwrite this with the nix twin's value during a hammerspoon sync.
+    daemonLabel = "dev.mise.org.kanata.daemon",
   },
   docked = {
     wifi = "off",

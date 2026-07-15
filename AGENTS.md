@@ -80,6 +80,15 @@ This is a **nix-darwin + home-manager** managed dotfiles repo.
 
 Directory-specific `AGENTS.md` files are removed; use this root file for repo guidance.
 
+## Parallel mise migration
+
+Nix/Home Manager remains active while mise migration proceeds. Treat `_mise.toml` `[dotfiles]` as mise ownership map; inspect its exact source and target before editing either world.
+
+- Literal twins (`config/` and `mise/config/` copies such as Hammerspoon, Neovim, tmux, Kitty, Ghostty, and Pi) require a recursive diff and an intentional sync on every related change. Preserve documented per-world divergences.
+- Generated Nix config and static mise config (fish, git, SSH/1Password, and similar) require behavior review, not byte comparison. Keep resulting user behavior equivalent until one owner retires.
+- Shared-source mappings (for example Kanata, Espanso, and some SSH paths) already link same repo files. Do not create copies; verify mapping before changing them.
+- Record owner, sync direction, and intentional divergence in `lat.md/`. Run `devenv shell -- lat check` after changing those docs.
+
 ## Research and audit artifacts
 
 - Ad-hoc agent-generated docs (audits, research, mental-model writeups, investigation reports) live in `~/.local/share/pi/docs/.dotfiles/`, NOT in the repo.
