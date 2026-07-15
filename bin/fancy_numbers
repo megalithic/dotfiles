@@ -8,7 +8,7 @@ variant=super
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    -v|--variant)
+    -v | --variant)
       if [ "$#" -lt 2 ]; then
         printf '%s: missing value for %s\n' "${0##*/}" "$1" >&2
         usage
@@ -37,7 +37,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 case "$variant" in
-  super|sub) ;;
+  super | sub) ;;
   *)
     printf '%s: unsupported variant: %s\n' "${0##*/}" "$variant" >&2
     usage
