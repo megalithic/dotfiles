@@ -1,6 +1,6 @@
 ---
 id: dot-0k38
-status: open
+status: closed
 deps: [dot-89d2, dot-zqvf]
 links: []
 created: 2026-07-15T17:04:41Z

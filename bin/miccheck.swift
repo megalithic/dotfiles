@@ -498,10 +498,52 @@ final class PresenceClient {
     private var lastInMeeting: Bool?
     private var loggedWaiting = false
 
-    /// Called on main with the new inMeeting value (transitions only).
+    /// Called on main when presence should force PTT: real inMeeting transitions,
+    /// plus the first seeded snapshot when it is already true.
     var onMeetingTransition: ((Bool) -> Void)?
 
     init(path: String) { self.path = path }
+
+    static func currentInMeeting(path: String) -> Bool? {
+        guard FileManager.default.fileExists(atPath: path) else { return nil }
+        let fd = socket(AF_UNIX, SOCK_STREAM, 0)
+        guard fd >= 0 else { return nil }
+        defer { close(fd) }
+
+        var addr = sockaddr_un()
+        addr.sun_family = sa_family_t(AF_UNIX)
+        let cap = MemoryLayout.size(ofValue: addr.sun_path)
+        let bytes = Array(path.utf8)
+        guard bytes.count < cap else { return nil }
+        withUnsafeMutablePointer(to: &addr.sun_path) { ptr in
+            ptr.withMemoryRebound(to: CChar.self, capacity: cap) { dst in
+                for i in 0..<bytes.count { dst[i] = CChar(bitPattern: bytes[i]) }
+                dst[bytes.count] = 0
+            }
+        }
+        let len = socklen_t(MemoryLayout<sockaddr_un>.size)
+        let ok = withUnsafePointer(to: &addr) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { Darwin.connect(fd, $0, len) }
+        }
+        guard ok == 0 else { return nil }
+
+        let get = Array("{\"cmd\":\"get\"}\n".utf8)
+        let wrote = get.withUnsafeBytes { Foundation.write(fd, $0.baseAddress, get.count) }
+        guard wrote == get.count else { return nil }
+
+        var tmp = [UInt8](repeating: 0, count: 4096)
+        let n = Foundation.read(fd, &tmp, tmp.count)
+        guard n > 0 else { return nil }
+        let data = Data(tmp[0..<n])
+        let line: Data
+        if let newline = data.firstIndex(of: 0x0A) {
+            line = data.subdata(in: data.startIndex..<newline)
+        } else {
+            line = data
+        }
+        guard let obj = try? JSONSerialization.jsonObject(with: line) as? [String: Any] else { return nil }
+        return obj["inMeeting"] as? Bool
+    }
 
     func start() { q.async { self.connect() } }
 
@@ -543,7 +585,7 @@ final class PresenceClient {
         source = src
         src.resume()
 
-        // Seed current state so we only react to real transitions.
+        // Seed current state; first active snapshot still forces PTT.
         let get = Array("{\"cmd\":\"get\"}\n".utf8)
         _ = get.withUnsafeBytes { Foundation.write(fd, $0.baseAddress, get.count) }
         log("presence: connected to \(path)")
@@ -583,7 +625,11 @@ final class PresenceClient {
         guard lastInMeeting != inMeeting else { return }
         let prev = lastInMeeting
         lastInMeeting = inMeeting
-        guard prev != nil else { return } // first snapshot seeds only
+        if prev == nil {
+            guard inMeeting else { return } // idle bootstrap seeds only
+            DispatchQueue.main.async { self.onMeetingTransition?(inMeeting) }
+            return
+        }
         DispatchQueue.main.async { self.onMeetingTransition?(inMeeting) }
     }
 }
@@ -691,6 +737,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             log("socket listening at \(socketPath)")
         } catch {
             log("socket failed: \(error)")
+        }
+
+        if let presencePath = presenceSocketPath,
+           PresenceClient.currentInMeeting(path: presencePath) == true,
+           mode != .pushToTalk {
+            mode = .pushToTalk
+            UserDefaults.standard.set(mode.rawValue, forKey: "mode")
+            log("presence: bootstrap inMeeting=true -> push-to-talk")
         }
 
         if let presencePath = presenceSocketPath {

@@ -339,12 +339,21 @@ final class CDPClient: NSObject, URLSessionWebSocketDelegate {
       const mic=aria('button[aria-label*="microphone" i]');
       const cam=aria('button[aria-label*="camera" i]');
       const btns=aria('button');
+      const telehealthLobby=telehealth&&(
+        /\\bGet ready for your visit\\b/i.test(txt)
+        || /\\bWhat is your full name\\?\\b/i.test(txt)
+        || /\\bClick Allow when your browser asks for access to your camera and microphone\\b/i.test(txt)
+        || /\\bVisit Sign\\s*In\\b/i.test(document.title||'')
+        || btns.some(l=>/^\\s*Next\\s*$/i.test(l))
+        || btns.some(l=>/\\bJoin (call|visit|video|appointment)\\b/i.test(l))
+        || btns.some(l=>/\\bStart (call|visit|video|appointment)\\b/i.test(l))
+      );
       const telehealthJoined=telehealth&&[txt,...btns].some(l=>/\\b(End call|Leave call|Mute|Unmute|Turn on microphone|Turn off microphone|Turn on camera|Turn off camera|Stop sharing|Share screen)\\b/i.test(l));
       const presenting=/You're presenting|You are presenting|Stop presenting|Stop sharing/i.test(txt)
         || btns.some(l=>/stop presenting|stop sharing/i.test(l));
       const names=mic.filter(l=>/^Mute /.test(l)).map(l=>l.replace(/^Mute /,'').replace(/'s microphone$/,''));
       return {
-        state: (leave||telehealthJoined)?'joined':(join?'lobby':'unknown'),
+        state: (leave||telehealthJoined)?'joined':((join||telehealthLobby)?'lobby':'unknown'),
         presenting,
         micSelf: mic.some(l=>/turn on microphone|unmute|microphone (is )?muted/i.test(l))?'muted':(mic.some(l=>/turn off microphone|\\bmute\\b/i.test(l))?'on':'?'),
         camSelf: cam.some(l=>/turn on camera|start video/i.test(l))?'off':(cam.some(l=>/turn off camera|stop video/i.test(l))?'on':'?'),
@@ -369,6 +378,72 @@ final class CDPClient: NSObject, URLSessionWebSocketDelegate {
 
     func activateTarget(_ targetId: String) {
         send("Target.activateTarget", ["targetId": targetId])
+    }
+
+    func focusBestMeeting(currentTargetId: String, completion: @escaping (_ ok: Bool, _ targetId: String?) -> Void) {
+        refreshMeetingTargets(reason: "focus_command")
+        meetingTargets { [weak self] infos in
+            guard let self else { return completion(false, nil) }
+            guard !infos.isEmpty else { return completion(false, nil) }
+
+            let group = DispatchGroup()
+            let resultLock = NSLock()
+            var doms: [String: MeetDOM] = [:]
+            for info in infos {
+                group.enter()
+                self.classifyTarget(tid: info.tid, url: info.sig, title: info.title, forceEmit: true) { dom in
+                    if let dom {
+                        resultLock.lock()
+                        doms[info.tid] = dom
+                        resultLock.unlock()
+                    }
+                    group.leave()
+                }
+            }
+
+            group.notify(queue: self.q) {
+                let joined = infos.first { doms[$0.tid]?.state == "joined" }
+                let lobby = infos.first { doms[$0.tid]?.state == "lobby" }
+                let current = infos.first { $0.tid == currentTargetId }
+                let pick = joined ?? lobby ?? current ?? infos.first!
+                self.activateTarget(pick.tid)
+                completion(true, pick.tid)
+            }
+        }
+    }
+
+    private struct MeetingTargetInfo {
+        var tid: String
+        var url: String
+        var sig: String
+        var title: String
+    }
+
+    private func meetingTargets(_ completion: @escaping ([MeetingTargetInfo]) -> Void) {
+        send("Target.getTargets") { [weak self] result in
+            guard let self,
+                  let r = result as? [String: Any],
+                  let targetInfos = r["targetInfos"] as? [[String: Any]] else {
+                completion([])
+                return
+            }
+            let infos = targetInfos.compactMap { info -> MeetingTargetInfo? in
+                guard (info["type"] as? String) == "page" else { return nil }
+                let url = (info["url"] as? String) ?? ""
+                guard Self.isMeetingURL(url) else { return nil }
+                let tid = (info["targetId"] as? String) ?? ""
+                guard !tid.isEmpty else { return nil }
+                let title = (info["title"] as? String) ?? ""
+                let sig = url.split(separator: "?").first.map(String.init) ?? url
+                return MeetingTargetInfo(tid: tid, url: url, sig: sig, title: title)
+            }
+            self.q.async {
+                for info in infos {
+                    self.onTargetQ(tid: info.tid, url: info.url, title: info.title, isMeeting: true, created: false)
+                }
+                completion(infos)
+            }
+        }
     }
 
     /// Event-driven rescan for Meet tabs when capture state changes without a
@@ -416,13 +491,15 @@ final class CDPClient: NSObject, URLSessionWebSocketDelegate {
                   let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let wsURLStr = obj["webSocketDebuggerUrl"] as? String,
                   let wsURL = URL(string: wsURLStr) else {
-                self.scheduleReconnect(); return
+                self.handleDisconnect(reason: "version_lookup_failed")
+                return
             }
             let task = self.session.webSocketTask(with: wsURL)
             self.ws = task
             task.resume()
-            self.receiveLoop()
+            self.receiveLoop(task)
             self.send("Target.setDiscoverTargets", ["discover": true])
+            self.refreshMeetingTargets(reason: "connect")
         }.resume()
     }
 
@@ -440,7 +517,10 @@ final class CDPClient: NSObject, URLSessionWebSocketDelegate {
         if let sessionId { msg["sessionId"] = sessionId }
         guard let data = try? JSONSerialization.data(withJSONObject: msg),
               let str = String(data: data, encoding: .utf8),
-              let ws else { return id }
+              let ws else {
+            completion?(nil)
+            return id
+        }
         if let c = completion {
             let timeout = DispatchWorkItem { [weak self] in
                 guard let self else { return }
@@ -468,18 +548,19 @@ final class CDPClient: NSObject, URLSessionWebSocketDelegate {
         return id
     }
 
-    private func receiveLoop() {
-        ws?.receive { [weak self] result in
+    private func receiveLoop(_ task: URLSessionWebSocketTask) {
+        task.receive { [weak self] result in
             guard let self else { return }
+            guard task == self.ws else { return }
             switch result {
             case .failure:
-                self.scheduleReconnect()
+                self.handleDisconnect(reason: "receive_failed")
             case .success(let message):
                 if case let .string(text) = message, let data = text.data(using: .utf8),
                    let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
                     self.handle(obj)
                 }
-                self.receiveLoop()
+                self.receiveLoop(task)
             }
         }
     }
@@ -540,17 +621,22 @@ final class CDPClient: NSObject, URLSessionWebSocketDelegate {
 
     // called on q (timer). send() is lock-guarded so safe here.
     private func classify(tid: String, url: String, title: String) {
+        classifyTarget(tid: tid, url: url, title: title, forceEmit: false, completion: nil)
+    }
+
+    private func classifyTarget(tid: String, url: String, title: String, forceEmit: Bool,
+                                completion: ((MeetDOM?) -> Void)?) {
         send("Target.attachToTarget", ["targetId": tid, "flatten": true]) { [weak self] result in
             guard let self, let r = result as? [String: Any],
-                  let sessionId = r["sessionId"] as? String else { return }
+                  let sessionId = r["sessionId"] as? String else { completion?(nil); return }
             self.send("Runtime.enable", [:], sessionId: sessionId)
             self.send("Runtime.evaluate", ["expression": CDPClient.classifyExpr, "returnByValue": true],
                       sessionId: sessionId) { [weak self] evalResult in
-                guard let self else { return }
+                guard let self else { completion?(nil); return }
                 self.send("Target.detachFromTarget", ["sessionId": sessionId], sessionId: sessionId)
                 guard let er = evalResult as? [String: Any],
                       let res = er["result"] as? [String: Any],
-                      let value = res["value"] as? [String: Any] else { return }
+                      let value = res["value"] as? [String: Any] else { completion?(nil); return }
                 var dom = MeetDOM()
                 dom.state = value["state"] as? String ?? "unknown"
                 dom.presenting = value["presenting"] as? Bool ?? false
@@ -558,13 +644,18 @@ final class CDPClient: NSObject, URLSessionWebSocketDelegate {
                 dom.camSelf = value["camSelf"] as? String ?? "?"
                 dom.participants = value["participants"] as? [String] ?? []
                 self.q.async { [weak self] in
-                    guard let self, let prev = self.known[tid]?.dom else { return }
-                    if prev != dom {
+                    guard let self else { completion?(dom); return }
+                    let prev = self.known[tid]?.dom
+                    if self.known[tid] == nil {
+                        self.known[tid] = TargetEntry(sig: url, dom: MeetDOM(), timer: nil)
+                    }
+                    if forceEmit || prev != dom {
                         self.known[tid]?.dom = dom
                         var st = MeetState(); st.present = true; st.targetId = tid
                         st.url = url; st.title = title; st.dom = dom
                         self.emitMain("meet.state", st)
                     }
+                    completion?(dom)
                 }
             }
         }
@@ -578,6 +669,17 @@ final class CDPClient: NSObject, URLSessionWebSocketDelegate {
         emitMain("meet.left", st)
     }
 
+    private func handleDisconnect(reason: String) {
+        q.async { [weak self] in
+            guard let self else { return }
+            self.onDebug?("cdp: disconnect (\(reason))")
+            self.ws = nil
+            let tids = Array(self.known.keys)
+            for tid in tids { self.emitLeftQ(tid, reason: reason) }
+            self.scheduleReconnect()
+        }
+    }
+
     private func emitMain(_ event: String, _ st: MeetState) {
         DispatchQueue.main.async { [weak self] in self?.onMeet?(event, st) }
     }
@@ -585,7 +687,8 @@ final class CDPClient: NSObject, URLSessionWebSocketDelegate {
     // URLSessionWebSocketDelegate
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask,
                     didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
-        scheduleReconnect()
+        guard webSocketTask == ws else { return }
+        handleDisconnect(reason: "socket_closed")
     }
 }
 
@@ -806,7 +909,7 @@ final class PresenceEngine {
         var p = presence
         switch event {
         case "meet.left":
-            if p.meetingTargetId.isEmpty || p.meetingTargetId == m.targetId {
+            if p.meetingTargetId == m.targetId {
                 let wasSharing = p.sharing
                 cdpMeetingActive = false
                 cdpSharing = false
@@ -823,25 +926,30 @@ final class PresenceEngine {
             }
         case "meet.appeared":
             let inMeetingWas = p.inMeeting, stateWas = p.meetingState
-            p.meetingTargetId = m.targetId
-            p.meetingURL = m.url
-            p.meetingTitle = m.title
-            // Don't overwrite meetingApp if slack has it; meet takes priority below.
-            if !slackHuddleActive { p.meetingApp = meetBundle }
-            reconcileDerived(&p)
-            commit(p)
-            emitMeetingStateEvents(from: inMeetingWas, stateWas)
+            if p.meetingTargetId.isEmpty || p.meetingTargetId == m.targetId || !cdpMeetingActive {
+                p.meetingTargetId = m.targetId
+                p.meetingURL = m.url
+                p.meetingTitle = m.title
+                // Don't overwrite meetingApp if slack has it; meet takes priority below.
+                if !slackHuddleActive { p.meetingApp = meetBundle }
+                reconcileDerived(&p)
+                commit(p)
+                emitMeetingStateEvents(from: inMeetingWas, stateWas)
+            }
         case "meet.state":
             let stateWas = p.meetingState
             let inMeetingWas = p.inMeeting
             let sharingWas = p.sharing
+            let targetIsActive = (m.dom.state == "lobby" || m.dom.state == "joined")
+            let targetIsCurrent = (p.meetingTargetId.isEmpty || p.meetingTargetId == m.targetId)
+            guard targetIsActive || targetIsCurrent || !cdpMeetingActive else { return }
             p.meetingTargetId = m.targetId
             p.meetingURL = m.url
             p.meetingTitle = m.title
             p.participants = m.dom.participants
             p.inAppMic = m.dom.micSelf
             p.inAppCamera = m.dom.camSelf
-            cdpMeetingActive = (m.dom.state == "lobby" || m.dom.state == "joined")
+            cdpMeetingActive = targetIsActive
             cdpSharing = m.dom.presenting
             p.meetingState = m.dom.state
             // CDP meeting always wins meetingApp when active.
@@ -1021,16 +1129,13 @@ server.onCommand = { cmd, reply in
     case "get":
         reply(encodePresenceLine("get", engine.presence).trimmingCharacters(in: .newlines))
     case "focus":
-        let p = engine.presence
-        if !p.meetingTargetId.isEmpty {
-            cdp.activateTarget(p.meetingTargetId)
-            if let app = NSRunningApplication.runningApplications(withBundleIdentifier: p.meetingApp).first {
+        let currentTargetId = engine.presence.meetingTargetId
+        cdp.focusBestMeeting(currentTargetId: currentTargetId) { ok, _ in
+            if ok, let app = NSRunningApplication.runningApplications(withBundleIdentifier: "net.imput.helium").first {
                 app.activate(options: [.activateAllWindows])
             }
-            reply(#"{"ok":true,"focused":"meet"}"#)
-        } else {
-            reply(#"{"ok":false,"error":"no active meeting"}"#)
         }
+        reply(#"{"ok":true,"refreshing":true}"#)
     default:
         reply(#"{"ok":false,"error":"unknown cmd"}"#)
     }

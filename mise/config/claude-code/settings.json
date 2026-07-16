@@ -1,0 +1,23 @@
+{
+	"attribution": {
+		"commit": "",
+		"pr": "",
+		"sessionUrl": false
+	},
+	"model": "opus[1m]",
+	"enabledPlugins": {
+		"vercel@claude-plugins-official": true,
+		"lua-lsp@claude-plugins-official": true
+	},
+	"extraKnownMarketplaces": {
+		"claude-plugins-official": {
+			"source": {
+				"source": "github",
+				"repo": "anthropics/claude-plugins-official"
+			}
+		}
+	},
+	"effortLevel": "high",
+	"skipDangerousModePermissionPrompt": true,
+	"theme": "auto"
+}

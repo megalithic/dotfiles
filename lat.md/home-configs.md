@@ -56,6 +56,18 @@ Tmux layout scripts are Bash-compatible session builders discovered by `ftm` fro
 
 Scripts use `.sh` names and `#!/usr/bin/env bash` so they run through bash regardless of the interactive shell. Fixed canonical layouts set explicit roots: `mega` in `/Users/seth/.dotfiles`, `rx` in `/Users/seth/code/work/strive/rx`, and `verify-doctor` in `/Users/seth/code/work/strive/verify-doctor`. Generic layouts may resolve through zoxide and fall back to `$HOME/code`.
 
+## Tmux plugins
+
+`config/tmux/plugins.tmux.conf` is TPM-managed. `tmux-mega-fingers` is installed through TPM from public repo `megalithic/tmux-mega-fingers` and mirrored in the mise twin at `mise/config/tmux/plugins.tmux.conf`.
+
+`tmux-mega-fingers` lives as a separate OSS checkout at `~/code/oss/tmux-mega-fingers/` (fork of `artemave/tmux_super_fingers` @ `523dc9b`; see that repo's `UPSTREAM.md`). Fork additions over upstream:
+- Inside fingers mode, a shifted hint letter (e.g. `A` vs `a`) selects the copy (secondary) action for that one selection; lowercase selects open (primary). Single `@mega-fingers-key` entry (`C-f`). Upstream's `space` sticky-toggle is kept.
+- New finders registered in `tmux_mega_fingers/finders/__init__.py` after the path/url/rails finders so real paths win overlap resolution: `git_sha_finder` (git/jj hashes, copy; excludes diff `index <hex>..<hex>` blobs), `email_finder` (copy / `mailto:` open), `github_ref_finder` (`owner/repo#123`, bare `#123` resolved against the pane cwd's origin remote, and dot-less `owner/repo`; defers to `FilePathFinder` when the slug is an existing local path).
+- `_remove_overlapping_marks` is implemented (was a no-op TODO): drops marks that overlap an earlier finder-order mark, so e.g. a github slug inside a full URL or colliding with a file path is suppressed.
+- `pi_section_finder` exists but is disabled (not registered); its on-screen markers are unconfirmed — tune `PI_SECTION_PATTERNS` and add it to `FINDERS` once known. (True multi-line section spans need an architecture extension beyond the single-line finder API.)
+
+Pane capture uses `capture-pane -J` (joined logical lines), so soft-wrapped URLs/paths already match on one logical line — no special multiline regex is needed (unlike tmux-fingers/fastcopy, which feed raw wrapped text to finders).
+
 ## Notable program docs
 
 A handful of programs have enough intricacy to warrant their own files instead of a one-line index row:

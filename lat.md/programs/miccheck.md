@@ -32,7 +32,7 @@ The persisted mode lives in `UserDefaults` (`~/Library/Preferences/miccheckd.pli
 
 miccheckd subscribes directly to [[media-presence#Socket protocol|media-presenced's socket]]: any `inMeeting` transition forces push-to-talk mode so meetings never start with a hot mic.
 
-This moved PTT enforcement out of Hammerspoon's `watchers/media-presence.lua`, which now keeps only music pause and DND. The client seeds state with `{"cmd":"get"}` on connect (transitions only, no action on the first snapshot) and reconnects every 5s; miccheck works standalone when the daemon is absent. `--presence-socket PATH` overrides the path, `--no-presence` disables the subscription. Hammerspoon interop is unchanged — both daemons stay controllable over their sockets (`lib/micctl.lua` for miccheck, `nc -w 1 -U` for media-presenced).
+This moved PTT enforcement out of Hammerspoon's `watchers/media-presence.lua`, which now keeps only music pause and DND. On launch, miccheck first does a synchronous `{"cmd":"get"}` probe before its first `apply()`, so a restart during an already-live meeting cannot briefly restore saved push-to-mute hot-mic state. The client then subscribes normally, reconnects every 5s, and also forces push-to-talk on the first seeded snapshot when `inMeeting=true`; this covers miccheck/media-presenced reconnects while a meeting or Athena pre-join lobby is already open. An idle first snapshot is still ignored, so miccheck does not rewrite the user's mode outside meetings. `--presence-socket PATH` overrides the path, `--no-presence` disables the subscription. Hammerspoon interop is unchanged — both daemons stay controllable over their sockets (`lib/micctl.lua` for miccheck, `nc -w 1 -U` for media-presenced).
 
 ## Socket protocol
 

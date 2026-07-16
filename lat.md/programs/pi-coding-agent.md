@@ -60,15 +60,29 @@ Session search has two paths: the legacy local `search_sessions` / `read_session
 
 ### Sentinel guardrail rules
 
-`sentinel.ts` is the single source of truth for Pi command guardrails, including former JSON rule tables.
+`extensions/sentinel.ts` is active because the Home Manager module auto-links non-underscore extensions; the same source is mirrored to `mise/config/pi-coding-agent/agent/extensions/sentinel.ts`.
 
-The extension now bundles interactive-command, always-interactive, and tool-correction tables directly; `extensions/sentinel-rules.json` is no longer installed or read at startup. The bundled tables cover interactive jj, docker, kubectl, Nix REPL, database shells, language REPLs, pagers, editors, and preferred-tool rewrites such as `find` to `fd`, `grep` to `rg`, `rm`/`rmdir` to `trash`, and `git` to `jj` inside jj repos.
+Sentinel is the runtime rule source for Pi command guardrails, replacing the former JSON rule file. `extensions/sentinel-rules.json` is no longer installed or read. Startup reports 14 conceptual classifier rules instead of expanding every interactive command and preferred-tool entry into separate runtime rules.
 
-Specialized guards stay as code because they need context-specific parsing or side effects: jj editor/message flows, nix-managed writes, unsafe `nix build` output, secret tools and gatekeeper scans before push, push/deploy/ssh confirmation, package install confirmation, investigation-only prompts, and pipe/redirect hang prevention.
+The classifier rules are `hard-interactive`, `hard-vcs-editor`, `hard-managed-config-write`, `hard-nix-build-result`, `hard-destructive-system-rm`, `hard-secret-tools`, `hard-gatekeeper-secrets`, `confirm-security-sensitive-bash`, `confirm-remote-effects`, `confirm-package-install`, `confirm-history-destructive`, `confirm-tcc-reset`, `rewrite-preferred-tools`, and `rewrite-builtin-grep`.
 
-The redundant `jj split -i` table rule was removed because the hardcoded `jj-split` rule blocks all `jj split` invocations. The disabled ticket-gate config path was removed with the JSON loader; investigation mode remains and blocks write-capable tool calls plus bash write workarounds for imperative `investigate`, `inspect`, or `audit` prompts unless the prompt includes implementation intent or the user grants the existing `override` flow.
+The bundled tables still feed those classifiers for interactive jj, Docker, Kubernetes, Nix REPL, database shells, language REPLs, pagers, editors, and preferred-tool rewrites. Rewrites include `find` to `fd`, `grep` to `rg`, `rm`/`rmdir` to `trash`, and `python -m json.tool` to `jq`. Sentinel no longer rewrites `git` to `jj`.
 
-The pipe/redirect guard blocks `bash` commands that pipe or redirect risky upstreams unless the call passes a `timeout` between 1 and 300 seconds.
+Sentinel has three rule tiers: hard blocks cannot be overridden, confirm blocks can be retried after an explicit override, and rewrite blocks force a preferred tool or safer pattern. Confirm overrides are single-use, expire after 120s, and are tied to the exact command or write path; `override`, `bypass`, or `force` open UI confirmation when available, while `!override`, `!bypass`, `!force`, and `!!` grant immediately for the last blocked confirm rule.
+
+Sentinel uses a shell-aware parser before rule matching. It strips quoted strings and heredocs, unwraps environment assignments, `sudo`, `command`, `env`, shell `-c` wrappers including `bash -c --`, command substitutions, absolute command paths, and simple `xargs` command forms. This keeps preferred-tool rewrites and safety confirms effective for wrapper forms such as `command grep`, `env grep`, `/bin/grep`, `sudo -n grep`, and `sh -c 'grep ...'`; it remains a UX guardrail, not an OS sandbox.
+
+Specialized guards stay as code because they need context-specific parsing, filesystem checks, or side effects: VCS editor/message flows, managed or symlinked config writes, unsafe `nix build` output, destructive system-removal hard blocks, secret tools and gatekeeper scans before push, security-sensitive bash confirms, sensitive-path write confirms, session write/execute correlation, push/deploy/ssh confirmation, package install confirmation, investigation-only prompts, and pipe/redirect hang prevention. The managed-config guard blocks broad managed config prefixes and symlinks that resolve into `/nix/store/` or `~/.dotfiles/`, steering writes to the owning source path.
+
+Security-sensitive bash confirms cover remote pipe execution through `curl` or `wget`, privilege escalation via `sudo` including absolute paths, persistence hooks, shell-config writes, and system binary installs. Sensitive-path write confirms use path-specific override keys so one approved `write` or `edit` cannot grant a later different path.
+
+Session write/execute correlation records allowed `write`/`edit` targets and asks for override before executing a session-written script whose current contents contain risky patterns such as `curl | bash`, `eval`, recursive delete, `chmod 777`, `sudo`, or persistence hooks. Direct execution (`./script` or absolute path) and shell execution (`sh script`) both resolve against the current working directory before checking the session registry.
+
+Investigation mode remains a guardrail outside the rule table. Prompts that start as imperative `investigate`, `inspect`, `audit`, or `check` block write-capable tool calls plus bash write workarounds unless the prompt includes implementation intent or the user grants the existing override flow.
+
+The pipe/redirect guard blocks `bash` commands that pipe or redirect risky upstreams unless the tool call passes a `timeout` between 1 and 300 seconds. Database shell guards allow explicit noninteractive query forms such as `psql -c`, `mysql -e`, and `sqlite3 DB SQL` while still blocking interactive shells, and editor commands are treated as interactive even when passed file paths.
+
+Package-install confirms cover Homebrew, global package installs, project dependency installs, and one-shot runners such as `npx` and `bunx`; installs under the managed Pi package source directory are allowed so local extension package work can run `npm install` without override. Push, deploy, SSH/SCP/remote-rsync, broad history-changing jj commands, and destructive Git history commands remain confirm-only so the agent cannot perform remote side effects or destructive history changes without explicit user approval.
 
 The local `checkpoint.ts` extension is removed from the active profile; checkpoint and main-branch prompting come from the agent harness instead.
 

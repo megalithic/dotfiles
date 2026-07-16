@@ -1,6 +1,6 @@
 ---
 id: dot-89d2
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-05-13T14:27:58Z

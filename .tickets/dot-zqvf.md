@@ -1,6 +1,6 @@
 ---
 id: dot-zqvf
-status: open
+status: closed
 deps: [dot-89d2]
 links: []
 created: 2026-05-13T14:27:58Z
