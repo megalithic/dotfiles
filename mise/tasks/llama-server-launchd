@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Launchd entrypoint: run mise-installed llama-server in router mode.
+# Mirrors home/common/programs/llama-cpp-local/default.nix safe defaults.
+set -euo pipefail
+
+export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:/usr/bin:/bin:$PATH"
+model_dir="${XDG_DATA_HOME:-$HOME/.local/share}/llama.cpp/models"
+log_dir="$HOME/Library/Logs/llama-cpp"
+mkdir -p "$model_dir" "$log_dir"
+
+exec llama-server \
+  --host 127.0.0.1 \
+  --port 18080 \
+  --models-dir "$model_dir" \
+  --models-max 1 \
+  -c 8192 \
+  --parallel 1 \
+  --cache-type-k q8_0 \
+  --cache-type-v q8_0 \
+  --flash-attn on \
+  --jinja \
+  --cont-batching

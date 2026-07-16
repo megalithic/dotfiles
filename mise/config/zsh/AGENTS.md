@@ -16,7 +16,7 @@ integration. These files provide that portable layer:
 
 ## Keep in sync
 
-- Cross-shell aliases live in `mise/config/mise/global_config.toml` and `_mise.toml`
-  `[shell_alias]`, not here.
+- Cross-shell aliases live in Home Manager's mise `globalConfig` and
+  `mise/config/mise/global_config.toml` `[shell_alias]`, not here.
 - Fish owns a custom `wt` function; zsh uses upstream Worktrunk integration.
 - Avoid nix store paths; resolve tools from PATH after `mise activate zsh`.

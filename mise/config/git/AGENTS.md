@@ -4,8 +4,8 @@ Non-nix twin of `home/common/programs/git/` (the Home Manager module). Both
 trees are **independent copies**: while the nix setup is still active, changes
 must be mirrored manually to whichever tree you actually run.
 
-Nothing here applies automatically. Application happens through the repo-root
-`_mise.toml` `[dotfiles]` table once that config is activated.
+Nothing here applies automatically. Application happens through
+`mise/config/mise/global_config.toml` `[dotfiles]` table once that config is active.
 
 ## Layout — XDG-native (deliberately different from the nix tree)
 
@@ -44,7 +44,7 @@ git/
 - Runtime deps referenced by `config`: delta (pager), git-lfs (filter), nvim
   (editor + codediff diff/merge tool), fzf (`cof` alias), worktrunk (`wt`
   alias), brew git contrib (`jump` alias). All but worktrunk are in
-  `_mise.toml` (`[tools]` / `[bootstrap.packages]`).
+  `mise/config/mise/global_config.toml` (`[tools]` / `[bootstrap.packages]`).
 
 ## Applying
 

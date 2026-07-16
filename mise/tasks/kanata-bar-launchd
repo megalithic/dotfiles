@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Launchd entrypoint: run the mise-installed kanata-bar UI client.
 # Resolves the versioned http:kanata-bar install path so version bumps in
-# _mise.toml [tools] do not require launchd agent edits.
+# mise/config/mise/global_config.toml [tools] do not require launchd agent edits.
 set -euo pipefail
 export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:/usr/bin:/bin:$PATH"
 

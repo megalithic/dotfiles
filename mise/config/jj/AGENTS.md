@@ -4,8 +4,8 @@ Non-nix twin of `home/common/programs/jj/` (the Home Manager module). Both
 trees are **independent copies**: while the nix setup is still active, changes
 must be mirrored manually to whichever tree you actually run.
 
-Applied through the repo-root `_mise.toml` `[dotfiles]` entry:
-`"~/.config/jj/config.toml" = "mise/config/jj/config.toml"`.
+Applied through `mise/config/mise/global_config.toml` `[dotfiles]` entry:
+`"~/.config/jj/config.toml" = "~/.dotfiles/mise/config/jj/config.toml"`.
 
 ## What `config.toml` merges (the nix world had THREE layers)
 

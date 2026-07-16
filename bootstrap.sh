@@ -4,14 +4,16 @@ set -eu
 
 # Human-readable version stamp — bump whenever this script changes so remote
 # runs (curl | sh) show which revision they got.
-BOOTSTRAP_UPDATED="2026-07-10 14:24 EDT"
+BOOTSTRAP_UPDATED="2026-07-16 11:30 EDT"
 
 DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-https://github.com/megalithic/dotfiles.git}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+BOOTSTRAP_MISE_CONFIG="$DOTFILES_DIR/mise/config/mise/global_config.toml"
+export DOTFILES_DIR
 FORCE_HOST="${HOST:-}" # desired hostname; skip hostname prompt if set
 FORCE=0                # --force: pass force flags to all sub-commands
 DRY_RUN=0              # --dry-run: pass dry-run flags to all sub-commands; skip other mutations
-MIN_MISE_VERSION="2026.6.10"
+MIN_MISE_VERSION="2026.7.7"
 BOOTSTRAP_INSTALL_ROSETTA="${BOOTSTRAP_INSTALL_ROSETTA:-0}"
 
 COLOR_RESET="$(printf '\033[0m')"
@@ -177,7 +179,7 @@ remove_store_link() {
 # level inside real dirs, for symlink-each entries) before applying.
 clean_nix_managed_targets() {
   [ -d /nix/store ] || return 0
-  sed -n '/^\[dotfiles\]/,/^\[/s/^"\(~\/[^"]*\)".*/\1/p' "$DOTFILES_DIR/_mise.toml" |
+  sed -n '/^\[dotfiles\]/,/^\[/s/^"\(~\/[^"]*\)".*/\1/p' "$BOOTSTRAP_MISE_CONFIG" |
     while IFS= read -r target; do
       path="$HOME${target#\~}"
       remove_store_link "$path"
@@ -455,15 +457,15 @@ fi
 # NOTE: plain sequential statements — wrapping these in `cd || { } && { }`
 # suppresses `set -e` inside the block, letting mise failures slip through.
 cd "$DOTFILES_DIR" || die "Unable to change to $DOTFILES_DIR"
-[ -f _mise.toml ] || die "Missing $DOTFILES_DIR/_mise.toml; checkout is stale or incomplete"
+[ -f "$BOOTSTRAP_MISE_CONFIG" ] || die "Missing $BOOTSTRAP_MISE_CONFIG; checkout is stale or incomplete"
 
-# The staged mise config is named _mise.toml so it stays inactive on
-# nix-managed machines; point mise at it explicitly for the bootstrap run.
-MISE_OVERRIDE_CONFIG_FILENAMES="_mise.toml"
-export MISE_OVERRIDE_CONFIG_FILENAMES
+# Keep bootstrap pinned to the repo-managed global config, not whichever
+# ~/.config/mise/config.toml may exist on the machine already.
+MISE_GLOBAL_CONFIG_FILE="$BOOTSTRAP_MISE_CONFIG"
+export MISE_GLOBAL_CONFIG_FILE
 
-info "Trusting mise config..."
-mise trust # needed even in dry-run so mise can read the config
+info "Trusting mise global config..."
+mise trust "$MISE_GLOBAL_CONFIG_FILE" # needed even in dry-run so mise can read the config
 
 clean_nix_managed_targets
 
@@ -606,18 +608,20 @@ run_first_bootstrap_task() {
     info "[dry-run] would run first-bootstrap task chain (fnox install, op gate, fnox render, Helium install)"
     return 0
   fi
+
   info "Running first-bootstrap task chain..."
   if command -v pre-commit >/dev/null 2>&1; then
     run pre-commit install --install-hooks
   fi
+
   run env MISE_AUTO_INSTALL=0 mise install --locked fnox
   fnox_dir=$(mise where fnox 2>/dev/null || true)
   [ -n "$fnox_dir" ] || die "fnox installed but mise cannot locate it"
   PATH="$fnox_dir/bin:$PATH"
   export PATH
-  run ./mise/scripts/op-signin-gate
-  run ./mise/scripts/fnox-render-secrets
-  run ./mise/scripts/install-helium
+  run ./mise/tasks/op-signin-gate
+  run ./mise/tasks/fnox-render-secrets
+  run ./mise/tasks/install-helium
 }
 
 info "Running mise bootstrap..."
@@ -627,9 +631,9 @@ set_login_shell
 run_first_bootstrap_task
 
 if [ "$DRY_RUN" = 1 ]; then
-  info "[dry-run] would run: ./mise/scripts/doctor"
+  info "[dry-run] would run: ./mise/tasks/doctor"
   info "[dry-run] done."
-elif BOOTSTRAP_SKIP_TOOL_CHECK=1 ./mise/scripts/doctor; then
+elif BOOTSTRAP_SKIP_TOOL_CHECK=1 ./mise/tasks/doctor; then
   info "Done. Restart your terminal (login shell is now fish)."
 else
   warn "Finished, but some of the health checks failed."

@@ -4,13 +4,15 @@ This file covers how Pi is packaged, wrapped, configured, and extended in this r
 
 ## Parallel mise configuration
 
-`mise/config/pi-coding-agent/` is an independent non-nix twin of the Home Manager module for the staged mise migration (`_mise.toml`, inactive until renamed). It is a copy, not shared source: changes must be mirrored manually while both exist.
+`mise/config/pi-coding-agent/` is an independent non-nix twin of the Home Manager module for the staged mise migration, wired through `mise/config/mise/global_config.toml`.
 
-The mise tree keeps the same behavior with different mechanics: `agent/` holds the managed subset of `~/.pi/agent` applied through `[dotfiles]` symlink and `symlink-each` entries; `bin/` holds plain-bash ports of the `pi`, `pinvim`, `p`, `pview`, `pi-acp`, and `work-tickets` wrappers linked into `~/.local/bin`; `scripts/setup` is the `setup:pi` (alias `pi:setup`) mise task covering the imperative pieces (sha256-pinned sesame/plannotator installs into `~/.pi/agent/bin`, jq settings merge, local `npm ci && npm run build` of the vendored pi-acp, extension-deps cleanup, first-run `pi update --extensions`). The `pi` wrapper resolves the CLI through `mise x npm:@earendil-works/pi-coding-agent -- pi`, prefers fnox secrets with an opnix fallback, and applies the same live-view widget patch. Disabled entries live in `disabled/` instead of using the `_` name-prefix convention because `symlink-each` links every entry. Session indexers are declared as `[bootstrap.macos.launchd.agents]` in `_mise.toml`.
+It is a copy, not shared source: changes must be mirrored manually while both exist.
+
+The mise tree keeps the same behavior with different mechanics: `agent/` holds the managed subset of `~/.pi/agent` applied through `[dotfiles]` symlink and `symlink-each` entries; `bin/` holds plain-bash ports of the `pi`, `pinvim`, `p`, `pview`, `pi-acp`, and `work-tickets` wrappers linked into `~/.local/bin`; `scripts/setup` is the `setup:pi` (alias `pi:setup`) mise task covering the imperative pieces (sha256-pinned sesame/plannotator installs into `~/.pi/agent/bin`, jq settings merge, local `npm ci && npm run build` of the vendored pi-acp, extension-deps cleanup, first-run `pi update --extensions`). The `pi` wrapper resolves the CLI through `mise x npm:@earendil-works/pi-coding-agent -- pi`, prefers fnox secrets with an opnix fallback, and applies the same live-view widget patch. Disabled entries live in `disabled/` instead of using the `_` name-prefix convention because `symlink-each` links every entry. Session indexers are declared as `[bootstrap.macos.launchd.agents]` in `mise/config/mise/global_config.toml`.
 
 The mise dotfiles must not be applied while Home Manager still owns `~/.pi/agent/*`; mise re-points HM symlinks and the next `just home` points them back.
 
-The root `_mise.toml` `[tools]` table prefers canonical mise registry aliases for user-facing tools and keeps backend-qualified names only when the registry has no alias or a specific package source is required.
+`mise/config/mise/global_config.toml` prefers canonical mise registry aliases for user-facing tools and keeps backend-qualified names only when the registry has no alias or a specific package source is required.
 
 ## Package source and wrapper
 
@@ -24,7 +26,7 @@ The main module auto-discovers non-underscore-prefixed local `./packages/*.nix`,
 
 Pi runtime helper packages come from `settings.json` package entries and are refreshed by `pi update --extensions` after `just home`.
 
-Current entries include `npm:pi-mcp-adapter`, `npm:pi-web-access`, `npm:pi-subagents`, `npm:pi-caveman`, `npm:@plannotator/pi-extension`, `npm:pi-rtk-optimizer`, `npm:@aliou/pi-synthetic`, and `github:sethmt/pi-bash-live-view`. The old vendored NPM derivations under `packages/` are removed except for `pi-acp`.
+Current entries include `npm:pi-mcp-adapter`, `npm:pi-web-access`, `npm:pi-subagents`, `npm:pi-caveman`, `npm:@plannotator/pi-extension`, `npm:pi-rtk-optimizer`, `npm:@aliou/pi-synthetic`, `github:sethmt/pi-bash-live-view`, `npm:pi-mono-btw`, `npm:context-mode`, `npm:pi-elixir`, `npm:pi-lens`, `npm:@juicesharp/rpiv-ask-user-question`, `npm:@juicesharp/rpiv-todo`, `npm:@ff-labs/pi-fff`, and `npm:@hypabolic/pi-hypa`. The old vendored NPM derivations under `packages/` are removed except for `pi-acp`.
 
 The local `pi-bash-live-view` widget patch makes live PTY panes fit rendered lines by display cell width, preserving ANSI escape sequences while trimming wide glyphs, combining marks, zero-width joiners, and variation selectors before padding to the terminal width. This avoids the one-cell overflow crash seen when live output contains wide glyphs or ANSI-colored truncation edges.
 

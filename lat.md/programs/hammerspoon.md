@@ -4,11 +4,11 @@ Hammerspoon owns macOS automation: window management, launcher panels, menubar s
 
 ## Parallel mise configuration
 
-`mise/config/hammerspoon/` is an independent mise twin of Nix source `config/hammerspoon/`; `_mise.toml` links it to `~/.config/hammerspoon`.
+`mise/config/hammerspoon/` is an independent mise twin of Nix source `config/hammerspoon/`; `mise/config/mise/global_config.toml` links it to `~/.config/hammerspoon`.
 
 It is a copy, not shared source: mirror changes manually from `config/hammerspoon/` into the twin.
 
-One field is an intentional, permanent divergence and must never be blindly overwritten during a sync: `config.lua`'s `dock.kanata.daemonLabel` is `"org.kanata.daemon"` on the nix side (matches `modules/darwin/kanata.nix`) but `"dev.mise.org.kanata.daemon"` on the mise side, because mise prefixes bootstrap-managed launchd labels with `dev.mise.` (see `mise/scripts/kanata-setup`). `watchers/dock.lua`'s kanata-profile-switch code reads this field to target the right launchd service with `launchctl kickstart -k`/`launchctl print`, so a wrong label silently breaks kanata profile switching in whichever world got the wrong value.
+One field is an intentional, permanent divergence and must never be blindly overwritten during a sync: `config.lua`'s `dock.kanata.daemonLabel` is `"org.kanata.daemon"` on the nix side (matches `modules/darwin/kanata.nix`) but `"dev.mise.org.kanata.daemon"` on the mise side, because mise prefixes bootstrap-managed launchd labels with `dev.mise.` (see `mise/tasks/kanata-setup`). `watchers/dock.lua`'s kanata-profile-switch code reads this field to target the right launchd service with `launchctl kickstart -k`/`launchctl print`, so a wrong label silently breaks kanata profile switching in whichever world got the wrong value.
 
 ## Reload safety
 

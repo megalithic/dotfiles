@@ -4,9 +4,9 @@ Non-nix twin of `home/common/programs/pi-coding-agent/` (the Home Manager
 module). Both trees are **independent copies**: while the nix setup is still
 active, changes must be mirrored manually to whichever tree you actually run.
 
-Nothing here applies automatically. Application happens through the repo-root
-`_mise.toml` (`[dotfiles]`, `[bootstrap.macos.launchd.agents]`, `pi:setup`
-task) once that config is activated.
+Nothing here applies automatically. Application happens through
+`mise/config/mise/global_config.toml` (`[dotfiles]`,
+`[bootstrap.macos.launchd.agents]`, `pi:setup` task) once that config is active.
 
 ## Directory layout
 

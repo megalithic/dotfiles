@@ -49,4 +49,4 @@ Signing uses a Developer ID Application identity (auto-detected; override with `
 Both config systems run the same wrapper `bin/miccheck-launchd`, which exits with a helpful error when the binary is missing:
 
 - nix: `home/common/programs/miccheck/default.nix` LaunchAgent (`org.nix-community.home.miccheck`)
-- mise: `_mise.toml` agent `com.megadots.miccheck` plus task `setup:miccheck` (runs `bin/miccheck-build`)
+- mise: `mise/config/mise/global_config.toml` agent `com.megadots.miccheck` plus task `setup:miccheck` (runs `bin/miccheck-build`)

@@ -1,18 +1,69 @@
-# Mirrored into the VM at ~/.config/mise/config.toml during provisioning.
-# Keep roughly in sync with your host ~/.config/mise/config.toml.
+#:tombi schema.strict = false
 
-# Shared env vars — `mise activate` exports these identically in bash, zsh, and
-# fish. Replaces nix-darwin's hosts/common.nix environment.variables.
-# Caveat: GUI/launchd apps don't inherit them (same as the nix setup).
+# Useful mise-based dotfiles repos and patterns:
+#
+# REFS:
+# https://github.com/kryota-dev/dotfiles - uses tart and macos vms to test mise bootstrap runs
+# https://github.com/sedalu/dotfiles - auto-env based on machine name, not just arch/os; and container based install :mindblown:
+# https://github.com/AllySummers/dotfiles - hk, pkl, usage releated stuff, too
+# https://github.com/hashiiiii/dotfiles
+# https://github.com/disrupted/dotfiles/blob/master/.config/mise/config.toml - tools i typically use
+# https://github.com/JJGadgets/Biohazard/blob/main/.mise.toml - lots of aqua use
+# https://github.com/disrupted/dotfiles/blob/master/.config/mise/config.toml - elixir related
+# https://github.com/AxlAlm/neovim-setup/blob/master/mise/README.md - language mise configs (not tmpl, manual cp)
+# https://github.com/mfilej/dotfiles/blob/main/README.md - perhaps a more simplified and less bespoke script version of bootstraping with mise (also an elixirist)
+
+[settings]
+experimental = true
+
+auto_install = true
+env_shell_expand = true
+
+# quiet = true
+# verbose = false
+
+activate_aggressive = true
+cargo.binstall = true
+color_theme = "everforest"
+github.use_git_credentials = true
+lockfile = true
+minimum_release_age = "1d"
+npm.package_manager = "aube"
+pin = true
+pipx.uvx = true
+task.monorepo_depth = 2
+
+[settings.status]
+show_env = true
+show_tools = true
+
+[deps.aube]
+auto = true
+
 [env]
+HK_MISE = "1"
+HK_HIDE_WHEN_DONE = "true"
+MISE_EXPERIMENTAL = "1"
+DOTS = "{{env.HOME}}/.dotfiles"
+DOTFILES_DIR = "{{env.HOME}}/.dotfiles"
+CODE = "{{env.HOME}}/code"
+XDG_CONFIG_HOME = "{{env.HOME}}/.config"
+XDG_DATA_HOME = "{{env.HOME}}/.local/share"
+XDG_STATE_HOME = "{{env.HOME}}/.local/state"
+XDG_CACHE_HOME = "{{env.HOME}}/.cache"
+PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
+# GitHub token for the private helium tap (brew-cask + gh). Sourced from the
+# op://Crypt/env item (notesPlain), same secret fnox/opnix render to env-vars.sh.
+# fnox render (`mise run setup:fnox:render`) first, opnix fallback during transition.
+HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env-vars.sh ]; then . ~/.config/fnox/secrets/env-vars.sh; elif [ -f ~/.config/opnix/secrets/env-vars.sh ]; then . ~/.config/opnix/secrets/env-vars.sh; fi; printf %s $HOMEBREW_GITHUB_API_TOKEN") }}'
 EDITOR = "nvim -O"
 VISUAL = "nvim -O"
 GIT_EDITOR = "nvim -O"
 JJ_EDITOR = "nvim -O"
 MANPAGER = "nvim +Man!"
 
-# Cross-shell aliases. mise renders these for bash, fish, zsh, and xonsh
-# through `mise activate` / `mise hook-env`.
+# Cross-shell aliases. Duplicated in home/common/programs/mise/default.nix
+# because mise has no general config include for shell aliases.
 [shell_alias]
 ls = "eza --all --group-directories-first --color=always --hyperlink"
 l = "eza --all --long --color=always --color-scale=all --group-directories-first --sort=type --hyperlink --icons=always --octal-permissions"
@@ -34,10 +85,401 @@ pir = "pi -r"
 pisock = "pinvim"
 pis = "pinvim"
 
+# (no [bootstrap.brew.taps]: helium installs via setup:helium:install in the
+# bootstrap task — direct GitHub releases download, no tap; brew taps are
+# read-only under nix-homebrew anyway)
+
+[bootstrap.packages]
+# Mac App Store apps are intentionally excluded from clean bootstrap: MAS needs
+# an interactive Apple Account session and triggers GUI sign-in on fresh macOS.
+# Install Fantastical manually after signing into the App Store.
+"brew:bash" = "latest"
+"brew:fish" = "latest"
+"brew:git" = "latest"
+"brew:zsh" = "latest"
+"brew:openssl@3" = "latest" # required by Python (ssl module) and networking Rust crates
+"brew:pkgconf" = "latest"   # helps compilers locate openssl and other libs when building from source
+"brew:poppler" = "latest"   # pdftotext etc. — pi wrapper expects poppler-utils on PATH
+"brew:apfel" = "latest"     # Apple Intelligence CLI/server — shade-next compact_ai interpreter
+"brew:kanata" = "latest"    # keyboard remapper; setup task copies it to stable /usr/local/bin/kanata
+
+# brew casks using mise's `brew-cask:<formulae>` notation
+# 1password must live in /Applications (anti-tamper; op-ssh-sign for git/jj
+# signing ships in the app bundle). 1password-cli provides `op` with app
+# integration (biometric auth) — together these replace nix-darwin's
+# programs._1password{,-gui}.
+# 1password-cli and hammerspoon cannot go here: mise's brew-cask backend
+# supports app-bundle-only casks and both ship a `binary` artifact (op; hs
+# CLI) — installed via real brew in [bootstrap.hooks.post-packages] instead.
+"brew-cask:1password" = "latest"
+# helium cannot go here either: mise fetches cask metadata unauthenticated from
+# raw.githubusercontent (api/cask/<token>.json), which a private tap can't serve.
+# It installs via setup:helium:install (authenticated GitHub releases API
+# download + sha256 verify) in the bootstrap task — `brew tap` is not usable on
+# nix-managed machines (taps pinned read-only in /nix/store).
+# After install, verify 1Password pairing: `mise run helium:1password-trust`.
+# App-only casks supported by mise 2026.6.12. Keep apps with binary, pkg,
+# preflight, completion, custom-wrapper, or private-release semantics out of this
+# table; their ownership is documented in lat.md/architecture.md.
+"brew-cask:colorsnapper" = "latest"
+"brew-cask:contexts" = "latest"
+"brew-cask:discord" = "latest"
+"brew-cask:handy" = "latest"
+"brew-cask:meetingbar" = "latest"
+"brew-cask:proton-drive" = "latest"
+"brew-cask:protonvpn" = "latest"
+"brew-cask:raycast" = "latest"
+"brew-cask:slack" = "latest"
+"brew-cask:yubico-authenticator" = "latest"
+
+[dotfiles]
+# "~/.config" = "~/.dotfiles/mise/config"
+
+# -- pi coding agent: managed subset of ~/.pi/agent; runtime state (sessions/,
+#    npm/, auth.json, settings.json) stays unmanaged. settings.json is merged
+#    by `mise run setup:pi`, not linked. --
+"~/.pi/agent/AGENTS.md" = "~/.dotfiles/mise/config/pi-coding-agent/agent/AGENTS.md"
+"~/.pi/agent/APPEND_SYSTEM.md" = "~/.dotfiles/mise/config/pi-coding-agent/agent/APPEND_SYSTEM.md"
+"~/.pi/agent/keybindings.json" = "~/.dotfiles/mise/config/pi-coding-agent/agent/keybindings.json"
+"~/.pi/agent/models.json" = "~/.dotfiles/mise/config/pi-coding-agent/agent/models.json"
+"~/.pi/agent/mcp.json" = "~/.dotfiles/mise/config/pi-coding-agent/agent/mcp.json"
+"~/.pi/agent/extensions" = { source = "~/.dotfiles/mise/config/pi-coding-agent/agent/extensions", mode = "symlink-each" }
+"~/.pi/agent/skills" = { source = "~/.dotfiles/mise/config/pi-coding-agent/agent/skills", mode = "symlink-each" }
+"~/.pi/agent/prompts" = { source = "~/.dotfiles/mise/config/pi-coding-agent/agent/prompts", mode = "symlink-each" }
+"~/.pi/agent/agents" = { source = "~/.dotfiles/mise/config/pi-coding-agent/agent/agents", mode = "symlink-each" }
+"~/.local/bin/pi" = "~/.dotfiles/mise/config/pi-coding-agent/bin/pi"
+"~/.local/bin/pinvim" = "~/.dotfiles/mise/config/pi-coding-agent/bin/pinvim"
+"~/.local/bin/p" = "~/.dotfiles/mise/config/pi-coding-agent/bin/p"
+"~/.local/bin/pview" = "~/.dotfiles/mise/config/pi-coding-agent/bin/pview"
+"~/.local/bin/pi-acp" = "~/.dotfiles/mise/config/pi-coding-agent/bin/pi-acp"
+"~/.local/bin/work-tickets" = "~/.dotfiles/mise/config/pi-coding-agent/bin/work-tickets"
+# "~/Library/Developer/Xcode/UserData/FontAndColorThemes/tokyo-night.xccolortheme" = ".config/xcode/tokyo-night.xccolortheme"
+"~/.config/mise/config.toml" = "~/.dotfiles/mise/config/mise/global_config.toml"
+"~/.config/atuin/config.toml" = "~/.dotfiles/mise/config/atuin/config.toml"
+"~/.config/fnox/config.toml" = "~/.dotfiles/mise/config/fnox/config.toml"
+"~/.config/fish" = "~/.dotfiles/mise/config/fish"
+"~/.profile" = "~/.dotfiles/mise/config/bash/profile"
+"~/.bashrc" = "~/.dotfiles/mise/config/bash/bashrc"
+"~/.bash_profile" = "~/.dotfiles/mise/config/bash/bash_profile"
+"~/.zshrc" = "~/.dotfiles/mise/config/zsh/zshrc"
+"~/.zprofile" = "~/.dotfiles/mise/config/zsh/zprofile"
+"~/.config/fzf" = "~/.dotfiles/mise/config/fzf"
+"~/.config/jj/config.toml" = "~/.dotfiles/mise/config/jj/config.toml"
+# worktrunk: per-file — approvals.toml{,.lock} in the same dir are mutable runtime state
+"~/.config/worktrunk/config.toml" = "~/.dotfiles/mise/config/worktrunk/config.toml"
+"~/.config/ghostty" = "~/.dotfiles/mise/config/ghostty"
+"~/.config/hammerspoon" = "~/.dotfiles/mise/config/hammerspoon"
+"~/.config/kitty" = "~/.dotfiles/mise/config/kitty"
+"~/.config/nvim" = "~/.dotfiles/mise/config/nvim"
+"~/.config/tmux" = "~/.dotfiles/mise/config/tmux"
+
+# -- generated fragments → committed static files (replaces Home Manager Nix interpolation) --
+# "~/.local/share/hammerspoon/nix_path.lua" = "~/.dotfiles/mise/fragments/hammerspoon/nix_path.lua"
+# "~/.local/share/hammerspoon/fragments/shade-next.lua" = "~/.dotfiles/mise/fragments/hammerspoon/shade-next.lua"
+# "~/.local/share/tmux/nix.conf" = "~/.dotfiles/mise/fragments/tmux/nix.conf"
+# Mirror of the nix-generated shade-next config (home/common/programs/shade-next).
+# Keep mise/config/shade-next/config.toml in sync with the nix module output;
+# uncomment when mise (not Home Manager) owns ~/.config/shade-next.
+# "~/.config/shade-next/config.toml" = "~/.dotfiles/mise/config/shade-next/config.toml"
+"~/.config/sesame/config.jsonc" = { source = "~/.dotfiles/mise/fragments/sesame/config.jsonc", mode = "template" }
+# "~/.config/process-compose/shortcuts.yaml" = "~/.dotfiles/mise/fragments/process-compose/shortcuts.yaml"
+# "~/.config/process-compose/theme.yaml" = "~/.dotfiles/mise/fragments/process-compose/theme.yaml"
+
+# -- kanata: individual .kbd files (parent dir has mutable state; active kanata.kbd is mutable) --
+"~/.config/kanata/macbook.kbd" = "~/.dotfiles/config/kanata/macbook.kbd"
+"~/.config/kanata/macbook-disabled.kbd" = "~/.dotfiles/config/kanata/macbook-disabled.kbd"
+"~/.config/kanata/icons" = "~/.dotfiles/config/kanata/icons"
+
+# -- SSH: individual files (directory holds mutable keys/known_hosts) --
+"~/.ssh/config" = "~/.dotfiles/config/ssh/config"
+"~/.ssh/allowed_signers" = "~/.dotfiles/mise/config/ssh/allowed_signers"
+# 1Password SSH agent key selection (vault/item); GUI+CLI come from the
+# brew casks in [bootstrap.packages], replacing nix-darwin's _1password module.
+"~/.config/1Password/ssh/agent.toml" = "~/.dotfiles/mise/config/1password/agent.toml"
+
+# -- espanso: app support path, not XDG config (validated repo-final link chain) --
+"~/Library/Application Support/espanso" = "~/.dotfiles/config/espanso"
+
+# -- git: XDG-native; single merged config, ignore is git's default excludes path.
+#    No ~/.gitconfig or ~/.gitignore in the mise world (HM-era split collapsed).
+#    NOTE: while nix still owns ~/.gitconfig it wins per-key over the XDG file;
+#    values are identical today — mirror edits until the HM git module is dropped. --
+"~/.config/git/config" = "~/.dotfiles/mise/config/git/config"
+"~/.config/git/ignore" = "~/.dotfiles/mise/config/git/ignore"
+"~/.ignore" = "~/.dotfiles/mise/config/git/tool-ignore"
+
+# -- static tool configs (small, single-file configs previously Nix-store-backed) --
+"~/.config/bat/config" = "~/.dotfiles/mise/config/bat/config"
+# bat theme/syntax referenced by config (--theme=everforest, ghostty map-syntax);
+# run `bat cache --build` if these change
+"~/.config/bat/themes/everforest.tmTheme" = "~/.dotfiles/mise/config/bat/themes/everforest.tmTheme"
+"~/.config/bat/syntaxes/ghostty.sublime-syntax" = "~/.dotfiles/mise/config/bat/syntaxes/ghostty.sublime-syntax"
+"~/.config/direnv/direnv.toml" = "~/.dotfiles/mise/config/direnv/direnv.toml"
+"~/.config/starship.toml" = "~/.dotfiles/mise/config/starship/starship.toml"
+"~/.config/karabiner/karabiner.json" = "~/.dotfiles/mise/config/karabiner/karabiner.json"
+"~/.config/eza/theme.yml" = "~/.dotfiles/mise/config/eza/theme.yml"
+"~/.config/ripgrep/rc" = "~/.dotfiles/mise/config/ripgrep/rc"
+"~/.config/ripgrep/ignore" = "~/.dotfiles/mise/config/fd/ignore"
+
+# -- symlink-each targets (existing mutable dirs, needs per-entry reconciliation) --
+"~/.local/bin" = { source = "~/.dotfiles/bin", mode = "symlink-each" }
+"~/bin" = { source = "~/.dotfiles/bin", mode = "symlink-each" }
+
+
+# Curated sections: semantic keys mise maps to canonical defaults writes.
+[bootstrap.macos.dock]
+autohide = true
+orientation = "bottom"
+tilesize = 60
+magnification = false
+show_recents = false
+mru_spaces = false
+
+[bootstrap.macos.finder]
+show_all_files = true
+show_pathbar = true
+show_status_bar = true
+show_extensions_warning = false
+preferred_view_style = "list"
+
+[bootstrap.macos.keyboard]
+key_repeat = 6
+initial_key_repeat = 25
+press_and_hold = false
+fn_state = false
+
+[bootstrap.macos.trackpad]
+tap_to_click = true
+three_finger_drag = true
+
+[bootstrap.macos.defaults.NSGlobalDomain]
+AppleInterfaceStyle = "Dark"
+AppleICUForce24HourTime = true
+AppleKeyboardUIMode = 3
+ApplePressAndHoldEnabled = false
+AppleShowScrollBars = "WhenScrolling"
+NSAutomaticCapitalizationEnabled = false
+NSAutomaticDashSubstitutionEnabled = false
+NSAutomaticPeriodSubstitutionEnabled = false
+NSAutomaticQuoteSubstitutionEnabled = false
+NSAutomaticSpellingCorrectionEnabled = false
+NSAutomaticWindowAnimationsEnabled = false
+NSDocumentSaveNewDocumentsToCloud = false
+NSNavPanelExpandedStateForSaveMode = true
+NSNavPanelExpandedStateForSaveMode2 = true
+NSWindowResizeTime = 0.001
+PMPrintingExpandedStateForPrint = true
+PMPrintingExpandedStateForPrint2 = true
+"com.apple.keyboard.fnState" = false
+"com.apple.swipescrolldirection" = false
+"com.apple.trackpad.scaling" = 3.0
+
+[bootstrap.macos.defaults."com.apple.finder"]
+AppleShowAllExtensions = true
+AppleShowAllFiles = true
+FXDefaultSearchScope = "SCcf"
+FXEnableExtensionChangeWarning = false
+FXPreferredViewStyle = "Nlsv"
+NewWindowTarget = "Home"
+QuitMenuItem = true
+ShowExternalHardDrivesOnDesktop = true
+ShowHardDrivesOnDesktop = false
+ShowMountedServersOnDesktop = false
+ShowPathbar = true
+ShowRemovableMediaOnDesktop = true
+ShowStatusBar = true
+_FXShowPosixPathInTitle = true
+_FXSortFoldersFirst = true
+
+[bootstrap.macos.defaults."com.apple.dock"]
+autohide = true
+"autohide-time-modifier" = 0.7
+"expose-animation-duration" = 0.0
+launchanim = false
+magnification = false
+mineffect = "scale"
+"minimize-to-application" = true
+"mru-spaces" = false
+orientation = "bottom"
+"show-process-indicators" = true
+"show-recents" = false
+"static-only" = true
+tilesize = 60
+
+[bootstrap.macos.defaults."com.apple.screencapture"]
+location = "~/__screenshots"
+type = "png"
+"disable-shadow" = true
+
+[bootstrap.macos.defaults."com.apple.LaunchServices"]
+LSQuarantine = false
+
+[bootstrap.macos.defaults."com.apple.desktopservices"]
+DSDontWriteNetworkStores = true
+DSDontWriteUSBStores = true
+
+[bootstrap.macos.defaults."com.apple.print.PrintingPrefs"]
+"Quit When Finished" = true
+
+[bootstrap.macos.defaults."com.mitchellh.ghostty"]
+SUAutomaticallyUpdate = false
+SUEnableAutomaticChecks = false
+SUHasLaunchedBefore = true
+SUSendProfileInfo = false
+
+[bootstrap.macos.defaults."net.imput.helium"]
+SUAutomaticallyUpdate = false
+SUEnableAutomaticChecks = false
+
+[bootstrap.macos.defaults."org.hammerspoon.Hammerspoon"]
+MJConfigFile = "~/.config/hammerspoon/init.lua"
+
+[bootstrap.macos.defaults."com.apple.SoftwareUpdate"]
+AutomaticCheckEnabled = true
+AutomaticDownload = 1
+CriticalUpdateInstall = 1
+ScheduleFrequency = 1
+
+# espanso LaunchAgent plist is written by the post-packages hook
+# (mise/tasks/espanso-service), not by mise's launchd-agents step.
+# It is not loaded during clean bootstrap because first app launch triggers a
+# Gatekeeper GUI prompt; start it manually after approving Espanso.
+
+[bootstrap.macos.launchd.agents."com.megadots.llama-cpp"]
+program = "~/.dotfiles/mise/tasks/llama-server-launchd"
+run_at_load = true
+keep_alive = true
+stdout_path = "~/Library/Logs/llama-cpp/stdout.log"
+stderr_path = "~/Library/Logs/llama-cpp/stderr.log"
+
+[bootstrap.macos.launchd.agents."com.megadots.sesame-session-indexer"]
+program = "~/.dotfiles/mise/config/pi-coding-agent/scripts/sesame-session-indexer"
+args = ["watch", "--interval", "30"]
+run_at_load = true
+keep_alive = true
+stdout_path = "~/.cache/sesame-session-indexer.log"
+stderr_path = "~/.cache/sesame-session-indexer.log"
+
+[bootstrap.macos.launchd.agents."com.megadots.pi-session-indexer"]
+program = "~/.dotfiles/mise/config/pi-coding-agent/scripts/pi-session-indexer"
+run_at_load = true
+start_interval = 7200
+stdout_path = "~/.cache/pi-session-indexer.log"
+stderr_path = "~/.cache/pi-session-indexer.log"
+
+# media-presence: meeting/AV presence daemon (bin/media-presenced, single-file
+# swift script, no build step). Defaults match the nix agent's args
+# (--socket ~/.local/state/media-presence/sock --cdp-port 9223).
+[bootstrap.macos.launchd.agents."com.megadots.media-presenced"]
+program = "~/.dotfiles/bin/media-presenced"
+run_at_load = true
+keep_alive = true
+stdout_path = "~/Library/Logs/media-presence/stdout.log"
+stderr_path = "~/Library/Logs/media-presence/stderr.log"
+
+# miccheck: menubar push-to-talk/push-to-mute app (bin/miccheck.swift).
+# Wrapper checks the compiled binary exists (built by `mise run setup:miccheck`).
+[bootstrap.macos.launchd.agents."com.megadots.miccheck"]
+program = "~/.dotfiles/bin/miccheck-launchd"
+run_at_load = true
+keep_alive = true
+stdout_path = "~/Library/Logs/miccheck/stdout.log"
+stderr_path = "~/Library/Logs/miccheck/stderr.log"
+
+# kanata daemon is managed by brew services (post-tools hook, `brew services
+# start kanata`), not mise launchd. brew formula owns the service plist.
+
+[bootstrap.macos.launchd.agents."com.kanata-bar.ui"]
+program = "~/.dotfiles/mise/tasks/kanata-bar-launchd"
+run_at_load = true
+keep_alive = false
+stdout_path = "/tmp/kanata-bar.log"
+stderr_path = "/tmp/kanata-bar.err"
+
+[bootstrap.hooks.post-packages]
+# Casks mise's brew-cask backend can't handle, installed via real brew:
+# - 1password-cli, hammerspoon: ship `binary` artifacts (backend is app-bundle only)
+# (helium is NOT here: it needs the GitHub token, which needs op signin +
+#  fnox render — see [tasks.bootstrap] for the ordered chain)
+# hooks: no template expansion, cwd = config root, [env] not applied
+run = [
+  "command -v op >/dev/null 2>&1 || HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask 1password-cli",
+  "[ -d /Applications/Hammerspoon.app ] || HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask hammerspoon",
+  "[ -d /Applications/Espanso.app ] || HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask espanso",
+  "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/espanso-service",
+]
+
+[bootstrap.hooks.post-defaults]
+run = "killall Finder SystemUIServer Dock || true"
+
+[bootstrap.hooks.post-tools]
+run = [
+  "brew services start kanata 2>/dev/null || true",
+  "mise run setup:kanata",
+]
+
+[bootstrap.user]
+login_shell = "/opt/homebrew/bin/fish"
+
+# Runs at step 8 of `mise bootstrap`, after [tools] (fnox available) and after
+# post-packages installed 1Password + op. Secrets chain, in order:
+# op signin (interactive gate) -> fnox render -> helium install (needs the
+# rendered HOMEBREW_GITHUB_API_TOKEN for the private releases repo).
+[tasks.bootstrap]
+run = [
+  "command -v pre-commit >/dev/null 2>&1 && pre-commit install --install-hooks || true",
+  "mise install --locked fnox",
+  "mise run setup:op:signin",
+  "mise run setup:fnox:render",
+  "mise run setup:helium:install",
+]
+
+[tasks.doctor]
+description = "Post-bootstrap health checks (bootstrap.sh runs this last)"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/doctor"
+
+# -- setup:* namespace: bootstrap/provisioning tasks. Old names kept as
+#    aliases so existing docs/scripts/muscle memory keep working. --
+
+[tasks."setup:fnox:render"]
+alias = "fnox:render"
+description = "Render fnox file-shaped secrets (env-vars.sh) to ~/.config/fnox/secrets"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox-render-secrets"
+
+[tasks."setup:op:signin"]
+alias = "op:signin"
+description = "Interactive gate: wait until the 1Password CLI (op) is signed in with app integration"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/op-signin-gate"
+
+[tasks."setup:helium:install"]
+alias = "helium:install"
+description = "Install Helium.app from the private releases repo (GitHub API download + sha256 verify)"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/install-helium"
+
+[tasks."setup:pi"]
+alias = "pi:setup"
+description = "Idempotent pi agent setup: pinned tools, settings merge, pi-acp build, extension seed"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/config/pi-coding-agent/scripts/setup"
+
+[tasks."setup:kanata"]
+alias = "kanata:setup"
+description = "Install/activate Karabiner VirtualHID glue and restart mise-managed kanata services"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/kanata-setup"
+
+[tasks."setup:miccheck"]
+alias = "miccheck:setup"
+description = "Compile bin/miccheck.swift to ~/.local/bin/miccheckd (push-to-talk menubar app)"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/miccheck-build"
+
+# checker, not setup — stays outside the namespace
+[tasks."helium:1password-trust"]
+description = "Check 1Password trusts /Applications/Helium.app; prints GUI Add Browser steps if not (setting is tamper-protected, not writable)"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/helium-1password-trust"
+
 # Global tasks: copy project templates from mise/config/mise/tmpls/ into a
 # project's .config/ dir. Run from a project root: `mise run gen:shopify`,
 # `mise run gen:elixir -- /path/to/project`, or `mise run gen:wt-elixir` for
-# Worktrunk's .config/wt.toml. Script lives in repo bin/ (linked onto PATH).
+# Worktrunk's .config/wt.toml. Template helper lives in repo bin/ (linked onto PATH).
 # Duplicated in home/common/programs/mise/default.nix globalConfig (nix twin).
 [tasks."gen:elixir"]
 description = "Copy the elixir mise template + scripts to [target-dir]/.config/ (default: cwd)"
@@ -60,15 +502,203 @@ dir = "{{cwd}}"
 run = "mise-tmpl-gen wt.shopify"
 
 [tools]
+# aqua
+"aqua:artempyanykh/marksman" = "latest"
+"aqua:astral-sh/ruff" = "latest"
+"aqua:docker/compose" = "latest"
+"aqua:mvdan/sh" = "latest"
+"aqua:remoteoss/dexter" = "latest"         # mise registry has no bare dexter alias
+"aqua:tidewave-ai/tidewave_app" = "latest"
+# github
+"github:EmmyLuaLs/emmylua-analyzer-rust" = "latest"
+"github:Feel-ix-343/markdown-oxide" = "latest"
+"github:jesseduffield/lazygit" = "latest"
+"github:kevindutra/crit" = "latest"
+"github:noworrieseh/macdisp" = "latest"
+"github:radiosilence/fastmail-cli" = "latest"
+"github:rtk-ai/rtk" = "latest"
+"github:steipete/imsg" = "latest"
+"github:umputun/revdiff" = "latest"
+# cargo
+"cargo:emmylua_check" = "latest"
+"cargo:emmylua_ls" = "latest"
+"cargo:forgejo-cli" = "latest"
+"cargo:eza" = "latest"             # bare eza resolves to broken asdf backend (404 quickinstall URL)
+"cargo:jj-vine" = "latest"
+"cargo:tree-sitter-cli" = "latest"
+# go
+"go:golang.org/x/tools/gopls" = "latest"
+# npm
+"npm:bash-language-server" = "latest"
+"npm:chrome-devtools-mcp" = "latest"
+"npm:hunkdiff" = "latest"
+"npm:httpyac" = "latest"
+"npm:prettier" = "latest"
+"npm:pyright" = "latest"
+"npm:trash-cli" = "latest"
+"npm:typescript" = "latest"
+"npm:typescript-language-server" = "latest"
+"npm:vscode-langservers-extracted" = "latest"
+# ubi
+# -
+# bare / registry aliases
+age = "latest"
+aqua = "latest"
 atuin = "latest"
+aube = "latest"
+awscli = { version = "latest", symlink_bins = true }
 bat = "latest"
+biome = "latest"
+bun = "latest"
+cargo-binstall = "latest"
+claude = "latest"
+codex = "latest"
 delta = "latest"
+difftastic = "latest"
 duckdb = "latest"
-fzf = "latest"
-github-cli = "latest"
-lazydocker = "latest"
-node = "latest"
-pnpm = "10"
-tmux = "latest"
-sqlite = "latest"
+elixir = "1.20.0-otp-29"
+elixir-ls = "latest"
+erlang = "28.3.1"
+expert = "latest"
 fd = "latest"
+flyctl = "latest"
+fzf = "latest"
+gh = "latest"
+github-cli = "latest"
+git-lfs = "latest"
+gitleaks = "latest"
+glow = "latest"
+go = "latest"
+gofumpt = "latest"
+golangci-lint-langserver = "latest"
+gum = "latest"
+hk = "latest"
+hunk = "latest"
+imagemagick = "latest"
+jiq = "latest"
+jj = "latest"
+jjui = "latest"
+lazydocker = "latest"
+jq = "latest"
+"llama.cpp" = "latest"
+lua-language-server = "3"
+neovim = "nightly"
+node = "latest"
+ollama = "latest"
+pnpm = "10"
+opencode = "latest"
+pi = "latest"
+pipx = "latest"
+pitchfork = "latest"
+prettier = "latest"
+python = "latest"
+ripgrep = "latest"
+ruby = "latest"
+rust = "latest"
+shellcheck = "latest"
+shfmt = "latest"
+sqlite = "latest"
+tailpipe = "latest"
+tmux = "latest"
+tokei = "latest"
+usage = "latest"
+uv = "latest"
+worktrunk = "latest"
+zoxide = "latest"
+
+# hk linters (see hk.pkl); typos/yamlfmt ship no shell completions, so they stay bare.
+# gitleaks, rumdl, and ryl get completion postinstall hooks below.
+typos = "latest"
+yamlfmt = "latest"
+
+# Sub-table tools (with postinstall hooks or extra options)
+[tools."aqua:tamasfe/taplo"]
+version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions completions {}"
+
+# ryl — the YAML linter (replaces yamlfmt's -lint role; see hk.pkl).
+[tools."aqua:owenlamont/ryl"]
+version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions --generate-completions {}"
+
+[tools."github:ryanoasis/nerd-fonts"]
+version = "latest"
+asset_pattern = "JetBrainsMono.tar.xz"
+postinstall = "$DOTFILES_DIR/mise/hooks/install-fonts.sh"
+
+# [tools."go:github.com/go-delve/delve/cmd/dlv"]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions completion {}"
+
+[tools."http:ghostty"]
+version = "1.2.3"
+postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
+platforms.macos-arm64.url = "https://release.files.ghostty.org/{{version}}/Ghostty.dmg"
+
+[tools."http:kanata-bar"]
+version = "1.1.1"
+checksum = "sha256:76c7cf89f4fea4ec4e136fd47d0cf2ba0c2ea926e898a3fa0f90dea3ec15c9ec"
+os = ["macos"]
+strip_components = 0
+platforms.macos-arm64.url = "https://github.com/not-in-stock/kanata-bar/releases/download/v{{version}}/kanata-bar.app.zip"
+platforms.macos-x64.url = "https://github.com/not-in-stock/kanata-bar/releases/download/v{{version}}/kanata-bar.app.zip"
+
+# [tools."http:cmux"]
+# version = "0.64.4"
+# postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
+# platforms.macos-arm64.url = "https://github.com/manaflow-ai/cmux/releases/download/v{{version}}/cmux-macos.dmg"
+
+# [tools.bat]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions --completion {}"
+
+# [tools.fd]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions --gen-completions {}"
+
+[tools.fnox]
+version = "latest"
+# postinstall = """
+# $DOTFILES_DIR/mise/hooks/completions completion {}
+# rm -f ${XDG_CACHE_HOME:-$HOME/.cache}/zsh/init/fnox.zsh ${XDG_CACHE_HOME:-$HOME/.cache}/bash/init/fnox.bash
+# """
+
+# [tools.fzf]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions --{}"
+
+# [tools.gitleaks]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions completion {}"
+
+# [tools.golangci-lint]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions completion {}"
+#
+# [tools.helix]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/helix-postinstall {}"
+
+# [tools.ollama]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/ollama-postinstall"
+
+# [tools.ripgrep]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions --tool rg --generate complete-{}"
+
+# [tools.rumdl]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions completions {}"
+
+# [tools.starship]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions completions {}"
+
+# [tools.xh]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions --generate complete-{}"
+
+# [tools.yq]
+# version = "latest"
+# postinstall = "$DOTFILES_DIR/mise/hooks/completions completion {}"

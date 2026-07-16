@@ -82,7 +82,7 @@ Directory-specific `AGENTS.md` files are removed; use this root file for repo gu
 
 ## Parallel mise migration
 
-Nix/Home Manager remains active while mise migration proceeds. Treat `_mise.toml` `[dotfiles]` as mise ownership map; inspect its exact source and target before editing either world.
+Nix/Home Manager remains active while mise migration proceeds. Treat `mise/config/mise/global_config.toml` `[dotfiles]` as mise ownership map; inspect its exact source and target before editing either world.
 
 - Literal twins (`config/` and `mise/config/` copies such as Hammerspoon, Neovim, tmux, Kitty, Ghostty, and Pi) require a recursive diff and an intentional sync on every related change. Preserve documented per-world divergences.
 - Generated Nix config and static mise config (fish, git, SSH/1Password, and similar) require behavior review, not byte comparison. Keep resulting user behavior equivalent until one owner retires.

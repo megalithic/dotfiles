@@ -70,7 +70,7 @@ PTT mode enforcement moved out of this watcher: [[miccheck#Presence integration|
 
 There is no SwiftPM or nix package; `bin/media-presenced` is the source and executable.
 
-`home/common/programs/media-presence/` points launchd directly at `~/.dotfiles/bin/media-presenced` (RunAtLoad + KeepAlive); the mise config mirrors it as `_mise.toml` agent `com.megadots.media-presenced` (no args — the script's defaults match the nix agent's args). The script uses an absolute `#!/usr/bin/swift` shebang so launchd can run it with its minimal environment. If the nix store SDK shadows Xcode's in an interactive shell, verify with `env -i HOME="$HOME" PATH=/usr/bin:/bin:/usr/sbin:/sbin bin/media-presenced --snapshot`.
+`home/common/programs/media-presence/` points launchd directly at `~/.dotfiles/bin/media-presenced` (RunAtLoad + KeepAlive); the mise config mirrors it as `mise/config/mise/global_config.toml` agent `com.megadots.media-presenced` (no args — the script's defaults match the nix agent's args). The script uses an absolute `#!/usr/bin/swift` shebang so launchd can run it with its minimal environment. If the nix store SDK shadows Xcode's in an interactive shell, verify with `env -i HOME="$HOME" PATH=/usr/bin:/bin:/usr/sbin:/sbin bin/media-presenced --snapshot`.
 
 The daemon needs no TCC grants: it reads device state (CoreAudio/CoreMediaIO IsRunningSomewhere), localhost CDP, and `NSRunningApplication.activate` — no `CGWindowList`, AX, or screencapture — so the agent runs with zero permission prompts. Because this is a script, its process identity is the Swift interpreter; keep it free of TCC-sensitive APIs unless it becomes a compiled binary again.
 

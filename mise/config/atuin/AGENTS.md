@@ -4,7 +4,7 @@ Atuin is a shell history replacement/search layer. It does **not** replace
 zoxide: zoxide jumps to directories (`z foo`), while Atuin searches commands
 (`Ctrl-R`) with cwd/host/session/exit-code metadata.
 
-Applied through `_mise.toml`:
+Applied through `mise/config/mise/global_config.toml`:
 
 - `[tools]`: `atuin = "latest"`
 - `[dotfiles]`: `~/.config/atuin/config.toml` → `mise/config/atuin/config.toml`

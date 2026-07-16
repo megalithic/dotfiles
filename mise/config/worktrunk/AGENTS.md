@@ -4,9 +4,9 @@ Non-nix twin of `home/common/programs/worktrunk/` (the Home Manager module).
 Both trees are **independent copies**: while the nix setup is still active,
 changes must be mirrored manually to whichever tree you actually run.
 
-Applied through the repo-root `_mise.toml`:
+Applied through `mise/config/mise/global_config.toml`:
 
-- `[dotfiles]`: `"~/.config/worktrunk/config.toml" = "mise/config/worktrunk/config.toml"`
+- `[dotfiles]`: `"~/.config/worktrunk/config.toml" = "~/.dotfiles/mise/config/worktrunk/config.toml"`
   (per-file — `approvals.toml{,.lock}` in the same dir are mutable runtime
   state and stay unmanaged)
 - `[tools]`: `worktrunk = "latest"` (registry backends:

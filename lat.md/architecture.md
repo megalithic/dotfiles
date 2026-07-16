@@ -49,7 +49,7 @@ Apps that need live-editable config use out-of-store symlinks into `config/` rat
 
 ## Parallel mise migration
 
-Nix/Home Manager and mise coexist during migration. `_mise.toml` `[dotfiles]` is mise's ownership map; inspect each mapping before changing a config.
+Nix/Home Manager and mise coexist during migration. `mise/config/mise/global_config.toml` `[dotfiles]` is mise's ownership map; inspect each mapping before changing a config.
 
 Literal copy twins require recursive diff and deliberate sync on each related change: `config/` and `mise/config/` currently include Hammerspoon, Neovim, tmux, Kitty, Ghostty, and Pi. The active Nix-side tree remains source of truth unless a program section records another owner or divergence. [[programs/hammerspoon#Hammerspoon#Parallel mise configuration|Hammerspoon]] documents its required kanata launchd-label difference.
 

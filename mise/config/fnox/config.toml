@@ -1,6 +1,6 @@
 #:schema https://fnox.jdx.dev/schema.json
 # Global fnox config — linked to ~/.config/fnox/config.toml by the mise
-# dotfiles table (_mise.toml). Non-nix twin of home/common/programs/opnix.
+# dotfiles table (mise/config/mise/global_config.toml). Non-nix twin of home/common/programs/opnix.
 #
 # Auth: op CLI with 1Password desktop-app integration (biometric); no
 # service-account token needed on this machine. For headless/CI use, bootstrap

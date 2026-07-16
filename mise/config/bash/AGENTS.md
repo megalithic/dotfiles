@@ -2,7 +2,7 @@
 
 Non-nix twin of `home/common/programs/bash/default.nix` plus the portable shell
 hooks that Home Manager used to inject from program modules. These files are
-linked by `_mise.toml`:
+linked by `mise/config/mise/global_config.toml`:
 
 - `~/.profile` → `mise/config/bash/profile`
 - `~/.bashrc` → `mise/config/bash/bashrc`
@@ -19,7 +19,7 @@ linked by `_mise.toml`:
 
 ## Keep in sync
 
-- Cross-shell aliases live in `mise/config/mise/global_config.toml` and `_mise.toml`
-  `[shell_alias]`, not here.
+- Cross-shell aliases live in Home Manager's mise `globalConfig` and
+  `mise/config/mise/global_config.toml` `[shell_alias]`, not here.
 - Fish owns a custom `wt` function; bash uses upstream Worktrunk integration.
 - Avoid nix store paths; resolve tools from PATH after `mise activate bash`.
