@@ -155,7 +155,6 @@ up = "cd $HOME/.dotfiles && mise run up"
 "brew-cask:meetingbar" = "latest"
 "brew-cask:proton-drive" = "latest"
 "brew-cask:protonvpn" = "latest"
-"brew-cask:raycast" = "latest"
 "brew-cask:slack" = "latest"
 "brew-cask:yubico-authenticator" = "latest"
 
@@ -426,6 +425,9 @@ stderr_path = "/tmp/kanata-bar.err"
 [bootstrap.hooks.post-packages]
 # Casks mise's brew-cask backend can't handle, installed via real brew:
 # - 1password-cli, hammerspoon: ship `binary` artifacts (backend is app-bundle only)
+# - raycast: extension-less DMG URL (releases.raycast.com/.../download?build=arm);
+#   backend infers archive type from URL filename and only magic-sniffs zip,
+#   so the DMG is treated as a raw binary and 'Raycast.app' is never found
 # (helium is NOT here: it needs the GitHub token, which needs op signin +
 #  fnox render — see [tasks.bootstrap] for the ordered chain)
 # hooks: no template expansion, cwd = config root, [env] not applied
@@ -433,6 +435,7 @@ run = [
   "command -v op >/dev/null 2>&1 || HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask 1password-cli",
   "[ -d /Applications/Hammerspoon.app ] || HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask hammerspoon",
   "[ -d /Applications/Espanso.app ] || HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask espanso",
+  "[ -d /Applications/Raycast.app ] || HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask raycast",
   "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/espanso-service",
 ]
 
