@@ -365,7 +365,7 @@ M.launchers = {
   -- { "com.spotify.client", "p" },
   { "com.apple.Music", "p" },
   { "com.freron.MailMate", "e" },
-  { "io.canarymail.mac", "e" },
+  { "io.canarymail.mac", "e", { cycleWindows = true } },
   {
     "com.flexibits.fantastical2.mac",
     "y",
