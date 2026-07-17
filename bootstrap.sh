@@ -4,7 +4,7 @@ set -eu
 
 # Human-readable version stamp — bump whenever this script changes so remote
 # runs (curl | sh) show which revision they got.
-BOOTSTRAP_UPDATED="2026-07-16 11:30 EDT"
+BOOTSTRAP_UPDATED="2026-07-17 16:15 EDT"
 
 DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-https://github.com/megalithic/dotfiles.git}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
@@ -15,6 +15,13 @@ FORCE=0                # --force: pass force flags to all sub-commands
 DRY_RUN=0              # --dry-run: pass dry-run flags to all sub-commands; skip other mutations
 MIN_MISE_VERSION="2026.7.7"
 BOOTSTRAP_INSTALL_ROSETTA="${BOOTSTRAP_INSTALL_ROSETTA:-0}"
+
+# Homebrew >= 4.6 asks "Do you want to proceed with the {install,upgrade}?"
+# by default (ask mode; --yes / HOMEBREW_NO_ASK to skip). Bootstrap funnels
+# all decisions through its own prompts, so brew must never block on [y/n].
+# Exported so it also reaches brew calls inside mise bootstrap hooks.
+HOMEBREW_NO_ASK=1
+export HOMEBREW_NO_ASK
 
 COLOR_RESET="$(printf '\033[0m')"
 COLOR_BLUE="$(printf '\033[34m')"
