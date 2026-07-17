@@ -19,21 +19,32 @@ experimental = true
 dotfiles.root = "~/.dotfiles"
 auto_install = true
 env_shell_expand = true
-
 # quiet = true
 # verbose = false
-
 activate_aggressive = true
 cargo.binstall = true
 color_theme = "everforest"
 github.use_git_credentials = true
-lockfile = true
-minimum_release_age = "1d"
 npm.package_manager = "aube"
+python.compile = false
+# using a lockfile helps avoid the need for a GitHub token on first time install
+# activate with `mise lock`
+lockfile = true
 system_packages.managers = ["brew", "brew-cask", "mas"]
 pin = true
 pipx.uvx = true
 task.monorepo_depth = 2
+# supply chain security: only allow installing new versions of tools that have
+# been released for at least 24 hours, to avoid 0-day supply chain attacks.
+# Exclude some tools that are frequently updated and have a low risk profile.
+minimum_release_age = "24h"
+# minimum_release_age_excludes = [
+#   "npm:opencode-ai",
+#   "npm:@openai/codex",
+#   "claude-code",
+#   "erlang",
+#   "elixir",
+# ]
 
 [settings.status]
 show_env = true
@@ -103,9 +114,9 @@ pisock = "pinvim"
 pis = "pinvim"
 up = "cd $HOME/.dotfiles && mise run up"
 
-# (no [bootstrap.brew.taps]: helium installs via setup:helium:install in the
-# bootstrap task — direct GitHub releases download, no tap; brew taps are
-# read-only under nix-homebrew anyway)
+# (no [bootstrap.brew.taps]: helium installs via the github: tool entry in
+# [tools] — direct GitHub releases download, no tap; brew taps are read-only
+# under nix-homebrew anyway)
 
 [bootstrap.packages]
 
@@ -453,15 +464,14 @@ login_shell = "/opt/homebrew/bin/fish"
 
 # Runs at step 8 of `mise bootstrap`, after [tools] (fnox available) and after
 # post-packages installed 1Password + op. Secrets chain, in order:
-# op signin (interactive gate) -> fnox render -> helium install (needs the
-# rendered HOMEBREW_GITHUB_API_TOKEN for the private releases repo).
+# op signin (interactive gate) -> fnox render. (helium moved to [tools] as a
+# github: backend tool when its releases repo went public — no token needed.)
 [tasks.bootstrap]
 run = [
   "command -v pre-commit >/dev/null 2>&1 && pre-commit install --install-hooks || true",
   "mise install --locked fnox",
   "mise run setup:op:signin",
   "mise run setup:fnox:render",
-  "mise run setup:helium:install",
 ]
 
 [tasks.doctor]
@@ -483,7 +493,7 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/op-signin-gate"
 
 [tasks."setup:helium:install"]
 alias = "helium:install"
-description = "Install Helium.app from the private releases repo (GitHub API download + sha256 verify)"
+description = "Manual fallback: install Helium.app via GitHub API download + sha256 verify (normal path is the github: tool entry)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/install-helium"
 
 [tasks."setup:pi"]
@@ -535,7 +545,7 @@ run = "mise-tmpl-gen wt.shopify"
 # aqua
 "aqua:openai/codex" = "latest"
 "aqua:docker/compose" = "latest"
-# "aqua:remoteoss/dexter" = "latest"         # mise registry has no bare dexter alias
+"aqua:remoteoss/dexter" = "latest"         # super fast elixir ls
 "aqua:elixir-lang/expert" = "latest"
 "aqua:artempyanykh/marksman" = "latest"
 "aqua:astral-sh/ruff" = "latest"
@@ -638,6 +648,7 @@ rust = { version = "latest", components = "rust-src,rust-analyzer,rustfmt" }
 shellcheck = "latest"
 shfmt = "latest"
 sqlite = "latest"
+starship = "latest"
 stylua = "latest"
 tailpipe = "latest"
 tmux = "latest"
@@ -674,19 +685,14 @@ postinstall = "$DOTFILES_DIR/mise/hooks/install-fonts.sh"
 # version = "latest"
 # postinstall = "$DOTFILES_DIR/mise/hooks/completions completion {}"
 
-# helium can NOT be an http: tool — the releases repo is private, and mise's
-# http backend sends no auth for github.com download URLs (host_auth_headers
-# only injects tokens for api.github.com), so this URL always 404s. Helium
-# installs via `mise run setup:helium:install` (GitHub API + token) instead.
-# [tools."http:helium"]
-# version = "0.14.2.1"
-# postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
-# platforms.macos-arm64.url = "https://github.com/megalithic/helium-macos-releases/releases/download/{{version}}/helium_{{version}}_arm64-macos.dmg"
-
-[tools."http:ghostty"]
-version = "1.2.3"
+# Helium.app from the (now public) releases repo. mise doesn't extract .dmg
+# assets (unlike zip), so the postinstall mounts the DMG and copies the
+# bundle to /Applications; it reruns on version changes (= upgrades).
+[tools."github:megalithic/helium-macos-releases"]
+version = "latest"
+os = ["macos"]
+asset_pattern = "helium_*_arm64-macos.dmg"
 postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
-platforms.macos-arm64.url = "https://release.files.ghostty.org/{{version}}/Ghostty.dmg"
 
 [tools."http:kanata-bar"]
 version = "1.1.10"

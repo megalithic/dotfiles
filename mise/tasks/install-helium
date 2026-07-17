@@ -1,12 +1,14 @@
 #!/bin/sh
-# Install Helium.app from the private megalithic/helium-macos-releases repo.
+# Manual fallback: install Helium.app from megalithic/helium-macos-releases.
+# The normal path is the [tools."github:megalithic/helium-macos-releases"]
+# entry in global_config.toml (mise downloads the DMG, install-app.sh mounts
+# and copies it). This script does the same via the GitHub API directly.
 #
-# Downloads the latest release DMG straight from the GitHub releases API —
-# no brew tap needed (nix-homebrew pins /opt/homebrew/Library/Taps read-only,
-# so `brew tap` fails on nix-managed machines). Verifies the published sha256.
+# The repo is public now, so a token is optional (raises API rate limits).
+# Verifies the published sha256.
 #
 # Env:
-#   HOMEBREW_GITHUB_API_TOKEN / GITHUB_TOKEN  auth for the private repo (required)
+#   HOMEBREW_GITHUB_API_TOKEN / GITHUB_TOKEN  optional auth
 #   HELIUM_INSTALL_DIR                        target dir (default /Applications)
 set -eu
 
@@ -19,6 +21,7 @@ APP="$INSTALL_DIR/Helium.app"
   exit 0
 }
 
+# Token is optional (public repo); use one when available for rate limits.
 # mise bootstrap hooks don't receive [env], so source the rendered secrets
 # (fnox first, opnix fallback) when no token is in the environment already.
 TOKEN="${HOMEBREW_GITHUB_API_TOKEN:-${GITHUB_TOKEN:-}}"
@@ -29,11 +32,6 @@ if [ -z "$TOKEN" ]; then
   done
   TOKEN="${HOMEBREW_GITHUB_API_TOKEN:-${GITHUB_TOKEN:-}}"
 fi
-[ -n "$TOKEN" ] || {
-  echo "install-helium: HOMEBREW_GITHUB_API_TOKEN or GITHUB_TOKEN required for private releases repo" >&2
-  echo "install-helium: render secrets first (mise run setup:fnox:render) or export GITHUB_TOKEN" >&2
-  exit 1
-}
 
 ARCH=$(uname -m) # arm64 / x86_64
 WORKDIR=$(mktemp -d "${TMPDIR:-/tmp}/install-helium.XXXXXX")
@@ -45,10 +43,11 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 api() {
-  curl -fsSL \
-    -H "Authorization: Bearer $TOKEN" \
-    -H "Accept: ${1}" \
-    "$2"
+  if [ -n "$TOKEN" ]; then
+    curl -fsSL -H "Authorization: Bearer $TOKEN" -H "Accept: ${1}" "$2"
+  else
+    curl -fsSL -H "Accept: ${1}" "$2"
+  fi
 }
 
 echo "install-helium: resolving latest release..."
