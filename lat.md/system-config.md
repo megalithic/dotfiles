@@ -28,7 +28,7 @@ Homebrew is the last-resort path for casks and apps that resist Nix packaging. `
 
 `modules/brew.nix` declares Homebrew casks and `homebrew.masApps` for Mac App Store apps. `brew-nix` provides a cask overlay used for `mas` packaging.
 
-The staged mise bootstrap mirrors Homebrew through `mise/config/mise/global_config.toml` `[bootstrap.packages]`: Homebrew entries use `brew:`/`brew-cask:` prefixes. Mac App Store apps are excluded from clean bootstrap because MAS requires an interactive Apple Account session; install Fantastical manually after signing into the App Store.
+The staged mise bootstrap mirrors Homebrew through `mise/config/mise/global_config.toml` `[bootstrap.packages]`: Homebrew entries use `brew:`/`brew-cask:` prefixes and Mac App Store apps use `mas:` (the `mas` manager is enabled in `system_packages.managers`). `mas:` installs still require an interactive Apple Account session in App Store.app; on a machine that is not signed in, `mas` entries fail and need a sign-in plus bootstrap retry.
 
 ## Darwin modules
 

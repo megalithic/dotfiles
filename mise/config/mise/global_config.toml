@@ -30,7 +30,7 @@ github.use_git_credentials = true
 lockfile = true
 minimum_release_age = "1d"
 npm.package_manager = "aube"
-system_packages.managers = ["brew", "brew-cask"]
+system_packages.managers = ["brew", "brew-cask", "mas"]
 pin = true
 pipx.uvx = true
 task.monorepo_depth = 2
@@ -432,10 +432,10 @@ stderr_path = "/tmp/kanata-bar.err"
 #  fnox render — see [tasks.bootstrap] for the ordered chain)
 # hooks: no template expansion, cwd = config root, [env] not applied
 run = [
-  "command -v op >/dev/null 2>&1 || HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask 1password-cli",
-  "[ -d /Applications/Hammerspoon.app ] || HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask hammerspoon",
-  "[ -d /Applications/Espanso.app ] || HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask espanso",
-  "[ -d /Applications/Raycast.app ] || HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask raycast",
+  "command -v op >/dev/null 2>&1 || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask 1password-cli",
+  "[ -d /Applications/Hammerspoon.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask hammerspoon",
+  "[ -d /Applications/Espanso.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask espanso",
+  "[ -d /Applications/Raycast.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask raycast",
   "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/espanso-service",
 ]
 
@@ -674,10 +674,14 @@ postinstall = "$DOTFILES_DIR/mise/hooks/install-fonts.sh"
 # version = "latest"
 # postinstall = "$DOTFILES_DIR/mise/hooks/completions completion {}"
 
-[tools."http:helium"]
-version = "0.14.2.1"
-postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
-platforms.macos-arm64.url = "https://github.com/megalithic/helium-macos-releases/releases/download/{{version}}/helium_{{version}}_arm64-macos.dmg"
+# helium can NOT be an http: tool — the releases repo is private, and mise's
+# http backend sends no auth for github.com download URLs (host_auth_headers
+# only injects tokens for api.github.com), so this URL always 404s. Helium
+# installs via `mise run setup:helium:install` (GitHub API + token) instead.
+# [tools."http:helium"]
+# version = "0.14.2.1"
+# postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
+# platforms.macos-arm64.url = "https://github.com/megalithic/helium-macos-releases/releases/download/{{version}}/helium_{{version}}_arm64-macos.dmg"
 
 [tools."http:ghostty"]
 version = "1.2.3"
