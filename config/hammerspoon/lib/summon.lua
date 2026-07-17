@@ -23,14 +23,18 @@ end
 local function findAppWithAlias(appHint)
   -- First try direct lookup
   local app = hs.application.find(appHint)
-  if app then return app end
+  if app then
+    return app
+  end
 
   -- If it's a bundle ID, try the alias
   if isBundleID(appHint) then
     local aliasedID = getAliasedBundleID(appHint)
     if aliasedID then
       app = hs.application.find(aliasedID)
-      if app then return app end
+      if app then
+        return app
+      end
     end
   end
 
@@ -46,7 +50,9 @@ end
 local function launchOrFocusApp(appHint, opts)
   local launchCommand = opts and opts.launchCommand
   if launchCommand then
-    if type(launchCommand) == "string" then launchCommand = { launchCommand } end
+    if type(launchCommand) == "string" then
+      launchCommand = { launchCommand }
+    end
     local args = { table.unpack(launchCommand, 2) }
     hs.task.new(launchCommand[1], nil, args):start()
     return
@@ -77,7 +83,9 @@ local INDICATOR_DURATION = 0.25
 
 -- Show a brief indicator border around the focused window
 local function showIndicator(win)
-  if not win then return end
+  if not win then
+    return
+  end
 
   -- Clean up existing indicator
   if indicatorTimer then
@@ -129,14 +137,24 @@ end
 
 local function usableWindows(app)
   local result = {}
-  if not app then return result end
-  for _, win in ipairs(app:allWindows() or {}) do
-    local ok, standard = pcall(function() return win:isStandard() end)
-    local visible = true
-    pcall(function() visible = win:isVisible() end)
-    if ok and standard and visible then table.insert(result, win) end
+  if not app then
+    return result
   end
-  table.sort(result, function(a, b) return a:id() < b:id() end)
+  for _, win in ipairs(app:allWindows() or {}) do
+    local ok, standard = pcall(function()
+      return win:isStandard()
+    end)
+    local visible = true
+    pcall(function()
+      visible = win:isVisible()
+    end)
+    if ok and standard and visible then
+      table.insert(result, win)
+    end
+  end
+  table.sort(result, function(a, b)
+    return a:id() < b:id()
+  end)
   return result
 end
 
@@ -146,7 +164,9 @@ function obj.cycleWindows(appIdentifier, opts)
     launchOrFocusApp(appIdentifier, opts)
     hs.timer.doAfter(0.3, function()
       local launchedApp = findAppWithAlias(appIdentifier)
-      if launchedApp then showIndicator(launchedApp:focusedWindow() or launchedApp:mainWindow()) end
+      if launchedApp then
+        showIndicator(launchedApp:focusedWindow() or launchedApp:mainWindow())
+      end
     end)
     return
   end
@@ -157,23 +177,36 @@ function obj.cycleWindows(appIdentifier, opts)
     return
   end
 
+  -- Cycle only when the app is already frontmost AND has more than one
+  -- window. Otherwise this is a plain app switch: activate and raise,
+  -- never cycle (cycling with a single window forced double keypresses).
   local focused = hs.window.focusedWindow()
-  local target = wins[1]
-  if focused and focused:application() and focused:application():bundleID() == app:bundleID() then
+  local appIsFrontmost = focused and focused:application() and focused:application():bundleID() == app:bundleID()
+
+  local target
+  if appIsFrontmost and #wins > 1 then
+    target = wins[1]
     for idx, win in ipairs(wins) do
       if win:id() == focused:id() then
         target = wins[(idx % #wins) + 1]
         break
       end
     end
+  elseif appIsFrontmost then
+    -- Single window and (apparently) already focused: don't cycle, but
+    -- still activate/raise below — the focused-window read can be stale
+    -- right after a switch, and re-activating is idempotent.
+    target = focused
   else
-    target = app:focusedWindow() or app:mainWindow() or target
+    target = app:focusedWindow() or app:mainWindow() or wins[1]
   end
 
   app:activate(true)
   pcall(app.unhide, app)
   pcall(target.focus, target)
-  hs.timer.doAfter(0.05, function() showIndicator(target) end)
+  hs.timer.doAfter(0.05, function()
+    showIndicator(target)
+  end)
 end
 
 -- Quickly move to and from a specific app
@@ -234,7 +267,13 @@ function obj.toggle(appHint, shouldHide, opts)
 
     if mainWin ~= nil then
       if mainWin == hs.window.focusedWindow() then
-        if shouldHide then mainWin:application():hide() end
+        if shouldHide then
+          mainWin:application():hide()
+        else
+          -- Re-activate anyway: focused-window reads can be stale right
+          -- after a switch; a no-op here would eat the keypress.
+          mainWin:application():activate(true)
+        end
       else
         if mainWin:application() ~= nil then
           -- always activate the entire application (brings all windows to the front);
@@ -242,13 +281,17 @@ function obj.toggle(appHint, shouldHide, opts)
           pcall(mainWin:application():unhide())
           pcall(mainWin:focus())
           -- Show indicator
-          hs.timer.doAfter(0.05, function() showIndicator(mainWin) end)
+          hs.timer.doAfter(0.05, function()
+            showIndicator(mainWin)
+          end)
         end
       end
     else
       -- assumes there is no "mainWindow" for the application in question, probably iTerm2
       if app:focusedWindow() == hs.window.focusedWindow() then
-        if shouldHide then app:hide() end
+        if shouldHide then
+          app:hide()
+        end
       else
         app:unhide()
         launchOrFocusApp(appHint)

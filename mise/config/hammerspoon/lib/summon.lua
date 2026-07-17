@@ -157,17 +157,30 @@ function obj.cycleWindows(appIdentifier, opts)
     return
   end
 
+  -- Cycle only when the app is already frontmost AND has more than one
+  -- window. Otherwise this is a plain app switch: activate and raise,
+  -- never cycle (cycling with a single window forced double keypresses).
   local focused = hs.window.focusedWindow()
-  local target = wins[1]
-  if focused and focused:application() and focused:application():bundleID() == app:bundleID() then
+  local appIsFrontmost = focused
+    and focused:application()
+    and focused:application():bundleID() == app:bundleID()
+
+  local target
+  if appIsFrontmost and #wins > 1 then
+    target = wins[1]
     for idx, win in ipairs(wins) do
       if win:id() == focused:id() then
         target = wins[(idx % #wins) + 1]
         break
       end
     end
+  elseif appIsFrontmost then
+    -- Single window and (apparently) already focused: don't cycle, but
+    -- still activate/raise below — the focused-window read can be stale
+    -- right after a switch, and re-activating is idempotent.
+    target = focused
   else
-    target = app:focusedWindow() or app:mainWindow() or target
+    target = app:focusedWindow() or app:mainWindow() or wins[1]
   end
 
   app:activate(true)
@@ -234,7 +247,13 @@ function obj.toggle(appHint, shouldHide, opts)
 
     if mainWin ~= nil then
       if mainWin == hs.window.focusedWindow() then
-        if shouldHide then mainWin:application():hide() end
+        if shouldHide then
+          mainWin:application():hide()
+        else
+          -- Re-activate anyway: focused-window reads can be stale right
+          -- after a switch; a no-op here would eat the keypress.
+          mainWin:application():activate(true)
+        end
       else
         if mainWin:application() ~= nil then
           -- always activate the entire application (brings all windows to the front);
