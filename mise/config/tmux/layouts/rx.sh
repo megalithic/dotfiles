@@ -27,7 +27,7 @@ tmux -2 send-keys -t "$SESSION":2.1 "ls" "C-m"
 # tmux send-keys -t "$SESSION":3.1 "p" "C-m"
 
 tmux send-keys -t "$SESSION":4.1 "ls" "C-m"
-tmux send-keys -t "$SESSION":4.1 "devenv processes stop; devenv up -d && m s" "C-m"
+tmux send-keys -t "$SESSION":4.1 "mise run start:db && mise run start:server" "C-m"
 # tmux select-layout -t "$SESSION":4 tiled
 # tmux select-layout -t "$SESSION":4 even-horizontal
 # tmux select-pane -t "$SESSION":4.2

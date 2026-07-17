@@ -12,10 +12,11 @@
 # https://github.com/disrupted/dotfiles/blob/master/.config/mise/config.toml - elixir related
 # https://github.com/AxlAlm/neovim-setup/blob/master/mise/README.md - language mise configs (not tmpl, manual cp)
 # https://github.com/mfilej/dotfiles/blob/main/README.md - perhaps a more simplified and less bespoke script version of bootstraping with mise (also an elixirist)
+# https://github.com/leandrocp/dotfiles/tree/master/config/mise - well known elixirist that uses mise/pi/nvim/zed/etc
 
 [settings]
 experimental = true
-
+dotfiles.root = "~/.dotfiles"
 auto_install = true
 env_shell_expand = true
 
@@ -29,6 +30,7 @@ github.use_git_credentials = true
 lockfile = true
 minimum_release_age = "1d"
 npm.package_manager = "aube"
+system_packages.managers = ["brew", "brew-cask"]
 pin = true
 pipx.uvx = true
 task.monorepo_depth = 2
@@ -52,9 +54,6 @@ XDG_DATA_HOME = "{{env.HOME}}/.local/share"
 XDG_STATE_HOME = "{{env.HOME}}/.local/state"
 XDG_CACHE_HOME = "{{env.HOME}}/.cache"
 PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
-# GitHub token for the private helium tap (brew-cask + gh). Sourced from the
-# op://Crypt/env item (notesPlain), same secret fnox/opnix render to env-vars.sh.
-# fnox render (`mise run setup:fnox:render`) first, opnix fallback during transition.
 HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env-vars.sh ]; then . ~/.config/fnox/secrets/env-vars.sh; elif [ -f ~/.config/opnix/secrets/env-vars.sh ]; then . ~/.config/opnix/secrets/env-vars.sh; fi; printf %s $HOMEBREW_GITHUB_API_TOKEN") }}'
 EDITOR = "nvim -O"
 VISUAL = "nvim -O"
@@ -62,9 +61,26 @@ GIT_EDITOR = "nvim -O"
 JJ_EDITOR = "nvim -O"
 MANPAGER = "nvim +Man!"
 
-# Cross-shell aliases. Duplicated in home/common/programs/mise/default.nix
-# because mise has no general config include for shell aliases.
+[env._]
+path = [
+  "/opt/homebrew/opt/coreutils/libexec/gnubin",
+  "/opt/homebrew/opt/gnupg/bin",
+  "/opt/homebrew/opt/gnu-sed/libexec/gnubin",
+  "/opt/homebrew/opt/grep/libexec/gnubin",
+  "/opt/homebrew/opt/openjdk/bin",
+  "$HOME/.bin",
+  "$HOME/.local/bin",
+  "./bin",
+  "$HOME/.fly/bin",
+  "$HOME/.cargo/bin",
+  "/Applications/Postgres.app/Contents/Versions/latest/bin",
+  "$HOME/.opencode/bin",
+]
+
 [shell_alias]
+"...." = "cd ../../.."
+"..." = "cd ../.."
+".." = "cd .."
 ls = "eza --all --group-directories-first --color=always --hyperlink"
 l = "eza --all --long --color=always --color-scale=all --group-directories-first --sort=type --hyperlink --icons=always --octal-permissions"
 ll = "eza -lahF --group-directories-first --color=always --icons=always --hyperlink"
@@ -76,6 +92,7 @@ q = "exit"
 ":q" = "exit"
 ":Q" = "exit"
 ":e" = "nvim"
+dns_reset = "dscacheutil -flushcache && killall -HUP mDNSResponder"
 mega = "ftm mega"
 copy = "pbcopy"
 paste = "pbpaste"
@@ -84,47 +101,57 @@ pic = "pi -c"
 pir = "pi -r"
 pisock = "pinvim"
 pis = "pinvim"
+up = "cd $HOME/.dotfiles && mise run up"
 
 # (no [bootstrap.brew.taps]: helium installs via setup:helium:install in the
 # bootstrap task — direct GitHub releases download, no tap; brew taps are
 # read-only under nix-homebrew anyway)
 
 [bootstrap.packages]
-# Mac App Store apps are intentionally excluded from clean bootstrap: MAS needs
-# an interactive Apple Account session and triggers GUI sign-in on fresh macOS.
-# Install Fantastical manually after signing into the App Store.
-"brew:bash" = "latest"
-"brew:fish" = "latest"
-"brew:git" = "latest"
-"brew:zsh" = "latest"
-"brew:openssl@3" = "latest" # required by Python (ssl module) and networking Rust crates
-"brew:pkgconf" = "latest"   # helps compilers locate openssl and other libs when building from source
-"brew:poppler" = "latest"   # pdftotext etc. — pi wrapper expects poppler-utils on PATH
-"brew:apfel" = "latest"     # Apple Intelligence CLI/server — shade-next compact_ai interpreter
-"brew:kanata" = "latest"    # keyboard remapper; setup task copies it to stable /usr/local/bin/kanata
 
-# brew casks using mise's `brew-cask:<formulae>` notation
-# 1password must live in /Applications (anti-tamper; op-ssh-sign for git/jj
-# signing ships in the app bundle). 1password-cli provides `op` with app
-# integration (biometric auth) — together these replace nix-darwin's
-# programs._1password{,-gui}.
-# 1password-cli and hammerspoon cannot go here: mise's brew-cask backend
-# supports app-bundle-only casks and both ship a `binary` artifact (op; hs
-# CLI) — installed via real brew in [bootstrap.hooks.post-packages] instead.
+"brew:apfel" = "latest"        # Apple Intelligence CLI/server — shade-next compact_ai interpreter
+"brew:autoconf" = "latest"
+"brew:automake" = "latest"
+"brew:bash" = "latest"
+"brew:btop" = "latest"
+"brew:cmark-gfm" = "latest"
+"brew:codespell" = "latest"
+"brew:coreutils" = "latest"
+"brew:eza" = "latest"
+"brew:fd" = "latest"
+"brew:fish" = "latest"
+"brew:gcc" = "latest"
+"brew:git" = "latest"
+"brew:gnu-sed" = "latest"
+"brew:gnupg" = "latest"
+"brew:grep" = "latest"
+"brew:herdr" = "latest"
+"brew:kanata" = "latest"       # keyboard remapper; setup task copies it to stable /usr/local/bin/kanata
+"brew:mas" = "latest"
+"brew:mole" = "latest"
+"brew:mosh" = "latest"
+"brew:openssl@3" = "latest"    # required by Python (ssl module) and networking Rust crates
+"brew:pgcli" = "latest"
+"brew:pinentry-mac" = "latest"
+"brew:pkgconf" = "latest"      # helps compilers locate openssl and other libs when building from source
+"brew:poppler" = "latest"      # pdftotext etc. — pi wrapper expects poppler-utils on PATH
+"brew:renameutils" = "latest"
+"brew:ripgrep" = "latest"
+"brew:tree" = "latest"
+"brew:wxwidgets" = "latest"
+"brew:zsh" = "latest"
+
+"mas:497799835" = "latest"  # Xcode
+"mas:975937182" = "latest"  # Fantastical
+"mas:1236045954" = "latest" # Canary
+
 "brew-cask:1password" = "latest"
-# helium cannot go here either: mise fetches cask metadata unauthenticated from
-# raw.githubusercontent (api/cask/<token>.json), which a private tap can't serve.
-# It installs via setup:helium:install (authenticated GitHub releases API
-# download + sha256 verify) in the bootstrap task — `brew tap` is not usable on
-# nix-managed machines (taps pinned read-only in /nix/store).
-# After install, verify 1Password pairing: `mise run helium:1password-trust`.
-# App-only casks supported by mise 2026.6.12. Keep apps with binary, pkg,
-# preflight, completion, custom-wrapper, or private-release semantics out of this
-# table; their ownership is documented in lat.md/architecture.md.
 "brew-cask:colorsnapper" = "latest"
 "brew-cask:contexts" = "latest"
 "brew-cask:discord" = "latest"
+"brew-cask:ghostty@tip" = "latest"
 "brew-cask:handy" = "latest"
+"brew-cask:hammerspoon" = "latest"
 "brew-cask:meetingbar" = "latest"
 "brew-cask:proton-drive" = "latest"
 "brew-cask:protonvpn" = "latest"
@@ -503,47 +530,58 @@ run = "mise-tmpl-gen wt.shopify"
 
 [tools]
 # aqua
+"aqua:openai/codex" = "latest"
+"aqua:docker/compose" = "latest"
+# "aqua:remoteoss/dexter" = "latest"         # mise registry has no bare dexter alias
+"aqua:elixir-lang/expert" = "latest"
 "aqua:artempyanykh/marksman" = "latest"
 "aqua:astral-sh/ruff" = "latest"
-"aqua:docker/compose" = "latest"
 "aqua:mvdan/sh" = "latest"
-"aqua:remoteoss/dexter" = "latest"         # mise registry has no bare dexter alias
 "aqua:tidewave-ai/tidewave_app" = "latest"
+
 # github
 "github:EmmyLuaLs/emmylua-analyzer-rust" = "latest"
 "github:Feel-ix-343/markdown-oxide" = "latest"
-"github:jesseduffield/lazygit" = "latest"
-"github:kevindutra/crit" = "latest"
-"github:noworrieseh/macdisp" = "latest"
-"github:radiosilence/fastmail-cli" = "latest"
+# "github:jesseduffield/lazygit" = "latest"
+# "github:kevindutra/crit" = "latest"
+# "github:noworrieseh/macdisp" = "latest"
+# "github:radiosilence/fastmail-cli" = "latest"
 "github:rtk-ai/rtk" = "latest"
-"github:steipete/imsg" = "latest"
-"github:umputun/revdiff" = "latest"
+# "github:steipete/imsg" = "latest"
+# "github:umputun/revdiff" = "latest"
+
 # cargo
 "cargo:emmylua_check" = "latest"
 "cargo:emmylua_ls" = "latest"
-"cargo:forgejo-cli" = "latest"
-"cargo:eza" = "latest"             # bare eza resolves to broken asdf backend (404 quickinstall URL)
-"cargo:jj-vine" = "latest"
-"cargo:tree-sitter-cli" = "latest"
+# "cargo:forgejo-cli" = "latest"
+"cargo:eza" = "latest" # bare eza resolves to broken asdf backend (404 quickinstall URL)
+# "cargo:jj-vine" = "latest"
+# "cargo:tree-sitter-cli" = "latest"
+
 # go
 "go:golang.org/x/tools/gopls" = "latest"
+
 # npm
 "npm:bash-language-server" = "latest"
 "npm:chrome-devtools-mcp" = "latest"
+"npm:@github/copilot-language-server" = "latest"
 "npm:hunkdiff" = "latest"
-"npm:httpyac" = "latest"
+# "npm:httpyac" = "latest"
+"npm:@earendil-works/pi-coding-agent" = "latest"
 "npm:prettier" = "latest"
 "npm:pyright" = "latest"
 "npm:trash-cli" = "latest"
 "npm:typescript" = "latest"
 "npm:typescript-language-server" = "latest"
 "npm:vscode-langservers-extracted" = "latest"
+
 # ubi
 # -
+
 # bare / registry aliases
 age = "latest"
 aqua = "latest"
+ast-grep = "latest"
 atuin = "latest"
 aube = "latest"
 awscli = { version = "latest", symlink_bins = true }
@@ -552,14 +590,13 @@ biome = "latest"
 bun = "latest"
 cargo-binstall = "latest"
 claude = "latest"
-codex = "latest"
+cmake = "latest"
 delta = "latest"
 difftastic = "latest"
 duckdb = "latest"
-elixir = "1.20.0-otp-29"
-elixir-ls = "latest"
-erlang = "28.3.1"
-expert = "latest"
+dust = "latest"
+elixir = "main-otp-29"
+erlang = "latest"
 fd = "latest"
 flyctl = "latest"
 fzf = "latest"
@@ -569,8 +606,6 @@ git-lfs = "latest"
 gitleaks = "latest"
 glow = "latest"
 go = "latest"
-gofumpt = "latest"
-golangci-lint-langserver = "latest"
 gum = "latest"
 hk = "latest"
 hunk = "latest"
@@ -578,29 +613,33 @@ imagemagick = "latest"
 jiq = "latest"
 jj = "latest"
 jjui = "latest"
-lazydocker = "latest"
 jq = "latest"
+just = "latest"
+lazydocker = "latest"
 "llama.cpp" = "latest"
-lua-language-server = "3"
-neovim = "nightly"
+lua = "latest"
+lua-language-server = "latest"
+neovim = "nightly"                                                           # nightly, stable, tags
 node = "latest"
 ollama = "latest"
-pnpm = "10"
+pnpm = "latest"
 opencode = "latest"
-pi = "latest"
 pipx = "latest"
 pitchfork = "latest"
 prettier = "latest"
-python = "latest"
+"npm:@fsouza/prettierd" = "latest"
+python = "3"
 ripgrep = "latest"
 ruby = "latest"
-rust = "latest"
+rust = { version = "latest", components = "rust-src,rust-analyzer,rustfmt" }
 shellcheck = "latest"
 shfmt = "latest"
 sqlite = "latest"
+stylua = "latest"
 tailpipe = "latest"
 tmux = "latest"
 tokei = "latest"
+tree-sitter = "latest"
 usage = "latest"
 uv = "latest"
 worktrunk = "latest"
@@ -608,17 +647,18 @@ zoxide = "latest"
 
 # hk linters (see hk.pkl); typos/yamlfmt ship no shell completions, so they stay bare.
 # gitleaks, rumdl, and ryl get completion postinstall hooks below.
+taplo = "latest"
 typos = "latest"
 yamlfmt = "latest"
 
 # Sub-table tools (with postinstall hooks or extra options)
-[tools."aqua:tamasfe/taplo"]
-version = "latest"
+# [tools."aqua:tamasfe/taplo"]
+# version = "latest"
 # postinstall = "$DOTFILES_DIR/mise/hooks/completions completions {}"
 
 # ryl — the YAML linter (replaces yamlfmt's -lint role; see hk.pkl).
-[tools."aqua:owenlamont/ryl"]
-version = "latest"
+# [tools."aqua:owenlamont/ryl"]
+# version = "latest"
 # postinstall = "$DOTFILES_DIR/mise/hooks/completions --generate-completions {}"
 
 [tools."github:ryanoasis/nerd-fonts"]
@@ -626,9 +666,15 @@ version = "latest"
 asset_pattern = "JetBrainsMono.tar.xz"
 postinstall = "$DOTFILES_DIR/mise/hooks/install-fonts.sh"
 
+
 # [tools."go:github.com/go-delve/delve/cmd/dlv"]
 # version = "latest"
 # postinstall = "$DOTFILES_DIR/mise/hooks/completions completion {}"
+
+[tools."http:helium"]
+version = "0.14.2.1"
+postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
+platforms.macos-arm64.url = "https://github.com/megalithic/helium-macos-releases/releases/download/{{version}}/helium_{{version}}_arm64-macos.dmg"
 
 [tools."http:ghostty"]
 version = "1.2.3"
@@ -636,7 +682,7 @@ postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
 platforms.macos-arm64.url = "https://release.files.ghostty.org/{{version}}/Ghostty.dmg"
 
 [tools."http:kanata-bar"]
-version = "1.1.1"
+version = "1.1.10"
 checksum = "sha256:76c7cf89f4fea4ec4e136fd47d0cf2ba0c2ea926e898a3fa0f90dea3ec15c9ec"
 os = ["macos"]
 strip_components = 0

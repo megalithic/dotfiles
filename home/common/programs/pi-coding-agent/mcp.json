@@ -1,43 +1,50 @@
 {
-  "mcpServers": {
-    "chrome-devtools": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "chrome-devtools-mcp@latest",
-        "--executable-path=/Applications/Helium.app/Contents/MacOS/Helium",
-        "--isolated"
-      ]
-    },
-    "chrome-devtools-profile": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "chrome-devtools-mcp@latest",
-        "--executable-path=/Applications/Helium.app/Contents/MacOS/Helium",
-        "--userDataDir=~/.cache/agent-web/profile-copy"
-      ],
-      "disabled": true
-    },
-    "chrome-devtools-attach": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "chrome-devtools-mcp@latest",
-        "--browserUrl=http://localhost:9223"
-      ],
-      "disabled": true
-    },
-    "context7": {
-      "url": "https://mcp.context7.com/mcp",
-      "headers": {
-        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
-      }
-    },
-    "githits": {
-      "url": "https://mcp.githits.com/",
-      "auth": "bearer",
-      "bearerTokenEnv": "GITHITS_API_KEY"
-    }
-  }
+	"mcpServers": {
+		"chrome-devtools": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"chrome-devtools-mcp@latest",
+				"--executable-path=/Applications/Helium.app/Contents/MacOS/Helium",
+				"--isolated"
+			]
+		},
+		"chrome-devtools-profile": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"chrome-devtools-mcp@latest",
+				"--executable-path=/Applications/Helium.app/Contents/MacOS/Helium",
+				"--userDataDir=~/.cache/agent-web/profile-copy"
+			],
+			"disabled": true
+		},
+		"chrome-devtools-attach": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"chrome-devtools-mcp@latest",
+				"--browserUrl=http://localhost:9223"
+			],
+			"disabled": true
+		},
+		"context7": {
+			"url": "https://mcp.context7.com/mcp",
+			"headers": {
+				"CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
+			}
+		},
+		"githits": {
+			"url": "https://mcp.githits.com/",
+			"auth": "bearer",
+			"bearerTokenEnv": "GITHITS_API_KEY"
+		},
+		"mise": {
+			"command": "mise",
+			"args": ["mcp"],
+			"env": {
+				"MISE_EXPERIMENTAL": "1"
+			}
+		}
+	}
 }

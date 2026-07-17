@@ -1,7 +1,0 @@
-#:tombi schema.strict = false
-
-# Retired staging config. Canonical mise bootstrap/global config now lives at:
-#   mise/config/mise/global_config.toml
-#
-# bootstrap.sh exports MISE_GLOBAL_CONFIG_FILE to that file and trusts it before
-# running `mise dotfiles apply` or `mise bootstrap`. Keep new mise config edits there.
