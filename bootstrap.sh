@@ -331,8 +331,10 @@ header
 # fish shell, app rescue) never re-prompt. A background loop refreshes the
 # timestamp every 60s; without this, the default 5-minute timeout expires
 # during long-running steps (CLT install, mise bootstrap packages/tools).
+# sudo -nv checks non-interactively first; only prompt if the timestamp is
+# expired (e.g. re-running bootstrap minutes after a prior sudo).
 if [ "$DRY_RUN" != 1 ]; then
-  sudo -v || die "sudo authentication failed; bootstrap needs administrator privileges"
+  sudo -nv 2>/dev/null || sudo -v || die "sudo authentication failed; bootstrap needs administrator privileges"
   (
     while true; do
       sudo -nv 2>/dev/null || break
@@ -383,8 +385,9 @@ if ! command -v brew >/dev/null 2>&1; then
   else
     info "Installing Homebrew (needs an administrator password)..."
     id -Gn | grep -qw admin || die "Homebrew install requires an administrator account; $(id -un) is not in the admin group"
-    # NONINTERACTIVE installs refuse to prompt for sudo — cache credentials first
-    sudo -v || die "sudo authentication failed; Homebrew install needs it"
+    # NONINTERACTIVE installs refuse to prompt for sudo — credentials were
+    # cached at startup; verify they're still valid (prompt only if expired).
+    sudo -nv 2>/dev/null || sudo -v || die "sudo authentication failed; Homebrew install needs it"
     NONINTERACTIVE=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 /bin/bash -c \
       "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   fi
