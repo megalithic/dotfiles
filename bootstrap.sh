@@ -686,14 +686,25 @@ run_first_bootstrap_task() {
     run pre-commit install --install-hooks
   fi
 
-  run env MISE_AUTO_INSTALL=0 mise install --locked fnox
+  # fnox was installed by mise bootstrap (tools step). Verify it's available;
+  # install without --locked as a fallback (lockfile may not have an entry).
   fnox_dir=$(mise where fnox 2>/dev/null || true)
+  if [ -z "$fnox_dir" ]; then
+    info "fnox not found; installing..."
+    run mise install fnox
+    fnox_dir=$(mise where fnox 2>/dev/null || true)
+  fi
   [ -n "$fnox_dir" ] || die "fnox installed but mise cannot locate it"
   PATH="$fnox_dir/bin:$PATH"
   export PATH
   run ./mise/tasks/op-signin-gate
   run ./mise/tasks/fnox-render-secrets
   run ./mise/tasks/install-helium
+
+  # Refresh the lockfile so future runs can use --locked (mise bootstrap installs
+  # tools live but doesn't regenerate the lockfile for new tools).
+  info "Updating mise lockfile..."
+  mise lock || warn "mise lock failed (non-fatal; tools still installed)"
 }
 
 info "Running mise bootstrap..."

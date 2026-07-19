@@ -470,7 +470,7 @@ login_shell = "/opt/homebrew/bin/fish"
 [tasks.bootstrap]
 run = [
   "command -v pre-commit >/dev/null 2>&1 && pre-commit install --install-hooks || true",
-  "mise install --locked fnox",
+  "mise install fnox",
   "mise run setup:op:signin",
   "mise run setup:fnox:render",
 ]
