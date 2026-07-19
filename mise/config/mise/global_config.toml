@@ -122,6 +122,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 
 "brew:apfel" = "latest"        # Apple Intelligence CLI/server — shade-next compact_ai interpreter
 "brew:autoconf" = "latest"
+"brew:bat" = "latest"
 "brew:automake" = "latest"
 "brew:bash" = "latest"
 "brew:btop" = "latest"

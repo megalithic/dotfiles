@@ -306,7 +306,10 @@ MISE_DOTFILES_FLAGS=""
 # mise 2026.7.5 launchd apply fails on clean Tahoe VMs with launchctl bootout
 # EIO before services converge. Its user step also calls chsh, which prompts
 # for a password on macOS. Skip both and handle the login shell below with sudo.
-MISE_BOOTSTRAP_FLAGS="--skip launchd --skip user --skip tools --skip task --locked"
+# Tools are NOT skipped — mise bootstrap installs the full toolchain.
+# Tasks are skipped because run_first_bootstrap_task handles the ordered chain
+# (fnox → op signin → fnox render → helium).
+MISE_BOOTSTRAP_FLAGS="--skip launchd --skip user --skip task --locked"
 if [ "$FORCE" = 1 ]; then
   MISE_DOTFILES_FLAGS="$MISE_DOTFILES_FLAGS --force"
   MISE_BOOTSTRAP_FLAGS="$MISE_BOOTSTRAP_FLAGS --force-dotfiles"
@@ -320,6 +323,23 @@ header
 
 [ "$(uname -s)" = "Darwin" ] || die "macOS only."
 [ "$(id -u)" -ne 0 ] || die "Do not run as root."
+
+# Cache sudo credentials early so later sudo ops (hostname, xcode license,
+# fish shell, app rescue) never re-prompt. A background loop refreshes the
+# timestamp every 60s; without this, the default 5-minute timeout expires
+# during long-running steps (CLT install, mise bootstrap packages/tools).
+if [ "$DRY_RUN" != 1 ]; then
+  sudo -v || die "sudo authentication failed; bootstrap needs administrator privileges"
+  (
+    while true; do
+      sudo -nv 2>/dev/null || break
+      sleep 60
+    done
+  ) &
+  SUDO_KEEPALIVE_PID=$!
+  # Clean up the background loop on exit (normal or error).
+  trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true' EXIT
+fi
 
 install_clt_noninteractive() {
   clt_marker="/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress"
@@ -636,6 +656,12 @@ run_mise_bootstrap
 ok "done bootstrapping."
 set_login_shell
 run_first_bootstrap_task
+
+# Kill the sudo keepalive loop before doctor (it runs in the background and
+# the EXIT trap handles normal exits, but explicit cleanup is cleaner).
+if [ "$DRY_RUN" != 1 ] && [ -n "${SUDO_KEEPALIVE_PID:-}" ]; then
+  kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
+fi
 
 if [ "$DRY_RUN" = 1 ]; then
   info "[dry-run] would run: ./mise/tasks/doctor"
