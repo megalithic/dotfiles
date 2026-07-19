@@ -697,7 +697,7 @@ postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
 
 [tools."http:kanata-bar"]
 version = "1.1.10"
-checksum = "sha256:76c7cf89f4fea4ec4e136fd47d0cf2ba0c2ea926e898a3fa0f90dea3ec15c9ec"
+checksum = "sha256:ba07e3caeb41d1b2a667e2c246cc3b0ef632a2d812ceeac0ce2eed9441d63b35"
 os = ["macos"]
 strip_components = 0
 platforms.macos-arm64.url = "https://github.com/not-in-stock/kanata-bar/releases/download/v{{version}}/kanata-bar.app.zip"

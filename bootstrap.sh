@@ -309,7 +309,10 @@ MISE_DOTFILES_FLAGS=""
 # Tools are NOT skipped — mise bootstrap installs the full toolchain.
 # Tasks are skipped because run_first_bootstrap_task handles the ordered chain
 # (fnox → op signin → fnox render → helium).
-MISE_BOOTSTRAP_FLAGS="--skip launchd --skip user --skip task --locked"
+# --locked is NOT used: the lockfile may be incomplete on a new machine (tools
+# added since last `mise lock`). Without --locked, mise resolves versions live
+# and updates the lockfile as it installs.
+MISE_BOOTSTRAP_FLAGS="--skip launchd --skip user --skip task"
 if [ "$FORCE" = 1 ]; then
   MISE_DOTFILES_FLAGS="$MISE_DOTFILES_FLAGS --force"
   MISE_BOOTSTRAP_FLAGS="$MISE_BOOTSTRAP_FLAGS --force-dotfiles"
