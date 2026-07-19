@@ -539,6 +539,35 @@ sudo_rescue_app_rename() {
   return 1
 }
 
+# mise's brew backend refuses to link a formula when target files already
+# exist but weren't created by mise or brew (left over from a previous
+# nix-homebrew or manual brew install). Remove the conflicting files and
+# let mise reinstall; brew will recreate them on the retry.
+rescue_stale_brew_files() {
+  can_link=$(sed -n 's/.*cannot link \([^:]*\):.*/\1/p' "$MISE_BOOTSTRAP_LOG" | head -1)
+  [ -n "$can_link" ] || return 1
+  # Collect the file paths listed after the error line — they appear indented
+  # on subsequent lines until the next ERROR or blank line.
+  files=$(sed -n '/cannot link '"$can_link"'/,/^mise ERROR/{ /^  \//p; }' "$MISE_BOOTSTRAP_LOG" | sed 's/^  //')
+  [ -n "$files" ] || return 1
+  warn "mise brew cannot link $can_link — removing stale files from previous install..."
+  removed=0
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    if [ -e "$f" ]; then
+      info "Removing stale file: $f"
+      run sudo rm -f "$f" && removed=1
+    fi
+  done <<EOF
+$files
+EOF
+  if [ "$removed" = 1 ]; then
+    ok "Removed stale files; retrying mise bootstrap."
+    return 0
+  fi
+  return 1
+}
+
 # mise launchd registration can trip over stale or half-written plists on first
 # bootstrap. When bootout fails, remove the stale registration target and retry.
 rescue_stuck_launchd_agent() {
@@ -568,6 +597,16 @@ explain_mise_bootstrap_failure() {
     say "via Finder (drag to Trash), then retry here."
     return 0
   fi
+  if grep -q 'cannot link.*these files already exist' "$MISE_BOOTSTRAP_LOG" 2>/dev/null; then
+    say "Stale Homebrew files from a previous install are blocking mise."
+    say "The bootstrap script attempted to remove them automatically; if you're still"
+    say "seeing this, run manually:"
+    grep 'cannot link' "$MISE_BOOTSTRAP_LOG" 2>/dev/null | head -1 | while IFS= read -r line; do
+      say "  $line"
+    done
+    say "Delete the listed files with sudo rm, then re-run bootstrap."
+    return 0
+  fi
   say "Errors from mise:"
   grep 'ERROR' "$MISE_BOOTSTRAP_LOG" 2>/dev/null | tail -5 | while IFS= read -r line; do
     say "  $line"
@@ -578,7 +617,7 @@ explain_mise_bootstrap_failure() {
 
 run_mise_bootstrap() {
   attempt_mise_bootstrap && return 0
-  if sudo_rescue_app_rename || rescue_stuck_launchd_agent; then
+  if sudo_rescue_app_rename || rescue_stale_brew_files || rescue_stuck_launchd_agent; then
     attempt_mise_bootstrap && return 0
   fi
   if ! { : </dev/tty; } 2>/dev/null; then
