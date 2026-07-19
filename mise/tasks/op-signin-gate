@@ -1,16 +1,17 @@
 #!/bin/sh
 # Interactive gate: block until the 1Password CLI (`op`) is usable.
 #
-# On a fresh machine `op` needs the desktop app signed in with
-# Settings -> Developer -> "Integrate with 1Password CLI" enabled — that's a
-# GUI step that cannot be automated. This gate opens the app, explains the
-# steps, and polls `op whoami` until it succeeds (each attempt triggers the
-# integration/biometric prompt once integration is on).
+# Two auth modes for `op`:
+#   1. App integration: 1Password app -> Settings -> Developer ->
+#      "Integrate with 1Password CLI". No env vars needed; just unlock the
+#      app. `op whoami` works automatically.
+#   2. Standalone CLI: `eval $(op signin)` in the shell, which sets
+#      OP_SESSION_<account>. This env var must be set in the process that
+#      runs `op whoami` — mise task subprocesses don't inherit it from the
+#      user's interactive shell.
 #
-# IMPORTANT: the app-bundled 'op' at /Applications/1Password.app/Contents/MacOS/op
-# is required for app integration. The standalone '1password-cli' cask uses a
-# separate auth flow and does NOT work with "Integrate with 1Password CLI".
-# The post-packages hook symlinks the app-bundled op to /usr/local/bin/op.
+# This gate detects either mode and offers a skip if the user has already
+# authenticated manually.
 #
 # Non-interactive contexts (no tty): fail fast instead of hanging.
 set -eu
@@ -27,7 +28,18 @@ op_path=$(command -v op)
 echo "op-signin-gate: using $op_path"
 op --version 2>/dev/null || echo "op-signin-gate: (could not get op version)" >&2
 
-if op whoami >/dev/null 2>&1; then
+# Check multiple ways op might be authenticated:
+# - op whoami (app integration or OP_SESSION env var present)
+# - op account list (may work even if whoami needs the session)
+op_is_authenticated() {
+  op whoami >/dev/null 2>&1 && return 0
+  # account list is a lighter check that may succeed where whoami needs
+  # the session env var
+  op account list >/dev/null 2>&1 && return 0
+  return 1
+}
+
+if op_is_authenticated; then
   echo "op-signin-gate: op is signed in"
   exit 0
 fi
@@ -38,22 +50,43 @@ if ! { : </dev/tty; } 2>/dev/null; then
 fi
 
 open -a 1Password 2>/dev/null || true
-echo "op-signin-gate: 1Password CLI is not signed in yet."
-echo "  1. Unlock the 1Password app (just opened)"
-echo "  2. 1Password -> Settings -> Developer -> enable 'Integrate with 1Password CLI'"
-echo "  3. Keep the 1Password app running and unlocked"
+echo "op-signin-gate: 1Password CLI is not authenticated yet."
 echo ""
-echo "  If integration is already enabled, try unlocking the app,"
-echo "  then press Enter to retry. The app must be unlocked for op to work."
+echo "  Option A — app integration (recommended, no env vars):"
+echo "    1. Unlock the 1Password app (just opened)"
+echo "    2. 1Password -> Settings -> Developer -> enable 'Integrate with 1Password CLI'"
+echo "    3. Keep the app running and unlocked"
+echo ""
+echo "  Option B — standalone CLI:"
+echo "    Run 'eval $(op signin)' in this terminal, then press Enter."
+echo "    (sets OP_SESSION env var for this process tree)"
+echo ""
+echo "  Press [s] to skip this gate if you've already authenticated manually."
 while :; do
-  printf 'op-signin-gate: press Enter to test again (ctrl-c to abort)... ' >/dev/tty
-  IFS= read -r _ </dev/tty || exit 1
+  printf 'op-signin-gate: press Enter to test, [s] to skip, ctrl-c to abort... ' >/dev/tty
+  IFS= read -r reply </dev/tty || exit 1
+  case "$reply" in
+  s | S | skip | SKIP)
+    warn_skip="op-signin-gate: skipping — fnox render may fail if op is not authenticated."
+    echo "$warn_skip" >&2
+    echo "  If fnox render fails, run 'eval $(op signin)' and re-run 'mise run setup:fnox:render'." >&2
+    exit 0
+    ;;
+  esac
   # Show the actual error on failure so the user can diagnose.
   if op_err=$(op whoami 2>&1); then
     echo "op-signin-gate: op is signed in"
     exit 0
   else
-    echo "op-signin-gate: op still not available:" >&2
+    echo "op-signin-gate: op whoami failed:" >&2
     echo "  $op_err" >&2
+    # Try account list as alternate
+    if op account list >/dev/null 2>&1; then
+      echo "op-signin-gate: op account list succeeded — op is available." >&2
+      exit 0
+    fi
+    echo "" >&2
+    echo "  If you just ran 'op signin', try 'eval \$(op signin)' to set the" >&2
+    echo "  OP_SESSION env var, then press Enter again." >&2
   fi
 done
