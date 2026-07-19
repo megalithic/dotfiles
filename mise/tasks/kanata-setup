@@ -276,32 +276,125 @@ cleanup_stale_nix_helpers() {
   move_stale_nixos_plist_if_broken "org.nixos.setsuid_karabiner_session_monitor"
 }
 
-warn_if_nix_agents_active() {
+unload_nix_agents() {
   # Parallel nix/mise setup: nix-darwin owns org.kanata.daemon and
   # com.kanata-bar.ui until the mise world takes over. Running both stacks
   # would start two kanata processes fighting over the keyboard.
-  local label
-  for label in "org.kanata.daemon" "com.kanata-bar.ui"; do
+  # Boot them out and remove the plists so mise can own kanata.
+  local labels=("org.kanata.daemon" "com.kanata-bar.ui")
+  for label in "${labels[@]}"; do
+    # User agents (gui domain)
     if /bin/launchctl print "gui/${USER_ID}/${label}" >/dev/null 2>&1; then
-      warn "nix-managed ${label} agent is still loaded; do not apply mise launchd agents while nix owns kanata"
+      say "unloading nix-managed ${label} (user agent)"
+      /bin/launchctl bootout "gui/${USER_ID}/${label}" >/dev/null 2>&1 || true
     fi
+    # System daemons (if nix installed them as system daemons)
+    if /bin/launchctl print "system/${label}" >/dev/null 2>&1; then
+      say "unloading nix-managed ${label} (system daemon)"
+      sudo /bin/launchctl bootout "system/${label}" >/dev/null 2>&1 || true
+    fi
+    # Remove stale nix plist files
+    for plist in "/Library/LaunchDaemons/${label}.plist" "${HOME}/Library/LaunchAgents/${label}.plist"; do
+      if [[ -f "$plist" ]]; then
+        # Only remove if it references /nix/store (nix-managed)
+        if /usr/bin/grep -q '/nix/store' "$plist" 2>/dev/null; then
+          say "removing nix-managed plist: $plist"
+          case "$plist" in
+            /Library/*) sudo /bin/rm -f "$plist" ;;
+            *) /bin/rm -f "$plist" ;;
+          esac
+        fi
+      fi
+    done
   done
 }
 
-kickstart_user_agents() {
-  if /bin/launchctl print "gui/${USER_ID}/${KANATA_DAEMON_LABEL}" >/dev/null 2>&1; then
-    /bin/launchctl kickstart -k "gui/${USER_ID}/${KANATA_DAEMON_LABEL}" >/dev/null 2>&1 || true
-    say "kickstarted ${KANATA_DAEMON_LABEL}"
-  else
-    warn "${KANATA_DAEMON_LABEL} LaunchAgent not loaded yet; run 'mise bootstrap launchd apply --yes'"
+apply_mise_launchd() {
+  # Bootstrap skips 'mise bootstrap launchd' (launchd apply fails on clean
+  # Tahoe VMs). Write and load the kanata plists directly here.
+  local agents_home="${HOME}/Library/LaunchAgents"
+  /bin/mkdir -p "$agents_home"
+
+  # kanata daemon: runs the stable kanata binary from /usr/local/bin/kanata
+  local daemon_plist="${agents_home}/${KANATA_DAEMON_LABEL}.plist"
+  cat >"$daemon_plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>${KANATA_DAEMON_LABEL}</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>${KANATA_STABLE_BIN}</string>
+    <string>--config</string>
+    <string>${KANATA_ACTIVE_CONFIG}</string>
+    <string>--nodelay</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>${HOME}/Library/Logs/kanata/stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>${HOME}/Library/Logs/kanata/stderr.log</string>
+</dict>
+</plist>
+PLIST
+  /usr/bin/plutil -lint "$daemon_plist" >/dev/null
+  mkdir -p "${HOME}/Library/Logs/kanata"
+
+  # kanata-bar: runs the kanata-bar app binary
+  local bar_plist="${agents_home}/${KANATA_BAR_LABEL}.plist"
+  # The bar launchd wrapper script already exists (from global_config.toml
+  # launchd.agents entry); if mise already wrote it, just load it.
+  # Otherwise write a minimal one here.
+  if [[ ! -f "$bar_plist" ]]; then
+    local bar_script="${DOTFILES_DIR}/mise/tasks/kanata-bar-launchd"
+    cat >"$bar_plist" <<BARPLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>${KANATA_BAR_LABEL}</string>
+  <key>Program</key>
+  <string>${bar_script}</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <false/>
+  <key>StandardOutPath</key>
+  <string>/tmp/kanata-bar.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/kanata-bar.err</string>
+</dict>
+</plist>
+BARPLIST
+    /usr/bin/plutil -lint "$bar_plist" >/dev/null
   fi
 
-  if /bin/launchctl print "gui/${USER_ID}/${KANATA_BAR_LABEL}" >/dev/null 2>&1; then
-    /bin/launchctl kickstart -k "gui/${USER_ID}/${KANATA_BAR_LABEL}" >/dev/null 2>&1 || true
-    say "kickstarted ${KANATA_BAR_LABEL}"
-  else
-    warn "${KANATA_BAR_LABEL} LaunchAgent not loaded yet; run 'mise bootstrap launchd apply --yes'"
-  fi
+  # Load both agents (bootstrap if not loaded, kickstart if already loaded)
+  for label in "$KANATA_DAEMON_LABEL" "$KANATA_BAR_LABEL"; do
+    local plist_file
+    case "$label" in
+      "$KANATA_DAEMON_LABEL") plist_file="$daemon_plist" ;;
+      "$KANATA_BAR_LABEL") plist_file="$bar_plist" ;;
+    esac
+    if /bin/launchctl print "gui/${USER_ID}/${label}" >/dev/null 2>&1; then
+      /bin/launchctl kickstart -k "gui/${USER_ID}/${label}" >/dev/null 2>&1 || true
+      say "kickstarted ${label}"
+    else
+      /bin/launchctl bootstrap "gui/${USER_ID}" "$plist_file" >/dev/null 2>&1 || true
+      /bin/launchctl enable "gui/${USER_ID}/${label}" >/dev/null 2>&1 || true
+      if /bin/launchctl print "gui/${USER_ID}/${label}" >/dev/null 2>&1; then
+        say "loaded ${label}"
+      else
+        warn "failed to load ${label}; check ${plist_file}"
+      fi
+    fi
+  done
 }
 
 print_manual_notes() {
@@ -328,8 +421,8 @@ main() {
   validate_kanata_bar_tool
   write_kanata_bar_config
   cleanup_stale_nix_helpers
-  warn_if_nix_agents_active
-  kickstart_user_agents
+  unload_nix_agents
+  apply_mise_launchd
   print_manual_notes
 }
 
