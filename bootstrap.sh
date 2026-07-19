@@ -337,7 +337,9 @@ if [ "$DRY_RUN" != 1 ]; then
   sudo -nv 2>/dev/null || sudo -v || die "sudo authentication failed; bootstrap needs administrator privileges"
   (
     while true; do
-      sudo -nv 2>/dev/null || break
+      # -nv never prompts; on failure just keep retrying — the next sudo
+      # in the main process will prompt if the timestamp truly expired.
+      sudo -nv 2>/dev/null
       sleep 60
     done
   ) &

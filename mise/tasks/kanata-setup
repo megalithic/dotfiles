@@ -55,7 +55,8 @@ need_sudo() {
   if [[ "$(id -u)" -eq 0 ]]; then
     die "run as your user, not root"
   fi
-  sudo -v
+  # Check non-interactively first; only prompt if timestamp expired.
+  sudo -nv 2>/dev/null || sudo -v
 }
 
 sha256_file() {
