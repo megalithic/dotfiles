@@ -7,13 +7,25 @@
 # steps, and polls `op whoami` until it succeeds (each attempt triggers the
 # integration/biometric prompt once integration is on).
 #
+# IMPORTANT: the app-bundled 'op' at /Applications/1Password.app/Contents/MacOS/op
+# is required for app integration. The standalone '1password-cli' cask uses a
+# separate auth flow and does NOT work with "Integrate with 1Password CLI".
+# The post-packages hook symlinks the app-bundled op to /usr/local/bin/op.
+#
 # Non-interactive contexts (no tty): fail fast instead of hanging.
 set -eu
 
 command -v op >/dev/null 2>&1 || {
-  echo "op-signin-gate: 'op' CLI not installed (bootstrap installs it via brew cask 1password-cli)" >&2
+  echo "op-signin-gate: 'op' CLI not installed" >&2
+  echo "  Ensure /Applications/1Password.app is installed and" >&2
+  echo "  /usr/local/bin/op symlinks to its bundled op binary." >&2
   exit 1
 }
+
+# Diagnostics: show which op we're using and its version.
+op_path=$(command -v op)
+echo "op-signin-gate: using $op_path"
+op --version 2>/dev/null || echo "op-signin-gate: (could not get op version)" >&2
 
 if op whoami >/dev/null 2>&1; then
   echo "op-signin-gate: op is signed in"
@@ -27,14 +39,21 @@ fi
 
 open -a 1Password 2>/dev/null || true
 echo "op-signin-gate: 1Password CLI is not signed in yet."
-echo "  1. Sign in to the 1Password app (just opened)"
+echo "  1. Unlock the 1Password app (just opened)"
 echo "  2. 1Password -> Settings -> Developer -> enable 'Integrate with 1Password CLI'"
+echo "  3. Keep the 1Password app running and unlocked"
+echo ""
+echo "  If integration is already enabled, try unlocking the app,"
+echo "  then press Enter to retry. The app must be unlocked for op to work."
 while :; do
   printf 'op-signin-gate: press Enter to test again (ctrl-c to abort)... ' >/dev/tty
   IFS= read -r _ </dev/tty || exit 1
-  if op whoami >/dev/null 2>&1; then
+  # Show the actual error on failure so the user can diagnose.
+  if op_err=$(op whoami 2>&1); then
     echo "op-signin-gate: op is signed in"
     exit 0
+  else
+    echo "op-signin-gate: op still not available:" >&2
+    echo "  $op_err" >&2
   fi
-  echo "op-signin-gate: op still not available; check the steps above."
 done

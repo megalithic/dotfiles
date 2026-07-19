@@ -444,7 +444,10 @@ stderr_path = "/tmp/kanata-bar.err"
 #  fnox render — see [tasks.bootstrap] for the ordered chain)
 # hooks: no template expansion, cwd = config root, [env] not applied
 run = [
-  "command -v op >/dev/null 2>&1 || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask 1password-cli",
+  # 1Password CLI: use the app-bundled 'op' (supports app integration),
+  # NOT the standalone 1password-cli cask (uses separate auth, doesn't work
+  # with 'Integrate with 1Password CLI' in app settings).
+  "[ -x /Applications/1Password.app/Contents/MacOS/op ] && [ ! -L /usr/local/bin/op ] && ln -sf /Applications/1Password.app/Contents/MacOS/op /usr/local/bin/op || true",
   "[ -d /Applications/Hammerspoon.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask hammerspoon",
   "[ -d /Applications/Espanso.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask espanso",
   "[ -d /Applications/Raycast.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask raycast",
