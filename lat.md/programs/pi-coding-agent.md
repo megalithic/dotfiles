@@ -44,6 +44,16 @@ The `/answer` extension can be invoked by its slash command, Ctrl+. shortcut, or
 
 `multi-sub.ts` owns `/subs`, `/pool`, and multi-sub pool or chain failover. When a rate limit rotates the pool while Pi is still processing the failed turn, retrying the same prompt must use `deliverAs: "steer"` or the core session rejects it as already processing.
 
+As of pi-coding-agent 0.80.x (pi-ai 0.80.8), the extension was migrated to the new SDK APIs:
+
+- **OAuth login flows removed**: pi-ai 0.80.8 removed `anthropicOAuthProvider`, `loginAnthropic`, `refreshAnthropicToken`, and all other runtime OAuth helpers from `@earendil-works/pi-ai/oauth`. The `/subs login` and `/subs logout` commands are stubbed out; users log in via pi's built-in `/login` for the base provider. The `oauth` block was removed from `pi.registerProvider` calls.
+- **Google providers dropped**: `google-gemini-cli` and `google-antigravity` are no longer supported (pi-ai 0.80 dropped those OAuth providers entirely). `PROVIDER_TEMPLATES` now only includes `anthropic`, `openai-codex`, and `github-copilot`, each with just a `displayName` field.
+- **`getModels` removed**: pi-ai 0.80 removed the standalone `getModels(provider)` export. All call sites now use `ctx.modelRegistry.getAll().filter((m) => m.provider === provider)` for built-in model lookups.
+- **`ModelRegistry.authStorage` removed**: the old `authStorage` property on `ModelRegistry` is gone. Auth status checks use `ctx.modelRegistry.getProviderAuthStatus(provider).configured`. Quota checker degrades to best-effort since raw credential metadata (access token, accountId, projectId, expires) is no longer synchronously accessible.
+- **Quota checker**: only `codexQuotaChecker` remains. Google Gemini and Antigravity quota checkers and all Google-specific helper functions/constants/types were removed (~650 lines).
+- **`cloneModels` and `registerSub`**: now accept `Model<Api>[]` and `ModelRegistry | undefined` params respectively. Activate-time registration passes `undefined` (no models until first `/subs add` command provides `ctx.modelRegistry`).
+- **Cross-extension auth sharing**: the scoped/named auth groups (sub entries, pools) are stored in `settings.json` under `multiSub` and cached in `_cachedSubs`. The extension exposes this via the `/subs` command surface and the `PoolManager` class.
+
 The `/goal` extension persists one long-running goal in session custom entries, injects it before agent turns, tracks token and elapsed usage, supports pause/resume/clear, enforces optional token budgets, and exposes `get_goal`, `create_goal`, and `update_goal`. Completion requires evidence-based auditing before `update_goal { status: complete }`.
 
 The `/handoff` extension replaces the old file-backed handoff skill: it serializes branch and session-chain context, asks the selected model for a self-contained next-thread prompt, opens a new session with `parentSession`, and uses `newSession({ withSession })` to leave the prompt in the replacement session editor for manual submission.
@@ -108,7 +118,7 @@ Configured aliases are refreshed on `session_start` and `before_agent_start`. Wh
 
 It drives default provider, enabled models, terminal behavior, subagent model overrides, and multi-sub presets. The default model list includes current OpenCode Go coding models; the `mega` scope exposes the strongest OpenCode Go options alongside Codex, Synthetic, and local models. The `alt` scope includes current Anthropic Opus, Sonnet, and Haiku aliases; planner, reviewer, and oracle default to the latest Opus alias; worker defaults to the latest Sonnet alias; scout and context-builder keep small-model fallbacks before local `llamacpp/gemma4`. The shell command prefix forces noninteractive git behavior and enables tmux image handling through `PI_TMUX_IMAGES=1`.
 
-`custom-footer.ts` replaces the default footer with a starship-backed cwd line plus compact token and model status. The right side of line 2 shows multi-pass routing as `({preset}){provider-or-failover-pool}/{model}/thinking_level`, derived from the `multi-pass` status string. Caveman status is suppressed and MCP status is reduced to ` {active}/{total}`, turning accent-blue when any server is active.
+`custom-footer.ts` replaces the default footer with a starship-backed cwd line plus compact token and model status. The right side of line 2 shows multi-pass routing as `({preset}){provider-or-failover-pool}/{model}/thinking_level`, derived from the `multi-pass` status string. Caveman status is suppressed and MCP status is reduced to `{active}/{total}`, turning accent-blue when any server is active.
 
 Extension footer statuses should be semantic and compact because `custom-footer.ts` owns separators, colors, and truncation. `pinvim` publishes no footer text until a Neovim peer is active, then sends a `pinvim.v1` record that the footer renders as ` {basename}` for a healthy link or ` {filename:line}` / ` {filename:start-end}` when attached Neovim context is pending. The icon is green for connected, yellow for a repaired 1:1 link, and red for stale peers.
 
