@@ -213,6 +213,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 
 [plugins]
 fnox-env = "https://github.com/jdx/mise-env-fnox"
+nix = "https://github.com/jbadeau/mise-nix.git"
 
 [tools]
 "aqua:openai/codex" = "latest"
@@ -253,7 +254,6 @@ fnox-env = "https://github.com/jdx/mise-env-fnox"
 
 1password-cli = "latest"
 age = "latest"
-age-keygen = "latest"
 aqua = "latest"
 ast-grep = "latest"
 atuin = "latest"
