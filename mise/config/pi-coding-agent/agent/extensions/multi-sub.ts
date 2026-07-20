@@ -5841,6 +5841,13 @@ export default function multiSub(pi: ExtensionAPI) {
 
 	// On session start, reload pools with project-level config
 	pi.on("session_start", async (_event, ctx) => {
+		// Re-register subs with real cloned models now that the model registry
+		// is available (activate-time registration ran without one, so the
+		// cloned providers were registered with empty model lists).
+		for (const entry of _cachedSubs) {
+			registerSub(pi, ctx.modelRegistry, entry);
+		}
+
 		const effective = loadEffectiveConfig(ctx.cwd);
 		poolManager.loadPools(effective.pools);
 
