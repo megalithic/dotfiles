@@ -35,12 +35,12 @@
       url = "github:lukasl-dev/pi.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # espanso: pinned to last-good nixpkgs. Jul 2026 unstable (clang 21 /
+    # cctools bump) crashes cctools ld (Trace/BPT trap 5) linking espanso
+    # on aarch64-darwin. Drop this pin once upstream espanso links again.
+    nixpkgs-espanso.url = "github:nixos/nixpkgs/89570f24e97e614aa34aa9ab1c927b6578a43775";
     worktrunk = {
       url = "github:max-sixty/worktrunk";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    hunk = {
-      url = "github:modem-dev/hunk";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nh.url = "github:nix-community/nh";

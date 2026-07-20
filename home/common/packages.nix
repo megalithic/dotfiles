@@ -14,13 +14,15 @@ let
     # mailmate app managed via home/common/programs/mailmate/default.nix
   ];
 
+  # espanso: from pinned nixpkgs input; current unstable's cctools ld crashes
+  # linking it on aarch64-darwin (see flake.nix nixpkgs-espanso comment).
+  espanso-pinned = inputs.nixpkgs-espanso.legacyPackages.${pkgs.stdenv.hostPlatform.system}.espanso;
+
   # Filter: only apps with appLocation = "home-manager" go to home.packages
   # (home-manager copies these to ~/Applications/Home Manager Apps/)
   homeManagerApps = builtins.filter (
     pkg: ((pkg.passthru or { }).appLocation or "home-manager") == "home-manager"
   ) customApps;
-
-  hunk = inputs.hunk.packages.${pkgs.stdenv.hostPlatform.system}.hunk;
 
   # Standard GUI apps from nixpkgs (not custom mkApp derivations)
   guiPkgs = with pkgs; [
@@ -62,14 +64,15 @@ let
     # devenv # managed by programs/devenv module
     difftastic
     dust # disk usage analyzer (du replacement)
-    espanso
+    espanso-pinned
     ffmpeg
     flyctl
     gh
     git-lfs
     gnupg
     gum
-    hunk
+    # hunk — installed via mise (aqua:modem-dev/hunk + npm:hunkdiff); nix flake
+    # input dropped 2026-07-20: bun2nix master broke eval and mise ships newer
     imagemagickBig
     inetutils # telnet, ftp, etc.
     jq # JSON processor
