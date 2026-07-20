@@ -55,6 +55,22 @@ Literal copy twins require recursive diff and deliberate sync on each related ch
 
 Generated Nix files and static mise files, including fish, git, SSH/1Password, and other per-file mappings, require behavior parity rather than byte equality. Shared-source mappings, including Kanata, Espanso, and selected SSH paths, link same repository files and must not be copied. Update this policy and program documentation whenever ownership or a divergence changes; run `devenv shell -- lat check` after doc changes.
 
+## Mise bootstrap
+
+`bootstrap.sh` keeps mise self-hosted: it installs or updates only
+`~/.local/bin/mise` through the standalone installer and `mise self-update`.
+
+Homebrew is still installed for packages used later by mise bootstrap, but it
+must not install or upgrade the mise binary. Prepending `~/.local/bin` makes
+bootstrap use the standalone binary even when Nix or Homebrew also provides
+`mise`.
+
+`bootstrap.sh` has no dry-run mode; bootstrap mutates machine state and should
+fail fast instead of carrying preview branches. It lets `mise bootstrap` run
+`[tasks.bootstrap]`; the script only handles shell setup and lockfile refresh
+afterward. Keep ordered first-run tasks in `mise/config/mise/global_config.toml`,
+not duplicated in shell.
+
 ## Mise GUI app migration
 
 Mise installs only casks its current bootstrap backend can reproduce; app-only casks belong in `[bootstrap.packages]`, while casks with binary, package, completion, preflight, or privileged artifacts retain explicit handling.

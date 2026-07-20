@@ -115,18 +115,22 @@ opt.fillchars = {
   stl = " ", -- alts: ─ ⣿ ░ ▐ ▒▓
   stlnc = " ", -- alts: ─
 }
-opt.formatoptions = vim.opt.formatoptions
-  - "a" -- Auto formatting is BAD.
-  - "t" -- Don't auto format my code. I got linters for that.
-  + "c" -- In general, I like it when comments respect textwidth
-  + "q" -- Allow formatting comments w/ `gq`
-  + "w" -- Trailing whitespace indicates a paragraph
-  - "o" -- Insert comment leader after hitting `o` or `O`
-  + "r" -- Insert comment leader after hitting Enter
-  + "n" -- Indent past the formatlistpat, not underneath it.
-  + "j" -- Remove comment leader when makes sense (joining lines)
-  -- + "2" -- Use the second line's indent vale when indenting (allows indented first line)
-  - "2" -- I'm not in gradeschool anymore
+-- Keep formatoptions updates separate: Neovim nightly rejects chained vim.opt infix ops.
+opt.formatoptions:remove({
+  "a", -- Auto formatting is BAD.
+  "t", -- Don't auto format my code. I got linters for that.
+  "o", -- Insert comment leader after hitting `o` or `O`
+  "2", -- I'm not in gradeschool anymore
+})
+opt.formatoptions:append({
+  "c", -- In general, I like it when comments respect textwidth
+  "q", -- Allow formatting comments w/ `gq`
+  "w", -- Trailing whitespace indicates a paragraph
+  "r", -- Insert comment leader after hitting Enter
+  "n", -- Indent past the formatlistpat, not underneath it.
+  "j", -- Remove comment leader when makes sense (joining lines)
+  -- "2", -- Use the second line's indent vale when indenting (allows indented first line)
+})
 -- Preview substitutions live, as you type!
 opt.inccommand = "split"
 opt.list = true
@@ -211,12 +215,20 @@ vim.filetype.add({
     -- Bigfile detection
     [".*"] = {
       function(path, buf)
-        if not path or not buf or vim.bo[buf].filetype == "bigfile" then return end
-        if path ~= vim.fs.normalize(vim.api.nvim_buf_get_name(buf)) then return end
+        if not path or not buf or vim.bo[buf].filetype == "bigfile" then
+          return
+        end
+        if path ~= vim.fs.normalize(vim.api.nvim_buf_get_name(buf)) then
+          return
+        end
         local size = vim.fn.getfsize(path)
-        if size <= 0 then return end
+        if size <= 0 then
+          return
+        end
         -- Detect files larger than 1.5MB
-        if size > 1.5 * 1024 * 1024 then return "bigfile" end
+        if size > 1.5 * 1024 * 1024 then
+          return "bigfile"
+        end
         -- Detect minified files with long lines
         local lines = vim.api.nvim_buf_line_count(buf)
         return (size - lines) / lines > 1000 and "bigfile" or nil

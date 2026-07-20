@@ -1,27 +1,26 @@
 #!/bin/sh
-# POSIX sh only — no bashisms; runs on stock macOS before anything is installed.
+#
+# Idempotent machine setup using mise.
+#
+# Usage:
+#   ~/.dotfiles/bootstrap.sh [--force|--host <hostname>]
+#
+
 set -eu
 
-# Human-readable version stamp — bump whenever this script changes so remote
-# runs (curl | sh) show which revision they got.
-BOOTSTRAP_UPDATED="2026-07-17 16:15 EDT"
+BOOTSTRAP_UPDATED="2026-07-20 16:35 EDT"
 
 DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-https://github.com/megalithic/dotfiles.git}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 BOOTSTRAP_MISE_CONFIG="$DOTFILES_DIR/mise/config/mise/global_config.toml"
-export DOTFILES_DIR
 FORCE_HOST="${HOST:-}" # desired hostname; skip hostname prompt if set
 FORCE=0                # --force: pass force flags to all sub-commands
-DRY_RUN=0              # --dry-run: pass dry-run flags to all sub-commands; skip other mutations
-MIN_MISE_VERSION="2026.7.7"
 BOOTSTRAP_INSTALL_ROSETTA="${BOOTSTRAP_INSTALL_ROSETTA:-0}"
-
-# Homebrew >= 4.6 asks "Do you want to proceed with the {install,upgrade}?"
-# by default (ask mode; --yes / HOMEBREW_NO_ASK to skip). Bootstrap funnels
-# all decisions through its own prompts, so brew must never block on [y/n].
-# Exported so it also reaches brew calls inside mise bootstrap hooks.
+MISE_INSTALL_PATH="$HOME/.local/bin/mise"
 HOMEBREW_NO_ASK=1
 export HOMEBREW_NO_ASK
+export DOTFILES_DIR
+export MISE_INSTALL_PATH
 
 COLOR_RESET="$(printf '\033[0m')"
 COLOR_BLUE="$(printf '\033[34m')"
@@ -86,37 +85,33 @@ normalize_hostname() {
   printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9-' '-' | sed 's/--*/-/g;s/^-//;s/-$//'
 }
 
-mise_version() {
-  mise --version | awk '{ for (i = 1; i <= NF; i++) if ($i ~ /^[0-9]+[.][0-9]+[.][0-9]+$/) { print $i; exit } }'
-}
-
-version_lt() {
-  version_a=$1
-  version_b=$2
-  IFS=. read -r a_major a_minor a_patch <<EOF
-$version_a
-EOF
-  IFS=. read -r b_major b_minor b_patch <<EOF
-$version_b
-EOF
-  [ "${a_major:-0}" -lt "${b_major:-0}" ] && return 0
-  [ "${a_major:-0}" -gt "${b_major:-0}" ] && return 1
-  [ "${a_minor:-0}" -lt "${b_minor:-0}" ] && return 0
-  [ "${a_minor:-0}" -gt "${b_minor:-0}" ] && return 1
-  [ "${a_patch:-0}" -lt "${b_patch:-0}" ]
-}
-
-# Standalone installer works even when Homebrew is nix-managed (taps pinned
-# read-only in /nix/store make `brew update`/`brew upgrade` a no-op there).
-install_mise_standalone() {
-  info "Installing mise to ~/.local/bin via https://mise.run..."
-  MISE_INSTALL_PATH="$HOME/.local/bin/mise" sh -c "$(curl -fsSL https://mise.run)" || {
-    warn "Standalone mise install failed."
-    return 1
-  }
+use_standalone_mise() {
   PATH="$HOME/.local/bin:$PATH"
   export PATH
   hash -r 2>/dev/null || true
+}
+
+install_mise_standalone() {
+  info "Installing mise to ~/.local/bin via https://mise.run..."
+  MISE_INSTALL_PATH="$MISE_INSTALL_PATH" sh -c "$(curl -fsSL https://mise.run)" || {
+    warn "Standalone mise install failed."
+    return 1
+  }
+  use_standalone_mise
+}
+
+ensure_mise_standalone() {
+  if [ ! -x "$MISE_INSTALL_PATH" ]; then
+    install_mise_standalone
+  else
+    use_standalone_mise
+    info "Updating standalone mise..."
+    "$MISE_INSTALL_PATH" self-update --yes || install_mise_standalone
+  fi
+
+  use_standalone_mise
+  [ "$(command -v mise 2>/dev/null)" = "$MISE_INSTALL_PATH" ] || die "Expected standalone mise at $MISE_INSTALL_PATH in PATH"
+  ok "$(mise --version)"
 }
 
 # nix-homebrew pins Homebrew taps as symlinks into /nix/store. After nix is
@@ -132,40 +127,11 @@ repair_nix_pinned_taps() {
     case "$(readlink "$tap_path")" in
     /nix/store/*)
       warn "Removing nix-pinned Homebrew tap link: $tap_path"
-      run rm -f "$tap_path"
+      rm -f "$tap_path"
       ;;
     esac
   done
-  [ -d "$taps_dir" ] || run mkdir -p "$taps_dir"
-}
-
-ensure_mise_version() {
-  current_mise_version=$(mise_version)
-  [ -n "$current_mise_version" ] || die "Unable to determine mise version"
-  version_lt "$current_mise_version" "$MIN_MISE_VERSION" || return 0
-  if [ "$DRY_RUN" = 1 ]; then
-    info "[dry-run] mise $current_mise_version is older than $MIN_MISE_VERSION; would upgrade mise"
-    die "dry-run cannot preview mise bootstrap with old mise; upgrade mise first or run without --dry-run"
-  fi
-  info "Upgrading mise ($current_mise_version -> >= $MIN_MISE_VERSION)..."
-  repair_nix_pinned_taps
-  info "Refreshing Homebrew formula index (brew update)..."
-  if HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew update; then
-    HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew upgrade mise || HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install mise || warn "brew could not upgrade mise."
-  else
-    warn "brew update failed (Homebrew may be nix-managed/read-only); skipping brew upgrade."
-  fi
-  hash -r 2>/dev/null || true
-  current_mise_version=$(mise_version)
-  if version_lt "$current_mise_version" "$MIN_MISE_VERSION"; then
-    warn "Homebrew could not provide mise >= $MIN_MISE_VERSION; falling back to standalone installer."
-    install_mise_standalone
-    current_mise_version=$(mise_version)
-  fi
-  if version_lt "$current_mise_version" "$MIN_MISE_VERSION"; then
-    die "mise is still $current_mise_version (< $MIN_MISE_VERSION) at $(command -v mise); remove stale mise binaries from PATH and retry."
-  fi
-  ok "mise $current_mise_version"
+  [ -d "$taps_dir" ] || mkdir -p "$taps_dir"
 }
 
 # Unlink a symlink that points into the read-only /nix/store; its parent dir
@@ -175,7 +141,7 @@ remove_store_link() {
   case "$(readlink "$1")" in
   /nix/store/*)
     info "Removing nix-managed symlink: $1"
-    run rm -f "$1"
+    rm -f "$1"
     ;;
   esac
 }
@@ -198,15 +164,6 @@ clean_nix_managed_targets() {
     done
 }
 
-# run a mutating command, or print it in dry-run mode
-run() {
-  if [ "$DRY_RUN" = 1 ]; then
-    info "[dry-run] would run: $*"
-  else
-    "$@"
-  fi
-}
-
 dotfiles_default_branch() {
   default_branch=$(git -C "$DOTFILES_DIR" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')
   printf '%s' "${default_branch:-main}"
@@ -219,7 +176,7 @@ ensure_dotfiles_branch() {
   fi
   checkout_branch=$(dotfiles_default_branch)
   warn "$DOTFILES_DIR is on a detached HEAD; checking out $checkout_branch."
-  run git -C "$DOTFILES_DIR" checkout "$checkout_branch"
+  git -C "$DOTFILES_DIR" checkout "$checkout_branch"
 }
 
 # Auto-stash local changes so checkout/pull never abort on a dirty tree.
@@ -227,11 +184,11 @@ ensure_dotfiles_branch() {
 stash_dotfiles_changes() {
   [ -n "$(git -C "$DOTFILES_DIR" status --porcelain 2>/dev/null)" ] || return 0
   warn "$DOTFILES_DIR has local changes; stashing them (recover with 'git stash pop')."
-  run git -C "$DOTFILES_DIR" stash push -u -m "bootstrap auto-stash $(date +%Y%m%d-%H%M%S)"
+  git -C "$DOTFILES_DIR" stash push -u -m "bootstrap auto-stash $(date +%Y%m%d-%H%M%S)"
 }
 
 pull_dotfiles() {
-  stash_dotfiles_changes && ensure_dotfiles_branch && run git -C "$DOTFILES_DIR" pull --ff-only
+  stash_dotfiles_changes && ensure_dotfiles_branch && git -C "$DOTFILES_DIR" pull --ff-only
 }
 
 update_dotfiles_checkout() {
@@ -273,17 +230,15 @@ update_dotfiles_checkout() {
 }
 
 usage() {
-  printf 'usage: bootstrap.sh [--force] [--dry-run] [--host <name>]\n'
+  printf 'usage: bootstrap.sh [--force] [--host <name>]\n'
   printf '  --force        overwrite conflicting dotfile targets (mise dotfiles apply --force,\n'
   printf '                 mise bootstrap --force-dotfiles)\n'
-  printf '  --dry-run, -n  print what would happen; mise sub-commands run in their dry-run modes\n'
   printf '  --host <name>  set macOS hostname and skip prompt\n'
 }
 
 while [ $# -gt 0 ]; do
   case "$1" in
   --force) FORCE=1 ;;
-  --dry-run | -n) DRY_RUN=1 ;;
   --host)
     shift
     [ $# -gt 0 ] || die "--host requires a value"
@@ -307,21 +262,16 @@ MISE_DOTFILES_FLAGS=""
 # EIO before services converge. Its user step also calls chsh, which prompts
 # for a password on macOS. Skip both and handle the login shell below with sudo.
 # Tools are NOT skipped — mise bootstrap installs the full toolchain.
-# Tasks are skipped because run_first_bootstrap_task handles the ordered chain
-# (fnox → op signin → fnox render → helium).
+# Tasks are not skipped: [tasks.bootstrap] owns first-run secret rendering after
+# tools and packages are installed.
 # --locked is NOT used: the lockfile may be incomplete on a new machine (tools
 # added since last `mise lock`). Without --locked, mise resolves versions live
 # and updates the lockfile as it installs.
-MISE_BOOTSTRAP_FLAGS="--skip launchd --skip user --skip task"
+MISE_BOOTSTRAP_FLAGS="--skip launchd --skip user"
 if [ "$FORCE" = 1 ]; then
   MISE_DOTFILES_FLAGS="$MISE_DOTFILES_FLAGS --force"
   MISE_BOOTSTRAP_FLAGS="$MISE_BOOTSTRAP_FLAGS --force-dotfiles"
 fi
-if [ "$DRY_RUN" = 1 ]; then
-  MISE_DOTFILES_FLAGS="$MISE_DOTFILES_FLAGS --dry-run"
-  MISE_BOOTSTRAP_FLAGS="$MISE_BOOTSTRAP_FLAGS --dry-run"
-fi
-
 header
 
 [ "$(uname -s)" = "Darwin" ] || die "macOS only."
@@ -333,39 +283,37 @@ header
 # during long-running steps (CLT install, mise bootstrap packages/tools).
 # sudo -nv checks non-interactively first; only prompt if the timestamp is
 # expired (e.g. re-running bootstrap minutes after a prior sudo).
-if [ "$DRY_RUN" != 1 ]; then
-  sudo -nv 2>/dev/null || sudo -v || die "sudo authentication failed; bootstrap needs administrator privileges"
-  (
-    while true; do
-      # -nv never prompts; on failure just keep retrying — the next sudo
-      # in the main process will prompt if the timestamp truly expired.
-      sudo -nv 2>/dev/null
-      sleep 60
-    done
-  ) &
-  SUDO_KEEPALIVE_PID=$!
-  # Clean up the background loop on exit (normal or error).
-  trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true' EXIT
-fi
+sudo -nv 2>/dev/null || sudo -v || die "sudo authentication failed; bootstrap needs administrator privileges"
+(
+  while true; do
+    # -nv never prompts; on failure just keep retrying — the next sudo
+    # in the main process will prompt if the timestamp truly expired.
+    sudo -nv 2>/dev/null
+    sleep 60
+  done
+) &
+SUDO_KEEPALIVE_PID=$!
+# Clean up the background loop on exit (normal or error).
+trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true' EXIT
 
 install_clt_noninteractive() {
   clt_marker="/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress"
-  run touch "$clt_marker"
+  touch "$clt_marker"
   clt_label=$(softwareupdate --list 2>&1 |
     sed -n 's/^[[:space:]]*\* Label: \(Command Line Tools for Xcode.*\)$/\1/p' |
     tail -1)
   if [ -z "$clt_label" ]; then
-    run rm -f "$clt_marker"
+    rm -f "$clt_marker"
     die "Could not find Command Line Tools in softwareupdate catalog"
   fi
   info "Installing $clt_label via softwareupdate..."
-  if ! run sudo softwareupdate --install "$clt_label" --verbose; then
-    run rm -f "$clt_marker"
+  if ! sudo softwareupdate --install "$clt_label" --verbose; then
+    rm -f "$clt_marker"
     die "Command Line Tools install failed"
   fi
-  run rm -f "$clt_marker"
+  rm -f "$clt_marker"
   if [ -d /Library/Developer/CommandLineTools ]; then
-    run sudo xcode-select --switch /Library/Developer/CommandLineTools
+    sudo xcode-select --switch /Library/Developer/CommandLineTools
   fi
   xcode-select -p >/dev/null 2>&1 || die "Command Line Tools install did not complete"
 }
@@ -373,8 +321,6 @@ install_clt_noninteractive() {
 # CLT first: everything below (brew, git, compilers) depends on it.
 if xcode-select -p >/dev/null 2>&1; then
   ok "CLT installed: $(xcode-select -p)"
-elif [ "$DRY_RUN" = 1 ]; then
-  die "[dry-run] Xcode Command Line Tools required. Run without --dry-run to install via softwareupdate"
 else
   info "Command Line Tools not installed; installing now."
   install_clt_noninteractive
@@ -382,17 +328,13 @@ else
 fi
 
 if ! command -v brew >/dev/null 2>&1; then
-  if [ "$DRY_RUN" = 1 ]; then
-    info "[dry-run] would install Homebrew"
-  else
-    info "Installing Homebrew (needs an administrator password)..."
-    id -Gn | grep -qw admin || die "Homebrew install requires an administrator account; $(id -un) is not in the admin group"
-    # NONINTERACTIVE installs refuse to prompt for sudo — credentials were
-    # cached at startup; verify they're still valid (prompt only if expired).
-    sudo -nv 2>/dev/null || sudo -v || die "sudo authentication failed; Homebrew install needs it"
-    NONINTERACTIVE=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 /bin/bash -c \
-      "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  fi
+  info "Installing Homebrew (needs an administrator password)..."
+  id -Gn | grep -qw admin || die "Homebrew install requires an administrator account; $(id -un) is not in the admin group"
+  # NONINTERACTIVE installs refuse to prompt for sudo — credentials were
+  # cached at startup; verify they're still valid (prompt only if expired).
+  sudo -nv 2>/dev/null || sudo -v || die "sudo authentication failed; Homebrew install needs it"
+  NONINTERACTIVE=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 /bin/bash -c \
+    "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
 if [ -x /opt/homebrew/bin/brew ]; then
@@ -404,49 +346,27 @@ fi
 # heal nix-homebrew leftovers before anything uses brew (cheap, idempotent)
 repair_nix_pinned_taps
 
-if ! command -v mise >/dev/null 2>&1; then
-  if [ "$DRY_RUN" = 1 ]; then
-    die "[dry-run] mise not installed; dry-run needs mise to preview sub-commands"
-  fi
-  info "Installing mise..."
-  HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install mise || install_mise_standalone
-  command -v mise >/dev/null 2>&1 || die "mise installation failed"
-fi
-ensure_mise_version
+ensure_mise_standalone
 
 HOST=""
-if [ "$DRY_RUN" = 1 ]; then
-  if [ -n "$FORCE_HOST" ]; then
-    HOST=$(normalize_hostname "$FORCE_HOST")
-    [ -n "$HOST" ] || die "--host cannot be empty after normalization"
-    info "[dry-run] would set hostname to $HOST"
-    run sudo scutil --set ComputerName "$HOST"
-    run sudo scutil --set LocalHostName "$HOST"
-    run sudo scutil --set HostName "$HOST"
-    run sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$HOST"
-  else
-    info "[dry-run] skipping hostname prompt/change; pass --host <name> to preview hostname change"
-  fi
+CURRENT_HOST=$(normalize_hostname "$(uname -n | cut -d. -f1)")
+if [ -n "$FORCE_HOST" ]; then
+  HOST=$(normalize_hostname "$FORCE_HOST")
+  [ -n "$HOST" ] || die "--host cannot be empty after normalization"
+  ok "Host override: $HOST"
 else
-  CURRENT_HOST=$(normalize_hostname "$(uname -n | cut -d. -f1)")
-  if [ -n "$FORCE_HOST" ]; then
-    HOST=$(normalize_hostname "$FORCE_HOST")
-    [ -n "$HOST" ] || die "--host cannot be empty after normalization"
-    ok "Host override: $HOST"
-  else
-    REPLY=$(ask_tty_default "Hostname [$CURRENT_HOST]:" "$CURRENT_HOST")
-    HOST=$(normalize_hostname "$REPLY")
-    [ -n "$HOST" ] || die "Hostname cannot be empty after normalization"
-  fi
+  REPLY=$(ask_tty_default "Hostname [$CURRENT_HOST]:" "$CURRENT_HOST")
+  HOST=$(normalize_hostname "$REPLY")
+  [ -n "$HOST" ] || die "Hostname cannot be empty after normalization"
+fi
 
-  if [ "$HOST" != "$CURRENT_HOST" ]; then
-    say "Switching macOS hostname: $CURRENT_HOST -> $HOST"
-    run sudo scutil --set ComputerName "$HOST"
-    run sudo scutil --set LocalHostName "$HOST"
-    run sudo scutil --set HostName "$HOST"
-    run sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$HOST"
-    ok "Hostname set to $HOST"
-  fi
+if [ "$HOST" != "$CURRENT_HOST" ]; then
+  say "Switching macOS hostname: $CURRENT_HOST -> $HOST"
+  sudo scutil --set ComputerName "$HOST"
+  sudo scutil --set LocalHostName "$HOST"
+  sudo scutil --set HostName "$HOST"
+  sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$HOST"
+  ok "Hostname set to $HOST"
 fi
 
 xcode_license_check=$(xcodebuild -license check 2>&1 || true)
@@ -459,7 +379,7 @@ case "$xcode_license_check" in
   ;;
 *)
   warn "Xcode license not accepted."
-  run sudo xcodebuild -license accept
+  sudo xcodebuild -license accept
   ok "Xcode license accepted"
   ;;
 esac
@@ -472,7 +392,7 @@ if [ "$(uname -m)" = "arm64" ]; then
     ok "Rosetta 2 installed"
   elif [ "$BOOTSTRAP_INSTALL_ROSETTA" = 1 ]; then
     say "Installing Rosetta 2..."
-    run softwareupdate --install-rosetta --agree-to-license
+    softwareupdate --install-rosetta --agree-to-license
   else
     info "Skipping Rosetta 2 install (set BOOTSTRAP_INSTALL_ROSETTA=1 to install)."
   fi
@@ -481,7 +401,6 @@ fi
 if [ -d "$DOTFILES_DIR/.git" ]; then
   update_dotfiles_checkout
 else
-  [ "$DRY_RUN" = 1 ] && die "[dry-run] $DOTFILES_DIR is not a clone; dry-run needs an existing checkout"
   info "Cloning into $DOTFILES_DIR..."
   mkdir -p "$(dirname "$DOTFILES_DIR")"
   git clone "$DOTFILES_REPO_URL" "$DOTFILES_DIR"
@@ -500,7 +419,7 @@ MISE_GLOBAL_CONFIG_FILE="$BOOTSTRAP_MISE_CONFIG"
 export MISE_GLOBAL_CONFIG_FILE
 
 info "Trusting mise global config..."
-mise trust "$MISE_GLOBAL_CONFIG_FILE" # needed even in dry-run so mise can read the config
+mise trust "$MISE_GLOBAL_CONFIG_FILE"
 
 clean_nix_managed_targets
 
@@ -539,7 +458,7 @@ sudo_rescue_app_rename() {
   [ -n "$blocked" ] || return 1
   [ -e "$blocked" ] || return 1
   warn "mise could not rename $blocked; trying with sudo..."
-  if run sudo mv "$blocked" "${blocked%.app}.pre-mise-$(date +%s).app"; then
+  if sudo mv "$blocked" "${blocked%.app}.pre-mise-$(date +%s).app"; then
     ok "Moved aside with sudo (kept as backup); retrying mise bootstrap."
     return 0
   fi
@@ -564,7 +483,7 @@ rescue_stale_brew_files() {
     [ -n "$f" ] || continue
     if [ -e "$f" ]; then
       info "Removing stale file: $f"
-      run sudo rm -f "$f" && removed=1
+      sudo rm -f "$f" && removed=1
     fi
   done <<EOF
 $files
@@ -583,8 +502,8 @@ rescue_stuck_launchd_agent() {
   [ -n "$plist" ] || return 1
   label=$(basename "$plist" .plist)
   warn "mise could not bootout stale launchd agent $label; removing stale registration target..."
-  run launchctl bootout "gui/$(id -u)/$label" 2>/dev/null || true
-  [ ! -e "$plist" ] || run rm -f "$plist"
+  launchctl bootout "gui/$(id -u)/$label" 2>/dev/null || true
+  [ ! -e "$plist" ] || rm -f "$plist"
   ok "Cleared stale launchd agent $label; retrying mise bootstrap."
   return 0
 }
@@ -667,41 +586,20 @@ set_login_shell() {
   [ -n "$fish_path" ] || die "fish is not installed; cannot set login shell"
   if ! grep -qx "$fish_path" /etc/shells 2>/dev/null; then
     info "Adding $fish_path to /etc/shells..."
-    printf '%s\n' "$fish_path" | run sudo tee -a /etc/shells >/dev/null
+    printf '%s\n' "$fish_path" | sudo tee -a /etc/shells >/dev/null
   fi
   current_shell=$(dscl . -read "/Users/$(id -un)" UserShell 2>/dev/null | awk '{print $2}')
   if [ "$current_shell" != "$fish_path" ]; then
     info "Setting login shell to $fish_path..."
-    run sudo dscl . -change "/Users/$(id -un)" UserShell "$current_shell" "$fish_path"
+    sudo dscl . -change "/Users/$(id -un)" UserShell "$current_shell" "$fish_path"
   fi
   ok "login shell: $fish_path"
 }
 
-run_first_bootstrap_task() {
-  if [ "$DRY_RUN" = 1 ]; then
-    info "[dry-run] would run first-bootstrap task chain (fnox install, op gate, fnox render, Helium install)"
-    return 0
-  fi
-
-  info "Running first-bootstrap task chain..."
+finish_bootstrap() {
   if command -v pre-commit >/dev/null 2>&1; then
-    run pre-commit install --install-hooks
+    pre-commit install --install-hooks
   fi
-
-  # fnox was installed by mise bootstrap (tools step). Verify it's available;
-  # install without --locked as a fallback (lockfile may not have an entry).
-  fnox_dir=$(mise where fnox 2>/dev/null || true)
-  if [ -z "$fnox_dir" ]; then
-    info "fnox not found; installing..."
-    run mise install fnox
-    fnox_dir=$(mise where fnox 2>/dev/null || true)
-  fi
-  [ -n "$fnox_dir" ] || die "fnox installed but mise cannot locate it"
-  PATH="$fnox_dir/bin:$PATH"
-  export PATH
-  run ./mise/tasks/op-signin-gate
-  run ./mise/tasks/fnox-render-secrets
-  run ./mise/tasks/install-helium
 
   # Refresh the lockfile so future runs can use --locked (mise bootstrap installs
   # tools live but doesn't regenerate the lockfile for new tools).
@@ -713,18 +611,15 @@ info "Running mise bootstrap..."
 run_mise_bootstrap
 ok "done bootstrapping."
 set_login_shell
-run_first_bootstrap_task
+finish_bootstrap
 
 # Kill the sudo keepalive loop before doctor (it runs in the background and
 # the EXIT trap handles normal exits, but explicit cleanup is cleaner).
-if [ "$DRY_RUN" != 1 ] && [ -n "${SUDO_KEEPALIVE_PID:-}" ]; then
+if [ -n "${SUDO_KEEPALIVE_PID:-}" ]; then
   kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
 fi
 
-if [ "$DRY_RUN" = 1 ]; then
-  info "[dry-run] would run: ./mise/tasks/doctor"
-  info "[dry-run] done."
-elif BOOTSTRAP_SKIP_TOOL_CHECK=1 ./mise/tasks/doctor; then
+if BOOTSTRAP_SKIP_TOOL_CHECK=1 ./mise/tasks/doctor; then
   info "Done. Restart your terminal (login shell is now fish)."
 else
   warn "Finished, but some of the health checks failed."

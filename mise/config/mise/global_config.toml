@@ -16,39 +16,38 @@
 
 [settings]
 experimental = true
-dotfiles.root = "~/.dotfiles"
 auto_install = true
 env_shell_expand = true
 # quiet = true
 # verbose = false
 activate_aggressive = true
-cargo.binstall = true
 color_theme = "everforest"
-github.use_git_credentials = true
-npm.package_manager = "aube"
-python.compile = false
 # using a lockfile helps avoid the need for a GitHub token on first time install
 # activate with `mise lock`
 lockfile = true
 system_packages.managers = ["brew", "brew-cask", "mas"]
 pin = true
-pipx.uvx = true
-task.monorepo_depth = 2
 # supply chain security: only allow installing new versions of tools that have
 # been released for at least 24 hours, to avoid 0-day supply chain attacks.
 # Exclude some tools that are frequently updated and have a low risk profile.
 minimum_release_age = "24h"
-# minimum_release_age_excludes = [
-#   "npm:opencode-ai",
-#   "npm:@openai/codex",
-#   "claude-code",
-#   "erlang",
-#   "elixir",
-# ]
-
-[settings.status]
-show_env = true
-show_tools = true
+minimum_release_age_excludes = [
+  "npm:@earendil-works/pi-coding-agent",
+  "npm:@openai/codex",
+  "github:dmno-dev/varlock",
+  "claude-code",
+  "erlang",
+  "elixir",
+]
+dotfiles.root = "~/.dotfiles"
+python.compile = false
+pipx.uvx = true
+task.monorepo_depth = 2
+github.use_git_credentials = true
+npm.package_manager = "aube"
+cargo.binstall = true
+status.show_env = true
+status.show_tools = true
 
 [deps.aube]
 auto = true
@@ -57,6 +56,8 @@ auto = true
 HK_MISE = "1"
 HK_HIDE_WHEN_DONE = "true"
 MISE_EXPERIMENTAL = "1"
+HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env-vars.sh ]; then . ~/.config/fnox/secrets/env-vars.sh; elif [ -f ~/.config/opnix/secrets/env-vars.sh ]; then . ~/.config/opnix/secrets/env-vars.sh; fi; printf %s $HOMEBREW_GITHUB_API_TOKEN") }}'
+
 DOTS = "{{env.HOME}}/.dotfiles"
 DOTFILES_DIR = "{{env.HOME}}/.dotfiles"
 CODE = "{{env.HOME}}/code"
@@ -65,15 +66,15 @@ XDG_DATA_HOME = "{{env.HOME}}/.local/share"
 XDG_STATE_HOME = "{{env.HOME}}/.local/state"
 XDG_CACHE_HOME = "{{env.HOME}}/.cache"
 PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
-HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env-vars.sh ]; then . ~/.config/fnox/secrets/env-vars.sh; elif [ -f ~/.config/opnix/secrets/env-vars.sh ]; then . ~/.config/opnix/secrets/env-vars.sh; fi; printf %s $HOMEBREW_GITHUB_API_TOKEN") }}'
+
 EDITOR = "nvim -O"
 VISUAL = "nvim -O"
 GIT_EDITOR = "nvim -O"
 JJ_EDITOR = "nvim -O"
 MANPAGER = "nvim +Man!"
+OP_COMMAND = "op"
 
-[env._]
-path = [
+_.path = [
   "/opt/homebrew/opt/coreutils/libexec/gnubin",
   "/opt/homebrew/opt/gnupg/bin",
   "/opt/homebrew/opt/gnu-sed/libexec/gnubin",
@@ -81,12 +82,15 @@ path = [
   "/opt/homebrew/opt/openjdk/bin",
   "$HOME/.bin",
   "$HOME/.local/bin",
+  "$HOME/.dotfiles/bin",
   "./bin",
+  "./.local_scripts",
   "$HOME/.fly/bin",
   "$HOME/.cargo/bin",
   "/Applications/Postgres.app/Contents/Versions/latest/bin",
-  "$HOME/.opencode/bin",
 ]
+_.fnox-env = { tools = true }
+# _.source = "fnox export"
 
 [shell_alias]
 "...." = "cd ../../.."
@@ -113,62 +117,6 @@ pir = "pi -r"
 pisock = "pinvim"
 pis = "pinvim"
 up = "cd $HOME/.dotfiles && mise run up"
-
-# (no [bootstrap.brew.taps]: helium installs via the github: tool entry in
-# [tools] — direct GitHub releases download, no tap; brew taps are read-only
-# under nix-homebrew anyway)
-
-[bootstrap.packages]
-
-"brew:apfel" = "latest"        # Apple Intelligence CLI/server — shade-next compact_ai interpreter
-"brew:autoconf" = "latest"
-"brew:bat" = "latest"
-"brew:automake" = "latest"
-"brew:bash" = "latest"
-"brew:btop" = "latest"
-"brew:cmark-gfm" = "latest"
-"brew:codespell" = "latest"
-"brew:coreutils" = "latest"
-"brew:eza" = "latest"
-"brew:fd" = "latest"
-"brew:fish" = "latest"
-"brew:gcc" = "latest"
-"brew:git" = "latest"
-"brew:gnu-sed" = "latest"
-"brew:gnupg" = "latest"
-"brew:grep" = "latest"
-"brew:herdr" = "latest"
-"brew:kanata" = "latest"       # keyboard remapper; setup task copies it to stable /usr/local/bin/kanata
-"brew:mas" = "latest"
-"brew:mole" = "latest"
-"brew:mosh" = "latest"
-"brew:openssl@3" = "latest"    # required by Python (ssl module) and networking Rust crates
-"brew:pgcli" = "latest"
-"brew:pinentry-mac" = "latest"
-"brew:pkgconf" = "latest"      # helps compilers locate openssl and other libs when building from source
-"brew:poppler" = "latest"      # pdftotext etc. — pi wrapper expects poppler-utils on PATH
-"brew:renameutils" = "latest"
-"brew:ripgrep" = "latest"
-"brew:tree" = "latest"
-"brew:wxwidgets" = "latest"
-"brew:zsh" = "latest"
-
-"mas:497799835" = "latest"  # Xcode
-"mas:975937182" = "latest"  # Fantastical
-"mas:1236045954" = "latest" # Canary
-
-"brew-cask:1password" = "latest"
-"brew-cask:colorsnapper" = "latest"
-"brew-cask:contexts" = "latest"
-"brew-cask:discord" = "latest"
-"brew-cask:ghostty@tip" = "latest"
-"brew-cask:handy" = "latest"
-"brew-cask:hammerspoon" = "latest"
-"brew-cask:meetingbar" = "latest"
-"brew-cask:proton-drive" = "latest"
-"brew-cask:protonvpn" = "latest"
-"brew-cask:slack" = "latest"
-"brew-cask:yubico-authenticator" = "latest"
 
 [dotfiles]
 # "~/.config" = "~/.dotfiles/mise/config"
@@ -263,8 +211,199 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.local/bin" = { source = "~/.dotfiles/bin", mode = "symlink-each" }
 "~/bin" = { source = "~/.dotfiles/bin", mode = "symlink-each" }
 
+[plugins]
+fnox-env = "https://github.com/jdx/mise-env-fnox"
 
-# Curated sections: semantic keys mise maps to canonical defaults writes.
+[tools]
+"aqua:openai/codex" = "latest"
+"aqua:docker/compose" = "latest"
+"aqua:remoteoss/dexter" = "latest"                  # super fast elixir ls
+"aqua:elixir-lang/expert" = "latest"
+"aqua:artempyanykh/marksman" = "latest"
+"aqua:astral-sh/ruff" = "latest"
+"aqua:mvdan/sh" = "latest"
+"aqua:tidewave-ai/tidewave_app" = "latest"
+"github:EmmyLuaLs/emmylua-analyzer-rust" = "latest"
+"github:Feel-ix-343/markdown-oxide" = "latest"
+# "github:jesseduffield/lazygit" = "latest"
+# "github:kevindutra/crit" = "latest"
+# "github:noworrieseh/macdisp" = "latest"
+# "github:radiosilence/fastmail-cli" = "latest"
+"github:rtk-ai/rtk" = "latest"
+"github:dmno-dev/varlock" = "latest"
+# "github:steipete/imsg" = "latest"
+# "github:umputun/revdiff" = "latest"
+"cargo:emmylua_check" = "latest"
+"cargo:emmylua_ls" = "latest"
+# "cargo:forgejo-cli" = "latest"
+# "cargo:jj-vine" = "latest"
+# "cargo:tree-sitter-cli" = "latest"
+"go:golang.org/x/tools/gopls" = "latest"
+"npm:bash-language-server" = "latest"
+"npm:chrome-devtools-mcp" = "latest"
+"npm:hunkdiff" = "latest"
+# "npm:httpyac" = "latest"
+"npm:@earendil-works/pi-coding-agent" = "latest"
+"npm:prettier" = "latest"
+"npm:pyright" = "latest"
+"npm:trash-cli" = "latest"
+"npm:typescript" = "latest"
+"npm:typescript-language-server" = "latest"
+"npm:vscode-langservers-extracted" = "latest"
+
+1password-cli = "latest"
+age = "latest"
+age-keygen = "latest"
+aqua = "latest"
+ast-grep = "latest"
+atuin = "latest"
+aube = "latest"
+awscli = { version = "latest", symlink_bins = true }
+bat = "latest"
+biome = "latest"
+bun = "latest"
+cargo-binstall = "latest"
+claude = "latest"
+cmake = "latest"
+delta = "latest"
+difftastic = "latest"
+direnv = "latest"
+duckdb = "latest"
+dust = "latest"
+elixir = "main-otp-29"
+erlang = "latest"
+eza = "latest"
+fd = "latest"
+ffmpeg = "latest"
+flyctl = "latest"
+fzf = "latest"
+gh = "latest"
+github-cli = "latest"
+git-lfs = "latest"
+gitleaks = "latest"
+glow = "latest"
+go = "latest"
+gum = "latest"
+hk = "latest"
+hunk = "latest"
+imagemagick = "latest"
+jiq = "latest"
+jj = "latest"
+jujutsu = "latest"
+jjui = "latest"
+jq = "latest"
+just = "latest"
+lazydocker = "latest"
+"llama.cpp" = "latest"
+lua = "latest"
+lua-language-server = "latest"
+neovim = "nightly"                                                           # nightly, stable, tags
+node = "latest"
+ollama = "latest"
+pnpm = "latest"
+opencode = "latest"
+pipx = "latest"
+pitchfork = "latest"
+prettier = "latest"
+"npm:@fsouza/prettierd" = "latest"
+python = "3"
+ripgrep = "latest"
+ruby = "latest"
+rust = { version = "latest", components = "rust-src,rust-analyzer,rustfmt" }
+shellcheck = "latest"
+shfmt = "latest"
+sqlite = "latest"
+starship = "latest"
+stylua = "latest"
+tailpipe = "latest"
+taplo = "latest"
+tmux = "latest"
+tokei = "latest"
+tree-sitter = "latest"
+typos = "latest"
+usage = "latest"
+uv = "latest"
+worktrunk = "latest"
+yamlfmt = "latest"
+zoxide = "latest"
+
+[tools."github:ryanoasis/nerd-fonts"]
+version = "latest"
+asset_pattern = "JetBrainsMono.tar.xz"
+postinstall = "$DOTFILES_DIR/mise/hooks/install-fonts.sh"
+
+[tools."github:megalithic/helium-macos-releases"]
+version = "latest"
+os = ["macos"]
+asset_pattern = "helium_*_arm64-macos.dmg"
+postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
+
+[tools."http:kanata-bar"]
+version = "1.1.10"
+checksum = "sha256:ba07e3caeb41d1b2a667e2c246cc3b0ef632a2d812ceeac0ce2eed9441d63b35"
+os = ["macos"]
+strip_components = 0
+platforms.macos-arm64.url = "https://github.com/not-in-stock/kanata-bar/releases/download/v{{version}}/kanata-bar.app.zip"
+platforms.macos-x64.url = "https://github.com/not-in-stock/kanata-bar/releases/download/v{{version}}/kanata-bar.app.zip"
+
+[tools.fnox]
+version = "latest"
+postinstall = """
+postinstall = "$DOTFILES_DIR/mise/tasks/fnox-setup.sh"
+"""
+
+[bootstrap.packages]
+# "brew:1password-cli" = "latest"
+"brew:apfel" = "latest"        # Apple Intelligence CLI/server — shade-next compact_ai interpreter
+"brew:autoconf" = "latest"
+"brew:bat" = "latest"
+"brew:automake" = "latest"
+"brew:bash" = "latest"
+"brew:btop" = "latest"
+"brew:cmark-gfm" = "latest"
+"brew:codespell" = "latest"
+"brew:coreutils" = "latest"
+"brew:eza" = "latest"
+"brew:fd" = "latest"
+"brew:fish" = "latest"
+"brew:gcc" = "latest"
+"brew:git" = "latest"
+"brew:gnu-sed" = "latest"
+"brew:gnupg" = "latest"
+"brew:grep" = "latest"
+"brew:herdr" = "latest"
+"brew:kanata" = "latest"       # keyboard remapper; setup task copies it to stable /usr/local/bin/kanata
+"brew:mas" = "latest"
+"brew:mole" = "latest"
+"brew:mosh" = "latest"
+"brew:openssl@3" = "latest"    # required by Python (ssl module) and networking Rust crates
+"brew:pgcli" = "latest"
+"brew:pinentry-mac" = "latest"
+"brew:pkgconf" = "latest"      # helps compilers locate openssl and other libs when building from source
+"brew:poppler" = "latest"      # pdftotext etc. — pi wrapper expects poppler-utils on PATH
+"brew:renameutils" = "latest"
+"brew:ripgrep" = "latest"
+"brew:tree" = "latest"
+"brew:wxwidgets" = "latest"
+"brew:zsh" = "latest"
+
+"mas:497799835" = "latest"  # Xcode
+"mas:975937182" = "latest"  # Fantastical
+"mas:1236045954" = "latest" # Canary
+
+"brew-cask:1password" = "latest"
+"brew-cask:colorsnapper" = "latest"
+"brew-cask:contexts" = "latest"
+"brew-cask:discord" = "latest"
+"brew-cask:ghostty@tip" = "latest"
+"brew-cask:handy" = "latest"
+"brew-cask:hammerspoon" = "latest"
+"brew-cask:meetingbar" = "latest"
+"brew-cask:proton-drive" = "latest"
+"brew-cask:protonvpn" = "latest"
+"brew-cask:slack" = "latest"
+"brew-cask:yubico-authenticator" = "latest"
+
 [bootstrap.macos.dock]
 autohide = true
 orientation = "bottom"
@@ -365,10 +504,6 @@ SUEnableAutomaticChecks = false
 SUHasLaunchedBefore = true
 SUSendProfileInfo = false
 
-[bootstrap.macos.defaults."net.imput.helium"]
-SUAutomaticallyUpdate = false
-SUEnableAutomaticChecks = false
-
 [bootstrap.macos.defaults."org.hammerspoon.Hammerspoon"]
 MJConfigFile = "~/.config/hammerspoon/init.lua"
 
@@ -377,11 +512,6 @@ AutomaticCheckEnabled = true
 AutomaticDownload = 1
 CriticalUpdateInstall = 1
 ScheduleFrequency = 1
-
-# espanso LaunchAgent plist is written by the post-packages hook
-# (mise/tasks/espanso-service), not by mise's launchd-agents step.
-# It is not loaded during clean bootstrap because first app launch triggers a
-# Gatekeeper GUI prompt; start it manually after approving Espanso.
 
 [bootstrap.macos.launchd.agents."com.megadots.llama-cpp"]
 program = "~/.dotfiles/mise/tasks/llama-server-launchd"
@@ -474,9 +604,9 @@ login_shell = "/opt/homebrew/bin/fish"
 # github: backend tool when its releases repo went public — no token needed.)
 [tasks.bootstrap]
 run = [
-  "command -v pre-commit >/dev/null 2>&1 && pre-commit install --install-hooks || true",
-  "mise install fnox",
-  "mise run setup:op:signin",
+  # "command -v pre-commit >/dev/null 2>&1 && pre-commit install --install-hooks || true",
+  # "mise install fnox",
+  # "mise run setup:op:signin",
   "mise run setup:fnox:render",
 ]
 
@@ -491,16 +621,11 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/doctor"
 alias = "fnox:render"
 description = "Render fnox file-shaped secrets (env-vars.sh) to ~/.config/fnox/secrets"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox-render-secrets"
-
-[tasks."setup:op:signin"]
-alias = "op:signin"
-description = "Interactive gate: wait until the 1Password CLI (op) is signed in with app integration"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/op-signin-gate"
-
-[tasks."setup:helium:install"]
-alias = "helium:install"
-description = "Manual fallback: install Helium.app via GitHub API download + sha256 verify (normal path is the github: tool entry)"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/install-helium"
+#
+# [tasks."setup:op:signin"]
+# alias = "op:signin"
+# description = "Interactive gate: wait until the 1Password CLI (op) is signed in with app integration"
+# run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/op-signin-gate"
 
 [tasks."setup:pi"]
 alias = "pi:setup"
@@ -517,10 +642,10 @@ alias = "miccheck:setup"
 description = "Compile bin/miccheck.swift to ~/.local/bin/miccheckd (push-to-talk menubar app)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/miccheck-build"
 
-# checker, not setup — stays outside the namespace
-[tasks."helium:1password-trust"]
-description = "Check 1Password trusts /Applications/Helium.app; prints GUI Add Browser steps if not (setting is tamper-protected, not writable)"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/helium-1password-trust"
+# # checker, not setup — stays outside the namespace
+# [tasks."helium:1password-trust"]
+# description = "Check 1Password trusts /Applications/Helium.app; prints GUI Add Browser steps if not (setting is tamper-protected, not writable)"
+# run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/helium-1password-trust"
 
 # Global tasks: copy project templates from mise/config/mise/tmpls/ into a
 # project's .config/ dir. Run from a project root: `mise run gen:shopify`,
@@ -546,224 +671,3 @@ run = "mise-tmpl-gen wt.elixir"
 description = "Copy the shopify Worktrunk template + scripts to [target-dir]/.config/wt.toml (default: cwd)"
 dir = "{{cwd}}"
 run = "mise-tmpl-gen wt.shopify"
-
-[tools]
-# aqua
-"aqua:openai/codex" = "latest"
-"aqua:docker/compose" = "latest"
-"aqua:remoteoss/dexter" = "latest"         # super fast elixir ls
-"aqua:elixir-lang/expert" = "latest"
-"aqua:artempyanykh/marksman" = "latest"
-"aqua:astral-sh/ruff" = "latest"
-"aqua:mvdan/sh" = "latest"
-"aqua:tidewave-ai/tidewave_app" = "latest"
-
-# github
-"github:EmmyLuaLs/emmylua-analyzer-rust" = "latest"
-"github:Feel-ix-343/markdown-oxide" = "latest"
-# "github:jesseduffield/lazygit" = "latest"
-# "github:kevindutra/crit" = "latest"
-# "github:noworrieseh/macdisp" = "latest"
-# "github:radiosilence/fastmail-cli" = "latest"
-"github:rtk-ai/rtk" = "latest"
-# "github:steipete/imsg" = "latest"
-# "github:umputun/revdiff" = "latest"
-
-# cargo
-"cargo:emmylua_check" = "latest"
-"cargo:emmylua_ls" = "latest"
-# "cargo:forgejo-cli" = "latest"
-"cargo:eza" = "latest" # bare eza resolves to broken asdf backend (404 quickinstall URL)
-# "cargo:jj-vine" = "latest"
-# "cargo:tree-sitter-cli" = "latest"
-
-# go
-"go:golang.org/x/tools/gopls" = "latest"
-
-# npm
-"npm:bash-language-server" = "latest"
-"npm:chrome-devtools-mcp" = "latest"
-"npm:@github/copilot-language-server" = "latest"
-"npm:hunkdiff" = "latest"
-# "npm:httpyac" = "latest"
-"npm:@earendil-works/pi-coding-agent" = "latest"
-"npm:prettier" = "latest"
-"npm:pyright" = "latest"
-"npm:trash-cli" = "latest"
-"npm:typescript" = "latest"
-"npm:typescript-language-server" = "latest"
-"npm:vscode-langservers-extracted" = "latest"
-
-# ubi
-# -
-
-# bare / registry aliases
-age = "latest"
-aqua = "latest"
-ast-grep = "latest"
-atuin = "latest"
-aube = "latest"
-awscli = { version = "latest", symlink_bins = true }
-bat = "latest"
-biome = "latest"
-bun = "latest"
-cargo-binstall = "latest"
-claude = "latest"
-cmake = "latest"
-delta = "latest"
-difftastic = "latest"
-duckdb = "latest"
-dust = "latest"
-elixir = "main-otp-29"
-erlang = "latest"
-fd = "latest"
-flyctl = "latest"
-fzf = "latest"
-gh = "latest"
-github-cli = "latest"
-git-lfs = "latest"
-gitleaks = "latest"
-glow = "latest"
-go = "latest"
-gum = "latest"
-hk = "latest"
-hunk = "latest"
-imagemagick = "latest"
-jiq = "latest"
-jj = "latest"
-jjui = "latest"
-jq = "latest"
-just = "latest"
-lazydocker = "latest"
-"llama.cpp" = "latest"
-lua = "latest"
-lua-language-server = "latest"
-neovim = "nightly"                                                           # nightly, stable, tags
-node = "latest"
-ollama = "latest"
-pnpm = "latest"
-opencode = "latest"
-pipx = "latest"
-pitchfork = "latest"
-prettier = "latest"
-"npm:@fsouza/prettierd" = "latest"
-python = "3"
-ripgrep = "latest"
-ruby = "latest"
-rust = { version = "latest", components = "rust-src,rust-analyzer,rustfmt" }
-shellcheck = "latest"
-shfmt = "latest"
-sqlite = "latest"
-starship = "latest"
-stylua = "latest"
-tailpipe = "latest"
-tmux = "latest"
-tokei = "latest"
-tree-sitter = "latest"
-usage = "latest"
-uv = "latest"
-worktrunk = "latest"
-zoxide = "latest"
-
-# hk linters (see hk.pkl); typos/yamlfmt ship no shell completions, so they stay bare.
-# gitleaks, rumdl, and ryl get completion postinstall hooks below.
-taplo = "latest"
-typos = "latest"
-yamlfmt = "latest"
-
-# Sub-table tools (with postinstall hooks or extra options)
-# [tools."aqua:tamasfe/taplo"]
-# version = "latest"
-# postinstall = "$DOTFILES_DIR/mise/hooks/completions completions {}"
-
-# ryl — the YAML linter (replaces yamlfmt's -lint role; see hk.pkl).
-# [tools."aqua:owenlamont/ryl"]
-# version = "latest"
-# postinstall = "$DOTFILES_DIR/mise/hooks/completions --generate-completions {}"
-
-[tools."github:ryanoasis/nerd-fonts"]
-version = "latest"
-asset_pattern = "JetBrainsMono.tar.xz"
-postinstall = "$DOTFILES_DIR/mise/hooks/install-fonts.sh"
-
-
-# [tools."go:github.com/go-delve/delve/cmd/dlv"]
-# version = "latest"
-# postinstall = "$DOTFILES_DIR/mise/hooks/completions completion {}"
-
-# Helium.app from the (now public) releases repo. mise doesn't extract .dmg
-# assets (unlike zip), so the postinstall mounts the DMG and copies the
-# bundle to /Applications; it reruns on version changes (= upgrades).
-[tools."github:megalithic/helium-macos-releases"]
-version = "latest"
-os = ["macos"]
-asset_pattern = "helium_*_arm64-macos.dmg"
-postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
-
-[tools."http:kanata-bar"]
-version = "1.1.10"
-checksum = "sha256:ba07e3caeb41d1b2a667e2c246cc3b0ef632a2d812ceeac0ce2eed9441d63b35"
-os = ["macos"]
-strip_components = 0
-platforms.macos-arm64.url = "https://github.com/not-in-stock/kanata-bar/releases/download/v{{version}}/kanata-bar.app.zip"
-platforms.macos-x64.url = "https://github.com/not-in-stock/kanata-bar/releases/download/v{{version}}/kanata-bar.app.zip"
-
-# [tools."http:cmux"]
-# version = "0.64.4"
-# postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
-# platforms.macos-arm64.url = "https://github.com/manaflow-ai/cmux/releases/download/v{{version}}/cmux-macos.dmg"
-
-# [tools.bat]
-# version = "latest"
-# postinstall = "$DOTFILES_DIR/mise/hooks/completions --completion {}"
-
-# [tools.fd]
-# version = "latest"
-# postinstall = "$DOTFILES_DIR/mise/hooks/completions --gen-completions {}"
-
-[tools.fnox]
-version = "latest"
-# postinstall = """
-# $DOTFILES_DIR/mise/hooks/completions completion {}
-# rm -f ${XDG_CACHE_HOME:-$HOME/.cache}/zsh/init/fnox.zsh ${XDG_CACHE_HOME:-$HOME/.cache}/bash/init/fnox.bash
-# """
-
-# [tools.fzf]
-# version = "latest"
-# postinstall = "$DOTFILES_DIR/mise/hooks/completions --{}"
-
-# [tools.gitleaks]
-# version = "latest"
-# postinstall = "$DOTFILES_DIR/mise/hooks/completions completion {}"
-
-# [tools.golangci-lint]
-# version = "latest"
-# postinstall = "$DOTFILES_DIR/mise/hooks/completions completion {}"
-#
-# [tools.helix]
-# version = "latest"
-# postinstall = "$DOTFILES_DIR/mise/hooks/helix-postinstall {}"
-
-# [tools.ollama]
-# version = "latest"
-# postinstall = "$DOTFILES_DIR/mise/hooks/ollama-postinstall"
-
-# [tools.ripgrep]
-# version = "latest"
-# postinstall = "$DOTFILES_DIR/mise/hooks/completions --tool rg --generate complete-{}"
-
-# [tools.rumdl]
-# version = "latest"
-# postinstall = "$DOTFILES_DIR/mise/hooks/completions completions {}"
-
-# [tools.starship]
-# version = "latest"
-# postinstall = "$DOTFILES_DIR/mise/hooks/completions completions {}"
-
-# [tools.xh]
-# version = "latest"
-# postinstall = "$DOTFILES_DIR/mise/hooks/completions --generate complete-{}"
-
-# [tools.yq]
-# version = "latest"
-# postinstall = "$DOTFILES_DIR/mise/hooks/completions completion {}"

@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+#
+# Restore fnox secrets on a machine that already has mise.
+#
+# Usage:
+#   ~/.dotfiles/mise/config/mise/tasks/fnox-setup.sh
+#
+# Prerequisites:
+#   mise install
+#
+set -euo pipefail
+
+if command -v tput &>/dev/null && [[ -t 1 ]]; then
+  GREEN=$(tput setaf 2)
+  YELLOW=$(tput setaf 3)
+  RED=$(tput setaf 1)
+  BOLD=$(tput bold)
+  RESET=$(tput sgr0)
+else
+  GREEN=""
+  YELLOW=""
+  RED=""
+  BOLD=""
+  RESET=""
+fi
+
+ok() { echo -e "\033[0;32m[OK]\033[0m $1"; }
+skip() { echo -e "\033[0;33m[SKIP]\033[0m $1"; }
+fail() {
+  echo -e "\033[0;31m[ERROR]\033[0m $1"
+  exit 1
+}
+
+for cmd in op fnox age-keygen; do
+  command -v "$cmd" &>/dev/null || fail "$cmd not found. Run 'mise install' first."
+done
+# op vault list &>/dev/null 2>&1 || fail "1Password CLI not authenticated. Enable Developer CLI integration in 1Password settings."
+
+# Check if 1Password CLI integration works (requires Developer mode)
+if ! op vault list &>/dev/null 2>&1; then
+  echo ""
+  echo "${YELLOW}${BOLD}1Password CLI requires Developer Settings to be enabled:${RESET}"
+  echo "  1. Open ${BOLD}Settings > Privacy & Security > Developer Mode${RESET} and enable it"
+  echo "  2. Open ${BOLD}1Password > Settings > Developer${RESET} and enable:"
+  echo "     - \"Integrate with 1Password CLI\""
+  echo "     - \"Connect with 1Password CLI\""
+  echo ""
+  read -rp "Press Enter once enabled (or 's' to skip): " answer
+  if [[ "$answer" == "s" ]]; then
+    skip "Skipping API key sync."
+    return 0
+  fi
+fi
+
+# 1. Restore age key from 1Password
+if [[ -f "$HOME/.config/fnox/age.txt" ]]; then
+  skip "age.txt already exists"
+else
+  op read "op://Crypt/fnox-age-key/notesPlain" >"$HOME/.config/fnox/age.txt"
+  chmod 600 "$HOME/.config/fnox/age.txt"
+  ok "Restored age key from 1Password"
+fi
+
+# 2. Sync secrets → local age cache
+cd "$HOME"
+fnox sync --provider age --config fnox.local.toml --force
+ok "Synced secrets to ~/fnox.local.toml"
+
+echo ""
+echo "Done. Reload your shell: exec fish"
