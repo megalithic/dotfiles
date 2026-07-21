@@ -335,8 +335,12 @@
 #   insteadOf = "ssh://git@github.com/"
 #   insteadOf = "http://github.com/"
 
-[url "ssh://git@github.com/"]
-  insteadOf = https://github.com/
+# Disabled: rewriting ALL GitHub https URLs to ssh breaks every
+# non-interactive libgit2/git fetch (mise plugins, devenv flake inputs,
+# launchd/CI contexts — no agent/tty). Public fetches should stay https.
+# If ssh pushes are wanted, use pushInsteadOf instead of insteadOf.
+# [url "ssh://git@github.com/"]
+#   insteadOf = https://github.com/
 
 [browse-remote "github.com"]
   top  = https://{host}/{path}
