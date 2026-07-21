@@ -34,7 +34,6 @@ minimum_release_age = "24h"
 minimum_release_age_excludes = [
   "npm:@earendil-works/pi-coding-agent",
   "npm:@openai/codex",
-  "github:dmno-dev/varlock",
   "claude-code",
   "erlang",
   "elixir",
@@ -231,7 +230,7 @@ nix = "https://github.com/jbadeau/mise-nix.git"
 # "github:noworrieseh/macdisp" = "latest"
 # "github:radiosilence/fastmail-cli" = "latest"
 "github:rtk-ai/rtk" = "latest"
-"github:dmno-dev/varlock" = "latest"
+# "github:dmno-dev/varlock" = "latest"
 # "github:steipete/imsg" = "latest"
 # "github:umputun/revdiff" = "latest"
 "cargo:emmylua_check" = "latest"
