@@ -612,11 +612,28 @@ finish_bootstrap() {
 
   # Refresh the lockfile so future runs can use --locked (mise bootstrap installs
   # tools live but doesn't regenerate the lockfile for new tools).
-  info "Updating mise lockfile..."
-  # --global: tools are declared in ~/.config/mise/config.toml (the linked
-  # global config), not a project config — without it mise reports
-  # "No tools configured to lock".
-  mise lock --global || warn "mise lock failed (non-fatal; tools still installed)"
+  # `mise lock` fetches release tags from api.github.com for every github:/
+  # aqua: tool. Unauthenticated that's 60 req/hr — it burns minutes in 429
+  # retries and 20s timeouts. Only lock when a GitHub token is available
+  # (rendered secrets provide GITHUB_TOKEN; mise [env] maps it too).
+  if [ -z "${GITHUB_TOKEN:-}" ]; then
+    for _envf in "$HOME/.config/fnox/secrets/env-vars.sh" "$HOME/.config/opnix/secrets/env-vars.sh"; do
+      if [ -f "$_envf" ]; then
+        # shellcheck disable=SC1090
+        . "$_envf"
+        break
+      fi
+    done
+  fi
+  if [ -n "${GITHUB_TOKEN:-}" ]; then
+    info "Updating mise lockfile..."
+    # --global: tools are declared in ~/.config/mise/config.toml (the linked
+    # global config), not a project config — without it mise reports
+    # "No tools configured to lock".
+    mise lock --global || warn "mise lock failed (non-fatal; tools still installed)"
+  else
+    warn "Skipping mise lock: no GITHUB_TOKEN (render fnox secrets, then run 'mise lock --global')"
+  fi
 }
 
 info "Running mise bootstrap..."

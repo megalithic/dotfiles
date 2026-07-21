@@ -56,6 +56,10 @@ HK_MISE = "1"
 HK_HIDE_WHEN_DONE = "true"
 MISE_EXPERIMENTAL = "1"
 HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env-vars.sh ]; then . ~/.config/fnox/secrets/env-vars.sh; elif [ -f ~/.config/opnix/secrets/env-vars.sh ]; then . ~/.config/opnix/secrets/env-vars.sh; fi; printf %s $HOMEBREW_GITHUB_API_TOKEN") }}'
+# mise's own GitHub API auth (release/tag lookups for github:/aqua: backends
+# and `mise lock`). Unauthenticated is 60 req/hr and stalls in 429 retries.
+# mise reads MISE_GITHUB_TOKEN > GITHUB_API_TOKEN > GITHUB_TOKEN.
+GITHUB_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env-vars.sh ]; then . ~/.config/fnox/secrets/env-vars.sh; elif [ -f ~/.config/opnix/secrets/env-vars.sh ]; then . ~/.config/opnix/secrets/env-vars.sh; fi; printf %s $GITHUB_TOKEN") }}'
 
 DOTS = "{{env.HOME}}/.dotfiles"
 DOTFILES_DIR = "{{env.HOME}}/.dotfiles"
