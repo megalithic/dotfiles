@@ -349,11 +349,12 @@ strip_components = 0
 platforms.macos-arm64.url = "https://github.com/not-in-stock/kanata-bar/releases/download/v{{version}}/kanata-bar.app.zip"
 platforms.macos-x64.url = "https://github.com/not-in-stock/kanata-bar/releases/download/v{{version}}/kanata-bar.app.zip"
 
+# fnox age-key restore is NOT a postinstall: mise/tasks/fnox-setup is
+# interactive (op auth gate, read prompt) and postinstall runs with captured
+# stdio during the tools step — it would hang or fail the install. Run
+# `mise run setup:fnox` once per machine instead.
 [tools.fnox]
 version = "latest"
-postinstall = """
-postinstall = "$DOTFILES_DIR/mise/tasks/fnox-setup.sh"
-"""
 
 [bootstrap.packages]
 # "brew:1password-cli" = "latest"
@@ -622,6 +623,13 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/doctor"
 
 # -- setup:* namespace: bootstrap/provisioning tasks. Old names kept as
 #    aliases so existing docs/scripts/muscle memory keep working. --
+
+[tasks."setup:fnox"]
+alias = "fnox:setup"
+description = "One-time: restore fnox age key from 1Password and sync the local age cache (interactive)"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox-setup"
+# raw: op auth gate prompts on the terminal
+raw = true
 
 [tasks."setup:fnox:render"]
 alias = "fnox:render"

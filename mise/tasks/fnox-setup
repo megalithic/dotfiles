@@ -3,7 +3,7 @@
 # Restore fnox secrets on a machine that already has mise.
 #
 # Usage:
-#   ~/.dotfiles/mise/config/mise/tasks/fnox-setup.sh
+#   mise run setup:fnox   (or: ~/.dotfiles/mise/tasks/fnox-setup)
 #
 # Prerequisites:
 #   mise install
@@ -48,7 +48,8 @@ if ! op vault list &>/dev/null 2>&1; then
   read -rp "Press Enter once enabled (or 's' to skip): " answer
   if [[ "$answer" == "s" ]]; then
     skip "Skipping API key sync."
-    return 0
+    # exit, not return: this is top-level script code, not a function
+    exit 0
   fi
 fi
 
