@@ -638,6 +638,10 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/config/pi-coding-agent/scripts/setu
 alias = "kanata:setup"
 description = "Install/activate Karabiner VirtualHID glue and restart mise-managed kanata services"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/kanata-setup"
+# raw: connect stdin/stdout/stderr directly — the task prompts for a sudo
+# password; under mise's default captured stdio the prompt never reaches the
+# terminal and the run hangs silently.
+raw = true
 
 [tasks."setup:miccheck"]
 alias = "miccheck:setup"
