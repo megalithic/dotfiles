@@ -88,6 +88,13 @@ normalize_hostname() {
 use_standalone_mise() {
   PATH="$HOME/.local/bin:$PATH"
   export PATH
+  # Override nix-managed gitconfig that rewrites https://github.com/ → ssh://
+  # (home/common/programs/git/gitconfig). mise uses libgit2 which reads
+  # ~/.gitconfig — the rewrite forces plugin fetches onto SSH, which fails
+  # in non-interactive contexts without an agent. /dev/null skips the global
+  # config entirely; plugin fetches are read-only public clones that don't
+  # need user.name, gpg, or other global settings.
+  export GIT_CONFIG_GLOBAL=/dev/null
   hash -r 2>/dev/null || true
 }
 
