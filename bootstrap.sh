@@ -300,8 +300,10 @@ sudo -nv 2>/dev/null || sudo -v || die "sudo authentication failed; bootstrap ne
   done
 ) &
 SUDO_KEEPALIVE_PID=$!
-# Clean up the background loop on exit (normal or error).
-trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true' EXIT
+# Clean up the background loop on exit (normal or error). `wait` after kill
+# reaps the job synchronously so the shell doesn't print a "Terminated: 15"
+# job-control notice.
+trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true; wait "$SUDO_KEEPALIVE_PID" 2>/dev/null || true' EXIT
 
 install_clt_noninteractive() {
   clt_marker="/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress"
@@ -611,7 +613,10 @@ finish_bootstrap() {
   # Refresh the lockfile so future runs can use --locked (mise bootstrap installs
   # tools live but doesn't regenerate the lockfile for new tools).
   info "Updating mise lockfile..."
-  mise lock || warn "mise lock failed (non-fatal; tools still installed)"
+  # --global: tools are declared in ~/.config/mise/config.toml (the linked
+  # global config), not a project config — without it mise reports
+  # "No tools configured to lock".
+  mise lock --global || warn "mise lock failed (non-fatal; tools still installed)"
 }
 
 info "Running mise bootstrap..."
@@ -624,6 +629,8 @@ finish_bootstrap
 # the EXIT trap handles normal exits, but explicit cleanup is cleaner).
 if [ -n "${SUDO_KEEPALIVE_PID:-}" ]; then
   kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
+  # Reap synchronously so sh doesn't print a "Terminated: 15" notice.
+  wait "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
 fi
 
 if BOOTSTRAP_SKIP_TOOL_CHECK=1 ./mise/tasks/doctor; then
