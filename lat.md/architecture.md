@@ -103,6 +103,8 @@ The 1Password service account token is the only unmanaged secret input and must 
 
 Shell secret loading is shell-specific: zsh uses `programs.zsh.initContent`, bash uses `programs.bash.bashrcExtra`, and fish parses the same files in `programs.fish.interactiveShellInit`.
 
+The staged mise twin is fnox: `mise/config/fnox/config.toml` (linked to `~/.config/fnox/config.toml`) declares the same 1Password-backed secrets and is rendered by `mise/tasks/fnox-render-secrets` into `~/.config/fnox/secrets/env-vars.sh`. Its providers pin `account = "my.1password.com"` so machines also signed into a work 1Password account (workbookpro) still resolve the personal `Crypt` vault; the personal account must be added to that machine's 1Password app with CLI integration enabled. The render task warns and exits 0 when the vault is unreachable so bootstrap continues.
+
 The OpNix module also derives `LAT_LLM_*` environment for `lat search`, and the Pi wrapper duplicates that derivation so GUI or non-interactive Pi launches still see the same lat provider config. Switching embedding providers changes vector dimensions, so `lat.md/.cache/vectors.db` must be deleted and rebuilt with `lat search --reindex`.
 
 ## Git hooks and Nix linting

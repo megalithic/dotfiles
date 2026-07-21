@@ -8,8 +8,11 @@
 # https://fnox.jdx.dev/providers/1password.html.
 
 [providers]
-onepass = { type = "1password", vault = "Crypt" }
-op = { type = "1password", vault = "Crypt" }
+# account pins the personal 1Password account so machines signed into a
+# work account too (e.g. workbookpro) still resolve the Crypt vault. Requires
+# the personal account added to that machine's 1Password app + CLI integration.
+onepass = { type = "1password", vault = "Crypt", account = "my.1password.com" }
+op = { type = "1password", vault = "Crypt", account = "my.1password.com" }
 
 [secrets]
 # File-shaped blobs: env = false keeps them out of `fnox exec` / shell
