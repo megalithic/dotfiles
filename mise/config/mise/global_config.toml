@@ -595,9 +595,7 @@ run = [
 run = "killall Finder SystemUIServer Dock || true"
 
 [bootstrap.hooks.post-tools]
-run = [
-  "mise run setup:kanata",
-]
+run = ["mise run setup:kanata"]
 
 [bootstrap.user]
 login_shell = "/opt/homebrew/bin/fish"
