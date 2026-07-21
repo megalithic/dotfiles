@@ -9,6 +9,9 @@ set -euo pipefail
 #     writes privileged launchd/sudoers pieces, and points configs at the
 #     mise/dotfiles-managed files.
 
+# Pairing verified 2026-07: driver 6.10.0 <-> kanata 1.11.0 (running on
+# megabookpro). Official docs still say 6.2.0; kanata's driverkit crate is
+# built against a specific driver IPC, so re-verify when bumping either side.
 DRIVER_VERSION="6.10.0"
 DRIVER_URL="https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/releases/download/v${DRIVER_VERSION}/Karabiner-DriverKit-VirtualHIDDevice-${DRIVER_VERSION}.pkg"
 DRIVER_SHA256="e1317d7fe68ad2d559cf41018c2bc6709e178d13bdb5f85ee30f3deaf4817966"
@@ -56,7 +59,12 @@ need_sudo() {
     die "run as your user, not root"
   fi
   # Check non-interactively first; only prompt if timestamp expired.
-  sudo -nv 2>/dev/null || sudo -v
+  # Announce before prompting: under mise task output capture, sudo's
+  # tty prompt can be invisible and the run looks hung.
+  if ! sudo -nv 2>/dev/null; then
+    say "sudo required; enter your password at the prompt"
+    sudo -v || die "sudo authentication failed (run 'sudo -v' first, then retry)"
+  fi
 }
 
 sha256_file() {
@@ -326,10 +334,13 @@ apply_mise_launchd() {
   <string>${KANATA_DAEMON_LABEL}</string>
   <key>ProgramArguments</key>
   <array>
+    <string>/usr/bin/sudo</string>
     <string>${KANATA_STABLE_BIN}</string>
-    <string>--config</string>
+    <string>--cfg</string>
     <string>${KANATA_ACTIVE_CONFIG}</string>
     <string>--nodelay</string>
+    <string>--port</string>
+    <string>5829</string>
   </array>
   <key>RunAtLoad</key>
   <true/>
@@ -397,6 +408,23 @@ BARPLIST
   done
 }
 
+verify_kanata_running() {
+  # The daemon agent runs `sudo kanata`; give launchd a moment, then check
+  # for the actual kanata process instead of claiming blind success.
+  local _attempt
+  for _attempt in 1 2 3 4 5; do
+    if /usr/bin/pgrep -f "^${KANATA_STABLE_BIN}" >/dev/null 2>&1; then
+      say "kanata is running"
+      return 0
+    fi
+    /bin/sleep 1
+  done
+  warn "kanata process not detected after load"
+  warn "check logs: ${HOME}/Library/Logs/kanata/stderr.log"
+  warn "common causes: driver extension not approved, Input Monitoring not granted, sudoers entry missing"
+  return 0
+}
+
 print_manual_notes() {
   if ! /usr/bin/systemextensionsctl list 2>/dev/null | /usr/bin/grep -q 'org.pqrs.Karabiner-DriverKit-VirtualHIDDevice.*\[activated enabled\]'; then
     warn "Karabiner DriverKit extension may still need approval"
@@ -423,6 +451,7 @@ main() {
   cleanup_stale_nix_helpers
   unload_nix_agents
   apply_mise_launchd
+  verify_kanata_running
   print_manual_notes
 }
 

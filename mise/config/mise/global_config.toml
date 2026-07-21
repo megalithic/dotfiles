@@ -553,8 +553,14 @@ keep_alive = true
 stdout_path = "~/Library/Logs/miccheck/stdout.log"
 stderr_path = "~/Library/Logs/miccheck/stderr.log"
 
-# kanata daemon is managed by brew services (post-tools hook, `brew services
-# start kanata`), not mise launchd. brew formula owns the service plist.
+# kanata daemon (dev.mise.org.kanata.daemon) and kanata-bar agents are
+# written and loaded by mise/tasks/kanata-setup (post-tools hook), because
+# bootstrap.sh always passes `--skip launchd`. This entry stays as the
+# declarative owner for whenever `mise bootstrap launchd` runs manually —
+# it generates the same dev.mise.-prefixed label kanata-setup writes.
+# NOTE: brew services CANNOT own the kanata daemon: the formula service is
+# require_root=true (fails without sudo) and runs the Cellar path, which
+# churns the Input Monitoring TCC grant on every upgrade.
 
 [bootstrap.macos.launchd.agents."com.kanata-bar.ui"]
 program = "~/.dotfiles/mise/tasks/kanata-bar-launchd"
@@ -590,7 +596,6 @@ run = "killall Finder SystemUIServer Dock || true"
 
 [bootstrap.hooks.post-tools]
 run = [
-  "brew services start kanata 2>/dev/null || true",
   "mise run setup:kanata",
 ]
 
