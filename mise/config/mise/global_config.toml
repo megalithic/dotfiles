@@ -163,9 +163,9 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.config/tmux" = "~/.dotfiles/mise/config/tmux"
 
 # -- generated fragments → committed static files (replaces Home Manager Nix interpolation) --
-# "~/.local/share/hammerspoon/nix_path.lua" = "~/.dotfiles/mise/fragments/hammerspoon/nix_path.lua"
+"~/.local/share/hammerspoon/nix_path.lua" = "~/.dotfiles/mise/fragments/hammerspoon/nix_path.lua"
 # "~/.local/share/hammerspoon/fragments/shade-next.lua" = "~/.dotfiles/mise/fragments/hammerspoon/shade-next.lua"
-# "~/.local/share/tmux/nix.conf" = "~/.dotfiles/mise/fragments/tmux/nix.conf"
+"~/.local/share/tmux/nix.conf" = "~/.dotfiles/mise/fragments/tmux/nix.conf"
 # Mirror of the nix-generated shade-next config (home/common/programs/shade-next).
 # Keep mise/config/shade-next/config.toml in sync with the nix module output;
 # uncomment when mise (not Home Manager) owns ~/.config/shade-next.
@@ -209,6 +209,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.config/eza/theme.yml" = "~/.dotfiles/mise/config/eza/theme.yml"
 "~/.config/ripgrep/rc" = "~/.dotfiles/mise/config/ripgrep/rc"
 "~/.config/ripgrep/ignore" = "~/.dotfiles/mise/config/fd/ignore"
+"~/.config/fd/ignore" = "~/.dotfiles/mise/config/fd/ignore"
 
 # -- symlink-each targets (existing mutable dirs, needs per-entry reconciliation) --
 "~/.local/bin" = { source = "~/.dotfiles/bin", mode = "symlink-each" }
@@ -620,6 +621,23 @@ run = [
 [tasks.doctor]
 description = "Post-bootstrap health checks (bootstrap.sh runs this last)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/doctor"
+
+# `mise run up` (or the `up` shell alias): idempotent day-to-day converge.
+# Re-applies dotfile symlinks/templates, converges brew/cask/mas packages and
+# launchd agents, installs missing tools, upgrades tools within their pins,
+# then health-checks. Every step is safe to re-run. Deliberately skips
+# macos-defaults (post-defaults hook kills Finder/Dock), user (login shell),
+# and the `bootstrap` task (fnox render prompts 1Password).
+[tasks.up]
+description = "Idempotently update tools, packages, dotfile symlinks, and launchd agents"
+dir = "{{env.HOME}}/.dotfiles"
+run = [
+  "mise self-update --yes 2>/dev/null || true",
+  "mise bootstrap --only packages,dotfiles,macos-launchd-agents --yes",
+  "mise install --yes",
+  "mise upgrade --yes",
+  "mise run doctor",
+]
 
 # -- setup:* namespace: bootstrap/provisioning tasks. Old names kept as
 #    aliases so existing docs/scripts/muscle memory keep working. --
