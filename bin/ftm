@@ -216,7 +216,7 @@ function fuzzy_find() {
 
   selected_session="$(
     fzf \
-      "${fzf_extra_args[@]}" \
+      ${fzf_extra_args[@]+"${fzf_extra_args[@]}"} \
       --ansi \
       --reverse \
       --border=none \
