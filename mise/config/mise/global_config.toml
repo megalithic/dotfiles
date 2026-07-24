@@ -306,7 +306,6 @@ neovim = "nightly"                                                           # n
 node = "latest"
 ollama = "latest"
 pnpm = "latest"
-opencode = "latest"
 pipx = "latest"
 pitchfork = "latest"
 prettier = "latest"
