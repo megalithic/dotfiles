@@ -331,11 +331,6 @@ worktrunk = "latest"
 yamlfmt = "latest"
 zoxide = "latest"
 
-[tools."github:ryanoasis/nerd-fonts"]
-version = "latest"
-asset_pattern = "JetBrainsMono.tar.xz"
-postinstall = "$DOTFILES_DIR/mise/hooks/install-fonts.sh"
-
 # postinstall chain: install-app.sh mounts/copies the DMG, then setup-helium
 # re-bakes the Chromium prodversion into the External Extensions update URLs
 # (mise equivalent of the nix module's eval-time readDir; goes stale on
@@ -638,6 +633,25 @@ run = [
 [tasks.doctor]
 description = "Post-bootstrap health checks (bootstrap.sh runs this last)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/doctor"
+
+# -- Nerd Fonts: declare the font list here (mirrors nix fonts.packages in
+#    hosts/common.nix). Names are release asset stems from
+#    https://github.com/ryanoasis/nerd-fonts/releases (<Name>.tar.xz).
+#    Add/remove a font = edit the list; `mise run fonts:install` converges.
+#    The postinstall hook below also runs it after any `mise install`;
+#    sources/outputs make re-runs no-ops when nothing changed.
+[vars]
+nerd_fonts_version = "3.4.0"
+nerd_fonts = "JetBrainsMono FiraCode Iosevka VictorMono FantasqueSansMono NerdFontsSymbolsOnly"
+
+[tasks."fonts:install"]
+description = "Install Nerd Fonts into ~/Library/Fonts"
+run = "NERD_FONTS_VERSION={{vars.nerd_fonts_version}} ${DOTFILES_DIR:-$HOME/.dotfiles}/mise/hooks/install-fonts.sh {{vars.nerd_fonts}}"
+sources = ["{{env.HOME}}/.dotfiles/mise/hooks/install-fonts.sh"]
+outputs = { auto = true }
+
+[hooks]
+postinstall = "mise run fonts:install"
 
 # [tasks.up]
 # description = "Idempotently update tools, packages, dotfile symlinks, and launchd agents"
