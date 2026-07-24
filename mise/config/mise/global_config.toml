@@ -336,11 +336,15 @@ version = "latest"
 asset_pattern = "JetBrainsMono.tar.xz"
 postinstall = "$DOTFILES_DIR/mise/hooks/install-fonts.sh"
 
+# postinstall chain: install-app.sh mounts/copies the DMG, then setup-helium
+# re-bakes the Chromium prodversion into the External Extensions update URLs
+# (mise equivalent of the nix module's eval-time readDir; goes stale on
+# Chromium bumps otherwise) and reapplies defaults/dictionary.
 [tools."github:megalithic/helium-macos-releases"]
 version = "latest"
 os = ["macos"]
 asset_pattern = "helium_*_arm64-macos.dmg"
-postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
+postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh && $DOTFILES_DIR/mise/tasks/setup-helium"
 
 [tools."http:kanata-bar"]
 version = "1.1.10"
@@ -506,6 +510,17 @@ DSDontWriteUSBStores = true
 [bootstrap.macos.defaults."com.mitchellh.ghostty"]
 SUAutomaticallyUpdate = false
 SUEnableAutomaticChecks = false
+SUHasLaunchedBefore = true
+SUSendProfileInfo = false
+
+# Helium: Sparkle auto-update kill switch (updates come from the mise tool /
+# install-app.sh path instead). Twin of modules/system.nix
+# CustomUserPreferences."net.imput.helium". setup:helium also writes these,
+# since `mise run up` skips the macos-defaults step.
+[bootstrap.macos.defaults."net.imput.helium"]
+SUAutomaticallyUpdate = false
+SUEnableAutomaticChecks = false
+SUScheduledCheckInterval = 0
 SUHasLaunchedBefore = true
 SUSendProfileInfo = false
 
@@ -678,10 +693,18 @@ alias = "miccheck:setup"
 description = "Compile bin/miccheck.swift to ~/.local/bin/miccheckd (push-to-talk menubar app)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/miccheck-build"
 
-# # checker, not setup — stays outside the namespace
-# [tasks."helium:1password-trust"]
-# description = "Check 1Password trusts /Applications/Helium.app; prints GUI Add Browser steps if not (setting is tamper-protected, not writable)"
-# run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/helium-1password-trust"
+# Declarative Helium profile setup (External Extensions with baked
+# prodversion, NSUserKeyEquivalents, Sparkle kill switch, en-US dictionary).
+# Also chained from the helium tool's postinstall, so it reruns on upgrades.
+[tasks."setup:helium"]
+alias = "helium:setup"
+description = "Seed Helium extensions (External Extensions JSONs), keyboard shortcuts, Sparkle-off defaults, and spellcheck dictionary"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/setup-helium"
+
+# checker, not setup — stays outside the namespace
+[tasks."helium:1password-trust"]
+description = "Check 1Password trusts /Applications/Helium.app; prints GUI Add Browser steps if not (setting is tamper-protected, not writable)"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/helium-1password-trust"
 
 # Global tasks: copy project templates from mise/config/mise/tmpls/ into a
 # project's .config/ dir. Run from a project root: `mise run gen:shopify`,

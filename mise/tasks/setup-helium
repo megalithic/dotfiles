@@ -1,0 +1,112 @@
+#!/bin/sh
+# Declarative Helium profile/prefs setup, mirroring the nix module
+# (home/common/programs/helium-browser/ + mkChromiumBrowser):
+#   - External Extensions JSONs with the Chromium prodversion baked into the
+#     CWS update URL
+#   - NSUserKeyEquivalents (ctrl-based tab shortcuts)
+#   - Sparkle auto-update kill switch defaults
+#   - en-US spellcheck dictionary (bdic)
+#
+# Idempotent and safe while Helium runs: only writes External Extensions /
+# Dictionaries files and defaults. Never touches profile JSON ("Secure
+# Preferences" has integrity metadata; rewriting it outside Helium risks
+# preference/profile resets).
+#
+# Runs from the helium tool's postinstall chain in global_config.toml (so a
+# version bump refreshes the baked prodversion — the mise equivalent of the
+# nix module's eval-time readDir) and manually via `mise run setup:helium`.
+#
+# Env:
+#   HELIUM_APP  app bundle path (default /Applications/Helium.app)
+set -eu
+
+[ "$(uname -s)" = Darwin ] || exit 0
+
+APP="${HELIUM_APP:-/Applications/Helium.app}"
+BUNDLE_ID="net.imput.helium"
+SUPPORT_DIR="$HOME/Library/Application Support/$BUNDLE_ID"
+
+[ -d "$APP" ] || {
+  echo "setup-helium: $APP not installed; skipping"
+  exit 0
+}
+
+# --- prodversion --------------------------------------------------------------
+# Helium strips prodversion= from extension update requests (fingerprint
+# protection) and CWS answers `noupdate` without it, so bake the installed
+# Chromium version into the update URL. The framework Versions/ dir name is
+# the Chromium version (CFBundleShortVersionString is the Helium version).
+FRAMEWORK_VERSIONS="$APP/Contents/Frameworks/Helium Framework.framework/Versions"
+PRODVERSION=$(ls "$FRAMEWORK_VERSIONS" 2>/dev/null | grep -E '^[0-9]' | sort -t. -k1,1n -k2,2n -k3,3n -k4,4n | tail -1)
+[ -n "$PRODVERSION" ] || {
+  echo "setup-helium: no Chromium version dir under $FRAMEWORK_VERSIONS" >&2
+  exit 1
+}
+UPDATE_URL="https://clients2.google.com/service/update2/crx?prodversion=$PRODVERSION"
+
+# --- External Extensions -------------------------------------------------------
+# Chromium picks these up on next launch. Note: deleting a JSON uninstalls the
+# extension on next launch and blocklists it from external reinstall, so ids
+# dropped from this list are deliberately left in place on disk.
+EXT_DIR="$SUPPORT_DIR/External Extensions"
+mkdir -p "$EXT_DIR"
+EXTENSIONS="\
+gfbliohnnapiefjpjlpjnehglfpaknnc Surfingkeys
+egpjdkipkomnmjhjmdamaniclmdlobbo Firenvim
+gmdfnfcigbfkmghbjeelmbkbiglbmbpe LiveDebugger-DevTools
+cfcmijalplpjkfihjkdjdkckkglehgcf Clear-Downloads
+ponfpcnoihfmfllpaingbgckeeldkhle Enhancer-for-YouTube"
+echo "$EXTENSIONS" | while read -r id name; do
+  printf '{"external_update_url":"%s"}' "$UPDATE_URL" >"$EXT_DIR/$id.json"
+done
+count=$(echo "$EXTENSIONS" | wc -l | tr -d ' ')
+echo "setup-helium: wrote $count External Extensions JSONs (prodversion=$PRODVERSION)"
+
+# --- macOS defaults ------------------------------------------------------------
+# NSUserKeyEquivalents: ^ = Ctrl, $ = Shift, ~ = Option, @ = Cmd.
+# Mirrors keyEquivalents in home/common/programs/helium-browser/default.nix.
+# Helium reads these on launch; restart to apply.
+defaults write "$BUNDLE_ID" NSUserKeyEquivalents -dict \
+  "Close Tab" '^w' \
+  "New Private Window" '^$n' \
+  "New Tab" '^t' \
+  "Select Previous Tab" '^h' \
+  "Select Next Tab" '^l' \
+  "Reload This Page" '^r' \
+  "Reopen Closed Tab" '^$t' \
+  "Reset zoom" '^0' \
+  "Zoom In" '^=' \
+  "Zoom Out" '^-'
+
+# Sparkle auto-update kill switch. Also declared in
+# [bootstrap.macos.defaults."net.imput.helium"] for fresh-machine bootstrap;
+# repeated here because `mise run up` deliberately skips the macos-defaults
+# step (post-defaults hook kills Finder/Dock). Mirrors modules/system.nix.
+defaults write "$BUNDLE_ID" SUAutomaticallyUpdate -bool false
+defaults write "$BUNDLE_ID" SUEnableAutomaticChecks -bool false
+defaults write "$BUNDLE_ID" SUScheduledCheckInterval -int 0
+defaults write "$BUNDLE_ID" SUHasLaunchedBefore -bool true
+defaults write "$BUNDLE_ID" SUSendProfileInfo -bool false
+echo "setup-helium: wrote NSUserKeyEquivalents + Sparkle defaults for $BUNDLE_ID"
+
+# --- Spellcheck dictionary (non-fatal) ------------------------------------------
+# Mirrors dictionaries = [ hunspellDictsChromium.en_US ] in the nix module.
+# Same upstream source nixpkgs uses: chromium's hunspell_dictionaries repo
+# (gitiles serves file blobs base64-encoded with ?format=TEXT).
+DICT="en-US-10-1.bdic"
+DICT_DIR="$SUPPORT_DIR/Dictionaries"
+DICT_URL="https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/refs/heads/main/$DICT?format=TEXT"
+if [ -s "$DICT_DIR/$DICT" ]; then
+  echo "setup-helium: $DICT already installed"
+else
+  mkdir -p "$DICT_DIR"
+  if curl -fsSL "$DICT_URL" | /usr/bin/base64 -d >"$DICT_DIR/$DICT.tmp" 2>/dev/null && [ -s "$DICT_DIR/$DICT.tmp" ]; then
+    mv "$DICT_DIR/$DICT.tmp" "$DICT_DIR/$DICT"
+    echo "setup-helium: installed $DICT"
+  else
+    rm -f "$DICT_DIR/$DICT.tmp"
+    echo "setup-helium: $DICT download failed (non-fatal; rerun 'mise run setup:helium')" >&2
+  fi
+fi
+
+echo "setup-helium: done (restart Helium to pick up extensions/shortcuts)"

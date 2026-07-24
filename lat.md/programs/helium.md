@@ -16,6 +16,12 @@ The signing team differs from imput's (`S4Q33XPHB4`), which 1Password's pairing 
 
 Since the releases repo went public, the mise world installs Helium declaratively via `[tools."github:megalithic/helium-macos-releases"]` (version `latest`, `asset_pattern` for the arm64 DMG, sha256 verified by mise against the release's `.sha256` asset). mise does not extract `.dmg` assets — and renames a single-file asset to the tool's short name, dropping the suffix — so the `postinstall` hook `mise/hooks/install-app.sh` finds the payload (by `.dmg` glob, else largest file), mounts it with hdiutil, and swaps the bundle into `/Applications`; it reruns on version changes, which is the upgrade path. `mise run setup:helium:install` (`mise/tasks/install-helium`: GitHub releases API download + `.sha256` verify + hdiutil copy, token now optional) remains as a manual fallback and no longer runs in the `bootstrap` task; the secrets chain there (`setup:op:signin` → `setup:fnox:render`) persists for other secrets, not for Helium.
 
+## Mise declarative profile setup
+
+The mise world replicates the module's declarative profile/prefs pieces via `mise/tasks/setup-helium` (`mise run setup:helium`, alias `helium:setup`): it writes the five `External Extensions/<id>.json` files, sets `NSUserKeyEquivalents` plus the Sparkle kill-switch defaults on `net.imput.helium`, and installs the `en-US-10-1.bdic` spellcheck dictionary (fetched from chromium's `hunspell_dictionaries` gitiles, the same upstream nixpkgs uses; non-fatal on failure). It deliberately never touches profile JSON such as "Secure Preferences".
+
+The prodversion baked into the extension update URLs is read at runtime from the installed app's framework `Versions/` dir — the mise equivalent of the nix module's eval-time `readDir`. Because it goes stale on Chromium bumps, the helium tool's `postinstall` in `global_config.toml` chains `install-app.sh && setup-helium`, so every install/upgrade re-bakes it. Sparkle defaults are additionally declared in `[bootstrap.macos.defaults."net.imput.helium"]` for fresh-machine bootstrap; the task repeats them because `mise run up` skips the macos-defaults step. Chromium picks up External Extensions on next launch; deleting a JSON uninstalls and blocklists the extension, so ids dropped from the list are left on disk. `mise run helium:1password-trust` runs the trust checker.
+
 ## Home Manager install
 
 Home Manager installs Helium to `/Applications/Helium.app` from the Nix package via `rsync -a --inplace --checksum --delete --chmod=u+w` and does no signing of its own.
