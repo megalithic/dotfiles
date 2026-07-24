@@ -166,7 +166,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 # -- generated fragments → committed static files (replaces Home Manager Nix interpolation) --
 "~/.local/share/hammerspoon/nix_path.lua" = "~/.dotfiles/mise/fragments/hammerspoon/nix_path.lua"
 # "~/.local/share/hammerspoon/fragments/shade-next.lua" = "~/.dotfiles/mise/fragments/hammerspoon/shade-next.lua"
-"~/.local/share/tmux/nix.conf" = "~/.dotfiles/mise/fragments/tmux/nix.conf"
+# "~/.local/share/tmux/nix.conf" = "~/.dotfiles/mise/fragments/tmux/nix.conf"
 # Mirror of the nix-generated shade-next config (home/common/programs/shade-next).
 # Keep mise/config/shade-next/config.toml in sync with the nix module output;
 # uncomment when mise (not Home Manager) owns ~/.config/shade-next.
@@ -218,7 +218,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 
 [plugins]
 fnox-env = "https://github.com/jdx/mise-env-fnox"
-nix = "https://github.com/jbadeau/mise-nix.git"
+# nix = "https://github.com/jbadeau/mise-nix.git"
 
 [tools]
 "aqua:openai/codex" = "latest"
