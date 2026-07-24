@@ -156,6 +156,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.config/jj/config.toml" = "~/.dotfiles/mise/config/jj/config.toml"
 # worktrunk: per-file — approvals.toml{,.lock} in the same dir are mutable runtime state
 "~/.config/worktrunk/config.toml" = "~/.dotfiles/mise/config/worktrunk/config.toml"
+"~/.config/surfingkeys/config.js" = "~/.dotfiles/mise/config/surfingkeys/config.js"
 "~/.config/ghostty" = "~/.dotfiles/mise/config/ghostty"
 "~/.config/hammerspoon" = "~/.dotfiles/mise/config/hammerspoon"
 "~/.config/kitty" = "~/.dotfiles/mise/config/kitty"
