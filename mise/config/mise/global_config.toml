@@ -429,8 +429,10 @@ show_extensions_warning = false
 preferred_view_style = "list"
 
 [bootstrap.macos.keyboard]
-key_repeat = 6
-initial_key_repeat = 25
+key_repeat = 3
+initial_key_repeat = 15
+# key_repeat = 6
+# initial_key_repeat = 25
 press_and_hold = false
 fn_state = false
 
