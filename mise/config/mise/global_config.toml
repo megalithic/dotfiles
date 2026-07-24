@@ -639,25 +639,73 @@ run = [
 description = "Post-bootstrap health checks (bootstrap.sh runs this last)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/doctor"
 
-# `mise run up` (or the `up` shell alias): idempotent day-to-day converge.
-# Re-applies dotfile symlinks/templates, converges brew/cask/mas packages and
-# launchd agents, installs missing tools, upgrades tools within their pins,
-# then health-checks. Every step is safe to re-run. Deliberately skips
-# macos-defaults (post-defaults hook kills Finder/Dock), user (login shell),
-# and the `bootstrap` task (fnox render prompts 1Password).
-[tasks.up]
-description = "Idempotently update tools, packages, dotfile symlinks, and launchd agents"
-dir = "{{env.HOME}}/.dotfiles"
-run = [
-  "mise self-update --yes 2>/dev/null || true",
-  "mise bootstrap --only packages,dotfiles,macos-launchd-agents --yes",
-  "mise install --yes",
-  "mise upgrade --yes",
-  "mise run doctor",
-]
+# [tasks.up]
+# description = "Idempotently update tools, packages, dotfile symlinks, and launchd agents"
+# dir = "{{env.HOME}}/.dotfiles"
+# run = [
+#   "mise self-update --yes 2>/dev/null || true",
+#   "mise bootstrap --only packages,dotfiles,macos-launchd-agents --yes",
+#   "mise install --yes",
+#   "mise upgrade --yes",
+#   "mise run doctor",
+# ]
 
 # -- setup:* namespace: bootstrap/provisioning tasks. Old names kept as
 #    aliases so existing docs/scripts/muscle memory keep working. --
+
+[tasks.up]
+description = "Update system packages, mise tools, and Neovim packages"
+run = """
+set -euo pipefail
+# mise bootstrap --only packages,dotfiles,macos-launchd-agents --yes
+mise bootstrap packages apply --yes
+mise bootstrap packages upgrade --yes
+mise up
+pi update --extensions
+# nvim --headless -c "lua vim.pack.update(nil, { force = true })" -c "quit"
+"""
+
+[tasks.clean]
+description = "Clean package-manager caches and generated artifacts"
+run = """
+set -euo pipefail
+
+printf 'Run cleanup? This deletes caches, unused mise tool versions, Docker artifacts, and node_modules under $HOME/code. [y/N] '
+read -r confirm
+case "$confirm" in
+  [yY]) ;;
+  *) echo "Cancelled."; exit 0 ;;
+esac
+
+echo "==> bootstrap packages"
+mise bootstrap packages prune --manager brew --yes
+
+echo "==> mise"
+mise cache prune
+mise prune
+
+echo "==> npm"
+npm cache verify
+npx --yes npkill --directory "$HOME/code" --exclude-sensitive --delete-all -y
+
+echo "==> mac-cleaner-cli"
+echo "Leave browser categories unselected. mac-cleaner-cli has no non-interactive browser skip flag."
+npx --yes mac-cleaner-cli
+
+echo "==> Cargo"
+if ! command -v cargo-cache >/dev/null; then
+  cargo install cargo-cache
+fi
+cargo cache --autoclean
+
+echo "==> Docker"
+if command -v docker >/dev/null && docker info >/dev/null 2>&1; then
+  docker system prune --all --force
+  docker builder prune --all --force
+else
+  echo "Docker is not running; skipping."
+fi
+"""
 
 [tasks."setup:fnox"]
 alias = "fnox:setup"
