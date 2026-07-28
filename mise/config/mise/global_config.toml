@@ -93,7 +93,7 @@ _.path = [
   "/Applications/Postgres.app/Contents/Versions/latest/bin",
 ]
 _.fnox-env = { tools = true }
-# _.source = "fnox export"
+_.source = "fnox export"
 
 [shell_alias]
 "...." = "cd ../../.."
@@ -613,26 +613,10 @@ run = [
 run = "killall Finder SystemUIServer Dock || true"
 
 [bootstrap.hooks.post-tools]
-run = ["mise run setup:kanata"]
+run = ["mise run setup:kanata", "mise run fnox:render"]
 
 [bootstrap.user]
 login_shell = "/opt/homebrew/bin/fish"
-
-# Runs at step 8 of `mise bootstrap`, after [tools] (fnox available) and after
-# post-packages installed 1Password + op. Secrets chain, in order:
-# op signin (interactive gate) -> fnox render. (helium moved to [tools] as a
-# github: backend tool when its releases repo went public — no token needed.)
-[tasks.bootstrap]
-run = [
-  # "command -v pre-commit >/dev/null 2>&1 && pre-commit install --install-hooks || true",
-  # "mise install fnox",
-  # "mise run setup:op:signin",
-  "mise run setup:fnox:render",
-]
-
-[tasks.doctor]
-description = "Post-bootstrap health checks (bootstrap.sh runs this last)"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/doctor"
 
 # -- Nerd Fonts: declare the font list here (mirrors nix fonts.packages in
 #    hosts/common.nix). Names are release asset stems from
@@ -643,6 +627,22 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/doctor"
 [vars]
 nerd_fonts_version = "3.4.0"
 nerd_fonts = "JetBrainsMono FiraCode Iosevka VictorMono FantasqueSansMono NerdFontsSymbolsOnly"
+
+# Runs at step 8 of `mise bootstrap`, after [tools] (fnox available) and after
+# post-packages installed 1Password + op. Secrets chain, in order:
+# op signin (interactive gate) -> fnox render. (helium moved to [tools] as a
+# github: backend tool when its releases repo went public — no token needed.)
+[tasks.bootstrap]
+run = [
+  # "command -v pre-commit >/dev/null 2>&1 && pre-commit install --install-hooks || true",
+  # "mise install fnox",
+  # "mise run setup:op:signin",
+  "mise run fnox:render",
+]
+
+[tasks.doctor]
+description = "Post-bootstrap health checks (bootstrap.sh runs this last)"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/doctor"
 
 [tasks."fonts:install"]
 description = "Install Nerd Fonts into ~/Library/Fonts"
