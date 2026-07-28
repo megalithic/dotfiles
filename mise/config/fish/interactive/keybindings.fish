@@ -29,6 +29,11 @@ bind -M insert ctrl-s 'commandline $history[1]' 'commandline -f execute'
 # https://github.com/fish-shell/fish-shell/issues/11327
 bind -M insert -m insert ctrl-c cancel-commandline
 
+# Word deletion (kanata nav layer sends opt+backspace / opt+delete; the vi
+# preset binds neither, unlike the emacs preset).
+bind -M insert alt-backspace backward-kill-word
+bind -M insert alt-delete kill-word
+
 # FZF widgets.
 bind -M insert ctrl-d fzf-dir-widget
 bind -M normal ctrl-d fzf-dir-widget
