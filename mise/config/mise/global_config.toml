@@ -236,7 +236,6 @@ fnox-env = "https://github.com/jdx/mise-env-fnox"
 # "github:noworrieseh/macdisp" = "latest"
 # "github:radiosilence/fastmail-cli" = "latest"
 "github:rtk-ai/rtk" = "latest"
-# "github:dmno-dev/varlock" = "latest"
 # "github:steipete/imsg" = "latest"
 # "github:umputun/revdiff" = "latest"
 "cargo:emmylua_check" = "latest"
@@ -255,9 +254,10 @@ fnox-env = "https://github.com/jdx/mise-env-fnox"
 "npm:trash-cli" = "latest"
 "npm:typescript" = "latest"
 "npm:typescript-language-server" = "latest"
+"npm:varlock" = "latest"
 "npm:vscode-langservers-extracted" = "latest"
 
-1password-cli = "latest"
+1password-cli = "latest"                                                     # op via vfox plugin (official binary from 1Password CDN). aqua:1password/cli is http-type — mise can't resolve its versions. Works with app integration.
 age = "latest"
 aqua = "latest"
 ast-grep = "latest"
@@ -397,6 +397,7 @@ version = "latest"
 "mas:1236045954" = "latest" # Canary
 
 "brew-cask:1password" = "latest"
+"brew-cask:brave-browser@nightly" = "latest"
 "brew-cask:colorsnapper" = "latest"
 "brew-cask:contexts" = "latest"
 "brew-cask:discord" = "latest"
@@ -404,9 +405,11 @@ version = "latest"
 "brew-cask:handy" = "latest"
 "brew-cask:hammerspoon" = "latest"
 "brew-cask:meetingbar" = "latest"
+"brew-cask:obsidian" = "latest"
 "brew-cask:proton-drive" = "latest"
 "brew-cask:protonvpn" = "latest"
-"brew-cask:slack" = "latest"
+"brew-cask:tuna" = "latest"
+# "brew-cask:slack" = "latest" # presently owned by app store (work requirement?)
 "brew-cask:yubico-authenticator" = "latest"
 
 [bootstrap.macos.dock]
@@ -590,23 +593,23 @@ stderr_path = "/tmp/kanata-bar.err"
 
 [bootstrap.hooks.post-packages]
 # Casks mise's brew-cask backend can't handle, installed via real brew:
-# - 1password-cli, hammerspoon: ship `binary` artifacts (backend is app-bundle only)
+# - hammerspoon: ships `binary` artifacts (backend is app-bundle only)
 # - raycast: extension-less DMG URL (releases.raycast.com/.../download?build=arm);
 #   backend infers archive type from URL filename and only magic-sniffs zip,
 #   so the DMG is treated as a raw binary and 'Raycast.app' is never found
+# - zoom: cask source uses `on_arch_conditional` (livecheck), which the shim's
+#   DSL surface rejects during whole-file eval; postflight then fails
 # (helium is NOT here: it needs the GitHub token, which needs op signin +
 #  fnox render — see [tasks.bootstrap] for the ordered chain)
 # hooks: no template expansion, cwd = config root, [env] not applied
 run = [
-  # 1Password CLI: use the app-bundled 'op' (supports app integration),
-  # NOT the standalone 1password-cli cask (uses separate auth, doesn't work
-  # with 'Integrate with 1Password CLI' in app settings). Uninstall the standalone
-  # cask if present, then symlink the app-bundled op to /usr/local/bin/op.
-  "HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew uninstall --cask 1password-cli 2>/dev/null || true",
-  "[ -x /Applications/1Password.app/Contents/MacOS/op ] && ln -sf /Applications/1Password.app/Contents/MacOS/op /usr/local/bin/op || true",
+  # op CLI comes from [tools] aqua:1password/cli — works with the app's
+  # 'Integrate with 1Password CLI' setting (integration goes over the app
+  # socket; any op >= 2.x works). No cask, no app-bundled symlink needed.
   "[ -d /Applications/Hammerspoon.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask hammerspoon",
   "[ -d /Applications/Espanso.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask espanso",
   "[ -d /Applications/Raycast.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask raycast",
+  "[ -d /Applications/zoom.us.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask zoom",
   "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/espanso-service",
   "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/setup-touchid-sudo",
 ]
@@ -653,7 +656,12 @@ sources = ["{{env.HOME}}/.dotfiles/mise/hooks/install-fonts.sh"]
 outputs = { auto = true }
 
 [hooks]
-postinstall = "mise run fonts:install"
+postinstall = '''
+# echo "Installed: $MISE_INSTALLED_TOOLS"
+
+echo "Running postinstall hooks.."
+mise run fonts:install
+'''
 
 # [tasks.up]
 # description = "Idempotently update tools, packages, dotfile symlinks, and launchd agents"
@@ -676,7 +684,8 @@ set -euo pipefail
 # mise bootstrap --only packages,dotfiles,macos-launchd-agents --yes
 mise bootstrap packages apply --yes
 mise bootstrap packages upgrade --yes
-mise up
+mise run fnox:render
+mise upgrade --bump
 pi update --extensions
 # nvim --headless -c "lua vim.pack.update(nil, { force = true })" -c "quit"
 """
