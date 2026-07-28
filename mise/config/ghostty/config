@@ -117,7 +117,7 @@ font-style-italic       = "Italic"
 font-style-bold-italic  = "ExtraBold Italic"
 
 
-font-size = 15
+font-size = 14
 # font-thicken = false
 
 # adjust-underline-position = 99
