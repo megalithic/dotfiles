@@ -335,12 +335,18 @@
 #   insteadOf = "ssh://git@github.com/"
 #   insteadOf = "http://github.com/"
 
-# Disabled: rewriting ALL GitHub https URLs to ssh breaks every
-# non-interactive libgit2/git fetch (mise plugins, devenv flake inputs,
-# launchd/CI contexts — no agent/tty). Public fetches should stay https.
-# If ssh pushes are wanted, use pushInsteadOf instead of insteadOf.
-# [url "ssh://git@github.com/"]
-#   insteadOf = https://github.com/
+# Fetches stay https (mise plugins, devenv flake inputs, launchd/CI
+# contexts — no agent/tty needed). Pushes rewrite to ssh so the
+# 1Password SSH agent handles auth. Do NOT use insteadOf here: it
+# rewrites fetches too and breaks non-interactive libgit2/git fetch.
+[url "ssh://git@github.com/"]
+  pushInsteadOf = https://github.com/
+
+# Private-repo https fetches need auth (server 401s, git asks helpers).
+# gh token fills it; public fetches never 401 so mise/devenv/launchd
+# stay anonymous https and never invoke this helper.
+[credential "https://github.com"]
+  helper = !gh auth git-credential
 
 [browse-remote "github.com"]
   top  = https://{host}/{path}
