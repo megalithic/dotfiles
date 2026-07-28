@@ -381,6 +381,7 @@ version = "latest"
 "brew:mole" = "latest"
 "brew:mosh" = "latest"
 "brew:openssl@3" = "latest"    # required by Python (ssl module) and networking Rust crates
+"brew:pam-reattach" = "latest" # Touch ID for sudo inside tmux; wired into sudo_local by setup:touchid-sudo
 "brew:pgcli" = "latest"
 "brew:pinentry-mac" = "latest"
 "brew:pkgconf" = "latest"      # helps compilers locate openssl and other libs when building from source
@@ -607,6 +608,7 @@ run = [
   "[ -d /Applications/Espanso.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask espanso",
   "[ -d /Applications/Raycast.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask raycast",
   "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/espanso-service",
+  "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/setup-touchid-sudo",
 ]
 
 [bootstrap.hooks.post-defaults]
@@ -766,6 +768,10 @@ description = "Seed Helium extensions (External Extensions JSONs), keyboard shor
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/setup-helium"
 
 # checker, not setup — stays outside the namespace
+[tasks."setup:touchid-sudo"]
+description = "Install /etc/pam.d/sudo_local with pam_tid (+ pam_reattach for tmux); replaces nix-darwin enableSudoTouchIdAuth"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/setup-touchid-sudo"
+
 [tasks."helium:1password-trust"]
 description = "Check 1Password trusts /Applications/Helium.app; prints GUI Add Browser steps if not (setting is tamper-protected, not writable)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/helium-1password-trust"

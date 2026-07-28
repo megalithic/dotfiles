@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Idempotent Touch ID for sudo via /etc/pam.d/sudo_local (Apple's sanctioned
+# mechanism — survives macOS updates, unlike editing /etc/pam.d/sudo).
+# Replaces nix-darwin's security.pam.enableSudoTouchIdAuth.
+#
+# Includes pam_reattach (brew:pam-reattach in [bootstrap.packages]) so Touch ID
+# prompts also work inside tmux sessions. The reattach line is only written
+# when the module is installed; ignore_ssh skips it over SSH.
+
+SUDO_LOCAL="/etc/pam.d/sudo_local"
+REATTACH_ARM="/opt/homebrew/lib/pam/pam_reattach.so"
+REATTACH_X86="/usr/local/lib/pam/pam_reattach.so"
+
+say() { printf 'touchid-sudo: %s\n' "$*"; }
+die() {
+  printf 'touchid-sudo: error: %s\n' "$*" >&2
+  exit 1
+}
+
+[[ "$(uname -s)" == "Darwin" ]] || die "macOS only"
+
+reattach=""
+if [[ -f "$REATTACH_ARM" ]]; then
+  reattach="$REATTACH_ARM"
+elif [[ -f "$REATTACH_X86" ]]; then
+  reattach="$REATTACH_X86"
+fi
+
+desired="$(mktemp)"
+trap 'rm -f "$desired"' EXIT
+{
+  echo "# sudo_local: managed by mise task setup:touchid-sudo (dotfiles)"
+  if [[ -n "$reattach" ]]; then
+    echo "auth       optional       ${reattach} ignore_ssh"
+  fi
+  echo "auth       sufficient     pam_tid.so"
+} >"$desired"
+
+if [[ -f "$SUDO_LOCAL" ]] && /usr/bin/cmp -s "$desired" "$SUDO_LOCAL"; then
+  say "${SUDO_LOCAL} already current"
+  exit 0
+fi
+
+if ! sudo -nv 2>/dev/null; then
+  say "sudo required; enter your password at the prompt"
+  sudo -v || die "sudo authentication failed"
+fi
+
+sudo /usr/bin/install -m 0644 -o root -g wheel "$desired" "$SUDO_LOCAL"
+say "installed ${SUDO_LOCAL}"
+[[ -n "$reattach" ]] && say "pam_reattach enabled (${reattach})" || say "pam_reattach not installed; tmux sessions fall back to password (brew install pam-reattach, then re-run)"
+say "verify: run 'sudo -k; sudo true' in a fresh terminal — expect Touch ID prompt"
