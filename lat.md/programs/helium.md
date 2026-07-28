@@ -18,7 +18,9 @@ Since the releases repo went public, the mise world installs Helium declarativel
 
 ## Mise declarative profile setup
 
-The mise world replicates the module's declarative profile/prefs pieces via `mise/tasks/setup-helium` (`mise run setup:helium`, alias `helium:setup`): it writes the five `External Extensions/<id>.json` files, sets `NSUserKeyEquivalents` plus the Sparkle kill-switch defaults on `net.imput.helium`, and installs the `en-US-10-1.bdic` spellcheck dictionary (fetched from chromium's `hunspell_dictionaries` gitiles, the same upstream nixpkgs uses; non-fatal on failure). It deliberately never touches profile JSON such as "Secure Preferences".
+The mise world replicates the module's declarative profile/prefs pieces via `mise/tasks/setup-helium` (`mise run setup:helium`, alias `helium:setup`).
+
+It writes the five `External Extensions/<id>.json` files, sets `NSUserKeyEquivalents` plus the Sparkle kill-switch defaults on `net.imput.helium`, and installs the `en-US-10-1.bdic` spellcheck dictionary (fetched from chromium's `hunspell_dictionaries` gitiles, the same upstream nixpkgs uses; non-fatal on failure). It deliberately never touches profile JSON such as "Secure Preferences".
 
 The prodversion baked into the extension update URLs is read at runtime from the installed app's framework `Versions/` dir — the mise equivalent of the nix module's eval-time `readDir`. Because it goes stale on Chromium bumps, the helium tool's `postinstall` in `global_config.toml` chains `install-app.sh && setup-helium`, so every install/upgrade re-bakes it. Sparkle defaults are additionally declared in `[bootstrap.macos.defaults."net.imput.helium"]` for fresh-machine bootstrap; the task repeats them because `mise run up` skips the macos-defaults step. Chromium picks up External Extensions on next launch; deleting a JSON uninstalls and blocklists the extension, so ids dropped from the list are left on disk. `mise run helium:1password-trust` runs the trust checker.
 

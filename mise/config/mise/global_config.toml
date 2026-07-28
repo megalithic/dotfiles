@@ -183,8 +183,9 @@ up = "cd $HOME/.dotfiles && mise run up"
 # -- SSH: individual files (directory holds mutable keys/known_hosts) --
 "~/.ssh/config" = "~/.dotfiles/config/ssh/config"
 "~/.ssh/allowed_signers" = "~/.dotfiles/mise/config/ssh/allowed_signers"
-# 1Password SSH agent key selection (vault/item); GUI+CLI come from the
-# brew casks in [bootstrap.packages], replacing nix-darwin's _1password module.
+# 1Password SSH agent key selection (vault/item); GUI (cask) + CLI (formula)
+# both come from brew via [bootstrap.packages], replacing nix-darwin's
+# _1password module.
 "~/.config/1Password/ssh/agent.toml" = "~/.dotfiles/mise/config/1password/agent.toml"
 
 # -- espanso: app support path, not XDG config (validated repo-final link chain) --
@@ -257,7 +258,6 @@ fnox-env = "https://github.com/jdx/mise-env-fnox"
 "npm:varlock" = "latest"
 "npm:vscode-langservers-extracted" = "latest"
 
-1password-cli = "latest"                                                     # op via vfox plugin (official binary from 1Password CDN). aqua:1password/cli is http-type — mise can't resolve its versions. Works with app integration.
 age = "latest"
 aqua = "latest"
 ast-grep = "latest"
@@ -357,7 +357,12 @@ platforms.macos-x64.url = "https://github.com/not-in-stock/kanata-bar/releases/d
 version = "latest"
 
 [bootstrap.packages]
-# "brew:1password-cli" = "latest"
+# op via brew formula — official documented install method. A real signed binary
+# at /opt/homebrew/bin/op is required for desktop-app integration (biometric
+# unlock): the app socket handshake rejects the mise vfox shim (shim -> mise
+# re-exec), which broke fnox on workbookpro and triggered the recurring
+# system-modal 'Set up Touch ID' dialog that wedged input (2026-07-28).
+"brew:1password-cli" = "latest"
 "brew:apfel" = "latest"        # Apple Intelligence CLI/server — shade-next compact_ai interpreter
 "brew:autoconf" = "latest"
 "brew:bat" = "latest"
@@ -603,9 +608,9 @@ stderr_path = "/tmp/kanata-bar.err"
 #  fnox render — see [tasks.bootstrap] for the ordered chain)
 # hooks: no template expansion, cwd = config root, [env] not applied
 run = [
-  # op CLI comes from [tools] aqua:1password/cli — works with the app's
-  # 'Integrate with 1Password CLI' setting (integration goes over the app
-  # socket; any op >= 2.x works). No cask, no app-bundled symlink needed.
+  # op CLI comes from [bootstrap.packages] brew:1password-cli — official
+  # documented install; real signed binary works with the app's 'Integrate with
+  # 1Password CLI' setting (mise shims break the socket handshake).
   "[ -d /Applications/Hammerspoon.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask hammerspoon",
   "[ -d /Applications/Espanso.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask espanso",
   "[ -d /Applications/Raycast.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask raycast",
