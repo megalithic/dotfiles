@@ -1130,9 +1130,16 @@ server.onCommand = { cmd, reply in
         reply(encodePresenceLine("get", engine.presence).trimmingCharacters(in: .newlines))
     case "focus":
         let currentTargetId = engine.presence.meetingTargetId
-        cdp.focusBestMeeting(currentTargetId: currentTargetId) { ok, _ in
-            if ok, let app = NSRunningApplication.runningApplications(withBundleIdentifier: "net.imput.helium").first {
+        let currentMeetingApp = engine.presence.meetingApp
+        if currentMeetingApp == "com.tinyspeck.slackmacgap" {
+            if let app = NSRunningApplication.runningApplications(withBundleIdentifier: "com.tinyspeck.slackmacgap").first {
                 app.activate(options: [.activateAllWindows])
+            }
+        } else {
+            cdp.focusBestMeeting(currentTargetId: currentTargetId) { ok, _ in
+                if ok, let app = NSRunningApplication.runningApplications(withBundleIdentifier: "net.imput.helium").first {
+                    app.activate(options: [.activateAllWindows])
+                }
             }
         }
         reply(#"{"ok":true,"refreshing":true}"#)

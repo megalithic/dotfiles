@@ -20,11 +20,11 @@ The meeting layer detects supported browser meeting URLs through Chrome DevTools
 
 ### Slack huddle resolver
 
-When the capture layer detects a mic owner whose bundle ID starts with `com.tinyspeck.slackmacgap` (the Slack app or its helper), the engine treats it as a meeting.
+When the capture layer detects a mic owner whose bundle ID exactly matches the Slack app (`com.tinyspeck.slackmacgap`) or helper (`com.tinyspeck.slackmacgap.helper`), the engine treats it as a meeting.
 
 This sets `inMeeting=true`, `meetingApp="com.tinyspeck.slackmacgap"`, `meetingState="joined"`. This triggers miccheckd's push-to-talk enforcement for Slack huddles without any CDP involvement. No video required — the mic-owner signal alone is sufficient (validated live 2026-07-07).
 
-The engine fuses Slack and CDP meeting sources: CDP takes priority when both are active (hyper+z focus works for browser meetings but not for Slack), so meetingApp stays on Helium while a Meet tab is also in a meeting. When multiple Meet tabs exist, active/lobby CDP states can replace the current browser target, but inactive/unknown stale tabs and stale `meet.left` events cannot clear an active different target. When Slack is the sole meeting source, `meetingApp` and `inMeeting` reflect the huddle, and `meeting.left` fires when the Slack mic owner disappears.
+The engine fuses Slack and CDP meeting sources: CDP takes priority when both are active, so meetingApp stays on Helium while a Meet tab is also in a meeting. When multiple Meet tabs exist, active/lobby CDP states can replace the current browser target, but inactive/unknown stale tabs and stale `meet.left` events cannot clear an active different target. When Slack is the sole meeting source, `meetingApp` and `inMeeting` reflect the huddle, hyper+z focuses the Slack app via `NSRunningApplication.activate`, and `meeting.left` fires when the Slack mic owner disappears.
 
 ### Screenshare resolver (sender-side)
 
@@ -64,7 +64,7 @@ PTT mode enforcement moved out of this watcher: [[miccheck#Presence integration|
 
 `nc -w 1` (1s idle timeout) is required because plain `nc -U` hangs waiting for more data, preventing the `hs.task` exit callback from firing.
 
-`bindings.lua` `loadMeeting` (hyper+z) sends `{"cmd":"focus"}` to the daemon via the same `nc -w 1 -U` pattern; the daemon handles CDP target activation and app focusing. The focus command replies immediately, then refreshes and classifies current meeting targets, preferring a joined tab over a lobby tab, the previous target, or the first meeting target. This prevents a stale/closed Meet tab from trapping hyper+z after a new Meet tab opens.
+`bindings.lua` `loadMeeting` (hyper+z) sends `{"cmd":"focus"}` to the daemon via the same `nc -w 1 -U` pattern; the daemon focuses Slack directly when the sole active meeting source is a Slack huddle, otherwise it handles CDP target activation and Helium app focusing. The browser focus path replies immediately, then refreshes and classifies current meeting targets, preferring a joined tab over a lobby tab, the previous target, or the first meeting target. This prevents a stale/closed Meet tab from trapping hyper+z after a new Meet tab opens.
 
 ## Build and packaging
 
