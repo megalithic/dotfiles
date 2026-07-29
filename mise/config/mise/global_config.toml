@@ -401,7 +401,8 @@ version = "latest"
 "mas:975937182" = "latest"  # Fantastical
 "mas:1236045954" = "latest" # Canary
 
-"brew-cask:1password" = "latest"
+"brew-cask:1password@beta" = "latest"
+"brew-cask:1password-cli@beta" = "latest"
 "brew-cask:brave-browser@nightly" = "latest"
 "brew-cask:colorsnapper" = "latest"
 "brew-cask:contexts" = "latest"
