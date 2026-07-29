@@ -19,8 +19,6 @@
 		"npm:pi-caveman",
 		"npm:@plannotator/pi-extension",
 		"npm:pi-rtk-optimizer",
-		"npm:@aliou/pi-synthetic",
-		"npm:pi-bash-live-view",
 		"npm:pi-mono-figma",
 		"npm:pi-mono-btw",
 		"npm:context-mode",
@@ -30,100 +28,91 @@
 		"npm:@juicesharp/rpiv-ask-user-question",
 		"npm:@juicesharp/rpiv-todo",
 		"npm:@ff-labs/pi-fff",
-		"npm:@hypabolic/pi-hypa"
+		"npm:@hypabolic/pi-hypa",
+		"git:github.com/dantetekanem/pi-bash-live-view"
 	],
 	"enabledModels": [
-		"alt-anthropic/claude-fable-5",
-		"alt-anthropic/claude-opus-4-8",
-		"alt-anthropic/claude-sonnet-5",
-		"alt-anthropic/claude-sonnet-4-6",
-		"alt-anthropic/claude-haiku-4-5",
-		"alt-codex/gpt-5.5",
-		"alt-codex/gpt-5.4",
-		"alt-codex/gpt-5.4-mini",
-		"alt-codex/gpt-5.3-codex-spark",
-		"google-vertex/gemini-3.1-pro-preview",
-		"google-vertex/gemini-3-flash-preview",
-		"opencode-go/glm-5.2",
-		"opencode-go/glm-5.1",
-		"opencode-go/kimi-k2.7-code",
-		"opencode-go/kimi-k2.6",
-		"opencode-go/deepseek-v4-pro",
-		"opencode-go/deepseek-v4-flash",
-		"opencode-go/mimo-v2.5-pro",
-		"opencode-go/mimo-v2.5",
-		"opencode-go/minimax-m3",
-		"opencode-go/minimax-m2.7",
-		"opencode-go/qwen3.7-max",
-		"opencode-go/qwen3.7-plus",
+		"anthropic/claude-fable-5",
+		"anthropic/claude-opus-5",
+		"anthropic/claude-opus-4-8",
+		"anthropic/claude-sonnet-5",
+		"anthropic/claude-haiku-4-5",
+		"openai-codex/gpt-5.6-sol",
+		"openai-codex/gpt-5.6-terra",
+		"openai-codex/gpt-5.6-luna",
 		"openai-codex/gpt-5.5",
 		"openai-codex/gpt-5.4",
-		"openai-codex/gpt-5.4-mini",
 		"openai-codex/gpt-5.3-codex-spark",
-		"synthetic/syn:large:text",
-		"synthetic/syn:small:text",
-		"synthetic/syn:large:vision",
-		"synthetic/syn:small:vision",
-		"llamacpp/deepseek14b",
-		"llamacpp/gemma4"
+		"google-vertex/gemini-3.1-pro-preview",
+		"google-vertex/gemini-3-flash-preview",
+		"opencode-go/kimi-k3",
+		"opencode-go/deepseek-v4-pro",
+		"opencode-go/deepseek-v4-flash",
+		"opencode-go/qwen3.7-max",
+		"opencode-go/qwen3.7-plus",
+		"llamacpp/gemma4",
+		"llamacpp/deepseek14b"
 	],
 	"enabledModelScopes": {
 		"mega": [
-			"openai-codex/gpt-5.5",
-			"openai-codex/gpt-5.4",
-			"openai-codex/gpt-5.4-mini",
-			"openai-codex/gpt-5.3-codex-spark",
-			"opencode-go/glm-5.2",
-			"opencode-go/kimi-k2.7-code",
+			"my-codex/gpt-5.6-sol",
+			"my-codex/gpt-5.6-terra",
+			"my-codex/gpt-5.6-luna",
+			"my-codex/gpt-5.5",
+			"my-codex/gpt-5.4",
+			"my-codex/gpt-5.3-codex-spark",
+			"opencode-go/kimi-k3",
 			"opencode-go/deepseek-v4-pro",
-			"opencode-go/mimo-v2.5-pro",
-			"opencode-go/minimax-m3",
+			"opencode-go/deepseek-v4-flash",
 			"opencode-go/qwen3.7-max",
 			"opencode-go/qwen3.7-plus",
-			"synthetic/syn:large:text",
-			"synthetic/syn:small:text",
-			"synthetic/syn:large:vision",
-			"synthetic/syn:small:vision",
-			"llamacpp/deepseek14b",
-			"llamacpp/gemma4"
+			"llamacpp/gemma4",
+			"llamacpp/deepseek14b"
 		],
 		"alt": [
-			"alt-anthropic/claude-fable-5",
-			"alt-anthropic/claude-opus-4-8",
-			"alt-anthropic/claude-sonnet-5",
-			"alt-anthropic/claude-sonnet-4-6",
-			"alt-anthropic/claude-haiku-4-5",
-			"alt-codex/gpt-5.5",
-			"alt-codex/gpt-5.4",
-			"alt-codex/gpt-5.4-mini",
-			"alt-codex/gpt-5.3-codex-spark",
+			"anthropic/claude-fable-5",
+			"anthropic/claude-opus-5",
+			"anthropic/claude-opus-4-8",
+			"anthropic/claude-sonnet-5",
+			"anthropic/claude-haiku-4-5",
+			"openai-codex/gpt-5.6-sol",
+			"openai-codex/gpt-5.6-terra",
+			"openai-codex/gpt-5.6-luna",
+			"openai-codex/gpt-5.5",
+			"openai-codex/gpt-5.4",
+			"openai-codex/gpt-5.3-codex-spark",
 			"google-vertex/gemini-3.1-pro-preview",
-			"google-vertex/gemini-3-flash-preview"
+			"google-vertex/gemini-3-flash-preview",
+			"opencode-go/kimi-k3",
+			"opencode-go/deepseek-v4-pro",
+			"opencode-go/deepseek-v4-flash",
+			"opencode-go/qwen3.7-max",
+			"opencode-go/qwen3.7-plus"
 		]
 	},
 	"terminal": {
 		"showTerminalProgress": true,
 		"imageWidthCells": 120
 	},
-	"shellCommandPrefix": "export GIT_EDITOR=true\nexport GIT_SEQUENCE_EDITOR=true\nexport GIT_TERMINAL_PROMPT=0\n export PI_TMUX_IMAGES=1",
+	"shellCommandPrefix": "export GIT_MERGE_AUTOEDIT=no\nGIT_EDITOR=true\nexport GIT_SEQUENCE_EDITOR=true\nexport GIT_TERMINAL_PROMPT=0\nexport PI_TMUX_IMAGES=1",
 	"multiSub": {
 		"subscriptions": [
 			{
 				"provider": "anthropic",
-				"alias": "alt-anthropic",
-				"label": "alt-anthropic"
+				"alias": "anthropic",
+				"label": "anthropic"
 			},
 			{
 				"provider": "openai-codex",
-				"alias": "alt-codex",
-				"label": "alt-codex"
+				"alias": "my-codex",
+				"label": "my-codex"
 			}
 		],
 		"pools": [
 			{
 				"name": "codex-pool",
-				"baseProvider": "openai-codex",
-				"members": ["openai-codex", "alt-codex"],
+				"baseProvider": "my-codex",
+				"members": ["openai-codex", "my-codex"],
 				"enabled": true
 			}
 		],
@@ -203,55 +192,53 @@
 	"subagents": {
 		"agentOverrides": {
 			"planner": {
-				"model": "alt-anthropic/claude-opus-4-8",
-				"fallbackModels": ["openai-codex/gpt-5.5", "synthetic/syn:large:text"],
-				"thinking": "medium"
+				"model": "anthropic/claude-fable-5",
+				"fallbackModels": ["openai-codex/gpt-5.6-sol", "opencode-go/kimi-k3"],
+				"thinking": "high"
 			},
 			"reviewer": {
-				"model": "alt-anthropic/claude-opus-4-8",
-				"fallbackModels": ["openai-codex/gpt-5.5", "synthetic/syn:large:text"],
-				"thinking": "medium"
+				"model": "anthropic/claude-fable-5",
+				"fallbackModels": ["openai-codex/gpt-5.6-sol", "opencode-go/kimi-k3"],
+				"thinking": "high"
 			},
 			"oracle": {
-				"model": "alt-anthropic/claude-opus-4-8",
-				"fallbackModels": ["openai-codex/gpt-5.5", "synthetic/syn:large:text"]
+				"model": "anthropic/claude-fable-5",
+				"fallbackModels": ["openai-codex/gpt-5.6-sol", "opencode-go/kimi-k3"],
+				"thinking": "high"
 			},
 			"worker": {
-				"model": "alt-anthropic/claude-sonnet-4-6",
+				"model": "anthropic/claude-sonnet-5",
 				"fallbackModels": [
-					"alt-codex/gpt-5.5",
-					"openai-codex/gpt-5.5",
-					"synthetic/syn:large:vision"
-				]
+					"openai-codex/gpt-5.6-luna",
+					"opencode-go/deepseek-v4-flash"
+				],
+				"thinking": "medium"
 			},
 			"researcher": {
-				"model": "alt-anthropic/claude-sonnet-5",
+				"model": "anthropic/claude-sonnet-5",
 				"fallbackModels": [
-					"alt-codex/gpt-5.5",
-					"alt-codex/gpt-5.4",
-					"openai-codex/gpt-5.5",
-					"openai-codex/gpt-5.4",
-					"alt-anthropic/claude-haiku-4-5"
+					"openai-codex/gpt-5.6-luna",
+					"opencode-go/deepseek-v4-flash"
 				],
 				"thinking": "medium"
 			},
 			"scout": {
-				"model": "alt-anthropic/claude-haiku-4-5",
+				"model": "openai-codex/gpt-5.6-luna",
 				"fallbackModels": [
 					"openai-codex/gpt-5.4-mini",
 					"google-vertex/gemini-3-flash-preview",
-					"synthetic/syn:small:text",
 					"llamacpp/gemma4"
-				]
+				],
+				"thinking": "medium"
 			},
 			"context-builder": {
 				"model": "alt-anthropic/claude-haiku-4-5",
 				"fallbackModels": [
 					"openai-codex/gpt-5.4-mini",
 					"google-vertex/gemini-3-flash-preview",
-					"synthetic/syn:small:text",
 					"llamacpp/gemma4"
-				]
+				],
+				"thinking": "medium"
 			}
 		}
 	}
