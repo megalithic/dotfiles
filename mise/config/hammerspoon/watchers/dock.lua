@@ -88,7 +88,8 @@ local function switchKanataProfile(profile)
     if isRunning then
       U.log.of("Kanata profile switched to %s", profile)
     else
-      local lastErr = U.run("tail -3 /tmp/kanata.err 2>/dev/null", true)
+      local errLog = fmt("%s/Library/Logs/kanata/stderr.log", os.getenv("HOME"))
+      local lastErr = U.run(fmt("tail -3 %q 2>/dev/null", errLog), true)
       U.log.wf("Kanata did not restart. Last error: %s", lastErr or "no log")
     end
   end)
