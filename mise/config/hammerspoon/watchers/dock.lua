@@ -63,6 +63,17 @@ local function switchKanataProfile(profile)
     return
   end
 
+  local uid = U.run("id -u", true):gsub("%s+", "")
+  local label = C.dock.kanata.daemonLabel or "org.kanata.daemon"
+  local state = U.run(fmt("launchctl print gui/%s/%s 2>/dev/null", uid, label), true)
+  local isRunning = state and state:match("state = running") ~= nil
+  local currentProfile = U.run(fmt("readlink %s 2>/dev/null || true", mainConfig), true)
+
+  if currentProfile == profilePath and isRunning then
+    U.log.of("Kanata already using profile %s", profile)
+    return
+  end
+
   -- Serialize kanata restarts to prevent overlapping kill/start cycles
   if M._switch_lock then
     U.log.w("Kanata switch already in progress, skipping")
@@ -76,21 +87,25 @@ local function switchKanataProfile(profile)
   U.run(fmt("ln -sf %s %s", profilePath, mainConfig), true)
 
   -- Restart kanata daemon via launchctl kickstart -k
-  local uid = U.run("id -u", true):gsub("%s+", "")
-  local label = C.dock.kanata.daemonLabel or "org.kanata.daemon"
+  local errLog = fmt("%s/Library/Logs/kanata/stderr.log", os.getenv("HOME"))
+  local errStateBefore = U.run(fmt("/usr/bin/stat -f %%m:%%z %q 2>/dev/null || echo 0:0", errLog), true)
   U.run(fmt("launchctl kickstart -k gui/%s/%s", uid, label), true)
 
   -- Verify restart (use launchctl print, not pgrep — kanata runs as root)
   hs.timer.doAfter(2, function()
     M._switch_lock = false
-    local state = U.run(fmt("launchctl print gui/%s/%s 2>/dev/null", uid, label), true)
-    local isRunning = state and state:match("state = running") ~= nil
-    if isRunning then
+    local nextState = U.run(fmt("launchctl print gui/%s/%s 2>/dev/null", uid, label), true)
+    local isRestarted = nextState and nextState:match("state = running") ~= nil
+    if isRestarted then
       U.log.of("Kanata profile switched to %s", profile)
     else
-      local errLog = fmt("%s/Library/Logs/kanata/stderr.log", os.getenv("HOME"))
-      local lastErr = U.run(fmt("tail -3 %q 2>/dev/null", errLog), true)
-      U.log.wf("Kanata did not restart. Last error: %s", lastErr or "no log")
+      local errStateAfter = U.run(fmt("/usr/bin/stat -f %%m:%%z %q 2>/dev/null || echo 0:0", errLog), true)
+      if errStateAfter ~= errStateBefore then
+        local lastErr = U.run(fmt("tail -3 %q 2>/dev/null", errLog), true)
+        U.log.wf("Kanata did not restart. Last error: %s", lastErr or "no log")
+      else
+        U.log.w("Kanata did not restart. No new stderr since restart attempt.")
+      end
     end
   end)
 end
