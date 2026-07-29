@@ -9,9 +9,10 @@ set -euo pipefail
 #     writes privileged launchd/sudoers pieces, and points configs at the
 #     mise/dotfiles-managed files.
 
-# Pairing verified 2026-07: driver 6.10.0 <-> kanata 1.11.0 (running on
-# megabookpro). Official docs still say 6.2.0; kanata's driverkit crate is
-# built against a specific driver IPC, so re-verify when bumping either side.
+# Pairing verified 2026-07 on this machine: driver 6.10.0 <-> kanata 1.12.0.
+# Driver 8.0.0 breaks kanata 1.12.0 (versioned IPC socket mismatch ->
+# connect_failed asio.system:2); v8.0.0 targets kanata main's driverkit 0.4.0
+# client. Re-verify the pairing before bumping either side.
 DRIVER_VERSION="6.10.0"
 DRIVER_URL="https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/releases/download/v${DRIVER_VERSION}/Karabiner-DriverKit-VirtualHIDDevice-${DRIVER_VERSION}.pkg"
 DRIVER_SHA256="e1317d7fe68ad2d559cf41018c2bc6709e178d13bdb5f85ee30f3deaf4817966"
@@ -22,6 +23,11 @@ VHID_DAEMON_BIN="/Library/Application Support/org.pqrs/Karabiner-DriverKit-Virtu
 VHID_DAEMON_PLIST="/Library/LaunchDaemons/${VHID_DAEMON_LABEL}.plist"
 
 KANATA_STABLE_BIN="/usr/local/bin/kanata"
+KANATA_EXPECTED_VERSION="kanata 1.12.0"
+KANATA_CODESIGN_COMMON_NAME="Kanata Local Code Signing"
+KANATA_CODESIGN_IDENTIFIER="org.megadots.kanata"
+KANATA_CODESIGN_KEYCHAIN="/Library/Keychains/System.keychain"
+KANATA_CODESIGN_P12_PASSWORD="kanata-local-codesign"
 KANATA_CONFIG_DIR="${HOME}/.config/kanata"
 KANATA_ACTIVE_CONFIG="${KANATA_CONFIG_DIR}/kanata.kbd"
 KANATA_DEFAULT_CONFIG="${KANATA_CONFIG_DIR}/macbook.kbd"
@@ -95,7 +101,7 @@ install_driver_pkg() {
   fi
 
   if [[ -x "$DRIVER_MANAGER" ]]; then
-    if sudo "$DRIVER_MANAGER" activate >/dev/null 2>&1; then
+    if sudo "$DRIVER_MANAGER" forceActivate >/dev/null 2>&1 || sudo "$DRIVER_MANAGER" activate >/dev/null 2>&1; then
       say "requested Karabiner VirtualHID activation"
     else
       warn "driver activation command returned non-zero; approve Driver Extensions in System Settings if prompted"
@@ -161,6 +167,65 @@ print(os.path.realpath(sys.argv[1]))
 PY
 }
 
+codesign_identity_hash() {
+  /usr/bin/security find-identity -v -p codesigning "$KANATA_CODESIGN_KEYCHAIN" 2>/dev/null \
+    | /usr/bin/awk -v name="$KANATA_CODESIGN_COMMON_NAME" '$0 ~ "\\\"" name "\\\"" { print $2; exit }'
+}
+
+ensure_kanata_codesign_identity() {
+  local identity_hash
+  identity_hash="$(codesign_identity_hash)"
+  if [[ -n "$identity_hash" ]]; then
+    say "codesign identity present: ${KANATA_CODESIGN_COMMON_NAME}"
+    return 0
+  fi
+
+  say "creating local codesign identity: ${KANATA_CODESIGN_COMMON_NAME}"
+  mkdir -p "$TMP_ROOT"
+  local key cert p12
+  key="${TMP_ROOT}/kanata-codesign.key"
+  cert="${TMP_ROOT}/kanata-codesign.crt"
+  p12="${TMP_ROOT}/kanata-codesign.p12"
+
+  /usr/bin/openssl req -new -newkey rsa:2048 -nodes -x509 -sha256 -days 3650 \
+    -subj "/CN=${KANATA_CODESIGN_COMMON_NAME}/" \
+    -addext "keyUsage=digitalSignature" \
+    -addext "extendedKeyUsage=codeSigning" \
+    -keyout "$key" \
+    -out "$cert" >/dev/null 2>&1
+  /usr/bin/openssl pkcs12 -export -inkey "$key" -in "$cert" -out "$p12" -passout "pass:${KANATA_CODESIGN_P12_PASSWORD}" >/dev/null 2>&1
+
+  sudo /usr/bin/security import "$p12" -k "$KANATA_CODESIGN_KEYCHAIN" -P "$KANATA_CODESIGN_P12_PASSWORD" -T /usr/bin/codesign >/dev/null
+  sudo /usr/bin/security add-trusted-cert -d -r trustRoot -p codeSign -k "$KANATA_CODESIGN_KEYCHAIN" "$cert" >/dev/null
+
+  identity_hash="$(codesign_identity_hash)"
+  [[ -n "$identity_hash" ]] || die "failed to create codesign identity ${KANATA_CODESIGN_COMMON_NAME}"
+  say "codesign identity created: ${KANATA_CODESIGN_COMMON_NAME}"
+}
+
+kanata_signature_is_stable() {
+  local requirement
+  requirement="$(/usr/bin/codesign -d -r- "$KANATA_STABLE_BIN" 2>&1 || true)"
+  [[ "$requirement" == *"identifier \"${KANATA_CODESIGN_IDENTIFIER}\""* && "$requirement" == *"certificate leaf ="* ]]
+}
+
+sign_stable_kanata() {
+  [[ -x "$KANATA_STABLE_BIN" ]] || die "kanata binary missing: ${KANATA_STABLE_BIN}"
+  if kanata_signature_is_stable; then
+    say "${KANATA_STABLE_BIN} already has stable codesign identity"
+    return 0
+  fi
+
+  ensure_kanata_codesign_identity
+
+  local identity_hash requirement
+  identity_hash="$(codesign_identity_hash)"
+  say "signing ${KANATA_STABLE_BIN} with stable identity ${KANATA_CODESIGN_COMMON_NAME}"
+  sudo /usr/bin/codesign --force --sign "$identity_hash" --identifier "$KANATA_CODESIGN_IDENTIFIER" --timestamp=none "$KANATA_STABLE_BIN" >/dev/null
+  requirement="$(/usr/bin/codesign -d -r- "$KANATA_STABLE_BIN" 2>&1 | /usr/bin/sed -n 's/^designated => //p')"
+  say "codesign requirement: ${requirement:-unknown}"
+}
+
 install_stable_kanata() {
   local brew_bin src
   brew_bin="$(command -v brew || true)"
@@ -168,13 +233,18 @@ install_stable_kanata() {
   src="$($brew_bin --prefix)/bin/kanata"
   [[ -x "$src" ]] || die "Homebrew kanata not found at ${src}; run 'mise bootstrap packages apply --yes' or 'brew install kanata'"
 
-  local src_real new_ver old_ver
+  local src_real new_ver old_ver did_copy
   src_real="$(realpath_python "$src")"
+  did_copy=0
   if [[ "$src_real" == "$KANATA_STABLE_BIN" ]]; then
     say "Homebrew kanata already uses stable path ${KANATA_STABLE_BIN}"
+    sign_stable_kanata
     return
   fi
   new_ver="$($src_real --version 2>/dev/null | head -1 || true)"
+  if [[ "$new_ver" != "$KANATA_EXPECTED_VERSION" && "${KANATA_ALLOW_UNVERIFIED_VERSION:-0}" != "1" ]]; then
+    die "Homebrew kanata is ${new_ver:-unknown}, expected ${KANATA_EXPECTED_VERSION} for driver ${DRIVER_VERSION}; update the verified pairing or set KANATA_ALLOW_UNVERIFIED_VERSION=1"
+  fi
   old_ver=""
   if [[ -x "$KANATA_STABLE_BIN" && ! -L "$KANATA_STABLE_BIN" ]]; then
     old_ver="$($KANATA_STABLE_BIN --version 2>/dev/null | head -1 || true)"
@@ -183,8 +253,14 @@ install_stable_kanata() {
   if [[ ! -x "$KANATA_STABLE_BIN" || -L "$KANATA_STABLE_BIN" || "$new_ver" != "$old_ver" ]]; then
     say "copying kanata to ${KANATA_STABLE_BIN} (${old_ver:-none} -> ${new_ver:-unknown})"
     sudo /usr/bin/install -m 0755 "$src_real" "$KANATA_STABLE_BIN"
+    did_copy=1
   else
     say "${KANATA_STABLE_BIN} already at ${old_ver}"
+  fi
+
+  sign_stable_kanata
+  if [[ "$did_copy" -eq 1 ]]; then
+    warn "macOS may ask for one final Accessibility/Input Monitoring approval after first stable signing"
   fi
 }
 
@@ -421,7 +497,7 @@ verify_kanata_running() {
   done
   warn "kanata process not detected after load"
   warn "check logs: ${HOME}/Library/Logs/kanata/stderr.log"
-  warn "common causes: driver extension not approved, Input Monitoring not granted, sudoers entry missing"
+  warn "common causes: driver extension not approved, Accessibility/Input Monitoring not granted to ${KANATA_STABLE_BIN}, sudoers entry missing"
   return 0
 }
 
@@ -432,6 +508,7 @@ print_manual_notes() {
   fi
 
   say "setup complete"
+  say "if kanata reports TCC errors, approve ${KANATA_STABLE_BIN} in Privacy & Security > Input Monitoring and Accessibility"
   say "verify: systemextensionsctl list | grep -i Karabiner"
   say "verify: launchctl print system/${VHID_DAEMON_LABEL}"
   say "verify: launchctl print gui/${USER_ID}/${KANATA_DAEMON_LABEL}"
