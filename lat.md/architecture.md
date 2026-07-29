@@ -6,7 +6,7 @@ This repo is a single-flake nix-darwin + Home Manager setup for macOS. One root 
 
 `flake.nix` pins `nixpkgs-unstable` and makes `home-manager` and `nix-darwin` follow it.
 
-Other inputs include `pi-nix`, `opnix`, `neovim-nightly-overlay`, `devenv`, `hunk`, `nh`, `kanata-darwin`, `yazi`, `nix-homebrew` plus the Homebrew taps, and `brew-nix` for cask and `mas` packaging.
+Other inputs include `opnix`, `neovim-nightly-overlay`, `devenv`, `hunk`, `nh`, `kanata-darwin`, `yazi`, `nix-homebrew` plus the Homebrew taps, and `brew-nix` for cask and `mas` packaging.
 
 Global constants live in the flake `let`: `arch = "aarch64-darwin"`, `version` (Home Manager/system state version), and `username = "seth"`. `lib` is `nixpkgs.lib` extended with `./lib/default.nix`, and `overlays` come from `./overlays`.
 
@@ -37,7 +37,7 @@ Builders under `lib/`:
 
 `pkgs/default.nix` is one overlay that auto-discovers every non-`default.nix` `.nix` file under `pkgs/` recursively and exposes it by filename in the nixpkgs namespace.
 
-Each file is a single-package module. If a module's arguments include `mkApp`, the overlay injects the shared macOS app builder. If a same-name override such as `pkgs/mise.nix` needs the upstream package, the overlay injects `prev.mise` to avoid self-recursion. Otherwise it uses normal `callPackage`. `pkgs/mise.nix` deliberately consumes mise's tagged macOS release asset instead of rebuilding the Rust crate from source. Current custom packages include `mise`, `helium-browser`, `brave-browser-nightly`, `bloom`, `slk`, `handy`, `tidewave`, `tidewave-cli`, `chrome-devtools-mcp`, and `cli/whisperkit-cli`.
+Each file is a single-package module. If a module's arguments include `mkApp`, the overlay injects the shared macOS app builder. If a same-name override such as `pkgs/mise.nix` needs the upstream package, the overlay injects `prev.mise` to avoid self-recursion. Otherwise it uses normal `callPackage`. `pkgs/mise.nix` deliberately consumes mise's tagged macOS release asset instead of rebuilding the Rust crate from source. Current custom packages include `mise`, `helium-browser`, `brave-browser-nightly`, `bloom`, `slk`, `handy`, `tidewave`, `tidewave-cli`, `chrome-devtools-mcp`, and `cli/whisperkit-cli`; `pkgs.handy` remains exposed as a backport, but active install comes from mise's `brew-cask:handy` to avoid Home Manager source builds.
 
 External overlays and input aliases live separately in `overlays/default.nix`.
 

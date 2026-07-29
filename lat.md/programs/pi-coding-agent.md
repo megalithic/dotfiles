@@ -16,9 +16,9 @@ The mise dotfiles must not be applied while Home Manager still owns `~/.pi/agent
 
 ## Package source and wrapper
 
-Pi comes from the `pi-nix` flake input (`inputs.pi-nix.packages.${system}.coding-agent`) and is exposed through `programs.pi.coding-agent.package`.
+Pi comes from nixpkgs' cached `pkgs.pi-coding-agent` package and is installed directly in `home.packages` through the local wrapper.
 
-The local wrapper sets `PI_STATE_DIR`, creates socket, manifest, and pinvim state directories, sources OpNix env secrets from `XDG_CONFIG_HOME` when present, adds the Nix-managed Sesame and Plannotator CLIs, `poppler-utils`, and `rtk` to `PATH`, clears the one-shot `PIMUX_FROM_NVIM` marker, and delegates to the packaged Pi binary. The wrapper also duplicates the OpNix `LAT_LLM_*` derivation so non-interactive launches still get lat search config, prepends `$HOME/.pi/agent/bin` to `PATH` so the patched `lat` binary resolves first, and copies the local `patches/pi-bash-live-view/widget.ts` over the installed `pi-bash-live-view` widget when that package is present.
+The local wrapper sets `PI_STATE_DIR`, creates socket, manifest, and pinvim state directories, sources OpNix env secrets from `XDG_CONFIG_HOME` when present, adds the Nix-managed Sesame and Plannotator CLIs plus `poppler-utils` to `PATH`, clears the one-shot `PIMUX_FROM_NVIM` marker, and delegates to the packaged Pi binary. `rtk` comes from mise when present on `PATH`, avoiding a Nix Rust source build. The wrapper also duplicates the OpNix `LAT_LLM_*` derivation so non-interactive launches still get lat search config, prepends `$HOME/.pi/agent/bin` to `PATH` so the patched `lat` binary resolves first, and copies the local `patches/pi-bash-live-view/widget.ts` over the installed `pi-bash-live-view` widget when that package is present.
 
 The main module auto-discovers non-underscore-prefixed local `./packages/*.nix`, `.ts` extensions, extension directories, `./agents/*.md`, skill directories under `./skills/`, and `./prompts/*.md`. Prefixing a path with `_` keeps it in source control while disabling it from the active profile.
 

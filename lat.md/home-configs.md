@@ -6,13 +6,15 @@ This file covers the user-level layer: how program modules are discovered, packa
 
 `home/common/default.nix` auto-imports every `home/common/programs/<tool>/` directory that contains a `default.nix`, so the layout stays one directory per tool instead of a hand-maintained import list.
 
-The auto-import filters by directory shape and gates optional modules: `worktrunk` imports only when `inputs ? worktrunk`; when enabled, `home/common/default.nix` also imports `inputs.worktrunk.homeModules.default` before the local `home/common/programs/worktrunk/` config so the `programs.worktrunk` option exists. Alongside the program modules it imports `lib.nix`, `modules/settings-sync.nix`, `packages.nix`, `services.nix`, and `accounts.nix`. `mkHome` imports `inputs.pi-nix.homeModules.default` so `programs.pi.coding-agent` can manage the wrapped Pi package declaratively.
+The auto-import filters by directory shape and gates optional modules: `worktrunk` imports only when `inputs ? worktrunk`; when enabled, `home/common/default.nix` also imports `inputs.worktrunk.homeModules.default` before the local `home/common/programs/worktrunk/` config so the `programs.worktrunk` option exists. Alongside the program modules it imports `lib.nix`, `modules/settings-sync.nix`, `packages.nix`, `services.nix`, and `accounts.nix`. Pi is installed as a normal Home Manager package from its local module, not through `pi-nix`.
 
 `home/common/default.nix` also sets `home.sessionPath`, session variables, the `~/bin` link, an `.editorconfig`, and out-of-store symlinks for iCloud and Proton drives. It enables `targets.darwin.copyApps` (not `linkApps`) so GUI apps work with Spotlight, and runs `lib.mega.mkAppActivation` over `config.mega.customApps`.
 
 ## Package and app composition
 
 Home Manager package composition avoids direct `pkgs.poppler` plus `pkgs."poppler-utils"` installs; PDF CLI tools come from `poppler-utils`.
+
+Python CLI packages use `python313Packages`, but `sqlfmt` is intentionally not installed from Nix while nixpkgs' Python 3.13 build fails its metadata lookup.
 
 Hunk is installed from the `hunk` flake input (`inputs.hunk.packages.${pkgs.stdenv.hostPlatform.system}.hunk`) rather than nixpkgs.
 
@@ -106,7 +108,7 @@ Tools managed under `home/common/programs/`, one line each. Tools with their own
 | ghostty                                 | terminal emulator — see [[ghostty]]                                                                                                                                                                                                                                                        |
 | git                                     | git, signing, gitignore/tool-ignore; `git wt` forwards to Worktrunk `wt`. `mise/config/git/` is the independent non-nix twin for the staged mise migration (XDG-native: single merged `~/.config/git/config` + `ignore`, no `~/.gitconfig`; see its `AGENTS.md`)                           |
 | hammerspoon                             | macOS automation — see [[hammerspoon]]                                                                                                                                                                                                                                                     |
-| handy                                   | macOS app (local nixpkgs backport)                                                                                                                                                                                                                                                         |
+| handy                                   | macOS app installed by mise `brew-cask:handy`; Home Manager module is a no-op so the custom Rust/Tauri backport does not build locally                                                                                                                                                     |
 | helium-browser                          | primary browser — see [[helium]]                                                                                                                                                                                                                                                           |
 | htop / k9s                              | process and Kubernetes TUIs                                                                                                                                                                                                                                                                |
 | jj                                      | Jujutsu VCS. Live setup layers the HM-rendered `~/.config/jj/config.toml` over an unmanaged `~/.jjconfig.toml` (carries the unwired `templates.nix` content). `mise/config/jj/` is the independent non-nix twin: one merged `config.toml`, effective-config-identical; see its `AGENTS.md` |

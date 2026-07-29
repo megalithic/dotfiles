@@ -41,7 +41,6 @@ inputs.home-manager.lib.homeManagerConfiguration {
   };
   modules = [
     inputs.opnix.homeManagerModules.default
-    inputs.pi-nix.homeModules.default
     ../home/${hostname}.nix
     {
       # Enable home-manager to manage itself (standalone mode)

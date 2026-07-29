@@ -31,10 +31,6 @@
       # Track Neovim's moving nightly tag instead of overlay's raw default branch.
       inputs.neovim-src.url = "github:neovim/neovim/nightly";
     };
-    pi-nix = {
-      url = "github:lukasl-dev/pi.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     # espanso: pinned to last-good nixpkgs. Jul 2026 unstable (clang 21 /
     # cctools bump) crashes cctools ld (Trace/BPT trap 5) linking espanso
     # on aarch64-darwin. Drop this pin once upstream espanso links again.

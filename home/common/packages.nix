@@ -149,7 +149,6 @@ let
     python313
     python313Packages.ipython
     python313Packages.pip
-    python313Packages.sqlfmt
     python313Packages.websocket-client
     python313Packages.websockets
     python313Packages.pdf2image

@@ -46,7 +46,7 @@ _: {
     serviceConfig = {
       Label = "limit.maxfiles";
       ProgramArguments = [
-        "launchctl"
+        "/bin/launchctl"
         "limit"
         "maxfiles"
         "524288" # soft limit

@@ -1,14 +1,13 @@
 {
-  inputs,
   config,
   pkgs,
   lib,
-  system,
   ...
 }:
 let
-  # inherit (pkgs) pi-coding-agent;
-  piPackage = inputs.pi-nix.packages.${system}.coding-agent;
+  # Use nixpkgs' cached Pi package. pi-nix may be newer, but it often
+  # requires a local Darwin build for this flake lock.
+  piPackage = pkgs.pi-coding-agent;
 
   piStateDir = "${config.xdg.stateHome}/pi";
 
@@ -120,7 +119,9 @@ let
       cp ${./patches/pi-bash-live-view/widget.ts} "$bash_live_view_widget"
     fi
 
-    export PATH="$HOME/.pi/agent/bin:${sesame}/bin:${plannotator}/bin:${pkgs."poppler-utils"}/bin:${pkgs.rtk}/bin:$PATH"
+    # rtk is installed by mise; keep existing PATH so its shim is available
+    # without forcing a Nix Rust source build.
+    export PATH="$HOME/.pi/agent/bin:${sesame}/bin:${plannotator}/bin:${pkgs."poppler-utils"}/bin:$PATH"
     exec ${piPackage}/bin/pi "$@"
   '';
 
@@ -323,6 +324,7 @@ in
       pkgs."poppler-utils"
       plannotator
       sesame
+      piWrapper
       piAcpWrapper
       pinvim
       p
@@ -425,12 +427,6 @@ in
       shellInit = ''
         ${piviewFishCompletions}
       '';
-    };
-    pi = {
-      coding-agent = {
-        enable = true;
-        package = piWrapper;
-      };
     };
   };
 }
