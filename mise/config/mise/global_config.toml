@@ -341,6 +341,21 @@ os = ["macos"]
 asset_pattern = "helium_*_arm64-macos.dmg"
 postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh && $DOTFILES_DIR/mise/tasks/setup-helium"
 
+# shade-next panel agent (private repo — token via MISE_GITHUB_TOKEN,
+# GITHUB_TOKEN, or the gh CLI config). The zip ships shade-next.app/ +
+# bin/shade-next (launches the app via `open`; GUI must go through
+# LaunchServices for the URL handler + TCC) +
+# install/mise-postinstall-shade-next.sh, which symlinks the app into
+# ~/Applications and registers io.shade.next / shade-next://.
+# Pinned: mise `latest` skips prereleases, and only -rc tags exist so far.
+# Flip to "latest" after the first stable release (`mise run release v0.1.0`).
+[tools."github:megalithic/shade-next"]
+version = "0.1.0-rc.2"
+os = ["macos"]
+asset_pattern = "shade-next-darwin-arm64.zip"
+bin_path = "bin"
+postinstall = 'bash "$MISE_TOOL_INSTALL_PATH/install/mise-postinstall-shade-next.sh"'
+
 [tools."http:kanata-bar"]
 version = "1.1.10"
 checksum = "sha256:ba07e3caeb41d1b2a667e2c246cc3b0ef632a2d812ceeac0ce2eed9441d63b35"
