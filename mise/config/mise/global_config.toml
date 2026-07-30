@@ -378,8 +378,7 @@ version = "latest"
 # unlock): the app socket handshake rejects the mise vfox shim (shim -> mise
 # re-exec), which broke fnox on workbookpro and triggered the recurring
 # system-modal 'Set up Touch ID' dialog that wedged input (2026-07-28).
-"brew:1password-cli" = "latest"
-"brew:apfel" = "latest"         # Apple Intelligence CLI/server — shade-next compact_ai interpreter
+"brew:apfel" = "latest"        # Apple Intelligence CLI/server — shade-next compact_ai interpreter
 "brew:autoconf" = "latest"
 "brew:bat" = "latest"
 "brew:automake" = "latest"
@@ -397,16 +396,16 @@ version = "latest"
 "brew:gnupg" = "latest"
 "brew:grep" = "latest"
 "brew:herdr" = "latest"
-"brew:kanata" = "latest"        # keyboard remapper; setup verifies 1.12.0 with VHID 6.10.0, then copies/signs it to stable /usr/local/bin/kanata
+"brew:kanata" = "latest"       # keyboard remapper; setup verifies 1.12.0 with VHID 6.10.0, then copies/signs it to stable /usr/local/bin/kanata
 "brew:mas" = "latest"
 "brew:mole" = "latest"
 "brew:mosh" = "latest"
-"brew:openssl@3" = "latest"     # required by Python (ssl module) and networking Rust crates
-"brew:pam-reattach" = "latest"  # Touch ID for sudo inside tmux; wired into sudo_local by setup:touchid-sudo
+"brew:openssl@3" = "latest"    # required by Python (ssl module) and networking Rust crates
+"brew:pam-reattach" = "latest" # Touch ID for sudo inside tmux; wired into sudo_local by setup:touchid-sudo
 "brew:pgcli" = "latest"
 "brew:pinentry-mac" = "latest"
-"brew:pkgconf" = "latest"       # helps compilers locate openssl and other libs when building from source
-"brew:poppler" = "latest"       # pdftotext etc. — pi wrapper expects poppler-utils on PATH
+"brew:pkgconf" = "latest"      # helps compilers locate openssl and other libs when building from source
+"brew:poppler" = "latest"      # pdftotext etc. — pi wrapper expects poppler-utils on PATH
 "brew:renameutils" = "latest"
 "brew:ripgrep" = "latest"
 "brew:syncthing" = "latest"
