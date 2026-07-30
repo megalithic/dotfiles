@@ -712,7 +712,7 @@ mise run fonts:install
 description = "Update system packages, mise tools, and Neovim packages"
 run = """
 set -euo pipefail
-echo -e "\\033[1;33m1) Updating dotfiles (packages, symlinks, mise tools, launchd, nvim packs, fnox secrets, pi plugins)\\033[0m"
+echo "Updating dotfiles (packages, symlinks, mise tools, launchd, nvim packs, fnox secrets, pi plugins)"
 mise bootstrap --only packages,dotfiles,macos-launchd-agents --yes
 mise bootstrap packages apply --yes
 mise bootstrap packages upgrade --yes
