@@ -69,6 +69,7 @@ XDG_DATA_HOME = "{{env.HOME}}/.local/share"
 XDG_STATE_HOME = "{{env.HOME}}/.local/state"
 XDG_CACHE_HOME = "{{env.HOME}}/.cache"
 PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
+STCONFDIR = "{{env.HOME}}/.config/syncthing"
 
 EDITOR = "nvim -O"
 VISUAL = "nvim -O"
