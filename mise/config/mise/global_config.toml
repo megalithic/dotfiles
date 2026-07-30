@@ -604,8 +604,8 @@ program = "/opt/homebrew/opt/syncthing/bin/syncthing"
 args = ["--no-browser", "--no-restart"]
 run_at_load = true
 keep_alive = true
-stdout_path = "~/.cache/syncthing-stdout.log"
-stderr_path = "~/.cache/syncthing-stderr.log"
+stdout_path = "~/.cache/syncthing.log"
+stderr_path = "~/.cache/syncthing.log"
 
 # kanata daemon (dev.mise.org.kanata.daemon) and kanata-bar agents are
 # written and loaded by mise/tasks/kanata-setup (post-tools hook), because
