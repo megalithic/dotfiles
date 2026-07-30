@@ -408,6 +408,7 @@ version = "latest"
 "brew:poppler" = "latest"       # pdftotext etc. — pi wrapper expects poppler-utils on PATH
 "brew:renameutils" = "latest"
 "brew:ripgrep" = "latest"
+"brew:syncthing" = "latest"
 "brew:tree" = "latest"
 "brew:wxwidgets" = "latest"
 "brew:zsh" = "latest"
@@ -584,8 +585,8 @@ stderr_path = "~/.cache/pi-session-indexer.log"
 program = "~/.dotfiles/bin/media-presenced"
 run_at_load = true
 keep_alive = true
-stdout_path = "~/Library/Logs/media-presence/stdout.log"
-stderr_path = "~/Library/Logs/media-presence/stderr.log"
+stdout_path = "~/.cache/media-presence-stdout.log"
+stderr_path = "~/.cache/media-presence-stderr.log"
 
 # miccheck: menubar push-to-talk/push-to-mute app (bin/miccheck.swift).
 # Wrapper checks the compiled binary exists (built by `mise run setup:miccheck`).
@@ -593,8 +594,16 @@ stderr_path = "~/Library/Logs/media-presence/stderr.log"
 program = "~/.dotfiles/bin/miccheck-launchd"
 run_at_load = true
 keep_alive = true
-stdout_path = "~/Library/Logs/miccheck/stdout.log"
-stderr_path = "~/Library/Logs/miccheck/stderr.log"
+stdout_path = "~/.cache/miccheck-stdout.log"
+stderr_path = "~/.cache/miccheck-stderr.log"
+
+[bootstrap.macos.launchd.agents."syncthing"]
+program = "/opt/homebrew/opt/syncthing/bin/syncthing"
+args = ["--no-browser", "--no-restart"]
+run_at_load = true
+keep_alive = true
+stdout_path = "~/.cache/syncthing-stdout.log"
+stderr_path = "~/.cache/syncthing-stderr.log"
 
 # kanata daemon (dev.mise.org.kanata.daemon) and kanata-bar agents are
 # written and loaded by mise/tasks/kanata-setup (post-tools hook), because
@@ -702,7 +711,8 @@ mise run fonts:install
 description = "Update system packages, mise tools, and Neovim packages"
 run = """
 set -euo pipefail
-# mise bootstrap --only packages,dotfiles,macos-launchd-agents --yes
+echo -e "\\033[1;33m1) Updating dotfiles (packages, symlinks, mise tools, launchd, nvim packs, fnox secrets, pi plugins)\\033[0m"
+mise bootstrap --only packages,dotfiles,macos-launchd-agents --yes
 mise bootstrap packages apply --yes
 mise bootstrap packages upgrade --yes
 mise run fnox:render
