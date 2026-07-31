@@ -1,10 +1,33 @@
 # Agent Instructions
 
-This is a **nix-darwin + home-manager** managed dotfiles repo.
+This repo contains both Nix-managed and mise-managed dotfiles. Host decides which system tools apply.
+
+## Host management guard (read first)
+
+Determine the host once from `$HOSTNAME` when it is set. Use `hostname -s` only as a fallback; do not re-query every turn.
+
+| Host | System management |
+| ---- | ----------------- |
+| `megabookpro` | Mostly nix-darwin + home-manager, with some mise migration. Use Nix rebuild rules for Nix-owned files. |
+| `workbookpro` | Fully mise-managed. Do not use Nix, nix-darwin, home-manager, `devenv`, or Nix rebuild commands. Use mise tasks/config and Homebrew casks declared in `mise/config/mise/global_config.toml`. |
+
+Nix sections below apply only on Nix-managed hosts or for paths still owned by Nix.
+
+### Mise-managed hosts
+
+On `workbookpro`, use mise as the system-management entry point:
+
+- Discover tasks with `mise tasks ls`; inspect one with `mise tasks info <task>`.
+- Run declared tasks with `mise run <task>` or `mise tasks run <task>`.
+- Run tool-scoped commands with `mise exec [TOOL@VERSION]... -- <command> [args...]` (`mise x` is the short alias). The `--` separates requested tools from the command.
+- If an approved tool is missing and you need to run an approved command, do not install it globally. Prefix the exec call with `MISE_AUTO_INSTALL=false` so mise fails instead of auto-installing: `MISE_AUTO_INSTALL=false mise exec <tool>@<version> -- <command> [args...]`.
+- Add or change tools in `mise/config/mise/global_config.toml` only when the user asks or the task requires persistent ownership changes.
+
+Reference: <https://mise.jdx.dev/cli/exec.html>
 
 ## Nix-Managed Config Files (CRITICAL)
 
-**Before editing ANY config file outside `~/.dotfiles/`:**
+**Before editing ANY config file outside `~/.dotfiles/` on a Nix-managed host:**
 
 1. Check if it's a symlink: `ls -la <path>`
 2. If symlinked to `/nix/store/` → find source in `~/.dotfiles/` and edit there
@@ -21,7 +44,7 @@ This is a **nix-darwin + home-manager** managed dotfiles repo.
 - `~/Applications/Nix/*` → Finder aliases created by `home/common/mac-aliases.nix`
 - Most `~/.config/<app>/*` → check `home/common/programs/<app>/` first
 
-**Never:**
+**Never on a Nix-managed host:**
 
 - Write directly to symlinked files (will fail or be overwritten)
 - Use `brew install` - all packages via Nix
