@@ -9,9 +9,10 @@ Lightweight Chrome DevTools Protocol CLI. Connects directly via WebSocket — no
 
 ## Prerequisites
 
-- Chrome (or Chromium, Brave, Edge, Vivaldi) with remote debugging enabled: open `chrome://inspect/#remote-debugging` and toggle the switch
+- Chrome (or Chromium, Brave, Edge, Vivaldi, Helium) with remote debugging enabled: open `chrome://inspect/#remote-debugging` and toggle the switch
 - Node.js 22+ (uses built-in WebSocket)
-- If your browser's `DevToolsActivePort` is in a non-standard location, set `CDP_PORT_FILE` to its full path
+- Helium running on port `9223` is detected automatically
+- To override discovery, set `CDP_PORT`, `CDP_HOST`, or `CDP_PORT_FILE`
 
 ## Commands
 

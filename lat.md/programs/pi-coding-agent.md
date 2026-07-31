@@ -132,6 +132,8 @@ Local Pi models use the `llamacpp` OpenAI-compatible provider at `http://127.0.0
 
 Global MCP server config lives in `mcp.json`: command-backed `chrome-devtools`, remote `context7` with `CONTEXT7_API_KEY`, and remote `githits` with bearer auth from `GITHITS_API_KEY`. Local app-backed MCP servers such as Tidewave and Paper are not declared globally unless they are expected to be running, to avoid reconnect noise.
 
+The `chrome-cdp` skill probes `CDP_PORT`, `CDP_PORT_FILE`, Helium's default port `9223`, then known browser `DevToolsActivePort` files. Each port is validated through `/json/version`, so stale port files do not block discovery.
+
 Pi subagent orchestration comes from the `npm:pi-subagents` package; the old local `extensions/subagent/` implementation and vendored `packages/pi-subagents.nix` derivation are removed.
 
 ## Nvim review routing
