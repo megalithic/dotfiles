@@ -12,19 +12,19 @@ The existing logic — `bindings.lua` `loadMeeting` (hyper+z) and `watchers/came
 
 ## Detection layers
 
-Three layers: an OS-level capture layer (mic/camera), a CDP-based browser meeting layer, and a Slack huddle resolver plus a replayd-based screenshare resolver.
+Three layers: an OS-level capture layer (mic/camera), a CDP-based browser meeting layer, native-app mic-owner resolvers, and a replayd-based screenshare resolver.
 
 The capture layer always works: microphone in-use plus owner via CoreAudio process objects (`kAudioHardwarePropertyProcessObjectList`, `kAudioProcessPropertyIsRunningInput`, `kAudioProcessPropertyPID`/`BundleID`), and camera in-use via CoreMediaIO `kAudioDevicePropertyDeviceIsRunningSomewhere`. Both install property listeners plus a 5s safety-net refresh.
 
 The meeting layer detects supported browser meeting URLs through Chrome DevTools Protocol against Helium on port 9223. `Target.setDiscoverTargets` discovers `meet.google.com` and `telehealth.px.athena.io` page targets event-driven, then a debounced (1.2s) `Runtime.evaluate` classifies lobby vs joined, in-app mic/camera state, screen-share (`You are presenting`/stop sharing), and Google Meet participant names (from `Mute X's microphone` aria-labels). Google Meet uses Join-now/Ask-to-join/Leave-call controls; Athena telehealth also treats its pre-join sign-in flow (`Telehealth - Visit Sign In`, `Get ready for your visit`, `What is your full name?`, `Click Allow...`, `Next`) as lobby so starting another visit still flips miccheck into push-to-talk before the call is live. CDP is the authority because TCC/replayd logs are unreliable for already-granted apps. Meet fires `Target.targetInfoChanged` in a tight loop, so classify is debounced and deduped by url+title signature. The daemon also runs a throttled `Target.getTargets` refresh on CDP connect, when Helium starts using the mic while no meeting is active, and on hyper+z focus; this catches pre-existing tabs, same-tab Google Meet rejoins, and stale focus state without adding a polling loop. Some meeting URLs (currently Athena telehealth) can fall back to `meetingState: camera-active`: if the URL prefix matches the fallback list and macOS reports the camera active, the daemon treats the page as an active meeting even when DOM classification is unknown.
 
-### Slack huddle resolver
+### Native-app mic-owner resolvers
 
-When the capture layer detects a mic owner whose bundle ID exactly matches the Slack app (`com.tinyspeck.slackmacgap`) or helper (`com.tinyspeck.slackmacgap.helper`), the engine treats it as a meeting.
+When the capture layer detects a mic owner whose bundle ID exactly matches a known native meeting app, the engine treats it as a joined meeting.
 
-This sets `inMeeting=true`, `meetingApp="com.tinyspeck.slackmacgap"`, `meetingState="joined"`. This triggers miccheckd's push-to-talk enforcement for Slack huddles without any CDP involvement. No video required — the mic-owner signal alone is sufficient (validated live 2026-07-07).
+Current native resolvers are Slack (`com.tinyspeck.slackmacgap`, `com.tinyspeck.slackmacgap.helper`) and Zoom (`us.zoom.xos`). These set `inMeeting=true`, `meetingApp` to the app bundle, and `meetingState="joined"`. This triggers miccheckd's push-to-talk enforcement without any CDP involvement. No video is required — the mic-owner signal alone is sufficient (Slack validated live 2026-07-07; Zoom validated live 2026-07-30).
 
-The engine fuses Slack and CDP meeting sources: CDP takes priority when both are active, so meetingApp stays on Helium while a Meet tab is also in a meeting. When multiple Meet tabs exist, active/lobby CDP states can replace the current browser target, but inactive/unknown stale tabs and stale `meet.left` events cannot clear an active different target. When Slack is the sole meeting source, `meetingApp` and `inMeeting` reflect the huddle, hyper+z focuses the Slack app via `NSRunningApplication.activate`, and `meeting.left` fires when the Slack mic owner disappears.
+The engine fuses native app and CDP meeting sources: CDP takes priority when both are active, so `meetingApp` stays on Helium while a Meet tab is also in a meeting. When multiple Meet tabs exist, active/lobby CDP states can replace the current browser target, but inactive/unknown stale tabs and stale `meet.left` events cannot clear an active different target. When a native app is the sole meeting source, `meetingApp` and `inMeeting` reflect that app, hyper+z focuses the app via `NSRunningApplication.activate`, and `meeting.left` fires when the native mic owner disappears.
 
 ### Screenshare resolver (sender-side)
 
@@ -64,7 +64,7 @@ PTT mode enforcement moved out of this watcher: [[miccheck#Presence integration|
 
 `nc -w 1` (1s idle timeout) is required because plain `nc -U` hangs waiting for more data, preventing the `hs.task` exit callback from firing.
 
-`bindings.lua` `loadMeeting` (hyper+z) sends `{"cmd":"focus"}` to the daemon via the same `nc -w 1 -U` pattern; the daemon focuses Slack directly when the sole active meeting source is a Slack huddle, otherwise it handles CDP target activation and Helium app focusing. The browser focus path replies immediately, then refreshes and classifies current meeting targets, preferring a joined tab over a lobby tab, the previous target, or the first meeting target. This prevents a stale/closed Meet tab from trapping hyper+z after a new Meet tab opens.
+`bindings.lua` `loadMeeting` (hyper+z) sends `{"cmd":"focus"}` to the daemon via the same `nc -w 1 -U` pattern; the daemon focuses Slack or Zoom directly when the sole active meeting source is a native app, otherwise it handles CDP target activation and Helium app focusing. The browser focus path replies immediately, then refreshes and classifies current meeting targets, preferring a joined tab over a lobby tab, the previous target, or the first meeting target. This prevents a stale/closed Meet tab from trapping hyper+z after a new Meet tab opens.
 
 ## Build and packaging
 
@@ -76,8 +76,8 @@ The daemon needs no TCC grants: it reads device state (CoreAudio/CoreMediaIO IsR
 
 ## Status and remaining work
 
-Working: Google Meet, Athena telehealth, Slack huddle resolver (capture-layer mic owner), screenshare resolver (replayd heartbeat), capture layer, running as a LaunchAgent from `bin/media-presenced`.
+Working: Google Meet, Athena telehealth, Slack huddle resolver (capture-layer mic owner), Zoom resolver (capture-layer mic owner), screenshare resolver (replayd heartbeat), capture layer, running as a LaunchAgent from `bin/media-presenced`.
 
-Also working: Hammerspoon consumer wired (ptt mute, music pause, DND on screenshare, hyper+z repointed to `{cmd:focus}`).
+Also working: Hammerspoon consumer wired (ptt mute, music pause, DND on screenshare, hyper+z repointed to `{cmd:focus}`). Zoom hyper+z focus was live-validated 2026-07-30.
 
-Not yet done: native-app (Zoom/Teams) resolver, camera owner attribution (currently on/off only), and end-to-end live validation of `meeting.left`/screenshare-stop/lobby-to-joined transitions. Tracked in ticket dot-717t.
+Not yet done: native Teams resolver, camera owner attribution (currently on/off only), and end-to-end live validation of `meeting.left`/screenshare-stop/lobby-to-joined transitions. Tracked in ticket dot-717t.

@@ -844,15 +844,15 @@ final class ScreenshareMonitor {
 }
 
 // MARK: - State
-// State machine: fuse capture layer (mic/cam) + CDP layer (Meet) + Slack
-// huddle resolver + screenshare resolver into a single presence model.
+// State machine: fuse capture layer (mic/cam) + CDP layer (Meet), native
+// meeting-app resolvers, and screenshare resolver into a single presence model.
 
 struct Presence: Codable, Equatable {
     // capture layer
     var micActive = false
     var micOwners: [String] = []        // bundle ids
     var cameraActive = false
-    // meeting layer (CDP + Slack huddle)
+    // meeting layer (CDP + native app mic ownership)
     var inMeeting = false               // any meeting source active
     var meetingState = "idle"           // idle | lobby | joined | camera-active
     var sharing = false
@@ -870,10 +870,21 @@ final class PresenceEngine {
     var onEvent: ((_ event: String, _ presence: Presence) -> Void)?
 
     private let meetBundle = "net.imput.helium"
-    // Exact bundle-id match — prefix would false-match com.tinyspeck.slackmacgapbeta.
-    private let slackAppBundles: Set<String> = [
-        "com.tinyspeck.slackmacgap",
-        "com.tinyspeck.slackmacgap.helper",
+    // Exact bundle-id match — prefix would false-match beta/helper-adjacent apps.
+    private let nativeMeetingApps: [(appBundle: String, ownerBundles: Set<String>)] = [
+        (
+            appBundle: "com.tinyspeck.slackmacgap",
+            ownerBundles: [
+                "com.tinyspeck.slackmacgap",
+                "com.tinyspeck.slackmacgap.helper",
+            ]
+        ),
+        (
+            appBundle: "us.zoom.xos",
+            ownerBundles: [
+                "us.zoom.xos",
+            ]
+        ),
     ]
     private let cameraActiveFallbackURLPrefixes = [
         "https://telehealth.px.athena.io/",
@@ -882,7 +893,7 @@ final class PresenceEngine {
 
     // Source-level flags (engine-private; "inMeeting" is derived from these).
     private var cdpMeetingActive = false
-    private var slackHuddleActive = false
+    private var nativeMeetingAppBundle = ""
     private var cdpSharing = false          // from Meet DOM presenting
     private var replaydSharing = false      // from OSLog screen capture
 
@@ -894,8 +905,8 @@ final class PresenceEngine {
         p.micOwners = c.micOwners.map { $0.bundleID }
         p.cameraActive = c.cameraActive
 
-        // Slack huddle resolver: if mic owner has Slack bundle, treat as meeting.
-        slackHuddleActive = c.micOwners.contains { slackAppBundles.contains($0.bundleID) }
+        // Native app resolver: if mic owner has a known meeting bundle, treat as meeting.
+        nativeMeetingAppBundle = nativeMeetingApp(for: c.micOwners)
         reconcileDerived(&p)
 
         applyCameraActiveFallback(&p)
@@ -930,8 +941,8 @@ final class PresenceEngine {
                 p.meetingTargetId = m.targetId
                 p.meetingURL = m.url
                 p.meetingTitle = m.title
-                // Don't overwrite meetingApp if slack has it; meet takes priority below.
-                if !slackHuddleActive { p.meetingApp = meetBundle }
+                // Don't overwrite meetingApp if native app has it; meet takes priority below.
+                if nativeMeetingAppBundle.isEmpty { p.meetingApp = meetBundle }
                 reconcileDerived(&p)
                 commit(p)
                 emitMeetingStateEvents(from: inMeetingWas, stateWas)
@@ -980,21 +991,29 @@ final class PresenceEngine {
     // MARK: reconciliation
 
     /// Derive inMeeting / meetingApp / sharing from the source flags.
-    /// CDP takes priority over Slack when both are active (focus works).
+    /// CDP takes priority over native apps when both are active (browser focus works).
     private func reconcileDerived(_ p: inout Presence) {
-        let oldInMeeting = p.inMeeting
-        p.inMeeting = cdpMeetingActive || slackHuddleActive
+        let nativeMeetingActive = !nativeMeetingAppBundle.isEmpty
+        p.inMeeting = cdpMeetingActive || nativeMeetingActive
         p.sharing = cdpSharing || replaydSharing
-        if !cdpMeetingActive && slackHuddleActive {
-            p.meetingApp = "com.tinyspeck.slackmacgap"
-            if p.meetingState == "idle" { p.meetingState = "joined" }
+        if !cdpMeetingActive && nativeMeetingActive {
+            p.meetingApp = nativeMeetingAppBundle
+            p.meetingState = "joined"
         }
-        if !cdpMeetingActive && !slackHuddleActive {
+        if !cdpMeetingActive && !nativeMeetingActive {
             p.meetingState = "idle"
             p.meetingApp = ""
         }
         // If only CDP active, meetingApp is already set correctly.
-        _ = oldInMeeting
+    }
+
+    private func nativeMeetingApp(for owners: [MicOwner]) -> String {
+        for app in nativeMeetingApps {
+            if owners.contains(where: { app.ownerBundles.contains($0.bundleID) }) {
+                return app.appBundle
+            }
+        }
+        return ""
     }
 
     private func applyCameraActiveFallback(_ p: inout Presence) {
@@ -1131,8 +1150,8 @@ server.onCommand = { cmd, reply in
     case "focus":
         let currentTargetId = engine.presence.meetingTargetId
         let currentMeetingApp = engine.presence.meetingApp
-        if currentMeetingApp == "com.tinyspeck.slackmacgap" {
-            if let app = NSRunningApplication.runningApplications(withBundleIdentifier: "com.tinyspeck.slackmacgap").first {
+        if ["com.tinyspeck.slackmacgap", "us.zoom.xos"].contains(currentMeetingApp) {
+            if let app = NSRunningApplication.runningApplications(withBundleIdentifier: currentMeetingApp).first {
                 app.activate(options: [.activateAllWindows])
             }
         } else {
