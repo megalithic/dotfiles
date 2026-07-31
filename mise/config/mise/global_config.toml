@@ -235,7 +235,6 @@ fnox-env = "https://github.com/jdx/mise-env-fnox"
 "aqua:astral-sh/ruff" = "latest"
 "aqua:mvdan/sh" = "latest"
 "aqua:tidewave-ai/tidewave_app" = "latest"
-# YubiKey-backed age identity for the fnox op-token bootstrap (setup:yubikey)
 "github:str4d/age-plugin-yubikey" = "latest"
 "github:EmmyLuaLs/emmylua-analyzer-rust" = "latest"
 "github:Feel-ix-343/markdown-oxide" = "latest"
