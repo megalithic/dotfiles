@@ -25,6 +25,19 @@ On `workbookpro`, use mise as the system-management entry point:
 
 Reference: <https://mise.jdx.dev/cli/exec.html>
 
+### op / 1Password / fnox failure runbook
+
+When `op`, 1Password CLI integration, or fnox secret rendering fails, follow these steps in order (also printed by `mise/tasks/fnox-render-secrets` on failure; keep both in sync):
+
+1. `op whoami` — if it works, op is fine; the problem is fnox config or the vault item.
+2. Error mentions `settings.json` "operation not permitted": macOS TCC attribution broke — a brew upgrade replaced Ghostty/1Password bundles under running processes. Fix:
+   1. Quit and relaunch Ghostty (loads the new binary).
+   2. `tmux kill-server`, then start tmux fresh from the new Ghostty.
+   3. `pkill -f 'op daemon'`
+   4. Rerun `op whoami`; Allow any "access data from other apps" prompt.
+3. "No accounts configured": the 1Password app must be running and unlocked, with Settings > Developer > "Integrate with 1Password CLI" enabled.
+4. Verify: `fnox get APPLE_TEAM_ID`, then `mise run setup:fnox:render`.
+
 ## Nix-Managed Config Files (CRITICAL)
 
 **Before editing ANY config file outside `~/.dotfiles/` on a Nix-managed host:**
