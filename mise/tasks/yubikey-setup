@@ -73,12 +73,21 @@ else
 fi
 
 # -- 4. recipient in fnox config ----------------------------------------------
+# Formatting-agnostic: formatters may split `recipients = []` across lines,
+# so match the empty array as a multiline regex instead of a literal grep.
 if grep -q "$recipient" "$fnox_config"; then
   ok "Recipient already in fnox config"
-elif grep -q 'recipients = \[\]' "$fnox_config"; then
-  # -i.bak works with both BSD and GNU sed (PATH may resolve either).
-  sed -i.bak "s|recipients = \[\]|recipients = [\"$recipient\"]|" "$fnox_config"
-  rm -f "$fnox_config.bak"
+elif python3 - "$fnox_config" "$recipient" <<'PY'; then
+import re, sys
+path, rec = sys.argv[1], sys.argv[2]
+with open(path) as f:
+    s = f.read()
+new, n = re.subn(r"recipients\s*=\s*\[\s*\]", f'recipients = ["{rec}"]', s, count=1)
+if n == 0:
+    sys.exit(1)
+with open(path, "w") as f:
+    f.write(new)
+PY
   ok "Inserted recipient into fnox config"
 else
   fail "fnox config has a different recipient (replacement key?).

@@ -229,7 +229,7 @@ fnox-env = "https://github.com/jdx/mise-env-fnox"
 [tools]
 "aqua:openai/codex" = "latest"
 "aqua:docker/compose" = "latest"
-"aqua:remoteoss/dexter" = "latest"                  # super fast elixir ls
+"aqua:remoteoss/dexter" = "latest"         # super fast elixir ls
 "aqua:elixir-lang/expert" = "latest"
 "aqua:artempyanykh/marksman" = "latest"
 "aqua:astral-sh/ruff" = "latest"

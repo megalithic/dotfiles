@@ -16,7 +16,7 @@ op = { type = "1password", vault = "Crypt", account = "my.1password.com" }
 # Hardware-backed bootstrap: OP_SERVICE_ACCOUNT_TOKEN is encrypted to the
 # YubiKey (age-plugin-yubikey, PIV retired slot). Decrypt needs the physical
 # key + PIN/touch. Recipient/identity are managed by `mise run setup:yubikey`.
-age = { type = "age", recipients = [], key_file = "~/.config/fnox/yubikey-identity.txt" }
+age = { type = "age", recipients = ["age1yubikey1qwdz7x6tcen507a08ddql7cuvv9lxce8phcxhpka5wp2llqye9q8wp825aw"], key_file = "~/.config/fnox/yubikey-identity.txt" }
 
 [secrets]
 # File-shaped blobs: env = false keeps them out of `fnox exec` / shell

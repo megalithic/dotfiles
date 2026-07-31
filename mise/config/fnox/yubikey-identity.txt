@@ -1,4 +1,7 @@
-# age-plugin-yubikey identity stub — populated by `mise run setup:yubikey`.
-# Non-secret: the private key never leaves the YubiKey; this file only tells
-# age clients which YubiKey slot to use. Regenerable at any time with:
-#   age-plugin-yubikey --identity
+#       Serial: 15759652, Slot: 1
+#         Name: fnox-crypt
+#      Created: Fri, 31 Jul 2026 14:11:24 +0000
+#   PIN policy: Once   (A PIN is required once per session, if set)
+# Touch policy: Cached (A physical touch is required for decryption, and is cached for 15 seconds)
+#    Recipient: age1yubikey1qwdz7x6tcen507a08ddql7cuvv9lxce8phcxhpka5wp2llqye9q8wp825aw
+AGE-PLUGIN-YUBIKEY-1Y3ULQQYZU7T48CSQAXAST
