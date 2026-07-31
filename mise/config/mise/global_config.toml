@@ -189,6 +189,9 @@ up = "cd $HOME/.dotfiles && mise run up"
 # both come from brew via [bootstrap.packages], replacing nix-darwin's
 # _1password module.
 "~/.config/1Password/ssh/agent.toml" = "~/.dotfiles/mise/config/1password/agent.toml"
+# YubiKey age identity stub (non-secret; key material stays on the YubiKey).
+# Written by `mise run setup:yubikey`; used by the fnox age provider.
+"~/.config/fnox/yubikey-identity.txt" = "~/.dotfiles/mise/config/fnox/yubikey-identity.txt"
 
 # -- espanso: app support path, not XDG config (validated repo-final link chain) --
 "~/Library/Application Support/espanso" = "~/.dotfiles/config/espanso"
@@ -232,6 +235,8 @@ fnox-env = "https://github.com/jdx/mise-env-fnox"
 "aqua:astral-sh/ruff" = "latest"
 "aqua:mvdan/sh" = "latest"
 "aqua:tidewave-ai/tidewave_app" = "latest"
+# YubiKey-backed age identity for the fnox op-token bootstrap (setup:yubikey)
+"github:str4d/age-plugin-yubikey" = "latest"
 "github:EmmyLuaLs/emmylua-analyzer-rust" = "latest"
 "github:Feel-ix-343/markdown-oxide" = "latest"
 # "github:jesseduffield/lazygit" = "latest"
@@ -770,6 +775,12 @@ alias = "fnox:setup"
 description = "One-time: restore fnox age key from 1Password and sync the local age cache (interactive)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox-setup"
 # raw: op auth gate prompts on the terminal
+raw = true
+
+[tasks."setup:yubikey"]
+description = "One-time (per YubiKey/token rotation): age identity on YubiKey + encrypted OP_SERVICE_ACCOUNT_TOKEN for fnox (interactive)"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/yubikey-setup"
+# raw: PIN/touch/token prompts on the terminal
 raw = true
 
 [tasks."setup:fnox:render"]

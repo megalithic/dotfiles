@@ -36,7 +36,8 @@ When `op`, 1Password CLI integration, or fnox secret rendering fails, follow the
    3. `pkill -f 'op daemon'`
    4. Rerun `op whoami`; Allow any "access data from other apps" prompt.
 3. "No accounts configured": the 1Password app must be running and unlocked, with Settings > Developer > "Integrate with 1Password CLI" enabled.
-4. Verify: `fnox get APPLE_TEAM_ID`, then `mise run setup:fnox:render`.
+4. GUI-independent fallback: plug in the YubiKey, then `export OP_SERVICE_ACCOUNT_TOKEN="$(fnox get OP_SERVICE_ACCOUNT_TOKEN)"`. First-time hardware setup: `mise run setup:yubikey`.
+5. Verify: `fnox get APPLE_TEAM_ID`, then `mise run setup:fnox:render`.
 
 ## Nix-Managed Config Files (CRITICAL)
 

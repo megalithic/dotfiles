@@ -1,0 +1,4 @@
+# age-plugin-yubikey identity stub — populated by `mise run setup:yubikey`.
+# Non-secret: the private key never leaves the YubiKey; this file only tells
+# age clients which YubiKey slot to use. Regenerable at any time with:
+#   age-plugin-yubikey --identity

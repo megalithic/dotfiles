@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+#
+# One-time (per YubiKey / per token rotation) setup for hardware-backed
+# op/fnox bootstrap. Idempotent; safe to re-run.
+#
+#   1. Verify age-plugin-yubikey is installed and a YubiKey is connected.
+#   2. Ensure an age identity exists on the YubiKey (generate into the first
+#      empty PIV retired slot if the key has none; never overwrites).
+#   3. Write the identity stub to the repo (committable, non-secret) and
+#      symlink it to ~/.config/fnox/yubikey-identity.txt.
+#   4. Ensure the recipient is in the fnox age provider config.
+#   5. Ensure OP_SERVICE_ACCOUNT_TOKEN is stored encrypted (prompts for the
+#      ops_... token on first run; create one at 1password.com > Settings >
+#      Integrations > Service Accounts with READ access to the Crypt vault).
+#   6. Verify the round-trip: decrypt via YubiKey, then `op whoami`.
+#
+# Usage: mise run setup:yubikey
+set -euo pipefail
+
+ok() { echo -e "\033[0;32m[OK]\033[0m $1"; }
+skip() { echo -e "\033[0;33m[SKIP]\033[0m $1"; }
+fail() {
+  echo -e "\033[0;31m[ERROR]\033[0m $1"
+  exit 1
+}
+
+dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
+repo_identity="$dotfiles/mise/config/fnox/yubikey-identity.txt"
+home_identity="${XDG_CONFIG_HOME:-$HOME/.config}/fnox/yubikey-identity.txt"
+fnox_config="$dotfiles/mise/config/fnox/config.toml"
+
+# -- 1. prerequisites ---------------------------------------------------------
+command -v age-plugin-yubikey &>/dev/null ||
+  fail "age-plugin-yubikey not found. Run 'mise install' first."
+command -v fnox &>/dev/null || fail "fnox not found. Run 'mise install' first."
+command -v op &>/dev/null || fail "op not found (brew-cask 1password-cli@beta)."
+
+ioreg -p IOUSB -k "USB Product Name" 2>/dev/null | grep -qi yubikey ||
+  fail "No YubiKey connected. Plug it in and re-run."
+ok "YubiKey connected"
+
+# -- 2. identity on the key ---------------------------------------------------
+# --list is read-only and PIN-less; one line per age identity on the key.
+identities="$(age-plugin-yubikey --list 2>/dev/null || true)"
+if [[ -z "$identities" ]]; then
+  echo "No age identity on this YubiKey yet; generating one (first empty slot)."
+  echo "You will be prompted for the PIV PIN (default 123456 forces a change)"
+  echo "and a touch."
+  [[ -t 0 ]] || fail "Interactive terminal required for PIN/touch prompts."
+  age-plugin-yubikey --generate --name fnox-crypt \
+    --pin-policy once --touch-policy cached >"$repo_identity"
+  ok "Generated identity into $repo_identity"
+else
+  ok "YubiKey already has an age identity"
+  # Regenerate the stub if the repo copy is missing or has no identity line.
+  if ! grep -q '^AGE-PLUGIN-YUBIKEY-' "$repo_identity" 2>/dev/null; then
+    age-plugin-yubikey --identity >"$repo_identity"
+    ok "Regenerated identity stub into $repo_identity"
+  fi
+fi
+
+recipient="$(grep -io 'age1yubikey1[a-z0-9]*' "$repo_identity" | head -1)"
+[[ -n "$recipient" ]] || fail "Could not extract recipient from $repo_identity"
+ok "Recipient: $recipient"
+
+# -- 3. symlink into ~/.config/fnox -------------------------------------------
+if [[ "$(readlink "$home_identity" 2>/dev/null)" != "$repo_identity" ]]; then
+  mkdir -p "$(dirname "$home_identity")"
+  ln -sf "$repo_identity" "$home_identity"
+  ok "Linked $home_identity -> $repo_identity"
+else
+  ok "Identity symlink in place"
+fi
+
+# -- 4. recipient in fnox config ----------------------------------------------
+if grep -q "$recipient" "$fnox_config"; then
+  ok "Recipient already in fnox config"
+elif grep -q 'recipients = \[\]' "$fnox_config"; then
+  # -i.bak works with both BSD and GNU sed (PATH may resolve either).
+  sed -i.bak "s|recipients = \[\]|recipients = [\"$recipient\"]|" "$fnox_config"
+  rm -f "$fnox_config.bak"
+  ok "Inserted recipient into fnox config"
+else
+  fail "fnox config has a different recipient (replacement key?).
+Update the age provider in $fnox_config to:
+  recipients = [\"$recipient\"]
+then re-encrypt: fnox reencrypt -p age"
+fi
+
+# -- 5. encrypted token in fnox config -----------------------------------------
+if fnox list 2>/dev/null | awk 'NR > 1 { print $1 }' | grep -qx 'OP_SERVICE_ACCOUNT_TOKEN'; then
+  skip "OP_SERVICE_ACCOUNT_TOKEN already stored (rotate: fnox set OP_SERVICE_ACCOUNT_TOKEN --provider age)"
+else
+  [[ -t 0 ]] || fail "Interactive terminal required to paste the token."
+  read -rsp "Paste the ops_... service account token: " token
+  echo
+  [[ "$token" == ops_* ]] || fail "Token must start with ops_"
+  fnox set OP_SERVICE_ACCOUNT_TOKEN "$token" --provider age
+  ok "Token stored encrypted in fnox config (safe to commit)"
+fi
+
+# -- 6. verify round-trip -------------------------------------------------------
+echo "Verifying decrypt (YubiKey touch may be required).."
+token="$(fnox get OP_SERVICE_ACCOUNT_TOKEN)"
+[[ -n "$token" ]] || fail "Decryption returned empty token"
+ok "Decrypt works"
+
+if OP_SERVICE_ACCOUNT_TOKEN="$token" op whoami &>/dev/null; then
+  ok "op authenticates with the service account token"
+else
+  fail "op rejected the token (revoked? wrong account?). Rotate it at 1password.com."
+fi
+
+ok "Done. Commit $repo_identity and mise/config/fnox/config.toml."
