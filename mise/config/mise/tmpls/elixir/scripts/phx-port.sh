@@ -20,7 +20,7 @@ if [ -n "${PORT:-}" ]; then
 fi
 
 # 2. running server: beam process whose cwd is this checkout. Lowest
-#    listening TCP port is Phoenix (4000+off < live_debugger 4008+off
+#    listening TCP port is Phoenix (4000+offset < live_debugger 4008+offset
 #    < erlang distribution ports).
 for pid in $(pgrep -x beam.smp 2>/dev/null || true); do
   cwd="$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | head -1)"
@@ -61,12 +61,12 @@ if [ -s "$cache" ]; then
 fi
 if command -v elixir >/dev/null 2>&1; then
   port="$(GIT_WORKTREE="$wt" elixir -e '
-    off =
+    offset =
       case System.get_env("GIT_WORKTREE") do
         w when w in [nil, ""] -> 0
         w -> :erlang.phash2(w, 1000)
       end
-    IO.puts(4000 + off)')"
+    IO.puts(4000 + offset)')"
   mkdir -p "$(dirname "$cache")"
   echo "$port" >"$cache"
   echo "$port"
