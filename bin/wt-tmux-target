@@ -103,10 +103,25 @@ if [[ -n "$gitdir" && ! -f "$services_cmd_file" ]]; then
   wt -C "$wpath" hook pre-start -y >/dev/null 2>&1 || true
 fi
 if [[ -n "$services_cmd_file" && -x "$services_cmd_file" ]]; then
-  services_cmd="$services_cmd_file"
+  services_cmd="exec $(printf '%q' "$services_cmd_file")"
 else
-  services_cmd="wt-tail-logs $(printf '%q' "$branch")"
+  services_cmd="exec wt-tail-logs $(printf '%q' "$branch")"
 fi
+
+resolve_services_port() {
+  local port="${PORT:-}"
+  if [[ -z "$port" && -x "$wpath/.config/scripts/phx-port.sh" ]]; then
+    port="$(cd "$wpath" && bash .config/scripts/phx-port.sh 2>/dev/null | tail -n 1 || true)"
+  fi
+  if [[ -z "$port" && -n "${PHX_PORT:-}" ]]; then
+    port="$PHX_PORT"
+  fi
+  [[ "$port" =~ ^[0-9]+$ ]] && printf '%s' "$port"
+}
+
+services_port="$(resolve_services_port)"
+services_window="services"
+[[ -n "$services_port" ]] && services_window="services-${services_port}"
 
 # Ensure a window with the given name exists in the session, rooted at $wpath.
 # Reuses an existing window of the same name; never kills panes.
@@ -122,6 +137,19 @@ ensure_window() {
   fi
 }
 
+ensure_services_window() {
+  local session="$1" window="$2" run_cmd="$3" existing=""
+  if tmux list-windows -t "=${session}" -F '#W' 2>/dev/null | grep -qx -- "$window"; then
+    return 0
+  fi
+  existing="$(tmux list-windows -t "=${session}" -F '#W' 2>/dev/null | grep -E '^services(-[0-9]+)?$' | head -n 1 || true)"
+  if [[ -n "$existing" ]]; then
+    tmux rename-window -t "=${session}:${existing}" "$window"
+  else
+    ensure_window "$session" "$window" "$run_cmd"
+  fi
+}
+
 do_session() {
   if ! tmux has-session -t "=${session}" 2>/dev/null; then
     # First window becomes `code`.
@@ -129,10 +157,10 @@ do_session() {
   fi
   tmux setenv -t "=${session}" GIT_WORKTREE "$worktree_id"
   ensure_window "$session" code
-  ensure_window "$session" services "$services_cmd"
+  ensure_services_window "$session" "$services_window" "$services_cmd"
   # Keep the services window alive when its command exits (e.g. server boot
   # crash) so the error output stays visible. Rerun with `tmux respawn-pane`.
-  tmux set-option -w -t "=${session}:services" remain-on-exit on 2>/dev/null || true
+  tmux set-option -w -t "=${session}:${services_window}" remain-on-exit on 2>/dev/null || true
 
   if [[ "$inside_tmux" == "true" ]]; then
     tmux switch-client -t "=${session}"

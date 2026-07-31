@@ -154,6 +154,7 @@ deps
 # Project-local config dirs (Worktrunk .config/wt.toml, mise .config/mise.local.toml, etc.)
 .config/
 **/.config/
+.pi-lens.json
 
 # Local (untracked) Claude Code project settings
 **/.claude/settings.local.json

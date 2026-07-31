@@ -98,6 +98,23 @@ emit_cd() { # $1 = target path
   fi
 }
 
+ensure_pi_lens_config() { # $1 = worktree path; create missing only
+  local path="$1" gd f
+  [ -d "$path" ] || return 0
+  gd="$(git -C "$path" rev-parse --git-dir 2>/dev/null || true)"
+  case "$gd" in */worktrees/*) ;; *) return 0 ;; esac
+
+  f="$path/.pi-lens.json"
+  [ -e "$f" ] && return 0
+  cat >"$f" <<'JSON'
+{
+  "format": {
+    "enabled": false
+  }
+}
+JSON
+}
+
 # ---- split args at `--`; parse -t/--target ----------------------------------
 pre=()
 post=()
@@ -283,6 +300,7 @@ if [ -n "$target" ]; then
     exit 0
   fi
 
+  ensure_pi_lens_config "$wpath"
   wt-tmux-target --target "$target" --branch "$branch" --path "$wpath"
   tmux_rc=$?
 
@@ -306,6 +324,7 @@ exit_code=$?
 
 if [ -s "$cd_file" ]; then
   tgt="$(sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' "$cd_file")"
+  ensure_pi_lens_config "$tgt"
   emit_cd "$tgt"
   # GIT_WORKTREE ({repo}-{branch-slug}) for shells/services; erased in main.
   gd="$(git -C "$tgt" rev-parse --git-dir 2>/dev/null)"
