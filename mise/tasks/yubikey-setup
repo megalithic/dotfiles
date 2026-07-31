@@ -96,17 +96,51 @@ Update the age provider in $fnox_config to:
 then re-encrypt: fnox reencrypt -p age"
 fi
 
-# -- 5. encrypted token in fnox config -----------------------------------------
-if fnox list 2>/dev/null | awk 'NR > 1 { print $1 }' | grep -qx 'OP_SERVICE_ACCOUNT_TOKEN'; then
-  skip "OP_SERVICE_ACCOUNT_TOKEN already stored (rotate: fnox set OP_SERVICE_ACCOUNT_TOKEN --provider age)"
+# -- 5. encrypted token in global fnox config ----------------------------------
+if python3 - "$fnox_config" <<'PY'
+import sys, tomllib
+with open(sys.argv[1], "rb") as f:
+    data = tomllib.load(f)
+secret = data.get("secrets", {}).get("OP_SERVICE_ACCOUNT_TOKEN")
+if not isinstance(secret, dict) or secret.get("provider") != "age":
+    sys.exit(1)
+PY
+then
+  skip "OP_SERVICE_ACCOUNT_TOKEN already stored in global fnox config (rotate: fnox set -g OP_SERVICE_ACCOUNT_TOKEN --provider age)"
 else
   [[ -t 0 ]] || fail "Interactive terminal required to paste the token."
   read -rsp "Paste the ops_... service account token: " token
   echo
   [[ "$token" == ops_* ]] || fail "Token must start with ops_"
-  fnox set OP_SERVICE_ACCOUNT_TOKEN "$token" --provider age
-  ok "Token stored encrypted in fnox config (safe to commit)"
+  printf '%s' "$token" | fnox set -g OP_SERVICE_ACCOUNT_TOKEN --provider age
+  ok "Token stored encrypted in global fnox config (safe to commit)"
 fi
+
+python3 - "$fnox_config" <<'PY'
+import re, sys, tomllib
+path = sys.argv[1]
+with open(path) as f:
+    s = f.read()
+with open(path, "rb") as f:
+    data = tomllib.load(f)
+secret = data.get("secrets", {}).get("OP_SERVICE_ACCOUNT_TOKEN")
+if not isinstance(secret, dict) or secret.get("provider") != "age":
+    sys.exit("OP_SERVICE_ACCOUNT_TOKEN missing from global fnox config")
+pattern = r'(OP_SERVICE_ACCOUNT_TOKEN\s*=\s*\{[^}\n]*)(\})'
+
+def repl(match):
+    line = match.group(0)
+    if re.search(r'\benv\s*=', line):
+        return re.sub(r'\benv\s*=\s*(true|false)', 'env = false', line, count=1)
+    return f'{match.group(1).rstrip()}, env = false {match.group(2)}'
+
+new, n = re.subn(pattern, repl, s, count=1)
+if n != 1:
+    sys.exit("Could not force env = false for OP_SERVICE_ACCOUNT_TOKEN")
+with open(path, "w") as f:
+    f.write(new)
+PY
+ok "OP_SERVICE_ACCOUNT_TOKEN env=false enforced"
 
 # -- 6. verify round-trip -------------------------------------------------------
 echo "Verifying decrypt (YubiKey touch may be required).."
