@@ -215,7 +215,12 @@ export default function (pi: ExtensionAPI) {
 				const tmpFile = join(tmpdir(), `pi-handoff-${Date.now()}.md`);
 				writeFileSync(tmpFile, promptWithHistory, "utf-8");
 
-				const result = spawnSync(editor, [tmpFile], { stdio: "inherit" });
+				// EDITOR may be multi-word (e.g. "nvim -O"); spawnSync does no shell
+				// splitting, so split the command from its flags ourselves.
+				const [editorCmd, ...editorArgs] = editor.split(/\s+/);
+				const result = spawnSync(editorCmd, [...editorArgs, tmpFile], {
+					stdio: "inherit",
+				});
 
 				if (result.error) {
 					ctx.ui.notify(`Editor failed: ${result.error.message}`, "error");
