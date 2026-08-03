@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+# Idempotent pi maintenance task for mise-managed dotfiles.
+# Run via `mise run pi:update`; preview with `mise run pi:update -- --dry-run`.
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+usage: pi-update [--dry-run]
+
+Updates pi-managed imperative state:
+  - pinned helper binaries under ~/.pi/agent/bin
+  - ~/.pi/agent/settings.json merged from repo settings
+  - vendored pi-acp build
+  - redundant extension deps cleanup
+  - pi update
+  - pi update --extensions
+EOF
+}
+
+dry_run=0
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run|-n) dry_run=1 ;;
+    --help|-h) usage; exit 0 ;;
+    *) echo "pi-update: unknown argument: $arg" >&2; usage >&2; exit 2 ;;
+  esac
+done
+
+dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
+pi_src="$dotfiles/mise/config/pi-coding-agent"
+agent="$HOME/.pi/agent"
+settings_file="$agent/settings.json"
+managed_settings="$pi_src/agent/settings.json"
+
+export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:$PATH"
+
+say() { printf '%s\n' "$*"; }
+
+sha256_file() {
+  shasum -a 256 "$1" | awk '{print $1}'
+}
+
+report_helper_bin() {
+  local name="$1" sha256="$2" dst actual
+  dst="$agent/bin/$name"
+  if [ -x "$dst" ]; then
+    actual="$(sha256_file "$dst")"
+    if [ "$actual" = "$sha256" ]; then
+      say "[ok] helper $name already matches $dst"
+    else
+      say "[would replace] helper $name at $dst"
+      say "  current sha256: $actual"
+      say "  target  sha256: $sha256"
+    fi
+  elif [ -e "$dst" ]; then
+    say "[would replace] helper $name exists but is not executable: $dst"
+  else
+    say "[would create] helper $name -> $dst"
+  fi
+}
+
+print_settings_preview() {
+  say "[settings] source: $managed_settings"
+  say "[settings] target: $settings_file"
+  if [ -f "$settings_file" ]; then
+    say "[would update] merged settings output: $settings_file"
+    jq -s '.[0] * .[1]' "$settings_file" "$managed_settings"
+  else
+    say "[would create] merged settings output: $settings_file"
+    jq -s '.[0] * .[1]' <(printf '{}\n') "$managed_settings"
+  fi
+}
+
+merge_settings() {
+  mkdir -p "$(dirname "$settings_file")"
+  if [ ! -f "$settings_file" ]; then
+    printf '{}\n' >"$settings_file"
+  fi
+
+  local tmp
+  tmp="${settings_file}.tmp.$$"
+  jq -s '.[0] * .[1]' "$settings_file" "$managed_settings" >"$tmp"
+  mv "$tmp" "$settings_file"
+  say "merged settings -> $settings_file"
+}
+
+acp_needs_build() {
+  local acp="$pi_src/packages/pi-acp" dist="$pi_src/packages/pi-acp/dist/index.js" f
+  [ ! -f "$dist" ] && return 0
+  [ "$acp/package.json" -nt "$dist" ] && return 0
+  while IFS= read -r f; do
+    [ "$f" -nt "$dist" ] && return 0
+  done < <(fd -t f . "$acp/src")
+  return 1
+}
+
+report_cleanup_target() {
+  local f="$1"
+  if [ -e "$f" ]; then
+    say "[would remove] $f"
+  else
+    say "[ok] absent $f"
+  fi
+}
+
+trash_path() {
+  local f="$1"
+  [ -e "$f" ] || return 0
+  if command -v trash >/dev/null 2>&1; then
+    trash "$f"
+  else
+    echo "trash command missing; refusing to delete $f" >&2
+    exit 1
+  fi
+}
+
+if [ "$dry_run" = 1 ]; then
+  say "pi:update dry run"
+  say "[would ensure dir] $agent"
+  say "[would ensure dir] $agent/bin"
+  report_helper_bin sesame "7ae875161227c18b6367cf3643a983b27003700f37e082d1af5d1f0da854c500"
+  report_helper_bin plannotator "80c18e2b3e95796e85902b4e3ec92d8f7bf49df8ebfcbd12195c784fa522fdda"
+  print_settings_preview
+  if acp_needs_build; then
+    say "[would build] $pi_src/packages/pi-acp"
+  else
+    say "[ok] pi-acp build current"
+  fi
+  report_cleanup_target "$agent/extensions/package.json"
+  report_cleanup_target "$agent/extensions/package-lock.json"
+  report_cleanup_target "$agent/extensions/node_modules"
+  say "[would run] $pi_src/bin/pi update"
+  say "[would run] $pi_src/bin/pi update --extensions"
+  exit 0
+fi
+
+mkdir -p "$agent" "$agent/bin"
+
+"$pi_src/scripts/install-pi-tools"
+merge_settings
+
+acp="$pi_src/packages/pi-acp"
+if acp_needs_build; then
+  echo "building pi-acp..."
+  (cd "$acp" && npm ci --no-audit --no-fund && npm run build)
+fi
+
+trash_path "$agent/extensions/package.json"
+trash_path "$agent/extensions/package-lock.json"
+trash_path "$agent/extensions/node_modules"
+
+"$pi_src/bin/pi" update
+"$pi_src/bin/pi" update --extensions
+
+echo "pi:update done."

@@ -3,6 +3,10 @@ flake := env('FLAKE', justfile_directory())
 default:
   @just --list
 
+# mise-owned config commands
+up:
+  mise run up
+
 # update your flake.lock
 update-flake:
   #!/usr/bin/env bash

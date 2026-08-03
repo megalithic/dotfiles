@@ -22,10 +22,11 @@ env_shell_expand = true
 # verbose = false
 activate_aggressive = true
 color_theme = "everforest"
+system_packages.managers = ["brew", "brew-cask", "mas"]
+idiomatic_version_file_enable_tools = ["node"]
 # using a lockfile helps avoid the need for a GitHub token on first time install
 # activate with `mise lock`
 lockfile = true
-system_packages.managers = ["brew", "brew-cask", "mas"]
 pin = true
 # supply chain security: only allow installing new versions of tools that have
 # been released for at least 24 hours, to avoid 0-day supply chain attacks.
@@ -52,6 +53,13 @@ status.show_tools = true
 auto = true
 
 [env]
+DO_NOT_TRACK = "true"
+ERL_AFLAGS = "-kernel shell_history enabled"
+FLYCTL_HOME = "$HOME/.fly"
+GH_TELEMETRY = "false"
+KERL_BUILD_DOCS = "yes"
+MIX_OS_DEPS_COMPILE_PARTITION_COUNT = "5"
+# RIPGREP_CONFIG_PATH = "$HOME/.config/ripgrep/ripgreprc"
 HK_MISE = "1"
 HK_HIDE_WHEN_DONE = "true"
 MISE_EXPERIMENTAL = "1"
@@ -60,6 +68,7 @@ HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env
 # and `mise lock`). Unauthenticated is 60 req/hr and stalls in 429 retries.
 # mise reads MISE_GITHUB_TOKEN > GITHUB_API_TOKEN > GITHUB_TOKEN.
 GITHUB_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env-vars.sh ]; then . ~/.config/fnox/secrets/env-vars.sh; elif [ -f ~/.config/opnix/secrets/env-vars.sh ]; then . ~/.config/opnix/secrets/env-vars.sh; fi; printf %s $GITHUB_TOKEN") }}'
+OP_COMMAND = "op"
 
 DOTS = "{{env.HOME}}/.dotfiles"
 DOTFILES_DIR = "{{env.HOME}}/.dotfiles"
@@ -76,7 +85,10 @@ VISUAL = "nvim -O"
 GIT_EDITOR = "nvim -O"
 JJ_EDITOR = "nvim -O"
 MANPAGER = "nvim +Man!"
-OP_COMMAND = "op"
+# MANPAGER = "less -X"
+PLUG_EDITOR = "zed://file/__FILE__:__LINE__"
+ECTO_EDITOR = "zed __FILE__:__LINE__"
+ELIXIR_EDITOR = "zed __FILE__:__LINE__"
 
 _.path = [
   "/opt/homebrew/opt/coreutils/libexec/gnubin",
@@ -127,7 +139,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 
 # -- pi coding agent: managed subset of ~/.pi/agent; runtime state (sessions/,
 #    npm/, auth.json, settings.json) stays unmanaged. settings.json is merged
-#    by `mise run setup:pi`, not linked. --
+#    by `mise run pi:update`, not linked. --
 "~/.pi/agent/AGENTS.md" = "~/.dotfiles/mise/config/pi-coding-agent/agent/AGENTS.md"
 "~/.pi/agent/APPEND_SYSTEM.md" = "~/.dotfiles/mise/config/pi-coding-agent/agent/APPEND_SYSTEM.md"
 "~/.pi/agent/keybindings.json" = "~/.dotfiles/mise/config/pi-coding-agent/agent/keybindings.json"
@@ -274,6 +286,7 @@ bat = "latest"
 biome = "latest"
 bun = "latest"
 cargo-binstall = "latest"
+clang-format = "latest"
 claude = "latest"
 cmake = "latest"
 delta = "latest"
@@ -400,7 +413,6 @@ version = "latest"
 "brew:gnu-sed" = "latest"
 "brew:gnupg" = "latest"
 "brew:grep" = "latest"
-"brew:herdr" = "latest"
 "brew:kanata" = "latest"       # keyboard remapper; setup verifies 1.12.0 with VHID 6.10.0, then copies/signs it to stable /usr/local/bin/kanata
 "brew:mas" = "latest"
 "brew:mole" = "latest"
@@ -436,9 +448,11 @@ version = "latest"
 "brew-cask:proton-drive" = "latest"
 "brew-cask:protonvpn" = "latest"
 "brew-cask:syncthing-app" = "latest"
+"brew-cask:tableplus" = "latest"
 "brew-cask:tuna" = "latest"
 # "brew-cask:slack" = "latest" # presently owned by app store (work requirement?)
 "brew-cask:yubico-authenticator" = "latest"
+"brew-cask:zed@preview" = "latest"
 
 [bootstrap.macos.dock]
 autohide = true
@@ -714,16 +728,19 @@ mise run fonts:install
 #    aliases so existing docs/scripts/muscle memory keep working. --
 
 [tasks.up]
+alias = "dot"
 description = "Update system packages, mise tools, and Neovim packages"
 run = """
 set -euo pipefail
-echo "Updating dotfiles (packages, symlinks, mise tools, launchd, nvim packs, fnox secrets, pi plugins)"
+
+printf 'Updating dotfiles..'
 mise bootstrap --only packages,dotfiles,macos-launchd-agents --yes
 mise bootstrap packages apply --yes
-mise bootstrap packages upgrade --yes
+# mise bootstrap packages upgrade --yes
 mise run fnox:render
 mise upgrade --bump
-pi update --extensions
+
+mise run pi:update
 # nvim --headless -c "lua vim.pack.update(nil, { force = true })" -c "quit"
 """
 
@@ -792,10 +809,14 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox-render-secrets"
 # description = "Interactive gate: wait until the 1Password CLI (op) is signed in with app integration"
 # run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/op-signin-gate"
 
+[tasks."pi:update"]
+description = "Update pi tools, settings, pi-acp build, runtime packages, and extensions"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/pi-update"
+
 [tasks."setup:pi"]
 alias = "pi:setup"
-description = "Idempotent pi agent setup: pinned tools, settings merge, pi-acp build, extension seed"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/config/pi-coding-agent/scripts/setup"
+description = "Compatibility alias for pi:update"
+run = "mise run pi:update"
 
 [tasks."setup:kanata"]
 alias = "kanata:setup"

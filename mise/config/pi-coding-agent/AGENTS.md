@@ -6,11 +6,11 @@ active, changes must be mirrored manually to whichever tree you actually run.
 
 Nothing here applies automatically. Application happens through
 `mise/config/mise/global_config.toml` (`[dotfiles]`,
-`[bootstrap.macos.launchd.agents]`, `pi:setup` task) once that config is active.
+`[bootstrap.macos.launchd.agents]`, `pi:update` task) once that config is active.
 
 ## Directory layout
 
-```
+```text
 pi-coding-agent/
 ├── agent/               # Managed subset of ~/.pi/agent (linked via [dotfiles])
 │   ├── AGENTS.md        # Global agent instructions (was sources/GLOBAL_AGENTS.md)
@@ -18,16 +18,15 @@ pi-coding-agent/
 │   ├── keybindings.json
 │   ├── models.json      # Custom model/provider definitions
 │   ├── mcp.json         # Global MCP server config
-│   ├── settings.json    # NOT linked — merged by scripts/setup via jq
+│   ├── settings.json    # NOT linked — merged by mise/tasks/pi-update via jq
 │   ├── extensions/      # .ts extensions (symlink-each into ~/.pi/agent/extensions)
 │   ├── skills/          # Skill directories (symlink-each)
 │   ├── prompts/         # Prompt templates (symlink-each)
 │   └── agents/          # Custom agent .md definitions (symlink-each)
 ├── bin/                 # Wrappers linked into ~/.local/bin: pi, pinvim, p,
 │                        # pview, pi-acp, work-tickets
-├── scripts/             # setup (pi:setup task), install-pi-tools,
-│                        # merge-settings.sh, indexer entrypoints, resolver
-├── packages/pi-acp/     # Vendored ACP adapter; built locally by pi:setup
+├── scripts/             # install-pi-tools, indexer entrypoints, resolver
+├── packages/pi-acp/     # Vendored ACP adapter; built locally by pi:update
 ├── patches/             # pi-bash-live-view widget patch (applied by bin/pi)
 └── disabled/            # Parked entries (former `_`-prefixed files/dirs).
                          # Move back into agent/* to re-enable.
@@ -50,7 +49,7 @@ pi-coding-agent/
 
 ```sh
 mise bootstrap dotfiles apply          # symlinks (agent files, bin wrappers)
-mise run setup:pi                      # tools, settings merge, pi-acp build
+mise run pi:update                     # tools, settings merge, pi-acp build, runtime updates
 mise bootstrap macos launchd-agents apply  # session indexers
 ```
 
