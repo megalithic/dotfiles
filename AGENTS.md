@@ -25,6 +25,20 @@ On `workbookpro`, use mise as the system-management entry point:
 
 Reference: <https://mise.jdx.dev/cli/exec.html>
 
+### Interactive input / TTY commands (workbookpro)
+
+When a command needs interactive user input — sudo password, installer prompts, any TTY-only flow — do not run it through the agent's own Bash tool and do not ask the user to run it manually. Use the `interactive-tty` skill:
+
+```bash
+# sudo-only: native Touch ID + reason shown to the user (-m required)
+~/.pi/agent/skills/interactive-tty/scripts/tty-run.sh sudo -m "why + what" -- <command> [args...]
+
+# typed input (logins, prompts): tmux display-popup
+~/.pi/agent/skills/interactive-tty/scripts/tty-run.sh popup -- <command> [args...]
+```
+
+sudo mode validates via Touch ID (password-in-popup fallback), then runs the command with cached credentials so output is captured by the agent. popup mode runs the command in a modal popup that auto-closes and returns focus. Exit codes: command's own; `124` timeout; `125` popup died without status. See the skill's SKILL.md for rules; tell the user what input is expected before invoking.
+
 ### op / 1Password / fnox failure runbook
 
 When `op`, 1Password CLI integration, or fnox secret rendering fails, follow these steps in order (also printed by `mise/tasks/fnox-render-secrets` on failure; keep both in sync):
