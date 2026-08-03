@@ -20,6 +20,20 @@ Host github.com gh
   LogLevel QUIET
   ForwardAgent yes
 
+Host megabookpro.local
+  Hostname megabookpro.local
+  User seth
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null
+  IdentityAgent "/Users/seth/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+  # IdentityFile "~/.ssh/id_ed25519"
+  StrictHostKeyChecking no
+  BatchMode yes
+  PasswordAuthentication no
+  ControlMaster auto
+  ControlPersist 120
+  LogLevel QUIET
+
 Host 198.199.91.123
   Hostname 198.199.91.123
   User replicant
@@ -40,35 +54,3 @@ Host 198.199.91.123
 #   ControlPath /tmp/ssh_mux_%r@%h:%p
 #   IdentityFile ~/.ssh/seth-megabookpro
 
-
-Host *.devspace
-  StrictHostKeyChecking no
-  UserKnownHostsFile=/dev/null
-  IdentityAgent "/Users/seth/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
-  BatchMode yes
-  PasswordAuthentication no
-  ControlMaster auto
-  ControlPath /Users/seth/.ssh/control-%C
-  ControlPersist 10m
-  LogLevel QUIET
-
-# DevSpace Start launchdeck-portal.devspace
-Host launchdeck-portal.devspace
-  HostName localhost
-  LogLevel error
-  Port 10013
-  IdentityFile "~/.devspace/ssh/id_devspace_ecdsa"
-  StrictHostKeyChecking no
-  UserKnownHostsFile /dev/null
-  User devspace
-# DevSpace End launchdeck-portal.devspace
-# DevSpace Start launchdeck-portal-api.devspace
-Host launchdeck-portal-api.devspace
-  HostName localhost
-  LogLevel error
-  Port 11224
-  IdentityFile "~/.devspace/ssh/id_devspace_ecdsa"
-  StrictHostKeyChecking no
-  UserKnownHostsFile /dev/null
-  User devspace
-# DevSpace End launchdeck-portal-api.devspace
