@@ -22,13 +22,13 @@ The repo generates `/etc/nix/nix.custom.conf` declaratively (trusted users, extr
 
 `environment.systemPath` explicitly adds `/nix/var/nix/profiles/system/sw/bin` and `/opt/homebrew/bin` because Determinate Nix does not create the `/run/current-system` symlink.
 
-System programs enabled in common include `bash`, `fish` (with babelfish), and `gnupg.agent` with SSH support. `services.tailscale.enable = true`. The SSH auth socket points at 1Password's agent through `environment.extraInit`.
+System programs enabled in common include `bash`, `fish` (with babelfish), and `gnupg.agent` with SSH support. Tailscale is installed as the official macOS GUI app via `modules/darwin/tailscale-app.nix`, not the nix-darwin `services.tailscale` daemon. The SSH auth socket points at 1Password's agent through `environment.extraInit`.
 
 ## Homebrew and Mac App Store
 
 Homebrew is the last-resort path for casks and apps that resist Nix packaging. `nix-homebrew` is configured in the flake `brew_config` with Rosetta enabled, auto-migrate on, immutable taps, and the four Homebrew taps wired from flake inputs.
 
-`modules/brew.nix` declares Homebrew casks and `homebrew.masApps` for Mac App Store apps. `brew-nix` provides a cask overlay used for `mas` packaging.
+Home Manager uses the `brew-nix` overlay (`pkgs.brewCasks.*`) for simple cask-style app bundles in `home/common/packages.nix` and per-program modules. Privileged `.pkg` apps that need installer side effects, such as Okta Verify and Tailscale, use dedicated nix-darwin modules that run Apple's installer during activation.
 
 The staged mise bootstrap mirrors Homebrew through `mise/config/mise/global_config.toml` `[bootstrap.packages]`: Homebrew entries use `brew:`/`brew-cask:` prefixes and Mac App Store apps use `mas:` (the `mas` manager is enabled in `system_packages.managers`). `mas:` installs still require an interactive Apple Account session in App Store.app; on a machine that is not signed in, `mas` entries fail and need a sign-in plus bootstrap retry.
 
@@ -36,7 +36,7 @@ The staged mise bootstrap mirrors Homebrew through `mise/config/mise/global_conf
 
 `modules/` holds the nix-darwin modules. Custom kanata support also comes from the `kanata-darwin` flake input.
 
-`system.nix` covers core system settings, `brew.nix` covers Homebrew, and `darwin/` holds `kanata.nix`, `services.nix`, `spotlight.nix`, `_1password.nix`, and `okta-verify.nix`.
+`system.nix` covers core system settings, and `darwin/` holds `kanata.nix`, `services.nix`, `spotlight.nix`, `_1password.nix`, `okta-verify.nix`, and `tailscale-app.nix`.
 
 ## Kanata on macOS
 
@@ -70,7 +70,11 @@ Root cause: replacing the bundle **in place** at `/Applications/1Password.app` (
 
 **Fix:** after the dialog, open **System Settings → Privacy & Security**, scroll to the Security section, and click **Open Anyway** for 1Password, then authenticate. This writes the user-consent override that the brew install used to carry. Verified working: app stays running across quit/relaunch with no further prompt.
 
-## Okta Verify (privileged .pkg installer)
+## Privileged .pkg installers
+
+`modules/darwin/okta-verify.nix` and `modules/darwin/tailscale-app.nix` install privileged macOS packages by running Apple's own installer during activation, because they are not plain `.app` bundles.
+
+## Okta Verify
 
 `modules/darwin/okta-verify.nix` installs Okta Verify by running Apple's own installer during activation, because it is not a plain `.app`.
 
@@ -79,6 +83,12 @@ Okta Verify's `.pkg` has an `auth="root"` postinstall that loads LaunchDaemons (
 The module pins the official `.pkg` in the nix store via `pkgs.fetchurl` (version/build/sha256 taken from the Homebrew cask `okta-verify.rb`), then a `system.activationScripts.postActivation` block runs `/usr/sbin/installer -pkg <store-path> -target /` as root so the real postinstall executes. It is idempotent on the `com.okta.mobile` pkgutil receipt version: same version → skip. No Homebrew, no `modules/brew.nix`. Bump version/build/sha256 in the module when the cask updates. `home/common/programs/okta-verify/default.nix` is now just a post-`just home` presence-check warning.
 
 Migration note: if the old Homebrew cask is still installed at the same version, the activation check sees a matching receipt and skips. To switch fully to the nix-managed install, `brew uninstall --cask okta-verify` first, then `just darwin` reinstalls from the pinned pkg.
+
+## Tailscale GUI app
+
+`modules/darwin/tailscale-app.nix` installs the official `tailscale-app` package from `pkgs.tailscale.com` during nix-darwin activation. This replaces `services.tailscale.enable = true`, because the desired macOS setup is the GUI app with its network extension and `/usr/local/bin/tailscale`, not the CLI-only nix-darwin daemon.
+
+The staged mise path mirrors this by using `brew-cask:tailscale-app` in `mise/config/mise/global_config.toml` instead of the `brew:tailscale` formula.
 
 ## Spotlight exclusions
 

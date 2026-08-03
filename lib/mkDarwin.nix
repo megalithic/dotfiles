@@ -50,6 +50,7 @@ inputs.nix-darwin.lib.darwinSystem {
     ../modules/darwin/spotlight.nix
     ../modules/darwin/_1password.nix
     ../modules/darwin/okta-verify.nix
+    ../modules/darwin/tailscale-app.nix
     inputs.kanata-darwin.darwinModules.default
     ../modules/darwin/kanata.nix
   ]

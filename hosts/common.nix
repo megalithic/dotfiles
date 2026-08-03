@@ -183,10 +183,6 @@ in
     };
   };
 
-  services = {
-    tailscale.enable = true;
-  };
-
   # ─── Spotlight exclusions ────────────────────────────────────────────────
   # Prevents Spotlight from indexing build artifacts, deps, and devenv state.
   # Override or extend in hosts/<hostname>.nix via spotlight.exclusions.paths/scanPaths.
