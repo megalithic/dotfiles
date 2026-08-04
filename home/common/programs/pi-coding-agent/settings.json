@@ -25,7 +25,7 @@
 		"npm:pi-elixir",
 		"npm:pi-subagents",
 		"npm:pi-lens",
-		"npm:@ogulcancelik/pi-ssh-tools",
+		"nm:@ogulcancelik/pi-ssh-tools",
 		"npm:@juicesharp/rpiv-ask-user-question",
 		"npm:@juicesharp/rpiv-todo",
 		"npm:@ff-labs/pi-fff",
@@ -59,9 +59,6 @@
 			"my-codex/gpt-5.6-sol",
 			"my-codex/gpt-5.6-terra",
 			"my-codex/gpt-5.6-luna",
-			"my-codex/gpt-5.5",
-			"my-codex/gpt-5.4",
-			"my-codex/gpt-5.3-codex-spark",
 			"opencode-go/kimi-k3",
 			"opencode-go/deepseek-v4-pro",
 			"opencode-go/deepseek-v4-flash",
@@ -99,9 +96,9 @@
 	"multiSub": {
 		"subscriptions": [
 			{
-				"provider": "anthropic",
-				"alias": "anthropic",
-				"label": "anthropic"
+				"provider": "openai-codex",
+				"alias": "openai-codex",
+				"label": "openai-codex"
 			},
 			{
 				"provider": "openai-codex",
@@ -123,18 +120,18 @@
 				"name": "mega",
 				"entries": [
 					{
-						"provider": "openai-codex",
-						"model": "gpt-5.5",
+						"provider": "my-codex",
+						"model": "gpt-sol-5.6",
 						"enabled": true
 					},
 					{
-						"provider": "openai-codex",
-						"model": "gpt-5.4",
+						"provider": "my-codex",
+						"model": "gpt-terra-5.6",
 						"enabled": true
 					},
 					{
-						"provider": "openai-codex",
-						"model": "gpt-5.4-mini",
+						"provider": "my-codex",
+						"model": "gpt-luna-5.6",
 						"enabled": true
 					}
 				],
@@ -144,38 +141,38 @@
 				"name": "alt",
 				"entries": [
 					{
-						"provider": "alt-anthropic",
-						"model": "claude-opus-4-8",
+						"provider": "anthropic",
+						"model": "claude-fable-5",
 						"enabled": true
 					},
 					{
-						"provider": "alt-anthropic",
+						"provider": "anthropic",
+						"model": "claude-opus-5",
+						"enabled": true
+					},
+					{
+						"provider": "anthropic",
 						"model": "claude-sonnet-5",
 						"enabled": true
 					},
 					{
-						"provider": "alt-anthropic",
-						"model": "claude-sonnet-4-6",
-						"enabled": true
-					},
-					{
-						"provider": "alt-anthropic",
+						"provider": "anthropic",
 						"model": "claude-haiku-4-5",
 						"enabled": true
 					},
 					{
-						"provider": "alt-codex",
-						"model": "gpt-5.5",
+						"provider": "openai-codex",
+						"model": "gpt-sol-5.6",
 						"enabled": true
 					},
 					{
-						"provider": "alt-codex",
-						"model": "gpt-5.4",
+						"provider": "openai-codex",
+						"model": "gpt-terra-5.6",
 						"enabled": true
 					},
 					{
-						"provider": "alt-codex",
-						"model": "gpt-5.4-mini",
+						"provider": "openai-codex",
+						"model": "gpt-luna-5.6",
 						"enabled": true
 					}
 				],
