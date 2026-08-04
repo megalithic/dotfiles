@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * /tell extension - async Pi-to-Pi guidance messages.
  *
@@ -27,6 +28,8 @@ const SOCKET_PREFIX = "pi";
 const CONNECT_TIMEOUT_MS = 800;
 const PING_TIMEOUT_MS = 1000;
 const PING_ATTEMPTS = 2;
+const SSH_TIMEOUT_MS = 5000;
+const KNOWN_MACHINE_ALIASES = new Set(["megabookpro", "workbookpro"]);
 
 type TmuxInfo = {
 	session: string;
@@ -72,6 +75,30 @@ type SendResult = {
 	id?: string;
 	response?: unknown;
 	error?: string;
+};
+
+type RemoteSendResult = {
+	ok: boolean;
+	target?: string;
+	socket?: string;
+	response?: unknown;
+	error?: string;
+};
+
+type TellRoute = {
+	machine?: string;
+	target?: string;
+	message: string;
+};
+
+type OriginInfo = {
+	display: string;
+	replyTarget: string;
+};
+
+type TellPayloadOptions = {
+	includeMachineReply: boolean;
+	includeFromSocket: boolean;
 };
 
 type SelectionResult =
@@ -158,6 +185,22 @@ const detectTmux = (): Promise<TmuxInfo | null> =>
 		);
 	});
 
+const currentMachineName = (): string | undefined => {
+	const raw = process.env.HOSTNAME || process.env.HOST || "";
+	const name = raw.split(".")[0]?.trim();
+	return name || undefined;
+};
+
+const looksLikeMachineTarget = (token: string | undefined): boolean => {
+	if (!token) return false;
+	const normalized = token.toLowerCase();
+	return (
+		KNOWN_MACHINE_ALIASES.has(normalized) ||
+		normalized.includes("@") ||
+		normalized.includes(".")
+	);
+};
+
 const currentSocketPath = async (): Promise<string | null> => {
 	if (process.env.PI_SOCKET) return process.env.PI_SOCKET;
 	const tmux = await detectTmux();
@@ -200,7 +243,7 @@ const pingSocketOnce = (socketPath: string): Promise<boolean> =>
 			try {
 				const line = chunk.toString().split("\n")[0]?.trim();
 				const response = line ? JSON.parse(line) : null;
-				finish(!!response && response.ok === true);
+				finish(Boolean(response) && response.ok === true);
 			} catch {
 				finish(false);
 			}
@@ -338,9 +381,7 @@ const isExactSelfTarget = (candidate: Candidate, target: string): boolean => {
 		candidate.session && candidate.window && candidate.pane
 			? `${candidate.session}:${candidate.window} ${candidate.pane}`
 			: undefined,
-	]
-		.filter(Boolean)
-		.map((value) => normalizeTarget(String(value)));
+	].flatMap((value) => (value ? [normalizeTarget(String(value))] : []));
 	return exacts.includes(t);
 };
 
@@ -368,9 +409,7 @@ const scoreCandidate = (candidate: Candidate, target: string): number => {
 		candidate.pane,
 		candidate.socket,
 		path.basename(candidate.socket),
-	]
-		.filter(Boolean)
-		.map((value) => normalizeTarget(String(value)));
+	].flatMap((value) => (value ? [normalizeTarget(String(value))] : []));
 
 	if (exacts.includes(t)) return 100;
 	if (candidate.searchText.includes(t)) return 50;
@@ -387,8 +426,9 @@ const scoreCandidate = (candidate: Candidate, target: string): number => {
 
 const formatCandidateList = (candidates: Candidate[]): string =>
 	candidates
-		.filter((candidate) => candidate.reachable && !candidate.current)
-		.map((candidate) => `- ${candidate.label}`)
+		.flatMap((candidate) =>
+			candidate.reachable && !candidate.current ? [`- ${candidate.label}`] : [],
+		)
 		.join("\n") || "(none)";
 
 const selectCandidate = async (
@@ -529,12 +569,189 @@ const sendJsonLine = (socketPath: string, payload: unknown): Promise<unknown> =>
 		});
 	});
 
+const shellQuote = (value: string): string =>
+	`'${value.replace(/'/g, `'\\''`)}'`;
+
+const REMOTE_TELL_NODE = `
+const net = require("node:net");
+const socketPath = process.env.PI_TELL_SOCKET;
+const payload = Buffer.from(process.env.PI_TELL_PAYLOAD_B64 || "", "base64").toString("utf8");
+if (!socketPath || !payload) {
+  console.error("missing remote tell socket or payload");
+  process.exit(2);
+}
+const socket = net.createConnection(socketPath);
+let buffer = "";
+let settled = false;
+const finish = (code, text) => {
+  if (settled) return;
+  settled = true;
+  socket.destroy();
+  if (text) process.stdout.write(text.endsWith("\\n") ? text : text + "\\n");
+  process.exit(code);
+};
+socket.setTimeout(${CONNECT_TIMEOUT_MS}, () => finish(3, "remote tell timed out"));
+socket.on("error", (err) => finish(4, err.message));
+socket.on("connect", () => socket.write(payload.endsWith("\\n") ? payload : payload + "\\n"));
+socket.on("data", (chunk) => {
+  buffer += chunk.toString();
+  if (buffer.includes("\\n")) finish(0, buffer.trim());
+});
+socket.on("close", () => finish(buffer.trim() ? 0 : 5, buffer.trim() || "remote tell socket closed without response"));
+`;
+
+const remoteTellScript = (target: string, payloadB64: string): string => `
+set -euo pipefail
+target=${shellQuote(target)}
+payload_b64=${shellQuote(payloadB64)}
+state_dir="\${PI_STATE_DIR:-\${XDG_STATE_HOME:-$HOME/.local/state}/pi}"
+sockets_dir="$state_dir/sockets"
+prefix="${SOCKET_PREFIX}"
+socket_path=""
+socket_for() {
+  printf '%s/%s-%s-%s.sock' "$sockets_dir" "$prefix" "$1" "$2"
+}
+first_session_socket() {
+  local session="$1"
+  local candidate
+  candidate="$(socket_for "$session" agent)"
+  if [[ -S "$candidate" ]]; then printf '%s' "$candidate"; return 0; fi
+  candidate="$(socket_for "$session" 0)"
+  if [[ -S "$candidate" ]]; then printf '%s' "$candidate"; return 0; fi
+  shopt -s nullglob
+  local sockets=("$sockets_dir/$prefix-$session-"*.sock)
+  shopt -u nullglob
+  for candidate in "\${sockets[@]}"; do
+    [[ "$candidate" == *-eph-* ]] && continue
+    [[ -S "$candidate" ]] || continue
+    printf '%s' "$candidate"
+    return 0
+  done
+  return 1
+}
+resolve_window_socket() {
+  local session="$1"
+  local window="$2"
+  local candidate win_name win_index
+  candidate="$(socket_for "$session" "$window")"
+  if [[ -S "$candidate" ]]; then printf '%s' "$candidate"; return 0; fi
+  if [[ "$window" =~ ^[0-9]+$ ]]; then
+    win_name="$(tmux list-windows -t "$session" -F '#{window_index}:#{window_name}' 2>/dev/null | awk -F: -v w="$window" '$1 == w {print $2; exit}')"
+    if [[ -n "$win_name" ]]; then
+      candidate="$(socket_for "$session" "$win_name")"
+      if [[ -S "$candidate" ]]; then printf '%s' "$candidate"; return 0; fi
+    fi
+  else
+    win_index="$(tmux list-windows -t "$session" -F '#{window_index}:#{window_name}' 2>/dev/null | awk -F: -v w="$window" '$2 == w {print $1; exit}')"
+    if [[ -n "$win_index" ]]; then
+      candidate="$(socket_for "$session" "$win_index")"
+      if [[ -S "$candidate" ]]; then printf '%s' "$candidate"; return 0; fi
+    fi
+  fi
+  return 1
+}
+if [[ -z "$target" ]]; then
+  echo 'remote tell target missing' >&2
+  exit 2
+fi
+if [[ "$target" == *:* ]]; then
+  session="\${target%%:*}"
+  window="\${target#*:}"
+  socket_path="$(resolve_window_socket "$session" "$window")" || true
+else
+  session="$target"
+  socket_path="$(first_session_socket "$session")" || true
+fi
+if [[ -z "$socket_path" || ! -S "$socket_path" ]]; then
+  echo "No Pi socket found for $target on $(hostname -s 2>/dev/null || hostname)" >&2
+  echo "Available sockets:" >&2
+  if [[ -d "$sockets_dir" ]]; then
+    ls "$sockets_dir"/"$prefix"-*.sock 2>/dev/null | sed 's/^/  /' >&2 || true
+  else
+    echo "  (socket dir missing: $sockets_dir)" >&2
+  fi
+  exit 3
+fi
+printf '__TELL_SOCKET__ %s\n' "$socket_path"
+PI_TELL_SOCKET="$socket_path" PI_TELL_PAYLOAD_B64="$payload_b64" node -e ${shellQuote(REMOTE_TELL_NODE)}
+`;
+
+const sendRemoteJsonLine = (
+	machine: string,
+	target: string,
+	payload: unknown,
+): Promise<RemoteSendResult> =>
+	new Promise((resolve) => {
+		const payloadB64 = Buffer.from(JSON.stringify(payload), "utf8").toString(
+			"base64",
+		);
+		const command = `bash -lc ${shellQuote(remoteTellScript(target, payloadB64))}`;
+		execFile(
+			"ssh",
+			[
+				"-o",
+				"BatchMode=yes",
+				"-o",
+				`ConnectTimeout=${Math.ceil(SSH_TIMEOUT_MS / 1000)}`,
+				machine,
+				command,
+			],
+			{ encoding: "utf-8", timeout: SSH_TIMEOUT_MS },
+			(err, stdout, stderr) => {
+				const stderrText = stderr.trim();
+				if (err) {
+					resolve({
+						ok: false,
+						error: stderrText || err.message,
+					});
+					return;
+				}
+
+				const lines = stdout.trim().split(/\r?\n/).filter(Boolean);
+				const socketLine = lines.find((line) =>
+					line.startsWith("__TELL_SOCKET__ "),
+				);
+				const socket = socketLine?.replace("__TELL_SOCKET__ ", "");
+				const responseText = lines
+					.filter((line) => !line.startsWith("__TELL_SOCKET__ "))
+					.join("\n")
+					.trim();
+
+				let response: unknown = responseText || undefined;
+				if (responseText) {
+					try {
+						response = JSON.parse(responseText);
+					} catch {
+						// Keep raw response.
+					}
+				}
+
+				resolve({ ok: true, target, socket, response });
+			},
+		);
+	});
+
 const makeMessageId = (): string =>
 	`tell-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
-const originLabel = async (ctx: ExtensionContext): Promise<string> => {
+const isLocalMachine = (machine: string | undefined): boolean => {
+	if (!machine) return false;
+	const normalized = machine.toLowerCase();
+	const current = currentMachineName()?.toLowerCase();
+	return (
+		normalized === "localhost" ||
+		normalized === "127.0.0.1" ||
+		(current !== undefined && normalized === current)
+	);
+};
+
+const originInfo = async (
+	ctx: ExtensionContext,
+	includeMachineReply: boolean,
+): Promise<OriginInfo> => {
 	const currentSocket = await currentSocketPath();
-	const currentCandidate = (await discoverCandidates()).find(
+	const candidates = await discoverCandidates();
+	const currentCandidate = candidates.find(
 		(candidate) => candidate.socket === currentSocket,
 	);
 	const tmux = await detectTmux();
@@ -552,47 +769,148 @@ const originLabel = async (ctx: ExtensionContext): Promise<string> => {
 		parsed.window ||
 		process.env.PI_WINDOW ||
 		"?";
-	return `${session}:${window} (${cwd})`;
+	const localTarget = `${session}:${window}`;
+	const machine = currentMachineName();
+	const replyTarget =
+		includeMachineReply && machine ? `${machine} ${localTarget}` : localTarget;
+	const display =
+		includeMachineReply && machine
+			? `${machine} ${localTarget} (${cwd})`
+			: `${localTarget} (${cwd})`;
+	return { display, replyTarget };
 };
 
 const wrapGuidance = async (
 	ctx: ExtensionContext,
 	message: string,
 	id: string,
-): Promise<string> => {
-	const from = await originLabel(ctx);
-	return `[TELL:${id} from ${from}]\n${message.trim()}\n\nReply asynchronously with /tell ${from.split(" ")[0]} <message>, or use the tell_pi tool with target ${JSON.stringify(from.split(" ")[0])}.`;
+	includeMachineReply: boolean,
+): Promise<{ text: string; from: string }> => {
+	const origin = await originInfo(ctx, includeMachineReply);
+	return {
+		from: origin.display,
+		text: `[TELL:${id} from ${origin.display}]\n${message.trim()}\n\nReply asynchronously with /tell ${origin.replyTarget} <message>, or use the tell_pi tool with target ${JSON.stringify(origin.replyTarget)}.`,
+	};
+};
+
+const buildTellPayload = async (
+	ctx: ExtensionContext,
+	message: string,
+	id: string,
+	options: TellPayloadOptions,
+): Promise<Record<string, unknown>> => {
+	const wrapped = await wrapGuidance(
+		ctx,
+		message,
+		id,
+		options.includeMachineReply,
+	);
+	const payload: Record<string, unknown> = {
+		type: "tell",
+		protocol: "pi.tell.v1",
+		id,
+		text: wrapped.text,
+		from: wrapped.from,
+		timestamp: Math.floor(Date.now() / 1000),
+	};
+	if (options.includeFromSocket) payload.fromSocket = await currentSocketPath();
+	return payload;
+};
+
+const normalizeRoute = (route: TellRoute): TellRoute => {
+	if (route.machine && isLocalMachine(route.machine)) {
+		return { target: route.target, message: route.message };
+	}
+	return route;
+};
+
+const routeFromTargetHint = (
+	targetText: string | undefined,
+	message: string,
+	machine?: string,
+): TellRoute => {
+	const trimmedTarget = targetText?.trim();
+	if (!trimmedTarget) return normalizeRoute({ machine, message });
+
+	const words = trimmedTarget.split(/\s+/).filter(Boolean);
+	if (!machine && words.length >= 2 && looksLikeMachineTarget(words[0])) {
+		return normalizeRoute({
+			machine: words[0],
+			target: words.slice(1).join(" "),
+			message,
+		});
+	}
+
+	return normalizeRoute({ machine, target: trimmedTarget, message });
 };
 
 const sendTell = async (
 	ctx: ExtensionContext,
-	targetText: string | undefined,
-	message: string,
+	rawRoute: TellRoute,
 ): Promise<SendResult> => {
-	const selection = await selectCandidate(targetText, ctx);
+	const route = normalizeRoute(rawRoute);
+	if (route.machine) {
+		if (!route.target?.trim()) {
+			return {
+				ok: false,
+				error: `Remote tell target missing for ${route.machine}. Usage: /tell ${route.machine} <tmux-session[:window]> <message>`,
+			};
+		}
+
+		const id = makeMessageId();
+		const payload = await buildTellPayload(ctx, route.message, id, {
+			includeMachineReply: true,
+			includeFromSocket: false,
+		});
+		const response = await sendRemoteJsonLine(
+			route.machine,
+			route.target,
+			payload,
+		);
+		const target: Candidate = {
+			socket: response.socket || `${route.machine}:${route.target}`,
+			id: `${route.machine} ${route.target}`,
+			label: `${route.machine} ${route.target}${response.socket ? ` — ${response.socket}` : ""}`,
+			searchText: `${route.machine} ${route.target}`.toLowerCase(),
+			current: false,
+			reachable: response.ok,
+		};
+		const ok =
+			response.ok &&
+			response.response !== null &&
+			typeof response.response === "object" &&
+			"ok" in response.response &&
+			(response.response as { ok?: unknown }).ok === true;
+		if (!ok) {
+			return {
+				ok: false,
+				target,
+				id,
+				response,
+				error:
+					response.error ||
+					`Remote target rejected tell payload: ${JSON.stringify(response.response)}`,
+			};
+		}
+		return { ok: true, target, id, response: response.response };
+	}
+
+	const selection = await selectCandidate(route.target, ctx);
 	if (selection.ok === false) {
 		return { ok: false, error: selection.error };
 	}
 	const target = selection.candidate;
 
 	const id = makeMessageId();
-	const text = await wrapGuidance(ctx, message, id);
-	const from = await originLabel(ctx);
-	const fromSocket = await currentSocketPath();
-	const payload = {
-		type: "tell",
-		protocol: "pi.tell.v1",
-		id,
-		text,
-		from,
-		fromSocket,
-		timestamp: Math.floor(Date.now() / 1000),
-	};
+	const payload = await buildTellPayload(ctx, route.message, id, {
+		includeMachineReply: false,
+		includeFromSocket: true,
+	});
 
 	try {
 		const response = await sendJsonLine(target.socket, payload);
 		const ok =
-			!!response &&
+			response !== null &&
 			typeof response === "object" &&
 			"ok" in response &&
 			(response as { ok?: unknown }).ok === true;
@@ -617,17 +935,19 @@ const sendTell = async (
 	}
 };
 
-const splitCommandArgs = (
-	args: string,
-): { target?: string; message?: string } => {
+const splitCommandArgs = (args: string): Partial<TellRoute> => {
 	const trimmed = args.trim();
 	if (!trimmed) return {};
 	const normalized = trimmed.replace(/^to\s+/i, "");
-	const colonMatch = normalized.match(/^([^\s:]+:[^\s]+)\s+([\s\S]+)$/);
-	if (colonMatch) return { target: colonMatch[1], message: colonMatch[2] };
-	const tokenMatch = normalized.match(/^(\S+)\s+([\s\S]+)$/);
-	if (tokenMatch) return { target: tokenMatch[1], message: tokenMatch[2] };
-	return { target: normalized };
+	const tokens = normalized.match(/^(\S+)(?:\s+(\S+))?(?:\s+([\s\S]+))?$/);
+	if (!tokens) return {};
+	const [, first, second, rest] = tokens;
+	if (looksLikeMachineTarget(first) && second) {
+		return { machine: first, target: second, message: rest };
+	}
+	if (second)
+		return { target: first, message: [second, rest].filter(Boolean).join(" ") };
+	return { target: first };
 };
 
 const restoreRecentTellWidget = (ctx: ExtensionContext): void => {
@@ -648,7 +968,7 @@ const restoreRecentTellWidget = (ctx: ExtensionContext): void => {
 			continue;
 		}
 		const data = entry.data;
-		if (!data || data.direction !== "received" || !data.text) continue;
+		if (data?.direction !== "received" || !data.text) continue;
 		const ageMs = Date.now() - (data.timestamp || 0) * 1000;
 		if (ageMs > 60 * 60 * 1000) return;
 		const from = data.from || "unknown";
@@ -671,12 +991,20 @@ export default function (pi: ExtensionAPI): void {
 		description: "Send async guidance to another running Pi instance",
 		handler: async (args, ctx) => {
 			const parsed = splitCommandArgs(args);
+			const machine = parsed.machine;
 			let target = parsed.target;
 			let message = parsed.message;
 
 			if (!message?.trim()) {
 				if (!ctx.hasUI) {
-					ctx.ui.notify("Usage: /tell <target> <message>", "error");
+					ctx.ui.notify("Usage: /tell [machine] <target> <message>", "error");
+					return;
+				}
+				if (machine && !target) {
+					ctx.ui.notify(
+						`Usage: /tell ${machine} <tmux-session[:window]> <message>`,
+						"error",
+					);
 					return;
 				}
 				if (!target) {
@@ -697,7 +1025,7 @@ export default function (pi: ExtensionAPI): void {
 				}
 			}
 
-			const result = await sendTell(ctx, target, message);
+			const result = await sendTell(ctx, { machine, target, message });
 			if (!result.ok) {
 				ctx.ui.notify(
 					`Tell failed: ${result.error || "unknown error"}`,
@@ -722,24 +1050,34 @@ export default function (pi: ExtensionAPI): void {
 		name: "tell_pi",
 		label: "Tell Pi",
 		description:
-			"Send asynchronous guidance to another running Pi instance by target name/session/window.",
+			"Send asynchronous guidance to another running Pi instance by machine and target name/session/window.",
 		promptSnippet:
-			"Send async guidance to another running Pi instance selected by target name or fuzzy selector.",
+			"Send async guidance to another running Pi instance selected by machine, target name, or fuzzy selector.",
 		promptGuidelines: [
 			"Use tell_pi when the user asks to tell, notify, guide, or hand work to another running Pi instance.",
 			"tell_pi is Pi-only; do not use it for external agents like Claude Code, opencode, aider, or codex.",
 		],
 		parameters: Type.Object({
+			machine: Type.Optional(
+				Type.String({
+					description:
+						"Optional machine/SSH host, e.g. megabookpro or workbookpro.",
+				}),
+			),
 			target: Type.Optional(
 				Type.String({
 					description:
-						"Pi target hint such as session, session:window, cwd basename, pane, or loose description.",
+						"Pi target hint such as machine + session, session, session:window, cwd basename, pane, or loose description.",
 				}),
 			),
 			message: Type.String({ description: "Guidance/prompt to send." }),
 		}),
-		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-			const result = await sendTell(ctx, params.target, params.message);
+		async execute(...args) {
+			const [, params, , , ctx] = args;
+			const result = await sendTell(
+				ctx,
+				routeFromTargetHint(params.target, params.message, params.machine),
+			);
 			if (!result.ok) {
 				return {
 					isError: true,

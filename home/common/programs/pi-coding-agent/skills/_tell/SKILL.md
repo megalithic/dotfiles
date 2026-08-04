@@ -36,6 +36,14 @@ Send a task to another pi agent running in a tmux session:
 
 **Modern `/tell` and `tell_pi` routing:** Prefer the Pi extension over this legacy script. It discovers live Pi manifests and sockets, excludes the originating instance from implicit selection, and hard-errors when an explicit target is missing, ambiguous, or busy/unreachable. In non-interactive tool calls, it never opens selector UI or falls back to the current instance; errors list reachable non-current candidates.
 
+**Machine + tmux target syntax:** `/tell` also accepts a machine before the tmux target. It SSHes to the machine, resolves `${PI_STATE_DIR:-~/.local/state/pi}/sockets/pi-{session}-{window}.sock` there, and sends the same `pi.tell.v1` payload.
+
+```bash
+/tell megabookpro mega "do something special"       # Remote machine, best Pi socket in tmux session mega
+/tell megabookpro mega:agent "do something special" # Remote machine, explicit window
+/tell workbookpro mega "do something special"       # Local machine prefix; routes as /tell mega ... on workbookpro
+```
+
 **Multi-instance support:** If a session has multiple pi instances (e.g., `mega:0` and `mega:agent`), the tell skill will:
 
 1. If `session:window` specified → use that socket directly
@@ -100,7 +108,8 @@ When a task completes (either external agent or pi agent calling `--done`):
 
 1. **ntfy notification** sent with task summary
 2. **Message sent to delegator's session**:
-   ```
+
+   ```text
    [TASK_RESULT:abc123] claude completed: Task finished successfully
    Original task: run the user-story-sync skill...
    ```

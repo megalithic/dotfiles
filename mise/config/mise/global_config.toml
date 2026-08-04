@@ -617,7 +617,7 @@ keep_alive = true
 stdout_path = "~/.cache/miccheck-stdout.log"
 stderr_path = "~/.cache/miccheck-stderr.log"
 
-[bootstrap.macos.launchd.agents."syncthing"]
+[bootstrap.macos.launchd.agents."com.megadots.syncthing"]
 program = "/opt/homebrew/opt/syncthing/bin/syncthing"
 args = ["--no-browser", "--no-restart"]
 run_at_load = true
@@ -729,18 +729,21 @@ mise run fonts:install
 
 [tasks.up]
 alias = "dot"
-description = "Update system packages, mise tools, and Neovim packages"
+description = "Update system packages, mise tools, nvim packages, pi, and more"
 run = """
 set -euo pipefail
 
-printf 'Updating dotfiles..'
-mise bootstrap --only packages,dotfiles,macos-launchd-agents --yes
+mise self-update --yes
+mise plugins update --yes
+mise upgrade --bump --yes
 mise bootstrap packages apply --yes
-# mise bootstrap packages upgrade --yes
+mise bootstrap dotfiles apply --force --yes
+mise bootstrap launchd apply --yes
+mise bootstrap macos-defaults apply --yes
+mise bootstrap packages upgrade --yes
 mise run fnox:render
-mise upgrade --bump
-
 mise run pi:update
+
 # nvim --headless -c "lua vim.pack.update(nil, { force = true })" -c "quit"
 """
 

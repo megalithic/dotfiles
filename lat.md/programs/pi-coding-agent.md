@@ -22,6 +22,8 @@ The local wrapper sets `PI_STATE_DIR`, creates socket, manifest, and pinvim stat
 
 The main module auto-discovers non-underscore-prefixed local `./packages/*.nix`, `.ts` extensions, extension directories, `./agents/*.md`, skill directories under `./skills/`, and `./prompts/*.md`. Prefixing a path with `_` keeps it in source control while disabling it from the active profile.
 
+The `git-worktrees` skill checks `wt --version` before managing worktrees. When available, it uses the local `wt` Worktrunk wrapper, Worktrunk JSON queries, `mise` project tasks, and generated `.config/wt.toml` templates; raw `git worktree`, copy loops, and manual tmux layouts stay forbidden. It preserves prior manual instructions in `skills/git-worktrees/references/legacy-git-worktrees.md` and uses that reference unchanged only when `wt` is unavailable.
+
 ## Runtime helper packages
 
 Pi runtime helper packages come from `settings.json` package entries and are refreshed by `pi update --extensions` after `just home`.
@@ -61,6 +63,8 @@ The `/handoff` extension replaces the old file-backed handoff skill: it serializ
 `resurrect-tag.ts` tags the surrounding tmux pane with the session UUID (pane option `@pi_session_id`) on every `session_start`. `bin/tmux-resurrect-save-pi` (a tmux-resurrect `save_command_strategy`, symlinked into the plugin by `config/tmux/plugins.tmux.conf`) reads the tag at save time so resurrect restores each pi pane exactly via `pinvim --session <uuid>`, falling back to `pinvim -c` for untagged panes.
 
 The `/tell` extension replaces the shell-script tell skill for Pi-to-Pi guidance. It discovers running Pi instances from `PI_STATE_DIR` socket manifests, ignores ephemeral/dead manifest entries and non-responsive socket-only fallbacks, sends `pi.tell.v1` JSON over the existing Pi socket, and exposes the `tell_pi` tool so the receiving instance can reply asynchronously. Incoming tell messages are persisted as custom entries, surfaced near the editor through a temporary widget, and mirrored through the same `~/bin/ntfy` path used by the notify extension.
+
+`/tell` accepts `machine target message` as a remote form, for example `/tell megabookpro mega do something`. Remote routing SSHes to the machine, resolves that machine's `${PI_STATE_DIR:-~/.local/state/pi}/sockets/pi-{session}-{window}.sock`, prefers `agent` then `0` then the first non-ephemeral socket for session-only targets, and sends the same `pi.tell.v1` payload. Local machine prefixes such as `/tell workbookpro mega ...` are normalized back to local target routing. Remote tell payloads omit `fromSocket`; replies use the generated `/tell <origin-machine> <origin-session:window> ...` hint instead of socket ack.
 
 Tell target resolution is fail-closed. Explicit targets must confidently match a reachable live candidate; missing, ambiguous, or busy/unreachable targets return an error instead of falling back. Non-interactive tool calls never open selector UI and report reachable non-current candidates. The originating/current instance is excluded from implicit selection and from loose target matches, preventing loopback; only an exact self target can select it.
 
@@ -142,7 +146,7 @@ Pi subagent orchestration comes from the `npm:pi-subagents` package; the old loc
 
 Scopes are `uncommitted`, `unpushed`, `branch`, `pr`, `ticket`, and `worktrees`. Diff modes are `status`, `worktree`, `staged`, `unstaged`, and `range`; they are forwarded as `{ scope, cwd, diff_mode }`.
 
-It is distinct from `extensions/review.ts` (the `/review` pi-review-loop, which performs agent-driven checkout/snapshot reviews). `/piview` only targets the active paired Nvim and never scans manifests or steals pairs; when no editor service is connected (bare Pi) it spawns a review Nvim that pairs back (see [[neovim-pinvim#Neovim and pinvim#Pi-initiated review spawn]]). The Nvim-side handler is documented in [[neovim-pinvim#Neovim and pinvim#Worktree-aware PiReview]].
+It is distinct from `extensions/review.ts` (the `/review` pi-review-loop, which performs agent-driven checkout/snapshot reviews). `/piview` only targets the active paired Nvim and never scans manifests or steals pairs; when no editor service is connected (bare Pi) it spawns a review Nvim that pairs back (see [[neovim-pinvim#Pi-initiated review spawn]]). The Nvim-side handler is documented in [[neovim-pinvim#Worktree-aware PiReview]].
 
 `pview [scope]` is the shell launcher for `/piview`: in a one-pane tmux window it runs `pinvim "/piview ..."` in place, while in a multi-pane window it opens a new tmux window first so the Pi-initiated review Nvim creates exactly one right-side split. Outside tmux it falls back to plain `p`. Fish completion mirrors the `/piview` scope list.
 
