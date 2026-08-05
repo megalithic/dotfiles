@@ -86,7 +86,9 @@ Migration note: if the old Homebrew cask is still installed at the same version,
 
 ## Tailscale GUI app
 
-`modules/darwin/tailscale-app.nix` installs the official `tailscale-app` package from `pkgs.tailscale.com` during nix-darwin activation. This replaces `services.tailscale.enable = true`, because the desired macOS setup is the GUI app with its network extension and `/usr/local/bin/tailscale`, not the CLI-only nix-darwin daemon.
+`modules/darwin/tailscale-app.nix` installs the official `tailscale-app` package from `pkgs.tailscale.com` during nix-darwin activation, replacing `services.tailscale.enable = true`.
+
+The GUI app is preferred because the desired macOS setup is the app with its network extension and `/usr/local/bin/tailscale`, not the CLI-only nix-darwin daemon.
 
 The staged mise path mirrors this by using `brew-cask:tailscale-app` in `mise/config/mise/global_config.toml` instead of the `brew:tailscale` formula.
 
