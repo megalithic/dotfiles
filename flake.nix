@@ -25,12 +25,10 @@
       url = "github:brizzbuzz/opnix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    neovim-nightly-overlay = {
-      url = "github:nix-community/neovim-nightly-overlay";
-      inputs.nixpkgs.follows = "nixpkgs";
-      # Track Neovim's moving nightly tag instead of overlay's raw default branch.
-      inputs.neovim-src.url = "github:neovim/neovim/nightly";
-    };
+    # No input overrides here: any deviation from the overlay's own lock
+    # (nixpkgs follows or a neovim-src pin) changes the derivation hash and
+    # forces a from-source neovim build instead of a nix-community cachix hit.
+    neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
     # espanso: pinned to last-good nixpkgs. Jul 2026 unstable (clang 21 /
     # cctools bump) crashes cctools ld (Trace/BPT trap 5) linking espanso
     # on aarch64-darwin. Drop this pin once upstream espanso links again.

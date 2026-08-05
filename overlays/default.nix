@@ -40,14 +40,10 @@
     #     '';
     # });
 
-    # neovim-nightly-overlay can run upstream functional tests while building
-    # from source; those tests are flaky in the Darwin Nix sandbox. Keep rebuilds
-    # focused on packaging.
-    nvim-nightly =
-      inputs.neovim-nightly-overlay.packages.${prev.stdenv.hostPlatform.system}.default.overrideAttrs
-        (_: {
-          doCheck = false;
-        });
+    # Use the overlay's package unmodified so it resolves to the exact
+    # derivation nix-community cachix built. Any overrideAttrs here (even
+    # doCheck = false) changes the hash and forces a local source build.
+    nvim-nightly = inputs.neovim-nightly-overlay.packages.${prev.stdenv.hostPlatform.system}.default;
 
     # tmux 3.6a has a macOS-arm64 grid-history corruption bug that SIGABRTs the
     # whole server on copy-mode entry (tmux/tmux#4962, fixed on master before
