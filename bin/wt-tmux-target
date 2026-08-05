@@ -109,11 +109,10 @@ else
 fi
 
 # The window is always created as plain `services`. The elixir tmpl's
-# wt-services-cmd renames it to services-<port> itself, in-worktree right
-# before `mise run start:server` — deriving the port HERE raced the
-# post-start .config/ copy (fresh worktrees had no phx-port.sh yet) and
-# could leak the invoking shell's PORT/PHX_PORT, so the title showed the
-# previous worktree's port.
+# wt-services-cmd renames it to services-<port> itself at script start —
+# deriving the port HERE consulted the invoking shell's PORT/PHX_PORT (the
+# worktree you switch FROM), so the title showed the previous worktree's
+# port.
 services_window="services"
 
 # Ensure a window with the given name exists in the session, rooted at $wpath.
