@@ -31,7 +31,7 @@ pin = true
 # supply chain security: only allow installing new versions of tools that have
 # been released for at least 24 hours, to avoid 0-day supply chain attacks.
 # Exclude some tools that are frequently updated and have a low risk profile.
-minimum_release_age = "24h"
+minimum_release_age = "8h"
 minimum_release_age_excludes = [
   "npm:@earendil-works/pi-coding-agent",
   "npm:@openai/codex",
@@ -300,6 +300,7 @@ eza = "latest"
 fd = "latest"
 ffmpeg = "latest"
 flyctl = "latest"
+fnox = "latest"
 fzf = "latest"
 gh = "latest"
 github-cli = "latest"
@@ -383,12 +384,10 @@ strip_components = 0
 platforms.macos-arm64.url = "https://github.com/not-in-stock/kanata-bar/releases/download/v{{version}}/kanata-bar.app.zip"
 platforms.macos-x64.url = "https://github.com/not-in-stock/kanata-bar/releases/download/v{{version}}/kanata-bar.app.zip"
 
-# fnox age-key restore is NOT a postinstall: mise/tasks/fnox-setup is
-# interactive (op auth gate, read prompt) and postinstall runs with captured
-# stdio during the tools step — it would hang or fail the install. Run
-# `mise run setup:fnox` once per machine instead.
-[tools.fnox]
+[tools."github:nicknisi/fleet"]
 version = "latest"
+asset_pattern = "fleet-darwin-arm64.tar.gz"
+bin_path = "."
 
 [bootstrap.packages]
 # op via brew formula — official documented install method. A real signed binary

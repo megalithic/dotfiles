@@ -179,6 +179,7 @@ end
 
 return {
   "obsidian-nvim/obsidian.nvim",
+  enabled = false,
   cond = not vim.g.started_by_firenvim,
   version = "*",
   event = "VeryLazy",

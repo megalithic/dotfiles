@@ -62,6 +62,8 @@ Scripts use `.sh` names and `#!/usr/bin/env bash` so they run through bash regar
 
 `config/tmux/plugins.tmux.conf` is TPM-managed. `tmux-mega-fingers` is installed through TPM from public repo `megalithic/tmux-mega-fingers` and mirrored in the mise twin at `mise/config/tmux/plugins.tmux.conf`.
 
+Fleet is installed by mise from `github:nicknisi/fleet`. `tmux.conf` binds prefix+f to `$(mise where github:nicknisi/fleet)/fleet sidebar --from '#{pane_id}'`, matching Nick Nisi's sidebar toggle and ensuring the split opens in the current tmux window when multiple clients exist.
+
 `tmux-mega-fingers` lives as a separate OSS checkout at `~/code/oss/tmux-mega-fingers/` (fork of `artemave/tmux_super_fingers` @ `523dc9b`; see that repo's `UPSTREAM.md`). Fork additions over upstream:
 
 - Inside fingers mode, a shifted hint letter (e.g. `A` vs `a`) selects the copy (secondary) action for that one selection; lowercase selects open (primary). Single `@mega-fingers-key` entry (`C-f`). Upstream's `space` sticky-toggle is kept.

@@ -6,19 +6,16 @@
       "timeoutMs": 3600000
     }
   },
-  "defaultProvider": "openai-codex",
-  "defaultThinkingLevel": "medium",
+  "defaultThinkingLevel": "high",
   "doubleEscapeAction": "tree",
   "enableSkillCommands": true,
   "hideThinkingBlock": true,
   "editorPaddingX": 1,
   "outputPad": 1,
-  "theme": "tokyonight-night",
   "quietStartup": true,
   "packages": [
     "npm:pi-mcp-adapter",
     "npm:pi-web-access",
-    "npm:pi-subagents",
     "npm:pi-caveman",
     "npm:@plannotator/pi-extension",
     "npm:pi-rtk-optimizer",
@@ -33,7 +30,8 @@
     "npm:@juicesharp/rpiv-todo",
     "npm:@ff-labs/pi-fff",
     "npm:@hypabolic/pi-hypa",
-    "git:github.com/dantetekanem/pi-bash-live-view"
+    "git:github.com/dantetekanem/pi-bash-live-view",
+    "~/.local/share/mise/installs/github-nicknisi-fleet/latest/hooks/pi"
   ],
   "enabledModels": [
     "anthropic/claude-fable-5",
