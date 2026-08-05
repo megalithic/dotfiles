@@ -108,20 +108,13 @@ else
   services_cmd="exec wt-tail-logs $(printf '%q' "$branch")"
 fi
 
-resolve_services_port() {
-  local port="${PORT:-}"
-  if [[ -z "$port" && -x "$wpath/.config/scripts/phx-port.sh" ]]; then
-    port="$(cd "$wpath" && bash .config/scripts/phx-port.sh 2>/dev/null | tail -n 1 || true)"
-  fi
-  if [[ -z "$port" && -n "${PHX_PORT:-}" ]]; then
-    port="$PHX_PORT"
-  fi
-  [[ "$port" =~ ^[0-9]+$ ]] && printf '%s' "$port"
-}
-
-services_port="$(resolve_services_port)"
+# The window is always created as plain `services`. The elixir tmpl's
+# wt-services-cmd renames it to services-<port> itself, in-worktree right
+# before `mise run start:server` — deriving the port HERE raced the
+# post-start .config/ copy (fresh worktrees had no phx-port.sh yet) and
+# could leak the invoking shell's PORT/PHX_PORT, so the title showed the
+# previous worktree's port.
 services_window="services"
-[[ -n "$services_port" ]] && services_window="services-${services_port}"
 
 # Ensure a window with the given name exists in the session, rooted at $wpath.
 # Reuses an existing window of the same name; never kills panes.
@@ -137,17 +130,16 @@ ensure_window() {
   fi
 }
 
+# Reuse any existing services window WITHOUT renaming: once wt-services-cmd
+# renames it to services-<port> the exact name no longer matches, so match
+# the services(-<port>) pattern. Renaming a running window back would lose
+# the port from the title until the next server restart.
 ensure_services_window() {
-  local session="$1" window="$2" run_cmd="$3" existing=""
-  if tmux list-windows -t "=${session}" -F '#W' 2>/dev/null | grep -qx -- "$window"; then
+  local session="$1" window="$2" run_cmd="$3"
+  if tmux list-windows -t "=${session}" -F '#W' 2>/dev/null | grep -qE '^services(-[0-9]+)?$'; then
     return 0
   fi
-  existing="$(tmux list-windows -t "=${session}" -F '#W' 2>/dev/null | grep -E '^services(-[0-9]+)?$' | head -n 1 || true)"
-  if [[ -n "$existing" ]]; then
-    tmux rename-window -t "=${session}:${existing}" "$window"
-  else
-    ensure_window "$session" "$window" "$run_cmd"
-  fi
+  ensure_window "$session" "$window" "$run_cmd"
 }
 
 do_session() {

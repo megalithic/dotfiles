@@ -12,6 +12,10 @@
 # only ONCE per worktree, guarded by .local/state/setup-complete. Reopening the
 # services window then just re-bootstraps and restarts the server. Remove the
 # marker (or run `mise run setup`) to force a full re-setup.
+#
+# The tmux window is renamed to services-<port> right before the server
+# starts (see below). wt-tmux-target always creates the window as plain
+# `services` — it can't derive the port reliably at creation time.
 log_dir=".local/log"
 mkdir -p "$log_dir"
 LOG="$PWD/$log_dir/services.log"
@@ -33,6 +37,18 @@ else
     date '+%F %T' >"$marker"
   else
     echo "[services] setup FAILED - leaving unmarked so it retries on next open"
+  fi
+fi
+# Append the derived Phoenix port to this window's title (services-<port>).
+# Resolved HERE — in-worktree, right before server start, after setup has
+# guaranteed .config/ exists. wt-tmux-target used to derive it at window-
+# creation time, which raced the post-start .config/ copy (no phx-port.sh in
+# fresh worktrees yet) and could inherit the invoking shell's PORT/PHX_PORT,
+# so the title showed the previous worktree's port.
+if [ -n "${TMUX_PANE:-}" ] && command -v tmux >/dev/null 2>&1; then
+  port="$(bash .config/scripts/phx-port.sh 2>/dev/null | tail -n 1 || true)"
+  if [ -n "$port" ]; then
+    tmux rename-window -t "$TMUX_PANE" "services-${port}" 2>/dev/null || true
   fi
 fi
 echo "[services] starting server: mise run start:server"
