@@ -332,25 +332,32 @@ final class CDPClient: NSObject, URLSessionWebSocketDelegate {
     (()=>{
       const href=location.href||'';
       const telehealth=href==='https://telehealth.px.athena.io'||href.startsWith('https://telehealth.px.athena.io/')||href.startsWith('https://telehealth.px.athena.io?')||href.startsWith('https://telehealth.px.athena.io#');
-      const txt=(document.body&&document.body.innerText)||'';
       const leave=document.querySelector('button[aria-label*="Leave call" i],button[aria-label*="End call" i]');
-      const join=/\\bJoin now\\b/i.test(txt)||/\\bAsk to join\\b/i.test(txt)||/\\bJoin (call|visit|video|appointment)\\b/i.test(txt)||/\\bStart (call|visit|video|appointment)\\b/i.test(txt);
       const aria=s=>[...document.querySelectorAll(s)].map(e=>e.getAttribute('aria-label')).filter(Boolean);
       const mic=aria('button[aria-label*="microphone" i]');
       const cam=aria('button[aria-label*="camera" i]');
       const btns=aria('button');
+      // Scoped text scan: aria-labels + textContent of buttons/headings/status/
+      // paragraphs. Never document.body.innerText — innerText forces synchronous
+      // layout of the whole live Meet DOM on the tab's main thread (call jank).
+      // textContent reads the DOM tree without layout.
+      const labels=btns.concat(
+        [...document.querySelectorAll('button,h1,h2,h3,p,label,[role="heading"],[role="status"]')]
+          .map(e=>(e.textContent||'').trim())
+      ).filter(Boolean);
+      const has=re=>labels.some(l=>re.test(l));
+      const join=has(/\\bJoin now\\b/i)||has(/\\bAsk to join\\b/i)||has(/\\bJoin (call|visit|video|appointment)\\b/i)||has(/\\bStart (call|visit|video|appointment)\\b/i);
       const telehealthLobby=telehealth&&(
-        /\\bGet ready for your visit\\b/i.test(txt)
-        || /\\bWhat is your full name\\?\\b/i.test(txt)
-        || /\\bClick Allow when your browser asks for access to your camera and microphone\\b/i.test(txt)
+        has(/\\bGet ready for your visit\\b/i)
+        || has(/\\bWhat is your full name\\?/i)
+        || has(/\\bClick Allow when your browser asks for access to your camera and microphone\\b/i)
         || /\\bVisit Sign\\s*In\\b/i.test(document.title||'')
         || btns.some(l=>/^\\s*Next\\s*$/i.test(l))
-        || btns.some(l=>/\\bJoin (call|visit|video|appointment)\\b/i.test(l))
-        || btns.some(l=>/\\bStart (call|visit|video|appointment)\\b/i.test(l))
+        || has(/\\bJoin (call|visit|video|appointment)\\b/i)
+        || has(/\\bStart (call|visit|video|appointment)\\b/i)
       );
-      const telehealthJoined=telehealth&&[txt,...btns].some(l=>/\\b(End call|Leave call|Mute|Unmute|Turn on microphone|Turn off microphone|Turn on camera|Turn off camera|Stop sharing|Share screen)\\b/i.test(l));
-      const presenting=/You're presenting|You are presenting|Stop presenting|Stop sharing/i.test(txt)
-        || btns.some(l=>/stop presenting|stop sharing/i.test(l));
+      const telehealthJoined=telehealth&&has(/\\b(End call|Leave call|Mute|Unmute|Turn on microphone|Turn off microphone|Turn on camera|Turn off camera|Stop sharing|Share screen)\\b/i);
+      const presenting=has(/You're presenting|You are presenting|Stop presenting|Stop sharing/i);
       const names=mic.filter(l=>/^Mute /.test(l)).map(l=>l.replace(/^Mute /,'').replace(/'s microphone$/,''));
       return {
         state: (leave||telehealthJoined)?'joined':((join||telehealthLobby)?'lobby':'unknown'),
@@ -1150,14 +1157,18 @@ server.onCommand = { cmd, reply in
     case "focus":
         let currentTargetId = engine.presence.meetingTargetId
         let currentMeetingApp = engine.presence.meetingApp
+        // Plain activate only: .activateAllWindows raises every browser window
+        // (window-raise storm with 100+ tabs → seconds of frozen browser and
+        // stolen focus). Target.activateTarget already selects the right tab,
+        // so Chromium makes its window the key window on activation.
         if ["com.tinyspeck.slackmacgap", "us.zoom.xos"].contains(currentMeetingApp) {
             if let app = NSRunningApplication.runningApplications(withBundleIdentifier: currentMeetingApp).first {
-                app.activate(options: [.activateAllWindows])
+                app.activate(options: [])
             }
         } else {
             cdp.focusBestMeeting(currentTargetId: currentTargetId) { ok, _ in
                 if ok, let app = NSRunningApplication.runningApplications(withBundleIdentifier: "net.imput.helium").first {
-                    app.activate(options: [.activateAllWindows])
+                    app.activate(options: [])
                 }
             }
         }
