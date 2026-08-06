@@ -85,6 +85,24 @@ let
       };
     };
 
+    fantastical = {
+      name = "Fantastical";
+      processName = "Fantastical";
+      source = "Library/Group Containers/85C27NK92C.com.flexibits.fantastical2.mac";
+      include = [
+        "Database"
+        "Library/Preferences"
+      ];
+      exclude = [
+        "*.log"
+        ".DS_Store"
+        "Cache"
+        "Caches"
+      ];
+      sqlite = [ "Database/Fantastical-8.fcdata" ];
+      defaults = "com.flexibits.fantastical2.mac";
+    };
+
     mailmate = {
       name = "MailMate";
       processName = "MailMate";
