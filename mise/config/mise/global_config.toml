@@ -746,6 +746,7 @@ mise bootstrap macos-defaults apply --yes
 mise bootstrap packages upgrade --yes
 mise run fnox:render
 mise run pi:update
+"$HOME/.dotfiles/bin/hs-reload" || echo "hs-reload failed (Hammerspoon not running?)"
 
 # nvim --headless -c "lua vim.pack.update(nil, { force = true })" -c "quit"
 """

@@ -8,6 +8,8 @@ Hammerspoon owns macOS automation: window management, launcher panels, menubar s
 
 It is a copy, not shared source: mirror changes manually from `config/hammerspoon/` into the twin.
 
+The mise `up` task ends by calling `bin/hs-reload` (non-fatal if Hammerspoon is not running) so a freshly synced config is picked up safely.
+
 Two fields are intentional, permanent divergences and must never be blindly overwritten during a sync. `config.lua`'s `dock.kanata.daemonLabel` is `"org.kanata.daemon"` on the nix side (matches `modules/darwin/kanata.nix`) but `"dev.mise.org.kanata.daemon"` on the mise side, because mise prefixes bootstrap-managed launchd labels with `dev.mise.` (see `mise/tasks/kanata-setup`). `watchers/dock.lua` also tails different stderr paths for restart failures: nix uses `/tmp/kanata.err`; mise uses `${HOME}/Library/Logs/kanata/stderr.log`. These differences keep profile switching and diagnostics pointed at the owning launchd service.
 
 The dock watcher checks the current `kanata.kbd` symlink and launchd state before switching profiles. If the requested profile already runs, Hammerspoon logs success and skips `launchctl kickstart`, so config reloads do not bounce Kanata. When a restart fails, the watcher reports stderr only if the stderr file changed during that restart attempt; stale Input Monitoring errors do not appear as fresh failures.
