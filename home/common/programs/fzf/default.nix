@@ -1,8 +1,4 @@
-{
-  pkgs,
-  ...
-}:
-{
+{ pkgs, ... }: {
   home.packages = with pkgs; [ glow ];
 
   programs.fzf = {
@@ -88,8 +84,8 @@
     # search path, so pass $dir as fd's root and strip only the ./ prefix from cwd
     # results. Leave $dir unquoted so Home Manager emits it literally; fish does not
     # split variable expansions on spaces.
-    fileWidgetCommand = "${pkgs.fd}/bin/fd --type f --hidden --no-ignore-vcs --follow --exclude .git --exclude .jj --exclude .direnv . \\$dir | sed 's#^\\./##'";
-    fileWidgetOptions = [
+    fileWidget.command = "${pkgs.fd}/bin/fd --type f --hidden --no-ignore-vcs --follow --exclude .git --exclude .jj --exclude .direnv . \\$dir | sed 's#^\\./##'";
+    fileWidget.options = [
       "--preview='preview {}'"
       "--header='find files [$(tput setaf 255)ctrl-y$(tput sgr 0): $(tput setaf 245)copy to clipboard$(tput sgr 0)]'"
     ];
