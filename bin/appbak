@@ -1332,6 +1332,7 @@ main() {
     done < <(jq -r '.apps | to_entries[] | .value.display_name' <<< "$manifest_json")
     if [[ ${#targets[@]} -eq 0 ]]; then
       log "no apps in manifest and none specified; nothing to do"
+      usage
       exit 0
     fi
   else
