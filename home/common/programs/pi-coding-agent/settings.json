@@ -7,6 +7,9 @@
 		}
 	},
 	"defaultProvider": "openai-codex",
+	"warnings": {
+		"anthropicExtraUsage": false
+	},
 	"defaultThinkingLevel": "medium",
 	"doubleEscapeAction": "tree",
 	"enableSkillCommands": true,
