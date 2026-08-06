@@ -102,19 +102,25 @@ Package-install confirms cover Homebrew, global package installs, project depend
 
 The local `checkpoint.ts` extension is removed from the active profile; checkpoint and main-branch prompting come from the agent harness instead.
 
-`claude-code-use.ts` is a local fork of `@benvargas/pi-claude-code-use` kept aligned with upstream payload fixes while omitting companion-package auto-loading for packages not used here.
+`claude-code-use.ts` is a local fork of `@benvargas/pi-claude-code-use` that renames extension tools on the wire instead of dropping them, omitting companion-package auto-loading for packages not used here.
 
 ### Claude Code subscription compatibility
 
 `claude-code-use.ts` makes Anthropic OAuth requests look like Claude Code use without loading unused companion packages.
 
-It rewrites Anthropic system prompt text from `pi itself`, `pi .md files`, and `pi packages` to CLI-neutral wording, then filters the outbound payload to Claude Code core tools, Anthropic typed tools, and already-MCP-prefixed tools. The OAuth model check intentionally accepts local `alt-anthropic` providers and `anthropic-messages` API models, not only the literal `anthropic` provider.
+It rewrites Anthropic system prompt text from `pi itself`, `pi .md files`, and `pi packages` to CLI-neutral wording. Instead of filtering unknown flat tools out of the outbound payload (upstream `1.0.4` behavior), it renames them to `mcp__pi__<name>` so they pass Anthropic's OAuth tool-name classifier while staying visible to the model — the approach from `@zgltyq/pi-provider-claude`. Claude Code core tools, Anthropic typed tools, and already-MCP-prefixed tools pass through untouched; `tool_choice` and historical `tool_use` blocks are remapped to match. The OAuth model check intentionally accepts local `alt-anthropic` providers and `anthropic-messages` API models, not only the literal `anthropic` provider.
 
-The local fork keeps upstream `1.0.4` alias behavior for user-configured tools but drops built-in companion package registration for `pi-exa-mcp` and `pi-firecrawl`. Optional config files at `~/.pi/agent/extensions/pi-claude-code-use.json` or `<cwd>/.pi/extensions/pi-claude-code-use.json` may declare `toolAliases` as `[flatToolName, mcpAliasName]` pairs. Project config replaces the top-level global setting by shallow merge.
-
-Configured aliases are refreshed on `session_start` and `before_agent_start`. When an Anthropic OAuth model is active, aliases are auto-activated alongside their flat tool only if that alias tool already exists; user-selected aliases are preserved. On `message_end`, managed MCP alias `toolCall` names are rewritten back to their flat names before Pi resolves execution, while foreign MCP tools pass through untouched.
+On `message_end`, `mcp__pi__*` `toolCall` names are stripped back to their flat names before Pi resolves execution, while foreign MCP tools pass through untouched. The former `toolAliases` config (`pi-claude-code-use.json`) and alias auto-activation are removed: renaming keeps every extension tool visible, so user-maintained alias maps are unnecessary. `PI_CLAUDE_CODE_USE_DISABLE_TOOL_FILTER=1` now disables renaming (flat names pass through), and `PI_CLAUDE_CODE_USE_DEBUG_LOG` still captures before/after payloads.
 
 `pinvim.ts` accepts `fill_prompt` frames from shade-next, sets the Pi editor text through `ctx.ui.setEditorText`, may focus the owning tmux pane, and never calls `sendUserMessage`, so remote fills cannot auto-submit.
+
+## Web-search config and agent dir
+
+`web-search.json` (exa provider, non-interactive `auto-summary` curation workflow) is one source file linked to every path pi-web-access may resolve: `~/.pi/web-search.json`, `~/.pi/agent/web-search.json`, and `~/.config/pi/web-search.json`.
+
+The sources are `home/common/programs/pi-coding-agent/web-search.json` (HM `home.file` entries) and its mise twin `mise/config/pi-coding-agent/web-search.json` (`[dotfiles]` mappings). pi-web-access resolves its config dir as `PI_CODING_AGENT_DIR`, then `$XDG_CONFIG_HOME/pi`, then `~/.pi`, while pi core defaults to `~/.pi/agent` — an unset var plus `XDG_CONFIG_HOME` is how a stray `~/.config/pi/web-search.json` once shadowed the managed config and re-enabled interactive search curation.
+
+`PI_CODING_AGENT_DIR=~/.pi/agent` is now set globally (HM `sessionVariables` in nix, `[env]` in the mise global config) so extension config resolution matches pi core's default. The pinvim wrappers' defensive `unset PI_CODING_AGENT_DIR` is commented out in both worlds; a nested pinvim launched from a profile session therefore inherits the profile agent dir (`~/.pi/agent-alt` and similar) instead of resetting to the default.
 
 ## Runtime settings
 

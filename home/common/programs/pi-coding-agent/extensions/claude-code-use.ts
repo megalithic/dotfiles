@@ -4,626 +4,403 @@
  * Patches Pi's Anthropic OAuth payloads so Claude subscription requests look
  * like Claude Code use:
  * - rewrites "pi itself" prompt references to "the cli itself"
- * - filters tools to Claude Code core tools, Anthropic typed tools, and MCP tools
- * - optionally maps user-configured flat extension tool names to MCP-style aliases
+ * - renames unknown flat extension tools to `mcp__pi__<name>` on the wire so
+ *   they pass Anthropic's tool-name classifier instead of being dropped,
+ *   then unmaps `mcp__pi__*` tool calls back to their flat names before Pi
+ *   resolves them (approach from @zgltyq/pi-provider-claude)
+ * - passes Claude Code core tools, Anthropic typed tools, and real MCP tools
+ *   through untouched
  *
- * Based on @benvargas/pi-claude-code-use 1.0.4, minus companion-package loading
- * for packages not used here.
+ * Based on @benvargas/pi-claude-code-use 1.0.4. The previous toolAliases
+ * config (pi-claude-code-use.json) is gone: renaming keeps every extension
+ * tool visible, so user-maintained alias maps are no longer needed.
  */
 
-import { appendFileSync, existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { appendFileSync } from "node:fs";
 import type {
-  ExtensionAPI,
-  ExtensionContext,
+	ExtensionAPI,
+	ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import { getAgentDir } from "@earendil-works/pi-coding-agent";
-
-type ToolAliasPair = readonly [flatName: string, mcpName: string];
 
 type CacheControl = {
-  type: "ephemeral";
-  ttl?: "1h";
+	type: "ephemeral";
+	ttl?: "1h";
 };
 
 type TextBlock = {
-  type: "text";
-  text: string;
-  cache_control?: CacheControl;
-  [key: string]: unknown;
+	type: "text";
+	text: string;
+	cache_control?: CacheControl;
+	[key: string]: unknown;
 };
 
 type AnthropicPayload = {
-  messages?: Array<{
-    role?: string;
-    content?: string | unknown[];
-    [key: string]: unknown;
-  }>;
-  tool_choice?: {
-    type?: string;
-    name?: string;
-    [key: string]: unknown;
-  };
-  tools?: Array<{
-    type?: string;
-    name?: string;
-    [key: string]: unknown;
-  }>;
-  system?: string | unknown[];
-  [key: string]: unknown;
+	messages?: Array<{
+		role?: string;
+		content?: string | unknown[];
+		[key: string]: unknown;
+	}>;
+	tool_choice?: {
+		type?: string;
+		name?: string;
+		[key: string]: unknown;
+	};
+	tools?: Array<{
+		type?: string;
+		name?: string;
+		[key: string]: unknown;
+	}>;
+	system?: string | unknown[];
+	[key: string]: unknown;
 };
 
 type AnthropicTransformOptions = {
-  disableToolFiltering?: boolean;
+	disableToolRenaming?: boolean;
 };
 
 type ActiveModel = NonNullable<ExtensionContext["model"]>;
-type ToolInfo = ReturnType<ExtensionAPI["getAllTools"]>[number];
 
-const CONFIG_FILENAME = "pi-claude-code-use.json";
 const debugLogPath = process.env.PI_CLAUDE_CODE_USE_DEBUG_LOG;
+
+// Prefix used to disguise flat tools as MCP tools. Kept short so
+// `mcp__pi__<name>` stays well under Anthropic's 64-char tool-name limit.
+const ALIAS_PREFIX = "mcp__pi__";
 
 // Mirror Pi core's Anthropic Claude Code tool set from:
 // packages/ai/src/providers/anthropic.ts -> claudeCodeTools
 const CORE_TOOL_NAMES = new Set(
-  [
-    "read",
-    "write",
-    "edit",
-    "bash",
-    "grep",
-    "glob",
-    "askuserquestion",
-    "enterplanmode",
-    "exitplanmode",
-    "killshell",
-    "notebookedit",
-    "skill",
-    "task",
-    "taskoutput",
-    "todowrite",
-    "webfetch",
-    "websearch",
-  ].map((name) => name.toLowerCase()),
+	[
+		"read",
+		"write",
+		"edit",
+		"bash",
+		"grep",
+		"glob",
+		"askuserquestion",
+		"enterplanmode",
+		"exitplanmode",
+		"killshell",
+		"notebookedit",
+		"skill",
+		"task",
+		"taskoutput",
+		"todowrite",
+		"webfetch",
+		"websearch",
+	].map((name) => name.toLowerCase()),
 );
 
-// Local fork intentionally has no built-in aliases for other users' companion
-// packages. Users can opt into generic aliases with pi-claude-code-use.json.
-const FLAT_TO_MCP = new Map<string, string>();
-const MCP_TO_FLAT = new Map<string, string>();
-const configuredMcpAliases = new Set<string>();
-const autoActivatedAliases = new Set<string>();
-let lastManagedToolList: string[] | undefined;
-
-function isToolFilteringDisabled(options?: AnthropicTransformOptions): boolean {
-  return (
-    options?.disableToolFiltering ??
-    process.env.PI_CLAUDE_CODE_USE_DISABLE_TOOL_FILTER === "1"
-  );
+function isToolRenamingDisabled(options?: AnthropicTransformOptions): boolean {
+	return (
+		options?.disableToolRenaming ??
+		process.env.PI_CLAUDE_CODE_USE_DISABLE_TOOL_FILTER === "1"
+	);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function isTextBlock(value: unknown): value is TextBlock {
-  return (
-    isRecord(value) && value.type === "text" && typeof value.text === "string"
-  );
+	return (
+		isRecord(value) && value.type === "text" && typeof value.text === "string"
+	);
 }
 
 function normalizeToolName(name: string | undefined): string {
-  return (name ?? "").trim().toLowerCase();
+	return (name ?? "").trim().toLowerCase();
 }
 
 function isCoreClaudeCodeToolName(name: string | undefined): boolean {
-  return CORE_TOOL_NAMES.has(normalizeToolName(name));
+	return CORE_TOOL_NAMES.has(normalizeToolName(name));
 }
 
 function isMcpToolName(name: string | undefined): boolean {
-  return normalizeToolName(name).startsWith("mcp__");
-}
-
-function readConfigFile(filePath: string): Record<string, unknown> {
-  if (!existsSync(filePath)) {
-    return {};
-  }
-  try {
-    const parsed = JSON.parse(readFileSync(filePath, "utf8")) as unknown;
-    return isRecord(parsed) ? parsed : {};
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.warn(`[pi-claude-code-use] Failed to read ${filePath}: ${message}`);
-    return {};
-  }
-}
-
-function extractToolAliasPairs(value: unknown): ToolAliasPair[] | undefined {
-  if (!isRecord(value)) {
-    return undefined;
-  }
-  const raw = value.toolAliases;
-  if (raw === undefined) {
-    return undefined;
-  }
-  if (!Array.isArray(raw)) {
-    console.warn(
-      `[pi-claude-code-use] Ignoring "toolAliases": expected array, got ${typeof raw}`,
-    );
-    return undefined;
-  }
-  return raw.filter(
-    (entry): entry is ToolAliasPair =>
-      Array.isArray(entry) &&
-      typeof entry[0] === "string" &&
-      typeof entry[1] === "string",
-  );
-}
-
-function loadToolAliases(
-  cwd: string,
-  agentDir: string = getAgentDir(),
-): ToolAliasPair[] {
-  const globalPath = join(agentDir, "extensions", CONFIG_FILENAME);
-  const projectPath = join(cwd, ".pi", "extensions", CONFIG_FILENAME);
-  const merged = {
-    ...readConfigFile(globalPath),
-    ...readConfigFile(projectPath),
-  };
-  return extractToolAliasPairs(merged) ?? [];
-}
-
-function refreshAliasMap(userToolAliases: ToolAliasPair[]): void {
-  FLAT_TO_MCP.clear();
-  MCP_TO_FLAT.clear();
-  configuredMcpAliases.clear();
-  for (const [flat, mcp] of userToolAliases) {
-    FLAT_TO_MCP.set(normalizeToolName(flat), mcp);
-    MCP_TO_FLAT.set(normalizeToolName(mcp), flat);
-    configuredMcpAliases.add(normalizeToolName(mcp));
-  }
-}
-
-function collectToolNames(tools: unknown[]): Set<string> {
-  const names = new Set<string>();
-  for (const tool of tools) {
-    if (isRecord(tool) && typeof tool.name === "string") {
-      names.add(normalizeToolName(tool.name));
-    }
-  }
-  return names;
-}
-
-function collectToolsByName(
-  tools: unknown[],
-): Map<string, Record<string, unknown>> {
-  const byName = new Map<string, Record<string, unknown>>();
-  for (const tool of tools) {
-    if (isRecord(tool) && typeof tool.name === "string") {
-      byName.set(normalizeToolName(tool.name), tool);
-    }
-  }
-  return byName;
-}
-
-function getAdvertisedToolNames(tools: AnthropicPayload["tools"]): Set<string> {
-  if (!Array.isArray(tools)) {
-    return new Set<string>();
-  }
-  return collectToolNames(tools);
+	return normalizeToolName(name).startsWith("mcp__");
 }
 
 function rewritePiSelfReferences(text: string): string {
-  return text
-    .replaceAll("pi itself", "the cli itself")
-    .replaceAll("pi .md files", "cli .md files")
-    .replaceAll("pi packages", "cli packages");
+	return text
+		.replaceAll("pi itself", "the cli itself")
+		.replaceAll("pi .md files", "cli .md files")
+		.replaceAll("pi packages", "cli packages");
 }
 
 function rewriteSystemBlocks(
-  system: AnthropicPayload["system"],
+	system: AnthropicPayload["system"],
 ): AnthropicPayload["system"] {
-  if (typeof system === "string") {
-    return rewritePiSelfReferences(system);
-  }
-  if (!Array.isArray(system)) {
-    return system;
-  }
-  return system.map((block) => {
-    if (!isTextBlock(block)) {
-      return block;
-    }
-    const rewritten = rewritePiSelfReferences(block.text);
-    return rewritten === block.text ? block : { ...block, text: rewritten };
-  });
+	if (typeof system === "string") {
+		return rewritePiSelfReferences(system);
+	}
+	if (!Array.isArray(system)) {
+		return system;
+	}
+	return system.map((block) => {
+		if (!isTextBlock(block)) {
+			return block;
+		}
+		const rewritten = rewritePiSelfReferences(block.text);
+		return rewritten === block.text ? block : { ...block, text: rewritten };
+	});
 }
 
-function filterAndRemapTools(
-  tools: AnthropicPayload["tools"],
-  disableFiltering: boolean,
-): AnthropicPayload["tools"] {
-  if (!Array.isArray(tools)) {
-    return tools;
-  }
+// True for tools that must NOT be renamed: Anthropic-native typed tools, core
+// Claude Code tools, already-mcp__ tools, or nameless entries.
+function shouldRenameTool(tool: Record<string, unknown>): boolean {
+	if (typeof tool.type === "string" && tool.type.trim().length > 0) {
+		return false;
+	}
+	const name = typeof tool.name === "string" ? tool.name : "";
+	if (!name) {
+		return false;
+	}
+	return !isCoreClaudeCodeToolName(name) && !isMcpToolName(name);
+}
 
-  const advertised = collectToolNames(tools);
-  const toolsByName = collectToolsByName(tools);
-  const emitted = new Set<string>();
-  const result: NonNullable<AnthropicPayload["tools"]> = [];
+// Rename unknown flat tools to `mcp__pi__<name>`; returns surviving tools plus
+// the flat→alias map of exactly what was renamed (so tool_choice and message
+// history stay consistent). Schema and cache_control ride along unchanged.
+function renameFlatTools(tools: AnthropicPayload["tools"]): {
+	tools: AnthropicPayload["tools"];
+	renamed: Map<string, string>;
+} {
+	const renamed = new Map<string, string>();
+	if (!Array.isArray(tools)) {
+		return { tools, renamed };
+	}
 
-  for (const tool of tools) {
-    if (!isRecord(tool)) {
-      continue;
-    }
+	const emitted = new Set<string>();
+	const result: NonNullable<AnthropicPayload["tools"]> = [];
 
-    // Anthropic-native typed tools always pass through.
-    if (typeof tool.type === "string" && tool.type.trim().length > 0) {
-      result.push(tool);
-      continue;
-    }
+	for (const tool of tools) {
+		if (!isRecord(tool)) {
+			continue;
+		}
 
-    const originalName = typeof tool.name === "string" ? tool.name : "";
-    if (!originalName) {
-      continue;
-    }
-    const name = normalizeToolName(originalName);
+		if (!shouldRenameTool(tool)) {
+			const key =
+				typeof tool.name === "string"
+					? normalizeToolName(tool.name)
+					: `__native_${result.length}`;
+			if (emitted.has(key)) {
+				continue;
+			}
+			emitted.add(key);
+			result.push(tool);
+			continue;
+		}
 
-    if (isCoreClaudeCodeToolName(originalName) || isMcpToolName(originalName)) {
-      if (!emitted.has(name)) {
-        emitted.add(name);
-        result.push(tool);
-      }
-      continue;
-    }
+		const name = tool.name as string;
+		const alias = ALIAS_PREFIX + name;
+		renamed.set(normalizeToolName(name), alias);
+		const aliasKey = normalizeToolName(alias);
+		if (emitted.has(aliasKey)) {
+			continue;
+		}
+		emitted.add(aliasKey);
+		result.push({ ...tool, name: alias });
+	}
 
-    const mcpAlias = FLAT_TO_MCP.get(name);
-    if (mcpAlias) {
-      const aliasName = normalizeToolName(mcpAlias);
-      if (advertised.has(aliasName) && !emitted.has(aliasName)) {
-        // Preserve alias metadata, including cache_control, when alias exists.
-        emitted.add(aliasName);
-        result.push(toolsByName.get(aliasName) ?? { ...tool, name: mcpAlias });
-      } else if (disableFiltering && !emitted.has(name)) {
-        emitted.add(name);
-        result.push(tool);
-      }
-      continue;
-    }
-
-    if (disableFiltering && !emitted.has(name)) {
-      emitted.add(name);
-      result.push(tool);
-    }
-  }
-
-  return result;
+	return { tools: result, renamed };
 }
 
 function rewriteAnthropicToolChoice(
-  toolChoice: AnthropicPayload["tool_choice"],
-  survivingNames: Map<string, string>,
+	toolChoice: AnthropicPayload["tool_choice"],
+	renamed: Map<string, string>,
 ): AnthropicPayload["tool_choice"] {
-  if (toolChoice?.type !== "tool" || typeof toolChoice.name !== "string") {
-    return toolChoice;
-  }
-
-  const name = normalizeToolName(toolChoice.name);
-  const actualName = survivingNames.get(name);
-  if (actualName) {
-    return actualName === toolChoice.name
-      ? toolChoice
-      : { ...toolChoice, name: actualName };
-  }
-
-  const mcpAlias = FLAT_TO_MCP.get(name);
-  if (mcpAlias && survivingNames.has(normalizeToolName(mcpAlias))) {
-    return { ...toolChoice, name: mcpAlias };
-  }
-
-  return undefined;
+	if (toolChoice?.type !== "tool" || typeof toolChoice.name !== "string") {
+		return toolChoice;
+	}
+	const alias = renamed.get(normalizeToolName(toolChoice.name));
+	return alias ? { ...toolChoice, name: alias } : toolChoice;
 }
 
 function remapBlockNames(
-  content: unknown[],
-  blockType: "tool_use" | "toolCall",
-  mapName: (name: string) => string | undefined,
+	content: unknown[],
+	blockType: "tool_use" | "toolCall",
+	mapName: (name: string) => string | undefined,
 ): unknown[] {
-  let changed = false;
-  const next = content.map((block) => {
-    if (
-      !isRecord(block) ||
-      block.type !== blockType ||
-      typeof block.name !== "string"
-    ) {
-      return block;
-    }
-    const newName = mapName(block.name);
-    if (!newName || newName === block.name) {
-      return block;
-    }
-    changed = true;
-    return { ...block, name: newName };
-  });
-  return changed ? next : content;
+	let changed = false;
+	const next = content.map((block) => {
+		if (
+			!isRecord(block) ||
+			block.type !== blockType ||
+			typeof block.name !== "string"
+		) {
+			return block;
+		}
+		const newName = mapName(block.name);
+		if (!newName || newName === block.name) {
+			return block;
+		}
+		changed = true;
+		return { ...block, name: newName };
+	});
+	return changed ? next : content;
 }
 
+// Rewrite historical tool_use block names to match the renamed tools.
 function rewriteHistoricalToolUseBlocks(
-  messages: AnthropicPayload["messages"],
-  survivingNames: Map<string, string>,
+	messages: AnthropicPayload["messages"],
+	renamed: Map<string, string>,
 ): AnthropicPayload["messages"] {
-  if (!Array.isArray(messages)) {
-    return messages;
-  }
+	if (!Array.isArray(messages) || renamed.size === 0) {
+		return messages;
+	}
 
-  let changed = false;
-  const nextMessages = messages.map((message) => {
-    if (!Array.isArray(message?.content)) {
-      return message;
-    }
+	let changed = false;
+	const nextMessages = messages.map((message) => {
+		if (!Array.isArray(message?.content)) {
+			return message;
+		}
 
-    const content = remapBlockNames(message.content, "tool_use", (name) => {
-      const mcpAlias = FLAT_TO_MCP.get(normalizeToolName(name));
-      return mcpAlias && survivingNames.has(normalizeToolName(mcpAlias))
-        ? mcpAlias
-        : undefined;
-    });
-    if (content === message.content) {
-      return message;
-    }
+		const content = remapBlockNames(message.content, "tool_use", (name) =>
+			renamed.get(normalizeToolName(name)),
+		);
+		if (content === message.content) {
+			return message;
+		}
 
-    changed = true;
-    return { ...message, content };
-  });
+		changed = true;
+		return { ...message, content };
+	});
 
-  return changed ? nextMessages : messages;
+	return changed ? nextMessages : messages;
 }
 
+// Rewrite mcp__pi__<name> tool calls back to <name> in the finalized assistant
+// message, BEFORE Pi resolves which tool to run. Only touches our own prefix,
+// so foreign mcp__ tools (real MCP servers) are untouched.
 function unaliasToolCalls(message: unknown): unknown {
-  if (!isRecord(message) || message.role !== "assistant") {
-    return undefined;
-  }
-  if (!Array.isArray(message.content)) {
-    return undefined;
-  }
+	if (!isRecord(message) || message.role !== "assistant") {
+		return undefined;
+	}
+	if (!Array.isArray(message.content)) {
+		return undefined;
+	}
 
-  const content = remapBlockNames(message.content, "toolCall", (name) => {
-    const flat = MCP_TO_FLAT.get(normalizeToolName(name));
-    if (!flat || !configuredMcpAliases.has(normalizeToolName(name))) {
-      return undefined;
-    }
-    return flat;
-  });
+	const content = remapBlockNames(message.content, "toolCall", (name) =>
+		name.startsWith(ALIAS_PREFIX) ? name.slice(ALIAS_PREFIX.length) : undefined,
+	);
 
-  return content === message.content ? undefined : { ...message, content };
+	return content === message.content ? undefined : { ...message, content };
 }
 
 function clonePayload(payload: AnthropicPayload): AnthropicPayload {
-  return JSON.parse(JSON.stringify(payload)) as AnthropicPayload;
+	return JSON.parse(JSON.stringify(payload)) as AnthropicPayload;
 }
 
 function transformAnthropicOAuthPayload(
-  payload: AnthropicPayload,
-  options?: AnthropicTransformOptions,
+	payload: AnthropicPayload,
+	options?: AnthropicTransformOptions,
 ): AnthropicPayload {
-  const disableFiltering = isToolFilteringDisabled(options);
-  const nextPayload = clonePayload(payload);
+	const disableRenaming = isToolRenamingDisabled(options);
+	const nextPayload = clonePayload(payload);
 
-  if (nextPayload.system !== undefined) {
-    nextPayload.system = rewriteSystemBlocks(nextPayload.system);
-  }
+	if (nextPayload.system !== undefined) {
+		nextPayload.system = rewriteSystemBlocks(nextPayload.system);
+	}
 
-  if (disableFiltering) {
-    return nextPayload;
-  }
+	if (disableRenaming) {
+		return nextPayload;
+	}
 
-  nextPayload.tools = filterAndRemapTools(nextPayload.tools, false);
+	const { tools, renamed } = renameFlatTools(nextPayload.tools);
+	nextPayload.tools = tools;
 
-  const survivingNames = new Map<string, string>();
-  if (Array.isArray(nextPayload.tools)) {
-    for (const tool of nextPayload.tools) {
-      if (typeof tool?.name === "string") {
-        survivingNames.set(normalizeToolName(tool.name), tool.name);
-      }
-    }
-  }
+	if (nextPayload.tool_choice !== undefined) {
+		nextPayload.tool_choice = rewriteAnthropicToolChoice(
+			nextPayload.tool_choice,
+			renamed,
+		);
+	}
 
-  if (nextPayload.tool_choice !== undefined) {
-    const rewrittenToolChoice = rewriteAnthropicToolChoice(
-      nextPayload.tool_choice,
-      survivingNames,
-    );
-    if (rewrittenToolChoice === undefined) {
-      delete nextPayload.tool_choice;
-    } else {
-      nextPayload.tool_choice = rewrittenToolChoice;
-    }
-  }
+	if (nextPayload.messages !== undefined) {
+		nextPayload.messages = rewriteHistoricalToolUseBlocks(
+			nextPayload.messages,
+			renamed,
+		);
+	}
 
-  if (nextPayload.messages !== undefined) {
-    nextPayload.messages = rewriteHistoricalToolUseBlocks(
-      nextPayload.messages,
-      survivingNames,
-    );
-  }
-
-  return nextPayload;
-}
-
-function syncAliasActivation(pi: ExtensionAPI, enableAliases: boolean): void {
-  const activeNames = pi.getActiveTools();
-  const allNames = new Set(pi.getAllTools().map((tool: ToolInfo) => tool.name));
-
-  if (enableAliases) {
-    const activeLc = new Set(activeNames.map(normalizeToolName));
-    const desiredAliases: string[] = [];
-    for (const [flat, mcp] of FLAT_TO_MCP) {
-      if (
-        activeLc.has(flat) &&
-        allNames.has(mcp) &&
-        configuredMcpAliases.has(normalizeToolName(mcp))
-      ) {
-        desiredAliases.push(mcp);
-      }
-    }
-    const desiredSet = new Set(desiredAliases);
-
-    if (lastManagedToolList !== undefined) {
-      const activeSet = new Set(activeNames);
-      const lastManaged = new Set(lastManagedToolList);
-      for (const alias of autoActivatedAliases) {
-        if (!activeSet.has(alias) || desiredSet.has(alias)) {
-          continue;
-        }
-        const flatName = [...FLAT_TO_MCP.entries()].find(
-          ([, mcp]) => mcp === alias,
-        )?.[0];
-        if (flatName && lastManaged.has(flatName) && !activeSet.has(flatName)) {
-          autoActivatedAliases.delete(alias);
-        }
-      }
-    }
-
-    const activeConfiguredAliases = activeNames.filter(
-      (name) =>
-        configuredMcpAliases.has(normalizeToolName(name)) && allNames.has(name),
-    );
-    const preserved = activeConfiguredAliases.filter(
-      (name) => !autoActivatedAliases.has(name),
-    );
-    const nonAlias = activeNames.filter(
-      (name) => !configuredMcpAliases.has(normalizeToolName(name)),
-    );
-    const next = Array.from(
-      new Set([...nonAlias, ...preserved, ...desiredAliases]),
-    );
-
-    const preservedSet = new Set(preserved);
-    autoActivatedAliases.clear();
-    for (const name of desiredAliases) {
-      if (!preservedSet.has(name)) {
-        autoActivatedAliases.add(name);
-      }
-    }
-
-    if (
-      next.length !== activeNames.length ||
-      next.some((name, i) => name !== activeNames[i])
-    ) {
-      pi.setActiveTools(next);
-      lastManagedToolList = [...next];
-    }
-    return;
-  }
-
-  const next = activeNames.filter((name) => !autoActivatedAliases.has(name));
-  autoActivatedAliases.clear();
-  if (
-    next.length !== activeNames.length ||
-    next.some((name, i) => name !== activeNames[i])
-  ) {
-    pi.setActiveTools(next);
-    lastManagedToolList = [...next];
-  } else {
-    lastManagedToolList = undefined;
-  }
+	return nextPayload;
 }
 
 function debugLogPayload(payload: unknown): void {
-  if (!debugLogPath) {
-    return;
-  }
+	if (!debugLogPath) {
+		return;
+	}
 
-  try {
-    appendFileSync(
-      debugLogPath,
-      `${new Date().toISOString()}\n${JSON.stringify(payload, null, 2)}\n---\n`,
-      "utf8",
-    );
-  } catch {}
+	try {
+		appendFileSync(
+			debugLogPath,
+			`${new Date().toISOString()}\n${JSON.stringify(payload, null, 2)}\n---\n`,
+			"utf8",
+		);
+	} catch {}
 }
 
 function isAnthropicOAuthModel(
-  model: ActiveModel | undefined,
-  modelRegistry: ExtensionContext["modelRegistry"],
+	model: ActiveModel | undefined,
+	modelRegistry: ExtensionContext["modelRegistry"],
 ): model is ActiveModel {
-  if (!model || !modelRegistry.isUsingOAuth(model)) {
-    return false;
-  }
+	if (!model || !modelRegistry.isUsingOAuth(model)) {
+		return false;
+	}
 
-  return (
-    model.provider === "anthropic" ||
-    /(^|-)anthropic($|-)/.test(model.provider) ||
-    model.api === "anthropic-messages"
-  );
+	return (
+		model.provider === "anthropic" ||
+		/(^|-)anthropic($|-)/.test(model.provider) ||
+		model.api === "anthropic-messages"
+	);
 }
 
 export default async function piClaudeCodeUse(pi: ExtensionAPI): Promise<void> {
-  pi.on("session_start", (_event, ctx) => {
-    refreshAliasMap(loadToolAliases(ctx.cwd));
-  });
+	// mcp__pi__* → flat, before the agent loop resolves the tool. Runs
+	// unconditionally: alias names only ever originate from our own transform.
+	pi.on("message_end", (event) => {
+		const rewritten = unaliasToolCalls(event.message);
+		if (!rewritten) {
+			return undefined;
+		}
+		return { message: rewritten as typeof event.message };
+	});
 
-  pi.on("before_agent_start", (_event, ctx) => {
-    refreshAliasMap(loadToolAliases(ctx.cwd));
-    syncAliasActivation(
-      pi,
-      isAnthropicOAuthModel(ctx.model, ctx.modelRegistry),
-    );
-  });
+	pi.on("before_provider_request", (event, ctx) => {
+		const model = ctx.model;
+		if (!isAnthropicOAuthModel(model, ctx.modelRegistry)) {
+			return undefined;
+		}
+		if (!isRecord(event.payload)) {
+			return undefined;
+		}
 
-  pi.on("message_end", (event) => {
-    const rewritten = unaliasToolCalls(event.message);
-    if (!rewritten) {
-      return undefined;
-    }
-    return { message: rewritten as typeof event.message };
-  });
-
-  pi.on("before_provider_request", (event, ctx) => {
-    const model = ctx.model;
-    if (!isAnthropicOAuthModel(model, ctx.modelRegistry)) {
-      return undefined;
-    }
-    if (!isRecord(event.payload)) {
-      return undefined;
-    }
-
-    debugLogPayload({
-      stage: "before",
-      provider: model.provider,
-      payload: event.payload,
-    });
-    const transformedPayload = transformAnthropicOAuthPayload(
-      event.payload as AnthropicPayload,
-    );
-    debugLogPayload({
-      stage: "after",
-      provider: model.provider,
-      payload: transformedPayload,
-    });
-    return transformedPayload;
-  });
+		debugLogPayload({
+			stage: "before",
+			provider: model.provider,
+			payload: event.payload,
+		});
+		const transformedPayload = transformAnthropicOAuthPayload(
+			event.payload as AnthropicPayload,
+		);
+		debugLogPayload({
+			stage: "after",
+			provider: model.provider,
+			payload: transformedPayload,
+		});
+		return transformedPayload;
+	});
 }
 
 export const _test = {
-  CORE_TOOL_NAMES,
-  MCP_TO_FLAT,
-  FLAT_TO_MCP,
-  autoActivatedAliases,
-  collectToolNames,
-  extractToolAliasPairs,
-  filterAndRemapTools,
-  getAdvertisedToolNames,
-  loadToolAliases,
-  normalizeToolName,
-  refreshAliasMap,
-  rewriteAnthropicToolChoice,
-  rewriteHistoricalToolUseBlocks,
-  rewritePiSelfReferences,
-  rewriteSystemBlocks,
-  setLastManagedToolList: (value: string[] | undefined) => {
-    lastManagedToolList = value;
-  },
-  syncAliasActivation,
-  transformAnthropicOAuthPayload,
-  unaliasToolCalls,
+	ALIAS_PREFIX,
+	CORE_TOOL_NAMES,
+	normalizeToolName,
+	renameFlatTools,
+	rewriteAnthropicToolChoice,
+	rewriteHistoricalToolUseBlocks,
+	rewritePiSelfReferences,
+	rewriteSystemBlocks,
+	shouldRenameTool,
+	transformAnthropicOAuthPayload,
+	unaliasToolCalls,
 };
