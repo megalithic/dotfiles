@@ -1,0 +1,1358 @@
+#!/usr/bin/env bash
+# appbak — macOS app data discovery + selective backup CLI.
+# Finds every settings/config/data/cache/keychain footprint for an app,
+# lets you pick what to back up, and mirrors it to a NAS (or any dest)
+# with timestamped, retained snapshots.
+#
+# See: ~/.local/share/pi/plans/dotfiles/app-backup-cli.md
+
+set -euo pipefail
+
+# Requires bash >= 4.4: `local -A` associative arrays, `local -n` namerefs, and
+# (critically) empty-array "${arr[@]}" expansions under `set -u` not raising
+# an unbound-variable error (this script relies on that throughout).
+if ((BASH_VERSINFO[0] < 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] < 4))); then
+  echo "appbak: requires bash >= 4.4 (found ${BASH_VERSION}); install via mise: mise use -g bash" >&2
+  exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# Constants block — every scanned location / default lives here so nothing
+# is hardcoded further down in the script.
+# ---------------------------------------------------------------------------
+
+# App resolution roots. NOTE: "$HOME/Applications/Home Manager Apps" is a
+# transient location from the ongoing mise migration — remove this one
+# array element once that migration is complete.
+APPBAK_APP_DIRS=(
+  "/Applications"
+  "$HOME/Applications"
+  "$HOME/Applications/Home Manager Apps"
+)
+
+# ~/Library categories: config/data/auth vs cache-ish.
+APPBAK_USER_CATEGORIES_CONFIG=(
+  "Application Support"
+  "Preferences"
+  "Containers"
+  "Group Containers"
+  "Application Scripts"
+  "LaunchAgents"
+)
+APPBAK_USER_CATEGORIES_CACHE=(
+  "Caches"
+  "WebKit"
+  "HTTPStorages"
+  "Cookies"
+  "Logs"
+  "Saved Application State"
+)
+
+# Root /Library categories (system-wide helpers/daemons): config/data vs cache-ish.
+APPBAK_ROOT_CATEGORIES_CONFIG=(
+  "Application Support"
+  "Preferences"
+  "LaunchAgents"
+  "LaunchDaemons"
+)
+APPBAK_ROOT_CATEGORIES_CACHE=(
+  "Caches"
+)
+
+# Bundle-ID tail-segment tokenization: drop generic/TLD-ish segments and
+# anything shorter than the minimum length so tokens like "mac"/"desktop"/
+# "com" don't substring-match unrelated ~/Library entries.
+APPBAK_TOKEN_STOPLIST=(com io ai org net mac app desktop inc co dev gmbh ltd www the for and)
+APPBAK_TOKEN_MIN_LEN=4
+
+# Nested build/dependency dirs to exclude when resolving .app bundle candidates.
+APPBAK_APP_CANDIDATE_EXCLUDE_MARKERS=("/_build/" "/deps/" "/node_modules/" "/.git/")
+
+# Destination / manifest / behavior defaults.
+APPBAK_DEFAULT_DEST="/Volumes/Backups"
+APPBAK_VOLUMES_ROOT="/Volumes"
+APPBAK_DEFAULT_MANIFEST="$HOME/.local/share/appbak/manifest.json"
+APPBAK_RETENTION_KEEP=2
+
+# Keychain export defaults.
+APPBAK_YUBIKEY_IDENTITY_FILE="$HOME/.config/fnox/yubikey-identity.txt"
+
+# ---------------------------------------------------------------------------
+# Option state — flag > env var > built-in default.
+# ---------------------------------------------------------------------------
+
+dest="${APPBAK_DEST:-$APPBAK_DEFAULT_DEST}"
+non_interactive="${APPBAK_NON_INTERACTIVE:-0}"
+dry_run="${APPBAK_DRY_RUN:-0}"
+discover_force="${APPBAK_DISCOVER:-0}"
+keychain_export="${APPBAK_KEYCHAIN_EXPORT:-off}"
+age_recipient="${APPBAK_AGE_RECIPIENT_KEY:-}"
+manifest_path="${APPBAK_MANIFEST:-$APPBAK_DEFAULT_MANIFEST}"
+list_mode=0
+app_args=()
+
+usage() {
+  cat <<'EOF'
+appbak [options] [app[,app...]]
+
+  (no args)              backup ALL apps already in manifest
+  <names>                one or more app names, comma or space separated, case-insensitive
+
+  -d, --discover         force (re)discovery + selection TUI even if app already in manifest
+  --dest DIR             override destination root (default: /Volumes/Backups)
+  -n, --non-interactive  no TUI: auto-select ALL discovered items; error (no prompt) if dest unreachable
+  --dry-run              show what would be copied, copy nothing
+  --list                 print manifest summary (apps, selections, last backup + status)
+  --keychain-export MODE off (default) | age — secret export
+  --age-recipient KEY    age public key (default: auto-derived from YubiKey identity stub)
+  -h, --help             show this help
+
+Every flag has an APPBAK_* environment variable twin (flag > env > default):
+  --dest              APPBAK_DEST
+  --non-interactive    APPBAK_NON_INTERACTIVE=1
+  --dry-run            APPBAK_DRY_RUN=1
+  --discover           APPBAK_DISCOVER=1
+  --keychain-export    APPBAK_KEYCHAIN_EXPORT
+  --age-recipient      APPBAK_AGE_RECIPIENT_KEY
+  (manifest path)      APPBAK_MANIFEST
+EOF
+}
+
+require_flag_value() {
+  local flag="$1" have="$2"
+  if [[ "$have" -lt 2 ]]; then
+    echo "appbak: option $flag requires a value" >&2
+    usage >&2
+    exit 2
+  fi
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -d|--discover) discover_force=1; shift ;;
+    --dest) require_flag_value "$1" "$#"; dest="$2"; shift 2 ;;
+    -n|--non-interactive) non_interactive=1; shift ;;
+    --dry-run) dry_run=1; shift ;;
+    --list) list_mode=1; shift ;;
+    --keychain-export) require_flag_value "$1" "$#"; keychain_export="$2"; shift 2 ;;
+    --age-recipient) require_flag_value "$1" "$#"; age_recipient="$2"; shift 2 ;;
+    -h|--help) usage; exit 0 ;;
+    --) shift; while [[ $# -gt 0 ]]; do app_args+=("$1"); shift; done ;;
+    -*) echo "appbak: unknown option: $1" >&2; usage >&2; exit 2 ;;
+    *) app_args+=("$1"); shift ;;
+  esac
+done
+
+case "$keychain_export" in
+  off|age) ;;
+  *) echo "appbak: invalid --keychain-export mode: $keychain_export (expected off|age)" >&2; exit 2 ;;
+esac
+
+# ---------------------------------------------------------------------------
+# Dependency checks
+# ---------------------------------------------------------------------------
+
+require_tool() {
+  local tool="$1" hint="$2"
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    echo "appbak: required tool '$tool' not found. Install via mise: $hint" >&2
+    exit 1
+  fi
+}
+
+require_tool gum "mise use -g gum"
+require_tool jq "mise use -g jq"
+
+if [[ "$keychain_export" == "age" ]]; then
+  require_tool age "mise use -g age"
+fi
+
+# Skip persistent filesystem writes entirely for --dry-run / --list — both
+# are read-only operations by contract.
+if [[ "$dry_run" -ne 1 && "$list_mode" -ne 1 ]]; then
+  mkdir -p "$(dirname "$manifest_path")"
+  if [[ ! -f "$manifest_path" ]]; then
+    echo '{"version":1,"apps":{}}' > "$manifest_path"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# Small helpers
+# ---------------------------------------------------------------------------
+
+log() { echo "appbak: $*" >&2; }
+
+now_iso() { date -u +%Y-%m-%dT%H:%M:%SZ; }
+now_stamp() { date +%Y%m%d%H%M%S; }
+
+manifest_read() {
+  if [[ ! -f "$manifest_path" ]]; then
+    printf '%s' '{"version":1,"apps":{}}'
+    return 0
+  fi
+  local content
+  content="$(jq -c . "$manifest_path" 2>/dev/null)" || content=""
+  if [[ -z "$content" ]]; then
+    log "manifest corrupt or unreadable, refusing to proceed: $manifest_path"
+    return 1
+  fi
+  printf '%s' "$content"
+}
+
+manifest_write() {
+  local new_json="$1"
+  if [[ "$dry_run" -eq 1 ]]; then
+    return 0
+  fi
+  if [[ -z "$new_json" ]] || ! jq -e . >/dev/null 2>&1 <<< "$new_json"; then
+    log "refusing to write invalid/empty manifest JSON — manifest left untouched"
+    return 1
+  fi
+  local tmp
+  tmp="$(mktemp "${manifest_path}.tmp.XXXXXX")"
+  printf '%s' "$new_json" > "$tmp"
+  mv "$tmp" "$manifest_path"
+}
+
+app_key() {
+  # lowercase display name -> manifest key
+  tr '[:upper:]' '[:lower:]' <<< "$1"
+}
+
+# ---------------------------------------------------------------------------
+# App resolution + identity extraction
+# ---------------------------------------------------------------------------
+
+# Resolve a requested app name (case-insensitive) to an absolute .app bundle
+# path. Prints candidate(s) newline-separated; caller decides on 0/1/many.
+resolve_app_candidates() {
+  local requested="$1" requested_lower
+  requested_lower="$(tr '[:upper:]' '[:lower:]' <<< "$requested")"
+  local -A seen=()
+  local hit
+
+  while IFS= read -r hit; do
+    [[ -z "$hit" ]] && continue
+    if [[ -z "${seen[$hit]:-}" ]]; then
+      seen[$hit]=1
+      printf '%s\n' "$hit"
+    fi
+  done < <(mdfind "kMDItemKind == 'Application'" 2>/dev/null | while IFS= read -r app_path; do
+    local base="${app_path##*/}"
+    base="${base%.app}"
+    local base_lower
+    base_lower="$(tr '[:upper:]' '[:lower:]' <<< "$base")"
+    if [[ "$base_lower" == "$requested_lower" ]]; then
+      printf '%s\n' "$app_path"
+    fi
+  done)
+
+  # Fallback: scan configured app dirs directly (mdfind can miss unregistered bundles).
+  local dir entry base base_lower
+  for dir in "${APPBAK_APP_DIRS[@]}"; do
+    [[ -d "$dir" ]] || continue
+    for entry in "$dir"/*.app; do
+      [[ -e "$entry" ]] || continue
+      base="${entry##*/}"
+      base="${base%.app}"
+      base_lower="$(tr '[:upper:]' '[:lower:]' <<< "$base")"
+      if [[ "$base_lower" == "$requested_lower" ]]; then
+        if [[ -z "${seen[$entry]:-}" ]]; then
+          seen[$entry]=1
+          printf '%s\n' "$entry"
+        fi
+      fi
+    done
+  done
+}
+
+# Drops candidates nested inside build/dependency dirs (Elixir/node/git
+# artifacts frequently contain their own throwaway .app bundles that
+# mdfind happily indexes), then prefers candidates under the configured
+# app resolution roots, then dedupes by bundle ID + realpath.
+filter_and_rank_candidates() {
+  local -a raw=("$@")
+  local -a filtered=()
+  local c marker skip
+
+  for c in "${raw[@]}"; do
+    skip=0
+    for marker in "${APPBAK_APP_CANDIDATE_EXCLUDE_MARKERS[@]}"; do
+      if [[ "$c" == *"$marker"* ]]; then
+        skip=1
+        break
+      fi
+    done
+    [[ "$skip" -eq 1 ]] && continue
+    filtered+=("$c")
+  done
+
+  local -a preferred=() dir
+  for c in "${filtered[@]}"; do
+    for dir in "${APPBAK_APP_DIRS[@]}"; do
+      if [[ "$c" == "$dir"/* ]]; then
+        preferred+=("$c")
+        break
+      fi
+    done
+  done
+  [[ ${#preferred[@]} -gt 0 ]] && filtered=("${preferred[@]}")
+
+  local -A seen_key=()
+  local -a deduped=()
+  local bid real key
+  for c in "${filtered[@]}"; do
+    bid="$(defaults read "$c/Contents/Info" CFBundleIdentifier 2>/dev/null || true)"
+    real="$(cd "$c" 2>/dev/null && pwd -P || printf '%s' "$c")"
+    key="${bid}|${real}"
+    if [[ -z "${seen_key[$key]:-}" ]]; then
+      seen_key[$key]=1
+      deduped+=("$c")
+    fi
+  done
+
+  printf '%s\n' "${deduped[@]}"
+}
+
+# Sets globals: RESOLVED_APP_NAME RESOLVED_BUNDLE_ID RESOLVED_TEAM_ID
+# Returns: 0 resolved, 1 not found, 2 ambiguous (or picker cancelled) —
+# callers must not conflate 1 and 2, an ambiguous match is not "not found".
+resolve_app() {
+  local requested="$1"
+  local candidates_raw
+  candidates_raw="$(resolve_app_candidates "$requested")"
+
+  if [[ -z "$candidates_raw" ]]; then
+    return 1
+  fi
+
+  local -a raw_arr=()
+  local c
+  while IFS= read -r c; do [[ -n "$c" ]] && raw_arr+=("$c"); done <<< "$candidates_raw"
+
+  local candidates
+  candidates="$(filter_and_rank_candidates "${raw_arr[@]}")"
+  if [[ -z "$candidates" ]]; then
+    return 1
+  fi
+
+  local count
+  count="$(wc -l <<< "$candidates" | tr -d ' ')"
+
+  local chosen
+  if [[ "$count" -gt 1 ]]; then
+    if [[ "$non_interactive" -eq 1 ]]; then
+      log "multiple matches for '$requested', cannot disambiguate non-interactively:"
+      while IFS= read -r c; do log "  $c"; done <<< "$candidates"
+      return 2
+    fi
+    chosen="$(gum choose --header "Multiple apps match '$requested' — pick one" <<< "$candidates")"
+    [[ -z "$chosen" ]] && return 2
+  else
+    chosen="$candidates"
+  fi
+
+  RESOLVED_APP_NAME="${chosen##*/}"
+  RESOLVED_APP_NAME="${RESOLVED_APP_NAME%.app}"
+
+  RESOLVED_BUNDLE_ID="$(defaults read "$chosen/Contents/Info" CFBundleIdentifier 2>/dev/null || true)"
+
+  RESOLVED_TEAM_ID="$(codesign -dvv "$chosen" 2>&1 | grep -oE 'TeamIdentifier=[^[:space:]]+' 2>/dev/null | cut -d= -f2 || true)"
+  if [[ "$RESOLVED_TEAM_ID" == "not set" ]]; then
+    RESOLVED_TEAM_ID=""
+  fi
+
+  return 0
+}
+
+# Build newline-separated search tokens (lowercased) from resolved identity.
+build_tokens() {
+  local -a tokens=()
+  local name="$RESOLVED_APP_NAME"
+  tokens+=("$(tr '[:upper:]' '[:lower:]' <<< "$name")")
+  tokens+=("$(tr '[:upper:]' '[:lower:]' <<< "${name// /}")")
+
+  if [[ -n "$RESOLVED_BUNDLE_ID" ]]; then
+    tokens+=("$(tr '[:upper:]' '[:lower:]' <<< "$RESOLVED_BUNDLE_ID")")
+
+    # Meaningful, non-generic segments only (e.g. "canarymail" from
+    # "io.canarymail.mac") — the raw tail segment ("mac", "desktop", ...) is
+    # usually a platform qualifier, not app identity, and substring-matches
+    # far too much of ~/Library when used as a search token.
+    local bundle_lower segment
+    bundle_lower="$(tr '[:upper:]' '[:lower:]' <<< "$RESOLVED_BUNDLE_ID")"
+    while IFS= read -r segment; do
+      [[ -z "$segment" ]] && continue
+      [[ ${#segment} -lt "$APPBAK_TOKEN_MIN_LEN" ]] && continue
+      is_stoplisted_token "$segment" && continue
+      tokens+=("$segment")
+    done < <(tr '.' '\n' <<< "$bundle_lower")
+  fi
+
+  if [[ -n "$RESOLVED_TEAM_ID" ]]; then
+    tokens+=("$(tr '[:upper:]' '[:lower:]' <<< "$RESOLVED_TEAM_ID").")
+  fi
+
+  printf '%s\n' "${tokens[@]}" | sort -u
+}
+
+is_stoplisted_token() {
+  local token="$1" s
+  for s in "${APPBAK_TOKEN_STOPLIST[@]}"; do
+    [[ "$s" == "$token" ]] && return 0
+  done
+  return 1
+}
+
+# ---------------------------------------------------------------------------
+# Discovery scan
+# ---------------------------------------------------------------------------
+
+# Emits TAB-joined: size_human<TAB>size_bytes<TAB>mtime_iso for one filesystem
+# entry. Uses /usr/bin/stat and /bin/date explicitly — a GNU coreutils
+# stat/date earlier on $PATH (nix/homebrew coreutils, common on this host)
+# does not understand the BSD `-f '%m'` / `-r <epoch>` flag forms and would
+# silently degrade every mtime to epoch 0. NOTE: /usr/bin/date does not exist
+# on macOS (BSD date lives at /bin/date only) — verified via `ls -la`.
+entry_stats() {
+  local entry="$1" size_bytes size_human mtime_epoch mtime_iso
+  size_bytes="$(du -sk "$entry" 2>/dev/null | awk '{print $1 * 1024}')"
+  [[ -z "$size_bytes" ]] && size_bytes=0
+  size_human="$(du -sh "$entry" 2>/dev/null | awk '{print $1}')"
+  [[ -z "$size_human" ]] && size_human="0B"
+  mtime_epoch="$(/usr/bin/stat -f '%m' "$entry" 2>/dev/null || echo 0)"
+  mtime_iso="$(/bin/date -u -r "$mtime_epoch" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo "1970-01-01T00:00:00Z")"
+  printf '%s\t%s\t%s\n' "$size_human" "$size_bytes" "$mtime_iso"
+}
+
+# Re-stats every zero_byte entry in a known app's stored `discovered` rows on
+# EVERY run (not just --discover, per plan). Emits
+# path<TAB>category<TAB>size<TAB>size_bytes<TAB>mtime<TAB>changed(0/1) for all
+# discovered rows; `changed=1` marks a zero-byte item whose size or mtime has
+# since changed (newly-backupable).
+refresh_zero_byte_rows() {
+  local app_entry="$1"
+  local path category size size_bytes mtime zero_byte
+  local new_size new_bytes new_mtime changed
+  while IFS=$'\t' read -r path category size size_bytes mtime zero_byte; do
+    [[ -z "$path" ]] && continue
+    changed=0
+    if [[ "$zero_byte" == "true" && -e "$path" ]]; then
+      IFS=$'\t' read -r new_size new_bytes new_mtime <<< "$(entry_stats "$path")"
+      if [[ "$new_bytes" != "$size_bytes" || "$new_mtime" != "$mtime" ]]; then
+        size="$new_size"; size_bytes="$new_bytes"; mtime="$new_mtime"
+        changed=1
+      fi
+    fi
+    printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$path" "$category" "$size" "$size_bytes" "$mtime" "$changed"
+  done < <(jq -r '.discovered[]? | [.path, .category, .size, (.size_bytes|tostring), .mtime, (.zero_byte|tostring)] | @tsv' <<< "$app_entry")
+}
+
+# Emits TSV rows: path<TAB>category<TAB>size_human<TAB>size_bytes<TAB>mtime_iso
+scan_category_dir() {
+  local base_dir="$1" category="$2"
+  local -r tokens_str="$3"
+  local scan_dir="$base_dir/$category"
+  [[ -d "$scan_dir" ]] || return 0
+
+  local entry base base_lower token matched size_human size_bytes mtime_iso
+  for entry in "$scan_dir"/*; do
+    [[ -e "$entry" ]] || continue
+    base="${entry##*/}"
+    base_lower="$(tr '[:upper:]' '[:lower:]' <<< "$base")"
+    matched=0
+    while IFS= read -r token; do
+      [[ -z "$token" ]] && continue
+      if [[ "$base_lower" == *"$token"* ]]; then
+        matched=1
+        break
+      fi
+    done <<< "$tokens_str"
+    [[ "$matched" -eq 1 ]] || continue
+
+    if [[ ! -r "$entry" ]]; then
+      log "unreadable, skipping: $entry"
+      continue
+    fi
+
+    IFS=$'\t' read -r size_human size_bytes mtime_iso <<< "$(entry_stats "$entry")"
+
+    printf '%s\t%s\t%s\t%s\t%s\n' "$entry" "$category" "$size_human" "$size_bytes" "$mtime_iso"
+  done
+}
+
+# Populates global array DISCOVERED_ROWS (TSV lines: path/category/size/size_bytes/mtime).
+run_discovery() {
+  DISCOVERED_ROWS=()
+  local tokens category row
+  tokens="$(build_tokens)"
+
+  for category in "${APPBAK_USER_CATEGORIES_CONFIG[@]}" "${APPBAK_USER_CATEGORIES_CACHE[@]}"; do
+    while IFS= read -r row; do
+      [[ -n "$row" ]] && DISCOVERED_ROWS+=("$row")
+    done < <(scan_category_dir "$HOME/Library" "$category" "$tokens")
+  done
+
+  for category in "${APPBAK_ROOT_CATEGORIES_CONFIG[@]}" "${APPBAK_ROOT_CATEGORIES_CACHE[@]}"; do
+    while IFS= read -r row; do
+      [[ -n "$row" ]] && DISCOVERED_ROWS+=("$row")
+    done < <(scan_category_dir "/Library" "$category" "$tokens")
+  done
+}
+
+is_config_category() {
+  local category="$1" c
+  for c in "${APPBAK_USER_CATEGORIES_CONFIG[@]}" "${APPBAK_ROOT_CATEGORIES_CONFIG[@]}"; do
+    [[ "$c" == "$category" ]] && return 0
+  done
+  return 1
+}
+
+# ---------------------------------------------------------------------------
+# Selection TUI
+# ---------------------------------------------------------------------------
+
+# Reads DISCOVERED_ROWS + previously-backed-up paths; sets SELECTED_PATHS.
+run_selection() {
+  local -a backed_up_prior=("$@")
+  SELECTED_PATHS=()
+
+  if [[ ${#DISCOVERED_ROWS[@]} -eq 0 ]]; then
+    return 0
+  fi
+
+  if [[ "$non_interactive" -eq 1 ]]; then
+    local row path
+    for row in "${DISCOVERED_ROWS[@]}"; do
+      path="${row%%$'\t'*}"
+      SELECTED_PATHS+=("$path")
+    done
+    return 0
+  fi
+
+  local -a labels=() selected_labels=()
+  local -A label_to_path=()
+  local row path category size mtime label is_prior is_config p
+  for row in "${DISCOVERED_ROWS[@]}"; do
+    IFS=$'\t' read -r path category size _ mtime <<< "$row"
+    label="[$category] $path ($size @ $mtime)"
+    is_prior=0
+    for p in "${backed_up_prior[@]}"; do
+      [[ "$p" == "$path" ]] && is_prior=1 && break
+    done
+    if [[ "$is_prior" -eq 0 && "$discover_force" -eq 1 && ${#backed_up_prior[@]} -gt 0 ]]; then
+      label="$label [NEW]"
+    fi
+    labels+=("$label")
+    label_to_path["$label"]="$path"
+
+    if [[ ${#backed_up_prior[@]} -gt 0 ]]; then
+      [[ "$is_prior" -eq 1 ]] && selected_labels+=("$label")
+    else
+      is_config=0
+      is_config_category "$category" && is_config=1
+      [[ "$is_config" -eq 1 ]] && selected_labels+=("$label")
+    fi
+  done
+
+  local chosen
+  chosen="$(gum choose --no-limit --header "Select items to back up for $RESOLVED_APP_NAME" \
+    --selected="$(IFS=,; echo "${selected_labels[*]:-}")" \
+    <<< "$(printf '%s\n' "${labels[@]}")")" || true
+
+  while IFS= read -r label; do
+    [[ -z "$label" ]] && continue
+    SELECTED_PATHS+=("${label_to_path[$label]}")
+  done <<< "$chosen"
+}
+
+# ---------------------------------------------------------------------------
+# Destination resolution
+# ---------------------------------------------------------------------------
+
+# Resolves (and, on fallback, persists) the destination root. Mutates the
+# global $dest directly rather than being called via a command substitution
+# subshell — a subshell mutation of $dest would be discarded by the caller,
+# silently re-prompting for every subsequent app in a multi-app run.
+resolve_dest_root() {
+  if [[ -d "$dest" && -w "$dest" ]]; then
+    return 0
+  fi
+
+  if [[ "$non_interactive" -eq 1 ]]; then
+    log "destination unreachable: $dest"
+    return 1
+  fi
+
+  log "destination unreachable: $dest"
+  local choice
+  choice="$(gum choose "Browse for a directory" "Type a path")"
+  case "$choice" in
+    "Browse for a directory")
+      dest="$(gum file --directory "$APPBAK_VOLUMES_ROOT")"
+      ;;
+    "Type a path")
+      dest="$(gum input --placeholder "/path/to/backups")"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  [[ -d "$dest" && -w "$dest" ]] || return 1
+  return 0
+}
+
+# Copies the manifest to the destination root. Called by process_* AFTER
+# update_manifest_for_app so the copy reflects the backup that just ran
+# instead of being one run stale. Guards against source == destination
+# (e.g. test harnesses that point --dest at the manifest's own directory).
+copy_manifest_to_dest_root() {
+  [[ "$dry_run" -eq 1 ]] && return 0
+  [[ -d "$dest" ]] || return 0
+  local target="$dest/manifest.json"
+  if [[ -e "$target" ]] && [[ "$manifest_path" -ef "$target" ]]; then
+    return 0
+  fi
+  cp "$manifest_path" "$target"
+}
+
+# ---------------------------------------------------------------------------
+# Running-app detection
+# ---------------------------------------------------------------------------
+
+app_is_running() {
+  local app_name="$1"
+  # NOTE: pgrep matches on the OS process name, which macOS truncates to
+  # ~16 chars and which often differs from the .app's display name (e.g.
+  # "Visual Studio Code" the process is "Electron"/truncated variants).
+  # Best-effort per the plan; `lsappinfo` would be more accurate but isn't
+  # used here to keep the dependency surface small.
+  pgrep -x "$app_name" >/dev/null 2>&1
+}
+
+# Polls (briefly) for an app to actually quit after an AppleScript quit
+# request, instead of trusting a bare `sleep 1`.
+wait_for_app_quit() {
+  local app_name="$1" tries=0
+  while app_is_running "$app_name" && [[ "$tries" -lt 10 ]]; do
+    sleep 0.5
+    tries=$((tries + 1))
+  done
+  if app_is_running "$app_name"; then
+    log "warning: $app_name still appears to be running after quit request"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Keychain handling
+# ---------------------------------------------------------------------------
+
+# Emits matching keychain item/service names (best-effort, metadata only).
+scan_keychain_items() {
+  local tokens="$1" dump token line svc
+  dump="$(security dump-keychain 2>/dev/null | grep -i '"svce"' || true)"
+  [[ -z "$dump" ]] && return 0
+
+  local -A seen=()
+  while IFS= read -r line; do
+    svc="$(grep -oE '"svce"<blob>="[^"]*"' <<< "$line" 2>/dev/null | sed -E 's/.*="(.*)"/\1/' || true)"
+    [[ -z "$svc" ]] && continue
+    local svc_lower
+    svc_lower="$(tr '[:upper:]' '[:lower:]' <<< "$svc")"
+    while IFS= read -r token; do
+      [[ -z "$token" ]] && continue
+      if [[ "$svc_lower" == *"$token"* ]] && [[ -z "${seen[$svc]:-}" ]]; then
+        seen[$svc]=1
+        printf '%s\n' "$svc"
+      fi
+    done <<< "$tokens"
+  done <<< "$dump"
+}
+
+# Writes keychain-items.txt (always) and optionally exports secrets.
+write_keychain_artifacts() {
+  local backup_dir="$1" tokens="$2"
+  local -a items=()
+  local item
+  while IFS= read -r item; do
+    [[ -n "$item" ]] && items+=("$item")
+  done < <(scan_keychain_items "$tokens")
+
+  if [[ "$dry_run" -eq 1 ]]; then
+    log "dry-run: would write keychain-items.txt with ${#items[@]} item(s)"
+    [[ ${#items[@]} -gt 0 ]] && printf '%s\n' "${items[@]}"
+    return 0
+  fi
+
+  if [[ ${#items[@]} -gt 0 ]]; then
+    printf '%s\n' "${items[@]}" > "$backup_dir/keychain-items.txt"
+  else
+    : > "$backup_dir/keychain-items.txt"
+  fi
+
+  case "$keychain_export" in
+    age) export_keychain_age "$backup_dir" items ;;
+  esac
+
+  [[ ${#items[@]} -gt 0 ]] && printf '%s\n' "${items[@]}"
+  return 0
+}
+
+derive_age_recipient() {
+  [[ -n "$age_recipient" ]] && { printf '%s\n' "$age_recipient"; return 0; }
+  [[ -f "$APPBAK_YUBIKEY_IDENTITY_FILE" ]] || return 1
+  grep -oE 'age1yubikey1[a-zA-Z0-9]+' "$APPBAK_YUBIKEY_IDENTITY_FILE" | head -1
+}
+
+export_keychain_age() {
+  local backup_dir="$1"
+  local -n item_names="$2"
+  local recipient
+  recipient="$(derive_age_recipient)" || {
+    log "--keychain-export age: no recipient found (set --age-recipient or populate $APPBAK_YUBIKEY_IDENTITY_FILE)"
+    return 1
+  }
+
+  local effective_tmpdir="${TMPDIR:-/tmp}"
+  if [[ "$effective_tmpdir" == "$dest"* ]]; then
+    log "--keychain-export age: refusing to stage plaintext — TMPDIR ($effective_tmpdir) is inside the backup destination"
+    return 1
+  fi
+
+  local plain
+  plain="$(mktemp)"
+  trap 'rm -f "$plain"' INT TERM EXIT
+
+  local item value
+  for item in "${item_names[@]}"; do
+    value="$(security find-generic-password -s "$item" -w 2>/dev/null || true)"
+    [[ -n "$value" ]] && printf '%s: %s\n' "$item" "$value" >> "$plain"
+  done
+
+  if ! age -r "$recipient" -o "$backup_dir/keychain-secrets.txt.age" "$plain"; then
+    log "--keychain-export age: encryption failed, not writing README"
+    rm -f "$plain" "$backup_dir/keychain-secrets.txt.age"
+    trap - INT TERM EXIT
+    return 1
+  fi
+
+  rm -f "$plain"
+  trap - INT TERM EXIT
+
+  cat >> "$backup_dir/README.md" <<EOF
+
+## Keychain secrets
+
+Encrypted with age for recipient: $recipient
+
+To decrypt (requires YubiKey, PIN + touch):
+
+\`\`\`
+age -d -i $APPBAK_YUBIKEY_IDENTITY_FILE keychain-secrets.txt.age
+\`\`\`
+EOF
+}
+
+# ---------------------------------------------------------------------------
+# Backup engine
+# ---------------------------------------------------------------------------
+
+# M1: apparent-size verification, not disk-block usage. `du -sk` (used by
+# entry_stats for the manifest's human/display size fields) reports
+# *allocated blocks*, which legitimately differs source-vs-dest for
+# byte-identical content (APFS decmpfs, sparse files, SMB block-rounding,
+# hardlinks) — that made every real multi-file app backup false-FAIL
+# verification (round-3 test report). This sums real bytes (`stat -f '%z'`)
+# over regular files only, recursively. Symlinks and directories are
+# excluded from both the count and the byte sum on both sides: ditto
+# preserves symlinks as symlinks (does not dereference), so a symlink's
+# "size" is not copy-fidelity data, and deliberately not following them here
+# (find without -L) keeps src/dest measured the same way and avoids a
+# top-level symlink amplifying into an arbitrarily large dereferenced tree.
+# Emits: file_count<TAB>total_bytes
+apparent_stats() {
+  local root="$1"
+  local count=0 bytes=0 f fsize
+  if [[ -L "$root" ]]; then
+    printf '%s\t%s\n' 0 0
+    return 0
+  fi
+  if [[ -f "$root" ]]; then
+    fsize="$(/usr/bin/stat -f '%z' "$root" 2>/dev/null || echo 0)"
+    printf '%s\t%s\n' 1 "$fsize"
+    return 0
+  fi
+  if [[ -d "$root" ]]; then
+    while IFS= read -r -d '' f; do
+      fsize="$(/usr/bin/stat -f '%z' "$f" 2>/dev/null || echo 0)"
+      count=$((count + 1))
+      bytes=$((bytes + fsize))
+    done < <(find "$root" -type f -print0 2>/dev/null)
+    printf '%s\t%s\n' "$count" "$bytes"
+    return 0
+  fi
+  printf '%s\t%s\n' 0 0
+}
+
+backup_app() {
+  local app_name="$1"
+  shift
+  local -a paths=("$@")
+  local key host_short stamp app_dest_root app_dest backup_manifest was_running status
+
+  # Reset per-app globals up front. Without this, a failure further down
+  # (e.g. unreachable destination) leaves the PREVIOUS app's status/copied
+  # list/running-flag in place for whichever caller reads them next.
+  BACKUP_STATUS=""
+  BACKUP_APP_WAS_RUNNING=0
+  BACKUP_COPIED=()
+  BACKUP_KEYCHAIN_ITEMS=()
+
+  key="$(app_key "$app_name")"
+  host_short="$(hostname -s)"
+  stamp="$(now_stamp)"
+
+  was_running=0
+  if app_is_running "$app_name"; then
+    log "warning: $app_name is currently running — backup may be incomplete"
+    was_running=1
+  fi
+
+  if [[ ${#paths[@]} -eq 0 ]]; then
+    log "no items selected for $app_name, skipping backup"
+    return 0
+  fi
+
+  resolve_dest_root || { log "cannot resolve destination for $app_name"; return 1; }
+  local root="$dest"
+
+  app_dest_root="$root/$host_short/$app_name"
+  app_dest="$app_dest_root/$stamp"
+
+  if [[ "$dry_run" -eq 1 ]]; then
+    log "dry-run: would create $app_dest and copy:"
+    printf '  %s\n' "${paths[@]}" >&2
+    status="dry-run"
+    if [[ "$was_running" -eq 1 ]]; then status="possibly_incomplete"; fi
+    BACKUP_STATUS="$status"
+    BACKUP_APP_WAS_RUNNING="$was_running"
+    return 0
+  fi
+
+  if ! mkdir -p "$app_dest"; then
+    log "$app_name: cannot create backup directory: $app_dest"
+    BACKUP_STATUS="failed"
+    BACKUP_APP_WAS_RUNNING="$was_running"
+    return 1
+  fi
+
+  # N1: every copy-critical command (mkdir/ditto) is explicitly checked.
+  # errexit is inert in this call chain (backup_app is invoked as `if !
+  # backup_app ...` by every caller), so a silently-ignored ditto/mkdir
+  # failure would otherwise stamp status "complete", exit 0, and then
+  # prune_retention would delete good older snapshots. copy_failed latches
+  # any failure so status/exit code/pruning all reflect it.
+  local -a copied=() copied_rows=()
+  local src rel target_dir item_size_bytes ap_count ap_bytes
+  local copy_failed=0 soft_fail=0 vanished_count=0
+  local expected_count=0 expected_bytes=0
+  local expected_apparent_count=0 expected_apparent_bytes=0
+  for src in "${paths[@]}"; do
+    [[ -e "$src" ]] || { log "source vanished, skipping: $src"; vanished_count=$((vanished_count + 1)); continue; }
+    rel="${src#/}"
+    target_dir="$app_dest/$(dirname "$rel")"
+    if ! mkdir -p "$target_dir"; then
+      log "$app_name: backup copy failed (mkdir): $src"
+      copy_failed=1
+      continue
+    fi
+    if ! ditto "$src" "$app_dest/$rel"; then
+      log "$app_name: backup copy failed (ditto): $src"
+      copy_failed=1
+      continue
+    fi
+    IFS=$'\t' read -r _ item_size_bytes _ <<< "$(entry_stats "$src")"
+    IFS=$'\t' read -r ap_count ap_bytes <<< "$(apparent_stats "$src")"
+    copied+=("$src")
+    copied_rows+=("$(printf '%s\t%s' "$src" "$item_size_bytes")")
+    expected_count=$((expected_count + 1))
+    expected_bytes=$((expected_bytes + item_size_bytes))
+    expected_apparent_count=$((expected_apparent_count + ap_count))
+    expected_apparent_bytes=$((expected_apparent_bytes + ap_bytes))
+  done
+
+  # B1: a vanished-source path is not a copy failure by itself (the item is
+  # simply gone — app uninstalled, data migrated), but if EVERY selected path
+  # vanished, copied/expected_count are empty/0 and the verify gate below is
+  # skipped entirely (it only runs when expected_count > 0). Left unchecked
+  # that produces an empty snapshot stamped "complete" with backed_up wiped
+  # to [], and prune_retention would then evict good older snapshots over
+  # the next two runs. Latch copy_failed so this reaches the exact same
+  # failed/no-manifest-update/no-prune path as any other copy failure.
+  if [[ "$vanished_count" -gt 0 && ${#copied[@]} -eq 0 && ${#paths[@]} -gt 0 ]]; then
+    log "$app_name: nothing copied, all $vanished_count selected source path(s) vanished"
+    copy_failed=1
+  fi
+
+  # Verify-before-prune gate: re-stat every copied item at its destination
+  # path and compare recursive regular-file count + apparent byte size
+  # (M1: NOT du block-usage, which false-fails routinely on byte-identical
+  # copies — see apparent_stats) against the source selection that was
+  # actually copied. Only on a clean verification does prune_retention ever
+  # run below — a bad/partial new snapshot must never evict a good older one.
+  if [[ "$copy_failed" -eq 0 && "$expected_count" -gt 0 ]]; then
+    local actual_apparent_count=0 actual_apparent_bytes=0
+    for src in "${copied[@]}"; do
+      rel="${src#/}"
+      if [[ ! -e "$app_dest/$rel" ]]; then
+        log "$app_name: verification failed, missing at dest: $app_dest/$rel"
+        copy_failed=1
+        continue
+      fi
+      IFS=$'\t' read -r ap_count ap_bytes <<< "$(apparent_stats "$app_dest/$rel")"
+      actual_apparent_count=$((actual_apparent_count + ap_count))
+      actual_apparent_bytes=$((actual_apparent_bytes + ap_bytes))
+    done
+    if [[ "$copy_failed" -eq 0 ]]; then
+      local verify_mismatch=0
+      if [[ "$actual_apparent_count" -ne "$expected_apparent_count" ]]; then
+        log "$app_name: verification failed, expected $expected_apparent_count file(s) copied, found $actual_apparent_count at dest"
+        verify_mismatch=1
+      fi
+      if [[ "$actual_apparent_bytes" -ne "$expected_apparent_bytes" ]]; then
+        log "$app_name: verification failed, expected $expected_apparent_bytes byte(s) copied, found $actual_apparent_bytes at dest"
+        verify_mismatch=1
+      fi
+      if [[ "$verify_mismatch" -eq 1 ]]; then
+        if [[ "$was_running" -eq 1 ]]; then
+          # A running app can mutate its own files between copy and verify;
+          # an apparent-size mismatch here is expected noise, not a broken
+          # copy. Downgrade instead of hard-failing: keep status
+          # possibly_incomplete, still skip prune this run, but do not
+          # discard the snapshot or block the manifest update.
+          log "$app_name: verification mismatch tolerated — app was running during backup"
+          soft_fail=1
+        else
+          copy_failed=1
+        fi
+      fi
+    fi
+  fi
+
+  local tokens keychain_items_file
+  tokens="$(build_tokens)"
+  keychain_items_file="$(mktemp)"
+  write_keychain_artifacts "$app_dest" "$tokens" > "$keychain_items_file" || true
+  local -a keychain_items=()
+  local item
+  while IFS= read -r item; do
+    [[ -n "$item" ]] && keychain_items+=("$item")
+  done < "$keychain_items_file"
+  rm -f "$keychain_items_file"
+
+  status="complete"
+  [[ "$was_running" -eq 1 ]] && status="possibly_incomplete"
+  # B1 partial-vanish: some (not all) selected paths vanished but everything
+  # that still existed copied and verified cleanly. Record what actually got
+  # backed up (accurate: backed_up will only list surviving items) but flag
+  # the run distinctly from a clean "complete" and skip pruning this run —
+  # a partial snapshot should not be trusted to justify evicting older ones.
+  local skip_prune=0
+  if [[ "$vanished_count" -gt 0 && ${#copied[@]} -gt 0 && "$copy_failed" -eq 0 ]]; then
+    status="partial"
+    skip_prune=1
+  fi
+  [[ "$soft_fail" -eq 1 ]] && skip_prune=1
+  [[ "$copy_failed" -eq 1 ]] && status="failed"
+
+  backup_manifest="$app_dest/backup-manifest.json"
+  if ! jq -n \
+    --arg app "$app_name" \
+    --arg host "$host_short" \
+    --arg ts "$(now_iso)" \
+    --arg status "$status" \
+    --argjson was_running "$([[ "$was_running" -eq 1 ]] && echo true || echo false)" \
+    --argjson copied "$(printf '%s\n' "${copied_rows[@]}" | jq -R -s '
+      split("\n") | map(select(length > 0)) | map(split("\t")) | map({path: .[0], size_bytes: (.[1] | tonumber)})
+    ')" \
+    --argjson keychain "$(printf '%s\n' "${keychain_items[@]}" | jq -R . | jq -s 'map(select(length > 0))')" \
+    '{app: $app, host: $host, timestamp: $ts, status: $status, app_was_running: $was_running, copied: $copied, keychain_items: $keychain}' \
+    > "$backup_manifest"
+  then
+    log "$app_name: cannot write backup-manifest.json: $backup_manifest"
+    copy_failed=1
+    status="failed"
+  fi
+
+  BACKUP_STATUS="$status"
+  BACKUP_APP_WAS_RUNNING="$was_running"
+  BACKUP_COPIED=("${copied[@]}")
+  BACKUP_KEYCHAIN_ITEMS=("${keychain_items[@]}")
+
+  if [[ "$copy_failed" -eq 1 ]]; then
+    log "$app_name: backup failed/partial, not pruning older snapshots"
+    return 1
+  fi
+
+  if [[ "$skip_prune" -eq 1 ]]; then
+    log "$app_name: not pruning older snapshots this run (status: $status)"
+    return 0
+  fi
+
+  # M3: prune_retention is intentionally decoupled from backup_app's return
+  # value — a prune failure (e.g. destination permissions) must not make a
+  # successful backup look like a failed one to callers. Callers gate the
+  # manifest update on backup_app's return status, so previously a failing
+  # prune here caused a real, successful backup to never be recorded.
+  prune_retention "$app_dest_root" || log "$app_name: prune failed (backup itself succeeded)"
+  return 0
+}
+
+prune_retention() {
+  # Safety-critical: app_dest_root MUST be a non-empty, real directory whose
+  # immediate children are 14-digit timestamp dirs (YYYYMMDDHHMMSS) — those
+  # are the only paths this function will ever rm -rf. ${var:?} guards
+  # against an empty/unset argument silently degrading the glob to root.
+  local app_dest_root="${1:?prune_retention requires app_dest_root}"
+  [[ -d "$app_dest_root" ]] || return 0
+
+  local -a dirs=()
+  local d base
+  for d in "$app_dest_root"/*/; do
+    [[ -d "$d" ]] || continue
+    base="$(basename "$d")"
+    # Only ever consider 14-digit timestamp dirs — never the app/dest root
+    # itself and never an unrelated sibling directory.
+    [[ "$base" =~ ^[0-9]{14}$ ]] || continue
+    dirs+=("${d%/}")
+  done
+
+  local count=${#dirs[@]}
+  [[ "$count" -le "$APPBAK_RETENTION_KEEP" ]] && return 0
+
+  local sorted
+  sorted="$(printf '%s\n' "${dirs[@]}" | sort)"
+  local to_remove
+  to_remove="$(head -n "$((count - APPBAK_RETENTION_KEEP))" <<< "$sorted")"
+  local rm_dir rm_base
+  while IFS= read -r rm_dir; do
+    [[ -z "$rm_dir" ]] && continue
+    # Belt-and-suspenders: re-verify the exact same invariants right before
+    # the destructive call, in case dirs/sorted was tampered with upstream.
+    rm_base="$(basename "$rm_dir")"
+    [[ "$rm_base" =~ ^[0-9]{14}$ ]] || { log "refusing to prune non-timestamp path: $rm_dir"; continue; }
+    [[ "$(dirname "$rm_dir")" == "$app_dest_root" ]] || { log "refusing to prune path outside app_dest_root: $rm_dir"; continue; }
+    log "pruning old backup: $rm_dir"
+    rm -rf "$rm_dir"
+  done <<< "$to_remove"
+}
+
+# ---------------------------------------------------------------------------
+# Manifest updates for one app
+# ---------------------------------------------------------------------------
+
+update_manifest_for_app() {
+  local app_name="$1" bundle_id="$2" team_id="$3"
+  local -a rows=("${@:4}")
+  local key
+  key="$(app_key "$app_name")"
+
+  local discovered_json
+  discovered_json="$(printf '%s\n' "${rows[@]}" | jq -R -s '
+    split("\n") | map(select(length > 0)) | map(split("\t")) | map({
+      path: .[0], category: .[1], size: .[2],
+      size_bytes: (.[3] | tonumber), mtime: .[4], zero_byte: (.[3] == "0")
+    })
+  ')"
+
+  local selected_json backed_up_json keychain_json
+  selected_json="$(printf '%s\n' "${SELECTED_PATHS[@]}" | jq -R . | jq -s 'map(select(length > 0))')"
+  backed_up_json="$(printf '%s\n' "${BACKUP_COPIED[@]}" | jq -R . | jq -s 'map(select(length > 0))')"
+  keychain_json="$(printf '%s\n' "${BACKUP_KEYCHAIN_ITEMS[@]}" | jq -R . | jq -s 'map(select(length > 0))')"
+
+  local current
+  if ! current="$(manifest_read)"; then
+    log "$app_name: not updating manifest, previous read failed"
+    return 1
+  fi
+
+  # N4/N6: a backup was only actually PERFORMED when backup_app ran to
+  # completion and set a non-empty BACKUP_STATUS. When selection was empty
+  # (0 paths selected) backup_app returns early with BACKUP_STATUS="" — in
+  # that case we must still persist discovered/selected (e.g. a new app
+  # whose only finds are zero-byte), but must NOT stamp last_backup / touch
+  # last_backup_status / app_was_running / backed_up — those describe the
+  # most recent backup that actually ran, which is unchanged.
+  local backup_performed=false
+  [[ -n "${BACKUP_STATUS:-}" ]] && backup_performed=true
+
+  current="$(jq \
+    --arg key "$key" \
+    --arg display "$app_name" \
+    --arg bundle "$bundle_id" \
+    --arg team "$team_id" \
+    --argjson discovered "$discovered_json" \
+    --argjson selected "$selected_json" \
+    --argjson backed_up "$backed_up_json" \
+    --argjson keychain "$keychain_json" \
+    --arg last_discovered "$(now_iso)" \
+    --arg last_backup "$(now_iso)" \
+    --arg status "${BACKUP_STATUS:-unknown}" \
+    --argjson was_running "${BACKUP_APP_WAS_RUNNING:-0}" \
+    --argjson backup_performed "$backup_performed" \
+    '(.apps[$key] // {}) as $prior |
+     .apps[$key] = {
+      display_name: $display,
+      bundle_id: $bundle,
+      team_id: $team,
+      discovered: $discovered,
+      selected: $selected,
+      backed_up: (if $backup_performed then $backed_up else ($prior.backed_up // []) end),
+      keychain_items: (if $backup_performed then $keychain else ($prior.keychain_items // []) end),
+      last_discovered: $last_discovered,
+      last_backup: (if $backup_performed then $last_backup else ($prior.last_backup // null) end),
+      last_backup_status: (if $backup_performed then $status else ($prior.last_backup_status // null) end),
+      app_was_running: (if $backup_performed then ($was_running == 1) else ($prior.app_was_running // false) end)
+    }' <<< "$current")"
+
+  manifest_write "$current"
+}
+
+# ---------------------------------------------------------------------------
+# High-level per-app flow
+# ---------------------------------------------------------------------------
+
+process_app() {
+  local requested="$1"
+  local key manifest_json app_entry
+
+  if ! manifest_json="$(manifest_read)"; then
+    return 1
+  fi
+  key="$(app_key "$requested")"
+  app_entry="$(jq -c --arg k "$key" '.apps[$k] // empty' <<< "$manifest_json")"
+
+  if [[ -n "$app_entry" && "$discover_force" -eq 0 ]]; then
+    process_known_app "$requested" "$app_entry"
+    return
+  fi
+
+  process_new_or_rediscover_app "$requested" "$app_entry"
+}
+
+process_known_app() {
+  local requested="$1" app_entry="$2"
+  local app_name bundle_id team_id
+  app_name="$(jq -r '.display_name' <<< "$app_entry")"
+  bundle_id="$(jq -r '.bundle_id' <<< "$app_entry")"
+  team_id="$(jq -r '.team_id' <<< "$app_entry")"
+
+  local -a paths=()
+  local p
+  while IFS= read -r p; do
+    [[ -n "$p" ]] && paths+=("$p")
+  done < <(jq -r '.selected[]?' <<< "$app_entry")
+
+  local prior_status was_running_before
+  prior_status="$(jq -r '.last_backup_status // ""' <<< "$app_entry")"
+  was_running_before="$(jq -r '.app_was_running // false' <<< "$app_entry")"
+
+  if [[ "$prior_status" == "possibly_incomplete" || "$was_running_before" == "true" ]]; then
+    if [[ "$non_interactive" -eq 1 ]]; then
+      log "$app_name: previous backup was possibly incomplete — proceeding anyway (non-interactive)"
+    else
+      local choice
+      choice="$(gum choose --header "$app_name: previous backup was possibly incomplete. What now?" \
+        "Back up anyway" "Skip for now" "Quit app and continue")"
+      case "$choice" in
+        "Skip for now") log "$app_name: skipped"; return 0 ;;
+        "Quit app and continue")
+          osascript -e "tell application \"$app_name\" to quit" 2>/dev/null || true
+          wait_for_app_quit "$app_name"
+          ;;
+      esac
+    fi
+  fi
+
+  # Re-stat every stored zero_byte item on EVERY run (not just --discover):
+  # anything that has grown or changed mtime since is surfaced as
+  # newly-backupable, and the refreshed stats feed back into the manifest.
+  local -a updated_discovered_rows=() newly_backupable=()
+  local rpath rcategory rsize rsize_bytes rmtime rchanged
+  while IFS=$'\t' read -r rpath rcategory rsize rsize_bytes rmtime rchanged; do
+    [[ -z "$rpath" ]] && continue
+    updated_discovered_rows+=("$(printf '%s\t%s\t%s\t%s\t%s' "$rpath" "$rcategory" "$rsize" "$rsize_bytes" "$rmtime")")
+    [[ "$rchanged" == "1" ]] && newly_backupable+=("$rpath")
+  done < <(refresh_zero_byte_rows "$app_entry")
+
+  if [[ ${#newly_backupable[@]} -gt 0 ]]; then
+    log "$app_name: ${#newly_backupable[@]} previously zero-byte item(s) changed size/mtime, adding to backup"
+    paths+=("${newly_backupable[@]}")
+  fi
+
+  RESOLVED_APP_NAME="$app_name"
+  RESOLVED_BUNDLE_ID="$bundle_id"
+  RESOLVED_TEAM_ID="$team_id"
+  SELECTED_PATHS=("${paths[@]}")
+
+  if ! backup_app "$app_name" "${paths[@]}"; then
+    log "$app_name: backup failed, not updating manifest"
+    return 1
+  fi
+  if ! update_manifest_for_app "$app_name" "$bundle_id" "$team_id" "${updated_discovered_rows[@]}"; then
+    log "$app_name: manifest update failed, not copying manifest to dest"
+    return 1
+  fi
+  copy_manifest_to_dest_root
+}
+
+process_new_or_rediscover_app() {
+  local requested="$1" app_entry="$2"
+
+  local resolve_rc=0
+  resolve_app "$requested" || resolve_rc=$?
+  if [[ "$resolve_rc" -eq 2 ]]; then
+    log "ambiguous match for $requested — not treating as not-found, skipping"
+    return 1
+  elif [[ "$resolve_rc" -ne 0 ]]; then
+    handle_not_found "$requested"
+    return 1
+  fi
+
+  local -a prior_backed_up=()
+  local p
+  if [[ -n "$app_entry" ]]; then
+    while IFS= read -r p; do
+      [[ -n "$p" ]] && prior_backed_up+=("$p")
+    done < <(jq -r '.backed_up[]?' <<< "$app_entry")
+  fi
+
+  run_discovery
+
+  local -a nonzero_rows=()
+  local row size_bytes
+  for row in "${DISCOVERED_ROWS[@]}"; do
+    size_bytes="$(cut -f4 <<< "$row")"
+    if [[ "$size_bytes" != "0" ]]; then
+      nonzero_rows+=("$row")
+    fi
+  done
+
+  if [[ ${#DISCOVERED_ROWS[@]} -eq 0 ]]; then
+    log "no data found for $RESOLVED_APP_NAME"
+    return 0
+  fi
+
+  local original_rows=("${DISCOVERED_ROWS[@]}")
+  DISCOVERED_ROWS=("${nonzero_rows[@]}")
+
+  run_selection "${prior_backed_up[@]}"
+
+  if [[ ${#SELECTED_PATHS[@]} -eq 0 ]]; then
+    if [[ ${#nonzero_rows[@]} -eq 0 ]]; then
+      # N6: every discovered item was zero-byte, so there is nothing to
+      # select and no backup will run — still persist the discovered rows
+      # (as zero_byte entries) so refresh_zero_byte_rows can re-stat them on
+      # future runs. Reset backup globals explicitly since backup_app is
+      # never called on this path; update_manifest_for_app treats an empty
+      # BACKUP_STATUS as "no backup performed" and will not stamp last_backup.
+      log "$RESOLVED_APP_NAME: only zero-byte items found, recording for future re-stat (no backup performed)"
+      BACKUP_STATUS=""
+      BACKUP_APP_WAS_RUNNING=0
+      BACKUP_COPIED=()
+      BACKUP_KEYCHAIN_ITEMS=()
+      SELECTED_PATHS=()
+      if ! update_manifest_for_app "$RESOLVED_APP_NAME" "$RESOLVED_BUNDLE_ID" "$RESOLVED_TEAM_ID" "${original_rows[@]}"; then
+        log "$RESOLVED_APP_NAME: manifest update failed, not copying manifest to dest"
+        return 1
+      fi
+      # M2: propagate copy_manifest_to_dest_root's exit status (bare `return`
+      # returns the last command's status) instead of always returning 0 —
+      # the other two backup_app call sites already propagate this the same
+      # way by letting it be their function's final statement.
+      copy_manifest_to_dest_root
+      return
+    else
+      log "no items selected for $RESOLVED_APP_NAME"
+    fi
+    return 0
+  fi
+
+  if ! backup_app "$RESOLVED_APP_NAME" "${SELECTED_PATHS[@]}"; then
+    log "$RESOLVED_APP_NAME: backup failed, not updating manifest"
+    return 1
+  fi
+  if ! update_manifest_for_app "$RESOLVED_APP_NAME" "$RESOLVED_BUNDLE_ID" "$RESOLVED_TEAM_ID" "${original_rows[@]}"; then
+    log "$RESOLVED_APP_NAME: manifest update failed, not copying manifest to dest"
+    return 1
+  fi
+  copy_manifest_to_dest_root
+}
+
+handle_not_found() {
+  local requested="$1"
+  log "app not found: $requested"
+  return 1
+}
+
+# ---------------------------------------------------------------------------
+# --list mode
+# ---------------------------------------------------------------------------
+
+print_list() {
+  local manifest_json
+  if ! manifest_json="$(manifest_read)"; then
+    return 1
+  fi
+  jq -r '
+    .apps | to_entries[] |
+    "\(.value.display_name): \(.value.selected | length) selected, last backup \(.value.last_backup // "never") (\(.value.last_backup_status // "n/a"))"
+  ' <<< "$manifest_json"
+}
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+main() {
+  if [[ "$list_mode" -eq 1 ]]; then
+    print_list || exit 1
+    exit 0
+  fi
+
+  local -a targets=()
+  if [[ ${#app_args[@]} -eq 0 ]]; then
+    local manifest_json k
+    if ! manifest_json="$(manifest_read)"; then
+      exit 1
+    fi
+    while IFS= read -r k; do
+      [[ -n "$k" ]] && targets+=("$k")
+    done < <(jq -r '.apps | to_entries[] | .value.display_name' <<< "$manifest_json")
+    if [[ ${#targets[@]} -eq 0 ]]; then
+      log "no apps in manifest and none specified; nothing to do"
+      exit 0
+    fi
+  else
+    local arg name
+    local -a split=()
+    for arg in "${app_args[@]}"; do
+      IFS=',' read -ra split <<< "$arg"
+      for name in "${split[@]}"; do
+        [[ -n "$name" ]] && targets+=("$name")
+      done
+    done
+  fi
+
+  local target rc=0
+  for target in "${targets[@]}"; do
+    if ! process_app "$target"; then
+      rc=1
+    fi
+  done
+
+  exit "$rc"
+}
+
+main

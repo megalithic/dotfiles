@@ -9,3 +9,4 @@ Per-program deep dives for the tools intricate enough to warrant their own file,
 - [[ghostty]] — module-vs-raw-config split and bell-driven Pi notifications.
 - [[media-presence]] — Swift daemon detecting mic/camera/Meet presence, served to Hammerspoon over a Unix socket.
 - [[miccheck]] — compiled Swift menubar push-to-talk/push-to-mute app (cmd+opt), controlled by Hammerspoon over a Unix socket.
+- [[appbak]] — bash CLI for app-data discovery and selective backup with verify-before-prune retention and a JSON manifest.
