@@ -78,6 +78,7 @@ XDG_DATA_HOME = "{{env.HOME}}/.local/share"
 XDG_STATE_HOME = "{{env.HOME}}/.local/state"
 XDG_CACHE_HOME = "{{env.HOME}}/.cache"
 PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
+PI_CODING_AGENT_DIR = "{{env.HOME}}/.pi/agent"
 STCONFDIR = "{{env.HOME}}/.config/syncthing"
 
 EDITOR = "nvim -O"
@@ -146,6 +147,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.pi/agent/models.json" = "~/.dotfiles/mise/config/pi-coding-agent/agent/models.json"
 "~/.pi/agent/mcp.json" = "~/.dotfiles/mise/config/pi-coding-agent/agent/mcp.json"
 "~/.pi/web-search.json" = "~/.dotfiles/mise/config/pi-coding-agent/web-search.json"
+"~/.pi/agent/web-search.json" = "~/.dotfiles/mise/config/pi-coding-agent/web-search.json"
 "~/.config/pi/web-search.json" = "~/.dotfiles/mise/config/pi-coding-agent/web-search.json"
 "~/.pi/agent/extensions" = { source = "~/.dotfiles/mise/config/pi-coding-agent/agent/extensions", mode = "symlink-each" }
 "~/.pi/agent/skills" = { source = "~/.dotfiles/mise/config/pi-coding-agent/agent/skills", mode = "symlink-each" }

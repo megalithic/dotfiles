@@ -212,7 +212,8 @@ let
 
   pinvim = pkgs.writeShellScriptBin "pinvim" ''
     # Clear conflicting env from previous pinvim sessions
-    unset PI_CODING_AGENT_DIR 2>/dev/null || true
+    # (disabled: PI_CODING_AGENT_DIR is now set globally via sessionVariables)
+    # unset PI_CODING_AGENT_DIR 2>/dev/null || true
 
     # Parse --profile flag and collect pi args
     EXPLICIT_PROFILE=""
@@ -332,6 +333,7 @@ in
     ];
     sessionVariables = {
       PI_STATE_DIR = piStateDir;
+      PI_CODING_AGENT_DIR = "${config.home.homeDirectory}/.pi/agent";
       PI_ACP_PI_COMMAND = "${piWrapper}/bin/pi";
       PI_ACP_ENABLE_EMBEDDED_CONTEXT = "true";
     };
@@ -343,6 +345,7 @@ in
       ".pi/agent/models.json".source = ./models.json;
       ".pi/agent/mcp.json".source = ./mcp.json;
       ".pi/web-search.json".source = ./web-search.json;
+      ".pi/agent/web-search.json".source = ./web-search.json;
       ".config/pi/web-search.json".source = ./web-search.json;
     }
     // piExtensionPackageSymlinks

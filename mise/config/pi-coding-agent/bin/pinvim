@@ -7,7 +7,8 @@ pi_src="$dotfiles/mise/config/pi-coding-agent"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Clear conflicting env from previous pinvim sessions
-unset PI_CODING_AGENT_DIR 2>/dev/null || true
+# (disabled: PI_CODING_AGENT_DIR is now set globally via mise [env])
+# unset PI_CODING_AGENT_DIR 2>/dev/null || true
 
 # Parse --profile flag and collect pi args
 EXPLICIT_PROFILE=""
