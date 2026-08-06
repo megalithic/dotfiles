@@ -342,6 +342,8 @@ in
       ".pi/agent/keybindings.json".source = ./keybindings.json;
       ".pi/agent/models.json".source = ./models.json;
       ".pi/agent/mcp.json".source = ./mcp.json;
+      ".pi/web-search.json".source = ./web-search.json;
+      ".config/pi/web-search.json".source = ./web-search.json;
     }
     // piExtensionPackageSymlinks
     // extensionSymlinks

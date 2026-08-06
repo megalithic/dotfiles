@@ -145,6 +145,8 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.pi/agent/keybindings.json" = "~/.dotfiles/mise/config/pi-coding-agent/agent/keybindings.json"
 "~/.pi/agent/models.json" = "~/.dotfiles/mise/config/pi-coding-agent/agent/models.json"
 "~/.pi/agent/mcp.json" = "~/.dotfiles/mise/config/pi-coding-agent/agent/mcp.json"
+"~/.pi/web-search.json" = "~/.dotfiles/mise/config/pi-coding-agent/web-search.json"
+"~/.config/pi/web-search.json" = "~/.dotfiles/mise/config/pi-coding-agent/web-search.json"
 "~/.pi/agent/extensions" = { source = "~/.dotfiles/mise/config/pi-coding-agent/agent/extensions", mode = "symlink-each" }
 "~/.pi/agent/skills" = { source = "~/.dotfiles/mise/config/pi-coding-agent/agent/skills", mode = "symlink-each" }
 "~/.pi/agent/prompts" = { source = "~/.dotfiles/mise/config/pi-coding-agent/agent/prompts", mode = "symlink-each" }

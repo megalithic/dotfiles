@@ -1,0 +1,5 @@
+{
+	"provider": "exa",
+	"workflow": "auto-summary",
+	"allowBrowserCookies": false
+}
