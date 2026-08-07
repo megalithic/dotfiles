@@ -35,7 +35,8 @@
  *   - github-copilot     (GitHub Copilot)
  */
 
-import type { Api, Model } from "@earendil-works/pi-ai";
+import type { Api, Model, Provider } from "@earendil-works/pi-ai";
+import { builtinProviders } from "@earendil-works/pi-ai/providers/all";
 import type {
 	AgentEndEvent,
 	ExtensionAPI,
@@ -1608,6 +1609,7 @@ function getBaseProvider(providerName: string): string | undefined {
 
 function cloneModels(
 	models: Model<Api>[],
+	providerName: string,
 	index: number,
 	alias?: string,
 ): Model<Api>[] {
@@ -1616,7 +1618,7 @@ function cloneModels(
 		id: m.id,
 		name: `${m.name} (${suffix})`,
 		api: m.api,
-		provider: m.provider,
+		provider: providerName,
 		baseUrl: m.baseUrl,
 		reasoning: m.reasoning,
 		input: m.input as ("text" | "image")[],
@@ -1632,25 +1634,44 @@ function cloneModels(
 // Register a single subscription as a provider
 // ==========================================================================
 
+let _builtinProviderById: Map<string, Provider> | undefined;
+
+function getBuiltinProviderDef(id: string): Provider | undefined {
+	_builtinProviderById ??= new Map(builtinProviders().map((p) => [p.id, p]));
+	return _builtinProviderById.get(id);
+}
+
 function registerSub(
 	pi: ExtensionAPI,
 	registry: ModelRegistry | undefined,
 	entry: SubEntry,
 ): void {
-	const template = PROVIDER_TEMPLATES[entry.provider];
-	if (!template) return;
+	if (!PROVIDER_TEMPLATES[entry.provider]) return;
+	const base = getBuiltinProviderDef(entry.provider);
+	if (!base?.auth.oauth) return;
 
 	const name = subProviderName(entry);
-	const builtinModels = registry
+	// Prefer registry-composed models (models.json overrides, dynamic
+	// catalogs); fall back to the static builtin catalog before the registry
+	// is available at activate time.
+	const baseModels: Model<Api>[] = registry
 		? registry.getAll().filter((m: Model<Api>) => m.provider === entry.provider)
-		: [];
-	const baseUrl = builtinModels[0]?.baseUrl || "";
-	const models = cloneModels(builtinModels, entry.index, entry.alias);
+		: [...base.getModels()];
+	const models = cloneModels(baseModels, name, entry.index, entry.alias);
 
-	pi.registerProvider(name, {
-		baseUrl,
-		api: builtinModels[0]?.api,
-		models,
+	// Register a native pi-ai Provider clone: same OAuth flow (credentials
+	// are stored per provider id, so each clone logs in separately) and same
+	// stream behavior as the builtin, with a distinct id, display name, and
+	// model list. OAuth-only auth: clones must not inherit the builtin's
+	// api-key env fallback, or every clone would look configured whenever
+	// e.g. ANTHROPIC_API_KEY is set.
+	pi.registerProvider({
+		...base,
+		id: name,
+		name: subDisplayName(entry),
+		auth: { oauth: base.auth.oauth },
+		getModels: () => models,
+		refreshModels: undefined,
 	});
 }
 
@@ -3122,12 +3143,9 @@ async function handleSubsLogin(ctx: ExtensionCommandContext): Promise<void> {
 		subProviderName(entry),
 	);
 
-	// Use the same name that registerSub generates
-	const loginName =
-		entry.alias ||
-		PROVIDER_TEMPLATES[entry.provider]?.displayName ||
-		entry.provider ||
-		subProviderName(entry);
+	// Providers are registered with subDisplayName as their display name,
+	// which is what the /login selector shows.
+	const loginName = subDisplayName(entry);
 
 	if (isLoggedIn) {
 		ctx.ui.notify(
@@ -5768,7 +5786,7 @@ async function handlePresetMenu(
 // Extension entry point
 // ==========================================================================
 
-export default function multiSub(pi: ExtensionAPI) {
+export default async function multiSub(pi: ExtensionAPI) {
 	const config = loadGlobalConfig();
 	const envEntries = parseEnvConfig();
 	const all = normalizeEntries(mergeConfigs(config, envEntries));
@@ -5776,10 +5794,9 @@ export default function multiSub(pi: ExtensionAPI) {
 	// Cache subscriptions for alias resolution in getBaseProvider()
 	_cachedSubs = all;
 
-	// Register all subscriptions (always global)
-	for (const entry of all) {
-		registerSub(pi, undefined, entry);
-	}
+	// Register all subscriptions (always global). No registry yet at
+	// activate time, so clones start from the static builtin catalogs.
+	for (const entry of all) registerSub(pi, undefined, entry);
 
 	// Initialize pool manager with global pools (updated on session_start with project config)
 	const poolManager = new PoolManager(pi);
@@ -5841,12 +5858,10 @@ export default function multiSub(pi: ExtensionAPI) {
 
 	// On session start, reload pools with project-level config
 	pi.on("session_start", async (_event, ctx) => {
-		// Re-register subs with real cloned models now that the model registry
-		// is available (activate-time registration ran without one, so the
-		// cloned providers were registered with empty model lists).
-		for (const entry of _cachedSubs) {
-			registerSub(pi, ctx.modelRegistry, entry);
-		}
+		// Re-register subs now that the model registry is available, so clones
+		// pick up registry-composed models (models.json overrides, dynamic
+		// catalogs) instead of the static builtin catalogs used at activate time.
+		for (const entry of _cachedSubs) registerSub(pi, ctx.modelRegistry, entry);
 
 		const effective = loadEffectiveConfig(ctx.cwd);
 		poolManager.loadPools(effective.pools);
