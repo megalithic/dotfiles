@@ -8,7 +8,9 @@ Requires bash >= 4.4 (empty-array expansion under `set -u`). Toolchain is mise-m
 
 ## Backup layout and manifest
 
-Snapshots mirror absolute source paths: `<dest>/<hostname -s>/<AppName>/<YYYYMMDDHHMMSS>/<abs source path>`, copied with `ditto`.
+Snapshots mirror absolute source paths: `<dest>/<hostname -s>/<AppName>/<YYYYMMDDHHMMSS>/<abs source path>`, copied with `/usr/bin/rsync -aR` (openrsync, no `-X`; `-R` with absolute sources produces the mirrored layout naturally).
+
+rsync replaced `ditto` because ditto's xattr/resource-fork writes fail on the SMB NAS destination (I/O errors and "Operation not supported" observed live), while rsync copies the same data cleanly and supports delta resume after interruption. In the gum-UI path, per-file progress streams from `rsync -v` stdout, dimmed onto stderr; errors stay on stderr undimmed.
 
 Each snapshot also contains `backup-manifest.json`; the primary manifest lives outside the dest (default `~/.local/share/appbak/manifest.json`, override `APPBAK_MANIFEST`).
 
@@ -20,7 +22,7 @@ A bad or partial new snapshot must never evict a good older one: retention pruni
 
 The pruner (`rm -rf` to 2 newest) is guarded by a `^[0-9]{14}$` basename filter plus a dirname re-check immediately before each removal.
 
-Every copy-critical command (`mkdir`, `ditto`, the backup-manifest write) is explicitly `if !`-checked into a `copy_failed` latch — `set -e` is inert in this call chain, so nothing relies on errexit. After copying, the snapshot is verified by recursive apparent-size (`stat -f '%z'`, regular files only, symlinks excluded identically on both sides) plus file-count comparison against the source at copy time. `du` block counts are used only for display: block allocation legitimately differs across filesystems and falsely failed byte-identical copies.
+Every copy-critical command (`mkdir`, `rsync`, the backup-manifest write) is explicitly `if !`-checked into a `copy_failed` latch — `set -e` is inert in this call chain, so nothing relies on errexit. After copying, the snapshot is verified by recursive apparent-size (`stat -f '%z'`, regular files only, symlinks excluded identically on both sides) plus file-count comparison against the source at copy time. `du` block counts are used only for display: block allocation legitimately differs across filesystems and falsely failed byte-identical copies.
 
 Status vocabulary and consequences:
 

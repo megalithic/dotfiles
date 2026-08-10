@@ -1,4 +1,5 @@
 {
+	"tuiMode": "fullscreen",
 	"retry": {
 		"baseDelayMs": 1000,
 		"maxDelayMs": 900000,
@@ -10,7 +11,7 @@
 	"warnings": {
 		"anthropicExtraUsage": false
 	},
-	"defaultThinkingLevel": "medium",
+	"defaultThinkingLevel": "high",
 	"doubleEscapeAction": "tree",
 	"enableSkillCommands": true,
 	"hideThinkingBlock": true,
@@ -32,8 +33,7 @@
 		"npm:@juicesharp/rpiv-ask-user-question",
 		"npm:@juicesharp/rpiv-todo",
 		"npm:@ff-labs/pi-fff",
-		"npm:@hypabolic/pi-hypa",
-		"git:github.com/dantetekanem/pi-bash-live-view"
+		"npm:@hypabolic/pi-hypa"
 	],
 	"enabledModels": [
 		"anthropic/claude-fable-5",
@@ -58,6 +58,40 @@
 		"llamacpp/deepseek14b"
 	],
 	"enabledModelScopes": {
+		"mega": [
+			"my-codex/gpt-5.6-sol",
+			"my-codex/gpt-5.6-terra",
+			"my-codex/gpt-5.6-luna",
+			"opencode-go/kimi-k3",
+			"opencode-go/deepseek-v4-pro",
+			"opencode-go/deepseek-v4-flash",
+			"opencode-go/qwen3.7-max",
+			"opencode-go/qwen3.7-plus",
+			"llamacpp/gemma4",
+			"llamacpp/deepseek14b"
+		],
+		"alt": [
+			"anthropic/claude-fable-5",
+			"anthropic/claude-opus-5",
+			"anthropic/claude-opus-4-8",
+			"anthropic/claude-sonnet-5",
+			"anthropic/claude-haiku-4-5",
+			"openai-codex/gpt-5.6-sol",
+			"openai-codex/gpt-5.6-terra",
+			"openai-codex/gpt-5.6-luna",
+			"openai-codex/gpt-5.5",
+			"openai-codex/gpt-5.4",
+			"openai-codex/gpt-5.3-codex-spark",
+			"google-vertex/gemini-3.1-pro-preview",
+			"google-vertex/gemini-3-flash-preview",
+			"opencode-go/kimi-k3",
+			"opencode-go/deepseek-v4-pro",
+			"opencode-go/deepseek-v4-flash",
+			"opencode-go/qwen3.7-max",
+			"opencode-go/qwen3.7-plus"
+		]
+	},
+	"enabledProfileModels": {
 		"mega": [
 			"my-codex/gpt-5.6-sol",
 			"my-codex/gpt-5.6-terra",

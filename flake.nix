@@ -38,10 +38,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nh.url = "github:nix-community/nh";
-    kanata-darwin = {
-      url = "github:not-in-stock/kanata-darwin";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     yazi.url = "github:sxyazi/yazi";
     yazi-plugins = {
       url = "github:yazi-rs/plugins";

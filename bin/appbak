@@ -72,6 +72,8 @@ APPBAK_APP_CANDIDATE_EXCLUDE_MARKERS=("/_build/" "/deps/" "/node_modules/" "/.gi
 APPBAK_DEFAULT_DEST="/Volumes/Backups"
 APPBAK_VOLUMES_ROOT="/Volumes"
 APPBAK_DEFAULT_MANIFEST="$HOME/.local/share/appbak/manifest.json"
+APPBAK_DEFAULT_LOG_FILE="$HOME/.local/share/appbak/appbak.log"
+APPBAK_LOG_ROTATE_BYTES=1048576
 APPBAK_RETENTION_KEEP=2
 
 # Keychain export defaults.
@@ -83,13 +85,17 @@ APPBAK_YUBIKEY_IDENTITY_FILE="$HOME/.config/fnox/yubikey-identity.txt"
 
 dest="${APPBAK_DEST:-$APPBAK_DEFAULT_DEST}"
 non_interactive="${APPBAK_NON_INTERACTIVE:-0}"
+force="${APPBAK_FORCE:-0}"
 dry_run="${APPBAK_DRY_RUN:-0}"
 discover_force="${APPBAK_DISCOVER:-0}"
 keychain_export="${APPBAK_KEYCHAIN_EXPORT:-off}"
 age_recipient="${APPBAK_AGE_RECIPIENT_KEY:-}"
 manifest_path="${APPBAK_MANIFEST:-$APPBAK_DEFAULT_MANIFEST}"
+log_file="${APPBAK_LOG_FILE:-$APPBAK_DEFAULT_LOG_FILE}"
 list_mode=0
+logs_mode=0
 app_args=()
+orig_args=("$@")
 
 usage() {
   cat <<'EOF'
@@ -101,8 +107,10 @@ appbak [options] [app[,app...]]
   -d, --discover         force (re)discovery + selection TUI even if app already in manifest
   --dest DIR             override destination root (default: /Volumes/Backups)
   -n, --non-interactive  no TUI: auto-select ALL discovered items; error (no prompt) if dest unreachable
+  --force                auto-create a missing destination dir (no prompt, works with -n)
   --dry-run              show what would be copied, copy nothing
   --list                 print manifest summary (apps, selections, last backup + status)
+  --logs                 show appbak's own log file (gum pager on TTY, cat otherwise)
   --keychain-export MODE off (default) | age — secret export
   --age-recipient KEY    age public key (default: auto-derived from YubiKey identity stub)
   -h, --help             show this help
@@ -110,11 +118,13 @@ appbak [options] [app[,app...]]
 Every flag has an APPBAK_* environment variable twin (flag > env > default):
   --dest              APPBAK_DEST
   --non-interactive    APPBAK_NON_INTERACTIVE=1
+  --force              APPBAK_FORCE=1
   --dry-run            APPBAK_DRY_RUN=1
   --discover           APPBAK_DISCOVER=1
   --keychain-export    APPBAK_KEYCHAIN_EXPORT
   --age-recipient      APPBAK_AGE_RECIPIENT_KEY
   (manifest path)      APPBAK_MANIFEST
+  (log file)           APPBAK_LOG_FILE
 EOF
 }
 
@@ -132,8 +142,10 @@ while [[ $# -gt 0 ]]; do
     -d|--discover) discover_force=1; shift ;;
     --dest) require_flag_value "$1" "$#"; dest="$2"; shift 2 ;;
     -n|--non-interactive) non_interactive=1; shift ;;
+    --force) force=1; shift ;;
     --dry-run) dry_run=1; shift ;;
     --list) list_mode=1; shift ;;
+    --logs) logs_mode=1; shift ;;
     --keychain-export) require_flag_value "$1" "$#"; keychain_export="$2"; shift 2 ;;
     --age-recipient) require_flag_value "$1" "$#"; age_recipient="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
@@ -167,6 +179,16 @@ if [[ "$keychain_export" == "age" ]]; then
   require_tool age "mise use -g age"
 fi
 
+# --logs is a pure viewer: print the log and exit before any writes happen.
+if [[ "$logs_mode" -eq 1 ]]; then
+  if [[ ! -s "$log_file" ]]; then
+    echo "appbak: no log yet at $log_file" >&2
+    exit 0
+  fi
+  if [[ -t 1 ]]; then gum pager < "$log_file"; else cat "$log_file"; fi
+  exit 0
+fi
+
 # Skip persistent filesystem writes entirely for --dry-run / --list — both
 # are read-only operations by contract.
 if [[ "$dry_run" -ne 1 && "$list_mode" -ne 1 ]]; then
@@ -176,11 +198,63 @@ if [[ "$dry_run" -ne 1 && "$list_mode" -ne 1 ]]; then
   fi
 fi
 
+# Log file init — same read-only contract: --dry-run/--list never write it.
+# Rotate a single .old generation past APPBAK_LOG_ROTATE_BYTES.
+if [[ "$dry_run" -eq 1 || "$list_mode" -eq 1 ]]; then
+  log_file=""
+elif [[ -n "$log_file" ]]; then
+  if ! mkdir -p "$(dirname "$log_file")" 2>/dev/null; then
+    log_file=""
+  elif [[ -f "$log_file" && "$(/usr/bin/stat -f '%z' "$log_file" 2>/dev/null || echo 0)" -gt "$APPBAK_LOG_ROTATE_BYTES" ]]; then
+    mv "$log_file" "${log_file}.old" 2>/dev/null || true
+  fi
+fi
+
 # ---------------------------------------------------------------------------
 # Small helpers
 # ---------------------------------------------------------------------------
 
-log() { echo "appbak: $*" >&2; }
+# Every user-visible line is mirrored (timestamped) into $log_file so
+# `appbak --logs` can replay what happened; file logging is best-effort
+# and never fails a run.
+log_to_file() {
+  [[ -n "$log_file" ]] || return 0
+  printf '%s %s\n' "$(/bin/date '+%Y-%m-%dT%H:%M:%S')" "$*" >> "$log_file" 2>/dev/null || true
+}
+
+log() { echo "appbak: $*" >&2; log_to_file "$*"; }
+
+# Stage/progress UI: gum-styled on an interactive terminal, plain `log`
+# lines otherwise (cron / --non-interactive / redirected stderr).
+is_tty=0
+[[ -t 2 ]] && is_tty=1
+use_gum_ui() { [[ "$is_tty" -eq 1 && "$non_interactive" -ne 1 ]]; }
+
+step() {
+  log_to_file "$*"
+  if use_gum_ui; then gum log --level info "$*" >&2; else echo "appbak: $*" >&2; fi
+}
+
+ok() {
+  log_to_file "✓ $*"
+  if use_gum_ui; then gum log --level info "✓ $*" >&2; else echo "appbak: ✓ $*" >&2; fi
+}
+
+warn() {
+  log_to_file "⚠ $*"
+  if use_gum_ui; then gum log --level warn "$*" >&2; else echo "appbak: warning: $*" >&2; fi
+}
+
+human_bytes() {
+  awk -v b="$1" 'BEGIN {
+    if (b >= 1073741824) printf "%.1fG", b / 1073741824;
+    else if (b >= 1048576) printf "%.1fM", b / 1048576;
+    else if (b >= 1024) printf "%.1fK", b / 1024;
+    else printf "%dB", b
+  }'
+}
+
+log_to_file "run: appbak${orig_args[*]:+ ${orig_args[*]}}"
 
 now_iso() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 now_stamp() { date +%Y%m%d%H%M%S; }
@@ -570,6 +644,26 @@ run_selection() {
 # Destination resolution
 # ---------------------------------------------------------------------------
 
+# Creates $dest (mkdir -p) with logging. Returns mkdir's status.
+create_dest() {
+  if ! mkdir -p "$dest" 2>/dev/null; then
+    log "failed to create destination: $dest"
+    return 1
+  fi
+  log "created destination: $dest"
+  return 0
+}
+
+# Offers to create a missing $dest (interactive, non-dry-run only — dry-run
+# is read-only by contract, non-interactive uses --force instead of a prompt).
+# Returns 0 only if the user accepted AND the mkdir succeeded.
+offer_create_dest() {
+  [[ "$dry_run" -ne 1 ]] || return 1
+  [[ ! -e "$dest" ]] || return 1
+  gum confirm "Destination $dest does not exist. Create it?" || return 1
+  create_dest
+}
+
 # Resolves (and, on fallback, persists) the destination root. Mutates the
 # global $dest directly rather than being called via a command substitution
 # subshell — a subshell mutation of $dest would be discarded by the caller,
@@ -579,12 +673,20 @@ resolve_dest_root() {
     return 0
   fi
 
+  # --force: auto-create a missing dest in ANY mode (dry-run stays read-only).
+  if [[ "$force" -eq 1 && "$dry_run" -ne 1 && ! -e "$dest" ]]; then
+    create_dest && [[ -d "$dest" && -w "$dest" ]] && return 0
+  fi
+
   if [[ "$non_interactive" -eq 1 ]]; then
     log "destination unreachable: $dest"
     return 1
   fi
 
   log "destination unreachable: $dest"
+  if offer_create_dest; then
+    [[ -d "$dest" && -w "$dest" ]] && return 0
+  fi
   local choice
   choice="$(gum choose "Browse for a directory" "Type a path")"
   case "$choice" in
@@ -593,6 +695,8 @@ resolve_dest_root() {
       ;;
     "Type a path")
       dest="$(gum input --placeholder "/path/to/backups")"
+      # Typed paths may not exist yet — offer to create before validating.
+      [[ -e "$dest" ]] || offer_create_dest || true
       ;;
     *)
       return 1
@@ -765,7 +869,7 @@ EOF
 # hardlinks) — that made every real multi-file app backup false-FAIL
 # verification (round-3 test report). This sums real bytes (`stat -f '%z'`)
 # over regular files only, recursively. Symlinks and directories are
-# excluded from both the count and the byte sum on both sides: ditto
+# excluded from both the count and the byte sum on both sides: rsync -a
 # preserves symlinks as symlinks (does not dereference), so a symlink's
 # "size" is not copy-fidelity data, and deliberately not following them here
 # (find without -L) keeps src/dest measured the same way and avoids a
@@ -847,17 +951,18 @@ backup_app() {
     return 1
   fi
 
-  # N1: every copy-critical command (mkdir/ditto) is explicitly checked.
+  # N1: every copy-critical command (mkdir/rsync) is explicitly checked.
   # errexit is inert in this call chain (backup_app is invoked as `if !
-  # backup_app ...` by every caller), so a silently-ignored ditto/mkdir
+  # backup_app ...` by every caller), so a silently-ignored rsync/mkdir
   # failure would otherwise stamp status "complete", exit 0, and then
   # prune_retention would delete good older snapshots. copy_failed latches
   # any failure so status/exit code/pruning all reflect it.
   local -a copied=() copied_rows=()
   local src rel target_dir item_size_bytes ap_count ap_bytes
-  local copy_failed=0 soft_fail=0 vanished_count=0
+  local copy_failed=0 soft_fail=0 vanished_count=0 rsync_rc=0
   local expected_count=0 expected_bytes=0
   local expected_apparent_count=0 expected_apparent_bytes=0
+  step "$app_name: copying ${#paths[@]} item(s) → $app_dest"
   for src in "${paths[@]}"; do
     [[ -e "$src" ]] || { log "source vanished, skipping: $src"; vanished_count=$((vanished_count + 1)); continue; }
     rel="${src#/}"
@@ -867,10 +972,31 @@ backup_app() {
       copy_failed=1
       continue
     fi
-    if ! ditto "$src" "$app_dest/$rel"; then
-      log "$app_name: backup copy failed (ditto): $src"
-      copy_failed=1
-      continue
+    step "$app_name: copying $src"
+    if use_gum_ui; then
+      # Copy engine is /usr/bin/rsync (openrsync) — NOT ditto: ditto's
+      # xattr/resource-fork writes fail on SMB NAS destinations (observed
+      # I/O errors + "Operation not supported"), while rsync -a (no -X)
+      # copies data cleanly and supports delta resume after interruption.
+      # -R (--relative) with an absolute $src reproduces the path-mirrored
+      # layout ($app_dest/$rel) that ditto built explicitly.
+      # rsync -v emits one line per copied file on stdout; stream it dimmed
+      # to stderr so large Containers show live activity instead of dead
+      # silence. Errors stay on stderr undimmed. Exit code is rsync's own —
+      # the process substitution cannot mask it.
+      rsync_rc=0
+      /usr/bin/rsync -aRv "$src" "$app_dest/" > >(sed $'s/^/    \x1b[2m/;s/$/\x1b[0m/' >&2) || rsync_rc=$?
+      if [[ "$rsync_rc" -ne 0 ]]; then
+        log "$app_name: backup copy failed (rsync): $src"
+        copy_failed=1
+        continue
+      fi
+    else
+      if ! /usr/bin/rsync -aR "$src" "$app_dest/"; then
+        log "$app_name: backup copy failed (rsync): $src"
+        copy_failed=1
+        continue
+      fi
     fi
     IFS=$'\t' read -r _ item_size_bytes _ <<< "$(entry_stats "$src")"
     IFS=$'\t' read -r ap_count ap_bytes <<< "$(apparent_stats "$src")"
@@ -902,6 +1028,7 @@ backup_app() {
   # actually copied. Only on a clean verification does prune_retention ever
   # run below — a bad/partial new snapshot must never evict a good older one.
   if [[ "$copy_failed" -eq 0 && "$expected_count" -gt 0 ]]; then
+    step "$app_name: verifying snapshot ($expected_apparent_count file(s), $(human_bytes "$expected_apparent_bytes"))"
     local actual_apparent_count=0 actual_apparent_bytes=0
     for src in "${copied[@]}"; do
       rel="${src#/}"
@@ -941,6 +1068,7 @@ backup_app() {
   fi
 
   local tokens keychain_items_file
+  step "$app_name: scanning keychain for matching item names"
   tokens="$(build_tokens)"
   keychain_items_file="$(mktemp)"
   write_keychain_artifacts "$app_dest" "$tokens" > "$keychain_items_file" || true
@@ -991,9 +1119,13 @@ backup_app() {
   BACKUP_KEYCHAIN_ITEMS=("${keychain_items[@]}")
 
   if [[ "$copy_failed" -eq 1 ]]; then
-    log "$app_name: backup failed/partial, not pruning older snapshots"
+    log "✗ $app_name: backup failed — not pruning older snapshots"
     return 1
   fi
+
+  local summary
+  summary="$app_name: $status — ${#copied[@]} item(s), $(human_bytes "$expected_apparent_bytes"), ${#keychain_items[@]} keychain item(s) → $app_dest"
+  if [[ "$status" == "complete" ]]; then ok "$summary"; else warn "$summary"; fi
 
   if [[ "$skip_prune" -eq 1 ]]; then
     log "$app_name: not pruning older snapshots this run (status: $status)"

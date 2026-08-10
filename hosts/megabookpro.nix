@@ -15,8 +15,6 @@
 
     # Google Cloud SDK for Vertex AI / Gemini access
     google-cloud-sdk
-
-    kanata
   ];
 
   # Personal laptop specific settings can go here
