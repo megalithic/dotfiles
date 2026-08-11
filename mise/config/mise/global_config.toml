@@ -570,6 +570,18 @@ SUScheduledCheckInterval = 0
 SUHasLaunchedBefore = true
 SUSendProfileInfo = false
 
+# Proton Drive: Sparkle auto-update kill switch (brew cask owns updates).
+# 2026-08-11: a Sparkle update stuck mid-flight + the keepalive SMAppService
+# agent respawn-looped Proton Drive every 10s for ~8.5 days (73,510 runs),
+# churning kTCCServiceListenEvent arbitration in WindowServer -> systemwide
+# keyboard stalls. Doc: pi docs workbookpro-keyboard-input-loss.md
+[bootstrap.macos.defaults."ch.protonmail.drive"]
+SUAutomaticallyUpdate = false
+SUEnableAutomaticChecks = false
+SUScheduledCheckInterval = 0
+SUHasLaunchedBefore = true
+SUSendProfileInfo = false
+
 [bootstrap.macos.defaults."org.hammerspoon.Hammerspoon"]
 MJConfigFile = "~/.config/hammerspoon/init.lua"
 
