@@ -69,7 +69,8 @@ end
 
 hs.loadSpoon("EmmyLua")
 
-local watchers = { "audio", "dock", "app", "notification", "url", "pasteboard", "screen", "media-presence" }
+local watchers = { "audio", "notification", "url", "pasteboard", "media-presence" }
+-- local watchers = { "audio", "dock", "app", "notification", "url", "pasteboard", "screen", "media-presence" }
 
 req("bindings")
 req("watchers", { watchers = watchers })
@@ -93,9 +94,7 @@ overrides.setupReloadCleanup({
   stopWatchers = stopBeforeReload,
 })
 
-hs.urlevent.bind("hs-reload", function()
-  hs.reload()
-end)
+hs.urlevent.bind("hs-reload", function() hs.reload() end)
 
 hs.shutdownCallback = function()
   require("watchers"):stop({ watchers = watchers })
