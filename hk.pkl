@@ -1,0 +1,44 @@
+// Git hooks via hk (https://hk.jdx.dev). Replaces the removed
+// devenv/git-hooks.nix + prek setup and replicates its hook set.
+//
+// NOT ACTIVE YET: hooks are not installed. Enable with either:
+//   hk install --global   # git 2.54+, applies to all repos with an hk.pkl
+//   hk install            # this repo only
+// Bypass once enabled: HK=0 git commit ...
+amends "package://github.com/jdx/hk/releases/download/v1.50.0/hk@1.50.0#/Config.pkl"
+import "package://github.com/jdx/hk/releases/download/v1.50.0/hk@1.50.0#/Builtins.pkl"
+
+local linters = new Mapping<String, Step> {
+    ["check-merge-conflict"] = Builtins.check_merge_conflict
+    ["detect-private-key"] = Builtins.detect_private_key
+    // Builtins.gitleaks scans the whole workspace (including gitignored
+    // files); match the old devenv setup and only scan staged changes.
+    ["gitleaks"] = (Builtins.gitleaks) {
+        check = "gitleaks git --pre-commit --staged --verbose"
+    }
+    ["shellcheck"] = (Builtins.shellcheck) {
+        check = "shellcheck --severity=warning {{files}}"
+    }
+    // Nix linters from the old devenv setup — enable once provided by mise:
+    // ["deadnix"] = Builtins.deadnix
+}
+
+hooks {
+    ["pre-commit"] {
+        fix = true
+        stash = "git"
+        steps = linters
+    }
+    ["commit-msg"] {
+        steps {
+            ["check-conventional-commit"] = Builtins.check_conventional_commit
+        }
+    }
+    ["fix"] {
+        fix = true
+        steps = linters
+    }
+    ["check"] {
+        steps = linters
+    }
+}
