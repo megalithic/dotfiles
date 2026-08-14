@@ -5,11 +5,15 @@ export PI_STATE_DIR="${PI_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/pi}"
 mkdir -p "$PI_STATE_DIR/sockets" "$PI_STATE_DIR/manifests" "$PI_STATE_DIR/pinvim"
 unset PIMUX_FROM_NVIM 2>/dev/null || true
 
-# Secrets: fnox first (mise world)
+# Secrets: fnox first (mise world), opnix fallback (megabookpro during the
+# nix -> mise migration).
 config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
 if [ -f "$config_home/fnox/secrets/env-vars.sh" ]; then
   # shellcheck disable=SC1090
   source "$config_home/fnox/secrets/env-vars.sh"
+elif [ -f "$config_home/opnix/secrets/env-vars.sh" ]; then
+  # shellcheck disable=SC1090
+  source "$config_home/opnix/secrets/env-vars.sh"
 fi
 
 # Derive lat.md semantic-search config from synthetic key (single source of
@@ -21,9 +25,19 @@ if [ -n "${SYNTHETIC_API_KEY:-}" ]; then
   export LAT_LLM_DIMENSIONS="768"
 fi
 
-# PATH: patched lat + pinned helper binaries first, then mise shims and brew
-# for non-interactive launch contexts (GUI, launchd) that lack shell init.
-export PATH="$HOME/.pi/agent/bin:${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:$PATH"
+# Patch pi-bash-live-view until upstream handles wide glyphs/ANSI truncation.
+# Without this, PTY live view can render one cell past terminal width and
+# crash Pi. Re-copied on every launch because `pi update` rewrites the file.
+bash_live_view_widget="$HOME/.pi/agent/npm/node_modules/pi-bash-live-view/widget.ts"
+widget_patch="${DOTFILES_DIR:-$HOME/.dotfiles}/mise/config/pi-coding-agent/patches/pi-bash-live-view/widget.ts"
+if [ -f "$bash_live_view_widget" ] && [ -f "$widget_patch" ]; then
+  cp "$widget_patch" "$bash_live_view_widget"
+fi
+
+# PATH: patched lat + pinned helper binaries first, then mise (binary +
+# shims) and brew for non-interactive launch contexts (GUI, launchd) that
+# lack shell init. ~/.local/bin covers the standalone mise binary itself.
+export PATH="$HOME/.pi/agent/bin:$HOME/.local/bin:${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:$PATH"
 
 # `mise x` prepends the npm tool's own bin dir, so the real pi binary wins
 # over this wrapper regardless of PATH ordering — no recursion possible.

@@ -160,7 +160,6 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.local/bin/pinvim" = "~/.dotfiles/mise/config/pi-coding-agent/bin/pinvim"
 "~/.local/bin/p" = "~/.dotfiles/mise/config/pi-coding-agent/bin/p"
 "~/.local/bin/pview" = "~/.dotfiles/mise/config/pi-coding-agent/bin/pview"
-"~/.local/bin/pi-acp" = "~/.dotfiles/mise/config/pi-coding-agent/bin/pi-acp"
 "~/.local/bin/work-tickets" = "~/.dotfiles/mise/config/pi-coding-agent/bin/work-tickets"
 # "~/Library/Developer/Xcode/UserData/FontAndColorThemes/tokyo-night.xccolortheme" = ".config/xcode/tokyo-night.xccolortheme"
 "~/.config/mise/config.toml" = "~/.dotfiles/mise/config/mise/global_config.toml"
@@ -837,7 +836,7 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox-render-secrets"
 # run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/op-signin-gate"
 
 [tasks."pi:update"]
-description = "Update pi tools, settings, pi-acp build, runtime packages, and extensions"
+description = "Update pi tools, settings, runtime packages, and extensions"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/pi-update"
 
 [tasks."setup:pi"]

@@ -16,7 +16,7 @@
 
 ### Command Execution
 
-- For long-running or progress-heavy commands (`mise <command>`, `nix build`, rebuilds, package installs, tests), run the command directly with PTY/live output when available (pass `usePTY: true` parameter for the Bash tool call).
+- For long-running or progress-heavy commands (`mise <command>`, `nix build`, `just home`/`just darwin`/`just rebuild`/`just validate`, package installs, tests), run the command directly with PTY/live output when available (pass `usePTY: true` parameter for the Bash tool call).
 - Do not pipe long-running commands through `tail`, `grep`, `head`, or `sed` while they run; those filters can buffer or hide output from `pi-bash-live-view`.
 - If output needs filtering, run the command first and inspect logs or captured output afterward.
 - Short, finite inspection commands may still use pipes when live progress is not useful.
@@ -68,6 +68,7 @@ When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-f
 - Work incrementally: complete step → verify → commit. Only commit when a step is fully working.
 - When user says "investigate", "check", "inspect", or "audit", only investigate and report findings. Don't implement changes unless explicitly told to.
 - Delegate complex tasks through pi-subagents: scout → plan → implement → review → fix
+- Use natural language delegation: "use scout to understand X", "have worker implement Y", "run parallel reviewers"
 - Run parallel reviewers after every non-trivial implementation
 - Ask oracle for a second opinion before risky decisions
 
@@ -81,6 +82,10 @@ When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-f
   - `tk` is on PATH (vendored at `~/.dotfiles/bin/tk`)
   - Example: `tk list`, `tk create "title" -d "desc" --acceptance "1. ..." -t feature`
   - Ticket files live in `.tickets/` as YAML-frontmatter markdown
+- For repetitive/verifiable tasks (fix all failing tests, migrate across many files, audit a codebase), use ralph-loop:
+  - Write a RALPH.md defining completion criteria (max_iterations, completion_promise, stop_on_error)
+  - Run `/ralph --path ./task` to loop until done
+  - Read the ralph-loop skill for details on guardrails, completion gating, and iteration patterns
 
 ## Research, audit, and exploration docs
 

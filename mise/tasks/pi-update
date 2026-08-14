@@ -10,7 +10,6 @@ usage: pi-update [--dry-run]
 Updates pi-managed imperative state:
   - pinned helper binaries under ~/.pi/agent/bin
   - ~/.pi/agent/settings.json merged from repo settings
-  - vendored pi-acp build
   - redundant extension deps cleanup
   - pi update
   - pi update --extensions
@@ -84,16 +83,6 @@ merge_settings() {
   say "merged settings -> $settings_file"
 }
 
-acp_needs_build() {
-  local acp="$pi_src/packages/pi-acp" dist="$pi_src/packages/pi-acp/dist/index.js" f
-  [ ! -f "$dist" ] && return 0
-  [ "$acp/package.json" -nt "$dist" ] && return 0
-  while IFS= read -r f; do
-    [ "$f" -nt "$dist" ] && return 0
-  done < <(fd -t f . "$acp/src")
-  return 1
-}
-
 report_cleanup_target() {
   local f="$1"
   if [ -e "$f" ]; then
@@ -121,11 +110,6 @@ if [ "$dry_run" = 1 ]; then
   report_helper_bin sesame "7ae875161227c18b6367cf3643a983b27003700f37e082d1af5d1f0da854c500"
   report_helper_bin plannotator "80c18e2b3e95796e85902b4e3ec92d8f7bf49df8ebfcbd12195c784fa522fdda"
   print_settings_preview
-  if acp_needs_build; then
-    say "[would build] $pi_src/packages/pi-acp"
-  else
-    say "[ok] pi-acp build current"
-  fi
   report_cleanup_target "$agent/extensions/package.json"
   report_cleanup_target "$agent/extensions/package-lock.json"
   report_cleanup_target "$agent/extensions/node_modules"
@@ -138,12 +122,6 @@ mkdir -p "$agent" "$agent/bin"
 
 "$pi_src/scripts/install-pi-tools"
 merge_settings
-
-acp="$pi_src/packages/pi-acp"
-if acp_needs_build; then
-  echo "building pi-acp..."
-  (cd "$acp" && npm ci --no-audit --no-fund && npm run build)
-fi
 
 trash_path "$agent/extensions/package.json"
 trash_path "$agent/extensions/package-lock.json"

@@ -90,6 +90,7 @@ let
     openconnect
     openssl_3
     openvpn
+    poppler-utils # pdftotext etc. — pi wrapper expects it on PATH (was in the removed pi-coding-agent module)
     pre-commit
     procs
     s3cmd
