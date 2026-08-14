@@ -1045,6 +1045,10 @@ backend = "npm:httpyac"
 version = "0.17.0"
 backend = "npm:hunkdiff"
 
+[[tools."npm:lat.md"]]
+version = "0.12.2"
+backend = "npm:lat.md"
+
 [[tools."npm:prettier"]]
 version = "3.9.4"
 backend = "npm:prettier"
