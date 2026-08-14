@@ -51,7 +51,9 @@ Apps that need live-editable config use out-of-store symlinks into `config/` rat
 
 Nix/Home Manager and mise coexist during migration. `mise/config/mise/global_config.toml` `[dotfiles]` is mise's ownership map; inspect each mapping before changing a config.
 
-Literal copy twins require recursive diff and deliberate sync on each related change: `config/` and `mise/config/` currently include Hammerspoon, Neovim, tmux, Kitty, Ghostty, and Pi. The active Nix-side tree remains source of truth unless a program section records another owner or divergence. [[programs/hammerspoon#Parallel mise configuration|Hammerspoon]] documents its required kanata launchd-label difference.
+On megabookpro, mise itself is now standalone-owned: the binary is installed by `bootstrap.sh`'s installer path to `~/.local/bin/mise`, `~/.config/mise/config.toml` symlinks to the repo global config, and the former nix `programs.mise` module (with its stub global config) is removed. The nix fish module activates the standalone binary and sets `MISE_DISABLE_TOOLS` for `github:megalithic/helium-macos-releases` and `github:megalithic/shade-next`, which stay nix-owned on that host. Only the pi targets, `~/.config/mise/config.toml`, and the sesame fragment are applied through `mise dotfiles apply <targets>`; the remaining `[dotfiles]` mappings stay nix-owned until their programs migrate. `mise bootstrap launchd apply` is skipped on megabookpro because it has no target filter and the other `com.megadots.*` agents would duplicate nix-run services; the session indexers stay unloaded pending a move to nicknisi's `sessions` tool.
+
+Literal copy twins require recursive diff and deliberate sync on each related change: `config/` and `mise/config/` currently include Hammerspoon, Neovim, tmux, Kitty, and Ghostty. Pi is no longer a twin — `mise/config/pi-coding-agent/` is the sole owner (see [[programs/pi-coding-agent#Pi coding agent]]). The active Nix-side tree remains source of truth for the remaining twins unless a program section records another owner or divergence. [[programs/hammerspoon#Parallel mise configuration|Hammerspoon]] documents its required kanata launchd-label difference.
 
 Generated Nix files and static mise files, including fish, git, SSH/1Password, and other per-file mappings, require behavior parity rather than byte equality. Shared-source mappings, including Kanata, Espanso, and selected SSH paths, link same repository files and must not be copied. Update this policy and program documentation whenever ownership or a divergence changes; run `lat check` after doc changes.
 
@@ -87,11 +89,11 @@ Both recipes accept `--dry-run` for build-only validation and `--skip-sync` when
 
 ## Repo dev environment (mise)
 
-Devenv is removed from this repo as part of the mise migration; repo-local `mise.toml` and `hk.pkl` replace it.
+Devenv is removed from this repo as part of the mise migration; the global mise config and `hk.pkl` replace it.
 
 The removal covers `devenv.nix`, `devenv.yaml`, `devenv.lock`, and the prek/git-hooks.nix shims in `.git/hooks`. The system-wide devenv tool from `home/common/programs/devenv/default.nix` remains for other projects.
 
-Repo-local `mise.toml` replaces it: tasks `nix:update` (flake lockfile plus manually-pinned package refresh), `nix:apply:home`, and `nix:apply:darwin` (thin `just` wrappers), plus tools needed by git hooks (`hk`, `gitleaks`, `shellcheck`) and `npm:lat.md` for the `lat` CLI. megabookpro's global mise config is a nix-managed stub without these tools, so the repo-local entries carry both hosts.
+The repo-root `mise.toml` that briefly replaced devenv is dissolved into `mise/config/mise/global_config.toml` — the single source of truth for anything mise-related. It carries the `nix:update`, `nix:apply:home`, and `nix:apply:darwin` tasks (megabookpro-only; harmless elsewhere), the git-hook tools (`hk`, `gitleaks`, `shellcheck`), and `npm:lat.md` for the `lat` CLI. Both hosts run this global config; megabookpro's former nix-managed stub is gone. `[env]` secrets sourcing goes through `mise/fragments/env-secrets.sh`, which prefers fnox and falls back to opnix on hosts without a fnox config.
 
 `tk` is vendored at `bin/tk` (on `PATH` via mise `_.path` and the `~/bin` symlinks). Upstream `wedow/ticket` publishes no release assets, and the vendored copy preserves the devenv-base patch that sanitizes the directory basename when deriving ticket ID prefixes — existing `.tickets/dot-*` IDs depend on it.
 

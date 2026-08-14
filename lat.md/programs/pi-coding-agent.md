@@ -1,48 +1,40 @@
 # Pi coding agent
 
-This file covers how Pi is packaged, wrapped, configured, and extended in this repo. The module lives at `home/common/programs/pi-coding-agent/`.
+This file covers how Pi is packaged, wrapped, configured, and extended in this repo. The configuration lives at `mise/config/pi-coding-agent/`.
 
-## Parallel mise configuration
+The former Home Manager module (`home/common/programs/pi-coding-agent/`) and the vendored `pi-acp` adapter are removed.
 
-`mise/config/pi-coding-agent/` is an independent non-nix twin of the Home Manager module for the staged mise migration, wired through `mise/config/mise/global_config.toml`.
+## Mise-managed configuration
 
-It is a copy, not shared source: changes must be mirrored manually while both exist.
+`mise/config/pi-coding-agent/` is the sole owner of pi configuration, wired through `mise/config/mise/global_config.toml`.
 
-The mise tree keeps the same behavior with different mechanics: `agent/` holds the managed subset of `~/.pi/agent` applied through `[dotfiles]` symlink and `symlink-each` entries; `bin/` holds plain-bash ports of the `pi`, `pinvim`, `p`, `pview`, `pi-acp`, and `work-tickets` wrappers linked into `~/.local/bin`; `mise/tasks/pi-update` is the `pi:update` mise task covering the imperative pieces (sha256-pinned sesame/plannotator installs into `~/.pi/agent/bin`, jq settings merge, local `npm ci && npm run build` of the vendored pi-acp, extension-deps cleanup, `pi update`, and `pi update --extensions`). `setup:pi` / `pi:setup` remain compatibility wrappers. `pi:update --dry-run` previews helper-bin changes, the final merged settings JSON, pi-acp build status, cleanup targets, and Pi update commands without modifying files. The `pi` wrapper resolves the CLI through `mise x npm:@earendil-works/pi-coding-agent -- pi`, prefers fnox secrets with an opnix fallback, and applies the same live-view widget patch. Disabled entries live in `disabled/` instead of using the `_` name-prefix convention because `symlink-each` links every entry. Session indexers are declared as `[bootstrap.macos.launchd.agents]` in `mise/config/mise/global_config.toml`.
-
-The mise dotfiles must not be applied while Home Manager still owns `~/.pi/agent/*`; mise re-points HM symlinks and the next `just home` points them back.
+`agent/` holds the managed subset of `~/.pi/agent` applied through `[dotfiles]` symlink and `symlink-each` entries; `bin/` holds the `pi`, `pinvim`, `p`, `pview`, and `work-tickets` wrappers linked into `~/.local/bin`; `mise/tasks/pi-update` is the `pi:update` mise task covering the imperative pieces (sha256-pinned sesame/plannotator installs into `~/.pi/agent/bin` via `scripts/install-pi-tools`, jq settings merge, extension-deps cleanup, `pi update`, and `pi update --extensions`). `setup:pi` / `pi:setup` remain compatibility wrappers. `pi:update --dry-run` previews helper-bin changes, the final merged settings JSON, cleanup targets, and Pi update commands without modifying files. Disabled entries live in `disabled/` instead of using the `_` name-prefix convention because `symlink-each` links every entry. Session indexers are declared as `[bootstrap.macos.launchd.agents]` in `mise/config/mise/global_config.toml`, but are currently not loaded on megabookpro (launchd apply is skipped there; see [[architecture#Parallel mise migration]]).
 
 `mise/config/mise/global_config.toml` prefers canonical mise registry aliases for user-facing tools and keeps backend-qualified names only when the registry has no alias or a specific package source is required.
 
 ## Package source and wrapper
 
-Pi comes from nixpkgs' cached `pkgs.pi-coding-agent` package and is installed directly in `home.packages` through the local wrapper.
+Pi comes from the mise tool `npm:@earendil-works/pi-coding-agent`; the `bin/pi` wrapper resolves the CLI through `mise x`.
 
-The local wrapper sets `PI_STATE_DIR`, creates socket, manifest, and pinvim state directories, sources OpNix env secrets from `XDG_CONFIG_HOME` when present, adds the Nix-managed Sesame and Plannotator CLIs plus `poppler-utils` to `PATH`, clears the one-shot `PIMUX_FROM_NVIM` marker, and delegates to the packaged Pi binary. `rtk` comes from mise when present on `PATH`, avoiding a Nix Rust source build. The wrapper also duplicates the OpNix `LAT_LLM_*` derivation so non-interactive launches still get lat search config, prepends `$HOME/.pi/agent/bin` to `PATH` so the patched `lat` binary resolves first, and copies the local `patches/pi-bash-live-view/widget.ts` over the installed `pi-bash-live-view` widget when that package is present.
+`mise x npm:@earendil-works/pi-coding-agent -- pi` prepends the npm tool's own bin dir, so the real binary wins over the wrapper without recursion.
 
-The main module auto-discovers non-underscore-prefixed local `./packages/*.nix`, `.ts` extensions, extension directories, `./agents/*.md`, skill directories under `./skills/`, and `./prompts/*.md`. Prefixing a path with `_` keeps it in source control while disabling it from the active profile.
+The wrapper sets `PI_STATE_DIR`, creates socket, manifest, and pinvim state directories, clears the one-shot `PIMUX_FROM_NVIM` marker, sources fnox secrets when rendered with an opnix fallback (megabookpro during the migration), derives `LAT_LLM_*` from the synthetic key so non-interactive launches still get lat search config, copies `patches/pi-bash-live-view/widget.ts` over the installed `pi-bash-live-view` widget when present, and prepends `~/.pi/agent/bin`, `~/.local/bin`, mise shims, and `/opt/homebrew/bin` to `PATH` for launch contexts without shell init. `poppler-utils` stays in nix `home/common/packages.nix` on megabookpro (mise's `brew:poppler` covers workbookpro).
 
 The `git-worktrees` skill checks `wt --version` before managing worktrees. When available, it uses the local `wt` Worktrunk wrapper, Worktrunk JSON queries, `mise` project tasks, and generated `.config/wt.toml` templates; raw `git worktree`, copy loops, and manual tmux layouts stay forbidden. It preserves prior manual instructions in `skills/git-worktrees/references/legacy-git-worktrees.md` and uses that reference unchanged only when `wt` is unavailable.
 
 ## Runtime helper packages
 
-Pi runtime helper packages come from `settings.json` package entries and are refreshed by `pi update --extensions` after `just home`.
+Pi runtime helper packages come from `settings.json` package entries and are refreshed by `pi update --extensions` (run by `mise run pi:update`).
 
-Current entries include `npm:pi-mcp-adapter`, `npm:pi-web-access`, `npm:pi-subagents`, `npm:pi-caveman`, `npm:@plannotator/pi-extension`, `npm:pi-rtk-optimizer`, `npm:@aliou/pi-synthetic`, `github:sethmt/pi-bash-live-view`, `npm:pi-mono-btw`, `npm:context-mode`, `npm:pi-elixir`, `npm:pi-lens`, `npm:@juicesharp/rpiv-ask-user-question`, `npm:@juicesharp/rpiv-todo`, `npm:@ff-labs/pi-fff`, and `npm:@hypabolic/pi-hypa`. The old vendored NPM derivations under `packages/` are removed except for `pi-acp`.
+Current entries include `npm:pi-mcp-adapter`, `npm:pi-web-access`, `npm:pi-subagents`, `npm:pi-caveman`, `npm:@plannotator/pi-extension`, `npm:pi-rtk-optimizer`, `npm:@aliou/pi-synthetic`, `github:sethmt/pi-bash-live-view`, `npm:pi-mono-btw`, `npm:context-mode`, `npm:pi-elixir`, `npm:pi-lens`, `npm:@juicesharp/rpiv-ask-user-question`, `npm:@juicesharp/rpiv-todo`, `npm:@ff-labs/pi-fff`, and `npm:@hypabolic/pi-hypa`.
 
 The local `pi-bash-live-view` widget patch makes live PTY panes fit rendered lines by display cell width, preserving ANSI escape sequences while trimming wide glyphs, combining marks, zero-width joiners, and variation selectors before padding to the terminal width. This avoids the one-cell overflow crash seen when live output contains wide glyphs or ANSI-colored truncation edges.
 
-## pi-acp adapter
-
-`pi-acp` is vendored at `home/common/programs/pi-coding-agent/packages/pi-acp/` and built from the vendored tree through `packages/pi-acp.nix`, not `fetchFromGitHub` plus patches.
-
-It is an ACP adapter process, not a Pi runtime extension. The main module excludes `pi-acp.nix` from extension auto-symlinking, installs a wrapper in `home.packages`, and links it to `~/.local/bin/pi-acp` so GUI apps such as Tidewave can use a stable command path. The wrapper sets `PI_ACP_PI_COMMAND` to the Nix-managed Pi wrapper and defaults `PI_ACP_ENABLE_EMBEDDED_CONTEXT=true`, `PI_PROFILE=alt`, and `PI_ACP_MODEL_PREFIXES=alt-anthropic,alt-codex`.
-
-Local adapter modifications include ACP MCP HTTP and SSE support, `acp_`-prefixed MCP mirroring into project `.pi/mcp.json`, session-history reattachment through `~/.pi/pi-acp/session-map.json`, adapter-side handling of headless ACP slash-command UX, model-prefix filtering, and normalization of Tidewave `content` fields into ACP `prompt` fields before SDK validation. Normalized inbound lines must be re-encoded with `TextEncoder().encode()`; `new Uint8Array(string)` silently produced empty chunks and stalled Tidewave on "Connecting…".
+The `pi-acp` ACP adapter (vendored package, wrapper, `~/.local/bin/pi-acp` link, and pi-update build step) is deleted entirely, not migrated.
 
 ## Session and routing extensions
 
-The `/answer` extension can be invoked by its slash command, Ctrl+. shortcut, or the internal `trigger:answer` event. The parked `_execute-command` extension is excluded from Home Manager symlinks until re-enabled.
+The `/answer` extension can be invoked by its slash command, Ctrl+. shortcut, or the internal `trigger:answer` event. Parked extensions (`execute-command`, `search-sessions`) live under `disabled/` until re-enabled.
 
 `multi-sub.ts` owns `/subs`, `/pool`, and multi-sub pool or chain failover. When a rate limit rotates the pool while Pi is still processing the failed turn, retrying the same prompt must use `deliverAs: "steer"` or the core session rejects it as already processing.
 
@@ -74,11 +66,11 @@ Tell is bidirectional: the sender includes `id` and `fromSocket` in the `pi.tell
 
 The task-pipeline commands use repo-scoped plan files under `~/.local/share/pi/plans/$(basename $PWD)/` and treat GRILL, TASK, PLAN, and ticket-context files as one progression. The `geo-workbench.ts` extension is a no-dependency browser UI for image geolocation that exposes `geo_lookup` and expects agents to call `geo_report`.
 
-Session search has two paths: the legacy local `search_sessions` / `read_session` Pi tools from `search-sessions.ts`, and the Nix-managed Sesame CLI plus `sesame` skill. Home Manager installs `sesame`, writes `~/.config/sesame/config.jsonc` for `~/.pi/agent/sessions`, and runs `sesame-session-indexer` as `sesame watch --interval 30` so the SQLite FTS index stays warm.
+Session search has two paths: the legacy local `search_sessions` / `read_session` Pi tools from the parked `disabled/extensions/search-sessions.ts`, and the pinned Sesame CLI plus `sesame` skill. `scripts/install-pi-tools` installs `sesame` into `~/.pi/agent/bin`, the `[dotfiles]` sesame fragment renders `~/.config/sesame/config.jsonc` for `~/.pi/agent/sessions`, and the `com.megadots.sesame-session-indexer` launchd agent (where loaded) runs `sesame watch --interval 30` so the SQLite FTS index stays warm.
 
 ### Sentinel guardrail rules
 
-`extensions/sentinel.ts` is active because the Home Manager module auto-links non-underscore extensions; the same source is mirrored to `mise/config/pi-coding-agent/agent/extensions/sentinel.ts`.
+`extensions/sentinel.ts` is active because `agent/extensions/` is `symlink-each`-linked into `~/.pi/agent/extensions`.
 
 Sentinel is the runtime rule source for Pi command guardrails, replacing the former JSON rule file. `extensions/sentinel-rules.json` is no longer installed or read. Startup reports 14 conceptual classifier rules instead of expanding every interactive command and preferred-tool entry into separate runtime rules.
 
@@ -120,13 +112,13 @@ On `message_end`, `mcp__pi__*` `toolCall` names are stripped back to their flat 
 
 `web-search.json` (exa provider, non-interactive `auto-summary` curation workflow) is one source file linked to every path pi-web-access may resolve: `~/.pi/web-search.json`, `~/.pi/agent/web-search.json`, and `~/.config/pi/web-search.json`.
 
-The sources are `home/common/programs/pi-coding-agent/web-search.json` (HM `home.file` entries) and its mise twin `mise/config/pi-coding-agent/web-search.json` (`[dotfiles]` mappings). pi-web-access resolves its config dir as `PI_CODING_AGENT_DIR`, then `$XDG_CONFIG_HOME/pi`, then `~/.pi`, while pi core defaults to `~/.pi/agent` — an unset var plus `XDG_CONFIG_HOME` is how a stray `~/.config/pi/web-search.json` once shadowed the managed config and re-enabled interactive search curation.
+The source is `mise/config/pi-coding-agent/web-search.json` (`[dotfiles]` mappings). pi-web-access resolves its config dir as `PI_CODING_AGENT_DIR`, then `$XDG_CONFIG_HOME/pi`, then `~/.pi`, while pi core defaults to `~/.pi/agent` — an unset var plus `XDG_CONFIG_HOME` is how a stray `~/.config/pi/web-search.json` once shadowed the managed config and re-enabled interactive search curation.
 
-`PI_CODING_AGENT_DIR=~/.pi/agent` is now set globally (HM `sessionVariables` in nix, `[env]` in the mise global config) so extension config resolution matches pi core's default. The pinvim wrappers' defensive `unset PI_CODING_AGENT_DIR` is commented out in both worlds; a nested pinvim launched from a profile session therefore inherits the profile agent dir (`~/.pi/agent-alt` and similar) instead of resetting to the default.
+`PI_CODING_AGENT_DIR=~/.pi/agent` is set globally through the mise global config `[env]` so extension config resolution matches pi core's default. The pinvim wrapper's defensive `unset PI_CODING_AGENT_DIR` is commented out; a nested pinvim launched from a profile session therefore inherits the profile agent dir (`~/.pi/agent-alt` and similar) instead of resetting to the default.
 
 ## Runtime settings
 
-`home/common/programs/pi-coding-agent/settings.json` is merged during activation.
+`mise/config/pi-coding-agent/agent/settings.json` is merged into `~/.pi/agent/settings.json` by `mise run pi:update` (jq deep merge), never symlinked — pi rewrites the runtime file.
 
 It drives default provider, enabled models, terminal behavior, subagent model overrides, and multi-sub presets. The default model list includes current OpenCode Go coding models; the `mega` scope exposes the strongest OpenCode Go options alongside Codex, Synthetic, and local models. The `alt` scope includes current Anthropic Opus, Sonnet, and Haiku aliases; planner, reviewer, and oracle default to the latest Opus alias; worker defaults to the latest Sonnet alias; scout and context-builder keep small-model fallbacks before local `llamacpp/gemma4`. The shell command prefix forces noninteractive git behavior and enables tmux image handling through `PI_TMUX_IMAGES=1`.
 
