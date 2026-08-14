@@ -1,0 +1,1510 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ticket - minimal ticket system with dependency tracking
+# Stores markdown files with YAML frontmatter in .tickets/
+
+# Find .tickets directory by walking parent directories
+find_tickets_dir() {
+    # Explicit env var takes priority
+    [[ -n "${TICKETS_DIR:-}" ]] && { echo "$TICKETS_DIR"; return 0; }
+
+    # Walk parents looking for .tickets
+    local dir="$PWD"
+    while [[ "$dir" != "/" ]]; do
+        if [[ -d "$dir/.tickets" ]]; then
+            echo "$dir/.tickets"
+            return 0
+        fi
+        dir=$(dirname "$dir")
+    done
+
+    # Check root too
+    [[ -d "/.tickets" ]] && { echo "/.tickets"; return 0; }
+
+    # Not found
+    return 1
+}
+
+# Commands that can create .tickets if not found
+WRITE_COMMANDS="create migrate-beads"
+
+# Initialize TICKETS_DIR based on command type
+init_tickets_dir() {
+    local cmd="$1"
+    local is_write_cmd=0
+    [[ " $WRITE_COMMANDS " == *" $cmd "* ]] && is_write_cmd=1
+
+    if TICKETS_DIR=$(find_tickets_dir); then
+        # For read commands, verify the directory exists
+        if [[ $is_write_cmd -eq 0 ]] && [[ ! -d "$TICKETS_DIR" ]]; then
+            echo "Error: tickets directory '$TICKETS_DIR' does not exist" >&2
+            return 1
+        fi
+        return 0
+    fi
+
+    # Not found - write commands can initialize in current directory
+    if [[ $is_write_cmd -eq 1 ]]; then
+        TICKETS_DIR=".tickets"
+        return 0
+    fi
+
+    echo "Error: no .tickets directory found (searched parent directories)" >&2
+    echo "Run 'tk create' to initialize, or set TICKETS_DIR env var" >&2
+    return 1
+}
+
+TICKET_PAGER="${TICKET_PAGER:-${PAGER:-}}"
+
+# Prefer ripgrep if available, fall back to grep
+if command -v rg &>/dev/null; then
+    _grep() { rg "$@"; }
+else
+    _grep() { grep "$@"; }
+fi
+
+# Portable ISO date (GNU date supports -Iseconds, BSD date does not)
+_iso_date() {
+    date -u +%Y-%m-%dT%H:%M:%SZ
+}
+
+# Portable sed -i (BSD requires -i '', GNU uses -i)
+_sed_i() {
+    local file="$1"
+    shift
+    local tmp="${file}.tmp.$$"
+    sed "$@" "$file" > "$tmp" && mv "$tmp" "$file"
+}
+
+# Generate ticket ID from directory name + random string
+generate_id() {
+    local dir_name
+    dir_name=$(basename "$(pwd)" | tr -d -c "a-zA-Z0-9-_")
+
+    # Extract first letter of each hyphenated/underscored segment
+    local prefix
+    prefix=$(echo "$dir_name" | sed 's/[-_]/ /g' | awk '{for(i=1;i<=NF;i++) printf substr($i,1,1)}')
+
+    # Fallback to first 3 chars if single segment (prefix too short)
+    [[ ${#prefix} -lt 3 ]] && prefix="${dir_name:0:3}"
+
+    # 4-char random lower case alphanumeric string
+    local hash
+    hash=$(LC_ALL=C tr -dc 'a-z0-9' < /dev/urandom | head -c 4)
+
+    echo "${prefix}-${hash}"
+}
+
+# Ensure tickets directory exists
+ensure_dir() {
+    mkdir -p "$TICKETS_DIR"
+}
+
+# Get ticket file path (supports partial ID matching)
+ticket_path() {
+    local id="$1"
+    # Trim leading/trailing whitespace (handles Claude/agent quirks)
+    read -r id <<< "$id"
+    local exact="$TICKETS_DIR/${id}.md"
+
+    if [[ -f "$exact" ]]; then
+        echo "$exact"
+        return 0
+    fi
+
+    # Try partial match (anywhere in filename)
+    local matches
+    matches=$(find "$TICKETS_DIR" -maxdepth 1 -name "*${id}*.md" 2>/dev/null | head -2)
+    local count
+    count=$(echo "$matches" | _grep -c . || true)
+
+    if [[ "$count" -eq 1 ]]; then
+        echo "$matches"
+        return 0
+    elif [[ "$count" -gt 1 ]]; then
+        echo "Error: ambiguous ID '$id' matches multiple tickets" >&2
+        return 1
+    else
+        echo "Error: ticket '$id' not found" >&2
+        return 1
+    fi
+}
+
+# Extract YAML field value
+yaml_field() {
+    local file="$1"
+    local field="$2"
+    sed -n '/^---$/,/^---$/p' "$file" | _grep "^${field}:" | sed "s/^${field}: *//"
+}
+
+# Update YAML field
+update_yaml_field() {
+    local file="$1"
+    local field="$2"
+    local value="$3"
+
+    if _grep -q "^${field}:" "$file"; then
+        _sed_i "$file" "s/^${field}:.*/${field}: ${value}/"
+    else
+        # Insert after first --- (beginning of frontmatter)
+        _sed_i "$file" "0,/^---$/ { /^---$/a\\
+${field}: ${value}
+}"
+    fi
+}
+
+cmd_create() {
+    ensure_dir
+
+    local title="" description="" design="" acceptance=""
+    local priority=2 issue_type="task" assignee="" external_ref="" parent="" tags=""
+
+    # Default assignee to git user.name if available
+    assignee=$(git config user.name 2>/dev/null || true)
+
+    # Parse args
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -d|--description) description="$2"; shift 2 ;;
+            --design) design="$2"; shift 2 ;;
+            --acceptance) acceptance="$2"; shift 2 ;;
+            -p|--priority) priority="$2"; shift 2 ;;
+            -t|--type) issue_type="$2"; shift 2 ;;
+            -a|--assignee) assignee="$2"; shift 2 ;;
+            --external-ref) external_ref="$2"; shift 2 ;;
+            --parent) parent="$2"; shift 2 ;;
+            --tags) tags="$2"; shift 2 ;;
+            -*) echo "Unknown option: $1" >&2; return 1 ;;
+            *) title="$1"; shift ;;
+        esac
+    done
+
+    # Validate and resolve parent if specified
+    if [[ -n "$parent" ]]; then
+        local parent_file
+        parent_file=$(ticket_path "$parent") || return 1
+        parent=$(basename "$parent_file" .md)
+    fi
+
+    title="${title:-Untitled}"
+    local id
+    id=$(generate_id)
+    local file="$TICKETS_DIR/${id}.md"
+    local now
+    now=$(_iso_date)
+
+    {
+        echo "---"
+        echo "id: $id"
+        echo "status: open"
+        echo "deps: []"
+        echo "links: []"
+        echo "created: $now"
+        echo "type: $issue_type"
+        echo "priority: $priority"
+        [[ -n "$assignee" ]] && echo "assignee: $assignee"
+        [[ -n "$external_ref" ]] && echo "external-ref: $external_ref"
+        [[ -n "$parent" ]] && echo "parent: $parent"
+        if [[ -n "$tags" ]]; then
+            echo "tags: [${tags//,/, }]"
+        fi
+        echo "---"
+        echo "# $title"
+        echo ""
+        if [[ -n "$description" ]]; then
+            echo "$description"
+            echo ""
+        fi
+        if [[ -n "$design" ]]; then
+            echo "## Design"
+            echo ""
+            echo "$design"
+            echo ""
+        fi
+        if [[ -n "$acceptance" ]]; then
+            echo "## Acceptance Criteria"
+            echo ""
+            echo "$acceptance"
+            echo ""
+        fi
+    } > "$file"
+
+    echo "$id"
+}
+
+# Valid statuses
+VALID_STATUSES="open in_progress closed"
+
+validate_status() {
+    local status="$1"
+    for valid in $VALID_STATUSES; do
+        [[ "$status" == "$valid" ]] && return 0
+    done
+    echo "Error: invalid status '$status'. Must be one of: $VALID_STATUSES" >&2
+    return 1
+}
+
+cmd_status() {
+    if [[ $# -lt 2 ]]; then
+        echo "Usage: $(basename "$0") status <id> <status>" >&2
+        echo "Valid statuses: $VALID_STATUSES" >&2
+        return 1
+    fi
+
+    local id="$1"
+    local status="$2"
+
+    validate_status "$status" || return 1
+
+    local file
+    file=$(ticket_path "$id") || return 1
+
+    update_yaml_field "$file" "status" "$status"
+    echo "Updated $(basename "$file" .md) -> $status"
+}
+
+cmd_start() {
+    if [[ $# -lt 1 ]]; then
+        echo "Usage: $(basename "$0") start <id>" >&2
+        return 1
+    fi
+    cmd_status "$1" "in_progress"
+}
+
+cmd_close() {
+    if [[ $# -lt 1 ]]; then
+        echo "Usage: $(basename "$0") close <id>" >&2
+        return 1
+    fi
+    cmd_status "$1" "closed"
+}
+
+cmd_reopen() {
+    if [[ $# -lt 1 ]]; then
+        echo "Usage: $(basename "$0") reopen <id>" >&2
+        return 1
+    fi
+    cmd_status "$1" "open"
+}
+
+cmd_dep_tree() {
+    local full_mode=0
+    local root_id=""
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --full) full_mode=1; shift ;;
+            *) root_id="$1"; shift ;;
+        esac
+    done
+
+    if [[ -z "$root_id" ]]; then
+        echo "Usage: ticket dep tree [--full] <id>" >&2
+        return 1
+    fi
+
+    awk -v root_pattern="$root_id" -v full_mode="$full_mode" '
+    BEGIN { FS=": "; in_front=0 }
+    FNR==1 {
+        if (prev_file) store()
+        id=""; status=""; title=""; deps=""; in_front=0
+        prev_file=FILENAME
+    }
+    /^---$/ { in_front = !in_front; next }
+    in_front && /^id:/ { id = $2 }
+    in_front && /^status:/ { status = $2 }
+    in_front && /^deps:/ {
+        deps = $2
+        gsub(/[\[\] ]/, "", deps)
+    }
+    !in_front && /^# / && title == "" { title = substr($0, 3) }
+    function store() {
+        if (id != "") {
+            statuses[id] = status
+            titles[id] = title
+            deps_str[id] = deps
+            n = split(deps, arr, ",")
+            for (i = 1; i <= n; i++) if (arr[i] != "") {
+                dep_count[id]++
+                dep_list[id, dep_count[id]] = arr[i]
+            }
+        }
+    }
+
+    END {
+        if (prev_file) store()
+        # Resolve partial ID
+        root = ""
+        for (id in statuses) {
+            if (index(id, root_pattern) > 0) {
+                if (root != "") {
+                    print "Error: ambiguous ID " root_pattern > "/dev/stderr"
+                    exit 1
+                }
+                root = id
+            }
+        }
+        if (root == "") {
+            print "Error: ticket " root_pattern " not found" > "/dev/stderr"
+            exit 1
+        }
+
+        # Find max depths using iterative approach with stack
+        stack[1] = root; stack_depth[1] = 0; stack_path[1] = ":"
+        sp = 1
+        while (sp > 0) {
+            id = stack[sp]; depth = stack_depth[sp]; path = stack_path[sp]
+            sp--
+
+            if (!(id in statuses)) continue
+            if (index(path, ":" id ":") > 0) continue
+
+            if (!(id in max_depth) || depth > max_depth[id]) {
+                max_depth[id] = depth
+            }
+
+            new_path = path id ":"
+            for (i = dep_count[id]; i >= 1; i--) {
+                child = dep_list[id, i]
+                if (child != "") {
+                    sp++
+                    stack[sp] = child
+                    stack_depth[sp] = depth + 1
+                    stack_path[sp] = new_path
+                }
+            }
+        }
+
+        # Compute subtree depths (iterative post-order)
+        delete stack; delete stack_depth; delete stack_path
+        delete visited
+        stack[1] = root; stack_path[1] = ":"; stack_phase[1] = 0
+        sp = 1
+        while (sp > 0) {
+            id = stack[sp]; path = stack_path[sp]; phase = stack_phase[sp]
+
+            if (!(id in statuses) || index(path, ":" id ":") > 0) { sp--; continue }
+
+            if (phase == 0) {
+                # First visit: push children
+                stack_phase[sp] = 1
+                new_path = path id ":"
+                for (i = dep_count[id]; i >= 1; i--) {
+                    child = dep_list[id, i]
+                    if (child != "" && !(child in subtree_depth)) {
+                        sp++
+                        stack[sp] = child
+                        stack_path[sp] = new_path
+                        stack_phase[sp] = 0
+                    }
+                }
+            } else {
+                # Second visit: compute subtree depth
+                max_sub = max_depth[id]
+                for (i = 1; i <= dep_count[id]; i++) {
+                    child = dep_list[id, i]
+                    if (child in subtree_depth && subtree_depth[child] > max_sub) {
+                        max_sub = subtree_depth[child]
+                    }
+                }
+                subtree_depth[id] = max_sub
+                sp--
+            }
+        }
+
+        # Print tree (iterative with stack)
+        print root " [" statuses[root] "] " titles[root]
+        printed[root] = 1
+
+        delete stack
+        # Stack entries: id|depth|prefix|connector|path
+        # Start with root children
+        build_children(root, 0, "", "", ":" root ":")
+
+        while (print_sp > 0) {
+            id = print_stack_id[print_sp]
+            depth = print_stack_depth[print_sp]
+            prefix = print_stack_prefix[print_sp]
+            connector = print_stack_conn[print_sp]
+            path = print_stack_path[print_sp]
+            print_sp--
+
+            if (!(id in statuses)) continue
+            if (!full_mode && (id in printed)) continue
+            if (index(path, ":" id ":") > 0) continue
+            if (!full_mode && depth != max_depth[id]) continue
+
+            print prefix connector id " [" statuses[id] "] " titles[id]
+            if (!full_mode) printed[id] = 1
+
+            if (connector == "└── ") new_prefix = prefix "    "
+            else new_prefix = prefix "│   "
+
+            build_children(id, depth, new_prefix, connector, path id ":")
+        }
+    }
+
+    function build_children(id, depth, prefix, connector, path,    i, child, n, arr, sorted, j, tmp, min_idx) {
+        # Collect printable children
+        n = 0
+        for (i = 1; i <= dep_count[id]; i++) {
+            child = dep_list[id, i]
+            if (child == "") continue
+            if (!full_mode && (child in printed)) continue
+            if (!(child in max_depth)) continue
+            if (!full_mode && depth + 1 != max_depth[child]) continue
+            if (index(path, ":" child ":") > 0) continue
+            n++
+            arr[n] = child
+        }
+        if (n == 0) return
+
+        # Sort by subtree_depth, then by ticket ID (insertion sort)
+        for (i = 2; i <= n; i++) {
+            tmp = arr[i]
+            j = i - 1
+            while (j >= 1 && (subtree_depth[arr[j]] > subtree_depth[tmp] || \
+                   (subtree_depth[arr[j]] == subtree_depth[tmp] && arr[j] > tmp))) {
+                arr[j + 1] = arr[j]
+                j--
+            }
+            arr[j + 1] = tmp
+        }
+
+        # Push to stack in reverse order (so first prints first)
+        for (i = n; i >= 1; i--) {
+            child = arr[i]
+            print_sp++
+            print_stack_id[print_sp] = child
+            print_stack_depth[print_sp] = depth + 1
+            print_stack_prefix[print_sp] = prefix
+            if (i == n) print_stack_conn[print_sp] = "└── "
+            else print_stack_conn[print_sp] = "├── "
+            print_stack_path[print_sp] = path
+        }
+    }
+    ' "$TICKETS_DIR"/*.md 2>/dev/null
+}
+
+cmd_dep_cycle() {
+    awk '
+    BEGIN { FS=": "; in_front=0 }
+    FNR==1 {
+        if (prev_file) store()
+        id=""; status=""; title=""; deps=""; in_front=0
+        prev_file=FILENAME
+    }
+    /^---$/ { in_front = !in_front; next }
+    in_front && /^id:/ { id = $2 }
+    in_front && /^status:/ { status = $2 }
+    in_front && /^deps:/ {
+        deps = $2
+        gsub(/[\[\] ]/, "", deps)
+    }
+    !in_front && /^# / && title == "" { title = substr($0, 3) }
+    function store() {
+        if (id != "" && status != "closed") {
+            statuses[id] = status
+            titles[id] = title
+            deps_str[id] = deps
+            n = split(deps, arr, ",")
+            for (i = 1; i <= n; i++) if (arr[i] != "") {
+                dep_count[id]++
+                dep_list[id, dep_count[id]] = arr[i]
+            }
+        }
+    }
+
+    # DFS cycle detection
+    function dfs(node, path, path_len,    i, child, result) {
+        if (!(node in statuses)) return ""
+        if (state[node] == 2) return ""  # black - fully visited
+        if (state[node] == 1) {
+            # gray - found cycle, extract it
+            cycle = node
+            for (i = path_len; i >= 1; i--) {
+                cycle = path[i] " -> " cycle
+                if (path[i] == node) break
+            }
+            return cycle
+        }
+
+        state[node] = 1  # gray - visiting
+        path[path_len + 1] = node
+
+        for (i = 1; i <= dep_count[node]; i++) {
+            child = dep_list[node, i]
+            result = dfs(child, path, path_len + 1)
+            if (result != "") return result
+        }
+
+        state[node] = 2  # black - done
+        return ""
+    }
+
+    END {
+        if (prev_file) store()
+
+        cycle_count = 0
+        for (id in statuses) {
+            if (state[id] == 0) {
+                delete path
+                result = dfs(id, path, 0)
+                if (result != "") {
+                    # Check if this cycle is already found (normalized)
+                    # Extract cycle members
+                    n = split(result, parts, " -> ")
+                    # Normalize: find smallest ID as starting point
+                    min_id = parts[1]
+                    min_idx = 1
+                    for (i = 2; i < n; i++) {  # skip last (duplicate of first)
+                        if (parts[i] < min_id) {
+                            min_id = parts[i]
+                            min_idx = i
+                        }
+                    }
+                    # Build normalized cycle string
+                    norm = ""
+                    for (i = 0; i < n - 1; i++) {
+                        idx = ((min_idx - 1 + i) % (n - 1)) + 1
+                        norm = (norm == "") ? parts[idx] : norm "," parts[idx]
+                    }
+                    # Check if already seen
+                    if (!(norm in seen_cycles)) {
+                        seen_cycles[norm] = 1
+                        cycle_count++
+                        cycles[cycle_count] = result
+                        cycle_members[cycle_count] = norm
+                    }
+                }
+            }
+        }
+
+        if (cycle_count == 0) {
+            print "No dependency cycles found"
+        } else {
+            for (c = 1; c <= cycle_count; c++) {
+                if (c > 1) print ""
+                print "Cycle " c ": " cycles[c]
+                n = split(cycle_members[c], members, ",")
+                for (i = 1; i <= n; i++) {
+                    id = members[i]
+                    printf "  %-8s [%s] %s\n", id, statuses[id], titles[id]
+                }
+            }
+        }
+    }
+    ' "$TICKETS_DIR"/*.md 2>/dev/null
+}
+
+cmd_dep() {
+    # Handle subcommands
+    if [[ "${1:-}" == "tree" ]]; then
+        shift
+        cmd_dep_tree "$@"
+        return
+    fi
+    if [[ "${1:-}" == "cycle" ]]; then
+        shift
+        cmd_dep_cycle "$@"
+        return
+    fi
+
+    if [[ $# -lt 2 ]]; then
+        echo "Usage: ticket dep <id> <dependency-id>" >&2
+        echo "       ticket dep tree <id>  - show dependency tree" >&2
+        echo "       ticket dep cycle      - find dependency cycles" >&2
+        return 1
+    fi
+
+    local id="$1"
+    local dep_id="$2"
+    local file
+    file=$(ticket_path "$id") || return 1
+
+    # Verify dependency exists and resolve to full ID
+    local dep_file
+    dep_file=$(ticket_path "$dep_id") || return 1
+    dep_id=$(basename "$dep_file" .md)
+
+    # Get current deps
+    local current_deps
+    current_deps=$(yaml_field "$file" "deps")
+
+    # Add dep if not already present
+    if echo "$current_deps" | _grep -q "$dep_id"; then
+        echo "Dependency already exists"
+        return 0
+    fi
+
+    # Update deps array
+    if [[ "$current_deps" == "[]" ]]; then
+        update_yaml_field "$file" "deps" "[$dep_id]"
+    else
+        local new_deps
+        new_deps=$(echo "$current_deps" | sed "s/\]/, $dep_id]/")
+        update_yaml_field "$file" "deps" "$new_deps"
+    fi
+
+    echo "Added dependency: $(basename "$file" .md) -> $dep_id"
+}
+
+cmd_ls() {
+    local status_filter="" assignee_filter="" tag_filter=""
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --status=*) status_filter="${1#--status=}"; shift ;;
+            -a) assignee_filter="$2"; shift 2 ;;
+            --assignee=*) assignee_filter="${1#--assignee=}"; shift ;;
+            -T) tag_filter="$2"; shift 2 ;;
+            --tag=*) tag_filter="${1#--tag=}"; shift ;;
+            *) shift ;;
+        esac
+    done
+
+    awk -v status_filter="$status_filter" -v assignee_filter="$assignee_filter" -v tag_filter="$tag_filter" '
+    BEGIN { FS=": "; in_front=0 }
+    FNR==1 {
+        if (prev_file) emit()
+        id=""; status=""; title=""; deps=""; assignee=""; tags=""; in_front=0
+        prev_file=FILENAME
+    }
+    /^---$/ { in_front = !in_front; next }
+    in_front && /^id:/ { id = $2 }
+    in_front && /^status:/ { status = $2 }
+    in_front && /^assignee:/ { assignee = $2 }
+    in_front && /^tags:/ { tags = $2; gsub(/[\[\] ]/, "", tags) }
+    in_front && /^deps:/ {
+        deps = $2
+        gsub(/[\[\] ]/, "", deps)
+    }
+    !in_front && /^# / && title == "" { title = substr($0, 3) }
+    END { if (prev_file) emit() }
+    function has_tag(tags_str, tag,    i, n, arr) {
+        n = split(tags_str, arr, ",")
+        for (i = 1; i <= n; i++) if (arr[i] == tag) return 1
+        return 0
+    }
+    function emit() {
+        if (id != "" && (status_filter == "" || status == status_filter) && (assignee_filter == "" || assignee == assignee_filter) && (tag_filter == "" || has_tag(tags, tag_filter))) {
+            deps_display = (deps != "") ? "[" deps "]" : "[]"
+            gsub(/,/, ", ", deps_display)
+            dep_str = (deps_display != "[]") ? " <- " deps_display : ""
+            printf "%-8s [%s] - %s%s\n", id, status, title, dep_str
+        }
+    }
+    ' "$TICKETS_DIR"/*.md 2>/dev/null
+}
+
+cmd_ready() {
+    local assignee_filter="" tag_filter=""
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -a) assignee_filter="$2"; shift 2 ;;
+            --assignee=*) assignee_filter="${1#--assignee=}"; shift ;;
+            -T) tag_filter="$2"; shift 2 ;;
+            --tag=*) tag_filter="${1#--tag=}"; shift ;;
+            *) shift ;;
+        esac
+    done
+
+    awk -v assignee_filter="$assignee_filter" -v tag_filter="$tag_filter" '
+    BEGIN { FS=": "; in_front=0 }
+    FNR==1 {
+        if (prev_file) store()
+        id=""; status=""; title=""; deps=""; priority=""; assignee=""; tags=""; in_front=0
+        prev_file=FILENAME
+    }
+    /^---$/ { in_front = !in_front; next }
+    in_front && /^id:/ { id = $2 }
+    in_front && /^status:/ { status = $2 }
+    in_front && /^priority:/ { priority = $2 }
+    in_front && /^assignee:/ { assignee = $2 }
+    in_front && /^tags:/ { tags = $2; gsub(/[\[\] ]/, "", tags) }
+    in_front && /^deps:/ {
+        deps = $2
+        gsub(/[\[\] ]/, "", deps)
+    }
+    !in_front && /^# / && title == "" { title = substr($0, 3) }
+    function has_tag(tags_str, tag,    i, n, arr) {
+        n = split(tags_str, arr, ",")
+        for (i = 1; i <= n; i++) if (arr[i] == tag) return 1
+        return 0
+    }
+    function store() {
+        if (id != "") {
+            statuses[id] = status
+            titles[id] = title
+            deps_raw[id] = deps
+            priorities[id] = (priority != "") ? priority : 2
+            assignees[id] = assignee
+            all_tags[id] = tags
+        }
+    }
+    END {
+        if (prev_file) store()
+        # Find ready tickets: active with all deps closed
+        for (id in statuses) {
+            status = statuses[id]
+            if (status != "open" && status != "in_progress") continue
+            if (assignee_filter != "" && assignees[id] != assignee_filter) continue
+            if (tag_filter != "" && !has_tag(all_tags[id], tag_filter)) continue
+
+            deps = deps_raw[id]
+            ready = 1
+            if (deps != "") {
+                n = split(deps, arr, ",")
+                for (i = 1; i <= n; i++) {
+                    dep = arr[i]
+                    if (dep != "" && statuses[dep] != "closed") {
+                        ready = 0
+                        break
+                    }
+                }
+            }
+            if (ready) {
+                output[++count] = sprintf("%s|%s|%s|%s", priorities[id], id, status, titles[id])
+            }
+        }
+
+        # Sort by priority, then by id
+        for (i = 1; i <= count; i++) {
+            for (j = i + 1; j <= count; j++) {
+                split(output[i], a, "|")
+                split(output[j], b, "|")
+                if (a[1] > b[1] || (a[1] == b[1] && a[2] > b[2])) {
+                    tmp = output[i]; output[i] = output[j]; output[j] = tmp
+                }
+            }
+        }
+
+        for (i = 1; i <= count; i++) {
+            split(output[i], f, "|")
+            printf "%-8s [P%s][%s] - %s\n", f[2], f[1], f[3], f[4]
+        }
+    }
+    ' "$TICKETS_DIR"/*.md 2>/dev/null
+}
+
+cmd_closed() {
+    local limit=20 assignee_filter="" tag_filter=""
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --limit=*) limit="${1#--limit=}"; shift ;;
+            -a) assignee_filter="$2"; shift 2 ;;
+            --assignee=*) assignee_filter="${1#--assignee=}"; shift ;;
+            -T) tag_filter="$2"; shift 2 ;;
+            --tag=*) tag_filter="${1#--tag=}"; shift ;;
+            *) shift ;;
+        esac
+    done
+
+    # List files by mtime (most recent first), filter closed, limit output
+    local files
+    files=$(ls -t "$TICKETS_DIR"/*.md 2>/dev/null | head -n 100)
+    [[ -z "$files" ]] && return 0
+    echo "$files" | xargs awk -v assignee_filter="$assignee_filter" -v tag_filter="$tag_filter" '
+    BEGIN { FS=": "; in_front=0 }
+    FNR==1 {
+        if (prev_file) emit()
+        id=""; status=""; title=""; assignee=""; tags=""; in_front=0
+        prev_file=FILENAME
+    }
+    /^---$/ { in_front = !in_front; next }
+    in_front && /^id:/ { id = $2 }
+    in_front && /^status:/ { status = $2 }
+    in_front && /^assignee:/ { assignee = $2 }
+    in_front && /^tags:/ { tags = $2; gsub(/[\[\] ]/, "", tags) }
+    !in_front && /^# / && title == "" { title = substr($0, 3) }
+    function has_tag(tags_str, tag,    i, n, arr) {
+        n = split(tags_str, arr, ",")
+        for (i = 1; i <= n; i++) if (arr[i] == tag) return 1
+        return 0
+    }
+    function emit() {
+        if (id != "" && (status == "closed" || status == "done") && (assignee_filter == "" || assignee == assignee_filter) && (tag_filter == "" || has_tag(tags, tag_filter))) {
+            output[++count] = sprintf("%-8s [%s] - %s", id, status, title)
+        }
+    }
+    END {
+        if (prev_file) emit()
+        for (i = 1; i <= count; i++) print output[i]
+    }
+    ' | head -n "$limit"
+}
+
+cmd_blocked() {
+    local assignee_filter="" tag_filter=""
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -a) assignee_filter="$2"; shift 2 ;;
+            --assignee=*) assignee_filter="${1#--assignee=}"; shift ;;
+            -T) tag_filter="$2"; shift 2 ;;
+            --tag=*) tag_filter="${1#--tag=}"; shift ;;
+            *) shift ;;
+        esac
+    done
+
+    awk -v assignee_filter="$assignee_filter" -v tag_filter="$tag_filter" '
+    BEGIN { FS=": "; in_front=0 }
+    FNR==1 {
+        if (prev_file) store()
+        id=""; status=""; title=""; deps=""; priority=""; assignee=""; tags=""; in_front=0
+        prev_file=FILENAME
+    }
+    /^---$/ { in_front = !in_front; next }
+    in_front && /^id:/ { id = $2 }
+    in_front && /^status:/ { status = $2 }
+    in_front && /^priority:/ { priority = $2 }
+    in_front && /^assignee:/ { assignee = $2 }
+    in_front && /^tags:/ { tags = $2; gsub(/[\[\] ]/, "", tags) }
+    in_front && /^deps:/ {
+        deps = $2
+        gsub(/[\[\] ]/, "", deps)
+    }
+    !in_front && /^# / && title == "" { title = substr($0, 3) }
+    function has_tag(tags_str, tag,    i, n, arr) {
+        n = split(tags_str, arr, ",")
+        for (i = 1; i <= n; i++) if (arr[i] == tag) return 1
+        return 0
+    }
+    function store() {
+        if (id != "") {
+            statuses[id] = status
+            titles[id] = title
+            deps_raw[id] = deps
+            priorities[id] = (priority != "") ? priority : 2
+            assignees[id] = assignee
+            all_tags[id] = tags
+        }
+    }
+    END {
+        if (prev_file) store()
+        # Find blocked tickets: active with at least one dep not closed
+        for (id in statuses) {
+            status = statuses[id]
+            if (status != "open" && status != "in_progress") continue
+            if (assignee_filter != "" && assignees[id] != assignee_filter) continue
+            if (tag_filter != "" && !has_tag(all_tags[id], tag_filter)) continue
+
+            deps = deps_raw[id]
+            if (deps == "") continue
+
+            blocked = 0
+            n = split(deps, arr, ",")
+            for (i = 1; i <= n; i++) {
+                dep = arr[i]
+                if (dep != "" && statuses[dep] != "closed") {
+                    blocked = 1
+                    break
+                }
+            }
+            if (blocked) {
+                # Build list of only open blockers
+                blockers = ""
+                n = split(deps, arr, ",")
+                for (i = 1; i <= n; i++) {
+                    dep = arr[i]
+                    if (dep != "" && statuses[dep] != "closed") {
+                        blockers = (blockers == "") ? dep : blockers ", " dep
+                    }
+                }
+                output[++count] = sprintf("%s|%s|%s|%s|[%s]", priorities[id], id, status, titles[id], blockers)
+            }
+        }
+
+        # Sort by priority, then by id
+        for (i = 1; i <= count; i++) {
+            for (j = i + 1; j <= count; j++) {
+                split(output[i], a, "|")
+                split(output[j], b, "|")
+                if (a[1] > b[1] || (a[1] == b[1] && a[2] > b[2])) {
+                    tmp = output[i]; output[i] = output[j]; output[j] = tmp
+                }
+            }
+        }
+
+        for (i = 1; i <= count; i++) {
+            split(output[i], f, "|")
+            printf "%-8s [P%s][%s] - %s <- %s\n", f[2], f[1], f[3], f[4], f[5]
+        }
+    }
+    ' "$TICKETS_DIR"/*.md 2>/dev/null
+}
+
+cmd_undep() {
+    if [[ $# -lt 2 ]]; then
+        echo "Usage: ticket undep <id> <dependency-id>" >&2
+        return 1
+    fi
+
+    local id="$1"
+    local dep_id="$2"
+    local file
+    file=$(ticket_path "$id") || return 1
+
+    # Resolve dep_id to full ID
+    local dep_file
+    dep_file=$(ticket_path "$dep_id") || return 1
+    dep_id=$(basename "$dep_file" .md)
+
+    local current_deps
+    current_deps=$(yaml_field "$file" "deps")
+
+    if ! echo "$current_deps" | _grep -q "$dep_id"; then
+        echo "Dependency not found"
+        return 1
+    fi
+
+    # Remove dep from array
+    local new_deps
+    new_deps=$(echo "$current_deps" | sed "s/, *$dep_id//g; s/$dep_id, *//g; s/$dep_id//g")
+    # Clean up empty array case
+    [[ "$new_deps" == "[]" || "$new_deps" == "[, ]" || "$new_deps" == "[ ]" ]] && new_deps="[]"
+
+    update_yaml_field "$file" "deps" "$new_deps"
+    echo "Removed dependency: $(basename "$file" .md) -/-> $dep_id"
+}
+
+add_link_to_file() {
+    local file="$1"
+    local target_id="$2"
+
+    local current_links
+    current_links=$(yaml_field "$file" "links" || true)
+    [[ -z "$current_links" ]] && current_links="[]"
+
+    # Skip if already present
+    if echo "$current_links" | _grep -q "$target_id"; then
+        return 0
+    fi
+
+    if [[ "$current_links" == "[]" ]]; then
+        update_yaml_field "$file" "links" "[$target_id]"
+    else
+        local new_links
+        new_links=$(echo "$current_links" | sed "s/\]/, $target_id]/")
+        update_yaml_field "$file" "links" "$new_links"
+    fi
+}
+
+cmd_link() {
+    if [[ $# -lt 2 ]]; then
+        echo "Usage: ticket link <id> <id> [id...]" >&2
+        return 1
+    fi
+
+    # Resolve all ticket paths first
+    local -a ids=() files=()
+    for arg in "$@"; do
+        local file
+        file=$(ticket_path "$arg") || return 1
+        ids+=("$(basename "$file" .md)")
+        files+=("$file")
+    done
+
+    # Use awk to update all files in one pass per file
+    local id_list
+    id_list=$(printf '%s\n' "${ids[@]}")
+
+    local count=0
+    for ((i=0; i<${#ids[@]}; i++)); do
+        local file="${files[$i]}"
+        local self="${ids[$i]}"
+
+        # Build list of other IDs to link
+        local others=""
+        for ((j=0; j<${#ids[@]}; j++)); do
+            [[ $i -ne $j ]] && others="$others ${ids[$j]}"
+        done
+
+        # Update file with awk - add missing links
+        local result
+        result=$(awk -v self="$self" -v others="$others" '
+        BEGIN {
+            n = split(others, other_arr, " ")
+            for (i = 1; i <= n; i++) need[other_arr[i]] = 1
+        }
+        /^links:/ {
+            # Parse existing links
+            gsub(/[\[\]]/, "", $0)
+            sub(/^links: */, "", $0)
+            m = split($0, existing, ", *")
+            for (i = 1; i <= m; i++) {
+                if (existing[i] != "") {
+                    have[existing[i]] = 1
+                    delete need[existing[i]]
+                }
+            }
+
+            # Build new links array
+            out = ""
+            for (i = 1; i <= m; i++) {
+                if (existing[i] != "") {
+                    out = (out == "") ? existing[i] : out ", " existing[i]
+                }
+            }
+            for (id in need) {
+                out = (out == "") ? id : out ", " id
+                added++
+            }
+            print "links: [" out "]"
+            found = 1
+            next
+        }
+        { print }
+        END { printf "%d", added > "/dev/stderr" }
+        ' "$file" 2>&1 >"${file}.tmp")
+
+        mv "${file}.tmp" "$file"
+        ((count += result)) || true
+    done
+
+    if [[ $count -eq 0 ]]; then
+        echo "All links already exist"
+    else
+        echo "Added $count link(s) between ${#ids[@]} tickets"
+    fi
+}
+
+remove_link_from_file() {
+    local file="$1"
+    local target_id="$2"
+
+    local current_links
+    current_links=$(yaml_field "$file" "links" || true)
+
+    # Skip if not present
+    if [[ -z "$current_links" ]] || ! echo "$current_links" | _grep -q "$target_id"; then
+        return 0
+    fi
+
+    local new_links
+    new_links=$(echo "$current_links" | sed "s/, *$target_id//g; s/$target_id, *//g; s/$target_id//g")
+    [[ "$new_links" == "[]" || "$new_links" == "[, ]" || "$new_links" == "[ ]" ]] && new_links="[]"
+
+    update_yaml_field "$file" "links" "$new_links"
+}
+
+cmd_unlink() {
+    if [[ $# -lt 2 ]]; then
+        echo "Usage: ticket unlink <id> <target-id>" >&2
+        return 1
+    fi
+
+    # Resolve both IDs to full IDs
+    local file target_file
+    file=$(ticket_path "$1") || return 1
+    target_file=$(ticket_path "$2") || return 1
+    local id target_id
+    id=$(basename "$file" .md)
+    target_id=$(basename "$target_file" .md)
+
+    local current_links
+    current_links=$(yaml_field "$file" "links" || true)
+
+    if [[ -z "$current_links" ]] || ! echo "$current_links" | _grep -q "$target_id"; then
+        echo "Link not found"
+        return 1
+    fi
+
+    # Remove from both files
+    remove_link_from_file "$file" "$target_id"
+    remove_link_from_file "$target_file" "$id"
+
+    echo "Removed link: $(basename "$file" .md) <-> $target_id"
+}
+
+cmd_show() {
+    if [[ $# -lt 1 ]]; then
+        echo "Usage: ticket show <id>" >&2
+        return 1
+    fi
+
+    local file
+    file=$(ticket_path "$1") || return 1
+    local target_id
+    target_id=$(basename "$file" .md)
+
+    _show_output() {
+        awk -v target="$target_id" -v target_file="$file" '
+    BEGIN { FS=": "; in_front=0 }
+
+    # First pass: collect all ticket metadata
+    FNR==1 {
+        if (prev_file) store()
+        id=""; status=""; title=""; deps=""; links=""; parent=""; in_front=0
+        prev_file=FILENAME
+    }
+    /^---$/ { in_front = !in_front; next }
+    in_front && /^id:/ { id = $2 }
+    in_front && /^status:/ { status = $2 }
+    in_front && /^deps:/ { deps = $2; gsub(/[\[\] ]/, "", deps) }
+    in_front && /^links:/ { links = $2; gsub(/[\[\] ]/, "", links) }
+    in_front && /^parent:/ { parent = $2 }
+    !in_front && /^# / && title == "" { title = substr($0, 3) }
+
+    function store() {
+        if (id != "") {
+            statuses[id] = status
+            titles[id] = title
+            all_deps[id] = deps
+            all_links[id] = links
+            parents[id] = parent
+        }
+    }
+
+    END {
+        if (prev_file) store()
+
+        # Build inverse relationships
+        for (id in statuses) {
+            # Children: tickets where parent == target
+            if (parents[id] == target) {
+                children_count++
+                children[children_count] = id
+            }
+            # Blocking: tickets where target is in their deps
+            deps = all_deps[id]
+            if (deps != "") {
+                n = split(deps, arr, ",")
+                for (i = 1; i <= n; i++) {
+                    if (arr[i] == target && statuses[id] != "closed") {
+                        blocking_count++
+                        blocking[blocking_count] = id
+                    }
+                }
+            }
+        }
+
+        # Now output the target file with enhancements
+        in_front = 0
+        while ((getline line < target_file) > 0) {
+            if (line == "---") {
+                in_front = !in_front
+                print line
+            } else if (in_front && line ~ /^parent:/) {
+                # Add parent title as comment
+                p = line
+                sub(/^parent: */, "", p)
+                if (p in titles) {
+                    print line "  # " titles[p]
+                } else {
+                    print line
+                }
+            } else {
+                print line
+            }
+        }
+        close(target_file)
+
+        # Collect blockers (unclosed deps)
+        deps = all_deps[target]
+        if (deps != "") {
+            n = split(deps, arr, ",")
+            blocker_count = 0
+            for (i = 1; i <= n; i++) {
+                d = arr[i]
+                if (d != "" && statuses[d] != "closed") {
+                    blocker_count++
+                    blockers[blocker_count] = d
+                }
+            }
+            if (blocker_count > 0) {
+                print ""
+                print "## Blockers"
+                print ""
+                for (i = 1; i <= blocker_count; i++) {
+                    d = blockers[i]
+                    printf "- %s [%s] %s\n", d, statuses[d], titles[d]
+                }
+            }
+        }
+
+        # Show tickets this is blocking
+        if (blocking_count > 0) {
+            print ""
+            print "## Blocking"
+            print ""
+            for (i = 1; i <= blocking_count; i++) {
+                b = blocking[i]
+                printf "- %s [%s] %s\n", b, statuses[b], titles[b]
+            }
+        }
+
+        # Show children
+        if (children_count > 0) {
+            print ""
+            print "## Children"
+            print ""
+            for (i = 1; i <= children_count; i++) {
+                c = children[i]
+                printf "- %s [%s] %s\n", c, statuses[c], titles[c]
+            }
+        }
+
+        # Collect linked tickets
+        links = all_links[target]
+        if (links != "") {
+            n = split(links, arr, ",")
+            print ""
+            print "## Linked"
+            print ""
+            for (i = 1; i <= n; i++) {
+                l = arr[i]
+                if (l != "") {
+                    printf "- %s [%s] %s\n", l, statuses[l], titles[l]
+                }
+            }
+        }
+    }
+    ' "$TICKETS_DIR"/*.md 2>/dev/null
+    }
+
+    if [[ -t 1 && -n "$TICKET_PAGER" ]]; then
+        read -r -a pager_cmd <<<"$TICKET_PAGER"
+        _show_output | "${pager_cmd[@]}"
+    else
+        _show_output
+    fi
+}
+
+cmd_add_note() {
+    if [[ $# -lt 1 ]]; then
+        echo "Usage: ticket add-note <id> [note text]" >&2
+        return 1
+    fi
+
+    local file
+    file=$(ticket_path "$1") || return 1
+    shift
+
+    local note
+    if [[ $# -gt 0 ]]; then
+        note="$*"
+    elif [[ ! -t 0 ]]; then
+        note=$(cat)
+    else
+        echo "Error: no note provided" >&2
+        return 1
+    fi
+
+    local timestamp
+    timestamp=$(_iso_date)
+
+    # Add Notes section if missing, then append timestamped note
+    if ! grep -q '^## Notes' "$file"; then
+        printf '\n## Notes\n' >> "$file"
+    fi
+    printf '\n**%s**\n\n%s\n' "$timestamp" "$note" >> "$file"
+
+    echo "Note added to $(basename "$file" .md)"
+}
+
+cmd_edit() {
+    if [[ $# -lt 1 ]]; then
+        echo "Usage: ticket edit <id>" >&2
+        return 1
+    fi
+
+    local file
+    file=$(ticket_path "$1") || return 1
+
+    if [ -t 0 ] && [ -t 1 ]; then
+        "${EDITOR:-vi}" "$file"
+    else
+        echo "Edit ticket file: $file"
+    fi
+}
+
+cmd_query() {
+    local filter="${1:-}"
+
+    # Generate all JSON in one awk pass
+    local json_output
+    json_output=$(awk '
+    BEGIN { FS=": "; in_front=0 }
+    FNR==1 {
+        if (prev_file) emit()
+        field_count=0; in_front=0
+        prev_file=FILENAME
+    }
+    /^---$/ { in_front = !in_front; next }
+    in_front && /^[a-zA-Z]/ {
+        key = $1
+        val = substr($0, length($1) + 3)
+        gsub(/^ +| +$/, "", val)
+        field_count++
+        field_keys[field_count] = key
+        field_vals[field_count] = val
+    }
+    function emit() {
+        if (field_count > 0) {
+            printf "{"
+            for (i = 1; i <= field_count; i++) {
+                if (i > 1) printf ","
+                key = field_keys[i]
+                val = field_vals[i]
+                # Handle arrays
+                if (val ~ /^\[.*\]$/) {
+                    gsub(/^\[|\]$/, "", val)
+                    n = split(val, items, ", *")
+                    printf "\"%s\":[", key
+                    for (j = 1; j <= n; j++) {
+                        if (j > 1) printf ","
+                        gsub(/^ +| +$/, "", items[j])
+                        if (items[j] != "") printf "\"%s\"", items[j]
+                    }
+                    printf "]"
+                } else {
+                    printf "\"%s\":\"%s\"", key, val
+                }
+            }
+            printf "}\n"
+        }
+    }
+    END { if (prev_file) emit() }
+    ' "$TICKETS_DIR"/*.md 2>/dev/null)
+
+    if [[ -n "$filter" ]]; then
+        echo "$json_output" | jq -c "select($filter)"
+    else
+        echo "$json_output"
+    fi
+}
+
+cmd_migrate_beads() {
+    local jsonl=".beads/issues.jsonl"
+    if [[ ! -f "$jsonl" ]]; then
+        echo "Error: $jsonl not found" >&2
+        return 1
+    fi
+
+    if ! command -v jq &>/dev/null; then
+        echo "Error: jq is required for migration" >&2
+        return 1
+    fi
+
+    ensure_dir
+
+    # Single jq call generates all markdown with <<<FILE:id>>> delimiters
+    # Then awk splits into individual files (much faster than per-line jq calls)
+    # Beads dependency types map to: blocks->deps, parent-child->parent, related->links
+    jq -r '
+        def by_type(t): [.dependencies[]? | select(.type == t) | .depends_on_id];
+        def to_array: if length == 0 then "[]" else "[" + (map("\(.)") | join(", ")) + "]" end;
+
+        (by_type("blocks") | to_array) as $deps |
+        (by_type("related") | to_array) as $links |
+        (by_type("parent-child") | first // null) as $parent |
+
+        "<<<FILE:\(.id)>>>\n" +
+        "---\n" +
+        "id: \(.id)\n" +
+        "status: \(.status // "open")\n" +
+        "deps: \($deps)\n" +
+        "links: \($links)\n" +
+        "created: \(.created_at // "")\n" +
+        "type: \(.issue_type // "task")\n" +
+        "priority: \(.priority // 2)\n" +
+        (if .assignee and .assignee != "" then "assignee: \(.assignee)\n" else "" end) +
+        (if .external_ref and .external_ref != "" then "external-ref: \(.external_ref)\n" else "" end) +
+        (if $parent then "parent: \($parent)\n" else "" end) +
+        "---\n" +
+        "# \(.title // "Untitled")\n\n" +
+        (if .description and .description != "" then "\(.description)\n\n" else "" end) +
+        (if .design and .design != "" then "## Design\n\n\(.design)\n\n" else "" end) +
+        (if .acceptance_criteria and .acceptance_criteria != "" then "## Acceptance Criteria\n\n\(.acceptance_criteria)\n\n" else "" end) +
+        (if .notes and .notes != "" then "## Notes\n\n\(.notes)\n\n" else "" end)
+    ' "$jsonl" | awk -v dir="$TICKETS_DIR" '
+        /^<<<FILE:.*>>>$/ {
+            if (file) close(file)
+            id = substr($0, 9, length($0) - 11)
+            file = dir "/" id ".md"
+            count++
+            print "Migrated: " id
+            next
+        }
+        file { print > file }
+        END { if (file) close(file); print "Migrated " count " tickets from beads" }
+    '
+}
+
+cmd_help() {
+    local cmd
+    cmd=$(basename "$0")
+    cat << EOF
+$cmd - minimal ticket system with dependency tracking
+
+Usage: $cmd <command> [args]
+
+Commands:
+  create [title] [options] Create ticket, prints ID
+    -d, --description      Description text
+    --design               Design notes
+    --acceptance           Acceptance criteria
+    -t, --type             Type (bug|feature|task|epic|chore) [default: task]
+    -p, --priority         Priority 0-4, 0=highest [default: 2]
+    -a, --assignee         Assignee
+    --external-ref         External reference (e.g., gh-123, JIRA-456)
+    --parent               Parent ticket ID
+    --tags                 Comma-separated tags (e.g., --tags ui,backend,urgent)
+  start <id>               Set status to in_progress
+  close <id>               Set status to closed
+  reopen <id>              Set status to open
+  status <id> <status>     Update status (open|in_progress|closed)
+  dep <id> <dep-id>        Add dependency (id depends on dep-id)
+  dep tree [--full] <id>   Show dependency tree (--full disables dedup)
+  dep cycle                Find dependency cycles in open tickets
+  undep <id> <dep-id>      Remove dependency
+  link <id> <id> [id...]   Link tickets together (symmetric)
+  unlink <id> <target-id>  Remove link between tickets
+  ls|list [--status=X] [-a X] [-T X]   List tickets
+  ready [-a X] [-T X]      List open/in-progress tickets with deps resolved
+  blocked [-a X] [-T X]    List open/in-progress tickets with unresolved deps
+  closed [--limit=N] [-a X] [-T X] List recently closed tickets (default 20, by mtime)
+  show <id>                Display ticket
+  edit <id>                Open ticket in \$EDITOR
+  add-note <id> [text]     Append timestamped note (or pipe via stdin)
+  query [jq-filter]        Output tickets as JSON, optionally filtered
+  migrate-beads            Import tickets from .beads/issues.jsonl
+
+Tickets stored as markdown files in .tickets/
+Supports partial ID matching (e.g., '$cmd show 5c4' matches 'nw-5c46')
+EOF
+}
+
+# Main dispatch
+# Initialize tickets dir (skip for help)
+case "${1:-help}" in
+    help|--help|-h) ;;
+    *) init_tickets_dir "${1:-}" || exit 1 ;;
+esac
+
+case "${1:-help}" in
+    create) shift; cmd_create "$@" ;;
+    start)  shift; cmd_start "$@" ;;
+    close)  shift; cmd_close "$@" ;;
+    reopen) shift; cmd_reopen "$@" ;;
+    status) shift; cmd_status "$@" ;;
+    dep)    shift; cmd_dep "$@" ;;
+    undep)  shift; cmd_undep "$@" ;;
+    link)   shift; cmd_link "$@" ;;
+    unlink) shift; cmd_unlink "$@" ;;
+    ls|list) shift; cmd_ls "$@" ;;
+    ready)  shift; cmd_ready "$@" ;;
+    blocked) shift; cmd_blocked "$@" ;;
+    closed) shift; cmd_closed "$@" ;;
+    show)   shift; cmd_show "$@" ;;
+    edit)   shift; cmd_edit "$@" ;;
+    add-note) shift; cmd_add_note "$@" ;;
+    query) shift; cmd_query "$@" ;;
+    migrate-beads) shift; cmd_migrate_beads "$@" ;;
+    help|--help|-h) cmd_help ;;
+    *)
+        echo "Unknown command: $1" >&2
+        cmd_help >&2
+        exit 1
+        ;;
+esac

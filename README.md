@@ -43,13 +43,13 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/HEAD
 curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --determinate
 ```
 
-2. Source nix to run nix things
+1. Source nix to run nix things
 
 ```bash
 source "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
 ```
 
-3. Run the installer (this clones the repo to ~/.dotfiles)
+1. Run the installer (this clones the repo to ~/.dotfiles)
 
 ```bash
 nix run github:megalithic/dotfiles
@@ -76,12 +76,12 @@ upgrade-nix   # upgrades nix
 
 > **_NOTE_**: this nix setup is super unstable at the moment.
 
-#### Quick start if using devenv:
+#### Quick start
 
 ```sh
-devenv shell                    # enter dev environment
-devenv tasks run home:apply     # apply home-manager config
-devenv tasks run system:apply   # apply system config (requires sudo)
+just home         # apply home-manager config
+just darwin       # apply system config (requires sudo)
+mise run nix:update  # update flake lockfiles and pinned packages
 ```
 
 ---

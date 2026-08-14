@@ -36,9 +36,11 @@ When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-f
 
 - Pasted images appear as file paths; image data is replaced with a placeholder.
 - To analyze an image, run pi with a vision model via bash:
+
   ```bash
   pi --no-session -p --model opencode-go/qwen3.7-plus -p @/path/to/image "describe this image in detail"
   ```
+
 - For code/screenshots: `--model opencode-go/kimi-k2.7-code` gives more structured output.
 - The subagent runs stateless — it only has the `read` tool, can't modify files.
 - pi writes model output to stderr. Use `2>&1` when you need the output (e.g. calling pi from another pi). Only use `2>/dev/null` for fire-and-forget calls.
@@ -48,7 +50,7 @@ When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-f
 - For non-interactive rebases, always run `GIT_EDITOR=true git rebase --continue`
 - Worktree conventions in `git-worktrees` skill
 
-## Coding specific guidelines:
+## Coding specific guidelines
 
 - KISS, YAGNI - prefer duplication over wrong abstraction
 - Prefer unix tools for single task scripts
@@ -58,7 +60,7 @@ When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-f
 - Place tests next to the files they test, not in a separate test directory. Integration tests can be next to the stack/module they test.
 - When `lat.md/` exists in the project root, use `lat search` to understand the codebase before making changes. Update `lat.md/` to reflect codebase changes, except for local-only paths under `.local_scripts/` or `.sandbox/`. Run `lat check` before finishing when lat docs changed.
 
-## General workflow:
+## General workflow
 
 - Always clarify users intention unless request is completely clear
 - If uncertain, say so immediately - don't guess what to implement
@@ -69,19 +71,18 @@ When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-f
 - Run parallel reviewers after every non-trivial implementation
 - Ask oracle for a second opinion before risky decisions
 
-## Local development scripts:
+## Local development scripts
 
 - Use .local_scripts/ for temporary, messy, repo-specific scripts that shouldn't be committed
 
-## Task tracking:
+## Task tracking
 
 - Manage tickets with `tk` when you need structured task tracking
-  - `tk` is project-local via `devenv.nix` (not on global PATH). Always run as `devenv shell -- tk <subcommand>`
-  - Example: `devenv shell -- tk list`, `devenv shell -- tk create "title" -d "desc" --acceptance "1. ..." -t feature`
+  - `tk` is on PATH (vendored at `~/.dotfiles/bin/tk`)
+  - Example: `tk list`, `tk create "title" -d "desc" --acceptance "1. ..." -t feature`
   - Ticket files live in `.tickets/` as YAML-frontmatter markdown
 
-
-## Research, audit, and exploration docs:
+## Research, audit, and exploration docs
 
 - Ad-hoc agent-generated documents (audits, research notes, mental-model writeups, investigation reports) go to `~/.local/share/pi/docs/$(basename $PWD)/`, mirroring the layout used by handoffs (`~/.local/share/pi/handoffs/$(basename $PWD)/`) and plans.
 - Use a descriptive filename, e.g. `helium-audit.md`, `widevine-research.md`. Companion artifacts (HTML, diagrams) sit next to the markdown with the same stem.

@@ -8,15 +8,8 @@ _plans/
 _docs/
 docs/
 
-# Devenv
-.devenv*
 .pi
 .nvim.lua
-.nvim.lua
-.pre-commit-config.yaml
-.pi
-devenv.local.nix
-devenv.local.yaml
 lat.md/.cache/
 result
 

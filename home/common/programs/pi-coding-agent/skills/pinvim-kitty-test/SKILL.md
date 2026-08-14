@@ -15,7 +15,7 @@ Do not rely only on `--no-session` shims for pinvim rewrite tickets. Use shims f
 - Never attach to, send keys to, or kill panes from existing tmux servers. All tmux commands in this skill must use `-S "$TEST_TMUX_SOCKET"`.
 - Never kill panes you did not create. Record pane IDs before cleanup.
 - Run from the directory under test. Use the caller's current working directory, whether it is `~/.dotfiles`, a worktree, or another repo checkout.
-- Apply Home Manager before testing installed wrappers: `devenv shell -- just home`.
+- Apply Home Manager before testing installed wrappers: `just home`.
 - Keep test artifacts under a clearly named tmux session and optional test state dir.
 - Prefer `trash` over `rm` for file deletion.
 
@@ -61,7 +61,7 @@ If kitty is not running, open kitty's startup window in the test cwd and run the
 if [ "$PINVIM_TEST_INSIDE_RIG" -eq 0 ] && [ "$KITTY_WAS_RUNNING" -eq 0 ]; then
   open -a kitty --args \
     --directory "$WT" \
-    fish -lc "cd '$WT'; devenv shell -- tmux -S '$TEST_TMUX_SOCKET' new-session -s '$TEST_SESSION'"
+    fish -lc "cd '$WT'; tmux -S '$TEST_TMUX_SOCKET' new-session -s '$TEST_SESSION'"
 fi
 ```
 
@@ -91,7 +91,7 @@ if [ "$PINVIM_TEST_INSIDE_RIG" -eq 0 ] && [ "$KITTY_WAS_RUNNING" -eq 1 ]; then
     --os-window-title "$TEST_SESSION" \
     --cwd "$WT" \
     --title "$TEST_SESSION" \
-    fish -lc "cd '$WT'; devenv shell -- tmux -S '$TEST_TMUX_SOCKET' new-session -s '$TEST_SESSION'"
+    fish -lc "cd '$WT'; tmux -S '$TEST_TMUX_SOCKET' new-session -s '$TEST_SESSION'"
 fi
 ```
 
@@ -134,7 +134,7 @@ NVIM_PANE=$(tmux -S "$TEST_TMUX_SOCKET" display-message -t "$TEST_SESSION:$TEST_
 Start Nvim in the test pane:
 
 ```bash
-tmux -S "$TEST_TMUX_SOCKET" send-keys -t "$NVIM_PANE" "cd '$WT' && devenv shell -- nvim README.md" Enter
+tmux -S "$TEST_TMUX_SOCKET" send-keys -t "$NVIM_PANE" "cd '$WT' && nvim README.md" Enter
 sleep 2
 tmux -S "$TEST_TMUX_SOCKET" display-message -t "$NVIM_PANE" -p '#{pane_current_command}'
 ```
@@ -256,9 +256,9 @@ Run these before manual behavior checks:
 
 ```bash
 cd "$WT"
-devenv shell -- bin/pinvim-protocol-smoke
-devenv shell -- nvim --headless '+lua require("pinvim").setup(); vim.cmd("PiDoctor"); print("doctor ok")' +qa
-devenv shell -- just validate home
+bin/pinvim-protocol-smoke
+nvim --headless '+lua require("pinvim").setup(); vim.cmd("PiDoctor"); print("doctor ok")' +qa
+just validate home
 ```
 
 Start a result log before interactive checks. Fill it as you go; do not wait until the end and reconstruct from memory.
@@ -443,7 +443,7 @@ tmux -S "$TEST_TMUX_SOCKET" split-window -h -l 45 -t "$PI_PANE" \
   -e "PINVIM_INSTANCE_ID=$INSTANCE_ID" \
   -e "PINVIM_REGISTRY_ROOT=$REGISTRY_ROOT" \
   -e "PI_SOCKET=$ORIGINAL_SOCKET" \
-  "cd '$WT' && devenv shell -- pinvim --no-session -p '/pinvim-health'; read -n 1"
+  "cd '$WT' && pinvim --no-session -p '/pinvim-health'; read -n 1"
 sleep 5
 NESTED_PANE=$(tmux -S "$TEST_TMUX_SOCKET" list-panes -t "$TEST_SESSION" -F '#{pane_id}	#{pane_current_command}	#{pane_title}' | tail -1 | cut -f1)
 tmux -S "$TEST_TMUX_SOCKET" capture-pane -p -J -t "$NESTED_PANE" -S -120

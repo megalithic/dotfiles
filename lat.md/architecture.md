@@ -53,7 +53,7 @@ Nix/Home Manager and mise coexist during migration. `mise/config/mise/global_con
 
 Literal copy twins require recursive diff and deliberate sync on each related change: `config/` and `mise/config/` currently include Hammerspoon, Neovim, tmux, Kitty, Ghostty, and Pi. The active Nix-side tree remains source of truth unless a program section records another owner or divergence. [[programs/hammerspoon#Parallel mise configuration|Hammerspoon]] documents its required kanata launchd-label difference.
 
-Generated Nix files and static mise files, including fish, git, SSH/1Password, and other per-file mappings, require behavior parity rather than byte equality. Shared-source mappings, including Kanata, Espanso, and selected SSH paths, link same repository files and must not be copied. Update this policy and program documentation whenever ownership or a divergence changes; run `devenv shell -- lat check` after doc changes.
+Generated Nix files and static mise files, including fish, git, SSH/1Password, and other per-file mappings, require behavior parity rather than byte equality. Shared-source mappings, including Kanata, Espanso, and selected SSH paths, link same repository files and must not be copied. Update this policy and program documentation whenever ownership or a divergence changes; run `lat check` after doc changes.
 
 ## Mise bootstrap
 
@@ -85,13 +85,17 @@ Rebuild recipes keep nix-darwin and Home Manager switches separate while still a
 
 Both recipes accept `--dry-run` for build-only validation and `--skip-sync` when called from the full flow. `just validate` builds Darwin and Home Manager configs without switching and removes any `result` symlink. `just bootstrap` rebuilds without `just` on `PATH`.
 
-## Devenv shell activation
+## Repo dev environment (mise)
 
-The repo devenv entry uses shell hooks plus direnv support, and generated caches stay ignored.
+Devenv is removed from this repo as part of the mise migration; repo-local `mise.toml` and `hk.pkl` replace it.
 
-Home Manager exports `DEVENV_TUI=false` from `home/common/programs/devenv/default.nix` so direnv-triggered `devenv direnv-export` stays non-interactive. The root `.envrc` drives direnv workflows with `eval "$(devenv direnvrc)"` and `use devenv`.
+The removal covers `devenv.nix`, `devenv.yaml`, `devenv.lock`, and the prek/git-hooks.nix shims in `.git/hooks`. The system-wide devenv tool from `home/common/programs/devenv/default.nix` remains for other projects.
 
-`devenv.yaml` imports the shared `devenv-base` module and pins GitHub-hosted devenv inputs with `git+ssh://git@github.com/...` URLs. This keeps `devenv update`, `devenv shell`, and direnv activation working with the global gitconfig rewrite from `https://github.com/` to SSH, and lets the private `megalithic/devenv-base` repo fetch through normal SSH auth.
+Repo-local `mise.toml` replaces it: tasks `nix:update` (flake lockfile plus manually-pinned package refresh), `nix:apply:home`, and `nix:apply:darwin` (thin `just` wrappers), plus tools needed by git hooks (`hk`, `gitleaks`, `shellcheck`) and `npm:lat.md` for the `lat` CLI. megabookpro's global mise config is a nix-managed stub without these tools, so the repo-local entries carry both hosts.
+
+`tk` is vendored at `bin/tk` (on `PATH` via mise `_.path` and the `~/bin` symlinks). Upstream `wedow/ticket` publishes no release assets, and the vendored copy preserves the devenv-base patch that sanitizes the directory basename when deriving ticket ID prefixes — existing `.tickets/dot-*` IDs depend on it.
+
+Git hooks are defined in `hk.pkl` ([hk](https://hk.jdx.dev)) mirroring the old set: check-merge-conflict, detect-private-key, gitleaks (staged-only override), shellcheck at warning severity, and conventional-commit checking on commit-msg. Hooks are configured but not installed; enable with `hk install --global` (git 2.54+) or per-repo `hk install`, bypass with `HK=0 git commit`. Nix linters (deadnix, statix) from the old setup are not yet ported.
 
 Repo-local `.devenv` and `.direnv` plus `.local_scripts/` are ignored. Unused flake inputs should be removed from `flake.lock` after their `flake.nix` references are gone.
 
