@@ -107,7 +107,10 @@ _.path = [
   "/Applications/Postgres.app/Contents/Versions/latest/bin",
 ]
 _.fnox-env = { tools = true }
-_.source = "fnox export"
+# Secrets chain: fnox when configured, else opnix (megabookpro during the
+# nix -> mise migration). Script guard avoids per-shell fnox failures on
+# hosts without ~/.config/fnox.
+_.source = "{{env.HOME}}/.dotfiles/mise/fragments/env-secrets.sh"
 
 [shell_alias]
 "...." = "cd ../../.."
@@ -270,6 +273,11 @@ fnox-env = "https://github.com/jdx/mise-env-fnox"
 "npm:bash-language-server" = "latest"
 "npm:chrome-devtools-mcp" = "latest"
 "npm:hunkdiff" = "latest"
+# lat.md CLI (`lat`) — replaces the nix/devenv-provided build. tk stays
+# vendored at bin/tk: upstream wedow/ticket has no release assets (script-only
+# repo) and the devenv-era prefix-sanitization patch must be preserved for
+# existing .tickets/dot-* IDs.
+"npm:lat.md" = "latest"
 # "npm:httpyac" = "latest"
 "npm:@earendil-works/pi-coding-agent" = "latest"
 "npm:prettier" = "latest"
@@ -892,3 +900,39 @@ run = "mise-tmpl-gen wt.elixir"
 description = "Copy the shopify Worktrunk template + scripts to [target-dir]/.config/wt.toml (default: cwd)"
 dir = "{{cwd}}"
 run = "mise-tmpl-gen wt.shopify"
+
+# Global task: apply per-worktree DB/port isolation to a Phoenix project.
+# Run from a project root: `mise run elixir-worktree-isolation` (dry-run)
+# or `mise run elixir-worktree-isolation -- --apply` to write.
+# Script lives in repo bin/ (linked onto PATH).
+[tasks.elixir-worktree-isolation]
+description = "Apply per-worktree DB/port isolation to Phoenix config/dev.exs and config/test.exs"
+dir = "{{cwd}}"
+run = "elixir-worktree-isolation"
+
+# -- nix:* tasks: megabookpro only (nix-managed host during the migration).
+#    Harmless on workbookpro; they only run when invoked. --
+
+[tasks."nix:apply:home"]
+description = "Apply home-manager configuration (megabookpro)"
+dir = "{{env.HOME}}/.dotfiles"
+run = "just home"
+
+[tasks."nix:apply:darwin"]
+description = "Apply nix-darwin configuration (megabookpro)"
+dir = "{{env.HOME}}/.dotfiles"
+run = "just darwin"
+
+[tasks."nix:update"]
+description = "Update flake lockfile and manually-pinned packages (megabookpro)"
+dir = "{{env.HOME}}/.dotfiles"
+run = """
+set -euo pipefail
+
+nix flake update --flake ./
+pi -p "Check these two manually-pinned packages for newer versions and update them if newer exists. DO NOT apply any changes (no home-manager switch, no nix-build). DO NOT commit. ONLY update the source files — nothing else.
+
+1. pi-mcp-adapter (packages/pi-mcp-adapter.nix): check GitHub releases at nicobailon/pi-mcp-adapter for version newer than what's in the nix file. If newer: update version, rev, src hash, and npmDepsHash in packages/pi-mcp-adapter.nix.
+
+2. pi-web-access (packages/pi-web-access.nix): check GitHub releases at nicobailon/pi-web-access for version newer than what's in the nix file. If newer: update version, rev, src hash, and npmDepsHash in packages/pi-web-access.nix."
+"""

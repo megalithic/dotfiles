@@ -19,6 +19,9 @@ in
     interactiveShellInit = builtins.readFile ./config.fish + ''
       # Standalone mise (installed by bootstrap.sh to ~/.local/bin/mise);
       # replaces the removed programs.mise Home Manager module's fish integration.
+      # helium/shade-next stay nix-owned on this host during the migration —
+      # keep mise from installing its own copies over them.
+      set -gx MISE_DISABLE_TOOLS "github:megalithic/helium-macos-releases,github:megalithic/shade-next"
       if test -x "$HOME/.local/bin/mise"
         "$HOME/.local/bin/mise" activate fish | source
       end
