@@ -16,7 +16,13 @@ in
     enable = true;
     package = pkgs.fish;
 
-    interactiveShellInit = builtins.readFile ./config.fish;
+    interactiveShellInit = builtins.readFile ./config.fish + ''
+      # Standalone mise (installed by bootstrap.sh to ~/.local/bin/mise);
+      # replaces the removed programs.mise Home Manager module's fish integration.
+      if test -x "$HOME/.local/bin/mise"
+        "$HOME/.local/bin/mise" activate fish | source
+      end
+    '';
 
     plugins = import ./plugins.nix { inherit pkgs; };
   };
