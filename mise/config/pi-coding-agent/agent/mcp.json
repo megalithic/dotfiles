@@ -48,6 +48,11 @@
 			"env": {
 				"MISE_EXPERIMENTAL": "1"
 			}
+		},
+		"sessions": {
+			"type": "stdio",
+			"command": "sessions",
+			"args": ["--mcp"]
 		}
 	}
 }

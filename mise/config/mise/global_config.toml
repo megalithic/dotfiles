@@ -256,6 +256,9 @@ fnox-env = "https://github.com/jdx/mise-env-fnox"
 "github:str4d/age-plugin-yubikey" = "latest"
 "github:EmmyLuaLs/emmylua-analyzer-rust" = "latest"
 "github:Feel-ix-343/markdown-oxide" = "latest"
+# sessions — search/memory across AI coding sessions (Claude, Codex, Pi, OpenCode);
+# CLI fuzzy-resume + MCP server (`sessions --mcp`) wired into pi mcp.json
+"github:nicknisi/sessions" = "latest"
 # "github:jesseduffield/lazygit" = "latest"
 # "github:kevindutra/crit" = "latest"
 # "github:noworrieseh/macdisp" = "latest"
