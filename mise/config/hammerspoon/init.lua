@@ -69,7 +69,7 @@ end
 
 hs.loadSpoon("EmmyLua")
 
-local watchers = { "audio", "notification", "url", "pasteboard", "media-presence" }
+local watchers = { "audio", "notification", "url" }
 -- local watchers = { "audio", "dock", "app", "notification", "url", "pasteboard", "screen", "media-presence" }
 
 req("bindings")
