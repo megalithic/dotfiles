@@ -1,10 +1,10 @@
 status is-interactive; or return
 
 if command -sq eza
-    alias ls 'eza --all --group-directories-first --color=always --hyperlink=always'
-    alias l 'eza --all --long --color=always --color-scale=all --group-directories-first --sort=type --hyperlink=always --icons=always --octal-permissions'
-    alias ll 'eza -lahF --group-directories-first --color=always --icons=always --hyperlink=always'
-    alias la 'eza -lahF --group-directories-first --color=always --icons=always --hyperlink=always'
+    alias ls 'eza --all --group-directories-first --color=always --hyperlink'
+    alias l 'eza --all --long --color=always --color-scale=all --group-directories-first --sort=type --hyperlink --icons=always --octal-permissions'
+    alias ll 'eza -lahF --group-directories-first --color=always --icons=always --hyperlink'
+    alias la 'eza -lahF --group-directories-first --color=always --icons=always --hyperlink'
     alias tree 'eza --tree --color=always'
 end
 
