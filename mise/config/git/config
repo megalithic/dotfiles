@@ -351,6 +351,14 @@
   pushInsteadOf = https://github.com/
 
 [credential "https://github.com"]
+  # empty helper resets helpers inherited from earlier scopes
+  # (nix git ships a system gitconfig with credential.helper=osxkeychain,
+  # which otherwise fires first and prompts for the login keychain)
+  helper =
+  helper = !gh auth git-credential
+
+[credential "https://gist.github.com"]
+  helper =
   helper = !gh auth git-credential
 
 [browse-remote "github.com"]
