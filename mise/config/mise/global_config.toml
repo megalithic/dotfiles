@@ -389,7 +389,17 @@ zoxide = "latest"
 [tools."github:megalithic/helium-macos-releases"]
 version = "latest"
 os = ["macos"]
-asset_pattern = "helium_*_arm64-macos.dmg"
+# Gotchas learned during the megabookpro cutover (2026-08):
+# - If this tool is in MISE_DISABLE_TOOLS anywhere in the environment (old
+#   shells, tmux server env), mise drops ALL tool options — asset_pattern and
+#   postinstall vanish, autodetection runs, and .dmg assets are hard-excluded,
+#   yielding "No matching asset found for platform macos-arm64" with the DMG
+#   plainly listed. Check `mise tool <name>` shows Tool Options before blaming
+#   the pattern; purge stale env with `tmux set-environment -gu MISE_DISABLE_TOOLS`.
+# - mise 2026.8.5's github backend 404'd by prepending `v` to the release tag;
+#   fixed by `mise self-update` (bootstrap.sh keeps the binary current).
+# asset_pattern supports globs and {{version}} templating equally.
+asset_pattern = "helium_{{version}}_arm64-macos.dmg"
 postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh && $DOTFILES_DIR/mise/tasks/setup-helium"
 
 # shade-next panel agent (private repo — token via MISE_GITHUB_TOKEN,
