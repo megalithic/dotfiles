@@ -107,10 +107,27 @@ _.path = [
   "/Applications/Postgres.app/Contents/Versions/latest/bin",
 ]
 _.fnox-env = { tools = true }
-# Secrets chain: fnox when configured, else opnix (megabookpro during the
-# nix -> mise migration). Script guard avoids per-shell fnox failures on
-# hosts without ~/.config/fnox.
-_.source = "{{env.HOME}}/.dotfiles/mise/fragments/env-secrets.sh"
+# Secrets are NOT loaded here. Removed 2026-08-24 along with
+# mise/fragments/env-secrets.sh.
+#
+# Why: `_.source` runs a bash script on *every* mise config load, including the
+# load performed by a mise shim. `~/.local/share/mise/shims/` holds 269 shims,
+# all symlinks to the mise binary, and seven scripts in this repo prepend that
+# dir to PATH (bin/pi, bin/pinvim, mise/tasks/pi-update, and the launchd
+# entrypoints). So: shim -> mise -> config load -> _.source -> fnox shim ->
+# mise -> ... which forked without bound (~9,700 processes on 2026-08-24).
+#
+# The fragment was also a guaranteed no-op: every secret in mise/config/fnox/
+# config.toml is `env = false`, so `fnox export` returned zero lines. It cost a
+# subprocess per config load and bought nothing.
+#
+# Secrets now reach consumers the documented way:
+#   interactive shells -> `fnox activate fish` (~/.config/fish/conf.d/fnox.fish)
+#   non-shell (pi)     -> `fnox exec --` in the launcher
+# See ~/.local/share/pi/plans/dotfiles/fnox-1password-secret-migration.md
+#
+# DO NOT reintroduce `_.source`/`_.file` that invokes a PATH-resolved binary.
+# If mise-env-fnox is ever enabled, pin `fnox_bin` to an absolute non-shim path.
 
 [shell_alias]
 "...." = "cd ../../.."
@@ -608,20 +625,13 @@ keep_alive = true
 stdout_path = "~/Library/Logs/llama-cpp/stdout.log"
 stderr_path = "~/Library/Logs/llama-cpp/stderr.log"
 
-[bootstrap.macos.launchd.agents."com.megadots.sesame-session-indexer"]
-program = "~/.dotfiles/mise/config/pi-coding-agent/scripts/sesame-session-indexer"
-args = ["watch", "--interval", "30"]
-run_at_load = true
-keep_alive = true
-stdout_path = "~/.cache/sesame-session-indexer.log"
-stderr_path = "~/.cache/sesame-session-indexer.log"
-
-[bootstrap.macos.launchd.agents."com.megadots.pi-session-indexer"]
-program = "~/.dotfiles/mise/config/pi-coding-agent/scripts/pi-session-indexer"
-run_at_load = true
-start_interval = 7200
-stdout_path = "~/.cache/pi-session-indexer.log"
-stderr_path = "~/.cache/pi-session-indexer.log"
+# Removed 2026-08-24: com.megadots.sesame-session-indexer and
+# com.megadots.pi-session-indexer. Both prepended ~/.local/share/mise/shims to
+# PATH and ran unattended (keep_alive / start_interval 7200). Any shimmed binary
+# they invoked (pi-session-indexer calls `jq` in a loop) re-entered mise config
+# load -> [env] _.source -> the fnox shim -> mise -> ... which forked without
+# bound. Session indexing is not worth an unattended fork-bomb vector; revisit
+# only after _.source is gone and with absolute, non-shim binary paths.
 
 # media-presence: meeting/AV presence daemon (bin/media-presenced, single-file
 # swift script, no build step). Defaults match the nix agent's args
