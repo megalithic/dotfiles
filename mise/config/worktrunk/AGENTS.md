@@ -1,8 +1,8 @@
 # Worktrunk — mise-managed configuration
 
-Non-nix twin of `home/common/programs/worktrunk/` (the Home Manager module).
-Both trees are **independent copies**: while the nix setup is still active,
-changes must be mirrored manually to whichever tree you actually run.
+**Sole owner** of Worktrunk config on both hosts since the megabookpro wave-1
+flip (the Home Manager worktrunk program module is removed; the optional
+`inputs.worktrunk` homeModule import remains but nothing enables it).
 
 Applied through `mise/config/mise/global_config.toml`:
 
@@ -19,7 +19,7 @@ Applied through `mise/config/mise/global_config.toml`:
 | `pkgs.worktrunk` binary | `[tools]` `worktrunk` |
 | `xdg.configFile worktrunk/config.toml` (worktree-path template) | this dir's `config.toml` |
 | `enableFishIntegration = false` + local `wt` fish function (vendored directives, implicit switch, tmux targets) | already migrated: `mise/config/fish/functions/wt.fish` + completions |
-| `enableBashIntegration/ZshIntegration` (`eval "$(wt config shell init bash|zsh)"` in rc files) | migrated: `mise/config/bash/bashrc` and `mise/config/zsh/zshrc` run the upstream init after `mise activate` |
+| `enableBashIntegration/ZshIntegration` (`eval "$(wt config shell init bash | zsh)"` in rc files) | migrated: `mise/config/bash/bashrc` and `mise/config/zsh/zshrc` run the upstream init after `mise activate` |
 | gitconfig `wt = !wt` alias | already migrated: `mise/config/git/config` |
 | global ignore project `.config/` dirs, `.worktrees/` (via tool-ignore) | already migrated: `mise/config/git/ignore` + `tool-ignore` |
 
@@ -31,4 +31,4 @@ mise bootstrap dotfiles apply
 wt config show   # confirm worktree-path template resolves
 ```
 
-Do not apply while Home Manager still owns `~/.config/worktrunk/config.toml`.
+Cutover complete: Home Manager no longer manages `~/.config/worktrunk/config.toml`.

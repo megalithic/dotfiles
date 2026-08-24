@@ -1,11 +1,8 @@
 # Git — mise-managed configuration
 
-Non-nix twin of `home/common/programs/git/` (the Home Manager module). Both
-trees are **independent copies**: while the nix setup is still active, changes
-must be mirrored manually to whichever tree you actually run.
-
-Nothing here applies automatically. Application happens through
-`mise/config/mise/global_config.toml` `[dotfiles]` table once that config is active.
+**Sole owner** of global git config on both hosts since the megabookpro
+wave-1 flip (the Home Manager git module is removed; no mirroring needed).
+Applied through the `mise/config/mise/global_config.toml` `[dotfiles]` table.
 
 ## Layout — XDG-native (deliberately different from the nix tree)
 
@@ -53,9 +50,7 @@ mise bootstrap dotfiles apply   # links config, ignore, tool-ignore
 git config --list --show-origin # verify origins point at ~/.config/git/config
 ```
 
-Cutover hazard: git reads `~/.config/git/config` first, then `~/.gitconfig` —
-the later file wins per key. While Home Manager still owns `~/.gitconfig`,
-both exist with identical values; any new edit must land here AND be mirrored
-to the nix tree, or the stale `~/.gitconfig` silently wins. Drop the HM git
-module promptly after cutover (its `~/.gitconfig`/`~/.gitignore` symlinks
-disappear with it).
+Cutover complete (wave 1): the HM git module and its `~/.gitconfig` /
+`~/.gitignore` symlinks are gone; `~/.config/git/config` is the only global
+config git reads. If a stray `~/.gitconfig` ever reappears, it wins per key —
+delete it.

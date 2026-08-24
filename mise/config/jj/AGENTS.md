@@ -1,8 +1,8 @@
 # jj (Jujutsu) — mise-managed configuration
 
-Non-nix twin of `home/common/programs/jj/` (the Home Manager module). Both
-trees are **independent copies**: while the nix setup is still active, changes
-must be mirrored manually to whichever tree you actually run.
+**Sole owner** of jj config on both hosts since the megabookpro wave-1 flip:
+the Home Manager jj module is removed and `~/.jjconfig.toml` is retired
+(backup at `~/.jjconfig.toml.pre-mise-bak`; solo config verified identical).
 
 Applied through `mise/config/mise/global_config.toml` `[dotfiles]` entry:
 `"~/.config/jj/config.toml" = "~/.dotfiles/mise/config/jj/config.toml"`.
@@ -25,20 +25,19 @@ Applied through `mise/config/mise/global_config.toml` `[dotfiles]` entry:
 
 ## Conventions / notes
 
-- `~/.config/jj/repos/` is jj runtime state (per-repo scoped configs) — never
++ `~/.config/jj/repos/` is jj runtime state (per-repo scoped configs) — never
   managed; only `config.toml` is linked, per-file.
-- Signing needs 1Password in `/Applications` (`brew-cask:1password`) and
++ Signing needs 1Password in `/Applications` (`brew-cask:1password`) and
   `~/.ssh/allowed_signers` (absolute `/Users/seth/...` path — same username
   on both hosts; linked from `mise/config/ssh/allowed_signers`).
-- Runtime deps: delta (`[tools]`), nvim (diff-editor `DiffEditor`), gh
++ Runtime deps: delta (`[tools]`), nvim (diff-editor `DiffEditor`), gh
   (`pr`/`push --pr` aliases), bash + rg (script aliases). `JJ_EDITOR` comes
   from the global mise config `[env]`.
-- Known quirk preserved as-is: `revset-aliases."stack(x)"` references `n`
++ Known quirk preserved as-is: `revset-aliases."stack(x)"` references `n`
   (copied from the live `.jjconfig.toml`; the nix `templates.nix` variant used
   `2`). Fix in both trees or not at all.
-- At cutover, `~/.jjconfig.toml` becomes redundant (every key it holds is
-  either overridden or duplicated here) — delete it to avoid a third layer
-  drifting again.
++ `~/.jjconfig.toml` is retired (wave-1 cutover); do not recreate it — a
+  third config layer silently wins/loses per key and drifts.
 
 ## Applying
 
@@ -48,5 +47,5 @@ jj config list --user | wc -l   # should match the pre-cutover count
 jj log                          # custom template, curved graph, signatures
 ```
 
-Do not apply while Home Manager still owns `~/.config/jj/config.toml` — mise
-re-points the symlink and the next `just home` points it back.
+Cutover complete: Home Manager no longer manages `~/.config/jj/config.toml`;
+mise apply is safe.

@@ -1,7 +1,7 @@
 # Starship - cross-shell prompt
-# Config (TOML) lives next to this file; written via xdg.configFile.
+# Config ownership flipped to mise (mise/config/starship/starship.toml ->
+# ~/.config/starship.toml via [dotfiles]). Keep enable=true so the HM fish
+# integration still inits the prompt until the shells wave flips fish.
 _: {
   programs.starship.enable = true;
-
-  xdg.configFile."starship.toml".text = builtins.readFile ./starship.toml;
 }

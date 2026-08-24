@@ -188,7 +188,7 @@ in
   # Override or extend in hosts/<hostname>.nix via spotlight.exclusions.paths/scanPaths.
   spotlight.exclusions = {
     enable = true;
-    fromFile = ../home/common/programs/git/gitignore;
+    fromFile = ../mise/config/git/ignore;
     paths = [
       "node_modules"
       ".devenv"

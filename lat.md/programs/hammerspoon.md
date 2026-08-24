@@ -38,13 +38,13 @@ Hammerspoon can act as the HTTP/S handler for app deep links while preserving br
 
 shade-next bindings are split between generated data and handwritten lifecycle code.
 
-`home/common/programs/shade-next/default.nix` writes `~/.local/share/hammerspoon/fragments/shade-next.lua` and `~/.config/shade-next/config.toml`; `config/hammerspoon/shade_next.lua` reads the fragment. The panel design spec lives in `~/.local/share/pi/docs/shade-next/panel-design.md`.
+mise `[dotfiles]` links `~/.local/share/hammerspoon/fragments/shade-next.lua` from the static `mise/fragments/hammerspoon/shade-next.lua` and `~/.config/shade-next/config.toml` from `mise/config/shade-next/config.toml` (the former nix shade-next module that generated both is removed); `config/hammerspoon/shade_next.lua` reads the fragment. The panel design spec lives in `~/.local/share/pi/docs/shade-next/panel-design.md`.
 
 Key behavior: one panel-height rule across all states; block types are result cards, section lists, message rows, composer, and preview; Esc always hides the panel; route keys reserve Ctrl+n for note, Ctrl+p for Pi, Ctrl+c for calc. Compact launch geometry starts at `900×104` points and grows result panels to visible rows before clamping to the configured max height.
 
 `hyper+return` talks directly to shade-next's control socket or `shade-next://toggle` URL so current app focus does not decide toggle behavior. When shade-next shows, it records the frontmost app before activating itself and restores it on hide without Accessibility APIs. `hyper+n` enters the route modal (`p` prefills `pi`, `n` prefills `note`). Legacy Shade keeps `hyper+return` for `shade.smartToggle()` and moves its advanced modal to `hyper+shift+n`.
 
-The `[ui]` table in the generated `config.toml` owns panel visual defaults including `border_width`, `border_color`, and `dim_unfocused`; the panel is non-opaque so the rounded material surface shows real transparency.
+The `[ui]` table in `mise/config/shade-next/config.toml` owns panel visual defaults including `border_width`, `border_color`, and `dim_unfocused`; the panel is non-opaque so the rounded material surface shows real transparency.
 
 ## Window management
 

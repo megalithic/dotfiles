@@ -96,4 +96,4 @@ The staged mise path mirrors this by using `brew-cask:tailscale-app` in `mise/co
 
 `spotlight.exclusions` (from `modules/darwin/spotlight.nix`) prevents Spotlight from indexing build artifacts, dependencies, and devenv state.
 
-It seeds exclusion patterns from `home/common/programs/git/gitignore` plus explicit paths such as `node_modules`, `.devenv`, `.direnv`, `_build`, `deps`, and Elixir tool caches, scanning under `~/code`. Hosts can extend it via `spotlight.exclusions.paths` and `scanPaths`.
+It seeds exclusion patterns from `mise/config/git/ignore` (the nix git module's gitignore was retired in the wave-1 mise flip) plus explicit paths such as `node_modules`, `.devenv`, `.direnv`, `_build`, `deps`, and Elixir tool caches, scanning under `~/code`. Hosts can extend it via `spotlight.exclusions.paths` and `scanPaths`.
