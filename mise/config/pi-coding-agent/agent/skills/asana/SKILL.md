@@ -34,10 +34,16 @@ Output is pretty-printed JSON. `--all` on `api GET` follows `next_page` paginati
    - `DevToolsActivePort` files can be stale; the process args are the source of truth.
    - Requires an Asana tab open. If missing, the script says so — ask the user to
      open Asana in that browser (do not navigate their tabs without asking).
-   - Read ops (GET) are reliable. Write ops (comment/update/complete) go through
-     the same cookie session and may be rejected (e.g. CSRF); if a write fails,
-     report the error and suggest setting up `ASANA_ACCESS_TOKEN`
+   - Read AND write ops work. Writes require the `X-Allow-Asana-Client: 1`
+     header (the script sends it automatically); without it cookie-session
+     POST/PUT/DELETE return 401. If a write still fails, report the error and
+     suggest setting up `ASANA_ACCESS_TOKEN`
      (create at https://app.asana.com/0/my-apps).
+   - File attachments need multipart (`FormData`), which the script's JSON-only
+     `api` passthrough doesn't do. Upload via CDP eval in the Asana tab:
+     build a `File` from base64 bytes, `FormData` with `file` + `parent`
+     (task gid), POST to `/api/1.0/attachments` with `X-Allow-Asana-Client: 1`
+     and no explicit Content-Type.
 
 ## Recipes
 

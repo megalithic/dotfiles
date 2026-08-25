@@ -187,9 +187,11 @@ async function browserRequest(tab, method, path, body) {
         method: ${JSON.stringify(method)},
         credentials: "include",
         headers: ${
+					// X-Allow-Asana-Client: 1 is required for cookie-session writes
+					// (POST/PUT/DELETE return 401 without it).
 					body
-						? '{ "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" }'
-						: "{}"
+						? '{ "Content-Type": "application/json", "X-Allow-Asana-Client": "1" }'
+						: '{ "X-Allow-Asana-Client": "1" }'
 				},
         body: ${body ? JSON.stringify(JSON.stringify(body)) : "undefined"},
       });
