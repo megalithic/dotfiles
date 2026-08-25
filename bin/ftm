@@ -5,9 +5,26 @@
 #
 # ftm [options] [SESSION_NAME | FUZZY_PATTERN]
 #
-# Running `ftm` with no argument opens a fuzzy-finder over pre-defined layouts
-# and running sessions. Passing an argument switches to that session if it
-# exists or creates it (layout script of the same name wins).
+# Running `ftm` with no argument opens a fuzzy-finder over recent sessions,
+# pre-defined layouts, running sessions, and the top zoxide directories.
+# Passing an argument switches to that session if it exists or creates it
+# (layout script of the same name wins).
+#
+# Picker ordering (top → bottom):
+#   1. ftm's own MRU list (state file; every switch/create bumps an entry)
+#   2. running sessions not in MRU, by tmux last-attached (desc)
+#   3. top zoxide dirs (frecency order) not already listed, shown as
+#      "name<TAB>dimmed-path"; names colliding with a layout script defer to
+#      the layout entry (layout wins on select)
+#   4. remaining layouts, alphabetical
+#
+# Hooks (similar to wt/mise hooks): executable scripts in
+# $TMUX_HOOKS (default ~/.config/tmux/hooks), one per event:
+#   pre-create.sh   before a new session is built
+#   post-create.sh  after a new session is built, before switching
+#   post-switch.sh  after any switch/attach (including brand-new sessions)
+# Each receives: $1 session name, $2 cwd (session path), $3 source
+# (layout|zoxide|default), plus FTM_EVENT/FTM_SESSION/FTM_CWD/FTM_SOURCE env.
 #
 # Keybinds in the picker:
 #   enter   switch/create session from selection or typed query
@@ -15,7 +32,7 @@
 #   ctrl-r  rename selected session
 #   ctrl-v  switch to selected session and open pinvim pane
 #
-# Dependencies: tmux, fzf (>= 0.53 for native --tmux popups)
+# Dependencies: tmux, fzf (>= 0.53 for native --tmux popups); zoxide optional
 #
 
 set -euo pipefail
@@ -24,9 +41,13 @@ __base="${0##*/}"
 
 TMUX="${TMUX:-}"
 TMUX_LAYOUTS="${TMUX_LAYOUTS:-$HOME/.config/tmux/layouts}"
+TMUX_HOOKS="${TMUX_HOOKS:-$HOME/.config/tmux/hooks}"
 POPUP="false"
 PI_STATE_DIR="${PI_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/pi}"
 PI_SOCKETS_DIR="$PI_STATE_DIR/sockets"
+FTM_STATE_DIR="${FTM_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ftm}"
+FTM_ZOXIDE_LIMIT="${FTM_ZOXIDE_LIMIT:-10}"
+recent_file="$FTM_STATE_DIR/recent"
 
 [[ -d $TMUX_LAYOUTS ]] && layouts_dir="$TMUX_LAYOUTS" || layouts_dir=""
 
@@ -36,6 +57,8 @@ C_ITALIC=$'\e[3m'
 C_MAGENTA=$'\e[35m'
 C_WHITE=$'\e[38;5;255m'
 C_GRAY=$'\e[38;5;245m'
+
+TAB=$'\t'
 
 function __help() {
   local tmux_running fzf_found
@@ -47,6 +70,10 @@ function __help() {
   printf -- "   Options:\n"
   printf -- "     -p              Run fzf directly (already inside a tmux popup); default uses fzf --tmux\n"
   printf -- "     -h              This help text you're presently reading. 😄\n"
+  printf -- "\n"
+  printf -- "   Hooks (executable scripts in \$TMUX_HOOKS, default ~/.config/tmux/hooks):\n"
+  printf -- "     pre-create.sh / post-create.sh / post-switch.sh\n"
+  printf -- "     args: SESSION CWD SOURCE (layout|zoxide|default)\n"
   printf -- "\n"
   printf -- "   Dependencies:\n"
   printf -- "     tmux            (%s)\n" "$tmux_running"
@@ -63,9 +90,10 @@ if ! command -v fzf &>/dev/null; then
   exit 1
 fi
 
-# -- strip picker markers (" * π" / " *") from a selection
+# -- strip picker markers (" * π" / " *") and any zoxide path column
 function strip_markers() {
   local s="$1"
+  s="${s%%"$TAB"*}"
   s="${s% \* π}"
   s="${s% \*}"
   printf '%s' "$s"
@@ -85,6 +113,36 @@ function session_id_for() {
   return 1
 }
 
+# -- run an event hook if present+executable. Never fails the caller.
+function run_hook() {
+  local event="$1" session="$2" cwd="$3" source="$4"
+  local hook="$TMUX_HOOKS/$event.sh"
+  [[ -x $hook ]] || return 0
+  FTM_EVENT="$event" FTM_SESSION="$session" FTM_CWD="$cwd" FTM_SOURCE="$source" \
+    bash "$hook" "$session" "$cwd" "$source" || true
+}
+
+# -- move a session name to the top of the MRU state file (source of truth
+#    for picker ordering); keeps the newest 50 entries.
+function bump_recent() {
+  local session="$1" line count=0 tmp
+  [[ -n $session ]] || return 0
+  mkdir -p "$FTM_STATE_DIR"
+  tmp="$recent_file.tmp.$$"
+  {
+    printf '%s\n' "$session"
+    if [[ -f $recent_file ]]; then
+      while IFS= read -r line; do
+        [[ -z $line || $line == "$session" ]] && continue
+        printf '%s\n' "$line"
+        count=$((count + 1))
+        [[ $count -ge 49 ]] && break
+      done <"$recent_file"
+    fi
+  } >"$tmp"
+  mv "$tmp" "$recent_file"
+}
+
 # -- pre-defined layout names (one glob, no subshells)
 function get_layouts() {
   local f
@@ -96,41 +154,106 @@ function get_layouts() {
   done
 }
 
-# -- annotated session list: layouts + running sessions, marked with * when
-#    running and π when a non-ephemeral pinvim socket exists.
+# -- annotated picker list. Sessions are marked with * when running and π when
+#    a non-ephemeral pinvim socket exists. Zoxide entries render as
+#    "name<TAB>dimmed path". Ordering: MRU file, then running sessions by
+#    last-attached, then zoxide by frecency, then layouts alphabetically.
 #    Socket pattern: $PI_SOCKETS_DIR/pi-{session}-{window}.sock
-#    Pure bash string matching — no per-session process spawns.
 function print_list() {
   local exclude_current="${1:-}"
-  local current_sessions socks f s current_wrapped
+  local emitted=$'\n' sess_wrapped=$'\n' socks=$'\n'
+  local f s name path line zi n
+  local -a sess_order=() zx_names=() zx_paths=() mru=()
 
-  current_sessions="$(tmux list-sessions -F '#S' 2>/dev/null || true)"
-  current_wrapped=$'\n'"$current_sessions"$'\n'
+  # running sessions, most recently attached first
+  while IFS= read -r line; do
+    s="${line#* }"
+    [[ -n $s ]] || continue
+    sess_order+=("$s")
+    sess_wrapped+="$s"$'\n'
+  done < <(tmux list-sessions -F '#{session_last_attached} #{session_name}' 2>/dev/null | sort -rn)
 
-  socks=$'\n'
+  # pinvim sockets
   for f in "$PI_SOCKETS_DIR"/pi-*.sock; do
     [[ -e $f ]] || continue
     [[ $f == *-eph-* ]] && continue
     socks+="${f##*/}"$'\n'
   done
 
-  {
-    get_layouts
-    printf '%s\n' "$current_sessions"
-  } | sort -u | while IFS= read -r s; do
-    [[ -z $s ]] && continue
-    [[ $s == "default" ]] && continue
-    [[ -n $exclude_current && $s == "$exclude_current" ]] && continue
-    if [[ $current_wrapped == *$'\n'"$s"$'\n'* ]]; then
-      if [[ $socks == *$'\n'"pi-$s-"* ]]; then
-        printf '%s * π\n' "$s"
+  # top zoxide dirs by frecency
+  n=0
+  if command -v zoxide &>/dev/null; then
+    while IFS= read -r path; do
+      [[ $n -ge $FTM_ZOXIDE_LIMIT ]] && break
+      [[ -d $path ]] || continue
+      zx_names+=("${path##*/}")
+      zx_paths+=("$path")
+      n=$((n + 1))
+    done < <(zoxide query -l 2>/dev/null || true)
+  fi
+
+  # MRU names (most recent first)
+  if [[ -f $recent_file ]]; then
+    while IFS= read -r name; do
+      [[ -n $name ]] && mru+=("$name")
+    done <"$recent_file"
+  fi
+
+  # 1) MRU block — a name renders as (in priority order): running session,
+  #    layout, zoxide dir; unknown names are skipped (stale entries)
+  for name in "${mru[@]}"; do
+    [[ $name == "default" || $name == "$exclude_current" ]] && continue
+    [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
+    if [[ $sess_wrapped == *$'\n'"$name"$'\n'* ]]; then
+      emitted+="$name"$'\n'
+      if [[ $socks == *$'\n'"pi-$name-"* ]]; then
+        printf '%s * π\n' "$name"
       else
-        printf '%s *\n' "$s"
+        printf '%s *\n' "$name"
       fi
+    elif [[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]]; then
+      emitted+="$name"$'\n'
+      printf '%s\n' "$name"
     else
-      printf '%s\n' "$s"
+      for zi in "${!zx_names[@]}"; do
+        if [[ ${zx_names[$zi]} == "$name" ]]; then
+          emitted+="$name"$'\n'
+          printf '%s\t%s%s%s\n' "$name" "$C_GRAY" "${zx_paths[$zi]/#$HOME/\~}" "$C_RESET"
+          break
+        fi
+      done
     fi
   done
+
+  # 2) remaining running sessions by last-attached
+  for name in "${sess_order[@]}"; do
+    [[ $name == "default" || $name == "$exclude_current" ]] && continue
+    [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
+    emitted+="$name"$'\n'
+    if [[ $socks == *$'\n'"pi-$name-"* ]]; then
+      printf '%s * π\n' "$name"
+    else
+      printf '%s *\n' "$name"
+    fi
+  done
+
+  # 3) remaining zoxide dirs by frecency (layout name wins → deferred to 4)
+  for zi in "${!zx_names[@]}"; do
+    name="${zx_names[$zi]}"
+    [[ -z $name || $name == "default" || $name == "$exclude_current" ]] && continue
+    [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
+    [[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]] && continue
+    emitted+="$name"$'\n'
+    printf '%s\t%s%s%s\n' "$name" "$C_GRAY" "${zx_paths[$zi]/#$HOME/\~}" "$C_RESET"
+  done
+
+  # 4) remaining layouts (glob order = alphabetical)
+  while IFS= read -r name; do
+    [[ -z $name || $name == "default" || $name == "$exclude_current" ]] && continue
+    [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
+    emitted+="$name"$'\n'
+    printf '%s\n' "$name"
+  done < <(get_layouts)
 }
 
 # -- change to the given existing session
@@ -139,65 +262,87 @@ function to_session() {
   session="$(strip_markers "$1")"
   sid="$(session_id_for "$session")" || return 1
   tmux "$change" -t "$sid" ';' refresh-client
+  bump_recent "$session"
+  run_hook post-switch "$session" \
+    "$(tmux display-message -p -t "$sid" '#{session_path}' 2>/dev/null || true)" \
+    "session"
 }
 
-# -- new session with pre-defined layout, OR just new basic tmux session
+# -- new session with pre-defined layout, OR just new basic tmux session.
+#    Fires pre-create/post-create hooks around the build.
 function new_session() {
-  local session="$1"
-  local cwd="$2"
+  local session="$1" cwd="$2" source="${3:-default}"
 
-  if [[ -f "$layouts_dir/$session.sh" ]]; then
+  [[ -n $layouts_dir && -f "$layouts_dir/$session.sh" ]] && source="layout"
+
+  run_hook pre-create "$session" "$cwd" "$source"
+
+  if [[ $source == "layout" ]]; then
     # Custom layout handles pinvim
-    (bash "$layouts_dir/$session.sh" &&
-      to_session "$session" ||
-      tmux new-session -d -s "$session" -c "${cwd}" &&
-      to_session "$session") && exit
-  else
+    bash "$layouts_dir/$session.sh" ||
+      tmux new-session -d -s "$session" -c "$cwd"
+  elif [[ -n $layouts_dir && -f "$layouts_dir/default.sh" ]]; then
     # Default layout includes pinvim
-    (bash "$layouts_dir/default.sh" "$session" "${cwd}" &&
-      to_session "$session" ||
-      tmux new-session -d -s "$session" -c "${cwd}" &&
-      to_session "$session") && exit
+    bash "$layouts_dir/default.sh" "$session" "$cwd" ||
+      tmux new-session -d -s "$session" -c "$cwd"
+  else
+    tmux new-session -d -s "$session" -c "$cwd"
   fi
+
+  run_hook post-create "$session" "$cwd" "$source"
+
+  to_session "$session"
 }
 
 # -- try to change to an existing session; otherwise, create a new one
 function try_session() {
-  local session cwd line
-  # first non-empty line of fzf output (query or selection), markers stripped
-  session=""
+  local session cwd source line
+  # first non-empty line of fzf output (query or selection)
+  session="" cwd="" source="default"
   while IFS= read -r line; do
-    [[ -n $line ]] && session="$(strip_markers "$line")" && break
+    [[ -n $line ]] || continue
+    if [[ $line == *$TAB* ]]; then
+      # zoxide entry: "name<TAB>path" (~ shortened for display)
+      session="${line%%"$TAB"*}"
+      cwd="${line#*"$TAB"}"
+      cwd="${cwd/#\~/$HOME}"
+      source="zoxide"
+    else
+      session="$(strip_markers "$line")"
+    fi
+    break
   done <<<"$1"
   [[ -n $session ]] || exit 0
 
-  cwd=$(zoxide query "$session" 2>/dev/null || true)
+  if [[ -z $cwd ]]; then
+    cwd=$(zoxide query "$session" 2>/dev/null || true)
+    [[ -n $cwd ]] && source="zoxide"
+  fi
 
   # backup plan: use code dir if zoxide finds nothing
   if [[ -z "$cwd" ]]; then
     cwd="$HOME/code"
+    source="default"
   fi
 
-  to_session "$session" 2>/dev/null || new_session "$session" "${cwd}"
+  to_session "$session" 2>/dev/null || new_session "$session" "$cwd" "$source"
 }
 
 function fuzzy_find() {
-  local current_session sessions_list fzf_list sessions_count
+  local current_session sessions_count fzf_list
   local fzf_prompt_text fzf_header_text selected_session
   declare -a fzf_extra_args=()
 
   current_session="$(tmux display-message -p '#S')"
-  sessions_list="$(print_list)"
   fzf_list="$(print_list "$current_session")"
 
   sessions_count=0
-  while IFS= read -r _; do sessions_count=$((sessions_count + 1)); done <<<"$sessions_list"
+  while IFS= read -r _; do sessions_count=$((sessions_count + 1)); done \
+    < <(tmux list-sessions -F '#S' 2>/dev/null || true)
 
   if [[ $sessions_count -le 1 ]]; then
     fzf_prompt_text=" create new session  "
-    fzf_header_text=""
-    fzf_list="$(get_layouts)"
-    [[ -n $fzf_list ]] && fzf_header_text="󰢩 possible layouts"
+    fzf_header_text="󰢩 recent dirs & layouts"
   else
     fzf_prompt_text=" new or existing session  "
     fzf_header_text="󰢩 ${C_ITALIC}${C_MAGENTA}${current_session}${C_RESET} [${C_WHITE}ctrl-k${C_RESET}: ${C_GRAY}kill / ${C_WHITE}ctrl-r${C_RESET}: ${C_GRAY}rename / ${C_WHITE}ctrl-v${C_RESET}: ${C_GRAY}pinvim${C_RESET}]"
@@ -207,9 +352,9 @@ function fuzzy_find() {
   # shellcheck disable=SC2016 # fzf action templates: {} and $() expand in fzf's shell, not here
   # "=" prefix forces exact session-name match (names like .dotfiles-... otherwise
   # trip tmux's target parser, which treats a leading dot as a window separator)
-  local kill_action='execute-silent(tmux-kill-session "$(printf %s {} | sed -E "s/ \*( π)?$//")")+reload(ftm --list)' \
-    rename_action='execute(session=$(printf %s {} | sed -E "s/ \*( π)?$//"); printf >&2 "New session name: "; read -r name; tmux rename-session -t "$(ftm --id="$session")" "${name}")+reload(ftm --list)' \
-    pinvim_action='execute-silent(session=$(printf %s {} | sed -E "s/ \*( π)?$//"); tmux switch-client -t "$(ftm --id="$session")" && PIMUX_PANE=$(tmux display-message -p "#{pane_id}") pimux)+accept'
+  local kill_action='execute-silent(tmux-kill-session "$(printf %s {} | sed -E "s/\t.*$//; s/ \*( π)?$//")")+reload(ftm --list)' \
+    rename_action='execute(session=$(printf %s {} | sed -E "s/\t.*$//; s/ \*( π)?$//"); printf >&2 "New session name: "; read -r name; tmux rename-session -t "$(ftm --id="$session")" "${name}")+reload(ftm --list)' \
+    pinvim_action='execute-silent(session=$(printf %s {} | sed -E "s/\t.*$//; s/ \*( π)?$//"); tmux switch-client -t "$(ftm --id="$session")" && PIMUX_PANE=$(tmux display-message -p "#{pane_id}") pimux)+accept'
 
   # native fzf tmux popup unless we're already inside one (-p)
   [[ $POPUP == "true" ]] || fzf_extra_args+=(--tmux "bottom,22%")
@@ -236,8 +381,7 @@ function fuzzy_find() {
       --pointer='▌' \
       --marker='󰛄' \
       --print-query \
-      --exit-0 \
-      --tac <<<"$fzf_list"
+      --exit-0 <<<"$fzf_list"
   )"
 
   try_session "$selected_session"

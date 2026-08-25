@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+#
+# ftm post-create hook — runs after a new session is built, before switching.
+# Enable: cp post-create.sh.example post-create.sh && chmod +x post-create.sh
+#
+# Args:  $1 session name, $2 cwd, $3 source (layout|zoxide|default)
+# Env:   FTM_EVENT FTM_SESSION FTM_CWD FTM_SOURCE
+
+session="$1"
+cwd="$2"
+source="$3"
+
+# Examples:
+#
+# 1) per-source tmux env tweaks (zoxide-spawned sessions):
+# if [[ $source == "zoxide" ]]; then
+#   tmux setenv -t "$session" 'SESSION_ICON' ''
+# fi
+#
+# 2) start a services window for repos with a justfile:
+# if [[ -f "$cwd/justfile" ]]; then
+#   tmux new-window -d -t "$session" -n services -c "$cwd"
+# fi
+
+exit 0
