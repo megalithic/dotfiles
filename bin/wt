@@ -220,8 +220,16 @@ fi
 # ---- first non-flag token = potential subcommand -----------------------------
 builtins="switch list remove merge select step hook config"
 first_cmd=""
+skip_next=false
 for t in ${pre[@]+"${pre[@]}"}; do
-  case "$t" in -*) continue ;; esac
+  if [ "$skip_next" = true ]; then
+    skip_next=false
+    continue
+  fi
+  case "$t" in
+    -C) skip_next=true; continue ;; # -C consumes a path value
+    -*) continue ;;
+  esac
   first_cmd="$t"
   break
 done
