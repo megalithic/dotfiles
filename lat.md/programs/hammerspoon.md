@@ -1,18 +1,26 @@
 # Hammerspoon
 
-Hammerspoon owns macOS automation: window management, launcher panels, menubar state, and clipboard tooling. Lua config lives in `config/hammerspoon/` (out-of-store symlink); nix-generated data fragments land in `~/.local/share/hammerspoon/`.
+Hammerspoon owns macOS automation: window management, launcher panels, menubar state, and clipboard tooling. mise owns it on both hosts — brew cask app, config in `mise/config/hammerspoon/`, fragments in `~/.local/share/hammerspoon/`.
 
-## Parallel mise configuration
+The app installs via `brew install --cask hammerspoon`, declared in `[bootstrap.hooks.post-packages]` because the `brew-cask:` backend can't handle its `binary` artifacts. `[dotfiles]` links `~/.config/hammerspoon` to `mise/config/hammerspoon/`.
 
-`mise/config/hammerspoon/` is an independent mise twin of Nix source `config/hammerspoon/`; `mise/config/mise/global_config.toml` links it to `~/.config/hammerspoon`.
+## Ownership flip from nix
 
-It is a copy, not shared source: mirror changes manually from `config/hammerspoon/` into the twin.
+The former HM module (`home/common/programs/hammerspoon/`) is removed; its launchd launcher + nix-store app copies caused duplicate instances at login.
+
+The old setup installed `pkgs.brewCasks.hammerspoon`, generated `nix_path.lua`, and ran a launchd launcher agent that opened the Home Manager Apps copy. Duplicates happened because macOS window-resume relaunched the previous session's raw `/nix/store/...` path while the launchd agent opened the HM Apps path, and every rebuild minted a new store path that LaunchServices registered as a distinct app.
+
+Now launch-at-login is Hammerspoon's own `hs.autoLaunch` login item pointing at the stable `/Applications/Hammerspoon.app`, and `~/.local/share/hammerspoon/nix_path.lua` is the committed static `mise/fragments/hammerspoon/nix_path.lua` (mise shims PATH; the `NIX_PATH`/`NIX_ENV` global names are kept for compatibility).
+
+The old nix twin `config/hammerspoon/` is retired and no longer linked anywhere; `mise/config/hammerspoon/` is the sole source. Historical divergences that lived across the twins (kanata `daemonLabel` `dev.mise.` prefix, kanata stderr log path) are now just the mise values — the `dev.mise.` label comment in `config.lua` remains until kanata's own ownership is unified.
 
 The mise `up` task ends by calling `bin/hs-reload` (non-fatal if Hammerspoon is not running) so a freshly synced config is picked up safely.
 
-Two fields are intentional, permanent divergences and must never be blindly overwritten during a sync. `config.lua`'s `dock.kanata.daemonLabel` is `"org.kanata.daemon"` on the nix side (matches `modules/darwin/kanata.nix`) but `"dev.mise.org.kanata.daemon"` on the mise side, because mise prefixes bootstrap-managed launchd labels with `dev.mise.` (see `mise/tasks/kanata-setup`). `watchers/dock.lua` also tails different stderr paths for restart failures: nix uses `/tmp/kanata.err`; mise uses `${HOME}/Library/Logs/kanata/stderr.log`. These differences keep profile switching and diagnostics pointed at the owning launchd service.
+## Dock watcher
 
-The dock watcher checks the current `kanata.kbd` symlink and launchd state before switching profiles. If the requested profile already runs, Hammerspoon logs success and skips `launchctl kickstart`, so config reloads do not bounce Kanata. When a restart fails, the watcher reports stderr only if the stderr file changed during that restart attempt; stale Input Monitoring errors do not appear as fresh failures.
+The dock watcher checks the current `kanata.kbd` symlink and launchd state before switching profiles.
+
+If the requested profile already runs, Hammerspoon logs success and skips `launchctl kickstart`, so config reloads do not bounce Kanata. When a restart fails, the watcher reports stderr only if the stderr file changed during that restart attempt; stale Input Monitoring errors do not appear as fresh failures.
 
 ## Reload safety
 
@@ -32,13 +40,13 @@ Global app bindings stay data-driven so app launchers, local pass-through keys, 
 
 Hammerspoon can act as the HTTP/S handler for app deep links while preserving browser auth flows.
 
-`config/hammerspoon/watchers/url.lua` redirects Figma web URLs to `figma://...`, but paths containing `auth` such as `/app_auth` pass through to the browser.
+`mise/config/hammerspoon/watchers/url.lua` redirects Figma web URLs to `figma://...`, but paths containing `auth` such as `/app_auth` pass through to the browser.
 
 ## shade-next panel
 
 shade-next bindings are split between generated data and handwritten lifecycle code.
 
-mise `[dotfiles]` links `~/.local/share/hammerspoon/fragments/shade-next.lua` from the static `mise/fragments/hammerspoon/shade-next.lua` and `~/.config/shade-next/config.toml` from `mise/config/shade-next/config.toml` (the former nix shade-next module that generated both is removed); `config/hammerspoon/shade_next.lua` reads the fragment. The panel design spec lives in `~/.local/share/pi/docs/shade-next/panel-design.md`.
+mise `[dotfiles]` links `~/.local/share/hammerspoon/fragments/shade-next.lua` from the static `mise/fragments/hammerspoon/shade-next.lua` and `~/.config/shade-next/config.toml` from `mise/config/shade-next/config.toml` (the former nix shade-next module that generated both is removed); `mise/config/hammerspoon/shade_next.lua` reads the fragment. The panel design spec lives in `~/.local/share/pi/docs/shade-next/panel-design.md`.
 
 Key behavior: one panel-height rule across all states; block types are result cards, section lists, message rows, composer, and preview; Esc always hides the panel; route keys reserve Ctrl+n for note, Ctrl+p for Pi, Ctrl+c for calc. Compact launch geometry starts at `900×104` points and grows result panels to visible rows before clamping to the configured max height.
 
@@ -58,11 +66,11 @@ App and window watchers run layout rules on launch and window creation (not `mai
 
 The old `miccheck.lua` module is gone; push-to-talk/push-to-mute now lives in the standalone [[miccheck]] menubar app, and Hammerspoon only sends it mode commands.
 
-`config/hammerspoon/lib/micctl.lua` is the socket client (`setPTTMode`, `toggleMode`); `watchers/camera.lua`, `watchers/media-presence.lua`, and `contexts/co.detail.mac.lua` call it where they previously required the Lua module. The eventtap, menubar icon, hotkeys, and mute logic all moved into the compiled Swift app.
+`mise/config/hammerspoon/lib/micctl.lua` is the socket client (`setPTTMode`, `toggleMode`); `watchers/camera.lua`, `watchers/media-presence.lua`, and `contexts/co.detail.mac.lua` call it where they previously required the Lua module. The eventtap, menubar icon, hotkeys, and mute logic all moved into the compiled Swift app.
 
 ## Audio device watcher
 
-`config/hammerspoon/watchers/audio.lua` selects preferred audio devices after debounced `hs.audiodevice.watcher` events.
+`mise/config/hammerspoon/watchers/audio.lua` selects preferred audio devices after debounced `hs.audiodevice.watcher` events.
 
 It uses a trailing timer for `dev#` bursts, calls Hammerspoon's `hs.audiodevice` API, and logs deterministic device-change messages only when the default device actually changes. It intentionally does not shell out to `SwitchAudioSource` for status text because shell output can include terminal control sequences when Hammerspoon runs inside a console/tmux-shaped environment.
 
