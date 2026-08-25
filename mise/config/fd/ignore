@@ -20,7 +20,7 @@ public
 dotbot
 dotbot-plugins
 config/zsh/plugins
-config/hammerspoon/Spoons
+mise/config/hammerspoon/Spoons
 home/emacs.d
 .git
 .jj

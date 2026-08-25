@@ -29,16 +29,22 @@ end
 --- Cached for 1 second to handle batch template expansions
 ---@return table|nil context { appName, windowTitle, url, selection, detectedLanguage, ... }
 function M.shade.get_context()
-  if shade_ctx_cache then return shade_ctx_cache end
+  if shade_ctx_cache then
+    return shade_ctx_cache
+  end
 
   local f = io.open(SHADE_CONTEXT_PATH, "r")
-  if not f then return nil end
+  if not f then
+    return nil
+  end
 
   local content = f:read("*a")
   f:close()
 
   local ok, ctx = pcall(vim.json.decode, content)
-  if not ok then return nil end
+  if not ok then
+    return nil
+  end
 
   shade_ctx_cache = ctx
 
@@ -94,10 +100,7 @@ function M.shade.request(method, params)
 
   local request = vim.mpack.encode({ MSG_REQUEST, msgid, method, params or {} })
 
-  local result = vim.system(
-    { "nc", "-U", "-w", "2", SHADE_SOCKET_PATH },
-    { stdin = request, text = false }
-  ):wait()
+  local result = vim.system({ "nc", "-U", "-w", "2", SHADE_SOCKET_PATH }, { stdin = request, text = false }):wait()
 
   if result.code ~= 0 then
     return nil, "Connection failed"
@@ -187,7 +190,7 @@ end
 -- nvim instances. Each entry is a file named by socket-id whose contents are
 -- the nvim --listen socket path.
 --
--- Socket id formats (must match parser in config/hammerspoon/lib/interop/nvim.lua):
+-- Socket id formats (must match parser in mise/config/hammerspoon/lib/interop/nvim.lua):
 --   tmux:     {session}_{window}_{pane}_{pid}
 --   non-tmux: global_{pid}
 --------------------------------------------------------------------------------
@@ -204,7 +207,9 @@ function M.hs.build_socket_id()
     if handle then
       local info = handle:read("*l")
       handle:close()
-      if info and info ~= "" then return info .. "_" .. vim.fn.getpid() end
+      if info and info ~= "" then
+        return info .. "_" .. vim.fn.getpid()
+      end
     end
   end
   return "global_" .. vim.fn.getpid()
@@ -220,7 +225,9 @@ function M.hs.register_socket()
     -- Auto-create a listen socket. Path matches nvim's default scheme so
     -- it's cleaned up on exit alongside other tempfiles.
     local ok, started = pcall(vim.fn.serverstart)
-    if not ok or not started or started == "" then return end
+    if not ok or not started or started == "" then
+      return
+    end
     servername = started
   end
   local id = M.hs.build_socket_id()
@@ -236,7 +243,9 @@ end
 --- Cleanup the socket file on nvim exit.
 function M.hs.cleanup_socket()
   local id = vim.g._hs_socket_id
-  if id then os.remove(HS_SOCKET_DIR .. "/" .. id) end
+  if id then
+    os.remove(HS_SOCKET_DIR .. "/" .. id)
+  end
 end
 
 --------------------------------------------------------------------------------

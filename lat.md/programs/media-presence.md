@@ -54,7 +54,7 @@ Events: `mic.on`/`mic.off`, `camera.on`/`camera.off`, `meeting.lobby`/`meeting.j
 
 ## Hammerspoon consumer
 
-`config/hammerspoon/watchers/media-presence.lua` polls the daemon every 3s via `nc -w 1 -U` with `{"cmd":"get"}`, detects state transitions by diffing successive snapshots, and dispatches:
+`mise/config/hammerspoon/watchers/media-presence.lua` polls the daemon every 3s via `nc -w 1 -U` with `{"cmd":"get"}`, detects state transitions by diffing successive snapshots, and dispatches:
 
 - `inMeeting` false→true → pause Apple Music
 - `sharing && inMeeting` while DND not already forced → enforce DND focus mode (`U.dnd(true, "meeting")`)

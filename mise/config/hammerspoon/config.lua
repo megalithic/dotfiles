@@ -422,10 +422,10 @@ M.dock = {
     connected = "macbook-disabled.kbd", -- Disable internal when Leeloo connected
     disconnected = "macbook.kbd", -- Normal config when Leeloo disconnected
     configPath = os.getenv("HOME") .. "/.config/kanata",
-    -- INTENTIONAL mise/nix divergence: mise prefixes bootstrap launchd labels
-    -- with `dev.mise.` (see mise/tasks/kanata-setup); nix-darwin's real
-    -- label is bare `org.kanata.daemon` (config/hammerspoon/config.lua). Do
-    -- not overwrite this with the nix twin's value during a hammerspoon sync.
+    -- INTENTIONAL divergence from the old nix twin (now removed from the
+    -- repo): mise prefixes bootstrap launchd labels with `dev.mise.` (see
+    -- mise/tasks/kanata-setup); nix-darwin's label was bare
+    -- `org.kanata.daemon`. Keep the prefixed label.
     daemonLabel = "dev.mise.org.kanata.daemon",
   },
   docked = {

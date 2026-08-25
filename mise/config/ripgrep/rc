@@ -31,7 +31,7 @@ railsmigrations:*/migrate/*
 rails:include:ruby,rabl,erb
 
 # ignores, etc
---glob=!config/hammerspoon/Spoons/*
+--glob=!mise/config/hammerspoon/Spoons/*
 --glob=!.git
 --glob=!.elixir_ls
 --glob=!.lexical

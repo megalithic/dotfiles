@@ -11,9 +11,9 @@
     # Base path to the dotfiles repo
     dotfilesPath = "${config.home.homeDirectory}/.dotfiles";
 
-    # Link to files in config/ directory (out-of-store configs like hammerspoon, tmux, kitty)
-    # Usage: config.lib.mega.linkConfig "hammerspoon"
-    # Result: symlink to ~/.dotfiles/config/hammerspoon
+    # Link to files in config/ directory (out-of-store configs like tmux, kitty, nvim)
+    # Usage: config.lib.mega.linkConfig "tmux"
+    # Result: symlink to ~/.dotfiles/config/tmux
     linkConfig =
       path: config.lib.file.mkOutOfStoreSymlink "${config.lib.mega.dotfilesPath}/config/${path}";
 

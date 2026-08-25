@@ -45,7 +45,7 @@ External overlays and input aliases live separately in `overlays/default.nix`.
 
 Apps that need live-editable config use out-of-store symlinks into `config/` rather than nix-store copies, so edits apply without a rebuild.
 
-`config/` holds `nvim/`, `tmux/`, `ghostty/`, `kitty/`, `kanata/`, `espanso/`, and `ssh/` (`config/hammerspoon/` is a retired nix twin, no longer linked — see [[programs/hammerspoon#Ownership flip from nix]]). Program modules under `home/common/programs/<tool>/` own the symlink wiring. Config fragments that need nix-interpolated values are generated into `~/.local/share/...` and sourced from the live config, keeping the editable tree in `config/`.
+`config/` holds `nvim/`, `tmux/`, `ghostty/`, `kitty/`, `kanata/`, `espanso/`, and `ssh/` (the retired `config/hammerspoon/` nix twin was deleted after the ownership flip — see [[programs/hammerspoon#Ownership flip from nix]]; the active tree is `mise/config/hammerspoon/`). Program modules under `home/common/programs/<tool>/` own the symlink wiring. Config fragments that need nix-interpolated values are generated into `~/.local/share/...` and sourced from the live config, keeping the editable tree in `config/`.
 
 ## Parallel mise migration
 

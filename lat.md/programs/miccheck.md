@@ -38,7 +38,7 @@ This moved PTT enforcement out of Hammerspoon's `watchers/media-presence.lua`, w
 
 The Unix socket (`~/.local/state/miccheck/sock`) accepts line-delimited JSON commands with one-line replies.
 
-Commands: `{"cmd":"get"}` → `{"ok":true,"mode":...,"live":...}`; `{"cmd":"set-mode","mode":"push-to-talk"|"push-to-mute"}`; `{"cmd":"toggle-mode"}`; `{"cmd":"quit"}`. Hammerspoon's client is `config/hammerspoon/lib/micctl.lua` (`setPTTMode`, `toggleMode`) using the same `nc -w 1 -U` pattern as [[media-presence#Hammerspoon consumer]]; callers are `watchers/camera.lua`, `watchers/media-presence.lua`, and `contexts/co.detail.mac.lua`.
+Commands: `{"cmd":"get"}` → `{"ok":true,"mode":...,"live":...}`; `{"cmd":"set-mode","mode":"push-to-talk"|"push-to-mute"}`; `{"cmd":"toggle-mode"}`; `{"cmd":"quit"}`. Hammerspoon's client is `mise/config/hammerspoon/lib/micctl.lua` (`setPTTMode`, `toggleMode`) using the same `nc -w 1 -U` pattern as [[media-presence#Hammerspoon consumer]]; callers are `watchers/camera.lua`, `watchers/media-presence.lua`, and `contexts/co.detail.mac.lua`.
 
 ## Build and packaging
 

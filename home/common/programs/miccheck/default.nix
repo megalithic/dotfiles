@@ -6,7 +6,7 @@
 # ad-hoc signature keeps the Input Monitoring TCC grant attached).
 #
 # Hammerspoon controls it over the Unix socket at ~/.local/state/miccheck/sock
-# via config/hammerspoon/lib/micctl.lua (set-mode / toggle-mode / get / quit).
+# via mise/config/hammerspoon/lib/micctl.lua (set-mode / toggle-mode / get / quit).
 { config, ... }:
 let
   scriptPath = "${config.lib.mega.dotfilesPath}/bin/miccheck-launchd";
