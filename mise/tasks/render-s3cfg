@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export PATH="$HOME/.local/bin:${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:$PATH"
+
+resolve_mise() {
+  if [[ -x "$HOME/.local/bin/mise" ]]; then
+    printf '%s\n' "$HOME/.local/bin/mise"
+    return 0
+  fi
+  command -v mise
+}
+
+mise_bin="$(resolve_mise 2>/dev/null || true)"
+
+resolve_fnox() {
+  local fnox_path
+  if [[ -n "$mise_bin" ]] && fnox_path="$(MISE_AUTO_INSTALL=false "$mise_bin" which fnox 2>/dev/null)" && [[ -n "$fnox_path" ]]; then
+    printf '%s\n' "$fnox_path"
+    return 0
+  fi
+  command -v fnox
+}
+
+required_vars=(
+  DO_SPACES_CAPS_KEY
+  DO_SPACES_CAPS_SECRET
+  DO_SPACES_CAPS_REGION
+)
+
+missing_vars=()
+for var in "${required_vars[@]}"; do
+  [[ -n "${!var:-}" ]] || missing_vars+=("$var")
+done
+
+if (( ${#missing_vars[@]} > 0 )); then
+  if [[ -z "${S3CFG_FNOX_EXECED:-}" ]]; then
+    fnox_bin="$(resolve_fnox 2>/dev/null || true)"
+    if [[ -n "$fnox_bin" ]]; then
+      export S3CFG_FNOX_EXECED=1
+      exec "$fnox_bin" exec --replace -- "$0" "$@"
+    fi
+  fi
+
+  printf 'render-s3cfg: missing required environment variables:' >&2
+  printf ' %s' "${missing_vars[@]}" >&2
+  printf '\n' >&2
+  exit 1
+fi
+
+template="${DOTFILES_DIR:-$HOME/.dotfiles}/mise/config/s3cmd/s3cfg.template"
+output_dir="${XDG_DATA_HOME:-$HOME/.local/share}/fnox/generated"
+output="$output_dir/s3cfg"
+tmp=""
+
+[[ -f "$template" ]] || {
+  echo "render-s3cfg: template not found: $template" >&2
+  exit 1
+}
+
+cleanup() {
+  if [[ -n "$tmp" && -f "$tmp" ]]; then
+    : > "$tmp"
+    trash "$tmp" >/dev/null 2>&1 || true
+  fi
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+umask 077
+mkdir -p "$output_dir"
+chmod 0700 "$output_dir"
+tmp="$(mktemp "$output.XXXXXX")"
+
+while IFS= read -r line || [[ -n "$line" ]]; do
+  line="${line//'{{DO_SPACES_CAPS_KEY}}'/$DO_SPACES_CAPS_KEY}"
+  line="${line//'{{DO_SPACES_CAPS_SECRET}}'/$DO_SPACES_CAPS_SECRET}"
+  line="${line//'{{DO_SPACES_CAPS_REGION}}'/$DO_SPACES_CAPS_REGION}"
+  printf '%s\n' "$line"
+done < "$template" > "$tmp"
+
+if rg -q '\{\{DO_SPACES_CAPS_[A-Z_]+\}\}' "$tmp"; then
+  echo "render-s3cfg: unresolved DO Spaces placeholder" >&2
+  exit 1
+fi
+
+chmod 0600 "$tmp"
+if [[ -f "$output" ]] && cmp -s "$tmp" "$output"; then
+  : > "$tmp"
+  trash "$tmp"
+  tmp=""
+  echo "render-s3cfg: unchanged $output"
+  exit 0
+fi
+
+mv "$tmp" "$output"
+tmp=""
+echo "render-s3cfg: rendered $output"

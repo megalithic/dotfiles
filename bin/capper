@@ -1,40 +1,107 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 # TODO: setup certbot and own cdn domain with digital-ocean:
 # https://www.digitalocean.com/community/tutorials/how-to-use-certbot-standalone-mode-to-retrieve-let-s-encrypt-ssl-certificates-on-ubuntu-1804
 
-# Source environment variables from opnix (required for Hammerspoon context)
-ENV_VARS_PATH="${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/env-vars.sh"
-if [[ -f "$ENV_VARS_PATH" ]]; then
-  source "$ENV_VARS_PATH"
+# GUI apps like Hammerspoon do not inherit shell PATH. Include mise shims and
+# local dotfile bins before Homebrew/Nix fallback locations.
+export PATH="$HOME/.local/bin:${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:$HOME/.dotfiles/bin:$HOME/bin:/opt/homebrew/bin:$HOME/.nix-profile/bin:/run/current-system/sw/bin:$PATH"
+
+usage() {
+  echo "Usage: $0 [file]" >&2
+}
+
+if [ "$#" -lt 1 ] || [ -z "${1:-}" ]; then
+  usage
+  exit 64
 fi
 
-# Ensure nix binaries are in PATH (required for Hammerspoon context)
-export PATH="$HOME/.nix-profile/bin:/run/current-system/sw/bin:$PATH"
+resolve_mise() {
+  if [ -x "$HOME/.local/bin/mise" ]; then
+    printf '%s\n' "$HOME/.local/bin/mise"
+    return 0
+  fi
+  command -v mise
+}
 
-if [ ! -n "$1" ]; then
-  echo "Usage: $0 [file]"
-  return
+mise_bin="$(resolve_mise 2>/dev/null || true)"
+
+resolve_fnox() {
+  local fnox_path
+  if [ -n "$mise_bin" ] && fnox_path="$(MISE_AUTO_INSTALL=false "$mise_bin" which fnox 2>/dev/null)" && [ -n "$fnox_path" ]; then
+    printf '%s\n' "$fnox_path"
+    return 0
+  fi
+  command -v fnox
+}
+
+required_vars=(
+  DO_SPACES_CAPS_KEY
+  DO_SPACES_CAPS_SECRET
+  DO_SPACES_CAPS_SPACE
+  DO_SPACES_CAPS_REGION
+  DO_SPACES_CAPS_CDN_URL
+)
+
+missing_vars=()
+for var in "${required_vars[@]}"; do
+  if [ -z "${!var:-}" ]; then
+    missing_vars+=("$var")
+  fi
+done
+
+if [ "${#missing_vars[@]}" -gt 0 ]; then
+  if [ -z "${CAPPER_FNOX_EXECED:-}" ]; then
+    fnox_bin="$(resolve_fnox 2>/dev/null || true)"
+    if [ -n "$fnox_bin" ]; then
+      export CAPPER_FNOX_EXECED=1
+      exec "$fnox_bin" exec --replace -- "$0" "$@"
+    fi
+  fi
+
+  printf 'Missing required environment variables:' >&2
+  printf ' %s' "${missing_vars[@]}" >&2
+  printf '\n' >&2
+  exit 1
 fi
+
+resolve_s3cmd() {
+  local s3cmd_path
+  if command -v s3cmd >/dev/null 2>&1; then
+    command -v s3cmd
+    return 0
+  fi
+  if [ -n "$mise_bin" ] && s3cmd_path="$(MISE_AUTO_INSTALL=false "$mise_bin" which s3cmd 2>/dev/null)" && [ -n "$s3cmd_path" ]; then
+    printf '%s\n' "$s3cmd_path"
+    return 0
+  fi
+  return 1
+}
+
+s3cmd_bin="$(resolve_s3cmd)" || {
+  echo "s3cmd not found; install mise tool pipx:s3cmd before using capper" >&2
+  exit 127
+}
 
 file="$1"
-friendly=$(echo "$1" | sed -e "s#$HOME/_screenshots/##g" \
+friendly=$(printf '%s\n' "$1" | sed -e "s#$HOME/_screenshots/##g" \
   -e 's/^cap_//' \
   -e 's/-\([0-9]\{4\}\)\.png$/_\1.png/' \
   -e 's/T/_/' \
   -e 's/://g' \
   -e 's/-//g')
 
-s3cmd --access_key="$DO_SPACES_CAPS_KEY" \
-  --secret_key="$DO_SPACES_CAPS_SECRET" \
+export AWS_ACCESS_KEY_ID="$DO_SPACES_CAPS_KEY"
+export AWS_SECRET_ACCESS_KEY="$DO_SPACES_CAPS_SECRET"
+
+if "$s3cmd_bin" \
+  --config=/dev/null \
   --host="${DO_SPACES_CAPS_REGION}.digitaloceanspaces.com" \
   --host-bucket='%(bucket)s.'"${DO_SPACES_CAPS_REGION}"'.digitaloceanspaces.com' \
-  -P put "$file" "s3://${DO_SPACES_CAPS_SPACE}/screenshots/$friendly"
-
-if [ "$?" -ne 0 ]; then
-  echo "There was a problem uploading '$file' to 's3://${DO_SPACES_CAPS_SPACE}/screenshots/$friendly'"
-
-  exit 1
-else
+  -P put "$file" "s3://${DO_SPACES_CAPS_SPACE}/screenshots/$friendly"; then
   echo "${DO_SPACES_CAPS_CDN_URL}/screenshots/$friendly"
+else
+  echo "There was a problem uploading '$file' to 's3://${DO_SPACES_CAPS_SPACE}/screenshots/$friendly'" >&2
+  exit 1
 fi
