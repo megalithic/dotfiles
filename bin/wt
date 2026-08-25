@@ -70,6 +70,40 @@ fi
 # ---- helpers ----------------------------------------------------------------
 gcd="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
 
+# ---- throttled background auto-prune -----------------------------------------
+# Every wrapper invocation (except help/version and explicit `step` calls)
+# kicks a detached `wt step prune --yes` at most once per
+# WT_AUTO_PRUNE_INTERVAL seconds (default 86400; 0 disables) per repo, so
+# merged worktrees/branches disappear without manual pruning. Fish completion
+# (`wt <tab>`) resolves this wrapper for `wt list`, so tab completion triggers
+# it too. Stamp and log live under .git/wt/. `wt auto-prune` runs only this
+# check and exits.
+auto_prune() {
+  [ -n "$gcd" ] && [ -d "$gcd" ] || return 0
+  local interval stamp now last
+  interval="${WT_AUTO_PRUNE_INTERVAL:-86400}"
+  case "$interval" in '' | *[!0-9]*) return 0 ;; esac
+  [ "$interval" -gt 0 ] || return 0
+  # Stamp holds the epoch of the last run (content, not mtime: `stat` flags
+  # differ between BSD and GNU coreutils, and GNU stat may shadow /usr/bin).
+  stamp="$gcd/wt/auto-prune.stamp"
+  now="$(date +%s)"
+  last="$(cat "$stamp" 2>/dev/null)"
+  case "$last" in '' | *[!0-9]*) last=0 ;; esac
+  [ $((now - last)) -ge "$interval" ] || return 0
+  mkdir -p "$gcd/wt/logs" 2>/dev/null || return 0
+  printf '%s\n' "$now" >"$stamp"
+  (
+    "$wt_bin" -C "$(dirname "$gcd")" step prune --yes \
+      </dev/null >>"$gcd/wt/logs/auto-prune.log" 2>&1 &
+  )
+}
+
+if [ "${1:-}" = auto-prune ]; then
+  auto_prune
+  exit 0
+fi
+
 write_env() { # $1 = set|unset, $2 = value (for set)
   [ -n "${WT_ENV_FILE:-}" ] || return 0
   case "${WT_SHELL:-posix}" in
@@ -176,6 +210,12 @@ is_builtin=false
 for b in $builtins; do
   [ "$first_cmd" = "$b" ] && is_builtin=true
 done
+
+# Kick throttled auto-prune (detached; adds no latency). Skip help/version and
+# explicit `step` calls so a manual `wt step prune` never races itself.
+if [ "$help_or_version" = false ] && [ "$first_cmd" != step ]; then
+  auto_prune
+fi
 
 # ---- implicit `switch` --------------------------------------------------------
 inject_switch=false
