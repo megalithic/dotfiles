@@ -228,6 +228,7 @@
     git pull --autostash --rebase ${1-} \
     && git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. \
     | sed 's/^/  /';\
+    git-prunable;\
     }; f"
 
   wt = !wt

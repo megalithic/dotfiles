@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# git-prunable — show worktrees and local branches already merged into the
+# default branch, each with the command to clean them up. Silent when there
+# is nothing to prune. Called by the `git up` alias; also works standalone
+# as `git prunable`.
+set -uo pipefail
+
+git rev-parse --git-dir >/dev/null 2>&1 || exit 0
+
+# Default branch: origin/HEAD when known, else local main/master.
+default="$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)"
+default="${default#origin/}"
+if [ -z "$default" ]; then
+  for c in main master; do
+    if git show-ref --verify --quiet "refs/heads/$c"; then
+      default="$c"
+      break
+    fi
+  done
+fi
+[ -n "$default" ] || exit 0
+
+# Compare against the local default branch (it may be ahead of origin, and
+# `git branch -d` judges deletability against local refs); fall back to the
+# remote tip when there is no local default checkout.
+if git show-ref --verify --quiet "refs/heads/$default"; then
+  base="$default"
+else
+  base="origin/$default"
+  git show-ref --verify --quiet "refs/remotes/origin/$default" || exit 0
+fi
+
+main_root="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
+current="$(git branch --show-current 2>/dev/null)"
+
+# ---- worktrees on merged branches --------------------------------------------
+wt_paths=()
+wt_branches=()
+wt_dirty=()
+path=""
+branch=""
+while IFS= read -r line; do
+  case "$line" in
+    "worktree "*) path="${line#worktree }" ;;
+    "branch refs/heads/"*) branch="${line#branch refs/heads/}" ;;
+    "")
+      if [ -n "$path" ] && [ -n "$branch" ] && [ "$path" != "$main_root" ] &&
+        [ "$branch" != "$default" ] &&
+        git merge-base --is-ancestor "$branch" "$base" 2>/dev/null; then
+        wt_paths+=("$path")
+        wt_branches+=("$branch")
+        if [ -n "$(git -C "$path" status --porcelain 2>/dev/null)" ]; then
+          wt_dirty+=(yes)
+        else
+          wt_dirty+=(no)
+        fi
+      fi
+      path=""
+      branch=""
+      ;;
+  esac
+done < <(
+  git worktree list --porcelain
+  echo
+)
+
+if [ "${#wt_paths[@]}" -gt 0 ]; then
+  echo
+  echo "  prunable worktrees (merged into $default):"
+  i=0
+  while [ "$i" -lt "${#wt_paths[@]}" ]; do
+    note=""
+    [ "${wt_dirty[$i]}" = yes ] && note="  (dirty — commit or stash first)"
+    echo "    ${wt_paths[$i]}  [${wt_branches[$i]}]$note"
+    i=$((i + 1))
+  done
+  if command -v wt >/dev/null 2>&1; then
+    echo "  → wt step prune"
+  else
+    i=0
+    while [ "$i" -lt "${#wt_paths[@]}" ]; do
+      echo "  → git worktree remove ${wt_paths[$i]} && git branch -d ${wt_branches[$i]}"
+      i=$((i + 1))
+    done
+  fi
+fi
+
+# ---- merged local branches without a worktree ---------------------------------
+checked_out="$(git worktree list --porcelain | sed -n 's|^branch refs/heads/||p')"
+branches=()
+while IFS= read -r b; do
+  [ -n "$b" ] || continue
+  [ "$b" = "$default" ] && continue
+  [ "$b" = "$current" ] && continue
+  printf '%s\n' "$checked_out" | grep -qxF "$b" && continue
+  branches+=("$b")
+done < <(git branch --format='%(refname:short)' --merged "$base" 2>/dev/null)
+
+if [ "${#branches[@]}" -gt 0 ]; then
+  echo
+  echo "  merged local branches (deletable):"
+  printf '    %s\n' "${branches[@]}"
+  echo "  → git branch -d ${branches[*]}"
+fi
