@@ -606,10 +606,6 @@ set_login_shell() {
 }
 
 finish_bootstrap() {
-  if command -v pre-commit >/dev/null 2>&1; then
-    pre-commit install --install-hooks
-  fi
-
   # Refresh the lockfile so future runs can use --locked (mise bootstrap installs
   # tools live but doesn't regenerate the lockfile for new tools).
   # `mise lock` fetches release tags from api.github.com for every github:/

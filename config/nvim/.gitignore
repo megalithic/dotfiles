@@ -11,9 +11,6 @@ _docs/
 .devenv*
 devenv.local.nix
 
-# pre-commit
-.pre-commit-config.yaml
-
 # Devenv
 .devenv*
 devenv.local.nix

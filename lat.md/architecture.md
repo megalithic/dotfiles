@@ -91,7 +91,7 @@ Both recipes accept `--dry-run` for build-only validation and `--skip-sync` when
 
 Devenv is removed from this repo as part of the mise migration; the global mise config and `hk.pkl` replace it.
 
-The removal covers `devenv.nix`, `devenv.yaml`, `devenv.lock`, and the prek/git-hooks.nix shims in `.git/hooks`. The system-wide devenv tool from `home/common/programs/devenv/default.nix` remains for other projects.
+The removal covers `devenv.nix`, `devenv.yaml`, `devenv.lock`, and the git-hooks.nix shims in `.git/hooks`. The system-wide devenv tool from `home/common/programs/devenv/default.nix` remains for other projects.
 
 The repo-root `mise.toml` that briefly replaced devenv is dissolved into `mise/config/mise/global_config.toml` — the single source of truth for anything mise-related. It carries the `nix:update`, `nix:apply:home`, and `nix:apply:darwin` tasks (megabookpro-only; harmless elsewhere), the git-hook tools (`hk`, `gitleaks`, `shellcheck`), and `npm:lat.md` for the `lat` CLI. Both hosts run this global config; megabookpro's former nix-managed stub is gone. `[env]` secrets sourcing goes through `mise/fragments/env-secrets.sh`, which prefers fnox and falls back to opnix on hosts without a fnox config.
 
@@ -146,7 +146,7 @@ LAT's active embedding backend is temporarily the bundled offline MiniLM model (
 
 ## Git hooks and Nix linting
 
-Git hooks are managed by prek from the generated `.pre-commit-config.yaml`.
+Git hooks are defined in `hk.pkl` via hk (see "Repo dev environment (mise)" above).
 
 Global git tooling ignores `.worktrees/` through `mise/config/git/tool-ignore` (linked to `~/.ignore`); global Git excludes also ignore `.worktrees/`, `.worktreeinclude`, and wrapper-generated `.pi-lens.json` via `mise/config/git/ignore` — the sole owner since the wave-1 flip removed the nix git module. The active hooks check merge conflicts, secrets, Nix dead code and style, shell scripts, formatting, and commit-message convention. The typos hook is disabled in `devenv.nix`, and treefmt is configured so this repo's local formatter choices override imported defaults.
 

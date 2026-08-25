@@ -740,7 +740,6 @@ nerd_fonts = "JetBrainsMono FiraCode Iosevka VictorMono FantasqueSansMono NerdFo
 # Helium moved to [tools] when its releases repo went public — no token needed.
 [tasks.bootstrap]
 run = [
-  # "command -v pre-commit >/dev/null 2>&1 && pre-commit install --install-hooks || true",
   # "mise install fnox",
   # "mise run setup:op:signin",
 ]

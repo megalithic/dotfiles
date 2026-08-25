@@ -1,5 +1,5 @@
 // Git hooks via hk (https://hk.jdx.dev). Replaces the removed
-// devenv/git-hooks.nix + prek setup and replicates its hook set.
+// devenv/git-hooks.nix setup and replicates its hook set.
 //
 // NOT ACTIVE YET: hooks are not installed. Enable with either:
 //   hk install --global   # git 2.54+, applies to all repos with an hk.pkl

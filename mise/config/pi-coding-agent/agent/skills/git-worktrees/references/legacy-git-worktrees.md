@@ -20,7 +20,6 @@ worktree_core_files=(
   devenv.nix
   devenv.yaml
   devenv.lock
-  .pre-commit-config.yaml
 )
 ```
 
@@ -160,7 +159,7 @@ The value is sanitized to `[A-Za-z0-9_-]` — spaces, slashes, and other charact
 ```bash
 repo_root=$(git rev-parse --show-toplevel)
 worktree_path="$repo_root/.worktrees/$branch"
-worktree_core_files=(.env .envrc devenv.nix devenv.yaml devenv.lock .pre-commit-config.yaml)
+worktree_core_files=(.env .envrc devenv.nix devenv.yaml devenv.lock)
 mkdir -p "$repo_root/.worktrees"
 git worktree add "$worktree_path" -b "$branch"
 for file in "${worktree_core_files[@]}"; do
@@ -227,7 +226,7 @@ rg -i 'failed|\(exit status|exception|authentication required|eaddrinuse|could n
 ```bash
 repo_root=$(git rev-parse --show-toplevel)
 worktree_path="$repo_root/.worktrees/$branch"
-worktree_core_files=(.env .envrc devenv.nix devenv.yaml devenv.lock .pre-commit-config.yaml)
+worktree_core_files=(.env .envrc devenv.nix devenv.yaml devenv.lock)
 mkdir -p "$repo_root/.worktrees"
 pr_number=$(gh pr list --state open --head "$branch" --json number --jq '.[0].number')
 git fetch origin "pull/$pr_number/head:$branch"
