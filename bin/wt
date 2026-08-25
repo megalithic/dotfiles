@@ -77,7 +77,15 @@ gcd="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
 # merged worktrees/branches disappear without manual pruning. Fish completion
 # (`wt <tab>`) resolves this wrapper for `wt list`, so tab completion triggers
 # it too. Stamp and log live under .git/wt/. `wt auto-prune` runs only this
-# check and exits.
+# check and exits. WT_AUTO_PRUNE_MIN_AGE (default 1d) passes through to
+# `step prune --min-age`.
+#
+# Async feedback: when the detached prune removed something or failed, the
+# result is written to $XDG_STATE_HOME/wt/auto-prune-note ("<epoch> <repo>:
+# <summary>"); a fish_prompt hook in fish conf.d/wt-auto-prune.fish prints
+# unseen notes at the next prompt. (Universal variables were tried first, but
+# fish 4.8 does not propagate cross-process changes into running shells
+# here.) Silent on "nothing to prune".
 auto_prune() {
   [ -n "$gcd" ] && [ -d "$gcd" ] || return 0
   local interval stamp now last
@@ -94,8 +102,26 @@ auto_prune() {
   mkdir -p "$gcd/wt/logs" 2>/dev/null || return 0
   printf '%s\n' "$now" >"$stamp"
   (
-    "$wt_bin" -C "$(dirname "$gcd")" step prune --yes \
-      </dev/null >>"$gcd/wt/logs/auto-prune.log" 2>&1 &
+    {
+      root="$(dirname "$gcd")"
+      out="$("$wt_bin" -C "$root" step prune --yes \
+        --min-age="${WT_AUTO_PRUNE_MIN_AGE:-1d}" </dev/null 2>&1)"
+      rc=$?
+      printf '%s\n' "$out" >>"$gcd/wt/logs/auto-prune.log"
+      note=""
+      if [ "$rc" -ne 0 ]; then
+        note="failed (exit $rc; see $gcd/wt/logs/auto-prune.log)"
+      elif printf '%s' "$out" | grep -q -e Removed -e Pruned; then
+        # Final line is Worktrunk's summary; strip the leading status symbol.
+        note="$(printf '%s\n' "$out" | tail -n 1 | sed 's/^[^[:alnum:]]*//')"
+      fi
+      if [ -n "$note" ]; then
+        note_dir="${XDG_STATE_HOME:-$HOME/.local/state}/wt"
+        mkdir -p "$note_dir" 2>/dev/null &&
+          printf '%s %s: %s\n' "$now" "$(basename "$root")" "$note" \
+            >"$note_dir/auto-prune-note"
+      fi
+    } &
   )
 }
 
