@@ -18,6 +18,7 @@
 	"editorPaddingX": 1,
 	"packages": [
 		"npm:pi-mcp-adapter",
+		"npm:pi-interactive-shell",
 		"npm:pi-web-access",
 		"npm:pi-subagents",
 		"npm:pi-caveman",

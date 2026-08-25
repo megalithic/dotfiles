@@ -1,64 +1,81 @@
 ---
 name: interactive-tty
-description: "Run commands needing user interaction: sudo-only commands via native Touch ID (with a reason shown to the user), and typed-input flows (logins, prompts) via a tmux display-popup. Use whenever a command fails or would fail with 'no TTY', 'requires a password', or needs human keystrokes."
+description: "Run commands needing user interaction — sudo/Touch ID elevation, PINs, passphrases, logins, interactive installers — via pi's native interactive_shell overlay (pi-interactive-shell extension). Use whenever a command fails or would fail with 'no TTY', 'requires a password', or needs human keystrokes."
 license: Vibecoded
-script: scripts/tty-run.sh
 ---
 
 # interactive-tty skill
 
-Two modes, one script:
+All interactive flows run in pi's embedded `interactive_shell` overlay
+(pi-interactive-shell extension): full PTY, user watches and types directly,
+hidden input stays hidden, agent blocks on the `sessionId` until done.
 
-- **sudo mode** — command only needs elevated privileges. User sees WHY sudo
-  is needed and WHAT will run; authenticates via the native Touch ID dialog
-  (pam_tid), password-in-popup as fallback. The real command then runs with
-  cached credentials in the agent's shell, so the agent captures its output.
-- **popup mode** — command needs typed input. Runs inside
-  `tmux display-popup`: modal, grabs focus, auto-closes, focus returns to the
-  invoking pane automatically.
+If the `interactive_shell` tool is unavailable, call
+`enable_interactive_shell` first (tool becomes callable next turn). If the
+extension is not installed: `pi install npm:pi-interactive-shell`.
 
-## Usage
+## sudo / Touch ID flow
 
-```bash
-# sudo-only command — -m is REQUIRED: explain why + what it does
-~/.pi/agent/skills/interactive-tty/scripts/tty-run.sh sudo \
-  -m "Install Tailscale GUI pkg (network extension needs root installer)" -- \
-  installer -pkg /path/to/Tailscale.pkg -target /
+Touch ID works natively even under tmux/pi: `/etc/pam.d/sudo_local` has
+`pam_reattach.so` + `pam_tid.so` (managed by mise task `setup:touchid-sudo`).
+The dialog is GUI — no TTY needed. The overlay exists only to (a) show the
+user why sudo is happening and (b) catch the typed-password fallback when
+Touch ID is cancelled or unavailable.
 
-# typed-input flow
-~/.pi/agent/skills/interactive-tty/scripts/tty-run.sh popup -- gh auth login
+```typescript
+// 0. Cached already? Run directly, no interaction needed.
+//    bash: sudo -n true  → exit 0 means skip to step 3.
 
-# mode auto-detects: leading `sudo` in the command selects sudo mode
-~/.pi/agent/skills/interactive-tty/scripts/tty-run.sh -m "why" -- sudo whoami
+// 1. Validate — Touch ID dialog appears; password fallback lands in overlay
+interactive_shell({
+  command: "sudo -v",
+  mode: "interactive",
+  reason: "Install Tailscale pkg — root installer. Touch ID or password."
+})
+// → { sessionId: "calm-reef" }
+
+// 2. Block until validated
+interactive_shell({ sessionId: "calm-reef" })
+// → { status: "exited", exitCode: 0 }
+
+// 3. Credentials cached (~5 min) — run the real command in the agent's own
+//    shell so output is captured normally:
+//    bash: sudo installer -pkg /path/to/Tailscale.pkg -target /
 ```
 
-Options: `-m` reason (required for sudo mode), `-t` timeout seconds
-(default 600), `-w`/`-h` popup size (default 70%/45%, popup mode).
+Rules:
 
-## Behavior details
+- ALWAYS give an honest, specific `reason` — why root is needed and what the
+  command changes. Never bury extra actions in the sudo command.
+- Group related sudo steps within the ~5 min credential cache so the user
+  authenticates once.
+- Exit ≠ 0 from `sudo -v` = declined/failed auth — report it; do not retry
+  silently.
 
-- sudo mode validates with `sudo -v` inside a popup showing the reason;
-  Touch ID dialog appears via pam_tid; cancelled Touch ID falls back to
-  typing the password in the popup. With credentials already cached
-  (`sudo -n true`), no popup appears at all.
-- After validation the command runs as `sudo <command>` in the agent's own
-  shell — output/errors are captured normally, not lost in the popup.
-- popup mode shows a header (reason + exact command), runs the command, and
-  on failure pauses up to 12s ("press Enter to close") so the user can read
-  the error before the popup closes.
-- Exit codes: the command's own code; `124` timeout; `125` popup closed
-  without status; `2` usage / not inside tmux.
-- Bounded wait: an abandoned prompt cannot hang the agent; on timeout the
-  popup is force-closed (`display-popup -C`) and temp files are removed.
+## Typed input flow (PINs, passphrases, logins, prompts)
 
-## Agent rules
+```typescript
+// 1. Launch — overlay opens, user types at the prompts
+interactive_shell({
+  command: "ykman -d 15759055 piv access change-pin",
+  mode: "interactive",
+  reason: "Change PIV PIN — you will type current + new PIN"
+})
+// → { sessionId: "calm-reef" }
 
-- sudo mode: write an honest, specific `-m` reason — why root is needed and
-  what the command changes. Never bury extra actions in the sudo command.
-- Tell the user what input is expected BEFORE invoking, so the focus jump is
-  no surprise.
-- One invocation at a time; one interactive command per invocation — no
-  compound one-liners.
-- On exit 124/125, report timeout/abort; do not silently retry.
-- sudo credentials stay cached ~5 minutes; group related sudo steps so the
-  user authenticates once.
+// 2. Poll status / read output after the user finishes
+interactive_shell({ sessionId: "calm-reef" })
+// → { status: "exited", exitCode: 0, output: "..." }
+```
+
+Rules:
+
+- Tell the user BEFORE launching what prompts to expect and what to type.
+- One interactive command per session — no compound one-liners.
+- Secrets: let the USER type them in the overlay. Never pass secrets as
+  command arguments or `input` strings; never echo them back from `output`.
+- Use absolute paths for mise-shim binaries when PATH may differ
+  (`command -v <tool>` first, e.g. `/Users/seth/.local/share/mise/shims/ykman`).
+- The agent may send non-secret input with
+  `interactive_shell({ sessionId, input, submit: true })`.
+- Kill a stuck session: `interactive_shell({ sessionId, kill: true })`.

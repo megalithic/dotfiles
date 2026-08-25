@@ -27,17 +27,11 @@ Reference: <https://mise.jdx.dev/cli/exec.html>
 
 ### Interactive input / TTY commands (workbookpro)
 
-When a command needs interactive user input — sudo password, installer prompts, any TTY-only flow — do not run it through the agent's own Bash tool and do not ask the user to run it manually. Use the `interactive-tty` skill:
+When a command needs interactive user input — sudo password, installer prompts, PINs, any TTY-only flow — do not run it through the agent's own Bash tool and do not ask the user to run it manually. Read the `interactive-tty` skill and run the command through the `interactive_shell` overlay (pi-interactive-shell extension):
 
-```bash
-# sudo-only: native Touch ID + reason shown to the user (-m required)
-~/.pi/agent/skills/interactive-tty/scripts/tty-run.sh sudo -m "why + what" -- <command> [args...]
-
-# typed input (logins, prompts): tmux display-popup
-~/.pi/agent/skills/interactive-tty/scripts/tty-run.sh popup -- <command> [args...]
-```
-
-sudo mode validates via Touch ID (password-in-popup fallback), then runs the command with cached credentials so output is captured by the agent. popup mode runs the command in a modal popup that auto-closes and returns focus. Exit codes: command's own; `124` timeout; `125` popup died without status. See the skill's SKILL.md for rules; tell the user what input is expected before invoking.
+- sudo: check `sudo -n true` first; if not cached, run `sudo -v` via `interactive_shell` (native Touch ID via pam_reattach/pam_tid, typed-password fallback in the overlay), then run the real `sudo <command>` in the agent's own shell so output is captured.
+- typed input (logins, prompts, PINs): run the command itself via `interactive_shell` with an honest `reason`; the user types secrets directly in the overlay. Block on the `sessionId` until it exits.
+- If `interactive_shell` is unavailable, call `enable_interactive_shell` first; see the skill's SKILL.md for full rules. Tell the user what input is expected before invoking.
 
 ### op / 1Password / fnox failure runbook
 
