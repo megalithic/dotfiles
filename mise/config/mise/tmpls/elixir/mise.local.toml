@@ -14,7 +14,10 @@ _.file = [
 HOST = { default = "127.0.0.1" }
 PG_ROOT = "{{ exec(command='git rev-parse --path-format=absolute --git-common-dir') | trim | dirname }}/tmp/pg"
 PGHOST = "{{ env.PG_ROOT }}"                                                                                    # unix socket dir (psql/pg_ctl use this)
-PGPORT = { default = "5432" }                                                                                   # respect pre-set PGPORT, else 5432; dev.exs + test.exs read this, Ecto via localhost TCP
+# Deterministic per-repo port via .config/scripts/pg-port.sh (5433 + cksum(repo) % 1000)
+# so parallel repos don't fight over 5432. Respects pre-set PGPORT; dev.exs +
+# test.exs read this, Ecto via localhost TCP. cwd-anchored like PHX_PORT below.
+PGPORT = { default = "{{ exec(command='cd \"' ~ cwd ~ '\" 2>/dev/null; t=\"$(git rev-parse --show-toplevel 2>/dev/null)\"; s=\"${t:-.}/.config/scripts/pg-port.sh\"; [ -f \"$s\" ] || s=\"' ~ config_root ~ '/.config/scripts/pg-port.sh\"; bash \"$s\" 2>/dev/null || echo 5432') }}" }
 PG_LOG = "{{ env.PG_ROOT }}/postgres.log"
 PGDATA = "{{ env.PG_ROOT }}/data"
 

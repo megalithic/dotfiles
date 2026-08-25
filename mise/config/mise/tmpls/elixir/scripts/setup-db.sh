@@ -9,7 +9,12 @@ if [ ! -s "$PGDATA/PG_VERSION" ]; then
   initdb -D "$PGDATA" -U postgres --encoding=UTF8 --locale=C
 fi
 conf="$PGDATA/postgresql.conf"
-if ! grep -q '^# rx local settings' "$conf"; then
+if grep -q '^# rx local settings' "$conf"; then
+  # keep an existing cluster in sync with the resolved PGPORT (pg-port.sh
+  # is deterministic per repo; clusters initialized before it existed have
+  # a stale hardcoded 5432 here)
+  sed -i.bak -E "s/^port = [0-9]+/port = $PGPORT/" "$conf" && rm -f "$conf.bak"
+else
   cat >>"$conf" <<EOF
 
 # rx local settings (appended by setup:db)
