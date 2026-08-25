@@ -27,6 +27,7 @@ llama.cpp aliases:
   rx-gemma26b   alias for gemma26b
   qwen35b       unsloth/Qwen3.5-35B-A3B-GGUF                 Qwen3.5-35B-A3B-Q4_K_M.gguf
   rx-qwen35b    alias for qwen35b
+  nomic-embed   nomic-ai/nomic-embed-text-v1.5-GGUF          nomic-embed-text-v1.5.Q8_0.gguf
 
 Examples:
   llm-pull qwen3.6
@@ -111,6 +112,9 @@ resolve_llamacpp() {
     qwen35b | rx-qwen35b)
       printf '%s\t%s\t%s\n' "qwen35b" "unsloth/Qwen3.5-35B-A3B-GGUF" "Qwen3.5-35B-A3B-Q4_K_M.gguf"
       ;;
+    nomic-embed)
+      printf '%s\t%s\t%s\n' "nomic-embed" "nomic-ai/nomic-embed-text-v1.5-GGUF" "nomic-embed-text-v1.5.Q8_0.gguf"
+      ;;
     */*.gguf)
       local repo="${alias%/*}"
       local file="${alias##*/}"
@@ -131,7 +135,7 @@ print_cmd() {
 }
 
 pull_llamacpp() {
-  local resolved model_alias repo file hf target_file alias_file
+  local resolved model_alias repo file quant hf target_file alias_file
   resolved="$(resolve_llamacpp "$ALIAS")"
   IFS=$'\t' read -r model_alias repo file <<<"$resolved"
 
@@ -139,10 +143,13 @@ pull_llamacpp() {
   target_file="$MODEL_DIR/$file"
   alias_file="$MODEL_DIR/$model_alias.gguf"
 
+  quant="${file%.gguf}"
+  quant="${quant##*[.-]}"
+
   if [[ $DRY_RUN -eq 1 ]]; then
     echo ":: backend=llamacpp"
     echo ":: repo=$repo"
-    echo ":: quant=Q4_K_M"
+    echo ":: quant=$quant"
     echo ":: target=$target_file"
     echo ":: alias=$alias_file"
     print_cmd "$hf" download "$repo" --include "$file" --local-dir "$MODEL_DIR" "${EXTRA[@]}"

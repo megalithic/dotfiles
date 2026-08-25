@@ -3,15 +3,26 @@
 # Mirrors home/common/programs/llama-cpp-local/default.nix safe defaults.
 set -euo pipefail
 
-export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:/usr/bin:/bin:$PATH"
-model_dir="${XDG_DATA_HOME:-$HOME/.local/share}/llama.cpp/models"
+data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+llama_server="$data_home/mise/installs/llama-cpp/latest/llama-server"
+model_dir="$data_home/llama.cpp/models"
+preset="$HOME/.dotfiles/mise/config/llama-cpp/models.ini"
 log_dir="$HOME/Library/Logs/llama-cpp"
 mkdir -p "$model_dir" "$log_dir"
+[[ -x "$llama_server" ]] || {
+  echo "llama-server-launchd: installed binary not found: $llama_server" >&2
+  exit 127
+}
+[[ -f "$preset" ]] || {
+  echo "llama-server-launchd: model preset not found: $preset" >&2
+  exit 1
+}
 
-exec llama-server \
+exec "$llama_server" \
   --host 127.0.0.1 \
   --port 18080 \
   --models-dir "$model_dir" \
+  --models-preset "$preset" \
   --models-max 1 \
   -c 8192 \
   --parallel 1 \
