@@ -1,20 +1,35 @@
 #!/usr/bin/env bash
 #
-# One-time (per YubiKey / per token rotation) setup for hardware-backed
-# op/fnox bootstrap. Idempotent; safe to re-run.
+# Per-YubiKey (and per token rotation) setup for hardware-backed op/fnox
+# bootstrap. Idempotent; safe to re-run. Serial-safe for a multi-key fleet:
+# every key-mutating command targets ONE explicit serial.
 #
-#   1. Verify age-plugin-yubikey is installed and a YubiKey is connected.
-#   2. Ensure an age identity exists on the YubiKey (generate into the first
-#      empty PIV retired slot if the key has none; never overwrites).
-#   3. Write the identity stub to the repo (committable, non-secret) and
-#      symlink it to ~/.config/fnox/yubikey-identity.txt.
-#   4. Ensure the recipient is in the fnox age provider config.
-#   5. Ensure OP_SERVICE_ACCOUNT_TOKEN is stored encrypted (prompts for the
-#      ops_... token on first run; create one at 1password.com > Settings >
-#      Integrations > Service Accounts with READ access to the Crypt vault).
-#   6. Verify the round-trip: decrypt via YubiKey, then `op whoami`.
+#   1. Verify tooling and resolve the target serial (arg 1 or YK_SERIAL; when
+#      exactly one YubiKey is connected it is auto-selected, otherwise the
+#      serial is required).
+#   2. Refuse to touch guarded serials (see GUARDED_SERIALS below).
+#   3. Ensure an age identity exists on the target key (generate into the
+#      first empty PIV retired slot if the key has none; never overwrites).
+#      Generation prompts for the PIV PIN — provision PIN/PUK/management key
+#      first and store them in a 1Password item named by serial:
+#        ykman -d <serial> piv access change-pin
+#        ykman -d <serial> piv access change-puk
+#        ykman -d <serial> piv access change-management-key --generate --protect
+#   4. Write the per-serial identity stub to the repo (committable,
+#      non-secret) and rebuild the combined identity file from all stubs.
+#      The combined file is what fnox's age provider key_file points at, so
+#      decryption works with whichever fleet key is plugged in.
+#   5. Ensure the key's recipient is in the fnox age provider recipients list
+#      (appended, never replacing existing recipients).
+#   6. Ensure OP_SERVICE_ACCOUNT_TOKEN is stored encrypted (prompts for the
+#      ops_... token on first run; create one at 1password.com > Developer >
+#      Service Accounts with READ access to the Crypt vault). If recipients
+#      changed and a blob already exists, re-encrypt with
+#      `fnox reencrypt -p age` (needs a key that can decrypt the current blob).
+#   7. Verify the round-trip: decrypt via YubiKey, then `op whoami`.
 #
-# Usage: mise run setup:yubikey
+# Usage: mise run setup:yubikey [-- <serial>]
+#        YK_SERIAL=<serial> mise run setup:yubikey
 set -euo pipefail
 
 ok() { echo -e "\033[0;32m[OK]\033[0m $1"; }
@@ -24,79 +39,130 @@ fail() {
   exit 1
 }
 
-dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
-repo_identity="$dotfiles/mise/config/fnox/yubikey-identity.txt"
-home_identity="${XDG_CONFIG_HOME:-$HOME/.config}/fnox/yubikey-identity.txt"
-fnox_config="$dotfiles/mise/config/fnox/config.toml"
+# Serials that must never be written to (blocked PIV PIN, pending recovery,
+# or intentionally frozen). Read-only inspection is fine.
+GUARDED_SERIALS=("15759652")
 
-# -- 1. prerequisites ---------------------------------------------------------
+# Policies for newly generated identities (primary-key defaults; override per
+# invocation, e.g. YK_PIN_POLICY=once for a backup key kept at home).
+PIN_POLICY="${YK_PIN_POLICY:-never}"
+TOUCH_POLICY="${YK_TOUCH_POLICY:-cached}"
+
+dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
+fnox_dir="$dotfiles/mise/config/fnox"
+combined_identity="$fnox_dir/yubikey-identity.txt"
+home_identity="${XDG_CONFIG_HOME:-$HOME/.config}/fnox/yubikey-identity.txt"
+fnox_config="$fnox_dir/config.toml"
+
+# -- 1. prerequisites + target serial ----------------------------------------
 command -v age-plugin-yubikey &>/dev/null ||
   fail "age-plugin-yubikey not found. Run 'mise install' first."
+command -v ykman &>/dev/null || fail "ykman not found. Run 'mise install' first."
 command -v fnox &>/dev/null || fail "fnox not found. Run 'mise install' first."
-command -v op &>/dev/null || fail "op not found (brew-cask 1password-cli@beta)."
+command -v op &>/dev/null || fail "op not found (brew 1password-cli@beta)."
 
-ioreg -p IOUSB -k "USB Product Name" 2>/dev/null | grep -qi yubikey ||
-  fail "No YubiKey connected. Plug it in and re-run."
-ok "YubiKey connected"
+serials="$(ykman list --serials 2>/dev/null || true)"
+[[ -n "$serials" ]] || fail "No YubiKey connected. Plug one in and re-run."
+count="$(wc -l <<<"$serials" | tr -d ' ')"
 
-# -- 2. identity on the key ---------------------------------------------------
-# --list is read-only and PIN-less; one line per age identity on the key.
-identities="$(age-plugin-yubikey --list 2>/dev/null || true)"
-if [[ -z "$identities" ]]; then
-  echo "No age identity on this YubiKey yet; generating one (first empty slot)."
-  echo "You will be prompted for the PIV PIN (default 123456 forces a change)"
-  echo "and a touch."
-  [[ -t 0 ]] || fail "Interactive terminal required for PIN/touch prompts."
-  age-plugin-yubikey --generate --name fnox-crypt \
-    --pin-policy once --touch-policy cached >"$repo_identity"
-  ok "Generated identity into $repo_identity"
-else
-  ok "YubiKey already has an age identity"
-  # Regenerate the stub if the repo copy is missing or has no identity line.
-  if ! grep -q '^AGE-PLUGIN-YUBIKEY-' "$repo_identity" 2>/dev/null; then
-    age-plugin-yubikey --identity >"$repo_identity"
-    ok "Regenerated identity stub into $repo_identity"
+serial="${1:-${YK_SERIAL:-}}"
+if [[ -z "$serial" ]]; then
+  if [[ "$count" == 1 ]]; then
+    serial="$serials"
+    ok "Single YubiKey connected; targeting serial $serial"
+  else
+    echo "Connected serials:"
+    while IFS= read -r s; do echo "  $s"; done <<<"$serials"
+    fail "Multiple YubiKeys connected. Pass the target serial: mise run setup:yubikey -- <serial>"
   fi
 fi
 
-recipient="$(grep -io 'age1yubikey1[a-z0-9]*' "$repo_identity" | head -1)"
-[[ -n "$recipient" ]] || fail "Could not extract recipient from $repo_identity"
+grep -qx "$serial" <<<"$serials" ||
+  fail "Serial $serial is not connected (found: $(tr '\n' ' ' <<<"$serials"))"
+ok "Target YubiKey: $serial"
+
+# -- 2. guard rail -------------------------------------------------------------
+for guarded in "${GUARDED_SERIALS[@]}"; do
+  [[ "$serial" == "$guarded" ]] &&
+    fail "Serial $serial is GUARDED (blocked PIN / pending recovery). Refusing to modify it."
+done
+
+# -- 3. identity on the key ----------------------------------------------------
+serial_stub="$fnox_dir/yubikey-identity-$serial.txt"
+# --identity with --serial is read-only and PIN-less.
+identity_out="$(age-plugin-yubikey --serial "$serial" --identity 2>/dev/null || true)"
+if grep -q '^AGE-PLUGIN-YUBIKEY-' <<<"$identity_out"; then
+  ok "YubiKey $serial already has an age identity"
+else
+  echo "No age identity on YubiKey $serial; generating one (first empty retired slot)."
+  echo "You will be prompted for this key's PIV PIN and a touch."
+  [[ -t 0 ]] || fail "Interactive terminal required for PIN/touch prompts."
+  age-plugin-yubikey --serial "$serial" --generate --name fnox-crypt \
+    --pin-policy "$PIN_POLICY" --touch-policy "$TOUCH_POLICY" >"$serial_stub"
+  ok "Generated identity on $serial (pin: $PIN_POLICY, touch: $TOUCH_POLICY)"
+  identity_out="$(age-plugin-yubikey --serial "$serial" --identity 2>/dev/null || true)"
+fi
+
+# Always (re)write the per-serial stub from the live key so the repo record
+# matches reality.
+printf '%s\n' "$identity_out" >"$serial_stub"
+ok "Per-serial stub: $serial_stub"
+
+recipient="$(grep -io 'age1yubikey1[a-z0-9]*' "$serial_stub" | head -1)"
+[[ -n "$recipient" ]] || fail "Could not extract recipient from $serial_stub"
 ok "Recipient: $recipient"
 
-# -- 3. symlink into ~/.config/fnox -------------------------------------------
-if [[ "$(readlink "$home_identity" 2>/dev/null)" != "$repo_identity" ]]; then
+# -- 4. rebuild combined identity file + symlink -------------------------------
+{
+  echo "# Combined YubiKey fleet age identity stubs (non-secret; key material stays on"
+  echo "# the YubiKeys). One identity line per fleet member — age-plugin-yubikey tries"
+  echo "# whichever key is connected. Rebuilt by mise/tasks/yubikey-setup from the"
+  echo "# per-serial records: yubikey-identity-<serial>.txt"
+  for stub in "$fnox_dir"/yubikey-identity-*.txt; do
+    [[ -e "$stub" ]] || continue
+    echo "#"
+    cat "$stub"
+  done
+} >"$combined_identity"
+ok "Rebuilt combined identity file: $combined_identity"
+
+if [[ "$(readlink "$home_identity" 2>/dev/null)" != "$combined_identity" ]]; then
   mkdir -p "$(dirname "$home_identity")"
-  ln -sf "$repo_identity" "$home_identity"
-  ok "Linked $home_identity -> $repo_identity"
+  ln -sf "$combined_identity" "$home_identity"
+  ok "Linked $home_identity -> $combined_identity"
 else
   ok "Identity symlink in place"
 fi
 
-# -- 4. recipient in fnox config ----------------------------------------------
-# Formatting-agnostic: formatters may split `recipients = []` across lines,
-# so match the empty array as a multiline regex instead of a literal grep.
+# -- 5. recipient in fnox config ------------------------------------------------
 if grep -q "$recipient" "$fnox_config"; then
   ok "Recipient already in fnox config"
-elif python3 - "$fnox_config" "$recipient" <<'PY'; then
+elif python3 - "$fnox_config" "$recipient" "$serial" <<'PY'; then
 import re, sys
-path, rec = sys.argv[1], sys.argv[2]
+path, rec, serial = sys.argv[1], sys.argv[2], sys.argv[3]
 with open(path) as f:
     s = f.read()
-new, n = re.subn(r"recipients\s*=\s*\[\s*\]", f'recipients = ["{rec}"]', s, count=1)
-if n == 0:
+# Append to the age provider's recipients array (handles multiline arrays and
+# an empty array; never replaces existing entries).
+m = re.search(r"(recipients\s*=\s*\[)([^\]]*)(\])", s)
+if not m:
     sys.exit(1)
+body = m.group(2)
+entry = f'\n  "{rec}", # {serial}\n'
+new_body = (body.rstrip() + entry) if body.strip() else entry
+s = s[: m.start(2)] + new_body + s[m.end(2):]
 with open(path, "w") as f:
-    f.write(new)
+    f.write(s)
 PY
-  ok "Inserted recipient into fnox config"
+  ok "Appended recipient to fnox config"
+  echo "NOTE: existing age-encrypted secrets are still encrypted to the OLD"
+  echo "recipient set. Re-encrypt with a key that can decrypt the current blob:"
+  echo "  fnox reencrypt -p age"
 else
-  fail "fnox config has a different recipient (replacement key?).
-Update the age provider in $fnox_config to:
-  recipients = [\"$recipient\"]
-then re-encrypt: fnox reencrypt -p age"
+  fail "Could not find a recipients array in $fnox_config age provider."
 fi
 
-# -- 5. encrypted token in global fnox config ----------------------------------
+# -- 6. encrypted token in global fnox config ------------------------------------
 if python3 - "$fnox_config" <<'PY'
 import sys, tomllib
 with open(sys.argv[1], "rb") as f:
@@ -142,7 +208,7 @@ with open(path, "w") as f:
 PY
 ok "OP_SERVICE_ACCOUNT_TOKEN env=false enforced"
 
-# -- 6. verify round-trip -------------------------------------------------------
+# -- 7. verify round-trip ---------------------------------------------------------
 echo "Verifying decrypt (YubiKey touch may be required).."
 token="$(fnox get OP_SERVICE_ACCOUNT_TOKEN)"
 [[ -n "$token" ]] || fail "Decryption returned empty token"
@@ -154,4 +220,4 @@ else
   fail "op rejected the token (revoked? wrong account?). Rotate it at 1password.com."
 fi
 
-ok "Done. Commit $repo_identity and mise/config/fnox/config.toml."
+ok "Done. Commit $fnox_dir/yubikey-identity*.txt and $fnox_config."

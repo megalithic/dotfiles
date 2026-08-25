@@ -271,6 +271,7 @@ fnox-env = "https://github.com/jdx/mise-env-fnox"
 "aqua:mvdan/sh" = "latest"
 "aqua:tidewave-ai/tidewave_app" = "latest"
 "github:str4d/age-plugin-yubikey" = "latest"
+"pipx:yubikey-manager" = "latest"
 "github:EmmyLuaLs/emmylua-analyzer-rust" = "latest"
 "github:Feel-ix-343/markdown-oxide" = "latest"
 # sessions — search/memory across AI coding sessions (Claude, Codex, Pi, OpenCode);
@@ -833,7 +834,7 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox-setup"
 raw = true
 
 [tasks."setup:yubikey"]
-description = "One-time (per YubiKey/token rotation): age identity on YubiKey + encrypted OP_SERVICE_ACCOUNT_TOKEN for fnox (interactive)"
+description = "Per-YubiKey (serial-safe): age identity + fnox recipient + encrypted OP_SERVICE_ACCOUNT_TOKEN (interactive; pass serial: mise run setup:yubikey -- <serial>)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/yubikey-setup"
 # raw: PIN/touch/token prompts on the terminal
 raw = true

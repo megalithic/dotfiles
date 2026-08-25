@@ -1,3 +1,16 @@
+# Combined YubiKey fleet age identity stubs (non-secret; key material stays on
+# the YubiKeys). One identity line per fleet member — age-plugin-yubikey tries
+# whichever key is connected. Rebuilt by mise/tasks/yubikey-setup from the
+# per-serial records: yubikey-identity-<serial>.txt
+#
+#       Serial: 15759055, Slot: 1
+#         Name: fnox-crypt
+#      Created: Tue, 25 Aug 2026 13:34:33 +0000
+#   PIN policy: Never  (A PIN is NOT required to decrypt)
+# Touch policy: Cached (A physical touch is required for decryption, and is cached for 15 seconds)
+#    Recipient: age1yubikey1qdmklmqtg0m9c4xthspkq4clgc6caguc8q2ksp6pcl3c93gypt827pl4p0l
+AGE-PLUGIN-YUBIKEY-1EAM0QQYZJTZE2WC9430X2
+#
 #       Serial: 15759652, Slot: 1
 #         Name: fnox-crypt
 #      Created: Fri, 31 Jul 2026 14:11:24 +0000

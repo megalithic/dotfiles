@@ -14,10 +14,16 @@
 onepass = { type = "1password", vault = "Crypt", account = "my.1password.com" }
 op = { type = "1password", vault = "Crypt", account = "my.1password.com" }
 # Hardware-backed bootstrap: OP_SERVICE_ACCOUNT_TOKEN is encrypted to the
-# YubiKey (age-plugin-yubikey, PIV retired slot). Decrypt needs the physical
-# key + PIN/touch. Recipient/identity are managed by `mise run setup:yubikey`.
+# YubiKey fleet (age-plugin-yubikey, PIV retired slots). Decrypt needs one of
+# the physical keys (+ touch; PIN policy varies per key). Recipients/identities
+# are managed by `mise run setup:yubikey`; per-serial stubs live next to this
+# file as yubikey-identity-<serial>.txt and the combined key_file below holds
+# one identity line per key so any connected fleet member can decrypt.
+#   15759055 = primary YK5C NFC (fnox-crypt, slot 1, pin never/touch cached)
+#   15759652 = old YK5C NFC (PIV PIN blocked — recovery pending; kept for later)
 age = { type = "age", recipients = [
-  "age1yubikey1qwdz7x6tcen507a08ddql7cuvv9lxce8phcxhpka5wp2llqye9q8wp825aw",
+  "age1yubikey1qdmklmqtg0m9c4xthspkq4clgc6caguc8q2ksp6pcl3c93gypt827pl4p0l", # 15759055
+  "age1yubikey1qwdz7x6tcen507a08ddql7cuvv9lxce8phcxhpka5wp2llqye9q8wp825aw", # 15759652
 ], key_file = "~/.config/fnox/yubikey-identity.txt" }
 
 [secrets]
@@ -30,7 +36,7 @@ age = { type = "age", recipients = [
 # source env-vars.sh directly.
 ENV_VARS_SH = { provider = "onepass", value = "op://Crypt/env/notesPlain", env = false }
 S3CFG = { provider = "onepass", value = "op://Crypt/s3cfg/notesPlain", env = false }
-OP_SERVICE_ACCOUNT_TOKEN = { provider = "age", value = "YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHBpdi1wMjU2IDU1ZFQ0ZyBBcHpWLzkvTFdOUTB1VEp2eWZBc3hQeWtxM3VHc05uaVlQRkZPTEt4dkJMWAp3Znk1d042QWUxOXJPZ0JTVFBFR1RjaWhzSkx4M3BWY01TaWtqNk42MDg0Ci0+ICN3b0UiaCktZ3JlYXNlCjlMSys5YzdnSXY5bW9UYkQ3TVB0SE5QdjNCTDc3bnRpaXZwYQotLS0gQS85VEh2djNFQm55U2RyMkV4NXhqZ1I3Nys2bFdMN2FOSHphSjB4ZmR1WQpdflY1w522QPrXU0ZoNMnODYwSeQ9dAFN3tKoQV/JlW8S9ZShw3NbJbsuWMDzAv6COCWx9Anxr+dd0FazZrBjz/c8f3NNOBeAscOtxK30RZ0vokc4/6hn4utE6YxP9R8TQ1IfvlG69imYK/3oPr0dbJQpQQXbcsVbl3Bij+SSqd1iLfaCR6kC28Dor0aiYV/kFnS95+LRky19a+cbdulcBeNWNnszLF2VmxUbKy3ys4XGBJWJWBXaQpu2OHzo6ZWrAuImYCTAAR3Sc4IkxBsG/7Hd1yFQ667N2jkYmL2MVXv7rCCXZokbx+JwuOKS1ydvpsY9nw9JbFTW4iTcvM8aHuwi1pnVUvuMfyyjZCfJuJfpKizSVy9cRGIArbbl87xdCepxqEs4XA+QB/bk3ZYO5XuFh4QXWfIZHHU2CkLUU9SXb2Aeh3EIIn+8pET5DVlQpCtgiLZUg0c5JbDNI33ZtNeeFOueWvS1NwBDEbGPAmZz4r8r6Jhn62oG0oDy6jBGDRTrpBwTMT31ozoCcTigOD1Ki1qxgEupJffVxXPlPNmL8BFWU+LZcYUyuhb1m8oxSOHsX78BC6n0Sg7NVwzIWN8QuOwmni1mAk3lpN1JQegdRgOFcsDi5f19duVfc7hyWRHDPT3DJT3XLwdnWV7v83JN/xjmYd6vyLnp8/O0TYq62YPb2ESKcZNDmQv2mNGPD9eVulqU0WQr06y/8bO21nVW7DlIqWzeaeOIVhqYzfswQWBPhRoiFasK4UhQXeLfiT8Xnwss4PSQYgaViXkNgshBIPJY82mFEaoAJVtOoB1ZENBa0gEOkdInrFxuCVpL0AF9KVySHRL7cUiyNiwJUwkcv97LanhxuVBZ8mjWlktOWNVIovihsKuh/YjaDA9SbjAHmSi/J2n69inzQQjKn+OgAVcLMyWR3CKFUBQ2Qk3N3B3UPhw/bH5r7Z8UYr8AmKi33EucoWmWdFJPsl61DNagtS3iUbBDYp9f6gY3xy/UJ/T3E5kIKufLRlGEJqVx+VXR1svQ3I2R9za1kubbrro3DY6RObka5hk0/jVGPAxrnp9mKUMBHeQkHg5fLCzNRJTc1bMuzXoxaiZj+I+s2kzHm2x89f9Hj2bE5vEu9uSnkvQ==", env = false }
+OP_SERVICE_ACCOUNT_TOKEN = { provider = "age", value = "YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHBpdi1wMjU2IGtzV1ZPdyBBNzFzK1V4Z01zWS9xVStxcFZKT1pONHI4d0RGRklpVzVZcVVjc1czNDUzdgpqK0VjSXZaOWM1Mm5XWWN1RnlSN0pLUXZJUDQ4UWFxb0FheGMrZkd4Tm9jCi0+IHBpdi1wMjU2IDU1ZFQ0ZyBBOUN0NXFjWFgwRkRiOU1ZZUV3ZUU1U1d6eEVEUmFYeW5vdnZ3Zmx5Z3A1bApUaGVCVW5pOCtvQUpXTTUzbHJJVmZQR3IxRFZPV0ZtNy9XK3JxdERBVWpJCi0+IHh1LWdyZWFzZSBBLCBiPllWCmNWcWdiTHVHRlFEd1kxd3ZmZzQKLS0tIG11UTRPQUhvQjhhZmVVbEQ0b0dtODV5b1VZcTJqUmR3R1BpT1ZGTXJ1MkkK8rhdPsgq5M6W4zHkxUBp6ToJge7BOdKMgXD2D801XKldDEPC8pTlSXF/fiowKJ6L5vka8MdksOgie2KXBqPoYvOzXUMmdni3we+blY9L4jZjDTMPzlnJdG8nCnSH+Gd0J7Rv5uKE/E2sfOJV8ee8B4L/1Z66WBDFv/ZCOekr1GpOlTk7CsmLeNYk4nWXMB36vsRzSy1cp56Qnxt3mPIuHRvlUjjXjKiuya8R43WiNoDq7Sq1xkxvMHis4vwAKu1t5qUbzdYoYBpu+cMeFreF0UFfxNVzS2/f65ffgP9p3xeQrBcf1PD1VtXdl8E6oibqeaZWC4hNR++o04EmuKUMU/rNT8wiBMB1F64UinjDBZDLDnqGK1ZNqLyjqx61kwsyjIweQ20NRRWpIb9mtwyLMXbqnOi1QUUDAcyNlR/pKAMKuwIJ1QPr5l32HP6/06fmAFDKDokeEExVR+sa+fAf5wWpLZIPw140Wty3RIg65awNzhW4sLp4AO/I/csYMpe2izYil8ny4fKf3o6sd/l0xuSVgRP/9WcelQOedPy4PtxAHHx2694Zdb6AoW43rhRTjqIjDkngkcBWYoaf8S9zJuvhaAEDb+dg2nogb26r9zfMtrKQxf1VK/RzSmyHMjfYEYUeK5lqFQjpBDMfPXLP45PuIUB9vsMMnsMqHn/tQ3IJySe0s6Db2D1egv9O3eE3nLXLqTz0afwc/8SBTfvzrAsYm2EVBMwNXnJ5d9o1mLZNGXXZaqAadkwlGsWmRUmfCiXdhcmxJStCLO8N1QB5ub2tokE4NN/4oeJsHr3bdzW8e98TTQmGnBk1pYa8TBHchpWq7AilF9FY8JG0Ry5MyKUubuvgdumDIMImwa5QxqhKhqC5oDdwyahRxX6Gmq82nA7V3JUub0wK5HKlC+pEelM6rn4AquJdAKhOn74rdDkOM8vPpoGpRTrQbwgiyeKhHlhufuik5InnFOSXJlWOSiyTNDJvjByDdqIGN2w9GXYtgpUnH55oE8Gx8F/6Oc83EZ9pC6GzgMHQF0/yeNIZJGb2JvoP8/K/7/4xloDaZV0GeDaIIjMca4W5KqToZP9qJy0poZt4Ffltpin8YyxvHjsppDLg24e9FIFNPhe8c6Qs0bt5z8CPpUe9P+4fqLUr+UALFBsTZJ2QHr7ynfyyPKGFd3I=", env = false }
 
 # On-demand single values: `fnox get APPLE_TEAM_ID`. env = false so shell
 # activation doesn't hit 1Password on every new shell for rarely-used secrets.
