@@ -163,6 +163,66 @@ function bump_recent() {
   mv "$tmp" "$recent_file"
 }
 
+# -- find the tmux pane id (%N) of the pi agent running in a session.
+#    Source of truth: the pi manifest ($PI_STATE_DIR/manifests/
+#    pi-{session}-{window}.info, single-line JSON with "pane" and "pid"
+#    keys). Falls back to the first pane in the session whose current
+#    command is node (pi runs under node).
+function pi_pane_for() {
+  local session="$1" sid="$2" f json pane pid panes line
+  panes="$(tmux list-panes -s -t "$sid" -F '#{pane_id} #{pane_current_command}' 2>/dev/null || true)"
+  for f in "$PI_STATE_DIR/manifests/pi-$session-"*.info; do
+    [[ -e $f ]] || continue
+    [[ $f == *-eph-* ]] && continue
+    json="$(<"$f")"
+    [[ $json == *'"pane":"'* ]] || continue
+    pane="${json#*\"pane\":\"}"
+    pane="${pane%%\"*}"
+    if [[ $json == *'"pid":'* ]]; then
+      pid="${json#*\"pid\":}"
+      pid="${pid%%[,\}]*}"
+      [[ $pid =~ ^[0-9]+$ ]] && ! kill -0 "$pid" 2>/dev/null && continue
+    fi
+    [[ $'\n'"$panes" == *$'\n'"$pane "* ]] || continue
+    printf '%s' "$pane"
+    return 0
+  done
+  while IFS= read -r line; do
+    if [[ ${line#* } == "node" ]]; then
+      printf '%s' "${line%% *}"
+      return 0
+    fi
+  done <<<"$panes"
+  return 1
+}
+
+# -- fzf preview for a picker entry. Running sessions show the last 200
+#    lines of the pi agent's pane (capture-pane -e); pi exposes no
+#    message-history query over its socket (ping/prompt/tell only), so the
+#    rendered pi TUI pane is the closest view of recent pi messages.
+#    Sessions without a pi pane fall back to the session's active pane.
+#    Dir entries show the path; layout entries show the script.
+function preview_entry() {
+  local line="$1" name path sid pane
+  if [[ $line == *"$TAB"* ]]; then
+    path="${line#*"$TAB"}"
+    printf '%s%s%s\n' "$C_GRAY" "$path" "$C_RESET"
+    return 0
+  fi
+  name="$(strip_markers "$line")"
+  [[ -n $name ]] || return 0
+  if sid="$(session_id_for "$name")"; then
+    if pane="$(pi_pane_for "$name" "$sid")"; then
+      tmux capture-pane -e -p -S -200 -t "$pane" 2>/dev/null || true
+    else
+      tmux capture-pane -e -p -S -200 -t "$sid" 2>/dev/null || true
+    fi
+  elif [[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]]; then
+    cat "$layouts_dir/$name.sh"
+  fi
+  return 0
+}
+
 # -- pre-defined layout names (one glob, no subshells)
 function get_layouts() {
   local f
@@ -390,7 +450,7 @@ function fuzzy_find() {
     pinvim_action='execute-silent(session=$(printf %s {} | sed -E "s/\t.*$//; s/ \*( π)?$//"); tmux switch-client -t "$(ftm --id="$session")" && PIMUX_PANE=$(tmux display-message -p "#{pane_id}") pimux)+accept'
 
   # native fzf tmux popup unless we're already inside one (-p)
-  [[ $POPUP == "true" ]] || fzf_extra_args+=(--tmux "bottom,22%")
+  [[ $POPUP == "true" ]] || fzf_extra_args+=(--tmux "center,80%,60%")
 
   selected_session="$(
     fzf \
@@ -403,9 +463,12 @@ function fuzzy_find() {
       --prompt="${fzf_prompt_text}" \
       --header="${fzf_header_text}" \
       --color="bg:#3c474d,bg+:#323d43" \
-      --no-preview \
+      --preview="ftm --preview={}" \
+      --preview-window="right,60%,nowrap" \
       --with-shell="bash -c" \
       --bind="change:first" \
+      --bind="?:toggle-preview" \
+      --bind="ctrl-u:preview-half-page-up,ctrl-d:preview-half-page-down" \
       --bind="ctrl-k:${kill_action}" \
       --bind="ctrl-x:${kill_action}" \
       --bind="ctrl-r:${rename_action}" \
@@ -444,6 +507,11 @@ while getopts "phs:-:" OPTION; do
       # internal: session name -> id for picker actions
       session_id_for "${OPTARG#id=}"
       exit $?
+      ;;
+    preview=*)
+      # internal: fzf preview for a picker entry
+      preview_entry "${OPTARG#preview=}"
+      exit 0
       ;;
     help) __help ;;
     *)
