@@ -109,7 +109,38 @@ The 1Password service account token is the only unmanaged secret input and must 
 
 Shell secret loading is shell-specific: zsh uses `programs.zsh.initContent`, bash uses `programs.bash.bashrcExtra`, and fish parses the same files in `programs.fish.interactiveShellInit`.
 
-The staged mise twin is fnox: `mise/config/fnox/config.toml` (linked to `~/.config/fnox/config.toml`) declares the same 1Password-backed secrets and is rendered by `mise/tasks/fnox-render-secrets` into `~/.config/fnox/secrets/env-vars.sh`. Its providers pin `account = "my.1password.com"` so machines also signed into a work 1Password account (workbookpro) still resolve the personal `Crypt` vault; the personal account must be added to that machine's 1Password app with CLI integration enabled. The render task warns and exits 0 when the vault is unreachable so bootstrap continues.
+The staged mise twin is fnox: `mise/config/fnox/config.toml` (linked to `~/.config/fnox/config.toml`) declares the same 1Password-backed secrets and is rendered by `mise/tasks/fnox-render-secrets` into `~/.config/fnox/secrets/env-vars.sh`. Its providers pin `account = "my.1password.com"` so machines also signed into a work 1Password account (workbookpro) still resolve the personal `Crypt` vault; the personal account must be added to that machine's 1Password app with CLI integration enabled. The render task warns and exits 0 when the vault is unreachable so bootstrap continues. The mise toolset includes `github:str4d/age-plugin-yubikey` for YubiKey-backed age decryption and `pipx:yubikey-manager` for the `ykman` PIV diagnostics CLI.
+
+### YubiKey fleet
+
+Three hardware keys, always addressed by explicit serial (`ykman -d <serial>`, `age-plugin-yubikey --serial <serial>`) because multiple keys are routinely connected:
+
+- `15759055` — YubiKey 5C NFC, fw 5.2.7, keychain (USB-C): primary daily-use key, carried on keychain. PIV provisioned (custom PIN/PUK, PIN-protected random management key) and holds the active `fnox-crypt` age identity (slot 1 / retired slot 82, PIN policy never, touch cached).
+- `6933956` — YubiKey 4, fw 4.3.7 (USB-A): resident laptop key, pending enrollment as fnox recipient #2. Limits vs the 5 series: no FIDO2 (U2F only, no resident SSH keys, no `ed25519-sk`), OpenPGP card spec 2.1 (RSA only, no ed25519/cv25519), no NFC, TDES-era PIV management key, `ykman piv keys info` unsupported (needs fw 5.3+).
+- `15759652` — YubiKey 5C NFC, fw 5.2.7: GUARDED. Its PIV PIN is blocked and the PUK is unknown; `mise/tasks/yubikey-setup` hard-refuses it via `GUARDED_SERIALS`. The `OP_SERVICE_ACCOUNT_TOKEN` blob no longer depends on it (re-encrypted 2026-08-25 to the fleet recipient set), so it can be PIV-reset and re-enrolled as an offline backup mirror whenever convenient.
+
+Application responsibilities are kept separate per key: PIV retired slots hold age-plugin-yubikey identities for fnox bootstrap; OpenPGP holds Git/GPG/SSH subkeys; FIDO2/U2F is for WebAuthn; OATH for TOTP; Yubico OTP is unused. PIN/PUK/management-key values live in 1Password items named by serial (e.g. `yubikey-5c-nfc (15759055)`), never in the repo.
+
+#### Provisioning and replacing a key
+
+Provisioning is serial-safe and repeatable: PIV credentials are set per key with explicit `-d <serial>` commands, then `mise run setup:yubikey -- <serial>` converges identity, stubs, and fnox config.
+
+1. Verify the target: `ykman list` (and `ykman list --serials`); every mutating command below names that serial explicitly.
+2. PIV credentials (store each in the key's 1Password item as you go): `ykman -d <serial> piv access change-pin`, `... change-puk`, then `... change-management-key --generate --protect` (random key stored on-device behind the PIN; blank/default is accepted for the current key on a factory-fresh device).
+3. `mise run setup:yubikey -- <serial>` — generates a `fnox-crypt` age identity in the first empty retired slot if the key has none (policies via `YK_PIN_POLICY`/`YK_TOUCH_POLICY`, defaults never/cached), writes `mise/config/fnox/yubikey-identity-<serial>.txt`, rebuilds the combined `yubikey-identity.txt` from all per-serial stubs, and appends the recipient to the age provider in `mise/config/fnox/config.toml`.
+4. Re-encrypt existing blobs to the grown recipient set: `fnox reencrypt -p age` (needs a connected key that can decrypt the current blob), then verify `fnox get OP_SERVICE_ACCOUNT_TOKEN` and `op whoami`.
+
+The combined `yubikey-identity.txt` (the age provider `key_file`) holds one identity line per fleet member, so decryption works with whichever key is plugged in; the per-serial stubs are the committable records. Losing a key costs nothing cryptographically: any surviving recipient decrypts, and the token itself lives in 1Password (`Shared/(fnox) Service Account Auth Token`) as the final fallback — worst case, mint a new `ops_...` service account (READ on Crypt) and store it with `fnox set -g OP_SERVICE_ACCOUNT_TOKEN --provider age`. Remove a lost key's recipient from the config and re-encrypt to evict it.
+
+#### Yubico OTP interface policy
+
+The factory Yubico OTP credential in slot 1 types `cccc…` one-time passwords into the focused window on accidental touch, so the OTP **USB interface** is disabled on daily-use keys instead of deleting the credential.
+
+Deletion is irreversible — Yubico never re-provisions the factory AES secret — while interface disable preserves the credential. Currently disabled on `15759055` (OTP over NFC remains enabled there). Fully reversible:
+
+- Re-enable: `ykman -d <serial> config usb --enable OTP` (the key reboots; re-run `ykman list` to confirm).
+- Repurpose slot 1 later (self-generated Yubico OTP, static password, challenge-response, or HOTP): re-enable the interface, then program with `ykman -d <serial> otp` subcommands (`yubiotp`, `static`, `chalresp`, `hotp`). A new self-generated Yubico OTP credential can be uploaded to YubiCloud at upload.yubico.com; the factory registration cannot be restored once overwritten or deleted.
+- Inspect state: `ykman -d <serial> otp info` (slot programmed/empty status only; secrets are never readable).
 
 The OpNix module also derives `LAT_LLM_*` environment for `lat search`, and the Pi wrapper duplicates that derivation so GUI or non-interactive Pi launches still see the same lat provider config. Switching embedding providers changes vector dimensions, so `lat.md/.cache/vectors.db` must be deleted and rebuilt with `lat search --reindex`.
 
