@@ -35,7 +35,7 @@ When a command needs interactive user input — sudo password, installer prompts
 
 ### op / 1Password / fnox failure runbook
 
-When `op`, 1Password CLI integration, or fnox secret rendering fails, follow these steps in order (also printed by `mise/tasks/fnox-render-secrets` on failure; keep both in sync):
+When `op`, 1Password CLI integration, or fnox secret resolution fails, follow these steps in order:
 
 1. `op whoami` — if it works, op is fine; the problem is fnox config or the vault item.
 2. Error mentions `settings.json` "operation not permitted": macOS TCC attribution broke — a brew upgrade replaced Ghostty/1Password bundles under running processes. Fix:
@@ -45,7 +45,7 @@ When `op`, 1Password CLI integration, or fnox secret rendering fails, follow the
    4. Rerun `op whoami`; Allow any "access data from other apps" prompt.
 3. "No accounts configured": the 1Password app must be running and unlocked, with Settings > Developer > "Integrate with 1Password CLI" enabled.
 4. GUI-independent fallback: plug in the YubiKey, then `export OP_SERVICE_ACCOUNT_TOKEN="$(fnox get OP_SERVICE_ACCOUNT_TOKEN)"`. First-time hardware setup: `mise run setup:yubikey`.
-5. Verify: `fnox get APPLE_TEAM_ID`, then `mise run setup:fnox:render`.
+5. Verify: `fnox get APPLE_TEAM_ID`.
 
 ## Nix-Managed Config Files (CRITICAL)
 

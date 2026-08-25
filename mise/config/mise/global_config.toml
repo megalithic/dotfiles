@@ -63,11 +63,13 @@ RIPGREP_CONFIG_PATH = "$HOME/.config/ripgrep/rc"
 HK_MISE = "1"
 HK_HIDE_WHEN_DONE = "true"
 MISE_EXPERIMENTAL = "1"
-HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env-vars.sh ]; then . ~/.config/fnox/secrets/env-vars.sh; elif [ -f ~/.config/opnix/secrets/env-vars.sh ]; then . ~/.config/opnix/secrets/env-vars.sh; fi; printf %s $HOMEBREW_GITHUB_API_TOKEN") }}'
+# On workbookpro these pass through the inherited value (fnox activate/exec
+# provides it); the opnix rendered file covers megabookpro non-shell contexts.
+HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/opnix/secrets/env-vars.sh ]; then . ~/.config/opnix/secrets/env-vars.sh; fi; printf %s $HOMEBREW_GITHUB_API_TOKEN") }}'
 # mise's own GitHub API auth (release/tag lookups for github:/aqua: backends
 # and `mise lock`). Unauthenticated is 60 req/hr and stalls in 429 retries.
 # mise reads MISE_GITHUB_TOKEN > GITHUB_API_TOKEN > GITHUB_TOKEN.
-GITHUB_TOKEN = '{{ exec(command="if [ -f ~/.config/fnox/secrets/env-vars.sh ]; then . ~/.config/fnox/secrets/env-vars.sh; elif [ -f ~/.config/opnix/secrets/env-vars.sh ]; then . ~/.config/opnix/secrets/env-vars.sh; fi; printf %s $GITHUB_TOKEN") }}'
+GITHUB_TOKEN = '{{ exec(command="if [ -f ~/.config/opnix/secrets/env-vars.sh ]; then . ~/.config/opnix/secrets/env-vars.sh; fi; printf %s $GITHUB_TOKEN") }}'
 OP_COMMAND = "op"
 
 DOTS = "{{env.HOME}}/.dotfiles"
@@ -182,6 +184,8 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.config/mise/config.toml" = "~/.dotfiles/mise/config/mise/global_config.toml"
 "~/.config/atuin/config.toml" = "~/.dotfiles/mise/config/atuin/config.toml"
 "~/.config/fnox/config.toml" = "~/.dotfiles/mise/config/fnox/config.toml"
+# Secret-bearing artifact is generated outside the repo by `mise run fnox:s3cfg`.
+"~/.s3cfg" = "~/.local/share/fnox/generated/s3cfg"
 "~/.config/fish" = "~/.dotfiles/mise/config/fish"
 "~/.profile" = "~/.dotfiles/mise/config/bash/profile"
 "~/.bashrc" = "~/.dotfiles/mise/config/bash/bashrc"
@@ -271,6 +275,8 @@ fnox-env = "https://github.com/jdx/mise-env-fnox"
 "aqua:tidewave-ai/tidewave_app" = "latest"
 "github:str4d/age-plugin-yubikey" = "latest"
 "pipx:yubikey-manager" = "latest"
+"pipx:s3cmd" = "latest"
+"pipx:huggingface-hub" = "latest"
 "github:EmmyLuaLs/emmylua-analyzer-rust" = "latest"
 "github:Feel-ix-343/markdown-oxide" = "latest"
 # sessions — search/memory across AI coding sessions (Claude, Codex, Pi, OpenCode);
@@ -713,7 +719,7 @@ run = [
 run = "killall Finder SystemUIServer Dock || true"
 
 [bootstrap.hooks.post-tools]
-run = ["mise run setup:kanata", "mise run fnox:render"]
+run = ["mise run setup:kanata", "mise run fnox:s3cfg"]
 
 [bootstrap.user]
 login_shell = "/opt/homebrew/bin/fish"
@@ -729,15 +735,14 @@ nerd_fonts_version = "3.4.0"
 nerd_fonts = "JetBrainsMono FiraCode Iosevka VictorMono FantasqueSansMono NerdFontsSymbolsOnly"
 
 # Runs at step 8 of `mise bootstrap`, after [tools] (fnox available) and after
-# post-packages installed 1Password + op. Secrets chain, in order:
-# op signin (interactive gate) -> fnox render. (helium moved to [tools] as a
-# github: backend tool when its releases repo went public — no token needed.)
+# post-packages installed 1Password + op. Environment secrets come straight
+# from fnox (activate/exec); the dedicated post-tools hook renders only s3cfg.
+# Helium moved to [tools] when its releases repo went public — no token needed.
 [tasks.bootstrap]
 run = [
   # "command -v pre-commit >/dev/null 2>&1 && pre-commit install --install-hooks || true",
   # "mise install fnox",
   # "mise run setup:op:signin",
-  "mise run fnox:render",
 ]
 
 [tasks.doctor]
@@ -786,7 +791,7 @@ mise bootstrap dotfiles apply --force --yes
 mise bootstrap launchd apply --yes
 mise bootstrap macos-defaults apply --yes
 mise bootstrap packages upgrade --yes
-mise run fnox:render
+mise run fnox:s3cfg
 mise run pi:update
 "$HOME/.dotfiles/bin/hs-reload" || echo "hs-reload failed (Hammerspoon not running?)"
 
@@ -842,17 +847,17 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox-setup"
 # raw: op auth gate prompts on the terminal
 raw = true
 
+[tasks."setup:fnox:s3cfg"]
+alias = "fnox:s3cfg"
+description = "Render s3cmd config from sanitized template and fnox DO Spaces fields"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/render-s3cfg"
+
 [tasks."setup:yubikey"]
 description = "Per-YubiKey (serial-safe): age identity + fnox recipient + encrypted OP_SERVICE_ACCOUNT_TOKEN (interactive; pass serial: mise run setup:yubikey -- <serial>)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/yubikey-setup"
 # raw: PIN/touch/token prompts on the terminal
 raw = true
 
-[tasks."setup:fnox:render"]
-alias = "fnox:render"
-description = "Render fnox file-shaped secrets (env-vars.sh) to ~/.config/fnox/secrets"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox-render-secrets"
-#
 # [tasks."setup:op:signin"]
 # alias = "op:signin"
 # description = "Interactive gate: wait until the 1Password CLI (op) is signed in with app integration"

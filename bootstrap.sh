@@ -269,8 +269,8 @@ MISE_DOTFILES_FLAGS=""
 # EIO before services converge. Its user step also calls chsh, which prompts
 # for a password on macOS. Skip both and handle the login shell below with sudo.
 # Tools are NOT skipped — mise bootstrap installs the full toolchain.
-# Tasks are not skipped: [tasks.bootstrap] owns first-run secret rendering after
-# tools and packages are installed.
+# Tasks remain enabled for post-tool bootstrap work. Secrets are resolved
+# directly by fnox; bootstrap never renders or sources secret files.
 # --locked is NOT used: the lockfile may be incomplete on a new machine (tools
 # added since last `mise lock`). Without --locked, mise resolves versions live
 # and updates the lockfile as it installs.
@@ -613,26 +613,17 @@ finish_bootstrap() {
   # Refresh the lockfile so future runs can use --locked (mise bootstrap installs
   # tools live but doesn't regenerate the lockfile for new tools).
   # `mise lock` fetches release tags from api.github.com for every github:/
-  # aqua: tool. Unauthenticated that's 60 req/hr — it burns minutes in 429
-  # retries and 20s timeouts. Only lock when a GitHub token is available
-  # (rendered secrets provide GITHUB_TOKEN; mise [env] maps it too).
-  if [ -z "${GITHUB_TOKEN:-}" ]; then
-    for _envf in "$HOME/.config/fnox/secrets/env-vars.sh" "$HOME/.config/opnix/secrets/env-vars.sh"; do
-      if [ -f "$_envf" ]; then
-        # shellcheck disable=SC1090
-        . "$_envf"
-        break
-      fi
-    done
-  fi
-  if [ -n "${GITHUB_TOKEN:-}" ]; then
-    info "Updating mise lockfile..."
+  # aqua: tool. Run it through fnox so GitHub credentials stay process-local;
+  # bootstrap never checks, exports, renders, or sources secret values itself.
+  fnox_bin=$(MISE_AUTO_INSTALL=false mise which fnox 2>/dev/null || true)
+  if [ -n "$fnox_bin" ] && [ -x "$fnox_bin" ]; then
+    info "Updating mise lockfile through fnox..."
     # --global: tools are declared in ~/.config/mise/config.toml (the linked
     # global config), not a project config — without it mise reports
     # "No tools configured to lock".
-    mise lock --global || warn "mise lock failed (non-fatal; tools still installed)"
+    "$fnox_bin" exec -- mise lock --global || warn "mise lock failed (non-fatal; tools still installed)"
   else
-    warn "Skipping mise lock: no GITHUB_TOKEN (render fnox secrets, then run 'mise lock --global')"
+    warn "Skipping mise lock: fnox is not installed"
   fi
 }
 

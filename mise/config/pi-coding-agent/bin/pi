@@ -1,29 +1,48 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# PATH: patched lat + pinned helper binaries first, then mise (binary + shims)
+# and brew for non-interactive launch contexts (GUI, launchd) that lack shell
+# init. ~/.local/bin covers the standalone mise binary itself.
+export PATH="$HOME/.pi/agent/bin:$HOME/.local/bin:${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:$PATH"
+
+resolve_mise() {
+  if [ -x "$HOME/.local/bin/mise" ]; then
+    printf '%s\n' "$HOME/.local/bin/mise"
+    return 0
+  fi
+  command -v mise
+}
+
+mise_bin="$(resolve_mise)" || {
+  echo "pi: mise not found" >&2
+  exit 127
+}
+
+resolve_fnox() {
+  local fnox_path
+  if fnox_path="$(MISE_AUTO_INSTALL=false "$mise_bin" which fnox 2>/dev/null)" && [ -n "$fnox_path" ]; then
+    printf '%s\n' "$fnox_path"
+    return 0
+  fi
+  command -v fnox
+}
+
+fnox_bin="$(resolve_fnox)" || {
+  echo "pi: fnox not found" >&2
+  exit 127
+}
+
 export PI_STATE_DIR="${PI_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/pi}"
 mkdir -p "$PI_STATE_DIR/sockets" "$PI_STATE_DIR/manifests" "$PI_STATE_DIR/pinvim"
 unset PIMUX_FROM_NVIM 2>/dev/null || true
 
-# Secrets: fnox first (mise world), opnix fallback (megabookpro during the
-# nix -> mise migration).
-config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
-if [ -f "$config_home/fnox/secrets/env-vars.sh" ]; then
-  # shellcheck disable=SC1090
-  source "$config_home/fnox/secrets/env-vars.sh"
-elif [ -f "$config_home/opnix/secrets/env-vars.sh" ]; then
-  # shellcheck disable=SC1090
-  source "$config_home/opnix/secrets/env-vars.sh"
-fi
-
-# Derive lat.md semantic-search config from synthetic key (single source of
-# truth) so pi sessions launched outside interactive shells still see LAT_LLM_*.
-if [ -n "${SYNTHETIC_API_KEY:-}" ]; then
-  export LAT_LLM_KEY="$SYNTHETIC_API_KEY"
-  export LAT_LLM_BASE_URL="https://api.synthetic.new/openai/v1"
-  export LAT_LLM_MODEL="hf:nomic-ai/nomic-embed-text-v1.5"
-  export LAT_LLM_DIMENSIONS="768"
-fi
+# Static lat.md semantic-search config. fnox injects LAT_LLM_KEY directly from
+# SYNTHETIC_API_KEY via the config alias; the wrapper keeps only non-secret
+# provider metadata for GUI or launchd starts.
+export LAT_LLM_BASE_URL="https://api.synthetic.new/openai/v1"
+export LAT_LLM_MODEL="hf:nomic-ai/nomic-embed-text-v1.5"
+export LAT_LLM_DIMENSIONS="768"
 
 # Patch pi-bash-live-view until upstream handles wide glyphs/ANSI truncation.
 # Without this, PTY live view can render one cell past terminal width and
@@ -34,11 +53,7 @@ if [ -f "$bash_live_view_widget" ] && [ -f "$widget_patch" ]; then
   cp "$widget_patch" "$bash_live_view_widget"
 fi
 
-# PATH: patched lat + pinned helper binaries first, then mise (binary +
-# shims) and brew for non-interactive launch contexts (GUI, launchd) that
-# lack shell init. ~/.local/bin covers the standalone mise binary itself.
-export PATH="$HOME/.pi/agent/bin:$HOME/.local/bin:${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:$PATH"
-
 # `mise x` prepends the npm tool's own bin dir, so the real pi binary wins
-# over this wrapper regardless of PATH ordering — no recursion possible.
-exec mise x "npm:@earendil-works/pi-coding-agent" -- pi "$@"
+# over this wrapper regardless of PATH ordering. `fnox exec --replace` injects
+# secrets without a wrapper re-entry or extra process layer.
+exec "$fnox_bin" exec --replace -- "$mise_bin" x "npm:@earendil-works/pi-coding-agent" -- pi "$@"

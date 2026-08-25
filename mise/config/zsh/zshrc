@@ -1,18 +1,17 @@
 # Standalone zsh config for mise-managed dotfiles.
 
-# Load rendered file-shaped secrets (fnox first, legacy opnix fallback during migration).
-if [ -f "$HOME/.config/fnox/secrets/env-vars.sh" ]; then
-  source "$HOME/.config/fnox/secrets/env-vars.sh"
-elif [ -f "$HOME/.config/opnix/secrets/env-vars.sh" ]; then
+# Secrets: fnox resolves op:// references directly (workbookpro; activation in
+# the interactive section below). Legacy opnix rendered files cover megabookpro.
+if [ -f "$HOME/.config/opnix/secrets/env-vars.sh" ]; then
   source "$HOME/.config/opnix/secrets/env-vars.sh"
 fi
 if [ -n "${SYNTHETIC_API_KEY:-}" ]; then
   export LAT_LLM_KEY="$SYNTHETIC_API_KEY"
-  export LAT_LLM_BASE_URL="https://api.synthetic.new/openai/v1"
-  export LAT_LLM_MODEL="hf:nomic-ai/nomic-embed-text-v1.5"
-  export LAT_LLM_DIMENSIONS="768"
 fi
-[ -f "$HOME/.config/fnox/secrets/work-env-vars.sh" ] && source "$HOME/.config/fnox/secrets/work-env-vars.sh"
+# Non-secret lat.md embedding config (LAT_LLM_KEY comes from fnox or opnix).
+export LAT_LLM_BASE_URL="https://api.synthetic.new/openai/v1"
+export LAT_LLM_MODEL="hf:nomic-ai/nomic-embed-text-v1.5"
+export LAT_LLM_DIMENSIONS="768"
 [ -f "$HOME/.config/opnix/secrets/work-env-vars.sh" ] && source "$HOME/.config/opnix/secrets/work-env-vars.sh"
 
 case $- in
@@ -22,6 +21,20 @@ esac
 
 if command -v mise >/dev/null 2>&1; then
   eval "$(mise activate zsh)"
+fi
+
+# fnox shell integration: exports config secrets and auto-loads per-project
+# fnox.toml on cd. `fnox activate` bakes the versioned mise install path into
+# its hooks; swap it for the stable shim path so `mise up` doesn't break
+# long-running shells (mirrors conf.d/fnox.fish).
+if command -v fnox >/dev/null 2>&1; then
+  _fnox_shim="$HOME/.local/share/mise/shims/fnox"
+  if [ -x "$_fnox_shim" ]; then
+    eval "$(fnox activate zsh | sed -E "s#[^ ()]*/mise/installs/fnox/[^ ()/]+/fnox#$_fnox_shim#g")"
+  else
+    eval "$(fnox activate zsh)"
+  fi
+  unset _fnox_shim
 fi
 
 if command -v fzf >/dev/null 2>&1; then

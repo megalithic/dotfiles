@@ -22,14 +22,12 @@ APP="$INSTALL_DIR/Helium.app"
 }
 
 # Token is optional (public repo); use one when available for rate limits.
-# mise bootstrap hooks don't receive [env], so source the rendered secrets
-# (fnox first, opnix fallback) when no token is in the environment already.
+# workbookpro inherits it from fnox shell activation/exec; megabookpro keeps
+# the opnix rendered-file fallback.
 TOKEN="${HOMEBREW_GITHUB_API_TOKEN:-${GITHUB_TOKEN:-}}"
-if [ -z "$TOKEN" ]; then
-  for secrets in "$HOME/.config/fnox/secrets/env-vars.sh" "$HOME/.config/opnix/secrets/env-vars.sh"; do
-    # shellcheck disable=SC1090
-    [ -f "$secrets" ] && . "$secrets" && break
-  done
+if [ -z "$TOKEN" ] && [ -f "$HOME/.config/opnix/secrets/env-vars.sh" ]; then
+  # shellcheck disable=SC1091
+  . "$HOME/.config/opnix/secrets/env-vars.sh"
   TOKEN="${HOMEBREW_GITHUB_API_TOKEN:-${GITHUB_TOKEN:-}}"
 fi
 

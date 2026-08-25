@@ -67,9 +67,9 @@ while :; do
   IFS= read -r reply </dev/tty || exit 1
   case "$reply" in
   s | S | skip | SKIP)
-    warn_skip="op-signin-gate: skipping — fnox render may fail if op is not authenticated."
+    warn_skip="op-signin-gate: skipping — fnox secret resolution may fail if op is not authenticated."
     echo "$warn_skip" >&2
-    echo "  If fnox render fails, run 'eval $(op signin)' and re-run 'mise run setup:fnox:render'." >&2
+    echo "  If fnox fails to resolve secrets, run 'eval $(op signin)' and retry the fnox command." >&2
     exit 0
     ;;
   esac

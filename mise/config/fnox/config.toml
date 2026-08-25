@@ -26,16 +26,53 @@ age = { type = "age", recipients = [
   "age1yubikey1qwdz7x6tcen507a08ddql7cuvv9lxce8phcxhpka5wp2llqye9q8wp825aw", # 15759652
 ], key_file = "~/.config/fnox/yubikey-identity.txt" }
 
+[daemon]
+enabled = true
+idle_timeout = "8h"
+
 [secrets]
-# File-shaped blobs: env = false keeps them out of `fnox exec` / shell
-# activation; read them with `fnox get`. `mise run setup:fnox:render` renders
-# every *_SH secret to ~/.config/fnox/secrets/<name>.sh (ENV_VARS_SH ->
-# env-vars.sh) and mapped file targets (S3CFG -> ~/.s3cfg). fish
-# conf.d/fnox.fish globs ~/.config/fnox/secrets/*.sh, so new *_SH secrets
-# reach shells with no code changes. The pi wrapper and mise [env] template
-# source env-vars.sh directly.
-ENV_VARS_SH = { provider = "onepass", value = "op://Crypt/env/notesPlain", env = false }
-S3CFG = { provider = "onepass", value = "op://Crypt/s3cfg/notesPlain", env = false }
+# Migrated env vars: one 1Password field reference per exported name. Aliases
+# intentionally share references so each underlying credential rotates once.
+MEGA_ANTHROPIC_API_KEY = { provider = "onepass", value = "op://Crypt/anthropic/mega" }
+WORK_ANTHROPIC_API_KEY = { provider = "onepass", value = "op://Crypt/anthropic/work" }
+EVIRTS_ANTHROPIC_API_KEY = { provider = "onepass", value = "op://Crypt/anthropic/work" }
+PERSONAL_CLAUDE_CODE_OAUTH_TOKEN = { provider = "onepass", value = "op://Crypt/claude-code/personal" }
+WORK_CLAUDE_CODE_OAUTH_TOKEN = { provider = "onepass", value = "op://Crypt/claude-code/work" }
+CLAUDE_CODE_OAUTH_TOKEN = { provider = "onepass", value = "op://Crypt/claude-code/work" }
+OPENCODE_GENERAL_GEMINI_API_KEY = { provider = "onepass", value = "op://Crypt/gemini/opencode_general" }
+EVIRTS_GEMINI_API_KEY = { provider = "onepass", value = "op://Crypt/gemini/evirts" }
+SLACK_API_TOKEN = { provider = "onepass", value = "op://Crypt/slack/api_token" }
+SLACK_NIBUILD_OAUTH_TOKEN = { provider = "onepass", value = "op://Crypt/slack/nibuild_oauth_token" }
+PUSHOVER_USER_TOKEN = { provider = "onepass", value = "op://Crypt/pushover/user_token" }
+PUSHOVER_APP_TOKEN = { provider = "onepass", value = "op://Crypt/pushover/app_token" }
+CACHIX_AUTH_TOKEN_MEGALITHIC = { provider = "onepass", value = "op://Crypt/cachix/megalithic_auth_token" }
+AWS_ACCESS_KEY_ID = { provider = "onepass", value = "op://Crypt/aws/access_key_id" }
+AWS_SECRET_ACCESS_KEY = { provider = "onepass", value = "op://Crypt/aws/secret_access_key" }
+AWS_PROFILE = { provider = "onepass", value = "op://Crypt/aws/profile" }
+DO_SPACES_CAPS_KEY = { provider = "onepass", value = "op://Crypt/do-spaces-caps/key" }
+DO_SPACES_CAPS_SECRET = { provider = "onepass", value = "op://Crypt/do-spaces-caps/secret" }
+DO_SPACES_CAPS_SPACE = { provider = "onepass", value = "op://Crypt/do-spaces-caps/space" }
+DO_SPACES_CAPS_REGION = { provider = "onepass", value = "op://Crypt/do-spaces-caps/region" }
+DO_SPACES_CAPS_CDN_URL = { provider = "onepass", value = "op://Crypt/do-spaces-caps/cdn_url" }
+CF_ZONE_ID = { provider = "onepass", value = "op://Crypt/cloudflare/zone_id" }
+CF_ACCOUNT_ID = { provider = "onepass", value = "op://Crypt/cloudflare/account_id" }
+CF_API_TOKEN = { provider = "onepass", value = "op://Crypt/cloudflare/api_token" }
+BRAVE_SEARCH_API_KEY = { provider = "onepass", value = "op://Crypt/brave-search/api_key" }
+TELEGRAM_BOT_TOKEN = { provider = "onepass", value = "op://Crypt/telegram/bot_token" }
+TELEGRAM_CHAT_ID = { provider = "onepass", value = "op://Crypt/telegram/chat_id" }
+SYNTHETIC_API_KEY = { provider = "onepass", value = "op://Crypt/synthetic/api_key" }
+LAT_LLM_KEY = { provider = "onepass", value = "op://Crypt/synthetic/api_key" }
+CONTEXT7_API_KEY = { provider = "onepass", value = "op://Crypt/context7/api_key" }
+GITHITS_API_KEY = { provider = "onepass", value = "op://Crypt/githits/api_key" }
+OPENCODE_API_KEY = { provider = "onepass", value = "op://Crypt/opencode/api_key" }
+GITHUB_TOKEN = { provider = "onepass", value = "op://Crypt/github/token" }
+HOMEBREW_GITHUB_API_TOKEN = { provider = "onepass", value = "op://Crypt/github/token" }
+MISE_GITHUB_API_TOKEN = { provider = "onepass", value = "op://Crypt/github/token" }
+GITHUB_CLI_TOKEN = { provider = "onepass", value = "op://Crypt/github/cli_token" }
+
+# Legacy env and s3cfg 1Password blob items are intentionally not referenced;
+# retain the items only through their clean cutover verification periods.
+# The YubiKey-backed service-account token remains an on-demand fnox secret.
 OP_SERVICE_ACCOUNT_TOKEN = { provider = "age", value = "YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHBpdi1wMjU2IGtzV1ZPdyBBNzFzK1V4Z01zWS9xVStxcFZKT1pONHI4d0RGRklpVzVZcVVjc1czNDUzdgpqK0VjSXZaOWM1Mm5XWWN1RnlSN0pLUXZJUDQ4UWFxb0FheGMrZkd4Tm9jCi0+IHBpdi1wMjU2IDU1ZFQ0ZyBBOUN0NXFjWFgwRkRiOU1ZZUV3ZUU1U1d6eEVEUmFYeW5vdnZ3Zmx5Z3A1bApUaGVCVW5pOCtvQUpXTTUzbHJJVmZQR3IxRFZPV0ZtNy9XK3JxdERBVWpJCi0+IHh1LWdyZWFzZSBBLCBiPllWCmNWcWdiTHVHRlFEd1kxd3ZmZzQKLS0tIG11UTRPQUhvQjhhZmVVbEQ0b0dtODV5b1VZcTJqUmR3R1BpT1ZGTXJ1MkkK8rhdPsgq5M6W4zHkxUBp6ToJge7BOdKMgXD2D801XKldDEPC8pTlSXF/fiowKJ6L5vka8MdksOgie2KXBqPoYvOzXUMmdni3we+blY9L4jZjDTMPzlnJdG8nCnSH+Gd0J7Rv5uKE/E2sfOJV8ee8B4L/1Z66WBDFv/ZCOekr1GpOlTk7CsmLeNYk4nWXMB36vsRzSy1cp56Qnxt3mPIuHRvlUjjXjKiuya8R43WiNoDq7Sq1xkxvMHis4vwAKu1t5qUbzdYoYBpu+cMeFreF0UFfxNVzS2/f65ffgP9p3xeQrBcf1PD1VtXdl8E6oibqeaZWC4hNR++o04EmuKUMU/rNT8wiBMB1F64UinjDBZDLDnqGK1ZNqLyjqx61kwsyjIweQ20NRRWpIb9mtwyLMXbqnOi1QUUDAcyNlR/pKAMKuwIJ1QPr5l32HP6/06fmAFDKDokeEExVR+sa+fAf5wWpLZIPw140Wty3RIg65awNzhW4sLp4AO/I/csYMpe2izYil8ny4fKf3o6sd/l0xuSVgRP/9WcelQOedPy4PtxAHHx2694Zdb6AoW43rhRTjqIjDkngkcBWYoaf8S9zJuvhaAEDb+dg2nogb26r9zfMtrKQxf1VK/RzSmyHMjfYEYUeK5lqFQjpBDMfPXLP45PuIUB9vsMMnsMqHn/tQ3IJySe0s6Db2D1egv9O3eE3nLXLqTz0afwc/8SBTfvzrAsYm2EVBMwNXnJ5d9o1mLZNGXXZaqAadkwlGsWmRUmfCiXdhcmxJStCLO8N1QB5ub2tokE4NN/4oeJsHr3bdzW8e98TTQmGnBk1pYa8TBHchpWq7AilF9FY8JG0Ry5MyKUubuvgdumDIMImwa5QxqhKhqC5oDdwyahRxX6Gmq82nA7V3JUub0wK5HKlC+pEelM6rn4AquJdAKhOn74rdDkOM8vPpoGpRTrQbwgiyeKhHlhufuik5InnFOSXJlWOSiyTNDJvjByDdqIGN2w9GXYtgpUnH55oE8Gx8F/6Oc83EZ9pC6GzgMHQF0/yeNIZJGb2JvoP8/K/7/4xloDaZV0GeDaIIjMca4W5KqToZP9qJy0poZt4Ffltpin8YyxvHjsppDLg24e9FIFNPhe8c6Qs0bt5z8CPpUe9P+4fqLUr+UALFBsTZJ2QHr7ynfyyPKGFd3I=", env = false }
 
 # On-demand single values: `fnox get APPLE_TEAM_ID`. env = false so shell
