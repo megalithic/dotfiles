@@ -11,7 +11,10 @@
 # (layout script of the same name wins).
 #
 # Picker ordering (top → bottom):
-#   1. ftm's own MRU list (state file; every switch/create bumps an entry)
+#   1. ftm's own MRU list (state file; every switch/create bumps an entry
+#      as "name<TAB>cwd", so entries whose session died but whose dir still
+#      exists — e.g. killed worktree sessions — keep rendering and recreate
+#      in the right directory)
 #   2. running sessions not in MRU, by tmux last-attached (desc)
 #   3. top zoxide dirs (frecency order) not already listed, shown as
 #      "name<TAB>dimmed-path"; names colliding with a layout script defer to
@@ -122,18 +125,35 @@ function run_hook() {
     bash "$hook" "$session" "$cwd" "$source" || true
 }
 
-# -- move a session name to the top of the MRU state file (source of truth
-#    for picker ordering); keeps the newest 50 entries.
+# -- like run_hook but detached (nohup + backgrounded subshell): survives the
+#    caller dying. Needed for post-switch — when ftm runs inside the C-Space
+#    display-popup binding, switch-client collapses the popup and tmux HUPs
+#    the script's process group before anything after the switch can run.
+function run_hook_detached() {
+  local event="$1" session="$2" cwd="$3" source="$4"
+  local hook="$TMUX_HOOKS/$event.sh"
+  [[ -x $hook ]] || return 0
+  (FTM_EVENT="$event" FTM_SESSION="$session" FTM_CWD="$cwd" FTM_SOURCE="$source" \
+    nohup bash "$hook" "$session" "$cwd" "$source" >/dev/null 2>&1 &)
+}
+
+# -- move a session to the top of the MRU state file (source of truth for
+#    picker ordering); keeps the newest 50 entries. Lines are "name<TAB>cwd"
+#    (cwd may be empty) so dead sessions with a live dir still render.
 function bump_recent() {
-  local session="$1" line count=0 tmp
+  local session="$1" cwd="${2:-}" line count=0 tmp
   [[ -n $session ]] || return 0
   mkdir -p "$FTM_STATE_DIR"
   tmp="$recent_file.tmp.$$"
   {
-    printf '%s\n' "$session"
+    if [[ -n $cwd ]]; then
+      printf '%s\t%s\n' "$session" "$cwd"
+    else
+      printf '%s\n' "$session"
+    fi
     if [[ -f $recent_file ]]; then
       while IFS= read -r line; do
-        [[ -z $line || $line == "$session" ]] && continue
+        [[ -z $line || ${line%%"$TAB"*} == "$session" ]] && continue
         printf '%s\n' "$line"
         count=$((count + 1))
         [[ $count -ge 49 ]] && break
@@ -162,8 +182,8 @@ function get_layouts() {
 function print_list() {
   local exclude_current="${1:-}"
   local emitted=$'\n' sess_wrapped=$'\n' socks=$'\n'
-  local f s name path line zi n
-  local -a sess_order=() zx_names=() zx_paths=() mru=()
+  local f s name path line zi mi n
+  local -a sess_order=() zx_names=() zx_paths=() mru_names=() mru_paths=()
 
   # running sessions, most recently attached first
   while IFS= read -r line; do
@@ -192,16 +212,24 @@ function print_list() {
     done < <(zoxide query -l 2>/dev/null || true)
   fi
 
-  # MRU names (most recent first)
+  # MRU entries, most recent first: "name<TAB>cwd" (cwd may be empty)
   if [[ -f $recent_file ]]; then
-    while IFS= read -r name; do
-      [[ -n $name ]] && mru+=("$name")
+    while IFS= read -r line; do
+      [[ -n $line ]] || continue
+      mru_names+=("${line%%"$TAB"*}")
+      if [[ $line == *"$TAB"* ]]; then
+        mru_paths+=("${line#*"$TAB"}")
+      else
+        mru_paths+=("")
+      fi
     done <"$recent_file"
   fi
 
-  # 1) MRU block — a name renders as (in priority order): running session,
-  #    layout, zoxide dir; unknown names are skipped (stale entries)
-  for name in "${mru[@]}"; do
+  # 1) MRU block — an entry renders as (in priority order): running session,
+  #    layout, stored cwd (dir must still exist — killed worktree sessions
+  #    land here), zoxide dir; entries resolving to nothing are skipped
+  for mi in "${!mru_names[@]}"; do
+    name="${mru_names[$mi]}"
     [[ $name == "default" || $name == "$exclude_current" ]] && continue
     [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
     if [[ $sess_wrapped == *$'\n'"$name"$'\n'* ]]; then
@@ -214,6 +242,9 @@ function print_list() {
     elif [[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]]; then
       emitted+="$name"$'\n'
       printf '%s\n' "$name"
+    elif [[ -n ${mru_paths[$mi]} && -d ${mru_paths[$mi]} ]]; then
+      emitted+="$name"$'\n'
+      printf '%s\t%s%s%s\n' "$name" "$C_GRAY" "${mru_paths[$mi]/#$HOME/\~}" "$C_RESET"
     else
       for zi in "${!zx_names[@]}"; do
         if [[ ${zx_names[$zi]} == "$name" ]]; then
@@ -256,16 +287,18 @@ function print_list() {
   done < <(get_layouts)
 }
 
-# -- change to the given existing session
+# -- change to the given existing session. MRU write and the post-switch hook
+#    launch happen BEFORE the switch: inside the C-Space display-popup
+#    binding, switch-client collapses the popup and tmux HUPs this script, so
+#    nothing after the switch is guaranteed to run.
 function to_session() {
-  local session sid
+  local session sid spath
   session="$(strip_markers "$1")"
   sid="$(session_id_for "$session")" || return 1
+  spath="$(tmux display-message -p -t "$sid" '#{session_path}' 2>/dev/null || true)"
+  bump_recent "$session" "$spath"
+  run_hook_detached post-switch "$session" "$spath" "session"
   tmux "$change" -t "$sid" ';' refresh-client
-  bump_recent "$session"
-  run_hook post-switch "$session" \
-    "$(tmux display-message -p -t "$sid" '#{session_path}' 2>/dev/null || true)" \
-    "session"
 }
 
 # -- new session with pre-defined layout, OR just new basic tmux session.
