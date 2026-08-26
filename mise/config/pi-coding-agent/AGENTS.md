@@ -24,7 +24,7 @@ pi-coding-agent/
 │   ├── prompts/         # Prompt templates (symlink-each)
 │   └── agents/          # Custom agent .md definitions (symlink-each)
 ├── bin/                 # Wrappers linked into ~/.local/bin: pi, p, work-tickets
-├── scripts/             # install-pi-tools and indexer entrypoints
+├── scripts/             # Helper installers and setup scripts
 ├── patches/             # pi-bash-live-view widget patch (applied by bin/pi)
 └── disabled/            # Turned-off files kept for possible re-enable
                          # (former `_`-prefixed). Move back into agent/* to re-enable.
@@ -37,8 +37,8 @@ pi-coding-agent/
   must live outside `agent/`).
 - `agent/settings.json` is a merge source, never a symlink target — pi rewrites
   `~/.pi/agent/settings.json` at runtime.
-- Helper binaries (sesame, plannotator) are version+sha256 pinned in
-  `scripts/install-pi-tools` and land in `~/.pi/agent/bin`.
+- Plannotator is version+sha256 pinned in `scripts/install-pi-tools` and lands
+  in `~/.pi/agent/bin`.
 - The `pi` wrapper resolves the actual CLI via
   `mise x npm:@earendil-works/pi-coding-agent -- pi`, sources fnox (or opnix
   fallback) secrets, derives `LAT_LLM_*`, and applies the live-view widget patch.
@@ -48,7 +48,7 @@ pi-coding-agent/
 ```sh
 mise bootstrap dotfiles apply          # symlinks (agent files, bin wrappers)
 mise run pi:update                     # tools, settings merge, runtime updates
-mise bootstrap launchd apply           # session indexers (currently skipped on
+mise bootstrap launchd apply           # user agents (currently skipped on
                                        # megabookpro; other com.megadots agents
                                        # would duplicate nix-run services)
 ```
