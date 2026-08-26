@@ -5531,24 +5531,30 @@ function resolveStartupProfile(cwd: string): ResolvedProfile {
 	const config = loadGlobalConfig();
 	const knownPresets = new Set(config.presets.map((p) => p.name));
 
-	// 1. --profile flag — set by pinvim wrapper with PI_PROFILE_SOURCE=profile-flag
+	// 1. Profile resolved by the managed Pi wrapper.
 	const source = process.env.PI_PROFILE_SOURCE?.trim();
-	if (source === "profile-flag") {
+	const wrapperSources: ProfileSource[] = [
+		"profile-flag",
+		"env",
+		"tmux",
+		"directory",
+		"default",
+	];
+	if (source && wrapperSources.includes(source as ProfileSource)) {
 		const preset =
-			process.env.PI_MULTI_PASS_PRESET?.trim() ||
 			process.env.PI_PROFILE?.trim() ||
+			process.env.PI_MULTI_PASS_PRESET?.trim() ||
 			"";
 		if (preset) {
 			return {
 				preset,
 				modelScope: process.env.PI_MODEL_SCOPE?.trim() || preset,
-				source: "profile-flag",
+				source: source as ProfileSource,
 			};
 		}
 	}
 
-	// 2. Explicit env vars (set by user before pinvim, not by wrapper defaults)
-	//    If PI_PROFILE_SOURCE is unset, treat any preset env as explicit (backward compat).
+	// 2. Explicit env vars when Pi is launched without the managed wrapper.
 	const envPresetCandidates = [
 		process.env.PI_PROFILE?.trim(),
 		process.env.PI_MULTI_PASS_PRESET?.trim(),
@@ -5905,57 +5911,6 @@ export default async function multiSub(pi: ExtensionAPI) {
 		);
 		if (autoPresetActivated && resolved.source !== "default") {
 			statusParts.push(`preset:${resolved.preset} (${resolved.source})`);
-		}
-
-		// Apply model scope (Ctrl+P filtering) after providers are registered.
-		// Use resolved modelScope (covers directory profiles, env, etc.).
-		// Fall back to legacy settings.json enabledModelScopes[scope] lists.
-		const modelScope = resolved.modelScope;
-		if (modelScope && typeof (pi as any).setScopedModels === "function") {
-			let appliedPresetScope = false;
-			const preset = effective.presets.find(
-				(p) => p.enabled && p.name === modelScope,
-			);
-			if (preset) {
-				const scoped = preset.entries
-					.filter((entry) => entry.enabled)
-					.map((entry) => ctx.modelRegistry.find(entry.provider, entry.model))
-					.filter((model): model is NonNullable<typeof model> => model != null)
-					.map((model) => ({ model }));
-				if (scoped.length > 0) {
-					(pi as any).setScopedModels(scoped);
-					appliedPresetScope = true;
-				}
-			}
-
-			if (!appliedPresetScope) {
-				try {
-					const settingsPath = join(getAgentDir(), "settings.json");
-					const settings = JSON.parse(readFileSync(settingsPath, "utf-8"));
-					const patterns: string[] = settings?.enabledModelScopes?.[modelScope];
-					if (patterns && patterns.length > 0) {
-						const available = ctx.modelRegistry.getAvailable();
-						const scoped = patterns
-							.map((pat: string) => {
-								// Match provider/model patterns against available models
-								const [prov, modelId] = pat.includes("/")
-									? pat.split("/", 2)
-									: ["", pat];
-								return available.find(
-									(m) =>
-										(prov ? m.provider === prov : true) && m.id === modelId,
-								);
-							})
-							.filter((m): m is NonNullable<typeof m> => m != null)
-							.map((model) => ({ model }));
-						if (scoped.length > 0) {
-							(pi as any).setScopedModels(scoped);
-						}
-					}
-				} catch {
-					// Silently skip — settings read failure shouldn't block startup
-				}
-			}
 		}
 
 		if (statusParts.length > 0 && !autoPresetActivated) {

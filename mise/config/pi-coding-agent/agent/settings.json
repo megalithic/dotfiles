@@ -51,6 +51,7 @@
 		"openai-codex/gpt-5.3-codex-spark",
 		"google-vertex/gemini-3.1-pro-preview",
 		"google-vertex/gemini-3-flash-preview",
+		"opencode-go/gpt-5.6-luna",
 		"opencode-go/kimi-k3",
 		"opencode-go/deepseek-v4-pro",
 		"opencode-go/deepseek-v4-flash",
@@ -64,6 +65,7 @@
 			"my-codex/gpt-5.6-sol",
 			"my-codex/gpt-5.6-terra",
 			"my-codex/gpt-5.6-luna",
+			"opencode-go/gpt-5.6-luna",
 			"opencode-go/kimi-k3",
 			"opencode-go/deepseek-v4-pro",
 			"opencode-go/deepseek-v4-flash",
@@ -98,6 +100,7 @@
 			"my-codex/gpt-5.6-sol",
 			"my-codex/gpt-5.6-terra",
 			"my-codex/gpt-5.6-luna",
+			"opencode-go/gpt-5.6-luna",
 			"opencode-go/kimi-k3",
 			"opencode-go/deepseek-v4-pro",
 			"opencode-go/deepseek-v4-flash",
@@ -126,6 +129,36 @@
 			"opencode-go/qwen3.7-max",
 			"opencode-go/qwen3.7-plus"
 		]
+	},
+	"subagentRouting": {
+		"mega": {
+			"worker": {
+				"model": "opencode-go/gpt-5.6-luna",
+				"thinking": "medium"
+			},
+			"researcher": {
+				"model": "opencode-go/gpt-5.6-luna",
+				"thinking": "medium"
+			},
+			"scout": {
+				"model": "opencode-go/gpt-5.6-luna",
+				"thinking": "medium"
+			}
+		},
+		"alt": {
+			"worker": {
+				"model": "anthropic/claude-sonnet-5",
+				"thinking": "medium"
+			},
+			"researcher": {
+				"model": "anthropic/claude-sonnet-5",
+				"thinking": "medium"
+			},
+			"scout": {
+				"model": "openai-codex/gpt-5.6-luna",
+				"thinking": "medium"
+			}
+		}
 	},
 	"terminal": {
 		"showTerminalProgress": true,
