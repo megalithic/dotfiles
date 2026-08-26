@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Restore fnox secrets on a machine that already has mise.
+# Configure fnox on a machine that already has mise.
 #
 # Usage:
 #   mise run setup:fnox   (or: ~/.dotfiles/mise/tasks/fnox-setup)
@@ -10,62 +10,34 @@
 #
 set -euo pipefail
 
-if command -v tput &>/dev/null && [[ -t 1 ]]; then
-  GREEN=$(tput setaf 2)
-  YELLOW=$(tput setaf 3)
-  RED=$(tput setaf 1)
-  BOLD=$(tput bold)
-  RESET=$(tput sgr0)
-else
-  GREEN=""
-  YELLOW=""
-  RED=""
-  BOLD=""
-  RESET=""
-fi
-
-ok() { echo -e "\033[0;32m[OK]\033[0m $1"; }
-skip() { echo -e "\033[0;33m[SKIP]\033[0m $1"; }
+ok() { printf '\033[0;32m[OK]\033[0m %s\n' "$1"; }
+skip() { printf '\033[0;33m[SKIP]\033[0m %s\n' "$1"; }
 fail() {
-  echo -e "\033[0;31m[ERROR]\033[0m $1"
+  printf '\033[0;31m[ERROR]\033[0m %s\n' "$1" >&2
   exit 1
 }
 
-for cmd in op fnox age-keygen; do
+for cmd in op fnox; do
   command -v "$cmd" &>/dev/null || fail "$cmd not found. Run 'mise install' first."
 done
-# op vault list &>/dev/null 2>&1 || fail "1Password CLI not authenticated. Enable Developer CLI integration in 1Password settings."
 
-# Check if 1Password CLI integration works (requires Developer mode)
-if ! op vault list &>/dev/null 2>&1; then
-  echo ""
-  echo "${YELLOW}${BOLD}1Password CLI requires Developer Settings to be enabled:${RESET}"
-  echo "  1. Open ${BOLD}Settings > Privacy & Security > Developer Mode${RESET} and enable it"
-  echo "  2. Open ${BOLD}1Password > Settings > Developer${RESET} and enable:"
-  echo "     - \"Integrate with 1Password CLI\""
-  echo "     - \"Connect with 1Password CLI\""
-  echo ""
-  read -rp "Press Enter once enabled (or 's' to skip): " answer
-  if [[ "$answer" == "s" ]]; then
-    skip "Skipping API key sync."
-    # exit, not return: this is top-level script code, not a function
-    exit 0
-  fi
-fi
+config_source="${DOTFILES_DIR:-$HOME/.dotfiles}/mise/config/fnox/config.toml"
+config_target="${XDG_CONFIG_HOME:-$HOME/.config}/fnox/config.toml"
 
-# 1. Restore age key from 1Password
-if [[ -f "$HOME/.config/fnox/age.txt" ]]; then
-  skip "age.txt already exists"
+[[ -f "$config_source" ]] || fail "fnox config source not found: $config_source"
+
+if [[ -L "$config_target" && ! -e "$config_target" ]]; then
+  fail "fnox config is a dangling symlink: $config_target"
+elif [[ -e "$config_target" ]]; then
+  skip "fnox config already exists: $config_target"
 else
-  op read "op://Crypt/fnox-age-key/notesPlain" >"$HOME/.config/fnox/age.txt"
-  chmod 600 "$HOME/.config/fnox/age.txt"
-  ok "Restored age key from 1Password"
+  mkdir -p "$(dirname "$config_target")"
+  ln -s "$config_source" "$config_target"
+  ok "Linked fnox config: $config_target"
 fi
 
-# 2. Sync secrets → local age cache
-cd "$HOME"
-fnox sync --provider age --config fnox.local.toml --force
-ok "Synced secrets to ~/fnox.local.toml"
+op vault list &>/dev/null || fail "1Password CLI cannot access vaults. Enable 1Password CLI integration, then retry."
+ok "1Password CLI can access vaults"
 
-echo ""
-echo "Done. Reload your shell: exec fish"
+fnox get APPLE_TEAM_ID --config "$config_target" >/dev/null
+ok "fnox resolved APPLE_TEAM_ID"

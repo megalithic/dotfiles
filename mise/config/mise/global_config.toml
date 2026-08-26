@@ -838,9 +838,9 @@ fi
 
 [tasks."setup:fnox"]
 alias = "fnox:setup"
-description = "One-time: restore fnox age key from 1Password and sync the local age cache (interactive)"
+description = "Link the shared fnox config and verify 1Password secret access"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox-setup"
-# raw: op auth gate prompts on the terminal
+# raw: 1Password may request biometric approval on the terminal
 raw = true
 
 [tasks."setup:fnox:s3cfg"]
