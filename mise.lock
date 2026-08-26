@@ -631,13 +631,15 @@ checksum = "sha256:94812d1383e57274a871f64b263410b91f6ae1311fd1f975369fc2cca3bbd
 url = "https://github.com/superfly/flyctl/releases/download/v0.4.68/flyctl_0.4.68_macOS_arm64.tar.gz"
 
 [[tools.fnox]]
-version = "1.29.0"
+version = "1.34.0"
 backend = "github:jdx/fnox"
 
 [tools.fnox."platforms.macos-arm64"]
-checksum = "sha256:71dc67c54670d41c239669d2cdbea78b6ebbbc6c174beca7743b93330661e07a"
-url = "https://github.com/jdx/fnox/releases/download/v1.29.0/fnox-aarch64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/jdx/fnox/releases/assets/463662176"
+checksum = "sha256:60cae86705108b7a2d2950b7182d58aa717f6996e4bb1e31fc1e8219a13a0cc5"
+url = "https://github.com/jdx/fnox/releases/download/v1.34.0/fnox-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/jdx/fnox/releases/assets/525712276"
+provenance = "github-attestations"
+provenance_verified = true
 
 [[tools.fzf]]
 version = "0.74.0"
