@@ -196,8 +196,28 @@ function pi_pane_for() {
   return 1
 }
 
-# -- fzf preview for a picker entry. Running sessions show the last 200
-#    lines of the pi agent's pane (capture-pane -e); pi exposes no
+# -- print a pane capture fitted to the preview window: trailing blank lines
+#    stripped (the pi TUI viewport pads with them), then only the newest
+#    lines that fit ($FZF_PREVIEW_LINES, exported by fzf) — otherwise fzf
+#    renders from the top of the capture and shows stale scrollback instead
+#    of the latest pi output.
+function print_capture_tail() {
+  local target="$1" last=0 i line
+  local -a lines=()
+  while IFS= read -r line; do
+    lines+=("$line")
+    [[ -n ${line//[[:space:]]/} ]] && last=${#lines[@]}
+  done < <(tmux capture-pane -e -p -S -200 -t "$target" 2>/dev/null || true)
+  i=$((last - ${FZF_PREVIEW_LINES:-40}))
+  [[ $i -lt 0 ]] && i=0
+  while [[ $i -lt $last ]]; do
+    printf '%s\n' "${lines[$i]}"
+    i=$((i + 1))
+  done
+}
+
+# -- fzf preview for a picker entry. Running sessions show the newest
+#    non-blank lines of the pi agent's pane (capture-pane -e); pi exposes no
 #    message-history query over its socket (ping/prompt/tell only), so the
 #    rendered pi TUI pane is the closest view of recent pi messages.
 #    Sessions without a pi pane fall back to the session's active pane.
@@ -213,9 +233,9 @@ function preview_entry() {
   [[ -n $name ]] || return 0
   if sid="$(session_id_for "$name")"; then
     if pane="$(pi_pane_for "$name" "$sid")"; then
-      tmux capture-pane -e -p -S -200 -t "$pane" 2>/dev/null || true
+      print_capture_tail "$pane"
     else
-      tmux capture-pane -e -p -S -200 -t "$sid" 2>/dev/null || true
+      print_capture_tail "$sid"
     fi
   elif [[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]]; then
     cat "$layouts_dir/$name.sh"
@@ -466,6 +486,7 @@ function fuzzy_find() {
   selected_session="$(
     fzf \
       ${fzf_extra_args[@]+"${fzf_extra_args[@]}"} \
+      --height=100% \
       --ansi \
       --reverse \
       --border=none \
@@ -475,7 +496,7 @@ function fuzzy_find() {
       --header="${fzf_header_text}" \
       --color="bg:#3c474d,bg+:#323d43" \
       --preview="ftm --preview={}" \
-      --preview-window="down,50%,nowrap" \
+      --preview-window="down,65%,nowrap" \
       --with-shell="bash -c" \
       --bind="change:first" \
       --bind="?:toggle-preview" \
