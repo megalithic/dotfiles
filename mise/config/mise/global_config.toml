@@ -756,17 +756,40 @@ description = "Update system packages, mise tools, nvim packages, pi, and more"
 run = """
 set -euo pipefail
 
-mise self-update --yes
-mise plugins update --yes
-mise upgrade --bump --yes
-mise bootstrap packages apply --yes
-mise bootstrap dotfiles apply --force --yes
-mise bootstrap launchd apply --yes
-mise bootstrap macos-defaults apply --yes
-mise bootstrap packages upgrade --yes
-mise run fnox:sync
-mise run pi:update
-"$HOME/.dotfiles/bin/hs-reload" || echo "hs-reload failed (Hammerspoon not running?)"
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/mise"
+mkdir -p "$state_dir"
+export MISE_LOG_FILE="$state_dir/up.log"
+export MISE_LOG_FILE_LEVEL=debug
+: > "$MISE_LOG_FILE"
+chmod 600 "$MISE_LOG_FILE"
+
+step() {
+  printf '\\n==> %s\\n' "$1"
+  shift
+  "$@"
+}
+
+on_exit() {
+  status=$?
+  trap - EXIT
+  if [ "$status" -ne 0 ]; then
+    printf '\\nup failed (exit %s). mise debug log: %s\\n' "$status" "$MISE_LOG_FILE" >&2
+  fi
+  exit "$status"
+}
+trap on_exit EXIT
+
+step "Update mise" mise self-update --yes
+step "Update mise plugins" mise plugins update --yes
+step "Upgrade mise tools" mise upgrade --bump --yes
+step "Apply packages" mise bootstrap packages apply --yes
+step "Apply dotfiles" mise --verbose bootstrap dotfiles apply --force --yes
+step "Apply launchd agents" mise bootstrap launchd apply --yes
+step "Apply macOS defaults" mise bootstrap macos-defaults apply --yes
+step "Upgrade packages" mise bootstrap packages upgrade --yes
+step "Sync fnox" mise run fnox:sync
+step "Update Pi" mise run pi:update
+step "Reload Hammerspoon" "$HOME/.dotfiles/bin/hs-reload" || echo "hs-reload failed (Hammerspoon not running?)"
 
 # nvim --headless -c "lua vim.pack.update(nil, { force = true })" -c "quit"
 """
