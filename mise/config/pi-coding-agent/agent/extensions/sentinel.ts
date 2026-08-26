@@ -14,6 +14,7 @@
 
 import { execSync, spawnSync } from "node:child_process";
 import {
+	appendFileSync,
 	existsSync,
 	lstatSync,
 	readFileSync,
@@ -21,12 +22,17 @@ import {
 	statSync,
 } from "node:fs";
 import { dirname, isAbsolute, join, normalize, resolve } from "node:path";
-import type {
-	ExtensionAPI,
-	InputEventResult,
-	ToolCallEvent,
-	ToolCallEventResult,
+import {
+	CustomEditor,
+	type ExtensionAPI,
+	type ExtensionCommandContext,
+	type KeybindingsManager,
+	type InputEventResult,
+	type ToolCallEvent,
+	type ToolCallEventResult,
 } from "@earendil-works/pi-coding-agent";
+import type { EditorTheme, TUI } from "@earendil-works/pi-tui";
+import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 type Tier = "hard" | "confirm" | "rewrite";
 
@@ -182,8 +188,24 @@ let blocked: BlockedState | null = null;
 let overrideGranted = false;
 let overrideAt = 0;
 
+const SENTINEL_DEBUG_LOG =
+	process.env.PI_SENTINEL_DEBUG_LOG ||
+	(process.env.PI_SENTINEL_DEBUG
+		? join(process.env.TMPDIR || "/tmp", "pi-sentinel.log")
+		: "");
+const SENTINEL_OFF_PROMPT = " ";
+
 function log(msg: string) {
-	console.log(`[sentinel] ${msg}`);
+	if (!SENTINEL_DEBUG_LOG) return;
+	try {
+		appendFileSync(
+			SENTINEL_DEBUG_LOG,
+			`${new Date().toISOString()} [sentinel] ${msg}\n`,
+			"utf8",
+		);
+	} catch {
+		// Debug logging must never affect guardrail behavior or corrupt the TUI.
+	}
 }
 function resetOverride() {
 	overrideGranted = false;
@@ -283,11 +305,6 @@ function stripQuoted(cmd: string): string {
 		i++;
 	}
 	return result;
-}
-
-/** Split stripped command into pipeline segments. */
-function _splitSegments(stripped: string): string[] {
-	return stripped.split(/\s*(?:\|\||&&|[|;]|\$\()\s*/);
 }
 
 interface Invocation {
@@ -650,9 +667,7 @@ function isDestructiveSystemRm(cmd: string): boolean {
 	const hasRecursive = tokens.some(
 		(t) => t === "--recursive" || /^-[A-Za-z]*[rR]/.test(t),
 	);
-	const hasForce = tokens.some(
-		(t) => t === "--force" || /^-[A-Za-z]*f/.test(t),
-	);
+	const hasForce = tokens.some((t) => t === "--force" || /^-[A-Za-z]*f/.test(t));
 	if (!hasRecursive || !hasForce) return false;
 	return tokens.slice(1).some((target) => {
 		const p =
@@ -1047,7 +1062,7 @@ function buildRules(): Rule[] {
 					stdio: ["pipe", "pipe", "pipe"],
 				},
 			);
-		} catch (_e) {
+		} catch {
 			log("failed to get diff for gatekeeper check");
 			return { blocked: false, findings: "" };
 		}
@@ -1164,8 +1179,7 @@ function buildRules(): Rule[] {
 			tools: ["bash"],
 			test: (cmd, path) => packageInstallReason(cmd, path) !== null,
 			reason: (cmd, path) =>
-				packageInstallReason(cmd, path) ||
-				"Package install requires confirmation.",
+				packageInstallReason(cmd, path) || "Package install requires confirmation.",
 		},
 		{
 			name: "confirm-history-destructive",
@@ -1367,11 +1381,80 @@ export default function (pi: ExtensionAPI) {
 	log(`${rules.length} rules loaded`);
 
 	// ── Session-aware state ──
+	let enabled = true;
 	let investigationMode = false;
+	let activeTui: TUI | undefined;
 	const sessionWrites = new Set<string>();
+
+	const requestEditorRender = () => activeTui?.requestRender();
+
+	pi.registerCommand("sentinel", {
+		description: "Turn Sentinel guardrails on or off for this session",
+		handler: (args: string, ctx: ExtensionCommandContext) => {
+			const action = (args || "").trim().toLowerCase();
+
+			if (action === "on") {
+				enabled = true;
+				log("enabled");
+				requestEditorRender();
+				if (ctx.hasUI) ctx.ui.notify("Sentinel on", "info");
+				return;
+			}
+
+			if (action === "off") {
+				enabled = false;
+				investigationMode = false;
+				resetOverride();
+				resetBlocked();
+				log("disabled");
+				requestEditorRender();
+				if (ctx.hasUI) ctx.ui.notify("Sentinel off", "warning");
+				return;
+			}
+
+			if (ctx.hasUI) {
+				ctx.ui.notify(
+					`Sentinel is ${enabled ? "on" : "off"}. Use /sentinel on or /sentinel off.`,
+					action ? "error" : "info",
+				);
+			}
+		},
+	});
+
+	pi.on("session_start", (_event, ctx) => {
+		class SentinelPromptEditor extends CustomEditor {
+			constructor(tui: TUI, theme: EditorTheme, keybindings: KeybindingsManager) {
+				super(tui, theme, keybindings, { paddingX: 1 });
+				activeTui = tui;
+			}
+
+			render(width: number): string[] {
+				const lines = super.render(width);
+				if (enabled || lines.length === 0) return lines;
+
+				const marker = ctx.ui.theme.fg("error", SENTINEL_OFF_PROMPT);
+				const inputLine = lines.length > 2 ? 1 : 0;
+				const remainingWidth = Math.max(0, width - visibleWidth(marker));
+				lines[inputLine] =
+					`${marker}${truncateToWidth(lines[inputLine] || "", remainingWidth, "")}`;
+				return lines;
+			}
+		}
+
+		ctx.ui.setEditorComponent(
+			(tui, theme, keybindings) =>
+				new SentinelPromptEditor(tui, theme, keybindings),
+		);
+	});
+
+	pi.on("session_shutdown", () => {
+		activeTui = undefined;
+	});
 
 	// Intercept user input: track investigation mode
 	pi.on("input", async (event): Promise<void> => {
+		if (!enabled) return;
+
 		// Reset investigation mode on every new user input
 		investigationMode = false;
 
@@ -1389,6 +1472,8 @@ export default function (pi: ExtensionAPI) {
 
 	// Intercept user input for override keywords
 	pi.on("input", async (event, ctx): Promise<InputEventResult | undefined> => {
+		if (!enabled) return;
+
 		const text = event.text?.trim().toLowerCase() || "";
 
 		const isOverrideCmd = ["override", "bypass", "force"].includes(text);
@@ -1465,6 +1550,8 @@ export default function (pi: ExtensionAPI) {
 	pi.on(
 		"tool_call",
 		async (event, ctx): Promise<ToolCallEventResult | undefined> => {
+			if (!enabled) return undefined;
+
 			const toolName = event.toolName;
 			const input = (event as ToolCallEvent).input as Record<string, unknown>;
 			const cmd = typeof input.command === "string" ? input.command : "";
@@ -1625,9 +1712,7 @@ ${issues.join("\n")}
 					};
 					log(`CONFIRM [${rule.name}]: ${confirmKey.slice(0, 60)}`);
 					const cmdPreview =
-						confirmKey.length > 200
-							? `${confirmKey.slice(0, 200)}...`
-							: confirmKey;
+						confirmKey.length > 200 ? `${confirmKey.slice(0, 200)}...` : confirmKey;
 					return {
 						block: true,
 						reason: `🔒 **${rule.name}** — ${reason}
@@ -1659,11 +1744,23 @@ Say \`override\` to allow.`,
 		get overrideGranted() {
 			return overrideGranted;
 		},
+		get enabled() {
+			return enabled;
+		},
 		rules: rules.map((r) => r.name),
 		reset: () => {
 			resetOverride();
 			resetBlocked();
 		},
 		grant: grantOverride,
+		enable: () => {
+			enabled = true;
+		},
+		disable: () => {
+			enabled = false;
+			investigationMode = false;
+			resetOverride();
+			resetBlocked();
+		},
 	};
 }
