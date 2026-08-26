@@ -27,11 +27,11 @@ Reference: <https://mise.jdx.dev/cli/exec.html>
 
 ### Interactive input / TTY commands (workbookpro)
 
-When a command needs interactive user input — sudo password, installer prompts, PINs, any TTY-only flow — do not run it through the agent's own Bash tool and do not ask the user to run it manually. Read the `interactive-tty` skill and run the command through the `interactive_shell` overlay (pi-interactive-shell extension):
+When a command needs interactive user input — sudo password, installer prompts, PINs, any TTY-only flow — do not run it through the agent's own Bash tool and do not ask the user to run it manually. Run it through the `interactive_shell` overlay (pi-interactive-shell extension):
 
 - sudo: check `sudo -n true` first; if not cached, run `sudo -v` via `interactive_shell` (native Touch ID via pam_reattach/pam_tid, typed-password fallback in the overlay), then run the real `sudo <command>` in the agent's own shell so output is captured.
 - typed input (logins, prompts, PINs): run the command itself via `interactive_shell` with an honest `reason`; the user types secrets directly in the overlay. Block on the `sessionId` until it exits.
-- If `interactive_shell` is unavailable, call `enable_interactive_shell` first; see the skill's SKILL.md for full rules. Tell the user what input is expected before invoking.
+- Tell the user what input is expected before invoking `interactive_shell`. If the tool is unavailable, report that it cannot proceed interactively; do not fall back to Bash or ask the user to run the command manually.
 
 ### op / 1Password / fnox failure runbook
 
