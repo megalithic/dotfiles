@@ -428,7 +428,7 @@ function fuzzy_find() {
     rename_action='execute(session=$(printf %s {} | sed -E "s/\t.*$//; s/ \*$//"); printf >&2 "New session name: "; read -r name; tmux rename-session -t "$(ftm --id="$session")" "${name}")+reload(ftm --list)'
 
   # native fzf tmux popup unless we're already inside one (-p)
-  [[ $POPUP == "true" ]] || fzf_extra_args+=(--tmux "center,80%,60%")
+  [[ $POPUP == "true" ]] || fzf_extra_args+=(--tmux "center,70%,75%")
 
   selected_session="$(
     fzf \
@@ -442,7 +442,7 @@ function fuzzy_find() {
       --header="${fzf_header_text}" \
       --color="bg:#3c474d,bg+:#323d43" \
       --preview="ftm --preview={}" \
-      --preview-window="right,60%,nowrap" \
+      --preview-window="down,50%,nowrap" \
       --with-shell="bash -c" \
       --bind="change:first" \
       --bind="?:toggle-preview" \
