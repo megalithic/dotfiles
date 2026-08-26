@@ -164,7 +164,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 #    npm/, auth.json, settings.json) stays unmanaged. settings.json is merged
 #    by `mise run pi:update`, not linked. --
 "~/.pi/agent/AGENTS.md" = "~/.dotfiles/mise/config/pi-coding-agent/agent/AGENTS.md"
-"~/.pi/agent/APPEND_SYSTEM.md" = "~/.dotfiles/mise/config/pi-coding-agent/agent/APPEND_SYSTEM.md"
+"~/.pi/agent/SYSTEM.md" = "~/.dotfiles/mise/config/pi-coding-agent/agent/SYSTEM.md"
 "~/.pi/agent/keybindings.json" = "~/.dotfiles/mise/config/pi-coding-agent/agent/keybindings.json"
 "~/.pi/agent/models.json" = "~/.dotfiles/mise/config/pi-coding-agent/agent/models.json"
 "~/.pi/agent/mcp.json" = "~/.dotfiles/mise/config/pi-coding-agent/agent/mcp.json"

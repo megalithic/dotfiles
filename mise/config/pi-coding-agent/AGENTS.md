@@ -14,7 +14,7 @@ Nothing here applies automatically. Application happens through
 pi-coding-agent/
 ├── agent/               # Managed subset of ~/.pi/agent (linked via [dotfiles])
 │   ├── AGENTS.md        # Global agent instructions (was sources/GLOBAL_AGENTS.md)
-│   ├── APPEND_SYSTEM.md
+│   ├── SYSTEM.md
 │   ├── keybindings.json
 │   ├── models.json      # Custom model/provider definitions
 │   ├── mcp.json         # Global MCP server config
