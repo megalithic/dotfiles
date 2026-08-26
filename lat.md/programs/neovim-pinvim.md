@@ -1,8 +1,10 @@
 # Neovim and pinvim
 
-This file covers Neovim nightly compatibility plus pinvim, the Neovim↔Pi integration that links the editor to Pi sessions over sockets and an msgpack-RPC editor service.
+This file covers Neovim nightly compatibility plus the dormant pinvim design.
 
-Pinvim ties together `config/nvim/lua/pinvim.lua`, `config/nvim/lua/pinvim/review.lua`, `home/common/programs/pi-coding-agent/extensions/pinvim.ts`, `home/common/programs/pi-coding-agent/extensions/nvim-review.ts`, `bin/pimux`, `bin/pireview`, and tmux.
+Pinvim is disabled on both sides. Pi-side: its extension, review extension, test skill, wrappers, and profile resolver are turned off and moved to `mise/config/pi-coding-agent/disabled/`. Neovim-side: the bootstrap entrypoint is disabled via `"pinvim"` in `vim.g.disabled_plugins` (`config/nvim/lua/settings.lua`, twin `mise/config/nvim/lua/settings.lua`), so `after/plugin/pinvim.lua` never calls `require("pinvim").setup()`; the lua modules stay in place unloaded. The shell wrappers `pimux`, `pireview`, `pinvim-protocol-smoke`, and `pinvim-review-spawn-smoke` moved from `bin/` to `mise/config/pi-coding-agent/disabled/bin/` and their `~/bin` symlinks are removed. Re-enable = comment the `disabled_plugins` entry back out and move the wrappers back. Sections below document the retained implementation for a future deliberate re-enable, not active runtime behavior.
+
+The dormant stack ties together `config/nvim/lua/pinvim.lua`, `config/nvim/lua/pinvim/review.lua`, `mise/config/pi-coding-agent/disabled/extensions/_pinvim.ts`, `mise/config/pi-coding-agent/disabled/extensions/_nvim-review.ts`, the turned-off Pi wrappers, Neovim helpers, and tmux. Active tmux config contains no pinvim/pimux command: agent layouts launch plain `pi`, and the former prefix `p`/`C-p` routes are removed.
 
 ## Neovim nightly compatibility
 
@@ -36,7 +38,7 @@ Pi sends msgpack-RPC `nvim_exec_lua` requests to `require("pinvim").api.editor_r
 
 After successful Pi `edit` and `write` tool calls, `pinvim.ts` asks the editor service to run `reload_buffer` for the changed path. Clean open buffers refresh from disk; dirty buffers stay dirty and Pi surfaces a conflict warning. `/pinvim-context` prints current context through the same path, and `/pinvim-doctor` plus Nvim-side `:PiDoctor` report registry identity, tmux pane, repair candidate, and editor-service state without new discovery side effects.
 
-`pinvim.ts` also shares Pi socket routing with [[pi-coding-agent#Pi coding agent#Session and routing extensions|Pi tell]]. Incoming `pi.tell.v1` messages are persisted, surfaced, delivered as prompts or follow-ups, and acknowledged with async `tell_ack` messages to the sender's `fromSocket`.
+`pinvim.ts` also shares Pi socket routing with [[pi-coding-agent#Session and routing extensions|Pi tell]]. Incoming `pi.tell.v1` messages are persisted, surfaced, delivered as prompts or follow-ups, and acknowledged with async `tell_ack` messages to the sender's `fromSocket`.
 
 ## Pinvim visual selection keymaps
 
@@ -64,17 +66,17 @@ Normal pinvim links are strictly paired: a Pi session belongs to exactly one Neo
 
 **Manifest discovery is diagnostic/manual only.** Nvim still writes `nvim-*.info` manifests under `$PI_STATE_DIR/manifests/` every five seconds (now including `pairId`); `VimLeavePre` cleans them up. `pinvim.ts` still scans manifests when no parent registry identity is present and the active peer is missing or stale, but the resulting `repairCandidate` is read-only for diagnostics (`/pinvim-doctor`, `/pinvim-status`) — normal flows never auto-adopt a scanned manifest for pairing. Candidates are still rejected when the pid is dead, the pid is an orphaned `nvim --embed`, the socket path is gone, or the tmux session differs. Pair state, relation (`attach-only`, `child`, `parent`, `no-parent`), and link mode appear in `:PiStatus`, `:PiHealth`, `/pinvim-status`, `/pinvim-health`, `/pinvim-info`, and the doctor commands.
 
-**pimux pair-aware reuse.** `bin/pimux` forwards `PINVIM_PAIR_ID` into the Pi pane and uses it for reuse decisions. `socket_pair_id` probes a socket's manifest `pairId`, and `socket_pair_matches` treats a socket as eligible only when there is no local pair id or the manifest pair id matches. Unknown manifest pair ids are ineligible in strict mode. `candidate_sockets` and `find_any_parked_pi_pane` skip panes paired with a different Neovim, while explicit `--socket` targets identify the current Neovim's instance socket instead of a shared workspace socket.
+**pimux pair-aware reuse.** `pimux` (now at `mise/config/pi-coding-agent/disabled/bin/pimux`, off PATH) forwards `PINVIM_PAIR_ID` into the Pi pane and uses it for reuse decisions. `socket_pair_id` probes a socket's manifest `pairId`, and `socket_pair_matches` treats a socket as eligible only when there is no local pair id or the manifest pair id matches. Unknown manifest pair ids are ineligible in strict mode. `candidate_sockets` and `find_any_parked_pi_pane` skip panes paired with a different Neovim, while explicit `--socket` targets identify the current Neovim's instance socket instead of a shared workspace socket.
 
 **Ownership neutrality.** `:PiTarget <socket>` is an explicit manual override: it sets the buffer-local target (checked before pair gating in `resolve_socket`) and never rewrites pair ownership. The shade-next `fill_prompt` remote-input path is ownership-neutral — it only prefills the editor and may focus the pane; it never runs `peerAllowedForSocket`, adds to `acceptedSockets`, claims or reclaims the pair, or auto-submits.
 
 ### Strict pairing verification checklist
 
-The automated check is `bin/pinvim-protocol-smoke`, run with `bash bin/pinvim-protocol-smoke`. It boots headless Neovim against a mock Pi socket and fails unless the `hello` peer frame carries a non-empty `pairId`.
+The automated check is `pinvim-protocol-smoke`, now in `mise/config/pi-coding-agent/disabled/bin/`. It boots headless Neovim against a mock Pi socket and fails unless the `hello` peer frame carries a non-empty `pairId`.
 
 Cases covered by code review plus manual tmux verification (no full multi-Neovim UI harness exists):
 
-- Exact pair acceptance — covered by `bin/pinvim-protocol-smoke`.
+- Exact pair acceptance — covered by `pinvim-protocol-smoke` (in `disabled/bin/`).
 - Unpaired same-window claim — allowed (no active peer, scoring path).
 - Stale > 20s / dead pid — same-window claim allowed once the live peer lapses (`STRICT_PAIR_STALE_SECONDS`).
 - Live `pairId` mismatch — rejected with `mismatched pair identity`, even in the same window.
@@ -96,7 +98,7 @@ Cases covered by code review plus manual tmux verification (no full multi-Neovim
 - `ticket` — branch or uncommitted scope with ticket metadata attached.
 - `worktrees` — `vim.ui.select` picker over `git worktree list --porcelain`, enriched with dirty/staged/untracked counts from `git -C <path> status --porcelain`; selecting a worktree `tcd`s into it and reruns the chosen scope.
 
-`bin/pireview [scope] [worktree-path]` opens the same review in a new tmux window named `review:<branch-or-ticket>` in the current tmux session, starting Nvim with `+PiReview <scope>`. It scrubs inherited `PI_SOCKET`/`PINVIM_PAIR_ID`/`PINVIM_*` env so the new Nvim never steals another Nvim/Pi pair.
+`pireview [scope] [worktree-path]` (now at `mise/config/pi-coding-agent/disabled/bin/pireview`, off PATH) opens the same review in a new tmux window named `review:<branch-or-ticket>` in the current tmux session, starting Nvim with `+PiReview <scope>`. It scrubs inherited `PI_SOCKET`/`PINVIM_PAIR_ID`/`PINVIM_*` env so the new Nvim never steals another Nvim/Pi pair.
 
 ### Review metadata in annotation flushes
 
