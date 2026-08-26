@@ -60,6 +60,8 @@ C_WHITE=$'\e[38;5;255m'
 C_GRAY=$'\e[38;5;245m'
 C_RED=$'\e[31m'
 C_GREEN=$'\e[32m'
+C_BOLD=$'\e[1m'
+C_DIM=$'\e[2m'
 
 TAB=$'\t'
 
@@ -93,12 +95,13 @@ if ! command -v fzf &>/dev/null; then
   exit 1
 fi
 
-# -- strip the running-session marker, pi status dot, and any zoxide path column
+# -- strip the pi status dot and any zoxide path column (running sessions
+#    render bold instead of carrying a text marker; fzf's --ansi strips the
+#    styling before selections reach us)
 function strip_markers() {
   local s="$1"
   s="${s%%"$TAB"*}"
   s="${s% ●}"
-  s="${s% \*}"
   printf '%s' "$s"
 }
 
@@ -254,21 +257,22 @@ function get_layouts() {
   done
 }
 
-# -- print a running-session row: "name *" plus a pi status dot (red = pi
+# -- print a running-session row: bold name plus a pi status dot (red = pi
 #    blocked on a structured question, green = turn done, waiting on user).
 #    Reads the asking/done session lists built by print_list.
 function print_running() {
   local name="$1"
   if [[ $status_asking == *$'\n'"$name"$'\n'* ]]; then
-    printf '%s * %s●%s\n' "$name" "$C_RED" "$C_RESET"
+    printf '%s%s%s %s●%s\n' "$C_BOLD" "$name" "$C_RESET" "$C_RED" "$C_RESET"
   elif [[ $status_done == *$'\n'"$name"$'\n'* ]]; then
-    printf '%s * %s●%s\n' "$name" "$C_GREEN" "$C_RESET"
+    printf '%s%s%s %s●%s\n' "$C_BOLD" "$name" "$C_RESET" "$C_GREEN" "$C_RESET"
   else
-    printf '%s *\n' "$name"
+    printf '%s%s%s\n' "$C_BOLD" "$name" "$C_RESET"
   fi
 }
 
-# -- annotated picker list. Sessions are marked with * when running, plus a
+# -- annotated picker list. Running sessions render bold (non-running
+#    entries — layouts and dirs — render dim), plus a
 #    colored pi status dot (see print_running) sourced from the agent-status
 #    extension's files ($PI_STATE_DIR/status/pi-{session}-{window}.status,
 #    "state pid session"). Pure file reads + kill -0 — no subprocesses, so
@@ -339,15 +343,15 @@ function print_list() {
       print_running "$name"
     elif [[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]]; then
       emitted+="$name"$'\n'
-      printf '%s\n' "$name"
+      printf '%s%s%s\n' "$C_DIM" "$name" "$C_RESET"
     elif [[ -n ${mru_paths[$mi]} && -d ${mru_paths[$mi]} ]]; then
       emitted+="$name"$'\n'
-      printf '%s\t%s%s%s\n' "$name" "$C_GRAY" "${mru_paths[$mi]/#$HOME/\~}" "$C_RESET"
+      printf '%s%s%s\t%s%s%s\n' "$C_DIM" "$name" "$C_RESET" "$C_GRAY" "${mru_paths[$mi]/#$HOME/\~}" "$C_RESET"
     else
       for zi in "${!zx_names[@]}"; do
         if [[ ${zx_names[$zi]} == "$name" ]]; then
           emitted+="$name"$'\n'
-          printf '%s\t%s%s%s\n' "$name" "$C_GRAY" "${zx_paths[$zi]/#$HOME/\~}" "$C_RESET"
+          printf '%s%s%s\t%s%s%s\n' "$C_DIM" "$name" "$C_RESET" "$C_GRAY" "${zx_paths[$zi]/#$HOME/\~}" "$C_RESET"
           break
         fi
       done
@@ -369,7 +373,7 @@ function print_list() {
     [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
     [[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]] && continue
     emitted+="$name"$'\n'
-    printf '%s\t%s%s%s\n' "$name" "$C_GRAY" "${zx_paths[$zi]/#$HOME/\~}" "$C_RESET"
+    printf '%s%s%s\t%s%s%s\n' "$C_DIM" "$name" "$C_RESET" "$C_GRAY" "${zx_paths[$zi]/#$HOME/\~}" "$C_RESET"
   done
 
   # 4) remaining layouts (glob order = alphabetical)
@@ -377,7 +381,7 @@ function print_list() {
     [[ -z $name || $name == "default" || $name == "$exclude_current" ]] && continue
     [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
     emitted+="$name"$'\n'
-    printf '%s\n' "$name"
+    printf '%s%s%s\n' "$C_DIM" "$name" "$C_RESET"
   done < <(get_layouts)
 }
 
@@ -477,8 +481,8 @@ function fuzzy_find() {
   # shellcheck disable=SC2016 # fzf action templates: {} and $() expand in fzf's shell, not here
   # "=" prefix forces exact session-name match (names like .dotfiles-... otherwise
   # trip tmux's target parser, which treats a leading dot as a window separator)
-  local kill_action='execute-silent(tmux-kill-session "$(printf %s {} | sed -E "s/\t.*$//; s/ ●$//; s/ \*$//")")+reload(ftm --list)' \
-    rename_action='execute(session=$(printf %s {} | sed -E "s/\t.*$//; s/ ●$//; s/ \*$//"); printf >&2 "New session name: "; read -r name; tmux rename-session -t "$(ftm --id="$session")" "${name}")+reload(ftm --list)'
+  local kill_action='execute-silent(tmux-kill-session "$(printf %s {} | sed -E "s/\t.*$//; s/ ●$//")")+reload(ftm --list)' \
+    rename_action='execute(session=$(printf %s {} | sed -E "s/\t.*$//; s/ ●$//"); printf >&2 "New session name: "; read -r name; tmux rename-session -t "$(ftm --id="$session")" "${name}")+reload(ftm --list)'
 
   # native fzf tmux popup unless we're already inside one (-p)
   [[ $POPUP == "true" ]] || fzf_extra_args+=(--tmux "center,70%,75%")
