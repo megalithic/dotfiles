@@ -9,6 +9,7 @@
  */
 
 import { execFile } from "node:child_process";
+import crypto from "node:crypto";
 import fsp from "node:fs/promises";
 import net from "node:net";
 import path from "node:path";
@@ -25,6 +26,8 @@ const PI_STATE_DIR = process.env.PI_STATE_DIR || path.join(xdgStateHome, "pi");
 const SOCKET_DIR = path.join(PI_STATE_DIR, "sockets");
 const MANIFEST_DIR = path.join(PI_STATE_DIR, "manifests");
 const SOCKET_PREFIX = "pi";
+// macOS sun_path limit is 104 bytes (incl. NUL). Must match bridge.ts scheme.
+const MAX_SOCKET_PATH_BYTES = 103;
 const CONNECT_TIMEOUT_MS = 800;
 const PING_TIMEOUT_MS = 1000;
 const PING_ATTEMPTS = 2;
@@ -160,11 +163,14 @@ const detectTmux = (): Promise<TmuxInfo | null> =>
 			return;
 		}
 
+		// Target our own pane explicitly: without -t, display-message reports
+		// the client's ACTIVE window, not the window this process runs in.
 		execFile(
 			"tmux",
 			[
 				"display-message",
 				"-p",
+				...(process.env.TMUX_PANE ? ["-t", process.env.TMUX_PANE] : []),
 				"#{session_name}\t#{window_name}\t#{window_index}\t#{pane_id}",
 			],
 			{ encoding: "utf-8", timeout: 2000 },
@@ -173,9 +179,7 @@ const detectTmux = (): Promise<TmuxInfo | null> =>
 					resolve(null);
 					return;
 				}
-				const [session, windowName, windowIndex, pane] = stdout
-					.trim()
-					.split("\t");
+				const [session, windowName, windowIndex, pane] = stdout.trim().split("\t");
 				const window =
 					windowName && /^[a-zA-Z0-9_-]+$/.test(windowName)
 						? windowName
@@ -201,14 +205,33 @@ const looksLikeMachineTarget = (token: string | undefined): boolean => {
 	);
 };
 
+const utf8Bytes = (value: string): number =>
+	new TextEncoder().encode(value).length;
+
+/**
+ * Build socket path for a session/window pair. Mirrors bridge.ts: when the
+ * full path exceeds the sun_path limit, truncate the name and append a
+ * deterministic 8-char sha256 suffix.
+ */
+const buildSocketPath = (session: string, window: string): string => {
+	const name = `${session}-${window}`;
+	const full = `${SOCKET_DIR}/${SOCKET_PREFIX}-${name}.sock`;
+	if (utf8Bytes(full) <= MAX_SOCKET_PATH_BYTES) return full;
+	const fixed = utf8Bytes(`${SOCKET_DIR}/${SOCKET_PREFIX}-.sock`) + 9; // "-" + 8 hex
+	const budget = Math.max(MAX_SOCKET_PATH_BYTES - fixed, 8);
+	const hash = crypto
+		.createHash("sha256")
+		.update(name)
+		.digest("hex")
+		.slice(0, 8);
+	return `${SOCKET_DIR}/${SOCKET_PREFIX}-${name.slice(0, budget)}-${hash}.sock`;
+};
+
 const currentSocketPath = async (): Promise<string | null> => {
 	if (process.env.PI_SOCKET) return process.env.PI_SOCKET;
 	const tmux = await detectTmux();
 	if (tmux) {
-		return path.join(
-			SOCKET_DIR,
-			`${SOCKET_PREFIX}-${tmux.session}-${tmux.window}.sock`,
-		);
+		return buildSocketPath(tmux.session, tmux.window);
 	}
 	return path.join(SOCKET_DIR, `${SOCKET_PREFIX}-default-0.sock`);
 };
@@ -261,9 +284,7 @@ const socketRespondsToPing = async (socketPath: string): Promise<boolean> => {
 const compactPath = (value: string | undefined): string => {
 	if (!value) return "?";
 	const home = process.env.HOME;
-	return home && value.startsWith(home)
-		? `~${value.slice(home.length)}`
-		: value;
+	return home && value.startsWith(home) ? `~${value.slice(home.length)}` : value;
 };
 
 const labelFor = (
@@ -467,9 +488,7 @@ const selectCandidate = async (
 		const topMatches = scored.filter(
 			(entry) => entry.score === bestOverall.score,
 		);
-		const unreachableTop = topMatches.find(
-			(entry) => !entry.candidate.reachable,
-		);
+		const unreachableTop = topMatches.find((entry) => !entry.candidate.reachable);
 		if (unreachableTop) {
 			return {
 				ok: false,
@@ -492,8 +511,7 @@ const selectCandidate = async (
 		const reachableScored = topMatches.filter(
 			(entry) =>
 				entry.candidate.reachable &&
-				(!entry.candidate.current ||
-					isExactSelfTarget(entry.candidate, target)),
+				(!entry.candidate.current || isExactSelfTarget(entry.candidate, target)),
 		);
 		const best = reachableScored[0];
 		const next = reachableScored[1];
@@ -1027,10 +1045,7 @@ export default function (pi: ExtensionAPI): void {
 
 			const result = await sendTell(ctx, { machine, target, message });
 			if (!result.ok) {
-				ctx.ui.notify(
-					`Tell failed: ${result.error || "unknown error"}`,
-					"error",
-				);
+				ctx.ui.notify(`Tell failed: ${result.error || "unknown error"}`, "error");
 				return;
 			}
 
@@ -1060,8 +1075,7 @@ export default function (pi: ExtensionAPI): void {
 		parameters: Type.Object({
 			machine: Type.Optional(
 				Type.String({
-					description:
-						"Optional machine/SSH host, e.g. megabookpro or workbookpro.",
+					description: "Optional machine/SSH host, e.g. megabookpro or workbookpro.",
 				}),
 			),
 			target: Type.Optional(

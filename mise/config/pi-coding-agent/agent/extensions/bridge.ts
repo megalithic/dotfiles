@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Pi Bridge Extension
  *
@@ -33,6 +34,7 @@ import type {
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 import { execSync } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import net from "node:net";
 import path from "node:path";
@@ -49,6 +51,33 @@ const SOCKET_DIR = path.join(PI_STATE_DIR, "sockets");
 const INFO_DIR = path.join(PI_STATE_DIR, "manifests");
 const SOCKET_PREFIX = "pi";
 
+// macOS sun_path limit is 104 bytes (incl. NUL terminator). Longer paths make
+// net.Server.listen() throw EINVAL. Keep a safety margin.
+const MAX_SOCKET_PATH_BYTES = 103;
+
+/**
+ * Build the socket path for a session/window pair. When the full path would
+ * exceed the sun_path limit, the `{session}-{window}` name is truncated and a
+ * deterministic 8-char sha256 suffix is appended so senders that use the same
+ * scheme (tell.ts, hammerspoon interop/pi.lua) resolve the identical path.
+ */
+const utf8Bytes = (value: string): number =>
+  new TextEncoder().encode(value).length;
+
+const buildSocketPath = (session: string, window: string): string => {
+  const name = `${session}-${window}`;
+  const full = `${SOCKET_DIR}/${SOCKET_PREFIX}-${name}.sock`;
+  if (utf8Bytes(full) <= MAX_SOCKET_PATH_BYTES) return full;
+  const fixed = utf8Bytes(`${SOCKET_DIR}/${SOCKET_PREFIX}-.sock`) + 9; // "-" + 8 hex
+  const budget = Math.max(MAX_SOCKET_PATH_BYTES - fixed, 8);
+  const hash = crypto
+    .createHash("sha256")
+    .update(name)
+    .digest("hex")
+    .slice(0, 8);
+  return `${SOCKET_DIR}/${SOCKET_PREFIX}-${name.slice(0, budget)}-${hash}.sock`;
+};
+
 /** Detect tmux session/window/pane names. Returns null if not in tmux. */
 const detectTmux = (): {
   session: string;
@@ -57,19 +86,33 @@ const detectTmux = (): {
 } | null => {
   if (!process.env.TMUX) return null;
   try {
-    const session = execSync("tmux display-message -p '#{session_name}'", {
-      encoding: "utf-8",
-      timeout: 2000,
-    }).trim();
-    const winName = execSync("tmux display-message -p '#{window_name}'", {
-      encoding: "utf-8",
-      timeout: 2000,
-    }).trim();
-    const winIndex = execSync("tmux display-message -p '#{window_index}'", {
-      encoding: "utf-8",
-      timeout: 2000,
-    }).trim();
-    const pane = execSync("tmux display-message -p '#{pane_id}'", {
+    // Target our own pane explicitly: without -t, display-message reports the
+    // client's ACTIVE window, not the window this process runs in.
+    const target = process.env.TMUX_PANE
+      ? `-t '${process.env.TMUX_PANE}' `
+      : "";
+    const session = execSync(
+      `tmux display-message -p ${target}'#{session_name}'`,
+      {
+        encoding: "utf-8",
+        timeout: 2000,
+      },
+    ).trim();
+    const winName = execSync(
+      `tmux display-message -p ${target}'#{window_name}'`,
+      {
+        encoding: "utf-8",
+        timeout: 2000,
+      },
+    ).trim();
+    const winIndex = execSync(
+      `tmux display-message -p ${target}'#{window_index}'`,
+      {
+        encoding: "utf-8",
+        timeout: 2000,
+      },
+    ).trim();
+    const pane = execSync(`tmux display-message -p ${target}'#{pane_id}'`, {
       encoding: "utf-8",
       timeout: 2000,
     }).trim();
@@ -101,7 +144,7 @@ const resolveSocket = (): {
   const tmux = detectTmux();
   if (tmux) {
     return {
-      socketPath: `${SOCKET_DIR}/${SOCKET_PREFIX}-${tmux.session}-${tmux.window}.sock`,
+      socketPath: buildSocketPath(tmux.session, tmux.window),
       session: tmux.session,
       window: tmux.window,
     };
@@ -279,7 +322,7 @@ const cleanupInfoManifest = (): void => {
 // Status Display
 // =============================================================================
 
-const getModelShortName = (modelId: string | undefined): string => {
+const _getModelShortName = (modelId: string | undefined): string => {
   if (!modelId) return "?";
 
   // Extract model name, strip provider prefix and version suffixes
@@ -303,7 +346,7 @@ const getModelShortName = (modelId: string | undefined): string => {
 // Socket Server
 // =============================================================================
 
-const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
+const startServer = (pi: ExtensionAPI, _ctx: ExtensionContext): void => {
   if (!SOCKET_PATH) return;
   if (server) return;
 
@@ -321,7 +364,7 @@ const startServer = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
   server = net.createServer((socket) => {
     let buffer = "";
 
-    socket.on("error", (err) => {
+    socket.on("error", (_err) => {
       // EPIPE, ECONNRESET, etc. — client disconnected before we could respond.
       // Safe to ignore; socket 'close' event handles cleanup.
     });

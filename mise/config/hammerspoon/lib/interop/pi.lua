@@ -22,13 +22,38 @@
 local M = {}
 
 -- Socket configuration (matches nix config)
-local function join_path(...) return table.concat({ ... }, "/") end
+local function join_path(...)
+  return table.concat({ ... }, "/")
+end
 
 local home = os.getenv("HOME") or "~"
-local xdgStateHome = (NIX_ENV and NIX_ENV.XDG_STATE_HOME) or os.getenv("XDG_STATE_HOME") or join_path(home, ".local", "state")
+local xdgStateHome = (NIX_ENV and NIX_ENV.XDG_STATE_HOME)
+  or os.getenv("XDG_STATE_HOME")
+  or join_path(home, ".local", "state")
 local PI_STATE_DIR = os.getenv("PI_STATE_DIR") or join_path(xdgStateHome, "pi")
 local SOCKET_DIR = join_path(PI_STATE_DIR, "sockets")
 local SOCKET_PREFIX = "pi"
+
+---macOS sun_path limit is 104 bytes (incl. NUL). Must match bridge.ts scheme.
+local MAX_SOCKET_PATH = 103
+
+---Build the `{session}-{window}` socket name, shortened deterministically
+---(truncate + 8-char sha256 suffix) when the full path would exceed the
+---sun_path limit. Mirrors buildSocketPath in bridge.ts and tell.ts.
+---@param session string
+---@param window string
+---@return string name Socket basename without prefix/extension
+local function socketName(session, window)
+  local name = string.format("%s-%s", session, window)
+  local full = string.format("%s/%s-%s.sock", SOCKET_DIR, SOCKET_PREFIX, name)
+  if #full <= MAX_SOCKET_PATH then
+    return name
+  end
+  local fixed = #string.format("%s/%s-.sock", SOCKET_DIR, SOCKET_PREFIX) + 9 -- "-" + 8 hex
+  local budget = math.max(MAX_SOCKET_PATH - fixed, 8)
+  local hash = hs.hash.SHA256(name):sub(1, 8)
+  return name:sub(1, budget) .. "-" .. hash
+end
 
 ---Default pi session for Telegram forwarding
 local DEFAULT_SESSION = "mega"
@@ -69,15 +94,21 @@ local reconnectAttempts = {}
 ---@param path string Socket path
 local function closeConnection(path)
   local conn = connections[path]
-  if not conn then return end
+  if not conn then
+    return
+  end
 
   if conn.reconnectTimer then
-    pcall(function() conn.reconnectTimer:stop() end)
+    pcall(function()
+      conn.reconnectTimer:stop()
+    end)
     conn.reconnectTimer = nil
   end
 
   if conn.socket then
-    pcall(function() conn.socket:disconnect() end)
+    pcall(function()
+      conn.socket:disconnect()
+    end)
   end
 
   connections[path] = nil
@@ -111,11 +142,15 @@ local function scheduleReconnect(path)
   local conn = connections[path]
   if conn then
     if conn.reconnectTimer then
-      pcall(function() conn.reconnectTimer:stop() end)
+      pcall(function()
+        conn.reconnectTimer:stop()
+      end)
     end
     conn.reconnectTimer = hs.timer.doAfter(RECONNECT_DELAY, function()
       local c = connections[path]
-      if c then c.reconnectTimer = nil end
+      if c then
+        c.reconnectTimer = nil
+      end
       -- getOrConnect will create a fresh connection
       closeConnection(path)
       -- Intentionally don't call getOrConnect here - next send will reconnect
@@ -131,7 +166,9 @@ local function getOrConnect(path)
   local conn = connections[path]
   if conn and conn.connected and conn.socket then
     local isConnected = false
-    pcall(function() isConnected = conn.socket:connected() end)
+    pcall(function()
+      isConnected = conn.socket:connected()
+    end)
     if isConnected then
       return conn
     end
@@ -156,7 +193,9 @@ local function getOrConnect(path)
 
   -- Create socket with read callback for responses
   local sock = hs.socket.new(function(data, tag)
-    if not data or data == "" then return end
+    if not data or data == "" then
+      return
+    end
 
     -- Parse newline-delimited JSON responses
     for line in data:gmatch("[^\n]+") do
@@ -173,7 +212,9 @@ local function getOrConnect(path)
     -- Keep reading for more responses
     local c = connections[path]
     if c and c.socket and c.connected then
-      pcall(function() c.socket:read("\n") end)
+      pcall(function()
+        c.socket:read("\n")
+      end)
     end
   end)
 
@@ -193,7 +234,9 @@ local function getOrConnect(path)
       reconnectAttempts[path] = 0
       U.log.f("connected to %s", path)
       -- Start reading responses
-      pcall(function() c.socket:read("\n") end)
+      pcall(function()
+        c.socket:read("\n")
+      end)
     end
   end)
 
@@ -219,7 +262,9 @@ end
 ---@param path string|nil
 ---@return boolean
 local function isEphemeralSocket(path)
-  if not path then return false end
+  if not path then
+    return false
+  end
   return path:match("%-eph%-[^/]+%.sock$") ~= nil
 end
 
@@ -229,15 +274,22 @@ end
 ---@return string|nil Socket path like ~/.local/state/pi/sockets/pi-mega-0.sock or nil if not found
 local function getSocketPath(session, window)
   if window then
-    local p = string.format("%s/%s-%s-%s.sock", SOCKET_DIR, SOCKET_PREFIX, session, window)
-    if isEphemeralSocket(p) then return nil end
+    local p = string.format("%s/%s-%s.sock", SOCKET_DIR, SOCKET_PREFIX, socketName(session, window))
+    if isEphemeralSocket(p) then
+      return nil
+    end
     return p
   else
-    -- Find first available NON-ephemeral socket for this session
-    local pattern = string.format("%s/%s-%s-*.sock", SOCKET_DIR, SOCKET_PREFIX, session)
+    -- Find first available NON-ephemeral socket for this session.
+    -- Long session names may be truncated by the shortening scheme, so glob
+    -- on the longest prefix that can survive shortening.
+    local fixed = #string.format("%s/%s-.sock", SOCKET_DIR, SOCKET_PREFIX) + 9
+    local budget = math.max(MAX_SOCKET_PATH - fixed, 8)
+    local prefix = (#session <= budget) and (session .. "-") or session:sub(1, budget)
+    local pattern = string.format("%s/%s-%s*.sock", SOCKET_DIR, SOCKET_PREFIX, prefix)
     local output = hs.execute(string.format("ls %s 2>/dev/null | grep -v -- '-eph-' | head -1", pattern))
     if output and output ~= "" then
-      return output:gsub("%s+$", "")  -- trim trailing whitespace
+      return output:gsub("%s+$", "") -- trim trailing whitespace
     end
     return nil
   end
@@ -247,7 +299,9 @@ end
 ---@param context string Format: "session:window:pane:pid" or "session-window" or just "session"
 ---@return string|nil session, string|nil window
 local function parseContext(context)
-  if not context then return nil, nil end
+  if not context then
+    return nil, nil
+  end
 
   -- Handle new format: session-window (from socket path)
   local session, window = context:match("^([^-]+)-([^-]+)$")
@@ -314,7 +368,9 @@ end
 ---Called by send.lua when telegram flag is set
 ---@param context string|nil Tmux context (session:window:pane:pid) or session-window
 function M.trackLastActive(context)
-  if not context then return end
+  if not context then
+    return
+  end
   -- Skip ephemeral pi contexts — they must never become the last-active target
   -- for Telegram/tell forwarders.
   if context:match("%-eph%-") then
