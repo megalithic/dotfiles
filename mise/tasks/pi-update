@@ -9,6 +9,7 @@ usage: pi-update [--dry-run]
 
 Updates pi-managed imperative state:
   - pinned helper binaries under ~/.pi/agent/bin
+  - nicknisi/sessions plugin extracted with an isolated home
   - ~/.pi/agent/settings.json merged from repo settings
   - redundant extension deps cleanup
   - pi update
@@ -63,10 +64,10 @@ print_settings_preview() {
   say "[settings] target: $settings_file"
   if [ -f "$settings_file" ]; then
     say "[would update] merged settings output: $settings_file"
-    jq -s '.[0] * .[1]' "$settings_file" "$managed_settings"
+    jq -s '.[0] * .[1] | del(.subagents)' "$settings_file" "$managed_settings"
   else
     say "[would create] merged settings output: $settings_file"
-    jq -s '.[0] * .[1]' <(printf '{}\n') "$managed_settings"
+    jq -s '.[0] * .[1] | del(.subagents)' <(printf '{}\n') "$managed_settings"
   fi
 }
 
@@ -78,7 +79,7 @@ merge_settings() {
 
   local tmp
   tmp="${settings_file}.tmp.$$"
-  jq -s '.[0] * .[1]' "$settings_file" "$managed_settings" >"$tmp"
+  jq -s '.[0] * .[1] | del(.subagents)' "$settings_file" "$managed_settings" >"$tmp"
   mv "$tmp" "$settings_file"
   say "merged settings -> $settings_file"
 }
@@ -94,13 +95,61 @@ report_cleanup_target() {
 
 trash_path() {
   local f="$1"
-  [ -e "$f" ] || return 0
-  if command -v trash >/dev/null 2>&1; then
+  [ -e "$f" ] || [ -L "$f" ] || return 0
+  if [ -x /usr/bin/trash ]; then
+    # npm trash-cli ignores broken symlinks; macOS trash handles them.
+    /usr/bin/trash "$f"
+  elif command -v trash >/dev/null 2>&1; then
     trash "$f"
   else
     echo "trash command missing; refusing to delete $f" >&2
     exit 1
   fi
+}
+
+remove_parked_pinvim_links() {
+  local link target
+  for link in \
+    "$HOME/.local/bin/pinvim" \
+    "$HOME/.local/bin/pview" \
+    "$agent/extensions/pinvim.ts" \
+    "$agent/extensions/nvim-review.ts" \
+    "$agent/skills/pinvim-kitty-test"; do
+    if [ -L "$link" ]; then
+      target="$(readlink "$link")"
+    elif [ -L "$link/SKILL.md" ]; then
+      target="$(readlink "$link/SKILL.md")"
+    else
+      continue
+    fi
+    case "$target" in
+      *"/.dotfiles/mise/config/pi-coding-agent/"*)
+        trash_path "$link"
+        say "removed parked pinvim link: $link"
+        ;;
+    esac
+  done
+}
+
+install_sessions_plugin() {
+  local fake_home status skill
+  fake_home="$(mktemp -d "${TMPDIR:-/tmp}/sessions-setup.XXXXXX")"
+  mkdir -p "$HOME/.local/share/sessions"
+
+  status=0
+  SESSIONS_HOME="$fake_home" \
+    SESSIONS_DATA_DIR="$HOME/.local/share/sessions" \
+    sessions setup </dev/null || status=$?
+  trash_path "$fake_home"
+  [ "$status" -eq 0 ] || return "$status"
+
+  for skill in context memory recall session-metrics standup weekly-summary; do
+    if [ ! -f "$HOME/.local/share/sessions/plugin/skills/$skill/SKILL.md" ]; then
+      echo "sessions plugin skill missing after setup: $skill" >&2
+      return 1
+    fi
+  done
+  say "refreshed sessions plugin -> $HOME/.local/share/sessions/plugin"
 }
 
 if [ "$dry_run" = 1 ]; then
@@ -109,6 +158,8 @@ if [ "$dry_run" = 1 ]; then
   say "[would ensure dir] $agent/bin"
   report_helper_bin sesame "7ae875161227c18b6367cf3643a983b27003700f37e082d1af5d1f0da854c500"
   report_helper_bin plannotator "80c18e2b3e95796e85902b4e3ec92d8f7bf49df8ebfcbd12195c784fa522fdda"
+  say "[would remove] managed pinvim/pview links when still present"
+  say "[would run] isolated sessions setup -> $HOME/.local/share/sessions/plugin"
   print_settings_preview
   report_cleanup_target "$agent/extensions/package.json"
   report_cleanup_target "$agent/extensions/package-lock.json"
@@ -121,6 +172,8 @@ fi
 mkdir -p "$agent" "$agent/bin"
 
 "$pi_src/scripts/install-pi-tools"
+remove_parked_pinvim_links
+install_sessions_plugin
 merge_settings
 
 trash_path "$agent/extensions/package.json"

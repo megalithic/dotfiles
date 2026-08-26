@@ -67,7 +67,7 @@ When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-f
 - When debugging, run diagnostic commands and present findings before proposing a fix. Don't jump to solutions.
 - Work incrementally: complete step → verify → commit. Only commit when a step is fully working.
 - When user says "investigate", "check", "inspect", or "audit", only investigate and report findings. Don't implement changes unless explicitly told to.
-- Delegate complex tasks through pi-subagents: scout → plan → implement → review → fix
+- Delegate complex tasks through pi-interactive-subagents: scout → plan → implement → review → fix
 - Use natural language delegation: "use scout to understand X", "have worker implement Y", "run parallel reviewers"
 - Run parallel reviewers after every non-trivial implementation
 - Ask oracle for a second opinion before risky decisions

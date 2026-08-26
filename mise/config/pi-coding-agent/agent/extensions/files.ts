@@ -183,7 +183,7 @@ const extractFileReferencesFromEntry = (entry: SessionEntry): string[] => {
 
 const sanitizeReference = (raw: string): string => {
   let value = raw.trim();
-  value = value.replace(/^["'`(<\[]+/, "");
+  value = value.replace(/^["'`(<[]+/, "");
   value = value.replace(/[>"'`,;).\]]+$/, "");
   value = value.replace(/[.,;:]+$/, "");
   return value;
@@ -1228,7 +1228,7 @@ export default function (pi: ExtensionAPI): void {
     },
   });
 
-  pi.registerShortcut("ctrl+shift+f", {
+  pi.registerShortcut("ctrl+shift+e", {
     description: "Reveal the latest file reference in Finder",
     handler: async (ctx) => {
       const entries = ctx.sessionManager.getBranch();

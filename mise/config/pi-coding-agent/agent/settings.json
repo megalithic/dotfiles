@@ -20,7 +20,9 @@
 		"npm:pi-mcp-adapter",
 		"npm:pi-interactive-shell",
 		"npm:pi-web-access",
-		"npm:pi-subagents",
+		"git:github.com/amosblomqvist/pi-interactive-subagents",
+		"git:github.com/amosblomqvist/pi-observational-memory",
+		"git:github.com/amosblomqvist/pi-dictate",
 		"npm:pi-caveman",
 		"npm:@plannotator/pi-extension",
 		"npm:pi-rtk-optimizer",
@@ -28,7 +30,6 @@
 		"npm:pi-mono-btw",
 		"npm:context-mode",
 		"npm:pi-elixir",
-		"npm:pi-subagents",
 		"npm:pi-lens",
 		"nm:@ogulcancelik/pi-ssh-tools",
 		"npm:@juicesharp/rpiv-ask-user-question",
@@ -159,17 +160,17 @@
 				"entries": [
 					{
 						"provider": "my-codex",
-						"model": "gpt-sol-5.6",
+						"model": "gpt-5.6-sol",
 						"enabled": true
 					},
 					{
 						"provider": "my-codex",
-						"model": "gpt-terra-5.6",
+						"model": "gpt-5.6-terra",
 						"enabled": true
 					},
 					{
 						"provider": "my-codex",
-						"model": "gpt-luna-5.6",
+						"model": "gpt-5.6-luna",
 						"enabled": true
 					}
 				],
@@ -200,17 +201,17 @@
 					},
 					{
 						"provider": "openai-codex",
-						"model": "gpt-sol-5.6",
+						"model": "gpt-5.6-sol",
 						"enabled": true
 					},
 					{
 						"provider": "openai-codex",
-						"model": "gpt-terra-5.6",
+						"model": "gpt-5.6-terra",
 						"enabled": true
 					},
 					{
 						"provider": "openai-codex",
-						"model": "gpt-luna-5.6",
+						"model": "gpt-5.6-luna",
 						"enabled": true
 					}
 				],
@@ -224,58 +225,5 @@
 				"modelScope": "alt"
 			}
 		]
-	},
-	"subagents": {
-		"agentOverrides": {
-			"planner": {
-				"model": "anthropic/claude-fable-5",
-				"fallbackModels": ["openai-codex/gpt-5.6-sol", "opencode-go/kimi-k3"],
-				"thinking": "high"
-			},
-			"reviewer": {
-				"model": "anthropic/claude-fable-5",
-				"fallbackModels": ["openai-codex/gpt-5.6-sol", "opencode-go/kimi-k3"],
-				"thinking": "high"
-			},
-			"oracle": {
-				"model": "anthropic/claude-fable-5",
-				"fallbackModels": ["openai-codex/gpt-5.6-sol", "opencode-go/kimi-k3"],
-				"thinking": "high"
-			},
-			"worker": {
-				"model": "anthropic/claude-sonnet-5",
-				"fallbackModels": [
-					"openai-codex/gpt-5.6-luna",
-					"opencode-go/deepseek-v4-flash"
-				],
-				"thinking": "medium"
-			},
-			"researcher": {
-				"model": "anthropic/claude-sonnet-5",
-				"fallbackModels": [
-					"openai-codex/gpt-5.6-luna",
-					"opencode-go/deepseek-v4-flash"
-				],
-				"thinking": "medium"
-			},
-			"scout": {
-				"model": "openai-codex/gpt-5.6-luna",
-				"fallbackModels": [
-					"openai-codex/gpt-5.4-mini",
-					"google-vertex/gemini-3-flash-preview",
-					"llamacpp/gemma4"
-				],
-				"thinking": "medium"
-			},
-			"context-builder": {
-				"model": "alt-anthropic/claude-haiku-4-5",
-				"fallbackModels": [
-					"openai-codex/gpt-5.4-mini",
-					"google-vertex/gemini-3-flash-preview",
-					"llamacpp/gemma4"
-				],
-				"thinking": "medium"
-			}
-		}
 	}
 }

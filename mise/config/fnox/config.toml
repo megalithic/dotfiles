@@ -58,6 +58,7 @@ CF_ZONE_ID = { provider = "onepass", value = "op://Crypt/cloudflare/zone_id" }
 CF_ACCOUNT_ID = { provider = "onepass", value = "op://Crypt/cloudflare/account_id" }
 CF_API_TOKEN = { provider = "onepass", value = "op://Crypt/cloudflare/api_token" }
 BRAVE_SEARCH_API_KEY = { provider = "onepass", value = "op://Crypt/brave-search/api_key" }
+DEEPGRAM_API_KEY = { provider = "onepass", value = "op://Crypt/deepgram/api_key" }
 TELEGRAM_BOT_TOKEN = { provider = "onepass", value = "op://Crypt/telegram/bot_token" }
 TELEGRAM_CHAT_ID = { provider = "onepass", value = "op://Crypt/telegram/chat_id" }
 SYNTHETIC_API_KEY = { provider = "onepass", value = "op://Crypt/synthetic/api_key" }

@@ -471,6 +471,7 @@ bin_path = "."
 "brew:poppler" = "latest"      # pdftotext etc. — pi wrapper expects poppler-utils on PATH
 "brew:renameutils" = "latest"
 "brew:ripgrep" = "latest"
+"brew:sox" = "latest"         # rec audio capture for pi-dictate
 "brew:tree" = "latest"
 "brew:wxwidgets" = "latest"
 "brew:zsh" = "latest"
