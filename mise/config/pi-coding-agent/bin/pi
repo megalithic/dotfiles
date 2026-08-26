@@ -92,7 +92,7 @@ case "${pi_args[0]:-}" in
     resolve_profile=0
     ;;
 esac
-for arg in "${pi_args[@]}"; do
+for arg in "${pi_args[@]+"${pi_args[@]}"}"; do
   case "$arg" in
     --help | -h | --version | --list-models | --export)
       resolve_profile=0
@@ -145,4 +145,6 @@ export LAT_LLM_DIMENSIONS="768"
 # `mise x` prepends the npm tool's own bin dir, so the real pi binary wins
 # over this wrapper regardless of PATH ordering. `fnox exec --replace` injects
 # secrets without a wrapper re-entry or extra process layer.
-exec "$fnox_bin" exec --replace -- "$mise_bin" x "npm:@earendil-works/pi-coding-agent" -- pi "${profile_args[@]}" "${pi_args[@]}"
+exec "$fnox_bin" exec --replace -- "$mise_bin" x "npm:@earendil-works/pi-coding-agent" -- pi \
+  "${profile_args[@]+"${profile_args[@]}"}" \
+  "${pi_args[@]+"${pi_args[@]}"}"
