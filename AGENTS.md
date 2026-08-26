@@ -61,7 +61,7 @@ When `op`, 1Password CLI integration, or fnox secret resolution fails, follow th
 - `~/.pi/agent/*` → `home/common/programs/pi-coding-agent/`
 - `~/.config/fish/*` → `home/common/programs/fish/`
 - `~/.config/ghostty/*` → `config/ghostty/` (out-of-store symlink)
-- `~/.config/tmux/*` → `config/tmux/` (out-of-store symlink)
+- `~/.config/tmux/*` → `mise/config/tmux/` (mise-managed symlink)
 - `~/.config/nvim/*` → `config/nvim/` (out-of-store symlink)
 - `~/Applications/Nix/*` → Finder aliases created by `home/common/mac-aliases.nix`
 - Most `~/.config/<app>/*` → check `home/common/programs/<app>/` first
@@ -211,12 +211,12 @@ For config files that need nix-interpolated values but live in out-of-store
 symlinked directories:
 
 1. Generate a fragment file via `xdg.dataFile` (e.g.,
-   `~/.local/share/tmux/nix.conf`)
+   `~/.local/share/fish/nix.fish`)
 2. Source it from the main config file
 
 Pattern (already used):
 
-- `~/.local/share/hammerspoon/nix_path.lua` — PATH + env vars for Hammerspoon
+- `~/.local/share/fish/nix.fish` - Nix profile paths for Fish
 
 ### Custom app packages (pkgs/default.nix)
 

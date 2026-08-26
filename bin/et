@@ -9,7 +9,7 @@
 PARAM="${1:-}"
 
 if [[ -z "$PARAM" ]]; then
-  nvim "$DOTS/config/tmux/tmux.conf"
+  nvim "$DOTS/mise/config/tmux/tmux.conf"
 else
   "$HOMEBREW_PREFIX/bin/et" "$@"
 fi

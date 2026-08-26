@@ -6,12 +6,9 @@
 # (tagged live by the resurrect-tag.ts pi extension), falling back to `pi -c`
 # (continue most recent session for the pane's cwd) when no tag exists.
 #
-# Restore side pairs with the inline strategy `"pi->pinvim *"` in
-# config/tmux/plugins.tmux.conf, which relaunches via pinvim (profile
-# resolution) passing the saved args through.
-#
-# plugins.tmux.conf symlinks this file into the resurrect plugin as
-# save_command_strategies/pi_session.sh and sets
+# Resurrect support is currently disabled in
+# mise/config/tmux/plugins.tmux.conf. If re-enabled, that config symlinks this
+# file into save_command_strategies/pi_session.sh and sets
 # @resurrect-save-command-strategy 'pi_session'.
 
 PANE_PID="$1"

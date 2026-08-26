@@ -96,11 +96,6 @@ in
     OBSIDIAN_HOME = "$NOTES_HOME";
     NVIM_DB_HOME = paths.nvimDb;
 
-    # Tmux
-    TMUX_LAYOUTS = "${paths.config}/tmux/layouts";
-    TMUX_PLUGIN_MANAGER_PATH = "${paths.home}/.local/share/tmux/plugins";
-    TMUX_PLUGINS_HOME = "${paths.home}/.local/share/tmux/plugins";
-
     # FZF configuration
     FZF_ALT_C_COMMAND = "$FZF_CTRL_T_COMMAND --type d .";
     FZF_ALT_C_OPTS = "--preview='($FZF_PREVIEW_COMMAND) 2> /dev/null' --walker-skip .git,node_modules";
@@ -122,7 +117,6 @@ in
   environment.shellAliases = {
     e = "$EDITOR";
     vim = "$EDITOR";
-    tmux = "direnv exec / tmux";
   };
 
   environment.extraInit = ''

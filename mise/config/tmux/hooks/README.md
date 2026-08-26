@@ -26,5 +26,4 @@ notifications, per-source tweaks).
 
 To enable a hook: `cp post-create.sh.example post-create.sh && chmod +x post-create.sh`
 
-This dir is a literal twin: keep `config/tmux/hooks/` and
-`mise/config/tmux/hooks/` in sync.
+This mise-managed directory is the sole source for `~/.config/tmux/hooks/`.

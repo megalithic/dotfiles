@@ -1206,12 +1206,13 @@ checksum = "sha256:fab9518767f6afd0fb89b56c607fa9e416a0ec2f1bb354170ef32e0cd5e1e
 url = "https://github.com/turbot/tailpipe/releases/download/v0.7.4/tailpipe.darwin.arm64.tar.gz"
 
 [[tools.tmux]]
-version = "3.7b"
+version = "3.7c"
 backend = "aqua:tmux/tmux-builds"
 
 [tools.tmux."platforms.macos-arm64"]
-checksum = "sha256:ee66dbcd49613eb41dc6b2f3abc5cd39d9135d67b7dfef1fdb180a3dbdc01f1e"
-url = "https://github.com/tmux/tmux-builds/releases/download/v3.7b/tmux-3.7b-macos-arm64.tar.gz"
+checksum = "sha256:0a763dd0380aa980d239509654da1bc7455843706a3c050f6709c8cd2e13d12d"
+url = "https://github.com/tmux/tmux-builds/releases/download/v3.7c/tmux-3.7c-macos-arm64.tar.gz"
+url_api = "https://api.github.com/repos/tmux/tmux-builds/releases/assets/528734861"
 
 [[tools.tokei]]
 version = "14.0.0"
