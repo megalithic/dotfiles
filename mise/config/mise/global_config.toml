@@ -193,7 +193,6 @@ up = "cd $HOME/.dotfiles && mise run up"
 # Mirror of the formerly nix-generated shade-next config; mise owns it as of
 # the megabookpro wave-1 flip (nix module removed).
 "~/.config/shade-next/config.toml" = "~/.dotfiles/mise/config/shade-next/config.toml"
-"~/.config/sesame/config.jsonc" = { source = "~/.dotfiles/mise/fragments/sesame/config.jsonc", mode = "template" }
 # "~/.config/process-compose/shortcuts.yaml" = "~/.dotfiles/mise/fragments/process-compose/shortcuts.yaml"
 # "~/.config/process-compose/theme.yaml" = "~/.dotfiles/mise/fragments/process-compose/theme.yaml"
 
@@ -620,13 +619,8 @@ keep_alive = true
 stdout_path = "~/Library/Logs/llama-cpp/stdout.log"
 stderr_path = "~/Library/Logs/llama-cpp/stderr.log"
 
-# Removed 2026-08-24: com.megadots.sesame-session-indexer and
-# com.megadots.pi-session-indexer. Both prepended ~/.local/share/mise/shims to
-# PATH and ran unattended (keep_alive / start_interval 7200). Any shimmed binary
-# they invoked (pi-session-indexer calls `jq` in a loop) re-entered mise config
-# load -> [env] _.source -> the fnox shim -> mise -> ... which forked without
-# bound. Session indexing is not worth an unattended fork-bomb vector; revisit
-# only after _.source is gone and with absolute, non-shim binary paths.
+# nicknisi/sessions indexes transcripts on demand through its CLI and MCP server.
+# No session-indexing launchd agent is needed.
 
 # media-presence: meeting/AV presence daemon (bin/media-presenced, single-file
 # swift script, no build step). Defaults match the nix agent's args

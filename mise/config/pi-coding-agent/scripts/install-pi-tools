@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Install pinned pi helper binaries into ~/.pi/agent/bin (idempotent, hash-verified).
-# Non-nix replacement for the sesame/plannotator derivations in the HM module.
+# Install pinned Pi helper binaries into ~/.pi/agent/bin (idempotent, hash-verified).
 set -euo pipefail
 
 bin_dir="$HOME/.pi/agent/bin"
@@ -25,11 +24,6 @@ download_bin() {
   rm -f "$tmp"
   echo "installed $name -> $dst"
 }
-
-# sesame 0.10.0 (BM25 search for Pi session files)
-download_bin sesame \
-  "https://github.com/aliou/sesame/releases/download/@aliou/sesame-cli@0.10.0/sesame-darwin-arm64" \
-  "7ae875161227c18b6367cf3643a983b27003700f37e082d1af5d1f0da854c500"
 
 # plannotator 0.20.3 (plan review/annotation UI)
 download_bin plannotator \

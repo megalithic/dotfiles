@@ -156,7 +156,6 @@ if [ "$dry_run" = 1 ]; then
   say "pi:update dry run"
   say "[would ensure dir] $agent"
   say "[would ensure dir] $agent/bin"
-  report_helper_bin sesame "7ae875161227c18b6367cf3643a983b27003700f37e082d1af5d1f0da854c500"
   report_helper_bin plannotator "80c18e2b3e95796e85902b4e3ec92d8f7bf49df8ebfcbd12195c784fa522fdda"
   say "[would remove] managed pinvim/pview links when still present"
   say "[would run] isolated sessions setup -> $HOME/.local/share/sessions/plugin"

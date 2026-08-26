@@ -1,3 +1,0 @@
-{
-  "piSessionPaths": ["{{env.HOME}}/.pi/agent/sessions"]
-}
