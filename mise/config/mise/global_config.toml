@@ -163,8 +163,10 @@ up = "cd $HOME/.dotfiles && mise run up"
 # "~/Library/Developer/Xcode/UserData/FontAndColorThemes/tokyo-night.xccolortheme" = ".config/xcode/tokyo-night.xccolortheme"
 "~/.config/mise/config.toml" = "~/.dotfiles/mise/config/mise/global_config.toml"
 "~/.config/atuin/config.toml" = "~/.dotfiles/mise/config/atuin/config.toml"
-"~/.config/fnox/config.toml" = "~/.dotfiles/mise/config/fnox/config.toml"
-# Secret-bearing artifact is generated outside the repo by `mise run fnox:s3cfg`.
+# fnox: ~/.config/fnox/config.toml is intentionally NOT linked here. It is
+# generated from mise/config/fnox/shared.toml by `mise run setup:fnox` and
+# receives the age-encrypted `mise run fnox:sync` cache.
+# Secret-bearing artifact is generated outside the repo by `mise run fnox:sync`.
 "~/.s3cfg" = "~/.local/share/fnox/generated/s3cfg"
 "~/.config/fish" = "~/.dotfiles/mise/config/fish"
 "~/.profile" = "~/.dotfiles/mise/config/bash/profile"
@@ -696,7 +698,7 @@ run = [
 run = "killall Finder SystemUIServer Dock || true"
 
 [bootstrap.hooks.post-tools]
-run = ["mise run setup:kanata", "mise run fnox:s3cfg"]
+run = ["mise run setup:kanata", "mise run fnox:sync"]
 
 [bootstrap.user]
 login_shell = "/opt/homebrew/bin/fish"
@@ -713,7 +715,8 @@ nerd_fonts = "JetBrainsMono FiraCode Iosevka VictorMono FantasqueSansMono NerdFo
 
 # Runs at step 8 of `mise bootstrap`, after [tools] (fnox available) and after
 # post-packages installed 1Password + op. Environment secrets come straight
-# from fnox (activate/exec); the dedicated post-tools hook renders only s3cfg.
+# from fnox (activate/exec); the dedicated post-tools hook syncs the local
+# secret cache and renders s3cfg via fnox:sync.
 # Helium moved to [tools] when its releases repo went public — no token needed.
 [tasks.bootstrap]
 run = [
@@ -767,7 +770,7 @@ mise bootstrap dotfiles apply --force --yes
 mise bootstrap launchd apply --yes
 mise bootstrap macos-defaults apply --yes
 mise bootstrap packages upgrade --yes
-mise run fnox:s3cfg
+mise run fnox:sync
 mise run pi:update
 "$HOME/.dotfiles/bin/hs-reload" || echo "hs-reload failed (Hammerspoon not running?)"
 
@@ -818,15 +821,16 @@ fi
 
 [tasks."setup:fnox"]
 alias = "fnox:setup"
-description = "Link the shared fnox config and verify 1Password secret access"
+description = "Link the shared fnox config, create the machine-local config + age cache key, and verify 1Password secret access"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox-setup"
 # raw: 1Password may request biometric approval on the terminal
 raw = true
 
-[tasks."setup:fnox:s3cfg"]
-alias = "fnox:s3cfg"
-description = "Render s3cmd config from sanitized template and fnox DO Spaces fields"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/render-s3cfg"
+[tasks."fnox:sync"]
+description = "Refresh the local age-encrypted secret cache from 1Password and re-render s3cfg"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox-sync"
+# raw: 1Password may request biometric approval on the terminal
+raw = true
 
 [tasks."setup:yubikey"]
 description = "Per-YubiKey (serial-safe): age identity + fnox recipient + encrypted OP_SERVICE_ACCOUNT_TOKEN (interactive; pass serial: mise run setup:yubikey -- <serial>)"

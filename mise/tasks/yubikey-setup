@@ -52,7 +52,7 @@ dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
 fnox_dir="$dotfiles/mise/config/fnox"
 combined_identity="$fnox_dir/yubikey-identity.txt"
 home_identity="${XDG_CONFIG_HOME:-$HOME/.config}/fnox/yubikey-identity.txt"
-fnox_config="$fnox_dir/config.toml"
+fnox_config="$fnox_dir/shared.toml"
 
 # -- 1. prerequisites + target serial ----------------------------------------
 command -v age-plugin-yubikey &>/dev/null ||

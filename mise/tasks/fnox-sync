@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#
+# Refresh the local age-encrypted fnox secret cache from 1Password.
+#
+# Usage:
+#   mise run fnox:sync   (or: ~/.dotfiles/mise/tasks/fnox-sync)
+#
+# Regenerates ~/.config/fnox/config.toml from the shared config (via
+# fnox-setup), resolves every onepass-backed secret, and writes age-encrypted
+# `sync` cache entries into it. fnox then resolves from the cache (offline, no
+# 1Password round-trips) until the next sync. Finishes by re-rendering the
+# s3cmd config from the cached DO Spaces values. Re-run after rotating
+# secrets or changing op:// references in the shared config.
+set -euo pipefail
+
+ok() { printf '\033[0;32m[OK]\033[0m %s\n' "$1"; }
+fail() {
+  printf '\033[0;31m[ERROR]\033[0m %s\n' "$1" >&2
+  exit 1
+}
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+config_target="${XDG_CONFIG_HOME:-$HOME/.config}/fnox/config.toml"
+
+# Regenerate the global config (drops stale caches) and verify op access
+"$script_dir/fnox-setup"
+echo
+
+fnox sync --global --provider agecache --source onepass --force
+ok "Synced 1Password secrets to the local age cache"
+
+fnox get APPLE_TEAM_ID --config "$config_target" >/dev/null
+ok "fnox resolved APPLE_TEAM_ID from the refreshed cache"
+
+"$script_dir/render-s3cfg"
