@@ -6,11 +6,10 @@
  * tmux-resurrect restore the exact session per pane instead of guessing with
  * `pi -c` (which collides when two pi panes share a cwd).
  *
- * Consumers:
- * - bin/tmux-resurrect-save-pi (custom resurrect save_command_strategy) reads
- *   the tag at save time and records `pi --session <uuid>`.
- * - config/tmux/plugins.tmux.conf inline strategy `"pi->pinvim *"` relaunches
- *   the pane via pinvim with the saved args on restore.
+ * The disabled bin/tmux-resurrect-save-pi strategy (kept in disabled/, not
+ * loaded) can read the tag at save time
+ * and record `pi --session <uuid>`. Active tmux config does not enable that
+ * strategy or any process-restore mapping.
  *
  * The tag is the bare session UUID (hex only, never contains "pi") because
  * resurrect's inline-strategy arg extraction uses a greedy sed on the match

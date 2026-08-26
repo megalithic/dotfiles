@@ -23,12 +23,11 @@ pi-coding-agent/
 │   ├── skills/          # Skill directories (symlink-each)
 │   ├── prompts/         # Prompt templates (symlink-each)
 │   └── agents/          # Custom agent .md definitions (symlink-each)
-├── bin/                 # Wrappers linked into ~/.local/bin: pi, pinvim, p,
-│                        # pview, work-tickets
-├── scripts/             # install-pi-tools, indexer entrypoints, resolver
+├── bin/                 # Wrappers linked into ~/.local/bin: pi, p, work-tickets
+├── scripts/             # install-pi-tools and indexer entrypoints
 ├── patches/             # pi-bash-live-view widget patch (applied by bin/pi)
-└── disabled/            # Parked entries (former `_`-prefixed files/dirs).
-                         # Move back into agent/* to re-enable.
+└── disabled/            # Turned-off files kept for possible re-enable
+                         # (former `_`-prefixed). Move back into agent/* to re-enable.
 ```
 
 ## Conventions

@@ -1,12 +1,10 @@
 /**
  * Pi Bridge Extension
  *
- * Transitional non-nvim ingress on a Unix socket.
- * Disabled by default; pinvim.ts owns the primary pi socket and all nvim/pinvim
- * peer behavior. Bridge has no knowledge of pinvim peer frames anymore.
- * Enable with PI_BRIDGE_LEGACY_SOCKET=1 to accept Telegram (via Hammerspoon)
- * and tell payloads on a dedicated socket; nvim/pinvim frames are not handled
- * here even when enabled.
+ * Generic non-nvim ingress on a Unix socket.
+ * The managed Pi wrapper enables it with PI_BRIDGE_LEGACY_SOCKET=1 so Telegram
+ * (via Hammerspoon) and /tell keep working while pinvim is disabled. Bridge has
+ * no heartbeat/status polling and does not handle nvim/pinvim peer frames.
  *
  * Protocol:
  *   Request:  { type: 'ping' }                  → { ok: true, type: 'pong' }
@@ -434,7 +432,7 @@ export default function (pi: ExtensionAPI): void {
   pi.on("session_start", (_event, ctx) => {
     latestCtx = ctx;
 
-    // Start transitional server only when explicitly enabled.
+    // Start generic ingress only when explicitly enabled by the Pi wrapper.
     if (IS_BRIDGE_ENABLED) {
       startServer(pi, ctx);
       writeInfoManifest();

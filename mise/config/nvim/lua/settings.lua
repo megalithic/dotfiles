@@ -19,8 +19,8 @@ vim.g.keyhelper = "whichkey"
 vim.g.notes_path = vim.env.NOTES_HOME or (vim.env.HOME .. "/notes")
 
 vim.g.disabled_plugins = {
-  "winbar",
-  -- "pinvim", -- disable new bootstrap entrypoint loaded by after/plugin/pi.lua
+	"winbar",
+	"pinvim", -- turned off together with pi-side pinvim; code kept in mise/config/pi-coding-agent/disabled/. Comment this line out to turn it back on.
 }
 
 vim.g.indent_scope_char = "│"
@@ -33,27 +33,29 @@ vim.g.relnum_hybrid = true
 ---@param plugin? string
 ---@return boolean
 function _G.Plugin_enabled(plugin)
-  if not plugin then
-    local src = debug.getinfo(2, "S").short_src
-    plugin = vim.fn.fnamemodify(src, ":t:r")
-  end
-  if not plugin then return true end
-  return not vim.list_contains(vim.g.disabled_plugins or {}, plugin)
+	if not plugin then
+		local src = debug.getinfo(2, "S").short_src
+		plugin = vim.fn.fnamemodify(src, ":t:r")
+	end
+	if not plugin then
+		return true
+	end
+	return not vim.list_contains(vim.g.disabled_plugins or {}, plugin)
 end
 
 --- Helper to create augroups with a cleaner syntax
 --- @param name string
 --- @param commands table[]
 function _G.Augroup(name, commands)
-  local group = vim.api.nvim_create_augroup(name, { clear = true })
-  for _, cmd in ipairs(commands) do
-    local opts = {
-      group = group,
-      pattern = cmd.pattern,
-      callback = cmd.command,
-    }
-    vim.api.nvim_create_autocmd(cmd.event, opts)
-  end
+	local group = vim.api.nvim_create_augroup(name, { clear = true })
+	for _, cmd in ipairs(commands) do
+		local opts = {
+			group = group,
+			pattern = cmd.pattern,
+			callback = cmd.command,
+		}
+		vim.api.nvim_create_autocmd(cmd.event, opts)
+	end
 end
 
 --- @param evnames string|string[]
@@ -61,8 +63,8 @@ end
 --- @param opts vim.api.keyset.create_autocmd?
 --- @param fn fun(ev)
 function _G.On(evnames, group, opts, fn)
-  opts = opts or {}
-  opts.group = group
-  opts.callback = fn
-  vim.api.nvim_create_autocmd(evnames, opts or {})
+	opts = opts or {}
+	opts.group = group
+	opts.callback = fn
+	vim.api.nvim_create_autocmd(evnames, opts or {})
 end

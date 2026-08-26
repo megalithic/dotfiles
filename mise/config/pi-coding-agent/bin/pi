@@ -34,8 +34,9 @@ fnox_bin="$(resolve_fnox)" || {
 }
 
 export PI_STATE_DIR="${PI_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/pi}"
-mkdir -p "$PI_STATE_DIR/sockets" "$PI_STATE_DIR/manifests" "$PI_STATE_DIR/pinvim"
-unset PIMUX_FROM_NVIM 2>/dev/null || true
+mkdir -p "$PI_STATE_DIR/sockets" "$PI_STATE_DIR/manifests"
+# Generic bridge owns Pi-to-Pi /tell ingress now that pinvim is disabled.
+export PI_BRIDGE_LEGACY_SOCKET=1
 
 # Static lat.md semantic-search config. fnox injects LAT_LLM_KEY directly from
 # SYNTHETIC_API_KEY via the config alias; the wrapper keeps only non-secret
