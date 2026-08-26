@@ -33,7 +33,6 @@
 #   enter   switch/create session from selection or typed query
 #   ctrl-k  kill selected session (ctrl-x also works)
 #   ctrl-r  rename selected session
-#   ctrl-v  switch to selected session and open pinvim pane
 #
 # Dependencies: tmux, fzf (>= 0.53 for native --tmux popups); zoxide optional
 #
@@ -47,7 +46,6 @@ TMUX_LAYOUTS="${TMUX_LAYOUTS:-$HOME/.config/tmux/layouts}"
 TMUX_HOOKS="${TMUX_HOOKS:-$HOME/.config/tmux/hooks}"
 POPUP="false"
 PI_STATE_DIR="${PI_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/pi}"
-PI_SOCKETS_DIR="$PI_STATE_DIR/sockets"
 FTM_STATE_DIR="${FTM_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ftm}"
 FTM_ZOXIDE_LIMIT="${FTM_ZOXIDE_LIMIT:-10}"
 recent_file="$FTM_STATE_DIR/recent"
@@ -93,11 +91,10 @@ if ! command -v fzf &>/dev/null; then
   exit 1
 fi
 
-# -- strip picker markers (" * π" / " *") and any zoxide path column
+# -- strip the running-session marker and any zoxide path column
 function strip_markers() {
   local s="$1"
   s="${s%%"$TAB"*}"
-  s="${s% \* π}"
   s="${s% \*}"
   printf '%s' "$s"
 }
@@ -234,15 +231,14 @@ function get_layouts() {
   done
 }
 
-# -- annotated picker list. Sessions are marked with * when running and π when
-#    a non-ephemeral pinvim socket exists. Zoxide entries render as
-#    "name<TAB>dimmed path". Ordering: MRU file, then running sessions by
-#    last-attached, then zoxide by frecency, then layouts alphabetically.
-#    Socket pattern: $PI_SOCKETS_DIR/pi-{session}-{window}.sock
+# -- annotated picker list. Sessions are marked with * when running. Zoxide
+#    entries render as "name<TAB>dimmed path". Ordering: MRU file, then
+#    running sessions by last-attached, then zoxide by frecency, then layouts
+#    alphabetically.
 function print_list() {
   local exclude_current="${1:-}"
-  local emitted=$'\n' sess_wrapped=$'\n' socks=$'\n'
-  local f s name path line zi mi n
+  local emitted=$'\n' sess_wrapped=$'\n'
+  local s name path line zi mi n
   local -a sess_order=() zx_names=() zx_paths=() mru_names=() mru_paths=()
 
   # running sessions, most recently attached first
@@ -252,13 +248,6 @@ function print_list() {
     sess_order+=("$s")
     sess_wrapped+="$s"$'\n'
   done < <(tmux list-sessions -F '#{session_last_attached} #{session_name}' 2>/dev/null | sort -rn)
-
-  # pinvim sockets
-  for f in "$PI_SOCKETS_DIR"/pi-*.sock; do
-    [[ -e $f ]] || continue
-    [[ $f == *-eph-* ]] && continue
-    socks+="${f##*/}"$'\n'
-  done
 
   # top zoxide dirs by frecency
   n=0
@@ -294,11 +283,7 @@ function print_list() {
     [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
     if [[ $sess_wrapped == *$'\n'"$name"$'\n'* ]]; then
       emitted+="$name"$'\n'
-      if [[ $socks == *$'\n'"pi-$name-"* ]]; then
-        printf '%s * π\n' "$name"
-      else
-        printf '%s *\n' "$name"
-      fi
+      printf '%s *\n' "$name"
     elif [[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]]; then
       emitted+="$name"$'\n'
       printf '%s\n' "$name"
@@ -321,11 +306,7 @@ function print_list() {
     [[ $name == "default" || $name == "$exclude_current" ]] && continue
     [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
     emitted+="$name"$'\n'
-    if [[ $socks == *$'\n'"pi-$name-"* ]]; then
-      printf '%s * π\n' "$name"
-    else
-      printf '%s *\n' "$name"
-    fi
+    printf '%s *\n' "$name"
   done
 
   # 3) remaining zoxide dirs by frecency (layout name wins → deferred to 4)
@@ -371,11 +352,9 @@ function new_session() {
   run_hook pre-create "$session" "$cwd" "$source"
 
   if [[ $source == "layout" ]]; then
-    # Custom layout handles pinvim
     bash "$layouts_dir/$session.sh" ||
       tmux new-session -d -s "$session" -c "$cwd"
   elif [[ -n $layouts_dir && -f "$layouts_dir/default.sh" ]]; then
-    # Default layout includes pinvim
     bash "$layouts_dir/default.sh" "$session" "$cwd" ||
       tmux new-session -d -s "$session" -c "$cwd"
   else
@@ -438,16 +417,15 @@ function fuzzy_find() {
     fzf_header_text="󰢩 recent dirs & layouts"
   else
     fzf_prompt_text=" new or existing session  "
-    fzf_header_text="󰢩 ${C_ITALIC}${C_MAGENTA}${current_session}${C_RESET} [${C_WHITE}ctrl-k${C_RESET}: ${C_GRAY}kill / ${C_WHITE}ctrl-r${C_RESET}: ${C_GRAY}rename / ${C_WHITE}ctrl-v${C_RESET}: ${C_GRAY}pinvim${C_RESET}]"
+    fzf_header_text="󰢩 ${C_ITALIC}${C_MAGENTA}${current_session}${C_RESET} [${C_WHITE}ctrl-k${C_RESET}: ${C_GRAY}kill / ${C_WHITE}ctrl-r${C_RESET}: ${C_GRAY}rename${C_RESET}]"
   fi
 
   # -- picker actions; reload regenerates the annotated list so markers stay correct
   # shellcheck disable=SC2016 # fzf action templates: {} and $() expand in fzf's shell, not here
   # "=" prefix forces exact session-name match (names like .dotfiles-... otherwise
   # trip tmux's target parser, which treats a leading dot as a window separator)
-  local kill_action='execute-silent(tmux-kill-session "$(printf %s {} | sed -E "s/\t.*$//; s/ \*( π)?$//")")+reload(ftm --list)' \
-    rename_action='execute(session=$(printf %s {} | sed -E "s/\t.*$//; s/ \*( π)?$//"); printf >&2 "New session name: "; read -r name; tmux rename-session -t "$(ftm --id="$session")" "${name}")+reload(ftm --list)' \
-    pinvim_action='execute-silent(session=$(printf %s {} | sed -E "s/\t.*$//; s/ \*( π)?$//"); tmux switch-client -t "$(ftm --id="$session")" && PIMUX_PANE=$(tmux display-message -p "#{pane_id}") pimux)+accept'
+  local kill_action='execute-silent(tmux-kill-session "$(printf %s {} | sed -E "s/\t.*$//; s/ \*$//")")+reload(ftm --list)' \
+    rename_action='execute(session=$(printf %s {} | sed -E "s/\t.*$//; s/ \*$//"); printf >&2 "New session name: "; read -r name; tmux rename-session -t "$(ftm --id="$session")" "${name}")+reload(ftm --list)'
 
   # native fzf tmux popup unless we're already inside one (-p)
   [[ $POPUP == "true" ]] || fzf_extra_args+=(--tmux "center,80%,60%")
@@ -472,7 +450,6 @@ function fuzzy_find() {
       --bind="ctrl-k:${kill_action}" \
       --bind="ctrl-x:${kill_action}" \
       --bind="ctrl-r:${rename_action}" \
-      --bind="ctrl-v:${pinvim_action}" \
       --bind="enter:replace-query+print-query" \
       --pointer='▌' \
       --marker='󰛄' \

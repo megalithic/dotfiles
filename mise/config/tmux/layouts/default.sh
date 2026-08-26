@@ -38,9 +38,9 @@ if [[ -n $SESSION ]]; then
   tmux new-window -c "$CWD" -t "$SESSION":2 -n code
   tmux send-keys -t "$SESSION":2.1 "cd $CWD" "C-m"
 
-  # Window "agent" - pinvim (hidden by default, toggle into view with prefix+p)
+  # Window "agent" - pi
   tmux new-window -c "$CWD" -t "$SESSION":3 -n agent
-  tmux send-keys -t "$SESSION":3.1 "pinvim" "C-m"
+  tmux send-keys -t "$SESSION":3.1 "pi" "C-m"
 
   # Focus on code window
   tmux select-window -t "$SESSION":2

@@ -61,9 +61,9 @@ tmux resize-pane -Z -t "$SESSION":3.2
 # tmux -2 select-pane -t "$SESSION":3.1
 # tmux -2 resize-pane -Z -t "$SESSION":3.1
 
-# Window "agent" - pinvim
+# Window "agent" - pi
 tmux new-window -c "$CWD" -t "$SESSION":4 -n agent
-tmux send-keys -t "$SESSION":4.1 "pinvim" "C-m"
+tmux send-keys -t "$SESSION":4.1 "pi" "C-m"
 
 # focus
 tmux -2 select-window -t "$SESSION":2
