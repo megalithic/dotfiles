@@ -494,7 +494,7 @@ function fuzzy_find() {
       --padding="1" \
       --prompt="${fzf_prompt_text}" \
       --header="${fzf_header_text}" \
-      --color="bg:#3c474d,bg+:#323d43" \
+      --color="bg:#3c474d,bg+:#323d43,preview-bg:#262b31" \
       --preview="ftm --preview={}" \
       --preview-window="down,65%,nowrap" \
       --with-shell="bash -c" \
