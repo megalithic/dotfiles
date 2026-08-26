@@ -58,6 +58,8 @@ C_ITALIC=$'\e[3m'
 C_MAGENTA=$'\e[35m'
 C_WHITE=$'\e[38;5;255m'
 C_GRAY=$'\e[38;5;245m'
+C_RED=$'\e[31m'
+C_GREEN=$'\e[32m'
 
 TAB=$'\t'
 
@@ -91,10 +93,11 @@ if ! command -v fzf &>/dev/null; then
   exit 1
 fi
 
-# -- strip the running-session marker and any zoxide path column
+# -- strip the running-session marker, pi status dot, and any zoxide path column
 function strip_markers() {
   local s="$1"
   s="${s%%"$TAB"*}"
+  s="${s% ●}"
   s="${s% \*}"
   printf '%s' "$s"
 }
@@ -231,15 +234,45 @@ function get_layouts() {
   done
 }
 
-# -- annotated picker list. Sessions are marked with * when running. Zoxide
-#    entries render as "name<TAB>dimmed path". Ordering: MRU file, then
-#    running sessions by last-attached, then zoxide by frecency, then layouts
-#    alphabetically.
+# -- print a running-session row: "name *" plus a pi status dot (red = pi
+#    blocked on a structured question, green = turn done, waiting on user).
+#    Reads the asking/done session lists built by print_list.
+function print_running() {
+  local name="$1"
+  if [[ $status_asking == *$'\n'"$name"$'\n'* ]]; then
+    printf '%s * %s●%s\n' "$name" "$C_RED" "$C_RESET"
+  elif [[ $status_done == *$'\n'"$name"$'\n'* ]]; then
+    printf '%s * %s●%s\n' "$name" "$C_GREEN" "$C_RESET"
+  else
+    printf '%s *\n' "$name"
+  fi
+}
+
+# -- annotated picker list. Sessions are marked with * when running, plus a
+#    colored pi status dot (see print_running) sourced from the agent-status
+#    extension's files ($PI_STATE_DIR/status/pi-{session}-{window}.status,
+#    "state pid session"). Pure file reads + kill -0 — no subprocesses, so
+#    the picker opens instantly. Zoxide entries render as "name<TAB>dimmed
+#    path". Ordering: MRU file, then running sessions by last-attached, then
+#    zoxide by frecency, then layouts alphabetically.
 function print_list() {
   local exclude_current="${1:-}"
   local emitted=$'\n' sess_wrapped=$'\n'
-  local s name path line zi mi n
+  local s name path line zi mi n f st st_pid st_sess
+  local status_asking=$'\n' status_done=$'\n'
   local -a sess_order=() zx_names=() zx_paths=() mru_names=() mru_paths=()
+
+  # pi agent states (dead pids skipped)
+  for f in "$PI_STATE_DIR/status"/pi-*.status; do
+    [[ -e $f ]] || continue
+    IFS=' ' read -r st st_pid st_sess <"$f" || true
+    [[ -n $st_sess ]] || continue
+    [[ $st_pid =~ ^[0-9]+$ ]] && ! kill -0 "$st_pid" 2>/dev/null && continue
+    case $st in
+    asking) status_asking+="$st_sess"$'\n' ;;
+    done) status_done+="$st_sess"$'\n' ;;
+    esac
+  done
 
   # running sessions, most recently attached first
   while IFS= read -r line; do
@@ -283,7 +316,7 @@ function print_list() {
     [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
     if [[ $sess_wrapped == *$'\n'"$name"$'\n'* ]]; then
       emitted+="$name"$'\n'
-      printf '%s *\n' "$name"
+      print_running "$name"
     elif [[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]]; then
       emitted+="$name"$'\n'
       printf '%s\n' "$name"
@@ -306,7 +339,7 @@ function print_list() {
     [[ $name == "default" || $name == "$exclude_current" ]] && continue
     [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
     emitted+="$name"$'\n'
-    printf '%s *\n' "$name"
+    print_running "$name"
   done
 
   # 3) remaining zoxide dirs by frecency (layout name wins → deferred to 4)
@@ -424,8 +457,8 @@ function fuzzy_find() {
   # shellcheck disable=SC2016 # fzf action templates: {} and $() expand in fzf's shell, not here
   # "=" prefix forces exact session-name match (names like .dotfiles-... otherwise
   # trip tmux's target parser, which treats a leading dot as a window separator)
-  local kill_action='execute-silent(tmux-kill-session "$(printf %s {} | sed -E "s/\t.*$//; s/ \*$//")")+reload(ftm --list)' \
-    rename_action='execute(session=$(printf %s {} | sed -E "s/\t.*$//; s/ \*$//"); printf >&2 "New session name: "; read -r name; tmux rename-session -t "$(ftm --id="$session")" "${name}")+reload(ftm --list)'
+  local kill_action='execute-silent(tmux-kill-session "$(printf %s {} | sed -E "s/\t.*$//; s/ ●$//; s/ \*$//")")+reload(ftm --list)' \
+    rename_action='execute(session=$(printf %s {} | sed -E "s/\t.*$//; s/ ●$//; s/ \*$//"); printf >&2 "New session name: "; read -r name; tmux rename-session -t "$(ftm --id="$session")" "${name}")+reload(ftm --list)'
 
   # native fzf tmux popup unless we're already inside one (-p)
   [[ $POPUP == "true" ]] || fzf_extra_args+=(--tmux "center,70%,75%")
