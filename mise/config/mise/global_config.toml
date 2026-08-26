@@ -108,28 +108,12 @@ _.path = [
   "$HOME/.cargo/bin",
   "/Applications/Postgres.app/Contents/Versions/latest/bin",
 ]
-_.fnox-env = { tools = true }
-# Secrets are NOT loaded here. Removed 2026-08-24 along with
-# mise/fragments/env-secrets.sh.
-#
-# Why: `_.source` runs a bash script on *every* mise config load, including the
-# load performed by a mise shim. `~/.local/share/mise/shims/` holds 269 shims,
-# all symlinks to the mise binary, and seven scripts in this repo prepend that
-# dir to PATH (bin/pi, bin/pinvim, mise/tasks/pi-update, and the launchd
-# entrypoints). So: shim -> mise -> config load -> _.source -> fnox shim ->
-# mise -> ... which forked without bound (~9,700 processes on 2026-08-24).
-#
-# The fragment was also a guaranteed no-op: every secret in mise/config/fnox/
-# config.toml is `env = false`, so `fnox export` returned zero lines. It cost a
-# subprocess per config load and bought nothing.
-#
-# Secrets now reach consumers the documented way:
-#   interactive shells -> `fnox activate fish` (~/.config/fish/conf.d/fnox.fish)
-#   non-shell (pi)     -> `fnox exec --` in the launcher
-# See ~/.local/share/pi/plans/dotfiles/fnox-1password-secret-migration.md
-#
-# DO NOT reintroduce `_.source`/`_.file` that invokes a PATH-resolved binary.
-# If mise-env-fnox is ever enabled, pin `fnox_bin` to an absolute non-shim path.
+# Do not load secrets through mise-env-fnox or a PATH-resolved `_.source`.
+# Either approach runs `fnox export` on every mise config load. Inside a
+# `fnox exec` launcher such as Pi, that creates a second secret-resolution pass
+# and blocks command startup. Secrets reach consumers through maintained paths:
+#   interactive shells -> `fnox activate` in each shell config
+#   non-shell Pi/capper -> `fnox exec` in each launcher
 
 [shell_alias]
 "...." = "cd ../../.."
@@ -255,10 +239,6 @@ up = "cd $HOME/.dotfiles && mise run up"
 # -- symlink-each targets (existing mutable dirs, needs per-entry reconciliation) --
 "~/.local/bin" = { source = "~/.dotfiles/bin", mode = "symlink-each" }
 "~/bin" = { source = "~/.dotfiles/bin", mode = "symlink-each" }
-
-[plugins]
-fnox-env = "https://github.com/jdx/mise-env-fnox"
-# nix = "https://github.com/jbadeau/mise-nix.git"
 
 [tools]
 "aqua:openai/codex" = "latest"
