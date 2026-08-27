@@ -40,11 +40,6 @@
     #     '';
     # });
 
-    # Use the overlay's package unmodified so it resolves to the exact
-    # derivation nix-community cachix built. Any overrideAttrs here (even
-    # doCheck = false) changes the hash and forces a local source build.
-    nvim-nightly = inputs.neovim-nightly-overlay.packages.${prev.stdenv.hostPlatform.system}.default;
-
     # llama-cpp: nodejs 24 hits a libuv kqueue assertion (Abort trap: 6) on darwin
     # during the webui `npm run build` teardown. Artifacts are already produced
     # when it aborts, but nix sees the non-zero exit. Pin nodejs_22 for the webui

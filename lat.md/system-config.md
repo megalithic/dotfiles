@@ -6,7 +6,7 @@ This file covers the nix-darwin layer: shared host settings, per-host overrides,
 
 `hosts/common.nix` holds settings shared by every host; `hosts/megabookpro.nix` and `hosts/workbookpro.nix` carry per-host overrides. The builder passes `username`, `hostname`, `paths`, and `arch` through special args.
 
-`hosts/common.nix` sets system fonts, the `seth` user (uid 501, fish shell), hostname, timezone (`America/New_York`), and locale (`en_US.UTF-8`). It defines system-wide `environment.variables` including editor (`nvim-nightly`), pager, XDG paths, project paths (`CODE`, `DOTS`), cloud-storage paths, tmux layout paths, and FZF defaults, plus a minimal `environment.systemPackages` set.
+`hosts/common.nix` sets system fonts, the `seth` user (uid 501, fish shell), hostname, timezone (`America/New_York`), and locale (`en_US.UTF-8`). It defines system-wide `environment.variables` including editor (plain `nvim`, resolved via PATH to the mise-installed neovim), pager, XDG paths, project paths (`CODE`, `DOTS`), cloud-storage paths, tmux layout paths, and FZF defaults, plus a minimal `environment.systemPackages` set.
 
 The staged mise path installs Nerd Fonts from a single list: `[vars].nerd_fonts` in `mise/config/mise/global_config.toml` names release asset stems (mirroring `fonts.packages`), the `fonts:install` task passes them with a pinned `nerd_fonts_version` to `mise/hooks/install-fonts.sh` (downloads each `<Name>.tar.xz`, cmp-copies font files into `~/Library/Fonts`, per-font version markers under `~/.local/state/nerd-fonts`), and a global `[hooks] postinstall` re-runs the task after `mise install`; task `sources`/`outputs { auto = true }` make unchanged runs no-ops. The nix side installs to `/Library/Fonts/Nix Fonts`, so the two worlds do not collide.
 

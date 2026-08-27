@@ -72,7 +72,7 @@ in
     LC_CTYPE = lang;
     LC_ALL = lang;
     PAGER = "less -FirSwX";
-    EDITOR = "${pkgs.neovim-unwrapped}/bin/nvim";
+    EDITOR = "nvim"; # mise-installed neovim, resolved via PATH
     VISUAL = "$EDITOR";
     GIT_EDITOR = "$EDITOR";
     JJ_EDITOR = "$EDITOR";
