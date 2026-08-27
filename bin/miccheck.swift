@@ -16,11 +16,14 @@
 //     meetings never start with a hot mic. Reconnects every 5s; miccheck works
 //     standalone when the presence daemon is absent. Disable with --no-presence.
 //   - Unix socket (~/.local/state/miccheck/sock) accepts line-delimited JSON:
-//       {"cmd":"get"}                                  -> {"ok":true,"mode":...,"live":...}
+//       {"cmd":"get"}                                  -> {"ok":true,"mode":...,"live":...,"leaseCount":...}
 //       {"cmd":"set-mode","mode":"push-to-talk"}       -> {"ok":true}
 //       {"cmd":"set-mode","mode":"push-to-mute"}       -> {"ok":true}
 //       {"cmd":"toggle-mode"}                          -> {"ok":true,"mode":...}
+//       {"cmd":"acquire-live","token":"..."}        -> {"ok":true}
+//       {"cmd":"release-live","token":"..."}        -> {"ok":true}
 //       {"cmd":"quit"}                                 -> {"ok":true}
+//   acquire-live leases are scoped to the connection and auto-release on disconnect.
 //
 // Build: bin/miccheck-build (swiftc -> ~/.local/bin/miccheckd, Developer ID
 // signed with a stable identifier so TCC grants survive rebuilds).
@@ -406,8 +409,12 @@ final class SocketServer {
     private let q = DispatchQueue(label: "miccheck.socket")
     private var clients: [Int32: DispatchSourceRead] = [:]
     private var buffers: [Int32: Data] = [:]
+    private var clientIDs: [Int32: UInt64] = [:]
+    private var nextClientID: UInt64 = 1
+    private let maxCommandBytes = 16 * 1024
 
-    var onCommand: ((_ cmd: String, _ reply: @escaping (String) -> Void) -> Void)?
+    var onCommand: ((_ cmd: String, _ clientID: UInt64, _ reply: @escaping (String) -> Void) -> Void)?
+    var onDisconnect: ((_ clientID: UInt64) -> Void)?
 
     init(path: String) { self.path = path }
 
@@ -426,7 +433,7 @@ final class SocketServer {
         guard bytes.count < cap else { throw POSIXError(.ENAMETOOLONG) }
         withUnsafeMutablePointer(to: &addr.sun_path) { ptr in
             ptr.withMemoryRebound(to: CChar.self, capacity: cap) { dst in
-                for i in 0..<bytes.count { dst[i] = CChar(bitPattern: bytes[i]) }
+                for index in 0..<bytes.count { dst[index] = CChar(bitPattern: bytes[index]) }
                 dst[bytes.count] = 0
             }
         }
@@ -451,33 +458,44 @@ final class SocketServer {
         src.setCancelHandler { close(fd) }
         clients[fd] = src
         buffers[fd] = Data()
+        clientIDs[fd] = nextClientID
+        nextClientID += 1
         src.resume()
     }
 
     private func readClient(_ fd: Int32) {
         var tmp = [UInt8](repeating: 0, count: 4096)
-        let n = Foundation.read(fd, &tmp, tmp.count)
-        if n <= 0 { dropClient(fd); return }
-        buffers[fd, default: Data()].append(contentsOf: tmp[0..<n])
+        let bytesRead = Foundation.read(fd, &tmp, tmp.count)
+        if bytesRead <= 0 { dropClient(fd); return }
+        buffers[fd, default: Data()].append(contentsOf: tmp[0..<bytesRead])
         while let idx = buffers[fd]?.firstIndex(of: 0x0A) {
             let line = buffers[fd]!.subdata(in: buffers[fd]!.startIndex..<idx)
             buffers[fd]!.removeSubrange(buffers[fd]!.startIndex...idx)
-            if let cmd = String(data: line, encoding: .utf8)?.trimmingCharacters(in: .whitespaces), !cmd.isEmpty {
-                onCommand?(cmd) { [weak self] reply in self?.q.async { self?.writeClient(fd, reply) } }
+            if line.count > maxCommandBytes { dropClient(fd); return }
+            if let cmd = String(data: line, encoding: .utf8)?.trimmingCharacters(in: .whitespaces),
+               !cmd.isEmpty, let clientID = clientIDs[fd] {
+                onCommand?(cmd, clientID) { [weak self] reply in
+                    self?.q.async { self?.writeClient(fd, clientID: clientID, reply) }
+                }
             }
         }
+        if buffers[fd, default: Data()].count > maxCommandBytes { dropClient(fd) }
     }
 
-    private func writeClient(_ fd: Int32, _ s: String) {
-        var data = Array(s.utf8)
+    private func writeClient(_ fd: Int32, clientID: UInt64, _ reply: String) {
+        guard clientIDs[fd] == clientID else { return }
+        var data = Array(reply.utf8)
         if data.last != 0x0A { data.append(0x0A) }
         _ = data.withUnsafeBytes { Foundation.write(fd, $0.baseAddress, data.count) }
     }
 
     private func dropClient(_ fd: Int32) {
+        guard clients[fd] != nil else { return }
+        let clientID = clientIDs.removeValue(forKey: fd)
         clients[fd]?.cancel()
         clients.removeValue(forKey: fd)
         buffers.removeValue(forKey: fd)
+        if let clientID { onDisconnect?(clientID) }
     }
 }
 
@@ -491,7 +509,7 @@ final class SocketServer {
 
 final class PresenceClient {
     private let path: String
-    private let q = DispatchQueue(label: "miccheck.presence")
+    private let queue = DispatchQueue(label: "miccheck.presence")
     private var fd: Int32 = -1
     private var source: DispatchSourceRead?
     private var buffer = Data()
@@ -517,7 +535,7 @@ final class PresenceClient {
         guard bytes.count < cap else { return nil }
         withUnsafeMutablePointer(to: &addr.sun_path) { ptr in
             ptr.withMemoryRebound(to: CChar.self, capacity: cap) { dst in
-                for i in 0..<bytes.count { dst[i] = CChar(bitPattern: bytes[i]) }
+                for index in 0..<bytes.count { dst[index] = CChar(bitPattern: bytes[index]) }
                 dst[bytes.count] = 0
             }
         }
@@ -532,9 +550,9 @@ final class PresenceClient {
         guard wrote == get.count else { return nil }
 
         var tmp = [UInt8](repeating: 0, count: 4096)
-        let n = Foundation.read(fd, &tmp, tmp.count)
-        guard n > 0 else { return nil }
-        let data = Data(tmp[0..<n])
+        let bytesRead = Foundation.read(fd, &tmp, tmp.count)
+        guard bytesRead > 0 else { return nil }
+        let data = Data(tmp[0..<bytesRead])
         let line: Data
         if let newline = data.firstIndex(of: 0x0A) {
             line = data.subdata(in: data.startIndex..<newline)
@@ -545,7 +563,7 @@ final class PresenceClient {
         return obj["inMeeting"] as? Bool
     }
 
-    func start() { q.async { self.connect() } }
+    func start() { queue.async { self.connect() } }
 
     private func connect() {
         fd = socket(AF_UNIX, SOCK_STREAM, 0)
@@ -558,7 +576,7 @@ final class PresenceClient {
         guard bytes.count < cap else { close(fd); fd = -1; return }
         withUnsafeMutablePointer(to: &addr.sun_path) { ptr in
             ptr.withMemoryRebound(to: CChar.self, capacity: cap) { dst in
-                for i in 0..<bytes.count { dst[i] = CChar(bitPattern: bytes[i]) }
+                for index in 0..<bytes.count { dst[index] = CChar(bitPattern: bytes[index]) }
                 dst[bytes.count] = 0
             }
         }
@@ -579,7 +597,7 @@ final class PresenceClient {
 
         loggedWaiting = false
         buffer = Data()
-        let src = DispatchSource.makeReadSource(fileDescriptor: fd, queue: q)
+        let src = DispatchSource.makeReadSource(fileDescriptor: fd, queue: queue)
         src.setEventHandler { [weak self] in self?.readData() }
         src.setCancelHandler { [fd = self.fd] in if fd >= 0 { close(fd) } }
         source = src
@@ -599,19 +617,19 @@ final class PresenceClient {
     }
 
     private func scheduleReconnect() {
-        q.asyncAfter(deadline: .now() + 5) { [weak self] in self?.connect() }
+        queue.asyncAfter(deadline: .now() + 5) { [weak self] in self?.connect() }
     }
 
     private func readData() {
         var tmp = [UInt8](repeating: 0, count: 4096)
-        let n = Foundation.read(fd, &tmp, tmp.count)
-        if n <= 0 {
+        let bytesRead = Foundation.read(fd, &tmp, tmp.count)
+        if bytesRead <= 0 {
             log("presence: disconnected; reconnecting")
             disconnect()
             scheduleReconnect()
             return
         }
-        buffer.append(contentsOf: tmp[0..<n])
+        buffer.append(contentsOf: tmp[0..<bytesRead])
         while let idx = buffer.firstIndex(of: 0x0A) {
             let line = buffer.subdata(in: buffer.startIndex..<idx)
             buffer.removeSubrange(buffer.startIndex...idx)
@@ -670,9 +688,9 @@ enum Icons {
         let img = NSImage(size: size, flipped: false) { rect in
             pillRed.setFill()
             NSBezierPath(roundedRect: rect, xRadius: rect.height / 2, yRadius: rect.height / 2).fill()
-            let m = mic.size
-            mic.draw(in: NSRect(x: (rect.width - m.width) / 2, y: (rect.height - m.height) / 2,
-                                width: m.width, height: m.height))
+            let micSize = mic.size
+            mic.draw(in: NSRect(x: (rect.width - micSize.width) / 2, y: (rect.height - micSize.height) / 2,
+                                width: micSize.width, height: micSize.height))
             return true
         }
         img.isTemplate = false
@@ -694,26 +712,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var mode: Mode = .pushToTalk
     private var chordActive = false
+    // Token -> monotonic connection ID. Leases keep the mic live only while
+    // their client connection remains open; IDs cannot alias reused socket fds.
+    private var liveLeases: [String: UInt64] = [:]
 
-    private var micLive: Bool { mode == .pushToTalk ? chordActive : !chordActive }
+    private var baseMicLive: Bool { mode == .pushToTalk ? chordActive : !chordActive }
+    private var micLive: Bool { baseMicLive || !liveLeases.isEmpty }
 
     private let socketPath: String = {
         var path = NSHomeDirectory() + "/.local/state/miccheck/sock"
         let args = CommandLine.arguments
-        if let i = args.firstIndex(of: "--socket"), i + 1 < args.count { path = args[i + 1] }
+        if let index = args.firstIndex(of: "--socket"), index + 1 < args.count { path = args[index + 1] }
         return path
     }()
 
     private let presenceSocketPath: String? = {
         let args = CommandLine.arguments
         if args.contains("--no-presence") { return nil }
-        if let i = args.firstIndex(of: "--presence-socket"), i + 1 < args.count { return args[i + 1] }
+        if let index = args.firstIndex(of: "--presence-socket"), index + 1 < args.count {
+            return args[index + 1]
+        }
         return NSHomeDirectory() + "/.local/state/media-presence/sock"
     }()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        if let saved = UserDefaults.standard.string(forKey: "mode"), let m = Mode(rawValue: saved) {
-            mode = m
+        if let saved = UserDefaults.standard.string(forKey: "mode"),
+           let savedMode = Mode(rawValue: saved) {
+            mode = savedMode
         }
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -728,8 +753,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hotkey = HotKey { [weak self] in self?.toggleMode() }
 
         let server = SocketServer(path: socketPath)
-        server.onCommand = { [weak self] cmd, reply in
-            DispatchQueue.main.async { self?.handleCommand(cmd, reply: reply) }
+        server.onCommand = { [weak self] cmd, clientID, reply in
+            DispatchQueue.main.async { self?.handleCommand(cmd, clientID: clientID, reply: reply) }
+        }
+        server.onDisconnect = { [weak self] clientID in
+            DispatchQueue.main.async { self?.releaseLeases(for: clientID) }
         }
         do {
             try server.start()
@@ -773,27 +801,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setChordActive(_ active: Bool) {
         guard chordActive != active else { return }
+        let oldLive = micLive
         chordActive = active
-        apply()
+        apply(oldLive: oldLive)
     }
 
-    private func setMode(_ m: Mode) {
+    private func setMode(_ requestedMode: Mode) {
+        let oldLive = micLive
         chord.deactivate()
         chordActive = false
-        mode = m
-        UserDefaults.standard.set(m.rawValue, forKey: "mode")
-        apply()
-        log("mode=\(m.rawValue)")
+        mode = requestedMode
+        UserDefaults.standard.set(requestedMode.rawValue, forKey: "mode")
+        apply(oldLive: oldLive)
+        log("mode=\(requestedMode.rawValue)")
     }
 
     @objc private func toggleMode() {
         setMode(mode == .pushToTalk ? .pushToMute : .pushToTalk)
     }
 
-    private func apply() {
-        audio.setLive(micLive)
+    private func apply(oldLive: Bool? = nil) {
+        if oldLive.map({ $0 != micLive }) ?? true { audio.setLive(micLive) }
         statusItem.button?.image = micLive ? Icons.live() : Icons.muted()
         rebuildMenu()
+    }
+
+    private func releaseLeases(for clientID: UInt64) {
+        let before = micLive
+        liveLeases = liveLeases.filter { $0.value != clientID }
+        if before != micLive { apply(oldLive: before) }
     }
 
     // MARK: menu
@@ -827,10 +863,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         log("event tap waiting for Input Monitoring grant (retrying every 5s; if the chord stays dead after granting, kickstart the agent)")
-        tapRetryTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] t in
-            guard let self else { t.invalidate(); return }
+        tapRetryTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] timer in
+            guard let self else { timer.invalidate(); return }
             if self.chord.start() {
-                t.invalidate()
+                timer.invalidate()
                 self.tapRetryTimer = nil
                 log("event tap active")
             }
@@ -839,7 +875,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: socket commands
 
-    private func handleCommand(_ raw: String, reply: @escaping (String) -> Void) {
+    private func handleCommand(_ raw: String, clientID: UInt64, reply: @escaping (String) -> Void) {
         guard let data = raw.data(using: .utf8),
               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let cmd = obj["cmd"] as? String
@@ -849,13 +885,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         switch cmd {
         case "get":
-            reply(#"{"ok":true,"mode":"\#(mode.rawValue)","live":\#(micLive)}"#)
+            reply(#"{"ok":true,"mode":"\#(mode.rawValue)","live":\#(micLive),"leaseCount":\#(liveLeases.count)}"#)
+        case "acquire-live", "release-live":
+            handleLiveLeaseCommand(cmd, obj: obj, clientID: clientID, reply: reply)
         case "set-mode":
-            guard let m = (obj["mode"] as? String).flatMap(Mode.init(rawValue:)) else {
+            guard let requestedMode = (obj["mode"] as? String).flatMap(Mode.init(rawValue:)) else {
                 reply(#"{"ok":false,"error":"bad mode"}"#)
                 return
             }
-            setMode(m)
+            setMode(requestedMode)
             reply(#"{"ok":true}"#)
         case "toggle-mode":
             toggleMode()
@@ -868,12 +906,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    private func handleLiveLeaseCommand(
+        _ cmd: String,
+        obj: [String: Any],
+        clientID: UInt64,
+        reply: @escaping (String) -> Void
+    ) {
+        guard let token = obj["token"] as? String,
+              !token.isEmpty, token.utf8.count <= 128 else {
+            reply(#"{"ok":false,"error":"bad token"}"#)
+            return
+        }
+        if let owner = liveLeases[token], owner != clientID {
+            reply(#"{"ok":false,"error":"token already owned"}"#)
+            return
+        }
+
+        let before = micLive
+        if cmd == "acquire-live" {
+            liveLeases[token] = clientID
+        } else {
+            liveLeases.removeValue(forKey: token)
+        }
+        if before != micLive { apply(oldLive: before) }
+        reply(#"{"ok":true,"live":\#(micLive),"leaseCount":\#(liveLeases.count)}"#)
+    }
+
     // MARK: signals
 
     private func installSignalHandlers() {
-        for sig in [SIGTERM, SIGINT] {
-            signal(sig, SIG_IGN)
-            let src = DispatchSource.makeSignalSource(signal: sig, queue: .main)
+        for signalNumber in [SIGTERM, SIGINT] {
+            signal(signalNumber, SIG_IGN)
+            let src = DispatchSource.makeSignalSource(signal: signalNumber, queue: .main)
             src.setEventHandler { NSApp.terminate(nil) }
             src.resume()
             signalSources.append(src)

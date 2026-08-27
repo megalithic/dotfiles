@@ -24,9 +24,9 @@ Some USB mics drift to an inaudible input volume on their own (the Samson GoMic 
 
 ## Menubar
 
-Same iconography as the old Lua module: white slashed mic (template) when muted, white mic on a `#c43e1f` rounded pill when the mic is hot; the menu picks the mode and quits.
+Same iconography as the old Lua module: white slashed mic (template) when muted, white mic on a `#c43e1f` rounded pill when the effective mic state is live; the menu picks the mode and quits.
 
-The persisted mode lives in `UserDefaults` (`~/Library/Preferences/miccheckd.plist`, key `mode`).
+The effective state is the saved mode/chord state OR any temporary live lease. Leases never rewrite the saved mode, and chord changes continue underneath them, so releasing the final lease immediately restores normal push-to-talk or push-to-mute behavior. The persisted mode lives in `UserDefaults` (`~/Library/Preferences/miccheckd.plist`, key `mode`).
 
 ## Presence integration
 
@@ -38,7 +38,11 @@ This moved PTT enforcement out of Hammerspoon's `watchers/media-presence.lua`, w
 
 The Unix socket (`~/.local/state/miccheck/sock`) accepts line-delimited JSON commands with one-line replies.
 
-Commands: `{"cmd":"get"}` → `{"ok":true,"mode":...,"live":...}`; `{"cmd":"set-mode","mode":"push-to-talk"|"push-to-mute"}`; `{"cmd":"toggle-mode"}`; `{"cmd":"quit"}`. Hammerspoon's client is `mise/config/hammerspoon/lib/micctl.lua` (`setPTTMode`, `toggleMode`) using the same `nc -w 1 -U` pattern as [[media-presence#Hammerspoon consumer]]; callers are `watchers/camera.lua`, `watchers/media-presence.lua`, and `contexts/co.detail.mac.lua`.
+Commands: `{"cmd":"get"}` → `{"ok":true,"mode":...,"live":...,"leaseCount":...}`; `{"cmd":"set-mode","mode":"push-to-talk"|"push-to-mute"}`; `{"cmd":"toggle-mode"}`; `{"cmd":"acquire-live","token":"..."}`; `{"cmd":"release-live","token":"..."}`; `{"cmd":"quit"}`.
+
+Live leases are connection-scoped. Clients keep the acquiring socket open; disconnecting releases every token owned by that connection. Tokens are non-empty and at most 128 UTF-8 bytes. Duplicate acquire/release calls from the owner are idempotent, multiple clients can hold distinct tokens, and attempts to reuse another live client's token fail. Acquire and release replies include effective `live` and `leaseCount` values. Commands are capped at 16 KiB; MicCheck drops clients that exceed the limit.
+
+Hammerspoon's one-shot client is `mise/config/hammerspoon/lib/micctl.lua` (`setPTTMode`, `toggleMode`) using the same `nc -w 1 -U` pattern as [[media-presence#Hammerspoon consumer]]; callers are `watchers/camera.lua`, `watchers/media-presence.lua`, and `contexts/co.detail.mac.lua`. Hammerspoon does not use live leases.
 
 ## Build and packaging
 

@@ -22,7 +22,6 @@
 		"npm:pi-web-access",
 		"git:github.com/amosblomqvist/pi-interactive-subagents",
 		"git:github.com/amosblomqvist/pi-observational-memory",
-		"git:github.com/amosblomqvist/pi-dictate",
 		"npm:pi-caveman",
 		"npm:@plannotator/pi-extension",
 		"npm:pi-rtk-optimizer",

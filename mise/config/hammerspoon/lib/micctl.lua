@@ -3,7 +3,9 @@
 ---
 --- Socket: ~/.local/state/miccheck/sock, line-delimited JSON.
 --- Commands: {"cmd":"set-mode","mode":"push-to-talk"|"push-to-mute"},
----           {"cmd":"toggle-mode"}, {"cmd":"get"}, {"cmd":"quit"}
+---           {"cmd":"toggle-mode"}, {"cmd":"get"}, {"cmd":"quit"}.
+--- acquire-live/release-live are connection-scoped lease commands for clients
+--- that keep their socket open; this one-shot Hammerspoon client does not use them.
 
 local M = {}
 
