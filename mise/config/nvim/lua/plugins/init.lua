@@ -100,5 +100,6 @@ return {
     ft = { "log" },
     opts = {},
   },
+  { "tpope/vim-obsession", cmd = "Obsession" },
   { "megalithic/virt-column.nvim", opts = { char = vim.g.virt_column_char }, lazy = false },
 }

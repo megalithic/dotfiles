@@ -74,6 +74,7 @@
   "tssorter.nvim": { "branch": "main", "commit": "74fa4102cb3272dcc8fd5696fd3240358f19c090" },
   "unclash.nvim": { "branch": "main", "commit": "04f6aba5e2eea8b665cba88f21082e33a7cb6e59" },
   "vim-matchup": { "branch": "master", "commit": "0fb1e6b7cea34e931a2af50b8ad565c5c4fd8f4d" },
+  "vim-obsession": { "branch": "master", "commit": "ed9dfc7c2cc917ace8b24f4f9f80a91e05614b63" },
   "vim-projectionist": { "branch": "master", "commit": "5ff7bf79a6ef741036d2038a226bcb5f8b1cd296" },
   "vim-test": { "branch": "master", "commit": "e4d4fa7f5ce354e7df473550080d9e78207ef4a0" },
   "virt-column.nvim": { "branch": "master", "commit": "f4e98ab147216daed18d8a040eb8687394477e4d" },
