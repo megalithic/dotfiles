@@ -6,13 +6,15 @@ The former Home Manager module (`home/common/programs/pi-coding-agent/`) and ven
 
 ## Mise-managed configuration
 
-`mise/config/pi-coding-agent/` is the sole owner of pi configuration, wired through `mise/config/mise/global_config.toml`.
+`mise/config/pi-coding-agent/` is the sole owner of Pi configuration, wired through `mise/config/mise/global_config.toml`.
 
 `mise run up` labels each update phase, writes nested mise debug output to `~/.local/state/mise/up.log`, and prints that path when a phase fails. Dotfile application also enables live verbose output so failing paths remain visible.
 
 `agent/` holds the managed subset of `~/.pi/agent` applied through `[dotfiles]` symlink and `symlink-each` entries; `bin/` holds the `pi`, `p`, and `work-tickets` wrappers linked into `~/.local/bin`; `mise/tasks/pi-update` is the `pi:update` mise task covering the imperative pieces (sha256-pinned Plannotator install into `~/.pi/agent/bin` via `scripts/install-pi-tools`, isolated nicknisi/sessions plugin extraction, jq settings merge, extension-deps cleanup, `pi update`, and `pi update --extensions`). The former `pinvim` and `pview` wrappers remain under `disabled/` and are no longer mapped into `~/.local/bin`; active profile resolution now runs through `scripts/resolve-profile.mjs` from `bin/pi`. `setup:pi` / `pi:setup` remain compatibility wrappers. `pi:update --dry-run` previews helper-bin changes, the final merged settings JSON, cleanup targets, and Pi update commands without modifying files. Disabled entries live in `disabled/` instead of using the `_` name-prefix convention because `symlink-each` links every entry.
 
 `lat` resolves from mise's `npm:lat.md` tool. Mise links `~/.pi/agent/bin/lat` to its stable shim because Pi's lat extension tools launch through that agent-local path; no lat override points back to Devenv.
+
+The managed `agent/extensions/lat.ts` passes arguments directly to `execFileSync`, captures child stderr, and reports command failures through tool results. Its lifecycle hooks stay dormant unless the working tree contains `lat.md/`. LAT diagnostics must never write directly into Pi's alternate-screen TUI because they can overwrite the input editor.
 
 `mise/config/mise/global_config.toml` prefers canonical mise registry aliases for user-facing tools and keeps backend-qualified names only when the registry has no alias or a specific package source is required.
 
@@ -68,7 +70,7 @@ The `/handoff` extension replaces the old file-backed handoff skill: it serializ
 
 `agent-status.ts` publishes this pi's coarse activity state (`idle`/`working`/`asking`/`done`) to `$PI_STATE_DIR/status/pi-{session}-{window}.status` (line `state pid session`) from lifecycle events (`agent_start`, `agent_end`, `input`, `tool_call`/`tool_execution_end` for `ask_user_question`, `error`), modeled on fleet's hook approach. Only interactive tmux pis publish (`ctx.hasUI` + `TMUX`); the file is removed on `session_shutdown` and readers must pid-validate to skip crash leftovers. `bin/ftm` reads these files for its picker status dots.
 
-`resurrect-tag.ts` still tags the surrounding tmux pane with the session UUID (pane option `@pi_session_id`) on every `session_start`. The old tmux-resurrect pinvim restore strategy is commented out and no active tmux command invokes pinvim.
+`resurrect-tag.ts` tags the surrounding tmux pane with the session UUID (pane option `@pi_session_id`) on `session_start` and clears it on `session_shutdown`. Both ftm snapshots and tmux-resurrect use the tag to restore the exact Pi conversation as `pi --session <uuid>`; no restore command invokes pinvim.
 
 The `/tell` extension replaces the shell-script tell skill for Pi-to-Pi guidance. It discovers running Pi instances from `PI_STATE_DIR` socket manifests, ignores ephemeral/dead manifest entries and non-responsive socket-only fallbacks, sends `pi.tell.v1` JSON over the generic `bridge.ts` socket, and exposes the `tell_pi` tool so the receiving instance can reply asynchronously. `bin/pi` enables this bridge directly; bridge has no pinvim heartbeat, peer scan, footer status, or Neovim protocol handling. Incoming tell messages are persisted as custom entries, surfaced near the editor through a temporary widget, and mirrored through the same `~/bin/ntfy` path used by the notify extension.
 
