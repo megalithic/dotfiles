@@ -161,6 +161,9 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.pi/agent/skills" = { source = "~/.dotfiles/mise/config/pi-coding-agent/agent/skills", mode = "symlink-each" }
 "~/.pi/agent/prompts" = { source = "~/.dotfiles/mise/config/pi-coding-agent/agent/prompts", mode = "symlink-each" }
 "~/.pi/agent/agents" = { source = "~/.dotfiles/mise/config/pi-coding-agent/agent/agents", mode = "symlink-each" }
+# Lat extension tools launch through this agent-local path; point it at mise's
+# stable shim rather than the removed Devenv profile.
+"~/.pi/agent/bin/lat" = "~/.local/share/mise/shims/lat"
 "~/.local/bin/pi" = "~/.dotfiles/mise/config/pi-coding-agent/bin/pi"
 "~/.local/bin/p" = "~/.dotfiles/mise/config/pi-coding-agent/bin/p"
 "~/.local/bin/work-tickets" = "~/.dotfiles/mise/config/pi-coding-agent/bin/work-tickets"

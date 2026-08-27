@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# PATH: patched lat + pinned helper binaries first, then mise (binary + shims)
+# PATH: pinned helper binaries first, then mise (binary + shims)
 # and brew for non-interactive launch contexts (GUI, launchd) that lack shell
 # init. ~/.local/bin covers the standalone mise binary itself.
 export PATH="$HOME/.pi/agent/bin:$HOME/.local/bin:${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:$PATH"

@@ -9,7 +9,7 @@ script: scripts/wait-for-text.sh
 
 Use tmux as a programmable terminal multiplexer for interactive work. Works on Linux and macOS with stock tmux; avoid custom config by using a private socket.
 
-**Script location:** `~/.dotfiles/home/common/programs/pi-coding-agent/skills/tmux/scripts/`
+**Script location:** `~/.dotfiles/mise/config/pi-coding-agent/agent/skills/tmux/scripts/`
 
 ## CRITICAL: Pane Safety Rules
 
@@ -18,12 +18,14 @@ Use tmux as a programmable terminal multiplexer for interactive work. Works on L
 1. **Identify your own pane:** Run `tmux display-message -p '#{pane_id}'` to get the pane pi is running in. Store this — never kill it.
 2. **Verify target pane before kill:** Before `kill-pane -t X`, confirm X is not your own pane ID.
 3. **Verify target pane before send-keys:** Before sending keys to ANY pane, verify the expected process is actually running there:
+
    ```bash
    # Check what's running in target pane
    tmux display-message -t "$TARGET" -p '#{pane_current_command}'
    # Or capture last few lines to confirm the right prompt/app
    tmux capture-pane -p -t "$TARGET" -S -5
    ```
+
 4. **Never send keys blindly.** If the expected app (python, gdb, w3m, etc.) is NOT in the target pane, STOP and re-discover the correct pane.
 5. **Never assume pane layout persists.** Panes can be rearranged, closed by user, or swapped. Always re-verify before interacting.
 
@@ -82,8 +84,8 @@ This must ALWAYS be printed right after a session was started and once again at 
 
 ## Finding sessions
 
-- List sessions on your active socket with metadata: `~/.dotfiles/home/common/programs/pi-coding-agent/skills/tmux/scripts/find-sessions.sh -S "$SOCKET"`; add `-q partial-name` to filter.
-- Scan all sockets under the shared directory: `~/.dotfiles/home/common/programs/pi-coding-agent/skills/tmux/scripts/find-sessions.sh --all` (uses `CLAUDE_TMUX_SOCKET_DIR` or `${TMPDIR:-/tmp}/claude-tmux-sockets`).
+- List sessions on your active socket with metadata: `~/.dotfiles/mise/config/pi-coding-agent/agent/skills/tmux/scripts/find-sessions.sh -S "$SOCKET"`; add `-q partial-name` to filter.
+- Scan all sockets under the shared directory: `~/.dotfiles/mise/config/pi-coding-agent/agent/skills/tmux/scripts/find-sessions.sh --all` (uses `CLAUDE_TMUX_SOCKET_DIR` or `${TMPDIR:-/tmp}/claude-tmux-sockets`).
 
 ## Sending input safely
 
@@ -109,9 +111,11 @@ Some special rules for processes:
 ## Synchronizing / waiting for prompts
 
 - Use timed polling to avoid races with interactive tools. Example: wait for a Python prompt before sending code:
+
   ```bash
-  ~/.dotfiles/home/common/programs/pi-coding-agent/skills/tmux/scripts/wait-for-text.sh -t "$SESSION":0.0 -p '^>>>' -T 15 -l 4000
+  ~/.dotfiles/mise/config/pi-coding-agent/agent/skills/tmux/scripts/wait-for-text.sh -t "$SESSION":0.0 -p '^>>>' -T 15 -l 4000
   ```
+
 - For long-running commands, poll for completion text (`"Type quit to exit"`, `"Program exited"`, etc.) before proceeding.
 
 ## Interactive tool recipes
@@ -128,10 +132,10 @@ Some special rules for processes:
 
 ## Helper: wait-for-text.sh
 
-`~/.dotfiles/home/common/programs/pi-coding-agent/skills/tmux/scripts/wait-for-text.sh` polls a pane for a regex (or fixed string) with a timeout. Works on Linux/macOS with bash + tmux + grep.
+`~/.dotfiles/mise/config/pi-coding-agent/agent/skills/tmux/scripts/wait-for-text.sh` polls a pane for a regex (or fixed string) with a timeout. Works on Linux/macOS with bash + tmux + grep.
 
 ```bash
-~/.dotfiles/home/common/programs/pi-coding-agent/skills/tmux/scripts/wait-for-text.sh -t session:0.0 -p 'pattern' [-F] [-T 20] [-i 0.5] [-l 2000]
+~/.dotfiles/mise/config/pi-coding-agent/agent/skills/tmux/scripts/wait-for-text.sh -t session:0.0 -p 'pattern' [-F] [-T 20] [-i 0.5] [-l 2000]
 ```
 
 - `-t`/`--target` pane target (required)

@@ -4,9 +4,9 @@
 -- Uses hs.socket for persistent bidirectional connections to bridge.ts.
 -- Connections are pooled per socket path with auto-reconnect on failure.
 --
--- SOCKET CONFIGURATION (nix is single source of truth):
+-- SOCKET CONFIGURATION (mise is single source of truth):
 --   Pattern: ${PI_STATE_DIR}/sockets/pi-{session}-{window}.sock (one socket per tmux window)
---   Env vars (defined in ~/.dotfiles/home/common/programs/pi-coding-agent/default.nix):
+--   Env vars and wrapper live under ~/.dotfiles/mise/config/pi-coding-agent/:
 --     - PI_STATE_DIR: ~/.local/state/pi
 --     - PI_SESSION: tmux session name
 --     - PI_WINDOW: tmux window index
@@ -21,7 +21,7 @@
 --
 local M = {}
 
--- Socket configuration (matches nix config)
+-- Socket configuration (matches mise config)
 local function join_path(...)
   return table.concat({ ... }, "/")
 end

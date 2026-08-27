@@ -36,14 +36,13 @@ Supported import sources: `vscode`, `cursor`, `claude-code`, `codex`, `windsurf`
 
 | Scope       | Config file                   | Managed by         | How to edit                                                                        |
 | ----------- | ----------------------------- | ------------------ | ---------------------------------------------------------------------------------- |
-| **Global**  | `~/.pi/agent/mcp.json`        | Nix (home-manager) | Edit `~/.dotfiles/home/common/programs/pi-coding-agent/mcp.json`, then `just home` |
+| **Global**  | `~/.pi/agent/mcp.json`        | Mise `[dotfiles]`  | Edit `~/.dotfiles/mise/config/pi-coding-agent/agent/mcp.json`; symlink is live     |
 | **Project** | `.pi/mcp.json` (project root) | Direct             | Write file directly                                                                |
 
-**Global is nix-managed.** The file at `~/.pi/agent/mcp.json` is a symlink to the nix store. To change it:
+**Global is mise-managed.** The file at `~/.pi/agent/mcp.json` links directly to the repo source. To change it:
 
-1. Edit the source: `~/.dotfiles/home/common/programs/pi-coding-agent/mcp.json`
-2. Run `just home` (or `just rebuild`) to apply
-3. Reload pi with `/reload`
+1. Edit `~/.dotfiles/mise/config/pi-coding-agent/agent/mcp.json`
+2. Reload pi with `/reload`
 
 **Project is direct.** Write `.pi/mcp.json` in the project root. No rebuild needed — just `/reload`.
 
@@ -123,7 +122,7 @@ Lifecycle modes:
 5. Warn if server name already exists — confirm before overwriting
 6. Merge new server into existing `mcpServers` object
 7. Write updated JSON
-8. For global: edit nix source file, inform user `just home` is needed, then `/reload`
+8. For global: edit the mise source file, then `/reload`
 9. For project: write directly, then `/reload`
 10. Verify: `mcp({ connect: "server-name" })` then `mcp({ server: "server-name" })`
 
@@ -133,12 +132,12 @@ Lifecycle modes:
 2. Read the config file
 3. Remove the server entry from `mcpServers`
 4. Write updated JSON
-5. For global: edit nix source, inform user `just home` is needed
+5. For global: edit the mise source; the live symlink needs no apply step
 6. `/reload` to apply
 
 ### List
 
-1. Read global config: `~/.dotfiles/home/common/programs/pi-coding-agent/mcp.json`
+1. Read global config: `~/.dotfiles/mise/config/pi-coding-agent/agent/mcp.json`
 2. Read project config: `.pi/mcp.json` in cwd (if exists)
 3. Show all servers with:
    - Name

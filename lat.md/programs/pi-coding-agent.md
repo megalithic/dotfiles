@@ -2,7 +2,7 @@
 
 This file covers how Pi is packaged, wrapped, configured, and extended in this repo. The configuration lives at `mise/config/pi-coding-agent/`.
 
-The former Home Manager module (`home/common/programs/pi-coding-agent/`) and the vendored `pi-acp` adapter are removed.
+The former Home Manager module (`home/common/programs/pi-coding-agent/`) and vendored `pi-acp` adapter are removed. Current Home Manager generations claim no Pi files.
 
 ## Mise-managed configuration
 
@@ -11,6 +11,8 @@ The former Home Manager module (`home/common/programs/pi-coding-agent/`) and the
 `mise run up` labels each update phase, writes nested mise debug output to `~/.local/state/mise/up.log`, and prints that path when a phase fails. Dotfile application also enables live verbose output so failing paths remain visible.
 
 `agent/` holds the managed subset of `~/.pi/agent` applied through `[dotfiles]` symlink and `symlink-each` entries; `bin/` holds the `pi`, `p`, and `work-tickets` wrappers linked into `~/.local/bin`; `mise/tasks/pi-update` is the `pi:update` mise task covering the imperative pieces (sha256-pinned Plannotator install into `~/.pi/agent/bin` via `scripts/install-pi-tools`, isolated nicknisi/sessions plugin extraction, jq settings merge, extension-deps cleanup, `pi update`, and `pi update --extensions`). The former `pinvim` and `pview` wrappers remain under `disabled/` and are no longer mapped into `~/.local/bin`; active profile resolution now runs through `scripts/resolve-profile.mjs` from `bin/pi`. `setup:pi` / `pi:setup` remain compatibility wrappers. `pi:update --dry-run` previews helper-bin changes, the final merged settings JSON, cleanup targets, and Pi update commands without modifying files. Disabled entries live in `disabled/` instead of using the `_` name-prefix convention because `symlink-each` links every entry.
+
+`lat` resolves from mise's `npm:lat.md` tool. Mise links `~/.pi/agent/bin/lat` to its stable shim because Pi's lat extension tools launch through that agent-local path; no lat override points back to Devenv.
 
 `mise/config/mise/global_config.toml` prefers canonical mise registry aliases for user-facing tools and keeps backend-qualified names only when the registry has no alias or a specific package source is required.
 

@@ -85,12 +85,6 @@ fix-shell-files:
 update:
   update-brew update-flake hm
 
-# Update npm package lockfiles and nix hashes (run before `just home`)
-# Usage: just update-npm          (all packages)
-#        just update-npm pi-diff  (one package)
-update-npm *pkg:
-  home/common/programs/pi-coding-agent/scripts/update-npm-pkg.sh {{pkg}}
-
 # ===========================================================================
 # Primary rebuild commands
 # ===========================================================================

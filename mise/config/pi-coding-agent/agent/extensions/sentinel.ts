@@ -945,7 +945,7 @@ function remoteEffectsReason(cmd: string): string | null {
 }
 
 const PACKAGE_INSTALL_ALLOWED_PATHS = [
-	`${HOME}/.dotfiles/home/common/programs/pi-coding-agent/packages`,
+	`${HOME}/.dotfiles/mise/config/pi-coding-agent`,
 ];
 
 function isAllowedPackageInstallLocation(path?: string): boolean {
