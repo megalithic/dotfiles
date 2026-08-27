@@ -1,0 +1,1 @@
+/nix/store/4y800jy7dvd1dh0859janglgs8y90zkm-home-manager-files/.config/fish/conf.d/devenv-tasks-run.fish
