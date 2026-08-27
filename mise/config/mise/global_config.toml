@@ -245,9 +245,13 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.config/ripgrep/ignore" = "~/.dotfiles/mise/config/fd/ignore"
 "~/.config/fd/ignore" = "~/.dotfiles/mise/config/fd/ignore"
 
+# Keep ~/bin as one directory symlink. Home Manager's megabookpro link resolves
+# through its generation to the same source; symlink-each would follow it and
+# overwrite source files with self-referential links.
+"~/bin" = "~/.dotfiles/bin"
+
 # -- symlink-each targets (existing mutable dirs, needs per-entry reconciliation) --
 "~/.local/bin" = { source = "~/.dotfiles/bin", mode = "symlink-each" }
-"~/bin" = { source = "~/.dotfiles/bin", mode = "symlink-each" }
 
 [tools]
 "aqua:openai/codex" = "latest"
