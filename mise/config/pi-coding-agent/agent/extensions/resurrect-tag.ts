@@ -6,10 +6,9 @@
  * tmux-resurrect restore the exact session per pane instead of guessing with
  * `pi -c` (which collides when two pi panes share a cwd).
  *
- * The disabled bin/tmux-resurrect-save-pi strategy (kept in disabled/, not
- * loaded) can read the tag at save time
- * and record `pi --session <uuid>`. Active tmux config does not enable that
- * strategy or any process-restore mapping.
+ * bin/tmux-resurrect-save-pi reads the tag at save time and records
+ * `pi --session <uuid>`. Tmux-resurrect loads that strategy and opts pi into
+ * process restore.
  *
  * The tag is the bare session UUID (hex only, never contains "pi") because
  * resurrect's inline-strategy arg extraction uses a greedy sed on the match
@@ -45,5 +44,8 @@ function tagPane(sessionFile: string | null): void {
 export default function (pi: ExtensionAPI) {
 	pi.on("session_start", async (_event, ctx: ExtensionContext) => {
 		tagPane(ctx.sessionManager.getSessionFile() ?? null);
+	});
+	pi.on("session_shutdown", async () => {
+		tagPane(null);
 	});
 }

@@ -6,18 +6,18 @@
 # (tagged live by the resurrect-tag.ts pi extension), falling back to `pi -c`
 # (continue most recent session for the pane's cwd) when no tag exists.
 #
-# Resurrect support is currently disabled in
-# mise/config/tmux/plugins.tmux.conf. If re-enabled, that config symlinks this
-# file into save_command_strategies/pi_session.sh and sets
+# mise/config/tmux/plugins.tmux.conf symlinks this file into
+# save_command_strategies/pi_session.sh and selects it with
 # @resurrect-save-command-strategy 'pi_session'.
 
 PANE_PID="$1"
 [ -n "$PANE_PID" ] || exit 0
 
 full_command="$(ps -ao "ppid,args" | sed 's/^ *//' | grep "^${PANE_PID} " | cut -d' ' -f2-)"
+command_path="${full_command%% *}"
 
-case "$full_command" in
-  pi | "pi "*)
+case "${command_path##*/}" in
+  pi)
     pane_id="$(tmux list-panes -a -F '#{pane_pid} #{pane_id}' |
       awk -v pid="$PANE_PID" '$1 == pid { print $2; exit }')"
     session_id=""
