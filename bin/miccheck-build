@@ -39,5 +39,4 @@ fi
 mv -f "$TMP/miccheckd" "$OUT"
 echo "built $OUT"
 echo "restart agent:"
-echo "  nix:  launchctl kickstart -k gui/$(id -u)/org.nix-community.home.miccheck"
-echo "  mise: launchctl kickstart -k gui/$(id -u)/com.megadots.miccheck"
+echo "  launchctl kickstart -k gui/$(id -u)/dev.mise.com.megadots.miccheck"

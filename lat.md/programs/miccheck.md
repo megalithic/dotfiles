@@ -46,7 +46,4 @@ Unlike [[media-presence#Build and packaging|media-presenced]], miccheck is compi
 
 Signing uses a Developer ID Application identity (auto-detected; override with `MICCHECK_CODESIGN_IDENTITY`) with the fixed identifier `com.megadots.miccheck` and hardened runtime. TCC pins grants to the designated requirement (identifier + cert + team), so Input Monitoring survives rebuilds. Without an identity the script falls back to ad-hoc signing, where every rebuild changes the code hash and the stale TCC row must be **removed** (not toggled) in System Settings before a fresh prompt can fire. The build script unsets nix `SDKROOT`/`DEVELOPER_DIR` and resolves the SDK via `/usr/bin/xcrun` because the nix apple-sdk mismatches the system Swift toolchain.
 
-Both config systems run the same wrapper `bin/miccheck-launchd`, which exits with a helpful error when the binary is missing:
-
-- nix: `home/common/programs/miccheck/default.nix` LaunchAgent (`org.nix-community.home.miccheck`)
-- mise: `mise/config/mise/global_config.toml` agent `com.megadots.miccheck` plus task `setup:miccheck` (runs `bin/miccheck-build`)
+Mise owns the service through `mise/config/mise/global_config.toml`: agent entry `com.megadots.miccheck` installs LaunchAgent `dev.mise.com.megadots.miccheck`, which runs `bin/miccheck-launchd` and exits with a helpful error when the binary is missing. Task `setup:miccheck` runs `bin/miccheck-build`. Home Manager no longer declares a miccheck LaunchAgent.
