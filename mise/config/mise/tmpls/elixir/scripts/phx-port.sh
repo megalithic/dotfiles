@@ -23,10 +23,13 @@ fi
 #    listening TCP port is Phoenix (4000+offset < live_debugger 4008+offset
 #    < erlang distribution ports).
 for pid in $(pgrep -x beam.smp 2>/dev/null || true); do
-  cwd="$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | head -1)"
+  # `|| true` guards: pid may vanish between pgrep and lsof (exit 1), and
+  # `head -1` can SIGPIPE upstream (exit 141) — either would kill the script
+  # under set -euo pipefail.
+  cwd="$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | head -1 || true)"
   [ "$cwd" = "$root" ] || continue
   p="$(lsof -a -p "$pid" -iTCP -sTCP:LISTEN -P -Fn 2>/dev/null |
-    sed -n 's/^n.*:\([0-9][0-9]*\)$/\1/p' | sort -n | head -1)"
+    sed -n 's/^n.*:\([0-9][0-9]*\)$/\1/p' | sort -n | head -1 || true)"
   if [ -n "$p" ]; then
     echo "$p"
     exit 0
