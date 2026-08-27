@@ -699,6 +699,9 @@ run = [
 [bootstrap.hooks.post-defaults]
 run = "killall Finder SystemUIServer Dock || true"
 
+# Full machine bootstrap reaches this hook once after tool install. The scoped
+# bootstrap apply/upgrade commands in `mise run up` do not run post-tools; up
+# calls fnox:sync once in its explicit update sequence instead.
 [bootstrap.hooks.post-tools]
 run = ["mise run setup:kanata", "mise run fnox:sync"]
 
@@ -714,17 +717,6 @@ login_shell = "/opt/homebrew/bin/fish"
 [vars]
 nerd_fonts_version = "3.4.0"
 nerd_fonts = "JetBrainsMono FiraCode Iosevka VictorMono FantasqueSansMono NerdFontsSymbolsOnly"
-
-# Runs at step 8 of `mise bootstrap`, after [tools] (fnox available) and after
-# post-packages installed 1Password + op. Environment secrets come straight
-# from fnox (activate/exec); the dedicated post-tools hook syncs the local
-# secret cache and renders s3cfg via fnox:sync.
-# Helium moved to [tools] when its releases repo went public — no token needed.
-[tasks.bootstrap]
-run = [
-  # "mise install fnox",
-  # "mise run setup:op:signin",
-]
 
 [tasks.doctor]
 description = "Post-bootstrap health checks (bootstrap.sh runs this last)"
@@ -846,13 +838,13 @@ fi
 
 [tasks."setup:fnox"]
 alias = "fnox:setup"
-description = "Link the shared fnox config, create the machine-local config + age cache key, and verify 1Password secret access"
+description = "Generate the machine-local fnox config and age cache key, then verify 1Password secret access"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox-setup"
 # raw: 1Password may request biometric approval on the terminal
 raw = true
 
 [tasks."fnox:sync"]
-description = "Refresh the local age-encrypted secret cache from 1Password and re-render s3cfg"
+description = "Atomically refresh fnox config and age cache once, then re-render s3cfg"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox-sync"
 # raw: 1Password may request biometric approval on the terminal
 raw = true

@@ -5,10 +5,11 @@
 # Usage:
 #   mise run fnox:sync   (or: ~/.dotfiles/mise/tasks/fnox-sync)
 #
-# Regenerates ~/.config/fnox/config.toml from the shared config (via
-# fnox-setup), resolves every onepass-backed secret, and writes age-encrypted
-# `sync` cache entries into it. fnox then resolves from the cache (offline, no
-# 1Password round-trips) until the next sync. Finishes by re-rendering the
+# Builds a staged ~/.config/fnox/config.toml from shared config (via fnox-setup
+# without its standalone source checks), resolves every onepass-backed secret
+# once, writes age-encrypted `sync` entries, verifies them, then atomically
+# activates the result. Fnox resolves from the cache offline until
+# the next sync. Finishes by re-rendering the
 # s3cmd config from the cached DO Spaces values. Re-run after rotating
 # secrets or changing op:// references in the shared config.
 set -euo pipefail
@@ -19,17 +20,45 @@ fail() {
   exit 1
 }
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-config_target="${XDG_CONFIG_HOME:-$HOME/.config}/fnox/config.toml"
+[[ "$#" -eq 0 ]] || fail "fnox:sync accepts no arguments"
 
-# Regenerate the global config (drops stale caches) and verify op access
-"$script_dir/fnox-setup"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fnox_dir="${XDG_CONFIG_HOME:-$HOME/.config}/fnox"
+config_target="$fnox_dir/config.toml"
+staged=""
+
+cleanup() {
+  if [[ -n "$staged" && -f "$staged" ]]; then
+    : >"$staged"
+    if [[ -x /usr/bin/trash ]]; then
+      /usr/bin/trash "$staged"
+    else
+      trash "$staged"
+    fi
+  fi
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+mkdir -p "$fnox_dir"
+umask 077
+staged="$(mktemp "$fnox_dir/config.toml.sync.XXXXXX")"
+
+# Build and sync a staging config so a transient source failure cannot destroy
+# the last valid offline cache.
+"$script_dir/fnox-setup" --skip-source-verify --config-target "$staged"
 echo
 
-fnox sync --global --provider agecache --source onepass --force
-ok "Synced 1Password secrets to the local age cache"
+fnox sync --config "$staged" --provider agecache --source onepass --force
+ok "Synced 1Password secrets to the staged age cache"
 
-fnox get APPLE_TEAM_ID --config "$config_target" >/dev/null
+fnox get APPLE_TEAM_ID --config "$staged" >/dev/null
 ok "fnox resolved APPLE_TEAM_ID from the refreshed cache"
+
+chmod 600 "$staged"
+mv "$staged" "$config_target"
+staged=""
+ok "Activated refreshed fnox config: $config_target"
 
 "$script_dir/render-s3cfg"
