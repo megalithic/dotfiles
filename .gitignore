@@ -4,9 +4,10 @@ local.nix
 _plans/
 .local_scripts/
 
-# Auto-generated documentation
+# Auto-generated documentation and runtime config state
 _docs/
 docs/
+mise/config/fish/fish_variables
 
 .pi
 .nvim.lua

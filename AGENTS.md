@@ -58,11 +58,11 @@ When `op`, 1Password CLI integration, or fnox secret resolution fails, follow th
 
 **Common nix-managed paths:**
 
-- `~/.pi/agent/*` → `home/common/programs/pi-coding-agent/`
-- `~/.config/fish/*` → `home/common/programs/fish/`
+- `~/.pi/agent/*` → `mise/config/pi-coding-agent/` (mise-managed symlinks plus runtime state merged by `mise run pi:update`)
+- `~/.config/fish/*` → `mise/config/fish/` (mise-managed symlink)
 - `~/.config/ghostty/*` → `config/ghostty/` (out-of-store symlink)
 - `~/.config/tmux/*` → `mise/config/tmux/` (mise-managed symlink)
-- `~/.config/nvim/*` → `config/nvim/` (out-of-store symlink)
+- `~/.config/nvim/*` → `mise/config/nvim/` (mise-managed symlink; nvim itself is mise-installed)
 - `~/Applications/Nix/*` → Finder aliases created by `home/common/mac-aliases.nix`
 - Most `~/.config/<app>/*` → check `home/common/programs/<app>/` first
 
@@ -115,9 +115,6 @@ When `op`, 1Password CLI integration, or fnox secret resolution fails, follow th
 │   └── default.nix        # Brave Nightly, Fantastical, Bloom, etc.
 ├── overlays/              # Nixpkgs overlays
 ├── config/                # Out-of-store app configs (live symlinks)
-│   ├── hammerspoon/       # macOS automation (Lua)
-│   ├── nvim/              # Neovim config (Lua)
-│   ├── tmux/              # Terminal multiplexer
 │   └── ghostty/           # Terminal emulator
 ├── bin/                   # User scripts (symlinked to ~/bin/)
 └── docs/                  # Curated architecture docs, skills, agents, commands
