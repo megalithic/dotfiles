@@ -7,19 +7,15 @@
 #
 # Running `ftm` with no argument opens a fuzzy-finder over recent sessions,
 # pre-defined layouts, running sessions, and the top zoxide directories.
-# Passing an argument switches to that session if it exists or creates it
-# (layout script of the same name wins).
+# Passing an argument switches to that session if it exists, restores its
+# snapshot if present, or creates it from a layout/default.
 #
 # Picker ordering (top → bottom):
-#   1. ftm's own MRU list (state file; every switch/create bumps an entry
-#      as "name<TAB>cwd", so entries whose session died but whose dir still
-#      exists — e.g. killed worktree sessions — keep rendering and recreate
-#      in the right directory)
-#   2. running sessions not in MRU, by tmux last-attached (desc)
-#   3. top zoxide dirs (frecency order) not already listed, shown as
-#      "name<TAB>dimmed-path"; names colliding with a layout script defer to
-#      the layout entry (layout wins on select)
-#   4. remaining layouts, alphabetical
+#   1. running MRU sessions
+#   2. remaining running sessions by tmux last-attached (desc)
+#   3. dim divider row (selection is a no-op)
+#   4. dead MRU entries, then zoxide dirs by frecency
+#   5. remaining layouts, alphabetical
 #
 # Hooks (similar to wt/mise hooks): executable scripts in
 # $TMUX_HOOKS (default ~/.config/tmux/hooks), one per event:
@@ -27,11 +23,12 @@
 #   post-create.sh  after a new session is built, before switching
 #   post-switch.sh  after any switch/attach (including brand-new sessions)
 # Each receives: $1 session name, $2 cwd (session path), $3 source
-# (layout|zoxide|default), plus FTM_EVENT/FTM_SESSION/FTM_CWD/FTM_SOURCE env.
+# (layout|zoxide|default|snapshot), plus FTM_EVENT/FTM_SESSION/FTM_CWD/FTM_SOURCE env.
 #
 # Keybinds in the picker:
-#   enter   switch/create session from selection or typed query
-#   ctrl-k  kill selected session (ctrl-x also works)
+#   enter   switch/create/restore from selection or typed query
+#   alt-enter  force fresh creation with default layout
+#   ctrl-k  snapshot and kill selected session (ctrl-x also works)
 #   ctrl-r  rename selected session
 #
 # Dependencies: tmux, fzf (>= 0.53 for native --tmux popups); zoxide optional
@@ -64,6 +61,191 @@ C_BOLD=$'\e[1m'
 C_DIM=$'\e[2m'
 
 TAB=$'\t'
+FTM_FRESH='__FTM_FRESH__'
+SNAPSHOT_DIVIDER='┈┈┈ dirs & layouts ┈┈┈'
+
+function b64_encode() {
+  [[ -n $1 ]] || { printf -- '-'; return; }
+  printf '%s' "$1" | base64 | tr -d '\n'
+}
+function b64_decode() {
+  local value
+  value="$(cat)"
+  [[ $value != - ]] || return 0
+  if base64 -D </dev/null >/dev/null 2>&1; then printf '%s' "$value" | base64 -D
+  else printf '%s' "$value" | base64 --decode
+  fi
+}
+function valid_snapshot_name() {
+  [[ -n $1 && $1 != . && $1 != .. && $1 != */* && $1 != *$'\n'* && $1 != *$'\t'* ]]
+}
+function snapshot_file() { printf '%s/snapshots/%s' "$FTM_STATE_DIR" "$1"; }
+function foreground_command() {
+  local tty="$1" line pid tpgid args
+  while read -r pid tpgid args; do
+    [[ $pid == "$tpgid" && -n $args ]] && { printf '%s' "$args"; return; }
+  done < <(ps -t "${tty##*/}" -o pid=,tpgid=,args= 2>/dev/null || true)
+  printf '%s' "${2:-}"
+}
+
+function snapshot_session() {
+  local session="$1" sid path tmp w p line win_name layout active zoom cwd cmd pi_id pane_tty pane_active panes
+  valid_snapshot_name "$session" || return 1
+  sid="$(session_id_for "$session")" || return 0
+  umask 077
+  mkdir -p "$FTM_STATE_DIR/snapshots"
+  chmod 700 "$FTM_STATE_DIR" "$FTM_STATE_DIR/snapshots" 2>/dev/null || true
+  tmp="$(mktemp "$FTM_STATE_DIR/snapshots/.snapshot.XXXXXX")"
+  path="$(tmux display-message -p -t "$sid" '#{session_path}')"
+  { printf 'version%s1\n' "$TAB"
+    printf 'path%s%s\n' "$TAB" "$(b64_encode "$path")"
+    printf 'active%s%s\n' "$TAB" "$(tmux display-message -p -t "$sid" '#{window_index}')"
+    while IFS= read -r line; do
+      w="${line%%"$TAB"*}"; line="${line#*"$TAB"}"; win_name="${line%%"$TAB"*}"; line="${line#*"$TAB"}"
+      layout="${line%%"$TAB"*}"; line="${line#*"$TAB"}"; active="${line%%"$TAB"*}"; zoom="${line#*"$TAB"}"
+      printf 'window%s%s%s%s%s%s%s%s%s%s\n' "$TAB" "$w" "$TAB" "$(b64_encode "$win_name")" "$TAB" "$(b64_encode "$layout")" "$TAB" "$active" "$TAB" "$zoom"
+      while IFS= read -r p; do
+        p="${p//$TAB$TAB/$TAB-$TAB}"
+        IFS=$TAB read -r _ cwd cmd pi_id pane_tty pane_active <<EOF
+$p
+EOF
+        [[ $pi_id == - ]] && pi_id=""
+        cmd="$(foreground_command "$pane_tty" "$cmd")"
+        printf 'pane%s%s%s%s%s%s%s%s%s%s%s%s\n' "$TAB" "$w" "$TAB" "${p%%"$TAB"*}" "$TAB" "$(b64_encode "$cwd")" "$TAB" "$(b64_encode "$cmd")" "$TAB" "$(b64_encode "$pi_id")" "$TAB" "$pane_active"
+      done < <(tmux list-panes -t "$sid:$w" -F '#{pane_index}'"$TAB"'#{pane_current_path}'"$TAB"'#{pane_current_command}'"$TAB"'#{@pi_session_id}'"$TAB"'#{pane_tty}'"$TAB"'#{pane_active}' 2>/dev/null)
+    done < <(tmux list-windows -t "$sid" -F '#{window_index}'"$TAB"'#{window_name}'"$TAB"'#{window_layout}'"$TAB"'#{window_active}'"$TAB"'#{window_zoomed_flag}')
+  } >"$tmp" && mv "$tmp" "$(snapshot_file "$session")"
+}
+
+function snapshot_all() {
+  local line
+  while IFS= read -r line; do snapshot_session "${line#* }"; done < <(tmux list-sessions -F '#{session_id} #{session_name}' 2>/dev/null || true)
+}
+
+function snapshot_value() { printf '%s' "$1" | b64_decode; }
+function valid_snapshot() {
+  local file="$1" kind a b c d e f w active_index=""
+  local versions=0 paths=0 actives=0 window_count=0 pane_count=0
+  local windows=$'\n' pane_windows=$'\n'
+  while IFS=$TAB read -r kind a b c d e f; do
+    case $kind in
+      version)
+        [[ $a == 1 ]] || return 1
+        versions=$((versions + 1))
+        ;;
+      path)
+        [[ -n $a ]] && snapshot_value "$a" >/dev/null || return 1
+        paths=$((paths + 1))
+        ;;
+      active)
+        [[ $a =~ ^[0-9]+$ ]] || return 1
+        active_index="$a"
+        actives=$((actives + 1))
+        ;;
+      window)
+        [[ $a =~ ^[0-9]+$ && -n $b && -n $c && $d =~ ^[01]$ && $e =~ ^[01]$ ]] || return 1
+        snapshot_value "$b" >/dev/null && snapshot_value "$c" >/dev/null || return 1
+        windows+="$a"$'\n'
+        window_count=$((window_count + 1))
+        ;;
+      pane)
+        [[ $a =~ ^[0-9]+$ && $b =~ ^[0-9]+$ && -n $c && -n $d && -n $e && $f =~ ^[01]$ ]] || return 1
+        snapshot_value "$c" >/dev/null && snapshot_value "$d" >/dev/null && snapshot_value "$e" >/dev/null || return 1
+        pane_windows+="$a"$'\n'
+        pane_count=$((pane_count + 1))
+        ;;
+      *) return 1 ;;
+    esac
+  done <"$file"
+  [[ $versions == 1 && $paths == 1 && $actives == 1 && $window_count -gt 0 && $pane_count -gt 0 ]] || return 1
+  [[ $windows == *$'\n'"$active_index"$'\n'* ]] || return 1
+  while IFS= read -r w; do
+    [[ -z $w || $pane_windows == *$'\n'"$w"$'\n'* ]] || return 1
+  done <<<"$windows"
+  while IFS= read -r w; do
+    [[ -z $w || $windows == *$'\n'"$w"$'\n'* ]] || return 1
+  done <<<"$pane_windows"
+}
+function discard_restored_session() {
+  local sid
+  sid="$(session_id_for "$1")" || return 0
+  tmux kill-session -t "$sid" 2>/dev/null || true
+}
+function restore_snapshot() {
+  local session="$1" file="$FTM_STATE_DIR/snapshots/" sid w path active first=1 win_name layout wactive zoom _idx cwd cmd pi_id pane_active pane_count pane_cwd shell pane_target window_target current_index
+  local -a pane_targets=()
+  valid_snapshot_name "$session" || return 1
+  file="$(snapshot_file "$session")"; [[ -s $file ]] || return 1
+  IFS=$TAB read -r version value <"$file"
+  [[ $version == version && $value == 1 ]] || return 1
+  valid_snapshot "$file" || return 1
+  path=""; active=""
+  while IFS=$TAB read -r kind a b c d e; do
+    case $kind in
+      path) path="$(snapshot_value "$a")" ;;
+      active) active="$a" ;;
+      window)
+        w="$a"; win_name="$(snapshot_value "$b")"; layout="$(snapshot_value "$c")"; wactive="$d"; zoom="$e"
+        [[ -d $path ]] || path="$HOME/code"
+        [[ -d $path ]] || path="$HOME"
+        if [[ $first == 1 ]]; then
+          tmux new-session -d -s "$session" -n "$win_name" -c "$path" || return 1
+          first=0
+          sid="$(session_id_for "$session")" || { discard_restored_session "$session"; return 1; }
+          window_target="$(tmux display-message -p -t "$sid" '#{window_id}')" || { discard_restored_session "$session"; return 1; }
+          current_index="$(tmux display-message -p -t "$window_target" '#{window_index}')" || { discard_restored_session "$session"; return 1; }
+          [[ $current_index == "$w" ]] || tmux move-window -s "$window_target" -t "$sid:$w" || { discard_restored_session "$session"; return 1; }
+        else
+          window_target="$(tmux new-window -d -P -F '#{window_id}' -t "$sid:$w" -n "$win_name" -c "$path")" || { discard_restored_session "$session"; return 1; }
+        fi
+        pane_count=0
+        pane_targets=()
+        while IFS=$TAB read -r pk pw _idx cwd cmd pi_id pane_active; do
+          [[ $pk == pane && $pw == "$w" ]] || continue
+          pane_cwd="$(snapshot_value "$cwd")"
+          [[ -d $pane_cwd ]] || pane_cwd="$path"
+          if [[ $pane_count == 0 ]]; then
+            pane_target="$(tmux display-message -p -t "$window_target" '#{pane_id}')" || { discard_restored_session "$session"; return 1; }
+            tmux respawn-pane -k -t "$pane_target" -c "$pane_cwd" || { discard_restored_session "$session"; return 1; }
+          else
+            pane_target="$(tmux split-window -d -P -F '#{pane_id}' -t "$window_target" -c "$pane_cwd")" || { discard_restored_session "$session"; return 1; }
+          fi
+          pane_targets[pane_count]="$pane_target"
+          pane_count=$((pane_count + 1))
+        done <"$file"
+        tmux select-layout -t "$window_target" "$layout" 2>/dev/null || { discard_restored_session "$session"; return 1; }
+        if [[ $wactive == 1 ]]; then
+          tmux select-window -t "$window_target" || { discard_restored_session "$session"; return 1; }
+        fi
+        if [[ $zoom == 1 ]]; then
+          tmux resize-pane -Z -t "$window_target" || { discard_restored_session "$session"; return 1; }
+        fi
+        pane_count=0
+        while IFS=$TAB read -r pk pw _idx cwd cmd pi_id pane_active; do
+          [[ $pk == pane && $pw == "$w" ]] || continue
+          pane_target="${pane_targets[pane_count]}"
+          pane_count=$((pane_count + 1))
+          cwd="$(snapshot_value "$cwd")"; cmd="$(snapshot_value "$cmd")"; pi_id="$(snapshot_value "$pi_id")"
+          [[ -d $cwd ]] || cwd="$path"
+          shell="${cmd%% *}"; shell="${shell##*/}"; shell="${shell#-}"
+          if [[ $pane_active == 1 ]]; then
+            tmux select-pane -t "$pane_target" || { discard_restored_session "$session"; return 1; }
+          fi
+          case "$shell" in fish|bash|zsh|sh) continue ;; esac
+          [[ -n $pi_id ]] && cmd="pi --session $pi_id"
+          if [[ -n $cmd ]]; then
+            tmux send-keys -t "$pane_target" "cd $(printf %q "$cwd") && $cmd" Enter || { discard_restored_session "$session"; return 1; }
+          fi
+        done <"$file"
+        ;;
+    esac
+  done <"$file"
+  if [[ -n $active ]]; then
+    tmux select-window -t "$sid:$active" 2>/dev/null || { discard_restored_session "$session"; return 1; }
+  fi
+  bump_recent "$session" "$path"
+  return 0
+}
 
 function __help() {
   local tmux_running fzf_found
@@ -75,6 +257,8 @@ function __help() {
   printf -- "   Options:\n"
   printf -- "     -p              Run fzf directly (already inside a tmux popup); default uses fzf --tmux\n"
   printf -- "     -h              This help text you're presently reading. 😄\n"
+  printf -- "     --snapshot=NAME Save a running session snapshot\n"
+  printf -- "     --snapshot-all Save snapshots for all running sessions\n"
   printf -- "\n"
   printf -- "   Hooks (executable scripts in \$TMUX_HOOKS, default ~/.config/tmux/hooks):\n"
   printf -- "     pre-create.sh / post-create.sh / post-switch.sh\n"
@@ -88,7 +272,7 @@ function __help() {
   exit 0
 }
 
-if ! command -v fzf &>/dev/null; then
+if ! command -v fzf &>/dev/null && [[ ${1:-} != --snapshot=* && ${1:-} != --snapshot-all && ${1:-} != -s ]]; then
   printf -- "ERROR: %s requires fzf to be installed\n" "$__base"
   __help
   # shellcheck disable=SC2317 # defensive; __help exits
@@ -282,7 +466,7 @@ function print_running() {
 function print_list() {
   local exclude_current="${1:-}"
   local emitted=$'\n' sess_wrapped=$'\n'
-  local s name path line zi mi n f st st_pid st_sess
+  local s name path line zi mi n f st st_pid st_sess running_count=0
   local status_asking=$'\n' status_done=$'\n'
   local -a sess_order=() zx_names=() zx_paths=() mru_names=() mru_paths=()
 
@@ -331,17 +515,34 @@ function print_list() {
     done <"$recent_file"
   fi
 
-  # 1) MRU block — an entry renders as (in priority order): running session,
-  #    layout, stored cwd (dir must still exist — killed worktree sessions
-  #    land here), zoxide dir; entries resolving to nothing are skipped
+  # 1) MRU running sessions, then remaining running sessions by last-attached.
+  for mi in "${!mru_names[@]}"; do
+    name="${mru_names[$mi]}"
+    [[ $name == "default" || $name == "$exclude_current" ]] && continue
+    [[ $sess_wrapped == *$'\n'"$name"$'\n'* ]] || continue
+    [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
+    emitted+="$name"$'\n'
+    running_count=$((running_count + 1))
+    print_running "$name"
+  done
+
+  # 2) remaining running sessions by last-attached
+  for name in "${sess_order[@]}"; do
+    [[ $name == "default" || $name == "$exclude_current" ]] && continue
+    [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
+    emitted+="$name"$'\n'
+    running_count=$((running_count + 1))
+    print_running "$name"
+  done
+
+  [[ $running_count -gt 0 ]] && printf '%s\n' "$C_DIM$SNAPSHOT_DIVIDER$C_RESET"
+
+  # 3) dead MRU entries, then zoxide dirs and layouts.
   for mi in "${!mru_names[@]}"; do
     name="${mru_names[$mi]}"
     [[ $name == "default" || $name == "$exclude_current" ]] && continue
     [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
-    if [[ $sess_wrapped == *$'\n'"$name"$'\n'* ]]; then
-      emitted+="$name"$'\n'
-      print_running "$name"
-    elif [[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]]; then
+    if [[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]]; then
       emitted+="$name"$'\n'
       printf '%s%s%s\n' "$C_DIM" "$name" "$C_RESET"
     elif [[ -n ${mru_paths[$mi]} && -d ${mru_paths[$mi]} ]]; then
@@ -358,15 +559,7 @@ function print_list() {
     fi
   done
 
-  # 2) remaining running sessions by last-attached
-  for name in "${sess_order[@]}"; do
-    [[ $name == "default" || $name == "$exclude_current" ]] && continue
-    [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
-    emitted+="$name"$'\n'
-    print_running "$name"
-  done
-
-  # 3) remaining zoxide dirs by frecency (layout name wins → deferred to 4)
+  # remaining zoxide dirs by frecency (layout name wins → deferred to 4)
   for zi in "${!zx_names[@]}"; do
     name="${zx_names[$zi]}"
     [[ -z $name || $name == "default" || $name == "$exclude_current" ]] && continue
@@ -402,9 +595,21 @@ function to_session() {
 # -- new session with pre-defined layout, OR just new basic tmux session.
 #    Fires pre-create/post-create hooks around the build.
 function new_session() {
-  local session="$1" cwd="$2" source="${3:-default}"
+  local session="$1" cwd="$2" source="${3:-default}" sid restored_cwd
 
-  [[ -n $layouts_dir && -f "$layouts_dir/$session.sh" ]] && source="layout"
+  if [[ $source != fresh && -f "$(snapshot_file "$session")" ]] && restore_snapshot "$session"; then
+    sid="$(session_id_for "$session")"
+    restored_cwd="$(tmux display-message -p -t "$sid" '#{session_path}' 2>/dev/null || printf '%s' "$cwd")"
+    run_hook post-create "$session" "$restored_cwd" "snapshot"
+    to_session "$session"
+    return 0
+  fi
+  local force_default=0
+  if [[ $source == fresh ]]; then
+    source="default"
+    force_default=1
+  fi
+  [[ $force_default == 0 && -n $layouts_dir && -f "$layouts_dir/$session.sh" ]] && source="layout"
 
   run_hook pre-create "$session" "$cwd" "$source"
 
@@ -425,11 +630,12 @@ function new_session() {
 
 # -- try to change to an existing session; otherwise, create a new one
 function try_session() {
-  local session cwd source line
+  local session cwd source line fresh=0
   # first non-empty line of fzf output (query or selection)
   session="" cwd="" source="default"
   while IFS= read -r line; do
     [[ -n $line ]] || continue
+    if [[ $line == "$FTM_FRESH" ]]; then fresh=1; continue; fi
     if [[ $line == *$TAB* ]]; then
       # zoxide entry: "name<TAB>path" (~ shortened for display)
       session="${line%%"$TAB"*}"
@@ -441,7 +647,7 @@ function try_session() {
     fi
     break
   done <<<"$1"
-  [[ -n $session ]] || exit 0
+  [[ -n $session && $session != "$SNAPSHOT_DIVIDER" ]] || exit 0
 
   if [[ -z $cwd ]]; then
     cwd=$(zoxide query "$session" 2>/dev/null || true)
@@ -454,7 +660,11 @@ function try_session() {
     source="default"
   fi
 
-  to_session "$session" 2>/dev/null || new_session "$session" "$cwd" "$source"
+  to_session "$session" 2>/dev/null || {
+    if [[ $fresh == 1 ]]; then new_session "$session" "$cwd" fresh
+    else new_session "$session" "$cwd" "$source"
+    fi
+  }
 }
 
 function fuzzy_find() {
@@ -471,10 +681,10 @@ function fuzzy_find() {
 
   if [[ $sessions_count -le 1 ]]; then
     fzf_prompt_text=" create new session  "
-    fzf_header_text="󰢩 recent dirs & layouts"
+    fzf_header_text="󰢩 recent dirs & layouts [alt-enter: fresh]"
   else
     fzf_prompt_text=" new or existing session  "
-    fzf_header_text="󰢩 ${C_ITALIC}${C_MAGENTA}${current_session}${C_RESET} [${C_WHITE}ctrl-k${C_RESET}: ${C_GRAY}kill / ${C_WHITE}ctrl-r${C_RESET}: ${C_GRAY}rename${C_RESET}]"
+    fzf_header_text="󰢩 ${C_ITALIC}${C_MAGENTA}${current_session}${C_RESET} [${C_WHITE}ctrl-k${C_RESET}: ${C_GRAY}kill / ${C_WHITE}ctrl-r${C_RESET}: ${C_GRAY}rename / ${C_WHITE}alt-enter${C_RESET}: ${C_GRAY}fresh${C_RESET}]"
   fi
 
   # -- picker actions; reload regenerates the annotated list so markers stay correct
@@ -509,6 +719,7 @@ function fuzzy_find() {
       --bind="ctrl-x:${kill_action}" \
       --bind="ctrl-r:${rename_action}" \
       --bind="enter:replace-query+print-query" \
+      --bind="alt-enter:print(${FTM_FRESH})+replace-query+print-query" \
       --pointer='▌' \
       --marker='󰛄' \
       --print-query \
@@ -528,11 +739,19 @@ while getopts "phs:-:" OPTION; do
     __help
     ;;
   s)
-    echo "Saving session with session name: $OPTARG"
+    snapshot_session "$OPTARG"
     exit 0
     ;;
   -)
     case "$OPTARG" in
+    snapshot=*)
+      snapshot_session "${OPTARG#snapshot=}"
+      exit 0
+      ;;
+    snapshot-all)
+      snapshot_all
+      exit 0
+      ;;
     list)
       # internal: annotated list for fzf reload binds
       print_list "$(tmux display-message -p '#S' 2>/dev/null || true)"

@@ -36,6 +36,10 @@ if [ "$kill_session" = "$switch_session" ]; then
   switch_session=""
 fi
 
+# Snapshot before switching or killing. ftm owns the snapshot format so global
+# and picker kill bindings have identical behavior.
+"$HOME/.local/bin/ftm" --snapshot="$kill_session" 2>/dev/null || true
+
 # switch client to another session before killing
 switch_sid=""
 [ -n "$switch_session" ] && switch_sid=$(session_id_for "$switch_session")
