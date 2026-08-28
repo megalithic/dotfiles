@@ -107,13 +107,12 @@ fnox get APPLE_TEAM_ID >/dev/null 2>&1 && ok "fnox secret resolution" || bad "fn
 sp="$(git config --get gpg.ssh.program 2>/dev/null)"
 [[ -x "$sp" ]] && ok "git signer exists: $sp" || bad "git gpg.ssh.program missing/not executable"
 
-hdr "GUI apps (cask owns, HM Apps only expected leftovers)"
-for app in "Brave Browser Nightly" Ghostty Contexts Discord MeetingBar Obsidian "Proton Drive" ProtonVPN ColorSnapper2 "Yubico Authenticator"; do
+hdr "GUI apps (cask owns, HM Apps empty)"
+for app in "Brave Browser Nightly" Ghostty Contexts Discord MeetingBar Obsidian "Proton Drive" ProtonVPN ColorSnapper2 "Yubico Authenticator" IINA Inkscape OBS Slack "Tidewave IDE" zoom.us "Okta Verify"; do
   [[ -d "/Applications/$app.app" ]] && ok "/Applications/$app.app" || bad "/Applications/$app.app missing"
 done
 hm_apps="$(ls "$HOME/Applications/Home Manager Apps/" 2>/dev/null | sort | tr '\n' ' ')"
-expected="IINA.app Inkscape.app OBS.app Slack.app Tidewave.app zoom.us.app "
-[[ "$hm_apps" == "$expected" ]] && ok "HM Apps = expected six" || wrn "HM Apps drifted: $hm_apps"
+[[ -z "$hm_apps" ]] && ok "HM Apps empty (all GUI apps cask-owned)" || wrn "HM Apps drifted: $hm_apps"
 
 hdr "Key config symlinks (mise [dotfiles])"
 for link in ghostty fish tmux; do
