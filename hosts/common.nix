@@ -23,12 +23,8 @@ in
     maple-mono.NF
     maple-mono.truetype
     maple-mono.variable
-    nerd-fonts.fantasque-sans-mono
-    nerd-fonts.fira-code
-    nerd-fonts.iosevka
-    nerd-fonts.jetbrains-mono
-    nerd-fonts.symbols-only
-    nerd-fonts.victor-mono
+    # nerd-fonts.* removed 2026-08 — mise owns nerd fonts (~/Library/Fonts via
+    # `mise run fonts:install`, list in global_config.toml vars.nerd_fonts)
     noto-fonts-color-emoji
     twemoji-color-font
     victor-mono
