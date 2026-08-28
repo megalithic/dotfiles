@@ -12,13 +12,9 @@ The auto-import filters by directory shape; `home/common/default.nix` still impo
 
 ## Package and app composition
 
-Home Manager package composition avoids direct `pkgs.poppler` plus `pkgs."poppler-utils"` installs; PDF CLI tools come from `poppler-utils`.
+The 2026-08 first mise-only wave removed shared Home Manager apps and packages covered by verified mise or Homebrew sources.
 
-Python CLI packages use `python313Packages`, but `sqlfmt` is intentionally not installed from Nix while nixpkgs' Python 3.13 build fails its metadata lookup.
-
-Hunk is installed from the `hunk` flake input (`inputs.hunk.packages.${pkgs.stdenv.hostPlatform.system}.hunk`) rather than nixpkgs.
-
-GUI `.app` packages built through `mkApp` register in `config.mega.customApps`, and `mkAppActivation` copies or symlinks them into `/Applications` and links any exposed CLI binaries into `~/.local/bin`. Custom `mkApp` packages managed by a wrapper module should set `appLocation = "wrapper"` so the base package is not also added to `home.packages`.
+IINA, Inkscape, Slack, Zoom, OBS beta, Tidewave GUI/CLI, k9s, Rust, Difftastic, Python, Lua, and the remaining shared fonts moved to mise declarations. Tidewave's GUI uses the GitHub DMG postinstall pattern while its CLI remains the Aqua tool. Fnox and mise tasks own dependent config/activation behavior as each module retires.
 
 Local inference uses llama.cpp, not Ollama. The service is mise-owned on both hosts: launchd agent `dev.mise.com.megadots.llama-cpp` runs `mise/tasks/llama-server-launchd` (the `home/common/programs/llama-cpp-local/` module still defines the nix options but is no longer enabled anywhere; running both fought over port 18080). The wrapper launches the absolute `llama-cpp/latest/llama-server` binary so unattended startup never enters a mise shim or fnox resolution. `mise/config/llama-cpp/models.ini` supplies router overrides: `nomic-embed` runs in embedding mode with a 2048-token context and mean pooling, exposing 768-dimensional OpenAI-compatible embeddings at `http://127.0.0.1:18080/v1/embeddings`. `home/common/programs/ollama/` stays an inert compatibility module. `bin/llm-pull` defaults to the `llamacpp` backend and creates GGUF alias symlinks (`qwen3.6.gguf`, `deepseek14b.gguf`, `gemma4.gguf`, `nomic-embed.gguf`) so the router exposes stable model IDs.
 
@@ -36,7 +32,7 @@ Fish carries repo workflow helpers and desktop integration environment variables
 
 Fish config is fully mise-owned: `~/.config/fish` is a mise `[dotfiles]` symlink to `mise/config/fish/` (`config.fish`, `conf.d/*.fish`, `functions/*.fish`, `interactive/*.fish`). The HM fish and bash modules are removed; fish plugins (autopair, nix-env, done) went with them by design — the mise port is plugin-free. Nix-specific PATH setup (`~/.nix-profile/bin`, per-user profile) lives in the committed fragment `mise/fragments/fish/nix.fish`, linked to `~/.local/share/fish/nix.fish` via `[dotfiles]` and sourced by `conf.d/env.fish` when present; `conf.d/00-path.fish` bootstraps portable paths. The mise tree activates mise from `mise/config/fish/conf.d/mise.fish` and keeps fish-only aliases in `mise/config/fish/interactive/aliases.fish`; shared shell aliases live only in `mise/config/mise/global_config.toml` `[shell_alias]` now that the nix mise `globalConfig` duplicate is gone. `mise/config/mise/global_config.toml` also links `~/.profile`, `~/.bashrc`, `~/.bash_profile`, `~/.zshrc`, and `~/.zprofile` from `mise/config/bash/` and `mise/config/zsh/` so bash/zsh get the same mise hook plus upstream Worktrunk init.
 
-Prompt/tool hooks all live in `conf.d/`: `starship.fish`, `fzf.fish` (exports `FZF_DEFAULT_OPTS`/commands), `zoxide.fish`, `atuin.fish`, and a guarded `direnv.fish` (skips when the nix profile's vendor hook already loaded); the HM starship/fzf/zoxide modules are removed. The login shell is `/opt/homebrew/bin/fish` (brew formula; nix-darwin fish is removed). Fish fzf Ctrl-T uses fzf's fish token parser, so the current path token becomes `$dir` and `conf.d/fzf.fish` passes `$dir` as fd's explicit search path. Fish defines a `jj` wrapper that runs real `jj` inside jj repos, allows `jj git init`, and falls back to `git` with a hint in plain git repos. `PLUG_EDITOR` is exported as a `hammerspoon://nvim-open` URL so stack-trace links delegate final Neovim target resolution to Hammerspoon.
+Prompt/tool hooks all live in `conf.d/`: `starship.fish`, `fzf.fish` (exports `FZF_DEFAULT_OPTS`/commands), `zoxide.fish`, `atuin.fish`, and `direnv.fish`; the HM starship/fzf/zoxide/direnv modules are removed. Mise links a pinned nix-direnv `direnvrc` into `~/.config/direnv/`. The login shell is `/opt/homebrew/bin/fish` (brew formula; nix-darwin fish is removed). Fish fzf Ctrl-T uses fzf's fish token parser, so the current path token becomes `$dir` and `conf.d/fzf.fish` passes `$dir` as fd's explicit search path. Fish defines a `jj` wrapper that runs real `jj` inside jj repos, allows `jj git init`, and falls back to `git` with a hint in plain git repos. `PLUG_EDITOR` is exported as a `hammerspoon://nvim-open` URL so stack-trace links delegate final Neovim target resolution to Hammerspoon.
 
 Fish sources `conf.d/usage.fish` to run jdx/usage `completion-init` for fish, which scans `$PATH` once per interactive shell and registers completions for executable scripts whose first line is a `usage` shebang. The sourced init is patched with a readable-file guard so unreadable system executables do not print startup warnings.
 
@@ -118,7 +114,7 @@ User-level tools, one line each. Rows marked **(mise)** were flipped in the mega
 | csvlens | CSV terminal viewer |
 | desktoppr | wallpaper activation |
 | devenv | devenv integration; exports `DEVENV_TUI=false` |
-| direnv | **(mise)** direnv; binary from `[tools]`, `~/.config/direnv/direnv.toml` linked from `mise/config/direnv/` via `[dotfiles]`; HM module keeps only nix-direnv + shell hooks (nix direnv binary is a deliberate dupe, mise wins PATH) |
+| direnv | **(mise)** binary, shell hooks, `direnv.toml`, and pinned nix-direnv `direnvrc`; HM module removed |
 | discord | **(mise)** chat app; `brew-cask:discord`; HM `programs.discord` module removed 2026-08 (settings.json no longer managed) |
 | espanso | **(mise)** text expander; config at `mise/config/espanso/`, cask app + staged `dev.mise.com.megadots.espanso` plist via `mise/tasks/espanso-service` (nix agent runs until the next `just home`) |
 | eza | **(mise)** ls replacement; theme under `mise/config/eza/`; aliases come from `[shell_alias]` |
@@ -126,11 +122,11 @@ User-level tools, one line each. Rows marked **(mise)** were flipped in the mega
 | firefox | browser |
 | fzf | **(mise)** fuzzy finder; binary from `[tools]`, options/widgets from `mise/config/fish/conf.d/fzf.fish`; HM module removed |
 | ghostty | **(mise)** terminal emulator; `brew-cask:ghostty@tip` + `mise/config/ghostty/` via `[dotfiles]`; HM module and `config/ghostty` twin removed — see [[programs/ghostty#Ghostty]] |
-| git | **(mise)** git, signing, gitignore/tool-ignore; `git wt` forwards to Worktrunk `wt`; `git up` runs `bin/git-prunable` after the pull (also standalone as `git prunable`) to list worktrees and local branches merged into the local default branch, each with its cleanup command (`wt step prune`, or per-path `git worktree remove` without Worktrunk, and `git branch -d …`), flagging dirty worktrees and staying silent when nothing is prunable. `mise/config/git/` is the sole owner (XDG-native: merged `~/.config/git/config` + `ignore` + `~/.ignore`, no `~/.gitconfig`; see its `AGENTS.md`); binary from nix-darwin system git until teardown, then `brew:git` |
+| git | **(mise)** Git via `brew:git`, signing, gitignore/tool-ignore; `mise/config/git/` is the sole config owner (XDG-native: merged `~/.config/git/config` + `ignore` + `~/.ignore`, no `~/.gitconfig`; see its `AGENTS.md`) |
 | hammerspoon | **(mise)** macOS automation; brew cask app + mise `[dotfiles]` config, HM module removed — see [[programs/hammerspoon#Hammerspoon]] |
 | handy | macOS app installed by mise `brew-cask:handy`; Home Manager module is a no-op so the custom Rust/Tauri backport does not build locally |
 | helium-browser | **(mise)** primary browser, installed by the mise github: tool — see [[programs/helium#Helium browser]] |
-| htop / k9s | process and Kubernetes TUIs |
+| htop / k9s | **(mise)** process and Kubernetes TUIs (`brew:htop`, `aqua:derailed/k9s`) |
 | jj | **(mise)** Jujutsu VCS. `mise/config/jj/config.toml` is the sole config (merged superset of the former HM render plus the retired `~/.jjconfig.toml`); see its `AGENTS.md` |
 | jq | JSON processor |
 | kanata / karabiner | keyboard remapping; karabiner.json is **(mise)**-owned (`mise/config/karabiner/`), kanata unchanged |
@@ -149,12 +145,13 @@ User-level tools, one line each. Rows marked **(mise)** were flipped in the mega
 | process-compose | process orchestration |
 | proton-drive | **(mise)** Proton Drive + Proton VPN GUI apps; `brew-cask:proton-drive` + `brew-cask:protonvpn`; brew-nix HM modules removed 2026-08 |
 | ripgrep | **(mise)** search tool; rc under `mise/config/ripgrep/`, `RIPGREP_CONFIG_PATH` exported from `[env]` |
-| rust | rustup + bacon toolchain |
+| rust | **(mise)** nightly Rust with rust-src/rust-analyzer/rustfmt/clippy plus `cargo:bacon`; HM and host Nix toolchains removed |
 | shade / shade-next | Hammerspoon launcher panels — shade-next is **(mise)** (github: tool + config + fragment); legacy shade module remains HM — see [[programs/hammerspoon#Hammerspoon]] |
 | slk | Slack CLI (upstream static tarball package) |
 | ssh | **(mise)** SSH config (1Password agent provides keys). `~/.ssh/config` links the shared `config/ssh/config`; `mise/config/ssh/allowed_signers` and `mise/config/1password/agent.toml` own the signing files |
 | starship | **(mise)** shell prompt; `starship.toml` under `mise/config/starship/`, prompt init from `conf.d/starship.fish`; HM module removed; git modules use `git rev-parse --show-toplevel` plus `.jj` root checks |
 | surfingkeys | **(mise)** browser keyboard nav (enabled on Tidewave); config.js under `mise/config/surfingkeys/` |
+| tidewave | **(mise)** Aqua CLI plus GitHub GUI DMG installed into `/Applications` by `install-app.sh`; Nix app/CLI declarations removed |
 | television | fuzzy TUI |
 | tmux | terminal multiplexer; layouts via `ftm`; pinned 3.7b via overlay (macOS-arm64 copy-mode crash, tmux/tmux#4962) until nixpkgs ships >= 3.7b; resurrect/continuum autosave for crash recovery |
 | worktrunk | **(mise)** worktree manager (`worktrunk` in `[tools]`, config via `[dotfiles]`; see its `AGENTS.md`); fish integration owned locally — see Fish shell helpers, `bin/wt-tmux-target`, `bin/wt-tail-logs` |

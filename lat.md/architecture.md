@@ -75,9 +75,9 @@ not duplicated in shell.
 
 ## Mise GUI app migration
 
-Mise installs only casks its current bootstrap backend can reproduce; app-only casks belong in `[bootstrap.packages]`, while casks with binary, package, completion, preflight, or privileged artifacts retain explicit handling.
+Mise 2026.8.14's cask backend handles app, binary, command-wrapper, font, installer, and supported `pkg` artifacts. Direct `[bootstrap.packages]` casks are preferred; real-Brew hooks remain only for verified lifecycle/DSL gaps.
 
-The mise 2026.6.12 audit verified Homebrew casks for every tracked GUI app. Declarative app-only casks cover Discord, Handy, MeetingBar, ColorSnapper, Contexts, Slack, Proton Drive, Proton VPN, Yubico Authenticator, and 1Password. Hammerspoon and Espanso retain real-Brew hooks because their casks ship binaries. Ghostty, IINA, Inkscape, Obsidian, MailMate, OBS beta, and Kitty have unsupported extra artifacts; Zoom and Okta Verify require package installation (Okta's nix module is removed 2026-08 — the app is unmanaged, kept current by its own AutoUpdateDaemon). Tidewave has no cask; Helium installs as a [[helium#Signed release package|declarative github: backend tool]] (public releases repo, DMG handled by the `install-app.sh` postinstall). Do not replace any special path with `brew-cask:` without re-auditing backend support and matching its activation semantics.
+The 2026-08 first-wave re-audit dry-ran IINA, Inkscape, Slack, and OBS beta successfully. Tailscale and Okta Verify now use direct cask package support; Hammerspoon uses direct binary-artifact support. Espanso keeps its verified real-Brew/service chain, and Zoom keeps a real-Brew package hook while its `on_arch_conditional` clean-machine path remains unproven. Tidewave's CLI uses Aqua and its GUI DMG uses a GitHub tool plus `install-app.sh`. Helium uses the same [[helium#Signed release package|declarative github: backend tool]] pattern.
 
 The 2026-08 GUI dedupe wave removed the HM twins on megabookpro: Brave Nightly (mkChromiumBrowser wrapper with managed extensions and flags — dropped, cask `brave-browser@nightly` is sole owner), Ghostty, Discord, MeetingBar, ColorSnapper, Contexts, Obsidian, Proton Drive, Proton VPN, and Yubico Authenticator now exist only as brew casks in `/Applications`; dock pins point there. Raycast is removed entirely (Tuna replaces it).
 
@@ -107,7 +107,7 @@ Repo-local `.devenv` and `.direnv` plus `.local_scripts/` are ignored. Unused fl
 
 Agenix and OpNix are both retired; fnox (mise) is the sole secret loader on megabookpro since 2026-08.
 
-The opnix HM module, its `lib/mkHome.nix` import, and the `opnix` flake input are removed. Leftover local state under `~/.config/opnix/` (token, rendered secrets) is unmanaged and safe to delete once nothing references it.
+The former Nix secret module, its `lib/mkHome.nix` import, and its flake input are removed. No tracked script or config reads its state; the former local state under `~/.config/opnix/` was deleted in 2026-08.
 
 Shell secret loading is mise-owned: interactive fish/bash/zsh load fnox secrets through `fnox activate` in their mise-managed shell configs.
 
@@ -144,7 +144,7 @@ Deletion is irreversible — Yubico never re-provisions the factory AES secret �
 - Repurpose slot 1 later (self-generated Yubico OTP, static password, challenge-response, or HOTP): re-enable the interface, then program with `ykman -d <serial> otp` subcommands (`yubiotp`, `static`, `chalresp`, `hotp`). A new self-generated Yubico OTP credential can be uploaded to YubiCloud at upload.yubico.com; the factory registration cannot be restored once overwritten or deleted.
 - Inspect state: `ykman -d <serial> otp info` (slot programmed/empty status only; secrets are never readable).
 
-LAT's active embedding backend is temporarily the bundled offline MiniLM model (`local:minilm-l6-v2`, 384 dimensions): the index was rebuilt with `lat reindex` run with every `LAT_LLM_*` variable unset, which records a durable per-repo local preference that wins even when the ambient Synthetic `LAT_LLM_*` environment is present. OpNix, the mise shell configs, and the Pi wrapper still export that Synthetic-pointed `LAT_LLM_*` environment. The local llama.cpp router remains ready and verified — it serves `nomic-embed` through OpenAI-compatible `/v1/embeddings` with 768-dimensional output — but released `lat.md` 0.12.2 cannot select a custom endpoint, so the final Nomic cutover is blocked on upstream PR [vercel-labs/lat.md#70](https://github.com/vercel-labs/lat.md/pull/70) landing in a release. After that release, switch LAT to the local endpoint and run `lat reindex` again (dimensions change 384 → 768, so a full rebuild is required).
+LAT's active embedding backend is temporarily the bundled offline MiniLM model (`local:minilm-l6-v2`, 384 dimensions): the index was rebuilt with `lat reindex` run with every `LAT_LLM_*` variable unset, which records a durable per-repo local preference that wins even when the ambient Synthetic `LAT_LLM_*` environment is present. Fnox still exports that Synthetic-pointed `LAT_LLM_*` environment. The local llama.cpp router remains ready and verified — it serves `nomic-embed` through OpenAI-compatible `/v1/embeddings` with 768-dimensional output — but released `lat.md` 0.12.2 cannot select a custom endpoint, so the final Nomic cutover is blocked on upstream PR [vercel-labs/lat.md#70](https://github.com/vercel-labs/lat.md/pull/70) landing in a release. After that release, switch LAT to the local endpoint and run `lat reindex` again (dimensions change 384 → 768, so a full rebuild is required).
 
 ## Git hooks and Nix linting
 
