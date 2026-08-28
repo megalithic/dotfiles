@@ -1,4 +1,4 @@
-# fnox: 1Password-backed secrets (non-nix twin of the opnix shell init).
+# fnox: 1Password-backed secrets.
 # Secrets are individual op:// field references in
 # ~/.config/fnox/config.toml; `fnox activate fish` exports them (daemon-cached)
 # and auto-loads per-project fnox.toml secrets on cd.

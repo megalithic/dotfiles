@@ -41,7 +41,7 @@ history_filter = [
 ]
 cwd_filter = [
   '/\.ssh($|/)',
-  '/\.config/(opnix|fnox)/secrets($|/)',
+  '/\.config/fnox($|/)',
 ]
 
 [stats]

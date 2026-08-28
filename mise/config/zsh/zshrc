@@ -1,18 +1,13 @@
 # Standalone zsh config for mise-managed dotfiles.
 
-# Secrets: fnox resolves op:// references directly (workbookpro; activation in
-# the interactive section below). Legacy opnix rendered files cover megabookpro.
-if [ -f "$HOME/.config/opnix/secrets/env-vars.sh" ]; then
-  source "$HOME/.config/opnix/secrets/env-vars.sh"
-fi
+# Fnox activation below exports the configured secrets.
 if [ -n "${SYNTHETIC_API_KEY:-}" ]; then
   export LAT_LLM_KEY="$SYNTHETIC_API_KEY"
 fi
-# Non-secret lat.md embedding config (LAT_LLM_KEY comes from fnox or opnix).
+# Non-secret lat.md embedding config (LAT_LLM_KEY comes from fnox).
 export LAT_LLM_BASE_URL="https://api.synthetic.new/openai/v1"
 export LAT_LLM_MODEL="hf:nomic-ai/nomic-embed-text-v1.5"
 export LAT_LLM_DIMENSIONS="768"
-[ -f "$HOME/.config/opnix/secrets/work-env-vars.sh" ] && source "$HOME/.config/opnix/secrets/work-env-vars.sh"
 
 case $- in
   *i*) ;;

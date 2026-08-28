@@ -40,8 +40,8 @@ pi-coding-agent/
 - Plannotator is version+sha256 pinned in `scripts/install-pi-tools` and lands
   in `~/.pi/agent/bin`.
 - The `pi` wrapper resolves the actual CLI via
-  `mise x npm:@earendil-works/pi-coding-agent -- pi`, sources fnox (or opnix
-  fallback) secrets, derives `LAT_LLM_*`, and applies the live-view widget patch.
+  `mise x npm:@earendil-works/pi-coding-agent -- pi`, sources fnox secrets,
+  derives `LAT_LLM_*`, and applies the live-view widget patch.
 
 ## Applying
 

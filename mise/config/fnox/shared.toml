@@ -1,6 +1,5 @@
 #:schema https://fnox.jdx.dev/schema.json
 # Shared fnox config — source of truth for providers and 1Password references.
-# Non-nix twin of home/common/programs/opnix.
 #
 # ~/.config/fnox/config.toml is GENERATED from this file by `mise run fnox`
 # (fnox ignores `import` in the auto-loaded global config, so the body is copied

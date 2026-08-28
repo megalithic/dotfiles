@@ -106,30 +106,6 @@ if [[ "$(stat -f '%Su' "$HOME/Applications")" != "$SUDO_USER" ]]; then
 fi
 chmod 755 "$HOME/Applications"
 
-echo "░ :: -> Provisioning opnix token for $FLAKE.."
-XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
-OPNIX_TOKEN="$XDG_CONFIG_HOME/opnix/token"
-OPNIX_OP_REF="op://Crypt/opnix/$FLAKE/token"
-mkdir -p "$(dirname "$OPNIX_TOKEN")"
-
-if [[ -f $OPNIX_TOKEN ]]; then
-  chmod 600 "$OPNIX_TOKEN"
-  echo "░ [✓] -> Existing opnix token found"
-elif command -v op &>/dev/null; then
-  echo "░      Fetching service account token from $OPNIX_OP_REF"
-  if op read "$OPNIX_OP_REF" >"$OPNIX_TOKEN" 2>/dev/null; then
-    chmod 600 "$OPNIX_TOKEN"
-    echo "░ [✓] -> opnix token installed"
-  else
-    rm -f "$OPNIX_TOKEN"
-    echo "░ [!] -> op read failed for $OPNIX_OP_REF"
-    echo "░      Create 1Password item first, then run: just opnix-token"
-  fi
-else
-  echo "░ [!] -> 1Password CLI (op) not found"
-  echo "░      Run after bootstrap: just opnix-token && just home"
-fi
-
 echo "░ :: -> Running home-manager for the first time for $FLAKE.." &&
   (nix run home-manager/master -- switch --flake "$DOTFILES_DIR" &&
     echo "░ [✓] -> Completed installation of $DOTFILES_DIR home-manager flake..") || echo "░ [x] -> Errored while installing $DOTFILES_DIR home-manager flake.."

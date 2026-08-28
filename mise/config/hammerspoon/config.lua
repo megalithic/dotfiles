@@ -723,7 +723,7 @@ M.notifier = {
       escalateOnRetry = true, -- Send to phone on retry
     },
 
-    -- Pushover settings (tokens via opnix env vars)
+    -- Pushover settings (tokens via fnox env vars)
     pushover = {
       enabled = true,
       -- Tokens read from env: PUSHOVER_USER_TOKEN, PUSHOVER_APP_TOKEN

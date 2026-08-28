@@ -21,15 +21,9 @@ APP="$INSTALL_DIR/Helium.app"
   exit 0
 }
 
-# Token is optional (public repo); use one when available for rate limits.
-# workbookpro inherits it from fnox shell activation/exec; megabookpro keeps
-# the opnix rendered-file fallback.
+# Token is optional (public repo); fnox activation/exec provides one when
+# available to raise GitHub API rate limits.
 TOKEN="${HOMEBREW_GITHUB_API_TOKEN:-${GITHUB_TOKEN:-}}"
-if [ -z "$TOKEN" ] && [ -f "$HOME/.config/opnix/secrets/env-vars.sh" ]; then
-  # shellcheck disable=SC1091
-  . "$HOME/.config/opnix/secrets/env-vars.sh"
-  TOKEN="${HOMEBREW_GITHUB_API_TOKEN:-${GITHUB_TOKEN:-}}"
-fi
 
 ARCH=$(uname -m) # arm64 / x86_64
 WORKDIR=$(mktemp -d "${TMPDIR:-/tmp}/install-helium.XXXXXX")

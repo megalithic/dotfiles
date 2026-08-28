@@ -4,9 +4,8 @@
 -- Setup:
 -- 1. Create bot via @BotFather on Telegram
 -- 2. Message your bot to get chat_id (use getUpdates API)
--- 3. Add to opnix shell exports:
---    export TELEGRAM_BOT_TOKEN="your-bot-token"
---    export TELEGRAM_CHAT_ID="your-chat-id"
+-- 3. Store TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in fnox, then run
+--    `mise run fnox`.
 --
 local M = {}
 
@@ -25,22 +24,30 @@ local envCache = {}
 local envCacheTime = 0
 local ENV_CACHE_TTL = 300 -- 5 minutes
 
----Get environment variable with opnix secrets fallback
+---Get environment variable with fnox fallback
 ---@param name string
 ---@return string|nil
 local function getEnvVar(name)
   local value = os.getenv(name)
-  if value and value ~= "" then return value end
+  if value and value ~= "" then
+    return value
+  end
+  if not name:match("^[A-Z][A-Z0-9_]*$") then
+    return nil
+  end
 
   local now = os.time()
-  if envCacheTime + ENV_CACHE_TTL > now and envCache[name] then return envCache[name] end
+  if envCacheTime + ENV_CACHE_TTL > now and envCache[name] then
+    return envCache[name]
+  end
 
-  -- Source opnix secrets directly (Hammerspoon doesn't inherit shell env)
-  -- Path: ${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/env-vars.sh
-  local cmd = string.format(
-    '/bin/bash -c \'source "${XDG_CONFIG_HOME:-$HOME/.config}/opnix/secrets/env-vars.sh" 2>/dev/null && echo "${%s:-}"\'',
-    name
-  )
+  -- Hammerspoon does not inherit shell activation, so read the encrypted fnox
+  -- cache through its stable mise shim.
+  local home = os.getenv("HOME")
+  if not home then
+    return nil
+  end
+  local cmd = string.format("%q get %q 2>/dev/null", home .. "/.local/share/mise/shims/fnox", name)
   local output, status = hs.execute(cmd)
 
   if status and output then
@@ -73,7 +80,9 @@ end
 ---@return string|nil url, string|nil error
 local function apiUrl(method)
   local token = getToken()
-  if not token then return nil, "missing_token" end
+  if not token then
+    return nil, "missing_token"
+  end
   return API_BASE .. token .. "/" .. method, nil
 end
 
@@ -162,7 +171,9 @@ end
 ---@param text string
 ---@return string
 function M.escapeMarkdown(text)
-  if not text then return "" end
+  if not text then
+    return ""
+  end
   -- Escape Markdown special chars: _ * [ ] ( ) ~ ` > # + - = | { } . !
   return text:gsub("([_%*%[%]%(%)~`>#+%-=|{}%.!])", "\\%1")
 end
@@ -301,7 +312,7 @@ end
 ---@param updates table Array of update objects
 local function processUpdates(updates)
   local allowedChatId = getChatId()
-  
+
   for _, update in ipairs(updates) do
     -- Track the latest update ID for offset
     if update.update_id >= M.lastUpdateId then
@@ -315,7 +326,7 @@ local function processUpdates(updates)
     elseif update.callback_query and update.callback_query.message and update.callback_query.message.chat then
       msgChatId = tostring(update.callback_query.message.chat.id)
     end
-    
+
     if msgChatId and msgChatId ~= allowedChatId then
       U.log.wf("ignoring message from unauthorized chat_id: %s", msgChatId)
       goto continue
@@ -342,10 +353,12 @@ local function processUpdates(updates)
     if update.message and update.message.voice then
       local msg = update.message
       local voice = msg.voice
-      U.log.f("received voice message from %s (duration=%ds, size=%d)", 
+      U.log.f(
+        "received voice message from %s (duration=%ds, size=%d)",
         msg.from and msg.from.username or "unknown",
         voice.duration or 0,
-        voice.file_size or 0)
+        voice.file_size or 0
+      )
 
       downloadFile(voice.file_id, function(success, localPath, err)
         if success and M.messageCallback then
@@ -368,10 +381,12 @@ local function processUpdates(updates)
     if update.message and update.message.audio then
       local msg = update.message
       local audio = msg.audio
-      U.log.f("received audio from %s: %s (duration=%ds)", 
+      U.log.f(
+        "received audio from %s: %s (duration=%ds)",
         msg.from and msg.from.username or "unknown",
         audio.title or audio.file_name or "untitled",
-        audio.duration or 0)
+        audio.duration or 0
+      )
 
       downloadFile(audio.file_id, function(success, localPath, err)
         if success and M.messageCallback then
@@ -398,11 +413,13 @@ local function processUpdates(updates)
       local photos = msg.photo
       -- Photos are sorted by size, last one is largest
       local photo = photos[#photos]
-      U.log.f("received photo from %s (%dx%d, %d bytes)", 
+      U.log.f(
+        "received photo from %s (%dx%d, %d bytes)",
         msg.from and msg.from.username or "unknown",
         photo.width or 0,
         photo.height or 0,
-        photo.file_size or 0)
+        photo.file_size or 0
+      )
 
       downloadFile(photo.file_id, function(success, localPath, err)
         if success and M.messageCallback then
@@ -429,11 +446,13 @@ local function processUpdates(updates)
       local mimeType = doc.mime_type or ""
       local isImage = mimeType:match("^image/")
 
-      U.log.f("received document from %s: %s (%s, %d bytes)", 
+      U.log.f(
+        "received document from %s: %s (%s, %d bytes)",
         msg.from and msg.from.username or "unknown",
         doc.file_name or "unnamed",
         mimeType,
-        doc.file_size or 0)
+        doc.file_size or 0
+      )
 
       downloadFile(doc.file_id, function(success, localPath, err)
         if success and M.messageCallback then
@@ -477,7 +496,7 @@ local function processUpdates(updates)
         M.answerCallbackQuery(query.id, "Response recorded: " .. (value or ""))
       end
     end
-    
+
     ::continue::
   end
 end
@@ -487,7 +506,9 @@ end
 ---@param text? string Optional notification text
 function M.answerCallbackQuery(callbackQueryId, text)
   local url, err = apiUrl("answerCallbackQuery")
-  if not url then return end
+  if not url then
+    return
+  end
 
   local payload = {
     callback_query_id = callbackQueryId,
@@ -504,10 +525,14 @@ local pollInFlight = false
 ---Poll for new updates
 local function poll()
   -- Skip if already polling (long polling can take up to 30s)
-  if pollInFlight then return end
-  
+  if pollInFlight then
+    return
+  end
+
   local url, err = apiUrl("getUpdates")
-  if not url then return end
+  if not url then
+    return
+  end
 
   -- Add offset to only get new updates, and timeout for long polling
   -- Using 30s timeout for efficient long polling
@@ -516,7 +541,7 @@ local function poll()
   pollInFlight = true
   hs.http.asyncGet(url, nil, function(status, body, headers)
     pollInFlight = false
-    
+
     if status == 200 and body then
       local ok, result = pcall(hs.json.decode, body)
       if ok and result and result.ok and result.result then

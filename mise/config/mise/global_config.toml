@@ -63,13 +63,8 @@ RIPGREP_CONFIG_PATH = "$HOME/.config/ripgrep/rc"
 HK_MISE = "1"
 HK_HIDE_WHEN_DONE = "true"
 MISE_EXPERIMENTAL = "1"
-# On workbookpro these pass through the inherited value (fnox activate/exec
-# provides it); the opnix rendered file covers megabookpro non-shell contexts.
-HOMEBREW_GITHUB_API_TOKEN = '{{ exec(command="if [ -f ~/.config/opnix/secrets/env-vars.sh ]; then . ~/.config/opnix/secrets/env-vars.sh; fi; printf %s $HOMEBREW_GITHUB_API_TOKEN") }}'
-# mise's own GitHub API auth (release/tag lookups for github:/aqua: backends
-# and `mise lock`). Unauthenticated is 60 req/hr and stalls in 429 retries.
-# mise reads MISE_GITHUB_TOKEN > GITHUB_API_TOKEN > GITHUB_TOKEN.
-GITHUB_TOKEN = '{{ exec(command="if [ -f ~/.config/opnix/secrets/env-vars.sh ]; then . ~/.config/opnix/secrets/env-vars.sh; fi; printf %s $GITHUB_TOKEN") }}'
+# GitHub API auth is inherited from `fnox activate` or `fnox exec`.
+# Unauthenticated mise release lookups are limited to 60 requests/hour.
 OP_COMMAND = "op"
 
 DOTS = "{{env.HOME}}/.dotfiles"

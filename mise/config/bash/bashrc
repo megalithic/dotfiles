@@ -190,18 +190,12 @@ complete -F _worktree_name_complete git-worktree-prune
 complete -F _pr_branch_complete git-worktree-pr
 
 
-[ -f "/Users/seth/.config/opnix/secrets/env-vars.sh" ] && source "/Users/seth/.config/opnix/secrets/env-vars.sh"
-if [ -n "$SYNTHETIC_API_KEY" ]; then
+if [ -n "${SYNTHETIC_API_KEY:-}" ]; then
   export LAT_LLM_KEY="$SYNTHETIC_API_KEY"
   export LAT_LLM_BASE_URL="https://api.synthetic.new/openai/v1"
   export LAT_LLM_MODEL="hf:nomic-ai/nomic-embed-text-v1.5"
   export LAT_LLM_DIMENSIONS="768"
 fi
-
-[ -f "/Users/seth/.config/opnix/secrets/apple-developer/apple-id" ] && export APPLE_ID_EMAIL="$(<"/Users/seth/.config/opnix/secrets/apple-developer/apple-id")"
-[ -f "/Users/seth/.config/opnix/secrets/apple-developer/team-id" ] && export APPLE_TEAM_ID="$(<"/Users/seth/.config/opnix/secrets/apple-developer/team-id")"
-[ -f "/Users/seth/.config/opnix/secrets/apple-developer/notarytool-password" ] && export APPLE_NOTARYTOOL_PASSWORD="$(<"/Users/seth/.config/opnix/secrets/apple-developer/notarytool-password")"
-[ -f "/Users/seth/.config/opnix/secrets/work-env-vars.sh" ] && source "/Users/seth/.config/opnix/secrets/work-env-vars.sh"
 
 
 # Commands that should be applied only for interactive shells.
@@ -215,20 +209,14 @@ shopt -s extglob
 shopt -s globstar
 shopt -s checkjobs
 
-# Secrets: fnox resolves op:// references directly (workbookpro; activation in
-# the interactive section below). Legacy opnix rendered files cover megabookpro.
-if [ -f "$HOME/.config/opnix/secrets/env-vars.sh" ]; then
-  # shellcheck source=/dev/null
-  source "$HOME/.config/opnix/secrets/env-vars.sh"
-fi
+# Fnox activation below exports the configured secrets.
 if [ -n "${SYNTHETIC_API_KEY:-}" ]; then
   export LAT_LLM_KEY="$SYNTHETIC_API_KEY"
 fi
-# Non-secret lat.md embedding config (LAT_LLM_KEY comes from fnox or opnix).
+# Non-secret lat.md embedding config (LAT_LLM_KEY comes from fnox).
 export LAT_LLM_BASE_URL="https://api.synthetic.new/openai/v1"
 export LAT_LLM_MODEL="hf:nomic-ai/nomic-embed-text-v1.5"
 export LAT_LLM_DIMENSIONS="768"
-[ -f "$HOME/.config/opnix/secrets/work-env-vars.sh" ] && source "$HOME/.config/opnix/secrets/work-env-vars.sh"
 
 # Commands below apply only for interactive shells.
 [[ $- == *i* ]] || return

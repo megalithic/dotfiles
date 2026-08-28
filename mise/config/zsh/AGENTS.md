@@ -9,7 +9,7 @@ integration. These files provide that portable layer:
 
 ## What lives here
 
-- fnox-first secrets loading with opnix fallback during migration.
+- Fnox shell activation for 1Password-backed secrets.
 - `mise activate zsh` so global `[env]` and `[shell_alias]` work in zsh.
 - Worktrunk upstream shell integration: `eval "$(wt config shell init zsh)"`.
 - Portable hooks for fzf, direnv, starship, and zoxide.

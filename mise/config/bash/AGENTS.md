@@ -15,7 +15,7 @@ linked by `mise/config/mise/global_config.toml`:
 - Worktrunk upstream shell integration: `eval "$(wt config shell init bash)"`.
 - Portable hooks for fzf, direnv, starship, zoxide, Ghostty shell integration,
   and the yazi `yy` cwd helper.
-- fnox-first secrets loading with opnix fallback during migration.
+- Fnox shell activation for 1Password-backed secrets.
 
 ## Keep in sync
 

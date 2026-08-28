@@ -314,30 +314,6 @@ scan:
   fi
   exit $rc
 
-# configure opnix service account token (only unmanaged secret, kept out of Nix store)
-# fetches per-host token from 1Password at op://Crypt/opnix/<hostname>/token,
-# falls back to interactive `opnix token set` if `op` is missing or unauth'd.
-opnix-token:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
-  token_file="$config_home/opnix/token"
-  host="$(hostname -s)"
-  op_ref="op://Crypt/opnix/${host}/token"
-  mkdir -p "$(dirname "$token_file")"
-  if command -v op >/dev/null 2>&1; then
-    echo ":: Fetching opnix token from $op_ref"
-    if op read "$op_ref" > "$token_file"; then
-      chmod 600 "$token_file"
-      echo ":: ✓ opnix token installed at $token_file"
-      exit 0
-    fi
-    echo ":: ⚠ op read failed, falling back to interactive entry"
-    rm -f "$token_file"
-  fi
-  opnix token -path "$token_file" set
-  chmod 600 "$token_file"
-
 # encrypt plaintext -> secrets/archive/<name>.age (ssh key as recipient)
 # output-name optional; defaults to basename of input. ".age" auto-added.
 # Usage: just age <path-to-plaintext> [output-name]
