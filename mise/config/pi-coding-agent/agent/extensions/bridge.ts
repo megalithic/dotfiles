@@ -300,6 +300,9 @@ const writeInfoManifest = (): void => {
       session: PI_SESSION,
       window: PI_WINDOW,
       pane: detectTmux()?.pane,
+      ephemeral:
+        process.env.PI_EPHEMERAL === "1" ||
+        /-eph-[^-]+-[^-]+\.sock$/.test(SOCKET_PATH),
       startedAt: new Date().toISOString(),
     };
     fs.writeFileSync(infoManifestPath, JSON.stringify(manifest) + "\n");

@@ -1,5 +1,4 @@
 {
-  "tuiMode": "fullscreen",
   "retry": {
     "baseDelayMs": 1000,
     "maxDelayMs": 900000,
@@ -15,6 +14,13 @@
   "doubleEscapeAction": "tree",
   "enableSkillCommands": true,
   "hideThinkingBlock": true,
+  "steeringMode": "all",
+  "followUpMode": "all",
+  "treeFilterMode": "no-tools",
+  "showCacheMissNotices": true,
+  "defaultProjectTrust": "always",
+  "fullscreenScrollbar": "always",
+  "tuiMode": "fullscreen",
   "editorPaddingX": 1,
   "packages": [
     "npm:pi-mcp-adapter",
@@ -25,12 +31,11 @@
     "npm:pi-caveman",
     "npm:@plannotator/pi-extension",
     "npm:pi-rtk-optimizer",
-    "npm:pi-mono-figma",
     "npm:pi-mono-btw",
     "npm:context-mode",
     "npm:pi-elixir",
     "npm:pi-lens",
-    "nm:@ogulcancelik/pi-ssh-tools",
+    "npm:@ogulcancelik/pi-ssh-tools",
     "npm:@juicesharp/rpiv-ask-user-question",
     "npm:@juicesharp/rpiv-todo",
     "npm:@ff-labs/pi-fff",
@@ -97,6 +102,7 @@
   },
   "enabledProfileModels": {
     "mega": [
+      "anthropic/claude-fable-5",
       "my-codex/gpt-5.6-sol",
       "my-codex/gpt-5.6-terra",
       "my-codex/gpt-5.6-luna",

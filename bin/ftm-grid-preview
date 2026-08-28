@@ -1,0 +1,244 @@
+#!/usr/bin/env bun
+import { readFileSync, readdirSync } from "node:fs";
+import { basename, join } from "node:path";
+
+function printManifestPanes(session, directory) {
+  try {
+    for (const entry of readdirSync(directory)) {
+      if (!entry.endsWith(".info")) continue;
+      try {
+        const manifest = JSON.parse(readFileSync(join(directory, entry), "utf8"));
+        if (manifest.session !== session || typeof manifest.pane !== "string" || manifest.ephemeral === true) continue;
+        const socketBase = typeof manifest.socket === "string" ? basename(manifest.socket) : "";
+        if (typeof manifest.window === "string" && socketBase.startsWith(`pi-${manifest.session}-${manifest.window}-eph-`)) continue;
+        const pid = Number.isInteger(manifest.pid) ? manifest.pid : "";
+        process.stdout.write(`${manifest.pane}\t${pid}\n`);
+      } catch {}
+    }
+  } catch {}
+}
+if (process.argv[2] === "--manifest-panes") {
+  printManifestPanes(process.argv[3] || "", process.argv[4] || "");
+  process.exit(0);
+}
+
+function dimension(value, fallback) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 1 ? Math.floor(parsed) : fallback;
+}
+const columns = dimension(process.env.FZF_PREVIEW_COLUMNS, 80);
+const rows = dimension(process.env.FZF_PREVIEW_LINES, 40);
+const session = process.argv[2] || "";
+const targets = process.argv.slice(3).filter(Boolean);
+const stateDir = process.env.PI_STATE_DIR || `${process.env.XDG_STATE_HOME || `${process.env.HOME}/.local/state`}/pi`;
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const children = new Set();
+let stopped = false;
+function killChild(child) {
+  try { process.kill(-child.pid, "SIGKILL"); } catch {
+    try { child.kill("SIGKILL"); } catch {}
+  }
+}
+function stop() {
+  stopped = true;
+  for (const child of children) killChild(child);
+}
+process.stdout.on("error", (error) => {
+  stop();
+  if (error.code !== "EPIPE") process.exitCode = 1;
+});
+process.on("SIGTERM", stop);
+process.on("SIGINT", stop);
+
+async function tmux(...args) {
+  if (stopped) return "";
+  let child;
+  let timeout;
+  try {
+    child = Bun.spawn(["tmux", ...args], { stdout: "pipe", stderr: "ignore", detached: true });
+    children.add(child);
+    timeout = setTimeout(() => killChild(child), 2000);
+    return (await new Response(child.stdout).text()).replace(/\n$/, "");
+  } catch {
+    return "";
+  } finally {
+    if (timeout) clearTimeout(timeout);
+    if (child) children.delete(child);
+  }
+}
+function statusIcon(window) {
+  try {
+    const text = readFileSync(`${stateDir}/status/pi-${session}-${window}.status`, "utf8");
+    switch (text.trim().split(/\s+/)[0]) {
+      case "working": return "\x1b[32m●\x1b[0m";
+      case "asking": case "error": return "\x1b[31m●\x1b[0m";
+      case "idle": case "done": return "\x1b[38;5;255m○\x1b[0m";
+      default: return "";
+    }
+  } catch { return ""; }
+}
+function validSgr(body) {
+  const values = body ? body.split(";").map(Number) : [0];
+  if (values.some((value) => !Number.isInteger(value) || value < 0)) return false;
+  for (let i = 0; i < values.length; i++) {
+    const value = values[i];
+    if ([0, 1, 2, 3, 4, 7, 22, 23, 24, 27, 39, 49].includes(value) || (value >= 30 && value <= 37) || (value >= 40 && value <= 47) || (value >= 90 && value <= 97) || (value >= 100 && value <= 107)) continue;
+    if ((value === 38 || value === 48) && values[i + 1] === 5 && i + 2 < values.length && values[i + 2] >= 0 && values[i + 2] < 256) { i += 2; continue; }
+    if ((value === 38 || value === 48) && values[i + 1] === 2 && i + 4 < values.length && values.slice(i + 2, i + 5).every((x) => x >= 0 && x <= 255)) { i += 4; continue; }
+    return false;
+  }
+  return true;
+}
+function stringTerminator(line, start, allowBell) {
+  const bell = allowBell ? line.indexOf("\x07", start) : -1;
+  const st = line.indexOf("\x1b\\", start);
+  const c1st = line.indexOf("\u009c", start);
+  const ends = [bell < 0 ? null : bell + 1, st < 0 ? null : st + 2, c1st < 0 ? null : c1st + 1].filter((end) => end !== null);
+  return ends.length ? Math.min(...ends) : line.length;
+}
+// Keep only SGR. Dropping every other escape sequence prevents pane text from controlling fzf.
+function safeAnsi(line) {
+  let out = "";
+  for (let i = 0; i < line.length;) {
+    const code = line.charCodeAt(i);
+    if (code === 0x9b) {
+      let end = i + 1;
+      while (end < line.length && !(line.charCodeAt(end) >= 0x40 && line.charCodeAt(end) <= 0x7e)) end++;
+      i = end < line.length ? end + 1 : line.length;
+      continue;
+    }
+    if ([0x90, 0x98, 0x9d, 0x9e, 0x9f].includes(code)) {
+      i = stringTerminator(line, i + 1, code === 0x9d);
+      continue;
+    }
+    if (line[i] !== "\x1b") {
+      if ((code >= 0x20 && !(code >= 0x80 && code <= 0x9f)) || line[i] === "\t") out += line[i];
+      i++;
+      continue;
+    }
+    const introducer = line[i + 1];
+    if (introducer === "[") {
+      let end = i + 2;
+      while (end < line.length && !(line.charCodeAt(end) >= 0x40 && line.charCodeAt(end) <= 0x7e)) end++;
+      if (end >= line.length) break;
+      const body = line.slice(i + 2, end);
+      if (line[end] === "m" && /^[0-9;]*$/.test(body) && validSgr(body)) out += line.slice(i, end + 1);
+      i = end + 1;
+      continue;
+    }
+    if (introducer === "]") {
+      i = stringTerminator(line, i + 2, true);
+      continue;
+    }
+    if (["P", "X", "^", "_"].includes(introducer)) {
+      i = stringTerminator(line, i + 2, false);
+      continue;
+    }
+    i += Math.min(2, line.length - i);
+  }
+  return out;
+}
+const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+const sgrPattern = /\x1b\[[0-9;]*m/g;
+function charWidth(ch) {
+  const n = ch.codePointAt(0);
+  if (n < 0x20 || n === 0x7f || n === 0x200d || (n >= 0x1f3fb && n <= 0x1f3ff) || (n >= 0x300 && n <= 0x36f) || (n >= 0x1ab0 && n <= 0x1aff) || (n >= 0x1dc0 && n <= 0x1dff) || (n >= 0x20d0 && n <= 0x20ff) || (n >= 0xfe00 && n <= 0xfe0f) || (n >= 0xfe20 && n <= 0xfe2f)) return 0;
+  if ((n >= 0x1f000 && n <= 0x1ffff) || (n >= 0x1100 && n <= 0x115f) || (n >= 0x2329 && n <= 0x232a) || (n >= 0x2e80 && n <= 0xa4cf) || (n >= 0xac00 && n <= 0xd7a3) || (n >= 0xf900 && n <= 0xfaff) || (n >= 0xfe10 && n <= 0xfe19) || (n >= 0xff01 && n <= 0xff60) || (n >= 0xffe0 && n <= 0xffe6)) return 2;
+  return 1;
+}
+function graphemeWidth(grapheme, column) {
+  if (grapheme === "\t") return 8 - (column % 8);
+  const points = [...grapheme].map((ch) => ch.codePointAt(0));
+  const regional = points.filter((point) => point >= 0x1f1e6 && point <= 0x1f1ff);
+  if (regional.length === 2 || points.includes(0x20e3) || points.includes(0x200d) || points.includes(0xfe0f) || points.some((point) => point >= 0x1f000 && point <= 0x1ffff)) return 2;
+  return Math.max(0, ...[...grapheme].map(charWidth));
+}
+function plainWidth(s) {
+  let width = 0;
+  for (const { segment } of segmenter.segment(s.replace(sgrPattern, ""))) width += graphemeWidth(segment, width);
+  return width;
+}
+function clip(s, width) {
+  let out = "", used = 0, index = 0, full = false;
+  while (index < s.length && !full) {
+    if (s[index] === "\x1b") {
+      const match = s.slice(index).match(/^\x1b\[[0-9;]*m/);
+      if (match) { out += match[0]; index += match[0].length; continue; }
+    }
+    const nextEscape = s.indexOf("\x1b", index);
+    const end = nextEscape < 0 ? s.length : nextEscape;
+    const text = s.slice(index, end);
+    for (const { segment } of segmenter.segment(text)) {
+      const cellWidth = graphemeWidth(segment, used);
+      if (used + cellWidth > width) { full = true; break; }
+      out += segment === "\t" ? " ".repeat(cellWidth) : segment;
+      used += cellWidth;
+    }
+    index = end;
+  }
+  return out + "\x1b[0m";
+}
+function pad(s, width) { return s + " ".repeat(Math.max(0, width - plainWidth(s))); }
+async function capture(target) {
+  const lines = (await tmux("capture-pane", "-e", "-p", "-S", "-200", "-t", target)).split("\n");
+  let last = 0;
+  lines.forEach((line, index) => { if (safeAnsi(line).trim()) last = index + 1; });
+  return lines.slice(Math.max(0, last - 200), last).map(safeAnsi);
+}
+function grid(count) {
+  let best = null;
+  for (let cols = 1; cols <= Math.min(count || 1, columns); cols++) {
+    const rowsNeeded = Math.ceil((count || 1) / cols);
+    const gapWidth = cols - 1, gapHeight = rowsNeeded - 1;
+    const width = Math.floor((columns - gapWidth) / cols), height = Math.floor((rows - gapHeight) / rowsNeeded);
+    if (width < 4 || height < 3) continue;
+    const avoidStrip = count > 2 && (cols === 1 || rowsNeeded === 1) ? 1 : 0;
+    const score = Math.abs(Math.log((width / height) / 2)) + avoidStrip + ((cols * rowsNeeded - count) / count) * 0.1;
+    if (!best || score < best.score) best = { score, cols, rows: rowsNeeded };
+  }
+  return best;
+}
+function messageFrame(message) {
+  const output = Array.from({ length: rows }, () => " ".repeat(columns));
+  if (message && rows > 0) output[Math.floor(rows / 2)] = pad(clip(message, columns), columns);
+  return output.join("\n");
+}
+function windowMeta(value) {
+  const separator = value.lastIndexOf("\t");
+  const rawTitle = separator < 0 ? value : value.slice(0, separator);
+  const index = separator < 0 ? "" : value.slice(separator + 1);
+  const title = safeAnsi(rawTitle).replace(sgrPattern, "").replace(/\s+/g, " ").trim();
+  return { title, statusKey: /^[a-zA-Z0-9_-]+$/.test(rawTitle) ? rawTitle : index };
+}
+async function frame() {
+  if (!targets.length) return messageFrame("");
+  const layout = grid(targets.length);
+  if (!layout) return messageFrame(`Preview too small for ${targets.length} panes`);
+  const cards = await Promise.all(targets.map(async (target) => {
+    const meta = windowMeta(await tmux("display-message", "-p", "-t", target, "#{window_name}\t#{window_index}"));
+    return { ...meta, lines: await capture(target) };
+  }));
+  const gapW = layout.cols - 1, gapH = layout.rows - 1;
+  const cardW = Math.floor((columns - gapW) / layout.cols), cardH = Math.floor((rows - gapH) / layout.rows);
+  const innerW = Math.max(1, cardW - 2), innerH = Math.max(1, cardH - 2), output = [];
+  for (let row = 0; row < layout.rows; row++) for (let y = 0; y < cardH; y++) {
+    const line = [];
+    for (let col = 0; col < layout.cols; col++) {
+      const card = cards[row * layout.cols + col];
+      if (!card) { line.push(" ".repeat(cardW)); continue; }
+      if (y === 0) line.push(`┌${pad(clip(`\x1b[2m${card.title} ${statusIcon(card.statusKey)}\x1b[0m`, innerW), innerW)}┐`);
+      else if (y === cardH - 1) line.push(`└${"─".repeat(innerW)}┘`);
+      else line.push(`│${pad(clip(card.lines[card.lines.length - innerH + y - 1] || "", innerW), innerW)}│`);
+    }
+    output.push(line.join(" "));
+    if (y === cardH - 1 && row < layout.rows - 1) output.push(" ".repeat(columns));
+  }
+  while (output.length < rows) output.push(" ".repeat(columns));
+  return output.slice(0, rows).map((line) => pad(clip(line, columns), columns)).join("\n");
+}
+let previous = "";
+while (!stopped) {
+  const next = await frame();
+  if (next !== previous && !stopped) { try { process.stdout.write(`\x1b[2J${next}\n`); previous = next; } catch (error) { if (error.code === "EPIPE") stopped = true; } }
+  if (!stopped) await sleep(500);
+}
