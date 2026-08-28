@@ -4,8 +4,7 @@
 # mise/config/mise/global_config.toml [tools] do not require launchd agent edits.
 set -euo pipefail
 # ~/.local/bin first: the standalone mise binary lives there (not in shims),
-# and launchd's minimal env otherwise never finds it — the glob fallback then
-# collates 1.1.1 before 1.1.10 and pins an old version.
+# and launchd's minimal environment otherwise cannot resolve the active install.
 export PATH="$HOME/.local/bin:${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:/usr/bin:/bin:$PATH"
 
 app_bin=""
@@ -17,13 +16,10 @@ if command -v mise >/dev/null 2>&1; then
 fi
 
 if [[ -z "$app_bin" ]]; then
-  installs_dir="${XDG_DATA_HOME:-$HOME/.local/share}/mise/installs/http-kanata-bar"
-  for candidate in "$installs_dir/latest/Kanata Bar.app/Contents/MacOS/kanata-bar" "$installs_dir"/*/"Kanata Bar.app/Contents/MacOS/kanata-bar"; do
-    if [[ -x "$candidate" ]]; then
-      app_bin="$candidate"
-      break
-    fi
-  done
+  candidate="${XDG_DATA_HOME:-$HOME/.local/share}/mise/installs/http-kanata-bar/latest/Kanata Bar.app/Contents/MacOS/kanata-bar"
+  if [[ -x "$candidate" ]]; then
+    app_bin="$candidate"
+  fi
 fi
 
 if [[ -z "$app_bin" ]]; then
