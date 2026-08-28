@@ -264,13 +264,13 @@ M.layouts = {
       { nil, 1, M.grid.full },
     },
   },
-  ["com.dexterleng.Homerow"] = {
-    bundleID = "com.dexterleng.Homerow",
-    name = "Homerow",
-    rules = {
-      { nil, 1, M.grid.center.large },
-    },
-  },
+  -- ["com.dexterleng.Homerow"] = {
+  --   bundleID = "com.dexterleng.Homerow",
+  --   name = "Homerow",
+  --   rules = {
+  --     { nil, 1, M.grid.center.large },
+  --   },
+  -- },
   ["com.flexibits.fantastical2.mac"] = {
     bundleID = "com.flexibits.fantastical2.mac",
     name = "Fantastical",
@@ -377,10 +377,10 @@ M.launchers = {
     },
   },
   -- { "com.apple.iCal", "y", { passThrough = { "'" } } },
-  { "com.raycast.macos", "space", { passThrough = { "c" } } },
-  -- { "com.brnbw.Tuna", nil, { passThrough = { "space" } } },
+  -- { "com.raycast.macos", "space", { passThrough = { "c" } } },
+  { "com.brnbw.Tuna", nil, { passThrough = { "space" } } },
   -- { "Tuna", nil, { passThrough = { { { "shift", "cmd" }, "space" } } } },
-  { "com.superultra.Homerow", nil, { passThrough = { ";" } } },
+  -- { "com.superultra.Homerow", nil, { passThrough = { ";" } } },
   { "com.tinyspeck.slackmacgap", "s" },
   { "com.tdesktop.Telegram", "t" },
   { "org.hammerspoon.Hammerspoon", "r" },
