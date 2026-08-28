@@ -150,7 +150,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 #    npm/, auth.json, settings.json) stays unmanaged. settings.json is merged
 #    by `mise run pi:update`, not linked. --
 "~/.pi/agent/AGENTS.md" = "~/.dotfiles/mise/config/pi-coding-agent/agent/AGENTS.md"
-"~/.pi/agent/SYSTEM.md" = "~/.dotfiles/mise/config/pi-coding-agent/agent/SYSTEM.md"
+"~/.pi/agent/APPEND_SYSTEM.md" = "~/.dotfiles/mise/config/pi-coding-agent/agent/SYSTEM.md"
 "~/.pi/agent/keybindings.json" = "~/.dotfiles/mise/config/pi-coding-agent/agent/keybindings.json"
 "~/.pi/agent/models.json" = "~/.dotfiles/mise/config/pi-coding-agent/agent/models.json"
 "~/.pi/agent/mcp.json" = "~/.dotfiles/mise/config/pi-coding-agent/agent/mcp.json"
@@ -198,12 +198,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.local/share/hammerspoon/nix_path.lua" = "~/.dotfiles/mise/fragments/hammerspoon/nix_path.lua"
 "~/.local/share/hammerspoon/fragments/shade-next.lua" = "~/.dotfiles/mise/fragments/hammerspoon/shade-next.lua"
 "~/.local/share/fish/nix.fish" = "~/.dotfiles/mise/fragments/fish/nix.fish"
-# "~/.local/share/tmux/nix.conf" = "~/.dotfiles/mise/fragments/tmux/nix.conf"
-# Mirror of the formerly nix-generated shade-next config; mise owns it as of
-# the megabookpro wave-1 flip (nix module removed).
 "~/.config/shade-next/config.toml" = "~/.dotfiles/mise/config/shade-next/config.toml"
-# "~/.config/process-compose/shortcuts.yaml" = "~/.dotfiles/mise/fragments/process-compose/shortcuts.yaml"
-# "~/.config/process-compose/theme.yaml" = "~/.dotfiles/mise/fragments/process-compose/theme.yaml"
 
 # -- kanata: individual .kbd files (parent dir has mutable state; active kanata.kbd is mutable) --
 "~/.config/kanata/macbook.kbd" = "~/.dotfiles/config/kanata/macbook.kbd"
@@ -221,8 +216,8 @@ up = "cd $HOME/.dotfiles && mise run up"
 # Written by `mise run setup:yubikey`; used by the fnox age provider.
 "~/.config/fnox/yubikey-identity.txt" = "~/.dotfiles/mise/config/fnox/yubikey-identity.txt"
 
-# -- espanso: app support path, not XDG config (validated repo-final link chain) --
-"~/Library/Application Support/espanso" = "~/.dotfiles/config/espanso"
+# -- espanso: app support path, not XDG config --
+"~/Library/Application Support/espanso" = "~/.dotfiles/mise/config/espanso"
 
 # -- git: XDG-native; single merged config, ignore is git's default excludes path.
 #    No ~/.gitconfig or ~/.gitignore in the mise world (HM-era split collapsed).
@@ -407,7 +402,7 @@ postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh && $DOTFILES_DIR/mise/tas
 # Pinned: mise `latest` skips prereleases, and only -rc tags exist so far.
 # Flip to "latest" after the first stable release (`mise run release v0.1.0`).
 [tools."github:megalithic/shade-next"]
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 os = ["macos"]
 asset_pattern = "shade-next-darwin-arm64.zip"
 bin_path = "bin"
@@ -461,7 +456,7 @@ bin_path = "."
 "brew:poppler" = "latest"      # pdftotext etc. — pi wrapper expects poppler-utils on PATH
 "brew:renameutils" = "latest"
 "brew:ripgrep" = "latest"
-"brew:sox" = "latest"         # rec audio capture for pi-dictate
+"brew:sox" = "latest"          # rec audio capture for pi-dictate
 "brew:tree" = "latest"
 "brew:wxwidgets" = "latest"
 "brew:zsh" = "latest"
@@ -483,7 +478,9 @@ bin_path = "."
 "brew-cask:obsidian" = "latest"
 "brew-cask:proton-drive" = "latest"
 "brew-cask:protonvpn" = "latest"
-"brew-cask:syncthing-app" = "latest"
+# syncthing: not in use yet — re-enable cask + com.megadots.syncthing agent together
+# "brew-cask:syncthing-app" = "latest"
+"brew-cask:kitty" = "latest"
 "brew-cask:tableplus" = "latest"
 "brew-cask:tailscale-app" = "latest"
 "brew-cask:tuna" = "latest"
@@ -654,13 +651,15 @@ keep_alive = true
 stdout_path = "~/.cache/miccheck-stdout.log"
 stderr_path = "~/.cache/miccheck-stderr.log"
 
-[bootstrap.macos.launchd.agents."com.megadots.syncthing"]
-program = "/opt/homebrew/opt/syncthing/bin/syncthing"
-args = ["--no-browser", "--no-restart"]
-run_at_load = true
-keep_alive = true
-stdout_path = "~/.cache/syncthing.log"
-stderr_path = "~/.cache/syncthing.log"
+# syncthing: not in use yet. Requires brew formula syncthing (daemon binary);
+# re-add "brew:syncthing" to [bootstrap.packages] when enabling.
+# [bootstrap.macos.launchd.agents."com.megadots.syncthing"]
+# program = "/opt/homebrew/opt/syncthing/bin/syncthing"
+# args = ["--no-browser", "--no-restart"]
+# run_at_load = true
+# keep_alive = true
+# stdout_path = "~/.cache/syncthing.log"
+# stderr_path = "~/.cache/syncthing.log"
 
 # kanata daemon (dev.mise.org.kanata.daemon) and kanata-bar agents are
 # written and loaded by mise/tasks/kanata-setup (post-tools hook), because
@@ -695,7 +694,6 @@ run = [
   # 1Password CLI' setting (mise shims break the socket handshake).
   "[ -d /Applications/Hammerspoon.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask hammerspoon",
   "[ -d /Applications/Espanso.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask espanso",
-  "[ -d /Applications/Raycast.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask raycast",
   "[ -d /Applications/zoom.us.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask zoom",
   "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/espanso-service",
   "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/setup-touchid-sudo",
