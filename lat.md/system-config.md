@@ -6,7 +6,7 @@ This file covers the nix-darwin layer: shared host settings, per-host overrides,
 
 `hosts/common.nix` holds settings shared by every host; `hosts/megabookpro.nix` and `hosts/workbookpro.nix` carry per-host overrides. The builder passes `username`, `hostname`, `paths`, and `arch` through special args.
 
-`hosts/common.nix` sets system fonts, the `seth` user (uid 501, fish shell), hostname, timezone (`America/New_York`), and locale (`en_US.UTF-8`). It defines system-wide `environment.variables` including editor (plain `nvim`, resolved via PATH to the mise-installed neovim), pager, XDG paths, project paths (`CODE`, `DOTS`), cloud-storage paths, tmux layout paths, and FZF defaults, plus a minimal `environment.systemPackages` set.
+`hosts/common.nix` sets system fonts, the `seth` user (uid 501, login shell `/opt/homebrew/bin/fish` — brew fish; nix fish is removed), hostname, timezone (`America/New_York`), and locale (`en_US.UTF-8`). It defines system-wide `environment.variables` including editor (plain `nvim`, resolved via PATH to the mise-installed neovim), pager, XDG paths, project paths (`CODE`, `DOTS`), cloud-storage paths, tmux layout paths, and FZF defaults, plus a minimal `environment.systemPackages` set.
 
 The staged mise path installs Nerd Fonts from a single list: `[vars].nerd_fonts` in `mise/config/mise/global_config.toml` names release asset stems (mirroring `fonts.packages`), the `fonts:install` task passes them with a pinned `nerd_fonts_version` to `mise/hooks/install-fonts.sh` (downloads each `<Name>.tar.xz`, cmp-copies font files into `~/Library/Fonts`, per-font version markers under `~/.local/state/nerd-fonts`), and a global `[hooks] postinstall` re-runs the task after `mise install`; task `sources`/`outputs { auto = true }` make unchanged runs no-ops. The nix side installs to `/Library/Fonts/Nix Fonts`, so the two worlds do not collide.
 
@@ -22,7 +22,7 @@ The repo generates `/etc/nix/nix.custom.conf` declaratively (trusted users, extr
 
 `environment.systemPath` explicitly adds `/nix/var/nix/profiles/system/sw/bin` and `/opt/homebrew/bin` because Determinate Nix does not create the `/run/current-system` symlink.
 
-System programs enabled in common include `bash`, `fish` (with babelfish), and `gnupg.agent` with SSH support. Tailscale is installed as the official macOS GUI app via `modules/darwin/tailscale-app.nix`, not the nix-darwin `services.tailscale` daemon. The SSH auth socket points at 1Password's agent through `environment.extraInit`.
+System programs enabled in common include `bash` and `gnupg.agent` with SSH support (`programs.fish`/babelfish removed — fish is mise/brew-owned and `mise/fragments/fish/nix.fish` imports the nix environment). Tailscale is installed as the official macOS GUI app via `modules/darwin/tailscale-app.nix`, not the nix-darwin `services.tailscale` daemon. The SSH auth socket points at 1Password's agent through `environment.extraInit`.
 
 ## Homebrew and Mac App Store
 
@@ -58,7 +58,7 @@ It sets `programs._1password.enable = true` and `programs._1password-gui.enable 
 
 For the staged mise migration, `mise/config/mise/global_config.toml` replaces this module with the `1password` brew cask (`[bootstrap.packages]`) plus `1password-cli` installed through the `post-packages` bootstrap hook via real brew (mise's brew-cask backend handles app-bundle-only casks, and that cask ships a `binary` artifact), and links `~/.config/1Password/ssh/agent.toml` from `mise/config/1password/agent.toml`.
 
-The GUI **must** live in `/Applications` — 1Password's anti-tamper logic quits the app when launched from `~/Applications/Home Manager Apps/` or the nix store. So unlike Hammerspoon/Raycast/ProtonVPN (Home Manager `copyApps` into `~/Applications/Home Manager Apps/`), 1Password is a system module. Git and jj SSH signing point at `/Applications/1Password.app/Contents/MacOS/op-ssh-sign` (the full GUI bundle ships `op-ssh-sign`); do not point them at the Home Manager Apps path.
+The GUI **must** live in `/Applications` — 1Password's anti-tamper logic quits the app when launched from `~/Applications/Home Manager Apps/` or the nix store. So unlike ProtonVPN and friends (Home Manager `copyApps` into `~/Applications/Home Manager Apps/`), 1Password is a system module. Git and jj SSH signing point at `/Applications/1Password.app/Contents/MacOS/op-ssh-sign` (the full GUI bundle ships `op-ssh-sign`); do not point them at the Home Manager Apps path.
 
 ### "1Password.app is damaged" gotcha (first-launch Gatekeeper false positive)
 
