@@ -90,7 +90,6 @@ let
     # nix
     alejandra
     nil
-    nix-direnv
     nixfmt
 
     # markdown
