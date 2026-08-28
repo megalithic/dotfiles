@@ -24,7 +24,7 @@ let
     iina # migrated from homebrew 2026-02-13
     inkscape # migrated from homebrew 2026-02-13
     # neovide # Native neovim GUI - potential future use for floating notes window
-    obsidian
+    # obsidian — brew cask owns it (GUI dedupe wave 2026-08)
     slack # migrated from homebrew 2026-02-13
     # spotify
     # telegram-desktop

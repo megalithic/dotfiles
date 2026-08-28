@@ -81,8 +81,8 @@
         persistent-others = null;
         persistent-apps = [
           { app = "/System/Library/CoreServices/Finder.app"; }
-          { app = "~/Applications/Home Manager Apps/Brave Browser Nightly.app"; }
-          { app = "~/Applications/Home Manager Apps/Ghostty.app"; }
+          { app = "/Applications/Brave Browser Nightly.app"; }
+          { app = "/Applications/Ghostty.app"; }
           { app = "/System/Applications/Messages.app"; }
 
           # {
@@ -406,8 +406,9 @@
           };
         };
 
-        # NOTE: Browser keybindings moved to home/common/programs/{brave-browser-nightly,helium-browser}/default.nix
+        # NOTE: Browser keybindings live in home/common/programs/helium-browser/default.nix
         # using the keyEquivalents option in mkChromiumBrowser module
+        # (brave-browser-nightly HM module removed 2026-08 — brew cask owns Brave)
       };
     };
     keyboard = {
