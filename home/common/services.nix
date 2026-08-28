@@ -15,19 +15,8 @@
   ...
 }:
 {
-  launchd.agents.espanso = {
-    enable = true;
-    config = {
-      Label = "com.federicoterzi.espanso";
-      ProgramArguments = [
-        "${config.home.profileDirectory}/bin/espanso"
-        "launcher"
-      ];
-      RunAtLoad = true;
-      StandardOutPath = "${config.home.homeDirectory}/Library/Logs/espanso/stdout.log";
-      StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/espanso/stderr.log";
-    };
-  };
+  # espanso: fully mise-owned now (cask espanso + dev.mise.com.megadots.espanso
+  # plist via mise/tasks/espanso-service; config at mise/config/espanso).
 
   # Home Manager currently emits `launchctl bootout --wait ...`, but macOS 15's
   # launchctl does not support `--wait` for `bootout`; it treats the flag as the
@@ -201,9 +190,4 @@
       set -e
     ''
   );
-
-  # Ensure log directories exist
-  home.activation.makeEspansoLogDir = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    mkdir -p ${config.home.homeDirectory}/Library/Logs/espanso
-  '';
 }

@@ -1,7 +1,6 @@
 {
   pkgs,
   lib,
-  inputs,
   ...
 }:
 let
@@ -13,10 +12,6 @@ let
     # bloom
     # mailmate app managed via home/common/programs/mailmate/default.nix
   ];
-
-  # espanso: from pinned nixpkgs input; current unstable's cctools ld crashes
-  # linking it on aarch64-darwin (see flake.nix nixpkgs-espanso comment).
-  espanso-pinned = inputs.nixpkgs-espanso.legacyPackages.${pkgs.stdenv.hostPlatform.system}.espanso;
 
   # Filter: only apps with appLocation = "home-manager" go to home.packages
   # (home-manager copies these to ~/Applications/Home Manager Apps/)
@@ -64,7 +59,6 @@ let
     # devenv # managed by programs/devenv module
     difftastic
     dust # disk usage analyzer (du replacement)
-    espanso-pinned
     ffmpeg
     flyctl
     gh
