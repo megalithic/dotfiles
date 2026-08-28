@@ -56,7 +56,7 @@ in
     "code/.keep".text = "";
     "src/.keep".text = "";
     "tmp/.keep".text = "";
-    "_screenshots/.keep".text = "";
+    "__screenshots/.keep".text = ""; # matches com.apple.screencapture location (nix + mise)
     ".hushlogin".text = "";
     "bin".source = config.lib.mega.linkBin;
     ".editorconfig".text = ''

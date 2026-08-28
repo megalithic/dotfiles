@@ -182,9 +182,10 @@
         # InitialKeyRepeat = 12;
         # KeyRepeat = 1;
         # ---
-        # default'ish speed:
-        InitialKeyRepeat = 25;
-        KeyRepeat = 6;
+        # ludicrous speed (kept in sync with mise [bootstrap.macos.keyboard]
+        # key_repeat/initial_key_repeat — both sides write these keys):
+        InitialKeyRepeat = 15;
+        KeyRepeat = 1;
         # Disable press and hold for diacritics.
         # I want to be able to press and hold j and k
         # in VSCode with vim keys to move around.
@@ -198,7 +199,8 @@
       };
 
       screencapture = {
-        location = "/Users/${username}/_screenshots";
+        # kept in sync with mise [bootstrap.macos.defaults."com.apple.screencapture"]
+        location = "/Users/${username}/__screenshots";
         type = "png";
         disable-shadow = true;
       };
@@ -263,32 +265,7 @@
         #   SUAutomaticallyUpdate = false;
         #   SUEnableAutomaticChecks = false;
         # };
-        "com.raycast.macos" = {
-          # cmd-space
-          initialSpotlightHotkey = "Command-49";
-          raycastGlobalHotkey = "Command-49";
-          raycastPreferredWindowMode = "compact";
-          raycastShouldFollowSystemAppearance = true;
-          "NSStatusItem Visible raycastIcon" = false;
-          showGettingStartedLink = false;
-          onboardingCompleted = true;
-          developerFlags = false;
-          organizationsPreferencesTabVisited = 1;
-          popToRootTimeout = 60;
-          raycastAPIOptions = 8;
-          suggestedPreferredGoogleBrowser = 1;
-          "permissions.folders.read:/Users/${username}/Desktop" = true;
-          "permissions.folders.read:/Users/${username}/Documents" = true;
-          "permissions.folders.read:/Users/${username}/Downloads" = true;
-          "permissions.folders.read:cloudStorage" = true;
-          # "raycast_hyperKey_state" = {
-          #   enabled = 1;
-          #   includeShiftKey = 1;
-          #   # use Right Option for hyper key
-          #   keyCode = 230;
-          # };
-          # useHyperKeyIcon = 1;
-        };
+        # raycast: removed — replaced by Tuna (brew-cask:tuna via mise).
 
         # Disabled: sandboxed apps — see SANDBOXED APP PREFS note at end.
         # REF: https://medium.com/@zmre/nix-darwin-quick-tip-activate-your-preferences-f69942a93236
