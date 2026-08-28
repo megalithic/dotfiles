@@ -96,9 +96,13 @@ ELIXIR_EDITOR = "zed __FILE__:__LINE__"
 
 _.path = [
   "/opt/homebrew/opt/coreutils/libexec/gnubin",
+  "/opt/homebrew/opt/curl/bin",
   "/opt/homebrew/opt/gnupg/bin",
   "/opt/homebrew/opt/gnu-sed/libexec/gnubin",
   "/opt/homebrew/opt/grep/libexec/gnubin",
+  "/opt/homebrew/opt/make/libexec/gnubin",
+  "/opt/homebrew/opt/unzip/bin",
+  "/opt/homebrew/opt/zip/bin",
   "/opt/homebrew/opt/openjdk/bin",
   "$HOME/.bin",
   "$HOME/.local/bin",
@@ -230,6 +234,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.config/bat/themes/everforest.tmTheme" = "~/.dotfiles/mise/config/bat/themes/everforest.tmTheme"
 "~/.config/bat/syntaxes/ghostty.sublime-syntax" = "~/.dotfiles/mise/config/bat/syntaxes/ghostty.sublime-syntax"
 "~/.config/direnv/direnv.toml" = "~/.dotfiles/mise/config/direnv/direnv.toml"
+"~/.config/direnv/direnvrc" = "~/.dotfiles/mise/config/direnv/direnvrc"
 "~/.config/starship.toml" = "~/.dotfiles/mise/config/starship/starship.toml"
 "~/.config/karabiner/karabiner.json" = "~/.dotfiles/mise/config/karabiner/karabiner.json"
 "~/.config/eza/theme.yml" = "~/.dotfiles/mise/config/eza/theme.yml"
@@ -247,6 +252,10 @@ up = "cd $HOME/.dotfiles && mise run up"
 
 [tools]
 "aqua:openai/codex" = "latest"
+"aqua:derailed/k9s" = "latest"
+"aqua:helm/helm" = "latest"
+"aqua:kubie-org/kubie" = "latest"
+"aqua:kubernetes/kubernetes/kubectl" = "latest"
 "aqua:docker/compose" = "latest"
 "aqua:remoteoss/dexter" = "latest"                  # super fast elixir ls
 "aqua:elixir-lang/expert" = "latest"
@@ -270,12 +279,14 @@ up = "cd $HOME/.dotfiles && mise run up"
 "github:rtk-ai/rtk" = "latest"
 # "github:steipete/imsg" = "latest"
 # "github:umputun/revdiff" = "latest"
+"cargo:bacon" = "latest"
 "cargo:emmylua_check" = "latest"
 "cargo:emmylua_ls" = "latest"
 # "cargo:forgejo-cli" = "latest"
 # "cargo:jj-vine" = "latest"
 # "cargo:tree-sitter-cli" = "latest"
 "go:golang.org/x/tools/gopls" = "latest"
+"npm:basedpyright" = "latest"
 "npm:bash-language-server" = "latest"
 "npm:chrome-devtools-mcp" = "latest"
 "npm:hunkdiff" = "latest"
@@ -319,6 +330,7 @@ ffmpeg = "latest"
 flyctl = "latest"
 fnox = "latest"
 fzf = "latest"
+gcloud = "latest"
 github-cli = "latest"
 git-lfs = "latest"
 gitleaks = "latest"
@@ -348,7 +360,7 @@ prettier = "latest"
 python = "3"
 ripgrep = "latest"
 ruby = "latest"
-rust = { version = "latest", components = "rust-src,rust-analyzer,rustfmt" }
+rust = { version = "nightly", components = "rust-src,rust-analyzer,rustfmt,clippy" }
 shellcheck = "latest"
 shfmt = "latest"
 sqlite = "latest"
@@ -372,6 +384,12 @@ zoxide = "latest"
 # re-bakes the Chromium prodversion into the External Extensions update URLs
 # (mise equivalent of the nix module's eval-time readDir; goes stale on
 # Chromium bumps otherwise) and reapplies defaults/dictionary.
+[tools."github:tidewave-ai/tidewave_app"]
+version = "latest"
+os = ["macos"]
+asset_pattern = "tidewave-app-aarch64.dmg"
+postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
+
 [tools."github:megalithic/helium-macos-releases"]
 version = "latest"
 os = ["macos"]
@@ -413,6 +431,7 @@ platforms.macos-arm64.url = "https://github.com/not-in-stock/kanata-bar/releases
 "brew:cmark-gfm" = "latest"
 "brew:codespell" = "latest"
 "brew:coreutils" = "latest"
+"brew:curl" = "latest"
 "brew:eza" = "latest"
 "brew:fd" = "latest"
 "brew:fish" = "latest"
@@ -423,6 +442,8 @@ platforms.macos-arm64.url = "https://github.com/not-in-stock/kanata-bar/releases
 "brew:grep" = "latest"
 "brew:htop" = "latest"       # HM htop module removed (CLI dedupe 2026-08); htoprc is self-managed
 "brew:kanata" = "latest"       # keyboard remapper; setup verifies 1.12.0 with VHID 6.10.0, then copies/signs it to stable /usr/local/bin/kanata
+"brew:luarocks" = "latest"
+"brew:make" = "latest"
 "brew:mas" = "latest"
 "brew:mole" = "latest"
 "brew:mosh" = "latest"
@@ -435,8 +456,14 @@ platforms.macos-arm64.url = "https://github.com/not-in-stock/kanata-bar/releases
 "brew:renameutils" = "latest"
 "brew:ripgrep" = "latest"
 "brew:sox" = "latest"          # rec audio capture for pi-dictate
+"brew:trash" = "latest"
 "brew:tree" = "latest"
+"brew:unzip" = "latest"
+"brew:vim" = "latest"
+"brew:wget" = "latest"
 "brew:wxwidgets" = "latest"
+"brew:zip" = "latest"
+"brew:p7zip" = "latest"
 "brew:zsh" = "latest"
 
 "mas:497799835" = "latest"  # Xcode
@@ -449,18 +476,32 @@ platforms.macos-arm64.url = "https://github.com/not-in-stock/kanata-bar/releases
 "brew-cask:colorsnapper" = "latest"
 "brew-cask:contexts" = "latest"
 "brew-cask:discord" = "latest"
+"brew-cask:font-atkinson-hyperlegible" = "latest"
+"brew-cask:font-fira-code" = "latest"
+"brew-cask:font-fira-mono" = "latest"
+"brew-cask:font-fontawesome" = "latest"
+"brew-cask:font-inter" = "latest"
+"brew-cask:font-maple-mono" = "latest"
+"brew-cask:font-maple-mono-nf" = "latest"
+"brew-cask:font-noto-color-emoji" = "latest"
+"brew-cask:font-twitter-color-emoji" = "latest"
+"brew-cask:font-victor-mono" = "latest"
 "brew-cask:ghostty@tip" = "latest"
 "brew-cask:handy" = "latest"
 "brew-cask:hammerspoon" = "latest"
+"brew-cask:iina" = "latest"
+"brew-cask:inkscape" = "latest"
 "brew-cask:meetingbar" = "latest"
+"brew-cask:obs@beta" = "latest"
 "brew-cask:obsidian" = "latest"
+"brew-cask:okta-verify" = "latest"
 "brew-cask:proton-drive" = "latest"
 "brew-cask:protonvpn" = "latest"
 "brew-cask:kitty" = "latest"
 "brew-cask:tableplus" = "latest"
 "brew-cask:tailscale-app" = "latest"
 "brew-cask:tuna" = "latest"
-# "brew-cask:slack" = "latest" # presently owned by app store (work requirement?)
+"brew-cask:slack" = "latest"
 "brew-cask:yubico-authenticator" = "latest"
 "brew-cask:zed@preview" = "latest"
 
@@ -656,21 +697,17 @@ stdout_path = "/tmp/kanata-bar.log"
 stderr_path = "/tmp/kanata-bar.err"
 
 [bootstrap.hooks.post-packages]
-# Casks mise's brew-cask backend can't handle, installed via real brew:
-# - hammerspoon: ships `binary` artifacts (backend is app-bundle only)
-# - raycast: extension-less DMG URL (releases.raycast.com/.../download?build=arm);
-#   backend infers archive type from URL filename and only magic-sniffs zip,
-#   so the DMG is treated as a raw binary and 'Raycast.app' is never found
-# - zoom: cask source uses `on_arch_conditional` (livecheck), which the shim's
-#   DSL surface rejects during whole-file eval; postflight then fails
-# (helium is NOT here: it needs the GitHub token, which needs op signin +
-#  `mise run fnox` — see [tasks.bootstrap] for the ordered chain)
+# Casks kept on real Brew because their verified service/lifecycle path still
+# differs from the direct mise backend:
+# - espanso: real Brew installs the app/CLI before espanso-service converges its
+#   LaunchAgent
+# - zoom: cask source uses `on_arch_conditional`; keep the verified package hook
+#   until a clean-machine direct-backend install is proven
 # hooks: no template expansion, cwd = config root, [env] not applied
 run = [
   # op CLI comes from [bootstrap.packages] brew:1password-cli — official
   # documented install; real signed binary works with the app's 'Integrate with
   # 1Password CLI' setting (mise shims break the socket handshake).
-  "[ -d /Applications/Hammerspoon.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask hammerspoon",
   "[ -d /Applications/Espanso.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask espanso",
   "[ -d /Applications/zoom.us.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask zoom",
   "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/espanso-service",
