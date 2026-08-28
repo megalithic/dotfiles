@@ -590,6 +590,15 @@ url = "https://github.com/astral-sh/ruff/releases/download/0.16.4/ruff-aarch64-a
 url_api = "https://api.github.com/repos/astral-sh/ruff/releases/assets/522579257"
 provenance = "github-attestations"
 
+[[tools."aqua:derailed/k9s"]]
+version = "0.51.0"
+backend = "aqua:derailed/k9s"
+
+[tools."aqua:derailed/k9s"."platforms.macos-arm64"]
+checksum = "sha256:9b8c0e8f461e5d33aeee43a67f5ef4aff646a008a786887b8266cbb153c610cc"
+url = "https://github.com/derailed/k9s/releases/download/v0.51.0/k9s_Darwin_arm64.tar.gz"
+url_api = "https://api.github.com/repos/derailed/k9s/releases/assets/440224326"
+
 [[tools."aqua:docker/compose"]]
 version = "5.5.0"
 backend = "aqua:docker/compose"
@@ -608,6 +617,31 @@ backend = "aqua:elixir-lang/expert"
 checksum = "sha256:1a3da907cd47d66d60efa62bd6f9eb0bff2af23aeb6f134cfd128aa023dec01e"
 url = "https://github.com/expert-lsp/expert/releases/download/v0.1.9/expert_darwin_arm64"
 url_api = "https://api.github.com/repos/expert-lsp/expert/releases/assets/524074928"
+
+[[tools."aqua:helm/helm"]]
+version = "4.2.4"
+backend = "aqua:helm/helm"
+
+[tools."aqua:helm/helm"."platforms.macos-arm64"]
+checksum = "sha256:d747eb4e28bd2727173d15b759fa0a17822291ec09db7ced3d55af290a3661a2"
+url = "https://get.helm.sh/helm-v4.2.4-darwin-arm64.tar.gz"
+
+[[tools."aqua:kubernetes/kubernetes/kubectl"]]
+version = "1.37.0"
+backend = "aqua:kubernetes/kubernetes/kubectl"
+
+[tools."aqua:kubernetes/kubernetes/kubectl"."platforms.macos-arm64"]
+checksum = "sha256:583beedaebe422e71d3f1a96acef8b1fef86ea2f09a45ad01aa6c9ce287c1380"
+url = "https://dl.k8s.io/v1.37.0/bin/darwin/arm64/kubectl"
+
+[[tools."aqua:kubie-org/kubie"]]
+version = "0.28.0"
+backend = "aqua:kubie-org/kubie"
+
+[tools."aqua:kubie-org/kubie"."platforms.macos-arm64"]
+checksum = "sha256:d5e757c5cc608fefb7450dd4d395aaf9fc6a52f194af220c9a1fe7ed38570960"
+url = "https://github.com/kubie-org/kubie/releases/download/v0.28.0/kubie-darwin-arm64"
+url_api = "https://api.github.com/repos/kubie-org/kubie/releases/assets/429011454"
 
 [[tools."aqua:mvdan/sh"]]
 version = "3.13.1"
@@ -730,6 +764,10 @@ checksum = "sha256:c364fd10e494b4fc0cc88a89995446364379a914930f0b0182b1151ad2769
 url = "https://github.com/cargo-bins/cargo-binstall/releases/download/v1.22.0/cargo-binstall-aarch64-apple-darwin.zip"
 url_api = "https://api.github.com/repos/cargo-bins/cargo-binstall/releases/assets/525164803"
 provenance = "github-attestations"
+
+[[tools."cargo:bacon"]]
+version = "3.25.0"
+backend = "cargo:bacon"
 
 [[tools."cargo:emmylua_check"]]
 version = "0.25.1"
@@ -1025,6 +1063,13 @@ checksum = "sha256:1f8501cea4f9c0c2d6110d0ff75d0ec9451cd9d7524d9a26244a154ea89f3
 url = "https://github.com/junegunn/fzf/releases/download/v0.74.3/fzf-0.74.3-darwin_arm64.tar.gz"
 url_api = "https://api.github.com/repos/junegunn/fzf/releases/assets/517537091"
 
+[[tools.gcloud]]
+version = "582.0.0"
+backend = "vfox:mise-plugins/vfox-gcloud"
+
+[tools.gcloud."platforms.macos-arm64"]
+url = "https://storage.googleapis.com/cloud-sdk-release/google-cloud-sdk-582.0.0-darwin-arm.tar.gz"
+
 [[tools.gh]]
 version = "2.98.0"
 backend = "aqua:cli/cli"
@@ -1183,6 +1228,18 @@ backend = "github:str4d/age-plugin-yubikey"
 checksum = "sha256:c83f3ec50921778bdaa555ef2d70fbaf32374a8527eeb4f3171d819c29236243"
 url = "https://github.com/str4d/age-plugin-yubikey/releases/download/v0.5.1/age-plugin-yubikey-v0.5.1-arm64-darwin.tar.gz"
 url_api = "https://api.github.com/repos/str4d/age-plugin-yubikey/releases/assets/391312796"
+
+[[tools."github:tidewave-ai/tidewave_app"]]
+version = "0.4.6"
+backend = "github:tidewave-ai/tidewave_app"
+
+[tools."github:tidewave-ai/tidewave_app".options]
+asset_pattern = "tidewave-app-aarch64.dmg"
+
+[tools."github:tidewave-ai/tidewave_app"."platforms.macos-arm64"]
+checksum = "sha256:f2dc85d262c736c1fa60d2b1bdb3f14dafdedbd9be2ec64d25d619c70b9a1425"
+url = "https://github.com/tidewave-ai/tidewave_app/releases/download/v0.4.6/tidewave-app-aarch64.dmg"
+url_api = "https://api.github.com/repos/tidewave-ai/tidewave_app/releases/assets/513005696"
 
 [[tools."github:umputun/revdiff"]]
 version = "1.10.0"
@@ -1501,6 +1558,10 @@ backend = "npm:@earendil-works/pi-coding-agent"
 version = "0.29.0"
 backend = "npm:@fsouza/prettierd"
 
+[[tools."npm:basedpyright"]]
+version = "1.39.10"
+backend = "npm:basedpyright"
+
 [[tools."npm:bash-language-server"]]
 version = "5.6.0"
 backend = "npm:bash-language-server"
@@ -1653,11 +1714,11 @@ url = "https://github.com/jdx/ruby/releases/download/4.0.6-1/ruby-4.0.6.macos.ta
 provenance = "github-attestations"
 
 [[tools.rust]]
-version = "1.98.0"
+version = "nightly-2026-08-28"
 backend = "core:rust"
 
 [tools.rust.options]
-components = "rust-analyzer,rust-src,rustfmt"
+components = "clippy,rust-analyzer,rust-src,rustfmt"
 
 [[tools.shellcheck]]
 version = "0.11.0"
