@@ -40,7 +40,7 @@ inputs.home-manager.lib.homeManagerConfiguration {
     inherit (inputs) self;
   };
   modules = [
-    inputs.opnix.homeManagerModules.default
+    # opnix module removed 2026-08 — fnox (mise) owns secret loading
     ../home/${hostname}.nix
     {
       # Enable home-manager to manage itself (standalone mode)

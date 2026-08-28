@@ -81,10 +81,13 @@ XDG_STATE_HOME = "{{env.HOME}}/.local/state"
 XDG_CACHE_HOME = "{{env.HOME}}/.cache"
 PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
 PI_CODING_AGENT_DIR = "{{env.HOME}}/.pi/agent"
-STCONFDIR = "{{env.HOME}}/.config/syncthing"
 TMUX_LAYOUTS = "{{env.HOME}}/.config/tmux/layouts"
 TMUX_PLUGIN_MANAGER_PATH = "{{env.HOME}}/.local/share/tmux/plugins"
 TMUX_PLUGINS_HOME = "{{env.HOME}}/.local/share/tmux/plugins"
+
+# 1Password SSH agent (was nix environment.extraInit; ssh's IdentityAgent in
+# the mise-owned ssh config points at the same socket)
+SSH_AUTH_SOCK = "{{env.HOME}}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
 
 EDITOR = "nvim -O"
 VISUAL = "nvim -O"
@@ -191,7 +194,6 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.config/kitty" = "~/.dotfiles/mise/config/kitty"
 "~/.config/nvim" = "~/.dotfiles/mise/config/nvim"
 "~/.config/tmux" = "~/.dotfiles/mise/config/tmux"
-# "~/.config/syncthing" = "~/.dotfiles/mise/config/syncthing"
 
 # -- generated fragments → committed static files (replaces Home Manager Nix interpolation) --
 "~/.local/share/hammerspoon/nix_path.lua" = "~/.dotfiles/mise/fragments/hammerspoon/nix_path.lua"
@@ -459,8 +461,6 @@ platforms.macos-arm64.url = "https://github.com/not-in-stock/kanata-bar/releases
 "brew-cask:obsidian" = "latest"
 "brew-cask:proton-drive" = "latest"
 "brew-cask:protonvpn" = "latest"
-# syncthing: not in use yet — re-enable cask + com.megadots.syncthing agent together
-# "brew-cask:syncthing-app" = "latest"
 "brew-cask:kitty" = "latest"
 "brew-cask:tableplus" = "latest"
 "brew-cask:tailscale-app" = "latest"
@@ -551,7 +551,9 @@ orientation = "bottom"
 tilesize = 60
 
 [bootstrap.macos.defaults."com.apple.screencapture"]
-location = "~/__screenshots"
+# absolute literal path — defaults does not expand ~, and mise does not
+# template values in [bootstrap.macos.defaults]
+location = "/Users/seth/_screenshots"
 type = "png"
 "disable-shadow" = true
 
@@ -631,16 +633,6 @@ run_at_load = true
 keep_alive = true
 stdout_path = "~/.cache/miccheck-stdout.log"
 stderr_path = "~/.cache/miccheck-stderr.log"
-
-# syncthing: not in use yet. Requires brew formula syncthing (daemon binary);
-# re-add "brew:syncthing" to [bootstrap.packages] when enabling.
-# [bootstrap.macos.launchd.agents."com.megadots.syncthing"]
-# program = "/opt/homebrew/opt/syncthing/bin/syncthing"
-# args = ["--no-browser", "--no-restart"]
-# run_at_load = true
-# keep_alive = true
-# stdout_path = "~/.cache/syncthing.log"
-# stderr_path = "~/.cache/syncthing.log"
 
 # kanata daemon (dev.mise.org.kanata.daemon) and kanata-bar agents are
 # written and loaded by mise/tasks/kanata-setup (post-tools hook), because

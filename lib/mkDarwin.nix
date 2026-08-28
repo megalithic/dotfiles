@@ -48,8 +48,8 @@ inputs.nix-darwin.lib.darwinSystem {
     ../modules/system.nix
     ../modules/darwin/services.nix
     ../modules/darwin/spotlight.nix
-    ../modules/darwin/_1password.nix
-    ../modules/darwin/okta-verify.nix
+    # _1password.nix removed 2026-08 — mise cask backend owns 1Password app + op CLI
+    # okta-verify.nix removed 2026-08 — app stays installed; no manager owns it
     ../modules/darwin/tailscale-app.nix
   ]
   ++ extraModules;

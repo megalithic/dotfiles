@@ -116,7 +116,7 @@ User-level tools, one line each. Rows marked **(mise)** were flipped in the mega
 | csvlens | CSV terminal viewer |
 | desktoppr | wallpaper activation |
 | devenv | devenv integration; exports `DEVENV_TUI=false` |
-| direnv | direnv + nix-direnv |
+| direnv | **(mise)** direnv; binary from `[tools]`, `~/.config/direnv/direnv.toml` linked from `mise/config/direnv/` via `[dotfiles]`; HM module keeps only nix-direnv + shell hooks (nix direnv binary is a deliberate dupe, mise wins PATH) |
 | discord | **(mise)** chat app; `brew-cask:discord`; HM `programs.discord` module removed 2026-08 (settings.json no longer managed) |
 | espanso | **(mise)** text expander; config at `mise/config/espanso/`, cask app + staged `dev.mise.com.megadots.espanso` plist via `mise/tasks/espanso-service` (nix agent runs until the next `just home`) |
 | eza | **(mise)** ls replacement; theme under `mise/config/eza/`; aliases come from `[shell_alias]` |
@@ -143,7 +143,6 @@ User-level tools, one line each. Rows marked **(mise)** were flipped in the mega
 | nvim | **(mise)** editor; nightly installed via mise (`vfox:mise-plugins/vfox-neovim`), config at `mise/config/nvim/`; HM module + `neovim-nightly-overlay` removed — see [[programs/neovim-pinvim#Neovim and pinvim]] |
 | obsidian | notes vault activation only (`home.activation.configureObsidian`); app is `brew-cask:obsidian`, nixpkgs package removed 2026-08 |
 | ollama | inert compatibility module (local inference uses llama.cpp) |
-| opnix | 1Password-backed secrets — see [[architecture#Secrets management]] |
 | pi-coding-agent | Pi CLI and extensions, mise-managed from `mise/config/pi-coding-agent/` — see [[programs/pi-coding-agent#Pi coding agent]] |
 | process-compose | process orchestration |
 | proton-drive | **(mise)** Proton Drive + Proton VPN GUI apps; `brew-cask:proton-drive` + `brew-cask:protonvpn`; brew-nix HM modules removed 2026-08 |

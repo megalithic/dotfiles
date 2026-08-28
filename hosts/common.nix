@@ -116,9 +116,8 @@ in
     vim = "$EDITOR";
   };
 
-  environment.extraInit = ''
-    export SSH_AUTH_SOCK="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
-  '';
+  # SSH_AUTH_SOCK (1Password agent) is mise-owned: global_config.toml [env].
+  # ssh itself uses IdentityAgent from the mise-owned ssh config.
 
   # Minimal system packages - most should go to home-manager
   # These are essentials needed system-wide or before home-manager runs
@@ -194,6 +193,6 @@ in
 
   nixpkgs.hostPlatform = arch;
   # Allow unfree at the nix-darwin system level (matches the flake's `pkgs`).
-  # Needed e.g. for programs._1password pulling in the unfree 1password-cli.
+  # (1Password is mise-cask-owned since 2026-08; unfree stays for other pkgs.)
   nixpkgs.config.allowUnfree = true;
 }

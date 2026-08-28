@@ -19,7 +19,8 @@
     # Google Cloud SDK for Vertex AI / Gemini access
     google-cloud-sdk
 
-    kanata
+    # kanata removed 2026-08 — mise owns it everywhere (brew:kanata +
+    # setup:kanata task; workbookpro is fully mise-managed anyway)
   ];
 
   # Work-specific system settings can go here

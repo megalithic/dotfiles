@@ -28,7 +28,7 @@ System programs enabled in common include `bash` and `gnupg.agent` with SSH supp
 
 Homebrew is the last-resort path for casks and apps that resist Nix packaging. `nix-homebrew` is configured in the flake `brew_config` with Rosetta enabled, auto-migrate on, immutable taps, and the four Homebrew taps wired from flake inputs.
 
-Home Manager uses the `brew-nix` overlay (`pkgs.brewCasks.*`) for simple cask-style app bundles in `home/common/packages.nix` and per-program modules. Privileged `.pkg` apps that need installer side effects, such as Okta Verify and Tailscale, use dedicated nix-darwin modules that run Apple's installer during activation.
+Home Manager uses the `brew-nix` overlay (`pkgs.brewCasks.*`) for simple cask-style app bundles in `home/common/packages.nix` and per-program modules. Tailscale, a privileged `.pkg` app needing installer side effects, keeps a dedicated nix-darwin module that runs Apple's installer during activation.
 
 The staged mise bootstrap mirrors Homebrew through `mise/config/mise/global_config.toml` `[bootstrap.packages]`: Homebrew entries use `brew:`/`brew-cask:` prefixes and Mac App Store apps use `mas:` (the `mas` manager is enabled in `system_packages.managers`). `mas:` installs still require an interactive Apple Account session in App Store.app; on a machine that is not signed in, `mas` entries fail and need a sign-in plus bootstrap retry.
 
@@ -36,15 +36,17 @@ The staged mise bootstrap mirrors Homebrew through `mise/config/mise/global_conf
 
 `modules/` holds the nix-darwin modules. Custom kanata support also comes from the `kanata-darwin` flake input.
 
-`system.nix` covers core system settings, and `darwin/` holds `kanata.nix`, `services.nix`, `spotlight.nix`, `_1password.nix`, `okta-verify.nix`, and `tailscale-app.nix`.
+`system.nix` covers core system settings, and `darwin/` holds `services.nix`, `spotlight.nix`, and `tailscale-app.nix`. Removed 2026-08: `_1password.nix` (mise casks own 1Password), `okta-verify.nix` (Okta Verify stays installed but unmanaged — its privileged `.pkg` postinstall has no mise equivalent), and `kanata.nix` (mise owns kanata).
+
+macOS defaults ownership is split since 2026-08: key repeat, press-and-hold, and screencapture live only in mise `[bootstrap.macos.keyboard]`/`[bootstrap.macos.defaults]` (screencapture location must be an absolute literal path — neither `defaults` nor mise's defaults section expands `~` or templates). `/etc/pam.d/sudo_local` (Touch ID + brew pam_reattach) is written by `mise run setup:touchid-sudo`; `security.pam.services.sudo_local.enable = false` in `system.nix` is a required kill switch because nix-darwin defaults it to true and would recreate an empty managed symlink. `bin/smoke-test-macos.sh` verifies the whole hybrid setup (defaults, shell, sudo_local, CLI/app ownership, launchd, bootstrap converge); run it with `--aqua` from tmux/agent contexts — tmux panes are sandboxed and produce false failures.
 
 ## Kanata on macOS
 
 Kanata needs Karabiner DriverKit VirtualHIDDevice on macOS; installing only `kanata` and `kanata-bar` is not enough.
 
-The nix path keeps using the `kanata-darwin` flake plus `modules/darwin/kanata.nix`. It installs and activates the Karabiner DriverKit package, runs the VirtualHID daemon, copies kanata to stable `/usr/local/bin/kanata`, starts kanata as a launchd user agent through sudo, and runs kanata-bar as a UI client.
+Kanata is fully mise-owned since 2026-08: `modules/darwin/kanata.nix` and the `kanata-darwin` flake input are gone, and the stray `kanata` nixpkgs package is out of `hosts/workbookpro.nix`.
 
-The staged mise path mirrors that design without changing the nix modules. `mise/config/mise/global_config.toml` installs `kanata` through Homebrew bootstrap packages and `kanata-bar` through mise's `http:` backend (pinned version + sha256), links the `.kbd` profiles and layer icons, declares mise-managed launchd agents, and runs `mise/tasks/kanata-setup` from the `post-tools` bootstrap hook for privileged macOS glue. Kanata Bar v1.1.10's generic ZIP contains arm64-only binaries, so the HTTP tool declares only `macos-arm64`; it cannot move to the one-line GitHub backend until upstream publishes a platform-qualified ZIP with a checksum sidecar. That script installs/activates the Karabiner VirtualHID `.pkg` (driver 6.10.0, empirically paired with Homebrew kanata 1.12.0 — driver 8.0.0 targets kanata main's driverkit 0.4.0 client and breaks 1.12.0 with a versioned-IPC-socket mismatch), rejects unverified Homebrew kanata versions unless `KANATA_ALLOW_UNVERIFIED_VERSION=1` is set, writes the system VirtualHID LaunchDaemon, copies Homebrew's kanata to stable `/usr/local/bin/kanata`, signs it with a local stable code-signing identity (`org.megadots.kanata`) so TCC does not churn on every Homebrew Cellar path or binary hash change, writes the sudoers entry, writes `~/.config/kanata-bar/config.toml`, boots out nix-managed kanata agents and removes their `/nix/store`-referencing plists (two stacks would fight over the keyboard), moves stale `org.nixos.*` helper LaunchDaemons aside when they point at missing Nix store paths, writes and loads the `dev.mise.` agents directly (bootstrap.sh always passes `--skip launchd`), and verifies the kanata process actually started before claiming success. The daemon agent must run `/usr/bin/sudo /usr/local/bin/kanata --cfg … --nodelay --port 5829`: kanata requires root on macOS (the VirtualHID daemon IPC lives under a root-only path), and kanata-bar plus Hammerspoon connect over TCP 5829 while restarting it passwordlessly via gui-domain `launchctl kickstart`. brew services cannot own the daemon: the formula service is `require_root = true` (fails without sudo) and runs the Cellar path.
+The mise path owns the whole stack. `mise/config/mise/global_config.toml` installs `kanata` through Homebrew bootstrap packages and `kanata-bar` through mise's `http:` backend (pinned version + sha256), links the `.kbd` profiles and layer icons, declares mise-managed launchd agents, and runs `mise/tasks/kanata-setup` from the `post-tools` bootstrap hook for privileged macOS glue. Kanata Bar v1.1.10's generic ZIP contains arm64-only binaries, so the HTTP tool declares only `macos-arm64`; it cannot move to the one-line GitHub backend until upstream publishes a platform-qualified ZIP with a checksum sidecar. That script installs/activates the Karabiner VirtualHID `.pkg` (driver 6.10.0, empirically paired with Homebrew kanata 1.12.0 — driver 8.0.0 targets kanata main's driverkit 0.4.0 client and breaks 1.12.0 with a versioned-IPC-socket mismatch), rejects unverified Homebrew kanata versions unless `KANATA_ALLOW_UNVERIFIED_VERSION=1` is set, writes the system VirtualHID LaunchDaemon, copies Homebrew's kanata to stable `/usr/local/bin/kanata`, signs it with a local stable code-signing identity (`org.megadots.kanata`) so TCC does not churn on every Homebrew Cellar path or binary hash change, writes the sudoers entry, writes `~/.config/kanata-bar/config.toml`, boots out nix-managed kanata agents and removes their `/nix/store`-referencing plists (two stacks would fight over the keyboard), moves stale `org.nixos.*` helper LaunchDaemons aside when they point at missing Nix store paths, writes and loads the `dev.mise.` agents directly (bootstrap.sh always passes `--skip launchd`), and verifies the kanata process actually started before claiming success. The daemon agent must run `/usr/bin/sudo /usr/local/bin/kanata --cfg … --nodelay --port 5829`: kanata requires root on macOS (the VirtualHID daemon IPC lives under a root-only path), and kanata-bar plus Hammerspoon connect over TCP 5829 while restarting it passwordlessly via gui-domain `launchctl kickstart`. brew services cannot own the daemon: the formula service is `require_root = true` (fails without sudo) and runs the Cellar path.
 
 The launchd agents run through wrapper scripts under `mise/tasks/` because mise expands `~` only in launchd `program`/`stdout_path`/`stderr_path`, never in `args`; the kanata-bar wrapper also resolves the versioned `http:kanata-bar` install path so `[tools]` version bumps need no agent edits. mise prefixes bootstrap launchd labels with `dev.mise.`, so the live agents are `dev.mise.org.kanata.daemon` and `dev.mise.com.kanata-bar.ui`.
 
@@ -52,17 +54,19 @@ Both `config/kanata/macbook.kbd` and `config/kanata/macbook-disabled.kbd` are sc
 
 ## 1Password (GUI + CLI)
 
-`modules/darwin/_1password.nix` enables the GUI and CLI via nix-darwin **system** options; there is no Home Manager equivalent.
+mise owns 1Password on megabookpro since 2026-08: `brew-cask:1password@beta` installs the GUI and `brew-cask:1password-cli@beta` installs `op`.
 
-It sets `programs._1password.enable = true` and `programs._1password-gui.enable = true`. The GUI module rsyncs `pkgs._1password-gui` to `/Applications/1Password.app` as `root:wheel r-xr-xr-x`; the CLI module installs `op` to `/usr/local/bin/op`. `nixpkgs.config.allowUnfree = true` in `hosts/common.nix` is required at the system level (the flake's `pkgs` already had it, but system nixpkgs did not).
+The app lives at `/Applications/1Password.app`; `op` symlinks at `/opt/homebrew/bin/op`; `~/.config/1Password/ssh/agent.toml` links from `mise/config/1password/agent.toml`; `SSH_AUTH_SOCK` comes from the mise `[env]` section.
 
-For the staged mise migration, `mise/config/mise/global_config.toml` replaces this module with the `1password` brew cask (`[bootstrap.packages]`) plus `1password-cli` installed through the `post-packages` bootstrap hook via real brew (mise's brew-cask backend handles app-bundle-only casks, and that cask ships a `binary` artifact), and links `~/.config/1Password/ssh/agent.toml` from `mise/config/1password/agent.toml`.
+The nix-darwin module (`modules/darwin/_1password.nix`, rsynced GUI + `/usr/local/bin/op`) and the opnix secrets module/flake input are removed; fnox is the sole secret loader. The 2026-08 cutover deleted the root-owned nix app copy and `/usr/local/bin/op` before reinstalling the cask (the mise cask backend had symlink-adopted the nix bundle, so a caskroom wipe + `mise bootstrap` was needed to lay down the real cask app). `nixpkgs.config.allowUnfree = true` stays in `hosts/common.nix` for other unfree packages.
 
-The GUI **must** live in `/Applications` — 1Password's anti-tamper logic quits the app when launched from `~/Applications/Home Manager Apps/` or the nix store. So unlike ProtonVPN and friends (Home Manager `copyApps` into `~/Applications/Home Manager Apps/`), 1Password is a system module. Git and jj SSH signing point at `/Applications/1Password.app/Contents/MacOS/op-ssh-sign` (the full GUI bundle ships `op-ssh-sign`); do not point them at the Home Manager Apps path.
+The GUI **must** live in `/Applications` — 1Password's anti-tamper logic quits the app when launched from `~/Applications/Home Manager Apps/` or the nix store. Git and jj SSH signing point at `/Applications/1Password.app/Contents/MacOS/op-ssh-sign` (the full GUI bundle ships `op-ssh-sign`); that path is stable across cask upgrades.
+
+After an app-bundle swap, the CLI needs the macOS "op would like to access data from other apps" TCC prompt re-allowed and the app's Settings > Developer > CLI integration verified.
 
 ### "1Password.app is damaged" gotcha (first-launch Gatekeeper false positive)
 
-After migrating the GUI from a Homebrew cask to this module, macOS may throw **"1Password.app is damaged and can't be opened"** on first GUI launch. The bundle is NOT damaged — do not trash it (that deletes the working nix copy; click Cancel).
+After replacing the app bundle in place (any owner flip: brew↔nix), macOS may throw **"1Password.app is damaged and can't be opened"** on first GUI launch. The bundle is NOT damaged — do not trash it; click Cancel.
 
 All checks pass: `codesign --verify` valid, `spctl -a -vvv` accepted (Notarized Developer ID, AgileBits `2BUA8C4S2C`), `xcrun stapler validate` confirms the notarization ticket is stapled, and there is no `com.apple.quarantine` xattr.
 
@@ -72,17 +76,13 @@ Root cause: replacing the bundle **in place** at `/Applications/1Password.app` (
 
 ## Privileged .pkg installers
 
-`modules/darwin/okta-verify.nix` and `modules/darwin/tailscale-app.nix` install privileged macOS packages by running Apple's own installer during activation, because they are not plain `.app` bundles.
+`modules/darwin/tailscale-app.nix` installs a privileged macOS package by running Apple's own installer during activation, because it is not a plain `.app` bundle.
 
 ## Okta Verify
 
-`modules/darwin/okta-verify.nix` installs Okta Verify by running Apple's own installer during activation, because it is not a plain `.app`.
+The Okta Verify nix modules are removed (2026-08); the installed app and its LaunchDaemons stay on disk unmanaged.
 
-Okta Verify's `.pkg` has an `auth="root"` postinstall that loads LaunchDaemons (`com.okta.authentication.service`, `autoupdate.daemon`, `deviceaccess.servicedaemon`), installs a SecurityAgentPlugin bundle, and drops `/usr/local/bin/AutoUpdateDaemon`. `mkApp`/`brewCasks`/`brew-nix` only extract the `.app` and never run that postinstall, so device-access auth breaks; `mas` needs interactive auth.
-
-The module pins the official `.pkg` in the nix store via `pkgs.fetchurl` (version/build/sha256 taken from the Homebrew cask `okta-verify.rb`), then a `system.activationScripts.postActivation` block runs `/usr/sbin/installer -pkg <store-path> -target /` as root so the real postinstall executes. It is idempotent on the `com.okta.mobile` pkgutil receipt version: same version → skip. No Homebrew, no `modules/brew.nix`. Bump version/build/sha256 in the module when the cask updates. `home/common/programs/okta-verify/default.nix` is now just a post-`just home` presence-check warning.
-
-Migration note: if the old Homebrew cask is still installed at the same version, the activation check sees a matching receipt and skips. To switch fully to the nix-managed install, `brew uninstall --cask okta-verify` first, then `just darwin` reinstalls from the pinned pkg.
+No manager owns it now: its `.pkg` has an `auth="root"` postinstall (LaunchDaemons `com.okta.authentication.service`/`autoupdate.daemon`/`deviceaccess.servicedaemon`, a SecurityAgentPlugin, `/usr/local/bin/AutoUpdateDaemon`) that cask-style extraction never runs, and `mas` needs interactive auth — so there is no mise equivalent. Okta's own AutoUpdateDaemon keeps the app current. To reinstall from scratch, download Okta's official `.pkg` and run `/usr/sbin/installer -pkg <pkg> -target /` as root.
 
 ## Tailscale GUI app
 

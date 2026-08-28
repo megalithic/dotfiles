@@ -177,19 +177,8 @@
         "com.apple.trackpad.scaling" = 3.0;
         AppleInterfaceStyleSwitchesAutomatically = false;
         AppleShowScrollBars = "WhenScrolling";
-        # ---
-        # ludicrous speed:
-        # InitialKeyRepeat = 12;
-        # KeyRepeat = 1;
-        # ---
-        # ludicrous speed (kept in sync with mise [bootstrap.macos.keyboard]
-        # key_repeat/initial_key_repeat — both sides write these keys):
-        InitialKeyRepeat = 15;
-        KeyRepeat = 1;
-        # Disable press and hold for diacritics.
-        # I want to be able to press and hold j and k
-        # in VSCode with vim keys to move around.
-        ApplePressAndHoldEnabled = false;
+        # Key repeat + press-and-hold are mise-owned (2026-08):
+        # [bootstrap.macos.keyboard] key_repeat/initial_key_repeat/press_and_hold.
 
         NSAutomaticCapitalizationEnabled = false;
         NSAutomaticDashSubstitutionEnabled = false;
@@ -198,12 +187,8 @@
         NSAutomaticSpellingCorrectionEnabled = false;
       };
 
-      screencapture = {
-        # kept in sync with mise [bootstrap.macos.defaults."com.apple.screencapture"]
-        location = "/Users/${username}/__screenshots";
-        type = "png";
-        disable-shadow = true;
-      };
+      # screencapture defaults are mise-owned (2026-08):
+      # [bootstrap.macos.defaults."com.apple.screencapture"] in global_config.toml
 
       LaunchServices = {
         LSQuarantine = false;
@@ -451,18 +436,15 @@
   # =============================================================================
   # Security
   # =============================================================================
-  security.pam.services.sudo_local = {
-    enable = true;
-    touchIdAuth = true;
-    reattach = true;
-    # Extend here with additional services (e.g., `login`) if we want biometric auth elsewhere.
-  };
+  # sudo_local (Touch ID + pam_reattach) is mise-owned since 2026-08:
+  # `mise run setup:touchid-sudo` writes /etc/pam.d/sudo_local with the brew
+  # pam_reattach. enable = false is required — nix-darwin defaults it to true
+  # and would otherwise keep an empty managed sudo_local symlink in /etc.
+  security.pam.services.sudo_local.enable = false;
 
   # security.sudo.extraConfig = "${username}    ALL = (ALL) NOPASSWD: ALL";
-  security.sudo.extraConfig = ''
-    ${username} ALL=(root) NOPASSWD: \
-      /run/current-system/sw/bin/mas install *
-  '';
+  # mas NOPASSWD sudo rule removed 2026-08 — HM mas module is gone (mise owns
+  # mas + Xcode installs) and /run/current-system mas no longer exists.
 
   # Apply symbolic hotkey changes immediately (without requiring logout)
   # REF:

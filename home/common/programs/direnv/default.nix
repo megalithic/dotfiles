@@ -1,5 +1,4 @@
-{ config, ... }:
-{
+_: {
   programs.direnv = {
     enable = true;
     # mise's direnv wins PATH; the nix binary here is a deliberate dupe —
@@ -8,11 +7,8 @@
     enableZshIntegration = true;
     nix-direnv.enable = true;
     mise.enable = true;
-    config = {
-      global.load_dotenv = true;
-      global.warn_timeout = 0;
-      global.hide_env_diff = true;
-      whitelist.prefix = [ config.home.homeDirectory ];
-    };
+    # direnv.toml is mise-owned: [dotfiles] links ~/.config/direnv/direnv.toml
+    # to mise/config/direnv/direnv.toml (same content the config block used to
+    # render). Declaring `config` here would collide with that symlink.
   };
 }
