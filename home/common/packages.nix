@@ -61,7 +61,7 @@ let
     dust # disk usage analyzer (du replacement)
     ffmpeg
     flyctl
-    gh
+    # gh — mise github-cli owns it (CLI dedupe 2026-08)
     git-lfs
     gnupg
     gum
@@ -69,14 +69,14 @@ let
     # input dropped 2026-07-20: bun2nix master broke eval and mise ships newer
     imagemagickBig
     inetutils # telnet, ftp, etc.
-    jq # JSON processor
-    just # command runner
+    # jq — mise owns it (CLI dedupe 2026-08); nix modules keep using ${pkgs.jq} store paths
+    # just — mise owns user-level just; bootstrap copy stays in hosts/common.nix systemPackages
     jwt-cli
     ldns # DNS tools (drill)
     libvterm-neovim
     libwebp # WebP image tools
     magika
-    mas
+    # mas — mise owns it (brew:mas + mas:497799835 Xcode); HM mas module removed 2026-08
     mprocs
     netcat # nc networking utility
     nix-update
@@ -132,8 +132,7 @@ let
     dockerfile-language-server
     podman
 
-    # node/js/ts
-    nodejs_22
+    # node/js/ts — node binary is mise-owned (CLI dedupe 2026-08)
     pnpm
     vue-language-server
 

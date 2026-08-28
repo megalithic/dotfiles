@@ -53,8 +53,10 @@ window-save-state = always
 
 maximize = true
 
-# command = fish -l
-# shell-integration = fish
+# brew fish (mise-declared brew:fish) — explicit so Ghostty never falls back
+# to a stale login-shell resolution
+command = /opt/homebrew/bin/fish -l
+shell-integration = fish
 shell-integration-features = true
 
 # custom-shader = shaders/cursor_blaze_no_trail.glsl

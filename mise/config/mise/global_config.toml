@@ -171,10 +171,9 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.config/mise/config.toml" = "~/.dotfiles/mise/config/mise/global_config.toml"
 "~/.config/mise/mise.lock" = "~/.dotfiles/mise.lock"
 "~/.config/atuin/config.toml" = "~/.dotfiles/mise/config/atuin/config.toml"
-# fnox: ~/.config/fnox/config.toml is intentionally NOT linked here. It is
-# generated from mise/config/fnox/shared.toml by `mise run setup:fnox` and
-# receives the age-encrypted `mise run fnox:sync` cache.
-# Secret-bearing artifact is generated outside the repo by `mise run fnox:sync`.
+# fnox: ~/.config/fnox/config.toml is intentionally NOT linked here. `mise run
+# fnox` generates it from mise/config/fnox/shared.toml and atomically installs
+# its age-encrypted cache. Secret-bearing artifacts stay outside the repo.
 "~/.s3cfg" = "~/.local/share/fnox/generated/s3cfg"
 "~/.config/fish" = "~/.dotfiles/mise/config/fish"
 "~/.profile" = "~/.dotfiles/mise/config/bash/profile"
@@ -425,6 +424,7 @@ platforms.macos-arm64.url = "https://github.com/not-in-stock/kanata-bar/releases
 "brew:gnu-sed" = "latest"
 "brew:gnupg" = "latest"
 "brew:grep" = "latest"
+"brew:htop" = "latest"       # HM htop module removed (CLI dedupe 2026-08); htoprc is self-managed
 "brew:kanata" = "latest"       # keyboard remapper; setup verifies 1.12.0 with VHID 6.10.0, then copies/signs it to stable /usr/local/bin/kanata
 "brew:mas" = "latest"
 "brew:mole" = "latest"
@@ -667,7 +667,7 @@ stderr_path = "/tmp/kanata-bar.err"
 # - zoom: cask source uses `on_arch_conditional` (livecheck), which the shim's
 #   DSL surface rejects during whole-file eval; postflight then fails
 # (helium is NOT here: it needs the GitHub token, which needs op signin +
-#  fnox render — see [tasks.bootstrap] for the ordered chain)
+#  `mise run fnox` — see [tasks.bootstrap] for the ordered chain)
 # hooks: no template expansion, cwd = config root, [env] not applied
 run = [
   # op CLI comes from [bootstrap.packages] brew:1password-cli — official
@@ -685,9 +685,9 @@ run = "killall Finder SystemUIServer Dock || true"
 
 # Full machine bootstrap reaches this hook once after tool install. The scoped
 # bootstrap apply/upgrade commands in `mise run up` do not run post-tools; up
-# calls fnox:sync once in its explicit update sequence instead.
+# calls the fnox task once in its explicit update sequence instead.
 [bootstrap.hooks.post-tools]
-run = ["mise run setup:kanata", "mise run fnox:sync"]
+run = ["mise run setup:kanata", "mise run fnox"]
 
 [bootstrap.user]
 login_shell = "/opt/homebrew/bin/fish"
@@ -771,7 +771,7 @@ step "Apply dotfiles" mise --verbose bootstrap dotfiles apply --force --yes
 step "Apply launchd agents" mise bootstrap launchd apply --yes
 step "Apply macOS defaults" mise bootstrap macos-defaults apply --yes
 step "Upgrade packages" mise bootstrap packages upgrade --yes
-step "Sync fnox" mise run fnox:sync
+step "Sync fnox" mise run fnox
 step "Update Pi" mise run pi:update
 step "Reload Hammerspoon" "$HOME/.dotfiles/bin/hs-reload" || echo "hs-reload failed (Hammerspoon not running?)"
 
@@ -820,16 +820,9 @@ else
 fi
 """
 
-[tasks."setup:fnox"]
-alias = "fnox:setup"
-description = "Generate the machine-local fnox config and age cache key, then verify 1Password secret access"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox-setup"
-# raw: 1Password may request biometric approval on the terminal
-raw = true
-
-[tasks."fnox:sync"]
-description = "Atomically refresh fnox config and age cache once, then re-render s3cfg"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox-sync"
+[tasks.fnox]
+description = "Idempotently converge fnox config, encrypted cache, daemon state, and generated artifacts"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox"
 # raw: 1Password may request biometric approval on the terminal
 raw = true
 
