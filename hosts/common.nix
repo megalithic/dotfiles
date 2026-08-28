@@ -40,8 +40,9 @@ in
     name = username;
     inherit (paths) home;
     isHidden = false;
-    shell = pkgs.fish;
-    # shell = pkgs.legacyPackages.aarch64-darwin.fish;
+    # fish is mise/brew-owned now ([bootstrap.packages] brew:fish +
+    # mise/config/fish); nix fish module removed with the shells wave.
+    shell = "/opt/homebrew/bin/fish";
   };
 
   networking.hostName = hostname;
@@ -63,11 +64,11 @@ in
   ];
   environment.pathsToLink = [ "/Applications" ];
   environment.shells = [
-    pkgs.fish
+    "/opt/homebrew/bin/fish"
   ];
 
   environment.variables = {
-    SHELL = "${pkgs.fish}/bin/fish";
+    SHELL = "/opt/homebrew/bin/fish";
     LANG = lang;
     LC_CTYPE = lang;
     LC_ALL = lang;
@@ -167,10 +168,8 @@ in
 
   programs = {
     bash.enable = true;
-    fish = {
-      enable = true;
-      useBabelfish = true;
-    };
+    # fish: mise/brew-owned (shells wave); babelfish env import replaced by
+    # mise fragments/fish/nix.fish.
     gnupg.agent = {
       enable = true;
       enableSSHSupport = true;
