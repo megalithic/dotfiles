@@ -13,14 +13,13 @@
  *       filename, which collides across session names sharing a prefix)
  *
  * States:
- *   idle     session up, turn not running (startup, or turn ended in error)
+ *   idle     session up, no turn running yet (startup, no prompt)
  *   working  agent is thinking / running tools
- *   asking   blocked on a structured question (ask_user_question tool)
- *   done     turn ended cleanly — agent is waiting on the user
- *
- * Prose questions at turn end are indistinguishable from completed work
- * (both are a plain agent_end), so they land in "done"; only the structured
- * question tool reaches "asking".
+ *   asking   waiting on the user — structured question (ask_user_question
+ *            tool) or the turn's final assistant message ends with a
+ *            question mark (prose-question heuristic)
+ *   error    turn ended after an error — needs attention
+ *   done     turn ended cleanly — agent finished its work
  *
  * Only interactive tmux pis publish (ctx.hasUI + TMUX); ephemeral/subagent
  * runs stay silent. The file is removed on session_shutdown, and readers
@@ -38,7 +37,7 @@ const xdgStateHome =
 const PI_STATE_DIR = process.env.PI_STATE_DIR || path.join(xdgStateHome, "pi");
 const STATUS_DIR = path.join(PI_STATE_DIR, "status");
 
-type AgentState = "idle" | "working" | "asking" | "done";
+type AgentState = "idle" | "working" | "asking" | "error" | "done";
 
 let statusPath: string | null = null;
 let session: string | null = null;
@@ -90,6 +89,37 @@ const removeStatus = (): void => {
 const isAskTool = (toolName: unknown): boolean =>
   typeof toolName === "string" && toolName.includes("ask_user_question");
 
+/**
+ * True when the last assistant message reads as a question to the user:
+ * its text ends with "?" after trailing markdown/quote/paren noise is
+ * stripped. Coarse by design — a status dot, not NLP.
+ */
+const endsWithQuestion = (messages: unknown): boolean => {
+  if (!Array.isArray(messages)) return false;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i] as {
+      role?: string;
+      content?: unknown;
+    };
+    if (m?.role !== "assistant") continue;
+    let text = "";
+    if (typeof m.content === "string") {
+      text = m.content;
+    } else if (Array.isArray(m.content)) {
+      text = m.content
+        .filter(
+          (c): c is { type: string; text: string } =>
+            (c as { type?: string })?.type === "text" &&
+            typeof (c as { text?: unknown }).text === "string",
+        )
+        .map((c) => c.text)
+        .join("\n");
+    }
+    return /\?[\s*_`"')\]]*$/.test(text.trimEnd());
+  }
+  return false;
+};
+
 export default function (pi: ExtensionAPI): void {
   pi.on("session_start", (_event, ctx) => {
     if (!ctx.hasUI) return;
@@ -122,7 +152,15 @@ export default function (pi: ExtensionAPI): void {
     sawError = true;
   });
 
-  pi.on("agent_end", () => writeState(sawError ? "idle" : "done"));
+  pi.on("agent_end", (event) =>
+    writeState(
+      sawError
+        ? "error"
+        : endsWithQuestion((event as { messages?: unknown })?.messages)
+          ? "asking"
+          : "done",
+    ),
+  );
 
   pi.on("session_shutdown", () => removeStatus());
 }

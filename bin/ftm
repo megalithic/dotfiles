@@ -13,7 +13,7 @@
 # Picker ordering (top → bottom):
 #   1. running MRU sessions
 #   2. remaining running sessions by tmux last-attached (desc)
-#   3. dim divider row (selection is a no-op)
+#   3. dim dashed divider row (enter is ignored — the picker stays open)
 #   4. dead MRU entries, then zoxide dirs by frecency
 #   5. remaining layouts, alphabetical
 #
@@ -62,7 +62,6 @@ C_DIM=$'\e[2m'
 
 TAB=$'\t'
 FTM_FRESH='__FTM_FRESH__'
-SNAPSHOT_DIVIDER='┈┈┈ dirs & layouts ┈┈┈'
 
 function b64_encode() {
   [[ -n $1 ]] || { printf -- '-'; return; }
@@ -286,7 +285,23 @@ function strip_markers() {
   local s="$1"
   s="${s%%"$TAB"*}"
   s="${s% ●}"
+  s="${s% ○}"
   printf '%s' "$s"
+}
+
+# -- dim divider between running sessions and everything else: dashes sized
+#    to the list. FZF_COLUMNS is exported to reload commands (ftm --list);
+#    the initial call estimates from the tmux client width (popup is 70%
+#    wide) minus padding/pointer/scrollbar columns.
+function divider_line() {
+  local cols="${FZF_COLUMNS:-0}"
+  if [[ $cols -le 0 ]]; then
+    cols="$(tmux display-message -p '#{client_width}' 2>/dev/null || printf 80)"
+    [[ $POPUP == "true" ]] || cols=$((cols * 70 / 100))
+  fi
+  cols=$((cols - 6))
+  [[ $cols -lt 3 ]] && cols=3
+  printf '%*s' "$cols" '' | tr ' ' '-'
 }
 
 # -- resolve a session name to its id ($N). tmux target parsing mangles names
@@ -350,14 +365,22 @@ function bump_recent() {
   mv "$tmp" "$recent_file"
 }
 
+# -- true when the pane tty has a process titled "pi": pi runs as a node
+#    shim (pane_current_command is "node"), and its process.title is the
+#    only distinguishing mark (trick from nicknisi's tmux-smart-name).
+# shellcheck disable=SC2009 # pgrep can't filter by tty
+function is_pi_pane() {
+  ps -t "${1#/dev/}" -o comm= 2>/dev/null | grep -qx pi
+}
+
 # -- find the tmux pane id (%N) of the pi agent running in a session.
 #    Source of truth: the pi manifest ($PI_STATE_DIR/manifests/
 #    pi-{session}-{window}.info, single-line JSON with "pane" and "pid"
-#    keys). Falls back to the first pane in the session whose current
-#    command is node (pi runs under node).
+#    keys). Falls back to the first node pane in the session whose process
+#    title is "pi" (is_pi_pane).
 function pi_pane_for() {
-  local session="$1" sid="$2" f json pane pid panes line
-  panes="$(tmux list-panes -s -t "$sid" -F '#{pane_id} #{pane_current_command}' 2>/dev/null || true)"
+  local session="$1" sid="$2" f json pane pid panes line cmd_tty
+  panes="$(tmux list-panes -s -t "$sid" -F '#{pane_id} #{pane_current_command} #{pane_tty}' 2>/dev/null || true)"
   for f in "$PI_STATE_DIR/manifests/pi-$session-"*.info; do
     [[ -e $f ]] || continue
     [[ $f == *-eph-* ]] && continue
@@ -375,12 +398,91 @@ function pi_pane_for() {
     return 0
   done
   while IFS= read -r line; do
-    if [[ ${line#* } == "node" ]]; then
+    cmd_tty="${line#* }"
+    if [[ ${cmd_tty%% *} == "node" ]] && is_pi_pane "${cmd_tty#* }"; then
       printf '%s' "${line%% *}"
       return 0
     fi
   done <<<"$panes"
   return 1
+}
+
+# -- STACKED PREVIEW (experimental — to revert, remove this block and its
+#    branch in preview_entry; single-agent sessions never enter it).
+#    List every live pi agent in a session as "window<TAB>pane_id" lines.
+#    Manifest-backed panes first (validated like pi_pane_for); then windows
+#    that only have a live status file (pis older than the manifest, e.g.
+#    started before a bridge restart) resolve to the first node pane in
+#    that tmux window whose process title is "pi" (is_pi_pane).
+function pi_panes_for() {
+  local session="$1" sid="$2" f json pane pid win panes wname wpane wcmd wtty
+  local seen=$'\n' _st _sess
+  panes="$(tmux list-panes -s -t "$sid" -F '#{window_name}'"$TAB"'#{pane_id}'"$TAB"'#{pane_current_command}'"$TAB"'#{pane_tty}' 2>/dev/null || true)"
+  for f in "$PI_STATE_DIR/manifests/pi-$session-"*.info; do
+    [[ -e $f ]] || continue
+    [[ $f == *-eph-* ]] && continue
+    win="${f##*/pi-"$session"-}"
+    win="${win%.info}"
+    json="$(<"$f")"
+    [[ $json == *'"pane":"'* ]] || continue
+    pane="${json#*\"pane\":\"}"
+    pane="${pane%%\"*}"
+    if [[ $json == *'"pid":'* ]]; then
+      pid="${json#*\"pid\":}"
+      pid="${pid%%[,\}]*}"
+      [[ $pid =~ ^[0-9]+$ ]] && ! kill -0 "$pid" 2>/dev/null && continue
+    fi
+    [[ $panes == *"$TAB$pane$TAB"* ]] || continue
+    seen+="$win"$'\n'
+    printf '%s\t%s\n' "$win" "$pane"
+  done
+  for f in "$PI_STATE_DIR/status/pi-$session-"*.status; do
+    [[ -e $f ]] || continue
+    win="${f##*/pi-"$session"-}"
+    win="${win%.status}"
+    [[ $seen == *$'\n'"$win"$'\n'* ]] && continue
+    IFS=' ' read -r _st pid _sess <"$f" || true
+    [[ $_sess == "$session" ]] || continue
+    [[ $pid =~ ^[0-9]+$ ]] && ! kill -0 "$pid" 2>/dev/null && continue
+    while IFS=$TAB read -r wname wpane wcmd wtty; do
+      if [[ $wname == "$win" && $wcmd == node ]] && is_pi_pane "$wtty"; then
+        seen+="$win"$'\n'
+        printf '%s\t%s\n' "$win" "$wpane"
+        break
+      fi
+    done <<<"$panes"
+  done
+}
+
+#    One section per agent: dim "── window" header with its status icon,
+#    then the newest capture lines, splitting $FZF_PREVIEW_LINES evenly
+#    (headers and separators counted against the budget). Sections are
+#    separated by a full-width line painted in the popup background color
+#    (48;2;60;71;77 = bg:#3c474d in fuzzy_find's --color; keep in sync) so
+#    the gap reads as the popup showing through the preview.
+function print_stacked_preview() {
+  local session="$1" entries="$2" count=0 budget line win pane st _rest f first=1
+  while IFS= read -r line; do [[ -n $line ]] && count=$((count + 1)); done <<<"$entries"
+  [[ $count -gt 0 ]] || return 0
+  budget=$(((${FZF_PREVIEW_LINES:-40} - count - (count - 1)) / count))
+  [[ $budget -lt 3 ]] && budget=3
+  while IFS=$TAB read -r win pane; do
+    [[ -n $pane ]] || continue
+    if [[ $first == 1 ]]; then first=0; else
+      printf '\e[48;2;60;71;77m%*s\e[0m\n' "${FZF_PREVIEW_COLUMNS:-80}" ''
+    fi
+    st=""
+    f="$PI_STATE_DIR/status/pi-$session-$win.status"
+    [[ -r $f ]] && IFS=' ' read -r st _rest <"$f"
+    case $st in
+    asking | error) st=" ${C_RED}●${C_RESET}" ;;
+    working) st=" ${C_GREEN}●${C_RESET}" ;;
+    idle | done) st=" ${C_WHITE}○${C_RESET}" ;;
+    *) st="" ;;
+    esac
+    printf '%s── %s%s%s\n' "$C_DIM" "$win" "$C_RESET" "$st"
+    FZF_PREVIEW_LINES=$budget print_capture_tail "$pane"
+  done <<<"$entries"
 }
 
 # -- print a pane capture fitted to the preview window: trailing blank lines
@@ -410,7 +512,7 @@ function print_capture_tail() {
 #    Sessions without a pi pane fall back to the session's active pane.
 #    Dir entries show the path; layout entries show the script.
 function preview_entry() {
-  local line="$1" name path sid pane
+  local line="$1" name path sid pane stacked
   if [[ $line == *"$TAB"* ]]; then
     path="${line#*"$TAB"}"
     printf '%s%s%s\n' "$C_GRAY" "$path" "$C_RESET"
@@ -419,6 +521,13 @@ function preview_entry() {
   name="$(strip_markers "$line")"
   [[ -n $name ]] || return 0
   if sid="$(session_id_for "$name")"; then
+    # stacked preview (experimental): sessions with 2+ pi agents render one
+    # section per agent. Remove this block to revert to single-pane previews.
+    stacked="$(pi_panes_for "$name" "$sid")"
+    if [[ $stacked == *$'\n'* ]]; then
+      print_stacked_preview "$name" "$stacked"
+      return 0
+    fi
     if pane="$(pi_pane_for "$name" "$sid")"; then
       print_capture_tail "$pane"
     else
@@ -441,15 +550,21 @@ function get_layouts() {
   done
 }
 
-# -- print a running-session row: bold name plus a pi status dot (red = pi
-#    blocked on a structured question, green = turn done, waiting on user).
-#    Reads the asking/done session lists built by print_list.
+# -- print a running-session row: bold name plus a pi status icon following
+#    the common three-state agent model (workmux/fleet/claude-squad):
+#      red ●    needs attention — blocked on a structured question or the
+#               turn ended with an error (states asking/error)
+#      green ●  actively working, no issues (state working)
+#      white ○  idle — no prompt yet or turn completed cleanly (idle/done)
+#    Sessions without a live pi status file render no icon.
 function print_running() {
   local name="$1"
-  if [[ $status_asking == *$'\n'"$name"$'\n'* ]]; then
+  if [[ $status_red == *$'\n'"$name"$'\n'* ]]; then
     printf '%s%s%s %s●%s\n' "$C_BOLD" "$name" "$C_RESET" "$C_RED" "$C_RESET"
-  elif [[ $status_done == *$'\n'"$name"$'\n'* ]]; then
+  elif [[ $status_green == *$'\n'"$name"$'\n'* ]]; then
     printf '%s%s%s %s●%s\n' "$C_BOLD" "$name" "$C_RESET" "$C_GREEN" "$C_RESET"
+  elif [[ $status_idle == *$'\n'"$name"$'\n'* ]]; then
+    printf '%s%s%s %s○%s\n' "$C_BOLD" "$name" "$C_RESET" "$C_WHITE" "$C_RESET"
   else
     printf '%s%s%s\n' "$C_BOLD" "$name" "$C_RESET"
   fi
@@ -467,7 +582,7 @@ function print_list() {
   local exclude_current="${1:-}"
   local emitted=$'\n' sess_wrapped=$'\n'
   local s name path line zi mi n f st st_pid st_sess running_count=0
-  local status_asking=$'\n' status_done=$'\n'
+  local status_red=$'\n' status_green=$'\n' status_idle=$'\n'
   local -a sess_order=() zx_names=() zx_paths=() mru_names=() mru_paths=()
 
   # pi agent states (dead pids skipped)
@@ -477,8 +592,9 @@ function print_list() {
     [[ -n $st_sess ]] || continue
     [[ $st_pid =~ ^[0-9]+$ ]] && ! kill -0 "$st_pid" 2>/dev/null && continue
     case $st in
-    asking) status_asking+="$st_sess"$'\n' ;;
-    done) status_done+="$st_sess"$'\n' ;;
+    asking | error) status_red+="$st_sess"$'\n' ;;
+    working) status_green+="$st_sess"$'\n' ;;
+    idle | done) status_idle+="$st_sess"$'\n' ;;
     esac
   done
 
@@ -535,7 +651,7 @@ function print_list() {
     print_running "$name"
   done
 
-  [[ $running_count -gt 0 ]] && printf '%s\n' "$C_DIM$SNAPSHOT_DIVIDER$C_RESET"
+  [[ $running_count -gt 0 ]] && printf '%s%s%s\n' "$C_DIM" "$(divider_line)" "$C_RESET"
 
   # 3) dead MRU entries, then zoxide dirs and layouts.
   for mi in "${!mru_names[@]}"; do
@@ -647,7 +763,9 @@ function try_session() {
     fi
     break
   done <<<"$1"
-  [[ -n $session && $session != "$SNAPSHOT_DIVIDER" ]] || exit 0
+  [[ -n $session ]] || exit 0
+  # divider row (all dashes): backstop — the enter bind already ignores it
+  [[ $session =~ ^-+$ ]] && exit 0
 
   if [[ -z $cwd ]]; then
     cwd=$(zoxide query "$session" 2>/dev/null || true)
@@ -691,8 +809,8 @@ function fuzzy_find() {
   # shellcheck disable=SC2016 # fzf action templates: {} and $() expand in fzf's shell, not here
   # "=" prefix forces exact session-name match (names like .dotfiles-... otherwise
   # trip tmux's target parser, which treats a leading dot as a window separator)
-  local kill_action='execute-silent(tmux-kill-session "$(printf %s {} | sed -E "s/\t.*$//; s/ ●$//")")+reload(ftm --list)' \
-    rename_action='execute(session=$(printf %s {} | sed -E "s/\t.*$//; s/ ●$//"); printf >&2 "New session name: "; read -r name; tmux rename-session -t "$(ftm --id="$session")" "${name}")+reload(ftm --list)'
+  local kill_action='execute-silent(tmux-kill-session "$(printf %s {} | sed -E "s/\t.*$//; s/ [●○]$//")")+reload(ftm --list)' \
+    rename_action='execute(session=$(printf %s {} | sed -E "s/\t.*$//; s/ [●○]$//"); printf >&2 "New session name: "; read -r name; tmux rename-session -t "$(ftm --id="$session")" "${name}")+reload(ftm --list)'
 
   # native fzf tmux popup unless we're already inside one (-p)
   [[ $POPUP == "true" ]] || fzf_extra_args+=(--tmux "center,70%,75%")
@@ -718,8 +836,8 @@ function fuzzy_find() {
       --bind="ctrl-k:${kill_action}" \
       --bind="ctrl-x:${kill_action}" \
       --bind="ctrl-r:${rename_action}" \
-      --bind="enter:replace-query+print-query" \
-      --bind="alt-enter:print(${FTM_FRESH})+replace-query+print-query" \
+      --bind='enter:transform:[[ {} =~ ^-+$ ]] && echo ignore || echo replace-query+print-query' \
+      --bind="alt-enter:transform:[[ {} =~ ^-+\$ ]] && echo ignore || echo 'print(${FTM_FRESH})+replace-query+print-query'" \
       --pointer='▌' \
       --marker='󰛄' \
       --print-query \
@@ -775,11 +893,12 @@ while getopts "phs:-:" OPTION; do
     esac
     ;;
   \?)
-    echo "Invalid Option: -$OPTARG" 1>&2
+    # bash leaves OPTARG unset for invalid options; guard for set -u
+    echo "Invalid Option: -${OPTARG:-}" 1>&2
     exit 1
     ;;
   :)
-    echo "Invalid Option: -$OPTARG requires an argument" 1>&2
+    echo "Invalid Option: -${OPTARG:-} requires an argument" 1>&2
     exit 1
     ;;
   esac
