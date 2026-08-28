@@ -2,12 +2,11 @@
 # Shared fnox config — source of truth for providers and 1Password references.
 # Non-nix twin of home/common/programs/opnix.
 #
-# ~/.config/fnox/config.toml is GENERATED from this file by `mise run
-# setup:fnox` (fnox ignores `import` in the auto-loaded global config, so the
-# body is copied and the per-machine `agecache` provider is appended). `mise
-# run fnox:sync` regenerates the copy and writes age-encrypted sync caches
-# into it; fnox then resolves from the cache until the next sync. Edit
-# secrets HERE, then rerun `mise run fnox:sync`.
+# ~/.config/fnox/config.toml is GENERATED from this file by `mise run fnox`
+# (fnox ignores `import` in the auto-loaded global config, so the body is copied
+# and the per-machine `agecache` provider is appended). The same task syncs all
+# declared onepass secrets into the age-encrypted cache, verifies full coverage,
+# and atomically activates the result. Edit secrets HERE, then rerun it.
 #
 # Auth: op CLI with 1Password desktop-app integration (biometric); no
 # service-account token needed on this machine. For headless/CI use, bootstrap
@@ -77,6 +76,7 @@ GITHUB_TOKEN = { provider = "onepass", value = "op://Crypt/github/token" }
 HOMEBREW_GITHUB_API_TOKEN = { provider = "onepass", value = "op://Crypt/github/token" }
 MISE_GITHUB_API_TOKEN = { provider = "onepass", value = "op://Crypt/github/token" }
 GITHUB_CLI_TOKEN = { provider = "onepass", value = "op://Crypt/github/cli_token" }
+RX_SENTRY_CLI_TOKEN = { provider = "onepass", value = "op://Crypt/sentry-rxv/api_key" }
 
 # Legacy env and s3cfg 1Password blob items are intentionally not referenced;
 # retain the items only through their clean cutover verification periods.

@@ -1,8 +1,35 @@
 #!/usr/bin/env bash
 # Render the s3cmd config from the sanitized template and fnox DO Spaces
-# fields. Runs at the end of `mise run fnox:sync`; values come from the local
+# fields. Runs at the end of `mise run fnox`; values come from the local
 # age cache, so no 1Password round-trips are needed. No-ops when unchanged.
 set -euo pipefail
+
+config=""
+output=""
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+  --config)
+    [[ "$#" -ge 2 && -n "$2" ]] || {
+      echo "render-s3cfg: --config requires a path" >&2
+      exit 1
+    }
+    config="$2"
+    shift 2
+    ;;
+  --output)
+    [[ "$#" -ge 2 && -n "$2" ]] || {
+      echo "render-s3cfg: --output requires a path" >&2
+      exit 1
+    }
+    output="$2"
+    shift 2
+    ;;
+  *)
+    echo "render-s3cfg: unknown argument: $1" >&2
+    exit 1
+    ;;
+  esac
+done
 
 command -v fnox &>/dev/null || {
   echo "render-s3cfg: fnox not found. Run 'mise install' first." >&2
@@ -10,8 +37,8 @@ command -v fnox &>/dev/null || {
 }
 
 template="${DOTFILES_DIR:-$HOME/.dotfiles}/mise/config/s3cmd/s3cfg.template"
-output_dir="${XDG_DATA_HOME:-$HOME/.local/share}/fnox/generated"
-output="$output_dir/s3cfg"
+output="${output:-${XDG_DATA_HOME:-$HOME/.local/share}/fnox/generated/s3cfg}"
+output_dir="$(dirname "$output")"
 tmp=""
 
 [[ -f "$template" ]] || {
@@ -19,9 +46,17 @@ tmp=""
   exit 1
 }
 
-DO_SPACES_CAPS_KEY="$(fnox get DO_SPACES_CAPS_KEY)"
-DO_SPACES_CAPS_SECRET="$(fnox get DO_SPACES_CAPS_SECRET)"
-DO_SPACES_CAPS_REGION="$(fnox get DO_SPACES_CAPS_REGION)"
+fnox_get() {
+  if [[ -n "$config" ]]; then
+    fnox get "$1" --config "$config" --no-daemon
+  else
+    fnox get "$1"
+  fi
+}
+
+DO_SPACES_CAPS_KEY="$(fnox_get DO_SPACES_CAPS_KEY)"
+DO_SPACES_CAPS_SECRET="$(fnox_get DO_SPACES_CAPS_SECRET)"
+DO_SPACES_CAPS_REGION="$(fnox_get DO_SPACES_CAPS_REGION)"
 for var in DO_SPACES_CAPS_KEY DO_SPACES_CAPS_SECRET DO_SPACES_CAPS_REGION; do
   [[ -n "${!var}" ]] || {
     echo "render-s3cfg: fnox returned empty $var" >&2
