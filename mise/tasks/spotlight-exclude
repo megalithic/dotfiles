@@ -1,0 +1,72 @@
+#!/opt/homebrew/bin/bash
+set -euo pipefail
+
+root="${SPOTLIGHT_SCAN_ROOT:-$HOME/code}"
+ignore_file="${DOTFILES_DIR:-$HOME/.dotfiles}/mise/config/git/ignore"
+max_depth="${SPOTLIGHT_MAX_DEPTH:-6}"
+
+patterns=(
+  node_modules
+  .devenv
+  .direnv
+  _build
+  deps
+  .elixir_ls
+  .lexical
+  .elixir-tools
+  .expert
+)
+
+if [[ -f "$ignore_file" ]]; then
+  while IFS= read -r line; do
+    line="${line#"${line%%[![:space:]]*}"}"
+    line="${line%"${line##*[![:space:]]}"}"
+    [[ -z "$line" || "$line" == \#* || "$line" == \!* ]] && continue
+    line="${line#\*\*/}"
+    line="${line#/}"
+    line="${line%/}"
+    [[ -z "$line" || "$line" == *\** || "$line" == \[* ]] && continue
+    patterns+=("$line")
+  done < "$ignore_file"
+fi
+
+if [[ "${1:-apply}" == "status" ]]; then
+  count=$(/usr/bin/find "$root" -maxdepth "$max_depth" -name .metadata_never_index -type f 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
+  echo "spotlight-exclude: $count marker(s) under $root"
+  exit 0
+fi
+
+[[ "${1:-apply}" == "apply" ]] || {
+  echo "usage: spotlight-exclude [apply|status]" >&2
+  exit 2
+}
+
+[[ -d "$root" ]] || {
+  echo "spotlight-exclude: scan root absent: $root"
+  exit 0
+}
+
+declare -A seen=()
+find_args=()
+for pattern in "${patterns[@]}"; do
+  [[ -n "${seen[$pattern]:-}" ]] && continue
+  seen[$pattern]=1
+  [[ ${#find_args[@]} -gt 0 ]] && find_args+=( -o )
+  find_args+=( -name "$pattern" )
+done
+
+[[ ${#find_args[@]} -gt 0 ]] || {
+  echo "spotlight-exclude: no patterns"
+  exit 0
+}
+
+count=0
+while IFS= read -r -d '' dir; do
+  marker="$dir/.metadata_never_index"
+  if [[ ! -f "$marker" ]]; then
+    /usr/bin/touch "$marker"
+    ((count += 1))
+  fi
+done < <(/usr/bin/find "$root" -maxdepth "$max_depth" -type d \( "${find_args[@]}" \) -print0 2>/dev/null || true)
+
+echo "spotlight-exclude: marked $count new directories under $root"

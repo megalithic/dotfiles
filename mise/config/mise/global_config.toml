@@ -629,6 +629,16 @@ keep_alive = true
 stdout_path = "~/.cache/miccheck-stdout.log"
 stderr_path = "~/.cache/miccheck-stderr.log"
 
+# Spotlight exclusions only touch user-owned development directories, so a
+# user LaunchAgent replaces the former root nix-darwin daemon.
+[bootstrap.macos.launchd.agents."com.megadots.spotlight-exclude"]
+program = "~/.dotfiles/mise/tasks/spotlight-exclude"
+run_at_load = true
+keep_alive = false
+start_interval = 21600
+stdout_path = "~/.cache/spotlight-exclude.log"
+stderr_path = "~/.cache/spotlight-exclude.err.log"
+
 # kanata daemon (dev.mise.org.kanata.daemon) and kanata-bar agents are
 # written and loaded by mise/tasks/kanata-setup (post-tools hook), because
 # bootstrap.sh always passes `--skip launchd`. This entry stays as the

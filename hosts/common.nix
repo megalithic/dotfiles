@@ -171,26 +171,6 @@ in
     };
   };
 
-  # ─── Spotlight exclusions ────────────────────────────────────────────────
-  # Prevents Spotlight from indexing build artifacts, deps, and devenv state.
-  # Override or extend in hosts/<hostname>.nix via spotlight.exclusions.paths/scanPaths.
-  spotlight.exclusions = {
-    enable = true;
-    fromFile = ../mise/config/git/ignore;
-    paths = [
-      "node_modules"
-      ".devenv"
-      ".direnv"
-      "_build"
-      "deps"
-      ".elixir_ls"
-      ".lexical"
-      ".elixir-tools"
-      ".expert"
-    ];
-    scanPaths = [ "${paths.home}/code" ];
-  };
-
   nixpkgs.hostPlatform = arch;
   # Allow unfree at the nix-darwin system level (matches the flake's `pkgs`).
   # (1Password is mise-cask-owned since 2026-08; unfree stays for other pkgs.)
