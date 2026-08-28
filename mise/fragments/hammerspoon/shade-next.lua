@@ -11,6 +11,7 @@ return {
     repo = "/Users/seth/code/shade-next",
     config = "/Users/seth/.config/shade-next/config.toml",
     socket = "/Users/seth/.local/state/shade-next/shade-next.sock",
+    wrapper = "/Users/seth/.local/share/mise/shims/shade-next",
     binaries = {
       debug = "/Users/seth/code/shade-next/.build/debug/shade-next",
       release = "/Users/seth/code/shade-next/.build/release/shade-next",

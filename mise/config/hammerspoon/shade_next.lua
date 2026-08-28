@@ -23,9 +23,7 @@ end
 
 -- Percent-encode a query value for the URL fallback.
 local function urlEncode(s)
-  return (string.gsub(s or "", "[^%w%-_%.~]", function(c)
-    return string.format("%%%02X", string.byte(c))
-  end))
+  return (string.gsub(s or "", "[^%w%-_%.~]", function(c) return string.format("%%%02X", string.byte(c)) end))
 end
 
 local function sendControl(frag, method, params)
@@ -35,13 +33,16 @@ local function sendControl(frag, method, params)
   local payload = hs.json.encode({ method = method, params = params or {} })
   if not payload then return false end
 
-  local cmd = string.format(
-    "printf '%%s\\n' %s | /usr/bin/nc -U %s",
-    string.format("%q", payload),
-    string.format("%q", socket)
-  )
+  local cmd =
+    string.format("printf '%%s\\n' %s | /usr/bin/nc -U %s", string.format("%q", payload), string.format("%q", socket))
   hs.task.new("/bin/sh", nil, { "-c", cmd }):start()
   return true
+end
+
+local function executableFile(path)
+  if not path then return false end
+  local permissions = hs.fs.attributes(path, "permissions")
+  return permissions ~= nil and string.find(permissions, "x", 1, true) ~= nil
 end
 
 local function openActionUrl(frag, action, query)
@@ -50,7 +51,24 @@ local function openActionUrl(frag, action, query)
     if value ~= nil then table.insert(parts, key .. "=" .. urlEncode(tostring(value))) end
   end
   local suffix = #parts > 0 and ("?" .. table.concat(parts, "&")) or ""
-  hs.urlevent.openURL(frag.app.url_scheme .. action .. suffix)
+  local url = frag.app.url_scheme .. action .. suffix
+  local wrapper = frag.launch and frag.launch.wrapper
+
+  -- The wrapper repairs the app symlink and LaunchServices registration before
+  -- opening this URL. Direct URL fallback only helps older/manual installs.
+  if executableFile(wrapper) then
+    hs.task
+      .new(wrapper, function(exitCode, _, stderr)
+        if exitCode ~= 0 then
+          U.log.w("shade-next wrapper failed; falling back to direct URL:", stderr or "")
+          hs.urlevent.openURL(url)
+        end
+      end, { url })
+      :start()
+    return
+  end
+
+  hs.urlevent.openURL(url)
 end
 
 local function toggle(frag)
@@ -59,8 +77,8 @@ local function toggle(frag)
 end
 
 -- Launch/focus shade-next prefilled with `text` (optionally routed).
--- Reuses a running instance via the control socket; otherwise opens the
--- shade-next:// URL (which launches the app, then prefills).
+-- Reuses a running instance via the control socket; otherwise runs the release
+-- wrapper with the shade-next:// URL so cold-start registration happens first.
 local function prefill(frag, text, route, focus)
   if sendControl(frag, "prefill", { text = text or "", route = route, focus = focus ~= false }) then return end
   openActionUrl(frag, "prefill", { text = text or "", route = route, focus = focus and "1" or "0" })
@@ -75,9 +93,7 @@ local function fallbackContextText()
     table.insert(lines, "- App: " .. (app:name() or "Unknown"))
     if app:bundleID() then table.insert(lines, "- Bundle: " .. app:bundleID()) end
   end
-  if win and win:title() and win:title() ~= "" then
-    table.insert(lines, "- Window: " .. win:title())
-  end
+  if win and win:title() and win:title() ~= "" then table.insert(lines, "- Window: " .. win:title()) end
   table.insert(lines, "")
   table.insert(lines, "")
   return table.concat(lines, "\n")
@@ -87,21 +103,17 @@ local function quickCaptureNote(frag, withContext)
   -- shade-next owns context gathering. Hammerspoon only passes a lightweight
   -- fallback because it sees the frontmost app before shade-next is focused.
   local fallback = withContext and fallbackContextText() or nil
-  if sendControl(frag, "captureNote", { context = withContext, fallback_context = fallback, focus = true }) then return end
+  if sendControl(frag, "captureNote", { context = withContext, fallback_context = fallback, focus = true }) then
+    return
+  end
   prefill(frag, fallback or "", "note", true)
 end
 
 local function binaryInstalled(frag)
-  local bins = frag.launch and frag.launch.binaries
-  if not bins then return false end
-  for _, path in pairs({ bins.release, bins.debug }) do
-    if path then
-      local f = io.open(path, "r")
-      if f then
-        f:close()
-        return true
-      end
-    end
+  local launch = frag.launch or {}
+  local bins = launch.binaries or {}
+  for _, path in pairs({ launch.wrapper, bins.release, bins.debug }) do
+    if executableFile(path) then return true end
   end
   return false
 end
@@ -120,10 +132,12 @@ function M:init(_)
   end
 
   local hyper = req("hyper", { id = "shade-next" }):start()
-  local mode = require("hypemode").new("shade-next", {
-    autoExit = 1,
-    dim = false,
-  }):start()
+  local mode = require("hypemode")
+    .new("shade-next", {
+      autoExit = 1,
+      dim = false,
+    })
+    :start()
 
   -- hyper+enter -> launch/toggle shade-next through its native control channel.
   hyper:bind({}, "return", nil, function() toggle(frag) end)

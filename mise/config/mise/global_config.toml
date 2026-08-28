@@ -29,7 +29,7 @@ idiomatic_version_file_enable_tools = ["node"]
 lockfile = true
 pin = true
 # supply chain security: only allow installing new versions of tools that have
-# been released for at least 24 hours, to avoid 0-day supply chain attacks.
+# been released for at least 8 hours, to avoid 0-day supply chain attacks.
 # Exclude some tools that are frequently updated and have a low risk profile.
 minimum_release_age = "8h"
 minimum_release_age_excludes = [
@@ -372,6 +372,8 @@ uv = "latest"
 worktrunk = "latest"
 yamlfmt = "latest"
 zoxide = "latest"
+"github:megalithic/shade-next" = "latest"
+"github:nicknisi/fleet" = "latest"
 
 # postinstall chain: install-app.sh mounts/copies the DMG, then setup-helium
 # re-bakes the Chromium prodversion into the External Extensions update URLs
@@ -393,33 +395,15 @@ os = ["macos"]
 asset_pattern = "helium_{{version}}_arm64-macos.dmg"
 postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh && $DOTFILES_DIR/mise/tasks/setup-helium"
 
-# shade-next panel agent (private repo — token via MISE_GITHUB_TOKEN,
-# GITHUB_TOKEN, or the gh CLI config). The zip ships shade-next.app/ +
-# bin/shade-next (launches the app via `open`; GUI must go through
-# LaunchServices for the URL handler + TCC) +
-# install/mise-postinstall-shade-next.sh, which symlinks the app into
-# ~/Applications and registers io.shade.next / shade-next://.
-# Pinned: mise `latest` skips prereleases, and only -rc tags exist so far.
-# Flip to "latest" after the first stable release (`mise run release v0.1.0`).
-[tools."github:megalithic/shade-next"]
-version = "0.1.0-rc.3"
-os = ["macos"]
-asset_pattern = "shade-next-darwin-arm64.zip"
-bin_path = "bin"
-postinstall = 'bash "$MISE_TOOL_INSTALL_PATH/install/mise-postinstall-shade-next.sh"'
-
+# Kanata Bar v1.1.10 publishes only generic `kanata-bar.app.zip` and `.dmg`
+# assets. The ZIP is arm64-only, so keep the explicit URL and checksum until
+# upstream publishes platform-qualified assets with checksum sidecars.
 [tools."http:kanata-bar"]
 version = "1.1.10"
 checksum = "sha256:ba07e3caeb41d1b2a667e2c246cc3b0ef632a2d812ceeac0ce2eed9441d63b35"
 os = ["macos"]
 strip_components = 0
 platforms.macos-arm64.url = "https://github.com/not-in-stock/kanata-bar/releases/download/v{{version}}/kanata-bar.app.zip"
-platforms.macos-x64.url = "https://github.com/not-in-stock/kanata-bar/releases/download/v{{version}}/kanata-bar.app.zip"
-
-[tools."github:nicknisi/fleet"]
-version = "latest"
-asset_pattern = "fleet-darwin-arm64.tar.gz"
-bin_path = "."
 
 [bootstrap.packages]
 # op via brew formula — official documented install method. A real signed binary
