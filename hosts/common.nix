@@ -12,24 +12,6 @@ let
   lang = "en_US.UTF-8";
 in
 {
-  fonts.packages = with pkgs; [
-    atkinson-hyperlegible
-    emacs-all-the-icons-fonts
-    fira-code
-    fira-mono
-    font-awesome
-    inter
-    # jetbrains-mono # temporarily disabled — gftools dep pulls ffmpeg-python which fails in sandbox
-    maple-mono.NF
-    maple-mono.truetype
-    maple-mono.variable
-    # nerd-fonts.* removed 2026-08 — mise owns nerd fonts (~/Library/Fonts via
-    # `mise run fonts:install`, list in global_config.toml vars.nerd_fonts)
-    noto-fonts-color-emoji
-    twemoji-color-font
-    victor-mono
-  ];
-
   users.knownUsers = [ username ];
   users.users.${username} = {
     uid = 501;
@@ -135,14 +117,6 @@ in
     # Nix tools
     nix-index
     nurl
-
-    # Darwin-specific
-    darwin.trash
-
-    # Archive tools
-    unzip
-    p7zip
-    zip
   ];
 
   # Determinate Nix handles nix daemon configuration via /etc/nix/nix.conf

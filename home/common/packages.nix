@@ -6,12 +6,7 @@
 let
   # ── gui tools ──────────────────────────────────────────────────────────────────
   # Custom apps built with mkApp - these have passthru.appLocation
-  customApps = with pkgs; [
-    tidewave # Tidewave GUI app for web app development
-    tidewave-cli # Tidewave MCP CLI
-    # bloom
-    # mailmate app managed via home/common/programs/mailmate/default.nix
-  ];
+  customApps = [ ];
 
   # Filter: only apps with appLocation = "home-manager" go to home.packages
   # (home-manager copies these to ~/Applications/Home Manager Apps/)
@@ -20,53 +15,30 @@ let
   ) customApps;
 
   # Standard GUI apps from nixpkgs (not custom mkApp derivations)
-  guiPkgs = with pkgs; [
-    iina # migrated from homebrew 2026-02-13
-    inkscape # migrated from homebrew 2026-02-13
-    # neovide # Native neovim GUI - potential future use for floating notes window
-    # obsidian — brew cask owns it (GUI dedupe wave 2026-08)
-    slack # migrated from homebrew 2026-02-13
-    # spotify
-    # telegram-desktop
-    zoom-us
-  ];
+  guiPkgs = [ ];
 
   # GUI apps from brew-nix overlay (pkgs.brewCasks.*) — migrated from
   # nix-darwin homebrew.casks. Tokens with leading digits or '@' need
   # string-keyed access. Handled elsewhere (not brewCasks):
   #   1password    — nix-darwin programs._1password*, see modules/darwin/_1password.nix
-  brewCaskPkgs = [
-    pkgs.brewCasks."obs@beta"
-  ];
+  brewCaskPkgs = [ ];
 
   # ── cli tools ──────────────────────────────────────────────────────────────────
   # NOTE: Some tools are enabled via programs.* (auto-installs package):
   #   bat, eza, fd, ripgrep, starship, zoxide, mise, k9s
   cliPkgs = with pkgs; [
     amber
-    apfel-llm # Apple Intelligence CLI/server — shade-next compact_ai interpreter
     argc
     awscli2
-    bash # macOS ships with ancient bash
     blueutil
     chafa
     curlie
-    delta
-    difftastic
     desktoppr # declarative wallpaper setter
     devbox
     # devenv # managed by programs/devenv module
-    difftastic
-    dust # disk usage analyzer (du replacement)
-    ffmpeg
-    flyctl
     # gh — mise github-cli owns it (CLI dedupe 2026-08)
-    git-lfs
-    gnupg
-    gum
     # hunk — installed via mise (aqua:modem-dev/hunk + npm:hunkdiff); nix flake
     # input dropped 2026-07-20: bun2nix master broke eval and mise ships newer
-    imagemagickBig
     inetutils # telnet, ftp, etc.
     # jq — mise owns it (CLI dedupe 2026-08); nix modules keep using ${pkgs.jq} store paths
     # just — mise owns user-level just; bootstrap copy stays in hosts/common.nix systemPackages
@@ -81,13 +53,8 @@ let
     nix-update
     nix-search-cli
     openconnect
-    openssl_3
     openvpn
-    poppler-utils # pdftotext etc. — pi wrapper expects it on PATH (was in the removed pi-coding-agent module)
     procs
-    s3cmd
-    sox # audio recording/processing for whisper dictation
-    sqlite
     switchaudio-osx
     tesseract # OCR fallback for clipper (Vision is primary)
     tldr
@@ -95,7 +62,6 @@ let
     whisperkit-cli # Apple Silicon Whisper speech recognition (was homebrew formula)
     w3m
     yq # YAML processor (jq for YAML)
-    yubikey-manager
     yubikey-personalization
   ];
 
@@ -109,22 +75,9 @@ let
     harper # grammar checker
 
     # kubernetes
-    k9s
-    kubectl
-    kubernetes-helm
-    kubie
-
-    # lua (use lowPrio on 5.1 to avoid fish completion collision with 5.4)
-    (lib.lowPrio lua5_1)
-    lua5_4
-    lua-language-server
+    # lua
     lua54Packages.luacheck
     lua54Packages.luarocks
-    stylua
-
-    # shell
-    shellcheck
-    shfmt
 
     # docker (CLI provided by OrbStack, installed via brew cask)
     docker-compose-language-service
@@ -132,18 +85,7 @@ let
     podman
 
     # node/js/ts — node binary is mise-owned (CLI dedupe 2026-08)
-    pnpm
     vue-language-server
-
-    # python
-    basedpyright
-    python313
-    python313Packages.ipython
-    python313Packages.pip
-    python313Packages.websocket-client
-    python313Packages.websockets
-    python313Packages.pdf2image
-    uv
 
     # nix
     alejandra
@@ -152,7 +94,6 @@ let
     nixfmt
 
     # markdown
-    markdown-oxide
   ];
 in
 {
