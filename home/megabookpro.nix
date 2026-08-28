@@ -38,21 +38,10 @@
     };
   };
 
-  # ===========================================================================
-  # llama.cpp — primary local inference for 32GB (conservative defaults)
-  # ===========================================================================
-  # Migration from Ollama/oMLX: use llama-server router mode with one loaded
-  # GGUF model at a time. 8K context, q8_0 KV cache, and flash attention keep
-  # memory predictable on 32GB while leaving headroom for OS/browser/nvim.
-  programs.llamaCppLocal = {
-    enable = true;
-    modelsMax = 1;
-    ctxSize = 8192;
-    parallel = 1;
-    cacheTypeK = "q8_0";
-    cacheTypeV = "q8_0";
-    flashAttn = "on";
-  };
+  # llama.cpp: ownership flipped to mise (com.megadots.llama-cpp launchd agent
+  # + mise/tasks/llama-server-launchd + mise/config/llama-cpp/models.ini),
+  # mirroring the same conservative 32GB defaults. The HM module
+  # (programs.llamaCppLocal) stays available but disabled here.
 
   # Host-specific home-manager overrides go here
   # Example: different shell aliases, extra packages, etc.
