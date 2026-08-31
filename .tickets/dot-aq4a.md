@@ -2,7 +2,7 @@
 id: dot-aq4a
 status: open
 deps: [dot-v5xw, dot-ltdf]
-links: []
+links: [dot-b2k7]
 created: 2026-04-30T14:17:48Z
 type: task
 priority: 1
