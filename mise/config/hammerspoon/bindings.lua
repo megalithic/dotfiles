@@ -62,7 +62,7 @@ function M.loadMeeting()
   req("hyper", { id = "meeting" }):start():bind({}, "z", nil, function()
     -- Delegate to media-presenced daemon: CDP Target.activateTarget + NSRunningApplication.activate
     local sock = os.getenv("HOME") .. "/.local/state/media-presence/sock"
-    local focusCmd = string.format("echo '{\"cmd\":\"focus\"}' | /usr/bin/nc -w 1 -U %s", sock)
+    local focusCmd = string.format('echo \'{"cmd":"focus"}\' | /usr/bin/nc -w 1 -U %s', sock)
     hs.task.new("/bin/sh", nil, { "-c", focusCmd }):start()
   end)
 end
@@ -181,8 +181,8 @@ function M.loadShade()
       "return",
       function() shade.captureWithContext() end
     )
-    -- hyper+shift+n / hyper+ctrl+n are owned by shade-next quick capture.
-    -- Keep legacy shade modal available from bindings above, not a direct chord.
+  -- hyper+shift+n / hyper+ctrl+n are owned by shade-next quick capture.
+  -- Keep legacy shade modal available from bindings above, not a direct chord.
 end
 
 function M.loadNotifications()

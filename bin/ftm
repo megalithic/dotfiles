@@ -70,6 +70,10 @@ C_DIM=$'\e[2m'
 
 TAB=$'\t'
 FTM_FRESH='__FTM_FRESH__'
+# replacement for $HOME in displayed paths; a literal \~ replacement keeps the
+# backslash under bash 3.2 (breaks try_session's ~ re-expansion), a variable is
+# version-safe
+TILDE='~'
 
 function b64_encode() {
   [[ -n $1 ]] || { printf -- '-'; return; }
@@ -570,12 +574,12 @@ function print_list() {
       printf '%s%s%s\n' "$C_DIM" "$name" "$C_RESET"
     elif [[ -n ${mru_paths[$mi]} && -d ${mru_paths[$mi]} ]]; then
       emitted+="$name"$'\n'
-      printf '%s%s%s\t%s%s%s\n' "$C_DIM" "$name" "$C_RESET" "$C_GRAY" "${mru_paths[$mi]/#$HOME/\~}" "$C_RESET"
+      printf '%s%s%s\t%s%s%s\n' "$C_DIM" "$name" "$C_RESET" "$C_GRAY" "${mru_paths[$mi]/#$HOME/$TILDE}" "$C_RESET"
     else
       for zi in "${!zx_names[@]}"; do
         if [[ ${zx_names[$zi]} == "$name" ]]; then
           emitted+="$name"$'\n'
-          printf '%s%s%s\t%s%s%s\n' "$C_DIM" "$name" "$C_RESET" "$C_GRAY" "${zx_paths[$zi]/#$HOME/\~}" "$C_RESET"
+          printf '%s%s%s\t%s%s%s\n' "$C_DIM" "$name" "$C_RESET" "$C_GRAY" "${zx_paths[$zi]/#$HOME/$TILDE}" "$C_RESET"
           break
         fi
       done
@@ -589,7 +593,7 @@ function print_list() {
     [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
     [[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]] && continue
     emitted+="$name"$'\n'
-    printf '%s%s%s\t%s%s%s\n' "$C_DIM" "$name" "$C_RESET" "$C_GRAY" "${zx_paths[$zi]/#$HOME/\~}" "$C_RESET"
+    printf '%s%s%s\t%s%s%s\n' "$C_DIM" "$name" "$C_RESET" "$C_GRAY" "${zx_paths[$zi]/#$HOME/$TILDE}" "$C_RESET"
   done
 
   # 4) remaining layouts (glob order = alphabetical)
@@ -654,21 +658,24 @@ function new_session() {
 # -- try to change to an existing session; otherwise, create a new one
 function try_session() {
   local session cwd source line fresh=0
-  # first non-empty line of fzf output (query or selection)
+  # fzf output: query line first; alt-enter's accept appends the FTM_FRESH
+  # marker after it (print() mimics --expect: query, marker, selection) —
+  # scan every line, honor the marker anywhere, keep the first session line
   session="" cwd="" source="default"
   while IFS= read -r line; do
     [[ -n $line ]] || continue
     if [[ $line == "$FTM_FRESH" ]]; then fresh=1; continue; fi
+    [[ -n $session ]] && continue
     if [[ $line == *$TAB* ]]; then
       # zoxide entry: "name<TAB>path" (~ shortened for display)
       session="${line%%"$TAB"*}"
       cwd="${line#*"$TAB"}"
+      cwd="${cwd#\\}" # heal rows rendered by bash 3.2's \~ replacement
       cwd="${cwd/#\~/$HOME}"
       source="zoxide"
     else
       session="$(strip_markers "$line")"
     fi
-    break
   done <<<"$1"
   [[ -n $session ]] || exit 0
   # divider row (all dashes): backstop — the enter bind already ignores it
@@ -713,6 +720,13 @@ function fuzzy_find() {
   fi
 
   # -- picker actions; reload regenerates the annotated list so markers stay correct
+  # Enter/Alt-Enter nest their divider check: fzf skips any action whose
+  # template contains a bare {} when nothing matches, which made Enter a no-op
+  # on typed queries with no matching row. The outer transform is
+  # placeholder-free ($FZF_MATCH_COUNT env, \{} escaped), so it always runs;
+  # the {} dash-check only runs when a current item exists. Alt-Enter uses
+  # accept, not print-query: print() mimics --expect (query, marker, selection
+  # output order) and print-query drops queued print() lines entirely.
   # shellcheck disable=SC2016 # fzf action templates: {} and $() expand in fzf's shell, not here
   # "=" prefix forces exact session-name match (names like .dotfiles-... otherwise
   # trip tmux's target parser, which treats a leading dot as a window separator)
@@ -722,6 +736,7 @@ function fuzzy_find() {
   # native fzf tmux popup unless we're already inside one (-p)
   [[ $POPUP == "true" ]] || fzf_extra_args+=(--tmux "center,70%,75%")
 
+  # shellcheck disable=SC2016 # fzf transform templates: $FZF_MATCH_COUNT and {} expand in fzf's shell
   selected_session="$(
     fzf \
       ${fzf_extra_args[@]+"${fzf_extra_args[@]}"} \
@@ -743,13 +758,12 @@ function fuzzy_find() {
       --bind="ctrl-k:${kill_action}" \
       --bind="ctrl-x:${kill_action}" \
       --bind="ctrl-r:${rename_action}" \
-      --bind='enter:transform:[[ {} =~ ^-+$ ]] && echo ignore || echo replace-query+print-query' \
-      --bind="alt-enter:transform:[[ {} =~ ^-+\$ ]] && echo ignore || echo 'print(${FTM_FRESH})+replace-query+print-query'" \
+      --bind='enter:transform:if [[ $FZF_MATCH_COUNT -eq 0 ]]; then echo print-query; else echo "transform:[[ \{} =~ ^-+$ ]] && echo ignore || echo replace-query+print-query"; fi' \
+      --bind="alt-enter:transform:if [[ \$FZF_MATCH_COUNT -eq 0 ]]; then echo 'print(${FTM_FRESH})+accept'; else echo \"transform:[[ \{} =~ ^-+\$ ]] && echo ignore || echo 'print(${FTM_FRESH})+replace-query+accept'\"; fi" \
       --pointer='▌' \
       --marker='󰛄' \
-      --print-query \
-      --exit-0 <<<"$fzf_list"
-  )"
+      --print-query <<<"$fzf_list"
+  )" || true
 
   try_session "$selected_session"
 }

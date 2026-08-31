@@ -39,6 +39,12 @@ live_debug = false
 # launcher state (an in-progress note is always preserved). 0 disables.
 auto_reset_timeout_seconds = 300
 
+[pi]
+# Persistent Shade conversations use explicit Pi settings and never inherit
+# ambient wrapper/profile defaults.
+model = "opencode-go/gpt-5.6-luna"
+thinking = "medium"
+
 [editor]
 nvim_host = true
 

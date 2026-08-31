@@ -174,9 +174,7 @@ function M.setupAlertOverride(hud)
     return alert.id
   end
 
-  hs.alert.closeAll = function()
-    hud.dismissAll({ animate = false })
-  end
+  hs.alert.closeAll = function() hud.dismissAll({ animate = false }) end
 
   hs.alert.closeSpecific = function(uuid)
     -- TODO: implement specific HUD dismissal by id
@@ -228,10 +226,22 @@ function M.setupNotifyOverride(hud)
       end,
       -- No-op methods for API compatibility
       withdraw = function(self) return self end,
-      withdrawAfter = function(self, secs) self._opts.withdrawAfter = secs; return self end,
-      title = function(self, t) self._opts.title = t; return self end,
-      subTitle = function(self, s) self._opts.subTitle = s; return self end,
-      informativeText = function(self, m) self._opts.informativeText = m; return self end,
+      withdrawAfter = function(self, secs)
+        self._opts.withdrawAfter = secs
+        return self
+      end,
+      title = function(self, t)
+        self._opts.title = t
+        return self
+      end,
+      subTitle = function(self, s)
+        self._opts.subTitle = s
+        return self
+      end,
+      informativeText = function(self, m)
+        self._opts.informativeText = m
+        return self
+      end,
       alwaysPresent = function(self, v) return self end,
       autoWithdraw = function(self, v) return self end,
       hasActionButton = function(self) return false end,
@@ -288,7 +298,7 @@ function M.setupReloadCleanup(opts)
   hs.reload = function()
     -- Clean up state manager
     if _G.S and _G.S.resetAll then pcall(_G.S.resetAll) end
-    
+
     -- Clean up notification module
     if _G.N and _G.N.cleanup then pcall(_G.N.cleanup) end
 
@@ -303,7 +313,7 @@ function M.setupReloadCleanup(opts)
     -- Use menu click instead of native hs.reload()
     -- Native hs.reload() and hs.timer.doAfter() both crash when called from hotkey callbacks
     -- Menu click triggers reload safely through Hammerspoon's native event handling
-    hs.application.get("Hammerspoon"):selectMenuItem({"File", "Reload Config"})
+    hs.application.get("Hammerspoon"):selectMenuItem({ "File", "Reload Config" })
   end
 end
 
