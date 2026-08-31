@@ -369,6 +369,10 @@ else
   [ -n "$HOST" ] || die "Hostname cannot be empty after normalization"
 fi
 
+# Host-specific mise config: mise merges ~/.config/mise/config.$MISE_ENV.toml
+# on top of the global config (shell init exports this for later sessions).
+export MISE_ENV="$HOST"
+
 if [ "$HOST" != "$CURRENT_HOST" ]; then
   say "Switching macOS hostname: $CURRENT_HOST -> $HOST"
   sudo scutil --set ComputerName "$HOST"

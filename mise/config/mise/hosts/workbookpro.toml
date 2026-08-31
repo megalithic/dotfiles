@@ -1,0 +1,6 @@
+# Host-specific mise config: workbookpro only.
+# Linked to ~/.config/mise/config.workbookpro.toml by [dotfiles]; mise merges
+# it on top of config.toml when MISE_ENV=workbookpro (exported from the short
+# hostname in shell init and bootstrap.sh).
+#
+# Empty for now — add work-only tools, packages, or launchd agents here.

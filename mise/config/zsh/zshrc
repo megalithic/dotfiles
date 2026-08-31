@@ -9,6 +9,11 @@ export LAT_LLM_BASE_URL="https://api.synthetic.new/openai/v1"
 export LAT_LLM_MODEL="hf:nomic-ai/nomic-embed-text-v1.5"
 export LAT_LLM_DIMENSIONS="768"
 
+# Host-specific mise config: mise merges ~/.config/mise/config.$MISE_ENV.toml
+# on top of the global config. Exported before the interactive guard so
+# non-interactive shells get it too.
+export MISE_ENV="$(hostname -s)"
+
 case $- in
   *i*) ;;
   *) return ;;

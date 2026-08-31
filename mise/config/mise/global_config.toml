@@ -172,6 +172,12 @@ up = "cd $HOME/.dotfiles && mise run up"
 # "~/Library/Developer/Xcode/UserData/FontAndColorThemes/tokyo-night.xccolortheme" = ".config/xcode/tokyo-night.xccolortheme"
 "~/.config/mise/config.toml" = "~/.dotfiles/mise/config/mise/global_config.toml"
 "~/.config/mise/mise.lock" = "~/.dotfiles/mise.lock"
+# -- host-specific mise config: mise merges ~/.config/mise/config.$MISE_ENV.toml
+#    on top of config.toml. MISE_ENV = short hostname, exported by shell init
+#    (fish env.fish, bashrc, zshrc) and bootstrap.sh. Both links exist on both
+#    machines; only the file matching MISE_ENV is loaded. --
+"~/.config/mise/config.megabookpro.toml" = "~/.dotfiles/mise/config/mise/hosts/megabookpro.toml"
+"~/.config/mise/config.workbookpro.toml" = "~/.dotfiles/mise/config/mise/hosts/workbookpro.toml"
 "~/.config/atuin/config.toml" = "~/.dotfiles/mise/config/atuin/config.toml"
 # fnox: ~/.config/fnox/config.toml is intentionally NOT linked here. `mise run
 # fnox` generates it from mise/config/fnox/shared.toml and atomically installs
@@ -773,6 +779,10 @@ description = "Update system packages, mise tools, nvim packages, pi, and more"
 run = """
 set -euo pipefail
 
+# Host-specific mise config: guard against stale shells without MISE_ENV so
+# child mise invocations see ~/.config/mise/config.$MISE_ENV.toml.
+export MISE_ENV="${MISE_ENV:-$(hostname -s)}"
+
 state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/mise"
 mkdir -p "$state_dir"
 export MISE_LOG_FILE="$state_dir/up.log"
@@ -815,6 +825,10 @@ step "Reload Hammerspoon" "$HOME/.dotfiles/bin/hs-reload" || echo "hs-reload fai
 description = "Clean package-manager caches and generated artifacts"
 run = """
 set -euo pipefail
+
+# Host-specific mise config: without MISE_ENV, `mise prune` below would treat
+# host-scoped tools (e.g. AirConnect) as unrequested and delete them.
+export MISE_ENV="${MISE_ENV:-$(hostname -s)}"
 
 printf 'Run cleanup? This deletes caches, unused mise tool versions, Docker artifacts, and node_modules under $HOME/code. [y/N] '
 read -r confirm

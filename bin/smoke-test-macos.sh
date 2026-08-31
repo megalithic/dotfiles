@@ -17,6 +17,10 @@ set -uo pipefail
 # inherited partial PATH would produce false ownership failures.
 export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
+# Host-specific mise config: --aqua runs with no shell init, so MISE_ENV
+# (normally exported by rc files) must be pinned here too.
+export MISE_ENV="${MISE_ENV:-$(hostname -s)}"
+
 LOG=/tmp/smoke-aqua.log
 run_bootstrap=1 aqua=0 aqua_run=0
 for arg in "$@"; do
