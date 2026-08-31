@@ -6,7 +6,7 @@
 # who stole it without remorse from https://github.com/wojtekmach/dotfiles/blob/master/bin/m
 
 set -e
-[[ -v DEBUG ]] && set -x
+[[ -n "${DEBUG+x}" ]] && set -x
 
 if [[ -f mix.lock ]] && [[ ! -d deps ]]; then
   mix deps.get
