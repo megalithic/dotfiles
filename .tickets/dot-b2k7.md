@@ -90,6 +90,6 @@ This task is a one-time migration under `dot-wo6i`. It complements `dot-aq4a`, w
 
 ## Notes
 
-**2026-08-31T18:41:41Z**
+### 2026-08-31T18:41:41Z
 
 First verified megabookpro snapshot captured after restart and clean Helium quit. Snapshot ID: 20260831T180725Z-cc4cdab1d860. WOLFHALL path: /Volumes/Backups/sync/helium/snapshots/v1/megabookpro/20260831T180725Z-cc4cdab1d860/. Local staged copy: ~/.local/share/helium-merge/staging/snapshots/v1/megabookpro/20260831T180725Z-cc4cdab1d860/. Inventory: 1,056 bookmark URLs, 21 folders, 12,482 history URLs, 146,524 visits, 5 session files, 108 open tabs in 1 window, saved tab groups present. All 12 checksums verified on NAS; staged History PRAGMA integrity_check returned ok; READY written last. No Helium profile was modified and no excluded credential/site-state files were copied.
