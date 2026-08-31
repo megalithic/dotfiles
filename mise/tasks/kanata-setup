@@ -312,8 +312,8 @@ validate_kanata_bar_tool() {
 write_kanata_bar_config() {
   /bin/mkdir -p "$KANATA_BAR_CONFIG_DIR"
   local icons_dir="$KANATA_ICONS_DIR"
-  if [[ ! -d "$icons_dir" && -d "${DOTFILES_DIR}/config/kanata/icons" ]]; then
-    icons_dir="${DOTFILES_DIR}/config/kanata/icons"
+  if [[ ! -d "$icons_dir" && -d "${DOTFILES_DIR}/mise/config/kanata/icons" ]]; then
+    icons_dir="${DOTFILES_DIR}/mise/config/kanata/icons"
   fi
 
   mkdir -p "$TMP_ROOT"

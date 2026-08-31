@@ -3,6 +3,10 @@
 # it on top of config.toml when MISE_ENV=megabookpro (exported from the short
 # hostname in shell init and bootstrap.sh). workbookpro twin lives next door.
 
+[dotfiles]
+# Host-specific ~/.ssh/config; Include-s mise/config/ssh/shared.config.
+"~/.ssh/config" = "~/.dotfiles/mise/config/ssh/config.megabookpro"
+
 # AirConnect (AirPlay -> UPnP/Sonos bridge, https://github.com/philippe44/AirConnect).
 # The release zip carries binaries for every platform; postinstall marks the
 # macOS ones executable. No brew formula or nixpkgs package exists.

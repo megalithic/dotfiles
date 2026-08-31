@@ -208,12 +208,13 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.config/shade-next/config.toml" = "~/.dotfiles/mise/config/shade-next/config.toml"
 
 # -- kanata: individual .kbd files (parent dir has mutable state; active kanata.kbd is mutable) --
-"~/.config/kanata/macbook.kbd" = "~/.dotfiles/config/kanata/macbook.kbd"
-"~/.config/kanata/macbook-disabled.kbd" = "~/.dotfiles/config/kanata/macbook-disabled.kbd"
-"~/.config/kanata/icons" = "~/.dotfiles/config/kanata/icons"
+"~/.config/kanata/macbook.kbd" = "~/.dotfiles/mise/config/kanata/macbook.kbd"
+"~/.config/kanata/macbook-disabled.kbd" = "~/.dotfiles/mise/config/kanata/macbook-disabled.kbd"
+"~/.config/kanata/icons" = "~/.dotfiles/mise/config/kanata/icons"
 
-# -- SSH: individual files (directory holds mutable keys/known_hosts) --
-"~/.ssh/config" = "~/.dotfiles/config/ssh/config"
+# -- SSH: individual files (directory holds mutable keys/known_hosts).
+#    ~/.ssh/config is host-specific: mapped in hosts/*.toml to
+#    mise/config/ssh/config.<hostname>, each Include-ing shared.config. --
 "~/.ssh/allowed_signers" = "~/.dotfiles/mise/config/ssh/allowed_signers"
 # 1Password SSH agent key selection (vault/item); GUI (cask) + CLI (formula)
 # both come from brew via [bootstrap.packages], replacing nix-darwin's
@@ -222,6 +223,9 @@ up = "cd $HOME/.dotfiles && mise run up"
 # YubiKey age identity stub (non-secret; key material stays on the YubiKey).
 # Written by `mise run setup:yubikey`; used by the fnox age provider.
 "~/.config/fnox/yubikey-identity.txt" = "~/.dotfiles/mise/config/fnox/yubikey-identity.txt"
+
+# -- home-dir dotfiles: sources live in mise/home/ (symlinked to ~/*) --
+"~/.iex.exs" = "~/.dotfiles/mise/home/iex.exs"
 
 # -- espanso: app support path, not XDG config --
 "~/Library/Application Support/espanso" = "~/.dotfiles/mise/config/espanso"
@@ -275,11 +279,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 "pipx:huggingface-hub" = "latest"
 "github:EmmyLuaLs/emmylua-analyzer-rust" = "latest"
 "github:Feel-ix-343/markdown-oxide" = "latest"
-# sessions — search/memory across AI coding sessions (Claude, Codex, Pi, OpenCode);
-# CLI fuzzy-resume + MCP server (`sessions --mcp`) wired into pi mcp.json
 "github:nicknisi/sessions" = "latest"
-# "github:jesseduffield/lazygit" = "latest"
-# "github:kevindutra/crit" = "latest"
 # "github:noworrieseh/macdisp" = "latest"
 # "github:radiosilence/fastmail-cli" = "latest"
 "github:rtk-ai/rtk" = "latest"
@@ -296,10 +296,6 @@ up = "cd $HOME/.dotfiles && mise run up"
 "npm:bash-language-server" = "latest"
 "npm:chrome-devtools-mcp" = "latest"
 "npm:hunkdiff" = "latest"
-# lat.md CLI (`lat`) — replaces the nix/devenv-provided build. tk stays
-# vendored at bin/tk: upstream wedow/ticket has no release assets (script-only
-# repo) and the devenv-era prefix-sanitization patch must be preserved for
-# existing .tickets/dot-* IDs.
 "npm:lat.md" = "latest"
 # "npm:httpyac" = "latest"
 "npm:@earendil-works/pi-coding-agent" = "latest"
@@ -355,7 +351,7 @@ lazydocker = "latest"
 "llama.cpp" = "latest"
 lua = "latest"
 lua-language-server = "latest"
-neovim = "nightly"                                                           # nightly, stable, tags
+neovim = "nightly"                                                                   # nightly, stable, tags
 node = "latest"
 ollama = "latest"
 pnpm = "latest"
@@ -446,7 +442,7 @@ platforms.macos-arm64.url = "https://github.com/not-in-stock/kanata-bar/releases
 "brew:gnu-sed" = "latest"
 "brew:gnupg" = "latest"
 "brew:grep" = "latest"
-"brew:htop" = "latest"       # HM htop module removed (CLI dedupe 2026-08); htoprc is self-managed
+"brew:htop" = "latest"         # HM htop module removed (CLI dedupe 2026-08); htoprc is self-managed
 "brew:kanata" = "latest"       # keyboard remapper; setup verifies 1.12.0 with VHID 6.10.0, then copies/signs it to stable /usr/local/bin/kanata
 "brew:luarocks" = "latest"
 "brew:make" = "latest"

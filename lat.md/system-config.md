@@ -34,7 +34,7 @@ The staged mise bootstrap mirrors Homebrew through `mise/config/mise/global_conf
 
 ## Darwin modules
 
-`modules/` holds the nix-darwin modules. Custom kanata support also comes from the `kanata-darwin` flake input.
+`modules/` holds the nix-darwin modules.
 
 `system.nix` covers core system settings, and `darwin/` now holds only `services.nix`. Removed 2026-08: `_1password.nix`, `okta-verify.nix`, `kanata.nix`, `spotlight.nix`, and `tailscale-app.nix`; mise owns those apps and user services.
 
@@ -50,7 +50,7 @@ The mise path owns the whole stack. `mise/config/mise/global_config.toml` instal
 
 The launchd agents run through wrapper scripts under `mise/tasks/` because mise expands `~` only in launchd `program`/`stdout_path`/`stderr_path`, never in `args`; the kanata-bar wrapper also resolves the versioned `http:kanata-bar` install path so `[tools]` version bumps need no agent edits. mise prefixes bootstrap launchd labels with `dev.mise.`, so the live agents are `dev.mise.org.kanata.daemon` and `dev.mise.com.kanata-bar.ui`.
 
-Both `config/kanata/macbook.kbd` and `config/kanata/macbook-disabled.kbd` are scoped to `"Apple Internal Keyboard / Trackpad"`; external Leeloo/ZMK state only selects which internal-keyboard profile is active.
+Both `mise/config/kanata/macbook.kbd` and `mise/config/kanata/macbook-disabled.kbd` are scoped to `"Apple Internal Keyboard / Trackpad"`; external Leeloo/ZMK state only selects which internal-keyboard profile is active.
 
 ## 1Password (GUI + CLI)
 

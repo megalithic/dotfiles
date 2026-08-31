@@ -1,0 +1,6 @@
+Include /Users/seth/.config/colima/ssh_config
+
+# megabookpro ~/.ssh/config — mapped by mise/config/mise/hosts/megabookpro.toml.
+# Host-specific entries go above the Include (first match wins).
+
+Include ~/.dotfiles/mise/config/ssh/shared.config
