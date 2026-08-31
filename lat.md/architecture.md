@@ -73,6 +73,36 @@ fail fast instead of carrying preview branches. It lets `mise bootstrap` run
 afterward. Keep ordered first-run tasks in `mise/config/mise/global_config.toml`,
 not duplicated in shell.
 
+## Host-specific mise config
+
+Per-host mise config uses mise's native `MISE_ENV` merge:
+`~/.config/mise/config.$MISE_ENV.toml` loads on top of the global config,
+with `MISE_ENV` set to the short hostname.
+
+`MISE_ENV` is exported before `mise activate` by fish `conf.d/env.fish`,
+`bashrc`, `zshrc` (before their interactive guards), and by `bootstrap.sh`
+right after the hostname prompt. The `up` and `clean` tasks and
+`bin/smoke-test-macos.sh` also self-derive it from the short hostname as a
+fallback: stale shells otherwise run `mise prune` (in `clean`) blind to host
+config and would delete host-scoped tool installs.
+
+Host files live at `mise/config/mise/hosts/{megabookpro,workbookpro}.toml`.
+The global `[dotfiles]` table links both onto every machine; only the file
+matching `MISE_ENV` is loaded, so unused links are inert.
+
+megabookpro's file owns AirConnect: the `github:philippe44/AirConnect` tool
+(release zip carries all-platform binaries; postinstall chmods the macOS
+ones; mise kebab-cases the install dir to `github-philippe44-air-connect`)
+plus the `com.megadots.airupnp` launchd agent. The agent runs
+`mise/tasks/airupnp-launchd`, which execs the `-static` arm64 binary — the
+dynamic one dlopens unversioned libcrypto and macOS kills it with SIGABRT —
+with `-Z` (no TTY under launchd; interactive mode spins CPU), Sonos latency
+`-l 1000:2000`, and `-b <default-route interface>` so it does not bind to
+Tailscale's utun. The upstream README's example plist is not used: it pairs
+`LaunchOnlyOnce` with `KeepAlive`, which contradict each other.
+
+workbookpro's file is an empty placeholder for work-only tools and agents.
+
 ## Mise GUI app migration
 
 Mise 2026.8.14's cask backend handles app, binary, command-wrapper, font, installer, and supported `pkg` artifacts. Direct `[bootstrap.packages]` casks are preferred; real-Brew hooks remain only for verified lifecycle/DSL gaps.

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Launchd entrypoint: run mise-installed airupnp (AirConnect UPnP/Sonos bridge).
+# -Z disables interactive mode — mandatory under launchd (no TTY; without it
+# airupnp spins 100% CPU, per upstream README). -l 1000:2000 is the
+# README-recommended Sonos/Heos latency. Logs go to launchd's
+# stdout_path/stderr_path; no -f log file needed.
+set -euo pipefail
+
+data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+# mise kebab-cases the repo name: AirConnect -> air-connect.
+# -static build: the dynamic binary dlopens unversioned libcrypto, which macOS
+# kills with SIGABRT ("loading libcrypto in an unsafe way") unless openssl
+# symlinks are planted in /usr/local/lib (sudo). Static needs neither.
+airupnp="$data_home/mise/installs/github-philippe44-air-connect/latest/airupnp-macos-$(uname -m)-static"
+[[ -x "$airupnp" ]] || {
+  echo "airupnp-launchd: installed binary not found or not executable: $airupnp" >&2
+  exit 127
+}
+
+# Bind to the default-route interface; left alone airupnp picks the first
+# interface it sees (was utun4/Tailscale, where no Sonos lives).
+iface=$(route -n get default 2>/dev/null | awk '/interface:/{print $2}')
+iface=${iface:-en0}
+
+exec "$airupnp" -Z -l 1000:2000 -b "$iface"
