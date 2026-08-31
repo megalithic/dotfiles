@@ -8,6 +8,7 @@ _plans/
 _docs/
 docs/
 mise/config/fish/fish_variables
+mise/config/hammerspoon/Spoons/EmmyLua.spoon/annotations/timestamps.json
 
 .pi
 .nvim.lua

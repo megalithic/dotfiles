@@ -12,7 +12,7 @@ The old setup installed `pkgs.brewCasks.hammerspoon`, generated `nix_path.lua`, 
 
 Now Hammerspoon's own `hs.autoLaunch` login item points at stable `/Applications/Hammerspoon.app`. mise owns `MJConfigFile`, and no Hammerspoon launch agent, Home Manager app copy, or nix-darwin preference remains. `~/.local/share/hammerspoon/nix_path.lua` is the committed static `mise/fragments/hammerspoon/nix_path.lua` (mise shims PATH; the `NIX_PATH`/`NIX_ENV` global names are kept for compatibility).
 
-The old nix twin `config/hammerspoon/` is retired and no longer linked anywhere; `mise/config/hammerspoon/` is the sole source. Historical divergences that lived across the twins (kanata `daemonLabel` `dev.mise.` prefix, kanata stderr log path) are now just the mise values — the `dev.mise.` label comment in `config.lua` remains until kanata's own ownership is unified.
+The old nix twin `config/hammerspoon/` is retired and no longer linked anywhere; `mise/config/hammerspoon/` is the sole source. Historical divergences that lived across the twins (kanata `daemonLabel` `dev.mise.` prefix, kanata stderr log path) are now just the mise values — the `dev.mise.` label comment in `config.lua` remains until kanata's own ownership is unified. EmmyLua's generated `annotations/timestamps.json` is repo-ignored runtime state.
 
 The mise `up` task ends by calling `bin/hs-reload` (non-fatal if Hammerspoon is not running) so a freshly synced config is picked up safely.
 
