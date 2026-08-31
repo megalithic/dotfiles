@@ -378,8 +378,11 @@ M.launchers = {
   },
   -- { "com.apple.iCal", "y", { passThrough = { "'" } } },
   -- { "com.raycast.macos", "space", { passThrough = { "c" } } },
-  { "com.brnbw.Tuna", nil, { passThrough = { "space" } } },
-  -- { "Tuna", nil, { passThrough = { { { "shift", "cmd" }, "space" } } } },
+  {
+    "com.brnbw.Tuna",
+    nil,
+    { urlSchemes = { { "space", "tuna://search" } } },
+  },
   -- { "com.superultra.Homerow", nil, { passThrough = { ";" } } },
   { "com.tinyspeck.slackmacgap", "s" },
   { "com.tdesktop.Telegram", "t" },

@@ -45,7 +45,7 @@ External overlays and input aliases live separately in `overlays/default.nix`.
 
 Apps that need live-editable config use out-of-store symlinks into `config/` rather than nix-store copies, so edits apply without a rebuild.
 
-`config/` holds `ghostty/`, `kanata/`, and `ssh/` (retired twins were deleted after their ownership flips: Hammerspoon, tmux, nvim, fish, kitty live under `mise/config/<tool>/`, and `config/espanso` was merged into `mise/config/espanso/`). `config/ghostty` has diverged from the active `mise/config/ghostty/` — diff before deleting it. Program modules under `home/common/programs/<tool>/` own the remaining Nix symlink wiring. Config fragments that need Nix-interpolated values are generated into `~/.local/share/...` and sourced from the live config, keeping the editable tree in `config/`.
+`config/` holds `ghostty/`, `kanata/`, and `ssh/` (retired twins were deleted after their ownership flips: Hammerspoon, tmux, nvim, fish, kitty live under `mise/config/<tool>/`, and `config/espanso` was merged into `mise/config/espanso/`). Tuna's app-managed directory follows the mise pattern: `~/.config/tuna` links to `mise/config/tuna/`, while mise defaults select that absolute custom folder. `config/ghostty` has diverged from the active `mise/config/ghostty/` — diff before deleting it. Program modules under `home/common/programs/<tool>/` own the remaining Nix symlink wiring. Config fragments that need Nix-interpolated values are generated into `~/.local/share/...` and sourced from the live config, keeping the editable tree in `config/`.
 
 ## Parallel mise migration
 

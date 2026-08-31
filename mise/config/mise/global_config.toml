@@ -196,6 +196,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.config/surfingkeys/config.js" = "~/.dotfiles/mise/config/surfingkeys/config.js"
 "~/.config/ghostty" = "~/.dotfiles/mise/config/ghostty"
 "~/.config/hammerspoon" = "~/.dotfiles/mise/config/hammerspoon"
+"~/.config/tuna" = "~/.dotfiles/mise/config/tuna"
 "~/.config/kitty" = "~/.dotfiles/mise/config/kitty"
 "~/.config/nvim" = "~/.dotfiles/mise/config/nvim"
 "~/.config/tmux" = "~/.dotfiles/mise/config/tmux"
@@ -636,6 +637,10 @@ SUEnableAutomaticChecks = false
 SUScheduledCheckInterval = 0
 SUHasLaunchedBefore = true
 SUSendProfileInfo = false
+
+[bootstrap.macos.defaults."com.brnbw.Tuna"]
+ConfigSyncCustomFolderPath = "/Users/seth/.config/tuna"
+ConfigSyncUsesCustomFolder = true
 
 [bootstrap.macos.defaults."org.hammerspoon.Hammerspoon"]
 MJConfigFile = "~/.config/hammerspoon/init.lua"

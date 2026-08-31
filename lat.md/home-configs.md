@@ -124,6 +124,7 @@ User-level tools, one line each. Rows marked **(mise)** were flipped in the mega
 | ghostty | **(mise)** terminal emulator; `brew-cask:ghostty@tip` + `mise/config/ghostty/` via `[dotfiles]`; HM module and `config/ghostty` twin removed — see [[programs/ghostty#Ghostty]] |
 | git | **(mise)** Git via `brew:git`, signing, gitignore/tool-ignore; `mise/config/git/` is the sole config owner (XDG-native: merged `~/.config/git/config` + `ignore` + `~/.ignore`, no `~/.gitconfig`; see its `AGENTS.md`) |
 | hammerspoon | **(mise)** macOS automation; brew cask app + mise `[dotfiles]` config, HM module removed — see [[programs/hammerspoon#Hammerspoon]] |
+| tuna | **(mise)** launcher; `brew-cask:tuna` owns the app, `~/.config/tuna` links to `mise/config/tuna/`, and mise defaults select that absolute custom folder; Tuna activates on Cmd+Space while Hammerspoon toggles it on Hyper+Space |
 | handy | macOS app installed by mise `brew-cask:handy`; Home Manager module is a no-op so the custom Rust/Tauri backport does not build locally |
 | helium-browser | **(mise)** primary browser, installed by the mise github: tool — see [[programs/helium#Helium browser]] |
 | htop / k9s | **(mise)** process and Kubernetes TUIs (`brew:htop`, `aqua:derailed/k9s`) |

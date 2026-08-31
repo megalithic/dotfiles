@@ -334,9 +334,6 @@
         #   # Disable inline attachments (just show the icons)
         #   DisableInlineAttachmentViewing = true;
         # };
-        # tell HS where to find its config file
-        "org.hammerspoon.Hammerspoon".MJConfigFile = "~/.config/hammerspoon/init.lua";
-
         # MailMate settings moved to home/common/programs/mailmate/default.nix
 
         "com.apple.SoftwareUpdate" = {

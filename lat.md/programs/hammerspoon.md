@@ -2,7 +2,7 @@
 
 Hammerspoon owns macOS automation: window management, launcher panels, menubar state, and clipboard tooling. mise owns it on both hosts — brew cask app, config in `mise/config/hammerspoon/`, fragments in `~/.local/share/hammerspoon/`.
 
-The app installs via `brew install --cask hammerspoon`, declared in `[bootstrap.hooks.post-packages]` because the `brew-cask:` backend can't handle its `binary` artifacts. `[dotfiles]` links `~/.config/hammerspoon` to `mise/config/hammerspoon/`.
+mise installs the app through `brew-cask:hammerspoon`, and `[dotfiles]` links `~/.config/hammerspoon` to `mise/config/hammerspoon/`.
 
 ## Ownership flip from nix
 
@@ -10,7 +10,7 @@ The former HM module (`home/common/programs/hammerspoon/`) is removed; its launc
 
 The old setup installed `pkgs.brewCasks.hammerspoon`, generated `nix_path.lua`, and ran a launchd launcher agent that opened the Home Manager Apps copy. Duplicates happened because macOS window-resume relaunched the previous session's raw `/nix/store/...` path while the launchd agent opened the HM Apps path, and every rebuild minted a new store path that LaunchServices registered as a distinct app.
 
-Now launch-at-login is Hammerspoon's own `hs.autoLaunch` login item pointing at the stable `/Applications/Hammerspoon.app`, and `~/.local/share/hammerspoon/nix_path.lua` is the committed static `mise/fragments/hammerspoon/nix_path.lua` (mise shims PATH; the `NIX_PATH`/`NIX_ENV` global names are kept for compatibility).
+Now Hammerspoon's own `hs.autoLaunch` login item points at stable `/Applications/Hammerspoon.app`. mise owns `MJConfigFile`, and no Hammerspoon launch agent, Home Manager app copy, or nix-darwin preference remains. `~/.local/share/hammerspoon/nix_path.lua` is the committed static `mise/fragments/hammerspoon/nix_path.lua` (mise shims PATH; the `NIX_PATH`/`NIX_ENV` global names are kept for compatibility).
 
 The old nix twin `config/hammerspoon/` is retired and no longer linked anywhere; `mise/config/hammerspoon/` is the sole source. Historical divergences that lived across the twins (kanata `daemonLabel` `dev.mise.` prefix, kanata stderr log path) are now just the mise values — the `dev.mise.` label comment in `config.lua` remains until kanata's own ownership is unified.
 
@@ -34,7 +34,7 @@ If the running config is too old to have the URL handler, `bin/hs-reload` falls 
 
 Global app bindings stay data-driven so app launchers, local pass-through keys, and URL-scheme actions share one configuration surface instead of per-app binding code.
 
-`C.launchers` rows use `{ bundleID, bind, opts? }`: simple launchers omit `opts`, while `opts.passThrough`, `opts.focusOnly`, `opts.cycleWindows`, `opts.urlSchemes`, and `opts.launchCommand` handle exceptions. `opts.launchCommand` (string or argv table) replaces the LaunchServices cold start with a detaching launcher script — LaunchServices forwards no command-line flags, so launchers that need them (Helium's CDP port via `bin/helium-launch`) spawn the script through `hs.task`; focus/cycle of an already-running app never respawns. When `opts.cycleWindows = true`, hitting the app binding while that app is focused cycles visible app windows rather than browser tabs. Fantastical keeps `hyper+y` as the app toggle; `hyper+'` opens `x-fantastical3://parse?sentence=`; `hyper+shift+'` opens `x-fantastical3://parse?reminder=1&sentence=`.
+`C.launchers` rows use `{ bundleID, bind, opts? }`: simple launchers omit `opts`, while `opts.passThrough`, `opts.focusOnly`, `opts.cycleWindows`, `opts.urlSchemes`, and `opts.launchCommand` handle exceptions. `opts.launchCommand` (string or argv table) replaces the LaunchServices cold start with a detaching launcher script — LaunchServices forwards no command-line flags, so launchers that need them (Helium's CDP port via `bin/helium-launch`) spawn the script through `hs.task`; focus/cycle of an already-running app never respawns. When `opts.cycleWindows = true`, hitting the app binding while that app is focused cycles visible app windows rather than browser tabs. Tuna maps `hyper+space` to its native `tuna://search` route, which toggles its panel; its own global activation shortcut remains `cmd+space`. Fantastical keeps `hyper+y` as the app toggle; `hyper+'` opens `x-fantastical3://parse?sentence=`; `hyper+shift+'` opens `x-fantastical3://parse?reminder=1&sentence=`.
 
 ## URL routing
 

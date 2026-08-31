@@ -2,7 +2,6 @@
 # Provides helper functions for common patterns in home configs
 #
 # Usage in other modules:
-#   xdg.configFile."hammerspoon".source = config.lib.mega.linkConfig "hammerspoon";
 #   xdg.configFile."nvim".source = config.lib.mega.linkConfig "nvim";
 #
 { config, ... }:
