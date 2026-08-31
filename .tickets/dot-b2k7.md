@@ -1,6 +1,6 @@
 ---
 id: dot-b2k7
-status: open
+status: in_progress
 deps: []
 links: [dot-aq4a]
 created: 2026-08-31T16:06:27Z
@@ -87,3 +87,9 @@ This task is a one-time migration under `dot-wo6i`. It complements `dot-aq4a`, w
 6. workbookpro retains its extensions and preferences. No cookies, saved logins, Keychain records, `Local State`, or `Secure Preferences` move between machines.
 7. Helium starts without profile-reset, corruption, or SQLite errors after the merge.
 8. No browser data, URL manifests, profile backups, or secrets are committed to this repository.
+
+## Notes
+
+**2026-08-31T18:41:41Z**
+
+First verified megabookpro snapshot captured after restart and clean Helium quit. Snapshot ID: 20260831T180725Z-cc4cdab1d860. WOLFHALL path: /Volumes/Backups/sync/helium/snapshots/v1/megabookpro/20260831T180725Z-cc4cdab1d860/. Local staged copy: ~/.local/share/helium-merge/staging/snapshots/v1/megabookpro/20260831T180725Z-cc4cdab1d860/. Inventory: 1,056 bookmark URLs, 21 folders, 12,482 history URLs, 146,524 visits, 5 session files, 108 open tabs in 1 window, saved tab groups present. All 12 checksums verified on NAS; staged History PRAGMA integrity_check returned ok; READY written last. No Helium profile was modified and no excluded credential/site-state files were copied.
