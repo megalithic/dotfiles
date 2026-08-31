@@ -138,7 +138,6 @@ obsidian/.obsidian
 
 **/*.bak
 .claude/settings.local.json
-.claude-cspire/
 .vscode/
 .nix-mix
 deps
