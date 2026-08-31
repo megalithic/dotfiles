@@ -1,0 +1,28 @@
+{
+  "_comment": "notiwatchd rules. First match wins. match fields: bundle_id (exact, string or array), title/subtitle/body (case-insensitive regex, string or array). Absent field = wildcard. actions: log | ignore | dismiss (reserved) | ntfy | ntfy:phone | ntfy:telegram | exec:<cmd> | webhook:<url>. urgency: normal | high | critical (passed to ntfy -u).",
+  "poll_fallback_seconds": 30,
+  "ntfy_path": "~/.dotfiles/bin/ntfy",
+  "default_actions": ["log"],
+  "rules": [
+    {
+      "name": "background-activity-noise",
+      "match": { "bundle_id": "com.apple.BTMNotificationAgent" },
+      "actions": ["ignore"]
+    },
+    {
+      "name": "slack-mentions",
+      "match": {
+        "bundle_id": "com.tinyspeck.slackmacgap",
+        "body": ["@seth", "\\burgent\\b"]
+      },
+      "urgency": "high",
+      "actions": ["ntfy"]
+    },
+    {
+      "name": "messages",
+      "match": { "bundle_id": ["com.apple.mobilesms", "com.apple.ichat"] },
+      "urgency": "high",
+      "actions": ["ntfy"]
+    }
+  ]
+}

@@ -179,6 +179,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.config/mise/config.megabookpro.toml" = "~/.dotfiles/mise/config/mise/hosts/megabookpro.toml"
 "~/.config/mise/config.workbookpro.toml" = "~/.dotfiles/mise/config/mise/hosts/workbookpro.toml"
 "~/.config/atuin/config.toml" = "~/.dotfiles/mise/config/atuin/config.toml"
+"~/.config/notiwatchd" = "~/.dotfiles/mise/config/notiwatchd"
 # fnox: ~/.config/fnox/config.toml is intentionally NOT linked here. `mise run
 # fnox` generates it from mise/config/fnox/shared.toml and atomically installs
 # its age-encrypted cache. Secret-bearing artifacts stay outside the repo.
@@ -667,6 +668,20 @@ keep_alive = true
 stdout_path = "~/.cache/media-presence-stdout.log"
 stderr_path = "~/.cache/media-presence-stderr.log"
 
+# notiwatchd: Notification Center watcher daemon (bin/notiwatchd.swift).
+# Watches the usernoted SQLite store, matches rules from
+# ~/.config/notiwatchd/config.json, records to
+# ~/.local/share/notiwatchd/notifications.db, broadcasts NDJSON on
+# ~/.local/state/notiwatchd/sock, and routes to bin/ntfy/exec/webhook sinks.
+# Wrapper checks the compiled binary exists (built by `mise run setup:notiwatchd`).
+# The compiled binary needs a one-time Full Disk Access grant.
+[bootstrap.macos.launchd.agents."com.megadots.notiwatchd"]
+program = "~/.dotfiles/bin/notiwatchd-launchd"
+run_at_load = true
+keep_alive = true
+stdout_path = "~/.cache/notiwatchd-stdout.log"
+stderr_path = "~/.cache/notiwatchd-stderr.log"
+
 # miccheck: menubar push-to-talk/push-to-mute app (bin/miccheck.swift).
 # Wrapper checks the compiled binary exists (built by `mise run setup:miccheck`).
 [bootstrap.macos.launchd.agents."com.megadots.miccheck"]
@@ -907,6 +922,11 @@ raw = true
 alias = "miccheck:setup"
 description = "Compile bin/miccheck.swift to ~/.local/bin/miccheckd (push-to-talk menubar app)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/miccheck-build"
+
+[tasks."setup:notiwatchd"]
+alias = "notiwatchd:setup"
+description = "Compile notiwatchd.swift to ~/.dotfiles/bin/notiwatchd (Notification Center watcher daemon)"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/config/notiwatchd/notiwatchd-build"
 
 # Declarative Helium profile setup (External Extensions with baked
 # prodversion, NSUserKeyEquivalents, Sparkle kill switch, en-US dictionary).

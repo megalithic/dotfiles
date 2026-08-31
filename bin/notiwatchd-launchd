@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Launchd entrypoint for notiwatchd (Notification Center watcher daemon).
+# The stable binary is installed by mise/config/notiwatchd/notiwatchd-build.
+set -euo pipefail
+
+BIN="$HOME/.dotfiles/bin/notiwatchd"
+
+if [[ ! -x "$BIN" ]]; then
+  echo "notiwatchd-launchd: $BIN missing; run: mise run setup:notiwatchd" >&2
+  exit 1
+fi
+
+exec "$BIN"

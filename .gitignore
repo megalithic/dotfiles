@@ -53,3 +53,6 @@ _plans/
 
 # pi-acp is built locally by `mise run setup:pi`
 mise/config/pi-coding-agent/packages/pi-acp/dist/
+
+# notiwatchd binary is built locally by `mise run setup:notiwatchd`
+bin/notiwatchd
