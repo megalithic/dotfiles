@@ -24,18 +24,30 @@ A readonly watcher over the usernoted DB with a persisted high-water mark, kqueu
 
 First matching rule wins. `match` fields: `bundle_id` (exact, string or array = any-of), `title`/`subtitle`/`body` (case-insensitive regex, string or array). Absent field = wildcard. Unmatched notifications get `default_actions` (default `["log"]`).
 
-Actions: `log` (stdout only), `ignore` (record + broadcast, no routing), `ntfy` / `ntfy:phone` / `ntfy:telegram` (exec `bin/ntfy send` with title/body/urgency/source), `exec:<cmd>` (`/bin/sh -c`, event JSON on stdin), `webhook:<url>` (POST event JSON), `dismiss` (reserved — on-screen banner dismissal needs an AX probe of Tahoe's new Notification Center tree; currently records `unsupported-yet`).
+Actions: `log` (stdout only), `ignore` (record + broadcast, no routing; suppresses all other actions in the rule), `ntfy` / `ntfy:phone` / `ntfy:telegram` (exec `bin/ntfy send` with title/body/urgency/source), `exec:<cmd>` (`/bin/sh -c`, event JSON on stdin), `webhook:<url>` (POST event JSON), `dismiss` (AX-close the still-visible banner/alert, see below).
+
+Action results are recorded per-notification in the store's `action_results` JSON column: `--once` waits for sinks before inserting; daemon mode inserts immediately and patches results in via UPDATE when the sinks finish (all store access stays on the main queue).
+
+### The dismiss action (Tahoe AX route)
+
+`dismiss` removes a still-on-screen banner/alert by performing the notification element's SwiftUI Close/Clear All custom action in the NotificationCenter process's AX tree — the only write path we have, since the usernoted DB is read-only for us.
+
+Tahoe (26.6.2) NC AX structure, discovered with `.local_scripts/nc-ax-probe.swift` (probe kept uncommitted per `.local_scripts/` convention): `AXWindow subrole=AXSystemDialog "Notification Center"` → `AXGroup subrole=AXHostingView` → … → `AXGroup id=AXNotificationListItems` → per-notification `AXGroup` with subrole `AXNotificationCenterAlertStack` (stacked; children are `AXStaticText id=title/body`). The element's `AXDescription` concatenates app name, title, body (e.g. "Login Items, App Background Activity, …, stacked"). Close/Clear All are NSAccessibilityCustomActions whose AX action *names* are literal `Name:…\nTarget:…\nSelector:(null)` strings — match by `AXUIElementCopyActionDescription` (`Close` / `Clear All` / `Clear`) instead of the name, then `AXUIElementPerformAction`.
+
+The daemon targets the banner by checking the AXDescription contains the event's title or body (case-insensitive) under any `AXNotificationCenter*` subrole element. Dismissing a stacked element clears the whole stack. Result strings recorded in `action_results`: `ok`, `ax-not-trusted`, `nc-not-running`, `no-title-or-body`, `not-on-screen`, `no-actions`, `no-close-action`, `ax-error=N`. Persistent alerts (`style=2`, e.g. BTM "App Background Activity") sit on screen indefinitely, so usernoted's lazy ~5-6s commit is no race; transient banners may already be gone (`not-on-screen`).
+
+Validated live 2026-09-01: BTM alert triggered by bootstrapping a throwaway launchd agent was auto-cleared by the `background-activity-noise` rule (`actions: ["dismiss"]`) with `{"dismiss":"ok"}` recorded.
 
 ## Build, packaging, TCC
 
 Reading the usernoted group container requires Full Disk Access, and TCC pins grants to the executable, so notiwatchd is compiled to a stable signed binary following the [[miccheck]] pattern instead of running as an interpreted script.
 
-An interpreted `#!/usr/bin/swift` script would attribute the FDA grant to the Swift interpreter. Source and build script are colocated with the config in `mise/config/notiwatchd/` (only launchd-executed or manually-run entrypoints live in `bin/`). `mise/config/notiwatchd/notiwatchd-build` compiles to `~/.dotfiles/bin/notiwatchd` (gitignored artifact) with a stable codesign identifier (`com.megadots.notiwatchd`, Developer ID if available, ad-hoc fallback), `mise run setup:notiwatchd` wraps it, and `bin/notiwatchd-launchd` is the LaunchAgent entrypoint (`com.megadots.notiwatchd` in `mise/config/mise/global_config.toml`, RunAtLoad + KeepAlive). The compiled binary needs a one-time FDA grant in System Settings; the daemon exits 1 with instructions when it cannot read the source DB.
+An interpreted `#!/usr/bin/swift` script would attribute the FDA grant to the Swift interpreter. Source and build script are colocated with the config in `mise/config/notiwatchd/` (only launchd-executed or manually-run entrypoints live in `bin/`). `mise/config/notiwatchd/notiwatchd-build` compiles to `~/.dotfiles/bin/notiwatchd` (gitignored artifact) with a stable codesign identifier (`com.megadots.notiwatchd`, Developer ID if available, ad-hoc fallback), `mise run setup:notiwatchd` wraps it, and `bin/notiwatchd-launchd` is the LaunchAgent entrypoint (`com.megadots.notiwatchd` in `mise/config/mise/global_config.toml`, RunAtLoad + KeepAlive). The compiled binary needs two one-time TCC grants in System Settings > Privacy & Security: Full Disk Access (read the usernoted store; daemon exits 1 with instructions when missing) and Accessibility (the `dismiss` action; recorded as `ax-not-trusted` when missing). With ad-hoc signing (no Developer ID identity) both grants die on every rebuild — re-toggle the entries off/on after `mise run setup:notiwatchd`.
 
 CLI flags: `--once` (drain and exit), `--replay N` (rewind high-water for testing), `--verbose`, and `--config/--store/--socket/--source` path overrides.
 
 ## Status and remaining work
 
-Working (validated live 2026-08-31): DB watch + decode, rule matching, own-store recording, socket broadcast, `--once`/`--replay`.
+Working (validated live 2026-08-31/2026-09-01): DB watch + decode, rule matching, own-store recording, socket broadcast, `--once`/`--replay`, launchd agent + FDA + Accessibility grants, `dismiss` action end-to-end (BTM alert auto-cleared).
 
-Not yet done: launchd agent loaded + FDA granted (needs one-time manual grant), `dismiss` action (Tahoe AX probe spike), Hammerspoon subscriber for on-screen routing of critical notifications.
+Not yet done: Hammerspoon subscriber for on-screen routing of critical notifications.

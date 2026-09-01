@@ -1,6 +1,6 @@
 ---
 id: dot-yu1m
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-09-01T00:34:06Z

@@ -16,6 +16,8 @@
 // Store:   ~/.local/share/notiwatchd/notifications.db
 // Socket:  ~/.local/state/notiwatchd/sock     (NDJSON broadcast, subscribe-only)
 
+import AppKit
+import ApplicationServices
 import Foundation
 import SQLite3
 
@@ -215,7 +217,8 @@ final class Store {
         sqlite3_step(stmt)
     }
 
-    func insert(_ event: Event, raw: String?, results: String?) {
+    @discardableResult
+    func insert(_ event: Event, raw: String?, results: String?) -> Int64 {
         var stmt: OpaquePointer?
         defer { sqlite3_finalize(stmt) }
         let sql = """
@@ -224,7 +227,7 @@ final class Store {
            rule, urgency, actions, action_results, raw)
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """
-        guard sqlite3_prepare_v2(handle, sql, -1, &stmt, nil) == SQLITE_OK else { return }
+        guard sqlite3_prepare_v2(handle, sql, -1, &stmt, nil) == SQLITE_OK else { return 0 }
         func bindOpt(_ index: Int32, _ value: String?) {
             if let value = value {
                 sqlite3_bind_text(stmt, index, value, -1, sqliteTransient)
@@ -252,7 +255,20 @@ final class Store {
         bindOpt(14, raw)
         if sqlite3_step(stmt) != SQLITE_DONE {
             warn("store insert failed: \(String(cString: sqlite3_errmsg(handle)))")
+            return 0
         }
+        return sqlite3_last_insert_rowid(handle)
+    }
+
+    func updateResults(_ rowID: Int64, _ results: String) {
+        guard rowID > 0 else { return }
+        var stmt: OpaquePointer?
+        defer { sqlite3_finalize(stmt) }
+        guard sqlite3_prepare_v2(handle, "UPDATE notifications SET action_results=? WHERE id=?",
+                                 -1, &stmt, nil) == SQLITE_OK else { return }
+        sqlite3_bind_text(stmt, 1, results, -1, sqliteTransient)
+        sqlite3_bind_int64(stmt, 2, rowID)
+        sqlite3_step(stmt)
     }
 }
 
@@ -443,6 +459,64 @@ final class SocketServer {
     }
 }
 
+// MARK: - On-screen dismissal (Accessibility)
+//
+// Tahoe renders Notification Center banners/alerts with system SwiftUI. The
+// notification elements are AXGroups with subroles like
+// AXNotificationCenterAlertStack (stacked) whose AXDescription contains the
+// app name, title, and body. Close/Clear All are exposed as SwiftUI custom
+// actions whose AX action *names* are literal "Name:...\nTarget:...\n
+// Selector:(null)" strings; match them by AXActionDescription instead.
+// Discovered with .local_scripts/nc-ax-probe.swift (see lat.md).
+
+func axAttr(_ element: AXUIElement, _ name: String) -> AnyObject? {
+    var value: AnyObject?
+    guard AXUIElementCopyAttributeValue(element, name as CFString, &value) == .success else { return nil }
+    return value
+}
+
+func axFindNotification(_ element: AXUIElement, needles: [String], depth: Int = 0) -> AXUIElement? {
+    if depth > 12 { return nil }
+    if let subrole = axAttr(element, kAXSubroleAttribute) as? String,
+       subrole.hasPrefix("AXNotificationCenter") {
+        let desc = (axAttr(element, kAXDescriptionAttribute) as? String) ?? ""
+        if needles.contains(where: { desc.range(of: $0, options: .caseInsensitive) != nil }) {
+            return element
+        }
+        return nil  // notification element, but not ours; children are just static texts
+    }
+    if let children = axAttr(element, kAXChildrenAttribute) as? [AXUIElement] {
+        for child in children {
+            if let found = axFindNotification(child, needles: needles, depth: depth + 1) { return found }
+        }
+    }
+    return nil
+}
+
+func dismissOnScreen(_ event: Event) -> String {
+    guard AXIsProcessTrusted() else { return "ax-not-trusted" }
+    guard let ncApp = NSWorkspace.shared.runningApplications.first(where: {
+        $0.bundleIdentifier == "com.apple.notificationcenterui"
+    }) else { return "nc-not-running" }
+    let needles = [event.title, event.body].compactMap { $0 }.filter { !$0.isEmpty }
+    guard !needles.isEmpty else { return "no-title-or-body" }
+    let appElement = AXUIElementCreateApplication(ncApp.processIdentifier)
+    guard let target = axFindNotification(appElement, needles: needles) else { return "not-on-screen" }
+    var actionNames: CFArray?
+    guard AXUIElementCopyActionNames(target, &actionNames) == .success,
+          let names = actionNames as? [String] else { return "no-actions" }
+    for name in names {
+        var descRef: CFString?
+        AXUIElementCopyActionDescription(target, name as CFString, &descRef)
+        let actionDesc = (descRef as String?) ?? ""
+        if actionDesc == "Close" || actionDesc == "Clear All" || actionDesc == "Clear" {
+            let err = AXUIElementPerformAction(target, name as CFString)
+            return err == .success ? "ok" : "ax-error=\(err.rawValue)"
+        }
+    }
+    return "no-close-action"
+}
+
 // MARK: - Sinks
 
 let sinkQueue = DispatchQueue(label: "notiwatchd.sinks", attributes: .concurrent)
@@ -477,9 +551,9 @@ func dispatchAction(_ action: String, event: Event, cfg: Config, done: @escaping
     case "log", "ignore":
         done(action, "ok")
     case "dismiss":
-        // Reserved: on-screen banner dismissal needs an AX probe on Tahoe's new
-        // Notification Center tree. Logged so rules can already declare intent.
-        done(action, "unsupported-yet")
+        // Needs an Accessibility grant for this binary (in addition to FDA).
+        // Dismisses the whole stack when the target is stacked (Clear All).
+        sinkQueue.async { done(action, dismissOnScreen(event)) }
     case "ntfy":
         sinkQueue.async {
             let ntfy = expand(cfg.ntfyPath ?? "~/.dotfiles/bin/ntfy")
@@ -663,15 +737,29 @@ func processRow(_ row: SourceRow, cfg: Config) {
             resultsLock.lock()
             results[name] = result
             resultsLock.unlock()
-            if result != "ok" && result != "unsupported-yet" { warn("action \(name): \(result)") }
+            if result != "ok" { warn("action \(name): \(result)") }
             group.leave()
         }
     }
-    if runOnce { group.wait() }
 
-    let resultsJSON = (try? JSONSerialization.data(withJSONObject: results, options: [.sortedKeys]))
-        .flatMap { String(data: $0, encoding: .utf8) }
-    store.insert(event, raw: rawJSON, results: resultsJSON)
+    func resultsJSON() -> String? {
+        resultsLock.lock()
+        defer { resultsLock.unlock() }
+        return (try? JSONSerialization.data(withJSONObject: results, options: [.sortedKeys]))
+            .flatMap { String(data: $0, encoding: .utf8) }
+    }
+
+    if runOnce {
+        group.wait()
+        store.insert(event, raw: rawJSON, results: resultsJSON())
+    } else {
+        // Insert immediately, then patch in action results when sinks finish
+        // (store access stays on mainQueue).
+        let rowID = store.insert(event, raw: rawJSON, results: nil)
+        group.notify(queue: mainQueue) {
+            if let json = resultsJSON() { store.updateResults(rowID, json) }
+        }
+    }
 }
 
 func drain() {
