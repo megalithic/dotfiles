@@ -1,0 +1,309 @@
+#!/bin/bash
+# Manual Fantastical snapshot, verify, publish, restore. Local-only: no SSH,
+# no scheduler, no process termination. Mirrors the Helium WOLFHALL snapshot
+# conventions (staging -> validate -> hidden incoming -> rename -> READY last).
+set -euo pipefail
+IFS=$'\n\t'
+
+HOST=$(hostname -s)
+TX=$(date -u +%Y%m%dT%H%M%SZ)-$$
+GROUP_NAME="85C27NK92C.com.flexibits.fantastical2.mac"
+META_PLIST=".com.apple.containermanagerd.metadata.plist"
+DEFAULTS_DOMAIN=${FANTASTICAL_SYNC_DEFAULTS_DOMAIN:-com.flexibits.fantastical2.mac}
+APP_ROOT=${FANTASTICAL_SYNC_APP_ROOT:-"$HOME/Library/Containers"}
+GROUP_PARENT=${FANTASTICAL_SYNC_GROUP_PARENT:-"$HOME/Library/Group Containers"}
+GROUP_ROOT="$GROUP_PARENT/$GROUP_NAME"
+APP_PLIST=${FANTASTICAL_SYNC_APP_PLIST:-/Applications/Fantastical.app/Contents/Info.plist}
+STAGING_ROOT=${FANTASTICAL_SYNC_STAGING_ROOT:-"$HOME/.local/share/fantastical-sync/staging/snapshots/v1/$HOST"}
+NAS_VOLUME=${FANTASTICAL_SYNC_NAS_VOLUME:-/Volumes/Backups}
+NAS_ROOT=${FANTASTICAL_SYNC_NAS_ROOT:-"$NAS_VOLUME/sync/fantastical/snapshots/v1/$HOST"}
+BACKUP_ROOT=${FANTASTICAL_SYNC_BACKUP_ROOT:-"$HOME/.local/share/pi/backups/fantastical"}
+STATE_ROOT=${FANTASTICAL_SYNC_STATE_ROOT:-"${XDG_STATE_HOME:-$HOME/.local/state}/fantastical-sync"}
+PROCESS_REGEX=${FANTASTICAL_SYNC_PROCESS_REGEX:-'fantastical|flexibits'}
+TMP_ROOT="${TMPDIR:-/tmp}/fantastical-sync.$TX"
+
+MODE='' SNAPSHOT='' APPLY=0 DRY_RUN=0 LOGFILE=''
+BUILD_DIR='' LIVE_BACKUP='' REPLACEMENT_STARTED=0
+
+usage() {
+  cat <<'EOF'
+Usage: fantastical-sync MODE [options]
+
+Modes:
+  snapshot  capture live containers + defaults into local staging (READY last)
+  verify    validate a snapshot (tree dir, .zip, or published NAS dir)
+  publish   copy a staged snapshot's archive to the WOLFHALL NAS root
+  restore   replace live Fantastical state from a READY snapshot (--apply)
+
+Options:
+  --snapshot PATH  snapshot input for verify/publish/restore
+  --apply          required for restore; permits live replacement
+  --dry-run        print the plan; no writes, no process checks
+  -h, --help
+
+Restore backs up current live state to a validated snapshot first and rolls
+back from it on failure. Quit Fantastical before snapshot/restore; the tool
+refuses to run while any Fantastical/Flexibits process is alive.
+EOF
+}
+log() {
+  printf '%s %s\n' "[$TX]" "$*" >&2
+  [ -n "$LOGFILE" ] && printf '%s %s\n' "[$TX]" "$*" >> "$LOGFILE" || true
+}
+fatal() { log "ERROR $*"; exit 1; }
+need() { command -v "$1" >/dev/null 2>&1 || fatal "missing dependency=$1"; }
+
+replace_live() { # replace_live SNAPSHOT_TREE
+  local src=$1 c
+  while IFS= read -r c; do trash -- "$c"; done < <(list_live_containers)
+  if [ -e "$GROUP_ROOT" ]; then trash -- "$GROUP_ROOT"; fi
+  mkdir -p "$APP_ROOT" "$GROUP_PARENT"
+  while IFS= read -r c; do /usr/bin/ditto "$c" "$APP_ROOT/${c##*/}"; done \
+    < <(fd -H -d 1 -t d . "$src/containers" | sed 's:/*$::')
+  /usr/bin/ditto "$src/group/$GROUP_NAME" "$GROUP_ROOT"
+  defaults import "$DEFAULTS_DOMAIN" "$src/defaults.plist"
+}
+cleanup() {
+  local status=$?
+  trap - EXIT
+  if [ "$status" -ne 0 ] && [ "$REPLACEMENT_STARTED" -eq 1 ] && [ -n "$LIVE_BACKUP" ] && [ -d "$LIVE_BACKUP" ]; then
+    log "rollback status=started backup=$LIVE_BACKUP"
+    if replace_live "$LIVE_BACKUP"; then
+      log "rollback status=complete"
+    else
+      log "rollback status=indeterminate backup=$LIVE_BACKUP"
+    fi
+    REPLACEMENT_STARTED=0
+  fi
+  [ -n "$BUILD_DIR" ] && [ -d "$BUILD_DIR" ] && trash -- "$BUILD_DIR" 2>/dev/null || true
+  [ -d "$TMP_ROOT" ] && trash -- "$TMP_ROOT" 2>/dev/null || true
+  exit "$status"
+}
+trap cleanup EXIT INT TERM
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    snapshot|verify|publish|restore) [ -z "$MODE" ] || fatal "one mode only"; MODE=$1 ;;
+    --snapshot) [ $# -ge 2 ] || fatal "--snapshot needs a path"; SNAPSHOT=$2; shift ;;
+    --apply) APPLY=1 ;;
+    --dry-run) DRY_RUN=1 ;;
+    -h|--help) usage; exit 0 ;;
+    *) fatal "unknown argument" ;;
+  esac
+  shift
+done
+[ -n "$MODE" ] || { usage >&2; exit 2; }
+case "$MODE" in
+  verify|publish|restore) [ -n "$SNAPSHOT" ] || fatal "$MODE requires --snapshot" ;;
+  snapshot) [ -z "$SNAPSHOT" ] || fatal "snapshot takes no --snapshot" ;;
+esac
+[ "$MODE" = restore ] || [ "$APPLY" -eq 0 ] || fatal "--apply is only for restore"
+need ditto; need shasum; need fd; need trash; need jq; need defaults
+if [ "$DRY_RUN" -eq 0 ]; then
+  mkdir -p "$STATE_ROOT"; chmod 700 "$STATE_ROOT"
+  LOGFILE="$STATE_ROOT/$TX.log"; : > "$LOGFILE"; chmod 600 "$LOGFILE"
+fi
+
+app_version() {
+  [ -f "$APP_PLIST" ] || fatal "Fantastical app metadata missing"
+  /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_PLIST"
+}
+process_gate() {
+  local n
+  n=$(ps -axo comm= | grep -icE "$PROCESS_REGEX" || true)
+  [ "${n:-0}" -eq 0 ] || fatal "Fantastical/Flexibits processes running count=$n; quit Fantastical first"
+}
+list_live_containers() {
+  [ -d "$APP_ROOT" ] || fatal "container root missing"
+  fd -d 1 -t d -i 'fantastical|flexibits' "$APP_ROOT" | sed 's:/*$::' | sort
+}
+strip_stfolder() {
+  local f
+  while IFS= read -r f; do trash -- "$f"; done < <(fd -H -g '.stfolder' "$1" || true)
+}
+write_checksums() {
+  local root=$1 f rel
+  : > "$root/checksums.sha256"
+  while IFS= read -r f; do
+    rel=${f#"$root"/}
+    case "$rel" in checksums.sha256|manifest.json|READY) continue ;; esac
+    shasum -a 256 "$f" | awk -v p="$rel" '{print $1"  "p}' >> "$root/checksums.sha256"
+  done < <(fd -H -t f . "$root" | sort)
+  [ -s "$root/checksums.sha256" ] || fatal "empty snapshot"
+}
+payload_identity() { grep -v '  manifest\.json$' "$1/checksums.sha256" | shasum -a 256 | awk '{print $1}'; }
+validate_tree() {
+  local root=$1 c rel line n manifest_id identity expect
+  [ -f "$root/manifest.json" ] || fatal "manifest missing"
+  jq -e '.schema=="fantastical.snapshot.v1"' "$root/manifest.json" >/dev/null || fatal "manifest schema mismatch"
+  [ -f "$root/defaults.plist" ] || fatal "defaults export missing"
+  [ -f "$root/group/$GROUP_NAME/$META_PLIST" ] || fatal "group metadata plist missing"
+  [ -n "$(fd -H -t f -g '*.fcdata' "$root")" ] || fatal "no fcdata"
+  [ -n "$(fd -H -t f -g 'Sources-*.plist' "$root")" ] || fatal "no Sources plist"
+  [ -z "$(fd -H -g '.stfolder' "$root")" ] || fatal ".stfolder present"
+  n=0
+  while IFS= read -r c; do
+    [ -f "$c/$META_PLIST" ] || fatal "container metadata plist missing"
+    n=$((n + 1))
+  done < <(fd -H -d 1 -t d . "$root/containers" | sed 's:/*$::')
+  [ "$n" -gt 0 ] || fatal "no containers"
+  [ "$n" -eq "$(jq -r '.container_count' "$root/manifest.json")" ] || fatal "container count mismatch"
+  while IFS= read -r line; do
+    rel=${line#*  }
+    case "$rel" in /*|../*|*/../*|*/..) fatal "unsafe checksum path" ;; esac
+  done < "$root/checksums.sha256"
+  (cd "$root" && shasum -a 256 --status -c checksums.sha256) || fatal "checksum mismatch"
+  identity=$(payload_identity "$root")
+  expect=$(jq -r '.payload_identity_sha256' "$root/manifest.json")
+  [ "$identity" = "$expect" ] || fatal "payload identity mismatch"
+  manifest_id=$(jq -r '.snapshot_id' "$root/manifest.json")
+  [ "${manifest_id##*-}" = "${identity:0:12}" ] || fatal "snapshot id mismatch"
+  log "validated containers=$n id=$manifest_id"
+}
+make_snapshot() { # make_snapshot DEST_ROOT -> prints final snapshot dir
+  local dest=$1 build c count=0 ts identity id final
+  process_gate
+  mkdir -p "$dest"; chmod 700 "$dest"
+  build="$dest/.building-$TX"; BUILD_DIR=$build
+  mkdir -p "$build/containers" "$build/group"
+  ts=$(date -u +%Y%m%dT%H%M%SZ)
+  while IFS= read -r c; do
+    /usr/bin/ditto "$c" "$build/containers/${c##*/}"
+    count=$((count + 1))
+  done < <(list_live_containers)
+  [ "$count" -gt 0 ] || fatal "no Fantastical containers found"
+  [ -d "$GROUP_ROOT" ] || fatal "group container missing"
+  /usr/bin/ditto "$GROUP_ROOT" "$build/group/$GROUP_NAME"
+  defaults export "$DEFAULTS_DOMAIN" "$build/defaults.plist"
+  strip_stfolder "$build"
+  write_checksums "$build"
+  identity=$(payload_identity "$build")
+  id="$ts-${identity:0:12}"
+  jq -n --arg schema fantastical.snapshot.v1 --arg id "$id" --arg host "$HOST" \
+    --arg at "$ts" --arg app "$(app_version)" --arg group "$GROUP_NAME" \
+    --arg identity "$identity" --argjson count "$count" \
+    '{schema:$schema, snapshot_id:$id, host:$host, captured_at:$at,
+      app_version:$app, container_count:$count, group_container:$group,
+      payload_identity_sha256:$identity,
+      scope:{included:["app-containers","group-container","defaults-export"],
+             excluded:["stfolder-markers"]}}' > "$build/manifest.json"
+  shasum -a 256 "$build/manifest.json" | awk '{print $1"  manifest.json"}' >> "$build/checksums.sha256"
+  final="$dest/$id"
+  ! [ -e "$final" ] || fatal "snapshot already exists id=$id"
+  mv "$build" "$final"; BUILD_DIR=
+  validate_tree "$final"
+  jq -n --arg id "$id" --arg host "$HOST" \
+    '{schema:"fantastical.snapshot-ready.v1", snapshot_id:$id, verified_by:$host}' > "$final/READY"
+  log "snapshot status=ready id=$id containers=$count"
+  printf '%s\n' "$final"
+}
+archive_snapshot() { # archive_snapshot SNAPSHOT_DIR
+  local snap=$1 parent base
+  parent=$(dirname "$snap"); base=$(basename "$snap")
+  if [ -f "$parent/$base.zip" ]; then log "archive exists id=$base"; return; fi
+  (cd "$parent" && /usr/bin/ditto -c -k --sequesterRsrc --keepParent "$base" "$base.zip")
+  (cd "$parent" && shasum -a 256 "$base.zip" > "$base.zip.sha256")
+  log "archived id=$base bytes=$(stat -f %z "$parent/$base.zip")"
+}
+resolve_snapshot() { # resolve tree dir, .zip, or published NAS dir -> prints tree dir
+  local input=$1 zip sidecar extracted
+  if [ -d "$input" ] && [ -f "$input/manifest.json" ] && [ -d "$input/containers" ]; then
+    printf '%s\n' "$input"; return
+  fi
+  zip=$input
+  if [ -d "$input" ]; then
+    zip=$(fd -d 1 -t f -g '*.zip' "$input" | head -1)
+    [ -n "$zip" ] || fatal "no snapshot tree or archive at input"
+  fi
+  [ -f "$zip" ] || fatal "snapshot input missing"
+  if [ -f "$zip.sha256" ]; then
+    sidecar=$(awk '{print $1}' "$zip.sha256")
+    [ "$(shasum -a 256 "$zip" | awk '{print $1}')" = "$sidecar" ] || fatal "archive checksum mismatch"
+  fi
+  mkdir -p "$TMP_ROOT"
+  /usr/bin/ditto -x -k "$zip" "$TMP_ROOT/extract"
+  extracted=$(fd -d 1 -t d . "$TMP_ROOT/extract" | sed 's:/*$::' | head -1)
+  [ -n "$extracted" ] || fatal "archive extraction failed"
+  printf '%s\n' "$extracted"
+}
+
+snapshot_mode() {
+  if [ "$DRY_RUN" -eq 1 ]; then
+    log "plan: capture $(list_live_containers | wc -l | tr -d ' ') containers + group + defaults into $STAGING_ROOT/<id>, then archive"
+    return
+  fi
+  local final
+  final=$(make_snapshot "$STAGING_ROOT")
+  archive_snapshot "$final"
+  printf '%s\n' "$final"
+}
+verify_mode() {
+  local tree
+  tree=$(resolve_snapshot "$SNAPSHOT")
+  validate_tree "$tree"
+  [ -f "$tree/READY" ] && log "verify status=valid ready=yes" || log "verify status=valid ready=no"
+}
+publish_mode() {
+  local tree id src zip incoming final
+  tree=$(resolve_snapshot "$SNAPSHOT")
+  validate_tree "$tree"
+  [ -f "$tree/READY" ] || fatal "snapshot not READY"
+  id=$(jq -r '.snapshot_id' "$tree/manifest.json")
+  src=$(dirname "$tree"); zip="$src/$id.zip"
+  if [ "$DRY_RUN" -eq 1 ]; then
+    log "plan: publish id=$id to $NAS_ROOT/$id via hidden incoming dir, READY last"
+    return
+  fi
+  [ -d "$NAS_VOLUME" ] && [ -w "$NAS_VOLUME" ] || fatal "NAS volume not mounted writable"
+  archive_snapshot "$tree"
+  final="$NAS_ROOT/$id"; incoming="$NAS_ROOT/.$id.incoming-$$"
+  ! [ -e "$final" ] || fatal "published snapshot already exists id=$id"
+  ! [ -e "$incoming" ] || fatal "incoming path already exists"
+  mkdir -p "$NAS_ROOT"
+  mkdir "$incoming"
+  cp "$zip" "$zip.sha256" "$tree/manifest.json" "$incoming/"
+  local expected actual
+  expected=$(awk '{print $1}' "$zip.sha256")
+  actual=$(shasum -a 256 "$incoming/$id.zip" | awk '{print $1}')
+  if [ "$expected" != "$actual" ]; then
+    log "ERROR NAS archive checksum mismatch; incoming retained at $incoming"
+    exit 1
+  fi
+  mv "$incoming" "$final"
+  jq -n --arg id "$id" --arg host "$HOST" \
+    '{schema:"fantastical.snapshot-ready.v1", snapshot_id:$id, verified_by:$host}' > "$final/READY"
+  log "publish status=ready id=$id dest=$final"
+}
+restore_mode() {
+  [ "$APPLY" -eq 1 ] || fatal "restore requires --apply"
+  local tree id snap_app live_app backup
+  tree=$(resolve_snapshot "$SNAPSHOT")
+  validate_tree "$tree"
+  [ -f "$tree/READY" ] || fatal "snapshot not READY"
+  id=$(jq -r '.snapshot_id' "$tree/manifest.json")
+  snap_app=$(jq -r '.app_version' "$tree/manifest.json")
+  live_app=$(app_version)
+  [ "$snap_app" = "$live_app" ] || fatal "app version mismatch snapshot=$snap_app installed=$live_app"
+  if [ "$DRY_RUN" -eq 1 ]; then
+    log "plan: back up live state to $BACKUP_ROOT/<id>, replace containers+group, import defaults from id=$id"
+    return
+  fi
+  process_gate
+  backup=$(make_snapshot "$BACKUP_ROOT")
+  LIVE_BACKUP=$backup
+  log "live backup id=$(basename "$backup")"
+  process_gate
+  REPLACEMENT_STARTED=1
+  replace_live "$tree"
+  [ -d "$GROUP_ROOT" ] || fatal "group publication missing"
+  [ -n "$(list_live_containers)" ] || fatal "container publication missing"
+  REPLACEMENT_STARTED=0
+  log "restore status=complete id=$id backup=$backup"
+}
+
+case "$MODE" in
+  snapshot) snapshot_mode ;;
+  verify) verify_mode ;;
+  publish) publish_mode ;;
+  restore) restore_mode ;;
+esac

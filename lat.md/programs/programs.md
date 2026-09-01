@@ -11,3 +11,4 @@ Per-program deep dives for the tools intricate enough to warrant their own file,
 - [[miccheck]] — compiled Swift menubar push-to-talk/push-to-mute app (cmd+opt), controlled by Hammerspoon over a Unix socket.
 - [[notiwatchd]] — compiled Swift daemon watching Notification Center deliveries (usernoted DB), rule-routing to ntfy/exec/webhook sinks with an NDJSON socket.
 - [[appbak]] — bash CLI for app-data discovery and selective backup with verify-before-prune retention and a JSON manifest.
+- [[fantastical-sync]] — standalone manual Fantastical container/defaults snapshots with Helium-style WOLFHALL publish, verify, and guarded restore.

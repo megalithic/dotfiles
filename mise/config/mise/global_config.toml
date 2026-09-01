@@ -764,6 +764,10 @@ nerd_fonts = "JetBrainsMono FiraCode Iosevka VictorMono FantasqueSansMono NerdFo
 description = "Post-bootstrap health checks (bootstrap.sh runs this last)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/doctor"
 
+[tasks."sync:fantastical"]
+description = "Manual Fantastical snapshot, verify, publish (WOLFHALL), or restore (restore requires --apply)"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/fantastical-sync"
+
 [tasks."fonts:install"]
 description = "Install Nerd Fonts into ~/Library/Fonts"
 run = "NERD_FONTS_VERSION={{vars.nerd_fonts_version}} ${DOTFILES_DIR:-$HOME/.dotfiles}/mise/hooks/install-fonts.sh {{vars.nerd_fonts}}"
