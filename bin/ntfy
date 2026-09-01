@@ -24,6 +24,8 @@ Send Options:
   -t, --title <title>      Notification title (required)
   -m, --message <message>  Notification message (required)
   -u, --urgency <level>    normal|high|critical (default: normal)
+  -b, --bundle-id <id>     Originating app bundle ID (HUD icon + engagement
+                           suppression when that app/conversation is focused)
   -s, --source <name>      Source app name (auto-detected if omitted)
   -S, --no-source          Disable source prefix in title
   -a, --attention <state>  Caller's hint: true|false|auto (default: auto)
@@ -103,12 +105,12 @@ lua_escape() {
   # Use [[ ]] Lua string literals which handle most escaping
   # But we need to escape ]] sequences
   str="${str//]]/] ]}"
-  echo "$str"
+  printf '%s' "$str"
 }
 
 # Send notification via N.send()
 cmd_send() {
-  local title="" message="" urgency="normal" source=""
+  local title="" message="" urgency="normal" source="" bundle_id=""
   local phone="false" telegram="false" question="false"
   local no_source="false" attention="auto"
 
@@ -117,6 +119,7 @@ cmd_send() {
       -t|--title) title="$2"; shift 2 ;;
       -m|--message) message="$2"; shift 2 ;;
       -u|--urgency) urgency="$2"; shift 2 ;;
+      -b|--bundle-id) bundle_id="$2"; shift 2 ;;
       -s|--source) source="$2"; shift 2 ;;
       -S|--no-source) no_source="true"; shift ;;
       -a|--attention) attention="$2"; shift 2 ;;
@@ -126,6 +129,7 @@ cmd_send() {
       --title=*) title="${1#*=}"; shift ;;
       --message=*) message="${1#*=}"; shift ;;
       --urgency=*) urgency="${1#*=}"; shift ;;
+      --bundle-id=*) bundle_id="${1#*=}"; shift ;;
       --source=*) source="${1#*=}"; shift ;;
       --attention=*) attention="${1#*=}"; shift ;;
       *) shift ;;
@@ -137,6 +141,13 @@ cmd_send() {
     echo "Usage: ntfy send -t 'Title' -m 'Message'" >&2
     return 1
   fi
+  case "$urgency" in
+    normal|high|critical) ;;
+    *)
+      echo "Error: urgency must be normal, high, or critical" >&2
+      return 1
+      ;;
+  esac
 
   # Auto-detect source if not provided and not disabled
   if [[ "$no_source" != "true" && -z "$source" ]]; then
@@ -157,6 +168,12 @@ cmd_send() {
   lua_message=$(lua_escape "$message")
   lua_context=$(lua_escape "$context")
 
+  # Bundle ID as Lua value (nil when not provided)
+  local lua_bundle="nil"
+  if [[ -n "$bundle_id" ]]; then
+    lua_bundle="[[$(lua_escape "$bundle_id")]]"
+  fi
+
   # Convert attention hint to Lua value
   local lua_attention
   case "$attention" in
@@ -173,6 +190,7 @@ local result = N.send({
   title = [[${lua_title}]],
   message = [[${lua_message}]],
   urgency = '${urgency}',
+  bundleID = ${lua_bundle},
   phone = ${phone},
   telegram = ${telegram},
   question = ${question},

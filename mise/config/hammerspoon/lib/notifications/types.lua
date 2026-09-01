@@ -31,66 +31,67 @@ local M = {}
 
 -- Priority levels
 M.PRIORITY = {
-  HIGH = "high",
-  NORMAL = "normal",
-  LOW = "low",
+	HIGH = "high",
+	NORMAL = "normal",
+	LOW = "low",
 }
 
 -- Actions taken on notifications
 M.ACTION = {
-  SHOWN_CENTER = "shown_center_dimmed",
-  SHOWN_BOTTOM = "shown_bottom_left",
-  BLOCKED_FOCUS = "blocked_by_focus",
-  BLOCKED_APP = "blocked_app_already_focused",
-  BLOCKED_TERMINAL = "blocked_in_terminal",
-  MACOS_DEFAULT = "macos_default",
+	SHOWN_CENTER = "shown_center_dimmed",
+	SHOWN_BOTTOM = "shown_bottom_left",
+	BLOCKED_FOCUS = "blocked_by_focus",
+	BLOCKED_APP = "blocked_app_already_focused",
+	BLOCKED_TERMINAL = "blocked_in_terminal",
+	MACOS_DEFAULT = "macos_default",
 }
 
 -- Anchor points (coordinate system context)
 -- Similar to Neovim's 'relative' parameter
 M.ANCHOR = {
-  SCREEN = "screen", -- Position relative to screen
-  WINDOW = "window", -- Position relative to focused window
-  APP = "app", -- Position relative to app coordinates
+	SCREEN = "screen", -- Position relative to screen
+	WINDOW = "window", -- Position relative to focused window
+	APP = "app", -- Position relative to app coordinates
 }
 
 -- Position directions (cardinal points)
 -- Similar to Neovim's anchor parameter
 M.POSITION = {
-  NW = "NW", -- Northwest (top-left)
-  N = "N", -- North (top-center)
-  NE = "NE", -- Northeast (top-right)
-  W = "W", -- West (middle-left)
-  C = "C", -- Center
-  E = "E", -- East (middle-right)
-  SW = "SW", -- Southwest (bottom-left)
-  S = "S", -- South (bottom-center)
-  SE = "SE", -- Southeast (bottom-right)
+	NW = "NW", -- Northwest (top-left)
+	N = "N", -- North (top-center)
+	NE = "NE", -- Northeast (top-right)
+	W = "W", -- West (middle-left)
+	C = "C", -- Center
+	E = "E", -- East (middle-right)
+	SW = "SW", -- Southwest (bottom-left)
+	S = "S", -- South (bottom-center)
+	SE = "SE", -- Southeast (bottom-right)
 }
 
 -- Attention states for AI agent notifications
 -- Used by N.send() to determine notification routing
 M.ATTENTION = {
-  PAYING_ATTENTION = "paying_attention", -- User viewing this terminal session
-  NOT_PAYING_ATTENTION = "not_paying_attention", -- Terminal focused but different session/window
-  TERMINAL_NOT_FOCUSED = "terminal_not_focused", -- Different app is frontmost
-  DISPLAY_ASLEEP = "display_asleep", -- Screen is off
-  SCREEN_LOCKED = "screen_locked", -- Lock screen is active
-  LOGGED_OUT = "logged_out", -- User logged out of console
-  USER_IDLE = "user_idle", -- HID idle > threshold (walked away)
+	PAYING_ATTENTION = "paying_attention", -- User viewing this terminal session
+	NOT_PAYING_ATTENTION = "not_paying_attention", -- Terminal focused but different session/window
+	TERMINAL_NOT_FOCUSED = "terminal_not_focused", -- Different app is frontmost
+	DISPLAY_ASLEEP = "display_asleep", -- Screen is off
+	SCREEN_LOCKED = "screen_locked", -- Lock screen is active
+	LOGGED_OUT = "logged_out", -- User logged out of console
+	USER_IDLE = "user_idle", -- HID idle > threshold (walked away)
 }
 
 -- Urgency levels for AI agent notifications
 M.URGENCY = {
-  NORMAL = "normal",
-  HIGH = "high",
-  CRITICAL = "critical",
+	NORMAL = "normal",
+	HIGH = "high",
+	CRITICAL = "critical",
 }
 
 ---@class SendOpts
 ---@field title string Required - notification title
 ---@field message string Required - notification body
 ---@field urgency? "normal"|"high"|"critical" Default: "normal"
+---@field bundleID? string Originating app bundle ID (HUD icon + engagement suppression)
 ---@field phone? boolean Send iMessage (default: false, auto-true if critical)
 ---@field telegram? boolean Send via Telegram bot (default: false, auto-true if remote_only)
 ---@field question? boolean Track for retry (default: false)

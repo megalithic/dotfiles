@@ -557,9 +557,12 @@ func dispatchAction(_ action: String, event: Event, cfg: Config, done: @escaping
     case "ntfy":
         sinkQueue.async {
             let ntfy = expand(cfg.ntfyPath ?? "~/.dotfiles/bin/ntfy")
+            // -b: HUD shows the app's icon and Hammerspoon can suppress when the
+            // user is already engaged with that app/conversation.
+            // -S: keep the raw title (sender) unprefixed for engagement matching.
             var args = ["send", "-t", event.title ?? event.bundleID,
                         "-m", [event.subtitle, event.body].compactMap { $0 }.joined(separator: " — "),
-                        "-u", event.urgency, "-s", event.bundleID]
+                        "-u", event.urgency, "-b", event.bundleID, "-S"]
             if arg == "phone" { args.append("-p") }
             if arg == "telegram" { args.append("-T") }
             done(action, runProcess(ntfy, args))

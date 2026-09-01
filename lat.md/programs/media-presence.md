@@ -54,11 +54,13 @@ Events: `mic.on`/`mic.off`, `camera.on`/`camera.off`, `meeting.lobby`/`meeting.j
 
 ## Hammerspoon consumer
 
-`mise/config/hammerspoon/watchers/media-presence.lua` polls the daemon every 3s via `nc -w 1 -U` with `{"cmd":"get"}`, detects state transitions by diffing successive snapshots, and dispatches:
+`mise/config/hammerspoon/watchers/media-presence.lua` polls the daemon every 3s via `nc -w 1 -U` with `{"cmd":"get"}`, exports each successful response as `M.state`, detects state transitions by diffing successive snapshots, and dispatches:
 
 - `inMeeting` false→true → pause Apple Music
 - `sharing && inMeeting` while DND not already forced → enforce DND focus mode (`U.dnd(true, "meeting")`)
 - `sharing` false or `inMeeting` false after this watcher forced DND → restore DND
+
+Notification attention checks read `M.state.sharing` and suppress local HUDs during any screen share; phone and Telegram keep their own routing rules. `M.state` is nil until the first successful poll, clears when the watcher stops, and expires after three missed poll intervals so a dead daemon cannot suppress HUDs indefinitely. Expiry or watcher shutdown also restores DND when this watcher forced it.
 
 PTT mode enforcement moved out of this watcher: [[miccheck#Presence integration|miccheckd subscribes to the daemon's socket directly]] and forces push-to-talk on `inMeeting` transitions. Hammerspoon can still set modes manually via `lib/micctl.lua`.
 

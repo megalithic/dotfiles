@@ -69,7 +69,10 @@ end
 
 hs.loadSpoon("EmmyLua")
 
-local watchers = { "audio", "notification", "url", "pasteboard" }
+-- "notification" (Sequoia-era AX watcher) retired: Tahoe stopped exposing the
+-- AXNotificationCenterAlert/Banner subroles it matches; notiwatchd owns
+-- notification watching/routing now (see lat.md/programs/notiwatchd.md).
+local watchers = { "audio", "media-presence", "url", "pasteboard" }
 -- local watchers = { "audio", "dock", "app", "notification", "url", "pasteboard", "screen", "media-presence" }
 
 req("bindings")

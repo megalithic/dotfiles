@@ -19,6 +19,16 @@
       "actions": ["ntfy"]
     },
     {
+      "name": "urgent-messages",
+      "match": {
+        "bundle_id": ["com.apple.mobilesms", "com.apple.ichat"],
+        "title": ["Abby Messer"],
+        "body": ["\\?"]
+      },
+      "urgency": "critical",
+      "actions": ["ntfy"]
+    },
+    {
       "name": "messages",
       "match": { "bundle_id": ["com.apple.mobilesms", "com.apple.ichat"] },
       "urgency": "high",
