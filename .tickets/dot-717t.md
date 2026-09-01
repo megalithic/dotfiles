@@ -1,6 +1,6 @@
 ---
 id: dot-717t
-status: in_progress
+status: closed
 deps: []
 links: []
 created: 2026-06-26T21:03:08Z
@@ -69,3 +69,7 @@ Re-scoped ticket around `avwatchd`, local Helium extension, native messaging, ev
 **2026-09-01T19:01:16Z**
 
 2026-09-01 final validation: reviewer issues fixed (SIGPIPE/slow-client bounds, replayd chunk buffering, private socket permissions, single native session, media-removal playback cleanup). Live-validated Hammerspoon 15s stale expiry/reconnect and playback cleanup when a playing element is removed. Playback observation on all HTTP(S) tabs is intentional and configurable with playbackEnabled; only active state, kind, tab/window IDs, and URL leave the extension.
+
+**2026-09-01T21:06:28Z**
+
+2026-09-01 live validation (final): Meet join at meet.google.com observed via socket subscriber — meetingState=joined with exact meetingTabId/WindowId, meetingApp=net.imput.helium, cameraActive=true, inAppMic=muted, micOwners=[net.imput.helium.helper]. Interactive getDisplayMedia tab-share start emitted immediate state.changed with browserTabSharing=true, sharingSource=browser-tab, osCaptureSharing=false. Share stop and meeting leave cleared all state to idle (verified via get). User confirmed no macOS Screen Recording permission prompt appeared at any point; code inspection also shows no ScreenCaptureKit/CGWindow/AX APIs in runtime. Fixed leftover: setup-avwatchd now also trashes ~/Library/Logs/media-presence (old daemon logs); existing dir trashed live. All acceptance criteria satisfied.

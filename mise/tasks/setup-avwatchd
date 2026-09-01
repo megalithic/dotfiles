@@ -61,7 +61,7 @@ done
 if [ -e "$OLD_SOCKET" ] || [ -S "$OLD_SOCKET" ]; then
   trash "$OLD_SOCKET"
 fi
-for old_log in "$HOME/.cache/media-presence-stdout.log" "$HOME/.cache/media-presence-stderr.log"; do
+for old_log in "$HOME/.cache/media-presence-stdout.log" "$HOME/.cache/media-presence-stderr.log" "$HOME/Library/Logs/media-presence"; do
   [ ! -e "$old_log" ] || trash "$old_log"
 done
 
