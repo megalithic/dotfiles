@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Sign binaries with the stable Developer ID Application identity so TCC
+# grants (FDA, Accessibility, ...) survive rebuilds. TCC pins grants to
+# cert + identifier; a stable pair means re-signing never invalidates them.
+#
+# Usage: signcode [-i identifier] <binary> [...]
+#   -i  codesign identifier (default: com.megadots.<basename>)
+# Env: SIGNCODE_IDENTITY overrides identity lookup.
+set -euo pipefail
+
+usage() { echo "usage: signcode [-i identifier] <binary> [...]" >&2; exit 2; }
+
+IDENTIFIER=""
+while getopts "i:h" opt; do
+  case $opt in
+    i) IDENTIFIER="$OPTARG" ;;
+    *) usage ;;
+  esac
+done
+shift $((OPTIND - 1))
+[[ $# -ge 1 ]] || usage
+
+IDENTITY="${SIGNCODE_IDENTITY:-}"
+if [[ -z "$IDENTITY" ]]; then
+  IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null \
+    | sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -1)"
+fi
+if [[ -z "$IDENTITY" ]]; then
+  echo "signcode: no Developer ID Application identity in keychain" >&2
+  echo "  import it (1Password Crypt > Apple Developer ID Application p12)" >&2
+  echo "  or set SIGNCODE_IDENTITY to another identity" >&2
+  exit 1
+fi
+
+for bin in "$@"; do
+  id="${IDENTIFIER:-com.megadots.$(basename "$bin")}"
+  codesign -f --timestamp --options runtime -i "$id" -s "$IDENTITY" "$bin"
+  echo "signed: $bin (identifier=$id)"
+done
