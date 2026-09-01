@@ -129,9 +129,25 @@ ls "$HOME/Library/Fonts/" 2>/dev/null | grep -q 'FiraCodeNerdFont' && ok "nerd f
 ls "/Library/Fonts/Nix Fonts/" 2>/dev/null | grep -qi 'nerd-fonts' && bad "Nix Fonts still ships nerd-fonts" || ok "Nix Fonts free of nerd-fonts"
 
 hdr "launchd (mise agents up, no strays)"
-for agent in dev.mise.com.megadots.llama-cpp dev.mise.com.megadots.media-presenced dev.mise.com.megadots.miccheck; do
+for agent in dev.mise.com.megadots.llama-cpp dev.mise.com.megadots.avwatchd dev.mise.com.megadots.miccheck; do
   if launchctl list "$agent" >/dev/null 2>&1; then ok "$agent loaded"; else bad "$agent not loaded"; fi
 done
+old_media_label=dev.mise.com.megadots.media-presenced
+old_media_plist="$HOME/Library/LaunchAgents/$old_media_label.plist"
+old_media_socket="$HOME/.local/state/media-presence/sock"
+if launchctl list "$old_media_label" >/dev/null 2>&1 ||
+  [[ -e "$old_media_plist" || -S "$old_media_socket" ]] ||
+  pgrep -f "$HOME/.dotfiles/bin/media-presenced" >/dev/null 2>&1; then
+  bad "stale media-presenced agent/process/socket"
+else
+  ok "no stale media-presenced agent/process/socket"
+fi
+avwatch_host="$HOME/Library/Application Support/net.imput.helium/NativeMessagingHosts/com.megadots.avwatchd.json"
+if [[ -f "$avwatch_host" ]]; then
+  ok "avwatchweb native host installed"
+else
+  bad "avwatchweb native host missing"
+fi
 pgrep -q kanata && ok "kanata running" || bad "kanata not running"
 pgrep -fq 'Espanso.app.*worker' && ok "espanso worker running" || bad "espanso worker not running"
 launchctl list 2>/dev/null | grep -q 'org.nixos.raycast\|com.raycast' && bad "raycast launchd leftovers" || ok "no raycast agents"

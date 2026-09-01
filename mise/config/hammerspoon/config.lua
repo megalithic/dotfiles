@@ -354,9 +354,8 @@ M.lollygaggers = {
 }
 
 M.launchers = {
-  -- launchCommand: cold-start only — LaunchServices forwards no flags, so a
-  -- detaching launcher script provides them (CDP 9223 for media-presenced +
-  -- chrome-devtools-attach). Running app keeps normal cycle/focus behavior.
+  -- launchCommand: cold-start only. It loads avwatchweb and keeps CDP 9223
+  -- for chrome-devtools-attach. Running app keeps normal cycle/focus behavior.
   { BROWSER, "j", { cycleWindows = true, launchCommand = os.getenv("HOME") .. "/bin/helium-launch" } },
   { TERMINAL, "k", { passThrough = { "`" } } },
   -- { "net.kovidgoyal.kitty", "k" },

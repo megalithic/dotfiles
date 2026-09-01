@@ -10,13 +10,18 @@
 set -euo pipefail
 
 HELIUM="/Applications/Helium.app/Contents/MacOS/Helium"
+AVWATCHWEB="${DOTFILES_DIR:-$HOME/.dotfiles}/mise/config/avwatchweb"
 if [ ! -x "$HELIUM" ]; then
   echo "Helium executable not found: $HELIUM" >&2
   exit 1
 fi
+if [ ! -f "$AVWATCHWEB/manifest.json" ]; then
+  echo "avwatchweb extension not found: $AVWATCHWEB" >&2
+  exit 1
+fi
 
-# --remote-debugging-port=9223: CDP for media-presenced meeting detection and
-# the chrome-devtools-attach MCP server. 9223 avoids Brave Nightly's 9222.
+# Port 9223 remains for chrome-devtools-attach. avwatchd uses avwatchweb native
+# messaging and has no runtime CDP dependency.
 nohup "$HELIUM" \
   --no-first-run \
   --no-default-browser-check \
@@ -26,6 +31,7 @@ nohup "$HELIUM" \
   --disable-wake-on-wifi \
   --no-pings \
   --disable-features=OutdatedBuildDetector \
+  --load-extension="$AVWATCHWEB" \
   --remote-debugging-port=9223 \
   "$@" >/dev/null 2>&1 &
 

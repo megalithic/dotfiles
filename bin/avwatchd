@@ -1,0 +1,1153 @@
+#!/usr/bin/swift
+import Foundation
+import CoreAudio
+import CoreMediaIO
+import AppKit
+
+// MARK: - Capture
+// Capture layer: OS-level mic / camera in-use detection with owner attribution.
+//
+// - Mic:    CoreAudio process objects (kAudioHardwarePropertyProcessObjectList,
+//           kAudioProcessPropertyIsRunningInput) → owner pid + bundle id.
+// - Camera: CoreMediaIO device kAudioDevicePropertyDeviceIsRunningSomewhere,
+//           with a property listener for change events.
+//
+// Validated against macOS Tahoe in .local_scripts/media-privacy-probe.
+
+struct MicOwner: Equatable {
+    var pid: pid_t
+    var bundleID: String
+    var name: String
+}
+
+struct CaptureState: Equatable {
+    var micActive: Bool = false
+    var micOwners: [MicOwner] = []
+    var cameraActive: Bool = false
+}
+
+// MARK: - CoreAudio helpers
+
+private func caUInt32(_ obj: AudioObjectID, _ sel: AudioObjectPropertySelector,
+                      _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal) -> UInt32? {
+    var addr = AudioObjectPropertyAddress(mSelector: sel, mScope: scope, mElement: kAudioObjectPropertyElementMain)
+    var value: UInt32 = 0
+    var size = UInt32(MemoryLayout<UInt32>.size)
+    guard AudioObjectGetPropertyData(obj, &addr, 0, nil, &size, &value) == noErr else { return nil }
+    return value
+}
+
+private func caString(_ obj: AudioObjectID, _ sel: AudioObjectPropertySelector) -> String? {
+    var addr = AudioObjectPropertyAddress(mSelector: sel, mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
+    var size: UInt32 = 0
+    guard AudioObjectGetPropertyDataSize(obj, &addr, 0, nil, &size) == noErr else { return nil }
+    var cf: CFString = "" as CFString
+    let st = withUnsafeMutablePointer(to: &cf) { AudioObjectGetPropertyData(obj, &addr, 0, nil, &size, $0) }
+    guard st == noErr else { return nil }
+    return cf as String
+}
+
+private func caObjectList(_ sel: AudioObjectPropertySelector) -> [AudioObjectID] {
+    var addr = AudioObjectPropertyAddress(mSelector: sel, mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
+    var size: UInt32 = 0
+    let sys = AudioObjectID(kAudioObjectSystemObject)
+    guard AudioObjectGetPropertyDataSize(sys, &addr, 0, nil, &size) == noErr else { return [] }
+    let count = Int(size) / MemoryLayout<AudioObjectID>.size
+    var ids = [AudioObjectID](repeating: 0, count: count)
+    guard AudioObjectGetPropertyData(sys, &addr, 0, nil, &size, &ids) == noErr else { return [] }
+    return ids
+}
+
+// MARK: - CMIO helpers
+
+private func cmioUInt32(_ obj: CMIOObjectID, _ sel: CMIOObjectPropertySelector) -> UInt32? {
+    var addr = CMIOObjectPropertyAddress(mSelector: sel,
+                                         mScope: CMIOObjectPropertyScope(kCMIOObjectPropertyScopeGlobal),
+                                         mElement: CMIOObjectPropertyElement(kCMIOObjectPropertyElementMain))
+    var value: UInt32 = 0
+    var size = UInt32(MemoryLayout<UInt32>.size)
+    guard CMIOObjectGetPropertyData(obj, &addr, 0, nil, size, &size, &value) == noErr else { return nil }
+    return value
+}
+
+private func cmioDevices() -> [CMIOObjectID] {
+    var addr = CMIOObjectPropertyAddress(mSelector: CMIOObjectPropertySelector(kCMIOHardwarePropertyDevices),
+                                         mScope: CMIOObjectPropertyScope(kCMIOObjectPropertyScopeGlobal),
+                                         mElement: CMIOObjectPropertyElement(kCMIOObjectPropertyElementMain))
+    var size: UInt32 = 0
+    let sys = CMIOObjectID(kCMIOObjectSystemObject)
+    guard CMIOObjectGetPropertyDataSize(sys, &addr, 0, nil, &size) == noErr else { return [] }
+    let count = Int(size) / MemoryLayout<CMIOObjectID>.size
+    var ids = [CMIOObjectID](repeating: 0, count: count)
+    guard CMIOObjectGetPropertyData(sys, &addr, 0, nil, size, &size, &ids) == noErr else { return [] }
+    return ids
+}
+
+// MARK: - CaptureMonitor
+
+final class CaptureMonitor {
+    private let queue = DispatchQueue(label: "avwatchd.capture")
+    private var current = CaptureState()
+    var onChange: ((CaptureState) -> Void)?
+
+    private var audioListenerInstalled = false
+    private var cameraListeners: [(CMIOObjectID, CMIOObjectPropertyAddress)] = []
+
+    func start() {
+        installAudioProcessListListener()
+        installCameraListeners()
+        refresh()
+    }
+
+    // Re-read full state and emit if changed.
+    func refresh() {
+        let new = CaptureMonitor.snapshot()
+        queue.async { [weak self] in
+            guard let self else { return }
+            if new != self.current {
+                self.current = new
+                DispatchQueue.main.async { self.onChange?(new) }
+            }
+        }
+    }
+
+    static func snapshot() -> CaptureState {
+        var s = CaptureState()
+        // Mic via process objects.
+        var owners: [MicOwner] = []
+        for proc in caObjectList(kAudioHardwarePropertyProcessObjectList) {
+            guard (caUInt32(proc, kAudioProcessPropertyIsRunningInput) ?? 0) != 0 else { continue }
+            let pid = pid_t(Int32(caUInt32(proc, kAudioProcessPropertyPID) ?? 0))
+            var bundle = caString(proc, kAudioProcessPropertyBundleID) ?? ""
+            var name = ""
+            if let app = NSRunningApplication(processIdentifier: pid) {
+                if bundle.isEmpty { bundle = app.bundleIdentifier ?? "" }
+                name = app.localizedName ?? ""
+            }
+            owners.append(MicOwner(pid: pid, bundleID: bundle, name: name))
+        }
+        s.micActive = !owners.isEmpty
+        s.micOwners = owners
+        // Camera via CMIO device running flag.
+        for dev in cmioDevices() {
+            if (cmioUInt32(dev, CMIOObjectPropertySelector(kAudioDevicePropertyDeviceIsRunningSomewhere)) ?? 0) != 0 {
+                s.cameraActive = true
+                break
+            }
+        }
+        return s
+    }
+
+    // MARK: listeners
+
+    private func installAudioProcessListListener() {
+        var addr = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyProcessObjectList,
+                                              mScope: kAudioObjectPropertyScopeGlobal,
+                                              mElement: kAudioObjectPropertyElementMain)
+        let block: AudioObjectPropertyListenerBlock = { [weak self] _, _ in self?.refresh() }
+        let st = AudioObjectAddPropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &addr, queue, block)
+        audioListenerInstalled = (st == noErr)
+        // Also listen on each input device's IsRunningSomewhere for robustness.
+        for dev in caObjectList(kAudioHardwarePropertyDevices) {
+            var a = AudioObjectPropertyAddress(mSelector: kAudioDevicePropertyDeviceIsRunningSomewhere,
+                                               mScope: kAudioObjectPropertyScopeGlobal,
+                                               mElement: kAudioObjectPropertyElementMain)
+            AudioObjectAddPropertyListenerBlock(dev, &a, queue, block)
+        }
+    }
+
+    private func installCameraListeners() {
+        let block: CMIOObjectPropertyListenerBlock = { [weak self] _, _ in self?.refresh() }
+        for dev in cmioDevices() {
+            var addr = CMIOObjectPropertyAddress(mSelector: CMIOObjectPropertySelector(kAudioDevicePropertyDeviceIsRunningSomewhere),
+                                                 mScope: CMIOObjectPropertyScope(kCMIOObjectPropertyScopeGlobal),
+                                                 mElement: CMIOObjectPropertyElement(kCMIOObjectPropertyElementMain))
+            if CMIOObjectAddPropertyListenerBlock(dev, &addr, queue, block) == noErr {
+                cameraListeners.append((dev, addr))
+            }
+        }
+    }
+}
+
+// MARK: - Unix socket
+
+private let nativeExtensionID = "ogfaajbfamngmlmkppahdpkoliobdemk"
+private let nativeExtensionOrigin = "chrome-extension://\(nativeExtensionID)/"
+private let maxMessageBytes = 1_048_576
+
+private func unixAddress(_ path: String) throws -> sockaddr_un {
+    var address = sockaddr_un()
+    address.sun_family = sa_family_t(AF_UNIX)
+    let bytes = Array(path.utf8)
+    let capacity = MemoryLayout.size(ofValue: address.sun_path)
+    guard bytes.count < capacity else { throw POSIXError(.ENAMETOOLONG) }
+    withUnsafeMutablePointer(to: &address.sun_path) { pointer in
+        pointer.withMemoryRebound(to: CChar.self, capacity: capacity) { destination in
+            for index in bytes.indices { destination[index] = CChar(bitPattern: bytes[index]) }
+            destination[bytes.count] = 0
+        }
+    }
+    return address
+}
+
+private func configureConnectedSocket(_ fd: Int32) {
+    var enabled: Int32 = 1
+    setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &enabled, socklen_t(MemoryLayout<Int32>.size))
+    let flags = fcntl(fd, F_GETFL)
+    if flags >= 0 { _ = fcntl(fd, F_SETFL, flags | O_NONBLOCK) }
+}
+
+private func connectUnix(_ path: String) -> Int32 {
+    let fd = socket(AF_UNIX, SOCK_STREAM, 0)
+    guard fd >= 0, var address = try? unixAddress(path) else { return -1 }
+    let result = withUnsafePointer(to: &address) {
+        $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+            Darwin.connect(fd, $0, socklen_t(MemoryLayout<sockaddr_un>.size))
+        }
+    }
+    guard result == 0 else { close(fd); return -1 }
+    configureConnectedSocket(fd)
+    return fd
+}
+
+@discardableResult
+private func writeAll(_ fd: Int32, _ data: Data) -> Bool {
+    var offset = 0
+    return data.withUnsafeBytes { raw in
+        guard let base = raw.baseAddress else { return data.isEmpty }
+        while offset < data.count {
+            let count = Foundation.write(fd, base.advanced(by: offset), data.count - offset)
+            if count > 0 {
+                offset += count
+                continue
+            }
+            if count < 0, errno == EINTR { continue }
+            if count < 0, errno == EAGAIN || errno == EWOULDBLOCK {
+                var descriptor = pollfd(fd: fd, events: Int16(POLLOUT), revents: 0)
+                var ready: Int32
+                repeat { ready = Darwin.poll(&descriptor, 1, 100) } while ready < 0 && errno == EINTR
+                if ready > 0 { continue }
+            }
+            return false
+        }
+        return true
+    }
+}
+
+final class SocketServer {
+    private let path: String
+    private var listenFD: Int32 = -1
+    private var acceptSource: DispatchSourceRead?
+    private let queue = DispatchQueue(label: "avwatchd.socket")
+    private var clients: [Int32: DispatchSourceRead] = [:]
+    private var buffers: [Int32: Data] = [:]
+    private var pendingDrops: Set<Int32> = []
+
+    var onCommand: ((_ client: Int32, _ command: String, _ reply: @escaping (String) -> Void) -> Void)?
+    var onDisconnect: ((Int32) -> Void)?
+
+    init(path: String) { self.path = path }
+
+    func start() throws {
+        let directory = (path as NSString).deletingLastPathComponent
+        try FileManager.default.createDirectory(atPath: directory, withIntermediateDirectories: true)
+        chmod(directory, S_IRWXU)
+        if FileManager.default.fileExists(atPath: path) {
+            let existing = connectUnix(path)
+            if existing >= 0 {
+                close(existing)
+                throw POSIXError(.EADDRINUSE)
+            }
+            unlink(path)
+        }
+
+        listenFD = socket(AF_UNIX, SOCK_STREAM, 0)
+        guard listenFD >= 0 else { throw POSIXError(.init(rawValue: errno) ?? .EIO) }
+        var address = try unixAddress(path)
+        let bound = withUnsafePointer(to: &address) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+                bind(listenFD, $0, socklen_t(MemoryLayout<sockaddr_un>.size))
+            }
+        }
+        guard bound == 0, listen(listenFD, 16) == 0 else {
+            close(listenFD)
+            throw POSIXError(.init(rawValue: errno) ?? .EIO)
+        }
+        chmod(path, S_IRUSR | S_IWUSR)
+        let source = DispatchSource.makeReadSource(fileDescriptor: listenFD, queue: queue)
+        source.setEventHandler { [weak self] in self?.acceptClient() }
+        source.setCancelHandler { [listenFD] in close(listenFD) }
+        source.resume()
+        acceptSource = source
+    }
+
+    func stop() {
+        acceptSource?.cancel()
+        acceptSource = nil
+        queue.sync {
+            for source in clients.values { source.cancel() }
+            clients.removeAll()
+            buffers.removeAll()
+        }
+        unlink(path)
+    }
+
+    private func acceptClient() {
+        let fd = Foundation.accept(listenFD, nil, nil)
+        guard fd >= 0 else { return }
+        configureConnectedSocket(fd)
+        let source = DispatchSource.makeReadSource(fileDescriptor: fd, queue: queue)
+        source.setEventHandler { [weak self] in self?.readClient(fd) }
+        source.setCancelHandler { close(fd) }
+        clients[fd] = source
+        buffers[fd] = Data()
+        source.resume()
+    }
+
+    private func readClient(_ fd: Int32) {
+        var bytes = [UInt8](repeating: 0, count: 8192)
+        let count = Foundation.read(fd, &bytes, bytes.count)
+        guard count > 0 else {
+            guard !pendingDrops.contains(fd) else { return }
+            pendingDrops.insert(fd)
+            queue.asyncAfter(deadline: .now() + 0.1) { [weak self] in self?.drop(fd) }
+            return
+        }
+        buffers[fd, default: Data()].append(contentsOf: bytes[0..<count])
+        if buffers[fd, default: Data()].count > maxMessageBytes { drop(fd); return }
+        while let newline = buffers[fd]?.firstIndex(of: 0x0A) {
+            let line = buffers[fd]!.subdata(in: buffers[fd]!.startIndex..<newline)
+            buffers[fd]!.removeSubrange(buffers[fd]!.startIndex...newline)
+            guard let command = String(data: line, encoding: .utf8), !command.isEmpty else { continue }
+            onCommand?(fd, command) { [weak self] response in
+                self?.send(response, to: fd)
+            }
+        }
+    }
+
+    private func drop(_ fd: Int32) {
+        guard let source = clients.removeValue(forKey: fd) else { return }
+        pendingDrops.remove(fd)
+        buffers.removeValue(forKey: fd)
+        source.cancel()
+        DispatchQueue.main.async { [weak self] in self?.onDisconnect?(fd) }
+    }
+
+    func disconnect(_ fd: Int32) {
+        queue.async { [weak self] in self?.drop(fd) }
+    }
+
+    func send(_ line: String, to fd: Int32) {
+        queue.async { [weak self] in
+            guard let self, self.clients[fd] != nil else { return }
+            var data = Data(line.utf8)
+            if data.last != 0x0A { data.append(0x0A) }
+            if !writeAll(fd, data) { self.drop(fd) }
+        }
+    }
+
+    func broadcast(_ line: String) {
+        queue.async { [weak self] in
+            guard let self else { return }
+            for fd in Array(self.clients.keys) {
+                var data = Data(line.utf8)
+                if data.last != 0x0A { data.append(0x0A) }
+                if !writeAll(fd, data) { self.drop(fd) }
+            }
+        }
+    }
+}
+
+// MARK: - Chrome native messaging bridge
+
+final class NativeHostBridge {
+    private let socketPath: String
+    private let queue = DispatchQueue(label: "avwatchd.native-host")
+    private var stdinSource: DispatchSourceRead?
+    private var socketSource: DispatchSourceRead?
+    private var inputBuffer = Data()
+    private var socketBuffer = Data()
+    private var socketFD: Int32 = -1
+    private var session: String?
+    private var reconnectPending = false
+
+    init(socketPath: String) { self.socketPath = socketPath }
+
+    func start() {
+        let source = DispatchSource.makeReadSource(fileDescriptor: STDIN_FILENO, queue: queue)
+        source.setEventHandler { [weak self] in self?.readNativeInput() }
+        source.resume()
+        stdinSource = source
+        connectDaemon()
+        dispatchMain()
+    }
+
+    private func readNativeInput() {
+        var bytes = [UInt8](repeating: 0, count: 8192)
+        let count = Foundation.read(STDIN_FILENO, &bytes, bytes.count)
+        guard count > 0 else { exit(0) }
+        inputBuffer.append(contentsOf: bytes[0..<count])
+        parseNativeFrames()
+    }
+
+    private func parseNativeFrames() {
+        while inputBuffer.count >= 4 {
+            let length = inputBuffer.prefix(4).enumerated().reduce(UInt32(0)) {
+                $0 | (UInt32($1.element) << UInt32($1.offset * 8))
+            }
+            guard length > 0, length <= maxMessageBytes else { exit(1) }
+            let total = 4 + Int(length)
+            guard inputBuffer.count >= total else { return }
+            let payload = inputBuffer.subdata(in: 4..<total)
+            inputBuffer.removeSubrange(0..<total)
+            handleNativeMessage(payload)
+        }
+    }
+
+    private func handleNativeMessage(_ data: Data) {
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              (object["v"] as? Int) == 1,
+              let type = object["type"] as? String,
+              let nonce = object["nonce"] as? String,
+              UUID(uuidString: nonce) != nil else { exit(1) }
+        if session == nil {
+            guard type == "hello", object["extensionId"] as? String == nativeExtensionID else { exit(1) }
+            session = nonce
+            registerAndReport()
+            return
+        }
+        guard nonce == session,
+              ["reset", "snapshot", "event", "tab-reset", "tab-removed", "focus-result"].contains(type) else {
+            exit(1)
+        }
+        guard socketFD >= 0 else { return }
+        var command = object
+        command["cmd"] = "browser"
+        sendDaemon(command)
+    }
+
+    private func connectDaemon() {
+        reconnectPending = false
+        guard socketFD < 0 else { return }
+        let fd = connectUnix(socketPath)
+        guard fd >= 0 else { scheduleReconnect(); return }
+        socketFD = fd
+        socketBuffer.removeAll(keepingCapacity: true)
+        let source = DispatchSource.makeReadSource(fileDescriptor: fd, queue: queue)
+        source.setEventHandler { [weak self] in self?.readDaemon() }
+        source.setCancelHandler { close(fd) }
+        source.resume()
+        socketSource = source
+        registerAndReport()
+    }
+
+    private func registerAndReport() {
+        guard socketFD >= 0, let session else { return }
+        sendDaemon(["cmd": "native-register", "v": 1, "extensionId": nativeExtensionID, "session": session])
+        writeNative(["v": 1, "type": "status", "nonce": session, "connected": true])
+    }
+
+    private func readDaemon() {
+        var bytes = [UInt8](repeating: 0, count: 8192)
+        let count = Foundation.read(socketFD, &bytes, bytes.count)
+        guard count > 0 else { daemonDisconnected(); return }
+        socketBuffer.append(contentsOf: bytes[0..<count])
+        if socketBuffer.count > maxMessageBytes { daemonDisconnected(); return }
+        while let newline = socketBuffer.firstIndex(of: 0x0A) {
+            let line = socketBuffer.subdata(in: socketBuffer.startIndex..<newline)
+            socketBuffer.removeSubrange(socketBuffer.startIndex...newline)
+            guard let object = try? JSONSerialization.jsonObject(with: line) as? [String: Any],
+                  object["event"] as? String == "browser.command",
+                  object["nonce"] as? String == session else { continue }
+            writeNative(object)
+        }
+    }
+
+    private func daemonDisconnected() {
+        socketSource?.cancel()
+        socketSource = nil
+        socketFD = -1
+        if let session { writeNative(["v": 1, "type": "status", "nonce": session, "connected": false]) }
+        scheduleReconnect()
+    }
+
+    private func scheduleReconnect() {
+        guard !reconnectPending else { return }
+        reconnectPending = true
+        queue.asyncAfter(deadline: .now() + 2) { [weak self] in self?.connectDaemon() }
+    }
+
+    private func sendDaemon(_ object: [String: Any]) {
+        guard socketFD >= 0,
+              let data = try? JSONSerialization.data(withJSONObject: object) else { return }
+        var line = data
+        line.append(0x0A)
+        if !writeAll(socketFD, line) { daemonDisconnected() }
+    }
+
+    private func writeNative(_ object: [String: Any]) {
+        guard let data = try? JSONSerialization.data(withJSONObject: object), data.count <= maxMessageBytes else { return }
+        var length = UInt32(data.count).littleEndian
+        var frame = Data(bytes: &length, count: 4)
+        frame.append(data)
+        if !writeAll(STDOUT_FILENO, frame) { exit(0) }
+    }
+}
+
+// MARK: - Screenshare (replayd log stream)
+// No TCC needed: log stream predicates on replayd/ScreenCaptureKit
+// require no grants. Detects sender-side screen sharing via the replayd
+// heartbeat pattern validated 2026-07-07 in a live Slack huddle capture.
+//
+// Start: SCScreenCaptureSession startWithError / updateScreenCaptureDidStart
+// Heartbeat (10s): updateExistingDisplayStreamCapturesWithAuditTokenValues
+// Stop: heartbeat gap > 25s (method-name stops unreliable — Slack churns)
+
+final class ScreenshareMonitor {
+    var onSharingChanged: ((Bool) -> Void)?
+
+    private let queue = DispatchQueue(label: "avwatchd.screenshare")
+    private var process: Process?
+    private var heartbeatTimer: DispatchSourceTimer?
+    private var pendingStart: DispatchWorkItem?
+    private var lastHeartbeat = Date.distantPast
+    private var logBuffer = ""
+    private var sharing = false
+    private var stopping = false
+    private var restartPending = false
+    private let heartbeatTimeout: TimeInterval = 25
+    private let startDebounce: TimeInterval = 1.5
+
+    func start() {
+        stopping = false
+        launch()
+    }
+
+    private func launch() {
+        guard !stopping, process == nil else { return }
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: "/usr/bin/log")
+        proc.arguments = [
+            "stream",
+            "--style", "compact",
+            "--predicate",
+            "(process == \"replayd\") OR (subsystem CONTAINS[c] \"screencapturekit\")",
+        ]
+        let pipe = Pipe()
+        proc.standardOutput = pipe
+        proc.standardError = FileHandle.nullDevice
+        proc.terminationHandler = { [weak self, weak proc] _ in
+            guard let self, let proc else { return }
+            self.queue.async {
+                guard self.process === proc else { return }
+                self.process = nil
+                self.restartAfterDelay()
+            }
+        }
+        do {
+            try proc.run()
+            process = proc
+        } catch {
+            restartAfterDelay()
+            return
+        }
+        readPipe(pipe)
+        startHeartbeatWatchdog()
+    }
+
+    func stop() {
+        stopping = true
+        restartPending = false
+        heartbeatTimer?.cancel()
+        heartbeatTimer = nil
+        pendingStart?.cancel()
+        pendingStart = nil
+        let running = process
+        process = nil
+        running?.terminate()
+    }
+
+    private func restartAfterDelay() {
+        guard !stopping, !restartPending else { return }
+        restartPending = true
+        queue.asyncAfter(deadline: .now() + 10) { [weak self] in
+            guard let self else { return }
+            self.restartPending = false
+            self.launch()
+        }
+    }
+
+    // MARK: log parsing
+
+    private func readPipe(_ pipe: Pipe) {
+        pipe.fileHandleForReading.readabilityHandler = { [weak self] h in
+            guard let self else { return }
+            let data = h.availableData
+            guard !data.isEmpty else { return }
+            self.queue.async { self.handleData(data) }
+        }
+    }
+
+    private func handleData(_ data: Data) {
+        guard let text = String(data: data, encoding: .utf8) else { return }
+        logBuffer += text
+        while let newline = logBuffer.firstIndex(of: "\n") {
+            let line = String(logBuffer[..<newline])
+            logBuffer.removeSubrange(...newline)
+            if !line.isEmpty { parseLine(line) }
+        }
+    }
+
+    private func parseLine(_ line: String) {
+        if line.contains("SCScreenShotSession") || line.contains("isScreenshotConfiguration") {
+            cancelPendingStart()
+            return
+        }
+
+        if line.contains("updateScreenCaptureDidStart:") && line.contains("hasStarted=0") {
+            cancelPendingStart()
+            if sharing { setSharing(false) }
+            return
+        }
+
+        if line.contains("SCScreenCaptureSession startWithError:") ||
+           (line.contains("updateScreenCaptureDidStart:") && line.contains("hasStarted=1")) {
+            scheduleStart()
+        }
+        if sharing && line.contains("updateExistingDisplayStreamCaptures") {
+            lastHeartbeat = Date()
+        }
+        // Method-name stop is a hint but not authoritative — heartbeat gap is.
+        if line.contains("stopAndInvalidateWithStreamData:userStopped:") {
+            // Record the stop time; if heartbeat doesn't resume within
+            // heartbeatTimeout, the watchdog will flip sharing.
+            lastHeartbeat = Date.distantPast // force watchdog to reevaluate
+        }
+    }
+
+    private func scheduleStart() {
+        pendingStart?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.setSharing(true) }
+        pendingStart = work
+        queue.asyncAfter(deadline: .now() + startDebounce, execute: work)
+    }
+
+    private func cancelPendingStart() {
+        pendingStart?.cancel()
+        pendingStart = nil
+    }
+
+    // MARK: heartbeat watchdog
+
+    private func startHeartbeatWatchdog() {
+        heartbeatTimer?.cancel()
+        let t = DispatchSource.makeTimerSource(queue: queue)
+        t.schedule(deadline: .now() + heartbeatTimeout, repeating: 5)
+        t.setEventHandler { [weak self] in self?.checkHeartbeat() }
+        t.resume()
+        heartbeatTimer = t
+    }
+
+    private func checkHeartbeat() {
+        let elapsed = Date().timeIntervalSince(lastHeartbeat)
+        if sharing && elapsed > heartbeatTimeout {
+            setSharing(false)
+        }
+        // If not sharing but the lastHeartbeat was recent (< heartbeatTimeout),
+        // we might have missed a start signal.  Don't auto-restart — start
+        // must be explicit.
+    }
+
+    private func setSharing(_ newSharing: Bool) {
+        guard sharing != newSharing else { return }
+        sharing = newSharing
+        if newSharing {
+            lastHeartbeat = Date()
+        }
+        let msg = "screenshare: \(newSharing ? "start" : "stop")"
+        FileHandle.standardError.write(Data((msg + "\n").utf8))
+        DispatchQueue.main.async { [weak self] in
+            self?.onSharingChanged?(newSharing)
+        }
+    }
+}
+
+// MARK: - State fusion
+
+struct BrowserTab: Equatable {
+    var tabID: Int
+    var windowID: Int
+    var url: String
+    var meetingState: String
+    var displaySharing: Bool
+    var userAudio: String
+    var userVideo: String
+    var playbackActive: Bool
+    var playbackKinds: [String]
+}
+
+private func jsonInt(_ value: Any?) -> Int? {
+    guard let number = value as? NSNumber,
+          CFGetTypeID(number) != CFBooleanGetTypeID() else { return nil }
+    let result = number.intValue
+    return result >= 0 ? result : nil
+}
+
+private func validWebURL(_ raw: String) -> Bool {
+    guard raw.count <= 8192, let scheme = URLComponents(string: raw)?.scheme?.lowercased() else { return false }
+    return scheme == "http" || scheme == "https"
+}
+
+private let meetingURLPrefixes = [
+    "https://meet.google.com/",
+    "https://telehealth.px.athena.io/",
+]
+
+private func parseBrowserTab(_ value: Any?) -> BrowserTab? {
+    guard let object = value as? [String: Any],
+          let tabID = jsonInt(object["tabId"]),
+          let windowID = jsonInt(object["windowId"]),
+          let url = object["url"] as? String,
+          validWebURL(url),
+          let meetingState = object["meetingState"] as? String,
+          ["idle", "lobby", "joined"].contains(meetingState),
+          let displaySharing = object["displaySharing"] as? Bool,
+          let userMedia = object["userMedia"] as? [String: Any],
+          let userAudio = userMedia["audio"] as? String,
+          let userVideo = userMedia["video"] as? String,
+          ["on", "muted", "off", "?"].contains(userAudio),
+          ["on", "muted", "off", "?"].contains(userVideo),
+          let playback = object["playback"] as? [String: Any],
+          let playbackActive = playback["active"] as? Bool,
+          let playbackKinds = playback["kinds"] as? [String],
+          playbackKinds.count <= 2,
+          playbackKinds.allSatisfy({ $0 == "audio" || $0 == "video" }) else { return nil }
+    if meetingState != "idle" && !meetingURLPrefixes.contains(where: url.hasPrefix) { return nil }
+    return BrowserTab(
+        tabID: tabID,
+        windowID: windowID,
+        url: url,
+        meetingState: meetingState,
+        displaySharing: displaySharing,
+        userAudio: userAudio,
+        userVideo: userVideo,
+        playbackActive: playbackActive,
+        playbackKinds: Array(Set(playbackKinds)).sorted()
+    )
+}
+
+struct Presence: Codable, Equatable {
+    var micActive = false
+    var micOwners: [String] = []
+    var cameraActive = false
+    var inMeeting = false
+    var meetingState = "idle"
+    var sharing = false
+    var sharingSource = "none"
+    var browserTabSharing = false
+    var osCaptureSharing = false
+    var meetingApp = ""
+    var meetingURL = ""
+    var meetingTitle = ""
+    var meetingTargetId = ""
+    var meetingTabId: Int?
+    var meetingWindowId: Int?
+    var inAppMic = "?"
+    var inAppCamera = "?"
+    var playbackActive = false
+    var playbackURL = ""
+    var playbackKind = ""
+    var playbackTabId: Int?
+    var playbackWindowId: Int?
+}
+
+final class PresenceEngine {
+    private(set) var presence = Presence()
+    var onEvent: ((_ event: String, _ presence: Presence) -> Void)?
+
+    private var browserTabs: [Int: BrowserTab] = [:]
+    private var browserOrder: [Int] = []
+    private var nativeMeetingAppBundle = ""
+    private var replaydSharing = false
+    private let nativeMeetingApps: [(appBundle: String, ownerBundles: Set<String>)] = [
+        ("com.tinyspeck.slackmacgap", ["com.tinyspeck.slackmacgap", "com.tinyspeck.slackmacgap.helper"]),
+        ("us.zoom.xos", ["us.zoom.xos"]),
+    ]
+
+    func applyCapture(_ capture: CaptureState) {
+        var next = presence
+        next.micActive = capture.micActive
+        next.micOwners = capture.micOwners.map(\.bundleID)
+        next.cameraActive = capture.cameraActive
+        nativeMeetingAppBundle = nativeMeetingApp(for: capture.micOwners)
+        reconcile(&next)
+        commit(next)
+    }
+
+    func applyScreenshare(_ sharing: Bool) {
+        guard replaydSharing != sharing else { return }
+        replaydSharing = sharing
+        var next = presence
+        reconcile(&next)
+        commit(next)
+    }
+
+    func resetBrowser() {
+        guard !browserTabs.isEmpty else { return }
+        browserTabs.removeAll()
+        browserOrder.removeAll()
+        var next = presence
+        reconcile(&next)
+        commit(next)
+    }
+
+    func replaceBrowserTabs(_ tabs: [BrowserTab]) {
+        let replacement = Dictionary(uniqueKeysWithValues: tabs.map { ($0.tabID, $0) })
+        let order = tabs.map(\.tabID)
+        guard replacement != browserTabs || order != browserOrder else { return }
+        browserTabs = replacement
+        browserOrder = order
+        var next = presence
+        reconcile(&next)
+        commit(next)
+    }
+
+    func applyBrowserTab(_ tab: BrowserTab) {
+        let changed = browserTabs[tab.tabID] != tab
+        browserTabs[tab.tabID] = tab
+        browserOrder.removeAll { $0 == tab.tabID }
+        browserOrder.append(tab.tabID)
+        guard changed else { return }
+        var next = presence
+        reconcile(&next)
+        commit(next)
+    }
+
+    func removeBrowserTab(_ tabID: Int) {
+        guard browserTabs.removeValue(forKey: tabID) != nil else { return }
+        browserOrder.removeAll { $0 == tabID }
+        var next = presence
+        reconcile(&next)
+        commit(next)
+    }
+
+    func focusTarget(_ target: String) -> BrowserTab? {
+        switch target {
+        case "meeting": return selectedMeetingTab()
+        case "playback": return orderedTabs().first(where: \.playbackActive)
+        default: return nil
+        }
+    }
+
+    private func orderedTabs() -> [BrowserTab] {
+        browserOrder.reversed().compactMap { browserTabs[$0] }
+    }
+
+    private func selectedMeetingTab() -> BrowserTab? {
+        let tabs = orderedTabs()
+        return tabs.first { $0.meetingState == "joined" }
+            ?? tabs.first { $0.meetingState == "lobby" }
+    }
+
+    private func reconcile(_ next: inout Presence) {
+        let meetingTab = selectedMeetingTab()
+        let nativeActive = !nativeMeetingAppBundle.isEmpty
+        let browserSharing = browserTabs.values.contains(where: \.displaySharing)
+        let playbackTab = orderedTabs().first(where: \.playbackActive)
+
+        next.browserTabSharing = browserSharing
+        next.osCaptureSharing = replaydSharing
+        next.sharing = browserSharing || replaydSharing
+        next.sharingSource = browserSharing && replaydSharing ? "both" : browserSharing ? "browser-tab" : replaydSharing ? "os-capture" : "none"
+
+        if let meetingTab {
+            next.inMeeting = true
+            next.meetingState = meetingTab.meetingState
+            next.meetingApp = "net.imput.helium"
+            next.meetingURL = meetingTab.url
+            next.meetingTargetId = String(meetingTab.tabID)
+            next.meetingTabId = meetingTab.tabID
+            next.meetingWindowId = meetingTab.windowID
+            next.inAppMic = meetingTab.userAudio
+            next.inAppCamera = meetingTab.userVideo
+        } else if nativeActive {
+            next.inMeeting = true
+            next.meetingState = "joined"
+            next.meetingApp = nativeMeetingAppBundle
+            next.meetingURL = ""
+            next.meetingTargetId = ""
+            next.meetingTabId = nil
+            next.meetingWindowId = nil
+            next.inAppMic = "?"
+            next.inAppCamera = "?"
+        } else if next.cameraActive,
+                  let athena = orderedTabs().first(where: { $0.url.hasPrefix("https://telehealth.px.athena.io/") }) {
+            next.inMeeting = true
+            next.meetingState = "camera-active"
+            next.meetingApp = "net.imput.helium"
+            next.meetingURL = athena.url
+            next.meetingTargetId = String(athena.tabID)
+            next.meetingTabId = athena.tabID
+            next.meetingWindowId = athena.windowID
+            next.inAppMic = athena.userAudio
+            next.inAppCamera = athena.userVideo == "?" ? "on" : athena.userVideo
+        } else {
+            next.inMeeting = false
+            next.meetingState = "idle"
+            next.meetingApp = ""
+            next.meetingURL = ""
+            next.meetingTargetId = ""
+            next.meetingTabId = nil
+            next.meetingWindowId = nil
+            next.inAppMic = "?"
+            next.inAppCamera = "?"
+        }
+        next.meetingTitle = ""
+
+        next.playbackActive = playbackTab != nil
+        next.playbackURL = playbackTab?.url ?? ""
+        next.playbackKind = playbackTab?.playbackKinds.joined(separator: ",") ?? ""
+        next.playbackTabId = playbackTab?.tabID
+        next.playbackWindowId = playbackTab?.windowID
+    }
+
+    private func nativeMeetingApp(for owners: [MicOwner]) -> String {
+        for app in nativeMeetingApps where owners.contains(where: { app.ownerBundles.contains($0.bundleID) }) {
+            return app.appBundle
+        }
+        return ""
+    }
+
+    private func commit(_ next: Presence) {
+        let previous = presence
+        guard next != previous else { return }
+        presence = next
+        if next.micActive != previous.micActive { emit(next.micActive ? "mic.on" : "mic.off") }
+        if next.cameraActive != previous.cameraActive { emit(next.cameraActive ? "camera.on" : "camera.off") }
+        if next.inMeeting != previous.inMeeting {
+            emit(next.inMeeting ? (next.meetingState == "lobby" ? "meeting.lobby" : "meeting.joined") : "meeting.left")
+        } else if next.meetingState != previous.meetingState {
+            if next.meetingState == "lobby" { emit("meeting.lobby") }
+            if next.meetingState == "joined" || next.meetingState == "camera-active" { emit("meeting.joined") }
+        }
+        if next.sharing != previous.sharing { emit(next.sharing ? "screenshare.start" : "screenshare.stop") }
+        if next.playbackActive != previous.playbackActive { emit(next.playbackActive ? "playback.start" : "playback.stop") }
+        emit("state.changed")
+    }
+
+    private func emit(_ event: String) { onEvent?(event, presence) }
+}
+
+func encodePresenceLine(_ event: String, _ presence: Presence) -> String {
+    var object: [String: Any] = [
+        "v": 2,
+        "t": ISO8601DateFormatter().string(from: Date()),
+        "event": event,
+        "micActive": presence.micActive,
+        "micOwners": presence.micOwners,
+        "cameraActive": presence.cameraActive,
+        "inMeeting": presence.inMeeting,
+        "meetingState": presence.meetingState,
+        "sharing": presence.sharing,
+        "sharingSource": presence.sharingSource,
+        "browserTabSharing": presence.browserTabSharing,
+        "osCaptureSharing": presence.osCaptureSharing,
+        "meetingApp": presence.meetingApp,
+        "meetingURL": presence.meetingURL,
+        "meetingTitle": presence.meetingTitle,
+        "meetingTargetId": presence.meetingTargetId,
+        "inAppMic": presence.inAppMic,
+        "inAppCamera": presence.inAppCamera,
+        "playbackActive": presence.playbackActive,
+        "playbackURL": presence.playbackURL,
+        "playbackKind": presence.playbackKind,
+    ]
+    if let value = presence.meetingTabId { object["meetingTabId"] = value }
+    if let value = presence.meetingWindowId { object["meetingWindowId"] = value }
+    if let value = presence.playbackTabId { object["playbackTabId"] = value }
+    if let value = presence.playbackWindowId { object["playbackWindowId"] = value }
+    guard let data = try? JSONSerialization.data(withJSONObject: object),
+          let line = String(data: data, encoding: .utf8) else { return "{}\n" }
+    return line + "\n"
+}
+
+private func jsonLine(_ object: [String: Any]) -> String {
+    guard let data = try? JSONSerialization.data(withJSONObject: object),
+          let line = String(data: data, encoding: .utf8) else { return #"{"ok":false}"# }
+    return line
+}
+
+// MARK: - Main
+
+var socketPath = NSString(string: "~/.local/state/avwatchd/sock").expandingTildeInPath
+let arguments = Array(CommandLine.arguments.dropFirst())
+if let origin = arguments.first, origin.hasPrefix("chrome-extension://"), origin != nativeExtensionOrigin {
+    FileHandle.standardError.write(Data("avwatchd: rejected native origin\n".utf8))
+    exit(1)
+}
+if let socketIndex = arguments.firstIndex(of: "--socket"), arguments.indices.contains(socketIndex + 1) {
+    socketPath = NSString(string: arguments[socketIndex + 1]).expandingTildeInPath
+}
+signal(SIGPIPE, SIG_IGN)
+let nativeMode = arguments.contains("--native-host") || arguments.first == nativeExtensionOrigin
+if nativeMode {
+    NativeHostBridge(socketPath: socketPath).start()
+}
+if arguments.contains("--snapshot") {
+    let capture = CaptureMonitor.snapshot()
+    var presence = Presence()
+    presence.micActive = capture.micActive
+    presence.micOwners = capture.micOwners.map(\.bundleID)
+    presence.cameraActive = capture.cameraActive
+    print(encodePresenceLine("snapshot", presence), terminator: "")
+    exit(0)
+}
+
+func log(_ message: String) {
+    FileHandle.standardError.write(Data((message + "\n").utf8))
+}
+
+let engine = PresenceEngine()
+let capture = CaptureMonitor()
+let screenshare = ScreenshareMonitor()
+let server = SocketServer(path: socketPath)
+var nativeSessions: [Int32: String] = [:]
+
+engine.onEvent = { event, presence in
+    server.broadcast(encodePresenceLine(event, presence))
+}
+capture.onChange = { engine.applyCapture($0) }
+screenshare.onSharingChanged = { engine.applyScreenshare($0) }
+
+func queueBrowserFocus(_ target: String) -> Bool {
+    guard let tab = engine.focusTarget(target), !nativeSessions.isEmpty else { return false }
+    let requestID = UUID().uuidString
+    for (client, nonce) in nativeSessions {
+        server.send(jsonLine([
+            "v": 1,
+            "event": "browser.command",
+            "type": "focus",
+            "nonce": nonce,
+            "requestId": requestID,
+            "target": target,
+            "tabId": tab.tabID,
+            "windowId": tab.windowID,
+        ]), to: client)
+    }
+    return true
+}
+
+func applyBrowserCommand(_ object: [String: Any], client: Int32, session: String) -> Bool {
+    guard object["nonce"] as? String == session, let type = object["type"] as? String else { return false }
+    switch type {
+    case "reset":
+        engine.resetBrowser()
+    case "snapshot":
+        guard let values = object["tabs"] as? [Any], values.count <= 512 else { return false }
+        let tabs = values.compactMap(parseBrowserTab)
+        guard tabs.count == values.count, Set(tabs.map(\.tabID)).count == tabs.count else { return false }
+        engine.replaceBrowserTabs(tabs)
+    case "event":
+        guard let tab = parseBrowserTab(object["tab"]) else { return false }
+        engine.applyBrowserTab(tab)
+    case "tab-reset", "tab-removed":
+        guard let tabID = jsonInt(object["tabId"]) else { return false }
+        engine.removeBrowserTab(tabID)
+    case "focus-result":
+        guard let requestID = object["requestId"] as? String,
+              !requestID.isEmpty, requestID.count <= 128,
+              object["ok"] is Bool else { return false }
+    default:
+        return false
+    }
+    return true
+}
+
+server.onCommand = { client, command, reply in
+    DispatchQueue.main.async {
+        guard let data = command.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let name = object["cmd"] as? String else {
+            reply(#"{"ok":false,"error":"bad command"}"#)
+            return
+        }
+        switch name {
+        case "get":
+            reply(encodePresenceLine("get", engine.presence).trimmingCharacters(in: .newlines))
+        case "native-register":
+            guard object["v"] as? Int == 1,
+                  object["extensionId"] as? String == nativeExtensionID,
+                  let session = object["session"] as? String,
+                  UUID(uuidString: session) != nil else {
+                reply(#"{"ok":false,"error":"invalid native registration"}"#)
+                return
+            }
+            if nativeSessions[client] != session {
+                engine.resetBrowser()
+                for oldClient in nativeSessions.keys where oldClient != client {
+                    server.disconnect(oldClient)
+                }
+                nativeSessions = [client: session]
+            }
+            reply(#"{"ok":true}"#)
+        case "browser":
+            guard let session = nativeSessions[client], applyBrowserCommand(object, client: client, session: session) else {
+                reply(#"{"ok":false,"error":"invalid browser message"}"#)
+                return
+            }
+            reply(#"{"ok":true}"#)
+        case "focus":
+            if ["com.tinyspeck.slackmacgap", "us.zoom.xos"].contains(engine.presence.meetingApp),
+               let app = NSRunningApplication.runningApplications(withBundleIdentifier: engine.presence.meetingApp).first {
+                app.activate(options: [])
+                reply(#"{"ok":true,"target":"native"}"#)
+            } else {
+                reply(jsonLine(["ok": queueBrowserFocus("meeting"), "target": "meeting"]))
+            }
+        case "focus-playback":
+            reply(jsonLine(["ok": queueBrowserFocus("playback"), "target": "playback"]))
+        default:
+            reply(#"{"ok":false,"error":"unknown command"}"#)
+        }
+    }
+}
+server.onDisconnect = { client in
+    if nativeSessions.removeValue(forKey: client) != nil, nativeSessions.isEmpty {
+        engine.resetBrowser()
+    }
+}
+
+do {
+    try server.start()
+    log("avwatchd: socket \(socketPath)")
+} catch {
+    log("avwatchd: socket error \(error)")
+    exit(1)
+}
+
+capture.start()
+screenshare.start()
+log("avwatchd: started")
+
+var signalSources: [DispatchSourceSignal] = []
+for signalNumber in [SIGTERM, SIGINT] {
+    signal(signalNumber, SIG_IGN)
+    let source = DispatchSource.makeSignalSource(signal: signalNumber, queue: .main)
+    source.setEventHandler {
+        log("avwatchd: shutting down")
+        screenshare.stop()
+        server.stop()
+        exit(0)
+    }
+    source.resume()
+    signalSources.append(source)
+}
+
+let refreshTimer = DispatchSource.makeTimerSource(queue: .main)
+refreshTimer.schedule(deadline: .now() + 5, repeating: 5)
+refreshTimer.setEventHandler {
+    capture.refresh()
+    server.broadcast(encodePresenceLine("heartbeat", engine.presence))
+}
+refreshTimer.resume()
+RunLoop.main.run()

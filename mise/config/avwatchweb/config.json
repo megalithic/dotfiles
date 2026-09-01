@@ -1,0 +1,14 @@
+{
+  "nativeHost": "com.megadots.avwatchd",
+  "meetingOrigins": [
+    "https://meet.google.com",
+    "https://telehealth.px.athena.io"
+  ],
+  "meetingUrlPrefixes": [
+    "https://meet.google.com/",
+    "https://telehealth.px.athena.io/"
+  ],
+  "playbackEnabled": true,
+  "mediaSessionMetadata": false,
+  "reconnectDelayMs": 1000
+}

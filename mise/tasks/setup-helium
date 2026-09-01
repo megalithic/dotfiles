@@ -25,6 +25,7 @@ set -eu
 APP="${HELIUM_APP:-/Applications/Helium.app}"
 BUNDLE_ID="net.imput.helium"
 SUPPORT_DIR="$HOME/Library/Application Support/$BUNDLE_ID"
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 
 [ -d "$APP" ] || {
   echo "setup-helium: $APP not installed; skipping"
@@ -109,4 +110,5 @@ else
   fi
 fi
 
-echo "setup-helium: done (restart Helium to pick up extensions/shortcuts)"
+"$DOTFILES_DIR/mise/tasks/setup-avwatchd"
+echo "setup-helium: done (restart Helium to load avwatchweb and apply extensions/shortcuts)"

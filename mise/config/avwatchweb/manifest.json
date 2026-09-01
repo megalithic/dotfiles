@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "avwatchweb",
+  "version": "1.0.0",
+  "description": "Private media state bridge for avwatchd.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvWo8WRW28723nEBmeXd8lxnZ4EpMoQRe3p/0Yxjr9KP0aI70oabzo6qQ9eSCycolH8wxpWCdlHBWzOSXvfDq/u9bNdDoxh/cjyzY/5SawqafKuB45sgP8Tsifzz6Kk6/4/juwNfYCCWpLYByo6UB6kqMovMagIKZumNwR+IPYwao0R1a7Na/aTaUt3GhXmKZDqafqg/Php8/KICQvHaDW/Q2qEVGfQM64TX/sYwmGzxlQRGfQbTUVOo+ymAAjer/e1JwLVjw/iwAcH4CCYjMqp40knCOhr9ROgMsyl1em6MEtEp9Z8vVdKF3hHTY0azTQOhlvLv6LSin45ANKXIBcwIDAQAB",
+  "background": { "service_worker": "service-worker.js" },
+  "content_scripts": [
+    { "matches": ["http://*/*", "https://*/*"], "js": ["main-hook.js"], "run_at": "document_start", "world": "MAIN" },
+    { "matches": ["http://*/*", "https://*/*"], "js": ["bridge.js"], "run_at": "document_start", "world": "ISOLATED" }
+  ],
+  "permissions": ["nativeMessaging", "tabs", "storage"],
+  "host_permissions": ["http://*/*", "https://*/*"]
+}

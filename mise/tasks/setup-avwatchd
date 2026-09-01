@@ -1,0 +1,81 @@
+#!/bin/sh
+# Install avwatchweb native messaging and retire the old media-presenced agent.
+set -eu
+
+[ "$(uname -s)" = Darwin ] || exit 0
+
+DOTFILES_DIR=${DOTFILES_DIR:-"$HOME/.dotfiles"}
+OLD_LABEL=dev.mise.com.megadots.media-presenced
+OLD_PLIST="$HOME/Library/LaunchAgents/$OLD_LABEL.plist"
+OLD_SOCKET="$HOME/.local/state/media-presence/sock"
+HOST_DIR="$HOME/Library/Application Support/net.imput.helium/NativeMessagingHosts"
+HOST_MANIFEST="$HOST_DIR/com.megadots.avwatchd.json"
+EXTENSION_ID=ogfaajbfamngmlmkppahdpkoliobdemk
+
+[ -x "$DOTFILES_DIR/bin/avwatchd" ] || {
+  echo "setup-avwatchd: missing executable $DOTFILES_DIR/bin/avwatchd" >&2
+  exit 1
+}
+[ -f "$DOTFILES_DIR/mise/config/avwatchweb/manifest.json" ] || {
+  echo "setup-avwatchd: missing avwatchweb extension" >&2
+  exit 1
+}
+
+if /bin/launchctl print "gui/$(id -u)/$OLD_LABEL" >/dev/null 2>&1; then
+  echo "setup-avwatchd: stopping $OLD_LABEL"
+  /bin/launchctl bootout "gui/$(id -u)/$OLD_LABEL" >/dev/null 2>&1 || true
+  attempts=0
+  while /bin/launchctl print "gui/$(id -u)/$OLD_LABEL" >/dev/null 2>&1; do
+    attempts=$((attempts + 1))
+    [ "$attempts" -lt 50 ] || {
+      echo "setup-avwatchd: old agent did not stop" >&2
+      exit 1
+    }
+    sleep 0.1
+  done
+fi
+
+for pid in $(pgrep -f "$DOTFILES_DIR/bin/media-presenced" 2>/dev/null || true); do
+  /bin/kill "$pid" 2>/dev/null || true
+done
+attempts=0
+while pgrep -f "$DOTFILES_DIR/bin/media-presenced" >/dev/null 2>&1; do
+  attempts=$((attempts + 1))
+  [ "$attempts" -lt 50 ] || {
+    echo "setup-avwatchd: old process did not stop" >&2
+    exit 1
+  }
+  sleep 0.1
+done
+[ ! -e "$OLD_PLIST" ] || trash "$OLD_PLIST"
+
+# A force-killed interpreted daemon can leave its log-stream child orphaned.
+# Match only this monitor's replayd/ScreenCaptureKit command and only PPID 1.
+ps -axo pid=,ppid=,command= | while read -r pid ppid command; do
+  [ "$ppid" = 1 ] || continue
+  case "$command" in
+    *"/usr/bin/log stream"*replayd*screencapturekit*) /bin/kill "$pid" 2>/dev/null || true ;;
+  esac
+done
+
+if [ -e "$OLD_SOCKET" ] || [ -S "$OLD_SOCKET" ]; then
+  trash "$OLD_SOCKET"
+fi
+for old_log in "$HOME/.cache/media-presence-stdout.log" "$HOME/.cache/media-presence-stderr.log"; do
+  [ ! -e "$old_log" ] || trash "$old_log"
+done
+
+mkdir -p "$HOME/.local/state/avwatchd" "$HOST_DIR"
+cat >"$HOST_MANIFEST" <<EOF
+{
+  "name": "com.megadots.avwatchd",
+  "description": "avwatchweb bridge to avwatchd",
+  "path": "$DOTFILES_DIR/bin/avwatchd",
+  "type": "stdio",
+  "allowed_origins": ["chrome-extension://$EXTENSION_ID/"]
+}
+EOF
+chmod 600 "$HOST_MANIFEST"
+
+echo "setup-avwatchd: installed $HOST_MANIFEST"
+echo "setup-avwatchd: restart Helium to load avwatchweb"

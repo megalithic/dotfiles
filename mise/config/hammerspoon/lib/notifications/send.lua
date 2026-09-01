@@ -178,8 +178,8 @@ function M.checkAttention(context, source)
 
 	-- 3. Screen sharing: never render local HUDs while others can see the
 	-- screen; remote channels (phone/telegram) still apply per their own rules.
-	local mp = package.loaded["watchers.media-presence"]
-	if mp and mp.state and mp.state.sharing then
+	local av = package.loaded["watchers.avwatchd"]
+	if av and av.state and av.state.sharing then
 		return { state = "screen_sharing", shouldNotify = "subtle" }
 	end
 

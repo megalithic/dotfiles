@@ -11,7 +11,7 @@
 //     hot-plug, and when another app flips mute behind our back.
 //   - Menubar: white slashed mic when muted, white mic on red pill when hot.
 //     Menu picks the mode; Quit unmutes everything and exits.
-//   - Subscribes to media-presenced's socket (~/.local/state/media-presence/sock)
+//   - Subscribes to avwatchd's socket (~/.local/state/avwatchd/sock)
 //     when available: any inMeeting transition forces push-to-talk mode, so
 //     meetings never start with a hot mic. Reconnects every 5s; miccheck works
 //     standalone when the presence daemon is absent. Disable with --no-presence.
@@ -400,7 +400,7 @@ final class HotKey {
     }
 }
 
-// MARK: - SocketServer (unix-domain, line-delimited JSON; media-presenced pattern)
+// MARK: - SocketServer (unix-domain, line-delimited JSON; avwatchd pattern)
 
 final class SocketServer {
     private let path: String
@@ -501,10 +501,9 @@ final class SocketServer {
 
 // MARK: - PresenceClient
 //
-// Client for media-presenced's unix socket. Every broadcast line carries the
-// full presence object; we watch inMeeting transitions and force push-to-talk
-// so meetings never start with a hot mic (the job Hammerspoon's
-// watchers/media-presence.lua used to do via miccheck.setPTTMode). Music
+// Client for avwatchd's Unix socket. Every broadcast line carries the full
+// presence object; we watch inMeeting transitions and force push-to-talk so
+// meetings never start with a hot mic. Music
 // pause / DND stay in Hammerspoon. Reconnects with a 5s backoff.
 
 final class PresenceClient {
@@ -589,7 +588,7 @@ final class PresenceClient {
             fd = -1
             if !loggedWaiting {
                 loggedWaiting = true
-                log("presence: media-presenced socket unavailable at \(path); retrying every 5s")
+                log("presence: avwatchd socket unavailable at \(path); retrying every 5s")
             }
             scheduleReconnect()
             return
@@ -732,7 +731,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let index = args.firstIndex(of: "--presence-socket"), index + 1 < args.count {
             return args[index + 1]
         }
-        return NSHomeDirectory() + "/.local/state/media-presence/sock"
+        return NSHomeDirectory() + "/.local/state/avwatchd/sock"
     }()
 
     func applicationDidFinishLaunching(_ notification: Notification) {

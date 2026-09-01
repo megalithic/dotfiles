@@ -662,15 +662,14 @@ stderr_path = "~/Library/Logs/llama-cpp/stderr.log"
 # nicknisi/sessions indexes transcripts on demand through its CLI and MCP server.
 # No session-indexing launchd agent is needed.
 
-# media-presence: meeting/AV presence daemon (bin/media-presenced, single-file
-# swift script, no build step). Defaults match the nix agent's args
-# (--socket ~/.local/state/media-presence/sock --cdp-port 9223).
-[bootstrap.macos.launchd.agents."com.megadots.media-presenced"]
-program = "~/.dotfiles/bin/media-presenced"
+# avwatchd: native and browser AV state daemon. avwatchweb reaches it through
+# Chrome native messaging; consumers subscribe to ~/.local/state/avwatchd/sock.
+[bootstrap.macos.launchd.agents."com.megadots.avwatchd"]
+program = "~/.dotfiles/bin/avwatchd"
 run_at_load = true
 keep_alive = true
-stdout_path = "~/.cache/media-presence-stdout.log"
-stderr_path = "~/.cache/media-presence-stderr.log"
+stdout_path = "/dev/null"
+stderr_path = "~/Library/Logs/avwatchd.log"
 
 # notiwatchd: Notification Center watcher daemon (bin/notiwatchd.swift).
 # Watches the usernoted SQLite store, matches rules from
@@ -746,7 +745,7 @@ run = "killall Finder SystemUIServer Dock || true"
 # bootstrap apply/upgrade commands in `mise run up` do not run post-tools; up
 # calls the fnox task once in its explicit update sequence instead.
 [bootstrap.hooks.post-tools]
-run = ["mise run setup:kanata", "mise run fnox"]
+run = ["mise run setup:kanata", "mise run setup:avwatchd", "mise run fnox"]
 
 [bootstrap.user]
 login_shell = "/opt/homebrew/bin/fish"
@@ -831,6 +830,7 @@ step "Update mise plugins" mise plugins update --yes
 step "Upgrade mise tools" mise upgrade --bump --yes
 step "Apply packages" mise bootstrap packages apply --yes
 step "Apply dotfiles" mise --verbose bootstrap dotfiles apply --force --yes
+step "Set up avwatchd" mise run setup:avwatchd
 step "Apply launchd agents" mise bootstrap launchd apply --yes
 # Use top-level scoped bootstrap so pre-defaults/post-defaults hooks run.
 step "Apply macOS defaults" mise bootstrap --only macos-defaults --yes
@@ -932,6 +932,11 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/miccheck-build"
 alias = "notiwatchd:setup"
 description = "Compile notiwatchd.swift to ~/.dotfiles/bin/notiwatchd (Notification Center watcher daemon)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/config/notiwatchd/notiwatchd-build"
+
+[tasks."setup:avwatchd"]
+alias = "avwatchd:setup"
+description = "Install avwatchweb native messaging and retire media-presenced"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/setup-avwatchd"
 
 # Declarative Helium profile setup (External Extensions with baked
 # prodversion, NSUserKeyEquivalents, Sparkle kill switch, en-US dictionary).
