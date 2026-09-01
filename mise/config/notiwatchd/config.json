@@ -31,7 +31,7 @@
     {
       "name": "messages",
       "match": { "bundle_id": ["com.apple.mobilesms", "com.apple.ichat"] },
-      "urgency": "high",
+      "urgency": "normal",
       "actions": ["ntfy"]
     }
   ]
