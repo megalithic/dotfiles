@@ -493,15 +493,7 @@ func axFindNotification(_ element: AXUIElement, needles: [String], depth: Int = 
     return nil
 }
 
-func dismissOnScreen(_ event: Event) -> String {
-    guard AXIsProcessTrusted() else { return "ax-not-trusted" }
-    guard let ncApp = NSWorkspace.shared.runningApplications.first(where: {
-        $0.bundleIdentifier == "com.apple.notificationcenterui"
-    }) else { return "nc-not-running" }
-    let needles = [event.title, event.body].compactMap { $0 }.filter { !$0.isEmpty }
-    guard !needles.isEmpty else { return "no-title-or-body" }
-    let appElement = AXUIElementCreateApplication(ncApp.processIdentifier)
-    guard let target = axFindNotification(appElement, needles: needles) else { return "not-on-screen" }
+func axCloseNotification(_ target: AXUIElement) -> String {
     var actionNames: CFArray?
     guard AXUIElementCopyActionNames(target, &actionNames) == .success,
           let names = actionNames as? [String] else { return "no-actions" }
@@ -515,6 +507,34 @@ func dismissOnScreen(_ event: Event) -> String {
         }
     }
     return "no-close-action"
+}
+
+// Not fire-and-forget: retries the find→close→verify cycle until the banner
+// is confirmed gone or the deadline passes. Banners can render after the
+// usernoted commit (find race), so a single scan loses reposted BTM alerts.
+// Blocking is fine here — dismiss runs on the concurrent sinkQueue.
+func dismissOnScreen(_ event: Event) -> String {
+    guard AXIsProcessTrusted() else { return "ax-not-trusted" }
+    guard let ncApp = NSWorkspace.shared.runningApplications.first(where: {
+        $0.bundleIdentifier == "com.apple.notificationcenterui"
+    }) else { return "nc-not-running" }
+    let needles = [event.title, event.body].compactMap { $0 }.filter { !$0.isEmpty }
+    guard !needles.isEmpty else { return "no-title-or-body" }
+    let appElement = AXUIElementCreateApplication(ncApp.processIdentifier)
+    let deadline = Date().addingTimeInterval(15)
+    var lastResult = "not-on-screen"
+    while true {
+        if let target = axFindNotification(appElement, needles: needles) {
+            lastResult = axCloseNotification(target)
+            if lastResult == "ok" {
+                Thread.sleep(forTimeInterval: 0.5)
+                if axFindNotification(appElement, needles: needles) == nil { return "ok" }
+                lastResult = "still-on-screen"
+            }
+        }
+        if Date() >= deadline { return lastResult }
+        Thread.sleep(forTimeInterval: 2)
+    }
 }
 
 // MARK: - Sinks
