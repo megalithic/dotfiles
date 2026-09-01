@@ -50,7 +50,7 @@ The mise path owns the whole stack. `mise/config/mise/global_config.toml` instal
 
 The launchd agents run through wrapper scripts under `mise/tasks/` because mise expands `~` only in launchd `program`/`stdout_path`/`stderr_path`, never in `args`; the kanata-bar wrapper also resolves the versioned `http:kanata-bar` install path so `[tools]` version bumps need no agent edits. mise prefixes bootstrap launchd labels with `dev.mise.`, so the live agents are `dev.mise.org.kanata.daemon` and `dev.mise.com.kanata-bar.ui`.
 
-Both `mise/config/kanata/macbook.kbd` and `mise/config/kanata/macbook-disabled.kbd` are scoped to `"Apple Internal Keyboard / Trackpad"`; external Leeloo/ZMK state only selects which internal-keyboard profile is active.
+Both `mise/config/kanata/macbook.kbd` and `mise/config/kanata/macbook-disabled.kbd` are scoped to `"Apple Internal Keyboard / Trackpad"`; external Leeloo/ZMK state only selects which internal-keyboard profile is active. The normal `macbook.kbd` profile also has a complete disabled layer: double-tap Fn switches between base and disabled, while a single tap remains Fn.
 
 ## 1Password (GUI + CLI)
 

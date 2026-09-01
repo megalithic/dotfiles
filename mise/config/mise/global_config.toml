@@ -557,6 +557,10 @@ PMPrintingExpandedStateForPrint2 = true
 "com.apple.swipescrolldirection" = false
 "com.apple.trackpad.scaling" = 3.0
 
+[bootstrap.macos.defaults."com.apple.HIToolbox"]
+# Disable standalone Globe/Fn action; held key remains Fn modifier.
+AppleFnUsageType = 0
+
 [bootstrap.macos.defaults."com.apple.finder"]
 AppleShowAllExtensions = true
 AppleShowAllFiles = true
@@ -828,7 +832,8 @@ step "Upgrade mise tools" mise upgrade --bump --yes
 step "Apply packages" mise bootstrap packages apply --yes
 step "Apply dotfiles" mise --verbose bootstrap dotfiles apply --force --yes
 step "Apply launchd agents" mise bootstrap launchd apply --yes
-step "Apply macOS defaults" mise bootstrap macos-defaults apply --yes
+# Use top-level scoped bootstrap so pre-defaults/post-defaults hooks run.
+step "Apply macOS defaults" mise bootstrap --only macos-defaults --yes
 step "Upgrade packages" mise bootstrap packages upgrade --yes
 step "Sync fnox" mise run fnox
 step "Update Pi" mise run pi:update

@@ -9,6 +9,7 @@
 ;; - Left Control → F19 (for Hammerspoon hyper key)
 ;; - Right Command → F19 (for Hammerspoon hyper key)
 ;; - Ctrl+Backspace → Forward Delete (via defoverrides)
+;; - Double-tap Fn toggles the internal keyboard disabled/enabled
 
 (defcfg
   concurrent-tap-hold yes
@@ -34,9 +35,13 @@
 ;; Source keys - what we're remapping
 ;; ────────────────────────────────────────────────────────────────────────────
 (defsrc
-  caps lctl rmet spc bspc
-  a    s    d    f    g    h    j    k    l    ;
-  u    i    o    w    b    0    4    p    \
+  esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  fn   lctl lalt lmet           spc            rmet ralt
+  left down up   rght
 )
 
 ;; ────────────────────────────────────────────────────────────────────────────
@@ -66,6 +71,10 @@
 ;; Aliases
 ;; ────────────────────────────────────────────────────────────────────────────
 (defalias
+  ;; Fn: tap = Fn, double-tap = disable/enable internal keyboard
+  to-disabled (tap-dance 500 (fn (layer-switch disabled)))
+  to-enabled (tap-dance 500 (fn (layer-switch base)))
+
   ;; Caps lock: tap = escape, hold = control
   escctrl (tap-hold $tap-time 225 esc lctl)
 
@@ -98,9 +107,26 @@
 ;; Base layer
 ;; ────────────────────────────────────────────────────────────────────────────
 (deflayer base
-  @escctrl f19 f19 spc bspc
-  @a   @s   @d   @nav g    h    j    k    l    ;
-  u    i    o    w    b    0    4    p    \
+  _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  @escctrl @a @s @d  @nav _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _
+  @to-disabled f19 _ _    _              f19  _
+  _    _    _    _
+)
+
+;; ────────────────────────────────────────────────────────────────────────────
+;; Disabled layer - blocks all internal keys except Fn toggle
+;; ────────────────────────────────────────────────────────────────────────────
+(deflayer disabled
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+  @to-enabled XX XX XX    XX             XX   XX
+  XX   XX   XX   XX
 )
 
 ;; ────────────────────────────────────────────────────────────────────────────
@@ -130,7 +156,11 @@
 ;;   p = next track (double-tap = previous track)
 ;;   \ = play/pause
 (deflayer nav
-  _    _    _    _    _
-  _    _    _    _    _    left down  up   rght _
-  mute vold volu A-rght A-left M-left M-rght @navp pp
+  _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    M-rght _  _    _    _    _    M-left _    _    _
+  _    _    A-rght _  _    _    _    mute vold volu @navp _    _    pp
+  _    _    _    _    _    _    left down up   rght _    _    _
+  _    _    _    _    _    A-left _   _    _    _    _    _
+  _    _    _    _           _              _    _
+  _    _    _    _
 )

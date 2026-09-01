@@ -71,7 +71,10 @@ bootstrap use the standalone binary even when Nix or Homebrew also provides
 fail fast instead of carrying preview branches. It lets `mise bootstrap` run
 `[tasks.bootstrap]`; the script only handles shell setup and lockfile refresh
 afterward. Keep ordered first-run tasks in `mise/config/mise/global_config.toml`,
-not duplicated in shell.
+not duplicated in shell. macOS defaults set `AppleFnUsageType = 0`, so a
+standalone Globe/Fn press does nothing while the held key remains the Fn modifier.
+The `up` task applies that phase with top-level `mise bootstrap --only
+macos-defaults`; the direct defaults subcommand bypasses `post-defaults` hooks.
 
 ## Host-specific mise config
 
