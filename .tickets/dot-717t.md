@@ -61,3 +61,11 @@ Validated Helium CDP startup and native Slack mic-owner detection. Subsequent te
 **2026-09-01T18:00Z**
 
 Re-scoped ticket around `avwatchd`, local Helium extension, native messaging, event-driven consumers, direct tab focus, and CDP removal. Browser-tab sharing cannot be observed through `replayd`, ScreenCaptureKit stream inventory, or Control Center. A bounded browser-chrome AX probe was fast but cannot provide reliable media state and is excluded from runtime design.
+
+**2026-09-01T18:52:34Z**
+
+2026-09-01 implementation: renamed daemon/socket/LaunchAgent to avwatchd; added avwatchweb MV3 extension, generated native-host setup, framed --native-host bridge, browser state fusion/direct focus, event-driven Hammerspoon subscriber, miccheck migration, stale-agent/socket/log-child cleanup, protocol v2 sharing-source/playback fields, and CDP removal. Automated Swift/JS/JSON/shell checks and avwatchweb smoke pass. Live-validated old-agent migration, daemon/miccheck/Hammerspoon/bridge/Helium restarts, extension load with expected ID, heartbeat subscriber state, one replayd child after restart, and browser playback play/pause plus exact focus. Manual live Meet join/leave and interactive getDisplayMedia tab-share start/stop remain; no ScreenCaptureKit/AX/CGWindow APIs were added, so no new Screen Recording permission path exists.
+
+**2026-09-01T19:01:16Z**
+
+2026-09-01 final validation: reviewer issues fixed (SIGPIPE/slow-client bounds, replayd chunk buffering, private socket permissions, single native session, media-removal playback cleanup). Live-validated Hammerspoon 15s stale expiry/reconnect and playback cleanup when a playing element is removed. Playback observation on all HTTP(S) tabs is intentional and configurable with playbackEnabled; only active state, kind, tab/window IDs, and URL leave the extension.

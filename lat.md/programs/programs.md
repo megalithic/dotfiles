@@ -7,7 +7,7 @@ Per-program deep dives for the tools intricate enough to warrant their own file,
 - [[helium]] — signed + notarized private-repo releases (Widevine baked in), requireFile prefetch, 1Password trust checker.
 - [[hammerspoon]] — shade-next panel, `wm.lua` window management, and the `bin/hs-reload` rule.
 - [[ghostty]] — module-vs-raw-config split and bell-driven Pi notifications.
-- [[media-presence]] — Swift daemon detecting mic/camera/Meet presence, served to Hammerspoon over a Unix socket.
+- [[avwatchd]] — Swift daemon fusing native AV, avwatchweb meeting/share/playback, and direct focus over a Unix socket.
 - [[miccheck]] — compiled Swift menubar push-to-talk/push-to-mute app (cmd+opt), controlled by Hammerspoon over a Unix socket.
 - [[notiwatchd]] — compiled Swift daemon watching Notification Center deliveries (usernoted DB), rule-routing to ntfy/exec/webhook sinks with an NDJSON socket.
 - [[appbak]] — bash CLI for app-data discovery and selective backup with verify-before-prune retention and a JSON manifest.

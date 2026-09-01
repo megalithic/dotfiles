@@ -66,7 +66,7 @@ App and window watchers run layout rules on launch and window creation (not `mai
 
 The old `miccheck.lua` module is gone; push-to-talk/push-to-mute now lives in the standalone [[miccheck]] menubar app, and Hammerspoon only sends it mode commands.
 
-`mise/config/hammerspoon/lib/micctl.lua` is the socket client (`setPTTMode`, `toggleMode`); `watchers/camera.lua`, `watchers/media-presence.lua`, and `contexts/co.detail.mac.lua` call it where they previously required the Lua module. The eventtap, menubar icon, hotkeys, and mute logic all moved into the compiled Swift app.
+`mise/config/hammerspoon/lib/micctl.lua` is the one-shot socket client (`setPTTMode`, `toggleMode`) for manual/context controls such as `contexts/co.detail.mac.lua`. [[avwatchd#Consumers|Meeting enforcement]] runs through miccheckd's own persistent avwatchd subscription. Eventtap, menubar icon, hotkeys, and mute logic live in the compiled Swift app.
 
 ## Audio device watcher
 

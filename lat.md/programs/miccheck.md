@@ -30,9 +30,9 @@ The effective state is the saved mode/chord state OR any temporary live lease. L
 
 ## Presence integration
 
-miccheckd subscribes directly to [[media-presence#Socket protocol|media-presenced's socket]]: any `inMeeting` transition forces push-to-talk mode so meetings never start with a hot mic.
+miccheckd subscribes directly to [[avwatchd#Socket protocol|avwatchd's socket]]: any `inMeeting` transition forces push-to-talk mode so meetings never start with a hot mic.
 
-This moved PTT enforcement out of Hammerspoon's `watchers/media-presence.lua`, which now keeps only music pause and DND. On launch, miccheck first does a synchronous `{"cmd":"get"}` probe before its first `apply()`, so a restart during an already-live meeting cannot briefly restore saved push-to-mute hot-mic state. The client then subscribes normally, reconnects every 5s, and also forces push-to-talk on the first seeded snapshot when `inMeeting=true`; this covers miccheck/media-presenced reconnects while a meeting or Athena pre-join lobby is already open. An idle first snapshot is still ignored, so miccheck does not rewrite the user's mode outside meetings. `--presence-socket PATH` overrides the path, `--no-presence` disables the subscription. Hammerspoon interop is unchanged — both daemons stay controllable over their sockets (`lib/micctl.lua` for miccheck, `nc -w 1 -U` for media-presenced).
+On launch, miccheck first does a synchronous `{"cmd":"get"}` probe before its first `apply()`, so a restart during an active meeting cannot briefly restore saved push-to-mute mode. The client then subscribes, reconnects every five seconds, and forces push-to-talk on an active seeded snapshot. This covers miccheck or avwatchd restart while a meeting or Athena pre-join lobby is active. An idle first snapshot stays ignored, so miccheck does not rewrite mode outside meetings. `--presence-socket PATH` overrides `~/.local/state/avwatchd/sock`; `--no-presence` disables the subscription.
 
 ## Socket protocol
 
@@ -42,11 +42,11 @@ Commands: `{"cmd":"get"}` → `{"ok":true,"mode":...,"live":...,"leaseCount":...
 
 Live leases are connection-scoped. Clients keep the acquiring socket open; disconnecting releases every token owned by that connection. Tokens are non-empty and at most 128 UTF-8 bytes. Duplicate acquire/release calls from the owner are idempotent, multiple clients can hold distinct tokens, and attempts to reuse another live client's token fail. Acquire and release replies include effective `live` and `leaseCount` values. Commands are capped at 16 KiB; MicCheck drops clients that exceed the limit.
 
-Hammerspoon's one-shot client is `mise/config/hammerspoon/lib/micctl.lua` (`setPTTMode`, `toggleMode`) using the same `nc -w 1 -U` pattern as [[media-presence#Hammerspoon consumer]]; callers are `watchers/camera.lua`, `watchers/media-presence.lua`, and `contexts/co.detail.mac.lua`. Hammerspoon does not use live leases.
+Hammerspoon's one-shot client is `mise/config/hammerspoon/lib/micctl.lua` (`setPTTMode`, `toggleMode`). Callers include manual controls and `contexts/co.detail.mac.lua`; [[avwatchd#Consumers|avwatchd policy integration]] reaches miccheck through its persistent Swift subscriber. Hammerspoon does not use live leases.
 
 ## Build and packaging
 
-Unlike [[media-presence#Build and packaging|media-presenced]], miccheck is compiled: `bin/miccheck-build` runs `swiftc` on `bin/miccheck.swift` and installs a signed binary at `~/.local/bin/miccheckd`.
+Unlike [[avwatchd#Setup and migration|avwatchd]], miccheck is compiled: `bin/miccheck-build` runs `swiftc` on `bin/miccheck.swift` and installs a signed binary at `~/.local/bin/miccheckd`.
 
 Signing uses a Developer ID Application identity (auto-detected; override with `MICCHECK_CODESIGN_IDENTITY`) with the fixed identifier `com.megadots.miccheck` and hardened runtime. TCC pins grants to the designated requirement (identifier + cert + team), so Input Monitoring survives rebuilds. Without an identity the script falls back to ad-hoc signing, where every rebuild changes the code hash and the stale TCC row must be **removed** (not toggled) in System Settings before a fresh prompt can fire. The build script unsets nix `SDKROOT`/`DEVELOPER_DIR` and resolves the SDK via `/usr/bin/xcrun` because the nix apple-sdk mismatches the system Swift toolchain.
 

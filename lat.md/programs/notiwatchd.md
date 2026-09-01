@@ -36,10 +36,10 @@ It passes `-b <bundle-id> -S` to `bin/ntfy`. The bundle ID selects the HUD app i
 
 `routeNotification` uses the shared `C.notifier.urgencyDisplay` map, matching native redirects: high and critical notifications render centered with background dimming, and critical urgency keeps its configured phone route. `checkAttention` skips the local HUD in two additional cases:
 
-- `watchers.media-presence` reports an active screen share through its exported `M.state` snapshot.
+- [[avwatchd#Consumers|`watchers.avwatchd`]] reports an active screen share through its exported `M.state` snapshot.
 - The source app is frontmost and its focused window title matches the notification sender. A different conversation or window still receives the HUD.
 
-Display, idle, and tmux-pane checks still run through the same attention path. Remote channels retain their own routing rules when the local HUD is suppressed. Hammerspoon now loads `media-presence`; the obsolete Sequoia AX `notification` watcher is retired because Tahoe no longer exposes the subroles it matched.
+Display, idle, and tmux-pane checks still run through the same attention path. Remote channels retain their own routing rules when the local HUD is suppressed. Hammerspoon loads the persistent `avwatchd` subscriber; the obsolete Sequoia AX `notification` watcher is retired because Tahoe no longer exposes the subroles it matched.
 
 ### The dismiss action (Tahoe AX route)
 
