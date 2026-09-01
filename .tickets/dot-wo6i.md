@@ -115,3 +115,7 @@ Child tickets created in ~/.dotfiles:
 - dot-aq4a: Brave Nightly → Helium migration
 
 Dependencies configured. Ready for implementation.
+
+**2026-09-01T17:26:48Z**
+
+Pruned epic scope: deleted dot-myti, dot-4746, dot-uwt8, dot-v5xw, dot-ltdf, dot-aq4a (nix sync-module and Safari/GoSuki chain abandoned; no nix involvement wanted). Remaining children: dot-b2k7 (in progress), dot-1e3z (Syncthing, kept as future WOLFHALL transport home).

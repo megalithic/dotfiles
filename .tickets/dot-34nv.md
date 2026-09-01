@@ -1,6 +1,6 @@
 ---
 id: dot-34nv
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-09-01T13:46:12Z
@@ -34,3 +34,7 @@ Investigation 2026-09-01: host has no Docker, Podman, Tart, UTM CLI, or rcodesig
 ### 2026-09-01T14:48:25Z
 
 TCC recovery observation: toggling stale FDA/Accessibility entries off/on did not update the ad-hoc requirement. Removing both entries and re-adding ~/.dotfiles/bin/notiwatchd restored FDA; launchd started at 14:40:44Z and resumed reading notifications. Accessibility was re-added but still needs a live dismiss event to verify.
+
+**2026-09-01T19:50:35Z**
+
+Resolved with the real Developer ID Application identity (3ZJ3F5RFBZ) instead of a new self-signed cert. Exported from megabookpro via Keychain Access GUI (CLI security export of private keys hard-fails over SSH: SecKeychainItemExport interaction-not-allowed even after unlock + set-key-partition-list), imported to workbookpro login keychain plus Apple DeveloperIDG2CA intermediate. Backup: .p12 + passphrase in 1Password Crypt > apple-developer > Code Signing (no secret values in repo). notiwatchd-build already preferred Developer ID and keeps documented ad-hoc fallback. New bin/signcode generalizes the flow for future binaries. AC validation: rebuilt + kickstarted, FDA read resumed (high-water anchor), Accessibility confirmed by live dismiss of two BTM alerts with verified ok via new retry/verify loop; TCC.db shows both services auth_value=2 pinned to the stable requirement. Sandbox evaluation: unnecessary once a durable identity existed in the keychain; decision recorded in lieu of VM/rcodesign work.

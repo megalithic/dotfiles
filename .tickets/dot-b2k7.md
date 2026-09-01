@@ -2,7 +2,7 @@
 id: dot-b2k7
 status: in_progress
 deps: []
-links: [dot-aq4a]
+links: []
 created: 2026-08-31T16:06:27Z
 type: task
 priority: 1
@@ -15,7 +15,7 @@ tags: [ready-for-development, browser, helium, migration]
 
 Merge browsing data from megabookpro's Helium profile into workbookpro's existing Helium profile. Preserve bookmarks, history, and open tabs from both machines. Do not replace workbookpro's profile or copy machine-bound secrets.
 
-This task is a one-time migration under `dot-wo6i`. It complements `dot-aq4a`, which tracks the earlier Brave Nightly-to-Helium migration.
+This task is a one-time migration under `dot-wo6i`. The earlier Brave Nightly-to-Helium migration ticket (dot-aq4a) was deleted.
 
 ## Current inventory
 
