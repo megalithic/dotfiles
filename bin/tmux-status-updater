@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Runs as the single invisible (zero-output) #() job in status-right.
+# Computes segment values and stores them in tmux @status_* options so the
+# visible segments are pure #{@...} format reads that can never blank when
+# tmux force-restarts #() jobs at each status-interval tick.
+#
+# Options are only overwritten on success, so a failed probe keeps the
+# last-good value on screen.
+
+args=()
+add() { args+=(set -g "@$1" "$2" \;); }
+
+# battery — one pmset parse, honors @batt_* options from plugins.tmux.conf
+batt_out=$(pmset -g batt 2>/dev/null)
+if [[ -n "$batt_out" ]]; then
+  status=$(awk -F '; *' 'NR==2 {print $2}' <<<"$batt_out")
+  pct=$(grep -o "[0-9]\{1,3\}%" <<<"$batt_out")
+  batt_opts=$(tmux show -g 2>/dev/null | grep '^@batt_')
+  opt() { sed -n "s/^@batt_$1 //p" <<<"$batt_opts" | tr -d '"'; }
+  case "$status" in
+    discharging)
+      icon=$(opt icon_status_discharging); fg=$(opt color_status_primary_discharging) ;;
+    charging*|finishing*)
+      icon=$(opt icon_status_charging); fg=$(opt color_status_primary_charging) ;;
+    charged*|full*|*not\ charging*|*AC\ attached*)
+      icon=$(opt icon_status_charged); fg=$(opt color_status_primary_charged) ;;
+    *)
+      icon=$(opt icon_status_attached); fg=$(opt color_status_primary_attached) ;;
+  esac
+  if [[ -n "$pct" ]]; then
+    add status_battery "$pct ${icon}"
+    add status_battery_fg "${fg:-colour250}"
+  fi
+fi
+
+# dnd — empty is meaningful (segment hidden), so always set
+dnd_txt=""
+[[ "$(dnd status 2>/dev/null)" == "on" ]] && dnd_txt="󰤄 DND"
+add status_dnd "$dnd_txt"
+
+# utc clock
+utc=$(TZ=UTC date +%H:%M)
+[[ -n "$utc" ]] && add status_utc "$utc"
+
+(( ${#args[@]} )) && tmux "${args[@]:0:${#args[@]}-1}" >/dev/null 2>&1
+exit 0
