@@ -9,50 +9,60 @@ priority: 2
 assignee: Seth Messer
 tags: [ready-for-development]
 ---
-# Build heimdall bridge extension exposing plannotator browser sessions as agent tools
+# Build Heimdall bridge from agent tools to extension slash-command behavior
 
-Problem: pi agents cannot invoke slash commands. Upstream pi (earendil-works/pi) intentionally blocks it: sendUserMessage("/cmd") from a tool sends plain text to the model instead of dispatching the command (issue #4754, closed 'on purpose'); ExtensionAPI.executeCommand feature request closed not_planned (#6010); the official reload-runtime.ts example is known-broken (#6574). No published pi-package extension bridges commands to tools (~250 npm packages scanned). Result: when told 'send this doc to plannotator', agents shell out to the plannotator CLI binary and build broken watcher/sleep loops that time out.
+Pi agents cannot invoke slash commands. Upstream Pi intentionally treats `sendUserMessage("/cmd")` as model input instead of command dispatch (earendil-works/pi #4754, closed "on purpose"); the `ExtensionAPI.executeCommand` request closed as not planned (#6010), and the official queued-command workaround is known broken (#6574). No published Pi package found during research exposed a generic command-to-tool bridge.
 
-Key research finding: plannotator does not need command dispatch at all. @plannotator/pi-extension ships TS source with exported, ctx-driven session functions in plannotator-browser.ts, and its existing plannotator_submit_plan tool proves browser sessions open fine from a plain agent tool (ExtensionContext is sufficient; only ctx.reload()/newSession() need command context, which plannotator flows never use).
+Heimdall works around that boundary. It is an extension-agnostic bridge that gives agents access to extension slash-command behavior by loading target extensions' exported factories, capturing selected `registerCommand` handlers, and invoking those exact handlers from agent tools. Heimdall is not a Plannotator integration with a reusable name. Plannotator is the first adapter and proof of the adapter contract.
 
-Verified exports in ~/.pi/agent/npm/node_modules/@plannotator/pi-extension/plannotator-browser.ts:
+Each adapter must preserve its target slash command's lifecycle, configuration, prompts, result routing, flags, session handling, and errors. Adapters must not reimplement command internals when the registered handler can be reused. A command that starts background work and returns immediately must remain non-blocking through Heimdall.
 
-- openCodeReview(ctx, options: CodeReviewOptions = {}) -> Promise<CodeReviewDecision>  (awaits waitForDecision internally; options: prUrl, vcsType, useLocal)
-- startCodeReviewBrowserSession(ctx, options) -> BrowserDecisionSession<CodeReviewDecision>
-- openMarkdownAnnotation(ctx, filePath, markdown, mode: AnnotateMode, folderPath?, sourceInfo?, sourceConverted?, gate?) -> Promise<{feedback, exit?, approved?, ...}>  (caller reads the markdown file content itself)
-- openLastMessageAnnotation(ctx, lastText, gate?, recentMessages?) -> same decision shape
-- AnnotateMode = 'annotate' | 'annotate-folder' | 'annotate-last' | 'annotate-app'
-- Arg parsing for review lives in ./generated/review-args.ts (parseReviewArgs) if we want CLI-style parity, but tool params should be a typed schema instead.
-- Sessions throw if !ctx.hasUI or built HTML missing — surface as tool error text, do not crash.
+## Research and design
 
-Build: new extension dir mise/config/pi-coding-agent/agent/extensions/heimdall/ (symlink into ~/.pi/agent/extensions/ like siblings — see existing symlink pattern in that dir, e.g. tell.ts, bridge.ts).
+`@plannotator/pi-extension` exports its default Pi extension factory from `index.ts`. That factory registers `/plannotator-review`, `/plannotator-annotate`, and `/plannotator-last`. Those handlers already own browser startup, remote URL guidance, URL/live-app/file/folder handling, configured prompts, annotation outcome classification, recent-message targeting, cross-session feedback fallback, stopped-session handling, and asynchronous `pi.sendUserMessage(..., { deliverAs: "followUp" })` delivery.
 
-Structure:
+Capturing and invoking those handlers gives stronger parity and less code than calling lower-level browser functions and copying handler logic. Heimdall loads the factory through a proxy `ExtensionAPI`:
 
-- heimdall/index.ts — extension entry: guarded dynamic import of @plannotator/pi-extension internals; if import fails (package missing/incompatible after version bump), register nothing or register tools that return a clear 'plannotator extension incompatible with heimdall' error; never crash session startup.
-- heimdall/lib.ts — shared glue for future adapters: error wrapping, decision->tool-result formatting (feedback text + approved flag in details), import guard helper.
-- heimdall/plannotator.ts — adapter registering agent tools:
-  1. plannotator_review: params {prUrl?: string, vcsType?: 'git'|'gitbutler', useLocal?: boolean}. Calls openCodeReview, awaits decision, returns feedback/annotations as tool result. Description must tell the model when to use it (current changes, commit range, PR URL, branch review).
-  2. plannotator_annotate: params {path: string (md/mdx file or folder)}. Reads file content, calls openMarkdownAnnotation with mode 'annotate' (or 'annotate-folder' for dirs), awaits decision, returns feedback as tool result.
-  3. plannotator_annotate_last: no params. Uses getLastAssistantMessageText export (re-exported from plannotator-browser.ts line 49) + openLastMessageAnnotation.
+- `registerCommand` captures command metadata and handlers.
+- Other registration and lifecycle methods are suppressed so Heimdall does not duplicate the extension's tools, flags, shortcuts, providers, or event hooks. All common event-listener APIs are suppressed; adapters can selectively forward only lifecycle hooks required by captured commands.
+- Runtime API calls made later by a captured handler delegate to Heimdall's real `ExtensionAPI`, including `sendUserMessage`, notifications, active tools, model state, and event emission.
+- Adapters can isolate and restore target-specific process-global state changed during factory initialization.
+- Required command names and the default factory export are validated before caching.
 
-Design decisions already made:
+## Implementation
 
-- Await the decision inside the tool call (blocking the turn) so user feedback returns directly as the tool result to the invoking agent — mirrors plannotator_submit_plan UX; no watcher/polling.
-- Thin adapter-per-target pattern, NOT declarative config — signatures differ too much across extensions. lib.ts is the only shared layer. Future targets = new adapter file.
-- Skills are out of scope: markdown, no functions; agent already invokes them natively.
+Path: `mise/config/pi-coding-agent/agent/extensions/heimdall/`, linked into `~/.pi/agent/extensions/` through the existing `symlink-each` mapping.
 
-Risks: adapter couples to plannotator internal exports (not a documented contract; package ships TS source). Import guard is the mitigation. Currently installed: @plannotator/pi-extension 0.27.9, pi 0.58.4.
+- `index.ts`: extension entry and adapter registration. Defines Heimdall as a generic command-behavior bridge and links to the Pi extension lat.md section.
+- `lib.ts`: guarded Pi-package import, extension-factory command capture, event/registration suppression, selective lifecycle forwarding, factory-state isolation, runtime delegation, required-command validation, and text-result helpers.
+- `plannotator.ts`: thin first adapter. It maps typed tool parameters to native command argument strings and invokes the captured handlers:
+  - `plannotator_review` -> `/plannotator-review`.
+  - `plannotator_annotate` -> `/plannotator-annotate`.
+  - `plannotator_annotate_last` -> `/plannotator-last`.
 
-Follow-up (separate, optional): upstream issue/PR to backnotprop/plannotator proposing first-class opt-in agent tools for review/annotate.
+The Plannotator adapter restores Plannotator's global current-session store after factory capture, then forwards only the first `session_start` and `session_shutdown` handlers which maintain background-feedback routing. It invokes commands through a context proxy that records native notifications while delegating them unchanged: error notifications become tool errors, and a tool reports `pending` only when Plannotator emitted an `opened` notification.
 
-## Acceptance Criteria
+The Plannotator tools expose common structured arguments and `rawArgs` escape hatches for exact or future command syntax. `/plannotator-annotate` mapping includes path/folder/URL/live-app targets and `--gate`, `--json`, `--render-html`, `--markdown`, `--no-jina`, `--app`, and `--static`. `/plannotator-last` includes `--gate`. `/plannotator-review` includes PR URL, Git/GitButler selection, and local-checkout behavior.
 
-1. New extension at mise/config/pi-coding-agent/agent/extensions/heimdall/ with index.ts, lib.ts, plannotator.ts; symlinked into ~/.pi/agent/extensions/ following the existing symlink pattern
-2. In a fresh pi session, tools plannotator_review, plannotator_annotate, plannotator_annotate_last appear in the tool list
-3. Agent calling plannotator_review with no params opens the code review browser UI for current changes; submitting feedback in the UI returns that feedback as the tool result (verify with a test prompt like 'open a plannotator review of my unstaged changes')
-4. Agent calling plannotator_annotate with a markdown file path opens the annotation UI; annotations come back as the tool result
-5. plannotator_review accepts prUrl and forwards it (PR mode)
-6. With @plannotator/pi-extension renamed/removed temporarily, pi session still starts cleanly and heimdall tools (if registered) return a clear incompatibility error instead of throwing
-7. Tool calls in a session without UI (pi -p / RPC without hasUI) return the plannotator 'unavailable in this session' error as tool result text, no crash
-8. lat.md/ updated if it documents pi extension layout; lat check passes if docs changed
+User extensions cannot resolve Pi-installed npm packages by bare specifier because normal Node walk-up resolution never reaches `~/.pi/agent/npm/node_modules`. Heimdall lazily imports target extension factories by absolute path under Pi's jiti loader. Missing packages, missing default exports, factory initialization failures, and missing required command registrations return clear tool errors instead of crashing Pi startup.
+
+## Risks
+
+Heimdall depends on target extension factories remaining callable and registering commands during factory initialization. Required-command validation detects incompatible registration changes. Plannotator adapter was developed against `@plannotator/pi-extension` 0.27.9 and Pi 0.58.4.
+
+A captured factory runs its initialization code through a registration-suppressing proxy. Future extensions with unavoidable initialization side effects need adapter-specific isolation, lifecycle forwarding, and review before addition. Typed argument serializers reject values their target parser cannot represent safely and direct callers to `rawArgs`.
+
+## Acceptance criteria
+
+1. `heimdall/index.ts`, `heimdall/lib.ts`, and `heimdall/plannotator.ts` load through `~/.pi/agent/extensions/heimdall/index.ts`.
+2. Heimdall core comments and docs define an extension-agnostic slash-command behavior bridge; Plannotator appears only as its first adapter.
+3. Heimdall captures required handlers from a target extension's exported default factory while suppressing duplicate registrations and lifecycle hooks.
+4. Missing packages, default factories, required commands, or `pi.events` support return clear bridge behavior without crashing Pi startup.
+5. A fresh or reloaded Pi session exposes `plannotator_review`, `plannotator_annotate`, and `plannotator_annotate_last`.
+6. Each Plannotator tool invokes the corresponding captured command handler and returns when that handler returns; it reports `pending` only after Plannotator emits an `opened` notification and surfaces native startup/validation errors instead of false success.
+7. Code-review feedback uses Plannotator's native configured prompts, denied suffix, remote-session guidance, stopped-session handling, and cross-session fallback.
+8. File/folder/URL/live-app annotation uses Plannotator's native target resolution, flags, conversion, outcome prompts, background feedback, and error behavior.
+9. Last-message annotation uses Plannotator's native gate flag, recent-message picker, selected-message targeting, anchoring, and cross-session fallback.
+10. Structured tool parameters produce parser-compatible native command arguments; unrepresentable quoted targets return a clear `rawArgs` instruction, and `rawArgs` passes exact strings for unsupported or future syntax.
+11. A fresh headless Pi run loads Heimdall and invokes a captured Plannotator command without extension-load or uncaught runtime errors.
+12. `lat.md/programs/pi-coding-agent.md` documents command capture, generic adapter contract, and Plannotator parity; Heimdall code links back to that section and `lat_check` passes.
