@@ -1,6 +1,6 @@
 # miccheck
 
-`bin/miccheck.swift` is a menubar push-to-talk / push-to-mute app (a local MicDrop-style tool) that replaced the Hammerspoon `miccheck.lua` module; Hammerspoon only sends it mode commands over a Unix socket.
+`lib/miccheck.swift` is a menubar push-to-talk / push-to-mute app (a local MicDrop-style tool) that replaced the Hammerspoon `miccheck.lua` module; Hammerspoon only sends it mode commands over a Unix socket.
 
 ## Keybinding behavior
 
@@ -46,8 +46,8 @@ Hammerspoon's one-shot client is `config/hammerspoon/lib/micctl.lua` (`setPTTMod
 
 ## Build and packaging
 
-Unlike [[avwatchd#Setup and migration|avwatchd]], miccheck is compiled: `bin/miccheck-build` runs `swiftc` on `bin/miccheck.swift` and installs a signed binary at `~/.local/bin/miccheckd`.
+All managed Swift daemon sources are flat under `lib/`. `lib/build-swift miccheck` compiles `lib/miccheck.swift` and atomically installs `~/.local/bin/miccheckd` only after strict signature verification.
 
-Signing uses a Developer ID Application identity (auto-detected; override with `MICCHECK_CODESIGN_IDENTITY`) with the fixed identifier `com.megadots.miccheck` and hardened runtime. TCC pins grants to the designated requirement (identifier + cert + team), so Input Monitoring survives rebuilds. Without an identity the script falls back to ad-hoc signing, where every rebuild changes the code hash and the stale TCC row must be **removed** (not toggled) in System Settings before a fresh prompt can fire. The build script unsets nix `SDKROOT`/`DEVELOPER_DIR` and resolves the SDK via `/usr/bin/xcrun` because the nix apple-sdk mismatches the system Swift toolchain.
+Signing requires a Developer ID Application identity for team `3ZJ3F5RFBZ` (override with `MICCHECK_CODESIGN_IDENTITY`) and verifies identifier `com.megadots.miccheck`, team, and hardened runtime. There is no ad-hoc fallback. TCC pins grants to the designated requirement (identifier + certificate + team), so Input Monitoring survives later rebuilds at the same path. The build resolves the system SDK through `/usr/bin/xcrun`.
 
-Mise owns the service through `config/mise/config.toml`: agent entry `com.megadots.miccheck` installs LaunchAgent `dev.mise.com.megadots.miccheck`, which runs `bin/miccheck-launchd` and exits with a helpful error when the binary is missing. Task `setup:miccheck` runs `bin/miccheck-build`. Home Manager no longer declares a miccheck LaunchAgent.
+Mise task `setup:miccheck` tracks `lib/build-swift` and `lib/miccheck.swift`, so unchanged sources skip compilation and restart. The mise LaunchAgent `dev.mise.com.megadots.miccheck` runs `~/.local/bin/miccheckd` directly. A changed successful build kickstarts a loaded agent unless `SKIP_RESTART=1`. During this migration the binary was rebuilt with `SKIP_RESTART=1`; the old Input Monitoring row must be removed manually before applying the direct LaunchAgent and testing cmd+opt.

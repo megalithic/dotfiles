@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# Build, Developer ID-sign, verify, and atomically install a managed Swift daemon.
+set -euo pipefail
+
+DOTFILES_DIR="${DOTFILES_DIR:-${DOTFILES:-$HOME/.dotfiles}}"
+PROGRAM="${1:-}"
+TEAM_ID="3ZJ3F5RFBZ"
+
+case "$PROGRAM" in
+  miccheck)
+    OUTPUT_NAME="miccheckd"
+    IDENTITY="${MICCHECK_CODESIGN_IDENTITY:-${CODESIGN_IDENTITY:-}}"
+    STALE_LINK_TARGET=""
+    ;;
+  notiwatchd)
+    OUTPUT_NAME="notiwatchd"
+    IDENTITY="${NOTIWATCHD_CODESIGN_IDENTITY:-${CODESIGN_IDENTITY:-}}"
+    STALE_LINK_TARGET="$DOTFILES_DIR/bin/notiwatchd"
+    ;;
+  avwatchd)
+    OUTPUT_NAME="avwatchd"
+    IDENTITY="${AVWATCHD_CODESIGN_IDENTITY:-${CODESIGN_IDENTITY:-}}"
+    STALE_LINK_TARGET="$DOTFILES_DIR/bin/avwatchd"
+    ;;
+  *)
+    echo "usage: $0 {miccheck|notiwatchd|avwatchd}" >&2
+    exit 1
+    ;;
+esac
+
+SRC="$DOTFILES_DIR/lib/$PROGRAM.swift"
+OUT="$HOME/.local/bin/$OUTPUT_NAME"
+IDENTIFIER="com.megadots.$PROGRAM"
+LABEL="dev.mise.$IDENTIFIER"
+
+[[ "$(uname -s)" == Darwin ]] || { echo "$PROGRAM build: macOS required" >&2; exit 1; }
+[[ -f "$SRC" ]] || { echo "$PROGRAM build: missing source $SRC" >&2; exit 1; }
+if [[ -z "$IDENTITY" ]]; then
+  IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null | awk -F '"' -v team="$TEAM_ID" '/Developer ID Application:/ && index($0, "(" team ")") { print $2; exit }')"
+fi
+[[ -n "$IDENTITY" ]] || { echo "$PROGRAM build: Developer ID Application identity for team $TEAM_ID not found" >&2; exit 1; }
+
+if [[ -L "$OUT" ]]; then
+  current_target="$(readlink "$OUT")"
+  if [[ -z "$STALE_LINK_TARGET" || "$current_target" != "$STALE_LINK_TARGET" ]]; then
+    echo "$PROGRAM build: refusing to replace unexpected symlink $OUT -> $current_target" >&2
+    exit 1
+  fi
+  echo "$PROGRAM build: replacing stale mise symlink $OUT -> $current_target"
+fi
+
+mkdir -p "$(dirname "$OUT")"
+TMP="$(mktemp "$OUT.tmp.XXXXXX")"
+cleanup() { [[ ! -e "$TMP" ]] || trash "$TMP" >/dev/null 2>&1 || true; }
+trap cleanup EXIT
+
+unset SDKROOT DEVELOPER_DIR
+SDKROOT="$(/usr/bin/xcrun --sdk macosx --show-sdk-path)"
+export SDKROOT
+
+echo "$PROGRAM build: compiling $SRC"
+/usr/bin/xcrun swiftc -O -o "$TMP" "$SRC"
+echo "$PROGRAM build: signing with $IDENTITY"
+/usr/bin/codesign --force --timestamp --options runtime --identifier "$IDENTIFIER" --sign "$IDENTITY" "$TMP"
+/usr/bin/codesign --verify --strict --verbose=2 "$TMP"
+DETAILS="$(/usr/bin/codesign --display --verbose=4 "$TMP" 2>&1)"
+[[ "$DETAILS" == *"Identifier=$IDENTIFIER"* ]] || { echo "$PROGRAM build: identifier verification failed" >&2; exit 1; }
+[[ "$DETAILS" == *"TeamIdentifier=$TEAM_ID"* ]] || { echo "$PROGRAM build: team verification failed" >&2; exit 1; }
+[[ "$DETAILS" == *"runtime"* ]] || { echo "$PROGRAM build: hardened runtime verification failed" >&2; exit 1; }
+
+remove_stale_artifact() {
+  if [[ -n "$STALE_LINK_TARGET" && ( -e "$STALE_LINK_TARGET" || -L "$STALE_LINK_TARGET" ) ]]; then
+    trash "$STALE_LINK_TARGET"
+    echo "$PROGRAM build: removed stale artifact $STALE_LINK_TARGET"
+  fi
+}
+
+if [[ ! -L "$OUT" && -e "$OUT" ]] && cmp -s "$TMP" "$OUT"; then
+  remove_stale_artifact
+  echo "$PROGRAM build: $OUT unchanged"
+  exit 0
+fi
+mv -f "$TMP" "$OUT"
+trap - EXIT
+remove_stale_artifact
+echo "$PROGRAM build: installed $OUT ($IDENTIFIER, team $TEAM_ID)"
+
+if [[ "${SKIP_RESTART:-0}" == 1 ]]; then
+  echo "$PROGRAM build: restart skipped"
+elif /bin/launchctl print "gui/$(id -u)/$LABEL" >/dev/null 2>&1; then
+  /bin/launchctl kickstart -k "gui/$(id -u)/$LABEL"
+  echo "$PROGRAM build: restarted $LABEL"
+fi

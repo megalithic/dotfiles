@@ -11,9 +11,10 @@ OLD_SOCKET="$HOME/.local/state/media-presence/sock"
 HOST_DIR="$HOME/Library/Application Support/net.imput.helium/NativeMessagingHosts"
 HOST_MANIFEST="$HOST_DIR/com.megadots.avwatchd.json"
 EXTENSION_ID=ogfaajbfamngmlmkppahdpkoliobdemk
+AVWATCHD_BIN="$HOME/.local/bin/avwatchd"
 
-[ -x "$DOTFILES_DIR/bin/avwatchd" ] || {
-  echo "setup-avwatchd: missing executable $DOTFILES_DIR/bin/avwatchd" >&2
+[ -x "$AVWATCHD_BIN" ] || {
+  echo "setup-avwatchd: missing executable $AVWATCHD_BIN" >&2
   exit 1
 }
 [ -f "$DOTFILES_DIR/config/avwatchweb/manifest.json" ] || {
@@ -49,7 +50,7 @@ while pgrep -f "$DOTFILES_DIR/bin/media-presenced" >/dev/null 2>&1; do
 done
 [ ! -e "$OLD_PLIST" ] || trash "$OLD_PLIST"
 
-# A force-killed interpreted daemon can leave its log-stream child orphaned.
+# A force-killed daemon can leave its log-stream child orphaned.
 # Match only this monitor's replayd/ScreenCaptureKit command and only PPID 1.
 ps -axo pid=,ppid=,command= | while read -r pid ppid command; do
   [ "$ppid" = 1 ] || continue
@@ -70,7 +71,7 @@ cat >"$HOST_MANIFEST" <<EOF
 {
   "name": "com.megadots.avwatchd",
   "description": "avwatchweb bridge to avwatchd",
-  "path": "$DOTFILES_DIR/bin/avwatchd",
+  "path": "$AVWATCHD_BIN",
   "type": "stdio",
   "allowed_origins": ["chrome-extension://$EXTENSION_ID/"]
 }

@@ -52,6 +52,3 @@ _planned
 result
 .handoff/
 _plans/
-
-# notiwatchd binary is built locally by `mise run setup:notiwatchd`
-bin/notiwatchd

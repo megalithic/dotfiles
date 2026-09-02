@@ -5,10 +5,8 @@ import { mkdtempSync } from "node:fs";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const extensionDir = path.dirname(fileURLToPath(import.meta.url));
-const daemonPath = path.resolve(extensionDir, "../../../bin/avwatchd");
+const daemonPath = process.env.AVWATCHD_BIN ?? path.join(os.homedir(), ".local/bin/avwatchd");
 const temporaryDir = mkdtempSync(path.join(os.tmpdir(), "avwatchd-smoke-"));
 const socketPath = path.join(temporaryDir, "sock");
 const nonce = "7fc4ba9b-c52f-4e27-8828-69f70c65f53d";

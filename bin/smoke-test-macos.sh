@@ -128,9 +128,74 @@ hdr "Fonts"
 ls "$HOME/Library/Fonts/" 2>/dev/null | grep -q 'FiraCodeNerdFont' && ok "nerd fonts in ~/Library/Fonts (mise)" || bad "mise nerd fonts missing"
 ls "/Library/Fonts/Nix Fonts/" 2>/dev/null | grep -qi 'nerd-fonts' && bad "Nix Fonts still ships nerd-fonts" || ok "Nix Fonts free of nerd-fonts"
 
+hdr "Compiled Swift daemons"
+check_swift_binary() {
+  local binary_name="$1"
+  local identifier="$2"
+  local binary="$HOME/.local/bin/$binary_name"
+  local details
+
+  if [[ -x "$binary" && ! -L "$binary" ]]; then
+    ok "$binary is a regular executable"
+  else
+    bad "$binary missing, non-executable, or symlinked"
+    return
+  fi
+  if file "$binary" | rg -q 'Mach-O'; then ok "$binary is Mach-O"; else bad "$binary is not Mach-O"; fi
+  if codesign --verify --strict "$binary" >/dev/null 2>&1; then
+    ok "$binary signature valid"
+  else
+    bad "$binary signature invalid"
+    return
+  fi
+  details="$(codesign --display --verbose=4 "$binary" 2>&1)"
+  if [[ "$details" == *"Identifier=$identifier"* ]]; then ok "$binary identifier $identifier"; else bad "$binary wrong identifier"; fi
+  if [[ "$details" == *"TeamIdentifier=3ZJ3F5RFBZ"* ]]; then ok "$binary team 3ZJ3F5RFBZ"; else bad "$binary wrong team"; fi
+  if [[ "$details" == *runtime* ]]; then ok "$binary hardened runtime"; else bad "$binary missing hardened runtime"; fi
+}
+check_swift_binary miccheckd com.megadots.miccheck
+check_swift_binary notiwatchd com.megadots.notiwatchd
+check_swift_binary avwatchd com.megadots.avwatchd
+notiwatchd_config_target="$(readlink "$HOME/.config/notiwatchd" 2>/dev/null || true)"
+if [[ "$notiwatchd_config_target" == "$HOME/.dotfiles/config/notiwatchd" && -f "$HOME/.config/notiwatchd/config.json" ]]; then
+  ok "notiwatchd runtime config linked"
+else
+  bad "notiwatchd runtime config link missing or wrong"
+fi
+if [[ ! -e "$HOME/.dotfiles/bin/notiwatchd" && ! -L "$HOME/.dotfiles/bin/notiwatchd" &&
+  ! -e "$HOME/.dotfiles/bin/avwatchd" && ! -L "$HOME/.dotfiles/bin/avwatchd" ]]; then
+  ok "no stale repo-local daemon artifacts"
+else
+  bad "stale repo-local daemon artifact"
+fi
+
 hdr "launchd (mise agents up, no strays)"
-for agent in dev.mise.com.megadots.llama-cpp dev.mise.com.megadots.avwatchd dev.mise.com.megadots.miccheck; do
+for agent in dev.mise.com.megadots.llama-cpp dev.mise.com.megadots.avwatchd dev.mise.com.megadots.notiwatchd dev.mise.com.megadots.miccheck; do
   if launchctl list "$agent" >/dev/null 2>&1; then ok "$agent loaded"; else bad "$agent not loaded"; fi
+done
+for spec in avwatchd:avwatchd notiwatchd:notiwatchd miccheck:miccheckd; do
+  agent_name="${spec%%:*}"
+  binary_name="${spec#*:}"
+  plist="$HOME/Library/LaunchAgents/dev.mise.com.megadots.$agent_name.plist"
+  program="$(/usr/libexec/PlistBuddy -c 'Print :ProgramArguments:0' "$plist" 2>/dev/null || true)"
+  if [[ "$program" == "$HOME/.local/bin/$binary_name" ]]; then
+    ok "$agent_name agent uses compiled binary"
+  else
+    bad "$agent_name agent program: ${program:-missing}"
+  fi
+done
+notiwatchd_path="$(/usr/libexec/PlistBuddy -c 'Print :EnvironmentVariables:PATH' "$HOME/Library/LaunchAgents/dev.mise.com.megadots.notiwatchd.plist" 2>/dev/null || true)"
+if [[ "$notiwatchd_path" == "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" ]]; then
+  ok "notiwatchd agent PATH is portable"
+else
+  bad "notiwatchd agent PATH: ${notiwatchd_path:-missing}"
+fi
+for socket in miccheck notiwatchd avwatchd; do
+  if [[ -S "$HOME/.local/state/$socket/sock" ]]; then
+    ok "$socket socket available"
+  else
+    bad "$socket socket missing"
+  fi
 done
 old_media_label=dev.mise.com.megadots.media-presenced
 old_media_plist="$HOME/Library/LaunchAgents/$old_media_label.plist"
@@ -144,7 +209,12 @@ else
 fi
 avwatch_host="$HOME/Library/Application Support/net.imput.helium/NativeMessagingHosts/com.megadots.avwatchd.json"
 if [[ -f "$avwatch_host" ]]; then
-  ok "avwatchweb native host installed"
+  host_path="$(/usr/bin/plutil -extract path raw -o - "$avwatch_host" 2>/dev/null || true)"
+  if [[ "$host_path" == "$HOME/.local/bin/avwatchd" ]]; then
+    ok "avwatchweb native host uses compiled avwatchd"
+  else
+    bad "avwatchweb native host path: ${host_path:-missing}"
+  fi
 else
   bad "avwatchweb native host missing"
 fi

@@ -659,33 +659,32 @@ stderr_path = "~/Library/Logs/llama-cpp/stderr.log"
 # nicknisi/sessions indexes transcripts on demand through its CLI and MCP server.
 # No session-indexing launchd agent is needed.
 
-# avwatchd: native and browser AV state daemon. avwatchweb reaches it through
-# Chrome native messaging; consumers subscribe to ~/.local/state/avwatchd/sock.
+# avwatchd: compiled native/browser AV state daemon. avwatchweb reaches the
+# same stable binary through Chrome native messaging; consumers subscribe to
+# ~/.local/state/avwatchd/sock.
 [bootstrap.macos.launchd.agents."com.megadots.avwatchd"]
-program = "~/.dotfiles/bin/avwatchd"
+program = "~/.local/bin/avwatchd"
 run_at_load = true
 keep_alive = true
 stdout_path = "/dev/null"
 stderr_path = "~/Library/Logs/avwatchd.log"
 
-# notiwatchd: Notification Center watcher daemon (bin/notiwatchd.swift).
-# Watches the usernoted SQLite store, matches rules from
+# notiwatchd: compiled Notification Center watcher daemon. It reads rules from
 # ~/.config/notiwatchd/config.json, records to
 # ~/.local/share/notiwatchd/notifications.db, broadcasts NDJSON on
 # ~/.local/state/notiwatchd/sock, and routes to bin/ntfy/exec/webhook sinks.
-# Wrapper checks the compiled binary exists (built by `mise run setup:notiwatchd`).
-# The compiled binary needs a one-time Full Disk Access grant.
+# The binary needs one-time Full Disk Access and Accessibility grants.
 [bootstrap.macos.launchd.agents."com.megadots.notiwatchd"]
-program = "~/.dotfiles/bin/notiwatchd-launchd"
+program = "~/.local/bin/notiwatchd"
+environment = { PATH = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" }
 run_at_load = true
 keep_alive = true
 stdout_path = "~/.cache/notiwatchd-stdout.log"
 stderr_path = "~/.cache/notiwatchd-stderr.log"
 
-# miccheck: menubar push-to-talk/push-to-mute app (bin/miccheck.swift).
-# Wrapper checks the compiled binary exists (built by `mise run setup:miccheck`).
+# miccheck: compiled menubar push-to-talk/push-to-mute app.
 [bootstrap.macos.launchd.agents."com.megadots.miccheck"]
-program = "~/.dotfiles/bin/miccheck-launchd"
+program = "~/.local/bin/miccheckd"
 run_at_load = true
 keep_alive = true
 stdout_path = "~/.cache/miccheck-stdout.log"
@@ -742,7 +741,13 @@ run = "killall Finder SystemUIServer Dock || true"
 # bootstrap apply/upgrade commands in `mise run up` do not run post-tools; up
 # calls the fnox task once in its explicit update sequence instead.
 [bootstrap.hooks.post-tools]
-run = ["mise run setup:kanata", "mise run setup:avwatchd", "mise run fnox"]
+run = [
+  "mise run setup:kanata",
+  "mise run setup:miccheck",
+  "mise run setup:notiwatchd",
+  "mise run setup:avwatchd",
+  "mise run fnox",
+]
 
 [bootstrap.user]
 login_shell = "/opt/homebrew/bin/fish"
@@ -834,6 +839,8 @@ step "Update mise plugins" mise plugins update --yes
 step "Upgrade mise tools" mise upgrade --bump --yes
 step "Apply packages" mise bootstrap packages apply --yes
 step "Apply dotfiles" mise --verbose bootstrap dotfiles apply --force --yes
+step "Build miccheckd" mise run setup:miccheck
+step "Build notiwatchd" mise run setup:notiwatchd
 step "Set up avwatchd" mise run setup:avwatchd
 step "Apply launchd agents" mise bootstrap launchd apply --yes
 # Use top-level scoped bootstrap so pre-defaults/post-defaults hooks run.
@@ -929,17 +936,38 @@ raw = true
 
 [tasks."setup:miccheck"]
 alias = "miccheck:setup"
-description = "Compile bin/miccheck.swift to ~/.local/bin/miccheckd (push-to-talk menubar app)"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/miccheck-build"
+description = "Build and sign miccheckd"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/lib/build-swift miccheck"
+sources = [
+  "{{env.DOTFILES_DIR}}/lib/build-swift",
+  "{{env.DOTFILES_DIR}}/lib/miccheck.swift",
+]
+outputs = ["{{env.HOME}}/.local/bin/miccheckd"]
 
 [tasks."setup:notiwatchd"]
 alias = "notiwatchd:setup"
-description = "Compile notiwatchd.swift to ~/.dotfiles/bin/notiwatchd (Notification Center watcher daemon)"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/config/notiwatchd/notiwatchd-build"
+description = "Build and sign notiwatchd"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/lib/build-swift notiwatchd"
+sources = [
+  "{{env.DOTFILES_DIR}}/lib/build-swift",
+  "{{env.DOTFILES_DIR}}/lib/notiwatchd.swift",
+]
+outputs = ["{{env.HOME}}/.local/bin/notiwatchd"]
+
+[tasks."build:avwatchd"]
+hide = true
+description = "Build and sign avwatchd"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/lib/build-swift avwatchd"
+sources = [
+  "{{env.DOTFILES_DIR}}/lib/build-swift",
+  "{{env.DOTFILES_DIR}}/lib/avwatchd.swift",
+]
+outputs = ["{{env.HOME}}/.local/bin/avwatchd"]
 
 [tasks."setup:avwatchd"]
 alias = "avwatchd:setup"
-description = "Install avwatchweb native messaging and retire media-presenced"
+description = "Build avwatchd, install native messaging, and retire media-presenced"
+depends = ["build:avwatchd"]
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/setup-avwatchd"
 
 # Declarative Helium profile setup (External Extensions with baked

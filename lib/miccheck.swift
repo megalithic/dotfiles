@@ -25,8 +25,8 @@
 //       {"cmd":"quit"}                                 -> {"ok":true}
 //   acquire-live leases are scoped to the connection and auto-release on disconnect.
 //
-// Build: bin/miccheck-build (swiftc -> ~/.local/bin/miccheckd, Developer ID
-// signed with a stable identifier so TCC grants survive rebuilds).
+// Build: lib/build-swift miccheck (swiftc -> ~/.local/bin/miccheckd,
+// Developer ID-signed with a stable identifier so TCC grants survive rebuilds).
 // Requires Input Monitoring (TCC) for the listen-only CGEvent tap.
 
 import AppKit
@@ -80,8 +80,8 @@ private func caSetUInt32(_ obj: AudioObjectID, _ addr: inout AudioObjectProperty
     var settable: DarwinBoolean = false
     guard AudioObjectHasProperty(obj, &addr),
           AudioObjectIsPropertySettable(obj, &addr, &settable) == noErr, settable.boolValue else { return false }
-    var v = value
-    return AudioObjectSetPropertyData(obj, &addr, 0, nil, UInt32(MemoryLayout<UInt32>.size), &v) == noErr
+    var mutableValue = value
+    return AudioObjectSetPropertyData(obj, &addr, 0, nil, UInt32(MemoryLayout<UInt32>.size), &mutableValue) == noErr
 }
 
 private func caGetFloat32(_ obj: AudioObjectID, _ addr: inout AudioObjectPropertyAddress) -> Float32? {
@@ -96,8 +96,8 @@ private func caSetFloat32(_ obj: AudioObjectID, _ addr: inout AudioObjectPropert
     var settable: DarwinBoolean = false
     guard AudioObjectHasProperty(obj, &addr),
           AudioObjectIsPropertySettable(obj, &addr, &settable) == noErr, settable.boolValue else { return false }
-    var v = value
-    return AudioObjectSetPropertyData(obj, &addr, 0, nil, UInt32(MemoryLayout<Float32>.size), &v) == noErr
+    var mutableValue = value
+    return AudioObjectSetPropertyData(obj, &addr, 0, nil, UInt32(MemoryLayout<Float32>.size), &mutableValue) == noErr
 }
 
 private func caDeviceName(_ dev: AudioObjectID) -> String {
@@ -125,7 +125,7 @@ private func caDeviceName(_ dev: AudioObjectID) -> String {
 private let minLiveVolume: Float32 = 0.55
 
 final class AudioController {
-    private let q = DispatchQueue(label: "miccheck.audio")
+    private let audioQueue = DispatchQueue(label: "miccheck.audio")
     private var desiredLive = false
     private var savedVolumes: [AudioObjectID: Float32] = [:]
     private var listenedDevices: Set<AudioObjectID> = []
@@ -136,11 +136,11 @@ final class AudioController {
     }
 
     func start() {
-        q.sync {
+        audioQueue.sync {
             var defAddr = caAddr(kAudioHardwarePropertyDefaultInputDevice)
-            AudioObjectAddPropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &defAddr, q, changeBlock)
+            AudioObjectAddPropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &defAddr, audioQueue, changeBlock)
             var devsAddr = caAddr(kAudioHardwarePropertyDevices)
-            AudioObjectAddPropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &devsAddr, q, changeBlock)
+            AudioObjectAddPropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &devsAddr, audioQueue, changeBlock)
             refreshDeviceListeners()
             if let def = defaultInput() {
                 log("default input: \(caDeviceName(def)) (id \(def))")
@@ -151,7 +151,7 @@ final class AudioController {
     }
 
     func setLive(_ live: Bool) {
-        q.async { [self] in
+        audioQueue.async { [self] in
             desiredLive = live
             applyDesired()
         }
@@ -159,13 +159,13 @@ final class AudioController {
 
     /// Unmute everything (used on quit so nothing stays hardware-muted).
     func releaseAll() {
-        q.sync { [self] in
+        audioQueue.sync { [self] in
             desiredLive = true
             for dev in inputDevices() { setDeviceMuted(dev, false) }
         }
     }
 
-    // MARK: internals (all on q)
+    // MARK: internals (all on audioQueue)
 
     private func scheduleApply() {
         pendingApply?.cancel()
@@ -175,7 +175,7 @@ final class AudioController {
             self.applyDesired()
         }
         pendingApply = work
-        q.asyncAfter(deadline: .now() + .milliseconds(50), execute: work)
+        audioQueue.asyncAfter(deadline: .now() + .milliseconds(50), execute: work)
     }
 
     private func inputDevices() -> [AudioObjectID] {
@@ -197,7 +197,7 @@ final class AudioController {
         for dev in inputDevices() where !listenedDevices.contains(dev) {
             var addr = caAddr(kAudioDevicePropertyMute, kAudioDevicePropertyScopeInput)
             if AudioObjectHasProperty(dev, &addr),
-               AudioObjectAddPropertyListenerBlock(dev, &addr, q, changeBlock) == noErr {
+               AudioObjectAddPropertyListenerBlock(dev, &addr, audioQueue, changeBlock) == noErr {
                 listenedDevices.insert(dev)
             }
         }
@@ -221,10 +221,10 @@ final class AudioController {
         let elements: [AudioObjectPropertyElement] = [kAudioObjectPropertyElementMain, 1, 2]
         for el in elements {
             var addr = caAddr(kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeInput, el)
-            guard let v = caGetFloat32(dev, &addr) else { continue }
-            if v < minLiveVolume {
+            guard let volume = caGetFloat32(dev, &addr) else { continue }
+            if volume < minLiveVolume {
                 if caSetFloat32(dev, &addr, minLiveVolume) {
-                    log("input volume floor: \(caDeviceName(dev)) ch\(el) \(v) -> \(minLiveVolume)")
+                    log("input volume floor: \(caDeviceName(dev)) ch\(el) \(volume) -> \(minLiveVolume)")
                 }
             }
         }
@@ -406,7 +406,7 @@ final class SocketServer {
     private let path: String
     private var listenFD: Int32 = -1
     private var acceptSource: DispatchSourceRead?
-    private let q = DispatchQueue(label: "miccheck.socket")
+    private let socketQueue = DispatchQueue(label: "miccheck.socket")
     private var clients: [Int32: DispatchSourceRead] = [:]
     private var buffers: [Int32: Data] = [:]
     private var clientIDs: [Int32: UInt64] = [:]
@@ -444,7 +444,7 @@ final class SocketServer {
         guard bound == 0 else { throw POSIXError(.init(rawValue: errno) ?? .EIO) }
         guard listen(listenFD, 16) == 0 else { throw POSIXError(.init(rawValue: errno) ?? .EIO) }
 
-        let src = DispatchSource.makeReadSource(fileDescriptor: listenFD, queue: q)
+        let src = DispatchSource.makeReadSource(fileDescriptor: listenFD, queue: socketQueue)
         src.setEventHandler { [weak self] in self?.acceptClient() }
         src.resume()
         acceptSource = src
@@ -453,7 +453,7 @@ final class SocketServer {
     private func acceptClient() {
         let fd = Foundation.accept(listenFD, nil, nil)
         guard fd >= 0 else { return }
-        let src = DispatchSource.makeReadSource(fileDescriptor: fd, queue: q)
+        let src = DispatchSource.makeReadSource(fileDescriptor: fd, queue: socketQueue)
         src.setEventHandler { [weak self] in self?.readClient(fd) }
         src.setCancelHandler { close(fd) }
         clients[fd] = src
@@ -475,7 +475,7 @@ final class SocketServer {
             if let cmd = String(data: line, encoding: .utf8)?.trimmingCharacters(in: .whitespaces),
                !cmd.isEmpty, let clientID = clientIDs[fd] {
                 onCommand?(cmd, clientID) { [weak self] reply in
-                    self?.q.async { self?.writeClient(fd, clientID: clientID, reply) }
+                    self?.socketQueue.async { self?.writeClient(fd, clientID: clientID, reply) }
                 }
             }
         }

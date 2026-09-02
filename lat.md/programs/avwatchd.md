@@ -1,8 +1,8 @@
 # avwatchd
 
-`bin/avwatchd` is a single-file interpreted Swift daemon that observes native and browser AV state, fuses it into one presence snapshot, publishes NDJSON, and focuses known meeting or playing-media targets.
+`lib/avwatchd.swift` observes native and browser AV state, fuses one presence snapshot, publishes NDJSON, and focuses known meeting or media targets.
 
-It runs as mise LaunchAgent `dev.mise.com.megadots.avwatchd` and listens on `~/.local/state/avwatchd/sock`. Policy remains in consumers: [[miccheck#Presence integration|miccheckd]] forces push-to-talk, while Hammerspoon observes transitions and exposes sharing state so [[notiwatchd#Rules and actions|notification routing]] can suppress local HUDs. Hammerspoon does not pause Music or change Focus/DND from avwatchd events.
+Production runs the compiled, signed `~/.local/bin/avwatchd` artifact. It runs as mise LaunchAgent `dev.mise.com.megadots.avwatchd` and listens on `~/.local/state/avwatchd/sock`. Policy remains in consumers: [[miccheck#Presence integration|miccheckd]] forces push-to-talk, while Hammerspoon observes transitions and exposes sharing state so [[notiwatchd#Rules and actions|notification routing]] can suppress local HUDs. Hammerspoon does not pause Music or change Focus/DND from avwatchd events.
 
 ## Architecture
 
@@ -23,7 +23,7 @@ The extension never enumerates tabs. Tab navigation and close events remove stat
 
 ## Native messaging
 
-Chrome launches `bin/avwatchd` with the calling extension origin; `--native-host` provides an explicit test mode.
+Chrome launches `~/.local/bin/avwatchd` with the calling extension origin; `--native-host` provides an explicit test mode.
 
 Native mode validates the exact origin and extension ID. Frames contain a four-byte little-endian JSON length followed by at most 1 MiB of UTF-8 JSON.
 
@@ -78,13 +78,13 @@ Hyper+z sends `focus` to avwatchd. Browser focus uses stored IDs; Slack and Zoom
 
 ## Setup and migration
 
-`mise run setup:avwatchd` installs avwatchweb native messaging.
+`mise run setup:avwatchd` first builds and signs avwatchd, then installs avwatchweb native messaging.
 
-The Helium manifest lives at `~/Library/Application Support/net.imput.helium/NativeMessagingHosts/com.megadots.avwatchd.json`. It uses an absolute daemon path and allows only avwatchweb's stable extension origin.
+The Helium manifest lives at `~/Library/Application Support/net.imput.helium/NativeMessagingHosts/com.megadots.avwatchd.json`. It points to `~/.local/bin/avwatchd` and allows only avwatchweb's stable extension origin.
 
 Before the new agent starts, setup stops `dev.mise.com.megadots.media-presenced`, waits until launchd removes it, then trashes its stale socket and old cache logs. This ordering prevents the old process from unlinking or rebinding the new socket. `mise run up` runs setup before applying LaunchAgents. `mise run setup:helium` also runs setup and reminds the user to restart Helium.
 
-The new LaunchAgent writes no stdout event log and sends low-volume diagnostics to `~/Library/Logs/avwatchd.log`. The executable uses `#!/usr/bin/swift`; it has no build step.
+The mise LaunchAgent runs `~/.local/bin/avwatchd` directly, writes no stdout event log, and sends low-volume diagnostics to `~/Library/Logs/avwatchd.log`. Shared builder `lib/build-swift avwatchd` requires Developer ID team `3ZJ3F5RFBZ`, verifies identifier `com.megadots.avwatchd` plus hardened runtime, and atomically installs the binary. avwatchd currently needs no TCC grant; signing gives all three managed daemons one stable artifact workflow.
 
 Helium keeps `--remote-debugging-port=9223` only for [[helium#Browser automation|chrome-devtools-attach]]. avwatchd has no CDP, target enumeration, or runtime DOM evaluation dependency.
 
@@ -92,6 +92,6 @@ Helium keeps `--remote-debugging-port=9223` only for [[helium#Browser automation
 
 Automated smoke test: `node config/avwatchweb/smoke-test.mjs`.
 
-It exercises native framing, session registration, state fusion, schema rejection, direct focus routing, heartbeat delivery, and bridge-exit cleanup. Swift type checks use `/usr/bin/swiftc -typecheck - < bin/avwatchd` and `/usr/bin/swiftc -typecheck bin/miccheck.swift`.
+It exercises the compiled binary's native framing, session registration, state fusion, schema rejection, direct focus routing, heartbeat delivery, and bridge-exit cleanup. Swift sources are `lib/avwatchd.swift`, `lib/miccheck.swift`, and `lib/notiwatchd.swift`; all use `lib/build-swift`.
 
 Manual checks still require live browser/app interaction: Meet join/leave, tab-share start/stop, playback play/pause/end, exact focus with many tabs, each component restart, and confirmation that System Settings adds no Screen Recording request. Extension reload recovery requires reloading active pages by design.

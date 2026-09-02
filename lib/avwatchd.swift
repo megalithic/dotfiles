@@ -1,4 +1,4 @@
-#!/usr/bin/swift
+// swiftlint:disable file_length
 import Foundation
 import CoreAudio
 import CoreMediaIO
@@ -112,7 +112,7 @@ final class CaptureMonitor {
     }
 
     static func snapshot() -> CaptureState {
-        var s = CaptureState()
+        var state = CaptureState()
         // Mic via process objects.
         var owners: [MicOwner] = []
         for proc in caObjectList(kAudioHardwarePropertyProcessObjectList) {
@@ -126,16 +126,16 @@ final class CaptureMonitor {
             }
             owners.append(MicOwner(pid: pid, bundleID: bundle, name: name))
         }
-        s.micActive = !owners.isEmpty
-        s.micOwners = owners
+        state.micActive = !owners.isEmpty
+        state.micOwners = owners
         // Camera via CMIO device running flag.
         for dev in cmioDevices() {
             if (cmioUInt32(dev, CMIOObjectPropertySelector(kAudioDevicePropertyDeviceIsRunningSomewhere)) ?? 0) != 0 {
-                s.cameraActive = true
+                state.cameraActive = true
                 break
             }
         }
-        return s
+        return state
     }
 
     // MARK: listeners
@@ -149,10 +149,10 @@ final class CaptureMonitor {
         audioListenerInstalled = (st == noErr)
         // Also listen on each input device's IsRunningSomewhere for robustness.
         for dev in caObjectList(kAudioHardwarePropertyDevices) {
-            var a = AudioObjectPropertyAddress(mSelector: kAudioDevicePropertyDeviceIsRunningSomewhere,
-                                               mScope: kAudioObjectPropertyScopeGlobal,
-                                               mElement: kAudioObjectPropertyElementMain)
-            AudioObjectAddPropertyListenerBlock(dev, &a, queue, block)
+            var address = AudioObjectPropertyAddress(mSelector: kAudioDevicePropertyDeviceIsRunningSomewhere,
+                                                     mScope: kAudioObjectPropertyScopeGlobal,
+                                                     mElement: kAudioObjectPropertyElementMain)
+            AudioObjectAddPropertyListenerBlock(dev, &address, queue, block)
         }
     }
 
@@ -580,9 +580,9 @@ final class ScreenshareMonitor {
     // MARK: log parsing
 
     private func readPipe(_ pipe: Pipe) {
-        pipe.fileHandleForReading.readabilityHandler = { [weak self] h in
+        pipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
             guard let self else { return }
-            let data = h.availableData
+            let data = handle.availableData
             guard !data.isEmpty else { return }
             self.queue.async { self.handleData(data) }
         }
@@ -641,11 +641,11 @@ final class ScreenshareMonitor {
 
     private func startHeartbeatWatchdog() {
         heartbeatTimer?.cancel()
-        let t = DispatchSource.makeTimerSource(queue: queue)
-        t.schedule(deadline: .now() + heartbeatTimeout, repeating: 5)
-        t.setEventHandler { [weak self] in self?.checkHeartbeat() }
-        t.resume()
-        heartbeatTimer = t
+        let timer = DispatchSource.makeTimerSource(queue: queue)
+        timer.schedule(deadline: .now() + heartbeatTimeout, repeating: 5)
+        timer.setEventHandler { [weak self] in self?.checkHeartbeat() }
+        timer.resume()
+        heartbeatTimer = timer
     }
 
     private func checkHeartbeat() {
@@ -991,7 +991,8 @@ if let socketIndex = arguments.firstIndex(of: "--socket"), arguments.indices.con
 signal(SIGPIPE, SIG_IGN)
 let nativeMode = arguments.contains("--native-host") || arguments.first == nativeExtensionOrigin
 if nativeMode {
-    NativeHostBridge(socketPath: socketPath).start()
+    let nativeHost = NativeHostBridge(socketPath: socketPath)
+    nativeHost.start()
 }
 if arguments.contains("--snapshot") {
     let capture = CaptureMonitor.snapshot()

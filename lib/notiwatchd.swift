@@ -1,4 +1,3 @@
-#!/usr/bin/swift
 // notiwatchd - macOS Notification Center watcher daemon.
 //
 // Watches the usernoted SQLite store (WAL file kqueue + fallback poll),
@@ -9,8 +8,8 @@
 // Requirements:
 // - Full Disk Access for the compiled binary (~/.local/bin/notiwatchd) to
 //   read ~/Library/Group Containers/group.com.apple.usernoted/db2/db.
-// - Build with bin/notiwatchd-build (stable codesign identity so the TCC
-//   grant survives rebuilds).
+// - Build with lib/build-swift notiwatchd (stable codesign identity so the
+//   TCC grant survives rebuilds).
 //
 // Config:  ~/.config/notiwatchd/config.json   (hot-reloaded on change)
 // Store:   ~/.local/share/notiwatchd/notifications.db
@@ -20,6 +19,11 @@ import AppKit
 import ApplicationServices
 import Foundation
 import SQLite3
+
+// LaunchAgent PATH is portable system/Homebrew paths; preserve the former
+// wrapper's HOME-relative command lookup for exec actions and helper scripts.
+let inheritedPath = ProcessInfo.processInfo.environment["PATH"] ?? "/usr/bin:/bin"
+setenv("PATH", "\(NSHomeDirectory())/bin:\(NSHomeDirectory())/.local/bin:\(inheritedPath)", 1)
 
 let sqliteTransient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 let appleEpochOffset = 978_307_200.0
@@ -717,7 +721,7 @@ if replay > 0 {
     log("replay: high-water rewound to \(highWater)")
 }
 
-func processRow(_ row: SourceRow, cfg: Config) {
+@Sendable func processRow(_ row: SourceRow, cfg: Config) {
     var bundleID = row.identifier ?? "unknown"
     var title: String?
     var subtitle: String?

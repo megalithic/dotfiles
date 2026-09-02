@@ -1,8 +1,8 @@
 # notiwatchd
 
-`config/notiwatchd/notiwatchd.swift` is a single-file Swift daemon watching Notification Center deliveries via the usernoted SQLite store: matches JSON rules, records to its own DB, broadcasts NDJSON on a Unix socket, routes to sinks.
+`lib/notiwatchd.swift` watches Notification Center deliveries through the usernoted SQLite store, matches JSON rules, records events, broadcasts NDJSON, and routes to sinks.
 
-Sinks are `bin/ntfy`, arbitrary exec commands, and webhooks.
+Production runs the compiled, signed `~/.local/bin/notiwatchd` artifact. Sinks are `bin/ntfy`, arbitrary exec commands, and webhooks.
 
 ## Why the usernoted DB, not accessibility
 
@@ -57,9 +57,9 @@ Validated live 2026-09-01: BTM alert triggered by bootstrapping a throwaway laun
 
 Reading the usernoted group container requires Full Disk Access, and TCC pins grants to the executable, so notiwatchd is compiled to a stable signed binary following the [[miccheck]] pattern instead of running as an interpreted script.
 
-An interpreted `#!/usr/bin/swift` script would attribute the FDA grant to the Swift interpreter. Source and build script are colocated with the config in `config/notiwatchd/` (only launchd-executed or manually-run entrypoints live in `bin/`). `config/notiwatchd/notiwatchd-build` compiles to `~/.dotfiles/bin/notiwatchd` (gitignored artifact) with a stable codesign identifier (`com.megadots.notiwatchd`, Developer ID if available, ad-hoc fallback), `mise run setup:notiwatchd` wraps it, and `bin/notiwatchd-launchd` is the LaunchAgent entrypoint (`com.megadots.notiwatchd` in `config/mise/config.toml`, RunAtLoad + KeepAlive). The compiled binary needs two one-time TCC grants in System Settings > Privacy & Security: Full Disk Access (read the usernoted store; daemon exits 1 with instructions when missing) and Accessibility (the `dismiss` action; recorded as `ax-not-trusted` when missing).
+An interpreted Swift script would attribute the FDA grant to the Swift interpreter. Source is `lib/notiwatchd.swift`; runtime config alone remains in `config/notiwatchd/config.json` and links to `~/.config/notiwatchd/config.json`. The shared `lib/build-swift notiwatchd` command compiles, Developer ID-signs, strictly verifies, and atomically installs `~/.local/bin/notiwatchd`. Mise task `setup:notiwatchd` tracks source and output freshness, and LaunchAgent `dev.mise.com.megadots.notiwatchd` runs the binary directly with portable Homebrew/system PATH. The daemon prepends `~/bin` and `~/.local/bin` at runtime so `exec:<cmd>` actions preserve prior command lookup without a launch wrapper.
 
-Signing is stable (dot-34nv resolved 2026-09-01): the "Developer ID Application: Seth Messer (3ZJ3F5RFBZ)" identity is installed in the login keychain on both megabookpro and workbookpro, so grants survive rebuilds — TCC pins cert + identifier and both are now constant. The identity was exported from megabookpro via Keychain Access (CLI `security export` of private keys hard-fails over SSH by design) and imported with Apple's DeveloperIDG2CA intermediate. The .p12 and its passphrase live in 1Password Crypt > `apple-developer` > Code Signing section; import recipe is in that item's field notes. `bin/signcode` wraps the same signing (identity lookup, `com.megadots.<basename>` identifier, hardened runtime + timestamp) for any other binary needing TCC-stable signing. Ad-hoc fallback still exists in `notiwatchd-build` for machines without the identity (grants then die per rebuild).
+Signing requires the "Developer ID Application: Seth Messer (3ZJ3F5RFBZ)" identity and verifies identifier `com.megadots.notiwatchd`, team `3ZJ3F5RFBZ`, and hardened runtime before replacing the existing artifact. There is no ad-hoc fallback. Full Disk Access (read the usernoted store) and Accessibility (the `dismiss` action) must be granted to `~/.local/bin/notiwatchd`; moving from the old repo-local binary path requires re-adding those path-bound TCC entries once. The `.p12` and passphrase remain in 1Password Crypt > `apple-developer` > Code Signing; only the public team identifier is committed.
 
 CLI flags: `--once` (drain and exit), `--replay N` (rewind high-water for testing), `--verbose`, and `--config/--store/--socket/--source` path overrides.
 
