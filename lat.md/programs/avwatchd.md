@@ -78,11 +78,11 @@ Hyper+z sends `focus` to avwatchd. Browser focus uses stored IDs; Slack and Zoom
 
 ## Setup and migration
 
-`mise run setup:avwatchd` first builds and signs avwatchd, then installs avwatchweb native messaging.
+`mise run setup:avwatchd`, implemented by `scripts/mise/setup-avwatchd`, first builds and signs avwatchd, then installs avwatchweb native messaging.
 
 The Helium manifest lives at `~/Library/Application Support/net.imput.helium/NativeMessagingHosts/com.megadots.avwatchd.json`. It points to `~/.local/bin/avwatchd` and allows only avwatchweb's stable extension origin.
 
-Before the new agent starts, setup stops `dev.mise.com.megadots.media-presenced`, waits until launchd removes it, then trashes its stale socket and old cache logs. This ordering prevents the old process from unlinking or rebinding the new socket. `mise run up` runs setup before applying LaunchAgents. `mise run setup:helium` also runs setup and reminds the user to restart Helium.
+Before the new agent starts, setup stops `dev.mise.com.megadots.media-presenced`, waits until launchd removes it, then trashes its stale socket and old cache logs. This ordering prevents the old process from unlinking or rebinding the new socket. `update:system` runs setup before applying LaunchAgents, and `up` runs that named phase after packages, dotfiles, and fonts. `mise run setup:helium` also runs setup and reminds the user to restart Helium.
 
 The mise LaunchAgent runs `~/.local/bin/avwatchd` directly, writes no stdout event log, and sends low-volume diagnostics to `~/Library/Logs/avwatchd.log`. Shared builder `lib/build-swift avwatchd` requires Developer ID team `3ZJ3F5RFBZ`, verifies identifier `com.megadots.avwatchd` plus hardened runtime, and atomically installs the binary. avwatchd currently needs no TCC grant; signing gives all three managed daemons one stable artifact workflow.
 

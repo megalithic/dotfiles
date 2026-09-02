@@ -1,6 +1,6 @@
 # Combined YubiKey fleet age identity stubs (non-secret; key material stays on
 # the YubiKeys). One identity line per fleet member — age-plugin-yubikey tries
-# whichever key is connected. Rebuilt by mise/tasks/yubikey-setup from the
+# whichever key is connected. Rebuilt by scripts/mise/setup-yubikey from the
 # per-serial records: yubikey-identity-<serial>.txt
 #
 #       Serial: 15759055, Slot: 1

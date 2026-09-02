@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Idempotent pi maintenance task for mise-managed dotfiles.
-# Run via `mise run pi:update`; preview with `mise run pi:update -- --dry-run`.
+# Run via `mise run update:pi`; preview with `mise run update:pi -- --dry-run`.
 set -euo pipefail
 
 usage() {
   cat <<'EOF'
-usage: pi-update [--dry-run]
+usage: update-pi [--dry-run]
 
 Updates pi-managed imperative state:
   - pinned helper binaries under ~/.pi/agent/bin
@@ -22,7 +22,7 @@ for arg in "$@"; do
   case "$arg" in
     --dry-run|-n) dry_run=1 ;;
     --help|-h) usage; exit 0 ;;
-    *) echo "pi-update: unknown argument: $arg" >&2; usage >&2; exit 2 ;;
+    *) echo "update-pi: unknown argument: $arg" >&2; usage >&2; exit 2 ;;
   esac
 done
 
@@ -153,7 +153,7 @@ install_sessions_plugin() {
 }
 
 if [ "$dry_run" = 1 ]; then
-  say "pi:update dry run"
+  say "update:pi dry run"
   say "[would ensure dir] $agent"
   say "[would ensure dir] $agent/bin"
   report_helper_bin plannotator "80c18e2b3e95796e85902b4e3ec92d8f7bf49df8ebfcbd12195c784fa522fdda"
@@ -182,4 +182,4 @@ trash_path "$agent/extensions/node_modules"
 "$pi_src/bin/pi" update
 "$pi_src/bin/pi" update --extensions
 
-echo "pi:update done."
+echo "update:pi done."

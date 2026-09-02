@@ -1,5 +1,5 @@
 # Sanitized template; contains no secret values.
-# Render with: mise run fnox
+# Render with: mise run update:fnox
 [default]
 access_key = {{DO_SPACES_CAPS_KEY}}
 access_token =

@@ -150,7 +150,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 
 # -- pi coding agent: managed subset of ~/.pi/agent; runtime state (sessions/,
 #    npm/, auth.json, settings.json) stays unmanaged. settings.json is merged
-#    by `mise run pi:update`, not linked. --
+#    by `mise run update:pi`, not linked. --
 "~/.pi/agent/AGENTS.md" = "~/.dotfiles/config/pi-coding-agent/agent/AGENTS.md"
 "~/.pi/agent/APPEND_SYSTEM.md" = "~/.dotfiles/config/pi-coding-agent/agent/SYSTEM.md"
 "~/.pi/agent/keybindings.json" = "~/.dotfiles/config/pi-coding-agent/agent/keybindings.json"
@@ -380,7 +380,7 @@ zoxide = "latest"
 "github:megalithic/shade-next" = "latest"
 "github:nicknisi/fleet" = "latest"
 
-# postinstall chain: install-app.sh mounts/copies the DMG, then setup-helium
+# postinstall chain: scripts/mise/install-app mounts/copies the DMG, then setup-helium
 # re-bakes the Chromium prodversion into the External Extensions update URLs
 # (mise equivalent of the nix module's eval-time readDir; goes stale on
 # Chromium bumps otherwise) and reapplies defaults/dictionary.
@@ -388,7 +388,7 @@ zoxide = "latest"
 version = "latest"
 os = ["macos"]
 asset_pattern = "tidewave-app-aarch64.dmg"
-postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh"
+postinstall = "$DOTFILES_DIR/scripts/mise/install-app"
 
 [tools."github:megalithic/helium-macos-releases"]
 version = "latest"
@@ -404,7 +404,7 @@ os = ["macos"]
 #   fixed by `mise self-update` (bootstrap.sh keeps the binary current).
 # asset_pattern supports globs and {{version}} templating equally.
 asset_pattern = "helium_{{version}}_arm64-macos.dmg"
-postinstall = "$DOTFILES_DIR/mise/hooks/install-app.sh && $DOTFILES_DIR/mise/tasks/setup-helium"
+postinstall = "$DOTFILES_DIR/scripts/mise/install-app && $DOTFILES_DIR/scripts/mise/setup-helium"
 
 # Kanata Bar v1.1.10 publishes only generic `kanata-bar.app.zip` and `.dmg`
 # assets. The ZIP is arm64-only, so keep the explicit URL and checksum until
@@ -614,9 +614,9 @@ SUHasLaunchedBefore = true
 SUSendProfileInfo = false
 
 # Helium: Sparkle auto-update kill switch (updates come from the mise tool /
-# install-app.sh path instead). Twin of nix/modules/system.nix
-# CustomUserPreferences."net.imput.helium". setup:helium also writes these,
-# since `mise run up` skips the macos-defaults step.
+# scripts/mise/install-app path instead). Twin of nix/modules/system.nix
+# CustomUserPreferences."net.imput.helium". setup:helium also writes these for
+# direct and post-package runs; update:system reapplies all macOS defaults.
 [bootstrap.macos.defaults."net.imput.helium"]
 SUAutomaticallyUpdate = false
 SUEnableAutomaticChecks = false
@@ -650,7 +650,7 @@ CriticalUpdateInstall = 1
 ScheduleFrequency = 1
 
 [bootstrap.macos.launchd.agents."com.megadots.llama-cpp"]
-program = "~/.dotfiles/mise/tasks/llama-server-launchd"
+program = "~/.dotfiles/scripts/mise/llama-server-launchd"
 run_at_load = true
 keep_alive = true
 stdout_path = "~/Library/Logs/llama-cpp/stdout.log"
@@ -693,7 +693,7 @@ stderr_path = "~/.cache/miccheck-stderr.log"
 # Spotlight exclusions only touch user-owned development directories, so a
 # user LaunchAgent replaces the former root nix-darwin daemon.
 [bootstrap.macos.launchd.agents."com.megadots.spotlight-exclude"]
-program = "~/.dotfiles/mise/tasks/spotlight-exclude"
+program = "~/.dotfiles/scripts/mise/spotlight-exclude"
 run_at_load = true
 keep_alive = false
 start_interval = 21600
@@ -701,7 +701,7 @@ stdout_path = "~/.cache/spotlight-exclude.log"
 stderr_path = "~/.cache/spotlight-exclude.err.log"
 
 # kanata daemon (dev.mise.org.kanata.daemon) and kanata-bar agents are
-# written and loaded by mise/tasks/kanata-setup (post-tools hook), because
+# written and loaded by scripts/mise/setup-kanata (post-tools hook), because
 # bootstrap.sh always passes `--skip launchd`. This entry stays as the
 # declarative owner for whenever `mise bootstrap launchd` runs manually —
 # it generates the same dev.mise.-prefixed label kanata-setup writes.
@@ -710,7 +710,7 @@ stderr_path = "~/.cache/spotlight-exclude.err.log"
 # churns the Input Monitoring TCC grant on every upgrade.
 
 [bootstrap.macos.launchd.agents."com.kanata-bar.ui"]
-program = "~/.dotfiles/mise/tasks/kanata-bar-launchd"
+program = "~/.dotfiles/scripts/mise/kanata-bar-launchd"
 run_at_load = true
 keep_alive = false
 stdout_path = "/tmp/kanata-bar.log"
@@ -730,23 +730,24 @@ run = [
   # 1Password CLI' setting (mise shims break the socket handshake).
   "[ -d /Applications/Espanso.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask espanso",
   "[ -d /Applications/zoom.us.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask zoom",
-  "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/espanso-service",
-  "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/setup-touchid-sudo",
+  "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/espanso-service",
+  "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/setup-pam",
+  "mise run setup:helium",
 ]
 
 [bootstrap.hooks.post-defaults]
 run = "killall Finder SystemUIServer Dock || true"
 
-# Full machine bootstrap reaches this hook once after tool install. The scoped
-# bootstrap apply/upgrade commands in `mise run up` do not run post-tools; up
-# calls the fnox task once in its explicit update sequence instead.
+# Full machine bootstrap reaches this hook once after tool install. Scoped
+# update tasks call their phases directly and do not run post-tools.
 [bootstrap.hooks.post-tools]
 run = [
+  "mise run install:fonts",
   "mise run setup:kanata",
   "mise run setup:miccheck",
   "mise run setup:notiwatchd",
   "mise run setup:avwatchd",
-  "mise run fnox",
+  "mise run update:fnox",
 ]
 
 [bootstrap.user]
@@ -755,103 +756,93 @@ login_shell = "/opt/homebrew/bin/fish"
 # -- Nerd Fonts: declare the font list here (mirrors nix fonts.packages in
 #    nix/hosts/common.nix). Names are release asset stems from
 #    https://github.com/ryanoasis/nerd-fonts/releases (<Name>.tar.xz).
-#    Add/remove a font = edit the list; `mise run fonts:install` converges.
-#    The postinstall hook below also runs it after any `mise install`;
-#    sources/outputs make re-runs no-ops when nothing changed.
+#    Add/remove a font = edit the list; `mise run install:fonts` converges.
+#    Full bootstrap and `mise run up` call it explicitly; sources/outputs make
+#    repeated runs no-ops when nothing changed.
 [vars]
 nerd_fonts_version = "3.4.0"
 nerd_fonts = "JetBrainsMono FiraCode Iosevka VictorMono FantasqueSansMono NerdFontsSymbolsOnly"
 
-[tasks.doctor]
-description = "Post-bootstrap health checks (bootstrap.sh runs this last)"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/doctor"
+[tasks.up]
+alias = "dot"
+description = "Update and converge this machine"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/update-machine"
+raw = true
+
+[tasks."update:tools"]
+description = "Update mise, plugins, and declared tools"
+run = [
+  "mise self-update --yes",
+  "mise plugins update --yes",
+  "mise install --yes",
+  "mise upgrade --yes",
+]
+
+[tasks."update:packages"]
+description = "Apply and upgrade declared system packages"
+run = '''
+set -eu
+export MISE_ENV="${MISE_ENV:-$(hostname -s)}"
+mise bootstrap packages apply --yes
+mise bootstrap packages upgrade --yes
+'''
+
+[tasks."update:dotfiles"]
+description = "Force-apply declared dotfile targets"
+run = '''
+set -eu
+export MISE_ENV="${MISE_ENV:-$(hostname -s)}"
+mise --verbose bootstrap dotfiles apply --force --yes
+'''
+
+[tasks."install:fonts"]
+description = "Install declared Nerd Fonts"
+run = "NERD_FONTS_VERSION={{vars.nerd_fonts_version}} ${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/install-fonts {{vars.nerd_fonts}}"
+sources = [
+  "{{env.HOME}}/.dotfiles/config/mise/config.toml",
+  "{{env.HOME}}/.dotfiles/scripts/mise/install-fonts",
+]
+outputs = { auto = true }
+
+[tasks."update:system"]
+description = "Converge local daemons, LaunchAgents, and macOS defaults"
+run = '''
+set -eu
+export MISE_ENV="${MISE_ENV:-$(hostname -s)}"
+mise run setup:miccheck
+mise run setup:notiwatchd
+mise run setup:helium
+mise bootstrap macos launchd-agents apply --yes
+mise bootstrap --only macos-defaults --yes
+'''
+
+[tasks."update:nvim"]
+description = "Update Neovim plugins and treesitter parsers"
+run = [
+  '''nvim --headless "+Lazy! sync" +qa''',
+  '''nvim --headless "+TSUpdateSync" +qa''',
+]
+
+[tasks."update:fnox"]
+description = "Refresh fnox cache and generated secret artifacts"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/update-fnox"
+raw = true
+
+[tasks."update:pi"]
+description = "Update Pi, settings, tools, and extensions"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/update-pi"
+
+[tasks."reload:hammerspoon"]
+description = "Reload Hammerspoon"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/hs-reload"
 
 [tasks."sync:fantastical"]
 description = "Manual Fantastical snapshot, verify, publish (WOLFHALL), or restore (restore requires --apply)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/fantastical-sync"
 
-[tasks."fonts:install"]
-description = "Install Nerd Fonts into ~/Library/Fonts"
-run = "NERD_FONTS_VERSION={{vars.nerd_fonts_version}} ${DOTFILES_DIR:-$HOME/.dotfiles}/mise/hooks/install-fonts.sh {{vars.nerd_fonts}}"
-sources = [
-  "{{env.HOME}}/.dotfiles/config/mise/config.toml",
-  "{{env.HOME}}/.dotfiles/mise/hooks/install-fonts.sh",
-]
-outputs = { auto = true }
-
-[hooks]
-postinstall = '''
-# echo "Installed: $MISE_INSTALLED_TOOLS"
-
-echo "Running postinstall hooks.."
-mise run fonts:install
-'''
-
-# [tasks.up]
-# description = "Idempotently update tools, packages, dotfile symlinks, and launchd agents"
-# dir = "{{env.HOME}}/.dotfiles"
-# run = [
-#   "mise self-update --yes 2>/dev/null || true",
-#   "mise bootstrap --only packages,dotfiles,macos-launchd-agents --yes",
-#   "mise install --yes",
-#   "mise upgrade --yes",
-#   "mise run doctor",
-# ]
-
-# -- setup:* namespace: bootstrap/provisioning tasks. Old names kept as
-#    aliases so existing docs/scripts/muscle memory keep working. --
-
-[tasks.up]
-alias = "dot"
-description = "Update system packages, mise tools, nvim packages, pi, and more"
-run = """
-set -euo pipefail
-
-# Host-specific mise config: guard against stale shells without MISE_ENV so
-# child mise invocations see ~/.config/mise/config.$MISE_ENV.toml.
-export MISE_ENV="${MISE_ENV:-$(hostname -s)}"
-
-state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/mise"
-mkdir -p "$state_dir"
-export MISE_LOG_FILE="$state_dir/up.log"
-export MISE_LOG_FILE_LEVEL=debug
-: > "$MISE_LOG_FILE"
-chmod 600 "$MISE_LOG_FILE"
-
-step() {
-  printf '\\n==> %s\\n' "$1"
-  shift
-  "$@"
-}
-
-on_exit() {
-  status=$?
-  trap - EXIT
-  if [ "$status" -ne 0 ]; then
-    printf '\\nup failed (exit %s). mise debug log: %s\\n' "$status" "$MISE_LOG_FILE" >&2
-  fi
-  exit "$status"
-}
-trap on_exit EXIT
-
-step "Update mise" mise self-update --yes
-step "Update mise plugins" mise plugins update --yes
-step "Upgrade mise tools" mise upgrade --bump --yes
-step "Apply packages" mise bootstrap packages apply --yes
-step "Apply dotfiles" mise --verbose bootstrap dotfiles apply --force --yes
-step "Build miccheckd" mise run setup:miccheck
-step "Build notiwatchd" mise run setup:notiwatchd
-step "Set up avwatchd" mise run setup:avwatchd
-step "Apply launchd agents" mise bootstrap launchd apply --yes
-# Use top-level scoped bootstrap so pre-defaults/post-defaults hooks run.
-step "Apply macOS defaults" mise bootstrap --only macos-defaults --yes
-step "Upgrade packages" mise bootstrap packages upgrade --yes
-step "Sync fnox" mise run fnox
-step "Update Pi" mise run pi:update
-step "Reload Hammerspoon" "$HOME/.dotfiles/bin/hs-reload" || echo "hs-reload failed (Hammerspoon not running?)"
-
-# nvim --headless -c "lua vim.pack.update(nil, { force = true })" -c "quit"
-"""
+[tasks.doctor]
+description = "Post-bootstrap health checks (bootstrap.sh runs this last)"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/check-system"
 
 [tasks.clean]
 description = "Clean package-manager caches and generated artifacts"
@@ -899,43 +890,21 @@ else
 fi
 """
 
-[tasks.fnox]
-description = "Idempotently converge fnox config, encrypted cache, daemon state, and generated artifacts"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/fnox"
-# raw: 1Password may request biometric approval on the terminal
-raw = true
-
 [tasks."setup:yubikey"]
 description = "Per-YubiKey (serial-safe): age identity + fnox recipient + encrypted OP_SERVICE_ACCOUNT_TOKEN (interactive; pass serial: mise run setup:yubikey -- <serial>)"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/yubikey-setup"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/setup-yubikey"
 # raw: PIN/touch/token prompts on the terminal
 raw = true
 
-# [tasks."setup:op:signin"]
-# alias = "op:signin"
-# description = "Interactive gate: wait until the 1Password CLI (op) is signed in with app integration"
-# run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/op-signin-gate"
-
-[tasks."pi:update"]
-description = "Update pi tools, settings, runtime packages, and extensions"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/pi-update"
-
-[tasks."setup:pi"]
-alias = "pi:setup"
-description = "Compatibility alias for pi:update"
-run = "mise run pi:update"
-
 [tasks."setup:kanata"]
-alias = "kanata:setup"
 description = "Install/activate Karabiner VirtualHID glue and restart mise-managed kanata services"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/kanata-setup"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/setup-kanata"
 # raw: connect stdin/stdout/stderr directly — the task prompts for a sudo
 # password; under mise's default captured stdio the prompt never reaches the
 # terminal and the run hangs silently.
 raw = true
 
 [tasks."setup:miccheck"]
-alias = "miccheck:setup"
 description = "Build and sign miccheckd"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/lib/build-swift miccheck"
 sources = [
@@ -945,7 +914,6 @@ sources = [
 outputs = ["{{env.HOME}}/.local/bin/miccheckd"]
 
 [tasks."setup:notiwatchd"]
-alias = "notiwatchd:setup"
 description = "Build and sign notiwatchd"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/lib/build-swift notiwatchd"
 sources = [
@@ -965,23 +933,21 @@ sources = [
 outputs = ["{{env.HOME}}/.local/bin/avwatchd"]
 
 [tasks."setup:avwatchd"]
-alias = "avwatchd:setup"
 description = "Build avwatchd, install native messaging, and retire media-presenced"
 depends = ["build:avwatchd"]
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/setup-avwatchd"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/setup-avwatchd"
 
 # Declarative Helium profile setup (External Extensions with baked
 # prodversion, NSUserKeyEquivalents, Sparkle kill switch, en-US dictionary).
 # Also chained from the helium tool's postinstall, so it reruns on upgrades.
 [tasks."setup:helium"]
-alias = "helium:setup"
-description = "Seed Helium extensions (External Extensions JSONs), keyboard shortcuts, Sparkle-off defaults, and spellcheck dictionary"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/setup-helium"
+description = "Seed Helium extensions, preferences, dictionary, and avwatchweb native messaging"
+depends = ["build:avwatchd"]
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/setup-helium"
 
-# checker, not setup — stays outside the namespace
 [tasks."setup:touchid-sudo"]
 description = "Install /etc/pam.d/sudo_local with pam_tid (+ pam_reattach for tmux); replaces nix-darwin enableSudoTouchIdAuth"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/tasks/setup-touchid-sudo"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/setup-pam"
 
 [tasks."helium:1password-trust"]
 description = "Check 1Password trusts /Applications/Helium.app; prints GUI Add Browser steps if not (setting is tamper-protected, not writable)"

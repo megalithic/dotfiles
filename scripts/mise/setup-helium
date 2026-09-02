@@ -14,7 +14,8 @@
 #
 # Runs from the helium tool's postinstall chain in config.toml (so a
 # version bump refreshes the baked prodversion — the mise equivalent of the
-# nix module's eval-time readDir) and manually via `mise run setup:helium`.
+# nix module's eval-time readDir), after package convergence, and manually via
+# `mise run setup:helium`.
 #
 # Env:
 #   HELIUM_APP  app bundle path (default /Applications/Helium.app)
@@ -38,6 +39,7 @@ DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 # Chromium version into the update URL. The framework Versions/ dir name is
 # the Chromium version (CFBundleShortVersionString is the Helium version).
 FRAMEWORK_VERSIONS="$APP/Contents/Frameworks/Helium Framework.framework/Versions"
+# shellcheck disable=SC2010 # Version directories use numeric names only.
 PRODVERSION=$(ls "$FRAMEWORK_VERSIONS" 2>/dev/null | grep -E '^[0-9]' | sort -t. -k1,1n -k2,2n -k3,3n -k4,4n | tail -1)
 [ -n "$PRODVERSION" ] || {
   echo "setup-helium: no Chromium version dir under $FRAMEWORK_VERSIONS" >&2
@@ -57,7 +59,7 @@ egpjdkipkomnmjhjmdamaniclmdlobbo Firenvim
 gmdfnfcigbfkmghbjeelmbkbiglbmbpe LiveDebugger-DevTools
 cfcmijalplpjkfihjkdjdkckkglehgcf Clear-Downloads
 ponfpcnoihfmfllpaingbgckeeldkhle Enhancer-for-YouTube"
-echo "$EXTENSIONS" | while read -r id name; do
+echo "$EXTENSIONS" | while read -r id _name; do
   printf '{"external_update_url":"%s"}' "$UPDATE_URL" >"$EXT_DIR/$id.json"
 done
 count=$(echo "$EXTENSIONS" | wc -l | tr -d ' ')
@@ -67,6 +69,7 @@ echo "setup-helium: wrote $count External Extensions JSONs (prodversion=$PRODVER
 # NSUserKeyEquivalents: ^ = Ctrl, $ = Shift, ~ = Option, @ = Cmd.
 # Mirrors keyEquivalents in nix/home/common/programs/helium-browser/default.nix.
 # Helium reads these on launch; restart to apply.
+# shellcheck disable=SC2016 # Dollar signs are literal shortcut syntax.
 defaults write "$BUNDLE_ID" NSUserKeyEquivalents -dict \
   "Close Tab" '^w' \
   "New Private Window" '^$n' \
@@ -81,8 +84,8 @@ defaults write "$BUNDLE_ID" NSUserKeyEquivalents -dict \
 
 # Sparkle auto-update kill switch. Also declared in
 # [bootstrap.macos.defaults."net.imput.helium"] for fresh-machine bootstrap;
-# repeated here because `mise run up` deliberately skips the macos-defaults
-# step (post-defaults hook kills Finder/Dock). Mirrors nix/modules/system.nix.
+# repeated here because package post-install also calls this setup before the
+# normal macOS defaults phase. Mirrors nix/modules/system.nix.
 defaults write "$BUNDLE_ID" SUAutomaticallyUpdate -bool false
 defaults write "$BUNDLE_ID" SUEnableAutomaticChecks -bool false
 defaults write "$BUNDLE_ID" SUScheduledCheckInterval -int 0

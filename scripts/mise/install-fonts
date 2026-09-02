@@ -1,9 +1,9 @@
 #!/bin/sh
 # Install Nerd Fonts into ~/Library/Fonts. Driven by [vars].nerd_fonts in
-# config/mise/config.toml via [tasks."fonts:install"].
+# config/mise/config.toml via [tasks."install:fonts"].
 #
-# Usage: install-fonts.sh <FontAssetStem>...
-#   e.g. install-fonts.sh JetBrainsMono NerdFontsSymbolsOnly
+# Usage: install-fonts <FontAssetStem>...
+#   e.g. install-fonts JetBrainsMono NerdFontsSymbolsOnly
 #   Names are release asset stems: <Name>.tar.xz on
 #   https://github.com/ryanoasis/nerd-fonts/releases
 #

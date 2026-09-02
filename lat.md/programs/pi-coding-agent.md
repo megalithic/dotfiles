@@ -8,9 +8,9 @@ The former Home Manager module (`nix/home/common/programs/pi-coding-agent/`) and
 
 `config/pi-coding-agent/` is the sole owner of Pi configuration, wired through `config/mise/config.toml`.
 
-`mise run up` labels each update phase, writes nested mise debug output to `~/.local/state/mise/up.log`, and prints that path when a phase fails. Dotfile application also enables live verbose output so failing paths remain visible.
+`mise run up` (alias `dot`) runs named update phases sequentially through `scripts/mise/update-machine` and stops on the first failure. Each run streams stdout and stderr while writing mode-0600 timestamped human and mise debug logs under `~/.local/state/mise/up/`; `latest.log` and `latest.mise-debug.log` point to the newest pair. Logs include phase commands, exit codes, detected changed/unchanged/skipped states, and warning summaries. Failures also print both paths and a bounded output tail.
 
-`agent/` holds the managed subset of `~/.pi/agent` applied through `[dotfiles]` symlink and `symlink-each` entries; `bin/` holds the `pi`, `p`, and `work-tickets` wrappers linked into `~/.local/bin`; `mise/tasks/pi-update` is the `pi:update` mise task covering the imperative pieces (sha256-pinned Plannotator install into `~/.pi/agent/bin` via `scripts/install-pi-tools`, isolated nicknisi/sessions plugin extraction, jq settings merge, extension-deps cleanup, `pi update`, and `pi update --extensions`). The former `pinvim` and `pview` wrappers remain under `disabled/` and are no longer mapped into `~/.local/bin`; active profile resolution now runs through `scripts/resolve-profile.mjs` from `bin/pi`. `setup:pi` / `pi:setup` remain compatibility wrappers. `pi:update --dry-run` previews helper-bin changes, the final merged settings JSON, cleanup targets, and Pi update commands without modifying files. Disabled entries live in `disabled/` instead of using the `_` name-prefix convention because `symlink-each` links every entry.
+`agent/` holds the managed subset of `~/.pi/agent` applied through `[dotfiles]` symlink and `symlink-each` entries; `bin/` holds the `pi`, `p`, and `work-tickets` wrappers linked into `~/.local/bin`. `scripts/mise/update-pi` implements `update:pi`: it installs the sha256-pinned Plannotator helper into `~/.pi/agent/bin` through `scripts/install-pi-tools`, extracts the nicknisi/sessions plugin in an isolated home, merges settings with jq, cleans redundant extension dependencies, and runs `pi update` plus `pi update --extensions`. `mise run update:pi -- --dry-run` previews helper-bin changes, merged settings, cleanup targets, and Pi update commands without modifying files. The former `pinvim` and `pview` wrappers remain under `disabled/` and are no longer mapped into `~/.local/bin`; active profile resolution runs through `scripts/resolve-profile.mjs` from `bin/pi`. Disabled entries live in `disabled/` instead of using the `_` name-prefix convention because `symlink-each` links every entry.
 
 `lat` resolves from mise's `npm:lat.md` tool. Mise links `~/.pi/agent/bin/lat` to its stable shim because Pi's lat extension tools launch through that agent-local path; no lat override points back to Devenv.
 
@@ -30,7 +30,7 @@ The `git-worktrees` skill checks `wt --version` before managing worktrees. When 
 
 ## Runtime helper packages
 
-Pi runtime helper packages come from `settings.json` package entries and are refreshed by `pi update --extensions` (run by `mise run pi:update`).
+Pi runtime helper packages come from `settings.json` package entries and are refreshed by `pi update --extensions` (run by `mise run update:pi`).
 
 Current entries include `npm:pi-mcp-adapter`, `npm:pi-web-access`, `git:github.com/amosblomqvist/pi-interactive-subagents`, `git:github.com/amosblomqvist/pi-observational-memory`, `npm:pi-caveman`, `npm:@plannotator/pi-extension`, `npm:pi-rtk-optimizer`, `npm:pi-mono-figma`, `npm:pi-mono-btw`, `npm:context-mode`, `npm:pi-elixir`, `npm:pi-lens`, `nm:@ogulcancelik/pi-ssh-tools`, `npm:@juicesharp/rpiv-ask-user-question`, `npm:@juicesharp/rpiv-todo`, `npm:@ff-labs/pi-fff`, and `npm:@hypabolic/pi-hypa`. The old `npm:pi-subagents` package and its `subagents.agentOverrides` settings are removed; `multiSub` remains separate provider-pool configuration.
 
@@ -90,7 +90,7 @@ The task-pipeline commands use repo-scoped plan files under `~/.local/share/pi/p
 
 Session recall uses the `sessions` CLI/MCP server (`github:nicknisi/sessions` mise tool), which indexes Claude Code, Codex, Pi, and OpenCode transcripts on demand for fuzzy resume, context primers, usage reports, and memory mining. No separate Sesame database, local `search_sessions` extension, or launchd indexer is required.
 
-The sessions tool is wired without running `sessions setup` against the real home: setup unconditionally wires every detected client (Claude Code, Cursor, Codex, Pi) and would rewrite the tab-indented managed `mcp.json` with 2-space JSON through the symlink. Instead the `mcpServers.sessions` entry is hand-maintained in `agent/mcp.json`, and `mise run pi:update` extracts the embedded plugin with `SESSIONS_HOME=<throwaway> SESSIONS_DATA_DIR=$HOME/.local/share/sessions sessions setup` (no clients detected under the fake home, so only the plugin copy runs). Its six skills (`context`, `memory`, `recall`, `session-metrics`, `standup`, `weekly-summary`) are exposed to Pi as `sessions-*` symlinks in `agent/skills/` pointing at `~/.local/share/sessions/plugin/skills/*`; re-run the fake-home setup after `mise upgrade` of the sessions tool to refresh them.
+The sessions tool is wired without running `sessions setup` against the real home: setup unconditionally wires every detected client (Claude Code, Cursor, Codex, Pi) and would rewrite the tab-indented managed `mcp.json` with 2-space JSON through the symlink. Instead the `mcpServers.sessions` entry is hand-maintained in `agent/mcp.json`, and `mise run update:pi` extracts the embedded plugin with `SESSIONS_HOME=<throwaway> SESSIONS_DATA_DIR=$HOME/.local/share/sessions sessions setup` (no clients detected under the fake home, so only the plugin copy runs). Its six skills (`context`, `memory`, `recall`, `session-metrics`, `standup`, `weekly-summary`) are exposed to Pi as `sessions-*` symlinks in `agent/skills/` pointing at `~/.local/share/sessions/plugin/skills/*`; re-run the fake-home setup after `mise upgrade` of the sessions tool to refresh them.
 
 ### Sentinel guardrail rules
 
@@ -142,7 +142,7 @@ The source is `config/pi-coding-agent/web-search.json` (`[dotfiles]` mappings). 
 
 ## Runtime settings
 
-`config/pi-coding-agent/agent/settings.json` is merged into `~/.pi/agent/settings.json` by `mise run pi:update` (jq deep merge), never symlinked — pi rewrites the runtime file.
+`config/pi-coding-agent/agent/settings.json` is merged into `~/.pi/agent/settings.json` by `mise run update:pi` (jq deep merge), never symlinked — pi rewrites the runtime file.
 
 It drives default provider, enabled models, terminal behavior, package loading, and multi-sub presets. The default model list includes current OpenCode Go coding models; the `mega` scope exposes the strongest OpenCode Go options alongside Codex, Synthetic, and local models. The `alt` scope includes current Anthropic Opus, Sonnet, and Haiku aliases; planner, reviewer, and oracle default to the latest Opus alias; worker defaults to the latest Sonnet alias; scout and context-builder keep small-model fallbacks before local `llamacpp/gemma4`. The shell command prefix forces noninteractive git behavior and enables tmux image handling through `PI_TMUX_IMAGES=1`.
 

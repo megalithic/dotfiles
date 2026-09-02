@@ -58,7 +58,7 @@ When `op`, 1Password CLI integration, or fnox secret resolution fails, follow th
 
 **Common nix-managed paths:**
 
-- `~/.pi/agent/*` → `config/pi-coding-agent/` (mise-managed symlinks plus runtime state merged by `mise run pi:update`)
+- `~/.pi/agent/*` → `config/pi-coding-agent/` (mise-managed symlinks plus runtime state merged by `mise run update:pi`)
 - `~/.config/fish/*` → `config/fish/` (mise-managed symlink)
 - `~/.config/ghostty/*` → `config/ghostty/` (mise-managed symlink)
 - `~/.config/tmux/*` → `config/tmux/` (mise-managed symlink)

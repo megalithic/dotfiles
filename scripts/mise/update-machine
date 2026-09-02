@@ -1,0 +1,169 @@
+#!/usr/bin/env bash
+# Run named machine-update phases with live output and per-run logs.
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+usage: update-machine [--dry-run]
+
+Runs each machine-update phase in order. --dry-run asks mise to print each task
+without running it.
+EOF
+}
+
+dry_run=0
+case "${1:-}" in
+  "") ;;
+  --dry-run|-n) dry_run=1 ;;
+  --help|-h) usage; exit 0 ;;
+  *) printf 'update-machine: unknown argument: %s\n' "$1" >&2; usage >&2; exit 2 ;;
+esac
+[[ "$#" -le 1 ]] || { usage >&2; exit 2; }
+
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/mise/up"
+umask 077
+mkdir -p "$state_dir"
+
+stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+run_stamp="$stamp"
+counter=1
+while [[ -e "$state_dir/$run_stamp.log" || -e "$state_dir/$run_stamp.mise-debug.log" ]]; do
+  run_stamp="$stamp-$counter"
+  counter=$((counter + 1))
+done
+
+human_log="$state_dir/$run_stamp.log"
+debug_log="$state_dir/$run_stamp.mise-debug.log"
+: >"$human_log"
+: >"$debug_log"
+chmod 600 "$human_log" "$debug_log"
+ln -sfn "$(basename "$human_log")" "$state_dir/latest.log"
+ln -sfn "$(basename "$debug_log")" "$state_dir/latest.mise-debug.log"
+
+export MISE_LOG_FILE="$debug_log"
+export MISE_LOG_FILE_LEVEL=debug
+
+dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
+config_path="${MISE_CONFIG_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/mise/config.toml}"
+host="$(hostname -s)"
+commit="$(git -C "$dotfiles" rev-parse --short HEAD 2>/dev/null || printf unknown)"
+started="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+emit() {
+  printf '%s\n' "$*" | tee -a "$human_log"
+}
+
+emit "mise up"
+emit "timestamp: $started"
+emit "hostname: $host"
+emit "MISE_ENV: ${MISE_ENV:-<unset>}"
+emit "dotfiles commit: $commit"
+emit "config: $config_path"
+if [[ "$dry_run" -eq 1 ]]; then
+  emit "mode: dry-run"
+fi
+
+phases=(
+  update:tools
+  update:packages
+  update:dotfiles
+  install:fonts
+  update:system
+  update:nvim
+  update:fnox
+  update:pi
+  reload:hammerspoon
+)
+states=()
+exit_codes=()
+
+phase_state() {
+  local start_line="$1"
+  if awk -v start="$start_line" 'NR >= start && tolower($0) ~ /(\[skip\]|skipp?ed|skipping)/ { found=1 } END { exit !found }' "$human_log"; then
+    printf skipped
+  elif awk -v start="$start_line" 'NR >= start && tolower($0) ~ /(installed|upgraded|updated|created|replaced|wrote|copied|activated|rendered|applied|removed|reloaded|restarted|kickstarted)/ { found=1 } END { exit !found }' "$human_log"; then
+    printf changed
+  elif awk -v start="$start_line" 'NR >= start && tolower($0) ~ /(unchanged|already|up[- ]to[- ]date|nothing to do|no changes)/ { found=1 } END { exit !found }' "$human_log"; then
+    printf unchanged
+  else
+    printf completed
+  fi
+}
+
+print_summary() {
+  local i
+  emit ""
+  emit "Phase summary:"
+  for ((i = 0; i < ${#states[@]}; i++)); do
+    emit "  ${phases[$i]}: ${states[$i]} (exit ${exit_codes[$i]})"
+  done
+}
+
+print_warnings() {
+  local warnings
+  warnings="$(awk 'tolower($0) ~ /(^|[^a-z])(warn|warning)([^a-z]|$)/ && !seen[$0]++ { print }' "$human_log")"
+  emit ""
+  if [[ -n "$warnings" ]]; then
+    emit "Warnings:"
+    while IFS= read -r line; do
+      emit "  $line"
+    done <<<"$warnings"
+  else
+    emit "Warnings: none"
+  fi
+}
+
+for task in "${phases[@]}"; do
+  command=(mise run "$task")
+  if [[ "$dry_run" -eq 1 ]]; then
+    command=(mise run --dry-run "$task")
+  fi
+  printf -v command_text '%q ' "${command[@]}"
+  command_text="${command_text% }"
+
+  emit ""
+  emit "==> $task"
+  emit "command: $command_text"
+  start_line=$(($(wc -l <"$human_log") + 1))
+
+  set +e
+  "${command[@]}" 2>&1 | tee -a "$human_log"
+  pipe_status=("${PIPESTATUS[@]}")
+  status=${pipe_status[0]}
+  if [[ "$status" -eq 0 && "${pipe_status[1]}" -ne 0 ]]; then
+    status=${pipe_status[1]}
+  fi
+  set -e
+
+  if [[ "$status" -eq 0 ]]; then
+    state="$(phase_state "$start_line")"
+  else
+    state=failed
+  fi
+  states+=("$state")
+  exit_codes+=("$status")
+  emit "result: $state"
+  emit "exit: $status"
+
+  if [[ "$status" -ne 0 ]]; then
+    last_output="$(tail -n 20 "$human_log")"
+    print_summary
+    print_warnings
+    emit ""
+    emit "FAILED: $task (exit $status)"
+    emit "command: $command_text"
+    emit "log: $human_log"
+    emit "mise debug: $debug_log"
+    emit "last output:"
+    while IFS= read -r line; do
+      emit "  $line"
+    done <<<"$last_output"
+    exit "$status"
+  fi
+done
+
+print_summary
+print_warnings
+emit ""
+emit "log: $human_log"
+emit "mise debug: $debug_log"

@@ -438,7 +438,7 @@ PLIST
   # launchd.agents entry); if mise already wrote it, just load it.
   # Otherwise write a minimal one here.
   if [[ ! -f "$bar_plist" ]]; then
-    local bar_script="${DOTFILES_DIR}/mise/tasks/kanata-bar-launchd"
+    local bar_script="${DOTFILES_DIR}/scripts/mise/kanata-bar-launchd"
     cat >"$bar_plist" <<BARPLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

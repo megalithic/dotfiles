@@ -223,8 +223,12 @@ pgrep -fq 'Espanso.app.*worker' && ok "espanso worker running" || bad "espanso w
 launchctl list 2>/dev/null | grep -q 'org.nixos.raycast\|com.raycast' && bad "raycast launchd leftovers" || ok "no raycast agents"
 
 hdr "touchid-sudo task idempotency"
-out="$(bash "$HOME/.dotfiles/mise/tasks/setup-touchid-sudo" 2>&1)"
-[[ "$out" == *"already current"* ]] && ok "setup-touchid-sudo: already current" || wrn "setup-touchid-sudo wants changes: $out"
+out="$(bash "$HOME/.dotfiles/scripts/mise/setup-pam" 2>&1)"
+if [[ "$out" == *"already current"* ]]; then
+  ok "setup-touchid-sudo: already current"
+else
+  wrn "setup-touchid-sudo wants changes: $out"
+fi
 
 if [[ "$run_bootstrap" -eq 1 ]]; then
   hdr "mise bootstrap (idempotent converge; --fast skips)"

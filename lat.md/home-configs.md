@@ -16,7 +16,7 @@ The 2026-08 first mise-only wave removed shared Home Manager apps and packages c
 
 IINA, Inkscape, Slack, Zoom, OBS beta, Tidewave GUI/CLI, k9s, Rust, Difftastic, Python, Lua, and the remaining shared fonts moved to mise declarations. Tidewave's GUI uses the GitHub DMG postinstall pattern while its CLI remains the Aqua tool. Fnox and mise tasks own dependent config/activation behavior as each module retires.
 
-Local inference uses llama.cpp, not Ollama. The service is mise-owned on both hosts: launchd agent `dev.mise.com.megadots.llama-cpp` runs `mise/tasks/llama-server-launchd` (the `nix/home/common/programs/llama-cpp-local/` module still defines the nix options but is no longer enabled anywhere; running both fought over port 18080). The wrapper launches the absolute `llama-cpp/latest/llama-server` binary so unattended startup never enters a mise shim or fnox resolution. `config/llama-cpp/models.ini` supplies router overrides: `nomic-embed` runs in embedding mode with a 2048-token context and mean pooling, exposing 768-dimensional OpenAI-compatible embeddings at `http://127.0.0.1:18080/v1/embeddings`. `nix/home/common/programs/ollama/` stays an inert compatibility module. `bin/llm-pull` defaults to the `llamacpp` backend and creates GGUF alias symlinks (`qwen3.6.gguf`, `deepseek14b.gguf`, `gemma4.gguf`, `nomic-embed.gguf`) so the router exposes stable model IDs.
+Local inference uses llama.cpp, not Ollama. The service is mise-owned on both hosts: launchd agent `dev.mise.com.megadots.llama-cpp` runs `scripts/mise/llama-server-launchd` (the `nix/home/common/programs/llama-cpp-local/` module still defines the nix options but is no longer enabled anywhere; running both fought over port 18080). The wrapper launches the absolute `llama-cpp/latest/llama-server` binary so unattended startup never enters a mise shim or fnox resolution. `config/llama-cpp/models.ini` supplies router overrides: `nomic-embed` runs in embedding mode with a 2048-token context and mean pooling, exposing 768-dimensional OpenAI-compatible embeddings at `http://127.0.0.1:18080/v1/embeddings`. `nix/home/common/programs/ollama/` stays an inert compatibility module. `bin/llm-pull` defaults to the `llamacpp` backend and creates GGUF alias symlinks (`qwen3.6.gguf`, `deepseek14b.gguf`, `gemma4.gguf`, `nomic-embed.gguf`) so the router exposes stable model IDs.
 
 ## Per-tool config conventions
 
@@ -116,7 +116,7 @@ User-level tools, one line each. Rows marked **(mise)** were flipped in the mega
 | devenv | devenv integration; exports `DEVENV_TUI=false` |
 | direnv | **(mise)** binary, shell hooks, and `direnv.toml`; nix-direnv integration and HM module removed |
 | discord | **(mise)** chat app; `brew-cask:discord`; HM `programs.discord` module removed 2026-08 (settings.json no longer managed) |
-| espanso | **(mise)** text expander; config at `config/espanso/`, cask app + staged `dev.mise.com.megadots.espanso` plist via `mise/tasks/espanso-service` (nix agent runs until the next `just home`) |
+| espanso | **(mise)** text expander; config at `config/espanso/`, cask app + staged `dev.mise.com.megadots.espanso` plist via `scripts/mise/espanso-service` (nix agent runs until the next `just home`) |
 | eza | **(mise)** ls replacement; theme under `config/eza/`; aliases come from `[shell_alias]` |
 | fd | **(mise)** find replacement; ignore file under `config/fd/` |
 | firefox | browser |
@@ -152,7 +152,7 @@ User-level tools, one line each. Rows marked **(mise)** were flipped in the mega
 | ssh | **(mise)** SSH config (1Password agent provides keys). `~/.ssh/config` links the shared `config/ssh/config`; `config/ssh/allowed_signers` and `config/1password/agent.toml` own the signing files |
 | starship | **(mise)** shell prompt; `starship.toml` under `config/starship/`, prompt init from `conf.d/starship.fish`; HM module removed; git modules use `git rev-parse --show-toplevel` plus `.jj` root checks |
 | surfingkeys | **(mise)** browser keyboard nav (enabled on Tidewave); config.js under `config/surfingkeys/` |
-| tidewave | **(mise)** Aqua CLI plus GitHub GUI DMG installed into `/Applications` by `install-app.sh`; Nix app/CLI declarations removed |
+| tidewave | **(mise)** Aqua CLI plus GitHub GUI DMG installed into `/Applications` by `scripts/mise/install-app`; Nix app/CLI declarations removed |
 | television | fuzzy TUI |
 | tmux | terminal multiplexer; layouts via `ftm`; pinned 3.7b via overlay (macOS-arm64 copy-mode crash, tmux/tmux#4962) until nixpkgs ships >= 3.7b; resurrect/continuum autosave for crash recovery |
 | worktrunk | **(mise)** worktree manager (`worktrunk` in `[tools]`, config via `[dotfiles]`; see its `AGENTS.md`); fish integration owned locally — see Fish shell helpers, `bin/wt-tmux-target`, `bin/wt-tail-logs` |

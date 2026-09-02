@@ -22,7 +22,7 @@ postinstall = "find \"$MISE_TOOL_INSTALL_PATH\" -name '*-macos-*' -type f -exec 
 # this entry instead; the wrapper passes -Z (mandatory under launchd: no TTY,
 # interactive mode spins CPU) and the Sonos latency flag.
 [bootstrap.macos.launchd.agents."com.megadots.airupnp"]
-program = "~/.dotfiles/mise/tasks/airupnp-launchd"
+program = "~/.dotfiles/scripts/mise/airupnp-launchd"
 run_at_load = true
 keep_alive = true
 stdout_path = "~/.cache/airupnp-stdout.log"

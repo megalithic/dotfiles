@@ -50,5 +50,9 @@ fi
 
 sudo /usr/bin/install -m 0644 -o root -g wheel "$desired" "$SUDO_LOCAL"
 say "installed ${SUDO_LOCAL}"
-[[ -n "$reattach" ]] && say "pam_reattach enabled (${reattach})" || say "pam_reattach not installed; tmux sessions fall back to password (brew install pam-reattach, then re-run)"
+if [[ -n "$reattach" ]]; then
+  say "pam_reattach enabled (${reattach})"
+else
+  say "pam_reattach not installed; tmux sessions fall back to password (brew install pam-reattach, then re-run)"
+fi
 say "verify: run 'sudo -k; sudo true' in a fresh terminal — expect Touch ID prompt"

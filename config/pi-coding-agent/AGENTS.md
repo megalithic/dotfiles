@@ -6,7 +6,7 @@ onto the mise-managed setup).
 
 Nothing here applies automatically. Application happens through
 `config/mise/config.toml` (`[dotfiles]`,
-`[bootstrap.macos.launchd.agents]`, `pi:update` task) once that config is active.
+`[bootstrap.macos.launchd.agents]`, `update:pi` task) once that config is active.
 
 ## Directory layout
 
@@ -18,7 +18,7 @@ pi-coding-agent/
 │   ├── keybindings.json
 │   ├── models.json      # Custom model/provider definitions
 │   ├── mcp.json         # Global MCP server config
-│   ├── settings.json    # NOT linked — merged by mise/tasks/pi-update via jq
+│   ├── settings.json    # NOT linked — merged by scripts/mise/update-pi via jq
 │   ├── extensions/      # .ts extensions (symlink-each into ~/.pi/agent/extensions)
 │   ├── skills/          # Skill directories (symlink-each)
 │   ├── prompts/         # Prompt templates (symlink-each)
@@ -47,7 +47,7 @@ pi-coding-agent/
 
 ```sh
 mise bootstrap dotfiles apply          # symlinks (agent files, bin wrappers)
-mise run pi:update                     # tools, settings merge, runtime updates
+mise run update:pi                     # tools, settings merge, runtime updates
 mise bootstrap launchd apply           # user agents (currently skipped on
                                        # megabookpro; other com.megadots agents
                                        # would duplicate nix-run services)

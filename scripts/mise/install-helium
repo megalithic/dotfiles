@@ -1,7 +1,7 @@
 #!/bin/sh
 # Manual fallback: install Helium.app from megalithic/helium-macos-releases.
 # The normal path is the [tools."github:megalithic/helium-macos-releases"]
-# entry in config.toml (mise downloads the DMG, install-app.sh mounts
+# entry in config.toml (mise downloads the DMG, scripts/mise/install-app mounts
 # and copies it). This script does the same via the GitHub API directly.
 #
 # The repo is public now, so a token is optional (raises API rate limits).

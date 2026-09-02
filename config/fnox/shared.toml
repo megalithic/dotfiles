@@ -1,7 +1,7 @@
 #:schema https://fnox.jdx.dev/schema.json
 # Shared fnox config — source of truth for providers and 1Password references.
 #
-# ~/.config/fnox/config.toml is GENERATED from this file by `mise run fnox`
+# ~/.config/fnox/config.toml is GENERATED from this file by `mise run update:fnox`
 # (fnox ignores `import` in the auto-loaded global config, so the body is copied
 # and the per-machine `agecache` provider is appended). The same task syncs all
 # declared onepass secrets into the age-encrypted cache, verifies full coverage,

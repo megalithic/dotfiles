@@ -5,7 +5,7 @@
 -- 1. Create bot via @BotFather on Telegram
 -- 2. Message your bot to get chat_id (use getUpdates API)
 -- 3. Store TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in fnox, then run
---    `mise run fnox`.
+--    `mise run update:fnox`.
 --
 local M = {}
 

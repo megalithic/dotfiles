@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Render the s3cmd config from the sanitized template and fnox DO Spaces
-# fields. Runs at the end of `mise run fnox`; values come from the local
+# fields. Runs at the end of `mise run update:fnox`; values come from the local
 # age cache, so no 1Password round-trips are needed. No-ops when unchanged.
 set -euo pipefail
 

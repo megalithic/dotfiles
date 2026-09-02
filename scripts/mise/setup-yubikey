@@ -116,7 +116,7 @@ ok "Recipient: $recipient"
 {
   echo "# Combined YubiKey fleet age identity stubs (non-secret; key material stays on"
   echo "# the YubiKeys). One identity line per fleet member — age-plugin-yubikey tries"
-  echo "# whichever key is connected. Rebuilt by mise/tasks/yubikey-setup from the"
+  echo "# whichever key is connected. Rebuilt by scripts/mise/setup-yubikey from the"
   echo "# per-serial records: yubikey-identity-<serial>.txt"
   for stub in "$fnox_dir"/yubikey-identity-*.txt; do
     [[ -e "$stub" ]] || continue
