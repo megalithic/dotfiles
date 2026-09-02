@@ -128,13 +128,13 @@ Devenv is removed from this repo as part of the mise migration; the global mise 
 
 The removal covers `devenv.nix`, `devenv.yaml`, `devenv.lock`, and the git-hooks.nix shims in `.git/hooks`. The system-wide devenv tool from `nix/home/common/programs/devenv/default.nix` remains for other projects.
 
-The repo-root `mise.toml` that briefly replaced devenv is dissolved into `mise/config/mise/global_config.toml` — the single source of truth for anything mise-related. It carries the `nix:update`, `nix:apply:home`, and `nix:apply:darwin` tasks (megabookpro-only; harmless elsewhere), the git-hook tools (`hk`, `gitleaks`, `shellcheck`), and `npm:lat.md` for the `lat` CLI. Both hosts run this global config; megabookpro's former nix-managed stub is gone. `[env]` secrets sourcing goes through `mise/fragments/env-secrets.sh`, which prefers fnox and falls back to opnix on hosts without a fnox config.
+The repo-root `mise.toml` that briefly replaced devenv is dissolved into `mise/config/mise/global_config.toml` — the single source of truth for anything mise-related. It carries the git-hook tools (`hk`, `gitleaks`, `shellcheck`) and `npm:lat.md` for the `lat` CLI; the former `nix:*` tasks are removed — nix apply/update goes through `just` (`just home`, `just darwin`, `just update-flake`) on megabookpro. Both hosts run this global config; megabookpro's former nix-managed stub is gone. `[env]` secrets sourcing goes through `mise/fragments/env-secrets.sh`, which prefers fnox and falls back to opnix on hosts without a fnox config.
 
 `tk` is vendored at `bin/tk` (on `PATH` via mise `_.path` and the `~/bin` symlinks). Upstream `wedow/ticket` publishes no release assets, and the vendored copy preserves the devenv-base patch that sanitizes the directory basename when deriving ticket ID prefixes — existing `.tickets/dot-*` IDs depend on it.
 
 Git hooks are defined in `hk.pkl` ([hk](https://hk.jdx.dev)) mirroring the old set: check-merge-conflict, detect-private-key, gitleaks (staged-only override), shellcheck at warning severity, and conventional-commit checking on commit-msg. Hooks are configured but not installed; enable with `hk install --global` (git 2.54+) or per-repo `hk install`, bypass with `HK=0 git commit`. Nix linters (deadnix, statix) from the old setup are not yet ported.
 
-Repo-local `.devenv` and `.direnv` plus `.local_scripts/` are ignored. Unused flake inputs should be removed from `flake.lock` after their `flake.nix` references are gone. Flake updates are manual via `mise run nix:update`; no scheduled GitHub workflow updates `flake.lock`.
+Repo-local `.devenv` and `.direnv` plus `.local_scripts/` are ignored. Unused flake inputs should be removed from `flake.lock` after their `flake.nix` references are gone. Flake updates are manual via `just update-flake`; no scheduled GitHub workflow updates `flake.lock`.
 
 ## Secrets management
 

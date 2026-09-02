@@ -81,7 +81,7 @@ upgrade-nix   # upgrades nix
 ```sh
 just home         # apply home-manager config
 just darwin       # apply system config (requires sudo)
-mise run nix:update  # update flake lockfiles and pinned packages
+just update-flake # update flake.lock
 ```
 
 ---

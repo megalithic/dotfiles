@@ -992,30 +992,3 @@ run = "mise-tmpl-gen wt.shopify"
 description = "Apply per-worktree DB/port isolation to Phoenix config/dev.exs and config/test.exs"
 dir = "{{cwd}}"
 run = "elixir-worktree-isolation"
-
-# -- nix:* tasks: megabookpro only (nix-managed host during the migration).
-#    Harmless on workbookpro; they only run when invoked. --
-
-[tasks."nix:apply:home"]
-description = "Apply home-manager configuration (megabookpro)"
-dir = "{{env.HOME}}/.dotfiles"
-run = "just home"
-
-[tasks."nix:apply:darwin"]
-description = "Apply nix-darwin configuration (megabookpro)"
-dir = "{{env.HOME}}/.dotfiles"
-run = "just darwin"
-
-[tasks."nix:update"]
-description = "Update flake lockfile and manually-pinned packages (megabookpro)"
-dir = "{{env.HOME}}/.dotfiles"
-run = """
-set -euo pipefail
-
-nix flake update --flake ./
-pi -p "Check these two manually-pinned packages for newer versions and update them if newer exists. DO NOT apply any changes (no home-manager switch, no nix-build). DO NOT commit. ONLY update the source files — nothing else.
-
-1. pi-mcp-adapter (packages/pi-mcp-adapter.nix): check GitHub releases at nicobailon/pi-mcp-adapter for version newer than what's in the nix file. If newer: update version, rev, src hash, and npmDepsHash in packages/pi-mcp-adapter.nix.
-
-2. pi-web-access (packages/pi-web-access.nix): check GitHub releases at nicobailon/pi-web-access for version newer than what's in the nix file. If newer: update version, rev, src hash, and npmDepsHash in packages/pi-web-access.nix."
-"""
