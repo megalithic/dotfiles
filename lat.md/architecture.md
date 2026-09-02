@@ -45,7 +45,7 @@ External overlays and input aliases live separately in `nix/overlays/default.nix
 
 The legacy `config/` out-of-store tree is retired (2026-08): every app config lives under `mise/config/<tool>/` and is linked by mise `[dotfiles]`.
 
-The last holdouts flipped as follows: kanata's `.kbd` profiles and icons moved to `mise/config/kanata/` (kanata-setup's icons fallback repointed too), `~/.ssh/config` became host-specific (`mise/config/ssh/config.<hostname>`, each `Include`-ing `mise/config/ssh/shared.config`; mapped from `mise/config/mise/hosts/*.toml`, not the global `[dotfiles]`), and `~/.iex.exs` links to `mise/home/iex.exs`. Shared SSH config gives both laptops bare-name and `.local` aliases, pins LAN authentication to the 1Password agent's `~/.ssh/id_ed25519.pub`, and accepts newly seen host keys. `mise/home/` is the location for sources symlinked to `~/*` dotfiles; `mise/config/` for `~/.config/*` targets. DevSpace ssh blocks were dropped from the ssh configs (devspace is no longer used). The `linkConfig` helper in `nix/pkgs/common/lib.nix` has no callers. Config fragments that need Nix-interpolated values are generated into `~/.local/share/...` and sourced from the live config.
+The last holdouts flipped as follows: kanata's `.kbd` profiles and icons moved to `mise/config/kanata/` (kanata-setup's icons fallback repointed too), `~/.ssh/config` became host-specific (`mise/config/ssh/config.<hostname>`, each `Include`-ing `mise/config/ssh/shared.config`; mapped from `mise/config/mise/hosts/*.toml`, not the global `[dotfiles]`), and `~/.iex.exs` links to `mise/home/iex.exs`. Shared SSH config gives both laptops bare-name and `.local` aliases, pins LAN authentication to the 1Password agent's `~/.ssh/id_ed25519.pub`, and accepts newly seen host keys. `mise/home/` is the location for sources symlinked to `~/*` dotfiles; `mise/config/` for `~/.config/*` targets. DevSpace ssh blocks were dropped from the ssh configs (devspace is no longer used). The `linkConfig` helper in `nix/home/common/lib.nix` has no callers. Config fragments that need Nix-interpolated values are generated into `~/.local/share/...` and sourced from the live config.
 
 ## Parallel mise migration
 
@@ -126,7 +126,7 @@ Both recipes accept `--dry-run` for build-only validation and `--skip-sync` when
 
 Devenv is removed from this repo as part of the mise migration; the global mise config and `hk.pkl` replace it.
 
-The removal covers `devenv.nix`, `devenv.yaml`, `devenv.lock`, and the git-hooks.nix shims in `.git/hooks`. The system-wide devenv tool from `nix/pkgs/common/programs/devenv/default.nix` remains for other projects.
+The removal covers `devenv.nix`, `devenv.yaml`, `devenv.lock`, and the git-hooks.nix shims in `.git/hooks`. The system-wide devenv tool from `nix/home/common/programs/devenv/default.nix` remains for other projects.
 
 The repo-root `mise.toml` that briefly replaced devenv is dissolved into `mise/config/mise/global_config.toml` — the single source of truth for anything mise-related. It carries the `nix:update`, `nix:apply:home`, and `nix:apply:darwin` tasks (megabookpro-only; harmless elsewhere), the git-hook tools (`hk`, `gitleaks`, `shellcheck`), and `npm:lat.md` for the `lat` CLI. Both hosts run this global config; megabookpro's former nix-managed stub is gone. `[env]` secrets sourcing goes through `mise/fragments/env-secrets.sh`, which prefers fnox and falls back to opnix on hosts without a fnox config.
 

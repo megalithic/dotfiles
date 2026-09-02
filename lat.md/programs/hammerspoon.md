@@ -6,7 +6,7 @@ mise installs the app through `brew-cask:hammerspoon`, and `[dotfiles]` links `~
 
 ## Ownership flip from nix
 
-The former HM module (`nix/pkgs/common/programs/hammerspoon/`) is removed; its launchd launcher + nix-store app copies caused duplicate instances at login.
+The former HM module (`nix/home/common/programs/hammerspoon/`) is removed; its launchd launcher + nix-store app copies caused duplicate instances at login.
 
 The old setup installed `pkgs.brewCasks.hammerspoon`, generated `nix_path.lua`, and ran a launchd launcher agent that opened the Home Manager Apps copy. Duplicates happened because macOS window-resume relaunched the previous session's raw `/nix/store/...` path while the launchd agent opened the HM Apps path, and every rebuild minted a new store path that LaunchServices registered as a distinct app.
 

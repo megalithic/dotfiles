@@ -1,14 +1,14 @@
 # Home Manager configuration
 
-This file covers the user-level layer: how program modules are discovered, package and app composition, per-tool config conventions, and an index of the tools managed under `nix/pkgs/common/programs/`. Apply with `just home`.
+This file covers the user-level layer: how program modules are discovered, package and app composition, per-tool config conventions, and an index of the tools managed under `nix/home/common/programs/`. Apply with `just home`.
 
 ## Module auto-import
 
-`nix/pkgs/common/default.nix` auto-imports every `nix/pkgs/common/programs/<tool>/` directory that contains a `default.nix`, so the layout stays one directory per tool instead of a hand-maintained import list.
+`nix/home/common/default.nix` auto-imports every `nix/home/common/programs/<tool>/` directory that contains a `default.nix`, so the layout stays one directory per tool instead of a hand-maintained import list.
 
-The auto-import filters by directory shape; `nix/pkgs/common/default.nix` still imports `inputs.worktrunk.homeModules.default` when the optional `worktrunk` flake input exists, though the local worktrunk program module is removed (wave-1 mise flip) so nothing enables it. Alongside the program modules it imports `lib.nix`, `modules/settings-sync.nix`, `packages.nix`, `services.nix`, and `accounts.nix`. Pi is installed as a normal Home Manager package from its local module, not through `pi-nix`.
+The auto-import filters by directory shape; `nix/home/common/default.nix` still imports `inputs.worktrunk.homeModules.default` when the optional `worktrunk` flake input exists, though the local worktrunk program module is removed (wave-1 mise flip) so nothing enables it. Alongside the program modules it imports `lib.nix`, `modules/settings-sync.nix`, `packages.nix`, `services.nix`, and `accounts.nix`. Pi is installed as a normal Home Manager package from its local module, not through `pi-nix`.
 
-`nix/pkgs/common/default.nix` also sets `home.sessionPath`, session variables, the `~/bin` link, an `.editorconfig`, and out-of-store symlinks for iCloud and Proton drives. It enables `targets.darwin.copyApps` (not `linkApps`) so GUI apps work with Spotlight, and runs `lib.mega.mkAppActivation` over `config.mega.customApps`.
+`nix/home/common/default.nix` also sets `home.sessionPath`, session variables, the `~/bin` link, an `.editorconfig`, and out-of-store symlinks for iCloud and Proton drives. It enables `targets.darwin.copyApps` (not `linkApps`) so GUI apps work with Spotlight, and runs `lib.mega.mkAppActivation` over `config.mega.customApps`.
 
 ## Package and app composition
 
@@ -16,7 +16,7 @@ The 2026-08 first mise-only wave removed shared Home Manager apps and packages c
 
 IINA, Inkscape, Slack, Zoom, OBS beta, Tidewave GUI/CLI, k9s, Rust, Difftastic, Python, Lua, and the remaining shared fonts moved to mise declarations. Tidewave's GUI uses the GitHub DMG postinstall pattern while its CLI remains the Aqua tool. Fnox and mise tasks own dependent config/activation behavior as each module retires.
 
-Local inference uses llama.cpp, not Ollama. The service is mise-owned on both hosts: launchd agent `dev.mise.com.megadots.llama-cpp` runs `mise/tasks/llama-server-launchd` (the `nix/pkgs/common/programs/llama-cpp-local/` module still defines the nix options but is no longer enabled anywhere; running both fought over port 18080). The wrapper launches the absolute `llama-cpp/latest/llama-server` binary so unattended startup never enters a mise shim or fnox resolution. `mise/config/llama-cpp/models.ini` supplies router overrides: `nomic-embed` runs in embedding mode with a 2048-token context and mean pooling, exposing 768-dimensional OpenAI-compatible embeddings at `http://127.0.0.1:18080/v1/embeddings`. `nix/pkgs/common/programs/ollama/` stays an inert compatibility module. `bin/llm-pull` defaults to the `llamacpp` backend and creates GGUF alias symlinks (`qwen3.6.gguf`, `deepseek14b.gguf`, `gemma4.gguf`, `nomic-embed.gguf`) so the router exposes stable model IDs.
+Local inference uses llama.cpp, not Ollama. The service is mise-owned on both hosts: launchd agent `dev.mise.com.megadots.llama-cpp` runs `mise/tasks/llama-server-launchd` (the `nix/home/common/programs/llama-cpp-local/` module still defines the nix options but is no longer enabled anywhere; running both fought over port 18080). The wrapper launches the absolute `llama-cpp/latest/llama-server` binary so unattended startup never enters a mise shim or fnox resolution. `mise/config/llama-cpp/models.ini` supplies router overrides: `nomic-embed` runs in embedding mode with a 2048-token context and mean pooling, exposing 768-dimensional OpenAI-compatible embeddings at `http://127.0.0.1:18080/v1/embeddings`. `nix/home/common/programs/ollama/` stays an inert compatibility module. `bin/llm-pull` defaults to the `llamacpp` backend and creates GGUF alias symlinks (`qwen3.6.gguf`, `deepseek14b.gguf`, `gemma4.gguf`, `nomic-embed.gguf`) so the router exposes stable model IDs.
 
 ## Per-tool config conventions
 

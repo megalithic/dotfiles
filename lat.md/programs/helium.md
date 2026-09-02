@@ -2,7 +2,7 @@
 
 Helium is the primary browser, consumed as pre-signed, notarized DMG releases from the `megalithic/helium-macos-releases` repo (public since 2026-07) — CI bakes Widevine in and Developer ID signs the bundle, so nothing signs or injects locally.
 
-Both hosts install Helium through mise (`[tools."github:megalithic/helium-macos-releases"]`); the Home Manager module (`nix/pkgs/common/programs/helium-browser/`) was removed in the megabookpro wave-1 mise flip. `nix/pkgs/helium-browser.nix` remains in the tree but is unreferenced by Home Manager; retire it with `bin/helium-prefetch` in the teardown wave. (That package replaced a legacy one that injected Widevine into imput's public DMG and ad-hoc re-signed helpers locally; see git history for that machinery.)
+Both hosts install Helium through mise (`[tools."github:megalithic/helium-macos-releases"]`); the Home Manager module (`nix/home/common/programs/helium-browser/`) was removed in the megabookpro wave-1 mise flip. `nix/pkgs/helium-browser.nix` remains in the tree but is unreferenced by Home Manager; retire it with `bin/helium-prefetch` in the teardown wave. (That package replaced a legacy one that injected Widevine into imput's public DMG and ad-hoc re-signed helpers locally; see git history for that machinery.)
 
 ## Signed release package
 

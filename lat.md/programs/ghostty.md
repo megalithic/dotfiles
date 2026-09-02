@@ -2,7 +2,7 @@
 
 Ghostty is the primary terminal. mise owns it on megabookpro: the app comes from `brew-cask:ghostty@tip` and behavior lives in raw config at `mise/config/ghostty/`, linked to `~/.config/ghostty` via mise `[dotfiles]`.
 
-The HM module (`nix/pkgs/common/programs/ghostty/`) and the `config/ghostty` twin were removed in the 2026-08 GUI dedupe wave. The twins had diverged only on `font-size` (mise 14 vs twin 15); the newer mise value survived.
+The HM module (`nix/home/common/programs/ghostty/`) and the `config/ghostty` twin were removed in the 2026-08 GUI dedupe wave. The twins had diverged only on `font-size` (mise 14 vs twin 15); the newer mise value survived.
 
 ## Raw config, no module
 
