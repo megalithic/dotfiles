@@ -249,34 +249,6 @@ _sync-main:
     echo ":: Already up to date with remote"
   fi
 
-# ===========================================================================
-# Settings sync (app preferences between machines)
-# ===========================================================================
-
-# Sync app settings - export to or import from sync directory
-# Usage: just sync [export|import|status] [app]
-# Examples:
-#   just sync              # Show status
-#   just sync export       # Export all enabled apps
-#   just sync import       # Import all from sync dir
-#   just sync export brave-nightly
-[macos]
-sync *args:
-  #!/usr/bin/env bash
-  set -euo pipefail
-
-  if ! command -v settings-sync &>/dev/null; then
-    echo "Error: settings-sync not found. Run 'just home' first to install it."
-    exit 1
-  fi
-
-  if [[ -z "${1:-}" ]]; then
-    settings-sync status
-  else
-    settings-sync "$@"
-  fi
-
-
 # REF: https://docs.determinate.systems/troubleshooting/installation-failed-macos#run-the-uninstaller
 [macos]
 uninstall:

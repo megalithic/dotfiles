@@ -34,7 +34,7 @@ process checks.
 Cross-machine flow: snapshot + publish on the source host, mount the same NAS
 share on the destination host, restore from the published directory (the zip
 preserves resource forks and xattrs across SMB). There is no remote SSH mode;
-appbak, Nix, and settings-sync are not involved.
+No legacy app-preference workflow is involved.
 
 ## Snapshot format and safety
 

@@ -6,7 +6,7 @@ This file covers the user-level layer: how program modules are discovered, packa
 
 `nix/home/common/default.nix` auto-imports every `nix/home/common/programs/<tool>/` directory that contains a `default.nix`, so the layout stays one directory per tool instead of a hand-maintained import list.
 
-The auto-import filters by directory shape; `nix/home/common/default.nix` still imports `inputs.worktrunk.homeModules.default` when the optional `worktrunk` flake input exists, though the local worktrunk program module is removed (wave-1 mise flip) so nothing enables it. Alongside the program modules it imports `lib.nix`, `modules/settings-sync.nix`, `packages.nix`, `services.nix`, and `accounts.nix`. Pi is installed as a normal Home Manager package from its local module, not through `pi-nix`.
+The auto-import filters by directory shape; `nix/home/common/default.nix` still imports `inputs.worktrunk.homeModules.default` when the optional `worktrunk` flake input exists, though the local worktrunk program module is removed (wave-1 mise flip) so nothing enables it. Alongside the program modules it imports `lib.nix`, `packages.nix`, `services.nix`, and `accounts.nix`. Pi is installed as a normal Home Manager package from its local module, not through `pi-nix`.
 
 `nix/home/common/default.nix` also sets `home.sessionPath`, session variables, the `~/bin` link, an `.editorconfig`, and out-of-store symlinks for iCloud and Proton drives. It enables `targets.darwin.copyApps` (not `linkApps`) so GUI apps work with Spotlight, and runs `lib.mega.mkAppActivation` over `config.mega.customApps`.
 

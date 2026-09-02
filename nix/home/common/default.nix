@@ -27,7 +27,6 @@ in
 {
   imports = [
     ./lib.nix
-    ./modules/settings-sync.nix
     ./packages.nix
     ./services.nix
   ]

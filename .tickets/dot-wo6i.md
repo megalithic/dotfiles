@@ -7,12 +7,12 @@ created: 2026-04-30T14:07:29Z
 type: epic
 priority: 2
 assignee: Seth Messer
-tags: [nix, browser, settings-sync, safari, chromium]
+tags: [nix, browser, safari, chromium]
 ---
 
 # Cross-browser bookmark sync: Brave/Brave Nightly/Helium/Safari
 
-Research and implement bookmark synchronization across Brave Browser, Brave Browser Nightly, Helium Browser, and Safari (macOS + iOS). Prefer declarative nix/home-manager configuration. Extend existing settings-sync.nix module.
+Research and implement bookmark synchronization across Brave Browser, Brave Browser Nightly, Helium Browser, and Safari (macOS + iOS). Prefer declarative configuration. Build a dedicated workflow; the legacy app-settings module is removed.
 
 Key requirements:
 
@@ -25,7 +25,7 @@ Key requirements:
 Current state:
 
 - Brave Browser Nightly is source of truth
-- settings-sync.nix exists but unused
+- Legacy app-settings module is removed
 - Chromium browsers use identical JSON format (easy win)
 - Safari uses binary plist (requires converter)
 
@@ -35,7 +35,7 @@ Solutions evaluated:
 
 1. GoSuki (extension-free, multi-browser, unknown Safari support)
 2. Syncthing (file-level, no format conversion)
-3. Extend settings-sync.nix (simple Chromium-only approach)
+3. Build a dedicated Chromium sync workflow
 4. Custom converter service (complex but complete)
 
 Next steps pending user Q&A response in research document.
@@ -64,7 +64,7 @@ Awaiting user responses before implementation phase.
 User responses from Q&A:
 
 Q1 (Safari priority): Safari is secondary - mainly for iOS access to bookmarks created/edited in Helium
-Q5 (Complexity): Willing to improve settings-sync.nix module. Chromium ↔ Safari converter may be necessary.
+Q5 (Complexity): Willing to build a dedicated sync workflow. Chromium ↔ Safari converter may be necessary.
 Q6 (Syncthing): Future goal - sync various things between laptops, NAS, phone (mix of backup + 2-way sync)
 Q7 (Shared sessions/cookies/logins): YES - high priority for Chromium browsers
 Q9 (Source of truth): Eventually Helium will become source of truth after trial period as daily driver
@@ -80,11 +80,7 @@ Key insights:
 
 Additional context from user:
 
-Goal: Improve/rewrite settings-sync.nix module
-
-- Rename to sync.nix
-- Relocate from home/common/modules/settings-sync.nix → home/common/programs/sync/default.nix
-- Emphasis on making this a robust, general-purpose sync solution
+Goal: Replace the removed legacy module with a robust, general-purpose sync workflow under `home/common/programs/sync/default.nix`.
 
 Cross-repo coordination required:
 
@@ -100,7 +96,7 @@ Megadots tickets:
 
 - meg-am5n: Mirror epic for cross-repo tracking
 - meg-oqfq: App backup/sync module (linked)
-- meg-nrxy: Settings-sync evaluation (linked)
+- meg-nrxy: App-sync evaluation (linked)
 
 All tickets updated with cross-references and coordination notes.
 
