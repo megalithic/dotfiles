@@ -121,7 +121,7 @@ hm_apps="$(ls "$HOME/Applications/Home Manager Apps/" 2>/dev/null | sort | tr '\
 hdr "Key config symlinks (mise [dotfiles])"
 for link in ghostty fish tmux; do
   target="$(readlink "$HOME/.config/$link" 2>/dev/null || true)"
-  [[ "$target" == *"/.dotfiles/mise/config/$link" ]] && ok "~/.config/$link → mise" || bad "~/.config/$link not mise-linked (→ ${target:-missing})"
+  [[ "$target" == *"/.dotfiles/config/$link" ]] && ok "~/.config/$link → mise" || bad "~/.config/$link not mise-linked (→ ${target:-missing})"
 done
 
 hdr "Fonts"

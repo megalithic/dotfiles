@@ -31,7 +31,7 @@ Capturing and invoking those handlers gives stronger parity and less code than c
 
 ## Implementation
 
-Path: `mise/config/pi-coding-agent/agent/extensions/heimdall/`, linked into `~/.pi/agent/extensions/` through the existing `symlink-each` mapping.
+Path: `config/pi-coding-agent/agent/extensions/heimdall/`, linked into `~/.pi/agent/extensions/` through the existing `symlink-each` mapping.
 
 - `index.ts`: extension entry and adapter registration. Defines Heimdall as a generic command-behavior bridge and links to the Pi extension lat.md section.
 - `lib.ts`: guarded Pi-package import, extension-factory command capture, event/registration suppression, selective lifecycle forwarding, factory-state isolation, runtime delegation, required-command validation, and text-result helpers.

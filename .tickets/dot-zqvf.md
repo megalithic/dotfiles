@@ -18,7 +18,7 @@ Update Sentinel rewrite behavior to keep only preferred-tool rewrites that still
 Relevant code:
 
 - `home/common/programs/pi-coding-agent/extensions/sentinel.ts`
-- `mise/config/pi-coding-agent/agent/extensions/sentinel.ts`
+- `config/pi-coding-agent/agent/extensions/sentinel.ts`
 - `lat.md/programs/pi-coding-agent.md`
 
 Acceptance criteria:

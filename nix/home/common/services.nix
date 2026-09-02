@@ -16,7 +16,7 @@
 }:
 {
   # espanso: fully mise-owned now (cask espanso + dev.mise.com.megadots.espanso
-  # plist via mise/tasks/espanso-service; config at mise/config/espanso).
+  # plist via mise/tasks/espanso-service; config at config/espanso).
 
   # Home Manager currently emits `launchctl bootout --wait ...`, but macOS 15's
   # launchctl does not support `--wait` for `bootout`; it treats the flag as the

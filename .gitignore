@@ -7,8 +7,10 @@ _plans/
 # Auto-generated documentation and runtime config state
 _docs/
 docs/
-mise/config/fish/fish_variables
-mise/config/hammerspoon/Spoons/EmmyLua.spoon/annotations/timestamps.json
+config/fish/fish_variables
+config/hammerspoon/Spoons/EmmyLua.spoon/annotations/timestamps.json
+config/mise/config.local.toml
+config/mise/conf.d/
 
 .pi
 .nvim.lua
@@ -50,9 +52,6 @@ _planned
 result
 .handoff/
 _plans/
-
-# pi-acp is built locally by `mise run setup:pi`
-mise/config/pi-coding-agent/packages/pi-acp/dist/
 
 # notiwatchd binary is built locally by `mise run setup:notiwatchd`
 bin/notiwatchd

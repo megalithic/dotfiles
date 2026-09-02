@@ -16,7 +16,7 @@ EXTENSION_ID=ogfaajbfamngmlmkppahdpkoliobdemk
   echo "setup-avwatchd: missing executable $DOTFILES_DIR/bin/avwatchd" >&2
   exit 1
 }
-[ -f "$DOTFILES_DIR/mise/config/avwatchweb/manifest.json" ] || {
+[ -f "$DOTFILES_DIR/config/avwatchweb/manifest.json" ] || {
   echo "setup-avwatchd: missing avwatchweb extension" >&2
   exit 1
 }

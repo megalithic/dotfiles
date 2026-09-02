@@ -42,7 +42,7 @@ Commands: `{"cmd":"get"}` → `{"ok":true,"mode":...,"live":...,"leaseCount":...
 
 Live leases are connection-scoped. Clients keep the acquiring socket open; disconnecting releases every token owned by that connection. Tokens are non-empty and at most 128 UTF-8 bytes. Duplicate acquire/release calls from the owner are idempotent, multiple clients can hold distinct tokens, and attempts to reuse another live client's token fail. Acquire and release replies include effective `live` and `leaseCount` values. Commands are capped at 16 KiB; MicCheck drops clients that exceed the limit.
 
-Hammerspoon's one-shot client is `mise/config/hammerspoon/lib/micctl.lua` (`setPTTMode`, `toggleMode`). Callers include manual controls and `contexts/co.detail.mac.lua`; [[avwatchd#Consumers|avwatchd policy integration]] reaches miccheck through its persistent Swift subscriber. Hammerspoon does not use live leases.
+Hammerspoon's one-shot client is `config/hammerspoon/lib/micctl.lua` (`setPTTMode`, `toggleMode`). Callers include manual controls and `contexts/co.detail.mac.lua`; [[avwatchd#Consumers|avwatchd policy integration]] reaches miccheck through its persistent Swift subscriber. Hammerspoon does not use live leases.
 
 ## Build and packaging
 
@@ -50,4 +50,4 @@ Unlike [[avwatchd#Setup and migration|avwatchd]], miccheck is compiled: `bin/mic
 
 Signing uses a Developer ID Application identity (auto-detected; override with `MICCHECK_CODESIGN_IDENTITY`) with the fixed identifier `com.megadots.miccheck` and hardened runtime. TCC pins grants to the designated requirement (identifier + cert + team), so Input Monitoring survives rebuilds. Without an identity the script falls back to ad-hoc signing, where every rebuild changes the code hash and the stale TCC row must be **removed** (not toggled) in System Settings before a fresh prompt can fire. The build script unsets nix `SDKROOT`/`DEVELOPER_DIR` and resolves the SDK via `/usr/bin/xcrun` because the nix apple-sdk mismatches the system Swift toolchain.
 
-Mise owns the service through `mise/config/mise/global_config.toml`: agent entry `com.megadots.miccheck` installs LaunchAgent `dev.mise.com.megadots.miccheck`, which runs `bin/miccheck-launchd` and exits with a helpful error when the binary is missing. Task `setup:miccheck` runs `bin/miccheck-build`. Home Manager no longer declares a miccheck LaunchAgent.
+Mise owns the service through `config/mise/config.toml`: agent entry `com.megadots.miccheck` installs LaunchAgent `dev.mise.com.megadots.miccheck`, which runs `bin/miccheck-launchd` and exits with a helpful error when the binary is missing. Task `setup:miccheck` runs `bin/miccheck-build`. Home Manager no longer declares a miccheck LaunchAgent.

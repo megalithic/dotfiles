@@ -312,8 +312,8 @@ validate_kanata_bar_tool() {
 write_kanata_bar_config() {
   /bin/mkdir -p "$KANATA_BAR_CONFIG_DIR"
   local icons_dir="$KANATA_ICONS_DIR"
-  if [[ ! -d "$icons_dir" && -d "${DOTFILES_DIR}/mise/config/kanata/icons" ]]; then
-    icons_dir="${DOTFILES_DIR}/mise/config/kanata/icons"
+  if [[ ! -d "$icons_dir" && -d "${DOTFILES_DIR}/config/kanata/icons" ]]; then
+    icons_dir="${DOTFILES_DIR}/config/kanata/icons"
   fi
 
   mkdir -p "$TMP_ROOT"
@@ -434,7 +434,7 @@ PLIST
 
   # kanata-bar: runs the kanata-bar app binary
   local bar_plist="${agents_home}/${KANATA_BAR_LABEL}.plist"
-  # The bar launchd wrapper script already exists (from global_config.toml
+  # The bar launchd wrapper script already exists (from config.toml
   # launchd.agents entry); if mise already wrote it, just load it.
   # Otherwise write a minimal one here.
   if [[ ! -f "$bar_plist" ]]; then

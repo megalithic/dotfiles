@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Launchd entrypoint: run the mise-installed kanata-bar UI client.
 # Resolves the versioned http:kanata-bar install path so version bumps in
-# mise/config/mise/global_config.toml [tools] do not require launchd agent edits.
+# config/mise/config.toml [tools] do not require launchd agent edits.
 set -euo pipefail
 # ~/.local/bin first: the standalone mise binary lives there (not in shims),
 # and launchd's minimal environment otherwise cannot resolve the active install.

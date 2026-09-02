@@ -1,8 +1,8 @@
 # Hammerspoon
 
-Hammerspoon owns macOS automation: window management, launcher panels, menubar state, and clipboard tooling. mise owns it on both hosts — brew cask app, config in `mise/config/hammerspoon/`, fragments in `~/.local/share/hammerspoon/`.
+Hammerspoon owns macOS automation: window management, launcher panels, menubar state, and clipboard tooling. mise owns it on both hosts — brew cask app, config in `config/hammerspoon/`, fragments in `~/.local/share/hammerspoon/`.
 
-mise installs the app through `brew-cask:hammerspoon`, and `[dotfiles]` links `~/.config/hammerspoon` to `mise/config/hammerspoon/`.
+mise installs the app through `brew-cask:hammerspoon`, and `[dotfiles]` links `~/.config/hammerspoon` to `config/hammerspoon/`.
 
 ## Ownership flip from nix
 
@@ -12,7 +12,7 @@ The old setup installed `pkgs.brewCasks.hammerspoon`, generated `nix_path.lua`, 
 
 Now Hammerspoon's own `hs.autoLaunch` login item points at stable `/Applications/Hammerspoon.app`. mise owns `MJConfigFile`, and no Hammerspoon launch agent, Home Manager app copy, or nix-darwin preference remains. `~/.local/share/hammerspoon/nix_path.lua` is the committed static `mise/fragments/hammerspoon/nix_path.lua` (mise shims PATH; the `NIX_PATH`/`NIX_ENV` global names are kept for compatibility).
 
-The old nix twin `config/hammerspoon/` is retired and no longer linked anywhere; `mise/config/hammerspoon/` is the sole source. Historical divergences that lived across the twins (kanata `daemonLabel` `dev.mise.` prefix, kanata stderr log path) are now just the mise values — the `dev.mise.` label comment in `config.lua` remains until kanata's own ownership is unified. EmmyLua's generated `annotations/timestamps.json` is repo-ignored runtime state.
+The old nix twin `config/hammerspoon/` is retired and no longer linked anywhere; `config/hammerspoon/` is the sole source. Historical divergences that lived across the twins (kanata `daemonLabel` `dev.mise.` prefix, kanata stderr log path) are now just the mise values — the `dev.mise.` label comment in `config.lua` remains until kanata's own ownership is unified. EmmyLua's generated `annotations/timestamps.json` is repo-ignored runtime state.
 
 The mise `up` task ends by calling `bin/hs-reload` (non-fatal if Hammerspoon is not running) so a freshly synced config is picked up safely.
 
@@ -40,19 +40,19 @@ Global app bindings stay data-driven so app launchers, local pass-through keys, 
 
 Hammerspoon can act as the HTTP/S handler for app deep links while preserving browser auth flows.
 
-`mise/config/hammerspoon/watchers/url.lua` redirects Figma web URLs to `figma://...`, but paths containing `auth` such as `/app_auth` pass through to the browser.
+`config/hammerspoon/watchers/url.lua` redirects Figma web URLs to `figma://...`, but paths containing `auth` such as `/app_auth` pass through to the browser.
 
 ## shade-next panel
 
 shade-next bindings are split between generated data and handwritten lifecycle code.
 
-mise `[dotfiles]` links `~/.local/share/hammerspoon/fragments/shade-next.lua` from the static `mise/fragments/hammerspoon/shade-next.lua` and `~/.config/shade-next/config.toml` from `mise/config/shade-next/config.toml` (the former nix shade-next module that generated both is removed); `mise/config/hammerspoon/shade_next.lua` reads the fragment. The panel design spec lives in `~/.local/share/pi/docs/shade-next/panel-design.md`.
+mise `[dotfiles]` links `~/.local/share/hammerspoon/fragments/shade-next.lua` from the static `mise/fragments/hammerspoon/shade-next.lua` and `~/.config/shade-next/config.toml` from `config/shade-next/config.toml` (the former nix shade-next module that generated both is removed); `config/hammerspoon/shade_next.lua` reads the fragment. The panel design spec lives in `~/.local/share/pi/docs/shade-next/panel-design.md`.
 
 Key behavior: one panel-height rule across all states; block types are result cards, section lists, message rows, composer, and preview; Esc always hides the panel; route keys reserve Ctrl+n for note, Ctrl+p for Pi, Ctrl+c for calc. Compact launch geometry starts at `900×104` points and grows result panels to visible rows before clamping to the configured max height.
 
 `hyper+return` talks directly to shade-next's control socket when the app is running. On a cold start, it invokes the mise-installed `shade-next` wrapper with the `shade-next://toggle` URL; the wrapper repairs the `~/Applications` symlink and LaunchServices registration before opening the URL. Direct URL dispatch remains only as a fallback for installs without the wrapper. The installed wrapper also makes bindings active without a local source build. When shade-next shows, it records the frontmost app before activating itself and restores it on hide without Accessibility APIs. `hyper+n` enters the route modal (`p` prefills `pi`, `n` prefills `note`). Legacy Shade keeps `hyper+return` for `shade.smartToggle()` and moves its advanced modal to `hyper+shift+n`.
 
-The `[ui]` table in `mise/config/shade-next/config.toml` owns panel visual defaults including `border_width`, `border_color`, and `dim_unfocused`; the panel is non-opaque so the rounded material surface shows real transparency.
+The `[ui]` table in `config/shade-next/config.toml` owns panel visual defaults including `border_width`, `border_color`, and `dim_unfocused`; the panel is non-opaque so the rounded material surface shows real transparency.
 
 ## Window management
 
@@ -66,11 +66,11 @@ App and window watchers run layout rules on launch and window creation (not `mai
 
 The old `miccheck.lua` module is gone; push-to-talk/push-to-mute now lives in the standalone [[miccheck]] menubar app, and Hammerspoon only sends it mode commands.
 
-`mise/config/hammerspoon/lib/micctl.lua` is the one-shot socket client (`setPTTMode`, `toggleMode`) for manual/context controls such as `contexts/co.detail.mac.lua`. [[avwatchd#Consumers|Meeting enforcement]] runs through miccheckd's own persistent avwatchd subscription. Eventtap, menubar icon, hotkeys, and mute logic live in the compiled Swift app.
+`config/hammerspoon/lib/micctl.lua` is the one-shot socket client (`setPTTMode`, `toggleMode`) for manual/context controls such as `contexts/co.detail.mac.lua`. [[avwatchd#Consumers|Meeting enforcement]] runs through miccheckd's own persistent avwatchd subscription. Eventtap, menubar icon, hotkeys, and mute logic live in the compiled Swift app.
 
 ## Audio device watcher
 
-`mise/config/hammerspoon/watchers/audio.lua` selects preferred audio devices after debounced `hs.audiodevice.watcher` events.
+`config/hammerspoon/watchers/audio.lua` selects preferred audio devices after debounced `hs.audiodevice.watcher` events.
 
 It uses a trailing timer for `dev#` bursts, calls Hammerspoon's `hs.audiodevice` API, and logs deterministic device-change messages only when the default device actually changes. It intentionally does not shell out to `SwitchAudioSource` for status text because shell output can include terminal control sequences when Hammerspoon runs inside a console/tmux-shaped environment.
 

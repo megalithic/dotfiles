@@ -2,7 +2,7 @@
 set -euo pipefail
 
 root="${SPOTLIGHT_SCAN_ROOT:-$HOME/code}"
-ignore_file="${DOTFILES_DIR:-$HOME/.dotfiles}/mise/config/git/ignore"
+ignore_file="${DOTFILES_DIR:-$HOME/.dotfiles}/config/git/ignore"
 max_depth="${SPOTLIGHT_MAX_DEPTH:-6}"
 
 patterns=(

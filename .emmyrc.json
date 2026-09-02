@@ -29,8 +29,8 @@
   "workspace": {
     "library": [
       "$VIMRUNTIME",
-      "{env:DOTS}/mise/config/hammerspoon",
-      "{env:DOTS}/mise/config/hammerspoon/annotations",
+      "{env:DOTS}/config/hammerspoon",
+      "{env:DOTS}/config/hammerspoon/annotations",
       "{env:DOTS}/config/nvim",
       "{env:HOME}/.local/share/nvim/lazy",
       "${3rd}/luv/library",

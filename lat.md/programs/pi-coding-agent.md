@@ -1,12 +1,12 @@
 # Pi coding agent
 
-This file covers how Pi is packaged, wrapped, configured, and extended in this repo. The configuration lives at `mise/config/pi-coding-agent/`.
+This file covers how Pi is packaged, wrapped, configured, and extended in this repo. The configuration lives at `config/pi-coding-agent/`.
 
 The former Home Manager module (`nix/home/common/programs/pi-coding-agent/`) and vendored `pi-acp` adapter are removed. Current Home Manager generations claim no Pi files.
 
 ## Mise-managed configuration
 
-`mise/config/pi-coding-agent/` is the sole owner of Pi configuration, wired through `mise/config/mise/global_config.toml`.
+`config/pi-coding-agent/` is the sole owner of Pi configuration, wired through `config/mise/config.toml`.
 
 `mise run up` labels each update phase, writes nested mise debug output to `~/.local/state/mise/up.log`, and prints that path when a phase fails. Dotfile application also enables live verbose output so failing paths remain visible.
 
@@ -16,7 +16,7 @@ The former Home Manager module (`nix/home/common/programs/pi-coding-agent/`) and
 
 The managed `agent/extensions/lat.ts` passes arguments directly to `execFileSync`, captures child stderr, and reports command failures through tool results. Its lifecycle hooks stay dormant unless the working tree contains `lat.md/`. LAT diagnostics must never write directly into Pi's alternate-screen TUI because they can overwrite the input editor.
 
-`mise/config/mise/global_config.toml` prefers canonical mise registry aliases for user-facing tools and keeps backend-qualified names only when the registry has no alias or a specific package source is required.
+`config/mise/config.toml` prefers canonical mise registry aliases for user-facing tools and keeps backend-qualified names only when the registry has no alias or a specific package source is required.
 
 ## Package source and wrapper
 
@@ -24,7 +24,7 @@ Pi comes from the mise tool `npm:@earendil-works/pi-coding-agent`; the `bin/pi` 
 
 `mise x npm:@earendil-works/pi-coding-agent -- pi` prepends the npm tool's own bin dir, so the real binary wins over the wrapper without recursion.
 
-The wrapper sets `PI_STATE_DIR`, creates socket and manifest state directories, exports `PI_BRIDGE_LEGACY_SOCKET=1` so the generic bridge owns Pi-to-Pi `/tell` ingress, prepends `~/.pi/agent/bin`, `~/.local/bin`, mise shims, and `/opt/homebrew/bin` to `PATH` for launch contexts without shell init, and resolves `mise` plus `fnox` before launch. Its empty-array expansions remain compatible with macOS Bash 3.2 under `set -u`, because the shebang selects Bash before the wrapper can prepend Homebrew to `PATH`. It exports only non-secret `LAT_LLM_*` provider metadata; fnox injects `LAT_LLM_KEY` from the Synthetic alias in `mise/config/fnox/config.toml`. The final handoff is `fnox exec --replace -- mise x npm:@earendil-works/pi-coding-agent -- pi`, so non-shell Pi launches receive secrets without sourcing rendered files. `poppler-utils` stays in nix `nix/home/common/packages.nix` on megabookpro (mise's `brew:poppler` covers workbookpro).
+The wrapper sets `PI_STATE_DIR`, creates socket and manifest state directories, exports `PI_BRIDGE_LEGACY_SOCKET=1` so the generic bridge owns Pi-to-Pi `/tell` ingress, prepends `~/.pi/agent/bin`, `~/.local/bin`, mise shims, and `/opt/homebrew/bin` to `PATH` for launch contexts without shell init, and resolves `mise` plus `fnox` before launch. Its empty-array expansions remain compatible with macOS Bash 3.2 under `set -u`, because the shebang selects Bash before the wrapper can prepend Homebrew to `PATH`. It exports only non-secret `LAT_LLM_*` provider metadata; fnox injects `LAT_LLM_KEY` from the Synthetic alias in `config/fnox/config.toml`. The final handoff is `fnox exec --replace -- mise x npm:@earendil-works/pi-coding-agent -- pi`, so non-shell Pi launches receive secrets without sourcing rendered files. `poppler-utils` stays in nix `nix/home/common/packages.nix` on megabookpro (mise's `brew:poppler` covers workbookpro).
 
 The `git-worktrees` skill checks `wt --version` before managing worktrees. When available, it uses the local `wt` Worktrunk wrapper, Worktrunk JSON queries, `mise` project tasks, and generated `.config/wt.toml` templates; raw `git worktree`, copy loops, and manual tmux layouts stay forbidden. It preserves prior manual instructions in `skills/git-worktrees/references/legacy-git-worktrees.md` and uses that reference unchanged only when `wt` is unavailable.
 
@@ -38,7 +38,7 @@ Managed `worker`, `researcher`, and `scout` definitions in `agent/agents/` overr
 
 Observational memory loads globally but stays off per session until `/om on`; it writes session-scoped `.memory/` data only after enablement. Pi Dictate is a repo-managed local extension at `agent/extensions/pi-dictate.ts`, forked from `github.com/amosblomqvist/pi-dictate` commit `46a8609`; the upstream git package entry is removed to prevent duplicate shortcuts and lifecycle handlers. Alt+M starts/stops and Alt+N cancels. Before starting `rec`, Dictate acquires a connection-scoped [[miccheck#Socket protocol|MicCheck live lease]] and keeps the socket open; stop releases immediately, while shared cleanup and socket disconnect cover cancel, recorder/WebSocket errors, failed startup, stale async acquisition, and session shutdown. `MICCHECK_SOCKET` overrides the default socket for testing. `brew:sox` provides `rec`, and fnox injects `DEEPGRAM_API_KEY` from `op://Crypt/deepgram/api_key` into the Pi wrapper environment. Prompt Snippets is copied as a local managed extension at `agent/extensions/prompt-snippets/` with its README and six adjacent snippet files; Alt+S or `/snippets` opens its one-message toggle menu.
 
-The local `pi-bash-live-view` widget patch (kept at `mise/config/pi-coding-agent/patches/pi-bash-live-view/widget.ts`) makes live PTY panes fit rendered lines by display cell width, preserving ANSI escape sequences while trimming wide glyphs, combining marks, zero-width joiners, and variation selectors before padding to the terminal width. This avoided the one-cell overflow crash seen when live output contains wide glyphs or ANSI-colored truncation edges. The `bin/pi` wrapper no longer copies it over the installed widget at launch; the file remains only as reference in case the upstream regression returns.
+The local `pi-bash-live-view` widget patch (kept at `config/pi-coding-agent/patches/pi-bash-live-view/widget.ts`) makes live PTY panes fit rendered lines by display cell width, preserving ANSI escape sequences while trimming wide glyphs, combining marks, zero-width joiners, and variation selectors before padding to the terminal width. This avoided the one-cell overflow crash seen when live output contains wide glyphs or ANSI-colored truncation edges. The `bin/pi` wrapper no longer copies it over the installed widget at launch; the file remains only as reference in case the upstream regression returns.
 
 The `pi-acp` ACP adapter (vendored package, wrapper, `~/.local/bin/pi-acp` link, and pi-update build step) is deleted entirely, not migrated.
 
@@ -78,7 +78,7 @@ The `/tell` extension replaces the shell-script tell skill for Pi-to-Pi guidance
 
 `/tell` accepts `machine target message` as a remote form, for example `/tell megabookpro mega do something`. Remote routing SSHes to the machine, resolves that machine's `${PI_STATE_DIR:-~/.local/state/pi}/sockets/pi-{session}-{window}.sock`, prefers `agent` then `0` then the first non-ephemeral socket for session-only targets, and sends the same `pi.tell.v1` payload. Local machine prefixes such as `/tell workbookpro mega ...` are normalized back to local target routing. Remote tell payloads omit `fromSocket`; replies use the generated `/tell <origin-machine> <origin-session:window> ...` hint instead of socket ack.
 
-Bridge socket paths follow `${PI_STATE_DIR}/sockets/pi-{session}-{window}.sock`, but macOS limits `sun_path` to 104 bytes and `net.Server.listen()` throws `EINVAL` past it. All three path builders - `agent/extensions/bridge.ts` (`buildSocketPath`), `agent/extensions/tell.ts` (`buildSocketPath`), and `mise/config/hammerspoon/lib/interop/pi.lua` (`socketName`) - share one deterministic shortening scheme: when the full path would exceed 103 bytes, truncate the `{session}-{window}` name to fit and append `-` plus the first 8 hex chars of its sha256. The scheme must stay byte-identical across TS (`node:crypto`) and Lua (`hs.hash.SHA256`) or senders resolve the wrong socket. Bridge manifests store an explicit `ephemeral` flag before this shortening, so consumers can reject child instances even when the shortened socket basename no longer contains `-eph-`. Tmux identity detection in bridge.ts and tell.ts passes `-t "$TMUX_PANE"` to `tmux display-message`; without it tmux reports the client's active window, which made two Pi instances in one session bind the same socket.
+Bridge socket paths follow `${PI_STATE_DIR}/sockets/pi-{session}-{window}.sock`, but macOS limits `sun_path` to 104 bytes and `net.Server.listen()` throws `EINVAL` past it. All three path builders - `agent/extensions/bridge.ts` (`buildSocketPath`), `agent/extensions/tell.ts` (`buildSocketPath`), and `config/hammerspoon/lib/interop/pi.lua` (`socketName`) - share one deterministic shortening scheme: when the full path would exceed 103 bytes, truncate the `{session}-{window}` name to fit and append `-` plus the first 8 hex chars of its sha256. The scheme must stay byte-identical across TS (`node:crypto`) and Lua (`hs.hash.SHA256`) or senders resolve the wrong socket. Bridge manifests store an explicit `ephemeral` flag before this shortening, so consumers can reject child instances even when the shortened socket basename no longer contains `-eph-`. Tmux identity detection in bridge.ts and tell.ts passes `-t "$TMUX_PANE"` to `tmux display-message`; without it tmux reports the client's active window, which made two Pi instances in one session bind the same socket.
 
 Tell target resolution is fail-closed. Explicit targets must confidently match a reachable live candidate; missing, ambiguous, or busy/unreachable targets return an error instead of falling back. Non-interactive tool calls never open selector UI and report reachable non-current candidates. The originating/current instance is excluded from implicit selection and from loose target matches, preventing loopback; only an exact self target can select it.
 
@@ -136,13 +136,13 @@ The turned-off `disabled/extensions/_pinvim.ts` retains the former shade-next `f
 
 `web-search.json` (exa provider, non-interactive `auto-summary` curation workflow) is one source file linked to every path pi-web-access may resolve: `~/.pi/web-search.json`, `~/.pi/agent/web-search.json`, and `~/.config/pi/web-search.json`.
 
-The source is `mise/config/pi-coding-agent/web-search.json` (`[dotfiles]` mappings). pi-web-access resolves its config dir as `PI_CODING_AGENT_DIR`, then `$XDG_CONFIG_HOME/pi`, then `~/.pi`, while pi core defaults to `~/.pi/agent` — an unset var plus `XDG_CONFIG_HOME` is how a stray `~/.config/pi/web-search.json` once shadowed the managed config and re-enabled interactive search curation.
+The source is `config/pi-coding-agent/web-search.json` (`[dotfiles]` mappings). pi-web-access resolves its config dir as `PI_CODING_AGENT_DIR`, then `$XDG_CONFIG_HOME/pi`, then `~/.pi`, while pi core defaults to `~/.pi/agent` — an unset var plus `XDG_CONFIG_HOME` is how a stray `~/.config/pi/web-search.json` once shadowed the managed config and re-enabled interactive search curation.
 
 `PI_CODING_AGENT_DIR=~/.pi/agent` is set globally through the mise global config `[env]` so extension config resolution matches pi core's default.
 
 ## Runtime settings
 
-`mise/config/pi-coding-agent/agent/settings.json` is merged into `~/.pi/agent/settings.json` by `mise run pi:update` (jq deep merge), never symlinked — pi rewrites the runtime file.
+`config/pi-coding-agent/agent/settings.json` is merged into `~/.pi/agent/settings.json` by `mise run pi:update` (jq deep merge), never symlinked — pi rewrites the runtime file.
 
 It drives default provider, enabled models, terminal behavior, package loading, and multi-sub presets. The default model list includes current OpenCode Go coding models; the `mega` scope exposes the strongest OpenCode Go options alongside Codex, Synthetic, and local models. The `alt` scope includes current Anthropic Opus, Sonnet, and Haiku aliases; planner, reviewer, and oracle default to the latest Opus alias; worker defaults to the latest Sonnet alias; scout and context-builder keep small-model fallbacks before local `llamacpp/gemma4`. The shell command prefix forces noninteractive git behavior and enables tmux image handling through `PI_TMUX_IMAGES=1`.
 

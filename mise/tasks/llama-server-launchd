@@ -6,7 +6,7 @@ set -euo pipefail
 data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
 llama_server="$data_home/mise/installs/llama-cpp/latest/llama-server"
 model_dir="$data_home/llama.cpp/models"
-preset="$HOME/.dotfiles/mise/config/llama-cpp/models.ini"
+preset="$HOME/.dotfiles/config/llama-cpp/models.ini"
 log_dir="$HOME/Library/Logs/llama-cpp"
 mkdir -p "$model_dir" "$log_dir"
 [[ -x "$llama_server" ]] || {

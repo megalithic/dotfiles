@@ -1,6 +1,6 @@
 # notiwatchd
 
-`mise/config/notiwatchd/notiwatchd.swift` is a single-file Swift daemon watching Notification Center deliveries via the usernoted SQLite store: matches JSON rules, records to its own DB, broadcasts NDJSON on a Unix socket, routes to sinks.
+`config/notiwatchd/notiwatchd.swift` is a single-file Swift daemon watching Notification Center deliveries via the usernoted SQLite store: matches JSON rules, records to its own DB, broadcasts NDJSON on a Unix socket, routes to sinks.
 
 Sinks are `bin/ntfy`, arbitrary exec commands, and webhooks.
 
@@ -18,7 +18,7 @@ A readonly watcher over the usernoted DB with a persisted high-water mark, kqueu
 - Trigger: kqueue `DispatchSource` file watchers on `db` and `db-wal` (write/extend/delete/rename, re-arms on delete/rename), debounced 200ms, plus a fallback poll (`poll_fallback_seconds`, default 30). Detection latency is ~5-6s after the banner because usernoted commits lazily, not because of the watcher.
 - Store: `~/.local/share/notiwatchd/notifications.db` — `notifications` table with rec_id, uuid, bundle_id, title/subtitle/body, delivered_at, presented, style, matched rule, urgency, actions, per-action results JSON, raw request JSON.
 - Socket: `~/.local/state/notiwatchd/sock` broadcasts every event as one NDJSON line to all connected subscribers (Hammerspoon or anything else can `nc -U` it).
-- Config: `~/.config/notiwatchd/config.json` (mise-symlinked from `mise/config/notiwatchd/config.json`), hot-reloaded on mtime change and on SIGHUP. Current first-match routing sends Abby Messer questions through `urgent-messages` at critical urgency before the generic normal-urgency Messages rule.
+- Config: `~/.config/notiwatchd/config.json` (mise-symlinked from `config/notiwatchd/config.json`), hot-reloaded on mtime change and on SIGHUP. Current first-match routing sends Abby Messer questions through `urgent-messages` at critical urgency before the generic normal-urgency Messages rule.
 
 ## Rules and actions
 
@@ -57,7 +57,7 @@ Validated live 2026-09-01: BTM alert triggered by bootstrapping a throwaway laun
 
 Reading the usernoted group container requires Full Disk Access, and TCC pins grants to the executable, so notiwatchd is compiled to a stable signed binary following the [[miccheck]] pattern instead of running as an interpreted script.
 
-An interpreted `#!/usr/bin/swift` script would attribute the FDA grant to the Swift interpreter. Source and build script are colocated with the config in `mise/config/notiwatchd/` (only launchd-executed or manually-run entrypoints live in `bin/`). `mise/config/notiwatchd/notiwatchd-build` compiles to `~/.dotfiles/bin/notiwatchd` (gitignored artifact) with a stable codesign identifier (`com.megadots.notiwatchd`, Developer ID if available, ad-hoc fallback), `mise run setup:notiwatchd` wraps it, and `bin/notiwatchd-launchd` is the LaunchAgent entrypoint (`com.megadots.notiwatchd` in `mise/config/mise/global_config.toml`, RunAtLoad + KeepAlive). The compiled binary needs two one-time TCC grants in System Settings > Privacy & Security: Full Disk Access (read the usernoted store; daemon exits 1 with instructions when missing) and Accessibility (the `dismiss` action; recorded as `ax-not-trusted` when missing).
+An interpreted `#!/usr/bin/swift` script would attribute the FDA grant to the Swift interpreter. Source and build script are colocated with the config in `config/notiwatchd/` (only launchd-executed or manually-run entrypoints live in `bin/`). `config/notiwatchd/notiwatchd-build` compiles to `~/.dotfiles/bin/notiwatchd` (gitignored artifact) with a stable codesign identifier (`com.megadots.notiwatchd`, Developer ID if available, ad-hoc fallback), `mise run setup:notiwatchd` wraps it, and `bin/notiwatchd-launchd` is the LaunchAgent entrypoint (`com.megadots.notiwatchd` in `config/mise/config.toml`, RunAtLoad + KeepAlive). The compiled binary needs two one-time TCC grants in System Settings > Privacy & Security: Full Disk Access (read the usernoted store; daemon exits 1 with instructions when missing) and Accessibility (the `dismiss` action; recorded as `ax-not-trusted` when missing).
 
 Signing is stable (dot-34nv resolved 2026-09-01): the "Developer ID Application: Seth Messer (3ZJ3F5RFBZ)" identity is installed in the login keychain on both megabookpro and workbookpro, so grants survive rebuilds — TCC pins cert + identifier and both are now constant. The identity was exported from megabookpro via Keychain Access (CLI `security export` of private keys hard-fails over SSH by design) and imported with Apple's DeveloperIDG2CA intermediate. The .p12 and its passphrase live in 1Password Crypt > `apple-developer` > Code Signing section; import recipe is in that item's field notes. `bin/signcode` wraps the same signing (identity lookup, `com.megadots.<basename>` identifier, hardened runtime + timestamp) for any other binary needing TCC-stable signing. Ad-hoc fallback still exists in `notiwatchd-build` for machines without the identity (grants then die per rebuild).
 

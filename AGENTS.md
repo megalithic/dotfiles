@@ -9,7 +9,7 @@ Determine the host once from `$HOSTNAME` when it is set. Use `hostname -s` only 
 | Host | System management |
 | ---- | ----------------- |
 | `megabookpro` | Mostly nix-darwin + home-manager, with some mise migration. Use Nix rebuild rules for Nix-owned files. |
-| `workbookpro` | Fully mise-managed. Do not use Nix, nix-darwin, home-manager, `devenv`, or Nix rebuild commands. Use mise tasks/config and Homebrew casks declared in `mise/config/mise/global_config.toml`. |
+| `workbookpro` | Fully mise-managed. Do not use Nix, nix-darwin, home-manager, `devenv`, or Nix rebuild commands. Use mise tasks/config and Homebrew casks declared in `config/mise/config.toml`. |
 
 Nix sections below apply only on Nix-managed hosts or for paths still owned by Nix.
 
@@ -21,7 +21,7 @@ On `workbookpro`, use mise as the system-management entry point:
 - Run declared tasks with `mise run <task>` or `mise tasks run <task>`.
 - Run tool-scoped commands with `mise exec [TOOL@VERSION]... -- <command> [args...]` (`mise x` is the short alias). The `--` separates requested tools from the command.
 - If an approved tool is missing and you need to run an approved command, do not install it globally. Prefix the exec call with `MISE_AUTO_INSTALL=false` so mise fails instead of auto-installing: `MISE_AUTO_INSTALL=false mise exec <tool>@<version> -- <command> [args...]`.
-- Add or change tools in `mise/config/mise/global_config.toml` only when the user asks or the task requires persistent ownership changes.
+- Add or change tools in `config/mise/config.toml` only when the user asks or the task requires persistent ownership changes.
 
 Reference: <https://mise.jdx.dev/cli/exec.html>
 
@@ -58,11 +58,11 @@ When `op`, 1Password CLI integration, or fnox secret resolution fails, follow th
 
 **Common nix-managed paths:**
 
-- `~/.pi/agent/*` → `mise/config/pi-coding-agent/` (mise-managed symlinks plus runtime state merged by `mise run pi:update`)
-- `~/.config/fish/*` → `mise/config/fish/` (mise-managed symlink)
-- `~/.config/ghostty/*` → `config/ghostty/` (out-of-store symlink)
-- `~/.config/tmux/*` → `mise/config/tmux/` (mise-managed symlink)
-- `~/.config/nvim/*` → `mise/config/nvim/` (mise-managed symlink; nvim itself is mise-installed)
+- `~/.pi/agent/*` → `config/pi-coding-agent/` (mise-managed symlinks plus runtime state merged by `mise run pi:update`)
+- `~/.config/fish/*` → `config/fish/` (mise-managed symlink)
+- `~/.config/ghostty/*` → `config/ghostty/` (mise-managed symlink)
+- `~/.config/tmux/*` → `config/tmux/` (mise-managed symlink)
+- `~/.config/nvim/*` → `config/nvim/` (mise-managed symlink; nvim itself is mise-installed)
 - `~/Applications/Nix/*` → Finder aliases created by `nix/home/common/mac-aliases.nix`
 - Most `~/.config/<app>/*` → check `nix/home/common/programs/<app>/` first
 
@@ -116,8 +116,11 @@ When `op`, 1Password CLI integration, or fnox secret resolution fails, follow th
 │   │   └── default.nix    # Brave Nightly, Fantastical, Bloom, etc.
 │   ├── overlays/          # Nixpkgs overlays
 │   └── secrets/           # age-encrypted archive (see just age/deage)
-├── config/                # Out-of-store app configs (live symlinks)
-│   └── ghostty/           # Terminal emulator
+├── config/                # Mise-managed app configuration sources
+│   ├── mise/              # Global/host configs, lockfile, templates
+│   └── ghostty/           # Terminal emulator (one of many app configs)
+├── home/                  # Mise-managed sources linked into ~/
+├── mise/                  # Bootstrap tasks, hooks, and static fragments
 ├── bin/                   # User scripts (symlinked to ~/bin/)
 └── docs/                  # Curated architecture docs, skills, agents, commands
 ```
@@ -126,9 +129,9 @@ Directory-specific `AGENTS.md` files are removed; use this root file for repo gu
 
 ## Parallel mise migration
 
-Nix/Home Manager remains active while mise migration proceeds. Treat `mise/config/mise/global_config.toml` `[dotfiles]` as mise ownership map; inspect its exact source and target before editing either world.
+Nix/Home Manager remains active while mise migration proceeds. Treat `config/mise/config.toml` `[dotfiles]` as mise ownership map; inspect its exact source and target before editing either world.
 
-- Literal twins (`config/` and `mise/config/` copies such as Hammerspoon, Neovim, tmux, Kitty, Ghostty, and Pi) require a recursive diff and an intentional sync on every related change. Preserve documented per-world divergences.
+- Literal twins (Nix-managed sources and `config/` copies such as Hammerspoon, Neovim, tmux, Kitty, Ghostty, and Pi) require a recursive diff and an intentional sync on every related change. Preserve documented per-world divergences.
 - Generated Nix config and static mise config (fish, git, SSH/1Password, and similar) require behavior review, not byte comparison. Keep resulting user behavior equivalent until one owner retires.
 - Shared-source mappings (for example Kanata, Espanso, and some SSH paths) already link same repo files. Do not create copies; verify mapping before changing them.
 - Record owner, sync direction, and intentional divergence in `lat.md/`. Run `lat check` after changing those docs.

@@ -27,7 +27,7 @@ for arg in "$@"; do
 done
 
 dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
-pi_src="$dotfiles/mise/config/pi-coding-agent"
+pi_src="$dotfiles/config/pi-coding-agent"
 agent="$HOME/.pi/agent"
 settings_file="$agent/settings.json"
 managed_settings="$pi_src/agent/settings.json"
@@ -123,7 +123,7 @@ remove_parked_pinvim_links() {
       continue
     fi
     case "$target" in
-      *"/.dotfiles/mise/config/pi-coding-agent/"*)
+      *"/.dotfiles/config/pi-coding-agent/"*)
         trash_path "$link"
         say "removed parked pinvim link: $link"
         ;;

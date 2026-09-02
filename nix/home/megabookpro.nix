@@ -39,7 +39,7 @@
   };
 
   # llama.cpp: ownership flipped to mise (com.megadots.llama-cpp launchd agent
-  # + mise/tasks/llama-server-launchd + mise/config/llama-cpp/models.ini),
+  # + mise/tasks/llama-server-launchd + config/llama-cpp/models.ini),
   # mirroring the same conservative 32GB defaults. The HM module
   # (programs.llamaCppLocal) stays available but disabled here.
 

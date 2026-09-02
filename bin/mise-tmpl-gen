@@ -5,7 +5,7 @@
 #   mise-tmpl-gen <lang>       [target-dir]   # mise config + scripts
 #   mise-tmpl-gen wt.<lang>    [target-dir]   # Worktrunk config + scripts
 #
-# Templates live in $MISE_TMPL_DIR (default ~/.dotfiles/mise/config/mise/tmpls)
+# Templates live in $MISE_TMPL_DIR (default ~/.dotfiles/config/mise/tmpls)
 # under language subdirs. The dest drops the ".local" segment so mise and
 # Worktrunk file patterns match:
 #   <lang>/mise.local.toml   -> <target>/.config/mise.toml
@@ -25,7 +25,7 @@
 # destinations are replaced with a notice. mise configs are `mise trust`ed.
 set -euo pipefail
 
-tmpl_dir="${MISE_TMPL_DIR:-$HOME/.dotfiles/mise/config/mise/tmpls}"
+tmpl_dir="${MISE_TMPL_DIR:-$HOME/.dotfiles/config/mise/tmpls}"
 
 usage() {
   echo "usage: mise-tmpl-gen <lang|wt.lang> [target-dir]" >&2

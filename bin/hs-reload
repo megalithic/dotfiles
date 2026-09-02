@@ -44,7 +44,7 @@ get_last_load() {
 before=$(get_last_load)
 
 # Preferred safe path: URL event handled inside Hammerspoon.
-# Requires mise/config/hammerspoon/init.lua to bind hs.urlevent "hs-reload".
+# Requires config/hammerspoon/init.lua to bind hs.urlevent "hs-reload".
 if /usr/bin/open -g 'hammerspoon://hs-reload' >/dev/null 2>&1; then
   for _ in {1..20}; do
     sleep 0.5

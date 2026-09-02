@@ -1,0 +1,25 @@
+# Bash / POSIX profile — mise-managed configuration
+
+Non-nix twin of `nix/home/common/programs/bash/default.nix` plus the portable shell
+hooks that Home Manager used to inject from program modules. These files are
+linked by `config/mise/config.toml`:
+
+- `~/.profile` → `config/bash/profile`
+- `~/.bashrc` → `config/bash/bashrc`
+- `~/.bash_profile` → `config/bash/bash_profile`
+
+## What moved here
+
+- Git worktree helper functions and completions from the nix bash module.
+- `mise activate bash` so global `[env]` and `[shell_alias]` work in bash.
+- Worktrunk upstream shell integration: `eval "$(wt config shell init bash)"`.
+- Portable hooks for fzf, direnv, starship, zoxide, Ghostty shell integration,
+  and the yazi `yy` cwd helper.
+- Fnox shell activation for 1Password-backed secrets.
+
+## Keep in sync
+
+- Cross-shell aliases live in Home Manager's mise `globalConfig` and
+  `config/mise/config.toml` `[shell_alias]`, not here.
+- Fish owns a custom `wt` function; bash uses upstream Worktrunk integration.
+- Avoid nix store paths; resolve tools from PATH after `mise activate bash`.

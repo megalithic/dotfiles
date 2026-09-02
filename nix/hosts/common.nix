@@ -19,7 +19,7 @@ in
     inherit (paths) home;
     isHidden = false;
     # fish is mise/brew-owned now ([bootstrap.packages] brew:fish +
-    # mise/config/fish); nix fish module removed with the shells wave.
+    # config/fish); nix fish module removed with the shells wave.
     shell = "/opt/homebrew/bin/fish";
   };
 
@@ -98,7 +98,7 @@ in
     vim = "$EDITOR";
   };
 
-  # SSH_AUTH_SOCK (1Password agent) is mise-owned: global_config.toml [env].
+  # SSH_AUTH_SOCK (1Password agent) is mise-owned: config.toml [env].
   # ssh itself uses IdentityAgent from the mise-owned ssh config.
 
   # Minimal system packages - most should go to home-manager

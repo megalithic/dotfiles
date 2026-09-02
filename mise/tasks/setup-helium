@@ -12,7 +12,7 @@
 # Preferences" has integrity metadata; rewriting it outside Helium risks
 # preference/profile resets).
 #
-# Runs from the helium tool's postinstall chain in global_config.toml (so a
+# Runs from the helium tool's postinstall chain in config.toml (so a
 # version bump refreshes the baked prodversion — the mise equivalent of the
 # nix module's eval-time readDir) and manually via `mise run setup:helium`.
 #

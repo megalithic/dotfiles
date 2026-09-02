@@ -2,7 +2,7 @@
 
 `bin/avwatchd` is a single-file interpreted Swift daemon that observes native and browser AV state, fuses it into one presence snapshot, publishes NDJSON, and focuses known meeting or playing-media targets.
 
-It runs as mise LaunchAgent `dev.mise.com.megadots.avwatchd` and listens on `~/.local/state/avwatchd/sock`. Policy remains in consumers: [[miccheck#Presence integration|miccheckd]] forces push-to-talk, while Hammerspoon observes transitions and exposes sharing state so [[notiwatchd#Rules and actions#Hammerspoon routing and suppression|notification routing]] can suppress local HUDs. Hammerspoon does not pause Music or change Focus/DND from avwatchd events.
+It runs as mise LaunchAgent `dev.mise.com.megadots.avwatchd` and listens on `~/.local/state/avwatchd/sock`. Policy remains in consumers: [[miccheck#Presence integration|miccheckd]] forces push-to-talk, while Hammerspoon observes transitions and exposes sharing state so [[notiwatchd#Rules and actions|notification routing]] can suppress local HUDs. Hammerspoon does not pause Music or change Focus/DND from avwatchd events.
 
 ## Architecture
 
@@ -13,7 +13,7 @@ Native layers stay inside `avwatchd`:
 - Exact Slack and Zoom microphone-owner bundle IDs create native meeting presence.
 - A persistent `log stream` child watches `replayd` ScreenCaptureKit start, heartbeat, stop, and screenshot markers. Screenshot markers cancel pending starts. A 25-second heartbeat timeout clears abandoned OS capture state.
 
-Browser state comes from `avwatchweb`, the local Manifest V3 extension under `mise/config/avwatchweb/`. `bin/helium-launch` loads it with `--load-extension`; its stable manifest key produces extension ID `ogfaajbfamngmlmkppahdpkoliobdemk`.
+Browser state comes from `avwatchweb`, the local Manifest V3 extension under `config/avwatchweb/`. `bin/helium-launch` loads it with `--load-extension`; its stable manifest key produces extension ID `ogfaajbfamngmlmkppahdpkoliobdemk`.
 
 `main-hook.js` runs in the page MAIN world at `document_start`. It wraps `getDisplayMedia` and `getUserMedia`, observes track start, enabled, mute, unmute, and ended state, and listens for media-element play, pause, and end events. On supported meeting hosts, a debounced `MutationObserver` checks only exact Leave/End control selectors. It never scans body text, participant names, titles, media URLs, or Media Session metadata.
 
@@ -66,9 +66,9 @@ Commands:
 
 ## Consumers
 
-`mise/config/hammerspoon/watchers/avwatchd.lua` keeps one `hs.socket` subscription.
+`config/hammerspoon/watchers/avwatchd.lua` keeps one `hs.socket` subscription.
 
-It seeds with `get`, applies every event/heartbeat, reconnects after disconnect, and clears `M.state` after 15 seconds without data. It has no transition side effects. `mise/config/hammerspoon/lib/notifications/send.lua` reads exported `M.state.sharing` for HUD suppression.
+It seeds with `get`, applies every event/heartbeat, reconnects after disconnect, and clears `M.state` after 15 seconds without data. It has no transition side effects. `config/hammerspoon/lib/notifications/send.lua` reads exported `M.state.sharing` for HUD suppression.
 
 Meeting, microphone, camera, and sharing changes produce observational Hammerspoon logs through a logger bound to `avwatchd`. Each transition includes daemon event/time plus meeting, app, target, and sharing context; microphone logs also include owners, and sharing logs include browser-tab and OS-capture state. Initial snapshots and state expiry/disconnects are logged. Unchanged state and five-second heartbeats are not logged, preserving evidence for native-host reset/snapshot churn without heartbeat noise.
 
@@ -90,7 +90,7 @@ Helium keeps `--remote-debugging-port=9223` only for [[helium#Browser automation
 
 ## Validation
 
-Automated smoke test: `node mise/config/avwatchweb/smoke-test.mjs`.
+Automated smoke test: `node config/avwatchweb/smoke-test.mjs`.
 
 It exercises native framing, session registration, state fusion, schema rejection, direct focus routing, heartbeat delivery, and bridge-exit cleanup. Swift type checks use `/usr/bin/swiftc -typecheck - < bin/avwatchd` and `/usr/bin/swiftc -typecheck bin/miccheck.swift`.
 

@@ -36,7 +36,7 @@ command -v fnox &>/dev/null || {
   exit 1
 }
 
-template="${DOTFILES_DIR:-$HOME/.dotfiles}/mise/config/s3cmd/s3cfg.template"
+template="${DOTFILES_DIR:-$HOME/.dotfiles}/config/s3cmd/s3cfg.template"
 output="${output:-${XDG_DATA_HOME:-$HOME/.local/share}/fnox/generated/s3cfg}"
 output_dir="$(dirname "$output")"
 tmp=""

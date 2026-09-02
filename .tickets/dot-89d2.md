@@ -13,14 +13,14 @@ tags: [sentinel, extensions, refactor, ready-for-development]
 
 # Collapse Sentinel rules into conceptual classifiers
 
-Refactor `home/common/programs/pi-coding-agent/extensions/sentinel.ts` so Sentinel no longer expands command tables into dozens of per-command runtime rules. Keep one managed extension file and mirror the final source to `mise/config/pi-coding-agent/agent/extensions/sentinel.ts`.
+Refactor `home/common/programs/pi-coding-agent/extensions/sentinel.ts` so Sentinel no longer expands command tables into dozens of per-command runtime rules. Keep one managed extension file and mirror the final source to `config/pi-coding-agent/agent/extensions/sentinel.ts`.
 
 Current runtime loads 58 rules. Target roughly 10–15 conceptual classifier rules while preserving existing safety behavior. Use `~/.local/share/pi/plans/.dotfiles/sentinel-simplification_PLAN.md` as the working plan.
 
 Relevant code:
 
 - `home/common/programs/pi-coding-agent/extensions/sentinel.ts`
-- `mise/config/pi-coding-agent/agent/extensions/sentinel.ts`
+- `config/pi-coding-agent/agent/extensions/sentinel.ts`
 - `lat.md/programs/pi-coding-agent.md`
 
 Acceptance criteria:

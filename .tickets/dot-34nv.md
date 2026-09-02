@@ -11,7 +11,7 @@ tags: [notiwatchd, macos, tcc, codesign]
 ---
 # Keep notiwatchd TCC grants across rebuilds
 
-Replace ad-hoc signing with a stable self-signed code-signing identity so Full Disk Access and Accessibility grants survive notiwatchd rebuilds. Evaluate a disposable signing sandbox, including macOS VM and cross-platform rcodesign/apple-codesign, with signing material sourced from fnox/1Password without exposing secrets. Integrate the chosen flow with mise/config/notiwatchd/notiwatchd-build.
+Replace ad-hoc signing with a stable self-signed code-signing identity so Full Disk Access and Accessibility grants survive notiwatchd rebuilds. Evaluate a disposable signing sandbox, including macOS VM and cross-platform rcodesign/apple-codesign, with signing material sourced from fnox/1Password without exposing secrets. Integrate the chosen flow with config/notiwatchd/notiwatchd-build.
 
 ## Design
 

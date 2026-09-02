@@ -1,4 +1,0 @@
-# workbookpro ~/.ssh/config — mapped by mise/config/mise/hosts/workbookpro.toml.
-# Host-specific entries go above the Include (first match wins).
-
-Include ~/.dotfiles/mise/config/ssh/shared.config

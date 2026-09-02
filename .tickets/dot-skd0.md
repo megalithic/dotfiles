@@ -10,7 +10,7 @@ assignee: Seth Messer
 ---
 # Load notiwatchd launchd agent
 
-notiwatchd binary is built and FDA-granted (~/.local/bin/notiwatchd). Write the launchd plist (dev.mise.com.megadots.notiwatchd, generated from bootstrap.macos.launchd.agents in global_config.toml or written directly matching the dev.mise convention), bootstrap it into gui/501, and verify the daemon runs under launchd: log output in ~/.cache/notiwatchd-stdout.log, events recorded to ~/.local/share/notiwatchd/notifications.db, socket at ~/.local/state/notiwatchd/sock. Precondition: bin/notiwatchd.swift relocation to mise/config/notiwatchd/ is done (build script SRC updated).
+notiwatchd binary is built and FDA-granted (~/.local/bin/notiwatchd). Write the launchd plist (dev.mise.com.megadots.notiwatchd, generated from bootstrap.macos.launchd.agents in config.toml or written directly matching the dev.mise convention), bootstrap it into gui/501, and verify the daemon runs under launchd: log output in ~/.cache/notiwatchd-stdout.log, events recorded to ~/.local/share/notiwatchd/notifications.db, socket at ~/.local/state/notiwatchd/sock. Precondition: bin/notiwatchd.swift relocation to config/notiwatchd/ is done (build script SRC updated).
 
 ## Acceptance Criteria
 

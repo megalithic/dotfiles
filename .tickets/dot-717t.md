@@ -14,7 +14,7 @@ tags: [avwatchd, swift, hammerspoon, helium, meetings, ready-for-development]
 
 Rename `bin/media-presenced` to `bin/avwatchd` and replace its Helium CDP meeting layer with a dotfiles-managed Manifest V3 extension plus Chrome native messaging. Keep CoreAudio, CoreMediaIO, and `replayd` as native-app and OS capture layers. Preserve daemon ownership of observation, state fusion, publication, and focus; keep mic mode, Music, Focus/DND, and notification HUD policy in consumers.
 
-Relevant files: `bin/media-presenced`, `bin/miccheck.swift`, `bin/helium-launch`, `bin/smoke-test-macos.sh`, `mise/config/hammerspoon/watchers/media-presence.lua`, `mise/config/hammerspoon/bindings.lua`, `mise/config/hammerspoon/lib/notifications/send.lua`, `mise/config/mise/global_config.toml`, `mise/tasks/setup-helium`, and `lat.md/programs/media-presence.md`.
+Relevant files: `bin/media-presenced`, `bin/miccheck.swift`, `bin/helium-launch`, `bin/smoke-test-macos.sh`, `config/hammerspoon/watchers/media-presence.lua`, `config/hammerspoon/bindings.lua`, `config/hammerspoon/lib/notifications/send.lua`, `config/mise/config.toml`, `mise/tasks/setup-helium`, and `lat.md/programs/media-presence.md`.
 
 ## Design
 

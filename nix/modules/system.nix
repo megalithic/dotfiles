@@ -188,7 +188,7 @@
       };
 
       # screencapture defaults are mise-owned (2026-08):
-      # [bootstrap.macos.defaults."com.apple.screencapture"] in global_config.toml
+      # [bootstrap.macos.defaults."com.apple.screencapture"] in config.toml
 
       LaunchServices = {
         LSQuarantine = false;

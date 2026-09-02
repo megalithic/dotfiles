@@ -12,7 +12,7 @@ BOOTSTRAP_UPDATED="2026-07-20 16:35 EDT"
 
 DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-https://github.com/megalithic/dotfiles.git}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
-BOOTSTRAP_MISE_CONFIG="$DOTFILES_DIR/mise/config/mise/global_config.toml"
+BOOTSTRAP_MISE_CONFIG="$DOTFILES_DIR/config/mise/config.toml"
 FORCE_HOST="${HOST:-}" # desired hostname; skip hostname prompt if set
 FORCE=0                # --force: pass force flags to all sub-commands
 BOOTSTRAP_INSTALL_ROSETTA="${BOOTSTRAP_INSTALL_ROSETTA:-0}"

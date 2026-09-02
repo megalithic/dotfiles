@@ -6,7 +6,7 @@
 # (tagged live by the resurrect-tag.ts pi extension), falling back to `pi -c`
 # (continue most recent session for the pane's cwd) when no tag exists.
 #
-# mise/config/tmux/plugins.tmux.conf symlinks this file into
+# config/tmux/plugins.tmux.conf symlinks this file into
 # save_command_strategies/pi_session.sh and selects it with
 # @resurrect-save-command-strategy 'pi_session'.
 

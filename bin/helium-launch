@@ -10,7 +10,7 @@
 set -euo pipefail
 
 HELIUM="/Applications/Helium.app/Contents/MacOS/Helium"
-AVWATCHWEB="${DOTFILES_DIR:-$HOME/.dotfiles}/mise/config/avwatchweb"
+AVWATCHWEB="${DOTFILES_DIR:-$HOME/.dotfiles}/config/avwatchweb"
 if [ ! -x "$HELIUM" ]; then
   echo "Helium executable not found: $HELIUM" >&2
   exit 1
