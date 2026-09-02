@@ -69,11 +69,9 @@ end
 
 hs.loadSpoon("EmmyLua")
 
--- "notification" (Sequoia-era AX watcher) retired: Tahoe stopped exposing the
--- AXNotificationCenterAlert/Banner subroles it matches; notiwatchd owns
--- notification watching/routing now (see lat.md/programs/notiwatchd.md).
+-- notiwatchd owns native notification watching and routing. Hammerspoon keeps
+-- avwatchd state only for notification HUD suppression during screen sharing.
 local watchers = { "audio", "avwatchd", "url", "pasteboard" }
--- local watchers = { "audio", "dock", "app", "notification", "url", "pasteboard", "screen", "avwatchd" }
 
 req("bindings")
 req("watchers", { watchers = watchers })

@@ -8,7 +8,7 @@ Sinks are `bin/ntfy`, arbitrary exec commands, and webhooks.
 
 The AX route broke on Tahoe and there is no public API for other apps' notifications; the usernoted SQLite store is the only reliable source and works on Tahoe 26.6.2 (verified live).
 
-The old Hammerspoon AX watcher (`watchers/notification.lua`, Sequoia-era) broke because Tahoe renders banners with system SwiftUI and stacked notifications expose no recognized AX subrole. Every delivered notification lands as a row in `~/Library/Group Containers/group.com.apple.usernoted/db2/db` (`record` table, binary-plist `data` blob with `req.titl`/`req.subt`/`req.body`). Rows persist until dismissed/withdrawn (~1 week retention), so watching inserts catches even fast-withdrawn notifications (e.g. Slack read elsewhere).
+The former Hammerspoon AX watcher broke because Tahoe renders banners with system SwiftUI and stacked notifications expose no recognized AX subrole. It and its processor, AX dismissal helper, persistent scanner, notification menubar, and health check were removed after the notiwatchd migration. Every delivered notification lands as a row in `~/Library/Group Containers/group.com.apple.usernoted/db2/db` (`record` table, binary-plist `data` blob with `req.titl`/`req.subt`/`req.body`). Rows persist until dismissed/withdrawn (~1 week retention), so watching inserts catches even fast-withdrawn notifications (e.g. Slack read elsewhere).
 
 ## Architecture
 
@@ -36,12 +36,12 @@ The `ntfy` action passes source identity to Hammerspoon so it can render and sup
 
 It passes `-b <bundle-id> -S` to `bin/ntfy`. The bundle ID selects the HUD app icon and identifies the source app; `-S` keeps the raw notification title, usually the sender, for focused-window matching. Rules with `presence_routing: true` also pass `--presence-routing`. `bin/ntfy` forwards these values to `lib.notifications.send`.
 
-`routeNotification` uses the shared `C.notifier.urgencyDisplay` map, matching native redirects: high and critical notifications render centered with background dimming, and critical urgency keeps its configured phone route. `checkAttention` skips the local HUD in two additional cases:
+`routeNotification` uses `C.notifier.urgencyDisplay`: high and critical notifications render centered with background dimming, and critical urgency keeps its configured phone route. `checkAttention` skips the local HUD in two additional cases:
 
 - [[avwatchd#Consumers|`watchers.avwatchd`]] reports an active screen share through its exported `M.state` snapshot.
 - The source app is frontmost and its focused window title matches the notification sender. A different conversation or window still receives the HUD.
 
-Display, idle, and tmux-pane checks still run through the same attention path. Remote channels retain their own routing rules when the local HUD is suppressed. Hammerspoon loads the persistent `avwatchd` subscriber; the obsolete Sequoia AX `notification` watcher is retired because Tahoe no longer exposes the subroles it matched.
+Display, idle, and tmux-pane checks still run through the same attention path. Remote channels retain their own routing rules when the local HUD is suppressed. Hammerspoon loads the persistent `avwatchd` subscriber, but has no native notification watcher, rule processor, AX dismissal path, persistent scanner, notification menubar, or notification health check. `lib.notifications` remains the delivery facade for `N.send()`, Telegram lifecycle, and question tracking.
 
 ### The dismiss action (Tahoe AX route)
 
