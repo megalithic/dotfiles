@@ -46,6 +46,8 @@ The `pi-acp` ACP adapter (vendored package, wrapper, `~/.local/bin/pi-acp` link,
 
 The `/answer` extension can be invoked by its slash command, Ctrl+. shortcut, or the internal `trigger:answer` event.
 
+`notify.ts` passes `--presence-routing` to `bin/ntfy`, making Pi notifications the sole automatic opt-in for Telegram delivery when Hammerspoon reports `remote_only` (display asleep, locked, logged out, or idle). Other `ntfy` callers and all current notiwatchd rules require explicit phone or Telegram routing.
+
 Pi fullscreen transcript search (`tui.altScreen.search`) keeps Ctrl+Shift+F; the local `files.ts` Finder reveal action moved to Ctrl+Shift+E so no extension shadows that core binding. `files.ts` still owns Ctrl+Shift+O and Ctrl+Shift+R, and `preview.ts` owns Ctrl+Shift+P.
 
 Turned-off extensions (`execute-command`, `pinvim`, and `nvim-review`) live under `disabled/` until re-enabled; the pinvim end-to-end test skill lives there too. Neovim-side pinvim source remains in place, but ordinary Pi no longer loads its socket polling, editor-service RPC, footer updates, or review command.

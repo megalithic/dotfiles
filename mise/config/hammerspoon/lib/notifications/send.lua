@@ -439,8 +439,8 @@ function M.routeNotification(opts, attention)
 		end
 	end
 
-	-- Telegram: send if explicitly requested with -T flag, or for remote_only
-	local shouldSendTelegram = opts.telegram or shouldNotify == "remote_only"
+	-- Telegram: explicit request always wins. Presence-based remote delivery is opt-in.
+	local shouldSendTelegram = opts.telegram or (opts.presenceRouting and shouldNotify == "remote_only")
 	if shouldSendTelegram and telegram.isReady() then
 		-- Track this session so replies can be routed back
 		if opts.context then
@@ -589,6 +589,8 @@ function M.startQuestionRetryTimer()
 						message = q.opts.message,
 						urgency = URGENCY.HIGH,
 						phone = cfg.escalateOnRetry,
+						telegram = q.opts.telegram,
+						presenceRouting = q.opts.presenceRouting,
 						question = false, -- Don't re-track
 					})
 				end

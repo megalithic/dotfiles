@@ -3,7 +3,7 @@
 # Delegates all logic to Hammerspoon's N.send() API
 #
 # Usage:
-#   ntfy send -t "Title" -m "Message" [-u urgency] [-p] [-T] [-q]
+#   ntfy send -t "Title" -m "Message" [-u urgency] [--presence-routing] [-p] [-T] [-q]
 #   ntfy answer [-t "Title"] [-m "Message"]
 #   ntfy pending
 #   ntfy help
@@ -32,6 +32,7 @@ Send Options:
                            true = user is focused, may suppress notification
                            false = user is away, prefer to notify
                            auto = let Hammerspoon detect
+      --presence-routing   Allow remote-only state to add Telegram delivery
   -p, --phone              Send to phone via iMessage
   -T, --telegram           Send via Telegram bot
   -q, --question           Track for retry if unanswered
@@ -112,7 +113,7 @@ lua_escape() {
 cmd_send() {
   local title="" message="" urgency="normal" source="" bundle_id=""
   local phone="false" telegram="false" question="false"
-  local no_source="false" attention="auto"
+  local no_source="false" attention="auto" presence_routing="false"
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -123,6 +124,7 @@ cmd_send() {
       -s|--source) source="$2"; shift 2 ;;
       -S|--no-source) no_source="true"; shift ;;
       -a|--attention) attention="$2"; shift 2 ;;
+      --presence-routing) presence_routing="true"; shift ;;
       -p|--phone) phone="true"; shift ;;
       -T|--telegram) telegram="true"; shift ;;
       -q|--question) question="true"; shift ;;
@@ -196,6 +198,7 @@ local result = N.send({
   question = ${question},
   context = [[${lua_context}]],
   attentionHint = ${lua_attention},
+  presenceRouting = ${presence_routing},
 })
 local channels = table.concat(result.channels, ',')
 print(result.sent and 'sent' or 'suppressed', result.reason, channels, result.questionId or '')

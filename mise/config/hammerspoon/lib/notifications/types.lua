@@ -93,7 +93,8 @@ M.URGENCY = {
 ---@field urgency? "normal"|"high"|"critical" Default: "normal"
 ---@field bundleID? string Originating app bundle ID (HUD icon + engagement suppression)
 ---@field phone? boolean Send iMessage (default: false, auto-true if critical)
----@field telegram? boolean Send via Telegram bot (default: false, auto-true if remote_only)
+---@field telegram? boolean Send via Telegram bot (default: false)
+---@field presenceRouting? boolean Allow remote_only attention state to add Telegram delivery (default: false)
 ---@field question? boolean Track for retry (default: false)
 ---@field context? string Calling context for attention detection (tmux session:window or tty)
 ---@field attentionHint? boolean Caller's hint about user attention: true=focused, false=away, nil=auto-detect

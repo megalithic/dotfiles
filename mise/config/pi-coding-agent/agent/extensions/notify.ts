@@ -134,7 +134,16 @@ function notify(
     phone?: boolean;
   } = {},
 ): void {
-  const args = ["send", "-t", title, "-m", message, "-s", getSource()];
+  const args = [
+    "send",
+    "-t",
+    title,
+    "-m",
+    message,
+    "-s",
+    getSource(),
+    "--presence-routing",
+  ];
   if (options.urgency) args.push("-u", options.urgency);
   if (options.attention !== undefined)
     args.push("-a", options.attention ? "true" : "false");

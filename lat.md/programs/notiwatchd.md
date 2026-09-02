@@ -22,9 +22,11 @@ A readonly watcher over the usernoted DB with a persisted high-water mark, kqueu
 
 ## Rules and actions
 
-First matching rule wins. `match` fields: `bundle_id` (exact, string or array = any-of), `title`/`subtitle`/`body` (case-insensitive regex, string or array). Absent field = wildcard. Unmatched notifications get `default_actions` (default `["log"]`).
+First matching rule wins. `match` fields: `bundle_id` (exact, string or array = any-of), `title`/`subtitle`/`body` (case-insensitive regex, string or array). Absent field = wildcard.
 
-Actions: `log` (stdout only), `ignore` (record + broadcast, no routing; suppresses all other actions in the rule), `ntfy` / `ntfy:phone` / `ntfy:telegram` (exec `bin/ntfy send` with title, body, urgency, bundle ID, and no source prefix), `exec:<cmd>` (`/bin/sh -c`, event JSON on stdin), `webhook:<url>` (POST event JSON), `dismiss` (AX-close the still-visible banner/alert, see below).
+Unmatched notifications get `default_actions` (default `["log"]`). A rule may set `presence_routing: true` to let a `remote_only` attention state add Telegram delivery; it defaults to `false`.
+
+Actions: `log` (stdout only), `ignore` (record + broadcast, no routing; suppresses all other actions in the rule), `ntfy` / `ntfy:phone` / `ntfy:telegram` (exec `bin/ntfy send` with title, body, urgency, bundle ID, no source prefix, and the rule's presence-routing choice), `exec:<cmd>` (`/bin/sh -c`, event JSON on stdin), `webhook:<url>` (POST event JSON), `dismiss` (AX-close the still-visible banner/alert, see below).
 
 Action results are recorded per-notification in the store's `action_results` JSON column: `--once` waits for sinks before inserting; daemon mode inserts immediately and patches results in via UPDATE when the sinks finish (all store access stays on the main queue).
 
@@ -32,7 +34,7 @@ Action results are recorded per-notification in the store's `action_results` JSO
 
 The `ntfy` action passes source identity to Hammerspoon so it can render and suppress HUDs in context.
 
-It passes `-b <bundle-id> -S` to `bin/ntfy`. The bundle ID selects the HUD app icon and identifies the source app; `-S` keeps the raw notification title, usually the sender, for focused-window matching. `bin/ntfy` forwards both values to `lib.notifications.send`.
+It passes `-b <bundle-id> -S` to `bin/ntfy`. The bundle ID selects the HUD app icon and identifies the source app; `-S` keeps the raw notification title, usually the sender, for focused-window matching. Rules with `presence_routing: true` also pass `--presence-routing`. `bin/ntfy` forwards these values to `lib.notifications.send`.
 
 `routeNotification` uses the shared `C.notifier.urgencyDisplay` map, matching native redirects: high and critical notifications render centered with background dimming, and critical urgency keeps its configured phone route. `checkAttention` skips the local HUD in two additional cases:
 

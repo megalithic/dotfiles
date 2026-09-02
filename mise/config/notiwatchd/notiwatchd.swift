@@ -71,7 +71,13 @@ struct Rule: Decodable {
     var name: String
     var match: Match
     var urgency: String?            // normal | high | critical (passed to ntfy -u)
+    var presenceRouting: Bool?      // allow remote-only attention to add Telegram delivery
     var actions: [String]           // log | ignore | dismiss | ntfy[:phone|:telegram] | exec:<cmd> | webhook:<url>
+
+    enum CodingKeys: String, CodingKey {
+        case name, match, urgency, actions
+        case presenceRouting = "presence_routing"
+    }
 }
 
 struct Config: Decodable {
@@ -130,12 +136,13 @@ struct Event {
     var style: Int?
     var rule: String?
     var urgency: String
+    var presenceRouting: Bool
     var actions: [String]
 
     func json() -> String {
         var dict: [String: Any] = [
             "rec_id": recID, "uuid": uuid, "bundle_id": bundleID,
-            "urgency": urgency, "actions": actions,
+            "urgency": urgency, "presence_routing": presenceRouting, "actions": actions,
         ]
         dict["title"] = title
         dict["subtitle"] = subtitle
@@ -583,6 +590,7 @@ func dispatchAction(_ action: String, event: Event, cfg: Config, done: @escaping
             var args = ["send", "-t", event.title ?? event.bundleID,
                         "-m", [event.subtitle, event.body].compactMap { $0 }.joined(separator: " — "),
                         "-u", event.urgency, "-b", event.bundleID, "-S"]
+            if event.presenceRouting { args.append("--presence-routing") }
             if arg == "phone" { args.append("-p") }
             if arg == "telegram" { args.append("-T") }
             done(action, runProcess(ntfy, args))
@@ -740,7 +748,8 @@ func processRow(_ row: SourceRow, cfg: Config) {
     let event = Event(recID: row.recID, uuid: row.uuid, bundleID: bundleID,
                       title: title, subtitle: subtitle, body: body,
                       deliveredAt: deliveredUnix, presented: row.presented, style: row.style,
-                      rule: rule?.name, urgency: rule?.urgency ?? "normal", actions: actions)
+                      rule: rule?.name, urgency: rule?.urgency ?? "normal",
+                      presenceRouting: rule?.presenceRouting ?? false, actions: actions)
 
     let ignored = actions.contains("ignore")
     if !ignored || verbose {
