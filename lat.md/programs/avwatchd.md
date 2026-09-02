@@ -2,7 +2,7 @@
 
 `bin/avwatchd` is a single-file interpreted Swift daemon that observes native and browser AV state, fuses it into one presence snapshot, publishes NDJSON, and focuses known meeting or playing-media targets.
 
-It runs as mise LaunchAgent `dev.mise.com.megadots.avwatchd` and listens on `~/.local/state/avwatchd/sock`. Policy remains in consumers: [[miccheck#Presence integration|miccheckd]] forces push-to-talk, Hammerspoon pauses Music and manages Focus/DND, and [[notiwatchd#Rules and actions#Hammerspoon routing and suppression|notification routing]] suppresses local HUDs while sharing.
+It runs as mise LaunchAgent `dev.mise.com.megadots.avwatchd` and listens on `~/.local/state/avwatchd/sock`. Policy remains in consumers: [[miccheck#Presence integration|miccheckd]] forces push-to-talk, while Hammerspoon observes transitions and exposes sharing state so [[notiwatchd#Rules and actions#Hammerspoon routing and suppression|notification routing]] can suppress local HUDs. Hammerspoon does not pause Music or change Focus/DND from avwatchd events.
 
 ## Architecture
 
@@ -68,7 +68,9 @@ Commands:
 
 `mise/config/hammerspoon/watchers/avwatchd.lua` keeps one `hs.socket` subscription.
 
-It seeds with `get`, applies every event/heartbeat, reconnects after disconnect, and clears `M.state` after 15 seconds without data. Clearing stale state restores DND if the watcher forced it. Meeting start pauses Music; sharing during a meeting enables the meeting Focus mode. `mise/config/hammerspoon/lib/notifications/send.lua` reads exported `M.state.sharing` for HUD suppression.
+It seeds with `get`, applies every event/heartbeat, reconnects after disconnect, and clears `M.state` after 15 seconds without data. It has no transition side effects. `mise/config/hammerspoon/lib/notifications/send.lua` reads exported `M.state.sharing` for HUD suppression.
+
+Meeting, microphone, camera, and sharing changes produce observational Hammerspoon logs through a logger bound to `avwatchd`. Each transition includes daemon event/time plus meeting, app, target, and sharing context; microphone logs also include owners, and sharing logs include browser-tab and OS-capture state. Initial snapshots and state expiry/disconnects are logged. Unchanged state and five-second heartbeats are not logged, preserving evidence for native-host reset/snapshot churn without heartbeat noise.
 
 [[miccheck#Presence integration|miccheckd]] seeds and subscribes through the same socket. An active seed or `inMeeting` transition forces push-to-talk. It reconnects every five seconds and ignores an idle first seed.
 
