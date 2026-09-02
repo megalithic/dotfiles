@@ -1,6 +1,6 @@
 ---
 id: dot-4vhu
-status: in_progress
+status: closed
 deps: []
 links: []
 created: 2026-09-01T12:23:37Z
@@ -66,3 +66,9 @@ A captured factory runs its initialization code through a registration-suppressi
 10. Structured tool parameters produce parser-compatible native command arguments; unrepresentable quoted targets return a clear `rawArgs` instruction, and `rawArgs` passes exact strings for unsupported or future syntax.
 11. A fresh headless Pi run loads Heimdall and invokes a captured Plannotator command without extension-load or uncaught runtime errors.
 12. `lat.md/programs/pi-coding-agent.md` documents command capture, generic adapter contract, and Plannotator parity; Heimdall code links back to that section and `lat_check` passes.
+
+## Notes
+
+**2026-09-02T13:07:33Z**
+
+2026-09-01 final validation: reviewed Heimdall implementation against all 12 acceptance criteria. Fresh headless Pi run loaded Heimdall and exposed plannotator_review, plannotator_annotate, and plannotator_annotate_last. A fresh headless invocation of plannotator_annotate exercised the captured native handler; Plannotator returned its native file-not-found validation error with no extension-load or uncaught runtime errors. Symlink loading, command capture, registration/event suppression, lifecycle forwarding, factory-state isolation, required-command validation, native notification/error routing, structured argument serialization, and rawArgs escape behavior verified by code inspection. lat_check passed. All acceptance criteria satisfied.
