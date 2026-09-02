@@ -1,4 +1,4 @@
-# Standalone fish config — non-nix port of home/common/programs/fish.
+# Standalone fish config — non-nix port of nix/home/common/programs/fish.
 # No external plugins; everything lives in this directory.
 # Nix-only setup still loads from ~/.local/share/fish/nix.fish when present (see conf.d/env.fish).
 

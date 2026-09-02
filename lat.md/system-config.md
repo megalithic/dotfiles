@@ -4,11 +4,11 @@ This file covers the nix-darwin layer: shared host settings, per-host overrides,
 
 ## Host layout
 
-`hosts/common.nix` holds settings shared by every host; `hosts/megabookpro.nix` and `hosts/workbookpro.nix` carry per-host overrides. The builder passes `username`, `hostname`, `paths`, and `arch` through special args.
+`nix/hosts/common.nix` holds settings shared by every host; `nix/hosts/megabookpro.nix` and `nix/hosts/workbookpro.nix` carry per-host overrides. The builder passes `username`, `hostname`, `paths`, and `arch` through special args.
 
-`hosts/common.nix` sets the `seth` user (uid 501, login shell `/opt/homebrew/bin/fish` - brew fish; nix fish is removed), hostname, timezone (`America/New_York`), and locale (`en_US.UTF-8`). It defines system-wide `environment.variables` including editor (plain `nvim`, resolved via PATH to the mise-installed neovim), pager, XDG paths, project paths (`CODE`, `DOTS`), cloud-storage paths, tmux layout paths, and FZF defaults, plus a minimal `environment.systemPackages` set.
+`nix/hosts/common.nix` sets the `seth` user (uid 501, login shell `/opt/homebrew/bin/fish` - brew fish; nix fish is removed), hostname, timezone (`America/New_York`), and locale (`en_US.UTF-8`). It defines system-wide `environment.variables` including editor (plain `nvim`, resolved via PATH to the mise-installed neovim), pager, XDG paths, project paths (`CODE`, `DOTS`), cloud-storage paths, tmux layout paths, and FZF defaults, plus a minimal `environment.systemPackages` set.
 
-Mise owns all fonts since 2026-08. `[vars].nerd_fonts` names upstream Nerd Fonts release assets installed by `fonts:install`; plain and emoji families use `brew-cask:font-*` bootstrap entries. This includes Maple Mono NF, which was the last Nerd Font variant left under Nix. `hosts/common.nix` no longer declares `fonts.packages`.
+Mise owns all fonts since 2026-08. `[vars].nerd_fonts` names upstream Nerd Fonts release assets installed by `fonts:install`; plain and emoji families use `brew-cask:font-*` bootstrap entries. This includes Maple Mono NF, which was the last Nerd Font variant left under Nix. `nix/hosts/common.nix` no longer declares `fonts.packages`.
 
 Mise declares the bootstrap CLI set through `[tools]` and `brew:` packages, including Git, curl, coreutils, Vim, wget, GNU make, archive tools, trash, and just. Matching Nix bootstrap copies remain temporarily until the no-Nix bootstrap path is validated; Nix-only maintenance tools remain explicit exceptions.
 
@@ -34,7 +34,7 @@ The staged mise bootstrap mirrors Homebrew through `mise/config/mise/global_conf
 
 ## Darwin modules
 
-`modules/` holds the nix-darwin modules.
+`nix/modules/` holds the nix-darwin modules.
 
 `system.nix` covers core system settings, and `darwin/` now holds only `services.nix`. Removed 2026-08: `_1password.nix`, `okta-verify.nix`, `kanata.nix`, `spotlight.nix`, and `tailscale-app.nix`; mise owns those apps and user services.
 
@@ -44,7 +44,7 @@ macOS defaults ownership is split since 2026-08: key repeat, press-and-hold, and
 
 Kanata needs Karabiner DriverKit VirtualHIDDevice on macOS; installing only `kanata` and `kanata-bar` is not enough.
 
-Kanata is fully mise-owned since 2026-08: `modules/darwin/kanata.nix` and the `kanata-darwin` flake input are gone, and the stray `kanata` nixpkgs package is out of `hosts/workbookpro.nix`.
+Kanata is fully mise-owned since 2026-08: `nix/modules/darwin/kanata.nix` and the `kanata-darwin` flake input are gone, and the stray `kanata` nixpkgs package is out of `nix/hosts/workbookpro.nix`.
 
 The mise path owns the whole stack. `mise/config/mise/global_config.toml` installs `kanata` through Homebrew bootstrap packages and `kanata-bar` through mise's `http:` backend (pinned version + sha256), links the `.kbd` profiles and layer icons, declares mise-managed launchd agents, and runs `mise/tasks/kanata-setup` from the `post-tools` bootstrap hook for privileged macOS glue. Kanata Bar v1.1.10's generic ZIP contains arm64-only binaries, so the HTTP tool declares only `macos-arm64`; it cannot move to the one-line GitHub backend until upstream publishes a platform-qualified ZIP with a checksum sidecar. That script installs/activates the Karabiner VirtualHID `.pkg` (driver 6.10.0, empirically paired with Homebrew kanata 1.12.0 — driver 8.0.0 targets kanata main's driverkit 0.4.0 client and breaks 1.12.0 with a versioned-IPC-socket mismatch), rejects unverified Homebrew kanata versions unless `KANATA_ALLOW_UNVERIFIED_VERSION=1` is set, writes the system VirtualHID LaunchDaemon, copies Homebrew's kanata to stable `/usr/local/bin/kanata`, signs it with a local stable code-signing identity (`org.megadots.kanata`) so TCC does not churn on every Homebrew Cellar path or binary hash change, writes the sudoers entry, writes `~/.config/kanata-bar/config.toml`, boots out nix-managed kanata agents and removes their `/nix/store`-referencing plists (two stacks would fight over the keyboard), moves stale `org.nixos.*` helper LaunchDaemons aside when they point at missing Nix store paths, writes and loads the `dev.mise.` agents directly (bootstrap.sh always passes `--skip launchd`), and verifies the kanata process actually started before claiming success. The daemon agent must run `/usr/bin/sudo /usr/local/bin/kanata --cfg … --nodelay --port 5829`: kanata requires root on macOS (the VirtualHID daemon IPC lives under a root-only path), and kanata-bar plus Hammerspoon connect over TCP 5829 while restarting it passwordlessly via gui-domain `launchctl kickstart`. brew services cannot own the daemon: the formula service is `require_root = true` (fails without sudo) and runs the Cellar path.
 
@@ -58,7 +58,7 @@ mise owns 1Password on megabookpro since 2026-08: `brew-cask:1password@beta` ins
 
 The app lives at `/Applications/1Password.app`; `op` symlinks at `/opt/homebrew/bin/op`; `~/.config/1Password/ssh/agent.toml` links from `mise/config/1password/agent.toml`; `SSH_AUTH_SOCK` comes from the mise `[env]` section.
 
-The nix-darwin module (`modules/darwin/_1password.nix`, rsynced GUI + `/usr/local/bin/op`) and the opnix secrets module/flake input are removed; fnox is the sole secret loader. The 2026-08 cutover deleted the root-owned nix app copy and `/usr/local/bin/op` before reinstalling the cask (the mise cask backend had symlink-adopted the nix bundle, so a caskroom wipe + `mise bootstrap` was needed to lay down the real cask app). `nixpkgs.config.allowUnfree = true` stays in `hosts/common.nix` for other unfree packages.
+The nix-darwin module (`nix/modules/darwin/_1password.nix`, rsynced GUI + `/usr/local/bin/op`) and the opnix secrets module/flake input are removed; fnox is the sole secret loader. The 2026-08 cutover deleted the root-owned nix app copy and `/usr/local/bin/op` before reinstalling the cask (the mise cask backend had symlink-adopted the nix bundle, so a caskroom wipe + `mise bootstrap` was needed to lay down the real cask app). `nixpkgs.config.allowUnfree = true` stays in `nix/hosts/common.nix` for other unfree packages.
 
 The GUI **must** live in `/Applications` — 1Password's anti-tamper logic quits the app when launched from `~/Applications/Home Manager Apps/` or the nix store. Git and jj SSH signing point at `/Applications/1Password.app/Contents/MacOS/op-ssh-sign` (the full GUI bundle ships `op-ssh-sign`); that path is stable across cask upgrades.
 
@@ -86,7 +86,7 @@ The cask's package postinstall supplies its three LaunchDaemons, SecurityAgentPl
 
 ## Tailscale GUI app
 
-Mise installs the official standalone Tailscale package through `brew-cask:tailscale-app`; `modules/darwin/tailscale-app.nix` is removed.
+Mise installs the official standalone Tailscale package through `brew-cask:tailscale-app`; `nix/modules/darwin/tailscale-app.nix` is removed.
 
 The cask is a supported `pkg` artifact with receipt `com.tailscale.ipn.macsys`. It supplies the GUI app, network extension support, login helpers, and `/usr/local/bin/tailscale`, unlike the CLI-only formula.
 

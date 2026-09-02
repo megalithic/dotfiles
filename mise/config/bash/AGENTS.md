@@ -1,6 +1,6 @@
 # Bash / POSIX profile — mise-managed configuration
 
-Non-nix twin of `home/common/programs/bash/default.nix` plus the portable shell
+Non-nix twin of `nix/home/common/programs/bash/default.nix` plus the portable shell
 hooks that Home Manager used to inject from program modules. These files are
 linked by `mise/config/mise/global_config.toml`:
 

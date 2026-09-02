@@ -617,7 +617,7 @@ SUHasLaunchedBefore = true
 SUSendProfileInfo = false
 
 # Helium: Sparkle auto-update kill switch (updates come from the mise tool /
-# install-app.sh path instead). Twin of modules/system.nix
+# install-app.sh path instead). Twin of nix/modules/system.nix
 # CustomUserPreferences."net.imput.helium". setup:helium also writes these,
 # since `mise run up` skips the macos-defaults step.
 [bootstrap.macos.defaults."net.imput.helium"]
@@ -751,7 +751,7 @@ run = ["mise run setup:kanata", "mise run setup:avwatchd", "mise run fnox"]
 login_shell = "/opt/homebrew/bin/fish"
 
 # -- Nerd Fonts: declare the font list here (mirrors nix fonts.packages in
-#    hosts/common.nix). Names are release asset stems from
+#    nix/hosts/common.nix). Names are release asset stems from
 #    https://github.com/ryanoasis/nerd-fonts/releases (<Name>.tar.xz).
 #    Add/remove a font = edit the list; `mise run fonts:install` converges.
 #    The postinstall hook below also runs it after any `mise install`;
@@ -963,7 +963,7 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/helium-1password-trust"
 # project's .config/ dir. Run from a project root: `mise run gen:shopify`,
 # `mise run gen:elixir -- /path/to/project`, or `mise run gen:wt-elixir` for
 # Worktrunk's .config/wt.toml. Template helper lives in repo bin/ (linked onto PATH).
-# Duplicated in home/common/programs/mise/default.nix globalConfig (nix twin).
+# Duplicated in nix/home/common/programs/mise/default.nix globalConfig (nix twin).
 [tasks."gen:elixir"]
 description = "Copy the elixir mise template + scripts to [target-dir]/.config/ (default: cwd)"
 dir = "{{cwd}}"

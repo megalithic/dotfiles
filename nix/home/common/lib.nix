@@ -18,8 +18,8 @@
 
     # Link to files in home/ directory (nix-managed configs like nvim)
     # Usage: config.lib.mega.linkHome "nvim"
-    # Result: symlink to ~/.dotfiles/home/nvim
-    linkHome = path: config.lib.file.mkOutOfStoreSymlink "${config.lib.mega.dotfilesPath}/home/${path}";
+    # Result: symlink to ~/.dotfiles/nix/home/nvim
+    linkHome = path: config.lib.file.mkOutOfStoreSymlink "${config.lib.mega.dotfilesPath}/nix/home/${path}";
 
     # Link to bin/ directory
     # Usage: config.lib.mega.linkBin

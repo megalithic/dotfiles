@@ -64,7 +64,7 @@ notify() {
 check_openvpn() {
   if ! command -v openvpn &>/dev/null; then
     log_error "OpenVPN is not installed or not in PATH"
-    log_info "Add to home/packages.nix: pkgs.openvpn"
+    log_info "Add to nix/home/packages.nix: pkgs.openvpn"
     log_info "Then run: sudo darwin-rebuild switch --flake ./"
     exit 1
   fi

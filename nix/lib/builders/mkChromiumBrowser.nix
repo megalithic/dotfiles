@@ -19,8 +19,8 @@ let
     brave-browser-nightly = "Brave Browser Nightly";
   };
 
-  # Wrapper .app builder - extracted to lib/builders/mkWrapperApp.nix
-  mkWrapperApp = import "${self}/lib/builders/mkWrapperApp.nix" { inherit pkgs lib; };
+  # Wrapper .app builder - extracted to nix/lib/builders/mkWrapperApp.nix
+  mkWrapperApp = import "${self}/nix/lib/builders/mkWrapperApp.nix" { inherit pkgs lib; };
 
   browserModule = browser: name: visible: {
     enable = mkOption {

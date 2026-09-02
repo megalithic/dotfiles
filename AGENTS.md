@@ -63,8 +63,8 @@ When `op`, 1Password CLI integration, or fnox secret resolution fails, follow th
 - `~/.config/ghostty/*` → `config/ghostty/` (out-of-store symlink)
 - `~/.config/tmux/*` → `mise/config/tmux/` (mise-managed symlink)
 - `~/.config/nvim/*` → `mise/config/nvim/` (mise-managed symlink; nvim itself is mise-installed)
-- `~/Applications/Nix/*` → Finder aliases created by `home/common/mac-aliases.nix`
-- Most `~/.config/<app>/*` → check `home/common/programs/<app>/` first
+- `~/Applications/Nix/*` → Finder aliases created by `nix/home/common/mac-aliases.nix`
+- Most `~/.config/<app>/*` → check `nix/home/common/programs/<app>/` first
 
 **Never on a Nix-managed host:**
 
@@ -86,34 +86,36 @@ When `op`, 1Password CLI integration, or fnox secret resolution fails, follow th
 ~/.dotfiles/
 ├── flake.nix              # Nix flake: inputs, outputs, host definitions
 ├── flake.lock             # Pinned dependency versions
-├── hosts/                 # Per-host nix-darwin config
-│   ├── common.nix         # Shared system settings (minimal packages)
-│   ├── megabookpro.nix    # Personal laptop
-│   └── workbookpro.nix      # Work laptop
-├── home/                  # Home-manager config
-│   ├── common/            # Shared across all hosts
-│   │   ├── packages.nix   # CLI + GUI packages (nixpkgs + custom)
-│   │   ├── mac-aliases.nix # Finder aliases for Spotlight/Launchpad
-│   │   ├── services.nix   # User launchd services (omlx, ollama opt-in)
-│   │   ├── mas.nix        # Mac App Store apps
-│   │   └── programs/      # Per-tool config (fish/, jj/, browsers/, ai/)
-│   ├── megabookpro.nix    # Personal overrides
-│   └── workbookpro.nix      # Work overrides
-├── modules/               # nix-darwin modules
-│   ├── system.nix         # Core system settings
-│   ├── brew.nix           # Homebrew casks (last resort)
-│   └── darwin/
-│       └── services.nix   # System launchd services
-├── lib/                   # Nix helpers (lib.mega.*)
-│   ├── mkDarwinHost.nix   # Darwin system builder
-│   ├── mkHome.nix         # Standalone HM builder
-│   ├── mkApp.nix          # macOS app builder (DMG/ZIP)
-│   └── builders/          # Reusable build utilities
-│       ├── mkWrapperApp.nix         # .app wrapper (custom CLI args)
-│       └── mkMacOSAlias.nix         # Finder alias module
-├── pkgs/                  # Custom package overlay
-│   └── default.nix        # Brave Nightly, Fantastical, Bloom, etc.
-├── overlays/              # Nixpkgs overlays
+├── nix/                   # All nix source trees
+│   ├── hosts/             # Per-host nix-darwin config
+│   │   ├── common.nix     # Shared system settings (minimal packages)
+│   │   ├── megabookpro.nix # Personal laptop
+│   │   └── workbookpro.nix # Work laptop
+│   ├── home/              # Home-manager config
+│   │   ├── common/        # Shared across all hosts
+│   │   │   ├── packages.nix   # CLI + GUI packages (nixpkgs + custom)
+│   │   │   ├── mac-aliases.nix # Finder aliases for Spotlight/Launchpad
+│   │   │   ├── services.nix   # User launchd services (omlx, ollama opt-in)
+│   │   │   ├── mas.nix        # Mac App Store apps
+│   │   │   └── programs/      # Per-tool config (fish/, jj/, browsers/, ai/)
+│   │   ├── megabookpro.nix # Personal overrides
+│   │   └── workbookpro.nix # Work overrides
+│   ├── modules/           # nix-darwin modules
+│   │   ├── system.nix     # Core system settings
+│   │   ├── brew.nix       # Homebrew casks (last resort)
+│   │   └── darwin/
+│   │       └── services.nix # System launchd services
+│   ├── lib/               # Nix helpers (lib.mega.*)
+│   │   ├── mkDarwin.nix   # Darwin system builder
+│   │   ├── mkHome.nix     # Standalone HM builder
+│   │   ├── mkApp.nix      # macOS app builder (DMG/ZIP)
+│   │   └── builders/      # Reusable build utilities
+│   │       ├── mkWrapperApp.nix # .app wrapper (custom CLI args)
+│   │       └── mkMacOSAlias.nix # Finder alias module
+│   ├── pkgs/              # Custom package overlay
+│   │   └── default.nix    # Brave Nightly, Fantastical, Bloom, etc.
+│   ├── overlays/          # Nixpkgs overlays
+│   └── secrets/           # age-encrypted archive (see just age/deage)
 ├── config/                # Out-of-store app configs (live symlinks)
 │   └── ghostty/           # Terminal emulator
 ├── bin/                   # User scripts (symlinked to ~/bin/)
@@ -142,14 +144,14 @@ Nix/Home Manager remains active while mise migration proceeds. Treat `mise/confi
 
 | What                                | Where                                |
 | ----------------------------------- | ------------------------------------ |
-| CLI tool from nixpkgs               | `home/common/packages.nix`           |
-| GUI app from nixpkgs                | `home/common/packages.nix` (guiPkgs) |
-| Custom .app not in nixpkgs          | `pkgs/default.nix` (mkApp)           |
-| Tool with HM config (`programs.*`)  | `home/common/programs/<tool>.nix`    |
-| Homebrew-only (accessibility, kext) | `modules/brew.nix`                   |
-| Mac App Store                       | `home/common/mas.nix`                |
-| System service (all hosts)          | `modules/darwin/services.nix`        |
-| User service (all hosts)            | `home/common/services.nix`           |
+| CLI tool from nixpkgs               | `nix/home/common/packages.nix`           |
+| GUI app from nixpkgs                | `nix/home/common/packages.nix` (guiPkgs) |
+| Custom .app not in nixpkgs          | `nix/pkgs/default.nix` (mkApp)           |
+| Tool with HM config (`programs.*`)  | `nix/home/common/programs/<tool>.nix`    |
+| Homebrew-only (accessibility, kext) | `nix/modules/brew.nix`                   |
+| Mac App Store                       | `nix/home/common/mas.nix`                |
+| System service (all hosts)          | `nix/modules/darwin/services.nix`        |
+| User service (all hosts)            | `nix/home/common/services.nix`           |
 
 ## Nix Module Rules
 
@@ -166,13 +168,13 @@ src = ../../lib/builders/my-script.swift;
 source = ../../../../docs/skills/nix.md;
 
 # CORRECT — deterministic, refactor-proof
-src = "${self}/lib/builders/my-script.swift";
+src = "${self}/nix/lib/builders/my-script.swift";
 source = "${self}/docs/skills/nix.md";
 ```
 
 ### Bootstrap-critical packages
 
-These must be in `hosts/common.nix` `environment.systemPackages` (not just
+These must be in `nix/hosts/common.nix` `environment.systemPackages` (not just
 home-manager), because they're needed before HM runs:
 
 - `just` — runs `just rebuild` / `just home`
@@ -215,7 +217,7 @@ Pattern (already used):
 
 - `~/.local/share/fish/nix.fish` - Nix profile paths for Fish
 
-### Custom app packages (pkgs/default.nix)
+### Custom app packages (nix/pkgs/default.nix)
 
 When adding a custom `mkApp` package that's managed by a wrapper module (e.g.,
 `mkChromiumBrowser`), always set `appLocation = "wrapper"` to prevent the base
@@ -234,8 +236,8 @@ brave-browser-nightly = mkApp {
 After touching Nix configuration, run the narrowest activation command that matches the changed files and monitor output until completion:
 
 ```bash
-just darwin           # nix-darwin only: hosts/, modules/, system settings, brew
-just home             # home-manager only: home/, user packages, dotfiles
+just darwin           # nix-darwin only: nix/hosts/, nix/modules/, system settings, brew
+just home             # home-manager only: nix/home/, user packages, dotfiles
 just rebuild          # both darwin + home, or when unsure which applies (syncs from remote first)
 just validate         # build both without switching (catches errors)
 just validate darwin  # darwin-only validation

@@ -43,19 +43,19 @@
       version = "26.05";
       arch = system;
       username = "seth";
-      lib = nixpkgs.lib.extend (import ./lib/default.nix inputs);
+      lib = nixpkgs.lib.extend (import ./nix/lib/default.nix inputs);
       pkgs = import nixpkgs {
         inherit system;
         config.allowUnfree = true;
         config.allowUnfreePredicate = _: true;
-        overlays = (import ./overlays { inherit inputs; }) ++ [
-          (import ./pkgs { inherit lib; })
+        overlays = (import ./nix/overlays { inherit inputs; }) ++ [
+          (import ./nix/pkgs { inherit lib; })
         ];
       };
 
-      mkInit = import ./lib/mkInit.nix { inherit nixpkgs; };
-      mkDarwin = import ./lib/mkDarwin.nix { inherit inputs lib; };
-      mkHome = import ./lib/mkHome.nix { inherit inputs lib; };
+      mkInit = import ./nix/lib/mkInit.nix { inherit nixpkgs; };
+      mkDarwin = import ./nix/lib/mkDarwin.nix { inherit inputs lib; };
+      mkHome = import ./nix/lib/mkHome.nix { inherit inputs lib; };
     in
     {
       apps."${arch}".default = mkInit {

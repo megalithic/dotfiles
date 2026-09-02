@@ -1,5 +1,5 @@
-# fzf environment — non-nix port of home/common/programs/fzf/default.nix plus
-# the FZF_* vars from hosts/common.nix (environment.variables).
+# fzf environment — non-nix port of nix/home/common/programs/fzf/default.nix plus
+# the FZF_* vars from nix/hosts/common.nix (environment.variables).
 #
 # Default options live in ~/.config/fzf/fzfrc via FZF_DEFAULT_OPTS_FILE (fzf >= 0.48).
 # Key bindings (ctrl-t / ctrl-r / alt-c) load in config.fish via `fzf --fish | source`,

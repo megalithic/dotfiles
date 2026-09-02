@@ -1,6 +1,6 @@
 #!/bin/sh
 # Declarative Helium profile/prefs setup, mirroring the nix module
-# (home/common/programs/helium-browser/ + mkChromiumBrowser):
+# (nix/home/common/programs/helium-browser/ + mkChromiumBrowser):
 #   - External Extensions JSONs with the Chromium prodversion baked into the
 #     CWS update URL
 #   - NSUserKeyEquivalents (ctrl-based tab shortcuts)
@@ -65,7 +65,7 @@ echo "setup-helium: wrote $count External Extensions JSONs (prodversion=$PRODVER
 
 # --- macOS defaults ------------------------------------------------------------
 # NSUserKeyEquivalents: ^ = Ctrl, $ = Shift, ~ = Option, @ = Cmd.
-# Mirrors keyEquivalents in home/common/programs/helium-browser/default.nix.
+# Mirrors keyEquivalents in nix/home/common/programs/helium-browser/default.nix.
 # Helium reads these on launch; restart to apply.
 defaults write "$BUNDLE_ID" NSUserKeyEquivalents -dict \
   "Close Tab" '^w' \
@@ -82,7 +82,7 @@ defaults write "$BUNDLE_ID" NSUserKeyEquivalents -dict \
 # Sparkle auto-update kill switch. Also declared in
 # [bootstrap.macos.defaults."net.imput.helium"] for fresh-machine bootstrap;
 # repeated here because `mise run up` deliberately skips the macos-defaults
-# step (post-defaults hook kills Finder/Dock). Mirrors modules/system.nix.
+# step (post-defaults hook kills Finder/Dock). Mirrors nix/modules/system.nix.
 defaults write "$BUNDLE_ID" SUAutomaticallyUpdate -bool false
 defaults write "$BUNDLE_ID" SUEnableAutomaticChecks -bool false
 defaults write "$BUNDLE_ID" SUScheduledCheckInterval -int 0

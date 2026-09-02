@@ -314,7 +314,7 @@ scan:
   fi
   exit $rc
 
-# encrypt plaintext -> secrets/archive/<name>.age (ssh key as recipient)
+# encrypt plaintext -> nix/secrets/archive/<name>.age (ssh key as recipient)
 # output-name optional; defaults to basename of input. ".age" auto-added.
 # Usage: just age <path-to-plaintext> [output-name]
 age file name="":
@@ -325,7 +325,7 @@ age file name="":
   name="{{name}}"
   [[ -z "$name" ]] && name="$(basename "$in")"
   [[ "$name" == *.age ]] || name="${name}.age"
-  out="secrets/archive/$name"
+  out="nix/secrets/archive/$name"
   pub="$HOME/.ssh/id_ed25519.pub"
   [[ -f "$pub" ]] || { echo ":: ✗ missing $pub" >&2; exit 1; }
   mkdir -p "$(dirname "$out")"
@@ -333,7 +333,7 @@ age file name="":
   nix run nixpkgs#age -- -R "$pub" -o "$out" "$in"
   echo ":: ✓ wrote $out"
 
-# decrypt secrets/archive/<name>[.age] with ssh key; accepts bare name or full path
+# decrypt nix/secrets/archive/<name>[.age] with ssh key; accepts bare name or full path
 # Usage: just deage <name> [out-path]   (no out-path -> stdout)
 deage file out="":
   #!/usr/bin/env bash
@@ -344,7 +344,7 @@ deage file out="":
   else
     base="$arg"
     [[ "$base" == *.age ]] || base="${base}.age"
-    in="secrets/archive/$base"
+    in="nix/secrets/archive/$base"
   fi
   [[ -f "$in" ]] || { echo ":: ✗ not found: $in" >&2; exit 1; }
   key="$HOME/.ssh/id_ed25519"

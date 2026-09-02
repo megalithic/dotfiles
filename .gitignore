@@ -43,7 +43,7 @@ node_modules
 **/.jj
 
 weechat
-home/config/weechat
+nix/home/config/weechat
 .direnv/
 _planned
 .playwright-mcp/

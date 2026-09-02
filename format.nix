@@ -22,7 +22,7 @@
     tree-root-file = "flake.nix";
 
     excludes = [
-      "pkgs/ivy-plugins/_sources/*"
+      "nix/pkgs/ivy-plugins/_sources/*"
     ];
 
     formatter = {
