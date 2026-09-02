@@ -6,3 +6,8 @@
 [dotfiles]
 # Host-specific ~/.ssh/config; Include-s config/ssh/shared.config.
 "~/.ssh/config" = "~/.dotfiles/config/ssh/config.workbookpro"
+
+[tools]
+ansible = "latest"
+gcloud = "latest"
+opentofu = "latest"

@@ -29,24 +29,16 @@ local ENV_CACHE_TTL = 300 -- 5 minutes
 ---@return string|nil
 local function getEnvVar(name)
   local value = os.getenv(name)
-  if value and value ~= "" then
-    return value
-  end
-  if not name:match("^[A-Z][A-Z0-9_]*$") then
-    return nil
-  end
+  if value and value ~= "" then return value end
+  if not name:match("^[A-Z][A-Z0-9_]*$") then return nil end
 
   local now = os.time()
-  if envCacheTime + ENV_CACHE_TTL > now and envCache[name] then
-    return envCache[name]
-  end
+  if envCacheTime + ENV_CACHE_TTL > now and envCache[name] then return envCache[name] end
 
   -- Hammerspoon does not inherit shell activation, so read the encrypted fnox
   -- cache through its stable mise shim.
   local home = os.getenv("HOME")
-  if not home then
-    return nil
-  end
+  if not home then return nil end
   local cmd = string.format("%q get %q 2>/dev/null", home .. "/.local/share/mise/shims/fnox", name)
   local output, status = hs.execute(cmd)
 
@@ -65,24 +57,18 @@ end
 
 ---Get bot token from environment
 ---@return string|nil
-local function getToken()
-  return getEnvVar("TELEGRAM_BOT_TOKEN")
-end
+local function getToken() return getEnvVar("TELEGRAM_BOT_TOKEN") end
 
 ---Get chat ID from environment
 ---@return string|nil
-local function getChatId()
-  return getEnvVar("TELEGRAM_CHAT_ID")
-end
+local function getChatId() return getEnvVar("TELEGRAM_CHAT_ID") end
 
 ---Build API URL
 ---@param method string API method name
 ---@return string|nil url, string|nil error
 local function apiUrl(method)
   local token = getToken()
-  if not token then
-    return nil, "missing_token"
-  end
+  if not token then return nil, "missing_token" end
   return API_BASE .. token .. "/" .. method, nil
 end
 
@@ -115,14 +101,10 @@ function M.send(text, opts)
   }
 
   -- parse_mode: false = disable, nil = default to MarkdownV2, string = use that mode
-  if opts.parse_mode ~= false then
-    payload.parse_mode = opts.parse_mode or "MarkdownV2"
-  end
+  if opts.parse_mode ~= false then payload.parse_mode = opts.parse_mode or "MarkdownV2" end
 
   -- Add reply keyboard if provided (useful for quick responses)
-  if opts.reply_markup then
-    payload.reply_markup = opts.reply_markup
-  end
+  if opts.reply_markup then payload.reply_markup = opts.reply_markup end
 
   local headers = { ["Content-Type"] = "application/json" }
   local body = hs.json.encode(payload)
@@ -171,9 +153,7 @@ end
 ---@param text string
 ---@return string
 function M.escapeMarkdown(text)
-  if not text then
-    return ""
-  end
+  if not text then return "" end
   -- Escape Markdown special chars: _ * [ ] ( ) ~ ` > # + - = | { } . !
   return text:gsub("([_%*%[%]%(%)~`>#+%-=|{}%.!])", "\\%1")
 end
@@ -207,9 +187,7 @@ function M.sendFormatted(text, opts)
     text = text,
     parse_mode = "MarkdownV2",
   }
-  if opts.reply_markup then
-    payload.reply_markup = opts.reply_markup
-  end
+  if opts.reply_markup then payload.reply_markup = opts.reply_markup end
 
   local status, body = hs.http.post(url, hs.json.encode(payload), headers)
 
@@ -315,9 +293,7 @@ local function processUpdates(updates)
 
   for _, update in ipairs(updates) do
     -- Track the latest update ID for offset
-    if update.update_id >= M.lastUpdateId then
-      M.lastUpdateId = update.update_id + 1
-    end
+    if update.update_id >= M.lastUpdateId then M.lastUpdateId = update.update_id + 1 end
 
     -- Security: only process messages from allowed chat_id
     local msgChatId = nil
@@ -506,9 +482,7 @@ end
 ---@param text? string Optional notification text
 function M.answerCallbackQuery(callbackQueryId, text)
   local url, err = apiUrl("answerCallbackQuery")
-  if not url then
-    return
-  end
+  if not url then return end
 
   local payload = {
     callback_query_id = callbackQueryId,
@@ -525,14 +499,10 @@ local pollInFlight = false
 ---Poll for new updates
 local function poll()
   -- Skip if already polling (long polling can take up to 30s)
-  if pollInFlight then
-    return
-  end
+  if pollInFlight then return end
 
   local url, err = apiUrl("getUpdates")
-  if not url then
-    return
-  end
+  if not url then return end
 
   -- Add offset to only get new updates, and timeout for long polling
   -- Using 30s timeout for efficient long polling
@@ -544,9 +514,7 @@ local function poll()
 
     if status == 200 and body then
       local ok, result = pcall(hs.json.decode, body)
-      if ok and result and result.ok and result.result then
-        processUpdates(result.result)
-      end
+      if ok and result and result.ok and result.result then processUpdates(result.result) end
     elseif status ~= 0 and status ~= -1 and status ~= 409 then
       -- Status 0 = timeout (normal for long polling)
       -- Status -1 = network error/cancelled (transient, will retry)
@@ -610,9 +578,7 @@ end
 
 ---Check if Telegram is configured and ready
 ---@return boolean ready
-function M.isReady()
-  return M.initialized and getToken() ~= nil and getChatId() ~= nil
-end
+function M.isReady() return M.initialized and getToken() ~= nil and getChatId() ~= nil end
 
 ---Get bot info (useful for testing)
 ---@param callback function Called with (success, info)

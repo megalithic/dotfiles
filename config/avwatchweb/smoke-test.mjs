@@ -6,7 +6,8 @@ import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 
-const daemonPath = process.env.AVWATCHD_BIN ?? path.join(os.homedir(), ".local/bin/avwatchd");
+const daemonPath =
+    process.env.AVWATCHD_BIN ?? path.join(os.homedir(), ".local/bin/avwatchd");
 const temporaryDir = mkdtempSync(path.join(os.tmpdir(), "avwatchd-smoke-"));
 const socketPath = path.join(temporaryDir, "sock");
 const nonce = "7fc4ba9b-c52f-4e27-8828-69f70c65f53d";

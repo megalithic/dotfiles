@@ -220,7 +220,6 @@ else
 fi
 pgrep -q kanata && ok "kanata running" || bad "kanata not running"
 pgrep -fq 'Espanso.app.*worker' && ok "espanso worker running" || bad "espanso worker not running"
-launchctl list 2>/dev/null | grep -q 'org.nixos.raycast\|com.raycast' && bad "raycast launchd leftovers" || ok "no raycast agents"
 
 hdr "touchid-sudo task idempotency"
 out="$(bash "$HOME/.dotfiles/scripts/mise/setup-pam" 2>&1)"

@@ -101,6 +101,6 @@ in
   # Keep the default "Applications/Home Manager Apps" subfolder. The copyApps
   # rsync runs with --delete against this directory, so pointing it at
   # ~/Applications directly would wipe non-nix apps living there (e.g. the
-  # Claude Code URL Handler). Spotlight/Raycast still index the subfolder.
+  # Claude Code URL Handler). Spotlight still indexes the subfolder.
   # targets.darwin.copyApps.directory = "Applications/Home Manager Apps"; # default
 }
