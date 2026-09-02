@@ -13,76 +13,148 @@
 
 </p>
 
-## 🚀 Installation (automagic)
+## Installation
 
-```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/HEAD/scripts/install.sh)"
-```
+`bootstrap.sh` is the macOS first-install and migration entry point. Run it in
+an interactive terminal on a new machine or when the machine still needs base
+setup. Do not run it as root.
 
-## 🚀 Installation (automagical)
+Run the current remote script:
 
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/HEAD/bootstrap.sh)"
 ```
 
-Pass flags after `--` (it fills `$0`; everything after reaches the script):
+Without flags, bootstrap prompts for a hostname and defaults to the current
+short hostname. To select a host without the prompt:
 
 ```bash
-# overwrite conflicting dotfile targets, preview, or preset hostname
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/HEAD/bootstrap.sh)" -- --force
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/HEAD/bootstrap.sh)" -- --dry-run
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/HEAD/bootstrap.sh)" -- --host workbookpro
 ```
 
-## 🚀 Installation (manual)
-
-1. Install
-   [Determinate `nix`](https://github.com/DeterminateSystems/nix-installer).
+From an existing checkout, run:
 
 ```bash
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --determinate
+cd ~/.dotfiles
+sh bootstrap.sh --host "$(hostname -s)"
 ```
 
-1. Source nix to run nix things
+Use `--force` only when bootstrap should overwrite conflicting whole-file
+dotfile targets:
 
 ```bash
-source "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/HEAD/bootstrap.sh)" -- --force --host workbookpro
 ```
 
-1. Run the installer (this clones the repo to ~/.dotfiles)
+Bootstrap has no dry-run mode. It changes machine state: it may install Command
+Line Tools and Homebrew, install or update standalone mise at
+`~/.local/bin/mise`, set the macOS hostname, clone or update `~/.dotfiles`,
+apply managed links, install tools/packages/apps, run first-install hooks, set
+fish as the login shell, attempt to refresh `mise.lock`, and run final health
+checks. If an existing checkout is dirty, the current script stashes its
+changes before pulling.
+
+### Host configuration
+
+Bootstrap normalizes the selected hostname, exports it as `MISE_ENV`, and uses
+that value while mise loads configuration. After dotfiles are applied, mise
+merges this host overlay over the global config:
+
+```text
+~/.config/mise/config.toml
+~/.config/mise/config.$MISE_ENV.toml
+```
+
+The repo sources are `config/mise/config.toml` and
+`config/mise/config.{workbookpro,megabookpro}.toml`. Both host overlays select
+their SSH configuration. The workbookpro overlay also declares Ansible, Google
+Cloud, and OpenTofu; the megabookpro overlay declares AirConnect and its
+LaunchAgent. Fish, Bash, and Zsh shell initialization export `MISE_ENV` from
+`hostname -s` for later sessions. The bootstrap-backed package, dotfile, and
+system update tasks use the same short hostname fallback when `MISE_ENV` is
+missing. Confirm the active global and host configuration without installing
+missing tools:
 
 ```bash
-nix run github:megalithic/dotfiles
+MISE_AUTO_INSTALL=false mise cfg
 ```
 
-## Usage
-
-You can see the current tasks by running `just --list`
+After bootstrap succeeds, fully quit and reopen the terminal so the fish login
+shell and host environment take effect. Bootstrap runs a limited
+`scripts/mise/check-system` check before exiting; this first pass skips the full
+missing-tool check. If it reports failures, restart the terminal and run the
+full check:
 
 ```bash
-$ just --list
-Available recipes:
-default
-fix-shell-files # fix shell files. this happens sometimes with nix-darwin
-hm              # run home-manager switch
-news
-mac | rebuild # rebuild nix darwin
-uninstall     # uninstalls the nix determinate installer
-update        # updates brew, flake, and runs home-manager
-update-brew   # update and upgrade homebrew packages
-update-flake  # update your flake.lock
-upgrade-nix   # upgrades nix
+mise run doctor
 ```
 
-> **_NOTE_**: this nix setup is super unstable at the moment.
+A macOS App Management permission failure also requires quitting and reopening
+the terminal after granting access, then rerunning bootstrap.
 
-#### Quick start
+## Machine updates
 
-```sh
-just home         # apply home-manager config
-just darwin       # apply system config (requires sudo)
-just update-flake # update flake.lock
+After initial bootstrap, use the recurring machine updater instead of rerunning
+bootstrap:
+
+```bash
+mise run up
+# Equivalent alias:
+mise run dot
 ```
+
+Both commands mutate machine state during a normal run. To print each phase
+without running it, use the updater's supported dry-run mode:
+
+```bash
+mise run up -- --dry-run
+```
+
+`scripts/mise/update-machine` runs these phases sequentially and stops on the
+first failure:
+
+1. `update:tools` - update standalone mise, plugins, and declared tools
+2. `update:packages` - apply and upgrade declared system packages
+3. `update:dotfiles` - force-apply managed dotfile targets
+4. `install:fonts` - install declared Nerd Fonts when inputs changed
+5. `update:system` - build signed miccheckd, notiwatchd, and avwatchd binaries,
+   configure Helium, apply LaunchAgents, and apply macOS defaults
+6. `update:nvim` - update Neovim plugins and Treesitter parsers
+7. `update:fnox` - refresh the fnox cache and generated secret artifacts
+8. `update:pi` - update Pi settings, tools, and extensions
+9. `reload:hammerspoon` - reload Hammerspoon
+
+Task declarations live in `config/mise/config.toml`. Multi-step mise helpers
+live in `scripts/mise/`; shared Swift sources and their signed build helper stay
+in `lib/`. List current public tasks with:
+
+```bash
+mise tasks ls
+```
+
+`doctor` and `sync:fantastical` are independent tasks. `up` does not run either
+one:
+
+```bash
+mise run doctor
+mise run sync:fantastical -- --help
+```
+
+### Update logs
+
+Each `up` run streams output and creates private timestamped logs under
+`~/.local/state/mise/up/`:
+
+```text
+<timestamp>.log
+<timestamp>.mise-debug.log
+latest.log
+latest.mise-debug.log
+```
+
+The human log records phase results, exit codes, and warnings. Failed runs also
+include a bounded failure tail. The mise debug log keeps internal diagnostics
+separate. The `latest` links point to the newest run.
 
 ---
 
