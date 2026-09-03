@@ -705,32 +705,31 @@ url = "https://github.com/ast-grep/ast-grep/releases/download/0.45.3/app-aarch64
 url_api = "https://api.github.com/repos/ast-grep/ast-grep/releases/assets/537332514"
 
 [[tools.atuin]]
-version = "18.20.1"
+version = "18.21.0"
 backend = "aqua:atuinsh/atuin"
 
 [tools.atuin."platforms.macos-arm64"]
-checksum = "sha256:690281d1b907973856ddc4430461f880530cc3f52398a331c284b2f9371f5025"
-url = "https://github.com/atuinsh/atuin/releases/download/v18.20.1/atuin-aarch64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/atuinsh/atuin/releases/assets/531543786"
+checksum = "sha256:c78ac159c89c38ee0b56eb6a11d9c0a7340de3a03b98fbbccd44f8e2d91e6e6e"
+url = "https://github.com/atuinsh/atuin/releases/download/v18.21.0/atuin-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/atuinsh/atuin/releases/assets/538647916"
 provenance = "github-attestations"
 
 [[tools.aube]]
-version = "2.2.0"
+version = "2.2.4"
 backend = "aqua:jdx/aube"
 
 [tools.aube."platforms.macos-arm64"]
-checksum = "sha256:702de7f549cef800a1f35900e638ea4fbe07bce854f234cef869cd5442484c90"
-url = "https://github.com/jdx/aube/releases/download/v2.2.0/aube-v2.2.0-aarch64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/jdx/aube/releases/assets/529761660"
-provenance = "github-attestations"
+checksum = "sha256:aa3f6e8e319c8d9c92393e797cd5576229eacc0740e8cf2b34d4c65bb1e61708"
+url = "https://github.com/jdx/aube/releases/download/v2.2.4/aube-v2.2.4-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/jdx/aube/releases/assets/538155490"
 
 [[tools.awscli]]
-version = "2.36.34"
+version = "2.36.38"
 backend = "aqua:aws/aws-cli"
 
 [tools.awscli."platforms.macos-arm64"]
-checksum = "blake3:86b61fc885c8462b50a8d6651d37482dde70a197c2bdfd68ab2ec6e4a65dea78"
-url = "https://awscli.amazonaws.com/AWSCLIV2-2.36.34.pkg"
+checksum = "blake3:8343824717cb3d50ca9a9a89467496afbf176055577a07f6adfe78b2b12892c8"
+url = "https://awscli.amazonaws.com/AWSCLIV2-2.36.38.pkg"
 
 [[tools.bat]]
 version = "0.26.1"
@@ -820,13 +819,13 @@ conda_deps = [
 ]
 
 [[tools.claude]]
-version = "2.1.251"
+version = "2.1.259"
 backend = "aqua:anthropics/claude-code"
 
 [tools.claude."platforms.macos-arm64"]
-checksum = "sha256:02e1e8f41406ae4f4a6b85f25ce6653bf586478dfe64e4d56e0a21624756141d"
-url = "https://github.com/anthropics/claude-code/releases/download/v2.1.251/claude-darwin-arm64.tar.gz"
-url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/533990605"
+checksum = "sha256:2e9440dd56c919f962e8896c2b8f899b25cc020ebcad7aad702c85e7102d6422"
+url = "https://github.com/anthropics/claude-code/releases/download/v2.1.259/claude-darwin-arm64.tar.gz"
+url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/541768344"
 
 [[tools.cmake]]
 version = "4.4.3"
@@ -906,13 +905,12 @@ checksum = "sha256:bac08322ea3698157eb2373bb5b65e38c15df9dd41e1c06f142f874367fa4
 url = "https://github.com/elixir-lsp/elixir-ls/releases/download/v0.31.1/elixir-ls-v0.31.1.zip"
 
 [[tools.erlang]]
-version = "29.0.5"
+version = "29.0.6"
 backend = "core:erlang"
 
 [tools.erlang."platforms.macos-arm64"]
-checksum = "sha256:24b9e00da2b9ad25b1f182e2efd73ff316e46ec4b143c0cc3c69dbd27d5a594d"
-url = "https://github.com/erlef/otp_builds/releases/download/OTP-29.0.5/otp-aarch64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/erlef/otp_builds/releases/assets/501257195"
+checksum = "sha256:935ecc08e3ea156d3050536a84338518020c28fa9a977d02671037069cb85a41"
+url = "https://github.com/erlef/otp_builds/releases/download/OTP-29.0.6/otp-aarch64-apple-darwin.tar.gz"
 
 [[tools.expert]]
 version = "0.1.5"
@@ -1038,13 +1036,13 @@ conda_deps = [
 ]
 
 [[tools.flyctl]]
-version = "0.4.95"
+version = "0.4.97"
 backend = "aqua:superfly/flyctl"
 
 [tools.flyctl."platforms.macos-arm64"]
-checksum = "sha256:4c18efadf2aeb38e12e1a2f0178600d71e34cca40fd5088b796cbce103b949e0"
-url = "https://github.com/superfly/flyctl/releases/download/v0.4.95/flyctl_0.4.95_macOS_arm64.tar.gz"
-url_api = "https://api.github.com/repos/superfly/flyctl/releases/assets/532949424"
+checksum = "sha256:56a5101b4c8b6aa94d2cdb60d5b36c7c14b87918d410796eb1b34043ca7bcf42"
+url = "https://github.com/superfly/flyctl/releases/download/v0.4.97/flyctl_0.4.97_macOS_arm64.tar.gz"
+url_api = "https://api.github.com/repos/superfly/flyctl/releases/assets/540013505"
 
 [[tools.fnox]]
 version = "1.34.1"
@@ -1093,13 +1091,13 @@ url = "https://github.com/git-lfs/git-lfs/releases/download/v3.8.0/git-lfs-darwi
 url_api = "https://api.github.com/repos/git-lfs/git-lfs/releases/assets/532993595"
 
 [[tools.github-cli]]
-version = "2.98.0"
+version = "2.99.0"
 backend = "aqua:cli/cli"
 
 [tools.github-cli."platforms.macos-arm64"]
-checksum = "sha256:8cfb027cc5310675f2b830eac8f9865c1155a45ffcf9757f699fdd5a22046ca4"
-url = "https://github.com/cli/cli/releases/download/v2.98.0/gh_2.98.0_macOS_arm64.zip"
-url_api = "https://api.github.com/repos/cli/cli/releases/assets/522857972"
+checksum = "sha256:94d4bd7e88563a9cb414e651e88acc4f1728a87476752460906d824230748d37"
+url = "https://github.com/cli/cli/releases/download/v2.99.0/gh_2.99.0_macOS_arm64.zip"
+url_api = "https://api.github.com/repos/cli/cli/releases/assets/540091462"
 provenance = "github-attestations"
 
 [[tools."github:EmmyLuaLs/emmylua-analyzer-rust"]]
@@ -1169,13 +1167,13 @@ url = "https://github.com/nicknisi/fleet/releases/download/v0.25.0/fleet-darwin-
 url_api = "https://api.github.com/repos/nicknisi/fleet/releases/assets/532906388"
 
 [[tools."github:nicknisi/sessions"]]
-version = "1.29.1"
+version = "1.29.2"
 backend = "github:nicknisi/sessions"
 
 [tools."github:nicknisi/sessions"."platforms.macos-arm64"]
-checksum = "sha256:5080d5c3d8aac14e42717b99add8d6fe2f70ed6e6a0cf0cf00f6800ff2d3f79c"
-url = "https://github.com/nicknisi/sessions/releases/download/v1.29.1/sessions-darwin-arm64.tar.gz"
-url_api = "https://api.github.com/repos/nicknisi/sessions/releases/assets/529506490"
+checksum = "sha256:fc87ada497cf60f9cf0dfbc0e6acd3ed1c1c643400497dcb4a5e0065328306cf"
+url = "https://github.com/nicknisi/sessions/releases/download/v1.29.2/sessions-darwin-arm64.tar.gz"
+url_api = "https://api.github.com/repos/nicknisi/sessions/releases/assets/539675274"
 
 [[tools."github:noworrieseh/macdisp"]]
 version = "0.2.1"
@@ -1196,13 +1194,13 @@ url = "https://github.com/radiosilence/fastmail-cli/releases/download/v2.2.2/fas
 url_api = "https://api.github.com/repos/radiosilence/fastmail-cli/releases/assets/399317023"
 
 [[tools."github:rtk-ai/rtk"]]
-version = "0.46.0"
+version = "0.47.0"
 backend = "github:rtk-ai/rtk"
 
 [tools."github:rtk-ai/rtk"."platforms.macos-arm64"]
-checksum = "sha256:484e5dd2b4bfdbbb910727a0ba1e2d63b2e23efa922cfcc7300fd131bca3e10a"
-url = "https://github.com/rtk-ai/rtk/releases/download/v0.46.0/rtk-aarch64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/rtk-ai/rtk/releases/assets/531218972"
+checksum = "sha256:3617f9a95d536e0b6bb9e2c6d121d81c3d8fd8ef04c5b2a605f5e7b0309a47d2"
+url = "https://github.com/rtk-ai/rtk/releases/download/v0.47.0/rtk-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/rtk-ai/rtk/releases/assets/540806263"
 
 [[tools."github:ryanoasis/nerd-fonts"]]
 version = "3.4.0"
@@ -1273,12 +1271,12 @@ url_api = "https://api.github.com/repos/charmbracelet/glow/releases/assets/51046
 provenance = "cosign"
 
 [[tools.go]]
-version = "1.27.0"
+version = "1.27.1"
 backend = "core:go"
 
 [tools.go."platforms.macos-arm64"]
-checksum = "sha256:90493b3bbd5e10f91d12153198bf1994fd756399b4fec93b49b0c6e2acdeeb3e"
-url = "https://dl.google.com/go/go1.27.0.darwin-arm64.tar.gz"
+checksum = "sha256:ee215d57e0ec269c60cc9ceca68e6bda321ba9ee5afe24f4b0988703c2d87d12"
+url = "https://dl.google.com/go/go1.27.1.darwin-arm64.tar.gz"
 
 [[tools."go:golang.org/x/tools/gopls"]]
 version = "0.23.0"
@@ -1337,13 +1335,13 @@ checksum = "sha256:ba07e3caeb41d1b2a667e2c246cc3b0ef632a2d812ceeac0ce2eed9441d63
 url = "https://github.com/not-in-stock/kanata-bar/releases/download/v1.1.10/kanata-bar.app.zip"
 
 [[tools.hunk]]
-version = "0.20.1"
+version = "0.21.0"
 backend = "aqua:modem-dev/hunk"
 
 [tools.hunk."platforms.macos-arm64"]
-checksum = "sha256:b710b121df35f9ac9ccef1bdef5e2135747be404b818710313cc3db1c90f84e6"
-url = "https://github.com/modem-dev/hunk/releases/download/v0.20.1/hunkdiff-darwin-arm64.tar.gz"
-url_api = "https://api.github.com/repos/modem-dev/hunk/releases/assets/535228768"
+checksum = "sha256:a3f053af663df0d222e550f4e64ef5455e953f03f140782c855186a6d9992bb9"
+url = "https://github.com/modem-dev/hunk/releases/download/v0.21.0/hunkdiff-darwin-arm64.tar.gz"
+url_api = "https://api.github.com/repos/modem-dev/hunk/releases/assets/541386485"
 
 [[tools.imagemagick]]
 version = "7.1.2_30"
@@ -1484,13 +1482,13 @@ url = "https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-macos-arm64"
 provenance = "github-attestations"
 
 [[tools.jujutsu]]
-version = "0.44.0"
+version = "0.45.0"
 backend = "aqua:jj-vcs/jj"
 
 [tools.jujutsu."platforms.macos-arm64"]
-checksum = "sha256:22b92ed109378a9638f0ae55ca7a7bdc9ef26aa60124215a1f04f6808623ba94"
-url = "https://github.com/jj-vcs/jj/releases/download/v0.44.0/jj-v0.44.0-aarch64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/jj-vcs/jj/releases/assets/503324615"
+checksum = "sha256:4eb739e998fed3dd9784db86349ad60133494d71e7f4e100907711dcad19c058"
+url = "https://github.com/jj-vcs/jj/releases/download/v0.45.0/jj-v0.45.0-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/jj-vcs/jj/releases/assets/542224091"
 
 [[tools.just]]
 version = "1.58.0"
@@ -1510,16 +1508,16 @@ checksum = "sha256:4a54d7b4abdf255b2bce9806641eac5568d5b7fbc820c1b5d3f9e34ea1367
 url = "https://github.com/jesseduffield/lazydocker/releases/download/v0.25.2/lazydocker_0.25.2_Darwin_arm64.tar.gz"
 
 [[tools."llama.cpp"]]
-version = "10715"
+version = "10775"
 backend = "github:ggml-org/llama.cpp"
 
 [tools."llama.cpp".options]
 version_prefix = "b"
 
 [tools."llama.cpp"."platforms.macos-arm64"]
-checksum = "sha256:8332737e05ca50cbdb11fcd87bd7dc81465609d755a7df463b52726bd4b9129a"
-url = "https://github.com/ggml-org/llama.cpp/releases/download/b10715/llama-b10715-bin-macos-arm64.tar.gz"
-url_api = "https://api.github.com/repos/ggml-org/llama.cpp/releases/assets/537805317"
+checksum = "sha256:cd91a87f6e00dddeab16469cf5fc3bf09ee535705a0d09e8cd2e8ef7da4d2cac"
+url = "https://github.com/ggml-org/llama.cpp/releases/download/b10775/llama-b10775-bin-macos-arm64.tar.gz"
+url_api = "https://api.github.com/repos/ggml-org/llama.cpp/releases/assets/542067917"
 provenance = "github-attestations"
 provenance_verified = true
 
@@ -1579,7 +1577,7 @@ version = "6.16.7"
 backend = "npm:httpyac"
 
 [[tools."npm:hunkdiff"]]
-version = "0.20.1"
+version = "0.21.0"
 backend = "npm:hunkdiff"
 
 [[tools."npm:lat.md"]]
@@ -1607,7 +1605,7 @@ version = "6.0.0"
 backend = "npm:typescript-language-server"
 
 [[tools."npm:varlock"]]
-version = "1.17.1"
+version = "1.18.0"
 backend = "npm:varlock"
 
 [[tools."npm:vscode-langservers-extracted"]]
@@ -1641,13 +1639,13 @@ url = "https://github.com/earendil-works/pi/releases/download/v0.80.3/pi-darwin-
 url_api = "https://api.github.com/repos/earendil-works/pi/releases/assets/462498374"
 
 [[tools.pipx]]
-version = "1.17.1"
+version = "1.17.2"
 backend = "aqua:pypa/pipx"
 
 [tools.pipx."platforms.macos-arm64"]
-checksum = "sha256:95f35ed56c07ea35d057dafbf5222cfda86a08a2602a2368256e9df3b25cbf1e"
-url = "https://github.com/pypa/pipx/releases/download/1.17.1/pipx.pyz"
-url_api = "https://api.github.com/repos/pypa/pipx/releases/assets/537002599"
+checksum = "sha256:31d517b7afebf55d3b597d613c735389068a973a54712a50641845cf2cb2bb1d"
+url = "https://github.com/pypa/pipx/releases/download/1.17.2/pipx.pyz"
+url_api = "https://api.github.com/repos/pypa/pipx/releases/assets/540192956"
 
 [[tools."pipx:huggingface-hub"]]
 version = "1.29.0"
@@ -1662,13 +1660,13 @@ version = "5.9.2"
 backend = "pipx:yubikey-manager"
 
 [[tools.pitchfork]]
-version = "2.23.0"
+version = "2.24.0"
 backend = "aqua:jdx/pitchfork"
 
 [tools.pitchfork."platforms.macos-arm64"]
-checksum = "sha256:8e206fa6d8dc5032dd19ffd2847898b8b1bbd883a69a22c073aea782fef8c7a7"
-url = "https://github.com/jdx/pitchfork/releases/download/v2.23.0/pitchfork-aarch64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/jdx/pitchfork/releases/assets/530652428"
+checksum = "sha256:0f41e366937ac01a8217ab53ee6937b8b806516a0ae212de6f7b8a233ff56faa"
+url = "https://github.com/jdx/pitchfork/releases/download/v2.24.0/pitchfork-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/jdx/pitchfork/releases/assets/541013280"
 
 [[tools.pnpm]]
 version = "11.25.0"
@@ -1718,7 +1716,7 @@ url = "https://github.com/jdx/ruby/releases/download/4.0.6-1/ruby-4.0.6.macos.ta
 provenance = "github-attestations"
 
 [[tools.rust]]
-version = "nightly-2026-08-31"
+version = "nightly-2026-09-03"
 backend = "core:rust"
 
 [tools.rust.options]
@@ -1817,41 +1815,41 @@ url_api = "https://api.github.com/repos/tree-sitter/tree-sitter/releases/assets/
 provenance = "github-attestations"
 
 [[tools.typos]]
-version = "1.50.0"
+version = "1.50.1"
 backend = "aqua:crate-ci/typos"
 
 [tools.typos."platforms.macos-arm64"]
-checksum = "sha256:3c9e3cdc20fbed3812c1f2060650398e88af0c0a251bbe069398752dd71513ed"
-url = "https://github.com/crate-ci/typos/releases/download/v1.50.0/typos-v1.50.0-aarch64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/crate-ci/typos/releases/assets/534128210"
+checksum = "sha256:2c940734b44b6e199e165278b662b7e17c68f068471a2a8a5e491ce635414ae6"
+url = "https://github.com/crate-ci/typos/releases/download/v1.50.1/typos-v1.50.1-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/crate-ci/typos/releases/assets/539861019"
 
 [[tools.usage]]
-version = "6.6.0"
+version = "6.6.1"
 backend = "aqua:jdx/usage"
 
 [tools.usage."platforms.macos-arm64"]
-checksum = "sha256:ef6f93e61697ed6dc287dc9b28611553a5099b1fabf259a21825f2978e14f3d9"
-url = "https://github.com/jdx/usage/releases/download/v6.6.0/usage-universal-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/jdx/usage/releases/assets/537090611"
+checksum = "sha256:2cd11077e8b62c65687c84eab29dae429985acfdea3847b3775a99677f5d6408"
+url = "https://github.com/jdx/usage/releases/download/v6.6.1/usage-universal-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/jdx/usage/releases/assets/539847849"
 
 [[tools.uv]]
-version = "0.12.7"
+version = "0.12.9"
 backend = "aqua:astral-sh/uv"
 
 [tools.uv."platforms.macos-arm64"]
-checksum = "sha256:127ebdda7ad953cdf198e964b570ea5771b85467ea93eb7cb6d6f8e6f55408f3"
-url = "https://github.com/astral-sh/uv/releases/download/0.12.7/uv-aarch64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/532935178"
+checksum = "sha256:301f72afaf54060f92da7016cb0115bd077f43a9c8e39c1d8170a0bac80fd398"
+url = "https://github.com/astral-sh/uv/releases/download/0.12.9/uv-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/540200930"
 provenance = "github-attestations"
 
 [[tools.worktrunk]]
-version = "0.75.0"
+version = "0.76.0"
 backend = "aqua:max-sixty/worktrunk"
 
 [tools.worktrunk."platforms.macos-arm64"]
-checksum = "sha256:c5868d06bddd28b8e49d7b0c42c06e5825ec27e930ce7f3d254a8d8f6511c3b9"
-url = "https://github.com/max-sixty/worktrunk/releases/download/v0.75.0/worktrunk-aarch64-apple-darwin.tar.xz"
-url_api = "https://api.github.com/repos/max-sixty/worktrunk/releases/assets/531753160"
+checksum = "sha256:7b19bb9d5ec60ea4b9bcb11d92606e0575bdf17a01edfe4b841f4281e5d0f56d"
+url = "https://github.com/max-sixty/worktrunk/releases/download/v0.76.0/worktrunk-aarch64-apple-darwin.tar.xz"
+url_api = "https://api.github.com/repos/max-sixty/worktrunk/releases/assets/540216619"
 
 [[tools.yamlfmt]]
 version = "0.21.0"
