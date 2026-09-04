@@ -16,6 +16,17 @@
 
 set -euo pipefail
 
+# Resolve the real script dir (this file may be invoked via a ~/bin symlink)
+# so the shared lock primitive can be sourced from a sibling path.
+script_path="${BASH_SOURCE[0]}"
+if [[ -L $script_path ]]; then
+  link_target="$(readlink "$script_path")"
+  if [[ $link_target == /* ]]; then script_path="$link_target"; else script_path="${script_path%/*}/$link_target"; fi
+fi
+script_dir="$(cd "${script_path%/*}" && pwd)"
+# shellcheck source=bin/wt-lock-lib
+source "$script_dir/wt-lock-lib"
+
 target=""
 branch=""
 wpath=""
@@ -91,6 +102,25 @@ worktree_id="${repo}-${canonical_slug}"
 inside_tmux="false"
 [[ -n "${TMUX:-}" ]] && inside_tmux="true"
 
+# Serialize with the shared repository/worktree locks (same primitive the
+# deterministic `ftm ensure/repair/remove` path uses) so the legacy flow and
+# the new flow cannot race during migration. Held through hook bootstrap and
+# window creation; released before any blocking attach/switch.
+gcommon="$(git -C "$wpath" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
+WTT_LEASE=""
+if [[ -n "$gcommon" ]]; then
+  if ! WTT_LEASE="$(wtlock_acquire "$gcommon" "$worktree_id" "${WT_LOCK_WAIT_MS:-10000}")"; then
+    echo "wt-tmux-target: repository/worktree lock is held by another operation" >&2
+    exit 1
+  fi
+fi
+release_locks() {
+  [[ -n "$WTT_LEASE" ]] || return 0
+  wtlock_release "$gcommon" "$worktree_id" "$WTT_LEASE" || true
+  WTT_LEASE=""
+}
+trap release_locks EXIT
+
 # The project's pre-start hook generates a services script in the worktree's
 # PRIVATE git dir (.git/worktrees/<name>/wt-services-cmd) — never the working
 # tree, so it can't be committed and is removed with the worktree. If it's
@@ -165,6 +195,9 @@ do_session() {
     tmux set-option -w -t "=${session}:${services_window_actual}" remain-on-exit on 2>/dev/null || true
   fi
 
+  # Locks are released once windows and service commands are launched;
+  # attach/switch can block indefinitely and must not hold them.
+  release_locks
   if [[ "$inside_tmux" == "true" ]]; then
     tmux switch-client -t "=${session}"
   else
@@ -186,6 +219,7 @@ do_window() {
   else
     tmux new-window -t "=${cur}" -n "$name" -c "$wpath"
   fi
+  release_locks
 }
 
 case "$target" in

@@ -1,0 +1,150 @@
+# shellcheck shell=bash
+# wt-lock-lib — shared mkdir(2)-based mutation locks for wt, wt-tmux-target,
+# and ftm (worktree-retaining design §1 "Backend result validation and
+# concurrency"). Sourced, never executed.
+#
+# Layout: <git-common-dir>/wt-wrapper/locks/{repository,worktree-<id>}
+# Order:  the repository lock is always acquired before the per-worktree lock.
+#
+# Each lock dir holds an `owner` file with the holder's pid, process start
+# time (pid-reuse guard), lease token, creation epoch, and label. Stale locks
+# are reclaimed only when the recorded owner process is provably gone (dead
+# pid, or live pid whose start time no longer matches). A lock dir without
+# readable metadata is reclaimed only after a >1 minute grace period (covers
+# a crash between mkdir and the metadata write). Everything else reports
+# busy — fail-closed.
+#
+# A lease token names one held repository+worktree pair. wt acquires the
+# locks, passes the token to ftm (--lease), and ftm validates the token
+# against the same metadata instead of re-acquiring.
+#
+# Reclaim renames the lock dir aside before deleting it, so two waiters that
+# both detect the same stale lock can never delete a freshly re-acquired one.
+
+wtlock_root() { printf '%s/wt-wrapper/locks' "$1"; }
+
+wtlock_sanitize() { printf '%s' "$1" | tr -c 'A-Za-z0-9_.-' '-'; }
+
+wtlock_proc_start() {
+  { ps -p "$1" -o lstart= 2>/dev/null || true; } |
+    sed -e 's/^ *//' -e 's/ *$//'
+}
+
+wtlock_new_lease() {
+  if command -v uuidgen >/dev/null 2>&1; then
+    uuidgen | tr '[:upper:]' '[:lower:]'
+  else
+    printf '%s-%s-%s%s' "$(date +%s)" "$$" "$RANDOM" "$RANDOM"
+  fi
+}
+
+wtlock_meta() { # $1 = lock dir, $2 = key
+  [ -f "$1/owner" ] || return 0
+  sed -n "s/^$2=//p" "$1/owner" | head -n 1
+}
+
+wtlock_owner_gone() { # $1 = lock dir → 0 when the recorded owner is provably dead
+  local pid start current
+  pid="$(wtlock_meta "$1" pid)"
+  start="$(wtlock_meta "$1" start)"
+  [ -n "$pid" ] || return 1
+  case "$pid" in *[!0-9]*) return 1 ;; esac
+  kill -0 "$pid" 2>/dev/null || return 0
+  current="$(wtlock_proc_start "$pid")"
+  [ -n "$current" ] && [ -n "$start" ] && [ "$current" != "$start" ]
+}
+
+wtlock_stale() { # $1 = lock dir
+  if [ -f "$1/owner" ]; then
+    wtlock_owner_gone "$1"
+  else
+    [ -n "$(find "$1" -maxdepth 0 -mmin +1 2>/dev/null)" ]
+  fi
+}
+
+wtlock_reclaim() { # $1 = lock dir
+  # Lock dirs contain exactly one metadata file, so no recursive delete is
+  # needed. Rename aside first: two waiters that both detect the same stale
+  # lock can then never delete a freshly re-acquired one.
+  local tomb="$1.stale.$$.$RANDOM"
+  mv "$1" "$tomb" 2>/dev/null || return 1
+  rm -f "$tomb/owner" 2>/dev/null || true
+  rmdir "$tomb" 2>/dev/null || true
+  return 0
+}
+
+wtlock_acquire_one() { # $1 = root, $2 = name, $3 = wait_ms, $4 = lease
+  local dir="$1/$2" waited=0
+  mkdir -p "$1" 2>/dev/null || return 1
+  while :; do
+    if mkdir "$dir" 2>/dev/null; then
+      if ! {
+        printf 'pid=%s\n' "$$"
+        printf 'start=%s\n' "$(wtlock_proc_start "$$")"
+        printf 'lease=%s\n' "$4"
+        printf 'created=%s\n' "$(date +%s)"
+        printf 'label=%s\n' "${WTLOCK_LABEL:-$0}"
+      } >"$dir/owner" 2>/dev/null; then
+        rmdir "$dir" 2>/dev/null || true
+        return 1
+      fi
+      return 0
+    fi
+    if wtlock_stale "$dir"; then
+      wtlock_reclaim "$dir" || true
+      continue
+    fi
+    [ "$waited" -lt "$3" ] || return 1
+    sleep 0.1
+    waited=$((waited + 100))
+  done
+}
+
+wtlock_release_one() { # $1 = root, $2 = name, $3 = lease
+  local dir="$1/$2" held
+  held="$(wtlock_meta "$dir" lease)"
+  [ -n "$3" ] && [ "$held" = "$3" ] || return 1
+  wtlock_reclaim "$dir"
+}
+
+wtlock_acquire() { # $1 = gcd, $2 = worktree-id ('' = repository only), $3 = wait_ms → lease on stdout
+  local root lease
+  root="$(wtlock_root "$1")"
+  lease="$(wtlock_new_lease)"
+  wtlock_acquire_one "$root" repository "$3" "$lease" || return 1
+  if [ -n "$2" ]; then
+    if ! wtlock_acquire_one "$root" "worktree-$(wtlock_sanitize "$2")" "$3" "$lease"; then
+      wtlock_release_one "$root" repository "$lease" || true
+      return 1
+    fi
+  fi
+  printf '%s\n' "$lease"
+}
+
+wtlock_release() { # $1 = gcd, $2 = worktree-id, $3 = lease
+  local root rc=0
+  root="$(wtlock_root "$1")"
+  if [ -n "$2" ]; then
+    wtlock_release_one "$root" "worktree-$(wtlock_sanitize "$2")" "$3" || rc=1
+  fi
+  wtlock_release_one "$root" repository "$3" || rc=1
+  return "$rc"
+}
+
+wtlock_lease_valid_one() { # $1 = root, $2 = name, $3 = lease
+  local dir="$1/$2"
+  [ -d "$dir" ] || return 1
+  [ "$(wtlock_meta "$dir" lease)" = "$3" ] || return 1
+  ! wtlock_owner_gone "$dir"
+}
+
+wtlock_validate_lease() { # $1 = gcd, $2 = worktree-id, $3 = lease
+  local root
+  [ -n "$3" ] || return 1
+  root="$(wtlock_root "$1")"
+  wtlock_lease_valid_one "$root" repository "$3" || return 1
+  if [ -n "$2" ]; then
+    wtlock_lease_valid_one "$root" "worktree-$(wtlock_sanitize "$2")" "$3" || return 1
+  fi
+  return 0
+}
