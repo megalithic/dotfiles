@@ -122,10 +122,17 @@ ensure_window() {
   if tmux list-windows -t "=${session}" -F '#W' 2>/dev/null | grep -qx -- "$window"; then
     return 0
   fi
+  # Create the window before starting the command so window options target its
+  # stable id. wt-services-cmd renames the window after startup; targeting the
+  # name here races that rename and can leave remain-on-exit unset.
+  tmux new-window -d -t "=${session}" -n "$window" -c "$wpath"
   if [[ -n "$run_cmd" ]]; then
-    tmux new-window -d -t "=${session}" -n "$window" -c "$wpath" "$run_cmd"
-  else
-    tmux new-window -d -t "=${session}" -n "$window" -c "$wpath"
+    local window_id
+    window_id="$(tmux list-windows -t "=${session}" -F '#{window_id} #{window_name}' |
+      awk -v n="$window" '$2 == n { print $1; exit }')"
+    [[ -n "$window_id" ]] || return 1
+    tmux set-option -w -t "$window_id" remain-on-exit on
+    tmux respawn-pane -k -t "${window_id}.0" "$run_cmd"
   fi
 }
 
@@ -150,8 +157,13 @@ do_session() {
   ensure_window "$session" code
   ensure_services_window "$session" "$services_window" "$services_cmd"
   # Keep the services window alive when its command exits (e.g. server boot
-  # crash) so the error output stays visible. Rerun with `tmux respawn-pane`.
-  tmux set-option -w -t "=${session}:${services_window}" remain-on-exit on 2>/dev/null || true
+  # crash) so the error output stays visible. The service command renames the
+  # window to services-<port>, so resolve its current name after it starts.
+  services_window_actual="$(tmux list-windows -t "=${session}" -F '#W' 2>/dev/null |
+    awk '/^services(-[0-9]+)?$/ { print; exit }')"
+  if [[ -n "$services_window_actual" ]]; then
+    tmux set-option -w -t "=${session}:${services_window_actual}" remain-on-exit on 2>/dev/null || true
+  fi
 
   if [[ "$inside_tmux" == "true" ]]; then
     tmux switch-client -t "=${session}"
