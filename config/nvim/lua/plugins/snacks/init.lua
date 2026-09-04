@@ -76,7 +76,7 @@ return {
       -- Keybindings
       keys = {
         cycle_grep_mode = "<c-y>", -- cycle plain/regex/fuzzy
-        cycle_picker = "<c-r>", -- toggle files ↔ grep
+        cycle_picker = "<c-g>", -- toggle files ↔ grep
       },
 
       -- Titles when toggling
