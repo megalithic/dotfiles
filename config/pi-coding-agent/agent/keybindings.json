@@ -1,5 +1,9 @@
 {
   "tui.editor.pageUp": ["ctrl+u"],
   "tui.editor.pageDown": ["ctrl+d"],
+  "tui.altScreen.pageUp": ["pageUp", "ctrl+b"],
+  "tui.altScreen.pageDown": ["pageDown", "ctrl+f"],
+  "tui.altScreen.halfPageUp": ["alt+u"],
+  "tui.altScreen.halfPageDown": ["alt+d"],
   "tui.input.newLine": ["shift+enter", "ctrl+j"]
 }
