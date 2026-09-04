@@ -58,7 +58,7 @@ Two scripts back the fish `wt` wrapper's tmux target mode. `wt` creates missing 
 
 Mise owns tmux and its configuration on both hosts.
 
-`config/mise/config.toml` declares `tmux = "latest"`, `config/mise/mise.lock` records the resolved registry build, and `[dotfiles]` links `~/.config/tmux` to sole source `config/tmux/`. `[env]` keeps `TMUX_LAYOUTS` at `~/.config/tmux/layouts` and the TPM paths at `~/.local/share/tmux/plugins`. Existing servers keep their original executable until restarted; new servers use the active mise version.
+`config/mise/config.toml` declares `tmux = "latest"` and `[dotfiles]` links `~/.config/tmux` to sole source `config/tmux/`. `[env]` keeps `TMUX_LAYOUTS` at `~/.config/tmux/layouts` and the TPM paths at `~/.local/share/tmux/plugins`. Existing servers keep their original executable until restarted; new servers use the active mise version.
 
 Tmux layout scripts are Bash-compatible session builders discovered by `ftm` from `TMUX_LAYOUTS`.
 

@@ -271,9 +271,6 @@ MISE_DOTFILES_FLAGS=""
 # Tools are NOT skipped — mise bootstrap installs the full toolchain.
 # Tasks remain enabled for post-tool bootstrap work. Secrets are resolved
 # directly by fnox; bootstrap never renders or sources secret files.
-# --locked is NOT used: the lockfile may be incomplete on a new machine (tools
-# added since last `mise lock`). Without --locked, mise resolves versions live
-# and updates the lockfile as it installs.
 MISE_BOOTSTRAP_FLAGS="--skip launchd --skip user"
 if [ "$FORCE" = 1 ]; then
   MISE_DOTFILES_FLAGS="$MISE_DOTFILES_FLAGS --force"
@@ -609,29 +606,10 @@ set_login_shell() {
   ok "login shell: $fish_path"
 }
 
-finish_bootstrap() {
-  # Refresh the lockfile so future runs can use --locked (mise bootstrap installs
-  # tools live but doesn't regenerate the lockfile for new tools).
-  # `mise lock` fetches release tags from api.github.com for every github:/
-  # aqua: tool. Run it through fnox so GitHub credentials stay process-local;
-  # bootstrap never checks, exports, renders, or sources secret values itself.
-  fnox_bin=$(MISE_AUTO_INSTALL=false mise which fnox 2>/dev/null || true)
-  if [ -n "$fnox_bin" ] && [ -x "$fnox_bin" ]; then
-    info "Updating mise lockfile through fnox..."
-    # --global: tools are declared in ~/.config/mise/config.toml (the linked
-    # global config), not a project config — without it mise reports
-    # "No tools configured to lock".
-    "$fnox_bin" exec -- mise lock --global || warn "mise lock failed (non-fatal; tools still installed)"
-  else
-    warn "Skipping mise lock: fnox is not installed"
-  fi
-}
-
 info "Running mise bootstrap..."
 run_mise_bootstrap
 ok "done bootstrapping."
 set_login_shell
-finish_bootstrap
 
 # Kill the sudo keepalive loop before doctor (it runs in the background and
 # the EXIT trap handles normal exits, but explicit cleanup is cleaner).
