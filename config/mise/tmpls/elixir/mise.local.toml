@@ -25,12 +25,12 @@ PGDATA = "{{ env.PG_ROOT }}/data"
 # Respects a pre-set GIT_WORKTREE, otherwise asks the local `wt` wrapper for
 # the canonical "{repo-name}-{branch-slug}" id. Main repo checkout → empty
 # (config/dev.exs treats nil/"" as no worktree).
-GIT_WORKTREE = """{{ exec(command='
+GIT_WORKTREE = { default = """{{ exec(command='
 cd "' ~ cwd ~ '" 2>/dev/null || true
 # Absolute path: in sh/mise context plain `wt` resolves to the Worktrunk
 # binary (no `id` subcommand), not this wrapper.
 w="$HOME/.dotfiles/bin/wt"; [ -x "$w" ] && "$w" id . 2>/dev/null || true
-') }}"""
+') }}""" }
 
 # ── Phoenix port ────────────────────────────────────────────────────────
 # Resolved directly by .config/scripts/phx-port.sh (copied by the generator):
@@ -64,11 +64,11 @@ mise run start:db
 '''
 
 [tasks.bootstrap]
-description = "Bootstrap local agent tooling (.pi dir: AGENTS.md + mcp.json)"
+description = "Bootstrap local agent tooling (.pi dir: APPEND_SYSTEM.md + mcp.json)"
 depends = ["bootstrap:pi"]
 
 [tasks."bootstrap:pi"]
-description = "Generate AGENTS.md (repo/worktree root) and merge tidewave into .pi/mcp.json"
+description = "Generate project-local Pi guidance and merge tidewave into .pi/mcp.json"
 run = "bash .config/scripts/bootstrap-pi.sh"
 
 [tasks.setup]
@@ -76,9 +76,37 @@ description = "Initial project setup + preflight"
 depends = ["preflight"]
 run = "bash .config/scripts/setup.sh"
 
+[tasks."dev:setup"]
+description = "Prepare this worktree for local development"
+shell = "bash -c"
+run = '''
+set -euo pipefail
+# A fresh worktree may not have its declared toolchain yet.
+mise install
+# Pi/MCP config is cheap, atomic, and safe to repair on every explicit ensure.
+mise run bootstrap
+marker=.local/state/setup-complete
+mkdir -p "$(dirname "$marker")"
+if [ -f "$marker" ]; then
+  echo "dev setup already complete ($(cat "$marker"))"
+else
+  # setup.sh creates databases without dropping them, so start the shared
+  # per-repository cluster only for the first full worktree setup.
+  mise run start:db
+  bash .config/scripts/setup.sh
+  date '+%F %T' >"$marker.tmp.$$"
+  mv "$marker.tmp.$$" "$marker"
+fi
+'''
+
 [tasks."setup:db"]
 description = "Init shared postgres cluster in ./tmp/pg (idempotent)"
 run = "bash .config/scripts/setup-db.sh"
+
+[tasks."db:reset"]
+description = "Explicitly reset dev and test databases (destructive)"
+depends = ["start:db"]
+run = "bash .config/scripts/reset-db.sh"
 
 [tasks."start:db"]
 description = "Start shared postgres in background (log: ./tmp/pg/postgres.log)"
@@ -91,6 +119,14 @@ depends = ["start:db"]
 # raw connects stdin/stdout/stderr straight to the terminal. Without it mise
 # captures the task's stdio, so `iex -S mix phx.server` sees no TTY on stdin,
 # hits EOF, and exits 0 immediately instead of staying foregrounded.
+raw = true
+run = "m s"
+
+[tasks."dev:services"]
+description = "Run local development services in the foreground"
+# start:db reuses the shared per-repository cluster when healthy and starts or
+# repairs it when absent; only the worktree-specific Phoenix server stays here.
+depends = ["start:db"]
 raw = true
 run = "m s"
 

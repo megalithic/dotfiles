@@ -8,10 +8,10 @@
 # TTY — so the Phoenix iex console stays fully interactive. Inspect after a
 # failed boot with `mise run logs` (strips ANSI) or `mise run logs:follow`.
 #
-# Heavy setup (`mise run setup` → `mix ecto.reset` wipes + reseeds the DB) runs
-# only ONCE per worktree, guarded by .local/state/setup-complete. Reopening the
-# services window then just re-bootstraps and restarts the server. Remove the
-# marker (or run `mise run setup`) to force a full re-setup.
+# Routine setup (`mise run setup`) runs only ONCE per worktree, guarded by
+# .local/state/setup-complete. It never drops or resets databases. Reopening the
+# services window then just re-bootstraps and restarts the server. Use the
+# explicit `mise run db:reset` task when a destructive reset is intentional.
 #
 # The tmux window is renamed to services-<port> at script start (see below).
 # wt-tmux-target always creates the window as plain `services` — deriving the

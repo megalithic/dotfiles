@@ -11,8 +11,10 @@
 #     (.git/worktrees/<name>/), never the working tree, so nothing can be
 #     accidentally committed and it is auto-removed with the worktree.
 #
-# The heavy setup (deps, assets, DB resets) runs in the tmux `services` window
-# via that script, guarded so reopening a worktree only restarts the server.
+# Routine setup (deps, assets, and database creation) runs in the tmux `services`
+# window via that script, guarded so reopening a worktree only restarts the
+# server. Database resets are explicit via `mise run db:reset` and never run by
+# Worktrunk hooks.
 [pre-start]
 mise-trust = "mise trust" # Execute mise trust before creating a worktree
 # Install the services runner into the worktree's PRIVATE git dir

@@ -42,12 +42,27 @@ mise run install
 description = "Initial local Shopify theme setup"
 depends = ["preflight"]
 
+[tasks."dev:setup"]
+description = "Prepare this worktree for local development"
+shell = "bash -c"
+run = '''
+set -euo pipefail
+# A fresh worktree may not have its declared toolchain yet.
+mise install
+# Keep ordering explicit: bootstrap may create package.json before install
+# evaluates its source/output freshness.
+mise run bootstrap
+mise run install
+'''
+
 [tasks.bootstrap]
 description = "Generate safe default Shopify, Theme Check, Biome, Prettier, gitignore, and package files"
 run = "bash .config/scripts/bootstrap.sh"
 
 [tasks.install]
 description = "Install local npm dev dependencies for Shopify CLI, Biome, Prettier, and Liquid formatting"
+sources = ["package.json", "package-lock.json"]
+outputs = ["node_modules/.package-lock.json"]
 run = "npm install"
 
 [tasks.dev]
@@ -58,6 +73,12 @@ run = 'shopify theme dev --environment "$SHOPIFY_THEME_ENV" --host "$SHOPIFY_THE
 [tasks."start:server"]
 description = "Start Shopify theme dev server"
 depends = ["dev"]
+
+[tasks."dev:services"]
+description = "Run local development services in the foreground"
+raw = true
+raw_args = true
+run = 'shopify theme dev --environment "$SHOPIFY_THEME_ENV" --host "$SHOPIFY_THEME_HOST" --port "$SHOPIFY_THEME_PORT" --live-reload "$SHOPIFY_THEME_LIVE_RELOAD"'
 
 [tasks."theme:init"]
 description = "Initialize a new Shopify theme (usually run before copying this template into the theme root)"
