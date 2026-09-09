@@ -501,14 +501,16 @@ v2_session_preflight() {
     session_path="$(tmux display-message -p -t "$sid" '#{session_path}' 2>/dev/null || true)"
     [ "$session_path" = "$V2_PATH" ] ||
       { v2_set_error ambiguous_session 'tmux session cwd does not match the worktree' prune_preflight 6 refused; return 1; }
-    while IFS=$'\t' read -r window pane_path; do
+    while IFS=$'\t' read -r window pane_dead pane_path; do
+      # Dead panes report no cwd and cannot wander; skip them.
+      [ "$pane_dead" = 1 ] && continue
       case "$window" in
         code | agent | services | services-[0-9]*)
           [ "$pane_path" = "$V2_PATH" ] ||
             { v2_set_error ambiguous_session 'tmux pane cwd does not match the worktree' prune_preflight 6 refused; return 1; }
           ;;
       esac
-    done < <(tmux list-panes -s -t "$sid" -F '#{window_name}'$'\t''#{pane_current_path}' 2>/dev/null || true)
+    done < <(tmux list-panes -s -t "$sid" -F '#{window_name}'$'\t''#{pane_dead}'$'\t''#{pane_current_path}' 2>/dev/null || true)
     V2_SESSION="$name"
   fi
 }
