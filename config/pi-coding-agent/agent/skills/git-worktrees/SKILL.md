@@ -5,7 +5,15 @@ description: Manage, query, enter, and remove Git worktrees with Worktrunk throu
 
 # Worktrees
 
-Use Worktrunk through `wt` for all worktree management when available. Do not use raw `git worktree` commands, hand-copy ignored files, write `GIT_WORKTREE`, or create tmux layouts manually while `wt` works. `wt` owns those steps.
+Use the local `wt` wrapper (`~/.dotfiles/bin/wt`) for every worktree operation. It runs a pinned Worktrunk (0.76.0 through mise), validates worktree identity, runs blocking project setup (`mise run dev:setup`), copies ignored files, derives `GIT_WORKTREE`, and owns tmux presentation through `ftm`.
+
+Never, while `wt` works:
+
+- run raw `git worktree` commands;
+- call `wt-tmux-target`, `wt-tail-logs`, or build worktree tmux layouts manually;
+- write or derive `GIT_WORKTREE` yourself (query `wt id`);
+- hand-copy ignored files or re-run setup steps `wt` already ran;
+- use `wt switch` for navigation — it is the legacy/upstream escape path, not the workflow.
 
 ## Availability gate
 
@@ -19,8 +27,6 @@ else
 fi
 ```
 
-`wt` must pass both checks. It is local shell-agnostic wrapper, not bare Worktrunk binary. Wrapper verifies real Worktrunk binary, then adds default project-hook approval, branch creation, tmux targeting, `GIT_WORKTREE`, and Pi Lens setup.
-
 If either check fails:
 
 1. Report failed command and output.
@@ -28,126 +34,65 @@ If either check fails:
 3. Follow legacy workflow unchanged for this task.
 4. Do not install Worktrunk or alter global mise config without user request.
 
-## Worktrunk preflight
+## Command contract
 
-From repository root:
+| Command | Effect |
+| --- | --- |
+| `wt NAME` | Ensure the worktree exists (create branch/worktree when missing), run copy-ignored plus blocking `dev:setup`, then cd the invoking interactive shell into it. |
+| `wt -t cd NAME` | Same as `wt NAME` (explicit escape spelling). |
+| `wt -t w NAME` (`-t window`) | Same lifecycle; inside tmux, create or reuse one tagged `wt:<id>` window in the current session — left pane interactive shell (60%), right pane `mise run dev:services` or a shell (40%). Outside tmux, falls back to cd behavior. |
+| `wt -t s NAME` (`-t session`) | Same lifecycle; create or repair the canonical per-worktree session (`code`, `agent`, `services` windows) and switch/attach to it. |
+| `wt open NAME` | Alias for the session presentation. |
+| `wt ensure NAME [--json]` | Full lifecycle with no presentation: never cds, selects, or attaches. Preferred for agents. |
+| `wt new NAME [--base BRANCH]` | Like ensure, but refuses when the branch already exists locally or on a remote. |
+| `wt repair` | Bare: infer the containing checkout from the cwd (nested directories and the primary checkout both work), run full setup, and repair the canonical session. Never attaches. `wt repair NAME` targets another worktree. |
+| `wt path NAME` / `wt path .` | Print the validated worktree path (`.` resolves the containing checkout). |
+| `wt list --json` | Normalized JSON: `.items[].branch`, `.items[].worktree.path`. |
+| `wt prune NAME` | Safe removal of one clean, integrated (or empty), non-main, non-current local worktree: removes the tmux session, then the worktree and branch, then verifies. |
+| `wt id [path]` | Print the `GIT_WORKTREE` id (`{repo}-{branch-slug}`); empty in the primary checkout. |
 
-```bash
-repo_root=$(git rev-parse --show-toplevel)
-cd "$repo_root"
-wt config show --full
-wt hook show
-```
+The primary checkout is a valid target: it skips copy-ignored and unsets `GIT_WORKTREE`. Upstream builtins (`wt list`, `wt merge`, `wt step`, `wt hook`, `wt config`, `wt remove`, `wt switch`) pass through to Worktrunk unchanged.
 
-Worktrunk global config keeps worktrees at `<repo>/.worktrees/<sanitized-branch>`.
+## Agent usage
 
-Project config lives at `<repo>/.config/wt.toml`. Generate only when missing and project stack is known:
-
-```bash
-# Elixir/Phoenix
-mise run gen:wt-elixir
-
-# Shopify theme
-mise run gen:wt-shopify
-```
-
-Template generation is idempotent. It writes project Worktrunk config plus stack helpers, then trusts generated mise config. Do not overwrite an existing `.config/wt.toml` or guess project stack. Worktrunk still works without a project template; hooks and stack services will not exist.
-
-## Create, enter, and navigate
-
-`wt` accepts implicit branches. It injects `switch`, `--create` when branch exists neither locally nor on `origin`, and `--yes` for approved hooks.
+Agent bash calls cannot change the parent shell cwd, so the cd presentation only helps interactive shells. From an agent:
 
 ```bash
-# Create or open branch worktree; default target creates/reuses tmux session.
-wt feature/login
-
-# Explicit new branch from base.
-wt -t session switch --create feature/login --base origin/main
-
-# Reuse/create current tmux session window.
-wt -t window feature/login
-
-# Use normal Worktrunk directive behavior in an interactive shell.
-wt -t cd feature/login
+wt ensure feature/login --json          # full setup, structured result, no attach
+wtp="$(wt path feature/login)"          # then run commands from that path
+cd "$wtp" && mise run <task>
 ```
 
-Target behavior:
+- JSON results are one `schema_version: 1` document. `.status` is `ok`, `refused`, `partial`, or `error`; `.error.code` names the failure; `.completed_phases` shows progress.
+- Use `-t w` / `-t s` only when the user asked for tmux presentation. Both are idempotent: they reuse tagged windows/sessions and never duplicate or kill panes.
+- `busy` errors mean another `wt`/`ftm` operation holds the repository or worktree lock; wait and retry rather than working around it.
+- Setup and services run through project mise tasks (`dev:setup`, `dev:services`). A missing task is reported `missing`, not failed. Do not start project services yourself; the services pane or `wt repair --restart-services` owns that.
 
-- `session` — create or reuse `<repo>-<branch>` tmux session with `code` and `services[-PORT]` windows; switch client inside tmux, attach outside.
-- `window` — create or reuse worktree window in current tmux session; outside tmux, falls back to `session`.
-- `cd` — restore Worktrunk's plain parent-shell change-directory behavior. Only useful from interactive shell wrapper; agent Bash calls cannot change parent cwd.
+## Prune and recovery
 
-The wrapper creates missing `.pi-lens.json` in linked worktrees with formatting disabled. It derives and exports `GIT_WORKTREE`; query it instead of reimplementing derivation:
+`wt prune NAME` refuses (exit 3/6, `.status == "refused"`): dirty worktrees, branches not `integrated`/`empty`, the main worktree, the worktree you are standing in, remote-only targets, and ambiguous tmux session matches.
+
+Partial results (`.status == "partial"`, e.g. the tmux session was removed but Worktrunk removal failed or the branch moved): nothing retries with force. Recover with `wt repair NAME` to rebuild the session, fix the reported cause, then rerun `wt prune NAME`. Never fall back to `git worktree remove`, `git branch -D`, or `wt remove --force*` without explicit user approval — those destroy the safety checks prune exists for.
+
+A background auto-prune (`wt step prune`, throttled daily per repo) also removes merged worktrees; unexpected disappearance of an integrated worktree is normal.
+
+## Project templates
+
+Project config lives at `<repo>/.config/wt.toml` plus a mise stub. Generate only when missing and the stack is known:
 
 ```bash
-wt id /path/to/worktree
+mise run gen:elixir      # mise task stub (dev:setup / dev:services)
+mise run gen:wt-elixir   # Worktrunk hook config
+mise run gen:shopify && mise run gen:wt-shopify
 ```
 
-## Query worktrees
-
-Use Worktrunk JSON for discovery and scripting:
-
-```bash
-wt list --format=json
-wt list --branches --full --format=json
-wt config show --format=json
-wt hook show
-```
-
-Resolve branch path before commands that must run there:
-
-```bash
-branch="feature/login"
-worktree_path=$(wt list --format=json | jq -er \
-  --arg branch "$branch" \
-  '.[] | select(.kind == "worktree" and .branch == $branch) | .path')
-cd "$worktree_path"
-mise trust
-mise tasks ls
-mise run <task>
-```
-
-Run project commands through `mise` from resolved worktree. Do not use `devenv` as generic setup path. For unavailable tools, use `MISE_AUTO_INSTALL=false mise exec … -- <command>` so mise fails instead of installing implicitly.
-
-## Hooks, files, and services
-
-Project `.config/wt.toml` controls Worktrunk lifecycle hooks. Elixir and Shopify templates:
-
-- run `mise trust` in `pre-start`;
-- install stack service runner in private worktree git dir;
-- run `wt step copy-ignored` in `post-start`;
-- expose local server URL in `wt list`.
-
-`wt-tmux-target` starts or reuses `code` and `services` windows. Private service runner runs stack `mise` tasks and logs through tmux without writing runner into worktree. Reenter with `wt -t session <branch>`; do not reimplement setup with copy loops, `.env` edits, or detached `devenv` processes.
-
-Use hooks only when needed:
-
-```bash
-wt hook show
-wt -C "$worktree_path" hook pre-start -y  # Repair missing template service runner.
-wt -C "$worktree_path" step copy-ignored --dry-run
-```
-
-`wt-tail-logs <branch>` only tails Worktrunk hook logs. Use project `mise run logs` or `mise run logs:follow` when template provides them.
-
-## Remove and prune
-
-Use Worktrunk removal so configured hooks run:
-
-```bash
-# Remove merged worktree and branch; reclaim non-interactive child processes.
-wt remove --reap feature/login
-
-# Keep branch.
-wt remove --reap --no-delete-branch feature/login
-```
-
-`--force`, `--force-delete`, and removal of dirty or unmerged worktrees destroy work. Request explicit user approval before these flags. `--reap` leaves interactive shells and terminal editors alive; inspect or close tmux session before forcing removal.
+Generation is idempotent; do not overwrite existing config or guess the stack. `wt` still works without a template — setup and services are then reported `missing`.
 
 ## Rules
 
-- Use `wt`, never bare `worktrunk` or raw `git worktree`, while availability gate passes.
-- Use `wt list --format=json` for path and state queries.
-- Use `mise` tasks and generated `.config/wt.toml` templates for project setup and services.
-- Keep worktree commands scoped with `wt -C "$worktree_path"` or `cd "$worktree_path"`.
-- If `wt` unavailable, use only preserved legacy reference.
+- Use `wt`, never bare `worktrunk` or raw `git worktree`, while the availability gate passes.
+- Prefer `wt ensure --json` + `wt path` in agent contexts; presentation flags only on user request.
+- Use `wt list --json` for discovery and `wt id` for the worktree id.
+- Keep worktree commands scoped with `cd "$(wt path NAME)"` or `wt -C`.
+- Use `wt prune` for cleanup; `wt remove` only as an approved upstream escape.
+- If `wt` is unavailable, use only the preserved legacy reference.
