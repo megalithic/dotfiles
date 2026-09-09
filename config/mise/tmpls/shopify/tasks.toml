@@ -1,0 +1,141 @@
+# tasks.toml — shopify template tasks, consumed by generated project stubs via
+# `[task_config] includes` (top-level task names, included-file form). Scripts
+# execute from dotfiles; nothing is copied into projects. Project stubs (or a
+# project mise.local.toml) can override any task by redefining its name.
+
+[preflight]
+description = "Trust config, install tools, and bootstrap Shopify theme tooling"
+shell = "bash -c"
+run = '''
+mise trust
+mise install
+mise run bootstrap
+mise run install
+'''
+
+[setup]
+description = "Initial local Shopify theme setup"
+depends = ["preflight"]
+
+["dev:setup"]
+description = "Prepare this worktree for local development"
+shell = "bash -c"
+run = '''
+set -euo pipefail
+# A fresh worktree may not have its declared toolchain yet.
+mise install
+# Keep ordering explicit: bootstrap may create package.json before install
+# evaluates its source/output freshness.
+mise run bootstrap
+mise run install
+'''
+
+[bootstrap]
+description = "Generate safe default Shopify, Theme Check, Biome, Prettier, gitignore, and package files"
+run = 'bash "$HOME/.dotfiles/config/mise/tmpls/shopify/scripts/bootstrap.sh"'
+
+[install]
+description = "Install local npm dev dependencies for Shopify CLI, Biome, Prettier, and Liquid formatting"
+sources = ["package.json", "package-lock.json"]
+outputs = ["node_modules/.package-lock.json"]
+run = "npm install"
+
+[dev]
+description = "Start Shopify theme dev server with hot reload"
+raw_args = true
+run = 'shopify theme dev --environment "$SHOPIFY_THEME_ENV" --host "$SHOPIFY_THEME_HOST" --port "$SHOPIFY_THEME_PORT" --live-reload "$SHOPIFY_THEME_LIVE_RELOAD"'
+
+["start:server"]
+description = "Start Shopify theme dev server"
+depends = ["dev"]
+
+["dev:services"]
+description = "Run local development services in the foreground"
+raw = true
+raw_args = true
+run = 'shopify theme dev --environment "$SHOPIFY_THEME_ENV" --host "$SHOPIFY_THEME_HOST" --port "$SHOPIFY_THEME_PORT" --live-reload "$SHOPIFY_THEME_LIVE_RELOAD"'
+
+["theme:init"]
+description = "Initialize a new Shopify theme (usually run before copying this template into the theme root)"
+raw_args = true
+run = "shopify theme init"
+
+["theme:pull"]
+description = "Pull an existing Shopify theme into this directory"
+raw_args = true
+run = 'shopify theme pull --environment "$SHOPIFY_THEME_ENV"'
+
+["theme:info"]
+description = "Show current Shopify theme/store context"
+raw_args = true
+run = 'shopify theme info --environment "$SHOPIFY_THEME_ENV"'
+
+["theme:check"]
+description = "Run Shopify Theme Check"
+raw_args = true
+run = 'shopify theme check --environment "$SHOPIFY_THEME_ENV"'
+
+[check]
+description = "Run Biome, Theme Check, and Liquid Prettier checks"
+depends = ["theme:check", "format:check"]
+
+[format]
+description = "Format JS/TS/JSON/CSS with Biome, then Liquid with Prettier"
+shell = "bash -c"
+run = '''
+biome check --write .
+prettier --write "**/*.liquid"
+'''
+
+["format:check"]
+description = "Check Biome-managed files and Liquid formatting without writing"
+shell = "bash -c"
+run = '''
+biome check .
+prettier --check "**/*.liquid"
+'''
+
+["theme:push"]
+description = "Push theme changes to Shopify"
+raw_args = true
+run = 'shopify theme push --environment "$SHOPIFY_THEME_ENV"'
+
+["theme:push-unpublished"]
+description = "Push theme as a new unpublished theme"
+raw_args = true
+run = 'shopify theme push --environment "$SHOPIFY_THEME_ENV" --unpublished'
+
+["theme:share"]
+description = "Create a shareable preview link"
+raw_args = true
+run = 'shopify theme share --environment "$SHOPIFY_THEME_ENV"'
+
+["theme:publish"]
+description = "Publish a pushed theme"
+raw_args = true
+run = 'shopify theme publish --environment "$SHOPIFY_THEME_ENV"'
+
+[doctor]
+description = "Print Shopify local development diagnostics"
+run = 'bash "$HOME/.dotfiles/config/mise/tmpls/shopify/scripts/doctor.sh"'
+
+[logs]
+description = "Show the last services-window log output (.local/log/services.log), ANSI stripped"
+shell = "bash -c"
+run = '''
+f=.local/log/services.log
+if [ -f "$f" ]; then
+  tail -n 500 "$f" | perl -pe 's/\e\[[0-9;?]*[ -\/]*[@-~]//g; s/\e\][^\a]*(?:\a|\e\\\\)//g; s/\r//g'
+else
+  echo "no services log yet: $f (open the services window or run mise run start:server)"
+fi
+'''
+
+["logs:follow"]
+description = "Follow the services-window log (.local/log/services.log), ANSI stripped"
+shell = "bash -c"
+run = '''
+f=.local/log/services.log
+mkdir -p "$(dirname "$f")"; touch "$f"
+tail -n 100 -f "$f" | perl -pe 's/\e\[[0-9;?]*[ -\/]*[@-~]//g; s/\e\][^\a]*(?:\a|\e\\\\)//g; s/\r//g'
+'''

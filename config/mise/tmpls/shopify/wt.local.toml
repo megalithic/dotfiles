@@ -11,15 +11,14 @@
 [pre-start]
 mise-trust = "mise trust" # Execute mise trust before creating a worktree
 # Install the services runner into the worktree's PRIVATE git dir
-# (.git/worktrees/<name>/wt-services-cmd) from the MAIN checkout's
-# .config/scripts/wt-services-cmd.sh (the new worktree's .config/ is not
-# copied until post-start). wt-tmux-target runs it in the `services` window.
-# Idempotent; skipped in the main checkout.
+# (.git/worktrees/<name>/wt-services-cmd) from the dotfiles template
+# (scripts are no longer copied into project .config/ — the stub-based
+# template model runs them from dotfiles). wt-tmux-target runs it in the
+# `services` window. Idempotent; skipped in the main checkout.
 services-cmd = '''
 gitdir="$(git rev-parse --absolute-git-dir)"
 case "$gitdir" in */worktrees/*) ;; *) exit 0 ;; esac
-main="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
-src="$main/.config/scripts/wt-services-cmd.sh"
+src="$HOME/.dotfiles/config/mise/tmpls/shopify/scripts/wt-services-cmd.sh"
 [ -f "$src" ] && install -m 0755 "$src" "$gitdir/wt-services-cmd"
 '''
 

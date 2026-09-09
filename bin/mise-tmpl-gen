@@ -1,25 +1,36 @@
 #!/usr/bin/env bash
-# Copy a language template into a project's .config/.
+# Generate (or check) a language template stub in a project's .config/.
 #
 # Usage:
-#   mise-tmpl-gen <lang>       [target-dir]   # mise config + scripts
-#   mise-tmpl-gen wt.<lang>    [target-dir]   # Worktrunk config + scripts
+#   mise-tmpl-gen <lang>            [target-dir]   # mise stub
+#   mise-tmpl-gen wt.<lang>         [target-dir]   # Worktrunk config
+#   mise-tmpl-gen --check <lang|wt.<lang>> [target-dir]
 #
 # Templates live in $MISE_TMPL_DIR (default ~/.dotfiles/config/mise/tmpls)
 # under language subdirs. The dest drops the ".local" segment so mise and
 # Worktrunk file patterns match:
 #   <lang>/mise.local.toml   -> <target>/.config/mise.toml
 #   <lang>/wt.local.toml     -> <target>/.config/wt.toml   (Worktrunk default)
-#   <lang>/scripts/*         -> <target>/.config/scripts/*
+#
+# Stub model: the generated mise.toml is a small stub. Tasks load from the
+# dotfiles template's tasks.toml via [task_config] includes, repo-keyed env
+# from env.sh via _.source, and scripts execute from the template's scripts/
+# directory. Nothing behavioral is copied into the project, so template edits
+# apply to every consuming repo and worktree immediately. A legacy
+# .config/scripts/ directory from the old copy model is stale; --check flags
+# it.
 #
 # wt mode also ensures <target>/.worktreeinclude lists .config/ (plus .env,
-# .envrc) so Worktrunk's `wt step copy-ignored` copies the generated .config/
-# into each new worktree. Additive: existing entries (build caches, deps) are
-# never removed.
+# .envrc) so Worktrunk's `wt step copy-ignored` copies the generated stub
+# into each new worktree. Additive: existing entries are never removed.
 #
-# The `scripts/` dir is copied for both modes so the generated .config/ is
-# self-contained (tasks/hooks reference .config/scripts/*.sh). Target defaults
-# to the directory the mise task was run from (MISE_ORIGINAL_CWD), else $PWD.
+# A .config/.metadata_never_index marker is maintained so Spotlight skips the
+# generated directory.
+#
+# --check mode: reports drift between the deployed .config/ and the template
+# (and legacy leftovers) without writing anything. Exit 1 when regeneration
+# or cleanup is needed. Unrecognized files are listed as notes only — project
+# overrides (mise.local.toml) and unrelated content are allowed.
 #
 # Idempotent: byte-identical destinations are left untouched; differing
 # destinations are replaced with a notice. mise configs are `mise trust`ed.
@@ -28,13 +39,19 @@ set -euo pipefail
 tmpl_dir="${MISE_TMPL_DIR:-$HOME/.dotfiles/config/mise/tmpls}"
 
 usage() {
-  echo "usage: mise-tmpl-gen <lang|wt.lang> [target-dir]" >&2
+  echo "usage: mise-tmpl-gen [--check] <lang|wt.lang> [target-dir]" >&2
   echo "languages in $tmpl_dir:" >&2
   for d in "$tmpl_dir"/*/; do
     [ -d "$d" ] || continue
     echo "  $(basename "$d")" >&2
   done
 }
+
+check=0
+if [ "${1:-}" = --check ]; then
+  check=1
+  shift
+fi
 
 if [ $# -lt 1 ] || [ $# -gt 2 ]; then
   usage
@@ -80,6 +97,35 @@ if [ ! -d "$target" ]; then
 fi
 dest_dir="$target/.config"
 dest="$dest_dir/$dest_name"
+
+# ── --check: report drift, write nothing ─────────────────────────────────
+if [ "$check" -eq 1 ]; then
+  rc=0
+  if [ ! -f "$dest" ]; then
+    echo "missing: $dest (run: mise-tmpl-gen $name $target)"
+    rc=1
+  elif ! cmp -s "$src" "$dest"; then
+    echo "drift: $dest differs from template $src"
+    rc=1
+  else
+    echo "up-to-date: $dest"
+  fi
+  if [ -d "$dest_dir/scripts" ]; then
+    echo "stale: $dest_dir/scripts/ (legacy copy model; scripts now run from $lang_dir/scripts/)"
+    rc=1
+  fi
+  # Unrecognized content is a note, not a failure: project overrides
+  # (mise.local.toml) and unrelated project files are allowed to live here.
+  for f in "$dest_dir"/* "$dest_dir"/.[!.]*; do
+    [ -e "$f" ] || continue
+    case "$(basename "$f")" in
+      mise.toml | wt.toml | mise.lock | mise.local.toml | .metadata_never_index | scripts) ;;
+      *) echo "note: unmanaged in .config/: $f" ;;
+    esac
+  done
+  exit "$rc"
+fi
+
 mkdir -p "$dest_dir"
 
 # copy_file SRC DEST [mode] — idempotent copy with a status notice.
@@ -101,16 +147,16 @@ copy_file() {
 
 copy_file "$src" "$dest"
 
-# Always sync the language's scripts/ into .config/scripts/ so the generated
-# config is self-contained. Executable bits preserved.
-scripts_src="$lang_dir/scripts"
-if [ -d "$scripts_src" ]; then
-  scripts_dest="$dest_dir/scripts"
-  mkdir -p "$scripts_dest"
-  for s in "$scripts_src"/*; do
-    [ -f "$s" ] || continue
-    copy_file "$s" "$scripts_dest/$(basename "$s")" 0755
-  done
+# Spotlight opt-out marker for the generated directory.
+[ -e "$dest_dir/.metadata_never_index" ] || {
+  : >"$dest_dir/.metadata_never_index"
+  echo "created: $dest_dir/.metadata_never_index"
+}
+
+# Legacy copy-model leftovers: scripts now execute from the dotfiles template.
+if [ -d "$dest_dir/scripts" ]; then
+  echo "note: $dest_dir/scripts/ is stale (scripts run from $lang_dir/scripts/ now);"
+  echo "      remove it after verifying nothing project-local lives there."
 fi
 
 # wt mode: keep the .worktreeinclude allowlist in sync so copy-ignored brings

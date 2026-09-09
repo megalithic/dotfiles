@@ -1,0 +1,104 @@
+# tasks.toml — elixir template tasks, consumed by generated project stubs via
+# `[task_config] includes`. Task names here are top-level (no [tasks.] prefix,
+# the included-file form). Scripts execute from dotfiles, so editing this file
+# or scripts/ updates every consuming repo and worktree immediately — nothing
+# is copied. Project stubs (or a project mise.local.toml) can override any
+# task by redefining its name.
+
+[preflight]
+description = "Preflight project setup"
+shell = "bash -c"
+run = '''
+mise trust
+mise install
+mise run bootstrap
+mise run start:db
+'''
+
+[bootstrap]
+description = "Bootstrap local agent tooling (.pi dir: APPEND_SYSTEM.md + mcp.json)"
+depends = ["bootstrap:pi"]
+
+["bootstrap:pi"]
+description = "Generate project-local Pi guidance and merge tidewave into .pi/mcp.json"
+run = 'bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/bootstrap-pi.sh"'
+
+[setup]
+description = "Initial project setup + preflight"
+depends = ["preflight"]
+run = 'bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/setup.sh"'
+
+["dev:setup"]
+description = "Prepare this worktree for local development"
+shell = "bash -c"
+run = '''
+set -euo pipefail
+# A fresh worktree may not have its declared toolchain yet.
+mise install
+# Pi/MCP config is cheap, atomic, and safe to repair on every explicit ensure.
+mise run bootstrap
+marker=.local/state/setup-complete
+mkdir -p "$(dirname "$marker")"
+if [ -f "$marker" ]; then
+  echo "dev setup already complete ($(cat "$marker"))"
+else
+  # setup.sh creates databases without dropping them, so start the shared
+  # per-repository cluster only for the first full worktree setup.
+  mise run start:db
+  bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/setup.sh"
+  date '+%F %T' >"$marker.tmp.$$"
+  mv "$marker.tmp.$$" "$marker"
+fi
+'''
+
+["setup:db"]
+description = "Init shared postgres cluster in ./tmp/pg (idempotent)"
+run = 'bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/setup-db.sh"'
+
+["db:reset"]
+description = "Explicitly reset dev and test databases (destructive)"
+depends = ["start:db"]
+run = 'bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/reset-db.sh"'
+
+["start:db"]
+description = "Start shared postgres in background (log: ./tmp/pg/postgres.log)"
+depends = ["setup:db"]
+run = 'bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/start-db.sh"'
+
+["start:server"]
+description = "Start web server"
+depends = ["start:db"]
+# raw connects stdin/stdout/stderr straight to the terminal. Without it mise
+# captures the task's stdio, so `iex -S mix phx.server` sees no TTY on stdin,
+# hits EOF, and exits 0 immediately instead of staying foregrounded.
+raw = true
+run = "m s"
+
+["dev:services"]
+description = "Run local development services in the foreground"
+# start:db reuses the shared per-repository cluster when healthy and starts or
+# repairs it when absent; only the worktree-specific Phoenix server stays here.
+depends = ["start:db"]
+raw = true
+run = "m s"
+
+[logs]
+description = "Show the last services-window log output (.local/log/services.log), ANSI stripped"
+shell = "bash -c"
+run = '''
+f=.local/log/services.log
+if [ -f "$f" ]; then
+  tail -n 500 "$f" | perl -pe 's/\e\[[0-9;?]*[ -\/]*[@-~]//g; s/\e\][^\a]*(?:\a|\e\\\\)//g; s/\r//g'
+else
+  echo "no services log yet: $f (open the services window or run mise run start:server)"
+fi
+'''
+
+["logs:follow"]
+description = "Follow the services-window log (.local/log/services.log), ANSI stripped"
+shell = "bash -c"
+run = '''
+f=.local/log/services.log
+mkdir -p "$(dirname "$f")"; touch "$f"
+tail -n 100 -f "$f" | perl -pe 's/\e\[[0-9;?]*[ -\/]*[@-~]//g; s/\e\][^\a]*(?:\a|\e\\\\)//g; s/\r//g'
+'''

@@ -34,7 +34,7 @@ fi
 # window-creation time consulted the invoking shell's PORT/PHX_PORT, so the
 # title showed the previous worktree's port.
 if [ -n "${TMUX_PANE:-}" ] && command -v tmux >/dev/null 2>&1; then
-  port="$(bash .config/scripts/phx-port.sh 2>/dev/null | tail -n 1 || true)"
+  port="$(bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/phx-port.sh" 2>/dev/null | tail -n 1 || true)"
   [ -n "$port" ] || port="${PHX_PORT:-}"
   if [ -n "$port" ]; then
     tmux rename-window -t "$TMUX_PANE" "services-${port}" 2>/dev/null || true
