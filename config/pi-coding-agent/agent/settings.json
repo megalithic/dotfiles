@@ -264,5 +264,29 @@
         "modelScope": "alt"
       }
     ]
+  },
+  "observational-memory": {
+    "chunkTokens": 5000,
+    "chunkOverlapTokens": 0,
+    "poolTargetTokens": 10000,
+    "consolidateAtPoolTokens": 20000,
+    "compactAtContextTokens": 100000,
+    "tailTokens": 20000,
+    "journeyTargetTokens": 1000,
+    "observerConcurrency": 4,
+    "models": {
+      "observer": {
+        "provider": "my-codex",
+        "id": "gpt-5.6-luna",
+        "thinking": "low"
+      },
+      "consolidator": {
+        "provider": "my-codex",
+        "id": "gpt-5.6-luna",
+        "thinking": "medium"
+      }
+    },
+    "passive": false,
+    "debugLog": false
   }
 }
