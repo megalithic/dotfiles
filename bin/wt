@@ -2,11 +2,10 @@
 # wt — shell-agnostic Worktrunk wrapper core.
 #
 # Holds all the logic that used to live in the fish `wt` function:
-#   - implicit `switch` for `wt <branch>`
-#   - auto `--create` when the branch exists neither locally nor on origin
-#   - auto `--yes` (project hook approval)
-#   - targets (-t/--target session|window|cd) via wt-tmux-target;
-#     switch flows default to `session`, `cd` restores plain cd-in-shell
+#   - v2 resolve/setup plus same-shell cd for `wt <branch>`
+#   - `-t window|w` 60/40 current-session window presentation
+#   - `-t session|s` canonical per-worktree session presentation
+#   - explicit upstream Worktrunk builtins remain on the compatibility path
 #   - GIT_WORKTREE id derivation ({repo}-{branch-slug}) — the single source of
 #     truth, queryable via `wt id [path]` (aka `wt --worktree-id`). Project
 #     mise configs call this instead of re-deriving the id themselves.
@@ -48,6 +47,54 @@ if [ "${1:-}" = id ] || [ "${1:-}" = --worktree-id ]; then
   case "$q_gd" in */worktrees/*) ;; *) exit 0 ;; esac
   worktree_id "$q_path"
   exit 0
+fi
+
+# ---- v2 deterministic lifecycle and default presentation ------------------
+# Resolve this file's real directory before sourcing the v2 coordinator. The
+# public wrapper is normally reached through a ~/bin symlink.
+wt_v2_script_path="${BASH_SOURCE[0]}"
+if [ -L "$wt_v2_script_path" ]; then
+  wt_v2_link="$(readlink "$wt_v2_script_path")"
+  case "$wt_v2_link" in
+    /*) wt_v2_script_path="$wt_v2_link" ;;
+    *) wt_v2_script_path="${wt_v2_script_path%/*}/$wt_v2_link" ;;
+  esac
+fi
+wt_v2_script_dir="$(cd "${wt_v2_script_path%/*}" && pwd -P)"
+WT_V2_SELF="$wt_v2_script_dir/$(basename "$wt_v2_script_path")"
+# shellcheck source=bin/wt-lock-lib
+source "$wt_v2_script_dir/wt-lock-lib"
+# shellcheck source=bin/wt-v2-lib
+source "$wt_v2_script_dir/wt-v2-lib"
+
+write_env() { # $1 = set|unset, $2 = value (for set)
+  [ -n "${WT_ENV_FILE:-}" ] || return 0
+  case "${WT_SHELL:-posix}" in
+    fish)
+      if [ "$1" = set ]; then printf "set -gx GIT_WORKTREE '%s'\n" "$2" >"$WT_ENV_FILE"; else printf 'set -ge GIT_WORKTREE\n' >"$WT_ENV_FILE"; fi ;;
+    *)
+      if [ "$1" = set ]; then printf "export GIT_WORKTREE='%s'\n" "$2" >"$WT_ENV_FILE"; else printf 'unset GIT_WORKTREE\n' >"$WT_ENV_FILE"; fi ;;
+  esac
+}
+
+emit_cd() {
+  if [ -n "${WT_CD_FILE:-}" ]; then printf '%s\n' "$1" >"$WT_CD_FILE"; else echo "wt: worktree at $1 (no shell wrapper active; cd manually)" >&2; fi
+}
+
+# v2 dispatch must happen before legacy backend resolution and auto-prune.
+case "${1:-}" in
+  -t|--target|-t=*|--target=*) wt_v2_main "$@"; exit $? ;;
+esac
+if wt_v2_wants_command "$@" || {
+  case "${1:-}" in
+    help|-h|--help|-V|--version|list|path|prune|repair|open|ensure|new|switch|remove|merge|select|step|hook|config|auto-prune|'') false ;;
+    -) true ;;
+    -*) false ;;
+    *) true ;;
+  esac
+}; then
+  wt_v2_main "$@"
+  exit $?
 fi
 
 # ---- locate the real Worktrunk binary (skip this script) -------------------
@@ -129,34 +176,6 @@ if [ "${1:-}" = auto-prune ]; then
   auto_prune
   exit 0
 fi
-
-write_env() { # $1 = set|unset, $2 = value (for set)
-  [ -n "${WT_ENV_FILE:-}" ] || return 0
-  case "${WT_SHELL:-posix}" in
-    fish)
-      if [ "$1" = set ]; then
-        printf "set -gx GIT_WORKTREE '%s'\n" "$2" >"$WT_ENV_FILE"
-      else
-        printf 'set -ge GIT_WORKTREE\n' >"$WT_ENV_FILE"
-      fi
-      ;;
-    *)
-      if [ "$1" = set ]; then
-        printf "export GIT_WORKTREE='%s'\n" "$2" >"$WT_ENV_FILE"
-      else
-        printf 'unset GIT_WORKTREE\n' >"$WT_ENV_FILE"
-      fi
-      ;;
-  esac
-}
-
-emit_cd() { # $1 = target path
-  if [ -n "${WT_CD_FILE:-}" ]; then
-    printf '%s\n' "$1" >"$WT_CD_FILE"
-  else
-    echo "wt: worktree at $1 (no shell wrapper active; cd manually)" >&2
-  fi
-}
 
 ensure_pi_lens_config() { # $1 = worktree path; create missing only
   local path="$1" gd f

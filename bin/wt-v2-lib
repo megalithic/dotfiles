@@ -1,0 +1,849 @@
+# shellcheck shell=bash
+# Worktrunk-retaining v2 lifecycle and presentation coordinator for bin/wt.
+# Sourced after worktree_id is defined; upstream builtins remain compatible.
+
+WT_V2_VERSION=0.76.0
+V2_CMD=
+V2_JSON=0
+V2_BACKEND=
+V2_LIST=
+V2_ITEM=
+V2_TARGET=
+V2_TARGET_KIND=
+V2_TARGET_SOURCE=
+V2_PRESENTATION=session
+V2_REQUESTED_PRESENTATION=session
+V2_PRESENTATION_EXPLICIT=0
+V2_BASE=
+V2_PRIMARY=0
+V2_IMPLICIT=0
+V2_DEFAULT=
+V2_REPO_ROOT=
+V2_GCD=
+V2_LEASE=
+V2_WORKTREE_LOCKED=0
+V2_PATH=
+V2_RAW_PATH=
+V2_BRANCH=
+V2_HEAD=
+V2_WID=
+V2_SESSION=
+V2_ACTION=
+V2_EXPECTED_PATH=
+V2_EXPECTED_BRANCH=
+V2_EXPECTED_HEAD=
+V2_COPY='{}'
+V2_FTM='{}'
+V2_RESTART=0
+V2_ERROR_CODE=
+V2_ERROR_MESSAGE=
+V2_ERROR_PHASE=
+V2_ERROR_STATUS=error
+V2_ERROR_RC=7
+V2_COMPLETED='[]'
+V2_SESSION_REMOVED=0
+
+wt_v2_wants_command() {
+  case "${1:-}" in
+    ensure | new | open | path | repair | prune) return 0 ;;
+    list)
+      shift
+      while [ "$#" -gt 0 ]; do
+        [ "$1" = --json ] && return 0
+        shift
+      done
+      ;;
+  esac
+  return 1
+}
+
+v2_set_error() { # code message phase rc [status]
+  V2_ERROR_CODE="$1"
+  V2_ERROR_MESSAGE="$2"
+  V2_ERROR_PHASE="$3"
+  V2_ERROR_RC="$4"
+  V2_ERROR_STATUS="${5:-error}"
+  return 1
+}
+
+v2_add_completed() {
+  V2_COMPLETED="$(printf '%s' "$V2_COMPLETED" | jq -c --arg p "$1" '. + [$p]')"
+}
+
+v2_real_file() {
+  if command -v realpath >/dev/null 2>&1; then
+    realpath "$1" 2>/dev/null
+  else
+    (cd "$(dirname "$1")" 2>/dev/null && printf '%s/%s\n' "$(pwd -P)" "$(basename "$1")")
+  fi
+}
+
+v2_resolve_backend() {
+  local resolved backend_real self_real version
+  resolved="$(MISE_AUTO_INSTALL=false mise which --tool "worktrunk@$WT_V2_VERSION" wt </dev/null 2>/dev/null)" ||
+    { v2_set_error backend_resolution_failed 'could not resolve pinned Worktrunk' backend_resolve 7; return 1; }
+  case "$resolved" in
+    /*) ;;
+    *) v2_set_error backend_resolution_failed 'mise returned a non-absolute Worktrunk path' backend_resolve 7; return 1 ;;
+  esac
+  case "$resolved" in
+    *$'\n'*) v2_set_error backend_resolution_failed 'mise returned multiple Worktrunk paths' backend_resolve 7; return 1 ;;
+  esac
+  [ -x "$resolved" ] ||
+    { v2_set_error backend_resolution_failed 'resolved Worktrunk is not executable' backend_resolve 7; return 1; }
+  backend_real="$(v2_real_file "$resolved")" ||
+    { v2_set_error backend_resolution_failed 'could not canonicalize resolved Worktrunk' backend_resolve 7; return 1; }
+  self_real="$(v2_real_file "$WT_V2_SELF")" || self_real="$WT_V2_SELF"
+  [ "$backend_real" != "$self_real" ] ||
+    { v2_set_error backend_recursion 'mise resolved the public wt wrapper' backend_resolve 7; return 1; }
+  V2_BACKEND="$resolved"
+  version="$("$V2_BACKEND" --version </dev/null 2>/dev/null)" ||
+    { v2_set_error backend_version_mismatch 'could not read Worktrunk version' backend_version 7; return 1; }
+  case "$version" in
+    "wt $WT_V2_VERSION" | "wt v$WT_V2_VERSION") ;;
+    *) v2_set_error backend_version_mismatch "Worktrunk version is not $WT_V2_VERSION" backend_version 7; return 1 ;;
+  esac
+  v2_add_completed backend_resolve
+}
+
+v2_repo_context() {
+  local root common first
+  root="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null)" ||
+    { v2_set_error identity_mismatch 'current directory is not in a Git repository' resolve 7; return 1; }
+  common="$(git -C "$PWD" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" ||
+    { v2_set_error identity_mismatch 'could not resolve the repository Git directory' resolve 7; return 1; }
+  common="$(cd "$common" 2>/dev/null && pwd -P)" ||
+    { v2_set_error identity_mismatch 'repository Git directory does not exist' resolve 7; return 1; }
+  first="$(git -C "$root" worktree list --porcelain 2>/dev/null | awk '/^worktree / {sub(/^worktree /, ""); print; exit}')"
+  [ -n "$first" ] ||
+    { v2_set_error identity_mismatch 'Git reported no primary worktree' resolve 7; return 1; }
+  V2_REPO_ROOT="$(cd "$first" 2>/dev/null && pwd -P)" ||
+    { v2_set_error identity_mismatch 'primary worktree path does not exist' resolve 7; return 1; }
+  V2_GCD="$common"
+}
+
+v2_backend_list() {
+  local raw
+  raw="$("$V2_BACKEND" list --yes --branches --remotes --format=json </dev/null 2>/dev/null)" ||
+    { v2_set_error backend_failed 'Worktrunk list failed' backend 7; return 1; }
+  printf '%s' "$raw" | jq -s -e '
+    length == 1 and
+    (.[0] | type == "object" and .schema == 2 and (.repo|type) == "object" and
+      (.repo.default_branch|type) == "string" and (.items|type) == "array" and
+      all(.items[]; (.branch|type) == "string" and
+        ((has("remote")|not) or (.remote|type) == "string") and
+        ((has("worktree")|not) or (.worktree|type) == "object")))
+  ' >/dev/null 2>&1 ||
+    { v2_set_error backend_parse_failed 'Worktrunk list output is not one valid schema 2 document' backend_parse 7; return 1; }
+  V2_LIST="$raw"
+  V2_DEFAULT="$(printf '%s' "$raw" | jq -r '.repo.default_branch // empty')"
+  [ -n "$V2_DEFAULT" ] || V2_DEFAULT=main
+  v2_add_completed list
+}
+
+v2_is_direct() {
+  case "$1" in
+    . | ^ | @ | - | pr:* | mr:* | http://* | https://* | /* | ./* | ../*) return 0 ;;
+  esac
+  return 1
+}
+
+v2_classify() {
+  local target="$1" local_item remote_count path
+  V2_ITEM=
+  V2_TARGET_KIND=
+  V2_TARGET_SOURCE=
+  V2_PATH=
+  V2_BRANCH=
+
+  if v2_is_direct "$target"; then
+    V2_TARGET_KIND=direct
+    V2_TARGET_SOURCE=direct
+    if [ -e "$target" ]; then
+      path="$(git -C "$target" rev-parse --show-toplevel 2>/dev/null)" || path="$(cd "$target" 2>/dev/null && pwd -P)" || path=
+      [ -z "$path" ] || path="$(cd "$path" 2>/dev/null && pwd -P)"
+      V2_PATH="$path"
+      V2_ITEM="$(printf '%s' "$V2_LIST" | jq -c --arg path "$path" '.items[] | select(.worktree.path == $path)' | head -n 1)"
+      [ -z "$V2_ITEM" ] || V2_BRANCH="$(printf '%s' "$V2_ITEM" | jq -r '.branch // empty')"
+    fi
+    return 0
+  fi
+
+  local_item="$(printf '%s' "$V2_LIST" | jq -c --arg branch "$target" '.items[] | select(.branch == $branch and ((has("remote") | not) or has("worktree")))' | head -n 1)"
+  if [ -n "$local_item" ]; then
+    V2_ITEM="$local_item"
+    V2_TARGET_KIND=local
+    V2_TARGET_SOURCE=local
+  else
+    remote_count="$(printf '%s' "$V2_LIST" | jq -r --arg branch "$target" '[.items[] | select(.branch == $branch and has("remote") and (has("worktree") | not))] | length')"
+    if [ "$remote_count" -gt 1 ]; then
+      v2_set_error ambiguous_remote 'multiple remotes provide the requested branch' resolve 3 refused
+      return 1
+    fi
+    if [ "$remote_count" -eq 1 ]; then
+      V2_ITEM="$(printf '%s' "$V2_LIST" | jq -c --arg branch "$target" '.items[] | select(.branch == $branch and has("remote") and (has("worktree") | not))')"
+      V2_TARGET_KIND=remote
+      V2_TARGET_SOURCE=remote
+    elif [ -e "$target" ]; then
+      path="$(git -C "$target" rev-parse --show-toplevel 2>/dev/null)" || path="$(cd "$target" 2>/dev/null && pwd -P)" || path=
+      [ -z "$path" ] || path="$(cd "$path" 2>/dev/null && pwd -P)"
+      V2_TARGET_KIND=direct
+      V2_TARGET_SOURCE=direct
+      V2_PATH="$path"
+    else
+      V2_TARGET_KIND=missing
+      V2_TARGET_SOURCE=created
+    fi
+  fi
+
+  if [ -n "$V2_ITEM" ]; then
+    V2_PATH="$(printf '%s' "$V2_ITEM" | jq -r '.worktree.path // empty')"
+    V2_BRANCH="$(printf '%s' "$V2_ITEM" | jq -r '.branch // empty')"
+  fi
+}
+
+v2_acquire_repository_lock() {
+  local wait=0
+  [ "$V2_JSON" -eq 1 ] || wait="${WT_LOCK_WAIT_MS:-10000}"
+  V2_LEASE="$(wtlock_acquire "$V2_GCD" '' "$wait")" ||
+    { v2_set_error busy 'repository lock is held by another operation' lock 7; return 1; }
+  v2_add_completed lock_repository
+}
+
+v2_acquire_worktree_lock() {
+  local wait=0
+  [ "$V2_JSON" -eq 1 ] || wait="${WT_LOCK_WAIT_MS:-10000}"
+  wtlock_acquire_one "$(wtlock_root "$V2_GCD")" "worktree-$(wtlock_sanitize "$V2_WID")" "$wait" "$V2_LEASE" ||
+    { v2_set_error busy 'worktree lock is held by another operation' lock 7; return 1; }
+  V2_WORKTREE_LOCKED=1
+  v2_add_completed lock_worktree
+}
+
+v2_release_locks() {
+  local wid=
+  [ "$V2_WORKTREE_LOCKED" -eq 0 ] || wid="$V2_WID"
+  if [ -n "$V2_LEASE" ] && [ -n "$V2_GCD" ]; then
+    wtlock_release "$V2_GCD" "$wid" "$V2_LEASE" >/dev/null 2>&1 || true
+  fi
+  V2_LEASE=
+  V2_WORKTREE_LOCKED=0
+}
+
+v2_parse_switch() { # raw backend JSON
+  local raw="$1" path branch
+  printf '%s' "$raw" | jq -s -e 'length == 1 and (.[0] | type == "object" and (.path|type) == "string" and (.branch|type) == "string")' >/dev/null 2>&1 ||
+    { v2_set_error backend_parse_failed 'Worktrunk switch returned malformed identity data' backend_parse 7; return 1; }
+  path="$(printf '%s' "$raw" | jq -r '.path')"
+  branch="$(printf '%s' "$raw" | jq -r '.branch')"
+  case "$path" in /*) ;; *) v2_set_error identity_mismatch 'Worktrunk returned a non-absolute worktree path' identity 7; return 1 ;; esac
+  [ -n "$branch" ] ||
+    { v2_set_error identity_mismatch 'Worktrunk returned an empty branch' identity 7; return 1; }
+  V2_RAW_PATH="$path"
+  V2_PATH="$path"
+  V2_BRANCH="$branch"
+}
+
+v2_switch_target() {
+  local raw
+  local -a args
+  if [ -z "$V2_TARGET" ] && [ "$V2_CMD" = open ]; then
+    args=(switch)
+    V2_TARGET_SOURCE=picker
+    V2_ACTION=reused
+  elif [ "$V2_TARGET_KIND" = missing ] || [ "$V2_CMD" = new ]; then
+    args=(switch --create "$V2_TARGET")
+    [ -z "$V2_BASE" ] || args+=(--base "$V2_BASE")
+    V2_ACTION=created
+  else
+    args=(switch)
+    [ -z "$V2_TARGET" ] || args+=("$V2_TARGET")
+    case "$V2_TARGET_KIND" in
+      local) [ -n "$V2_PATH" ] && V2_ACTION=reused || V2_ACTION=created ;;
+      remote) V2_ACTION=created ;;
+      *) V2_ACTION=reused ;;
+    esac
+  fi
+
+  if [ -z "$V2_TARGET" ]; then
+    raw="$("$V2_BACKEND" "${args[@]}" --yes --no-cd --no-hooks --format=json 2>&2)" ||
+      { v2_set_error target_resolution_failed 'Worktrunk picker or switch failed' switch 3; return 1; }
+  else
+    raw="$("$V2_BACKEND" "${args[@]}" --yes --no-cd --no-hooks --format=json </dev/null 2>&2)" ||
+      { v2_set_error target_resolution_failed 'Worktrunk switch failed' switch 3; return 1; }
+  fi
+  v2_parse_switch "$raw" || return 1
+  v2_add_completed switch
+}
+
+v2_match_item_by_path() {
+  local matched
+  matched="$(printf '%s' "$V2_LIST" | jq -c --arg path "$V2_PATH" '.items[] | select(.worktree.path == $path)' | head -n 1)"
+  V2_ITEM="$matched"
+}
+
+v2_validate_identity() {
+  local canonical top common gitdir actual_branch actual_ref actual_head record record_head record_ref item_path item_branch item_head invalid
+  canonical="$(cd "$V2_RAW_PATH" 2>/dev/null && pwd -P)" ||
+    { v2_set_error identity_mismatch 'worktree path does not exist' identity 7; return 1; }
+  [ "$canonical" = "$V2_RAW_PATH" ] ||
+    { v2_set_error identity_mismatch 'worktree path changes after canonicalization' identity 7; return 1; }
+  V2_PATH="$canonical"
+  top="$(git -C "$V2_PATH" rev-parse --show-toplevel 2>/dev/null)" ||
+    { v2_set_error identity_mismatch 'worktree is not a Git checkout' identity 7; return 1; }
+  top="$(cd "$top" 2>/dev/null && pwd -P)" || top=
+  [ "$top" = "$V2_PATH" ] ||
+    { v2_set_error identity_mismatch 'worktree path is not its Git toplevel' identity 7; return 1; }
+  common="$(git -C "$V2_PATH" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" ||
+    { v2_set_error identity_mismatch 'worktree Git metadata is invalid' identity 7; return 1; }
+  common="$(cd "$common" 2>/dev/null && pwd -P)" || common=
+  [ "$common" = "$V2_GCD" ] ||
+    { v2_set_error identity_mismatch 'worktree belongs to another repository' identity 7; return 1; }
+  case "$V2_PATH" in
+    "$V2_REPO_ROOT" | "$V2_REPO_ROOT"/.worktrees/*) ;;
+    *) v2_set_error identity_mismatch 'worktree is outside the repository worktree root' identity 7; return 1 ;;
+  esac
+
+  gitdir="$(git -C "$V2_PATH" rev-parse --path-format=absolute --git-dir 2>/dev/null)" || gitdir=
+  [ -n "$gitdir" ] && [ -d "$gitdir" ] ||
+    { v2_set_error identity_mismatch 'private Git directory is missing' identity 7; return 1; }
+  if [ "$V2_PATH" = "$V2_REPO_ROOT" ]; then
+    [ "$gitdir" = "$V2_GCD" ] ||
+      { v2_set_error identity_mismatch 'primary worktree Git directory does not match' identity 7; return 1; }
+  else
+    case "$gitdir" in "$V2_GCD"/worktrees/*) ;; *) v2_set_error identity_mismatch 'private worktree Git directory does not match' identity 7; return 1 ;; esac
+    [ -f "$V2_PATH/.git" ] ||
+      { v2_set_error identity_mismatch 'linked worktree has no Git file' identity 7; return 1; }
+  fi
+
+  actual_branch="$(git -C "$V2_PATH" branch --show-current 2>/dev/null)"
+  actual_ref="$(git -C "$V2_PATH" symbolic-ref -q HEAD 2>/dev/null)"
+  actual_head="$(git -C "$V2_PATH" rev-parse HEAD 2>/dev/null)" || actual_head=
+  [ -n "$actual_branch" ] && [ "$actual_ref" = "refs/heads/$actual_branch" ] && [ -n "$actual_head" ] ||
+    { v2_set_error identity_mismatch 'worktree branch or HEAD is invalid' identity 7; return 1; }
+  [ "$V2_BRANCH" = "$actual_branch" ] ||
+    { v2_set_error identity_mismatch 'Worktrunk switch branch does not match Git' identity 7; return 1; }
+  [ -z "$V2_EXPECTED_BRANCH" ] || [ "$actual_branch" = "$V2_EXPECTED_BRANCH" ] ||
+    { v2_set_error identity_mismatch 'selected branch does not match the requested local target' identity 7; return 1; }
+  [ -z "$V2_EXPECTED_PATH" ] || [ "$V2_PATH" = "$V2_EXPECTED_PATH" ] ||
+    { v2_set_error identity_mismatch 'selected path does not match the requested worktree' identity 7; return 1; }
+  [ -z "$V2_EXPECTED_HEAD" ] || [ "$actual_head" = "$V2_EXPECTED_HEAD" ] ||
+    { v2_set_error identity_mismatch 'selected HEAD does not match the classified worktree' identity 7; return 1; }
+
+  record="$(git -C "$V2_REPO_ROOT" worktree list --porcelain 2>/dev/null | awk -v wanted="$V2_PATH" '
+    /^worktree / { if (seen) exit; path=substr($0,10); seen=(path==wanted); next }
+    seen && /^HEAD / { head=$2; next }
+    seen && /^branch / { ref=$2; next }
+    seen && /^$/ { print head "\t" ref; exit }
+    END { if (seen && head != "") print head "\t" ref }
+  ' | head -n 1)"
+  record_head="${record%%$'\t'*}"
+  record_ref="${record#*$'\t'}"
+  [ -n "$record" ] && [ "$record_head" = "$actual_head" ] && [ "$record_ref" = "$actual_ref" ] ||
+    { v2_set_error identity_mismatch 'Git worktree registration does not match path, branch, or HEAD' identity 7; return 1; }
+
+  v2_match_item_by_path
+  if [ -n "$V2_ITEM" ]; then
+    item_path="$(printf '%s' "$V2_ITEM" | jq -r '.worktree.path // empty')"
+    item_branch="$(printf '%s' "$V2_ITEM" | jq -r '.branch // empty')"
+    item_head="$(printf '%s' "$V2_ITEM" | jq -r '.head.sha // empty')"
+    invalid="$(printf '%s' "$V2_ITEM" | jq -r '.worktree | [(.detached // false),(.branch_mismatch // false),(.duplicate_branch // false)] | any')"
+    [ -z "$item_path" ] || [ "$item_path" = "$V2_PATH" ] ||
+      { v2_set_error identity_mismatch 'backend worktree path does not match Git' identity 7; return 1; }
+    [ -z "$item_branch" ] || [ "$item_branch" = "$actual_branch" ] ||
+      { v2_set_error identity_mismatch 'backend branch does not match Git' identity 7; return 1; }
+    [ -z "$item_head" ] || [ "$item_head" = "$actual_head" ] ||
+      { v2_set_error identity_mismatch 'backend HEAD does not match Git' identity 7; return 1; }
+    [ "$invalid" = false ] ||
+      { v2_set_error identity_mismatch 'backend reports an invalid worktree identity' identity 7; return 1; }
+  fi
+
+  V2_BRANCH="$actual_branch"
+  V2_HEAD="$actual_head"
+  V2_WID="$(worktree_id "$V2_PATH")"
+  V2_SESSION="$V2_WID"
+  v2_add_completed identity
+}
+
+v2_copy_ignored() {
+  local raw destination
+  raw="$("$V2_BACKEND" -C "$V2_PATH" step copy-ignored --yes --from "$V2_DEFAULT" --require-include --format=json </dev/null 2>&2)" ||
+    { v2_set_error copy_failed 'Worktrunk copy-ignored failed' copy 4; return 1; }
+  printf '%s' "$raw" | jq -s -e 'length == 1 and (.[0] | type == "object")' >/dev/null 2>&1 ||
+    { v2_set_error copy_failed 'Worktrunk copy-ignored returned malformed JSON' copy 4; return 1; }
+  destination="$(printf '%s' "$raw" | jq -r '.path // .destination // .to // empty')"
+  [ -z "$destination" ] || [ "$destination" = "$V2_PATH" ] ||
+    { v2_set_error copy_destination_mismatch 'copy destination did not match the selected worktree' copy 4; return 1; }
+  V2_COPY="$raw"
+  v2_add_completed copy
+}
+
+v2_call_ftm() { # ensure|repair|remove
+  local operation="$1" raw rc code message phase status actual_presentation
+  local -a args
+  case "$operation" in
+    ensure | open | repair)
+      [ "$operation" = open ] && operation=ensure
+      args=("$operation" --kind worktree --cwd "$V2_PATH" --session "$V2_SESSION" --worktree-id "$V2_WID" --lease "$V2_LEASE" --attach never --format json --presentation "$V2_PRESENTATION")
+      [ "$V2_PRIMARY" -eq 1 ] && args+=(--primary)
+      [ "$V2_RESTART" -eq 0 ] || args+=(--restart-services)
+      ;;
+    remove)
+      args=(remove --kind worktree --cwd "$V2_PATH" --session "$V2_SESSION" --worktree-id "$V2_WID" --lease "$V2_LEASE" --discard-snapshot --attach never --format json)
+      ;;
+  esac
+  raw="$(FTM_NO_ATTACH=1 ftm "${args[@]}" </dev/null 2>&2)"
+  rc=$?
+  if [ -z "$raw" ] && [ "$V2_CMD" = open ] && [ "$V2_JSON" -eq 0 ] && [ "$rc" -eq 0 ]; then
+    V2_FTM='{"status":"ok","setup":{"state":"missing"},"tmux":{"action":"reused","windows":{}}}'
+    v2_add_completed ftm
+    return 0
+  fi
+  printf '%s' "$raw" | jq -s -e 'length == 1 and (.[0] | type == "object" and .schema_version == 1 and (.status|type) == "string")' >/dev/null 2>&1 ||
+    { v2_set_error ftm_failed 'ftm returned malformed JSON' tmux 7; return 1; }
+  V2_FTM="$raw"
+  actual_presentation="$(printf '%s' "$raw" | jq -r '.presentation | if type == "object" then (.actual // empty) else (. // empty) end')"
+  [ -z "$actual_presentation" ] || V2_PRESENTATION="$actual_presentation"
+  if [ "$rc" -ne 0 ] || [ "$(printf '%s' "$raw" | jq -r '.status')" != ok ]; then
+    code="$(printf '%s' "$raw" | jq -r '.error.code // "ftm_failed"')"
+    message="$(printf '%s' "$raw" | jq -r '.error.message // "ftm failed"')"
+    phase="$(printf '%s' "$raw" | jq -r '.phase // "tmux"')"
+    status="$(printf '%s' "$raw" | jq -r '.status // "error"')"
+    [ "$rc" -ne 0 ] || rc=7
+    v2_set_error "$code" "$message" "$phase" "$rc" "$status"
+    return 1
+  fi
+  v2_add_completed ftm
+}
+
+v2_validate_target_policy() {
+  local operation="$1"
+  if [ "$V2_CMD" = new ]; then
+    [ "$V2_TARGET_KIND" = missing ] ||
+      { v2_set_error target_exists 'new requires a branch absent locally and remotely' resolve 3 refused; return 1; }
+  elif [ -n "$V2_BASE" ] && [ "$V2_TARGET_KIND" != missing ]; then
+    v2_set_error base_for_existing '--base applies only when creating a branch' args 2
+    return 1
+  fi
+  if [ "$operation" = repair ] && { [ "$V2_TARGET_KIND" = missing ] || [ "$V2_TARGET_KIND" = remote ]; }; then
+    v2_set_error target_not_found 'repair requires an existing worktree checkout' resolve 3 refused
+    return 1
+  fi
+}
+
+v2_set_expected_target() {
+  V2_EXPECTED_PATH=
+  V2_EXPECTED_BRANCH=
+  V2_EXPECTED_HEAD=
+  if [ "$V2_TARGET_KIND" = local ]; then
+    V2_EXPECTED_PATH="$(printf '%s' "$V2_ITEM" | jq -r '.worktree.path // empty')"
+    V2_EXPECTED_BRANCH="$(printf '%s' "$V2_ITEM" | jq -r '.branch // empty')"
+    V2_EXPECTED_HEAD="$(printf '%s' "$V2_ITEM" | jq -r '.head.sha // empty')"
+  elif [ "$V2_TARGET_KIND" = direct ] && [ -e "$V2_TARGET" ]; then
+    V2_EXPECTED_PATH="$(git -C "$V2_TARGET" rev-parse --show-toplevel 2>/dev/null)" || V2_EXPECTED_PATH="$(cd "$V2_TARGET" 2>/dev/null && pwd -P)" || V2_EXPECTED_PATH=
+    [ -z "$V2_EXPECTED_PATH" ] || V2_EXPECTED_PATH="$(cd "$V2_EXPECTED_PATH" 2>/dev/null && pwd -P)"
+  fi
+}
+
+v2_prepare_target() {
+  local operation="$1"
+  v2_resolve_backend || return 1
+  v2_repo_context || return 1
+  v2_backend_list || return 1
+  v2_classify "$V2_TARGET" || return 1
+  v2_validate_target_policy "$operation" || return 1
+}
+
+v2_run_ensure() { # ensure|open|repair
+  local operation="$1"
+  v2_prepare_target "$operation" || return 1
+  v2_acquire_repository_lock || return 1
+  # Classification is advisory until protected by the repository lock. Refresh
+  # it under the lock before any switch/create mutation.
+  v2_backend_list || return 1
+  v2_classify "$V2_TARGET" || return 1
+  v2_validate_target_policy "$operation" || return 1
+  v2_set_expected_target
+  v2_switch_target || return 1
+  v2_validate_identity || return 1
+  v2_acquire_worktree_lock || return 1
+  if [ "$V2_PATH" = "$V2_REPO_ROOT" ]; then
+    V2_PRIMARY=1
+    V2_COPY='{"state":"skipped","reason":"primary_worktree"}'
+    v2_add_completed copy_primary_skipped
+  else
+    v2_copy_ignored || return 1
+  fi
+  v2_call_ftm "$operation" || return 1
+}
+
+v2_session_preflight() {
+  local sid name kind path wid count=0 found='' session_path window pane_path
+  while IFS=' ' read -r sid name; do
+    [ -n "$sid" ] || continue
+    kind="$(tmux show-options -t "$sid" -qv @ftm_kind 2>/dev/null || true)"
+    [ "$kind" = worktree ] || continue
+    path="$(tmux show-options -t "$sid" -qv @ftm_worktree 2>/dev/null || true)"
+    wid="$(tmux show-options -t "$sid" -qv @ftm_worktree_id 2>/dev/null || true)"
+    if [ "$path" = "$V2_PATH" ] || [ "$wid" = "$V2_WID" ]; then
+      count=$((count + 1))
+      found="$sid $name"
+    fi
+  done < <(tmux list-sessions -F '#{session_id} #{session_name}' 2>/dev/null || true)
+  [ "$count" -le 1 ] ||
+    { v2_set_error ambiguous_session 'multiple tmux sessions match the worktree' prune_preflight 6 refused; return 1; }
+  if [ "$count" -eq 1 ]; then
+    sid="${found%% *}"
+    name="${found#* }"
+    path="$(tmux show-options -t "$sid" -qv @ftm_worktree 2>/dev/null || true)"
+    wid="$(tmux show-options -t "$sid" -qv @ftm_worktree_id 2>/dev/null || true)"
+    [ "$path" = "$V2_PATH" ] && [ "$wid" = "$V2_WID" ] ||
+      { v2_set_error ambiguous_session 'tmux session tags do not match the worktree' prune_preflight 6 refused; return 1; }
+    session_path="$(tmux display-message -p -t "$sid" '#{session_path}' 2>/dev/null || true)"
+    [ "$session_path" = "$V2_PATH" ] ||
+      { v2_set_error ambiguous_session 'tmux session cwd does not match the worktree' prune_preflight 6 refused; return 1; }
+    while IFS=$'\t' read -r window pane_path; do
+      case "$window" in
+        code | agent | services | services-[0-9]*)
+          [ "$pane_path" = "$V2_PATH" ] ||
+            { v2_set_error ambiguous_session 'tmux pane cwd does not match the worktree' prune_preflight 6 refused; return 1; }
+          ;;
+      esac
+    done < <(tmux list-panes -s -t "$sid" -F '#{window_name}'$'\t''#{pane_current_path}' 2>/dev/null || true)
+    V2_SESSION="$name"
+  fi
+}
+
+v2_prune_refresh() {
+  v2_backend_list || return 1
+  v2_classify "$V2_TARGET" || return 1
+  [ -n "$V2_ITEM" ] ||
+    { v2_set_error target_not_found 'target was not found' resolve 3 refused; return 1; }
+  [ -n "$V2_PATH" ] ||
+    { v2_set_error remote_refusal 'remote-only targets cannot be pruned' prune_preflight 6 refused; return 1; }
+  V2_RAW_PATH="$V2_PATH"
+  V2_BRANCH="$(printf '%s' "$V2_ITEM" | jq -r '.branch // empty')"
+}
+
+v2_run_prune() {
+  local dirty state caller before_remote after_remote raw remove_record backend_rc old_head old_ref
+  v2_resolve_backend || return 1
+  v2_repo_context || return 1
+  v2_backend_list || return 1
+  v2_classify "$V2_TARGET" || return 1
+  [ -n "$V2_ITEM" ] && [ -n "$V2_PATH" ] ||
+    { v2_set_error remote_refusal 'prune requires one local linked worktree' prune_preflight 6 refused; return 1; }
+  v2_acquire_repository_lock || return 1
+  v2_prune_refresh || return 1
+  # Bind every later check and the remove call to the exact schema item selected
+  # under the repository lock. Reusing the path or moving its ref fails closed.
+  v2_set_expected_target
+
+  [ "$(printf '%s' "$V2_ITEM" | jq -r '.worktree.main // false')" = false ] ||
+    { v2_set_error main_worktree 'main worktree cannot be pruned' prune_preflight 6 refused; return 1; }
+  caller="$(pwd -P)"
+  case "$caller" in "$V2_PATH" | "$V2_PATH"/*) v2_set_error current_worktree 'cannot prune the caller current worktree' prune_preflight 6 refused; return 1 ;; esac
+  dirty="$(printf '%s' "$V2_ITEM" | jq -r '.worktree.changes | [(.staged // false),(.modified // false),(.untracked // false),(.renamed // false),(.deleted // false),(.conflicted // false)] | any')"
+  [ "$dirty" = false ] ||
+    { v2_set_error dirty_worktree 'dirty worktree cannot be pruned' prune_preflight 6 refused; return 1; }
+  state="$(printf '%s' "$V2_ITEM" | jq -r '.display.state // empty')"
+  case "$state" in integrated | empty) ;; *) v2_set_error not_integrated 'worktree is not integrated or empty' prune_preflight 6 refused; return 1 ;; esac
+  v2_validate_identity || return 1
+  v2_acquire_worktree_lock || return 1
+  v2_session_preflight || return 1
+  old_head="$V2_HEAD"
+  old_ref="refs/heads/$V2_BRANCH"
+  before_remote="$(git -C "$V2_REPO_ROOT" for-each-ref --format='%(refname) %(objectname)' refs/remotes | sort)"
+  v2_add_completed prune_preflight
+
+  v2_call_ftm remove || return 1
+  V2_SESSION_REMOVED=1
+  v2_add_completed session_remove
+
+  V2_RAW_PATH="$V2_PATH"
+  V2_BRANCH="${old_ref#refs/heads/}"
+  if ! v2_validate_identity; then
+    v2_set_error branch_moved 'worktree identity changed after session removal' prune_recheck 7 partial
+    return 1
+  fi
+  [ "$V2_HEAD" = "$old_head" ] ||
+    { v2_set_error branch_moved 'branch moved after session removal' prune_recheck 7 partial; return 1; }
+
+  raw="$("$V2_BACKEND" remove "$V2_PATH" --yes --foreground --reap --no-hooks --format=json </dev/null 2>&2)"
+  backend_rc=$?
+  if [ "$backend_rc" -ne 0 ]; then
+    if ! git -C "$V2_REPO_ROOT" show-ref --verify --quiet "$old_ref" ||
+      [ "$(git -C "$V2_REPO_ROOT" rev-parse "$old_ref" 2>/dev/null || true)" != "$old_head" ]; then
+      v2_set_error branch_moved 'branch moved during Worktrunk removal' remove 7 partial
+    else
+      v2_set_error prune_backend_failed 'Worktrunk removal failed after the tmux session was removed' remove 7 partial
+    fi
+    return 1
+  fi
+  remove_record="$(printf '%s' "$raw" | jq -sc 'if length == 1 and (.[0]|type) == "array" and (.[0]|length) == 1 and (.[0][0]|type) == "object" then .[0][0] else empty end')"
+  [ -n "$remove_record" ] ||
+    { v2_set_error prune_backend_failed 'Worktrunk removal returned malformed JSON' remove 7 partial; return 1; }
+  [ "$(printf '%s' "$remove_record" | jq -r '.branch_outcome // empty')" = deleted ] ||
+    { v2_set_error branch_moved 'Worktrunk retained the local branch' remove 7 partial; return 1; }
+  [ "$(printf '%s' "$remove_record" | jq -r '.path // empty')" = "$V2_PATH" ] ||
+    { v2_set_error prune_backend_failed 'Worktrunk removal reported a different path' remove 7 partial; return 1; }
+  [ "$(printf '%s' "$remove_record" | jq -r '.branch // empty')" = "$V2_BRANCH" ] ||
+    { v2_set_error prune_backend_failed 'Worktrunk removal reported a different branch' remove 7 partial; return 1; }
+
+  after_remote="$(git -C "$V2_REPO_ROOT" for-each-ref --format='%(refname) %(objectname)' refs/remotes | sort)"
+  [ "$after_remote" = "$before_remote" ] ||
+    { v2_set_error remote_ref_changed 'a remote-tracking ref changed during prune' verify 7 partial; return 1; }
+  if [ -e "$V2_PATH" ] ||
+    git -C "$V2_REPO_ROOT" worktree list --porcelain | awk '/^worktree / {sub(/^worktree /, ""); print}' | rg -Fxq "$V2_PATH" ||
+    git -C "$V2_REPO_ROOT" show-ref --verify --quiet "$old_ref"; then
+    v2_set_error prune_verification_failed 'worktree path, registration, or local branch survived removal' verify 7 partial
+    return 1
+  fi
+  v2_add_completed remove
+  v2_add_completed verify
+}
+
+v2_parse_args() {
+  local command="$1" arg
+  shift
+  V2_CMD="$command"
+  V2_TARGET=
+  V2_BASE=
+  V2_JSON=0
+  V2_RESTART=0
+  V2_PRESENTATION=session
+  V2_REQUESTED_PRESENTATION=session
+  V2_PRESENTATION_EXPLICIT=0
+  V2_PRIMARY=0
+  while [ "$#" -gt 0 ]; do
+    arg="$1"
+    case "$arg" in
+      --json) V2_JSON=1; shift ;;
+      --base)
+        [ "$#" -ge 2 ] || { v2_set_error usage 'missing value for --base' args 2; return 1; }
+        V2_BASE="$2"; shift 2
+        ;;
+      --restart-services) V2_RESTART=1; shift ;;
+      -t|--target)
+        if [ "$#" -ge 2 ]; then
+          case "$2" in
+            cd|window|w|session|s)
+              V2_REQUESTED_PRESENTATION="$2"; V2_PRESENTATION_EXPLICIT=1; shift 2
+              case "$V2_REQUESTED_PRESENTATION" in w) V2_REQUESTED_PRESENTATION=window ;; s) V2_REQUESTED_PRESENTATION=session ;; esac
+              V2_PRESENTATION="$V2_REQUESTED_PRESENTATION"
+              ;;
+            *) V2_PRESENTATION=session; V2_REQUESTED_PRESENTATION=session; V2_PRESENTATION_EXPLICIT=1; shift ;;
+          esac
+        else
+          V2_PRESENTATION=session; V2_REQUESTED_PRESENTATION=session; V2_PRESENTATION_EXPLICIT=1; shift
+        fi
+        ;;
+      -t=*|--target=*)
+        V2_REQUESTED_PRESENTATION="${arg#*=}"
+        V2_PRESENTATION_EXPLICIT=1
+        case "$V2_REQUESTED_PRESENTATION" in cd|window|w|session|s) case "$V2_REQUESTED_PRESENTATION" in w) V2_REQUESTED_PRESENTATION=window ;; s) V2_REQUESTED_PRESENTATION=session ;; esac; V2_PRESENTATION="$V2_REQUESTED_PRESENTATION" ;; *) v2_set_error usage 'target must be cd|window|session' args 2; return 1 ;; esac
+        shift ;;
+      --*) v2_set_error usage "unknown argument: $arg" args 2; return 1 ;;
+      *)
+        [ -z "$V2_TARGET" ] || { v2_set_error usage 'too many targets' args 2; return 1; }
+        V2_TARGET="$arg"; shift
+        ;;
+    esac
+  done
+
+  case "$V2_CMD" in
+    list)
+      [ "$V2_JSON" -eq 1 ] && [ -z "$V2_TARGET" ] && [ -z "$V2_BASE" ] && [ "$V2_RESTART" -eq 0 ] ||
+        { v2_set_error usage 'list v2 requires only --json' args 2; return 1; }
+      ;;
+    open)
+      [ "$V2_RESTART" -eq 0 ] || { v2_set_error usage 'open does not accept --restart-services' args 2; return 1; }
+      if [ -z "$V2_TARGET" ]; then
+        [ "$V2_JSON" -eq 0 ] && [ -t 0 ] || { v2_set_error usage 'target is required in noninteractive mode' args 2; return 1; }
+      fi
+      ;;
+    ensure | path | prune)
+      [ -n "$V2_TARGET" ] || { v2_set_error usage 'target is required' args 2; return 1; }
+      [ "$V2_RESTART" -eq 0 ] || { v2_set_error usage "$V2_CMD does not accept --restart-services" args 2; return 1; }
+      [ "$V2_CMD" = ensure ] || [ -z "$V2_BASE" ] || { v2_set_error usage "$V2_CMD does not accept --base" args 2; return 1; }
+      ;;
+    new)
+      [ -n "$V2_TARGET" ] || { v2_set_error usage 'branch is required' args 2; return 1; }
+      [ "$V2_RESTART" -eq 0 ] || { v2_set_error usage 'new does not accept --restart-services' args 2; return 1; }
+      ;;
+    repair)
+      if [ -z "$V2_TARGET" ]; then
+        V2_TARGET="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null)" || V2_TARGET=.
+      fi
+      [ -z "$V2_BASE" ] || { v2_set_error usage 'repair does not accept --base' args 2; return 1; }
+      ;;
+  esac
+}
+
+v2_emit_error() {
+  local worktree_exists=false session_exists=false branch_exists=false
+  [ -n "$V2_PATH" ] && [ -e "$V2_PATH" ] && worktree_exists=true
+  [ -n "$V2_SESSION" ] && tmux has-session -t "=$V2_SESSION" 2>/dev/null && session_exists=true
+  [ -n "$V2_BRANCH" ] && [ -n "$V2_REPO_ROOT" ] && git -C "$V2_REPO_ROOT" show-ref --verify --quiet "refs/heads/$V2_BRANCH" && branch_exists=true
+  if [ "$V2_JSON" -eq 0 ]; then
+    printf 'wt %s: %s: %s\n' "$V2_CMD" "$V2_ERROR_CODE" "$V2_ERROR_MESSAGE" >&2
+    return "$V2_ERROR_RC"
+  fi
+  jq -cn \
+    --arg command "$V2_CMD" \
+    --arg status "$V2_ERROR_STATUS" \
+    --arg phase "$V2_ERROR_PHASE" \
+    --arg code "$V2_ERROR_CODE" \
+    --arg message "$V2_ERROR_MESSAGE" \
+    --argjson completed "$V2_COMPLETED" \
+    --argjson worktree_exists "$worktree_exists" \
+    --argjson session_exists "$session_exists" \
+    --argjson branch_exists "$branch_exists" \
+    --argjson session_removed "$V2_SESSION_REMOVED" \
+    --arg requested_presentation "$V2_REQUESTED_PRESENTATION" \
+    --arg actual_presentation "$V2_PRESENTATION" \
+    '{schema_version:1,command:$command,status:$status,phase:$phase,error:{code:$code,message:$message},completed_phases:$completed,current_state:{worktree_exists:$worktree_exists,session_exists:$session_exists,local_branch_exists:$branch_exists,session_removed:($session_removed == 1)},presentation:{requested:$requested_presentation,actual:$actual_presentation},attached:false,warnings:[]}'
+  return "$V2_ERROR_RC"
+}
+
+v2_emit_list() {
+  local normalized
+  normalized="$(printf '%s' "$V2_LIST" | jq -c 'del(.schema)')"
+  jq -cn --argjson data "$normalized" '{schema_version:1,command:"list",status:"ok",repo:$data.repo,items:$data.items,attached:false,warnings:[]}'
+}
+
+v2_emit_success() {
+  local setup tmux copy_state base
+  setup="$(printf '%s' "$V2_FTM" | jq -c '.setup // {state:"missing"}')"
+  tmux="$(printf '%s' "$V2_FTM" | jq -c '.tmux // {action:"reused",windows:{}}')"
+  copy_state="$(printf '%s' "$V2_COPY" | jq -r '.state // "completed"')"
+  base="$V2_BASE"
+  [ -n "$base" ] || { [ "$V2_TARGET_SOURCE" = created ] && base="$V2_DEFAULT" || true; }
+  jq -cn \
+    --arg command "$V2_CMD" \
+    --arg root "$V2_REPO_ROOT" \
+    --arg default_branch "$V2_DEFAULT" \
+    --arg input "$V2_TARGET" \
+    --arg branch "$V2_BRANCH" \
+    --arg source "$V2_TARGET_SOURCE" \
+    --arg base "$base" \
+    --arg path "$V2_PATH" \
+    --arg action "$V2_ACTION" \
+    --arg wid "$V2_WID" \
+    --arg copy_state "$copy_state" \
+    --argjson setup "$setup" \
+    --argjson tmux "$tmux" \
+    --arg requested_presentation "$V2_REQUESTED_PRESENTATION" \
+    --arg actual_presentation "$V2_PRESENTATION" \
+    '{schema_version:1,command:$command,status:"ok",repo:{root:$root,default_branch:$default_branch},target:{input:$input,branch:$branch,source:$source,base:(if $base=="" then null else $base end)},worktree:{path:$path,action:$action,id:$wid},copy:{state:$copy_state},setup:$setup,tmux:$tmux,presentation:{requested:$requested_presentation,actual:$actual_presentation},attached:false,warnings:[]}'
+}
+
+v2_emit_prune_success() {
+  jq -cn --arg root "$V2_REPO_ROOT" --arg input "$V2_TARGET" --arg branch "$V2_BRANCH" --arg path "$V2_PATH" --argjson completed "$V2_COMPLETED" \
+    '{schema_version:1,command:"prune",status:"ok",repo:{root:$root},target:{input:$input,branch:$branch},worktree:{path:$path,action:"removed"},completed_phases:$completed,attached:false,warnings:[]}'
+}
+
+wt_v2_main() {
+  local rc operation actual_presentation window_id left_pane
+  V2_IMPLICIT=0
+  case "${1:-}" in
+    ensure|new|open|path|repair|prune|list) ;;
+    *) V2_IMPLICIT=1; set -- ensure "$@" ;;
+  esac
+  v2_parse_args "$@" || { v2_emit_error; return "$V2_ERROR_RC"; }
+  if [ "$V2_IMPLICIT" -eq 1 ] && [ "$V2_PRESENTATION_EXPLICIT" -eq 0 ]; then
+    V2_PRESENTATION="cd"
+    V2_REQUESTED_PRESENTATION="cd"
+  fi
+  if [ "$V2_CMD" = open ]; then
+    V2_PRESENTATION=session
+    V2_REQUESTED_PRESENTATION=session
+  fi
+  trap v2_release_locks EXIT
+  trap 'v2_release_locks; exit 130' INT
+  trap 'v2_release_locks; exit 143' TERM
+
+  case "$V2_CMD" in
+    list)
+      v2_resolve_backend && v2_backend_list
+      rc=$?
+      if [ "$rc" -eq 0 ]; then v2_emit_list; else v2_emit_error; rc="$V2_ERROR_RC"; fi
+      ;;
+    path)
+      v2_resolve_backend && v2_repo_context && v2_backend_list && v2_classify "$V2_TARGET"
+      rc=$?
+      if [ "$rc" -eq 0 ] && [ -n "$V2_ITEM" ] && [ -n "$V2_PATH" ]; then
+        V2_RAW_PATH="$V2_PATH"
+        V2_BRANCH="$(printf '%s' "$V2_ITEM" | jq -r '.branch // empty')"
+        v2_validate_identity
+        rc=$?
+      elif [ "$rc" -eq 0 ]; then
+        v2_set_error target_not_found 'target has no linked worktree' resolve 3 refused
+        rc=1
+      fi
+      if [ "$rc" -eq 0 ]; then
+        if [ "$V2_JSON" -eq 1 ]; then
+          jq -cn --arg path "$V2_PATH" --arg branch "$V2_BRANCH" '{schema_version:1,command:"path",status:"ok",path:$path,branch:$branch,attached:false,warnings:[]}'
+        else
+          printf '%s\n' "$V2_PATH"
+        fi
+      else
+        v2_emit_error
+        rc="$V2_ERROR_RC"
+      fi
+      ;;
+    prune)
+      v2_run_prune
+      rc=$?
+      if [ "$rc" -eq 0 ]; then
+        if [ "$V2_JSON" -eq 1 ]; then v2_emit_prune_success; else printf 'Pruned %s\n' "$V2_TARGET" >&2; fi
+      else
+        v2_emit_error
+        rc="$V2_ERROR_RC"
+      fi
+      ;;
+    ensure | new | repair | open)
+      operation="$V2_CMD"
+      [ "$operation" = new ] && operation=ensure
+      v2_run_ensure "$operation"
+      rc=$?
+      if [ "$rc" -eq 0 ]; then
+        v2_release_locks
+        if [ "$V2_JSON" -eq 1 ]; then
+          v2_emit_success
+        elif [ "$V2_CMD" = repair ]; then
+          # Repair is maintenance-only: report, never cd, select, or attach.
+          printf 'wt repair: %s at %s\n' "$V2_BRANCH" "$V2_PATH" >&2
+        else
+          printf 'wt %s: %s at %s\n' "$V2_CMD" "$V2_BRANCH" "$V2_PATH" >&2
+          actual_presentation="$(printf '%s' "$V2_FTM" | jq -r '.presentation | if type == "object" then (.actual // empty) else (. // empty) end')"
+          [ -n "$actual_presentation" ] || actual_presentation="$V2_PRESENTATION"
+          case "$actual_presentation" in
+            cd)
+              emit_cd "$V2_PATH"
+              if [ "$V2_PRIMARY" -eq 1 ]; then write_env unset; else write_env set "$V2_WID"; fi
+              ;;
+            window)
+              window_id="$(printf '%s' "$V2_FTM" | jq -r '.tmux.window_id // empty')"
+              left_pane="$(printf '%s' "$V2_FTM" | jq -r '.tmux.left_pane // empty')"
+              if [ -n "$window_id" ]; then tmux select-window -t "$window_id" 2>/dev/null || true; fi
+              if [ -n "$left_pane" ]; then tmux select-pane -t "$left_pane" 2>/dev/null || true; fi
+              ;;
+            session)
+              if [ -z "${FTM_NO_ATTACH:-}" ]; then
+                ftm "$V2_SESSION"
+                rc=$?
+              fi
+              ;;
+          esac
+        fi
+      else
+        v2_emit_error
+        rc="$V2_ERROR_RC"
+      fi
+      ;;
+  esac
+
+  v2_release_locks
+  trap - EXIT INT TERM
+  return "$rc"
+}
