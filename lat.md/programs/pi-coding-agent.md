@@ -22,7 +22,7 @@ The managed `agent/extensions/lat.ts` passes arguments directly to `execFileSync
 
 Pi comes from the mise tool `npm:@earendil-works/pi-coding-agent`; the `bin/pi` wrapper resolves the CLI through `mise x`.
 
-`mise x npm:@earendil-works/pi-coding-agent -- pi` prepends the npm tool's own bin dir, so the real binary wins over the wrapper without recursion.
+The wrapper resolves the real binary by absolute path (`mise which pi`) and passes it to `mise x` explicitly. Relying on `mise x ... -- pi` PATH lookup broke: mise splices tool paths into the existing PATH block instead of prepending, so the wrapper's own `~/.local/bin` export shadowed the real binary and the wrapper exec'd itself in an infinite loop. A realpath self-check fails closed with exit 127 if resolution ever points back at the wrapper.
 
 The wrapper sets `PI_STATE_DIR`, creates socket and manifest state directories, exports `PI_BRIDGE_LEGACY_SOCKET=1` so the generic bridge owns Pi-to-Pi `/tell` ingress, prepends `~/.pi/agent/bin`, `~/.local/bin`, mise shims, and `/opt/homebrew/bin` to `PATH` for launch contexts without shell init, and resolves `mise` plus `fnox` before launch. Its empty-array expansions remain compatible with macOS Bash 3.2 under `set -u`, because the shebang selects Bash before the wrapper can prepend Homebrew to `PATH`. It exports only non-secret `LAT_LLM_*` provider metadata; fnox injects `LAT_LLM_KEY` from the Synthetic alias in `config/fnox/config.toml`. The final handoff is `fnox exec --replace -- mise x npm:@earendil-works/pi-coding-agent -- pi`, so non-shell Pi launches receive secrets without sourcing rendered files. `poppler-utils` stays in nix `nix/home/common/packages.nix` on megabookpro (mise's `brew:poppler` covers workbookpro).
 

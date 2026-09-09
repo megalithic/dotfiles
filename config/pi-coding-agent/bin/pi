@@ -142,9 +142,25 @@ export LAT_LLM_BASE_URL="https://api.synthetic.new/openai/v1"
 export LAT_LLM_MODEL="hf:nomic-ai/nomic-embed-text-v1.5"
 export LAT_LLM_DIMENSIONS="768"
 
-# `mise x` prepends the npm tool's own bin dir, so the real pi binary wins
-# over this wrapper regardless of PATH ordering. `fnox exec --replace` injects
-# secrets without a wrapper re-entry or extra process layer.
-exec "$fnox_bin" exec --replace -- "$mise_bin" x "npm:@earendil-works/pi-coding-agent" -- pi \
+# Resolve the real pi binary by absolute path. `mise x ... -- pi` used to be
+# safe because mise prepended the npm tool's bin dir ahead of everything, but
+# mise now splices tool paths into the existing PATH block, so this wrapper's
+# own ~/.local/bin export shadowed the real binary and the wrapper exec'd
+# itself forever. Fail closed on any resolution that points back here.
+pi_bin="$(MISE_AUTO_INSTALL=false "$mise_bin" which pi 2>/dev/null || true)"
+if [ -z "$pi_bin" ]; then
+  echo "pi: could not resolve the pi binary via mise which" >&2
+  exit 127
+fi
+self_real="$(realpath "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
+pi_real="$(realpath "$pi_bin" 2>/dev/null || echo "$pi_bin")"
+if [ "$pi_real" = "$self_real" ]; then
+  echo "pi: mise which pi resolved this wrapper (recursion); check the npm tool install" >&2
+  exit 127
+fi
+# `mise x` keeps the project/tool env for the process; the absolute binary
+# path sidesteps PATH shadowing. `fnox exec --replace` injects secrets
+# without a wrapper re-entry or extra process layer.
+exec "$fnox_bin" exec --replace -- "$mise_bin" x "npm:@earendil-works/pi-coding-agent" -- "$pi_bin" \
   "${profile_args[@]+"${profile_args[@]}"}" \
   "${pi_args[@]+"${pi_args[@]}"}"
