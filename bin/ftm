@@ -274,6 +274,7 @@ function __help() {
   printf -- "   Deterministic (non-picker) session lifecycle:\n"
   printf -- "     %s ensure --kind worktree|generic --cwd PATH --session NAME \\\n" "$__base"
   printf -- "         [--worktree-id ID] [--lease TOKEN] [--pi-session UUID] \\\n"
+  printf -- "         [--presentation cd|window|session] [--primary] \\\n"
   printf -- "         [--attach auto|never] [--format json|text]\n"
   printf -- "     %s repair ... [--restart-services]   additive repair of a recognized session\n" "$__base"
   printf -- "     %s remove --session NAME [--cwd PATH] [--discard-snapshot]\n" "$__base"
@@ -789,9 +790,10 @@ function fuzzy_find() {
 
 DET_CMD="" DET_KIND="" DET_CWD="" DET_SESSION="" DET_WID=""
 DET_LEASE="" DET_ATTACH=auto DET_FORMAT=text DET_PI_SESSION=""
+DET_PRESENTATION=session DET_PRIMARY=0
 DET_RESTART_SERVICES=0 DET_DISCARD_SNAPSHOT=0
 DET_GCD="" DET_OWNED_LEASE="" DET_SETUP_STATE=skipped
-DET_TMUX_ACTION="" DET_W_CODE="" DET_W_AGENT="" DET_W_SERVICES=""
+DET_TMUX_ACTION="" DET_W_CODE="" DET_W_AGENT="" DET_W_SERVICES="" DET_WINDOW_ID=""
 
 function det_json_escape() {
   local s="$1"
@@ -859,6 +861,14 @@ function det_parse() {
         esac
         shift 2
         ;;
+      --presentation)
+        [[ $# -ge 2 ]] || det_error 2 usage args 'missing value for --presentation'
+        DET_PRESENTATION="$2"; shift 2
+        [[ $DET_PRESENTATION == cd || $DET_PRESENTATION == window || $DET_PRESENTATION == session ]] || det_error 2 usage args '--presentation must be cd|window|session'
+        ;;
+      --primary)
+        [[ $DET_CMD == ensure || $DET_CMD == repair ]] || det_error 2 usage args '--primary is valid only for ensure/repair'
+        DET_PRIMARY=1; shift ;;
       --restart-services)
         DET_RESTART_SERVICES=1
         shift
@@ -880,6 +890,7 @@ function det_parse() {
   if [[ $DET_CMD == ensure || $DET_CMD == repair ]]; then
     [[ -n $DET_KIND ]] || det_error 2 usage args '--kind is required'
     [[ $DET_KIND == worktree || $DET_KIND == generic ]] || det_error 2 usage args "--kind must be worktree|generic"
+    [[ $DET_PRIMARY == 0 || $DET_KIND == worktree ]] || det_error 2 usage args '--primary requires --kind worktree'
     [[ -n $DET_CWD ]] || det_error 2 usage args '--cwd is required'
     if [[ $DET_KIND == worktree ]]; then
       [[ -n $DET_WID ]] || det_error 2 usage args '--worktree-id is required for --kind worktree'
@@ -951,7 +962,13 @@ function det_task_exists() { # $1 = mise task name, probed in the target cwd
 # mutation. A missing task is reported as missing, not failed.
 function det_run_setup() {
   if det_task_exists dev:setup; then
-    if (cd "$DET_CWD" && mise run dev:setup </dev/null >&2); then
+    # Worktree mode supplies the canonical GIT_WORKTREE so project env
+    # derivation (ports, db names) consumes the exact id instead of
+    # re-deriving it (setup runs in ftm's process, not a tmux pane, so the
+    # session environment does not apply here).
+    local -a setup_env=()
+    [[ $DET_KIND == worktree && -n $DET_WID && $DET_PRIMARY == 0 ]] && setup_env=("GIT_WORKTREE=$DET_WID")
+    if (cd "$DET_CWD" && env ${setup_env[@]+"${setup_env[@]}"} mise run dev:setup </dev/null >&2); then
       DET_SETUP_STATE=completed
     else
       det_error 4 setup_failed setup 'dev:setup exited nonzero'
@@ -990,7 +1007,11 @@ function det_build() {
   if [[ $DET_KIND == worktree ]]; then
     tmux set-option -t "$sid" @ftm_worktree "$DET_CWD"
     tmux set-option -t "$sid" @ftm_worktree_id "$DET_WID"
-    tmux setenv -t "$sid" GIT_WORKTREE "$DET_WID"
+    if [[ $DET_PRIMARY == 1 ]]; then
+      tmux setenv -u -t "$sid" GIT_WORKTREE 2>/dev/null || true
+    else
+      tmux setenv -t "$sid" GIT_WORKTREE "$DET_WID"
+    fi
   fi
 
   if [[ -n "$(det_window_id "$sid" code)" ]]; then
@@ -1006,11 +1027,23 @@ function det_build() {
   else
     # Exact-cwd Pi: tmux cwd AND process cwd both set to the canonical path;
     # pi -c continues the latest session stored for exactly that directory.
-    # An explicit Pi session UUID targets a known session instead.
+    # An explicit Pi session UUID targets a known session instead. Launch
+    # through `mise exec` when available so pi's process env carries the
+    # project's [env] (PHX_PORT etc.) — required for env-interpolated MCP
+    # URLs like ${PHX_PORT} — falling back to a direct exec without mise.
+    local pi_args
     if [[ -n $DET_PI_SESSION ]]; then
-      agent_cmd="cd -- $q && exec pi --session $DET_PI_SESSION"
+      pi_args="--session $DET_PI_SESSION"
     else
-      agent_cmd="cd -- $q && exec pi -c"
+      pi_args="-c"
+    fi
+    # The command string runs via tmux's default shell (possibly fish), so it
+    # must stay POSIX-and-fish portable: no if/then, just cd && exec. Mise
+    # availability is decided here in ftm, like det_task_exists.
+    if command -v mise >/dev/null 2>&1; then
+      agent_cmd="cd -- $q && exec mise exec -- pi $pi_args"
+    else
+      agent_cmd="cd -- $q && exec pi $pi_args"
     fi
     tmux new-window -d -t "$sid" -n agent -c "$DET_CWD" "$agent_cmd"
     DET_W_AGENT=created
@@ -1058,13 +1091,66 @@ function det_build() {
   fi
 }
 
+function det_window_build() {
+  local sid wid left right q candidate count=0 name path id roles cpath cid role
+  if [[ -z ${TMUX:-} || -z ${TMUX_PANE:-} ]]; then DET_PRESENTATION="cd"; return 0; fi
+  sid="$(tmux display-message -p -t "$TMUX_PANE" '#{session_id}' 2>/dev/null || true)"
+  if [[ -z $sid ]]; then DET_PRESENTATION="cd"; return 0; fi
+  q="$(printf %q "$DET_CWD")"
+  while IFS=$TAB read -r candidate name; do
+    path="$(tmux show-options -w -t "$candidate" -qv @ftm_worktree 2>/dev/null || true)"
+    id="$(tmux show-options -w -t "$candidate" -qv @ftm_worktree_id 2>/dev/null || true)"
+    if [[ $name == "wt:$DET_WID" && ($path != "$DET_CWD" || $id != "$DET_WID") ]]; then
+      det_error 5 window_conflict identity "window name '$name' is already used"
+    fi
+    if [[ $path == "$DET_CWD" || $id == "$DET_WID" ]]; then
+      [[ $path == "$DET_CWD" && $id == "$DET_WID" ]] || det_error 5 window_conflict identity 'window tags match only part of the worktree identity'
+      count=$((count + 1)); wid="$candidate"
+    fi
+  done < <(tmux list-windows -t "$sid" -F '#{window_id}'"$TAB"'#{window_name}' 2>/dev/null || true)
+  [[ $count -le 1 ]] || det_error 5 ambiguous_window identity 'multiple windows match the worktree'
+  if [[ $count == 1 ]]; then
+    roles="$(tmux list-panes -t "$wid" -F '#{pane_id}'"$TAB"'#{@ftm_role}'"$TAB"'#{@ftm_worktree}'"$TAB"'#{@ftm_worktree_id}' 2>/dev/null || true)"
+    left=; right=; cpath=; cid=; role=
+    while IFS=$TAB read -r candidate role cpath cid; do
+      [[ $cpath == "$DET_CWD" && $cid == "$DET_WID" ]] || det_error 5 window_conflict identity 'tagged pane identity does not match worktree'
+      case "$role" in code) left="$candidate" ;; services) right="$candidate" ;; *) det_error 5 window_conflict identity 'window has an unknown tagged pane role' ;; esac
+    done <<<"$roles"
+    [[ -n $left && -n $right ]] || det_error 5 window_conflict identity 'reused window lacks exact code/services panes'
+    [[ $(printf '%s\n' "$roles" | wc -l | tr -d ' ') == 2 ]] || det_error 5 window_conflict identity 'reused window must contain exactly two tagged panes'
+    DET_W_CODE="$left"; DET_W_SERVICES="$right"; DET_WINDOW_ID="$wid"; DET_TMUX_ACTION=reused
+    return 0
+  fi
+  wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n "wt:$DET_WID" -c "$DET_CWD")" || det_error 7 tmux_failed tmux 'could not create worktree window'
+  tmux set-option -w -t "$wid" @ftm_kind worktree
+  tmux set-option -w -t "$wid" @ftm_worktree "$DET_CWD"
+  tmux set-option -w -t "$wid" @ftm_worktree_id "$DET_WID"
+  tmux set-option -w -t "$wid" @ftm_role worktree
+  left="$(tmux display-message -p -t "$wid" '#{pane_id}')"
+  right="$(tmux split-window -h -p 40 -d -P -F '#{pane_id}' -t "$left" -c "$DET_CWD")" || det_error 7 tmux_failed tmux 'could not split worktree window'
+  tmux set-option -p -t "$left" @ftm_worktree "$DET_CWD"; tmux set-option -p -t "$left" @ftm_worktree_id "$DET_WID"; tmux set-option -p -t "$left" @ftm_role code
+  tmux set-option -p -t "$right" @ftm_worktree "$DET_CWD"; tmux set-option -p -t "$right" @ftm_worktree_id "$DET_WID"; tmux set-option -p -t "$right" @ftm_role services
+  if [[ $DET_PRIMARY == 1 ]]; then
+    tmux send-keys -t "$left" 'unset GIT_WORKTREE' Enter
+  else
+    tmux send-keys -t "$left" "export GIT_WORKTREE=$(printf %q "$DET_WID")" Enter
+  fi
+  tmux set-option -w -t "$wid" remain-on-exit on
+  if det_task_exists dev:services; then
+    if [[ $DET_PRIMARY == 1 ]]; then tmux respawn-pane -k -t "$right" "unset GIT_WORKTREE; cd -- $q && exec mise run dev:services"; else tmux respawn-pane -k -t "$right" "export GIT_WORKTREE=$(printf %q "$DET_WID"); cd -- $q && exec mise run dev:services"; fi
+  else
+    if [[ $DET_PRIMARY == 1 ]]; then tmux send-keys -t "$right" 'unset GIT_WORKTREE' Enter; else tmux send-keys -t "$right" "export GIT_WORKTREE=$(printf %q "$DET_WID")" Enter; fi
+  fi
+  DET_W_CODE="$left"; DET_W_SERVICES="$right"; DET_TMUX_ACTION=created; DET_WINDOW_ID="$wid"
+}
+
 function det_emit_ok() {
   det_release_locks
   if [[ $DET_FORMAT == json ]]; then
-    printf '{"schema_version":1,"command":"%s","status":"ok","kind":"%s","session":"%s","cwd":"%s","setup":{"state":"%s"},"tmux":{"session":"%s","action":"%s","windows":{"code":"%s","agent":"%s","services":"%s"}},"attached":false,"warnings":[]}\n' \
+    printf '{"schema_version":1,"command":"%s","status":"ok","kind":"%s","session":"%s","cwd":"%s","setup":{"state":"%s"},"presentation":"%s","tmux":{"session":"%s","window_id":"%s","left_pane":"%s","action":"%s","windows":{"code":"%s","agent":"%s","services":"%s"}},"attached":false,"warnings":[]}\n' \
       "$(det_json_escape "$DET_CMD")" "$(det_json_escape "$DET_KIND")" \
       "$(det_json_escape "$DET_SESSION")" "$(det_json_escape "$DET_CWD")" \
-      "$DET_SETUP_STATE" "$(det_json_escape "$DET_SESSION")" "$DET_TMUX_ACTION" \
+      "$DET_SETUP_STATE" "$DET_PRESENTATION" "$(det_json_escape "$DET_SESSION")" "$DET_WINDOW_ID" "$DET_W_CODE" "$DET_TMUX_ACTION" \
       "$DET_W_CODE" "$DET_W_AGENT" "$DET_W_SERVICES"
   else
     printf 'ftm %s: session %s %s (code=%s agent=%s services=%s setup=%s)\n' \
@@ -1104,18 +1190,24 @@ function det_ensure() {
     fi
   fi
   local sid conflicts
-  if [[ $DET_KIND == worktree ]]; then
+  if [[ $DET_PRESENTATION == session && $DET_KIND == worktree ]]; then
     conflicts="$(det_find_tagged_conflicts)"
     [[ -z $conflicts ]] ||
       det_error 5 ambiguous_session identity "other sessions tagged for this worktree: ${conflicts//$'\n'/, }"
   fi
-  if sid="$(session_id_for "$DET_SESSION")"; then
+  if sid="$(session_id_for "$DET_SESSION")" && [[ $DET_PRESENTATION == session ]]; then
     det_validate_existing "$sid"
   fi
   det_run_setup
-  det_build
+  if [[ $DET_PRESENTATION == cd ]]; then
+    DET_TMUX_ACTION=skipped
+  elif [[ $DET_PRESENTATION == window ]]; then
+    det_window_build
+  else
+    det_build
+  fi
   det_emit_ok
-  det_attach
+  [[ $DET_PRESENTATION == session ]] && det_attach
   exit 0
 }
 
