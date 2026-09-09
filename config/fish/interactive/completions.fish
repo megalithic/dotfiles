@@ -18,17 +18,22 @@ complete -c mix -xa "(__fish_mix_tasks)"
 
 # Worktrunk smart wrapper completions (local `wt` fish function).
 function __fish_wt_worktrees
-    set -l wt_bin "$WORKTRUNK_BIN"
-    test -z "$wt_bin"; and set wt_bin (command -s wt)
-    test -z "$wt_bin"; and return 0
+    set -l wt_bin ~/.dotfiles/bin/wt
+    test -x "$wt_bin"; or return 0
 
-    $wt_bin list --format=json 2>/dev/null | jq -r '.[] | "\(.branch)\t\(.path)"' 2>/dev/null
+    $wt_bin list --json 2>/dev/null | jq -r '.items[] | "\(.branch)\t\(.worktree.path // .remote // \"remote\")"' 2>/dev/null
 end
 
 # Subcommands (kept visible since upstream fish init is disabled).
-complete -c wt -n __fish_use_subcommand -f -a switch -d 'Switch to a worktree; create if needed'
+complete -c wt -n __fish_use_subcommand -f -a switch -d 'Use the upstream Worktrunk switch command'
+complete -c wt -n __fish_use_subcommand -f -a ensure -d 'Ensure setup and canonical session without attaching'
+complete -c wt -n __fish_use_subcommand -f -a new -d 'Create and set up a new worktree'
+complete -c wt -n __fish_use_subcommand -f -a open -d 'Open the canonical worktree session'
+complete -c wt -n __fish_use_subcommand -f -a path -d 'Print the canonical worktree path'
+complete -c wt -n __fish_use_subcommand -f -a repair -d 'Repair setup and canonical session'
+complete -c wt -n __fish_use_subcommand -f -a prune -d 'Safely remove an integrated worktree'
 complete -c wt -n __fish_use_subcommand -f -a list -d 'List worktrees'
-complete -c wt -n __fish_use_subcommand -f -a remove -d 'Remove a worktree'
+complete -c wt -n __fish_use_subcommand -f -a remove -d 'Use the upstream Worktrunk remove command'
 complete -c wt -n __fish_use_subcommand -f -a merge -d 'Merge current branch into target'
 complete -c wt -n __fish_use_subcommand -f -a select -d 'Select a worktree'
 complete -c wt -n __fish_use_subcommand -f -a step -d 'Render hook template step'
@@ -39,8 +44,8 @@ complete -c wt -n __fish_use_subcommand -f -a config -d 'Manage Worktrunk config
 complete -c wt -n '__fish_seen_subcommand_from switch' -f -a '(__fish_wt_worktrees)' -d Worktree
 complete -c wt -n __fish_use_subcommand -f -a '(__fish_wt_worktrees)' -d Worktree
 
-# Local tmux target option.
-complete -c wt -s t -l target -x -a 'window session' -d 'tmux target'
+# Worktree presentation target: current shell by default, or tmux window/session.
+complete -c wt -s t -l target -x -a 'cd window w session s' -d 'presentation target'
 
 # Pi /piview scopes (pview wrapper)
 for scope in uncommitted unpushed branch pr ticket worktrees
