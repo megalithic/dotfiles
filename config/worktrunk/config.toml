@@ -1,1 +1,4 @@
 worktree-path = "{{ repo_path }}/.worktrees/{{ branch | sanitize }}"
+
+[list]
+json-schema = 2
