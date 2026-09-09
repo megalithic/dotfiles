@@ -978,6 +978,12 @@ function det_run_setup() {
   fi
 }
 
+function det_shell_pane() { # $1 = target; true when the pane runs a plain interactive shell
+  local cmd
+  cmd="$(tmux display-message -p -t "$1" '#{pane_current_command}' 2>/dev/null || true)"
+  case "$cmd" in fish | bash | zsh | sh | dash | ksh) return 0 ;; *) return 1 ;; esac
+}
+
 function det_window_id() { # $1 = session id, $2 = exact window name
   tmux list-windows -t "$1" -F '#{window_id} #{window_name}' 2>/dev/null |
     awk -v n="$2" '$2 == n { print $1; exit }' || true
@@ -991,8 +997,7 @@ function det_services_window_id() { # $1 = session id; recognizes legacy service
 # Additive canonical layout: create only missing code/agent/services windows,
 # tag the session, and never touch unrelated windows or panes.
 function det_build() {
-  local sid q agent_cmd wid wname pcwd created_any=0
-  q="$(printf %q "$DET_CWD")"
+  local sid agent_cmd wid wname pcwd created_any=0
   if sid="$(session_id_for "$DET_SESSION")"; then
     DET_TMUX_ACTION=reused
   else
@@ -1030,22 +1035,26 @@ function det_build() {
     # An explicit Pi session UUID targets a known session instead. Launch
     # through `mise exec` when available so pi's process env carries the
     # project's [env] (PHX_PORT etc.) — required for env-interpolated MCP
-    # URLs like ${PHX_PORT} — falling back to a direct exec without mise.
+    # URLs like ${PHX_PORT} — falling back to a direct launch without mise.
     local pi_args
     if [[ -n $DET_PI_SESSION ]]; then
       pi_args="--session $DET_PI_SESSION"
     else
       pi_args="-c"
     fi
-    # The command string runs via tmux's default shell (possibly fish), so it
-    # must stay POSIX-and-fish portable: no if/then, just cd && exec. Mise
-    # availability is decided here in ftm, like det_task_exists.
+    # The window is a plain interactive shell and the command is typed via
+    # send-keys: the shell's job control keeps pi as the foreground process
+    # (pane_current_command stays node for pi detection), and cancelling or
+    # exiting pi returns to the shell prompt instead of killing the window.
+    # The typed line must stay POSIX-and-fish portable.
     if command -v mise >/dev/null 2>&1; then
-      agent_cmd="cd -- $q && exec mise exec -- pi $pi_args"
+      agent_cmd="mise exec -- pi $pi_args"
     else
-      agent_cmd="cd -- $q && exec pi $pi_args"
+      agent_cmd="pi $pi_args"
     fi
-    tmux new-window -d -t "$sid" -n agent -c "$DET_CWD" "$agent_cmd"
+    wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n agent -c "$DET_CWD")" ||
+      det_error 7 tmux_failed tmux 'could not create agent window'
+    tmux send-keys -t "$wid" "$agent_cmd" Enter
     DET_W_AGENT=created
     created_any=1
   fi
@@ -1060,9 +1069,13 @@ function det_build() {
       pcwd="$(tmux display-message -p -t "$wid" '#{pane_current_path}' 2>/dev/null || true)"
       [[ $pcwd == "$DET_CWD" ]] && tmux rename-window -t "$wid" services 2>/dev/null || true
     fi
-    if [[ "$(tmux display-message -p -t "$wid" '#{pane_dead}' 2>/dev/null || true)" == 1 ]]; then
+    # Stopped = dead pane, OR a plain shell sitting where the runner should be
+    # (the runner was cancelled back to the prompt) while dev:services exists.
+    if [[ "$(tmux display-message -p -t "$wid" '#{pane_dead}' 2>/dev/null || true)" == 1 ]] ||
+      { det_task_exists dev:services && det_shell_pane "$wid"; }; then
       if [[ $DET_CMD == repair && $DET_RESTART_SERVICES == 1 ]] && det_task_exists dev:services; then
-        tmux respawn-pane -k -t "$wid" "cd -- $q && exec mise run dev:services"
+        tmux respawn-pane -k -t "$wid" -c "$DET_CWD"
+        tmux send-keys -t "$wid" 'mise run dev:services' Enter
         DET_W_SERVICES=started
         created_any=1
       else
@@ -1072,13 +1085,15 @@ function det_build() {
       DET_W_SERVICES=present
     fi
   else
-    # Create the window with a shell first so remain-on-exit is set before the
-    # service command can exit (startup failures stay visible).
+    # The window is a plain interactive shell with remain-on-exit set before
+    # the runner is typed via send-keys: job control keeps `mise` as the
+    # foreground process, startup failures stay visible, and cancelling the
+    # runner returns to the shell prompt instead of killing the pane.
     wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n services -c "$DET_CWD")" ||
       det_error 7 tmux_failed tmux 'could not create services window'
     tmux set-option -w -t "$wid" remain-on-exit on
     if det_task_exists dev:services; then
-      tmux respawn-pane -k -t "$wid" "cd -- $q && exec mise run dev:services"
+      tmux send-keys -t "$wid" 'mise run dev:services' Enter
       DET_W_SERVICES=started
     else
       DET_W_SERVICES=shell
@@ -1092,11 +1107,10 @@ function det_build() {
 }
 
 function det_window_build() {
-  local sid wid left right q candidate count=0 name path id roles cpath cid role
+  local sid wid left right candidate count=0 name path id roles cpath cid role
   if [[ -z ${TMUX:-} || -z ${TMUX_PANE:-} ]]; then DET_PRESENTATION="cd"; return 0; fi
   sid="$(tmux display-message -p -t "$TMUX_PANE" '#{session_id}' 2>/dev/null || true)"
   if [[ -z $sid ]]; then DET_PRESENTATION="cd"; return 0; fi
-  q="$(printf %q "$DET_CWD")"
   while IFS=$TAB read -r candidate name; do
     path="$(tmux show-options -w -t "$candidate" -qv @ftm_worktree 2>/dev/null || true)"
     id="$(tmux show-options -w -t "$candidate" -qv @ftm_worktree_id 2>/dev/null || true)"
@@ -1136,10 +1150,16 @@ function det_window_build() {
     tmux send-keys -t "$left" "export GIT_WORKTREE=$(printf %q "$DET_WID")" Enter
   fi
   tmux set-option -w -t "$wid" remain-on-exit on
-  if det_task_exists dev:services; then
-    if [[ $DET_PRIMARY == 1 ]]; then tmux respawn-pane -k -t "$right" "unset GIT_WORKTREE; cd -- $q && exec mise run dev:services"; else tmux respawn-pane -k -t "$right" "export GIT_WORKTREE=$(printf %q "$DET_WID"); cd -- $q && exec mise run dev:services"; fi
+  # The right pane stays a plain interactive shell; env and runner are typed
+  # via send-keys so cancelling the runner returns to the prompt instead of
+  # killing the pane. `export`/`unset` work in both fish and POSIX shells.
+  if [[ $DET_PRIMARY == 1 ]]; then
+    tmux send-keys -t "$right" 'unset GIT_WORKTREE' Enter
   else
-    if [[ $DET_PRIMARY == 1 ]]; then tmux send-keys -t "$right" 'unset GIT_WORKTREE' Enter; else tmux send-keys -t "$right" "export GIT_WORKTREE=$(printf %q "$DET_WID")" Enter; fi
+    tmux send-keys -t "$right" "export GIT_WORKTREE=$(printf %q "$DET_WID")" Enter
+  fi
+  if det_task_exists dev:services; then
+    tmux send-keys -t "$right" 'mise run dev:services' Enter
   fi
   DET_W_CODE="$left"; DET_W_SERVICES="$right"; DET_TMUX_ACTION=created; DET_WINDOW_ID="$wid"
 }
