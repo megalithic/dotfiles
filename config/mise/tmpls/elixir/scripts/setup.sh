@@ -25,3 +25,9 @@ create_db() {
 
 create_db
 create_db MIX_ENV=test
+
+# Fresh (per-worktree) databases are empty after create; services crash on
+# missing tables without this. ecto.migrate covers every configured repo and
+# is idempotent on already-migrated databases.
+mix ecto.migrate
+env MIX_ENV=test mix ecto.migrate
