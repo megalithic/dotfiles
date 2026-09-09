@@ -1,6 +1,6 @@
 ---
 id: dot-1u0w
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-06-24T20:32:00Z
@@ -61,3 +61,7 @@ Relevant files/directories:
 8. Worktrunk approvals and mise trust behavior are documented in the ticket implementation notes or `lat.md` as appropriate.
 9. Relevant `lat.md` sections are updated for any changed architecture docs and `lat_check` passes if docs changed.
 10. Existing validation still passes with the narrowest applicable command, likely `devenv shell -- just validate home` or documented equivalent if implementation is script-only.
+
+## Closure note (2026-09-09)
+
+Superseded by the Worktrunk-retaining wt v2 workflow: `bin/wt` + `bin/wt-v2-lib` own setup/session/cleanup deterministically (`wt NAME` cd presentation, `-t w|s` tmux presentations, `wt repair`, `wt prune`), `bin/ftm ensure|repair|remove` owns canonical sessions, and project setup/services run through mise template tasks (`dev:setup`/`dev:services`, stub-and-include model via `mise-tmpl-gen`). The hook-based helper-script approach this ticket targeted was deliberately not built; hooks remain minimal (`mise trust`, services-cmd install) in tmpls wt.local.toml.
