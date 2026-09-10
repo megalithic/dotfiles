@@ -62,17 +62,25 @@ if [ -s "$cache" ]; then
   cat "$cache"
   exit 0
 fi
+# Mise evaluates this script before adding configured tools to PATH. Use the
+# globally managed Elixir in that case, without triggering an installation.
+elixir_cmd=()
 if command -v elixir >/dev/null 2>&1; then
-  port="$(GIT_WORKTREE="$wt" elixir -e '
-    offset =
-      case System.get_env("GIT_WORKTREE") do
-        w when w in [nil, ""] -> 0
-        w -> :erlang.phash2(w, 1000)
-      end
-    IO.puts(4000 + offset)')"
-  mkdir -p "$(dirname "$cache")"
-  echo "$port" >"$cache"
-  echo "$port"
-else
-  echo "$base"
+  elixir_cmd=(elixir)
+elif command -v mise >/dev/null 2>&1; then
+  elixir_cmd=(mise exec --cd "$HOME" -- elixir)
 fi
+if [ "${#elixir_cmd[@]}" -eq 0 ]; then
+  echo "$base"
+  exit 0
+fi
+port="$(GIT_WORKTREE="$wt" MISE_AUTO_INSTALL=false "${elixir_cmd[@]}" -e '
+  offset =
+    case System.get_env("GIT_WORKTREE") do
+      w when w in [nil, ""] -> 0
+      w -> :erlang.phash2(w, 1000)
+    end
+  IO.puts(4000 + offset)')"
+mkdir -p "$(dirname "$cache")"
+echo "$port" >"$cache"
+echo "$port"
