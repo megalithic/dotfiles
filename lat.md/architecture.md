@@ -45,7 +45,7 @@ External overlays and input aliases live separately in `nix/overlays/default.nix
 
 The legacy `config/` out-of-store tree is retired (2026-08): every app config lives under `config/<tool>/` and is linked by mise `[dotfiles]`.
 
-The last holdouts flipped as follows: kanata's `.kbd` profiles and icons moved to `config/kanata/` (`scripts/mise/setup-kanata` icons fallback repointed too), `~/.ssh/config` became host-specific (`config/ssh/config.<hostname>`, each `Include`-ing `config/ssh/shared.config`; mapped from `config/mise/hosts/*.toml`, not the global `[dotfiles]`), and `~/.iex.exs` links to `home/iex.exs`. Shared SSH config gives both laptops bare-name and `.local` aliases, pins LAN authentication to the 1Password agent's `~/.ssh/id_ed25519.pub`, and accepts newly seen host keys. `home/` is the location for sources symlinked to `~/*` dotfiles; `config/` for `~/.config/*` targets. DevSpace ssh blocks were dropped from the ssh configs (devspace is no longer used). The `linkConfig` helper in `nix/home/common/lib.nix` has no callers. Config fragments that need Nix-interpolated values are generated into `~/.local/share/...` and sourced from the live config.
+The last holdouts flipped as follows: kanata's `.kbd` profiles and icons moved to `config/kanata/` (`scripts/mise/setup-kanata` icons fallback repointed too), `~/.ssh/config` became host-specific (`config/ssh/config.<hostname>`, each `Include`-ing `config/ssh/shared.config`; mapped from `config/mise/config.<hostname>.toml`, not the global `[dotfiles]`), and `~/.iex.exs` links to `home/iex.exs`. Shared SSH config gives both laptops bare-name and `.local` aliases, pins LAN authentication to the 1Password agent's `~/.ssh/id_ed25519.pub`, and accepts newly seen host keys. `home/` is the location for sources symlinked to `~/*` dotfiles; `config/` for `~/.config/*` targets. DevSpace ssh blocks were dropped from the ssh configs (devspace is no longer used). The `linkConfig` helper in `nix/home/common/lib.nix` has no callers. Config fragments that need Nix-interpolated values are generated into `~/.local/share/...` and sourced from the live config.
 
 ## Parallel mise migration
 
@@ -92,9 +92,9 @@ when missing. `clean` and `bin/smoke-test-macos.sh` retain their safety fallback
 stale shells would otherwise run `mise prune` blind to host config and delete
 host-scoped tool installs.
 
-Host files live at `config/mise/hosts/{megabookpro,workbookpro}.toml`.
-The global `[dotfiles]` table links both onto every machine; only the file
-matching `MISE_ENV` is loaded, so unused links are inert.
+Host files live at `config/mise/config.{megabookpro,workbookpro}.toml`.
+The global `[dotfiles]` table links the containing `config/mise/` directory;
+only the file matching `MISE_ENV` is loaded, so the other overlay is inert.
 
 megabookpro's file owns AirConnect: the `github:philippe44/AirConnect` tool
 (release zip carries all-platform binaries; postinstall chmods the macOS

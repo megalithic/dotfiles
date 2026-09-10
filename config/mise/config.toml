@@ -210,7 +210,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.config/kanata/icons" = "~/.dotfiles/config/kanata/icons"
 
 # -- SSH: individual files (directory holds mutable keys/known_hosts).
-#    ~/.ssh/config is host-specific: mapped in hosts/*.toml to
+#    ~/.ssh/config is host-specific: mapped in config.<hostname>.toml to
 #    config/ssh/config.<hostname>, each Include-ing shared.config. --
 "~/.ssh/allowed_signers" = "~/.dotfiles/config/ssh/allowed_signers"
 # 1Password SSH agent key selection (vault/item); GUI (cask) + CLI (formula)
