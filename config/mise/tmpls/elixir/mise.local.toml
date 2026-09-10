@@ -44,7 +44,7 @@ PHX_PORT = { default = "{{ exec(command='cd \"' ~ cwd ~ '\" 2>/dev/null; bash \"
 # extract_all: unpack the whole distribution (bin/ lib/ share/ include/);
 # bin_path: without it, PATH would point at the archive root instead of bin/.
 "ubi:theseus-rs/postgresql-binaries" = { version = "18.4.0", extract_all = "true", bin_path = "bin" }
-expert = "0.1.5"
+expert = "0.1.10"
 jq = "latest" # bootstrap:pi merges tidewave into .pi/mcp.json
 
 [task_config]
