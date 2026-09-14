@@ -4,19 +4,22 @@
  *
  * This replaces the shell-script tell skill for Pi instance targeting. It sends
  * line-delimited JSON to the existing Pi/pinvim socket for a selected running Pi
- * instance. The receiver injects the message as a user prompt, and can reply by
- * using /tell or the tell_pi tool back to the origin instance.
+ * instance. New peers use pi.control.v1 and fall back to pi.tell.v1 only when an
+ * older peer explicitly rejects the control envelope. The receiver injects the
+ * message as a user prompt and can reply with /tell or tell_pi.
  */
 
 import { execFile } from "node:child_process";
 import crypto from "node:crypto";
 import fsp from "node:fs/promises";
 import net from "node:net";
+import os from "node:os";
 import path from "node:path";
 import type {
 	ExtensionAPI,
 	ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
+import { StringEnum } from "@earendil-works/pi-ai";
 import { Type } from "typebox";
 
 const xdgStateHome =
@@ -33,11 +36,17 @@ const PING_TIMEOUT_MS = 1000;
 const PING_ATTEMPTS = 2;
 const SSH_TIMEOUT_MS = 5000;
 const KNOWN_MACHINE_ALIASES = new Set(["megabookpro", "workbookpro"]);
+const CONTROL_PROTOCOL = "pi.control.v1";
+
+type DeliveryMode = "steer" | "follow_up";
+type ControlOperation = "sessions.list" | "message.last" | "message.send";
 
 type TmuxInfo = {
 	session: string;
 	window: string;
+	windowIndex?: string;
 	pane?: string;
+	paneIndex?: string;
 };
 
 type PiManifest = {
@@ -46,14 +55,18 @@ type PiManifest = {
 	root?: string;
 	pid?: number;
 	session?: string;
+	sessionId?: string | null;
+	sessionName?: string | null;
 	window?: string;
+	windowIndex?: string;
 	pane?: string;
+	paneIndex?: string;
 	owner?: string;
 	role?: string;
 	linkMode?: string;
 	ephemeral?: boolean;
 	startedAt?: string;
-	heartbeatAt?: number;
+	heartbeatAt?: number | string;
 };
 
 type Candidate = {
@@ -61,7 +74,16 @@ type Candidate = {
 	id: string;
 	label: string;
 	searchText: string;
+	machine?: string;
+	windowIndex?: string;
+	windowName?: string;
+	displayTitle?: string;
+	paneTitle?: string;
+	paneIndex?: string;
+	state?: string;
 	session?: string;
+	sessionId?: string | null;
+	sessionName?: string | null;
 	window?: string;
 	pane?: string;
 	cwd?: string;
@@ -74,6 +96,7 @@ type Candidate = {
 
 type SendResult = {
 	ok: boolean;
+	candidates?: Candidate[];
 	target?: Candidate;
 	id?: string;
 	response?: unknown;
@@ -92,6 +115,7 @@ type TellRoute = {
 	machine?: string;
 	target?: string;
 	message: string;
+	mode?: DeliveryMode;
 };
 
 type OriginInfo = {
@@ -102,6 +126,25 @@ type OriginInfo = {
 type TellPayloadOptions = {
 	includeMachineReply: boolean;
 	includeFromSocket: boolean;
+	mode?: DeliveryMode;
+};
+
+type ControlRequest = {
+	type: "control";
+	protocol: "pi.control.v1";
+	id: string;
+	operation: ControlOperation;
+	params: Record<string, unknown>;
+};
+
+type ControlResponse = {
+	ok: boolean;
+	type: "control_response";
+	protocol: "pi.control.v1";
+	id: string;
+	operation: ControlOperation;
+	data?: unknown;
+	error?: string;
 };
 
 type SelectionResult =
@@ -171,7 +214,7 @@ const detectTmux = (): Promise<TmuxInfo | null> =>
 				"display-message",
 				"-p",
 				...(process.env.TMUX_PANE ? ["-t", process.env.TMUX_PANE] : []),
-				"#{session_name}\t#{window_name}\t#{window_index}\t#{pane_id}",
+				"#{session_name}\t#{window_name}\t#{window_index}\t#{pane_id}\t#{pane_index}",
 			],
 			{ encoding: "utf-8", timeout: 2000 },
 			(err, stdout) => {
@@ -179,18 +222,24 @@ const detectTmux = (): Promise<TmuxInfo | null> =>
 					resolve(null);
 					return;
 				}
-				const [session, windowName, windowIndex, pane] = stdout.trim().split("\t");
+				const [session, windowName, windowIndex, pane, paneIndex] = stdout
+					.trim()
+					.split("\t");
 				const window =
 					windowName && /^[a-zA-Z0-9_-]+$/.test(windowName)
 						? windowName
 						: windowIndex;
-				resolve(session && window ? { session, window, pane } : null);
+				resolve(
+					session && window
+						? { session, window, windowIndex, pane, paneIndex }
+						: null,
+				);
 			},
 		);
 	});
 
 const currentMachineName = (): string | undefined => {
-	const raw = process.env.HOSTNAME || process.env.HOST || "";
+	const raw = process.env.HOSTNAME || process.env.HOST || os.hostname();
 	const name = raw.split(".")[0]?.trim();
 	return name || undefined;
 };
@@ -209,12 +258,16 @@ const utf8Bytes = (value: string): number =>
 	new TextEncoder().encode(value).length;
 
 /**
- * Build socket path for a session/window pair. Mirrors bridge.ts: when the
- * full path exceeds the sun_path limit, truncate the name and append a
- * deterministic 8-char sha256 suffix.
+ * Build the socket path for a tmux pane. Mirrors bridge.ts: when the full path
+ * exceeds the sun_path limit, truncate the name and append a deterministic
+ * 8-char sha256 suffix.
  */
-const buildSocketPath = (session: string, window: string): string => {
-	const name = `${session}-${window}`;
+const buildSocketPath = (
+	session: string,
+	window: string,
+	paneId?: string,
+): string => {
+	const name = [session, window, paneId].filter(Boolean).join("-");
 	const full = `${SOCKET_DIR}/${SOCKET_PREFIX}-${name}.sock`;
 	if (utf8Bytes(full) <= MAX_SOCKET_PATH_BYTES) return full;
 	const fixed = utf8Bytes(`${SOCKET_DIR}/${SOCKET_PREFIX}-.sock`) + 9; // "-" + 8 hex
@@ -231,7 +284,7 @@ const currentSocketPath = async (): Promise<string | null> => {
 	if (process.env.PI_SOCKET) return process.env.PI_SOCKET;
 	const tmux = await detectTmux();
 	if (tmux) {
-		return buildSocketPath(tmux.session, tmux.window);
+		return buildSocketPath(tmux.session, tmux.window, tmux.pane);
 	}
 	return path.join(SOCKET_DIR, `${SOCKET_PREFIX}-default-0.sock`);
 };
@@ -292,11 +345,20 @@ const labelFor = (
 ): string => {
 	const session = candidate.session || "?";
 	const window = candidate.window || "?";
+	const address =
+		candidate.windowIndex && candidate.paneIndex
+			? `${session}:${candidate.windowIndex}.${candidate.paneIndex}`
+			: `${session}:${window}`;
 	const cwd = compactPath(candidate.cwd || candidate.root);
 	const pane = candidate.pane ? ` ${candidate.pane}` : "";
 	const current = candidate.current ? " current" : "";
 	const status = candidate.reachable ? "" : " busy/unreachable";
-	return `${session}:${window}${pane} — ${cwd}${current}${status}`;
+	const title = candidate.displayTitle || candidate.paneTitle;
+	const machine = candidate.machine ? `${candidate.machine} ` : "";
+	const logicalName = candidate.sessionName ? ` {${candidate.sessionName}}` : "";
+	const logicalId = candidate.sessionId ? ` <${candidate.sessionId}>` : "";
+	const id = candidate.id ? ` [${candidate.id}]` : "";
+	return `${machine}${address}${pane}${title ? ` ${title}` : ""}${logicalName}${logicalId} — ${cwd}${current}${status}${id}`;
 };
 
 const buildCandidate = (
@@ -307,13 +369,26 @@ const buildCandidate = (
 ): Candidate => {
 	const parsed = parseSocketName(socket);
 	const base = path.basename(socket).replace(/\.sock$/, "");
+	const stableId = [
+		currentMachineName() || "local",
+		manifest?.session || parsed.session || "?",
+		manifest?.window || parsed.window || "?",
+		manifest?.pane || manifest?.pid || base,
+	].join(":");
 	const partial = {
 		socket,
-		id: parsed.id || base,
+		id: stableId,
 		session: manifest?.session || parsed.session,
+		sessionId: manifest?.sessionId,
+		sessionName: manifest?.sessionName,
 		window: manifest?.window || parsed.window,
 		pane: manifest?.pane,
+		paneIndex: manifest?.paneIndex,
 		cwd: manifest?.cwd,
+		machine: currentMachineName(),
+		state: reachable ? "reachable" : "orphaned/unreachable",
+		windowIndex: manifest?.windowIndex,
+		windowName: manifest?.window,
 		root: manifest?.root,
 		pid: manifest?.pid,
 		current: socket === currentSocket,
@@ -324,8 +399,12 @@ const buildCandidate = (
 	const searchText = [
 		partial.id,
 		partial.session,
+		partial.sessionId,
+		partial.sessionName,
 		partial.window,
 		partial.pane,
+		partial.paneIndex,
+		partial.windowIndex,
 		partial.cwd,
 		partial.root,
 		path.basename(socket),
@@ -337,9 +416,110 @@ const buildCandidate = (
 	return { ...partial, label, searchText };
 };
 
+const listTmuxPanes = (): Promise<
+	Array<{
+		session: string;
+		window: string;
+		windowIndex: string;
+		windowName: string;
+		pane: string;
+		paneIndex: string;
+		title: string;
+		cwd?: string;
+		pid?: number;
+	}>
+> =>
+	new Promise((resolve) => {
+		execFile(
+			"tmux",
+			[
+				"list-panes",
+				"-a",
+				"-F",
+				"#{session_name}\t#{window_index}\t#{window_name}\t#{pane_id}\t#{pane_index}\t#{pane_title}\t#{pane_pid}\t#{pane_current_path}",
+			],
+			{ encoding: "utf8", timeout: 2000 },
+			(err, stdout) => {
+				if (err) return resolve([]);
+				const rows = stdout
+					.trim()
+					.split(/\r?\n/)
+					.filter(Boolean)
+					.map((line) => {
+						const [
+							session,
+							windowIndex,
+							windowName,
+							pane,
+							paneIndex,
+							title,
+							pid,
+							cwd,
+						] = line.split("\t");
+						return {
+							session,
+							window: /^[a-zA-Z0-9_-]+$/.test(windowName || "")
+								? windowName
+								: windowIndex,
+							windowIndex,
+							windowName,
+							pane,
+							paneIndex,
+							title,
+							cwd,
+							panePid: Number(pid) || undefined,
+						};
+					});
+				execFile(
+					"ps",
+					["-axo", "pid=,ppid=,command="],
+					{ encoding: "utf8", timeout: 2000 },
+					(psErr, psOut) => {
+						if (psErr) return resolve([]);
+						const commands = new Map<number, string>();
+						const children = new Map<number, number[]>();
+						for (const line of psOut.trim().split(/\r?\n/)) {
+							const match = line.trim().match(/^(\d+)\s+(\d+)\s+(.*)$/);
+							if (!match) continue;
+							const pid = Number(match[1]),
+								ppid = Number(match[2]);
+							commands.set(pid, match[3]);
+							children.set(ppid, [...(children.get(ppid) || []), pid]);
+						}
+						const piDescendant = (root: number | undefined): number | undefined => {
+							const queue = root ? [root] : [];
+							const seen = new Set<number>();
+							while (queue.length) {
+								const pid = queue.shift()!;
+								if (seen.has(pid)) continue;
+								seen.add(pid);
+								if (/(?:^|[/\s])pi(?:\s|$)/i.test(commands.get(pid) || "")) return pid;
+								queue.push(...(children.get(pid) || []));
+							}
+							return undefined;
+						};
+						resolve(
+							rows.flatMap(({ panePid, ...row }) => {
+								if (
+									/eph|ephemeral/i.test(
+										`${row.title || ""} ${row.session || ""} ${row.windowName || ""}`,
+									)
+								)
+									return [];
+								const pid = piDescendant(panePid);
+								return pid ? [{ ...row, pid }] : [];
+							}),
+						);
+					},
+				);
+			},
+		);
+	});
+
 const discoverCandidates = async (): Promise<Candidate[]> => {
 	const currentSocket = await currentSocketPath();
 	const bySocket = new Map<string, PiManifest | undefined>();
+	const ignoredSockets = new Set<string>();
 
 	if (await fileExists(MANIFEST_DIR)) {
 		const entries = await fsp.readdir(MANIFEST_DIR);
@@ -347,9 +527,10 @@ const discoverCandidates = async (): Promise<Candidate[]> => {
 			if (!entry.endsWith(".info")) continue;
 			const manifest = await readManifest(path.join(MANIFEST_DIR, entry));
 			if (!manifest?.socket) continue;
-			if (manifest.ephemeral) continue;
-			if (!pidAlive(manifest.pid)) continue;
-			if (!(await isSocket(manifest.socket))) continue;
+			if (manifest.ephemeral) {
+				ignoredSockets.add(manifest.socket);
+				continue;
+			}
 			bySocket.set(manifest.socket, manifest);
 		}
 	}
@@ -362,7 +543,7 @@ const discoverCandidates = async (): Promise<Candidate[]> => {
 			}
 			if (entry.includes("-eph-")) continue;
 			const socket = path.join(SOCKET_DIR, entry);
-			if (!(await isSocket(socket))) continue;
+			if (ignoredSockets.has(socket) || !(await isSocket(socket))) continue;
 			if (!bySocket.has(socket) && (await socketRespondsToPing(socket))) {
 				bySocket.set(socket, undefined);
 			}
@@ -375,10 +556,74 @@ const discoverCandidates = async (): Promise<Candidate[]> => {
 				socket,
 				manifest,
 				currentSocket,
-				await socketRespondsToPing(socket),
+				(await isSocket(socket)) && (await socketRespondsToPing(socket)),
 			),
 		),
 	);
+	const seenPanes = new Set<string>();
+	for (const pane of await listTmuxPanes()) {
+		const manifestCandidate = candidates.find(
+			(candidate) => candidate.manifest?.pane === pane.pane,
+		);
+		if (manifestCandidate?.session && manifestCandidate.session !== pane.session)
+			continue;
+		if (seenPanes.has(pane.pane)) continue;
+		seenPanes.add(pane.pane);
+
+		const socket = buildSocketPath(pane.session, pane.window, pane.pane);
+		const existing =
+			candidates.find((candidate) => candidate.socket === socket) ||
+			manifestCandidate;
+		if (existing) {
+			existing.pane = existing.pane || pane.pane;
+			existing.pid = existing.pid || pane.pid;
+			existing.cwd = existing.cwd || pane.cwd;
+			existing.windowIndex = pane.windowIndex;
+			existing.windowName = pane.windowName;
+			existing.paneIndex = pane.paneIndex;
+			existing.paneTitle = pane.title;
+			existing.displayTitle = pane.windowName;
+			existing.searchText = [
+				existing.id,
+				existing.session,
+				existing.sessionId,
+				existing.sessionName,
+				existing.window,
+				existing.pane,
+				existing.paneIndex,
+				existing.windowIndex,
+				existing.cwd,
+				existing.paneTitle,
+				existing.displayTitle,
+				existing.socket,
+			]
+				.filter(Boolean)
+				.join(" ")
+				.toLowerCase();
+			existing.label = labelFor(existing);
+			continue;
+		}
+		const orphan = buildCandidate(
+			socket,
+			{
+				session: pane.session,
+				window: pane.window,
+				pane: pane.pane,
+				paneIndex: pane.paneIndex,
+				pid: pane.pid,
+				cwd: pane.cwd,
+			},
+			currentSocket,
+			false,
+		);
+		orphan.windowIndex = pane.windowIndex;
+		orphan.windowName = pane.windowName;
+		orphan.paneIndex = pane.paneIndex;
+		orphan.paneTitle = pane.title;
+		orphan.displayTitle = pane.windowName;
+		orphan.state = "orphaned/unreachable";
+		candidates.push(orphan);
+	}
 
 	return candidates.sort((a, b) => {
 		if (a.reachable !== b.reachable) return a.reachable ? -1 : 1;
@@ -387,8 +632,24 @@ const discoverCandidates = async (): Promise<Candidate[]> => {
 	});
 };
 
+const STOPWORDS = new Set(["pi", "agent", "instance", "the", "a", "an", "to"]);
 const normalizeTarget = (target: string): string =>
-	target.trim().replace(/\s+/g, " ").toLowerCase();
+	target
+		.trim()
+		.replace(/[“”]/g, '"')
+		.replace(/[‘’]/g, "'")
+		.replace(/[^\p{L}\p{N}:@._-]+/gu, " ")
+		.replace(/\s+/g, " ")
+		.toLowerCase();
+
+const tokenizeHint = (input: string): string[] => {
+	const tokens: string[] = [];
+	const re = /"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|(\S+)/g;
+	let match: RegExpExecArray | null;
+	while ((match = re.exec(input)))
+		tokens.push((match[1] ?? match[2] ?? match[3]).replace(/\\(["'])/g, "$1"));
+	return tokens;
+};
 
 const isExactSelfTarget = (candidate: Candidate, target: string): boolean => {
 	const t = normalizeTarget(target);
@@ -396,11 +657,16 @@ const isExactSelfTarget = (candidate: Candidate, target: string): boolean => {
 		candidate.id,
 		candidate.socket,
 		path.basename(candidate.socket),
+		candidate.sessionId,
+		candidate.sessionName,
 		candidate.session && candidate.window
 			? `${candidate.session}:${candidate.window}`
 			: undefined,
 		candidate.session && candidate.window && candidate.pane
 			? `${candidate.session}:${candidate.window} ${candidate.pane}`
+			: undefined,
+		candidate.session && candidate.windowIndex && candidate.paneIndex
+			? `${candidate.session}:${candidate.windowIndex}.${candidate.paneIndex}`
 			: undefined,
 	].flatMap((value) => (value ? [normalizeTarget(String(value))] : []));
 	return exacts.includes(t);
@@ -419,15 +685,29 @@ const scoreCandidate = (candidate: Candidate, target: string): number => {
 					`${candidate.session}:${candidate.window} ${candidate.pane}`,
 				)
 			: undefined;
+	const exactTmuxAddress =
+		candidate.session && candidate.windowIndex && candidate.paneIndex
+			? normalizeTarget(
+					`${candidate.session}:${candidate.windowIndex}.${candidate.paneIndex}`,
+				)
+			: undefined;
 
+	if (candidate.sessionId && normalizeTarget(candidate.sessionId) === t)
+		return 155;
+	if (exactTmuxAddress && exactTmuxAddress === t) return 160;
 	if (exactSessionWindowPane && exactSessionWindowPane === t) return 140;
 	if (exactSessionWindow && exactSessionWindow === t) return 120;
+	if (candidate.sessionName && normalizeTarget(candidate.sessionName) === t)
+		return 110;
 
 	const exacts = [
 		candidate.id,
 		candidate.session,
+		candidate.sessionId,
+		candidate.sessionName,
 		candidate.window,
 		candidate.pane,
+		candidate.paneIndex,
 		candidate.socket,
 		path.basename(candidate.socket),
 	].flatMap((value) => (value ? [normalizeTarget(String(value))] : []));
@@ -435,7 +715,9 @@ const scoreCandidate = (candidate: Candidate, target: string): number => {
 	if (exacts.includes(t)) return 100;
 	if (candidate.searchText.includes(t)) return 50;
 
-	const words = t.split(/\s+/).filter(Boolean);
+	const words = tokenizeHint(t)
+		.map((word) => word.replace(/[^\p{L}\p{N}:@._-]/gu, "").toLowerCase())
+		.filter((word) => word && !STOPWORDS.has(word));
 	if (
 		words.length > 0 &&
 		words.every((word) => candidate.searchText.includes(word))
@@ -455,8 +737,9 @@ const formatCandidateList = (candidates: Candidate[]): string =>
 const selectCandidate = async (
 	target: string | undefined,
 	ctx: ExtensionContext,
+	inventory?: Candidate[],
 ): Promise<SelectionResult> => {
-	const candidates = await discoverCandidates();
+	const candidates = inventory || (await discoverCandidates());
 	const nonCurrentReachable = candidates.filter(
 		(candidate) => candidate.reachable && !candidate.current,
 	);
@@ -476,7 +759,12 @@ const selectCandidate = async (
 				score: scoreCandidate(candidate, target),
 			}))
 			.filter((entry) => entry.score > 0)
-			.sort((a, b) => b.score - a.score);
+			.sort(
+				(a, b) =>
+					b.score - a.score ||
+					a.candidate.id.localeCompare(b.candidate.id) ||
+					a.candidate.socket.localeCompare(b.candidate.socket),
+			);
 		const bestOverall = scored[0];
 		if (!bestOverall) {
 			return {
@@ -515,13 +803,32 @@ const selectCandidate = async (
 		);
 		const best = reachableScored[0];
 		const next = reachableScored[1];
-		if (best && (!next || best.score - next.score >= 25)) {
+		if (best && best.score >= 100 && (!next || next.score < best.score)) {
 			return { ok: true, candidate: best.candidate };
 		}
 
+		const choices = scored
+			.filter((entry) => entry.candidate.reachable && !entry.candidate.current)
+			.map((entry) => entry.candidate);
+		if (ctx.hasUI && choices.length > 0) {
+			try {
+				const options = new Map(choices.map((entry) => [entry.label, entry]));
+				const selected = await ctx.ui.select("Select matching Pi instance", [
+					...options.keys(),
+				]);
+				const candidate = options.get(selected);
+				if (candidate) return { ok: true, candidate };
+			} catch (err) {
+				return {
+					ok: false,
+					error: `Selection unavailable (${err instanceof Error ? err.message : String(err)}). Retry with an exact target; candidates:\n${formatCandidateList(candidates)}`,
+					candidates,
+				};
+			}
+		}
 		return {
 			ok: false,
-			error: `Target "${target.trim()}" ambiguous.\nReachable candidates:\n${formatCandidateList(candidates)}`,
+			error: `Target "${target.trim()}" ambiguous. Retry with an exact target.\nReachable candidates:\n${formatCandidateList(candidates)}`,
 			candidates,
 		};
 	}
@@ -538,15 +845,28 @@ const selectCandidate = async (
 		};
 	}
 
-	const labels = nonCurrentReachable.map((candidate) => candidate.label);
-	const selected = await ctx.ui.select("Select Pi instance", labels);
-	const candidate = nonCurrentReachable.find(
-		(entry) => entry.label === selected,
+	const options = new Map(
+		nonCurrentReachable.map((candidate) => [candidate.label, candidate]),
 	);
-	if (!candidate) {
-		return { ok: false, error: "No Pi instance selected", candidates };
+	try {
+		const selected = await ctx.ui.select("Select Pi instance", [
+			...options.keys(),
+		]);
+		const candidate = options.get(selected);
+		if (!candidate)
+			return {
+				ok: false,
+				error: "No Pi instance selected; retry with an exact target.",
+				candidates,
+			};
+		return { ok: true, candidate };
+	} catch (err) {
+		return {
+			ok: false,
+			error: `Selection unavailable (${err instanceof Error ? err.message : String(err)}). Retry with an exact target; candidates:\n${formatCandidateList(candidates)}`,
+			candidates,
+		};
 	}
-	return { ok: true, candidate };
 };
 
 const sendJsonLine = (socketPath: string, payload: unknown): Promise<unknown> =>
@@ -590,6 +910,22 @@ const sendJsonLine = (socketPath: string, payload: unknown): Promise<unknown> =>
 const shellQuote = (value: string): string =>
 	`'${value.replace(/'/g, `'\\''`)}'`;
 
+const REMOTE_INVENTORY_SCRIPT = `
+set -euo pipefail
+state_dir="\${PI_STATE_DIR:-\${XDG_STATE_HOME:-$HOME/.local/state}/pi}"
+STATE_DIR="$state_dir" node - <<'NODE'
+const fs=require("node:fs"),path=require("node:path"),cp=require("node:child_process"),crypto=require("node:crypto"),net=require("node:net");
+const state=process.env.STATE_DIR, sockets=path.join(state,"sockets"), manifests=path.join(state,"manifests"), out=new Map(), ignored=new Set();
+const socketFor=(session,window,paneId)=>{const name=[session,window,paneId].filter(Boolean).join("-"),full=path.join(sockets,"pi-"+name+".sock");if(Buffer.byteLength(full)<=${MAX_SOCKET_PATH_BYTES})return full;const fixed=Buffer.byteLength(path.join(sockets,"pi-.sock"))+9,budget=Math.max(${MAX_SOCKET_PATH_BYTES}-fixed,8),hash=crypto.createHash("sha256").update(name).digest("hex").slice(0,8);return path.join(sockets,"pi-"+name.slice(0,budget)+"-"+hash+".sock")};
+const add=(m,s)=>{if(!s)return;const merged={...(out.get(s)||{}),...m,socket:s};merged.alive=!merged.pid||(()=>{try{process.kill(merged.pid,0);return true}catch{return false}})();out.set(s,merged)};
+try{for(const f of fs.readdirSync(manifests).filter(x=>x.endsWith(".info"))){try{const m=JSON.parse(fs.readFileSync(path.join(manifests,f)));if(m.ephemeral){if(m.socket)ignored.add(m.socket)}else add(m,m.socket)}catch{}}}catch{}
+try{for(const f of fs.readdirSync(sockets).filter(x=>x.startsWith("pi-")&&x.endsWith(".sock"))){const socket=path.join(sockets,f);if(!f.includes("-eph-")&&!ignored.has(socket))add({},socket)}}catch{}
+try{const ps=cp.execFileSync("ps",["-axo","pid=,ppid=,command="],{encoding:"utf8"}),commands=new Map(),children=new Map();for(const l of ps.trim().split(/\\r?\\n/)){const m=l.trim().match(/^(\\d+)\\s+(\\d+)\\s+(.*)$/);if(!m)continue;const pid=+m[1],ppid=+m[2];commands.set(pid,m[3]);children.set(ppid,[...(children.get(ppid)||[]),pid])}const pi=(root)=>{const queue=[root],seen=new Set();while(queue.length){const pid=queue.shift();if(!pid||seen.has(pid))continue;seen.add(pid);if(/(?:^|[\\/\\s])pi(?:\\s|$)/i.test(commands.get(pid)||""))return pid;queue.push(...(children.get(pid)||[]))}};const panes=cp.execFileSync("tmux",["list-panes","-a","-F","#{session_name}\\t#{window_index}\\t#{window_name}\\t#{pane_id}\\t#{pane_index}\\t#{pane_title}\\t#{pane_pid}\\t#{pane_current_path}"],{encoding:"utf8"});for(const l of panes.trim().split(/\\r?\\n/)){const [session,wi,wn,pane,paneIndex,title,panePid,cwd]=l.split("\\t"),pid=pi(+panePid);if(pid&&!/eph|ephemeral/i.test((title||"")+" "+(session||"")+" "+(wn||""))){const window=/^[a-zA-Z0-9_-]+$/.test(wn||"")?wn:wi,paneOwner=[...out.values()].find(row=>row.pane===pane);if(paneOwner?.session&&paneOwner.session!==session)continue;if(paneOwner){Object.assign(paneOwner,{windowIndex:wi,windowName:wn,paneIndex,paneTitle:title});continue}add({session,window,windowIndex:wi,windowName:wn,pane,paneIndex,paneTitle:title,pid,cwd,state:"orphaned"},socketFor(session,window,pane))}}}catch{}
+const ping=(socket)=>new Promise(resolve=>{if(!fs.existsSync(socket))return resolve(false);const client=net.createConnection(socket);let done=false;const finish=ok=>{if(done)return;done=true;clearTimeout(timer);client.destroy();resolve(ok)};const timer=setTimeout(()=>finish(false),500);client.once("error",()=>finish(false));client.once("connect",()=>client.write('{"type":"ping"}\\n'));client.once("data",data=>{try{finish(JSON.parse(String(data).split("\\n")[0]).ok===true)}catch{finish(false)}})});
+(async()=>{const rows=await Promise.all([...out.values()].map(async row=>({...row,reachable:Boolean(row.alive)&&await ping(row.socket)})));process.stdout.write(JSON.stringify(rows))})().catch(error=>{console.error(error);process.exit(1)});
+NODE
+`;
+
 const REMOTE_TELL_NODE = `
 const net = require("node:net");
 const socketPath = process.env.PI_TELL_SOCKET;
@@ -618,81 +954,71 @@ socket.on("data", (chunk) => {
 socket.on("close", () => finish(buffer.trim() ? 0 : 5, buffer.trim() || "remote tell socket closed without response"));
 `;
 
-const remoteTellScript = (target: string, payloadB64: string): string => `
+const remoteTellScript = (socketPath: string, payloadB64: string): string => `
 set -euo pipefail
-target=${shellQuote(target)}
+socket_path=${shellQuote(socketPath)}
 payload_b64=${shellQuote(payloadB64)}
-state_dir="\${PI_STATE_DIR:-\${XDG_STATE_HOME:-$HOME/.local/state}/pi}"
-sockets_dir="$state_dir/sockets"
-prefix="${SOCKET_PREFIX}"
-socket_path=""
-socket_for() {
-  printf '%s/%s-%s-%s.sock' "$sockets_dir" "$prefix" "$1" "$2"
-}
-first_session_socket() {
-  local session="$1"
-  local candidate
-  candidate="$(socket_for "$session" agent)"
-  if [[ -S "$candidate" ]]; then printf '%s' "$candidate"; return 0; fi
-  candidate="$(socket_for "$session" 0)"
-  if [[ -S "$candidate" ]]; then printf '%s' "$candidate"; return 0; fi
-  shopt -s nullglob
-  local sockets=("$sockets_dir/$prefix-$session-"*.sock)
-  shopt -u nullglob
-  for candidate in "\${sockets[@]}"; do
-    [[ "$candidate" == *-eph-* ]] && continue
-    [[ -S "$candidate" ]] || continue
-    printf '%s' "$candidate"
-    return 0
-  done
-  return 1
-}
-resolve_window_socket() {
-  local session="$1"
-  local window="$2"
-  local candidate win_name win_index
-  candidate="$(socket_for "$session" "$window")"
-  if [[ -S "$candidate" ]]; then printf '%s' "$candidate"; return 0; fi
-  if [[ "$window" =~ ^[0-9]+$ ]]; then
-    win_name="$(tmux list-windows -t "$session" -F '#{window_index}:#{window_name}' 2>/dev/null | awk -F: -v w="$window" '$1 == w {print $2; exit}')"
-    if [[ -n "$win_name" ]]; then
-      candidate="$(socket_for "$session" "$win_name")"
-      if [[ -S "$candidate" ]]; then printf '%s' "$candidate"; return 0; fi
-    fi
-  else
-    win_index="$(tmux list-windows -t "$session" -F '#{window_index}:#{window_name}' 2>/dev/null | awk -F: -v w="$window" '$2 == w {print $1; exit}')"
-    if [[ -n "$win_index" ]]; then
-      candidate="$(socket_for "$session" "$win_index")"
-      if [[ -S "$candidate" ]]; then printf '%s' "$candidate"; return 0; fi
-    fi
-  fi
-  return 1
-}
-if [[ -z "$target" ]]; then
-  echo 'remote tell target missing' >&2
-  exit 2
-fi
-if [[ "$target" == *:* ]]; then
-  session="\${target%%:*}"
-  window="\${target#*:}"
-  socket_path="$(resolve_window_socket "$session" "$window")" || true
-else
-  session="$target"
-  socket_path="$(first_session_socket "$session")" || true
-fi
-if [[ -z "$socket_path" || ! -S "$socket_path" ]]; then
-  echo "No Pi socket found for $target on $(hostname -s 2>/dev/null || hostname)" >&2
-  echo "Available sockets:" >&2
-  if [[ -d "$sockets_dir" ]]; then
-    ls "$sockets_dir"/"$prefix"-*.sock 2>/dev/null | sed 's/^/  /' >&2 || true
-  else
-    echo "  (socket dir missing: $sockets_dir)" >&2
-  fi
+if [[ ! -S "$socket_path" ]]; then
+  echo "Selected Pi socket is unavailable: $socket_path" >&2
   exit 3
 fi
 printf '__TELL_SOCKET__ %s\n' "$socket_path"
 PI_TELL_SOCKET="$socket_path" PI_TELL_PAYLOAD_B64="$payload_b64" node -e ${shellQuote(REMOTE_TELL_NODE)}
 `;
+
+const fetchRemoteInventory = (machine: string): Promise<Candidate[]> =>
+	new Promise((resolve) => {
+		execFile(
+			"ssh",
+			[
+				"-o",
+				"BatchMode=yes",
+				"-o",
+				`ConnectTimeout=${Math.ceil(SSH_TIMEOUT_MS / 1000)}`,
+				machine,
+				`bash -lc ${shellQuote(REMOTE_INVENTORY_SCRIPT)}`,
+			],
+			{ encoding: "utf8", timeout: SSH_TIMEOUT_MS },
+			(err, stdout) => {
+				if (err) return resolve([]);
+				try {
+					const rows = JSON.parse(stdout.trim()) as PiManifest[];
+					resolve(
+						rows.map((m: any) => {
+							const c = buildCandidate(m.socket, m, null, Boolean(m.reachable));
+							c.machine = machine;
+							c.id = [
+								machine,
+								m.session || "?",
+								m.window || "?",
+								m.pane || m.pid || path.basename(m.socket),
+							].join(":");
+							c.state = m.state || "orphaned/unreachable";
+							c.label = labelFor(c);
+							c.searchText = [
+								c.id,
+								c.session,
+								c.sessionId,
+								c.sessionName,
+								c.window,
+								c.pane,
+								c.cwd,
+								c.paneTitle,
+								c.displayTitle,
+								c.socket,
+							]
+								.filter(Boolean)
+								.join(" ")
+								.toLowerCase();
+							return c;
+						}),
+					);
+				} catch {
+					resolve([]);
+				}
+			},
+		);
+	});
 
 const sendRemoteJsonLine = (
 	machine: string,
@@ -752,6 +1078,93 @@ const sendRemoteJsonLine = (
 const makeMessageId = (): string =>
 	`tell-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
+const buildControlRequest = (
+	operation: ControlOperation,
+	params: Record<string, unknown> = {},
+	id = `control-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+): ControlRequest => ({
+	type: "control",
+	protocol: CONTROL_PROTOCOL,
+	id,
+	operation,
+	params,
+});
+
+const isOkResponse = (response: unknown): boolean =>
+	response !== null &&
+	typeof response === "object" &&
+	"ok" in response &&
+	(response as { ok?: unknown }).ok === true;
+
+const isUnsupportedControlResponse = (response: unknown): boolean => {
+	if (
+		response === null ||
+		typeof response !== "object" ||
+		!("ok" in response) ||
+		(response as { ok?: unknown }).ok !== false
+	) {
+		return false;
+	}
+	const error = String((response as { error?: unknown }).error || "");
+	return /unsupported (?:payload type: control|control protocol)/i.test(error);
+};
+
+const parseControlResponse = (
+	request: ControlRequest,
+	response: unknown,
+): { ok: true; response: ControlResponse } | { ok: false; error: string } => {
+	if (response === null || typeof response !== "object") {
+		return { ok: false, error: "Target returned no control response" };
+	}
+	const value = response as Partial<ControlResponse>;
+	if (
+		value.type !== "control_response" ||
+		value.protocol !== CONTROL_PROTOCOL ||
+		value.id !== request.id ||
+		value.operation !== request.operation ||
+		typeof value.ok !== "boolean"
+	) {
+		return {
+			ok: false,
+			error: `Target returned an invalid control response: ${JSON.stringify(response)}`,
+		};
+	}
+	if (!value.ok) {
+		return {
+			ok: false,
+			error: value.error || `Control operation ${request.operation} failed`,
+		};
+	}
+	return { ok: true, response: value as ControlResponse };
+};
+
+const controlSendParams = (
+	payload: Record<string, unknown>,
+	mode: DeliveryMode | undefined,
+): Record<string, unknown> => {
+	const { type: _type, protocol, id, ...params } = payload;
+	return {
+		...params,
+		messageId: id,
+		tellProtocol: protocol,
+		...(mode ? { mode } : {}),
+	};
+};
+
+const tellResponseError = (
+	request: ControlRequest,
+	response: unknown,
+	legacy: boolean,
+): string | undefined => {
+	if (legacy) {
+		return isOkResponse(response)
+			? undefined
+			: `Target rejected legacy tell payload: ${JSON.stringify(response)}`;
+	}
+	const parsed = parseControlResponse(request, response);
+	return parsed.ok ? undefined : parsed.error;
+};
+
 const isLocalMachine = (machine: string | undefined): boolean => {
 	if (!machine) return false;
 	const normalized = machine.toLowerCase();
@@ -787,7 +1200,12 @@ const originInfo = async (
 		parsed.window ||
 		process.env.PI_WINDOW ||
 		"?";
-	const localTarget = `${session}:${window}`;
+	const windowIndex = currentCandidate?.windowIndex || tmux?.windowIndex;
+	const paneIndex = currentCandidate?.paneIndex || tmux?.paneIndex;
+	const localTarget =
+		windowIndex && paneIndex
+			? `${session}:${windowIndex}.${paneIndex}`
+			: `${session}:${window}`;
 	const machine = currentMachineName();
 	const replyTarget =
 		includeMachineReply && machine ? `${machine} ${localTarget}` : localTarget;
@@ -829,15 +1247,22 @@ const buildTellPayload = async (
 		id,
 		text: wrapped.text,
 		from: wrapped.from,
+		sessionId: ctx.sessionManager.getSessionId(),
+		sessionName: ctx.sessionManager.getSessionName() || undefined,
 		timestamp: Math.floor(Date.now() / 1000),
 	};
+	if (options.mode) payload.mode = options.mode;
 	if (options.includeFromSocket) payload.fromSocket = await currentSocketPath();
 	return payload;
 };
 
 const normalizeRoute = (route: TellRoute): TellRoute => {
 	if (route.machine && isLocalMachine(route.machine)) {
-		return { target: route.target, message: route.message };
+		return {
+			target: route.target,
+			message: route.message,
+			mode: route.mode,
+		};
 	}
 	return route;
 };
@@ -846,9 +1271,20 @@ const routeFromTargetHint = (
 	targetText: string | undefined,
 	message: string,
 	machine?: string,
+	mode?: DeliveryMode,
 ): TellRoute => {
 	const trimmedTarget = targetText?.trim();
-	if (!trimmedTarget) return normalizeRoute({ machine, message });
+	if (!trimmedTarget) return normalizeRoute({ machine, message, mode });
+
+	const stableMachine = trimmedTarget.match(/^([^:\s]+):/);
+	if (!machine && stableMachine && looksLikeMachineTarget(stableMachine[1])) {
+		return normalizeRoute({
+			machine: stableMachine[1],
+			target: trimmedTarget,
+			message,
+			mode,
+		});
+	}
 
 	const words = trimmedTarget.split(/\s+/).filter(Boolean);
 	if (!machine && words.length >= 2 && looksLikeMachineTarget(words[0])) {
@@ -856,10 +1292,11 @@ const routeFromTargetHint = (
 			machine: words[0],
 			target: words.slice(1).join(" "),
 			message,
+			mode,
 		});
 	}
 
-	return normalizeRoute({ machine, target: trimmedTarget, message });
+	return normalizeRoute({ machine, target: trimmedTarget, message, mode });
 };
 
 const sendTell = async (
@@ -867,81 +1304,98 @@ const sendTell = async (
 	rawRoute: TellRoute,
 ): Promise<SendResult> => {
 	const route = normalizeRoute(rawRoute);
-	if (route.machine) {
-		if (!route.target?.trim()) {
-			return {
-				ok: false,
-				error: `Remote tell target missing for ${route.machine}. Usage: /tell ${route.machine} <tmux-session[:window]> <message>`,
-			};
-		}
-
-		const id = makeMessageId();
-		const payload = await buildTellPayload(ctx, route.message, id, {
-			includeMachineReply: true,
-			includeFromSocket: false,
-		});
-		const response = await sendRemoteJsonLine(
-			route.machine,
-			route.target,
-			payload,
-		);
-		const target: Candidate = {
-			socket: response.socket || `${route.machine}:${route.target}`,
-			id: `${route.machine} ${route.target}`,
-			label: `${route.machine} ${route.target}${response.socket ? ` — ${response.socket}` : ""}`,
-			searchText: `${route.machine} ${route.target}`.toLowerCase(),
-			current: false,
-			reachable: response.ok,
+	if (!route.target?.trim() && route.machine) {
+		return {
+			ok: false,
+			error: `Remote tell target missing for ${route.machine}. Usage: /tell ${route.machine} <tmux-session[:window]> <message>`,
 		};
-		const ok =
-			response.ok &&
-			response.response !== null &&
-			typeof response.response === "object" &&
-			"ok" in response.response &&
-			(response.response as { ok?: unknown }).ok === true;
-		if (!ok) {
-			return {
-				ok: false,
-				target,
-				id,
-				response,
-				error:
-					response.error ||
-					`Remote target rejected tell payload: ${JSON.stringify(response.response)}`,
-			};
-		}
-		return { ok: true, target, id, response: response.response };
 	}
 
-	const selection = await selectCandidate(route.target, ctx);
-	if (selection.ok === false) {
-		return { ok: false, error: selection.error };
+	const inventory = route.machine
+		? await fetchRemoteInventory(route.machine)
+		: undefined;
+	const selection = await selectCandidate(route.target, ctx, inventory);
+	if (!selection.ok) {
+		return {
+			ok: false,
+			candidates: selection.candidates,
+			error: `${selection.error}\nUse ask_user_question with these candidates, then retry tell_pi using the selected stable candidate id.`,
+		};
 	}
-	const target = selection.candidate;
 
 	const id = makeMessageId();
-	const payload = await buildTellPayload(ctx, route.message, id, {
-		includeMachineReply: false,
-		includeFromSocket: true,
+	const legacyPayload = await buildTellPayload(ctx, route.message, id, {
+		includeMachineReply: Boolean(route.machine),
+		includeFromSocket: !route.machine,
+		mode: route.mode,
 	});
+	const controlRequest = buildControlRequest(
+		"message.send",
+		controlSendParams(legacyPayload, route.mode),
+		id,
+	);
+	const target = selection.candidate;
 
 	try {
-		const response = await sendJsonLine(target.socket, payload);
-		const ok =
-			response !== null &&
-			typeof response === "object" &&
-			"ok" in response &&
-			(response as { ok?: unknown }).ok === true;
-		if (!ok) {
+		if (route.machine) {
+			let remoteResponse = await sendRemoteJsonLine(
+				route.machine,
+				target.socket,
+				controlRequest,
+			);
+			let usedLegacy = false;
+			if (
+				remoteResponse.ok &&
+				isUnsupportedControlResponse(remoteResponse.response)
+			) {
+				usedLegacy = true;
+				remoteResponse = await sendRemoteJsonLine(
+					route.machine,
+					target.socket,
+					legacyPayload,
+				);
+			}
+			const resolvedTarget: Candidate = {
+				...target,
+				socket: remoteResponse.socket || target.socket,
+				reachable: remoteResponse.ok,
+			};
+			const responseError = remoteResponse.ok
+				? tellResponseError(controlRequest, remoteResponse.response, usedLegacy)
+				: remoteResponse.error || "Remote tell transport failed";
+			if (responseError) {
+				return {
+					ok: false,
+					target: resolvedTarget,
+					id,
+					response: remoteResponse,
+					error: responseError,
+				};
+			}
+			return {
+				ok: true,
+				target: resolvedTarget,
+				id,
+				response: remoteResponse.response,
+			};
+		}
+
+		let response = await sendJsonLine(target.socket, controlRequest);
+		let usedLegacy = false;
+		if (isUnsupportedControlResponse(response)) {
+			usedLegacy = true;
+			response = await sendJsonLine(target.socket, legacyPayload);
+		}
+		const responseError = tellResponseError(controlRequest, response, usedLegacy);
+		if (responseError) {
 			return {
 				ok: false,
 				target,
 				id,
 				response,
-				error: `Target rejected tell payload: ${JSON.stringify(response)}`,
+				error: responseError,
 			};
 		}
-
 		return { ok: true, target, id, response };
 	} catch (err) {
 		return {
@@ -953,19 +1407,133 @@ const sendTell = async (
 	}
 };
 
-const splitCommandArgs = (args: string): Partial<TellRoute> => {
-	const trimmed = args.trim();
-	if (!trimmed) return {};
-	const normalized = trimmed.replace(/^to\s+/i, "");
-	const tokens = normalized.match(/^(\S+)(?:\s+(\S+))?(?:\s+([\s\S]+))?$/);
-	if (!tokens) return {};
-	const [, first, second, rest] = tokens;
-	if (looksLikeMachineTarget(first) && second) {
-		return { machine: first, target: second, message: rest };
+const requestControl = async (
+	ctx: ExtensionContext,
+	rawRoute: TellRoute,
+	operation: Exclude<ControlOperation, "message.send">,
+): Promise<SendResult> => {
+	const route = normalizeRoute(rawRoute);
+	if (!route.target?.trim()) {
+		return { ok: false, error: `${operation} requires a target` };
 	}
-	if (second)
-		return { target: first, message: [second, rest].filter(Boolean).join(" ") };
-	return { target: first };
+	const inventory = route.machine
+		? await fetchRemoteInventory(route.machine)
+		: undefined;
+	const selection = await selectCandidate(route.target, ctx, inventory);
+	if (!selection.ok) {
+		return {
+			ok: false,
+			candidates: selection.candidates,
+			error: selection.error,
+		};
+	}
+	const request = buildControlRequest(operation);
+	const target = selection.candidate;
+	try {
+		let response: unknown;
+		if (route.machine) {
+			const remote = await sendRemoteJsonLine(
+				route.machine,
+				target.socket,
+				request,
+			);
+			if (!remote.ok) {
+				return { ok: false, target, id: request.id, error: remote.error };
+			}
+			response = remote.response;
+		} else {
+			response = await sendJsonLine(target.socket, request);
+		}
+		if (isUnsupportedControlResponse(response)) {
+			return {
+				ok: false,
+				target,
+				id: request.id,
+				response,
+				error: `${target.label} has not reloaded pi.control.v1`,
+			};
+		}
+		const parsed = parseControlResponse(request, response);
+		if (!parsed.ok) {
+			return {
+				ok: false,
+				target,
+				id: request.id,
+				response,
+				error: parsed.error,
+			};
+		}
+		return {
+			ok: true,
+			target,
+			id: request.id,
+			response: parsed.response,
+		};
+	} catch (error) {
+		return {
+			ok: false,
+			target,
+			id: request.id,
+			error: error instanceof Error ? error.message : String(error),
+		};
+	}
+};
+
+const splitCommandArgs = (args: string): Partial<TellRoute> => {
+	const normalized = args.trim().replace(/^to\s+/i, "");
+	const tokens = tokenizeHint(normalized);
+	if (!tokens.length) return {};
+	let mode: DeliveryMode | undefined;
+	if (tokens[0] === "--steer") {
+		mode = "steer";
+		tokens.shift();
+	} else if (tokens[0] === "--follow-up" || tokens[0] === "--follow_up") {
+		mode = "follow_up";
+		tokens.shift();
+	}
+	if (!tokens.length) return { mode };
+	if (looksLikeMachineTarget(tokens[0]) && tokens[1]) {
+		return {
+			machine: tokens[0],
+			target: tokens[1],
+			message: tokens.slice(2).join(" "),
+			mode,
+		};
+	}
+	return {
+		target: tokens[0],
+		message: tokens.slice(1).join(" "),
+		mode,
+	};
+};
+
+const listSessions = async (
+	machine: string | undefined,
+): Promise<Candidate[]> => {
+	if (machine && !isLocalMachine(machine)) return fetchRemoteInventory(machine);
+	return discoverCandidates();
+};
+
+const formatSessionList = (candidates: Candidate[]): string => {
+	if (!candidates.length) return "No Pi sessions found.";
+	return candidates.map((candidate) => `- ${candidate.label}`).join("\n");
+};
+
+const controlLastMessage = (
+	response: unknown,
+): { content: string; timestamp?: number } | null => {
+	if (response === null || typeof response !== "object") return null;
+	const data = (response as { data?: unknown }).data;
+	if (data === null || typeof data !== "object") return null;
+	const message = (data as { message?: unknown }).message;
+	if (message === null || typeof message !== "object") return null;
+	const content = (message as { content?: unknown }).content;
+	if (typeof content !== "string" || !content) return null;
+	const timestamp = (message as { timestamp?: unknown }).timestamp;
+	return {
+		content,
+		timestamp: typeof timestamp === "number" ? timestamp : undefined,
+	};
 };
 
 const restoreRecentTellWidget = (ctx: ExtensionContext): void => {
@@ -999,6 +1567,28 @@ const restoreRecentTellWidget = (ctx: ExtensionContext): void => {
 	}
 };
 
+export const _test = {
+	REMOTE_INVENTORY_SCRIPT,
+	buildCandidate,
+	buildControlRequest,
+	buildSocketPath,
+	controlLastMessage,
+	discoverCandidates,
+	fetchRemoteInventory,
+	formatSessionList,
+	isUnsupportedControlResponse,
+	labelFor,
+	listTmuxPanes,
+	normalizeTarget,
+	parseControlResponse,
+	tellResponseError,
+	routeFromTargetHint,
+	scoreCandidate,
+	selectCandidate,
+	splitCommandArgs,
+	tokenizeHint,
+};
+
 export default function (pi: ExtensionAPI): void {
 	pi.on("session_start", (_event, ctx) => {
 		restoreRecentTellWidget(ctx);
@@ -1010,12 +1600,16 @@ export default function (pi: ExtensionAPI): void {
 		handler: async (args, ctx) => {
 			const parsed = splitCommandArgs(args);
 			const machine = parsed.machine;
+			const mode = parsed.mode;
 			let target = parsed.target;
 			let message = parsed.message;
 
 			if (!message?.trim()) {
 				if (!ctx.hasUI) {
-					ctx.ui.notify("Usage: /tell [machine] <target> <message>", "error");
+					ctx.ui.notify(
+						"Usage: /tell [--steer|--follow-up] [machine] <target> <message>",
+						"error",
+					);
 					return;
 				}
 				if (machine && !target) {
@@ -1043,7 +1637,12 @@ export default function (pi: ExtensionAPI): void {
 				}
 			}
 
-			const result = await sendTell(ctx, { machine, target, message });
+			const result = await sendTell(ctx, {
+				machine,
+				target,
+				message,
+				mode,
+			});
 			if (!result.ok) {
 				ctx.ui.notify(`Tell failed: ${result.error || "unknown error"}`, "error");
 				return;
@@ -1055,9 +1654,55 @@ export default function (pi: ExtensionAPI): void {
 				target: result.target?.label,
 				socket: result.target?.socket,
 				message,
+				mode: mode || "follow_up",
 				timestamp: Date.now(),
 			});
 			ctx.ui.notify(`Told ${result.target?.label}`, "info");
+		},
+	});
+
+	pi.registerCommand("tell-sessions", {
+		description: "List discoverable local or remote Pi sessions",
+		handler: async (args, ctx) => {
+			const machine = args.trim() || undefined;
+			const candidates = await listSessions(machine);
+			ctx.ui.notify(formatSessionList(candidates), "info");
+		},
+	});
+
+	pi.registerCommand("tell-last", {
+		description: "Show the last assistant message from another Pi session",
+		handler: async (args, ctx) => {
+			if (!ctx.hasUI) {
+				ctx.ui.notify("tell-last requires interactive mode", "error");
+				return;
+			}
+			const parsed = splitCommandArgs(args);
+			if (!parsed.target) {
+				ctx.ui.notify("Usage: /tell-last [machine] <target>", "error");
+				return;
+			}
+			const result = await requestControl(
+				ctx,
+				routeFromTargetHint(parsed.target, "", parsed.machine),
+				"message.last",
+			);
+			if (!result.ok) {
+				ctx.ui.notify(
+					`Last-message lookup failed: ${result.error || "unknown error"}`,
+					"error",
+				);
+				return;
+			}
+			const message = controlLastMessage(result.response);
+			if (!message) {
+				ctx.ui.notify("Target has no assistant message", "info");
+				return;
+			}
+			await ctx.ui.editor(
+				`Last assistant message from ${result.target?.label || parsed.target}`,
+				message.content,
+			);
 		},
 	});
 
@@ -1085,12 +1730,23 @@ export default function (pi: ExtensionAPI): void {
 				}),
 			),
 			message: Type.String({ description: "Guidance/prompt to send." }),
+			mode: Type.Optional(
+				StringEnum(["steer", "follow_up"] as const, {
+					description:
+						"Delivery mode while the target is busy. Defaults to follow_up.",
+				}),
+			),
 		}),
 		async execute(...args) {
 			const [, params, , , ctx] = args;
 			const result = await sendTell(
 				ctx,
-				routeFromTargetHint(params.target, params.message, params.machine),
+				routeFromTargetHint(
+					params.target,
+					params.message,
+					params.machine,
+					params.mode,
+				),
 			);
 			if (!result.ok) {
 				return {
@@ -1106,6 +1762,7 @@ export default function (pi: ExtensionAPI): void {
 				target: result.target?.label,
 				socket: result.target?.socket,
 				message: params.message,
+				mode: params.mode || "follow_up",
 				timestamp: Date.now(),
 			});
 
@@ -1121,6 +1778,82 @@ export default function (pi: ExtensionAPI): void {
 					target: result.target?.label,
 					socket: result.target?.socket,
 					response: result.response,
+				},
+			};
+		},
+	});
+
+	pi.registerTool({
+		name: "list_pi_sessions",
+		label: "List Pi Sessions",
+		description:
+			"List discoverable Pi sessions locally or on an SSH-accessible machine.",
+		parameters: Type.Object({
+			machine: Type.Optional(
+				Type.String({
+					description: "Optional machine/SSH host to inspect.",
+				}),
+			),
+		}),
+		async execute(...args) {
+			const [, params] = args;
+			const candidates = await listSessions(params.machine);
+			return {
+				content: [{ type: "text", text: formatSessionList(candidates) }],
+				details: { candidates },
+			};
+		},
+	});
+
+	pi.registerTool({
+		name: "get_pi_last_message",
+		label: "Get Pi Last Message",
+		description:
+			"Retrieve the last assistant message from a selected running Pi session.",
+		parameters: Type.Object({
+			machine: Type.Optional(
+				Type.String({
+					description: "Optional machine/SSH host.",
+				}),
+			),
+			target: Type.String({
+				description:
+					"Exact or fuzzy Pi target using the same selection rules as tell_pi.",
+			}),
+		}),
+		async execute(...args) {
+			const [, params, , , ctx] = args;
+			const route = routeFromTargetHint(params.target, "", params.machine);
+			const result = await requestControl(ctx, route, "message.last");
+			if (!result.ok) {
+				return {
+					isError: true,
+					content: [
+						{
+							type: "text",
+							text: result.error || "Last-message lookup failed",
+						},
+					],
+					details: result,
+				};
+			}
+			const message = controlLastMessage(result.response);
+			if (!message) {
+				return {
+					content: [{ type: "text", text: "Target has no assistant message." }],
+					details: result,
+				};
+			}
+			const maxLength = 30_000;
+			const content =
+				message.content.length > maxLength
+					? `${message.content.slice(0, maxLength)}\n\n[Message truncated at ${maxLength} characters]`
+					: message.content;
+			return {
+				content: [{ type: "text", text: content }],
+				details: {
+					target: result.target,
+					message,
 				},
 			};
 		},
