@@ -10,14 +10,13 @@
  *   /handoff execute phase one of the plan
  *   /handoff check other places that need this fix
  *
- * The generated prompt opens in your $EDITOR for review/editing (falls back
- * to pi's built-in TUI editor if no EDITOR or VISUAL env var is set).
+ * The generated prompt is saved to the handoff directory, then appears as
+ * a draft in pi's editor. The user can open the draft in an external editor.
  */
 
-import { spawnSync } from "node:child_process";
-import { readFileSync, unlinkSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { basename, join } from "node:path";
 
 import { complete, type Message } from "@earendil-works/pi-ai";
 import type {
@@ -124,9 +123,7 @@ export default function (pi: ExtensionAPI) {
 				const doGenerate = async () => {
 					// pi 0.78+: getApiKey(model) renamed to getApiKeyAndHeaders(model)
 					// returning a Result<{ apiKey, headers, ... }> with ok/error discriminator.
-					const authResult = await ctx.modelRegistry.getApiKeyAndHeaders(
-						ctx.model!,
-					);
+					const authResult = await ctx.modelRegistry.getApiKeyAndHeaders(ctx.model!);
 					if (!authResult.ok) {
 						throw new Error(authResult.error);
 					}
@@ -162,9 +159,7 @@ export default function (pi: ExtensionAPI) {
 					}
 
 					const textContent = response.content
-						.filter(
-							(c): c is { type: "text"; text: string } => c.type === "text",
-						)
+						.filter((c): c is { type: "text"; text: string } => c.type === "text")
 						.map((c) => c.text)
 						.join("\n");
 
@@ -204,46 +199,26 @@ export default function (pi: ExtensionAPI) {
 					: "";
 
 			const promptWithHistory = result.text + historySection;
+			const handoffDir = join(
+				homedir(),
+				".local",
+				"share",
+				"pi",
+				"handoffs",
+				basename(ctx.cwd),
+			);
+			const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+			const handoffFile = join(handoffDir, `${timestamp}.md`);
 
-			// Open the generated prompt in the user's external $EDITOR so they can
-			// edit it without risk of accidentally clearing it via keybindings.
-			// Falls back to pi's built-in TUI editor if no EDITOR/VISUAL is set.
-			const editor = process.env.EDITOR || process.env.VISUAL;
-			let editedPrompt: string | undefined;
-
-			if (editor) {
-				const tmpFile = join(tmpdir(), `pi-handoff-${Date.now()}.md`);
-				writeFileSync(tmpFile, promptWithHistory, "utf-8");
-
-				// EDITOR may be multi-word (e.g. "nvim -O"); spawnSync does no shell
-				// splitting, so split the command from its flags ourselves.
-				const [editorCmd, ...editorArgs] = editor.split(/\s+/);
-				const result = spawnSync(editorCmd, [...editorArgs, tmpFile], {
-					stdio: "inherit",
+			try {
+				mkdirSync(handoffDir, { recursive: true });
+				writeFileSync(handoffFile, promptWithHistory, {
+					encoding: "utf-8",
+					flag: "wx",
 				});
-
-				if (result.error) {
-					ctx.ui.notify(`Editor failed: ${result.error.message}`, "error");
-					unlinkSync(tmpFile);
-					return;
-				}
-
-				editedPrompt = readFileSync(tmpFile, "utf-8");
-				unlinkSync(tmpFile);
-
-				if (editedPrompt === promptWithHistory) {
-					ctx.ui.notify("Cancelled (no changes saved)", "info");
-					return;
-				}
-			} else {
-				editedPrompt = await ctx.ui.editor(
-					"Edit handoff prompt",
-					promptWithHistory,
-				);
-			}
-
-			if (editedPrompt === undefined) {
-				ctx.ui.notify("Cancelled", "info");
+			} catch (error) {
+				const message = error instanceof Error ? error.message : String(error);
+				ctx.ui.notify(`Handoff save failed: ${message}`, "error");
 				return;
 			}
 
@@ -252,9 +227,11 @@ export default function (pi: ExtensionAPI) {
 			const newSessionResult = await ctx.newSession({
 				parentSession: currentSessionFile,
 				withSession: async (ctx) => {
-					// Set the edited prompt in the main editor for submission
-					ctx.ui.setEditorText(editedPrompt);
-					ctx.ui.notify("Handoff ready. Submit when ready.", "info");
+					ctx.ui.setEditorText(promptWithHistory);
+					ctx.ui.notify(
+						`Handoff saved to ${handoffFile}. Submit when ready.`,
+						"info",
+					);
 				},
 			});
 
