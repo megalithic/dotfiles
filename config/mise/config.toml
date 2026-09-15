@@ -691,6 +691,14 @@ keep_alive = true
 stdout_path = "~/.cache/miccheck-stdout.log"
 stderr_path = "~/.cache/miccheck-stderr.log"
 
+# AeroPlay: route one app's audio only to a selected AirPlay or CoreAudio output.
+[bootstrap.macos.launchd.agents."com.megadots.aeroplayd"]
+program = "~/Applications/AeroPlay.app/Contents/MacOS/aeroplayd"
+run_at_load = true
+keep_alive = false
+stdout_path = "~/.cache/aeroplayd-stdout.log"
+stderr_path = "~/.cache/aeroplayd-stderr.log"
+
 # Spotlight exclusions only touch user-owned development directories, so a
 # user LaunchAgent replaces the former root nix-darwin daemon.
 [bootstrap.macos.launchd.agents."com.megadots.spotlight-exclude"]
@@ -700,14 +708,6 @@ keep_alive = false
 start_interval = 21600
 stdout_path = "~/.cache/spotlight-exclude.log"
 stderr_path = "~/.cache/spotlight-exclude.err.log"
-
-# AeroPlay: route one app's audio only to a selected AirPlay or CoreAudio output.
-[bootstrap.macos.launchd.agents."com.megadots.aeroplayd"]
-program = "~/Applications/AeroPlay.app/Contents/MacOS/aeroplayd"
-run_at_load = true
-keep_alive = false
-stdout_path = "~/.cache/aeroplayd-stdout.log"
-stderr_path = "~/.cache/aeroplayd-stderr.log"
 
 # kanata daemon (dev.mise.org.kanata.daemon) and kanata-bar agents are
 # written and loaded by scripts/mise/setup-kanata (post-tools hook), because
@@ -754,6 +754,7 @@ run = [
   "mise run install:fonts",
   "mise run setup:kanata",
   "mise run setup:miccheck",
+  "mise run setup:aeroplayd",
   "mise run setup:notiwatchd",
   "mise run setup:avwatchd",
   "mise run update:fnox",
@@ -764,7 +765,6 @@ login_shell = "/opt/homebrew/bin/fish"
 
 # -- Nerd Fonts: declare the font list here (mirrors nix fonts.packages in
 #    nix/hosts/common.nix). Names are release asset stems from
-  "mise run setup:aeroplayd",
 #    https://github.com/ryanoasis/nerd-fonts/releases (<Name>.tar.xz).
 #    Add/remove a font = edit the list; `mise run install:fonts` converges.
 #    Full bootstrap and `mise run up` call it explicitly; sources/outputs make
@@ -820,6 +820,7 @@ run = '''
 set -eu
 export MISE_ENV="${MISE_ENV:-$(hostname -s)}"
 mise run setup:miccheck
+mise run setup:aeroplayd
 mise run setup:notiwatchd
 mise run setup:helium
 mise bootstrap macos launchd-agents apply --yes
@@ -830,7 +831,6 @@ mise bootstrap --only macos-defaults --yes
 description = "Update Neovim plugins and treesitter parsers"
 run = [
   '''nvim --headless "+Lazy! sync" +qa''',
-mise run setup:aeroplayd
   '''nvim --headless "+TSUpdateSync" +qa''',
 ]
 
@@ -924,16 +924,6 @@ sources = [
 ]
 outputs = ["{{env.HOME}}/.local/bin/miccheckd"]
 
-[tasks."setup:notiwatchd"]
-description = "Build and sign notiwatchd"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/lib/build-swift notiwatchd"
-sources = [
-  "{{env.DOTFILES_DIR}}/lib/build-swift",
-  "{{env.DOTFILES_DIR}}/lib/notiwatchd.swift",
-]
-outputs = ["{{env.HOME}}/.local/bin/notiwatchd"]
-
-[tasks."build:avwatchd"]
 [tasks."setup:aeroplayd"]
 description = "Build and sign AeroPlay.app"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/lib/build-swift aeroplayd"
@@ -951,6 +941,16 @@ outputs = [
   "{{env.HOME}}/Applications/AeroPlay.app/Contents/Resources/cliraop",
 ]
 
+[tasks."setup:notiwatchd"]
+description = "Build and sign notiwatchd"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/lib/build-swift notiwatchd"
+sources = [
+  "{{env.DOTFILES_DIR}}/lib/build-swift",
+  "{{env.DOTFILES_DIR}}/lib/notiwatchd.swift",
+]
+outputs = ["{{env.HOME}}/.local/bin/notiwatchd"]
+
+[tasks."build:avwatchd"]
 hide = true
 description = "Build and sign avwatchd"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/lib/build-swift avwatchd"
