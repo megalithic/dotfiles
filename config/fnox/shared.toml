@@ -8,9 +8,9 @@
 # and atomically activates the result. Edit secrets HERE, then rerun it.
 #
 # Auth: op CLI with 1Password desktop-app integration (biometric); no
-# service-account token needed on this machine. For headless/CI use, bootstrap
-# OP_SERVICE_ACCOUNT_TOKEN with an age provider per
-# https://fnox.jdx.dev/providers/1password.html.
+# service-account token needed on this machine. Headless recovery reads the
+# age-encrypted token with `fnox --profile bootstrap get
+# OP_SERVICE_ACCOUNT_TOKEN`; see https://fnox.jdx.dev/providers/1password.html.
 
 [providers]
 # account pins the personal 1Password account so machines signed into a
@@ -79,8 +79,8 @@ RX_SENTRY_CLI_TOKEN = { provider = "onepass", value = "op://Crypt/sentry-rxv/api
 
 # Legacy env and s3cfg 1Password blob items are intentionally not referenced;
 # retain the items only through their clean cutover verification periods.
-# The YubiKey-backed service-account token remains an on-demand fnox secret.
-OP_SERVICE_ACCOUNT_TOKEN = { provider = "age", value = "YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHBpdi1wMjU2IGtzV1ZPdyBBNzFzK1V4Z01zWS9xVStxcFZKT1pONHI4d0RGRklpVzVZcVVjc1czNDUzdgpqK0VjSXZaOWM1Mm5XWWN1RnlSN0pLUXZJUDQ4UWFxb0FheGMrZkd4Tm9jCi0+IHBpdi1wMjU2IDU1ZFQ0ZyBBOUN0NXFjWFgwRkRiOU1ZZUV3ZUU1U1d6eEVEUmFYeW5vdnZ3Zmx5Z3A1bApUaGVCVW5pOCtvQUpXTTUzbHJJVmZQR3IxRFZPV0ZtNy9XK3JxdERBVWpJCi0+IHh1LWdyZWFzZSBBLCBiPllWCmNWcWdiTHVHRlFEd1kxd3ZmZzQKLS0tIG11UTRPQUhvQjhhZmVVbEQ0b0dtODV5b1VZcTJqUmR3R1BpT1ZGTXJ1MkkK8rhdPsgq5M6W4zHkxUBp6ToJge7BOdKMgXD2D801XKldDEPC8pTlSXF/fiowKJ6L5vka8MdksOgie2KXBqPoYvOzXUMmdni3we+blY9L4jZjDTMPzlnJdG8nCnSH+Gd0J7Rv5uKE/E2sfOJV8ee8B4L/1Z66WBDFv/ZCOekr1GpOlTk7CsmLeNYk4nWXMB36vsRzSy1cp56Qnxt3mPIuHRvlUjjXjKiuya8R43WiNoDq7Sq1xkxvMHis4vwAKu1t5qUbzdYoYBpu+cMeFreF0UFfxNVzS2/f65ffgP9p3xeQrBcf1PD1VtXdl8E6oibqeaZWC4hNR++o04EmuKUMU/rNT8wiBMB1F64UinjDBZDLDnqGK1ZNqLyjqx61kwsyjIweQ20NRRWpIb9mtwyLMXbqnOi1QUUDAcyNlR/pKAMKuwIJ1QPr5l32HP6/06fmAFDKDokeEExVR+sa+fAf5wWpLZIPw140Wty3RIg65awNzhW4sLp4AO/I/csYMpe2izYil8ny4fKf3o6sd/l0xuSVgRP/9WcelQOedPy4PtxAHHx2694Zdb6AoW43rhRTjqIjDkngkcBWYoaf8S9zJuvhaAEDb+dg2nogb26r9zfMtrKQxf1VK/RzSmyHMjfYEYUeK5lqFQjpBDMfPXLP45PuIUB9vsMMnsMqHn/tQ3IJySe0s6Db2D1egv9O3eE3nLXLqTz0afwc/8SBTfvzrAsYm2EVBMwNXnJ5d9o1mLZNGXXZaqAadkwlGsWmRUmfCiXdhcmxJStCLO8N1QB5ub2tokE4NN/4oeJsHr3bdzW8e98TTQmGnBk1pYa8TBHchpWq7AilF9FY8JG0Ry5MyKUubuvgdumDIMImwa5QxqhKhqC5oDdwyahRxX6Gmq82nA7V3JUub0wK5HKlC+pEelM6rn4AquJdAKhOn74rdDkOM8vPpoGpRTrQbwgiyeKhHlhufuik5InnFOSXJlWOSiyTNDJvjByDdqIGN2w9GXYtgpUnH55oE8Gx8F/6Oc83EZ9pC6GzgMHQF0/yeNIZJGb2JvoP8/K/7/4xloDaZV0GeDaIIjMca4W5KqToZP9qJy0poZt4Ffltpin8YyxvHjsppDLg24e9FIFNPhe8c6Qs0bt5z8CPpUe9P+4fqLUr+UALFBsTZJ2QHr7ynfyyPKGFd3I=", env = false }
+# The YubiKey-backed service-account token remains an on-demand secret in the
+# bootstrap profile below.
 
 # On-demand single values: `fnox get APPLE_TEAM_ID`. env = false so shell
 # activation doesn't hit 1Password on every new shell for rarely-used secrets.
@@ -90,3 +90,8 @@ APPLE_NOTARYTOOL_PASSWORD = { provider = "onepass", value = "op://Crypt/apple-de
 
 COZI_USERNAME = { provider = "onepass", value = "op://Crypt/tsfx5wfd3kzuauzl5h4m3dct5i/COZI_USERNAME", env = false }
 COZI_PASSWORD = { provider = "onepass", value = "op://Crypt/tsfx5wfd3kzuauzl5h4m3dct5i/COZI_PASSWORD", env = false }
+
+# Hardware-backed 1Password bootstrap token. Keep it outside the default
+# profile so routine `fnox exec` calls never prompt for a YubiKey touch.
+[profiles.bootstrap.secrets]
+OP_SERVICE_ACCOUNT_TOKEN = { provider = "age", value = "YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHBpdi1wMjU2IGtzV1ZPdyBBb3pPMHlwcUUycVd1aGliWXBuTTBpbTJWOU1PM0V5UVk4QWhsZXBRN09nUwpsWWNxMVlvUEJNQ3NBOFlTaGRUWEoxMDBaNUgvRjlKRE5ZMUQvZmc4YTNNCi0+IHBpdi1wMjU2IDU1ZFQ0ZyBBayt0WExTbWF6c2Z4Q0kyYVBnOXdQaHk0MnVZZExMUm9RdWx0VCtPRE5xegpwT2l0ODVncllQLy9HalZDcVBHb3RSY3VmdXNRVzQ1Zkkxay9Kay9Ic1BjCi0+IC01MDBfUEVRLWdyZWFzZSAubXghMUkkIDYkQzpOIDpLNEMKVitBMDFLSDR2a3htVG5MSTRCbkdVNzlnZjc4QnN0dkxBSENNTmVaOVBJQXZrajNnejArTlEzM3ZZQ0g3Q0xZMApwVGFvV2NYUlpPdlJWaTlDYWs2QTNzemYybDAKLS0tIHNZbVB4QVExZ1p3UGplNzg1enNKMFo4ZU1BSlBiWjJvYWFzWWx4Z1VaSGcKD/1LSf7dry8jT74mcGSbv7+48TovLgwj00p+/gbxNR9c5Qj+7zhvQnz7Ha9iKYTmNVzggB2mDHs/8Cr/Pm/xiDGfGTUGLiBGHOifmkFJ2uPS9qG2ia6BwZs3mw3SepKlOWJpTBk5kKPeI6dc4OMCZUqXOoNWj77Ol/dXF35kD+c1tgB4AfHb4tE0Vg5d+JHlLr7B+A8j5+sToJz1ZOKHBstXLBc7sgjzNyfAS+xA7nEtenMWF8dW331Vtbowcmn1i8AZ7W5gtVekl3EF7cEvUeY3vxuv4cF0xaAhdXArRYpWFU+LkOmJQqSfYqe9WD4lxVNeDf2X6F3GPCVBi6SIxAqBerZ14YQuaJ6d2ulmHO/142sp36TLhMiYLbZvAzchq7r+UMS984UZ/J30ijhouMpDwdxa9O8TbsjjfIMBwfByIegsPj0ye9UUco3BuleSrUQilFEe91QaJIA5h2T7Rwkcm/9jpmniE7Hka2H5A78k0q8f9gl2JWXHfB35yY/1jgnOrPx7lJQ3P+8LEaEUaznRnl5zu45QwW5yhSTLGCn2K95/WYSrqQCcr/s/SDUWv10POUbDRU3SkFNFaRkiqWyUG5CfKqUwdyvzxZvlv4N3w5PybcPp68BfjV8L2O4AJCTNE/ZOj4aQhXqffrQXsf5U+P8mKQb4E3GJFF7Jw00lRYELzAJ63mj176H3fEBZY2QByvJhScOylQoYKF4ngMiXX20cE7ECAXCpHADdilFeU/X50Nq9LkXzV8WFMci5h2cFcqdBq8HDR0iHGFpA87Hd2JNVNkXSgVxMmCN534U7djuKaQEasnFc1rjg7CepH828On5x7kEPpFE0hcR9S4halZssDFXL58KDeoUVlDI94kaTdztfXU9/fYmI/zbOC3w616k0o9Zv6kxRxwYOzh7FZsDjhTMJcCGfPZMudQEgUVNa+oLX3rZddyptNGCa7tWr45OqBWjuo4dodqYyiKFGXShGsdTk1lc0KwEwnBH9p2uxY6bwI4UmbIneq9rO2vLwJ7220UkL0q3M4LAuwsW54lC3em0G+a3QOLJmJw/2h1WcrcFxvcNCoYwUbZs+T3k7hwNxoT/UNBE2dLCFpD7RdNLIYbPpToFDk393ABv7eQaKaLoHks0rxyW2JYWlL5fAKUd6BMTHS77QP6PDAkQNToI=", env = false }

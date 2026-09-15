@@ -21,12 +21,13 @@
 #      decryption works with whichever fleet key is plugged in.
 #   5. Ensure the key's recipient is in the fnox age provider recipients list
 #      (appended, never replacing existing recipients).
-#   6. Ensure OP_SERVICE_ACCOUNT_TOKEN is stored encrypted (prompts for the
-#      ops_... token on first run; create one at 1password.com > Developer >
-#      Service Accounts with READ access to the Crypt vault). If recipients
-#      changed and a blob already exists, re-encrypt with
-#      `fnox reencrypt -p age` (needs a key that can decrypt the current blob).
-#   7. Verify the round-trip: decrypt via YubiKey, then `op whoami`.
+#   6. Ensure OP_SERVICE_ACCOUNT_TOKEN is stored encrypted in the bootstrap
+#      profile (prompts for the ops_... token on first run; create one at
+#      1password.com > Developer > Service Accounts with READ access to the
+#      Crypt vault). If recipients changed and a blob already exists,
+#      re-encrypt with `fnox --profile bootstrap reencrypt -p age` (needs a key
+#      that can decrypt the current blob).
+#   7. Verify the round-trip through the bootstrap profile, then `op whoami`.
 #
 # Usage: mise run setup:yubikey [-- <serial>]
 #        YK_SERIAL=<serial> mise run setup:yubikey
@@ -135,6 +136,7 @@ else
 fi
 
 # -- 5. recipient in fnox config ------------------------------------------------
+recipient_added=0
 if grep -q "$recipient" "$fnox_config"; then
   ok "Recipient already in fnox config"
 elif python3 - "$fnox_config" "$recipient" "$serial" <<'PY'; then
@@ -154,32 +156,42 @@ s = s[: m.start(2)] + new_body + s[m.end(2):]
 with open(path, "w") as f:
     f.write(s)
 PY
+  recipient_added=1
   ok "Appended recipient to fnox config"
   echo "NOTE: existing age-encrypted secrets are still encrypted to the OLD"
   echo "recipient set. Re-encrypt with a key that can decrypt the current blob:"
-  echo "  fnox reencrypt -p age"
+  echo "  fnox --config $fnox_config --profile bootstrap reencrypt -p age"
 else
   fail "Could not find a recipients array in $fnox_config age provider."
 fi
 
-# -- 6. encrypted token in global fnox config ------------------------------------
+# -- 6. encrypted token in bootstrap profile -------------------------------------
 if python3 - "$fnox_config" <<'PY'
 import sys, tomllib
 with open(sys.argv[1], "rb") as f:
     data = tomllib.load(f)
-secret = data.get("secrets", {}).get("OP_SERVICE_ACCOUNT_TOKEN")
+secret = (
+    data.get("profiles", {})
+    .get("bootstrap", {})
+    .get("secrets", {})
+    .get("OP_SERVICE_ACCOUNT_TOKEN")
+)
 if not isinstance(secret, dict) or secret.get("provider") != "age":
     sys.exit(1)
 PY
 then
-  skip "OP_SERVICE_ACCOUNT_TOKEN already stored in global fnox config (rotate: fnox set -g OP_SERVICE_ACCOUNT_TOKEN --provider age)"
+  if [[ "$recipient_added" -eq 1 ]]; then
+    fail "Recipient added, but the existing token still needs re-encryption. Connect a key that decrypts the current blob, run: fnox --config $fnox_config --profile bootstrap reencrypt -p age; then rerun this setup."
+  fi
+  skip "OP_SERVICE_ACCOUNT_TOKEN already stored in bootstrap profile (rotate: fnox --config $fnox_config --profile bootstrap --write-profile bootstrap set OP_SERVICE_ACCOUNT_TOKEN --provider age)"
 else
   [[ -t 0 ]] || fail "Interactive terminal required to paste the token."
   read -rsp "Paste the ops_... service account token: " token
   echo
   [[ "$token" == ops_* ]] || fail "Token must start with ops_"
-  printf '%s' "$token" | fnox set -g OP_SERVICE_ACCOUNT_TOKEN --provider age
-  ok "Token stored encrypted in global fnox config (safe to commit)"
+  printf '%s' "$token" | fnox --config "$fnox_config" --profile bootstrap \
+    --write-profile bootstrap set OP_SERVICE_ACCOUNT_TOKEN --provider age
+  ok "Token stored encrypted in bootstrap profile (safe to commit)"
 fi
 
 python3 - "$fnox_config" <<'PY'
@@ -189,9 +201,14 @@ with open(path) as f:
     s = f.read()
 with open(path, "rb") as f:
     data = tomllib.load(f)
-secret = data.get("secrets", {}).get("OP_SERVICE_ACCOUNT_TOKEN")
+secret = (
+    data.get("profiles", {})
+    .get("bootstrap", {})
+    .get("secrets", {})
+    .get("OP_SERVICE_ACCOUNT_TOKEN")
+)
 if not isinstance(secret, dict) or secret.get("provider") != "age":
-    sys.exit("OP_SERVICE_ACCOUNT_TOKEN missing from global fnox config")
+    sys.exit("OP_SERVICE_ACCOUNT_TOKEN missing from bootstrap profile")
 pattern = r'(OP_SERVICE_ACCOUNT_TOKEN\s*=\s*\{[^}\n]*)(\})'
 
 def repl(match):
@@ -210,7 +227,7 @@ ok "OP_SERVICE_ACCOUNT_TOKEN env=false enforced"
 
 # -- 7. verify round-trip ---------------------------------------------------------
 echo "Verifying decrypt (YubiKey touch may be required).."
-token="$(fnox get OP_SERVICE_ACCOUNT_TOKEN)"
+token="$(fnox --config "$fnox_config" --profile bootstrap get OP_SERVICE_ACCOUNT_TOKEN)"
 [[ -n "$token" ]] || fail "Decryption returned empty token"
 ok "Decrypt works"
 
