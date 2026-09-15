@@ -20,17 +20,26 @@ if [ -n "${PORT:-}" ]; then
   exit 0
 fi
 
-# 2. running server: beam process whose cwd is this checkout. Lowest
-#    listening TCP port is Phoenix (4000+offset < live_debugger 4008+offset
-#    < erlang distribution ports).
+# 2. running server: beam process whose cwd is this checkout AND whose
+#    command line runs `mix phx.server` — other beams share the cwd
+#    (pi-elixir project VMs, `mix test` runs) and would match a bare cwd
+#    probe. Lowest listening TCP port in the deterministic Phoenix range
+#    (4000..4999 = 4000 + phash2(_, 1000)) is the server; ports outside the
+#    range (erlang distribution, live_debugger never wins: 4008+offset >
+#    4000+offset) are ignored rather than misreported.
 for pid in $(pgrep -x beam.smp 2>/dev/null || true); do
   # `|| true` guards: pid may vanish between pgrep and lsof (exit 1), and
   # `head -1` can SIGPIPE upstream (exit 141) — either would kill the script
   # under set -euo pipefail.
+  case "$(ps -o command= -p "$pid" 2>/dev/null || true)" in
+  *phx.server*) ;;
+  *) continue ;;
+  esac
   cwd="$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | head -1 || true)"
   [ "$cwd" = "$root" ] || continue
   p="$(lsof -a -p "$pid" -iTCP -sTCP:LISTEN -P -Fn 2>/dev/null |
-    sed -n 's/^n.*:\([0-9][0-9]*\)$/\1/p' | sort -n | head -1 || true)"
+    sed -n 's/^n.*:\([0-9][0-9]*\)$/\1/p' |
+    awk '$1 >= 4000 && $1 <= 4999' | sort -n | head -1 || true)"
   if [ -n "$p" ]; then
     echo "$p"
     exit 0
