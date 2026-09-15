@@ -10,7 +10,8 @@
 				"chrome-devtools-mcp@latest",
 				"--executable-path=/Applications/Helium.app/Contents/MacOS/Helium",
 				"--isolated"
-			]
+			],
+			"disabled": true
 		},
 		"chrome-devtools-profile": {
 			"command": "npx",
@@ -28,8 +29,7 @@
 				"-y",
 				"chrome-devtools-mcp@latest",
 				"--browserUrl=http://localhost:9223"
-			],
-			"disabled": true
+			]
 		},
 		"context7": {
 			"url": "https://mcp.context7.com/mcp",

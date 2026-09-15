@@ -160,7 +160,7 @@ MCP reconnect failures are contained so repeating server errors do not corrupt P
 
 Local Pi models use the `llamacpp` OpenAI-compatible provider at `http://127.0.0.1:18080/v1` with `llamacpp/qwen3.6`, `llamacpp/deepseek14b`, and `llamacpp/gemma4` aliases instead of Ollama or oMLX. Activation removes redundant `package.json`, `package-lock.json`, and `node_modules` from `~/.pi/agent/extensions` because Pi's own resolver handles deps.
 
-Global MCP server config lives in `mcp.json`: command-backed `chrome-devtools`, remote `context7` with `CONTEXT7_API_KEY`, remote `githits` with bearer auth from `GITHITS_API_KEY`, command-backed `mise`, and stdio `sessions` (`sessions --mcp`, the nicknisi/sessions cross-tool session search/memory server). Local app-backed MCP servers such as Tidewave and Paper are not declared globally unless they are expected to be running, to avoid reconnect noise.
+Global MCP server config lives in `mcp.json`: `chrome-devtools-attach` connects to the running Helium debug port at `localhost:9223`; isolated `chrome-devtools` and copied-profile `chrome-devtools-profile` remain configured but disabled. Other global servers are remote `context7` with `CONTEXT7_API_KEY`, remote `githits` with bearer auth from `GITHITS_API_KEY`, command-backed `mise`, and stdio `sessions` (`sessions --mcp`, the nicknisi/sessions cross-tool session search/memory server). Local app-backed MCP servers such as Tidewave and Paper are not declared globally unless they are expected to be running, which avoids reconnect noise.
 
 The `chrome-cdp` skill probes `CDP_PORT`, `CDP_PORT_FILE`, Helium's default port `9223`, then known browser `DevToolsActivePort` files. Each port is validated through `/json/version`, so stale port files do not block discovery.
 

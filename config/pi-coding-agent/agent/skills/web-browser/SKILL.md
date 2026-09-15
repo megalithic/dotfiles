@@ -22,6 +22,20 @@ Activate when the user:
 Do NOT ask for permission to use the browser — just use it. Navigate, snapshot,
 screenshot as needed to answer the user's question.
 
+**ALWAYS attach to the user's running Helium on port 9223 — NEVER launch a new
+Helium app instance.** Before any browser work, check the debug port:
+
+```bash
+curl -s --max-time 2 http://localhost:9223/json/version
+```
+
+- Reachable → use the `chrome-devtools-attach` MCP server (enable it in
+  `~/.pi/agent/mcp.json`, disable `chrome-devtools`, reload). Work in a new
+  tab of the existing window.
+- Not reachable → do NOT fall back to launching a browser. Ask the user to
+  start their Helium with the debug port:
+  `helium --remote-debugging-port=9223`
+
 ## Quick reference
 
 ### See a page
@@ -79,10 +93,19 @@ mcp chrome-devtools evaluate_script {"function": "<contents of pick.js>"}
 
 ## Browsing modes
 
-### Isolated (default)
+### Attach to running Helium (default — always prefer this)
 
-Every `chrome-devtools` tool call uses a fresh temp profile. No cookies, no
-logins. Works for public pages, testing, screenshots.
+Attach to the user's live Helium via debug port 9223 using the
+`chrome-devtools-attach` MCP server. This shares the live session — all
+cookies, tabs, and extensions. Open a new tab; never spawn a second Helium
+instance. If port 9223 is down, ask the user to relaunch with
+`helium --remote-debugging-port=9223` instead of launching anything yourself.
+
+### Isolated (fallback, only on explicit user request)
+
+Every `chrome-devtools` tool call uses a fresh temp profile in a separate
+Chromium instance. No cookies, no logins. Only use when the user explicitly
+asks for an isolated/clean browser.
 
 ### Copied profile (logged-in sessions)
 
@@ -90,25 +113,15 @@ When the user needs their logged-in session (e.g., "check my dashboard",
 "look at my account page"):
 
 1. Run the copy script:
+
    ```bash
    ./scripts/copy-profile.sh           # copy daily Helium profile
    ./scripts/copy-profile.sh brave     # copy daily Brave Nightly profile
    ```
+
 2. Tell the user: "I've copied your profile. To use it, enable
    `chrome-devtools-profile` in `~/.pi/agent/mcp.json` (set `disabled: false`
    and set `chrome-devtools` to `disabled: true`), then reload the session."
-
-### Attach to running Helium
-
-When the user's daily Helium is running with a debug port:
-
-```bash
-helium --remote-debugging-port=9223   # user launches from fish
-```
-
-Use the `chrome-devtools-attach` MCP server (enable in mcp.json, disable
-the default `chrome-devtools`). This shares the live session — all cookies,
-tabs, and extensions.
 
 ## Tips
 
