@@ -28,18 +28,16 @@
     "npm:pi-web-access",
     "git:github.com/amosblomqvist/pi-interactive-subagents",
     "git:github.com/amosblomqvist/pi-observational-memory",
-    "npm:pi-caveman",
     "npm:@plannotator/pi-extension",
     "npm:pi-rtk-optimizer",
     "npm:pi-mono-btw",
-    "npm:context-mode",
     "npm:pi-elixir",
-    "npm:pi-lens",
     "npm:@ogulcancelik/pi-ssh-tools",
     "npm:@juicesharp/rpiv-ask-user-question",
     "npm:@juicesharp/rpiv-todo",
     "npm:@ff-labs/pi-fff",
-    "npm:@hypabolic/pi-hypa"
+    "npm:@hypabolic/pi-hypa",
+    "npm:@sting8k/pi-vcc"
   ],
   "enabledModels": [
     "anthropic/claude-fable-5",
