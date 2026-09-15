@@ -1,6 +1,6 @@
 ---
 id: dot-a9wd
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-06-03T20:10:24Z
