@@ -100,35 +100,16 @@ const detectTmux = (): {
     const target = process.env.TMUX_PANE
       ? `-t '${process.env.TMUX_PANE}' `
       : "";
-    const session = execSync(
-      `tmux display-message -p ${target}'#{session_name}'`,
-      {
-        encoding: "utf-8",
-        timeout: 2000,
-      },
-    ).trim();
-    const winName = execSync(
-      `tmux display-message -p ${target}'#{window_name}'`,
-      {
-        encoding: "utf-8",
-        timeout: 2000,
-      },
-    ).trim();
-    const winIndex = execSync(
-      `tmux display-message -p ${target}'#{window_index}'`,
-      {
-        encoding: "utf-8",
-        timeout: 2000,
-      },
-    ).trim();
-    const pane = execSync(`tmux display-message -p ${target}'#{pane_id}'`, {
-      encoding: "utf-8",
-      timeout: 2000,
-    }).trim();
-    const paneIndex = execSync(
-      `tmux display-message -p ${target}'#{pane_index}'`,
+    // Single subprocess: batched tab-separated format. This runs at startup
+    // AND on every heartbeat, so collapsing five execSync spawns into one is a
+    // 5x reduction in per-interval tmux process churn across all Pi panes.
+    const raw = execSync(
+      `tmux display-message -p ${target}'#{session_name}\t#{window_name}\t#{window_index}\t#{pane_id}\t#{pane_index}'`,
       { encoding: "utf-8", timeout: 2000 },
-    ).trim();
+    );
+    const [session, winName, winIndex, pane, paneIndex] = raw
+      .replace(/\n$/, "")
+      .split("\t");
     // Use window name if alphanumeric, otherwise index
     const window =
       winName && /^[a-zA-Z0-9_-]+$/.test(winName) ? winName : winIndex;
@@ -267,6 +248,13 @@ let shuttingDown = false;
 let tellWidgetTimer: ReturnType<typeof setTimeout> | null = null;
 let retryDelay = 250;
 let retryLogs = 0;
+// Live tidewave-MCP-connected gate. pi surfaces each connected MCP server as a
+// single tool `mcp__<serverName>` in the built system prompt's selectedTools;
+// it appears only when the server actually connected (not merely configured).
+// Captured in before_agent_start and mirrored into the manifest so Hammerspoon
+// can gate the Tidewave->pi handshake by reading the active pane's manifest.
+const TIDEWAVE_TOOL = "mcp__tidewave";
+let tidewaveConnected = false;
 const HEARTBEAT_MS = 10_000;
 const STALE_HEARTBEAT_MS = 45_000;
 const MAX_RETRY_MS = 8_000;
@@ -623,6 +611,7 @@ const writeInfoManifest = (): boolean => {
         process.env.PI_EPHEMERAL === "1" ||
         /-eph-[^-]+-[^-]+\.sock$/.test(SOCKET_PATH),
       startedAt: now,
+      tidewaveConnected,
       ...piSessionIdentity(latestCtx),
     });
   } catch {
@@ -638,30 +627,6 @@ const cleanupInfoManifest = (): void => {
       fs.unlinkSync(infoManifestPath);
     }
   } catch {}
-};
-
-// =============================================================================
-// Status Display
-// =============================================================================
-
-const _getModelShortName = (modelId: string | undefined): string => {
-  if (!modelId) return "?";
-
-  // Extract model name, strip provider prefix and version suffixes
-  // e.g., "anthropic/claude-opus-4-5-20250131" → "opus-4"
-  const name = modelId.split("/").pop() || modelId;
-
-  // Common model name shortenings
-  if (name.includes("opus")) return "opus-4";
-  if (name.includes("sonnet")) return "sonnet-4";
-  if (name.includes("haiku")) return "haiku";
-  if (name.includes("gpt-4o")) return "gpt-4o";
-  if (name.includes("gpt-4")) return "gpt-4";
-  if (name.includes("o1")) return "o1";
-  if (name.includes("o3")) return "o3";
-
-  // Fallback: first part of name
-  return name.split("-").slice(0, 2).join("-");
 };
 
 // =============================================================================
@@ -1057,6 +1022,7 @@ const startServer = async (
       if (manifest?.owner !== ownerToken || manifest?.pid !== process.pid)
         return;
       manifest.heartbeatAt = new Date().toISOString();
+      manifest.tidewaveConnected = tidewaveConnected;
       Object.assign(manifest, piSessionIdentity(latestCtx));
       const tmux = detectTmux();
       if (tmux?.pane === manifest.pane) {
@@ -1113,6 +1079,25 @@ export default function (pi: ExtensionAPI): void {
     manifest.heartbeatAt = new Date().toISOString();
     writeManifestAtomic(manifest);
   };
+
+  // Capture the live tidewave-MCP gate. selectedTools lists `mcp__tidewave`
+  // only when the server actually connected, so this refreshes per turn and
+  // writes the current truth into the manifest for Hammerspoon to read.
+  pi.on("before_agent_start", (event, ctx) => {
+    const selected =
+      (event as { systemPromptOptions?: { selectedTools?: string[] } })
+        .systemPromptOptions?.selectedTools ??
+      ctx.getSystemPromptOptions?.().selectedTools ??
+      [];
+    const next = selected.includes(TIDEWAVE_TOOL);
+    if (next !== tidewaveConnected) {
+      tidewaveConnected = next;
+      refreshSessionContext(ctx);
+    } else {
+      latestCtx = ctx;
+    }
+    return undefined;
+  });
 
   pi.on("session_switch", (_event, ctx) => {
     refreshSessionContext(ctx);
