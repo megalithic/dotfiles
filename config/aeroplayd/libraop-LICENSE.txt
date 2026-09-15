@@ -1,0 +1,9 @@
+libraop
+Copyright Philippe (philippe_44@outlook.com)
+
+Licensed under the MIT License: https://mit-license.org
+
+This program uses third-party software licensed by its authors under their own terms.
+
+Source revision: 4fe461a809eadd5230e3b587a3b3c948f90d9617
+Source: https://github.com/philippe44/libraop

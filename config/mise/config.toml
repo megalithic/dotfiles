@@ -175,6 +175,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 # config.toml. MISE_ENV = short hostname, exported by shell init (fish env.fish,
 # bashrc, zshrc) and bootstrap.sh.
 "~/.config/atuin/config.toml" = "~/.dotfiles/config/atuin/config.toml"
+"~/.config/aeroplayd/config.json" = "~/.dotfiles/config/aeroplayd/config.json"
 "~/.config/notiwatchd" = "~/.dotfiles/config/notiwatchd"
 # fnox: ~/.config/fnox/config.toml is intentionally NOT linked here. `mise run
 # fnox` generates it from config/fnox/shared.toml and atomically installs
@@ -700,6 +701,14 @@ start_interval = 21600
 stdout_path = "~/.cache/spotlight-exclude.log"
 stderr_path = "~/.cache/spotlight-exclude.err.log"
 
+# AeroPlay: route one app's audio only to a selected AirPlay or CoreAudio output.
+[bootstrap.macos.launchd.agents."com.megadots.aeroplayd"]
+program = "~/Applications/AeroPlay.app/Contents/MacOS/aeroplayd"
+run_at_load = true
+keep_alive = false
+stdout_path = "~/.cache/aeroplayd-stdout.log"
+stderr_path = "~/.cache/aeroplayd-stderr.log"
+
 # kanata daemon (dev.mise.org.kanata.daemon) and kanata-bar agents are
 # written and loaded by scripts/mise/setup-kanata (post-tools hook), because
 # bootstrap.sh always passes `--skip launchd`. This entry stays as the
@@ -755,6 +764,7 @@ login_shell = "/opt/homebrew/bin/fish"
 
 # -- Nerd Fonts: declare the font list here (mirrors nix fonts.packages in
 #    nix/hosts/common.nix). Names are release asset stems from
+  "mise run setup:aeroplayd",
 #    https://github.com/ryanoasis/nerd-fonts/releases (<Name>.tar.xz).
 #    Add/remove a font = edit the list; `mise run install:fonts` converges.
 #    Full bootstrap and `mise run up` call it explicitly; sources/outputs make
@@ -820,6 +830,7 @@ mise bootstrap --only macos-defaults --yes
 description = "Update Neovim plugins and treesitter parsers"
 run = [
   '''nvim --headless "+Lazy! sync" +qa''',
+mise run setup:aeroplayd
   '''nvim --headless "+TSUpdateSync" +qa''',
 ]
 
@@ -923,6 +934,23 @@ sources = [
 outputs = ["{{env.HOME}}/.local/bin/notiwatchd"]
 
 [tasks."build:avwatchd"]
+[tasks."setup:aeroplayd"]
+description = "Build and sign AeroPlay.app"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/lib/build-swift aeroplayd"
+sources = [
+  "{{env.DOTFILES_DIR}}/lib/build-swift",
+  "{{env.DOTFILES_DIR}}/lib/aeroplayd.swift",
+  "{{env.DOTFILES_DIR}}/lib/aeroplayd-cli.swift",
+  "{{env.DOTFILES_DIR}}/lib/aeroplayd-idle.swift",
+  "{{env.DOTFILES_DIR}}/lib/aeroplayd-ui.swift",
+  "{{env.DOTFILES_DIR}}/config/aeroplayd/cliraop-control.patch",
+  "{{env.DOTFILES_DIR}}/config/aeroplayd/libraop-LICENSE.txt",
+]
+outputs = [
+  "{{env.HOME}}/Applications/AeroPlay.app/Contents/MacOS/aeroplayd",
+  "{{env.HOME}}/Applications/AeroPlay.app/Contents/Resources/cliraop",
+]
+
 hide = true
 description = "Build and sign avwatchd"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/lib/build-swift avwatchd"

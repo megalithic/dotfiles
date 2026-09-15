@@ -128,7 +128,7 @@ hdr "Fonts"
 ls "$HOME/Library/Fonts/" 2>/dev/null | grep -q 'FiraCodeNerdFont' && ok "nerd fonts in ~/Library/Fonts (mise)" || bad "mise nerd fonts missing"
 ls "/Library/Fonts/Nix Fonts/" 2>/dev/null | grep -qi 'nerd-fonts' && bad "Nix Fonts still ships nerd-fonts" || ok "Nix Fonts free of nerd-fonts"
 
-hdr "Compiled Swift daemons"
+hdr "Compiled Swift programs"
 check_swift_binary() {
   local binary_name="$1"
   local identifier="$2"
@@ -156,6 +156,34 @@ check_swift_binary() {
 check_swift_binary miccheckd com.megadots.miccheck
 check_swift_binary notiwatchd com.megadots.notiwatchd
 check_swift_binary avwatchd com.megadots.avwatchd
+
+aeroplay_app="$HOME/Applications/AeroPlay.app"
+aeroplay_binary="$aeroplay_app/Contents/MacOS/aeroplayd"
+aeroplay_helper="$aeroplay_app/Contents/Resources/cliraop"
+if [[ -d "$aeroplay_app" && -x "$aeroplay_binary" && -x "$aeroplay_helper" ]]; then
+  ok "AeroPlay app and helper installed"
+  if codesign --verify --deep --strict "$aeroplay_app" >/dev/null 2>&1; then
+    ok "AeroPlay nested signatures valid"
+    aeroplay_details="$(codesign --display --verbose=4 "$aeroplay_app" 2>&1)"
+    aeroplay_helper_details="$(codesign --display --verbose=4 "$aeroplay_helper" 2>&1)"
+    if [[ "$aeroplay_details" == *"Identifier=com.megadots.aeroplayd"* ]]; then ok "AeroPlay identifier valid"; else bad "AeroPlay identifier invalid"; fi
+    if [[ "$aeroplay_details" == *"TeamIdentifier=3ZJ3F5RFBZ"* && "$aeroplay_details" == *runtime* ]]; then ok "AeroPlay team and runtime valid"; else bad "AeroPlay team or runtime invalid"; fi
+    if [[ "$aeroplay_helper_details" == *"Identifier=com.megadots.aeroplayd.cliraop"* && "$aeroplay_helper_details" == *"TeamIdentifier=3ZJ3F5RFBZ"* ]]; then ok "AeroPlay helper identity valid"; else bad "AeroPlay helper identity invalid"; fi
+  else
+    bad "AeroPlay nested signature invalid"
+  fi
+  aeroplay_ui_element="$(/usr/libexec/PlistBuddy -c 'Print :LSUIElement' "$aeroplay_app/Contents/Info.plist" 2>/dev/null || true)"
+  aeroplay_usage="$(/usr/libexec/PlistBuddy -c 'Print :NSAudioCaptureUsageDescription' "$aeroplay_app/Contents/Info.plist" 2>/dev/null || true)"
+  if [[ "$aeroplay_ui_element" == true && -n "$aeroplay_usage" ]]; then ok "AeroPlay menubar and audio-capture metadata valid"; else bad "AeroPlay Info.plist metadata invalid"; fi
+else
+  bad "AeroPlay app or helper missing"
+fi
+aeroplay_config_target="$(readlink "$HOME/.config/aeroplayd/config.json" 2>/dev/null || true)"
+if [[ "$aeroplay_config_target" == "$HOME/.dotfiles/config/aeroplayd/config.json" ]]; then
+  ok "AeroPlay runtime config linked"
+else
+  bad "AeroPlay runtime config link missing or wrong"
+fi
 notiwatchd_config_target="$(readlink "$HOME/.config/notiwatchd" 2>/dev/null || true)"
 if [[ "$notiwatchd_config_target" == "$HOME/.dotfiles/config/notiwatchd" && -f "$HOME/.config/notiwatchd/config.json" ]]; then
   ok "notiwatchd runtime config linked"
@@ -170,7 +198,7 @@ else
 fi
 
 hdr "launchd (mise agents up, no strays)"
-for agent in dev.mise.com.megadots.llama-cpp dev.mise.com.megadots.avwatchd dev.mise.com.megadots.notiwatchd dev.mise.com.megadots.miccheck; do
+for agent in dev.mise.com.megadots.llama-cpp dev.mise.com.megadots.avwatchd dev.mise.com.megadots.notiwatchd dev.mise.com.megadots.miccheck dev.mise.com.megadots.aeroplayd; do
   if launchctl list "$agent" >/dev/null 2>&1; then ok "$agent loaded"; else bad "$agent not loaded"; fi
 done
 for spec in avwatchd:avwatchd notiwatchd:notiwatchd miccheck:miccheckd; do
@@ -184,6 +212,12 @@ for spec in avwatchd:avwatchd notiwatchd:notiwatchd miccheck:miccheckd; do
     bad "$agent_name agent program: ${program:-missing}"
   fi
 done
+aeroplay_agent_program="$(/usr/libexec/PlistBuddy -c 'Print :ProgramArguments:0' "$HOME/Library/LaunchAgents/dev.mise.com.megadots.aeroplayd.plist" 2>/dev/null || true)"
+if [[ "$aeroplay_agent_program" == "$aeroplay_binary" ]]; then
+  ok "aeroplayd agent uses signed app executable"
+else
+  bad "aeroplayd agent program: ${aeroplay_agent_program:-missing}"
+fi
 notiwatchd_path="$(/usr/libexec/PlistBuddy -c 'Print :EnvironmentVariables:PATH' "$HOME/Library/LaunchAgents/dev.mise.com.megadots.notiwatchd.plist" 2>/dev/null || true)"
 if [[ "$notiwatchd_path" == "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" ]]; then
   ok "notiwatchd agent PATH is portable"

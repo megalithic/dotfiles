@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
-# Build, Developer ID-sign, verify, and atomically install a managed Swift daemon.
+# Build, Developer ID-sign, verify, and atomically install a managed Swift program.
 set -euo pipefail
 
 DOTFILES_DIR="${DOTFILES_DIR:-${DOTFILES:-$HOME/.dotfiles}}"
 PROGRAM="${1:-}"
 TEAM_ID="3ZJ3F5RFBZ"
+APP_BUNDLE=0
 
 case "$PROGRAM" in
+  aeroplayd)
+    APP_BUNDLE=1
+    OUTPUT_NAME="AeroPlay.app"
+    IDENTITY="${AEROPLAYD_CODESIGN_IDENTITY:-${CODESIGN_IDENTITY:-}}"
+    STALE_LINK_TARGET=""
+    ;;
   miccheck)
     OUTPUT_NAME="miccheckd"
     IDENTITY="${MICCHECK_CODESIGN_IDENTITY:-${CODESIGN_IDENTITY:-}}"
@@ -23,22 +30,45 @@ case "$PROGRAM" in
     STALE_LINK_TARGET="$DOTFILES_DIR/bin/avwatchd"
     ;;
   *)
-    echo "usage: $0 {miccheck|notiwatchd|avwatchd}" >&2
+    echo "usage: $0 {aeroplayd|miccheck|notiwatchd|avwatchd}" >&2
     exit 1
     ;;
 esac
 
 SRC="$DOTFILES_DIR/lib/$PROGRAM.swift"
-OUT="$HOME/.local/bin/$OUTPUT_NAME"
 IDENTIFIER="com.megadots.$PROGRAM"
 LABEL="dev.mise.$IDENTIFIER"
+if [[ "$APP_BUNDLE" == 1 ]]; then
+  OUT="$HOME/Applications/$OUTPUT_NAME"
+else
+  OUT="$HOME/.local/bin/$OUTPUT_NAME"
+fi
 
 [[ "$(uname -s)" == Darwin ]] || { echo "$PROGRAM build: macOS required" >&2; exit 1; }
 [[ -f "$SRC" ]] || { echo "$PROGRAM build: missing source $SRC" >&2; exit 1; }
+if [[ "$PROGRAM" == aeroplayd ]]; then
+  for extra_source in aeroplayd-cli.swift aeroplayd-ui.swift; do
+    [[ -f "$DOTFILES_DIR/lib/$extra_source" ]] || {
+      echo "$PROGRAM build: missing source $DOTFILES_DIR/lib/$extra_source" >&2
+      exit 1
+    }
+  done
+  [[ -f "$DOTFILES_DIR/config/aeroplayd/libraop-LICENSE.txt" ]] || {
+    echo "$PROGRAM build: missing libraop license" >&2
+    exit 1
+  }
+  [[ "$(uname -m)" == arm64 ]] || {
+    echo "$PROGRAM build: bundled cliraop supports arm64 only" >&2
+    exit 1
+  }
+fi
 if [[ -z "$IDENTITY" ]]; then
   IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null | awk -F '"' -v team="$TEAM_ID" '/Developer ID Application:/ && index($0, "(" team ")") { print $2; exit }')"
 fi
-[[ -n "$IDENTITY" ]] || { echo "$PROGRAM build: Developer ID Application identity for team $TEAM_ID not found" >&2; exit 1; }
+[[ -n "$IDENTITY" ]] || {
+  echo "$PROGRAM build: Developer ID Application identity for team $TEAM_ID not found" >&2
+  exit 1
+}
 
 if [[ -L "$OUT" ]]; then
   current_target="$(readlink "$OUT")"
@@ -49,14 +79,212 @@ if [[ -L "$OUT" ]]; then
   echo "$PROGRAM build: replacing stale mise symlink $OUT -> $current_target"
 fi
 
+unset SDKROOT DEVELOPER_DIR
+SDKROOT="$(/usr/bin/xcrun --sdk macosx --show-sdk-path)"
+export SDKROOT
+
+restart_if_loaded() {
+  if [[ "${SKIP_RESTART:-0}" == 1 ]]; then
+    echo "$PROGRAM build: restart skipped"
+  elif /bin/launchctl print "gui/$(id -u)/$LABEL" >/dev/null 2>&1; then
+    /bin/launchctl kickstart -k "gui/$(id -u)/$LABEL"
+    echo "$PROGRAM build: restarted $LABEL"
+  fi
+}
+
+build_aeroplayd() {
+  local revision="4fe461a809eadd5230e3b587a3b3c948f90d9617"
+  local patched_source_sha="5b80845bd11b2a07e58c998ac6bc89a2d83da3f9dae4b05a738d2ebe563a2f88"
+  local helper_recipe="1-arm64"
+  local helper_patch="$DOTFILES_DIR/config/aeroplayd/cliraop-control.patch"
+  local patch_sha=""
+  local toolchain_sha=""
+  local cache_dir="$HOME/Library/Caches/AeroPlay"
+  local cached_helper=""
+  local helper_build=""
+  local tmp_app=""
+  local backup_app=""
+
+  [[ -f "$helper_patch" ]] || {
+    echo "$PROGRAM build: missing cliraop control patch" >&2
+    exit 1
+  }
+  patch_sha="$(/usr/bin/shasum -a 256 "$helper_patch" | awk '{print $1}')"
+  toolchain_sha="$({
+    /usr/bin/xcrun clang --version
+    /usr/bin/xcrun --sdk macosx --show-sdk-version
+  } | /usr/bin/shasum -a 256 | awk '{print $1}')"
+  cached_helper="$cache_dir/cliraop-$helper_recipe-$revision-$patch_sha-$toolchain_sha"
+  mkdir -p "$cache_dir" "$(dirname "$OUT")"
+  helper_help="$("$cached_helper" --help 2>&1 || true)"
+  if [[ ! -x "$cached_helper" ]] ||
+    ! file "$cached_helper" | rg -q 'Mach-O 64-bit executable arm64' ||
+    [[ "$helper_help" != *"volume control FIFO"* ]]; then
+    if [[ -e "$cached_helper" || -L "$cached_helper" ]]; then
+      trash "$cached_helper"
+    fi
+    helper_build="$(mktemp -d "$cache_dir/cliraop.build.XXXXXX")"
+    echo "$PROGRAM build: building pinned cliraop $revision with live-volume control"
+    if ! (
+      set -e
+      source_dir="$helper_build/libraop"
+      /usr/bin/git -C "$helper_build" init libraop
+      /usr/bin/git -C "$source_dir" remote add origin https://github.com/philippe44/libraop.git
+      /usr/bin/git -C "$source_dir" fetch --depth 1 origin "$revision"
+      /usr/bin/git -C "$source_dir" -c advice.detachedHead=false checkout --detach FETCH_HEAD
+      [[ "$(/usr/bin/git -C "$source_dir" rev-parse HEAD)" == "$revision" ]]
+      /usr/bin/git -C "$source_dir" submodule update --init --recursive --depth 1 \
+        crosstools dmap-parser libopenssl libcodecs libmdns
+      /usr/bin/git -C "$source_dir" apply --check --unidiff-zero "$helper_patch"
+      /usr/bin/git -C "$source_dir" apply --unidiff-zero "$helper_patch"
+      /usr/bin/git -C "$source_dir" diff --check
+      actual_source_sha="$(/usr/bin/shasum -a 256 "$source_dir/src/cliraop.c" | awk '{print $1}')"
+      [[ "$actual_source_sha" == "$patched_source_sha" ]]
+      for targets in libopenssl/targets libcodecs/targets libmdns/targets; do
+        ln -s macos "$source_dir/$targets/aeroplay"
+      done
+      make_bin="$(command -v gmake || command -v make)"
+      "$make_bin" -C "$source_dir" -j8 HOST=aeroplay PLATFORM=arm64 STATIC=1 \
+        CC="$(/usr/bin/xcrun --find clang)" CXX="$(/usr/bin/xcrun --find clang++)" \
+        AR="$(/usr/bin/xcrun --find ar)"
+      built_helper="$source_dir/bin/cliraop-aeroplay-arm64"
+      file "$built_helper" | rg -q 'Mach-O 64-bit executable arm64'
+      built_help="$("$built_helper" --help 2>&1 || true)"
+      [[ "$built_help" == *"volume control FIFO"* ]]
+      ! /usr/bin/otool -L "$built_helper" | awk 'NR > 1' | rg -q '/(opt|Users|nix/store)/'
+      cp "$built_helper" "$helper_build/cliraop"
+      chmod 0755 "$helper_build/cliraop"
+    ); then
+      trash "$helper_build" >/dev/null 2>&1 || true
+      echo "$PROGRAM build: patched cliraop build failed" >&2
+      exit 1
+    fi
+    mv "$helper_build/cliraop" "$cached_helper"
+    trash "$helper_build"
+    helper_build=""
+  fi
+
+  tmp_app="$(mktemp -d "$(dirname "$OUT")/.AeroPlay.app.tmp.XXXXXX")"
+  cleanup_app() {
+    if [[ -n "$tmp_app" && ( -e "$tmp_app" || -L "$tmp_app" ) ]]; then
+      trash "$tmp_app" >/dev/null 2>&1 || true
+    fi
+    if [[ -n "$backup_app" && ( -e "$backup_app" || -L "$backup_app" ) ]]; then
+      if [[ ! -e "$OUT" && ! -L "$OUT" ]]; then
+        mv "$backup_app" "$OUT" || true
+      else
+        trash "$backup_app" >/dev/null 2>&1 || true
+      fi
+    fi
+  }
+  trap cleanup_app EXIT
+
+  mkdir -p "$tmp_app/Contents/MacOS" "$tmp_app/Contents/Resources"
+  cat >"$tmp_app/Contents/Info.plist" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key><string>en</string>
+  <key>CFBundleDisplayName</key><string>AeroPlay</string>
+  <key>CFBundleExecutable</key><string>aeroplayd</string>
+  <key>CFBundleIdentifier</key><string>com.megadots.aeroplayd</string>
+  <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+  <key>CFBundleName</key><string>AeroPlay</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>0.1.0</string>
+  <key>CFBundleVersion</key><string>1</string>
+  <key>LSMinimumSystemVersion</key><string>26.0</string>
+  <key>LSMultipleInstancesProhibited</key><true/>
+  <key>LSUIElement</key><true/>
+  <key>NSAudioCaptureUsageDescription</key>
+  <string>AeroPlay captures the selected app's audio and sends it only to your chosen speaker.</string>
+  <key>NSBonjourServices</key>
+  <array><string>_raop._tcp</string></array>
+  <key>NSHighResolutionCapable</key><true/>
+  <key>NSLocalNetworkUsageDescription</key>
+  <string>AeroPlay discovers and connects to AirPlay speakers on your local network.</string>
+  <key>NSPrincipalClass</key><string>NSApplication</string>
+</dict>
+</plist>
+PLIST
+
+  echo "$PROGRAM build: compiling AeroPlay.app"
+  /usr/bin/xcrun swiftc -O \
+    -framework AppKit \
+    -framework CoreAudio \
+    -framework AudioToolbox \
+    -framework AVFoundation \
+    -framework SwiftUI \
+    "$DOTFILES_DIR/lib/aeroplayd.swift" \
+    "$DOTFILES_DIR/lib/aeroplayd-cli.swift" \
+    "$DOTFILES_DIR/lib/aeroplayd-idle.swift" \
+    "$DOTFILES_DIR/lib/aeroplayd-ui.swift" \
+    -o "$tmp_app/Contents/MacOS/aeroplayd"
+  cp "$cached_helper" "$tmp_app/Contents/Resources/cliraop"
+  cp "$DOTFILES_DIR/config/aeroplayd/libraop-LICENSE.txt" \
+    "$tmp_app/Contents/Resources/libraop-LICENSE.txt"
+
+  echo "$PROGRAM build: signing nested helper with $IDENTITY"
+  /usr/bin/codesign --force --timestamp --options runtime \
+    --identifier "$IDENTIFIER.cliraop" --sign "$IDENTITY" \
+    "$tmp_app/Contents/Resources/cliraop"
+  echo "$PROGRAM build: signing app with $IDENTITY"
+  /usr/bin/codesign --force --timestamp --options runtime \
+    --identifier "$IDENTIFIER" --sign "$IDENTITY" "$tmp_app"
+
+  /usr/bin/plutil -lint "$tmp_app/Contents/Info.plist" >/dev/null
+  /usr/bin/codesign --verify --deep --strict --verbose=2 "$tmp_app"
+  details="$(/usr/bin/codesign --display --verbose=4 "$tmp_app" 2>&1)"
+  [[ "$details" == *"Identifier=$IDENTIFIER"* ]] || {
+    echo "$PROGRAM build: identifier verification failed" >&2
+    exit 1
+  }
+  [[ "$details" == *"TeamIdentifier=$TEAM_ID"* ]] || {
+    echo "$PROGRAM build: team verification failed" >&2
+    exit 1
+  }
+  [[ "$details" == *runtime* ]] || {
+    echo "$PROGRAM build: hardened runtime verification failed" >&2
+    exit 1
+  }
+  helper_details="$(/usr/bin/codesign --display --verbose=4 "$tmp_app/Contents/Resources/cliraop" 2>&1)"
+  [[ "$helper_details" == *"Identifier=$IDENTIFIER.cliraop"* ]] || {
+    echo "$PROGRAM build: helper identifier verification failed" >&2
+    exit 1
+  }
+  [[ "$helper_details" == *"TeamIdentifier=$TEAM_ID"* ]] || {
+    echo "$PROGRAM build: helper team verification failed" >&2
+    exit 1
+  }
+
+  if [[ -e "$OUT" || -L "$OUT" ]]; then
+    backup_app="$(dirname "$OUT")/.AeroPlay.app.previous.$$"
+    if [[ -e "$backup_app" || -L "$backup_app" ]]; then
+      trash "$backup_app"
+    fi
+    mv "$OUT" "$backup_app"
+  fi
+  mv "$tmp_app" "$OUT"
+  tmp_app=""
+  if [[ -n "$backup_app" ]]; then
+    trash "$backup_app"
+    backup_app=""
+  fi
+  trap - EXIT
+  echo "$PROGRAM build: installed $OUT ($IDENTIFIER, team $TEAM_ID)"
+  restart_if_loaded
+}
+
+if [[ "$PROGRAM" == aeroplayd ]]; then
+  build_aeroplayd
+  exit 0
+fi
+
 mkdir -p "$(dirname "$OUT")"
 TMP="$(mktemp "$OUT.tmp.XXXXXX")"
 cleanup() { [[ ! -e "$TMP" ]] || trash "$TMP" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
-
-unset SDKROOT DEVELOPER_DIR
-SDKROOT="$(/usr/bin/xcrun --sdk macosx --show-sdk-path)"
-export SDKROOT
 
 echo "$PROGRAM build: compiling $SRC"
 /usr/bin/xcrun swiftc -O -o "$TMP" "$SRC"
@@ -64,9 +292,18 @@ echo "$PROGRAM build: signing with $IDENTITY"
 /usr/bin/codesign --force --timestamp --options runtime --identifier "$IDENTIFIER" --sign "$IDENTITY" "$TMP"
 /usr/bin/codesign --verify --strict --verbose=2 "$TMP"
 DETAILS="$(/usr/bin/codesign --display --verbose=4 "$TMP" 2>&1)"
-[[ "$DETAILS" == *"Identifier=$IDENTIFIER"* ]] || { echo "$PROGRAM build: identifier verification failed" >&2; exit 1; }
-[[ "$DETAILS" == *"TeamIdentifier=$TEAM_ID"* ]] || { echo "$PROGRAM build: team verification failed" >&2; exit 1; }
-[[ "$DETAILS" == *"runtime"* ]] || { echo "$PROGRAM build: hardened runtime verification failed" >&2; exit 1; }
+[[ "$DETAILS" == *"Identifier=$IDENTIFIER"* ]] || {
+  echo "$PROGRAM build: identifier verification failed" >&2
+  exit 1
+}
+[[ "$DETAILS" == *"TeamIdentifier=$TEAM_ID"* ]] || {
+  echo "$PROGRAM build: team verification failed" >&2
+  exit 1
+}
+[[ "$DETAILS" == *runtime* ]] || {
+  echo "$PROGRAM build: hardened runtime verification failed" >&2
+  exit 1
+}
 
 remove_stale_artifact() {
   if [[ -n "$STALE_LINK_TARGET" && ( -e "$STALE_LINK_TARGET" || -L "$STALE_LINK_TARGET" ) ]]; then
@@ -84,10 +321,4 @@ mv -f "$TMP" "$OUT"
 trap - EXIT
 remove_stale_artifact
 echo "$PROGRAM build: installed $OUT ($IDENTIFIER, team $TEAM_ID)"
-
-if [[ "${SKIP_RESTART:-0}" == 1 ]]; then
-  echo "$PROGRAM build: restart skipped"
-elif /bin/launchctl print "gui/$(id -u)/$LABEL" >/dev/null 2>&1; then
-  /bin/launchctl kickstart -k "gui/$(id -u)/$LABEL"
-  echo "$PROGRAM build: restarted $LABEL"
-fi
+restart_if_loaded
