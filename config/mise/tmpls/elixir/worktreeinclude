@@ -1,0 +1,13 @@
+# Entries mise-tmpl-gen (wt mode) merges into <project>/.worktreeinclude —
+# the allowlist Worktrunk's `wt step copy-ignored --require-include` copies
+# into every new worktree. Merging is additive: project-local entries are
+# never removed. Comments and blank lines here are ignored.
+#
+# deps/ and _build/ seed the Mix caches copy-on-write (Worktrunk clones via
+# reflink/clonefile on APFS), eliminating the fresh-worktree cold start;
+# `mix deps.get` + `mix compile` in dev:setup validate the seeded cache.
+.config/
+.env
+.envrc
+deps/
+_build/

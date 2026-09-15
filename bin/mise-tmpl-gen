@@ -20,9 +20,12 @@
 # .config/scripts/ directory from the old copy model is stale; --check flags
 # it.
 #
-# wt mode also ensures <target>/.worktreeinclude lists .config/ (plus .env,
-# .envrc) so Worktrunk's `wt step copy-ignored` copies the generated stub
-# into each new worktree. Additive: existing entries are never removed.
+# wt mode also ensures <target>/.worktreeinclude lists the template's
+# copy-ignored allowlist so Worktrunk's `wt step copy-ignored` seeds each
+# new worktree. Entries come from <lang>/worktreeinclude when the template
+# provides one (comments/blank lines ignored), otherwise the default
+# .config/ + .env + .envrc trio. Additive: existing entries are never
+# removed.
 #
 # A .config/.metadata_never_index marker is maintained so Spotlight skips the
 # generated directory.
@@ -90,6 +93,17 @@ if [ ! -f "$src" ]; then
   exit 1
 fi
 
+# Template copy-ignored allowlist entries: <lang>/worktreeinclude when the
+# template ships one (comments and blank lines stripped), else the default
+# trio every stub needs.
+worktreeinclude_entries() {
+  if [ -f "$lang_dir/worktreeinclude" ]; then
+    grep -v '^[[:space:]]*\(#\|$\)' "$lang_dir/worktreeinclude"
+  else
+    printf '%s\n' ".config/" ".env" ".envrc"
+  fi
+}
+
 target="${2:-${MISE_ORIGINAL_CWD:-$PWD}}"
 if [ ! -d "$target" ]; then
   echo "error: target directory '$target' does not exist" >&2
@@ -109,6 +123,16 @@ if [ "$check" -eq 1 ]; then
     rc=1
   else
     echo "up-to-date: $dest"
+  fi
+  if [ "$mode" = "wt" ]; then
+    wi="$target/.worktreeinclude"
+    while IFS= read -r entry; do
+      [ -f "$wi" ] && grep -qxF "$entry" "$wi" && continue
+      echo "missing worktreeinclude entry: $entry (run: mise-tmpl-gen $name $target)"
+      rc=1
+    done <<EOF
+$(worktreeinclude_entries)
+EOF
   fi
   if [ -d "$dest_dir/scripts" ]; then
     echo "stale: $dest_dir/scripts/ (legacy copy model; scripts now run from $lang_dir/scripts/)"
@@ -165,13 +189,16 @@ if [ "$mode" = "wt" ]; then
   wi="$target/.worktreeinclude"
   touch "$wi"
   wi_changed=0
-  for entry in ".config/" ".env" ".envrc"; do
+  while IFS= read -r entry; do
+    [ -n "$entry" ] || continue
     if ! grep -qxF "$entry" "$wi"; then
       printf '%s\n' "$entry" >>"$wi"
       echo "worktreeinclude += $entry"
       wi_changed=1
     fi
-  done
+  done <<EOF
+$(worktreeinclude_entries)
+EOF
   [ "$wi_changed" -eq 0 ] && echo "worktreeinclude up-to-date: $wi"
 fi
 
