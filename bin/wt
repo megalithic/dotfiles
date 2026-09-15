@@ -2,7 +2,8 @@
 # wt — shell-agnostic Worktrunk wrapper core.
 #
 # Holds all the logic that used to live in the fish `wt` function:
-#   - v2 resolve/setup plus same-shell cd for `wt <branch>`
+#   - v2 resolve/setup for `wt <branch>` (canonical per-worktree session
+#     presentation by default; `-t cd` cds the same shell instead)
 #   - `-t window|w` 60/40 current-session window presentation
 #   - `-t session|s` canonical per-worktree session presentation
 #   - explicit upstream Worktrunk builtins remain on the compatibility path
@@ -280,9 +281,10 @@ if [ "$help_or_version" = false ]; then
   fi
 fi
 
-# Default target: switch flows (explicit `wt switch` or implicit `wt <branch>`)
-# open a per-worktree tmux session unless overridden. `-t cd` restores the
-# plain cd-in-shell behavior. Other builtins (list, remove, ...) never target.
+# Default target: explicit `wt switch` flows on this legacy compatibility
+# path open a per-worktree tmux session unless overridden (`-t cd` restores
+# plain cd-in-shell; implicit `wt <branch>` never reaches here — v2 handles
+# it). Other builtins (list, remove, ...) never target.
 target_defaulted=false
 if [ -z "$target" ] && [ "$help_or_version" = false ]; then
   if [ "$inject_switch" = true ] || [ "$first_cmd" = switch ]; then

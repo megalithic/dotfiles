@@ -13,10 +13,8 @@ V2_TARGET_KIND=
 V2_TARGET_SOURCE=
 V2_PRESENTATION=session
 V2_REQUESTED_PRESENTATION=session
-V2_PRESENTATION_EXPLICIT=0
 V2_BASE=
 V2_PRIMARY=0
-V2_IMPLICIT=0
 V2_DEFAULT=
 V2_REPO_ROOT=
 V2_GCD=
@@ -614,7 +612,6 @@ v2_parse_args() {
   V2_RESTART=0
   V2_PRESENTATION=session
   V2_REQUESTED_PRESENTATION=session
-  V2_PRESENTATION_EXPLICIT=0
   V2_PRIMARY=0
   while [ "$#" -gt 0 ]; do
     arg="$1"
@@ -629,19 +626,18 @@ v2_parse_args() {
         if [ "$#" -ge 2 ]; then
           case "$2" in
             cd|window|w|session|s)
-              V2_REQUESTED_PRESENTATION="$2"; V2_PRESENTATION_EXPLICIT=1; shift 2
+              V2_REQUESTED_PRESENTATION="$2"; shift 2
               case "$V2_REQUESTED_PRESENTATION" in w) V2_REQUESTED_PRESENTATION=window ;; s) V2_REQUESTED_PRESENTATION=session ;; esac
               V2_PRESENTATION="$V2_REQUESTED_PRESENTATION"
               ;;
-            *) V2_PRESENTATION=session; V2_REQUESTED_PRESENTATION=session; V2_PRESENTATION_EXPLICIT=1; shift ;;
+            *) V2_PRESENTATION=session; V2_REQUESTED_PRESENTATION=session; shift ;;
           esac
         else
-          V2_PRESENTATION=session; V2_REQUESTED_PRESENTATION=session; V2_PRESENTATION_EXPLICIT=1; shift
+          V2_PRESENTATION=session; V2_REQUESTED_PRESENTATION=session; shift
         fi
         ;;
       -t=*|--target=*)
         V2_REQUESTED_PRESENTATION="${arg#*=}"
-        V2_PRESENTATION_EXPLICIT=1
         case "$V2_REQUESTED_PRESENTATION" in cd|window|w|session|s) case "$V2_REQUESTED_PRESENTATION" in w) V2_REQUESTED_PRESENTATION=window ;; s) V2_REQUESTED_PRESENTATION=session ;; esac; V2_PRESENTATION="$V2_REQUESTED_PRESENTATION" ;; *) v2_set_error usage 'target must be cd|window|session' args 2; return 1 ;; esac
         shift ;;
       --*) v2_set_error usage "unknown argument: $arg" args 2; return 1 ;;
@@ -746,16 +742,15 @@ v2_emit_prune_success() {
 
 wt_v2_main() {
   local rc operation actual_presentation window_id left_pane
-  V2_IMPLICIT=0
   case "${1:-}" in
     ensure|new|open|path|repair|prune|list) ;;
-    *) V2_IMPLICIT=1; set -- ensure "$@" ;;
+    *) set -- ensure "$@" ;;
   esac
   v2_parse_args "$@" || { v2_emit_error; return "$V2_ERROR_RC"; }
-  if [ "$V2_IMPLICIT" -eq 1 ] && [ "$V2_PRESENTATION_EXPLICIT" -eq 0 ]; then
-    V2_PRESENTATION="cd"
-    V2_REQUESTED_PRESENTATION="cd"
-  fi
+  # Implicit `wt <branch>` uses the default session presentation (same as
+  # `wt open`): the canonical per-worktree tmux session with the
+  # code/agent/services layout. `wt -t cd <branch>` is the explicit escape
+  # hatch that only cds the calling shell without touching tmux.
   if [ "$V2_CMD" = open ]; then
     V2_PRESENTATION=session
     V2_REQUESTED_PRESENTATION=session
