@@ -20,9 +20,16 @@ EOF
 dry_run=0
 for arg in "$@"; do
   case "$arg" in
-    --dry-run|-n) dry_run=1 ;;
-    --help|-h) usage; exit 0 ;;
-    *) echo "update-pi: unknown argument: $arg" >&2; usage >&2; exit 2 ;;
+    --dry-run | -n) dry_run=1 ;;
+    --help | -h)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "update-pi: unknown argument: $arg" >&2
+      usage >&2
+      exit 2
+      ;;
   esac
 done
 
@@ -179,6 +186,7 @@ trash_path "$agent/extensions/package.json"
 trash_path "$agent/extensions/package-lock.json"
 trash_path "$agent/extensions/node_modules"
 
+mise upgrade npm:@earendil-works/pi-coding-agent --yes
 "$pi_src/bin/pi" update
 "$pi_src/bin/pi" update --extensions
 
