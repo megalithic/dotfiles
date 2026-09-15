@@ -103,62 +103,62 @@ return {
       },
     },
 
-    {
-      "nikbrunner/mdn.nvim",
-      ft = { "markdown" },
-      opts = {
-        auto_continue = true,
-      },
-    },
+    -- {
+    --   "nikbrunner/mdn.nvim",
+    --   ft = { "markdown" },
+    --   opts = {
+    --     auto_continue = true,
+    --   },
+    -- },
 
     -- markdown.nvim: List continuation, inline surround, navigation
     -- Replaces unmaintained autolist.nvim (last commit Dec 2023)
-    {
-      "tadmccorkle/markdown.nvim",
-      ft = "markdown",
-      opts = {
-        mappings = {
-          inline_surround_toggle = "gs",
-          inline_surround_toggle_line = "gss",
-          inline_surround_delete = "ds",
-          inline_surround_change = "cs",
-          link_add = "gl",
-          link_follow = "gx",
-          go_curr_heading = "]c",
-          go_parent_heading = "]p",
-          go_next_heading = "]]",
-          go_prev_heading = "[[",
-        },
-        on_attach = function(bufnr)
-          local map = vim.keymap.set
-          local opts = { buffer = bufnr }
-
-          -- List item insertion (Alt+Enter)
-          map({ "n", "i" }, "<M-CR>", "<Cmd>MDListItemBelow<CR>", opts)
-          map({ "n", "i" }, "<M-S-CR>", "<Cmd>MDListItemAbove<CR>", opts)
-
-          -- Insert mode: Enter continues lists
-          map("i", "<CR>", function()
-            local line = vim.api.nvim_get_current_line()
-            -- If in a list (bullet or numbered), create new item
-            if line:match("^%s*[-*+]%s") or line:match("^%s*%d+[.)]%s") then return "<Cmd>MDListItemBelow<CR>" end
-            return "<CR>"
-          end, { buffer = bufnr, expr = true })
-
-          -- Normal mode: o continues lists
-          map("n", "o", function()
-            local line = vim.api.nvim_get_current_line()
-            if line:match("^%s*[-*+]%s") or line:match("^%s*%d+[.)]%s") then return "<Cmd>MDListItemBelow<CR>" end
-            return "o"
-          end, { buffer = bufnr, expr = true })
-
-          map("n", "O", function()
-            local line = vim.api.nvim_get_current_line()
-            if line:match("^%s*[-*+]%s") or line:match("^%s*%d+[.)]%s") then return "<Cmd>MDListItemAbove<CR>" end
-            return "O"
-          end, { buffer = bufnr, expr = true })
-        end,
-      },
-    },
+    -- {
+    --   "tadmccorkle/markdown.nvim",
+    --   ft = "markdown",
+    --   opts = {
+    --     mappings = {
+    --       inline_surround_toggle = "gs",
+    --       inline_surround_toggle_line = "gss",
+    --       inline_surround_delete = "ds",
+    --       inline_surround_change = "cs",
+    --       link_add = "gl",
+    --       link_follow = "gx",
+    --       go_curr_heading = "]c",
+    --       go_parent_heading = "]p",
+    --       go_next_heading = "]]",
+    --       go_prev_heading = "[[",
+    --     },
+    --     on_attach = function(bufnr)
+    --       local map = vim.keymap.set
+    --       local opts = { buffer = bufnr }
+    --
+    --       -- List item insertion (Alt+Enter)
+    --       map({ "n", "i" }, "<M-CR>", "<Cmd>MDListItemBelow<CR>", opts)
+    --       map({ "n", "i" }, "<M-S-CR>", "<Cmd>MDListItemAbove<CR>", opts)
+    --
+    --       -- Insert mode: Enter continues lists
+    --       map("i", "<CR>", function()
+    --         local line = vim.api.nvim_get_current_line()
+    --         -- If in a list (bullet or numbered), create new item
+    --         if line:match("^%s*[-*+]%s") or line:match("^%s*%d+[.)]%s") then return "<Cmd>MDListItemBelow<CR>" end
+    --         return "<CR>"
+    --       end, { buffer = bufnr, expr = true })
+    --
+    --       -- Normal mode: o continues lists
+    --       map("n", "o", function()
+    --         local line = vim.api.nvim_get_current_line()
+    --         if line:match("^%s*[-*+]%s") or line:match("^%s*%d+[.)]%s") then return "<Cmd>MDListItemBelow<CR>" end
+    --         return "o"
+    --       end, { buffer = bufnr, expr = true })
+    --
+    --       map("n", "O", function()
+    --         local line = vim.api.nvim_get_current_line()
+    --         if line:match("^%s*[-*+]%s") or line:match("^%s*%d+[.)]%s") then return "<Cmd>MDListItemAbove<CR>" end
+    --         return "O"
+    --       end, { buffer = bufnr, expr = true })
+    --     end,
+    --   },
+    -- },
   },
 }
