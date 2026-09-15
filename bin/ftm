@@ -628,10 +628,40 @@ function to_session() {
   tmux "$change" -t "$sid" ';' refresh-client
 }
 
+# -- canonical worktree session name for a directory: prints the
+#    {repo}-{branch-slug} id when $1 is a linked Git worktree, fails
+#    otherwise. Delegates to `wt id` (the single source of truth) with any
+#    inherited GIT_WORKTREE cleared so a pane inside worktree A cannot
+#    mislabel worktree B.
+function worktree_session_for() { # $1 = directory
+  local gd wid
+  [[ -n ${1:-} && -d $1 ]] || return 1
+  gd="$(git -C "$1" rev-parse --git-dir 2>/dev/null)" || return 1
+  case "$gd" in */worktrees/*) ;; *) return 1 ;; esac
+  wid="$(env -u GIT_WORKTREE "$HOME/.dotfiles/bin/wt" id "$1" 2>/dev/null)" || return 1
+  [[ -n $wid ]] || return 1
+  printf '%s' "$wid"
+}
+
 # -- new session with pre-defined layout, OR just new basic tmux session.
 #    Fires pre-create/post-create hooks around the build.
+#    Linked-worktree directories are routed through the deterministic
+#    worktree builder (tags + code/agent/services + dev:setup gate) under
+#    their canonical {repo}-{branch-slug} name, so picker/zoxide entry
+#    points converge with `wt`. alt-enter (fresh) skips that and forces a
+#    plain default-layout session.
 function new_session() {
-  local session="$1" cwd="$2" source="${3:-default}" sid restored_cwd
+  local session="$1" cwd="$2" source="${3:-default}" sid restored_cwd wid
+
+  if [[ $source != fresh ]] && wid="$(worktree_session_for "$cwd")"; then
+    run_hook pre-create "$wid" "$cwd" "worktree"
+    if "$0" ensure --kind worktree --cwd "$cwd" --session "$wid" --worktree-id "$wid" --attach never >/dev/null; then
+      run_hook post-create "$wid" "$cwd" "worktree"
+      to_session "$wid"
+      return 0
+    fi
+    echo "ftm: worktree session setup failed for $cwd - falling back to a generic session" >&2
+  fi
 
   if [[ $source != fresh && -f "$(snapshot_file "$session")" ]] && restore_snapshot "$session"; then
     sid="$(session_id_for "$session")"
@@ -788,14 +818,14 @@ function fuzzy_find() {
 # (bin/wt-lock-lib) and accepts an inherited lease token from wt; generic
 # mode uses the same lifecycle without Git locks or worktree tags.
 
-DET_CMD="" DET_KIND="" DET_CWD="" DET_SESSION="" DET_WID=""
-DET_LEASE="" DET_ATTACH=auto DET_FORMAT=text DET_PI_SESSION=""
-DET_PRESENTATION=session DET_PRIMARY=0
-DET_RESTART_SERVICES=0 DET_DISCARD_SNAPSHOT=0
-DET_GCD="" DET_OWNED_LEASE="" DET_SETUP_STATE=skipped
-DET_TMUX_ACTION="" DET_W_CODE="" DET_W_AGENT="" DET_W_SERVICES="" DET_WINDOW_ID=""
+DETERMINISTIC_CMD="" DETERMINISTIC_KIND="" DETERMINISTIC_CWD="" DETERMINISTIC_SESSION="" DETERMINISTIC_WID=""
+DETERMINISTIC_LEASE="" DETERMINISTIC_ATTACH=auto DETERMINISTIC_FORMAT=text DETERMINISTIC_PI_SESSION=""
+DETERMINISTIC_PRESENTATION=session DETERMINISTIC_PRIMARY=0
+DETERMINISTIC_RESTART_SERVICES=0 DETERMINISTIC_DISCARD_SNAPSHOT=0
+DETERMINISTIC_GCD="" DETERMINISTIC_OWNED_LEASE="" DETERMINISTIC_SETUP_STATE=skipped
+DETERMINISTIC_TMUX_ACTION="" DETERMINISTIC_W_CODE="" DETERMINISTIC_W_AGENT="" DETERMINISTIC_W_SERVICES="" DETERMINISTIC_WINDOW_ID=""
 
-function det_json_escape() {
+function deterministic_json_escape() {
   local s="$1"
   s="${s//\\/\\\\}"
   s="${s//\"/\\\"}"
@@ -805,34 +835,34 @@ function det_json_escape() {
   printf '%s' "$s"
 }
 
-function det_release_locks() {
-  [[ -n $DET_OWNED_LEASE && -n $DET_GCD ]] || return 0
-  wtlock_release "$DET_GCD" "$DET_WID" "$DET_OWNED_LEASE" || true
-  DET_OWNED_LEASE=""
+function deterministic_release_locks() {
+  [[ -n $DETERMINISTIC_OWNED_LEASE && -n $DETERMINISTIC_GCD ]] || return 0
+  wtlock_release "$DETERMINISTIC_GCD" "$DETERMINISTIC_WID" "$DETERMINISTIC_OWNED_LEASE" || true
+  DETERMINISTIC_OWNED_LEASE=""
 }
 
-# det_error EXIT CODE PHASE MESSAGE — emit one JSON error document (or a
+# deterministic_error EXIT CODE PHASE MESSAGE — emit one JSON error document (or a
 # stderr line in text mode), release owned locks, and exit.
-function det_error() {
+function deterministic_error() {
   local exit_code="$1" code="$2" phase="$3" message="$4"
-  det_release_locks
-  if [[ $DET_FORMAT == json ]]; then
+  deterministic_release_locks
+  if [[ $DETERMINISTIC_FORMAT == json ]]; then
     printf '{"schema_version":1,"command":"%s","status":"error","phase":"%s","error":{"code":"%s","message":"%s"},"attached":false,"warnings":[]}\n' \
-      "$(det_json_escape "$DET_CMD")" "$(det_json_escape "$phase")" \
-      "$(det_json_escape "$code")" "$(det_json_escape "$message")"
+      "$(deterministic_json_escape "$DETERMINISTIC_CMD")" "$(deterministic_json_escape "$phase")" \
+      "$(deterministic_json_escape "$code")" "$(deterministic_json_escape "$message")"
   else
-    printf 'ftm %s: %s: %s\n' "$DET_CMD" "$code" "$message" >&2
+    printf 'ftm %s: %s: %s\n' "$DETERMINISTIC_CMD" "$code" "$message" >&2
   fi
   exit "$exit_code"
 }
 
-function det_wait_ms() {
+function deterministic_wait_ms() {
   # JSON/noninteractive callers never wait; interactive callers wait bounded.
-  if [[ $DET_FORMAT == json ]]; then printf 0; else printf '%s' "${FTM_LOCK_WAIT_MS:-5000}"; fi
+  if [[ $DETERMINISTIC_FORMAT == json ]]; then printf 0; else printf '%s' "${FTM_LOCK_WAIT_MS:-5000}"; fi
 }
 
-function det_parse() {
-  DET_CMD="$1"
+function deterministic_parse() {
+  DETERMINISTIC_CMD="$1"
   shift
   local a
   # Pre-scan for --format so even usage errors honor JSON mode.
@@ -840,7 +870,7 @@ function det_parse() {
   local i=0
   while [[ $i -lt $# ]]; do
     if [[ ${argv[$i]} == --format && $((i + 1)) -lt $# && ${argv[$((i + 1))]} == json ]]; then
-      DET_FORMAT=json
+      DETERMINISTIC_FORMAT=json
     fi
     i=$((i + 1))
   done
@@ -848,73 +878,73 @@ function det_parse() {
     a="$1"
     case "$a" in
       --kind | --cwd | --session | --worktree-id | --lease | --attach | --format | --pi-session)
-        [[ $# -ge 2 ]] || det_error 2 usage args "missing value for $a"
+        [[ $# -ge 2 ]] || deterministic_error 2 usage args "missing value for $a"
         case "$a" in
-          --kind) DET_KIND="$2" ;;
-          --cwd) DET_CWD="$2" ;;
-          --session) DET_SESSION="$2" ;;
-          --worktree-id) DET_WID="$2" ;;
-          --lease) DET_LEASE="$2" ;;
-          --attach) DET_ATTACH="$2" ;;
-          --format) DET_FORMAT="$2" ;;
-          --pi-session) DET_PI_SESSION="$2" ;;
+          --kind) DETERMINISTIC_KIND="$2" ;;
+          --cwd) DETERMINISTIC_CWD="$2" ;;
+          --session) DETERMINISTIC_SESSION="$2" ;;
+          --worktree-id) DETERMINISTIC_WID="$2" ;;
+          --lease) DETERMINISTIC_LEASE="$2" ;;
+          --attach) DETERMINISTIC_ATTACH="$2" ;;
+          --format) DETERMINISTIC_FORMAT="$2" ;;
+          --pi-session) DETERMINISTIC_PI_SESSION="$2" ;;
         esac
         shift 2
         ;;
       --presentation)
-        [[ $# -ge 2 ]] || det_error 2 usage args 'missing value for --presentation'
-        DET_PRESENTATION="$2"; shift 2
-        [[ $DET_PRESENTATION == cd || $DET_PRESENTATION == window || $DET_PRESENTATION == session ]] || det_error 2 usage args '--presentation must be cd|window|session'
+        [[ $# -ge 2 ]] || deterministic_error 2 usage args 'missing value for --presentation'
+        DETERMINISTIC_PRESENTATION="$2"; shift 2
+        [[ $DETERMINISTIC_PRESENTATION == cd || $DETERMINISTIC_PRESENTATION == window || $DETERMINISTIC_PRESENTATION == session ]] || deterministic_error 2 usage args '--presentation must be cd|window|session'
         ;;
       --primary)
-        [[ $DET_CMD == ensure || $DET_CMD == repair ]] || det_error 2 usage args '--primary is valid only for ensure/repair'
-        DET_PRIMARY=1; shift ;;
+        [[ $DETERMINISTIC_CMD == ensure || $DETERMINISTIC_CMD == repair ]] || deterministic_error 2 usage args '--primary is valid only for ensure/repair'
+        DETERMINISTIC_PRIMARY=1; shift ;;
       --restart-services)
-        DET_RESTART_SERVICES=1
+        DETERMINISTIC_RESTART_SERVICES=1
         shift
         ;;
       --discard-snapshot)
-        DET_DISCARD_SNAPSHOT=1
+        DETERMINISTIC_DISCARD_SNAPSHOT=1
         shift
         ;;
-      *) det_error 2 usage args "unknown argument: $a" ;;
+      *) deterministic_error 2 usage args "unknown argument: $a" ;;
     esac
   done
-  [[ $DET_FORMAT == json || $DET_FORMAT == text ]] || det_error 2 usage args "--format must be json|text"
-  [[ $DET_ATTACH == auto || $DET_ATTACH == never ]] || det_error 2 usage args "--attach must be auto|never"
-  [[ -n $DET_SESSION ]] || det_error 2 usage args '--session is required'
-  valid_snapshot_name "$DET_SESSION" || det_error 2 usage args 'invalid session name'
-  if [[ -n $DET_PI_SESSION && ! $DET_PI_SESSION =~ ^[0-9a-fA-F][0-9a-fA-F-]*$ ]]; then
-    det_error 2 usage args 'invalid --pi-session UUID'
+  [[ $DETERMINISTIC_FORMAT == json || $DETERMINISTIC_FORMAT == text ]] || deterministic_error 2 usage args "--format must be json|text"
+  [[ $DETERMINISTIC_ATTACH == auto || $DETERMINISTIC_ATTACH == never ]] || deterministic_error 2 usage args "--attach must be auto|never"
+  [[ -n $DETERMINISTIC_SESSION ]] || deterministic_error 2 usage args '--session is required'
+  valid_snapshot_name "$DETERMINISTIC_SESSION" || deterministic_error 2 usage args 'invalid session name'
+  if [[ -n $DETERMINISTIC_PI_SESSION && ! $DETERMINISTIC_PI_SESSION =~ ^[0-9a-fA-F][0-9a-fA-F-]*$ ]]; then
+    deterministic_error 2 usage args 'invalid --pi-session UUID'
   fi
-  if [[ $DET_CMD == ensure || $DET_CMD == repair ]]; then
-    [[ -n $DET_KIND ]] || det_error 2 usage args '--kind is required'
-    [[ $DET_KIND == worktree || $DET_KIND == generic ]] || det_error 2 usage args "--kind must be worktree|generic"
-    [[ $DET_PRIMARY == 0 || $DET_KIND == worktree ]] || det_error 2 usage args '--primary requires --kind worktree'
-    [[ -n $DET_CWD ]] || det_error 2 usage args '--cwd is required'
-    if [[ $DET_KIND == worktree ]]; then
-      [[ -n $DET_WID ]] || det_error 2 usage args '--worktree-id is required for --kind worktree'
+  if [[ $DETERMINISTIC_CMD == ensure || $DETERMINISTIC_CMD == repair ]]; then
+    [[ -n $DETERMINISTIC_KIND ]] || deterministic_error 2 usage args '--kind is required'
+    [[ $DETERMINISTIC_KIND == worktree || $DETERMINISTIC_KIND == generic ]] || deterministic_error 2 usage args "--kind must be worktree|generic"
+    [[ $DETERMINISTIC_PRIMARY == 0 || $DETERMINISTIC_KIND == worktree ]] || deterministic_error 2 usage args '--primary requires --kind worktree'
+    [[ -n $DETERMINISTIC_CWD ]] || deterministic_error 2 usage args '--cwd is required'
+    if [[ $DETERMINISTIC_KIND == worktree ]]; then
+      [[ -n $DETERMINISTIC_WID ]] || deterministic_error 2 usage args '--worktree-id is required for --kind worktree'
     fi
   fi
 }
 
-function det_tag() { # $1 = session id, $2 = option name
+function deterministic_tag() { # $1 = session id, $2 = option name
   tmux show-options -t "$1" -qv "$2" 2>/dev/null || true
 }
 
 # Sessions other than the target that are tagged for the same worktree
 # path/id. Any hit is an ambiguity: never choose between duplicates.
-function det_find_tagged_conflicts() {
+function deterministic_find_tagged_conflicts() {
   local line sid name k p i
   while IFS= read -r line; do
     sid="${line%% *}"
     name="${line#* }"
-    [[ $name == "$DET_SESSION" ]] && continue
-    k="$(det_tag "$sid" @ftm_kind)"
+    [[ $name == "$DETERMINISTIC_SESSION" ]] && continue
+    k="$(deterministic_tag "$sid" @ftm_kind)"
     [[ $k == worktree ]] || continue
-    p="$(det_tag "$sid" @ftm_worktree)"
-    i="$(det_tag "$sid" @ftm_worktree_id)"
-    if [[ $p == "$DET_CWD" || (-n $DET_WID && $i == "$DET_WID") ]]; then
+    p="$(deterministic_tag "$sid" @ftm_worktree)"
+    i="$(deterministic_tag "$sid" @ftm_worktree_id)"
+    if [[ $p == "$DETERMINISTIC_CWD" || (-n $DETERMINISTIC_WID && $i == "$DETERMINISTIC_WID") ]]; then
       printf '%s\n' "$name"
     fi
   done < <(tmux list-sessions -F '#{session_id} #{session_name}' 2>/dev/null || true)
@@ -925,110 +955,110 @@ function det_find_tagged_conflicts() {
 # mutation. Tagged sessions must match exactly; untagged sessions are adopted
 # only when the session cwd and every standard-window pane cwd equal the
 # requested canonical path. Everything else is a conflict — never mutate.
-function det_validate_existing() { # $1 = session id
+function deterministic_validate_existing() { # $1 = session id
   local k p i spath wname pcwd
-  k="$(det_tag "$1" @ftm_kind)"
+  k="$(deterministic_tag "$1" @ftm_kind)"
   if [[ -n $k ]]; then
-    [[ $k == "$DET_KIND" ]] ||
-      det_error 5 session_conflict identity "session '$DET_SESSION' is tagged kind '$k', expected '$DET_KIND'"
-    if [[ $DET_KIND == worktree ]]; then
-      p="$(det_tag "$1" @ftm_worktree)"
-      i="$(det_tag "$1" @ftm_worktree_id)"
-      [[ $p == "$DET_CWD" && $i == "$DET_WID" ]] ||
-        det_error 5 session_conflict identity "session '$DET_SESSION' is tagged for a different worktree"
+    [[ $k == "$DETERMINISTIC_KIND" ]] ||
+      deterministic_error 5 session_conflict identity "session '$DETERMINISTIC_SESSION' is tagged kind '$k', expected '$DETERMINISTIC_KIND'"
+    if [[ $DETERMINISTIC_KIND == worktree ]]; then
+      p="$(deterministic_tag "$1" @ftm_worktree)"
+      i="$(deterministic_tag "$1" @ftm_worktree_id)"
+      [[ $p == "$DETERMINISTIC_CWD" && $i == "$DETERMINISTIC_WID" ]] ||
+        deterministic_error 5 session_conflict identity "session '$DETERMINISTIC_SESSION' is tagged for a different worktree"
     fi
     return 0
   fi
   spath="$(tmux display-message -p -t "$1" '#{session_path}' 2>/dev/null || true)"
-  [[ $spath == "$DET_CWD" ]] ||
-    det_error 5 session_conflict identity "session '$DET_SESSION' path '$spath' does not match '$DET_CWD'"
+  [[ $spath == "$DETERMINISTIC_CWD" ]] ||
+    deterministic_error 5 session_conflict identity "session '$DETERMINISTIC_SESSION' path '$spath' does not match '$DETERMINISTIC_CWD'"
   while IFS=$TAB read -r wname pcwd; do
     case "$wname" in
       code | agent | services | services-[0-9]*)
-        [[ $pcwd == "$DET_CWD" ]] ||
-          det_error 5 session_conflict identity "window '$wname' pane cwd '$pcwd' does not match '$DET_CWD'"
+        [[ $pcwd == "$DETERMINISTIC_CWD" ]] ||
+          deterministic_error 5 session_conflict identity "window '$wname' pane cwd '$pcwd' does not match '$DETERMINISTIC_CWD'"
         ;;
     esac
   done < <(tmux list-panes -s -t "$1" -F '#{window_name}'"$TAB"'#{pane_current_path}' 2>/dev/null || true)
   return 0
 }
 
-function det_task_exists() { # $1 = mise task name, probed in the target cwd
+function deterministic_task_exists() { # $1 = mise task name, probed in the target cwd
   command -v mise >/dev/null 2>&1 || return 1
-  (cd "$DET_CWD" && mise tasks info --json "$1" </dev/null >/dev/null 2>&1)
+  (cd "$DETERMINISTIC_CWD" && mise tasks info --json "$1" </dev/null >/dev/null 2>&1)
 }
 
 # Blocking dev:setup gate: runs after identity validation and before any tmux
 # mutation. A missing task is reported as missing, not failed.
-function det_run_setup() {
-  if det_task_exists dev:setup; then
+function deterministic_run_setup() {
+  if deterministic_task_exists dev:setup; then
     # Worktree mode supplies the canonical GIT_WORKTREE so project env
     # derivation (ports, db names) consumes the exact id instead of
     # re-deriving it (setup runs in ftm's process, not a tmux pane, so the
     # session environment does not apply here).
     local -a setup_env=()
-    [[ $DET_KIND == worktree && -n $DET_WID && $DET_PRIMARY == 0 ]] && setup_env=("GIT_WORKTREE=$DET_WID")
-    if (cd "$DET_CWD" && env ${setup_env[@]+"${setup_env[@]}"} mise run dev:setup </dev/null >&2); then
-      DET_SETUP_STATE=completed
+    [[ $DETERMINISTIC_KIND == worktree && -n $DETERMINISTIC_WID && $DETERMINISTIC_PRIMARY == 0 ]] && setup_env=("GIT_WORKTREE=$DETERMINISTIC_WID")
+    if (cd "$DETERMINISTIC_CWD" && env ${setup_env[@]+"${setup_env[@]}"} mise run dev:setup </dev/null >&2); then
+      DETERMINISTIC_SETUP_STATE=completed
     else
-      det_error 4 setup_failed setup 'dev:setup exited nonzero'
+      deterministic_error 4 setup_failed setup 'dev:setup exited nonzero'
     fi
   else
-    DET_SETUP_STATE=missing
+    DETERMINISTIC_SETUP_STATE=missing
   fi
 }
 
-function det_shell_pane() { # $1 = target; true when the pane runs a plain interactive shell
+function deterministic_shell_pane() { # $1 = target; true when the pane runs a plain interactive shell
   local cmd
   cmd="$(tmux display-message -p -t "$1" '#{pane_current_command}' 2>/dev/null || true)"
   case "$cmd" in fish | bash | zsh | sh | dash | ksh) return 0 ;; *) return 1 ;; esac
 }
 
-function det_window_id() { # $1 = session id, $2 = exact window name
+function deterministic_window_id() { # $1 = session id, $2 = exact window name
   tmux list-windows -t "$1" -F '#{window_id} #{window_name}' 2>/dev/null |
     awk -v n="$2" '$2 == n { print $1; exit }' || true
 }
 
-function det_services_window_id() { # $1 = session id; recognizes legacy services-NNNN
+function deterministic_services_window_id() { # $1 = session id; recognizes legacy services-NNNN
   tmux list-windows -t "$1" -F '#{window_id} #{window_name}' 2>/dev/null |
     awk '$2 ~ /^services(-[0-9]+)?$/ { print $1; exit }' || true
 }
 
 # Additive canonical layout: create only missing code/agent/services windows,
 # tag the session, and never touch unrelated windows or panes.
-function det_build() {
-  local sid agent_cmd wid wname pcwd created_any=0
-  if sid="$(session_id_for "$DET_SESSION")"; then
-    DET_TMUX_ACTION=reused
+function deterministic_build() {
+  local sid agent_cmd wid created_any=0
+  if sid="$(session_id_for "$DETERMINISTIC_SESSION")"; then
+    DETERMINISTIC_TMUX_ACTION=reused
   else
-    tmux new-session -d -s "$DET_SESSION" -n code -c "$DET_CWD" ||
-      det_error 7 tmux_failed tmux 'could not create session'
-    sid="$(session_id_for "$DET_SESSION")" ||
-      det_error 7 tmux_failed tmux 'created session not found'
-    DET_TMUX_ACTION=created
+    tmux new-session -d -s "$DETERMINISTIC_SESSION" -n code -c "$DETERMINISTIC_CWD" ||
+      deterministic_error 7 tmux_failed tmux 'could not create session'
+    sid="$(session_id_for "$DETERMINISTIC_SESSION")" ||
+      deterministic_error 7 tmux_failed tmux 'created session not found'
+    DETERMINISTIC_TMUX_ACTION=created
   fi
-  tmux set-option -t "$sid" @ftm_kind "$DET_KIND"
+  tmux set-option -t "$sid" @ftm_kind "$DETERMINISTIC_KIND"
   tmux set-option -t "$sid" @ftm_schema 1
-  if [[ $DET_KIND == worktree ]]; then
-    tmux set-option -t "$sid" @ftm_worktree "$DET_CWD"
-    tmux set-option -t "$sid" @ftm_worktree_id "$DET_WID"
-    if [[ $DET_PRIMARY == 1 ]]; then
+  if [[ $DETERMINISTIC_KIND == worktree ]]; then
+    tmux set-option -t "$sid" @ftm_worktree "$DETERMINISTIC_CWD"
+    tmux set-option -t "$sid" @ftm_worktree_id "$DETERMINISTIC_WID"
+    if [[ $DETERMINISTIC_PRIMARY == 1 ]]; then
       tmux setenv -u -t "$sid" GIT_WORKTREE 2>/dev/null || true
     else
-      tmux setenv -t "$sid" GIT_WORKTREE "$DET_WID"
+      tmux setenv -t "$sid" GIT_WORKTREE "$DETERMINISTIC_WID"
     fi
   fi
 
-  if [[ -n "$(det_window_id "$sid" code)" ]]; then
-    DET_W_CODE=present
+  if [[ -n "$(deterministic_window_id "$sid" code)" ]]; then
+    DETERMINISTIC_W_CODE=present
   else
-    tmux new-window -d -t "$sid" -n code -c "$DET_CWD"
-    DET_W_CODE=created
+    tmux new-window -d -t "$sid" -n code -c "$DETERMINISTIC_CWD"
+    DETERMINISTIC_W_CODE=created
     created_any=1
   fi
 
-  if [[ -n "$(det_window_id "$sid" agent)" ]]; then
-    DET_W_AGENT=present
+  if [[ -n "$(deterministic_window_id "$sid" agent)" ]]; then
+    DETERMINISTIC_W_AGENT=present
   else
     # Exact-cwd Pi: tmux cwd AND process cwd both set to the canonical path;
     # pi -c continues the latest session stored for exactly that directory.
@@ -1037,8 +1067,8 @@ function det_build() {
     # project's [env] (PHX_PORT etc.) — required for env-interpolated MCP
     # URLs like ${PHX_PORT} — falling back to a direct launch without mise.
     local pi_args
-    if [[ -n $DET_PI_SESSION ]]; then
-      pi_args="--session $DET_PI_SESSION"
+    if [[ -n $DETERMINISTIC_PI_SESSION ]]; then
+      pi_args="--session $DETERMINISTIC_PI_SESSION"
     else
       pi_args="-c"
     fi
@@ -1052,140 +1082,136 @@ function det_build() {
     else
       agent_cmd="pi $pi_args"
     fi
-    wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n agent -c "$DET_CWD")" ||
-      det_error 7 tmux_failed tmux 'could not create agent window'
+    wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n agent -c "$DETERMINISTIC_CWD")" ||
+      deterministic_error 7 tmux_failed tmux 'could not create agent window'
     tmux send-keys -t "$wid" "$agent_cmd" Enter
-    DET_W_AGENT=created
+    DETERMINISTIC_W_AGENT=created
     created_any=1
   fi
 
-  wid="$(det_services_window_id "$sid")"
+  wid="$(deterministic_services_window_id "$sid")"
   if [[ -n $wid ]]; then
     tmux set-option -w -t "$wid" remain-on-exit on 2>/dev/null || true
-    # Adopt one legacy services-NNNN window: rename only when no exact
-    # `services` window exists and the pane cwd matches.
-    wname="$(tmux display-message -p -t "$wid" '#{window_name}' 2>/dev/null || true)"
-    if [[ $wname != services && -z "$(det_window_id "$sid" services)" ]]; then
-      pcwd="$(tmux display-message -p -t "$wid" '#{pane_current_path}' 2>/dev/null || true)"
-      [[ $pcwd == "$DET_CWD" ]] && tmux rename-window -t "$wid" services 2>/dev/null || true
-    fi
+    # services-NNNN is the canonical runtime title (dev-services.sh renames
+    # the window to services-<port> when the runner starts) — never rename
+    # it back; deterministic_services_window_id recognizes both spellings.
     # Stopped = dead pane, OR a plain shell sitting where the runner should be
     # (the runner was cancelled back to the prompt) while dev:services exists.
     if [[ "$(tmux display-message -p -t "$wid" '#{pane_dead}' 2>/dev/null || true)" == 1 ]] ||
-      { det_task_exists dev:services && det_shell_pane "$wid"; }; then
-      if [[ $DET_CMD == repair && $DET_RESTART_SERVICES == 1 ]] && det_task_exists dev:services; then
-        tmux respawn-pane -k -t "$wid" -c "$DET_CWD"
+      { deterministic_task_exists dev:services && deterministic_shell_pane "$wid"; }; then
+      if [[ $DETERMINISTIC_CMD == repair && $DETERMINISTIC_RESTART_SERVICES == 1 ]] && deterministic_task_exists dev:services; then
+        tmux respawn-pane -k -t "$wid" -c "$DETERMINISTIC_CWD"
         tmux send-keys -t "$wid" 'mise run dev:services' Enter
-        DET_W_SERVICES=started
+        DETERMINISTIC_W_SERVICES=started
         created_any=1
       else
-        DET_W_SERVICES=dead
+        DETERMINISTIC_W_SERVICES=dead
       fi
     else
-      DET_W_SERVICES=present
+      DETERMINISTIC_W_SERVICES=present
     fi
   else
     # The window is a plain interactive shell with remain-on-exit set before
     # the runner is typed via send-keys: job control keeps `mise` as the
     # foreground process, startup failures stay visible, and cancelling the
     # runner returns to the shell prompt instead of killing the pane.
-    wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n services -c "$DET_CWD")" ||
-      det_error 7 tmux_failed tmux 'could not create services window'
+    wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n services -c "$DETERMINISTIC_CWD")" ||
+      deterministic_error 7 tmux_failed tmux 'could not create services window'
     tmux set-option -w -t "$wid" remain-on-exit on
-    if det_task_exists dev:services; then
+    if deterministic_task_exists dev:services; then
       tmux send-keys -t "$wid" 'mise run dev:services' Enter
-      DET_W_SERVICES=started
+      DETERMINISTIC_W_SERVICES=started
     else
-      DET_W_SERVICES=shell
+      DETERMINISTIC_W_SERVICES=shell
     fi
     created_any=1
   fi
 
-  if [[ $DET_TMUX_ACTION == reused && $created_any == 1 ]]; then
-    DET_TMUX_ACTION=repaired
+  if [[ $DETERMINISTIC_TMUX_ACTION == reused && $created_any == 1 ]]; then
+    DETERMINISTIC_TMUX_ACTION=repaired
   fi
 }
 
-function det_window_build() {
+function deterministic_window_build() {
   local sid wid left right candidate count=0 name path id roles cpath cid role
-  if [[ -z ${TMUX:-} || -z ${TMUX_PANE:-} ]]; then DET_PRESENTATION="cd"; return 0; fi
+  if [[ -z ${TMUX:-} || -z ${TMUX_PANE:-} ]]; then DETERMINISTIC_PRESENTATION="cd"; return 0; fi
   sid="$(tmux display-message -p -t "$TMUX_PANE" '#{session_id}' 2>/dev/null || true)"
-  if [[ -z $sid ]]; then DET_PRESENTATION="cd"; return 0; fi
+  if [[ -z $sid ]]; then DETERMINISTIC_PRESENTATION="cd"; return 0; fi
   while IFS=$TAB read -r candidate name; do
     path="$(tmux show-options -w -t "$candidate" -qv @ftm_worktree 2>/dev/null || true)"
     id="$(tmux show-options -w -t "$candidate" -qv @ftm_worktree_id 2>/dev/null || true)"
-    if [[ $name == "wt:$DET_WID" && ($path != "$DET_CWD" || $id != "$DET_WID") ]]; then
-      det_error 5 window_conflict identity "window name '$name' is already used"
+    if [[ $name == "wt:$DETERMINISTIC_WID" && ($path != "$DETERMINISTIC_CWD" || $id != "$DETERMINISTIC_WID") ]]; then
+      deterministic_error 5 window_conflict identity "window name '$name' is already used"
     fi
-    if [[ $path == "$DET_CWD" || $id == "$DET_WID" ]]; then
-      [[ $path == "$DET_CWD" && $id == "$DET_WID" ]] || det_error 5 window_conflict identity 'window tags match only part of the worktree identity'
+    if [[ $path == "$DETERMINISTIC_CWD" || $id == "$DETERMINISTIC_WID" ]]; then
+      [[ $path == "$DETERMINISTIC_CWD" && $id == "$DETERMINISTIC_WID" ]] || deterministic_error 5 window_conflict identity 'window tags match only part of the worktree identity'
       count=$((count + 1)); wid="$candidate"
     fi
   done < <(tmux list-windows -t "$sid" -F '#{window_id}'"$TAB"'#{window_name}' 2>/dev/null || true)
-  [[ $count -le 1 ]] || det_error 5 ambiguous_window identity 'multiple windows match the worktree'
+  [[ $count -le 1 ]] || deterministic_error 5 ambiguous_window identity 'multiple windows match the worktree'
   if [[ $count == 1 ]]; then
     roles="$(tmux list-panes -t "$wid" -F '#{pane_id}'"$TAB"'#{@ftm_role}'"$TAB"'#{@ftm_worktree}'"$TAB"'#{@ftm_worktree_id}' 2>/dev/null || true)"
     left=; right=; cpath=; cid=; role=
     while IFS=$TAB read -r candidate role cpath cid; do
-      [[ $cpath == "$DET_CWD" && $cid == "$DET_WID" ]] || det_error 5 window_conflict identity 'tagged pane identity does not match worktree'
-      case "$role" in code) left="$candidate" ;; services) right="$candidate" ;; *) det_error 5 window_conflict identity 'window has an unknown tagged pane role' ;; esac
+      [[ $cpath == "$DETERMINISTIC_CWD" && $cid == "$DETERMINISTIC_WID" ]] || deterministic_error 5 window_conflict identity 'tagged pane identity does not match worktree'
+      case "$role" in code) left="$candidate" ;; services) right="$candidate" ;; *) deterministic_error 5 window_conflict identity 'window has an unknown tagged pane role' ;; esac
     done <<<"$roles"
-    [[ -n $left && -n $right ]] || det_error 5 window_conflict identity 'reused window lacks exact code/services panes'
-    [[ $(printf '%s\n' "$roles" | wc -l | tr -d ' ') == 2 ]] || det_error 5 window_conflict identity 'reused window must contain exactly two tagged panes'
-    DET_W_CODE="$left"; DET_W_SERVICES="$right"; DET_WINDOW_ID="$wid"; DET_TMUX_ACTION=reused
+    [[ -n $left && -n $right ]] || deterministic_error 5 window_conflict identity 'reused window lacks exact code/services panes'
+    [[ $(printf '%s\n' "$roles" | wc -l | tr -d ' ') == 2 ]] || deterministic_error 5 window_conflict identity 'reused window must contain exactly two tagged panes'
+    DETERMINISTIC_W_CODE="$left"; DETERMINISTIC_W_SERVICES="$right"; DETERMINISTIC_WINDOW_ID="$wid"; DETERMINISTIC_TMUX_ACTION=reused
     return 0
   fi
-  wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n "wt:$DET_WID" -c "$DET_CWD")" || det_error 7 tmux_failed tmux 'could not create worktree window'
+  wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n "wt:$DETERMINISTIC_WID" -c "$DETERMINISTIC_CWD")" || deterministic_error 7 tmux_failed tmux 'could not create worktree window'
   tmux set-option -w -t "$wid" @ftm_kind worktree
-  tmux set-option -w -t "$wid" @ftm_worktree "$DET_CWD"
-  tmux set-option -w -t "$wid" @ftm_worktree_id "$DET_WID"
+  tmux set-option -w -t "$wid" @ftm_worktree "$DETERMINISTIC_CWD"
+  tmux set-option -w -t "$wid" @ftm_worktree_id "$DETERMINISTIC_WID"
   tmux set-option -w -t "$wid" @ftm_role worktree
   left="$(tmux display-message -p -t "$wid" '#{pane_id}')"
-  right="$(tmux split-window -h -p 40 -d -P -F '#{pane_id}' -t "$left" -c "$DET_CWD")" || det_error 7 tmux_failed tmux 'could not split worktree window'
-  tmux set-option -p -t "$left" @ftm_worktree "$DET_CWD"; tmux set-option -p -t "$left" @ftm_worktree_id "$DET_WID"; tmux set-option -p -t "$left" @ftm_role code
-  tmux set-option -p -t "$right" @ftm_worktree "$DET_CWD"; tmux set-option -p -t "$right" @ftm_worktree_id "$DET_WID"; tmux set-option -p -t "$right" @ftm_role services
-  if [[ $DET_PRIMARY == 1 ]]; then
+  right="$(tmux split-window -h -p 40 -d -P -F '#{pane_id}' -t "$left" -c "$DETERMINISTIC_CWD")" || deterministic_error 7 tmux_failed tmux 'could not split worktree window'
+  tmux set-option -p -t "$left" @ftm_worktree "$DETERMINISTIC_CWD"; tmux set-option -p -t "$left" @ftm_worktree_id "$DETERMINISTIC_WID"; tmux set-option -p -t "$left" @ftm_role code
+  tmux set-option -p -t "$right" @ftm_worktree "$DETERMINISTIC_CWD"; tmux set-option -p -t "$right" @ftm_worktree_id "$DETERMINISTIC_WID"; tmux set-option -p -t "$right" @ftm_role services
+  if [[ $DETERMINISTIC_PRIMARY == 1 ]]; then
     tmux send-keys -t "$left" 'unset GIT_WORKTREE' Enter
   else
-    tmux send-keys -t "$left" "export GIT_WORKTREE=$(printf %q "$DET_WID")" Enter
+    tmux send-keys -t "$left" "export GIT_WORKTREE=$(printf %q "$DETERMINISTIC_WID")" Enter
   fi
   tmux set-option -w -t "$wid" remain-on-exit on
   # The right pane stays a plain interactive shell; env and runner are typed
   # via send-keys so cancelling the runner returns to the prompt instead of
   # killing the pane. `export`/`unset` work in both fish and POSIX shells.
-  if [[ $DET_PRIMARY == 1 ]]; then
+  if [[ $DETERMINISTIC_PRIMARY == 1 ]]; then
     tmux send-keys -t "$right" 'unset GIT_WORKTREE' Enter
   else
-    tmux send-keys -t "$right" "export GIT_WORKTREE=$(printf %q "$DET_WID")" Enter
+    tmux send-keys -t "$right" "export GIT_WORKTREE=$(printf %q "$DETERMINISTIC_WID")" Enter
   fi
-  if det_task_exists dev:services; then
+  if deterministic_task_exists dev:services; then
     tmux send-keys -t "$right" 'mise run dev:services' Enter
   fi
-  DET_W_CODE="$left"; DET_W_SERVICES="$right"; DET_TMUX_ACTION=created; DET_WINDOW_ID="$wid"
+  DETERMINISTIC_W_CODE="$left"; DETERMINISTIC_W_SERVICES="$right"; DETERMINISTIC_TMUX_ACTION=created; DETERMINISTIC_WINDOW_ID="$wid"
 }
 
-function det_emit_ok() {
-  det_release_locks
-  if [[ $DET_FORMAT == json ]]; then
+function deterministic_emit_ok() {
+  deterministic_release_locks
+  if [[ $DETERMINISTIC_FORMAT == json ]]; then
     printf '{"schema_version":1,"command":"%s","status":"ok","kind":"%s","session":"%s","cwd":"%s","setup":{"state":"%s"},"presentation":"%s","tmux":{"session":"%s","window_id":"%s","left_pane":"%s","action":"%s","windows":{"code":"%s","agent":"%s","services":"%s"}},"attached":false,"warnings":[]}\n' \
-      "$(det_json_escape "$DET_CMD")" "$(det_json_escape "$DET_KIND")" \
-      "$(det_json_escape "$DET_SESSION")" "$(det_json_escape "$DET_CWD")" \
-      "$DET_SETUP_STATE" "$DET_PRESENTATION" "$(det_json_escape "$DET_SESSION")" "$DET_WINDOW_ID" "$DET_W_CODE" "$DET_TMUX_ACTION" \
-      "$DET_W_CODE" "$DET_W_AGENT" "$DET_W_SERVICES"
+      "$(deterministic_json_escape "$DETERMINISTIC_CMD")" "$(deterministic_json_escape "$DETERMINISTIC_KIND")" \
+      "$(deterministic_json_escape "$DETERMINISTIC_SESSION")" "$(deterministic_json_escape "$DETERMINISTIC_CWD")" \
+      "$DETERMINISTIC_SETUP_STATE" "$DETERMINISTIC_PRESENTATION" "$(deterministic_json_escape "$DETERMINISTIC_SESSION")" "$DETERMINISTIC_WINDOW_ID" "$DETERMINISTIC_W_CODE" "$DETERMINISTIC_TMUX_ACTION" \
+      "$DETERMINISTIC_W_CODE" "$DETERMINISTIC_W_AGENT" "$DETERMINISTIC_W_SERVICES"
   else
     printf 'ftm %s: session %s %s (code=%s agent=%s services=%s setup=%s)\n' \
-      "$DET_CMD" "$DET_SESSION" "$DET_TMUX_ACTION" \
-      "$DET_W_CODE" "$DET_W_AGENT" "$DET_W_SERVICES" "$DET_SETUP_STATE" >&2
+      "$DETERMINISTIC_CMD" "$DETERMINISTIC_SESSION" "$DETERMINISTIC_TMUX_ACTION" \
+      "$DETERMINISTIC_W_CODE" "$DETERMINISTIC_W_AGENT" "$DETERMINISTIC_W_SERVICES" "$DETERMINISTIC_SETUP_STATE" >&2
   fi
 }
 
-function det_attach() {
-  [[ $DET_ATTACH == auto ]] || return 0
-  [[ $DET_FORMAT != json ]] || return 0
+function deterministic_attach() {
+  [[ $DETERMINISTIC_ATTACH == auto ]] || return 0
+  [[ $DETERMINISTIC_FORMAT != json ]] || return 0
   [[ -z ${FTM_NO_ATTACH:-} ]] || return 0
   local sid
-  sid="$(session_id_for "$DET_SESSION")" || return 0
-  bump_recent "$DET_SESSION" "$DET_CWD"
+  sid="$(session_id_for "$DETERMINISTIC_SESSION")" || return 0
+  bump_recent "$DETERMINISTIC_SESSION" "$DETERMINISTIC_CWD"
   if [[ -n $TMUX ]]; then
     tmux switch-client -t "$sid"
   else
@@ -1193,92 +1219,92 @@ function det_attach() {
   fi
 }
 
-function det_ensure() {
+function deterministic_ensure() {
   # Absolutize only; do not resolve symlinks. Callers (wt) supply the exact
   # canonical worktree path, and tags/adoption checks must use it verbatim.
-  DET_CWD="$(cd -- "$DET_CWD" 2>/dev/null && pwd)" ||
-    det_error 2 usage args "cwd is not a directory: $DET_CWD"
-  if [[ $DET_KIND == worktree ]]; then
-    DET_GCD="$(git -C "$DET_CWD" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" ||
-      det_error 7 git_context_failed resolve "not a Git worktree: $DET_CWD"
-    if [[ -n $DET_LEASE ]]; then
-      wtlock_validate_lease "$DET_GCD" "$DET_WID" "$DET_LEASE" ||
-        det_error 7 invalid_lease lock 'lease token does not match held locks'
+  DETERMINISTIC_CWD="$(cd -- "$DETERMINISTIC_CWD" 2>/dev/null && pwd)" ||
+    deterministic_error 2 usage args "cwd is not a directory: $DETERMINISTIC_CWD"
+  if [[ $DETERMINISTIC_KIND == worktree ]]; then
+    DETERMINISTIC_GCD="$(git -C "$DETERMINISTIC_CWD" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" ||
+      deterministic_error 7 git_context_failed resolve "not a Git worktree: $DETERMINISTIC_CWD"
+    if [[ -n $DETERMINISTIC_LEASE ]]; then
+      wtlock_validate_lease "$DETERMINISTIC_GCD" "$DETERMINISTIC_WID" "$DETERMINISTIC_LEASE" ||
+        deterministic_error 7 invalid_lease lock 'lease token does not match held locks'
     else
-      DET_OWNED_LEASE="$(wtlock_acquire "$DET_GCD" "$DET_WID" "$(det_wait_ms)")" ||
-        det_error 7 busy lock 'repository or worktree lock is held by another operation'
+      DETERMINISTIC_OWNED_LEASE="$(wtlock_acquire "$DETERMINISTIC_GCD" "$DETERMINISTIC_WID" "$(deterministic_wait_ms)")" ||
+        deterministic_error 7 busy lock 'repository or worktree lock is held by another operation'
     fi
   fi
   local sid conflicts
-  if [[ $DET_PRESENTATION == session && $DET_KIND == worktree ]]; then
-    conflicts="$(det_find_tagged_conflicts)"
+  if [[ $DETERMINISTIC_PRESENTATION == session && $DETERMINISTIC_KIND == worktree ]]; then
+    conflicts="$(deterministic_find_tagged_conflicts)"
     [[ -z $conflicts ]] ||
-      det_error 5 ambiguous_session identity "other sessions tagged for this worktree: ${conflicts//$'\n'/, }"
+      deterministic_error 5 ambiguous_session identity "other sessions tagged for this worktree: ${conflicts//$'\n'/, }"
   fi
-  if sid="$(session_id_for "$DET_SESSION")" && [[ $DET_PRESENTATION == session ]]; then
-    det_validate_existing "$sid"
+  if sid="$(session_id_for "$DETERMINISTIC_SESSION")" && [[ $DETERMINISTIC_PRESENTATION == session ]]; then
+    deterministic_validate_existing "$sid"
   fi
-  det_run_setup
-  if [[ $DET_PRESENTATION == cd ]]; then
-    DET_TMUX_ACTION=skipped
-  elif [[ $DET_PRESENTATION == window ]]; then
-    det_window_build
+  deterministic_run_setup
+  if [[ $DETERMINISTIC_PRESENTATION == cd ]]; then
+    DETERMINISTIC_TMUX_ACTION=skipped
+  elif [[ $DETERMINISTIC_PRESENTATION == window ]]; then
+    deterministic_window_build
   else
-    det_build
+    deterministic_build
   fi
-  det_emit_ok
-  [[ $DET_PRESENTATION == session ]] && det_attach
+  deterministic_emit_ok
+  [[ $DETERMINISTIC_PRESENTATION == session ]] && deterministic_attach
   exit 0
 }
 
-function det_remove() {
+function deterministic_remove() {
   local sid k p wid_tag base f
-  if [[ -n $DET_CWD ]]; then
-    DET_CWD="$(cd -- "$DET_CWD" 2>/dev/null && pwd)" ||
-      det_error 2 usage args "cwd is not a directory: $DET_CWD"
+  if [[ -n $DETERMINISTIC_CWD ]]; then
+    DETERMINISTIC_CWD="$(cd -- "$DETERMINISTIC_CWD" 2>/dev/null && pwd)" ||
+      deterministic_error 2 usage args "cwd is not a directory: $DETERMINISTIC_CWD"
   fi
-  if ! sid="$(session_id_for "$DET_SESSION")"; then
-    det_release_locks
-    if [[ $DET_FORMAT == json ]]; then
+  if ! sid="$(session_id_for "$DETERMINISTIC_SESSION")"; then
+    deterministic_release_locks
+    if [[ $DETERMINISTIC_FORMAT == json ]]; then
       printf '{"schema_version":1,"command":"remove","status":"ok","session":"%s","tmux":{"action":"absent"},"attached":false,"warnings":[]}\n' \
-        "$(det_json_escape "$DET_SESSION")"
+        "$(deterministic_json_escape "$DETERMINISTIC_SESSION")"
     else
-      printf 'ftm remove: session %s already absent\n' "$DET_SESSION" >&2
+      printf 'ftm remove: session %s already absent\n' "$DETERMINISTIC_SESSION" >&2
     fi
     exit 0
   fi
-  k="$(det_tag "$sid" @ftm_kind)"
-  p="$(det_tag "$sid" @ftm_worktree)"
-  if [[ -n $DET_CWD && -n $p && $p != "$DET_CWD" ]]; then
-    det_error 5 session_conflict identity "session '$DET_SESSION' is tagged for '$p', not '$DET_CWD'"
+  k="$(deterministic_tag "$sid" @ftm_kind)"
+  p="$(deterministic_tag "$sid" @ftm_worktree)"
+  if [[ -n $DETERMINISTIC_CWD && -n $p && $p != "$DETERMINISTIC_CWD" ]]; then
+    deterministic_error 5 session_conflict identity "session '$DETERMINISTIC_SESSION' is tagged for '$p', not '$DETERMINISTIC_CWD'"
   fi
   if [[ $k == worktree ]]; then
-    wid_tag="$(det_tag "$sid" @ftm_worktree_id)"
-    [[ -n $DET_WID ]] || DET_WID="$wid_tag"
-    base="${p:-$DET_CWD}"
-    if [[ -n $base ]] && DET_GCD="$(git -C "$base" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"; then
-      if [[ -n $DET_LEASE ]]; then
-        wtlock_validate_lease "$DET_GCD" "$DET_WID" "$DET_LEASE" ||
-          det_error 7 invalid_lease lock 'lease token does not match held locks'
+    wid_tag="$(deterministic_tag "$sid" @ftm_worktree_id)"
+    [[ -n $DETERMINISTIC_WID ]] || DETERMINISTIC_WID="$wid_tag"
+    base="${p:-$DETERMINISTIC_CWD}"
+    if [[ -n $base ]] && DETERMINISTIC_GCD="$(git -C "$base" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"; then
+      if [[ -n $DETERMINISTIC_LEASE ]]; then
+        wtlock_validate_lease "$DETERMINISTIC_GCD" "$DETERMINISTIC_WID" "$DETERMINISTIC_LEASE" ||
+          deterministic_error 7 invalid_lease lock 'lease token does not match held locks'
       else
-        DET_OWNED_LEASE="$(wtlock_acquire "$DET_GCD" "$DET_WID" "$(det_wait_ms)")" ||
-          det_error 7 busy lock 'repository or worktree lock is held by another operation'
+        DETERMINISTIC_OWNED_LEASE="$(wtlock_acquire "$DETERMINISTIC_GCD" "$DETERMINISTIC_WID" "$(deterministic_wait_ms)")" ||
+          deterministic_error 7 busy lock 'repository or worktree lock is held by another operation'
       fi
     fi
   fi
-  tmux kill-session -t "$sid" || det_error 7 tmux_failed tmux 'kill-session failed'
-  if [[ $DET_DISCARD_SNAPSHOT == 1 ]] && valid_snapshot_name "$DET_SESSION"; then
-    f="$(snapshot_file "$DET_SESSION")"
+  tmux kill-session -t "$sid" || deterministic_error 7 tmux_failed tmux 'kill-session failed'
+  if [[ $DETERMINISTIC_DISCARD_SNAPSHOT == 1 ]] && valid_snapshot_name "$DETERMINISTIC_SESSION"; then
+    f="$(snapshot_file "$DETERMINISTIC_SESSION")"
     if [[ -e $f ]]; then
       trash "$f" 2>/dev/null || rm -f -- "$f"
     fi
   fi
-  det_release_locks
-  if [[ $DET_FORMAT == json ]]; then
+  deterministic_release_locks
+  if [[ $DETERMINISTIC_FORMAT == json ]]; then
     printf '{"schema_version":1,"command":"remove","status":"ok","session":"%s","tmux":{"action":"removed"},"attached":false,"warnings":[]}\n' \
-      "$(det_json_escape "$DET_SESSION")"
+      "$(deterministic_json_escape "$DETERMINISTIC_SESSION")"
   else
-    printf 'ftm remove: session %s removed\n' "$DET_SESSION" >&2
+    printf 'ftm remove: session %s removed\n' "$DETERMINISTIC_SESSION" >&2
   fi
   exit 0
 }
@@ -1287,11 +1313,11 @@ case "${1:-}" in
   ensure | repair | remove)
     # shellcheck source=bin/wt-lock-lib
     source "$script_dir/wt-lock-lib"
-    det_parse "$@"
-    if [[ $DET_CMD == remove ]]; then
-      det_remove
+    deterministic_parse "$@"
+    if [[ $DETERMINISTIC_CMD == remove ]]; then
+      deterministic_remove
     else
-      det_ensure
+      deterministic_ensure
     fi
     # Defensive stop: deterministic calls must never fall through to the picker.
     # shellcheck disable=SC2317
