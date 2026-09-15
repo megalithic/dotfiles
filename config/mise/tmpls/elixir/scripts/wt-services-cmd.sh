@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# LEGACY: only the explicit `wt switch [-t ...]` compatibility path runs this
+# (bin/wt -> wt-tmux-target). The normal v2 flow (`wt <branch>` -> ftm ->
+# `mise run dev:services` -> dev-services.sh) never uses it.
+#
 # The per-worktree `services` command, installed into the worktree's PRIVATE
 # git dir (.git/worktrees/<name>/wt-services-cmd) by the wt.toml pre-start hook
 # and run in the tmux `services` window by wt-tmux-target.

@@ -2,10 +2,11 @@
 # Resolve the Phoenix dev port, mirroring config/dev.exs:
 #   port: String.to_integer(System.get_env("PORT") || "#{4000 + worktree_port_offset}")
 #   worktree_port_offset = :erlang.phash2(GIT_WORKTREE, 1000)
-# Copied to <project>/.config/scripts/phx-port.sh by the generator and called
-# directly by the mise PHX_PORT env and bootstrap:pi (there is no
-# .local/bin/phx-port). Root resolves via git toplevel, with a dirname
-# fallback ("../.." = project root from .config/scripts/).
+# Runs in place from the dotfiles template (nothing is copied into the
+# project). Called via absolute path by the mise stub's PHX_PORT env,
+# dev-services.sh, wt-services-cmd.sh, and bootstrap-pi.sh (there is no
+# .local/bin/phx-port). Root resolves via git toplevel of the caller's cwd;
+# the dirname fallback only matters if git is unavailable.
 set -euo pipefail
 # Root = git toplevel of the CALLER's cwd (worktree-aware — the main repo's
 # script may be invoked for a nested worktree). Script location is fallback.

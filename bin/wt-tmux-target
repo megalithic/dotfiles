@@ -11,8 +11,10 @@
 # window:  inside tmux create/reuse a single current-session window rooted at
 #          <path>; outside tmux degrade to session behavior.
 #
-# The `services` window tails Worktrunk hook logs via `wt-tail-logs <branch>`.
-# It does not start services itself.
+# The `services` window runs the project's generated services script
+# (.git/worktrees/<name>/wt-services-cmd), bootstrapping it via
+# `wt hook pre-start` when missing. It falls back to tailing Worktrunk hook
+# logs via `wt-tail-logs <branch>` only when no project script is available.
 
 set -euo pipefail
 

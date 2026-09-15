@@ -981,28 +981,31 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/setup-pam"
 description = "Check 1Password trusts /Applications/Helium.app; prints GUI Add Browser steps if not (setting is tamper-protected, not writable)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/helium-1password-trust"
 
-# Global tasks: copy project templates from config/mise/tmpls/ into a
-# project's .config/ dir. Run from a project root: `mise run gen:shopify`,
-# `mise run gen:elixir -- /path/to/project`, or `mise run gen:wt-elixir` for
-# Worktrunk's .config/wt.toml. Template helper lives in repo bin/ (linked onto PATH).
-# Duplicated in nix/home/common/programs/mise/default.nix globalConfig (nix twin).
+# Global tasks: generate a small stub config (.config/mise.toml or
+# .config/wt.toml) in a project from config/mise/tmpls/<lang>/. Tasks, env,
+# and scripts are NOT copied: the stub includes the template's tasks.toml and
+# scripts execute from the dotfiles template's scripts/ dir, so template edits
+# apply to every consuming repo immediately. Run from a project root:
+# `mise run gen:shopify`, `mise run gen:elixir -- /path/to/project`, or
+# `mise run gen:wt-elixir` for Worktrunk's .config/wt.toml. Template helper
+# lives in repo bin/ (linked onto PATH).
 [tasks."gen:elixir"]
-description = "Copy the elixir mise template + scripts to [target-dir]/.config/ (default: cwd)"
+description = "Generate the elixir mise stub at [target-dir]/.config/mise.toml (default: cwd); scripts run from dotfiles"
 dir = "{{cwd}}"
 run = "mise-tmpl-gen elixir"
 
 [tasks."gen:shopify"]
-description = "Copy the shopify mise template + scripts to [target-dir]/.config/ (default: cwd)"
+description = "Generate the shopify mise stub at [target-dir]/.config/mise.toml (default: cwd); scripts run from dotfiles"
 dir = "{{cwd}}"
 run = "mise-tmpl-gen shopify"
 
 [tasks."gen:wt-elixir"]
-description = "Copy the elixir Worktrunk template + scripts to [target-dir]/.config/wt.toml (default: cwd)"
+description = "Generate the elixir Worktrunk config at [target-dir]/.config/wt.toml (default: cwd); scripts run from dotfiles"
 dir = "{{cwd}}"
 run = "mise-tmpl-gen wt.elixir"
 
 [tasks."gen:wt-shopify"]
-description = "Copy the shopify Worktrunk template + scripts to [target-dir]/.config/wt.toml (default: cwd)"
+description = "Generate the shopify Worktrunk config at [target-dir]/.config/wt.toml (default: cwd); scripts run from dotfiles"
 dir = "{{cwd}}"
 run = "mise-tmpl-gen wt.shopify"
 

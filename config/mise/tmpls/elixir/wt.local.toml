@@ -17,6 +17,9 @@
 # Worktrunk hooks.
 [pre-start]
 mise-trust = "mise trust" # Execute mise trust before creating a worktree
+# LEGACY compatibility: this installed script is only executed by the
+# explicit `wt switch [-t ...]` path (wt-tmux-target). The normal v2 flow
+# (`wt <branch>` -> ftm -> `mise run dev:services`) ignores it.
 # Install the services runner into the worktree's PRIVATE git dir
 # (.git/worktrees/<name>/wt-services-cmd) from the dotfiles template
 # (scripts are no longer copied into project .config/ — the stub-based
