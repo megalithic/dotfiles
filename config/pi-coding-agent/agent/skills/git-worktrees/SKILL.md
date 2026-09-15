@@ -38,8 +38,8 @@ If either check fails:
 
 | Command | Effect |
 | --- | --- |
-| `wt NAME` | Ensure the worktree exists (create branch/worktree when missing), run copy-ignored plus blocking `dev:setup`, then cd the invoking interactive shell into it. |
-| `wt -t cd NAME` | Same as `wt NAME` (explicit escape spelling). |
+| `wt NAME` | Ensure the worktree exists (create branch/worktree when missing), run copy-ignored plus blocking `dev:setup`, then create or repair the canonical per-worktree session (`code`, `agent`, `services` windows) and switch/attach to it — same presentation as `wt open`. |
+| `wt -t cd NAME` | Same lifecycle, but only cd the invoking interactive shell into the worktree — no tmux session or windows (escape hatch). |
 | `wt -t w NAME` (`-t window`) | Same lifecycle; inside tmux, create or reuse one tagged `wt:<id>` window in the current session — left pane interactive shell (60%), right pane `mise run dev:services` or a shell (40%). Outside tmux, falls back to cd behavior. |
 | `wt -t s NAME` (`-t session`) | Same lifecycle; create or repair the canonical per-worktree session (`code`, `agent`, `services` windows) and switch/attach to it. |
 | `wt open NAME` | Alias for the session presentation. |
