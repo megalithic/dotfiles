@@ -82,7 +82,9 @@ Scripts use `.sh` names and `#!/usr/bin/env bash` so they run through bash regar
 
 ## Tmux plugins
 
-`config/tmux/plugins.tmux.conf` is TPM-managed. `tmux-mega-fingers` is installed through TPM from public repo `megalithic/tmux-mega-fingers`; mutable plugin checkouts stay under `~/.local/share/tmux/plugins`.
+`config/tmux/plugins.tmux.conf` is TPM-managed. Mutable plugin checkouts stay under `~/.local/share/tmux/plugins`.
+
+TPM installs `tmux-mega-fingers` from `megalithic/tmux-mega-fingers`. `and-rs/flash.tmux` replaces `tmux-easymotion`: `C-s` starts selection and `s` selects the copy action.
 
 Tmux-resurrect and tmux-continuum provide whole-server crash recovery alongside ftm's per-session snapshots. Continuum saves every 15 minutes through its `status-right` hook and restores once at server start. Resurrect uses prefix+S/R, captures pane contents, restores Pi processes selected by `@resurrect-processes 'pi'`, and runs the custom `pi_session` save strategy from `bin/tmux-resurrect-save-pi`; tagged panes become `pi --session <uuid>`, with `pi -c` only for untagged Pi panes. Neovim uses resurrect's `session` strategy, which runs `nvim -S` when the pane cwd contains `Session.vim`.
 
