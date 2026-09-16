@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+
+# Persistent, per-directory shell used by the tmux popup binding.
+
+set -euo pipefail
+
+runtime_dir=${TMUX_POPUP_SHELL_DIR:-${TMPDIR:-/tmp}/tmux-popup-shell-${UID:-$(id -u)}}
+popup_socket="$runtime_dir/socket"
+self="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+
+popup_tmux() {
+  env -u TMUX tmux -S "$popup_socket" "$@"
+}
+
+show_session_env() {
+  local session=$1 name=$2 line
+  line=$(tmux show-environment -t "$session" "$name" 2>/dev/null) || return 1
+  case $line in
+    "$name="*) printf '%s' "${line#*=}" ;;
+    *) return 1 ;;
+  esac
+}
+
+open_popup_shell() {
+  local cwd=${1:-${TMUX_POPUP_CWD:-}}
+  local outer_socket=${2:-${TMUX_POPUP_OUTER_SOCKET:-}}
+  local outer_client=${3:-${TMUX_POPUP_OUTER_CLIENT:-}}
+  local cwd_hash session shell self_q
+
+  if [[ ! -d $cwd || -z $outer_socket || -z $outer_client ]]; then
+    printf 'tmux-popup-shell: missing popup context\n' >&2
+    exit 2
+  fi
+
+  cwd=$(cd "$cwd" && pwd -P)
+  cwd_hash=$(printf '%s' "$cwd" | /usr/bin/shasum -a 256 | /usr/bin/cut -c1-16)
+  session="cwd-$cwd_hash"
+  shell=$(tmux -S "$outer_socket" show-options -gv default-shell 2>/dev/null || true)
+  [[ -x $shell ]] || shell=${SHELL:-/bin/sh}
+
+  umask 077
+  mkdir -p "$runtime_dir"
+  chmod 700 "$runtime_dir"
+
+  if ! popup_tmux has-session -t "=$session" 2>/dev/null; then
+    popup_tmux -f /dev/null new-session -d -s "$session" -c "$cwd" "$shell" -l
+  fi
+
+  self_q=$(printf '%q' "$self")
+  popup_tmux set-option -g default-shell "$shell"
+  popup_tmux set-option -g status off
+  popup_tmux set-option -g prefix C-Space
+  popup_tmux bind-key C-p detach-client
+  popup_tmux bind-key C-Space run-shell -b "$self_q ftm '#{session_id}'"
+  popup_tmux set-environment -t "=$session" POPUP_OUTER_SOCKET "$outer_socket"
+  popup_tmux set-environment -t "=$session" POPUP_OUTER_CLIENT "$outer_client"
+
+  exec env -u TMUX tmux -S "$popup_socket" attach-session -t "=$session"
+}
+
+open_ftm() {
+  local session=${1:-} outer_socket outer_client
+
+  if [[ -z $session ]]; then
+    printf 'usage: tmux-popup-shell ftm <popup-session>\n' >&2
+    exit 2
+  fi
+  outer_socket=$(show_session_env "$session" POPUP_OUTER_SOCKET)
+  outer_client=$(show_session_env "$session" POPUP_OUTER_CLIENT)
+
+  tmux -S "$outer_socket" display-popup -C -c "$outer_client" 2>/dev/null || true
+  sleep 0.05
+  tmux -S "$outer_socket" send-keys -K -c "$outer_client" C-Space C-Space
+}
+
+case ${1:-} in
+  open) open_popup_shell "${2:-}" "${3:-}" "${4:-}" ;;
+  ftm) open_ftm "${2:-}" ;;
+  *)
+    printf 'usage: tmux-popup-shell <open|ftm> ...\n' >&2
+    exit 2
+    ;;
+esac
