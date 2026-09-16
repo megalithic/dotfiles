@@ -9,9 +9,11 @@
 --      "connected via tidewave mcp"). Cross-checked by the pi manifest's
 --      tidewaveConnected flag when present.
 --   4. Resolve the pane's pi bridge socket from its manifest (match .pane).
---   5. Write the handshake binding the pidewave.ts conduit reads.
---   6. Focus Helium, find the tab on localhost:<port>, CDP-click Tidewave
---      inspect.
+--   5. Find the unambiguous app tab on localhost:<port>, preferring the exact
+--      URL saved by the previous handshake and never selecting /tidewave.
+--   6. Write the optional Tidewave IDE Chat -> tmux pi binding.
+--   7. Bring the app tab forward via CDP, focus Helium, wait until the toolbar
+--      is ready in the foreground tab, then click Inspect.
 --
 -- Everything is best-effort and pcall-guarded: interop failures (tmux absent,
 -- Helium closed, cdp.mjs missing, pi not running) must never crash Hammerspoon.
@@ -23,6 +25,7 @@ local DOTFILES = os.getenv("HOME") .. "/.dotfiles"
 local PHX_PORT_SH = DOTFILES .. "/config/mise/tmpls/elixir/scripts/phx-port.sh"
 local WT_FOR_PORT_SH = DOTFILES .. "/config/mise/tmpls/elixir/scripts/worktree-for-port.sh"
 local CDP = os.getenv("HOME") .. "/.pi/agent/skills/chrome-cdp/scripts/cdp.mjs"
+local CDP_PORT = 9223
 
 local home = os.getenv("HOME") or "~"
 local xdgState = os.getenv("XDG_STATE_HOME") or (home .. "/.local/state")
@@ -45,16 +48,22 @@ local function notify(text, isError)
   log("%s%s", isError and "ERROR: " or "", text)
 end
 
+local function shellQuote(value)
+  return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
+end
+
 -- Run a shell command, return trimmed stdout or nil. Never throws.
 local function sh(cmd, cwd)
-  local full = cmd
-  if cwd then full = string.format("cd %q && %s", cwd, cmd) end
+  local shellPath = rawget(_G, "PATH") or os.getenv("PATH") or "/usr/bin:/bin:/usr/sbin:/sbin"
+  local command = cmd
+  if cwd then command = "cd " .. shellQuote(cwd) .. " && " .. cmd end
+  local full = "PATH=" .. shellQuote(shellPath) .. "; export PATH; " .. command
   local ok, out = pcall(function()
-    -- Login shell so mise/fnox PATH shims resolve like a normal terminal.
     local h = io.popen(full .. " 2>/dev/null")
     if not h then return nil end
     local data = h:read("*a")
-    h:close()
+    local closed = h:close()
+    if not closed then return nil end
     return data
   end)
   if not ok or not out then return nil end
@@ -105,9 +114,9 @@ end
 
 -- Derive Phoenix port + worktree facts from the worktree cwd.
 local function worktreeFacts(cwd)
-  local port = sh(string.format("bash %q", PHX_PORT_SH), cwd)
+  local port = sh("bash " .. shellQuote(PHX_PORT_SH), cwd)
   if not port or not port:match("^%d+$") then return nil end
-  local factsJson = sh(string.format("bash %q %s", WT_FOR_PORT_SH, port))
+  local factsJson = sh("bash " .. shellQuote(WT_FOR_PORT_SH) .. " " .. port)
   local facts = nil
   if factsJson and factsJson:match("^{") then
     local ok, decoded = pcall(hs.json.decode, factsJson)
@@ -122,20 +131,42 @@ end
 local function tidewaveLive(port)
   if not port then return false end
   local code = sh(string.format(
-    "curl -s -o /dev/null -w '%%{http_code}' -X POST http://localhost:%d/tidewave/mcp "
+    "curl -s --connect-timeout 1 --max-time 3 -o /dev/null -w '%%{http_code}' -X POST http://localhost:%d/tidewave/mcp "
       .. "-H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' "
       .. "-d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"pidewave\",\"version\":\"0\"}}}'",
     port
   ))
   -- Any non-000/404/405 response means the MCP route answered.
-  return code ~= nil and code ~= "000" and code ~= "404" and code ~= "000"
+  return code ~= nil and code ~= "000" and code ~= "404" and code ~= "405"
 end
 
-local function writeBinding(facts, manifest)
+local function bindingSlug(facts)
+  local slug = (facts.root or ""):match("([^/]+)$") or facts.worktree or "unknown"
+  return slug:lower():gsub("[^a-z0-9]", "-"):gsub("%-+", "-"):gsub("^%-", ""):gsub("%-$", "")
+end
+
+local function bindingPath(facts)
+  return BINDING_DIR .. "/" .. bindingSlug(facts) .. ".json"
+end
+
+local function previousTabUrl(facts)
+  local url = nil
+  pcall(function()
+    local f = io.open(bindingPath(facts), "r")
+    if not f then return end
+    local raw = f:read("*a")
+    f:close()
+    local decoded = hs.json.decode(raw)
+    if decoded and tonumber(decoded.port) == tonumber(facts.port) and type(decoded.tabUrl) == "string" then
+      url = decoded.tabUrl
+    end
+  end)
+  return url
+end
+
+local function writeBinding(facts, manifest, tabUrl)
   pcall(function() hs.fs.mkdir(PI_STATE_DIR .. "/tidewave") end)
   pcall(function() hs.fs.mkdir(BINDING_DIR) end)
-  local slug = (facts.root or ""):match("([^/]+)$") or facts.worktree or "unknown"
-  slug = slug:lower():gsub("[^a-z0-9]", "-"):gsub("%-+", "-"):gsub("^%-", ""):gsub("%-$", "")
   local binding = {
     worktree = facts.worktree,
     cwd = facts.root or manifest.cwd,
@@ -144,10 +175,10 @@ local function writeBinding(facts, manifest)
     window = manifest.window,
     pane = manifest.pane,
     port = facts.port,
-    tabUrl = string.format("http://localhost:%d", facts.port or 0),
+    tabUrl = tabUrl or string.format("http://localhost:%d", facts.port or 0),
     boundAt = os.date("!%Y-%m-%dT%H:%M:%SZ"),
   }
-  local path = BINDING_DIR .. "/" .. slug .. ".json"
+  local path = bindingPath(facts)
   local ok = pcall(function()
     local f = assert(io.open(path, "w"))
     f:write(hs.json.encode(binding))
@@ -157,51 +188,135 @@ local function writeBinding(facts, manifest)
   return nil, nil
 end
 
--- Focus Helium and CDP-click the Tidewave inspect button on the tab for this port.
-local function focusHeliumAndInspect(port)
-  pcall(function()
-    local app = hs.application.get("Helium") or hs.application.get("net.imput.helium")
-    if app then app:activate() end
-  end)
-  if not hs.fs.attributes(CDP) then
-    log("cdp.mjs not found at %s; skipped inspect-click", CDP)
-    return false
-  end
-  -- Find the tab targetId whose URL is on localhost:<port>, then eval a click on
-  -- the toolbar's shadow-DOM "Inspect element" control.
-  local list = sh(string.format("node %q list", CDP))
-  if not list then
-    log("cdp list failed; is Helium remote-debugging on :9223?")
-    return false
-  end
-  local target = nil
+local function appUrl(url, port)
+  local _, host, urlPort, rest = url:match("^(https?)://([^/:?#]+):(%d+)(.*)$")
+  if not host or (host ~= "localhost" and host ~= "127.0.0.1") then return nil end
+  if tonumber(urlPort) ~= tonumber(port) then return nil end
+  local path = (rest or ""):match("^([^?#]*)") or "/"
+  if path == "" then path = "/" end
+  return { path = path, tidewave = path == "/tidewave" or path:match("^/tidewave/") ~= nil }
+end
+
+-- Pick an app page without relying on CDP target enumeration order. A saved
+-- exact URL resolves multiple same-port app pages; otherwise ambiguity fails
+-- closed so Inspect is never clicked in a random tab.
+local function selectAppTarget(port, preferredUrl)
+  if not hs.fs.attributes(CDP) then return nil, "CDP helper is missing." end
+  local list = sh(string.format("CDP_PORT=%d node %s list", CDP_PORT, shellQuote(CDP)))
+  if not list then return nil, "Could not list Helium tabs on CDP port 9223." end
+
+  local targets = {}
   for line in list:gmatch("[^\n]+") do
-    if line:match("localhost:" .. port) then
-      target = line:match("^(%x+)")
-      if target then break end
+    local id = line:match("^(%x+)")
+    local url = line:match("(https?://%S+)%s*$")
+    local parsed = url and appUrl(url, port) or nil
+    if id and parsed and not parsed.tidewave then
+      table.insert(targets, { id = id, url = url, path = parsed.path })
     end
   end
-  if not target then
-    log("no Helium tab found on localhost:%d", port)
-    return false
+  table.sort(targets, function(a, b)
+    if a.url ~= b.url then return a.url < b.url end
+    return a.id < b.id
+  end)
+
+  if preferredUrl then
+    local exact = {}
+    for _, target in ipairs(targets) do
+      if target.url == preferredUrl then table.insert(exact, target) end
+    end
+    if #exact == 1 then return exact[1] end
+    if #exact > 1 then
+      return nil, string.format("Multiple Helium tabs have the saved app URL %s.", preferredUrl)
+    end
   end
-  local js = [[
-    (() => {
-      const host = document.getElementById('tidewave-toolbar');
-      const sr = host && host.shadowRoot;
-      if (!sr) return 'no-toolbar';
-      const btn = [...sr.querySelectorAll('button,[role=button]')]
-        .find(b => /inspect/i.test((b.getAttribute('aria-label')||b.title||b.textContent||'')));
-      if (!btn) return 'no-inspect-btn';
-      btn.click();
-      return 'clicked';
-    })()
+  if #targets == 1 then return targets[1] end
+  if #targets == 0 then
+    return nil, string.format("No normal app tab found on localhost:%d (Tidewave pages are ignored).", port)
+  end
+  return nil, string.format(
+    "Multiple app tabs are open on localhost:%d; keep only the intended tab open, then retry.",
+    port
+  )
+end
+
+local function heliumOwnsCdp(app)
+  local listeners = sh(string.format("/usr/sbin/lsof -nP -iTCP:%d -sTCP:LISTEN -Fp", CDP_PORT))
+  if not listeners then return false end
+  local appPid = app:pid()
+  for pid in listeners:gmatch("p(%d+)") do
+    if tonumber(pid) == appPid then return true end
+  end
+  return false
+end
+
+-- Page.bringToFront selects the Chromium tab before Helium itself is activated.
+-- The in-page poll then refuses to click until that tab is visible, fully loaded,
+-- and has an Inspect control in the Tidewave toolbar shadow root.
+local function focusHeliumAndInspect(target)
+  local app = hs.application.get("net.imput.helium")
+  if not app then return false, "Helium is not running." end
+  if not heliumOwnsCdp(app) then return false, "Helium does not own CDP port 9223." end
+
+  local brought = sh(string.format(
+    "CDP_PORT=%d node %s evalraw %s Page.bringToFront '{}'",
+    CDP_PORT,
+    shellQuote(CDP),
+    shellQuote(target.id)
+  ))
+  if not brought then return false, "Could not foreground the Helium app tab via CDP." end
+
+  local activated = false
+  local activationOk = pcall(function() activated = app:activate(true) ~= false end)
+  if not activationOk or not activated then return false, "Could not focus Helium." end
+
+  local js = "const expectedUrl = " .. hs.json.encode(target.url) .. ";" .. [[
+    new Promise(resolve => {
+      const deadline = Date.now() + 4000;
+      let clicked = false;
+      const inspect = () => {
+        if (location.href !== expectedUrl) {
+          resolve(`url-changed:${location.href}`);
+          return;
+        }
+        const host = document.getElementById('tidewave-toolbar');
+        const root = host && host.shadowRoot;
+        const button = root && [...root.querySelectorAll('button,[role=button]')]
+          .find(b => /inspect/i.test((b.getAttribute('aria-label') || b.title || b.textContent || '')));
+        const enabled = button && !button.disabled && button.getAttribute('aria-disabled') !== 'true';
+        const rect = button && button.getBoundingClientRect();
+        const visible = enabled && button.isConnected && (button.checkVisibility
+          ? button.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })
+          : rect.width > 0 && rect.height > 0);
+        const active = visible && button.classList.contains('bg-accent')
+          && root.querySelector('[data-testid="inspector-panel"]');
+        if (document.readyState === 'complete' && document.visibilityState === 'visible' && active) {
+          resolve('active');
+          return;
+        }
+        if (document.readyState === 'complete' && document.visibilityState === 'visible' && visible && !clicked) {
+          button.click();
+          clicked = true;
+        }
+        if (Date.now() >= deadline) {
+          const buttonState = !button ? 'no-button' : !enabled ? 'button-disabled' : !visible ? 'button-hidden' : clicked ? 'click-unconfirmed' : 'button';
+          resolve(`not-ready:${document.readyState}:${document.visibilityState}:${host ? 'toolbar' : 'no-toolbar'}:${buttonState}`);
+          return;
+        }
+        setTimeout(inspect, 100);
+      };
+      inspect();
+    })
   ]]
-  -- shell-escape the JS payload in single quotes
-  local jsEsc = js:gsub("'", "'\\''")
-  local res = sh(string.format("node %q eval %s '%s'", CDP, target, jsEsc))
-  log("inspect-click result: %s", res or "nil")
-  return res ~= nil and res:match("clicked") ~= nil
+  local res = sh(string.format(
+    "CDP_PORT=%d node %s eval %s %s",
+    CDP_PORT,
+    shellQuote(CDP),
+    shellQuote(target.id),
+    shellQuote(js)
+  ))
+  log("inspect-click target=%s url=%s result=%s", target.id, target.url, res or "nil")
+  if res == "active" then return true end
+  return false, "Selected app tab did not enter Tidewave Inspect mode (" .. (res or "CDP error") .. ")."
 end
 
 function M.handshake()
@@ -231,13 +346,23 @@ function M.handshake()
       notify(string.format("Tidewave MCP not connected on :%d.", facts.port), true)
       return
     end
-    local binding = writeBinding(facts, manifest)
+    local preferredUrl = facts.appUrl or previousTabUrl(facts)
+    local target, targetError = selectAppTarget(facts.port, preferredUrl)
+    local binding = writeBinding(facts, manifest, target and target.url or preferredUrl)
     if not binding then
-      notify("Failed to write handshake binding.", true)
+      notify("Optional Tidewave IDE Chat binding failed; continuing with toolbar routing.", true)
+    end
+    local bindingNote = binding and " Optional IDE Chat binding was updated." or ""
+    if not target then
+      notify("Toolbar routing stopped: " .. targetError .. bindingNote, true)
       return
     end
-    notify(string.format("Bound %s (%s) -> :%d", manifest.session or "pi", pane.pane, facts.port))
-    focusHeliumAndInspect(facts.port)
+    local inspected, inspectError = focusHeliumAndInspect(target)
+    if not inspected then
+      notify("Toolbar routing stopped: " .. inspectError .. bindingNote, true)
+      return
+    end
+    notify(string.format("Tidewave Inspect ready in %s", target.url))
   end)
   if not ok then
     notify("handshake crashed (guarded): " .. tostring(err), true)
