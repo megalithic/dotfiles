@@ -30,6 +30,14 @@ If the requested profile already runs, Hammerspoon logs success and skips `launc
 
 If the running config is too old to have the URL handler, `bin/hs-reload` falls back to a System Events menu click and fails with an Accessibility-permission error instead of trying unsafe IPC fallbacks. Hammerspoon's preflight adds `~/.local/share/hammerspoon` to Lua `package.path` so generated data-only fragments such as `fragments/shade-next.lua` can be required without editing the generated file.
 
+## Tidewave inspector handoff
+
+`init.lua` loads `lib/interop/pidewave.lua`, which owns the global Cmd+Shift+C handoff from a focused tmux Pi to Tidewave Inspect in Helium. Ghostty ignores the same local chord so the global Hammerspoon binding receives it.
+
+The handler asks tmux for the current client's active pane with one printable, pipe-separated `display-message` call; control-character separators become underscores when tmux runs through Hammerspoon. It then requires Pi as the pane's foreground process, resolves the pane-qualified bridge manifest, derives the worktree's live Phoenix port, and requires either the manifest's `tidewaveConnected` flag or a successful bounded MCP probe. All shell values use single-quote escaping, and failures notify without escaping the outer `pcall` guard.
+
+For browser routing, the handler verifies that the running Helium PID owns CDP port 9223. It ignores `/tidewave` routes, prefers the exact app URL saved by a previous handshake, accepts a sole remaining normal app page, and fails closed when multiple unmatched same-port pages remain. It calls CDP `Page.bringToFront` before activating Helium, rechecks the exact URL, waits for a complete visible page and rendered enabled Inspect button, clicks once, and reports success only after the active button and inspector panel appear. The same handshake also writes the optional [[lat.md/programs/pi-coding-agent#Session and routing extensions|Tidewave IDE Chat binding]], but toolbar inspection does not route through `acp.ts`.
+
 ## Global app bindings
 
 Global app bindings stay data-driven so app launchers, local pass-through keys, and URL-scheme actions share one configuration surface instead of per-app binding code.

@@ -72,9 +72,11 @@ end
 
 -- Active tmux pane facts as seen from a non-TMUX (Hammerspoon) context.
 local function activePane()
-  local raw = sh("tmux display-message -p '#{pane_id}\t#{pane_current_path}\t#{pane_pid}'")
+  -- tmux replaces control-character separators with underscores when invoked
+  -- from Hammerspoon, so use a printable delimiter and parse the last field.
+  local raw = sh("tmux display-message -p '#{pane_id}|#{pane_current_path}|#{pane_pid}'")
   if not raw or raw == "" then return nil end
-  local pane, cwd, pid = raw:match("^(%S+)\t(.-)\t(%d+)$")
+  local pane, cwd, pid = raw:match("^([^|]+)|(.*)|(%d+)$")
   if not pane then return nil end
   return { pane = pane, cwd = cwd, pid = tonumber(pid) }
 end
