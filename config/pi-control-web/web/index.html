@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#111827">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pi control">
+    <title>Pi control</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/icon.svg">
+    <link rel="stylesheet" href="/styles.css">
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <header>
+      <div>
+        <p class="eyebrow">Private tailnet console</p>
+        <h1>Pi control</h1>
+      </div>
+      <button id="refresh" class="secondary" type="button">Refresh</button>
+    </header>
+
+    <main>
+      <section id="login" class="panel hidden" aria-labelledby="login-title">
+        <h2 id="login-title">Sign in</h2>
+        <p>Enter the gateway token stored on workbookpro.</p>
+        <form id="login-form">
+          <label for="token">Gateway token</label>
+          <input id="token" name="token" type="password" autocomplete="current-password" required>
+          <button type="submit">Sign in</button>
+        </form>
+      </section>
+
+      <section id="sessions" aria-labelledby="sessions-title">
+        <div class="section-heading">
+          <h2 id="sessions-title">Sessions</h2>
+          <span id="connection" class="muted">Connecting</span>
+        </div>
+        <div id="session-list" class="session-list" aria-live="polite"></div>
+      </section>
+
+      <section id="detail" class="panel hidden" aria-labelledby="detail-title">
+        <button id="back" class="link-button" type="button">Back to sessions</button>
+        <div class="detail-heading">
+          <div>
+            <p id="detail-meta" class="eyebrow"></p>
+            <h2 id="detail-title">Session</h2>
+          </div>
+          <span id="detail-state" class="state"></span>
+        </div>
+        <article id="latest" class="message" aria-live="polite"></article>
+        <form id="message-form">
+          <label for="message">Send input</label>
+          <textarea id="message" name="message" rows="5" maxlength="8000" required></textarea>
+          <div class="send-row">
+            <label class="mode-label" for="mode">Delivery</label>
+            <select id="mode" name="mode">
+              <option value="follow_up">Follow up</option>
+              <option value="steer">Steer now</option>
+            </select>
+            <button type="submit">Send</button>
+          </div>
+        </form>
+      </section>
+
+      <p id="notice" class="notice" role="status" aria-live="polite"></p>
+    </main>
+  </body>
+</html>

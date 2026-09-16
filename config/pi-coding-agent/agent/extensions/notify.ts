@@ -1,217 +1,351 @@
-/**
- * Notification Extension for Pi Coding Agent
- *
- * Uses ~/bin/ntfy for intelligent notification routing based on attention state.
- * Features:
- * - Attention detection (terminal focused, display asleep, etc.)
- * - Multi-channel routing (macOS, canvas overlay, phone, Pushover)
- * - Question tracking with reminders
- * - User activity tracking to hint at attention state
- * - Shows last assistant message as notification body
- * - Suppresses notifications during active telegram conversations
- *
- * Much more sophisticated than OSC 777 escape sequences.
- */
-
-import type { AgentMessage, UserMessage } from "@earendil-works/pi-agent-core";
+import { execFileSync, spawn } from "node:child_process";
+import path from "node:path";
+import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { AssistantMessage, TextContent } from "@earendil-works/pi-ai";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { spawn, execSync } from "node:child_process";
-import path from "node:path";
 
 const NTFY_PATH = path.join(process.env.HOME || "", "bin", "ntfy");
-
-// Telegram message prefix (set by bridge.ts when forwarding from Hammerspoon)
 const TELEGRAM_PREFIX = "📱 **Telegram message:**";
+const NOTIFY_DELAY_MS = 3_000;
+const CONNECTION_ERROR = "Connection error.";
+const EMPTY_RESPONSE = "Pi is waiting for your next instruction.";
 
-// Track when user last interacted (sent input)
-let lastInputTime = Date.now();
-
-// Track when last telegram message was received
-let lastTelegramTime = 0;
-
-// How recently a telegram message must be to suppress notifications (ms)
-const TELEGRAM_SUPPRESS_WINDOW_MS = 60_000; // 1 minute
-
-// Cache tmux session name (doesnt change during session)
 let tmuxSessionName: string | null = null;
 
-function getTmuxSessionName(): string | null {
-  if (tmuxSessionName !== null) return tmuxSessionName;
-  if (!process.env.TMUX) {
-    tmuxSessionName = "";
-    return null;
-  }
-  try {
-    const result = execSync("tmux display-message -p '#S'", {
-      encoding: "utf-8",
-      timeout: 1000,
-      stdio: ["pipe", "pipe", "pipe"],
-    }).trim();
-    tmuxSessionName = result || "";
-    return tmuxSessionName || null;
-  } catch {
-    tmuxSessionName = "";
-    return null;
-  }
-}
+const getTmuxSessionName = (): string | null => {
+	if (tmuxSessionName !== null) return tmuxSessionName || null;
+	if (!process.env.TMUX) {
+		tmuxSessionName = "";
+		return null;
+	}
 
-function getSource(): string {
-  const session = getTmuxSessionName();
-  return session ? `${session} pi` : "pi";
-}
+	try {
+		const args = ["display-message", "-p"];
+		if (process.env.TMUX_PANE) args.push("-t", process.env.TMUX_PANE);
+		args.push("#{session_name}");
+		tmuxSessionName = execFileSync("tmux", args, {
+			encoding: "utf-8",
+			timeout: 1_000,
+			stdio: ["ignore", "pipe", "ignore"],
+		}).trim();
+	} catch {
+		tmuxSessionName = "";
+	}
 
-const ATTENTION_THRESHOLD_MS = 30_000;
+	return tmuxSessionName || null;
+};
 
-function isUserLikelyAttentive(): boolean {
-  return Date.now() - lastInputTime < ATTENTION_THRESHOLD_MS;
-}
+const getSource = (): string => {
+	const session = getTmuxSessionName();
+	return session ? `${session} pi` : "pi";
+};
 
-function isAssistantMessage(m: AgentMessage): m is AssistantMessage {
-  return m.role === "assistant" && Array.isArray(m.content);
-}
+const isAssistantMessage = (
+	message: AgentMessage,
+): message is AssistantMessage =>
+	message.role === "assistant" && Array.isArray(message.content);
 
-function isUserMessage(m: AgentMessage): m is UserMessage {
-  return m.role === "user";
-}
+const assistantText = (message: AssistantMessage): string =>
+	message.content
+		.filter((block): block is TextContent => block.type === "text")
+		.map((block) => block.text)
+		.join("\n")
+		.trim();
 
-function getTextContent(message: AssistantMessage): string {
-  return message.content
-    .filter((block): block is TextContent => block.type === "text")
-    .map((block) => block.text)
-    .join("\n");
-}
+const cleanMarkdown = (text: string): string => {
+	const lines = text.replace(/\r\n?/g, "\n").split("\n");
+	const cleaned: string[] = [];
+	let pendingBlank = false;
 
-function getUserMessageText(message: UserMessage): string {
-  if (typeof message.content === "string") return message.content;
-  return message.content
-    .filter((block): block is TextContent => block.type === "text")
-    .map((block) => block.text)
-    .join("\n");
-}
+	for (const rawLine of lines) {
+		let line = rawLine.trim();
+		if (/^\s*```/.test(line) || /^\s*~~~/.test(line)) continue;
+		if (/^(?:[-*_]\s*){3,}$/.test(line)) continue;
 
-function getLastMeaningfulLine(text: string, maxLength: number = 200): string {
-  const lines = text
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-  for (let i = lines.length - 1; i >= 0; i--) {
-    const line = lines[i];
-    if (/^```|^---$|^===|^\*\*\*$/.test(line)) continue;
-    if (/^[-*]*\s*$|^\d+\.\s*$/.test(line)) continue;
-    if (line.length <= maxLength) return line;
-    return line.slice(0, maxLength - 3) + "...";
-  }
-  return "Pi is waiting for your next instruction";
-}
+		line = line
+			.replace(/^#{1,6}\s+/, "")
+			.replace(/^>\s?/, "")
+			.replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+			.replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+			.replace(/\*\*|__|~~|`/g, "")
+			.replace(/\s+/g, " ")
+			.trim();
 
-function extractNotificationBody(messages: AgentMessage[]): string {
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const msg = messages[i];
-    if (isAssistantMessage(msg)) {
-      const text = getTextContent(msg);
-      if (text) return getLastMeaningfulLine(text);
-    }
-  }
-  return "Pi is waiting for your next instruction";
-}
+		if (!line || /^[-*+]+$/.test(line)) {
+			pendingBlank = cleaned.length > 0;
+			continue;
+		}
 
-/**
- * Check if telegram conversation is currently active.
- * Returns true if a telegram message was received within the suppress window.
- */
-function isTelegramActive(): boolean {
-  return Date.now() - lastTelegramTime < TELEGRAM_SUPPRESS_WINDOW_MS;
-}
+		if (pendingBlank && cleaned.at(-1) !== "") cleaned.push("");
+		pendingBlank = false;
+		cleaned.push(line.replace(/^\*\s+/, "- ").replace(/^\+\s+/, "- "));
+	}
 
-function notify(
-  title: string,
-  message: string,
-  options: {
-    urgency?: "normal" | "high" | "critical";
-    attention?: boolean;
-    question?: boolean;
-    phone?: boolean;
-  } = {},
-): void {
-  const args = [
-    "send",
-    "-t",
-    title,
-    "-m",
-    message,
-    "-s",
-    getSource(),
-    "--presence-routing",
-  ];
-  if (options.urgency) args.push("-u", options.urgency);
-  if (options.attention !== undefined)
-    args.push("-a", options.attention ? "true" : "false");
-  if (options.question) args.push("-q");
-  if (options.phone) args.push("-p");
-  const proc = spawn(NTFY_PATH, args, { stdio: "ignore", detached: true });
-  proc.unref();
-}
+	return cleaned.join("\n").trim();
+};
 
-// Track pending notification timeout
-let pendingNotifyTimeout: ReturnType<typeof setTimeout> | null = null;
+const lastBoundary = (
+	text: string,
+	minimum: number,
+	maximum: number,
+): number | null => {
+	let boundary: number | null = null;
+	let index = text.indexOf("\n\n", minimum);
+	while (index !== -1 && index <= maximum) {
+		boundary = index;
+		index = text.indexOf("\n\n", index + 2);
+	}
+	if (boundary !== null) return boundary;
 
-// Delay before showing "ready for input" notification (ms)
-const NOTIFY_DELAY_MS = 3000;
+	const sentence = /[.!?]["')\]]?\s+/g;
+	for (const match of text.matchAll(sentence)) {
+		const end = (match.index ?? 0) + match[0].trimEnd().length;
+		if (end >= minimum && end <= maximum) boundary = end;
+	}
+	if (boundary !== null) return boundary;
 
-export default function (pi: ExtensionAPI) {
-  pi.on("input", async (_event, _ctx, message) => {
-    lastInputTime = Date.now();
+	index = text.lastIndexOf("\n", maximum);
+	if (index >= minimum) return index;
+	index = text.lastIndexOf(" ", maximum);
+	return index >= minimum ? index : null;
+};
 
-    // Track telegram messages to suppress duplicate notifications
-    if (message && message.startsWith(TELEGRAM_PREFIX)) {
-      lastTelegramTime = Date.now();
-    }
+const notificationExcerpt = (text: string, maxLength = 700): string => {
+	const cleaned = cleanMarkdown(text);
+	if (!cleaned) return EMPTY_RESPONSE;
+	if (cleaned.length <= maxLength) return cleaned;
 
-    // Cancel pending notification if user starts typing
-    if (pendingNotifyTimeout) {
-      clearTimeout(pendingNotifyTimeout);
-      pendingNotifyTimeout = null;
-    }
-  });
+	const suffix = "...";
+	const limit = maxLength - suffix.length;
+	const minimum = Math.min(500, Math.floor(limit * 0.7));
+	const boundary = lastBoundary(cleaned, minimum, limit) ?? limit;
+	return `${cleaned.slice(0, boundary).trimEnd()}${suffix}`;
+};
 
-  pi.on("agent_end", async (event, ctx) => {
-    if (!ctx.hasUI) return;
+const normalizeErrorMessage = (message: string | undefined): string =>
+	(message || "").replace(/\s+/g, " ").trim();
 
-    // Skip notification if conversation includes telegram messages
-    // Check if any recent user message was from telegram
-    const hasTelegramInConversation = event.messages.some((msg) => {
-      if (msg.role !== "user") return false;
-      const content =
-        typeof msg.content === "string"
-          ? msg.content
-          : msg.content
-              .filter(
-                (b): b is { type: "text"; text: string } => b.type === "text",
-              )
-              .map((b) => b.text)
-              .join("");
-      return content.includes(TELEGRAM_PREFIX);
-    });
+const asksQuestion = (text: string): boolean =>
+	/\?[\s*_`"')\]]*$/.test(text.trimEnd());
 
-    // Skip if telegram conversation OR recent telegram activity
-    if (hasTelegramInConversation || isTelegramActive()) {
-      return;
-    }
+type NotificationRequest = {
+	title: "Pi failed" | "Input needed" | "Pi finished";
+	message: string;
+	urgency?: "normal" | "high";
+};
 
-    const body = extractNotificationBody(event.messages);
+type TimerHandle = ReturnType<typeof setTimeout>;
+type TimerPurpose = "prompt" | "settled";
 
-    // Delay notification to avoid spam when switching focus
-    pendingNotifyTimeout = setTimeout(() => {
-      pendingNotifyTimeout = null;
-      notify("Ready for input", body, {});
-    }, NOTIFY_DELAY_MS);
-  });
+type ControllerOptions = {
+	delayMs?: number;
+	setTimer?: (callback: () => void, delayMs: number) => TimerHandle;
+	clearTimer?: (handle: TimerHandle) => void;
+};
 
-  pi.on("error", async (event) => {
-    notify("Error", event.error?.message || "An error occurred", {
-      urgency: "high",
-      attention: false,
-    });
-  });
+const notificationForAssistant = (
+	message: AssistantMessage,
+): NotificationRequest | null => {
+	const text = assistantText(message);
+	if (message.stopReason === "error") {
+		const error = normalizeErrorMessage(message.errorMessage);
+		if (error === CONNECTION_ERROR) return null;
+		return {
+			title: "Pi failed",
+			message: notificationExcerpt(
+				error || text || "Pi failed without an error message.",
+			),
+			urgency: "high",
+		};
+	}
+	if (message.stopReason === "aborted") return null;
+
+	return {
+		title: asksQuestion(text) ? "Input needed" : "Pi finished",
+		message: notificationExcerpt(text),
+	};
+};
+
+const createNotificationController = (
+	emit: (request: NotificationRequest) => void,
+	options: ControllerOptions = {},
+) => {
+	const delayMs = options.delayMs ?? NOTIFY_DELAY_MS;
+	const setTimer = options.setTimer ?? setTimeout;
+	const clearTimer = options.clearTimer ?? clearTimeout;
+
+	let latestAssistant: AssistantMessage | null = null;
+	let telegramRun = false;
+	let pendingTimer: TimerHandle | null = null;
+	let pendingPurpose: TimerPurpose | null = null;
+	let promptNotificationSent = false;
+
+	const cancelPending = (purpose?: TimerPurpose): void => {
+		if (pendingTimer === null || (purpose && pendingPurpose !== purpose))
+			return;
+		clearTimer(pendingTimer);
+		pendingTimer = null;
+		pendingPurpose = null;
+	};
+
+	const schedule = (
+		request: NotificationRequest,
+		purpose: TimerPurpose,
+		afterSend?: () => void,
+	): void => {
+		cancelPending();
+		pendingPurpose = purpose;
+		pendingTimer = setTimer(() => {
+			pendingTimer = null;
+			pendingPurpose = null;
+			emit(request);
+			afterSend?.();
+		}, delayMs);
+	};
+
+	const capture = (message: AgentMessage): void => {
+		if (isAssistantMessage(message)) latestAssistant = message;
+	};
+
+	return {
+		capture,
+		captureRun(messages: AgentMessage[]): void {
+			for (let i = messages.length - 1; i >= 0; i--) {
+				if (isAssistantMessage(messages[i])) {
+					latestAssistant = messages[i];
+					return;
+				}
+			}
+		},
+		input(text: string): void {
+			cancelPending();
+			telegramRun = text.startsWith(TELEGRAM_PREFIX);
+		},
+		agentStart(): void {
+			cancelPending();
+			latestAssistant = null;
+			promptNotificationSent = false;
+		},
+		uiPromptStart(hasUI: boolean, title?: string): void {
+			if (!hasUI || telegramRun) return;
+			cancelPending();
+			emit({
+				title: "Input needed",
+				message: notificationExcerpt(
+					title || "Pi is waiting for your response.",
+				),
+			});
+			promptNotificationSent = true;
+		},
+		uiPromptEnd(): void {
+			cancelPending("prompt");
+		},
+		settled(hasUI: boolean): void {
+			cancelPending();
+			const suppress = telegramRun;
+			telegramRun = false;
+			if (!hasUI || !latestAssistant || suppress) return;
+
+			const request = notificationForAssistant(latestAssistant);
+			if (!request) return;
+			if (request.title === "Input needed" && promptNotificationSent) return;
+			schedule(request, "settled");
+		},
+		cancelPending,
+		shutdown(): void {
+			cancelPending();
+			latestAssistant = null;
+			telegramRun = false;
+		},
+	};
+};
+
+const notificationArgs = (request: NotificationRequest): string[] => {
+	const args = [
+		"send",
+		"-t",
+		request.title,
+		"-m",
+		request.message,
+		"-s",
+		getSource(),
+		"--presence-routing",
+	];
+	if (request.urgency) args.push("-u", request.urgency);
+	return args;
+};
+
+const notify = (request: NotificationRequest): void => {
+	const args = notificationArgs(request);
+
+	try {
+		const child = spawn(NTFY_PATH, args, { stdio: "ignore", detached: true });
+		child.once("error", () => undefined);
+		child.unref();
+	} catch {
+		// Notifications are best-effort and must never interrupt Pi.
+	}
+};
+
+export const _test = {
+	CONNECTION_ERROR,
+	TELEGRAM_PREFIX,
+	assistantText,
+	asksQuestion,
+	cleanMarkdown,
+	createNotificationController,
+	normalizeErrorMessage,
+	notificationArgs,
+	notificationExcerpt,
+	notificationForAssistant,
+};
+
+export default function (pi: ExtensionAPI): void {
+	const controller = createNotificationController(notify);
+	let unsubscribeTerminalInput: (() => void) | null = null;
+
+	pi.on("session_start", (_event, ctx) => {
+		unsubscribeTerminalInput?.();
+		unsubscribeTerminalInput =
+			ctx.mode === "tui"
+				? ctx.ui.onTerminalInput(() => {
+						controller.cancelPending();
+						return undefined;
+					})
+				: null;
+	});
+
+	pi.on("input", (event) => {
+		controller.input(event.text);
+	});
+
+	pi.on("agent_start", () => {
+		controller.agentStart();
+	});
+
+	pi.on("message_end", (event) => {
+		controller.capture(event.message);
+	});
+
+	pi.on("agent_end", (event) => {
+		controller.captureRun(event.messages);
+	});
+
+	pi.on("ui_prompt_start", (event, ctx) => {
+		controller.uiPromptStart(ctx.hasUI, event.title);
+	});
+
+	pi.on("ui_prompt_end", () => {
+		controller.uiPromptEnd();
+	});
+
+	pi.on("agent_settled", (_event, ctx) => {
+		controller.settled(ctx.hasUI);
+	});
+
+	pi.on("session_shutdown", () => {
+		unsubscribeTerminalInput?.();
+		unsubscribeTerminalInput = null;
+		controller.shutdown();
+	});
 }

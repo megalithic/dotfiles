@@ -84,6 +84,8 @@ RX_SENTRY_CLI_TOKEN = { provider = "onepass", value = "op://Crypt/sentry-rxv/api
 
 # On-demand single values: `fnox get APPLE_TEAM_ID`. env = false so shell
 # activation doesn't hit 1Password on every new shell for rarely-used secrets.
+PI_CONTROL_WEB_TOKEN = { provider = "onepass", value = "op://Crypt/pi-control-web/token", env = false }
+
 APPLE_ID_EMAIL = { provider = "onepass", value = "op://Crypt/apple-developer/username", env = false }
 APPLE_TEAM_ID = { provider = "onepass", value = "op://Crypt/apple-developer/Section_6qgogrdycnlqc4x7ngqwchlyvi/team id", env = false }
 APPLE_NOTARYTOOL_PASSWORD = { provider = "onepass", value = "op://Crypt/apple-developer/Section_6qgogrdycnlqc4x7ngqwchlyvi/notarytool app password", env = false }

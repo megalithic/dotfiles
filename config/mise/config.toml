@@ -388,15 +388,15 @@ yamlfmt = "latest"
 zig = "0.16.0"
 zoxide = "latest"
 
-# postinstall chain: scripts/mise/install-app mounts/copies the DMG, then setup-helium
+# postinstall chain: mise/scripts/install-app mounts/copies the DMG, then setup-helium
 # re-bakes the Chromium prodversion into the External Extensions update URLs
 # (mise equivalent of the nix module's eval-time readDir; goes stale on
 # Chromium bumps otherwise) and reapplies defaults/dictionary.
-[tools."github:tidewave-ai/tidewave_app"]
-version = "latest"
-os = ["macos"]
-asset_pattern = "tidewave-app-aarch64.dmg"
-postinstall = "$DOTFILES_DIR/scripts/mise/install-app"
+# [tools."github:tidewave-ai/tidewave_app"]
+# version = "latest"
+# os = ["macos"]
+# asset_pattern = "tidewave-app-aarch64.dmg"
+# postinstall = "$DOTFILES_DIR/mise/scripts/install-app"
 
 [tools."github:megalithic/helium-macos-releases"]
 version = "latest"
@@ -412,7 +412,7 @@ os = ["macos"]
 #   fixed by `mise self-update` (bootstrap.sh keeps the binary current).
 # asset_pattern supports globs and {{version}} templating equally.
 asset_pattern = "helium_{{version}}_arm64-macos.dmg"
-postinstall = "$DOTFILES_DIR/scripts/mise/install-app && $DOTFILES_DIR/scripts/mise/setup-helium"
+postinstall = "$DOTFILES_DIR/mise/scripts/install-app && $DOTFILES_DIR/mise/scripts/setup-helium"
 
 # Kanata Bar v1.1.10 publishes only generic `kanata-bar.app.zip` and `.dmg`
 # assets. The ZIP is arm64-only, so keep the explicit URL and checksum until
@@ -625,7 +625,7 @@ SUHasLaunchedBefore = true
 SUSendProfileInfo = false
 
 # Helium: Sparkle auto-update kill switch (updates come from the mise tool /
-# scripts/mise/install-app path instead). Twin of nix/modules/system.nix
+# mise/scripts/install-app path instead). Twin of nix/modules/system.nix
 # CustomUserPreferences."net.imput.helium". setup:helium also writes these for
 # direct and post-package runs; update:system reapplies all macOS defaults.
 [bootstrap.macos.defaults."net.imput.helium"]
@@ -661,7 +661,7 @@ CriticalUpdateInstall = 1
 ScheduleFrequency = 1
 
 [bootstrap.macos.launchd.agents."com.megadots.llama-cpp"]
-program = "~/.dotfiles/scripts/mise/llama-server-launchd"
+program = "~/.dotfiles/mise/scripts/llama-server-launchd"
 run_at_load = true
 keep_alive = true
 stdout_path = "~/Library/Logs/llama-cpp/stdout.log"
@@ -712,7 +712,7 @@ stderr_path = "~/.cache/aeroplayd-stderr.log"
 # Spotlight exclusions only touch user-owned development directories, so a
 # user LaunchAgent replaces the former root nix-darwin daemon.
 [bootstrap.macos.launchd.agents."com.megadots.spotlight-exclude"]
-program = "~/.dotfiles/scripts/mise/spotlight-exclude"
+program = "~/.dotfiles/mise/scripts/spotlight-exclude"
 run_at_load = true
 keep_alive = false
 start_interval = 21600
@@ -720,7 +720,7 @@ stdout_path = "~/.cache/spotlight-exclude.log"
 stderr_path = "~/.cache/spotlight-exclude.err.log"
 
 # kanata daemon (dev.mise.org.kanata.daemon) and kanata-bar agents are
-# written and loaded by scripts/mise/setup-kanata (post-tools hook), because
+# written and loaded by mise/scripts/setup-kanata (post-tools hook), because
 # bootstrap.sh always passes `--skip launchd`. This entry stays as the
 # declarative owner for whenever `mise bootstrap launchd` runs manually —
 # it generates the same dev.mise.-prefixed label kanata-setup writes.
@@ -729,7 +729,7 @@ stderr_path = "~/.cache/spotlight-exclude.err.log"
 # churns the Input Monitoring TCC grant on every upgrade.
 
 [bootstrap.macos.launchd.agents."com.kanata-bar.ui"]
-program = "~/.dotfiles/scripts/mise/kanata-bar-launchd"
+program = "~/.dotfiles/mise/scripts/kanata-bar-launchd"
 run_at_load = true
 keep_alive = false
 stdout_path = "/tmp/kanata-bar.log"
@@ -749,8 +749,8 @@ run = [
   # 1Password CLI' setting (mise shims break the socket handshake).
   "[ -d /Applications/Espanso.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask espanso",
   "[ -d /Applications/zoom.us.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask zoom",
-  "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/espanso-service",
-  "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/setup-pam",
+  "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/espanso-service",
+  "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-pam",
   "mise run setup:helium",
 ]
 
@@ -786,7 +786,7 @@ nerd_fonts = "JetBrainsMono FiraCode Iosevka VictorMono FantasqueSansMono NerdFo
 [tasks.up]
 alias = "dot"
 description = "Update and converge this machine"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/update-machine"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/update-machine"
 raw = true
 
 [tasks."update:tools"]
@@ -817,10 +817,10 @@ mise --verbose bootstrap dotfiles apply --force --yes
 
 [tasks."install:fonts"]
 description = "Install declared Nerd Fonts"
-run = "NERD_FONTS_VERSION={{vars.nerd_fonts_version}} ${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/install-fonts {{vars.nerd_fonts}}"
+run = "NERD_FONTS_VERSION={{vars.nerd_fonts_version}} ${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/install-fonts {{vars.nerd_fonts}}"
 sources = [
   "{{env.HOME}}/.dotfiles/config/mise/config.toml",
-  "{{env.HOME}}/.dotfiles/scripts/mise/install-fonts",
+  "{{env.HOME}}/.dotfiles/mise/scripts/install-fonts",
 ]
 outputs = { auto = true }
 
@@ -846,12 +846,12 @@ run = [
 
 [tasks."update:fnox"]
 description = "Refresh fnox cache and generated secret artifacts"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/update-fnox"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/update-fnox"
 raw = true
 
 [tasks."update:pi"]
 description = "Update Pi, settings, tools, and extensions"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/update-pi"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/update-pi"
 
 [tasks."reload:hammerspoon"]
 description = "Reload Hammerspoon"
@@ -863,7 +863,7 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/fantastical-sync"
 
 [tasks.doctor]
 description = "Post-bootstrap health checks (bootstrap.sh runs this last)"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/check-system"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/check-system"
 
 [tasks.clean]
 description = "Clean package-manager caches and generated artifacts"
@@ -913,13 +913,13 @@ fi
 
 [tasks."setup:yubikey"]
 description = "Per-YubiKey (serial-safe): age identity + fnox recipient + encrypted OP_SERVICE_ACCOUNT_TOKEN (interactive; pass serial: mise run setup:yubikey -- <serial>)"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/setup-yubikey"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-yubikey"
 # raw: PIN/touch/token prompts on the terminal
 raw = true
 
 [tasks."setup:kanata"]
 description = "Install/activate Karabiner VirtualHID glue and restart mise-managed kanata services"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/setup-kanata"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-kanata"
 # raw: connect stdin/stdout/stderr directly — the task prompts for a sudo
 # password; under mise's default captured stdio the prompt never reaches the
 # terminal and the run hangs silently.
@@ -973,7 +973,7 @@ outputs = ["{{env.HOME}}/.local/bin/avwatchd"]
 [tasks."setup:avwatchd"]
 description = "Build avwatchd, install native messaging, and retire media-presenced"
 depends = ["build:avwatchd"]
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/setup-avwatchd"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-avwatchd"
 
 # Declarative Helium profile setup (External Extensions with baked
 # prodversion, NSUserKeyEquivalents, Sparkle kill switch, en-US dictionary).
@@ -981,11 +981,11 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/setup-avwatchd"
 [tasks."setup:helium"]
 description = "Seed Helium extensions, preferences, dictionary, and avwatchweb native messaging"
 depends = ["build:avwatchd"]
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/setup-helium"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-helium"
 
 [tasks."setup:touchid-sudo"]
 description = "Install /etc/pam.d/sudo_local with pam_tid (+ pam_reattach for tmux); replaces nix-darwin enableSudoTouchIdAuth"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/mise/setup-pam"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-pam"
 
 [tasks."helium:1password-trust"]
 description = "Check 1Password trusts /Applications/Helium.app; prints GUI Add Browser steps if not (setting is tamper-protected, not writable)"

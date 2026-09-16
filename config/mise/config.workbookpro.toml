@@ -11,3 +11,14 @@
 ansible = "latest"
 gcloud = "latest"
 opentofu = "latest"
+
+[bootstrap.macos.launchd.agents."com.megadots.pi-control-web"]
+program = "~/.dotfiles/mise/scripts/pi-control-web-launchd"
+run_at_load = true
+keep_alive = true
+stdout_path = "~/Library/Logs/pi-control-web/stdout.log"
+stderr_path = "~/Library/Logs/pi-control-web/stderr.log"
+
+[tasks."setup:pi-control-web"]
+description = "Create the private Pi control web token and log directory"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-pi-control-web"

@@ -1,0 +1,19 @@
+{
+	"name": "Pi control",
+	"short_name": "Pi control",
+	"description": "Private mobile access to active Pi sessions",
+	"id": "/",
+	"start_url": "/",
+	"scope": "/",
+	"display": "standalone",
+	"background_color": "#070b14",
+	"theme_color": "#111827",
+	"icons": [
+		{
+			"src": "/icon.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose": "any maskable"
+		}
+	]
+}

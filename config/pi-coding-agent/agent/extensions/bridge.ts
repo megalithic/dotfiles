@@ -57,6 +57,7 @@ const SOCKET_PREFIX = "pi";
 // macOS sun_path limit is 104 bytes (incl. NUL terminator). Longer paths make
 // net.Server.listen() throw EINVAL. Keep a safety margin.
 const MAX_SOCKET_PATH_BYTES = 103;
+const MAX_CLIENT_BUFFER_CHARS = 1024 * 1024;
 
 /**
  * Build the socket path for a tmux pane. When the full path would exceed the
@@ -240,6 +241,20 @@ let latestCtx: ExtensionContext | null = null;
 let infoManifestPath: string | null = null;
 const clientSockets = new Set<net.Socket>();
 const ownerToken = crypto.randomBytes(16).toString("hex");
+type BridgeActivityState =
+  | "idle"
+  | "working"
+  | "input_needed"
+  | "done"
+  | "error";
+let activityState: BridgeActivityState = "idle";
+let activityBeforePrompt: BridgeActivityState | null = null;
+let activityUpdatedAt = new Date().toISOString();
+let latestAssistantResult: {
+  content?: unknown;
+  stopReason?: string;
+  errorMessage?: string;
+} | null = null;
 let socketInode: number | null = null;
 let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
 let watchdogTimer: ReturnType<typeof setInterval> | null = null;
@@ -612,6 +627,8 @@ const writeInfoManifest = (): boolean => {
         /-eph-[^-]+-[^-]+\.sock$/.test(SOCKET_PATH),
       startedAt: now,
       tidewaveConnected,
+      state: activityState,
+      statusUpdatedAt: activityUpdatedAt,
       ...piSessionIdentity(latestCtx),
     });
   } catch {
@@ -627,6 +644,63 @@ const cleanupInfoManifest = (): void => {
       fs.unlinkSync(infoManifestPath);
     }
   } catch {}
+};
+
+const updateActivityState = (
+  state: BridgeActivityState,
+  ctx: ExtensionContext | null = latestCtx,
+): void => {
+  activityState = state;
+  activityUpdatedAt = new Date().toISOString();
+  if (ctx) latestCtx = ctx;
+  if (!ownedSocket() || !infoManifestPath) return;
+  const manifest = readManifest(infoManifestPath);
+  if (manifest?.owner !== ownerToken || manifest?.pid !== process.pid) return;
+  manifest.state = activityState;
+  manifest.statusUpdatedAt = activityUpdatedAt;
+  Object.assign(manifest, piSessionIdentity(latestCtx));
+  writeManifestAtomic(manifest);
+};
+
+const beginPrompt = (ctx: ExtensionContext | null = latestCtx): void => {
+  if (activityState !== "input_needed") activityBeforePrompt = activityState;
+  updateActivityState("input_needed", ctx);
+};
+
+const endPrompt = (ctx: ExtensionContext | null = latestCtx): void => {
+  const next = activityBeforePrompt ?? "idle";
+  activityBeforePrompt = null;
+  updateActivityState(next, ctx);
+};
+
+const captureAssistantResult = (message: unknown): void => {
+  if (
+    !message ||
+    typeof message !== "object" ||
+    (message as { role?: string }).role !== "assistant"
+  )
+    return;
+  latestAssistantResult = message as typeof latestAssistantResult;
+};
+
+const assistantResultText = (): string => {
+  const content = latestAssistantResult?.content;
+  if (!Array.isArray(content)) return "";
+  return content
+    .filter(
+      (part): part is { type: "text"; text: string } =>
+        part?.type === "text" && typeof part.text === "string",
+    )
+    .map((part) => part.text)
+    .join("\n")
+    .trim();
+};
+
+const settledActivityState = (): BridgeActivityState => {
+  if (latestAssistantResult?.stopReason === "error") return "error";
+  return /\?[\s*_`"')\]]*$/.test(assistantResultText().trimEnd())
+    ? "input_needed"
+    : "done";
 };
 
 // =============================================================================
@@ -665,6 +739,8 @@ const controlSessions = (): Array<Record<string, unknown>> => {
             paneIndex: manifest.paneIndex,
             startedAt: manifest.startedAt,
             heartbeatAt: manifest.heartbeatAt,
+            state: manifest.state ?? "idle",
+            statusUpdatedAt: manifest.statusUpdatedAt ?? manifest.heartbeatAt,
             reachable: socketExists && pidAlive(Number(manifest.pid)),
           },
         ];
@@ -850,7 +926,11 @@ const startServer = async (
 ): Promise<void> => {
   if (shuttingDown || !SOCKET_PATH || server) return;
 
-  fs.mkdirSync(path.dirname(SOCKET_PATH), { recursive: true });
+  const socketDir = path.dirname(SOCKET_PATH);
+  fs.mkdirSync(socketDir, { recursive: true, mode: 0o700 });
+  fs.mkdirSync(INFO_DIR, { recursive: true, mode: 0o700 });
+  if (socketDir === SOCKET_DIR) fs.chmodSync(socketDir, 0o700);
+  fs.chmodSync(INFO_DIR, 0o700);
 
   // Reclaim only an explicitly stale owner. Never unlink based on ping failure.
   if (fs.existsSync(SOCKET_PATH)) {
@@ -875,6 +955,11 @@ const startServer = async (
 
     socket.on("data", (chunk) => {
       buffer += chunk.toString();
+      if (buffer.length > MAX_CLIENT_BUFFER_CHARS) {
+        respondError(socket, "request too large");
+        socket.destroy();
+        return;
+      }
 
       let idx = buffer.indexOf("\n");
       while (idx !== -1) {
@@ -989,6 +1074,7 @@ const startServer = async (
     }
     if (server !== pendingServer) return;
     try {
+      fs.chmodSync(SOCKET_PATH, 0o600);
       socketInode = fs.statSync(SOCKET_PATH).ino;
     } catch {
       socketInode = null;
@@ -1042,22 +1128,32 @@ const startServer = async (
 // =============================================================================
 
 export const _test = {
+  activityState: () => activityState,
+  beginPrompt,
   buildSocketPath,
   canReclaim,
+  captureAssistantResult,
   controlResponse,
   controlSessions,
   deliverTell,
+  endPrompt,
   handleControl,
   latestAssistantMessage,
   manifestForSocket,
   piSessionIdentity,
   pidAlive,
+  settledActivityState,
   summarizeTellText,
+  updateActivityState,
 };
 
 export default function (pi: ExtensionAPI): void {
   pi.on("session_start", (_event, ctx) => {
     latestCtx = ctx;
+    activityState = "idle";
+    activityBeforePrompt = null;
+    activityUpdatedAt = new Date().toISOString();
+    latestAssistantResult = null;
 
     // Start generic ingress only when explicitly enabled by the Pi wrapper.
     if (IS_BRIDGE_ENABLED) {
@@ -1100,6 +1196,9 @@ export default function (pi: ExtensionAPI): void {
   });
 
   pi.on("session_switch", (_event, ctx) => {
+    latestAssistantResult = null;
+    activityBeforePrompt = null;
+    updateActivityState("idle", ctx);
     refreshSessionContext(ctx);
   });
 
@@ -1110,6 +1209,43 @@ export default function (pi: ExtensionAPI): void {
   // Update status when model changes
   pi.on("model_select", (_event, ctx) => {
     refreshSessionContext(ctx);
+  });
+
+  pi.on("input", (_event, ctx) => {
+    updateActivityState("working", ctx);
+  });
+
+  pi.on("agent_start", (_event, ctx) => {
+    latestAssistantResult = null;
+    activityBeforePrompt = null;
+    updateActivityState("working", ctx);
+  });
+
+  pi.on("message_end", (event) => {
+    captureAssistantResult(event.message);
+  });
+
+  pi.on("agent_end", (event) => {
+    for (let i = event.messages.length - 1; i >= 0; i--) {
+      const message = event.messages[i];
+      if (message?.role === "assistant") {
+        captureAssistantResult(message);
+        break;
+      }
+    }
+  });
+
+  pi.on("ui_prompt_start", (_event, ctx) => {
+    beginPrompt(ctx);
+  });
+
+  pi.on("ui_prompt_end", (_event, ctx) => {
+    endPrompt(ctx);
+  });
+
+  pi.on("agent_settled", (_event, ctx) => {
+    activityBeforePrompt = null;
+    updateActivityState(settledActivityState(), ctx);
   });
 
   pi.on("session_shutdown", async () => {

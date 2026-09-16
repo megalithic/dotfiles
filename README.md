@@ -73,7 +73,7 @@ MISE_AUTO_INSTALL=false mise cfg
 
 After bootstrap succeeds, fully quit and reopen the terminal so the fish login
 shell and host environment take effect. Bootstrap runs a limited
-`scripts/mise/check-system` check before exiting; this first pass skips the full
+`mise/scripts/check-system` check before exiting; this first pass skips the full
 missing-tool check. If it reports failures, restart the terminal and run the
 full check:
 
@@ -100,7 +100,7 @@ To print each phase without running it, use the updater's dry-run mode:
 mise run up -- --dry-run
 ```
 
-`scripts/mise/update-machine` runs these phases sequentially and stops on the
+`mise/scripts/update-machine` runs these phases sequentially and stops on the
 first failure:
 
 1. `update:tools` - update standalone mise, plugins, and declared tools
@@ -115,7 +115,7 @@ first failure:
 9. `reload:hammerspoon` - reload Hammerspoon
 
 Task declarations live in `config/mise/config.toml`. Multi-step mise helpers
-live in `scripts/mise/`; shared Swift sources and their signed build helper stay
+live in `mise/scripts/`; shared Swift sources and their signed build helper stay
 in `lib/`. List current public tasks with:
 
 ```bash

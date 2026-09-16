@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img">
+  <title>Pi control</title>
+  <rect width="512" height="512" rx="112" fill="#111827"/>
+  <path d="M128 132h148c70 0 116 39 116 105s-46 106-116 106h-72v69h-76V132Zm76 65v81h65c29 0 46-14 46-41s-17-40-46-40h-65Z" fill="#67e8f9"/>
+  <circle cx="367" cy="389" r="35" fill="#86efac"/>
+</svg>

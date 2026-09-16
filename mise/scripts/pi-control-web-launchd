@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euo pipefail
+
+node="$HOME/.local/share/mise/installs/node/latest/bin/node"
+server="$HOME/.dotfiles/config/pi-control-web/server.mjs"
+token="${XDG_CONFIG_HOME:-$HOME/.config}/pi-control-web/token"
+
+if [[ ! -x "$node" ]]; then
+  echo "pi-control-web: missing Node at $node" >&2
+  exit 1
+fi
+if [[ ! -f "$token" ]]; then
+  echo "pi-control-web: missing token; run mise run setup:pi-control-web" >&2
+  exit 1
+fi
+
+exec "$node" "$server"

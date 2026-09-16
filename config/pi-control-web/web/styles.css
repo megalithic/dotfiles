@@ -1,0 +1,276 @@
+:root {
+	color-scheme: dark;
+	font-family:
+		ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	background: #070b14;
+	color: #eef2ff;
+	--panel: #111827;
+	--panel-soft: #182235;
+	--border: #2b3952;
+	--muted: #94a3b8;
+	--accent: #67e8f9;
+	--danger: #fca5a5;
+	--success: #86efac;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	background:
+		radial-gradient(circle at top right, #12304b 0, transparent 35rem), #070b14;
+}
+
+button,
+input,
+select,
+textarea {
+	font: inherit;
+}
+
+button,
+select,
+input,
+textarea {
+	border: 1px solid var(--border);
+	border-radius: 0.75rem;
+}
+
+button {
+	min-height: 2.75rem;
+	padding: 0.65rem 1rem;
+	border-color: #0891b2;
+	background: #0891b2;
+	color: #ecfeff;
+	font-weight: 700;
+}
+
+button:active {
+	transform: translateY(1px);
+}
+
+button.secondary,
+.link-button {
+	border-color: var(--border);
+	background: transparent;
+	color: var(--accent);
+}
+
+header {
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: calc(1rem + env(safe-area-inset-top)) 1rem 1rem;
+	border-bottom: 1px solid rgb(43 57 82 / 70%);
+	background: rgb(7 11 20 / 88%);
+	backdrop-filter: blur(18px);
+}
+
+h1,
+h2,
+p {
+	margin-top: 0;
+}
+
+h1 {
+	margin-bottom: 0;
+	font-size: 1.35rem;
+}
+
+h2 {
+	margin-bottom: 0.8rem;
+	font-size: 1.15rem;
+}
+
+main {
+	width: min(100%, 48rem);
+	margin: 0 auto;
+	padding: 1rem 1rem calc(2rem + env(safe-area-inset-bottom));
+}
+
+.eyebrow {
+	margin-bottom: 0.25rem;
+	color: var(--muted);
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.muted {
+	color: var(--muted);
+	font-size: 0.85rem;
+}
+
+.hidden {
+	display: none;
+}
+
+.panel,
+.session-card {
+	border: 1px solid var(--border);
+	border-radius: 1rem;
+	background: rgb(17 24 39 / 92%);
+	box-shadow: 0 1rem 3rem rgb(0 0 0 / 20%);
+}
+
+.panel {
+	padding: 1rem;
+}
+
+.section-heading,
+.detail-heading,
+.send-row,
+.session-summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
+
+.section-heading h2 {
+	margin-bottom: 0;
+}
+
+.session-list {
+	display: grid;
+	gap: 0.75rem;
+	margin-top: 0.75rem;
+}
+
+.session-card {
+	width: 100%;
+	min-height: auto;
+	padding: 1rem;
+	border-color: var(--border);
+	background: rgb(17 24 39 / 92%);
+	color: inherit;
+	text-align: left;
+}
+
+.session-card strong,
+.session-card span {
+	display: block;
+}
+
+.session-card .project {
+	margin-top: 0.3rem;
+	color: var(--muted);
+	font-weight: 500;
+}
+
+.state {
+	display: inline-flex;
+	align-items: center;
+	min-height: 1.8rem;
+	padding: 0.2rem 0.55rem;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	color: var(--muted);
+	font-size: 0.75rem;
+	font-weight: 800;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.state[data-state="working"] {
+	border-color: #0e7490;
+	color: var(--accent);
+}
+
+.state[data-state="input_needed"] {
+	border-color: #ca8a04;
+	color: #fde68a;
+}
+
+.state[data-state="done"] {
+	border-color: #15803d;
+	color: var(--success);
+}
+
+.state[data-state="error"] {
+	border-color: #b91c1c;
+	color: var(--danger);
+}
+
+form {
+	display: grid;
+	gap: 0.7rem;
+}
+
+label {
+	color: #cbd5e1;
+	font-size: 0.85rem;
+	font-weight: 700;
+}
+
+input,
+select,
+textarea {
+	width: 100%;
+	padding: 0.8rem;
+	background: #090f1c;
+	color: #f8fafc;
+}
+
+textarea {
+	resize: vertical;
+}
+
+.send-row {
+	align-items: end;
+}
+
+.send-row select {
+	width: auto;
+	min-width: 8rem;
+}
+
+.mode-label {
+	margin-right: auto;
+}
+
+.message {
+	min-height: 8rem;
+	max-height: 48vh;
+	margin: 1rem 0;
+	padding: 1rem;
+	overflow: auto;
+	border: 1px solid var(--border);
+	border-radius: 0.75rem;
+	background: #090f1c;
+	color: #dbeafe;
+	line-height: 1.5;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.notice {
+	min-height: 1.5rem;
+	margin: 1rem 0 0;
+	color: var(--muted);
+	text-align: center;
+}
+
+.empty {
+	padding: 2rem 1rem;
+	border: 1px dashed var(--border);
+	border-radius: 1rem;
+	color: var(--muted);
+	text-align: center;
+}
+
+@media (min-width: 44rem) {
+	header,
+	main {
+		padding-right: 1.5rem;
+		padding-left: 1.5rem;
+	}
+}

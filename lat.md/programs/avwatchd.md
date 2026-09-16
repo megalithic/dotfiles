@@ -78,7 +78,7 @@ Hyper+z sends `focus` to avwatchd. Browser focus uses stored IDs; Slack and Zoom
 
 ## Setup and migration
 
-`mise run setup:avwatchd`, implemented by `scripts/mise/setup-avwatchd`, first builds and signs avwatchd, then installs avwatchweb native messaging.
+`mise run setup:avwatchd`, implemented by `mise/scripts/setup-avwatchd`, first builds and signs avwatchd, then installs avwatchweb native messaging.
 
 The Helium manifest lives at `~/Library/Application Support/net.imput.helium/NativeMessagingHosts/com.megadots.avwatchd.json`. It points to `~/.local/bin/avwatchd` and allows only avwatchweb's stable extension origin.
 

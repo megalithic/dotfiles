@@ -256,7 +256,7 @@ pgrep -q kanata && ok "kanata running" || bad "kanata not running"
 pgrep -fq 'Espanso.app.*worker' && ok "espanso worker running" || bad "espanso worker not running"
 
 hdr "touchid-sudo task idempotency"
-out="$(bash "$HOME/.dotfiles/scripts/mise/setup-pam" 2>&1)"
+out="$(bash "$HOME/.dotfiles/mise/scripts/setup-pam" 2>&1)"
 if [[ "$out" == *"already current"* ]]; then
   ok "setup-touchid-sudo: already current"
 else

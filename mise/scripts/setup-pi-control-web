@@ -1,0 +1,47 @@
+#!/bin/sh
+set -eu
+
+umask 077
+config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/pi-control-web"
+token_file="$config_dir/token"
+temp=""
+
+cleanup() {
+  if [ -n "$temp" ] && [ -f "$temp" ]; then
+    : >"$temp"
+    trash "$temp" >/dev/null 2>&1 || true
+  fi
+}
+trap cleanup EXIT HUP INT TERM
+
+command -v fnox >/dev/null 2>&1 || {
+  echo "setup-pi-control-web: fnox is required" >&2
+  exit 1
+}
+command -v trash >/dev/null 2>&1 || {
+  echo "setup-pi-control-web: trash is required" >&2
+  exit 1
+}
+
+mkdir -p "$config_dir" "$HOME/Library/Logs/pi-control-web"
+temp="$(mktemp "$config_dir/token.XXXXXX")"
+if ! fnox get PI_CONTROL_WEB_TOKEN --no-daemon >"$temp"; then
+  echo "setup-pi-control-web: could not resolve PI_CONTROL_WEB_TOKEN" >&2
+  exit 1
+fi
+chmod 600 "$temp"
+token_length="$(tr -d '\r\n' <"$temp" | wc -c | tr -d ' ')"
+if [ "$token_length" -lt 32 ]; then
+  echo "setup-pi-control-web: PI_CONTROL_WEB_TOKEN is too short" >&2
+  exit 1
+fi
+
+if [ -f "$token_file" ] && cmp -s "$temp" "$token_file"; then
+  chmod 600 "$token_file"
+  echo "setup-pi-control-web: token is current"
+else
+  mv -f "$temp" "$token_file"
+  temp=""
+  chmod 600 "$token_file"
+  echo "setup-pi-control-web: installed token from fnox"
+fi

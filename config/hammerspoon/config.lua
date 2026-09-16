@@ -417,7 +417,7 @@ M.dock = {
     configPath = os.getenv("HOME") .. "/.config/kanata",
     -- INTENTIONAL divergence from the old nix twin (now removed from the
     -- repo): mise prefixes bootstrap launchd labels with `dev.mise.` (see
-    -- scripts/mise/setup-kanata); nix-darwin's label was bare
+    -- mise/scripts/setup-kanata); nix-darwin's label was bare
     -- `org.kanata.daemon`. Keep the prefixed label.
     daemonLabel = "dev.mise.org.kanata.daemon",
   },

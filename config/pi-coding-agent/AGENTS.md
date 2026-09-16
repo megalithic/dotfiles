@@ -18,7 +18,7 @@ pi-coding-agent/
 │   ├── keybindings.json
 │   ├── models.json      # Custom model/provider definitions
 │   ├── mcp.json         # Global MCP server config
-│   ├── settings.json    # NOT linked — merged by scripts/mise/update-pi via jq
+│   ├── settings.json    # NOT linked — merged by mise/scripts/update-pi via jq
 │   ├── extensions/      # .ts extensions (symlink-each into ~/.pi/agent/extensions)
 │   ├── skills/          # Skill directories (symlink-each)
 │   ├── prompts/         # Prompt templates (symlink-each)

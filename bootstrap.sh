@@ -619,7 +619,7 @@ if [ -n "${SUDO_KEEPALIVE_PID:-}" ]; then
   wait "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
 fi
 
-if BOOTSTRAP_SKIP_TOOL_CHECK=1 ./scripts/mise/check-system; then
+if BOOTSTRAP_SKIP_TOOL_CHECK=1 ./mise/scripts/check-system; then
   info "Done. Restart your terminal (login shell is now fish)."
 else
   warn "Finished, but some of the health checks failed."
