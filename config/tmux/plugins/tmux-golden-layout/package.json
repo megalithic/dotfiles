@@ -1,0 +1,12 @@
+{
+  "name": "tmux-golden-layout",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Golden-ratio focused-pane resizing and declarative per-window layouts for tmux",
+  "type": "module",
+  "scripts": {
+    "test": "bun test",
+    "test:unit": "bun test src/",
+    "test:integration": "bun test test/"
+  }
+}

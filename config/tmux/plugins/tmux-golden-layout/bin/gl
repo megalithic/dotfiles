@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# tmux-golden-layout launcher: resolve bun, exec the TypeScript CLI.
+# Resolution order: TMUX_GL_BUN env -> @gl-bun tmux option (set by the plugin
+# entrypoint) -> PATH -> mise. Exits quietly when bun is unavailable so hook
+# invocations never surface errors inside tmux.
+set -u
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+BUN="${TMUX_GL_BUN:-}"
+if [ -z "$BUN" ] || [ ! -x "$BUN" ]; then
+  BUN="$(command -v bun 2>/dev/null || true)"
+fi
+if [ -z "$BUN" ]; then
+  if [ -n "${GL_TMUX_SOCKET:-}" ]; then
+    BUN="$(tmux -S "$GL_TMUX_SOCKET" show-options -gqv @gl-bun 2>/dev/null || true)"
+  else
+    BUN="$(tmux show-options -gqv @gl-bun 2>/dev/null || true)"
+  fi
+  [ -n "$BUN" ] && [ ! -x "$BUN" ] && BUN=""
+fi
+if [ -z "$BUN" ] && command -v mise >/dev/null 2>&1; then
+  BUN="$(mise which bun 2>/dev/null || true)"
+fi
+[ -z "$BUN" ] && exit 0
+
+exec "$BUN" "$DIR/../src/cli.ts" "$@"

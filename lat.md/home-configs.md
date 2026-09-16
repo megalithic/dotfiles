@@ -99,6 +99,16 @@ Fleet is installed by mise from `github:nicknisi/fleet`. `tmux.conf` binds prefi
 
 Pane capture uses `capture-pane -J` (joined logical lines), so soft-wrapped URLs/paths already match on one logical line — no special multiline regex is needed (unlike tmux-fingers/fastcopy, which feed raw wrapped text to finders).
 
+## Tmux golden layout
+
+`config/tmux/plugins/tmux-golden-layout/` is a local, dotfiles-owned tmux layout manager (TypeScript on Bun, TPM-compatible structure) that golden-ratio-resizes the focused pane and exposes a declarative per-window layout API.
+
+`plugins.tmux.conf` loads it with a direct `run-shell .../golden-layout.tmux` instead of a TPM `@plugin` entry so prefix+U can never `git pull` the dotfiles checkout and prefix+M-u can never delete it.
+
+Behavior: every window resizes the focused pane to exactly `1/phi` of the window on each axis with siblings, parsing and rebuilding the complete `#{window_layout}` string (dimensions, coordinates, separators, checksum) and applying it with one `select-layout`. Unfocused branches split the remainder by leaf count; nested unfocused groups equalize. All computations restart from exact values (1/phi, declared ratios, or the immutable manual reference), so outer-window resize cycles are drift-free. A manual resize or foreign `select-layout` pauses that window and shows `Auto resize paused for this window; prefix+= to resume`; prefix+= resumes and reapplies. Zoomed windows defer changes until unzoom. Per-window state lives in window-scoped `@gl_*` user options keyed by stable window id (auto-cleaned when the window dies); loop prevention uses a short-TTL applied-layout history, and every apply re-fetches window state first, aborting if layout/dims (or the active pane, for golden) changed since the computation. Debug logs go to `$TMPDIR/tmux-gl-<uid>/` when `@gl-debug` is on. Hooks are indexed at slot 188 (`after-select-pane`, `after-split-window`, `after-resize-pane`, `window-layout-changed`, `window-resized`), all `run-shell -b`; the entrypoint is idempotent on reload.
+
+The declarative API (`bin/gl declare|grid|clear|apply|pause|resume|companion|status`) lets Nvim/Pi declare per-window topologies with exact ratios and ordered stable pane ids (e.g. Nvim/Pi 65/35, Pi+subagents 50/50 nested grid); declarations suppress golden resizing while present and reorder panes with `swap-pane` when needed (tmux maps layout leaves to panes by window order, not by the ids in the string). The pi-interactive-subagents fork that will call this API is future work; until then its 120 ms `even-horizontal` rebalance simply pauses the affected window. Tests: `bun test` in the plugin dir (unit + integration against an isolated `tmux -S <tmp> -f /dev/null` server).
+
 ## Notable program docs
 
 A handful of programs have enough intricacy to warrant their own files instead of a one-line index row:
