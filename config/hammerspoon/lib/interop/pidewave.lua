@@ -14,6 +14,8 @@
 --   6. Write the optional Tidewave IDE Chat -> tmux pi binding.
 --   7. Bring the app tab forward via CDP, focus Helium, wait until the toolbar
 --      is ready in the foreground tab, then click Inspect.
+--   8. Watch the clipboard briefly; forward copied Tidewave prompts
+--      (<user_prompt> payloads) to the bound pi as follow_up messages.
 --
 -- Everything is best-effort and pcall-guarded: interop failures (tmux absent,
 -- Helium closed, cdp.mjs missing, pi not running) must never crash Hammerspoon.
@@ -340,7 +342,70 @@ local function focusHeliumAndInspect(target)
   return false, "Selected app tab did not enter Tidewave Inspect mode (" .. result .. ")."
 end
 
+-- After Inspect activates, Tidewave's "Copy prompt" only writes the composed
+-- prompt to the clipboard. Relay those copies to the bound pi over its bridge
+-- socket so the prompt lands in tmux without a manual paste.
+local PROMPT_RELAY_TTL = 300 -- seconds
+
+local function stopPromptRelay()
+  pcall(function()
+    if M._promptWatcher then
+      M._promptWatcher:stop()
+      M._promptWatcher = nil
+    end
+    if M._promptRelayTimer then
+      M._promptRelayTimer:stop()
+      M._promptRelayTimer = nil
+    end
+  end)
+  M._lastForwardedPrompt = nil
+end
+
+local function forwardPrompt(binding, text)
+  local sent = false
+  pcall(function()
+    local piInterop = require("lib.interop.pi")
+    sent = piInterop.sendPayload(binding.socket, {
+      type = "control",
+      protocol = "pi.control.v1",
+      id = string.format("pidewave-%d-%d", os.time(), math.random(1000, 9999)),
+      operation = "message.send",
+      params = { text = text, mode = "follow_up", from = "tidewave" },
+    }) == true
+  end)
+  return sent
+end
+
+local function armPromptRelay(binding)
+  stopPromptRelay()
+  if not binding or not binding.socket then return end
+  local ok = pcall(function()
+    M._promptWatcher = hs.pasteboard.watcher.new(function(contents)
+      if type(contents) ~= "string" then return end
+      if not contents:find("<user_prompt>", 1, true) then return end
+      if contents == M._lastForwardedPrompt then return end
+      M._lastForwardedPrompt = contents
+      if forwardPrompt(binding, contents) then
+        -- Write-initiated only: bridge errors surface asynchronously in logs.
+        notify(
+          string.format("Tidewave prompt forwarded to %s (%s); confirm in tmux.", binding.session or "pi", binding.pane or "?")
+        )
+      else
+        notify("Copied Tidewave prompt was not delivered to the bound pi.", true)
+      end
+    end)
+    M._promptRelayTimer = hs.timer.doAfter(PROMPT_RELAY_TTL, stopPromptRelay)
+  end)
+  if not ok or not M._promptWatcher then
+    stopPromptRelay()
+    notify("Could not watch the clipboard for copied Tidewave prompts.", true)
+  end
+end
+
 function M.handshake()
+  -- A new handshake invalidates any armed relay immediately: a failed run must
+  -- not leave a previous binding's watcher forwarding prompts.
+  stopPromptRelay()
   local ok, err = pcall(function()
     local pane = activePane()
     if not pane then
@@ -384,6 +449,7 @@ function M.handshake()
       return
     end
     notify(string.format("Tidewave Inspect ready in %s", target.url))
+    armPromptRelay(binding)
   end)
   if not ok then
     notify("handshake crashed (guarded): " .. tostring(err), true)
@@ -400,6 +466,7 @@ function M:init()
 end
 
 function M:stop()
+  stopPromptRelay()
   pcall(function()
     if M._hotkey then
       M._hotkey:delete()

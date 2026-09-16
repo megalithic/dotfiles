@@ -444,6 +444,16 @@ function M.sendToSession(session, text, source, window)
   return sendToSocket(socketPath, payload)
 end
 
+---Send an arbitrary JSON payload to a specific bridge socket path.
+---Used by pidewave.lua to deliver `pi.control.v1` requests to the exact
+---bound socket instead of session-based resolution.
+---@param socketPath string
+---@param payload table JSON-serializable payload
+---@return boolean success Whether the write was initiated
+function M.sendPayload(socketPath, payload)
+  return sendToSocket(socketPath, payload)
+end
+
 ---Get list of available pi sockets (ephemerals EXCLUDED — forwarders must
 ---never auto-pick them).
 ---@return table Array of { session, window, windowIndex, pane, paneIndex, path, connected }

@@ -90,6 +90,7 @@ local function stopBeforeReload()
   require("watchers"):stop({ watchers = watchers })
   require("quitter"):stop()
   require("clipper"):stop()
+  require("lib.interop.pidewave"):stop()
 end
 
 overrides.setupReloadCleanup({
@@ -102,6 +103,7 @@ hs.shutdownCallback = function()
   require("watchers"):stop({ watchers = watchers })
   require("quitter"):stop()
   require("clipper"):stop()
+  require("lib.interop.pidewave"):stop()
   if N and N.cleanup then N.cleanup() end
   if HUD and HUD.cleanup then HUD.cleanup() end
 end
