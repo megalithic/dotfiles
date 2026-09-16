@@ -1,6 +1,7 @@
 function sz
-    set -e __HM_SESS_VARS_SOURCED
-    set -l vars_file (string match -r '/nix/store/[^ ]+hm-session-vars\.fish' < ~/.config/fish/config.fish)
-    test -n "$vars_file"; and source $vars_file
+    # Unstick terminal state left behind by crashed TUIs/BEAM: pop kitty
+    # keyboard flags, disable modifyOtherKeys, disable bracketed paste.
+    # Works inside tmux (parsed per-pane) and in a bare terminal.
+    printf '\e[<u\e[>4;0m\e[?2004l'
     exec fish
 end
