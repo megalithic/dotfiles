@@ -2,7 +2,7 @@
 # http://iamvery.com/2013/11/16/tmux-pairing-anywhere-on-your-box.html
 # https://github.com/jeffweiss/dotfiles/blob/master/bin/pair
 
-command=$(basename $0)
+command=$(basename "$0")
 session="pairing"
 ssh_command=""
 user="pair"
@@ -36,11 +36,11 @@ help(){
 }
 
 add(){
-  gh-auth add --users $@ --command="$(which tmux) attach -t $session"
+  gh-auth add --users "$@" --command="$(which tmux) attach -t $session"
 }
 
 rm(){
-  gh-auth remove --users $@
+  gh-auth remove --users "$@"
 }
 
 ls() {
@@ -49,8 +49,8 @@ ls() {
 
 up(){
   # Add any users, if specified
-  if [[ ! -z $@ ]]; then
-    add $@
+  if [ "$#" -gt 0 ]; then
+    add "$@"
   fi
 
   pair_status_on
@@ -95,7 +95,7 @@ ssh() {
   port=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | cut -d : -f3)
   # tunnel
   ssh_command="ssh -p $port $user@$host"
-  echo $ssh_command
+  echo "$ssh_command"
 }
 
 info() {
@@ -141,8 +141,12 @@ case $subcommand in
     pair_status_on ;;
   off)
     pair_status_off ;;
-  *)
+  add | rm | ls | up | down | info | ssh)
     shift
-    ${subcommand} $@
+    "$subcommand" "$@"
+    ;;
+  *)
+    help >&2
+    exit 2
     ;;
 esac

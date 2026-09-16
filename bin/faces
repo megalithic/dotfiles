@@ -5,11 +5,10 @@ faces=('ಠ_ಠ' 'ಠ_ರೃ' '﴾͡๏̯͡๏﴿' '๏_๏' 'ಠ▃ಠ' '(•�
 if [[ -z $1 ]]; then
   echo 'Choose a face and | it to pbcopy'
   i=1
-  for f in ${faces[@]}
-  do
-    echo $i $f
-    i=`expr $i + 1`
+  for f in "${faces[@]}"; do
+    printf '%s %s\n' "$i" "$f"
+    ((i += 1))
   done
 else
-  echo ${faces[$1]}
+  printf '%s\n' "${faces[$1]}"
 fi

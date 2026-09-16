@@ -443,3 +443,12 @@
 # Machine-local, untracked overrides (created manually when needed).
 [include]
   path = config.local
+[hook "hk-pre-commit"]
+	command = test \"${HK:-1}\" = \"0\" || ~/.local/bin/mise x hk -- hk run pre-commit --from-hook --staged
+	event = pre-commit
+[hook "hk-commit-msg"]
+	command = test \"${HK:-1}\" = \"0\" || ~/.local/bin/mise x hk -- hk run commit-msg --from-hook
+	event = commit-msg
+[hook "hk-pre-push"]
+	command = test \"${HK:-1}\" = \"0\" || ~/.local/bin/mise x hk -- hk run pre-push --from-hook
+	event = pre-push

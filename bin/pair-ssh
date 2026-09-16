@@ -46,7 +46,7 @@ user="pair"
 [ ! "$(command -v tmux)" ] && printf -- "tmux not found, please install for your platform\n" && exit 1
 
 help() {
-  printf -- "Usage: "$command" <subcommand> [options]\n"
+  printf -- "Usage: ""$command"" <subcommand> [options]\n"
   printf -- "Subcommands:\n"
   printf -- "    add    Add a github user\n"
   printf -- "    rm     Remove a github user\n"
@@ -115,12 +115,12 @@ tunnel_and_connect() {
 tunnel() {
   tunnel_command="ssh -v -f -N -R $port:localhost:22 $user@$host_ip"
   # tunnel_command="unset $TMUX; tmate"
-  echo $tunnel_command
+  echo "$tunnel_command"
 }
 
 ssh() {
   ssh_command="ssh $user@$host_ip"
-  echo $ssh_command
+  echo "$ssh_command"
 }
 
 info() {
@@ -140,8 +140,12 @@ subcommand=$1
 case $subcommand in
   '' | '-h' | '--help')
     help ;;
-  *)
+  add | rm | ls | up | down | ssh | tunnel | info)
     shift
-    ${subcommand} $@
+    "$subcommand" "$@"
+    ;;
+  *)
+    help >&2
+    exit 2
     ;;
 esac

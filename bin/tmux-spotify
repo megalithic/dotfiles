@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-NOW_PLAYING=$(osascript EOF
+NOW_PLAYING=$(osascript <<'EOF'
   if app_is_running("Spotify") then
     tell application "Spotify"
       if player state is playing then
@@ -23,6 +23,7 @@ NOW_PLAYING=$(osascript EOF
   on app_is_running(app_name)
     tell app "System Events" to (name of processes) contains app_name
   end app_is_running
-EOF)
+EOF
+)
 
-echo $NOW_PLAYING
+printf '%s\n' "$NOW_PLAYING"

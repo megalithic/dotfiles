@@ -50,7 +50,7 @@ get_cost() {
   cost=$(get_json '.cost.total_cost_usd' '0')
   printf "\$%.2f" "$cost"
 }
-get_context_max() { get_json '.context_window.context_window_size' '1' }
+get_context_max() { get_json '.context_window.context_window_size' '1'; }
 
 # compactions=0
 # if [ -n "$transcript" ] && [ -f "$transcript" ]; then

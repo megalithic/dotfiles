@@ -12,7 +12,6 @@ set -euo pipefail
 #
 
 shortcut_cmd="macos-focus-mode"
-dnd_cmd="shortcuts run '$shortcut_cmd'"
 command=""
 subcommand=""
 
@@ -24,7 +23,7 @@ subcommand=""
 command="$(basename "$0")"
 
 help() {
-  printf -- "Usage: "$command" <subcommand> [options]\n"
+  printf 'Usage: %s <subcommand> [options]\n' "$command"
   printf -- "Subcommands:\n"
   printf -- "    on        Turn ON do-not-disturb (DND) mode\n"
   printf -- "    off       Turn OFF do-not-disturb (DND) mode\n"
@@ -92,8 +91,12 @@ case $subcommand in
   '-h' | '--help')
     help
     ;;
-  *)
+  on | off | toggle | install | status)
     shift
-    ${subcommand} $@
+    "$subcommand" "$@"
+    ;;
+  *)
+    help >&2
+    exit 2
     ;;
 esac

@@ -761,6 +761,7 @@ run = "killall Finder SystemUIServer Dock || true"
 # update tasks call their phases directly and do not run post-tools.
 [bootstrap.hooks.post-tools]
 run = [
+  "mise run setup:hk",
   "mise run install:fonts",
   "mise run setup:kanata",
   "mise run setup:miccheck",
@@ -796,6 +797,7 @@ run = [
   "mise plugins update --yes",
   "mise install --yes",
   "mise upgrade --yes",
+  "mise run setup:hk",
 ]
 
 [tasks."update:packages"]
@@ -910,6 +912,10 @@ else
   echo "Docker is not running; skipping."
 fi
 """
+
+[tasks."setup:hk"]
+description = "Install global hk hooks for repositories with hk.pkl"
+run = "hk install --global --mise"
 
 [tasks."setup:yubikey"]
 description = "Per-YubiKey (serial-safe): age identity + fnox recipient + encrypted OP_SERVICE_ACCOUNT_TOKEN (interactive; pass serial: mise run setup:yubikey -- <serial>)"

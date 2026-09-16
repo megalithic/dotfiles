@@ -59,6 +59,7 @@ When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-f
 - Use existing patterns and conventions in the codebase — same error shapes, same file structure, same naming. Don't invent new approaches when there's already a working one.
 - Place tests next to the files they test, not in a separate test directory. Integration tests can be next to the stack/module they test.
 - When `lat.md/` exists in the project root, use `lat search` to understand the codebase before making changes. Update `lat.md/` to reflect codebase changes, except for local-only paths under `.local_scripts/` or `.sandbox/`. Run `lat check` before finishing when lat docs changed.
+- When `hk.pkl` exists, run `hk validate`, inspect the planned checks for the changed files, then run `hk check --check --safe` on that scope before finishing. Never bypass failed checks; only drop `--safe` after confirming every refused command is read-only.
 
 ## General workflow
 

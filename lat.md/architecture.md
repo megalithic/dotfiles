@@ -135,7 +135,7 @@ The repo-root `mise.toml` that briefly replaced devenv is dissolved into `config
 
 `tk` is vendored at `bin/tk` (on `PATH` via mise `_.path` and the `~/bin` symlinks). Upstream `wedow/ticket` publishes no release assets, and the vendored copy preserves the devenv-base patch that sanitizes the directory basename when deriving ticket ID prefixes — existing `.tickets/dot-*` IDs depend on it.
 
-Git hooks are defined in `hk.pkl` ([hk](https://hk.jdx.dev)) mirroring the old set: check-merge-conflict, detect-private-key, gitleaks (staged-only override), shellcheck at warning severity, and conventional-commit checking on commit-msg. Hooks are configured but not installed; enable with `hk install --global` (git 2.54+) or per-repo `hk install`, bypass with `HK=0 git commit`. Nix linters (deadnix, statix) from the old setup are not yet ported.
+Git hooks use hk v2 through `hk.pkl` ([hk](https://hk.jdx.dev)). The shared check set covers large files, case conflicts, executable/shebang mismatches, merge markers, broken symlinks, private keys, staged secrets with gitleaks, and shellcheck errors; commit-msg also checks Conventional Commits. `mise run setup:hk` installs hk's Git 2.54+ config hooks globally through mise, full bootstrap and `update:tools` rerun that idempotent setup, and repositories without `hk.pkl` remain no-ops. Agents validate `hk.pkl`, inspect the scoped plan, and run safe checks before finishing. Nix linters (deadnix, statix) from the old setup are not yet ported.
 
 Repo-local `.devenv` and `.direnv` plus `.local_scripts/` are ignored. Unused flake inputs should be removed from `flake.lock` after their `flake.nix` references are gone. Flake updates are manual via `just update-flake`; no scheduled GitHub workflow updates `flake.lock`.
 
@@ -188,11 +188,9 @@ LAT's active embedding backend is temporarily the bundled offline MiniLM model (
 
 Git hooks are defined in `hk.pkl` via hk (see "Repo dev environment (mise)" above).
 
-Global git tooling ignores `.worktrees/` through `config/git/tool-ignore` (linked to `~/.ignore`); global Git excludes also ignore `.worktrees/`, `.worktreeinclude`, and wrapper-generated `.pi-lens.json` via `config/git/ignore` — the sole owner since the wave-1 flip removed the nix git module. The active hooks check merge conflicts, secrets, Nix dead code and style, shell scripts, formatting, and commit-message convention. The typos hook is disabled in `devenv.nix`, and treefmt is configured so this repo's local formatter choices override imported defaults.
+Global git tooling ignores `.worktrees/` through `config/git/tool-ignore` (linked to `~/.ignore`); global Git excludes also ignore `.worktrees/`, `.worktreeinclude`, and wrapper-generated `.pi-lens.json` via `config/git/ignore` — the sole owner since the wave-1 flip removed the nix git module. The active hk checks are described above. Nix lint remains separate: `statix.toml` disables the `repeated_keys` lint because repeated top-level module keys are intentional, while deadnix and statix hooks remain pending.
 
-`statix.toml` disables the `repeated_keys` lint because repeated top-level Nix module keys are intentional: related Home Manager and nix-darwin options stay near the context that explains them.
-
-`just scan` is the on-demand security check, separate from the commit hooks. It currently runs `gitleaks detect` over git history and the working tree; the recipe is structured so more checks (PII, dependency, or SAST scans) can be added to the same `just scan` entry over time.
+`just scan` is the on-demand full security scan. It uses the mise-managed gitleaks binary to scan both Git history (`gitleaks git`) and the current working tree (`gitleaks dir`); commit hooks keep the faster staged-only scan. `.gitleaksignore` baselines exact legacy-history and public browser-extension-key fingerprints found when enforcement began, so new findings still fail.
 
 ## Agent guidance and task tooling
 
@@ -206,6 +204,6 @@ Nix activation guidance is explicit: run `just darwin` for nix-darwin changes, `
 
 `config/pi-coding-agent/agent/AGENTS.md` is the mise `[dotfiles]` source for `~/.pi/agent/AGENTS.md`; Pi's system additions live in the adjacent `SYSTEM.md`. No `APPEND_SYSTEM.md` is managed.
 
-The global policy mirrors the structure of the repo-root `AGENTS.md` instead of being a separate mini-policy. It covers preferred tools, writing rules, vision-model subprocesses for images, git conventions, KISS/YAGNI coding, lat.md sync, subagent delegation, ralph-loop, and the local docs/handoffs directories.
+The global policy mirrors the structure of the repo-root `AGENTS.md` instead of being a separate mini-policy. It covers preferred tools, writing rules, vision-model subprocesses for images, git conventions, KISS/YAGNI coding, lat.md sync, scoped hk checks, subagent delegation, ralph-loop, and the local docs/handoffs directories.
 
 Repo-specific nix-darwin and Home Manager rules stay in the repo-root `AGENTS.md`. Keep portable rules global and dotfiles-specific rules local.

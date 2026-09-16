@@ -268,21 +268,23 @@ check:
 # Security scanning
 # ===========================================================================
 
-# Scan the repo for compromising info (secrets, keys, tokens) before pushing.
-# Add more checks (PII, deps, SAST, etc.) to this recipe over time.
+# Scan Git history and the working tree for secrets before pushing.
 # Usage: just scan
 scan:
   #!/usr/bin/env bash
   set -uo pipefail
   rc=0
 
-  echo ":: gitleaks — scanning git history + working tree for secrets..."
-  nix run nixpkgs#gitleaks -- detect --source . --redact --verbose || rc=$?
+  echo ":: gitleaks - scanning Git history..."
+  MISE_AUTO_INSTALL=false mise exec gitleaks -- gitleaks git --redact --verbose . || rc=$?
+
+  echo ":: gitleaks - scanning working tree..."
+  MISE_AUTO_INSTALL=false mise exec gitleaks -- gitleaks dir --redact --verbose . || rc=$?
 
   if [[ $rc -eq 0 ]]; then
-    echo ":: ✓ scan complete — no findings."
+    echo ":: scan complete - no findings."
   else
-    echo ":: ✗ scan found issues (exit $rc) — review output above before pushing." >&2
+    echo ":: scan found issues (exit $rc) - review output before pushing." >&2
   fi
   exit $rc
 

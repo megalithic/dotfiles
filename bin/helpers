@@ -101,7 +101,8 @@ function clean_exit {
 }
 
 dotsay() {
-  local result=$(_colorized $@)
+  local result
+  result=$(_colorized "$@")
   echo "$result"
 }
 
