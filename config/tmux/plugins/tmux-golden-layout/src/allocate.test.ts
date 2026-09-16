@@ -69,6 +69,35 @@ describe("distribute", () => {
       expect(out!.reduce((a, b) => a + b, 0)).toBe(total);
     }
   });
+
+  test("invalid totals and minimums fail without entering apportionment", () => {
+    expect(distribute(1, [])).toBeNull();
+    expect(distribute(0, [])).toEqual([]);
+    expect(distribute(Number.NaN, [{ weight: 1, min: 0 }])).toBeNull();
+    expect(distribute(10, [{ weight: 1, min: -1 }])).toBeNull();
+    expect(distribute(10, [{ weight: 1, min: Number.POSITIVE_INFINITY }])).toBeNull();
+  });
+
+  test("zero, negative, and nonfinite weights cannot break conservation", () => {
+    expect(
+      distribute(10, [
+        { weight: -1, min: 2 },
+        { weight: 2, min: 2 },
+      ]),
+    ).toEqual([2, 8]);
+    expect(
+      distribute(10, [
+        { weight: 0, min: 2 },
+        { weight: 0, min: 2 },
+      ]),
+    ).toEqual([5, 5]);
+    expect(
+      distribute(10, [
+        { weight: Number.POSITIVE_INFINITY, min: 2 },
+        { weight: 1, min: 2 },
+      ]),
+    ).toEqual([2, 8]);
+  });
 });
 
 describe("computeGolden", () => {
@@ -210,6 +239,18 @@ describe("declarations", () => {
     expect(
       validateDeclaration({ root: { split: "x" as never, children: [{ pane: "%1" }] } }),
     ).toMatch(/axis/);
+    expect(validateDeclaration(null)).toMatch(/root/);
+    expect(validateDeclaration({ root: null })).toMatch(/object/);
+    expect(
+      validateDeclaration({
+        root: { split: "h", ratios: "0.5,0.5", children: [{ pane: "%1" }, { pane: "%2" }] },
+      }),
+    ).toMatch(/array/);
+    expect(
+      validateDeclaration({
+        root: { split: "h", ratios: [Number.POSITIVE_INFINITY, 0.5], children: [{ pane: "%1" }, { pane: "%2" }] },
+      }),
+    ).toMatch(/finite/);
   });
 
   test("renders exact 65/35 split", () => {

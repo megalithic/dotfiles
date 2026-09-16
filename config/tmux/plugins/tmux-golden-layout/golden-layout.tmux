@@ -17,6 +17,26 @@ set -u
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GL="$CURRENT_DIR/bin/gl"
 HOOK_INDEX=188
+BOUND_RESUME_KEY="$(tmux show-options -gqv @gl-bound-resume-key)"
+
+unregister() {
+  tmux set-hook -gu "after-select-pane[$HOOK_INDEX]" 2>/dev/null || true
+  tmux set-hook -gu "after-split-window[$HOOK_INDEX]" 2>/dev/null || true
+  tmux set-hook -gu "after-resize-pane[$HOOK_INDEX]" 2>/dev/null || true
+  tmux set-hook -gu "window-layout-changed[$HOOK_INDEX]" 2>/dev/null || true
+  tmux set-hook -gu "window-resized[$HOOK_INDEX]" 2>/dev/null || true
+  if [ -n "$BOUND_RESUME_KEY" ]; then
+    tmux unbind-key "$BOUND_RESUME_KEY" 2>/dev/null || true
+  fi
+  tmux set-option -gu @gl-bound-resume-key 2>/dev/null || true
+  tmux set-option -gu @gl-bun 2>/dev/null || true
+}
+
+if [ "$(tmux show-options -gqv @gl-enabled)" = "off" ]; then
+  # Disabling must work even when bun has disappeared since the last load.
+  unregister
+  exit 0
+fi
 
 # Resolve bun once at load; hooks reuse it through TMUX_GL_BUN.
 BUN="$(command -v bun 2>/dev/null || true)"
@@ -24,6 +44,7 @@ if [ -z "$BUN" ] && command -v mise >/dev/null 2>&1; then
   BUN="$(mise which bun 2>/dev/null || true)"
 fi
 if [ -z "$BUN" ]; then
+  unregister
   tmux display-message "tmux-golden-layout: bun not found; plugin disabled" 2>/dev/null || true
   exit 0
 fi
@@ -42,22 +63,16 @@ hook() {
   tmux set-hook -g "$1[$HOOK_INDEX]" "run-shell -b \"$ENV_PREFIX '$GL' $2\""
 }
 
-if [ "$(tmux show-options -gqv @gl-enabled)" = "off" ]; then
-  # Unregister our slots on reload when disabled.
-  tmux set-hook -gu "after-select-pane[$HOOK_INDEX]" 2>/dev/null || true
-  tmux set-hook -gu "after-split-window[$HOOK_INDEX]" 2>/dev/null || true
-  tmux set-hook -gu "after-resize-pane[$HOOK_INDEX]" 2>/dev/null || true
-  tmux set-hook -gu "window-layout-changed[$HOOK_INDEX]" 2>/dev/null || true
-  tmux set-hook -gu "window-resized[$HOOK_INDEX]" 2>/dev/null || true
-  exit 0
-fi
-
-hook "after-select-pane" "event focus '#{window_id}' '#{pane_id}'"
-hook "after-split-window" "event topology '#{window_id}'"
-hook "after-resize-pane" "event manual '#{window_id}'"
-hook "window-layout-changed" "event layout '#{window_id}'"
-hook "window-resized" "event resized '#{window_id}'"
+hook "after-select-pane" "event focus '#{window_id}' '#{pane_id}' '#{window_layout}'"
+hook "after-split-window" "event topology '#{window_id}' '#{window_layout}'"
+hook "after-resize-pane" "event manual '#{window_id}' '#{window_layout}'"
+hook "window-layout-changed" "event layout '#{window_id}' '#{window_layout}'"
+hook "window-resized" "event resized '#{window_id}' '#{window_layout}'"
 
 RESUME_KEY="$(tmux show-options -gqv @gl-resume-key)"
 RESUME_KEY="${RESUME_KEY:-=}"
+if [ -n "$BOUND_RESUME_KEY" ] && [ "$BOUND_RESUME_KEY" != "$RESUME_KEY" ]; then
+  tmux unbind-key "$BOUND_RESUME_KEY" 2>/dev/null || true
+fi
 tmux bind-key "$RESUME_KEY" run-shell -b "$ENV_PREFIX '$GL' resume '#{window_id}'"
+tmux set-option -g @gl-bound-resume-key "$RESUME_KEY"

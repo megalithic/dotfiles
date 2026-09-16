@@ -3,7 +3,7 @@
  * tmux-golden-layout CLI.
  *
  * Hook events (fire-and-forget; never fail the tmux server):
- *   gl event <focus|layout|resized|manual|topology> <window-id> [pane-id]
+ *   gl event <kind> <window-id> [pane-id] [origin-layout]
  *
  * API (for Nvim, Pi, and other integrations; exits non-zero on error):
  *   gl declare <window-id> <declaration-json|->   set/replace a declaration
@@ -33,7 +33,7 @@ import {
   setCompanion,
   statusWindow,
 } from "./engine";
-import { getPaneOrder } from "./tmux";
+import { getPaneOrder, withWindowLock } from "./tmux";
 
 const EVENT_KINDS = new Set(["focus", "layout", "resized", "manual", "topology"]);
 
@@ -62,38 +62,53 @@ async function main(): Promise<void> {
       try {
         const kind = rest[0];
         const windowId = rest[1];
+        const paneId = kind === "focus" ? rest[2] : undefined;
+        const eventLayout = kind === "focus" ? rest[3] : rest[2];
         if (!kind || !EVENT_KINDS.has(kind) || !windowId || !/^@\d+$/.test(windowId)) return;
-        handleEvent(kind as EventKind, windowId);
+        if (paneId && !/^%\d+$/.test(paneId)) return;
+        await withWindowLock(windowId, () =>
+          handleEvent(kind as EventKind, windowId, paneId, eventLayout),
+        );
       } catch (err) {
         log(`event error: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`);
       }
       return;
     }
-    case "resume":
-      resumeWindow(requireWindow(rest[0]));
+    case "resume": {
+      const windowId = requireWindow(rest[0]);
+      await withWindowLock(windowId, () => resumeWindow(windowId));
       return;
-    case "pause":
-      pauseWindowApi(requireWindow(rest[0]));
+    }
+    case "pause": {
+      const windowId = requireWindow(rest[0]);
+      await withWindowLock(windowId, () => pauseWindowApi(windowId));
       return;
-    case "apply":
-      applyWindow(requireWindow(rest[0]));
+    }
+    case "apply": {
+      const windowId = requireWindow(rest[0]);
+      await withWindowLock(windowId, () => applyWindow(windowId));
       return;
-    case "clear":
-      clearWindow(requireWindow(rest[0]));
+    }
+    case "clear": {
+      const windowId = requireWindow(rest[0]);
+      await withWindowLock(windowId, () => clearWindow(windowId));
       return;
+    }
     case "declare": {
       const windowId = requireWindow(rest[0]);
       let json = rest[1];
       if (!json) usage();
       if (json === "-") json = await new Response(Bun.stdin.stream()).text();
-      declareWindow(windowId, json);
+      await withWindowLock(windowId, () => declareWindow(windowId, json));
       return;
     }
     case "grid": {
       const windowId = requireWindow(rest[0]);
-      const panes = rest.slice(1).length > 0 ? rest.slice(1) : getPaneOrder(windowId);
-      if (panes.length === 0) throw new Error("no panes for grid declaration");
-      declareWindow(windowId, JSON.stringify(gridDeclaration(panes)));
+      await withWindowLock(windowId, () => {
+        const panes = rest.slice(1).length > 0 ? rest.slice(1) : getPaneOrder(windowId);
+        if (panes.length === 0) throw new Error("no panes for grid declaration");
+        declareWindow(windowId, JSON.stringify(gridDeclaration(panes)));
+      });
       return;
     }
     case "companion": {
@@ -104,7 +119,7 @@ async function main(): Promise<void> {
         process.stderr.write(`expected an owner pane id like %3, got: ${owner ?? "<missing>"}\n`);
         process.exit(2);
       }
-      setCompanion(companion, source, owner);
+      await withWindowLock(companion, () => setCompanion(companion, source, owner));
       return;
     }
     case "status":

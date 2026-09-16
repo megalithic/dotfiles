@@ -24,7 +24,9 @@ for tmux. Local, dotfiles-owned plugin with a TPM-compatible structure
   outer resizes still scale the captured manual reference proportionally.
 - `prefix + =` resumes and immediately reapplies the active declaration, or
   golden resizing if none exists.
-- Zoomed windows defer all changes; they apply after unzoom.
+- Zoomed windows defer all changes; they apply after unzoom. Tmux 3.7 cannot
+  restore custom layouts containing floating panes, so the plugin also defers
+  while a floating pane exists and reapplies pending work after it closes.
 - Minimum pane sizes derive from topology, pane count, and separators. When
   the golden target cannot fit, the focused pane is clamped to the largest
   legal size; when even minimums cannot fit, the current layout is kept.
@@ -36,7 +38,7 @@ for tmux. Local, dotfiles-owned plugin with a TPM-compatible structure
 
 | option           | default | meaning                                  |
 | ---------------- | ------- | ---------------------------------------- |
-| `@gl-enabled`    | `on`    | `off` unregisters hooks on next load     |
+| `@gl-enabled`    | `on`    | `off` unregisters hooks/key on next load |
 | `@gl-min-width`  | `4`     | minimum leaf pane width (cells)          |
 | `@gl-min-height` | `2`     | minimum leaf pane height (cells)         |
 | `@gl-resume-key` | `=`     | prefix key that resumes a paused window  |
@@ -87,25 +89,29 @@ Loaded from `plugins.tmux.conf` with a direct
 `run-shell .../golden-layout.tmux` rather than through TPM: TPM's installer
 would try to clone it, `prefix+U` would `git pull` inside the dotfiles
 checkout, and `prefix+M-u` would delete anything under the plugin path not in
-its list. The entrypoint is idempotent (indexed hook slot 188, `bind-key`
-replacement) so config reloads are safe.
+its list. The entrypoint is idempotent (indexed hook slot 188, tracked
+`bind-key` replacement) so config reloads and resume-key changes are safe.
 
 ## Engine notes
 
 - Hooks: `after-select-pane`, `after-split-window`, `after-resize-pane`
   (session table) and `window-layout-changed`, `window-resized` (window
   table), all at index 188, all `run-shell -b`.
-- Loop prevention: every applied layout is recorded in a short-lived
-  per-window history (`@gl_history`); hook echoes matching the history are
-  ignored. Older history entries only count as echoes when the pane set still
-  matches `@gl_last_applied`.
+- Loop prevention: every applied layout gets a short-lived, layout-keyed
+  window option (`@gl_history_<hash>`). Separate options prevent concurrent
+  applies from overwriting each other's echo guards. Older entries count as
+  echoes only when the pane set still matches `@gl_last_applied`.
 - Classification of `window-layout-changed`: topology change -> recompute;
   root dims changed -> outer resize -> recompute/scale; same panes and dims
   with different geometry -> user change -> pause.
-- Races: before applying, each event re-fetches window state and aborts if
-  layout, dimensions, or (for focus-dependent layouts) the active pane changed
-  since the computation; the event that caused the change recomputes on its
-  own. tmux itself is not addressed by index anywhere — only `@id`/`%id`.
+- Races: hooks pass the originating layout (and pane for focus events), so a
+  delayed process cannot reinterpret newer window state. A crash-recoverable
+  per-window lock serializes hook and API state transitions; tmux calls time
+  out before the lock's stale-owner deadline. Before applying, each event
+  re-fetches state and aborts if layout, dimensions, or the active pane changed.
+  A post-apply check makes one settling pass when focus or dimensions changed
+  between verification and apply. Tmux itself is addressed only by stable
+  `@id`/`%id`.
 - `tmux select-layout` maps layout leaves to panes by window order, not by the
   pane ids embedded in the string; declarations therefore reorder panes first
   and golden layouts always preserve the parsed leaf order.

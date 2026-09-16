@@ -8,21 +8,100 @@
  */
 
 import { execFileSync } from "node:child_process";
+import { createHash, randomUUID } from "node:crypto";
+import { closeSync, mkdirSync, openSync, readdirSync, rmdirSync, unlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+function socketPath(): string {
+  const explicit = process.env.GL_TMUX_SOCKET;
+  if (explicit) return explicit;
+  return process.env.TMUX?.split(",")[0] ?? "default";
+}
 
 function socketArgs(): string[] {
-  const explicit = process.env.GL_TMUX_SOCKET;
-  if (explicit) return ["-S", explicit];
-  const tmuxEnv = process.env.TMUX;
-  if (tmuxEnv) {
-    const sock = tmuxEnv.split(",")[0];
-    if (sock) return ["-S", sock];
-  }
-  return [];
+  const socket = socketPath();
+  return socket === "default" ? [] : ["-S", socket];
 }
+
+const LOCK_TTL_MS = 10_000;
+const LOCK_WAIT_MS = 15_000;
+
+function processAlive(pid: number): boolean {
+  if (!Number.isSafeInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return err instanceof Error && "code" in err && err.code === "EPERM";
+  }
+}
+
+/** Serialize state transitions for one window across asynchronous hook processes. */
+export async function withWindowLock<T>(windowId: string, fn: () => T | Promise<T>): Promise<T> {
+  const socketHash = createHash("sha256").update(socketPath()).digest("hex").slice(0, 16);
+  const root = join(tmpdir(), `tmux-gl-${typeof process.getuid === "function" ? process.getuid() : 0}`, socketHash);
+  const dir = join(root, `lock-${windowId.slice(1)}`);
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
+
+  // Each process owns a unique contender file. The oldest live contender runs;
+  // dead owners can be removed without ever deleting a newer owner's lock.
+  const started = Date.now();
+  const contender = `${String(started).padStart(13, "0")}-${process.pid}-${randomUUID()}`;
+  const contenderPath = join(dir, contender);
+  closeSync(openSync(contenderPath, "wx", 0o600));
+  const deadline = started + LOCK_WAIT_MS;
+
+  try {
+    for (;;) {
+      const live: string[] = [];
+      for (const name of readdirSync(dir)) {
+        const match = /^(\d{13})-(\d+)-[0-9a-f-]+$/.exec(name);
+        const ownerStarted = Number.parseInt(match?.[1] ?? "", 10);
+        const ownerPid = Number.parseInt(match?.[2] ?? "", 10);
+        const stale =
+          !match ||
+          !Number.isFinite(ownerStarted) ||
+          !processAlive(ownerPid) ||
+          Date.now() - ownerStarted > LOCK_TTL_MS;
+        if (stale && name !== contender) {
+          try {
+            unlinkSync(join(dir, name));
+          } catch {
+            // another waiter cleaned it first
+          }
+        } else {
+          live.push(name);
+        }
+      }
+      live.sort();
+      if (live[0] === contender) return await fn();
+      if (Date.now() >= deadline) throw new Error(`timed out waiting for layout lock: ${windowId}`);
+      await new Promise<void>((resolve) => setTimeout(resolve, 10));
+    }
+  } finally {
+    try {
+      unlinkSync(contenderPath);
+    } catch {
+      // A stale-owner recovery may already have removed it.
+    }
+    try {
+      rmdirSync(dir);
+      rmdirSync(root);
+    } catch {
+      // Other windows or contenders still use the socket-specific directory.
+    }
+  }
+}
+
+const TMUX_TIMEOUT_MS = 3000;
 
 /** Run one tmux command, returning trimmed stdout. */
 export function tmux(...args: string[]): string {
-  return execFileSync("tmux", [...socketArgs(), ...args], { encoding: "utf8" }).trim();
+  return execFileSync("tmux", [...socketArgs(), ...args], {
+    encoding: "utf8",
+    timeout: TMUX_TIMEOUT_MS,
+  }).trim();
 }
 
 /** Run several tmux commands in one server round-trip (`;`-separated). */
@@ -32,7 +111,7 @@ export function tmuxMulti(commands: string[][]): string {
     if (i > 0) args.push(";");
     args.push(...cmd);
   });
-  return execFileSync("tmux", args, { encoding: "utf8" }).trim();
+  return execFileSync("tmux", args, { encoding: "utf8", timeout: TMUX_TIMEOUT_MS }).trim();
 }
 
 export interface WindowState {
@@ -67,15 +146,25 @@ export function getWindowState(windowId: string): WindowState | null {
   };
 }
 
-/** Window pane ids in tmux window order. */
+/** Tiled pane ids in tmux window order (floating panes are not layout cells). */
 export function getPaneOrder(windowId: string): string[] {
-  const out = tmux("list-panes", "-t", windowId, "-F", "#{pane_id}");
-  return out === "" ? [] : out.split("\n");
+  const out = tmux("list-panes", "-t", windowId, "-F", "#{pane_id}\u001f#{pane_floating_flag}");
+  if (out === "") return [];
+  return out
+    .split("\n")
+    .map((line) => line.split("\u001f"))
+    .filter(([, floating]) => floating !== "1")
+    .map(([pane]) => pane);
 }
 
 // ── Per-window plugin state (window-scoped @gl_* user options) ──
 // Window options die with the window, so state cleanup is automatic, and the
 // window id key is stable across renames and index moves.
+
+interface HistoryEntry {
+  option: string;
+  value: string;
+}
 
 export interface WindowOpts {
   paused: boolean;
@@ -83,8 +172,8 @@ export interface WindowOpts {
   manualRef: string | null;
   /** base64 JSON declaration */
   decl: string | null;
-  /** recent "ts:layout" entries we applied; hook echoes match against this */
-  history: string[];
+  /** recent independently stored "ts:layout" entries; hook echoes match these */
+  history: HistoryEntry[];
   /** last layout string this plugin applied */
   lastApplied: string | null;
   /** last observed zoom flag */
@@ -106,6 +195,7 @@ const OPT_NAMES = {
   busy: "@gl_busy",
 } as const;
 
+const HISTORY_PREFIX = "@gl_history_";
 const HISTORY_LIMIT = 6;
 const HISTORY_TTL_MS = 5000;
 
@@ -124,7 +214,12 @@ export function getWindowOpts(windowId: string): WindowOpts {
     if (v.startsWith('"') && v.endsWith('"')) v = v.slice(1, -1);
     map.set(m[1], v);
   }
-  const history = (map.get(OPT_NAMES.history) ?? "").split("|").filter((e) => e.length > 0);
+  const history: HistoryEntry[] = [];
+  const legacy = (map.get(OPT_NAMES.history) ?? "").split("|").filter((e) => e.length > 0);
+  history.push(...legacy.map((value) => ({ option: OPT_NAMES.history, value })));
+  for (const [option, value] of map) {
+    if (option.startsWith(HISTORY_PREFIX)) history.push({ option, value });
+  }
   return {
     paused: map.get(OPT_NAMES.paused) === "1",
     manualRef: map.get(OPT_NAMES.manualRef) ?? null,
@@ -141,7 +236,6 @@ export type OptPatch = Partial<{
   paused: boolean;
   manualRef: string | null;
   decl: string | null;
-  history: string[] | null;
   lastApplied: string | null;
   zoomed: boolean;
   pending: boolean;
@@ -158,8 +252,6 @@ export function setWindowOpts(windowId: string, patch: OptPatch): void {
   if (patch.paused !== undefined) put(OPT_NAMES.paused, patch.paused ? "1" : null);
   if (patch.manualRef !== undefined) put(OPT_NAMES.manualRef, patch.manualRef);
   if (patch.decl !== undefined) put(OPT_NAMES.decl, patch.decl);
-  if (patch.history !== undefined)
-    put(OPT_NAMES.history, patch.history && patch.history.length > 0 ? patch.history.join("|") : null);
   if (patch.lastApplied !== undefined) put(OPT_NAMES.lastApplied, patch.lastApplied);
   if (patch.zoomed !== undefined) put(OPT_NAMES.zoomed, patch.zoomed ? "1" : null);
   if (patch.pending !== undefined) put(OPT_NAMES.pending, patch.pending ? "1" : null);
@@ -168,33 +260,56 @@ export function setWindowOpts(windowId: string, patch: OptPatch): void {
 }
 
 /** Timestamps of history entries ("ts:layout"). */
+function historyTimestamp(entry: string): number {
+  return Number.parseInt(entry.slice(0, entry.indexOf(":")), 10) || 0;
+}
+
 function historyEntryFresh(entry: string, now: number): boolean {
-  const ts = Number.parseInt(entry.slice(0, entry.indexOf(":")), 10) || 0;
-  return now - ts <= HISTORY_TTL_MS;
+  return now - historyTimestamp(entry) <= HISTORY_TTL_MS;
 }
 
 /** True when a layout string is one we applied recently. */
 export function historyContains(opts: WindowOpts, layout: string): boolean {
   if (opts.lastApplied === layout) return true;
   const now = Date.now();
-  return opts.history.some((e) => historyEntryFresh(e, now) && e.slice(e.indexOf(":") + 1) === layout);
+  return opts.history.some(
+    ({ value }) => historyEntryFresh(value, now) && value.slice(value.indexOf(":") + 1) === layout,
+  );
 }
 
 /**
- * Apply a layout: push it onto the applied-history, record last-applied, and
- * select it in one server round-trip so hook echoes can be recognized even
- * when several of our applies race.
+ * Apply a layout: store this history entry under a layout-specific option,
+ * record last-applied, and select it in one server round-trip. Independent
+ * options keep concurrent applies from overwriting each other's echo guards.
  */
 export function applyLayout(windowId: string, layout: string, opts: WindowOpts): void {
   const now = Date.now();
-  const history = [...opts.history.filter((e) => historyEntryFresh(e, now)), `${now}:${layout}`].slice(
-    -HISTORY_LIMIT,
+  const option = `${HISTORY_PREFIX}${createHash("sha256").update(layout).digest("hex").slice(0, 16)}`;
+  const value = `${now}:${layout}`;
+  const fresh = opts.history
+    .filter((entry) => entry.option !== OPT_NAMES.history && historyEntryFresh(entry.value, now))
+    .filter((entry) => entry.option !== option);
+  const keep = [...fresh, { option, value }]
+    .sort((a, b) => historyTimestamp(a.value) - historyTimestamp(b.value))
+    .slice(-HISTORY_LIMIT);
+  const keepOptions = new Set(keep.map((entry) => entry.option));
+  const staleOptions = new Set(
+    opts.history.map((entry) => entry.option).filter((name) => !keepOptions.has(name)),
   );
-  tmuxMulti([
-    ["set-option", "-w", "-t", windowId, "@gl_history", history.join("|")],
-    ["set-option", "-w", "-t", windowId, "@gl_last_applied", layout],
-    ["select-layout", "-t", windowId, layout],
+  const commands: string[][] = [...staleOptions].map((name) => [
+    "set-option",
+    "-w",
+    "-u",
+    "-t",
+    windowId,
+    name,
   ]);
+  commands.push(
+    ["set-option", "-w", "-t", windowId, option, value],
+    ["set-option", "-w", "-t", windowId, OPT_NAMES.lastApplied, layout],
+    ["select-layout", "-t", windowId, layout],
+  );
+  tmuxMulti(commands);
 }
 
 export function displayMessage(message: string): void {

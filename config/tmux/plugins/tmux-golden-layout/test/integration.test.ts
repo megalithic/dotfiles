@@ -7,16 +7,18 @@
  */
 
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { execFileSync, spawn, spawnSync } from "node:child_process";
+import { chmodSync, existsSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { GOLDEN_FRACTION } from "../src/allocate";
+import { withWindowLock } from "../src/tmux";
 
 const PLUGIN_DIR = join(import.meta.dir, "..");
 const GL = join(PLUGIN_DIR, "bin", "gl");
 const ENTRYPOINT = join(PLUGIN_DIR, "golden-layout.tmux");
+const REAL_TMUX = execFileSync("which", ["tmux"], { encoding: "utf8" }).trim();
 
 const dir = mkdtempSync(join(tmpdir(), "gl-itest-"));
 const SOCK = join(dir, "sock");
@@ -87,6 +89,63 @@ describe("plugin load", () => {
     expect(windowHooks).toContain("window-resized[188]");
     const keys = tmux("list-keys");
     expect(keys).toContain("resume");
+  });
+
+  test("serializes concurrent per-window work", async () => {
+    let active = 0;
+    let maxActive = 0;
+    await Promise.all(
+      Array.from({ length: 20 }, (_, i) =>
+        withWindowLock("@998", async () => {
+          active += 1;
+          maxActive = Math.max(maxActive, active);
+          await Bun.sleep(i % 3);
+          active -= 1;
+        }),
+      ),
+    );
+    expect(maxActive).toBe(1);
+  });
+
+  test("recovers a per-window lock after its owner crashes", async () => {
+    const modulePath = join(PLUGIN_DIR, "src", "tmux.ts");
+    const holder = spawn(
+      process.execPath,
+      [
+        "-e",
+        `import { withWindowLock } from ${JSON.stringify(modulePath)}; await withWindowLock("@999", async () => { console.log("locked"); await Bun.sleep(10000); });`,
+      ],
+      { env: ENV, stdio: ["ignore", "pipe", "pipe"] },
+    );
+    await new Promise<void>((resolve, reject) => {
+      holder.stdout.once("data", () => resolve());
+      holder.once("error", reject);
+      holder.once("exit", (code) => reject(new Error(`lock holder exited early: ${code}`)));
+    });
+    const exited = new Promise<void>((resolve) => holder.once("exit", () => resolve()));
+    holder.kill("SIGKILL");
+    await exited;
+    expect(await withWindowLock("@999", () => "recovered")).toBe("recovered");
+  });
+
+  test("disabled reload unregisters hooks even when bun and mise are unavailable", () => {
+    const pathDir = mkdtempSync(join(tmpdir(), "gl-path-itest-"));
+    symlinkSync(REAL_TMUX, join(pathDir, "tmux"));
+    try {
+      tmux("set-option", "-g", "@gl-enabled", "off");
+      const disabledEnv = { ...ENV, PATH: `${pathDir}:/usr/bin:/bin` };
+      const out = spawnSync("bash", [ENTRYPOINT], { encoding: "utf8", env: disabledEnv });
+      expect(out.status).toBe(0);
+      expect(tmux("show-hooks", "-g")).not.toContain("[188]");
+      expect(tmux("show-hooks", "-gw")).not.toContain("[188]");
+      expect(tmux("list-keys")).not.toContain("tmux-golden-layout/bin/gl");
+      expect(tmux("show-options", "-gqv", "@gl-bun")).toBe("");
+    } finally {
+      tmux("set-option", "-g", "@gl-enabled", "on");
+      const out = spawnSync("bash", [ENTRYPOINT], { encoding: "utf8", env: ENV });
+      if (out.status !== 0) throw new Error(`entrypoint restore failed: ${out.stderr}`);
+      rmSync(pathDir, { recursive: true, force: true });
+    }
   });
 });
 
@@ -161,6 +220,18 @@ describe("manual pause and resume", () => {
     expect(windowOption(win, "@gl_paused")).toBe("1");
   });
 
+  test("outer resize while zoomed settles the paused manual reference after unzoom", async () => {
+    tmux("resize-pane", "-Z", "-t", a);
+    await waitFor(() => windowOption(win, "@gl_zoomed") === "1", "paused zoom recorded");
+    tmux("resize-window", "-t", win, "-x", "150", "-y", String(H));
+    await waitFor(() => windowOption(win, "@gl_pending") === "1", "paused zoom resize pending");
+    tmux("resize-pane", "-Z", "-t", a);
+    await waitFor(() => paneWidth(a) === 75, `paused reference scaled after unzoom, got ${paneWidth(a)}`);
+    tmux("resize-window", "-t", win, "-x", String(W), "-y", String(H));
+    await waitFor(() => paneWidth(a) === 100, "paused reference restored after zoom resize cycle");
+    expect(windowOption(win, "@gl_paused")).toBe("1");
+  });
+
   test("resume reapplies golden immediately", async () => {
     const r = gl("resume", win);
     expect(r.status).toBe(0);
@@ -214,6 +285,14 @@ describe("declarative API", () => {
     await waitFor(() => paneWidth(b) === 70, `b at 35%, got ${paneWidth(b)}`);
   });
 
+  test("manual resize during the reorder busy window still pauses", async () => {
+    tmux("resize-pane", "-t", a, "-x", "90");
+    await waitFor(() => windowOption(win, "@gl_paused") === "1", "manual resize after reorder paused");
+    expect(paneWidth(a)).toBe(90);
+    expect(gl("resume", win).status).toBe(0);
+    await waitFor(() => paneWidth(b) === 70, "declaration restored after reorder pause");
+  });
+
   test("declare rejects pane mismatch", () => {
     const decl = { root: { split: "h", children: [{ pane: a }, { pane: "%999" }] } };
     const r = gl("declare", win, JSON.stringify(decl));
@@ -256,6 +335,32 @@ describe("declarative API", () => {
     const parsed = JSON.parse(r.stdout);
     expect(parsed.window).toBe(win);
     expect(parsed.paused).toBe(false);
+  });
+});
+
+describe("floating pane deferral", () => {
+  test("keeps and reapplies a declaration after the floating pane closes", async () => {
+    const win = tmux("new-window", "-P", "-F", "#{window_id}");
+    const a = tmux("display-message", "-p", "-t", win, "#{pane_id}");
+    const b = tmux("split-window", "-h", "-t", win, "-P", "-F", "#{pane_id}");
+    await waitFor(() => paneWidth(b) === TARGET_W, "golden before floating pane");
+
+    const initial = { root: { split: "h", ratios: [0.65, 0.35], children: [{ pane: a }, { pane: b }] } };
+    expect(gl("declare", win, JSON.stringify(initial)).status).toBe(0);
+    await waitFor(() => paneWidth(a) === 129, "initial declaration before floating pane");
+
+    const floating = tmux("new-pane", "-d", "-t", win, "-P", "-F", "#{pane_id}");
+    await waitFor(() => tmux("display-message", "-p", "-t", win, "#{window_layout}").includes("<"), "floating layout");
+    const updated = { root: { split: "h", ratios: [0.6, 0.4], children: [{ pane: a }, { pane: b }] } };
+    expect(gl("declare", win, JSON.stringify(updated)).status).toBe(0);
+    expect(windowOption(win, "@gl_decl")).not.toBe("");
+    expect(windowOption(win, "@gl_pending")).toBe("1");
+    expect(paneWidth(a)).toBe(129); // declaration is deferred, not cleared
+
+    tmux("kill-pane", "-t", floating);
+    await waitFor(() => paneWidth(a) === 119, `deferred declaration after floating close, got ${paneWidth(a)}`);
+    expect(windowOption(win, "@gl_decl")).not.toBe("");
+    tmux("kill-window", "-t", win);
   });
 });
 
@@ -308,6 +413,69 @@ describe("rapid focus changes", () => {
     // and it must not be paused by our own churn
     expect(windowOption(win, "@gl_paused")).toBe("");
     tmux("kill-window", "-t", win);
+  });
+});
+
+describe("apply races", () => {
+  test("a delayed stale focus apply settles on the current pane", async () => {
+    const raceDir = mkdtempSync(join(tmpdir(), "gl-race-itest-"));
+    const raceSock = join(raceDir, "sock");
+    const wrapper = join(raceDir, "tmux");
+    const delayed = join(raceDir, "delayed");
+    const raceEnv = {
+      ...process.env,
+      PATH: `${raceDir}:${process.env.PATH ?? ""}`,
+      GL_TMUX_SOCKET: raceSock,
+      TMUX: `${raceSock},0,0`,
+    };
+    const rt = (...args: string[]): string =>
+      execFileSync(REAL_TMUX, ["-S", raceSock, ...args], { encoding: "utf8", env: raceEnv }).trim();
+
+    writeFileSync(
+      wrapper,
+      `#!/usr/bin/env bash
+last="\${!#}"
+case "$last" in
+  *,200x50,0,0\\{124x50,0,0,*) : >${JSON.stringify(delayed)}; sleep 0.8 ;;
+esac
+exec ${JSON.stringify(REAL_TMUX)} "$@"
+`,
+    );
+    chmodSync(wrapper, 0o755);
+
+    try {
+      rt("-f", "/dev/null", "new-session", "-d", "-x", String(W), "-y", String(H));
+      const load = spawnSync("bash", [ENTRYPOINT], { encoding: "utf8", env: raceEnv });
+      if (load.status !== 0) throw new Error(`race entrypoint failed: ${load.stderr}`);
+      const win = rt("display-message", "-p", "#{window_id}");
+      const a = rt("display-message", "-p", "#{pane_id}");
+      const b = rt("split-window", "-h", "-P", "-F", "#{pane_id}");
+      await waitFor(
+        () => Number.parseInt(rt("display-message", "-p", "-t", b, "#{pane_width}"), 10) === TARGET_W,
+        "race server initial golden layout",
+      );
+
+      await Bun.sleep(300); // drain split-hook echoes before the controlled race
+      rmSync(delayed, { force: true });
+      rt("select-pane", "-t", a);
+      await waitFor(() => existsSync(delayed), "stale focus apply to enter its delay");
+      rt("select-pane", "-t", b); // overtakes the verified but delayed apply
+      await Bun.sleep(1000); // let the stale apply land before checking the settling pass
+      await waitFor(
+        () => Number.parseInt(rt("display-message", "-p", "-t", b, "#{pane_width}"), 10) === TARGET_W,
+        "current pane golden after stale apply",
+      );
+      expect(rt("display-message", "-p", "-t", win, "#{pane_id}")).toBe(b);
+      expect(Number.parseInt(rt("display-message", "-p", "-t", b, "#{pane_width}"), 10)).toBe(TARGET_W);
+      expect(rt("show-options", "-wqv", "-t", win, "@gl_paused")).toBe("");
+    } finally {
+      try {
+        rt("kill-server");
+      } catch {
+        // already gone
+      }
+      rmSync(raceDir, { recursive: true, force: true });
+    }
   });
 });
 

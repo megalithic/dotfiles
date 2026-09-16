@@ -23,7 +23,7 @@ import {
   scaleReference,
   validateDeclaration,
 } from "./allocate";
-import { leafPanes, parseLayout, samePaneSet, serializeLayout } from "./layout";
+import { parseLayout, samePaneSet, serializeLayout } from "./layout";
 import {
   type WindowOpts,
   type WindowState,
@@ -67,26 +67,50 @@ export function log(msg: string): void {
 
 /**
  * Apply `target` only if the window still looks exactly like the state the
- * computation was based on. Concurrent hook processes each verify-then-apply;
- * a process working from stale state aborts, and the event that changed the
- * state recomputes on its own. `checkActivePane` is used for focus-dependent
+ * computation was based on. Hook processes are serialized per window, but an
+ * event can still become stale while waiting for the lock; stale work aborts.
+ * `checkActivePane` is used for focus-dependent
  * (golden) layouts; declarations and reference scaling ignore focus.
  */
-function applyVerified(st: WindowState, target: string, opts: WindowOpts, checkActivePane: boolean): void {
-  const now = getWindowState(st.windowId);
+function applyVerified(
+  st: WindowState,
+  target: string,
+  opts: WindowOpts,
+  checkActivePane: boolean,
+): WindowState | null {
+  const before = getWindowState(st.windowId);
   if (
-    !now ||
-    now.zoomed ||
-    now.layout !== st.layout ||
-    now.width !== st.width ||
-    now.height !== st.height ||
-    (checkActivePane && now.activePane !== st.activePane)
+    !before ||
+    before.zoomed ||
+    before.layout !== st.layout ||
+    before.width !== st.width ||
+    before.height !== st.height ||
+    (checkActivePane && before.activePane !== st.activePane)
   ) {
     log(`state changed under ${st.windowId}; skipping apply`);
-    return;
+    return null;
   }
   log(`apply ${st.windowId}: ${target}`);
   applyLayout(st.windowId, target, opts);
+
+  // Verification and apply are separate tmux round-trips. If focus or outer
+  // dimensions changed in that gap, the corresponding hook may have already
+  // inspected the old layout and aborted. Return the new state so the caller
+  // can settle it once more instead of leaving a stale last writer in place.
+  const after = getWindowState(st.windowId);
+  if (!after) return null;
+  if (after.zoomed) {
+    setWindowOpts(st.windowId, { zoomed: true, pending: true });
+    return null;
+  }
+  if (
+    after.width !== st.width ||
+    after.height !== st.height ||
+    (checkActivePane && after.activePane !== st.activePane)
+  ) {
+    return after;
+  }
+  return null;
 }
 
 // ── Helpers ──
@@ -105,12 +129,14 @@ function readConfig(): Config {
     // server unreachable; caller handles
   }
   const [enabled, minW, minH, debug] = out.split("\u001f");
+  const parsedMinW = Number(minW);
+  const parsedMinH = Number(minH);
   debugEnabled = debug === "on" || debug === "1";
   return {
     enabled: enabled !== "off" && enabled !== "0",
     mins: {
-      width: Number.parseInt(minW ?? "", 10) || DEFAULT_MINS.width,
-      height: Number.parseInt(minH ?? "", 10) || DEFAULT_MINS.height,
+      width: Number.isSafeInteger(parsedMinW) && parsedMinW > 0 ? parsedMinW : DEFAULT_MINS.width,
+      height: Number.isSafeInteger(parsedMinH) && parsedMinH > 0 ? parsedMinH : DEFAULT_MINS.height,
     },
   };
 }
@@ -152,7 +178,13 @@ function reorderPanes(windowId: string, desired: string[]): boolean {
 
 // ── Recompute (declaration > golden) ──
 
-function recompute(st: WindowState, opts: WindowOpts, mins: Mins): void {
+function recompute(st: WindowState, opts: WindowOpts, mins: Mins, retries = 1): void {
+  if (st.layout.includes("<")) {
+    log(`floating panes present in ${st.windowId}; deferring apply`);
+    setWindowOpts(st.windowId, { pending: true });
+    return;
+  }
+
   let target: string | null = null;
   let focusDependent = false;
 
@@ -203,7 +235,8 @@ function recompute(st: WindowState, opts: WindowOpts, mins: Mins): void {
     if (opts.lastApplied !== target) setWindowOpts(st.windowId, { lastApplied: target });
     return;
   }
-  applyVerified(st, target, opts, focusDependent);
+  const changed = applyVerified(st, target, opts, focusDependent);
+  if (changed && retries > 0) recompute(changed, getWindowOpts(st.windowId), mins, retries - 1);
 }
 
 function sameSet(a: string[], b: string[]): boolean {
@@ -218,7 +251,7 @@ function pauseWindow(st: WindowState, opts: WindowOpts, silent = false): void {
   if (!wasPaused && !silent) displayMessage(PAUSE_MESSAGE);
 }
 
-function scaleManualRef(st: WindowState, opts: WindowOpts, mins: Mins): void {
+function scaleManualRef(st: WindowState, opts: WindowOpts, mins: Mins, retries = 1): void {
   const refLayout = opts.manualRef ?? st.layout;
   let ref;
   try {
@@ -248,19 +281,45 @@ function scaleManualRef(st: WindowState, opts: WindowOpts, mins: Mins): void {
     if (opts.lastApplied !== target) setWindowOpts(st.windowId, { lastApplied: target });
     return;
   }
-  applyVerified(st, target, opts, false);
+  const changed = applyVerified(st, target, opts, false);
+  if (changed && retries > 0) scaleManualRef(changed, getWindowOpts(st.windowId), mins, retries - 1);
 }
 
 // ── Event entry point ──
 
-export function handleEvent(kind: EventKind, windowId: string): void {
+export function handleEvent(
+  kind: EventKind,
+  windowId: string,
+  eventPaneId?: string,
+  eventLayout?: string,
+): void {
   const config = readConfig();
   if (!config.enabled) return;
 
   const st = getWindowState(windowId);
   if (!st || st.windowId !== windowId) return; // window gone
+  if (eventLayout && st.layout !== eventLayout) {
+    log(`stale ${kind} event for ${windowId}; layout changed`);
+    return;
+  }
+  if (kind === "focus" && eventPaneId && st.activePane !== eventPaneId) {
+    log(`stale focus event ${eventPaneId} for ${windowId}; active=${st.activePane}`);
+    return;
+  }
   const opts = getWindowOpts(windowId);
   log(`event ${kind} ${windowId} layout=${st.layout} active=${st.activePane} paused=${opts.paused}`);
+
+  // after-split-window and window-layout-changed describe the same topology
+  // transition. Once one handler has applied a layout with the new pane set,
+  // later topology handlers are stale even if another tool restores the split's
+  // original geometry before they run.
+  if (kind === "topology" && opts.lastApplied) {
+    try {
+      if (samePaneSet(parseLayout(st.layout), parseLayout(opts.lastApplied))) return;
+    } catch {
+      // let the normal recompute path report or recover from malformed state
+    }
+  }
 
   // Zoom: defer everything while zoomed; recompute once after unzoom.
   if (st.zoomed) {
@@ -269,10 +328,26 @@ export function handleEvent(kind: EventKind, windowId: string): void {
   }
   if (opts.zoomed) {
     setWindowOpts(windowId, { zoomed: false, pending: false });
-    if (!opts.paused && opts.pending) {
-      recompute(st, opts, config.mins);
+    if (opts.pending) {
+      if (opts.paused) scaleManualRef(st, opts, config.mins);
+      else recompute(st, opts, config.mins);
     }
     return;
+  }
+
+  // tmux 3.7 custom layouts cannot restore floating panes. Keep declarations
+  // and manual references intact, then settle once the last floating pane is
+  // gone instead of treating it as a topology change.
+  if (st.layout.includes("<")) {
+    setWindowOpts(windowId, { pending: true });
+    return;
+  }
+  if (opts.pending) {
+    setWindowOpts(windowId, { pending: false });
+    if (!opts.paused) {
+      recompute(st, opts, config.mins);
+      return;
+    }
   }
 
   // Echo of one of our own recent select-layout calls: nothing to classify.
@@ -292,7 +367,7 @@ export function handleEvent(kind: EventKind, windowId: string): void {
   }
 
   // Multi-step declaration apply (pane swaps) in flight: ignore its noise.
-  if (opts.busy && Date.now() - opts.busy <= BUSY_TTL_MS && (kind === "layout" || kind === "manual")) {
+  if (opts.busy && Date.now() - opts.busy <= BUSY_TTL_MS && kind === "layout") {
     return;
   }
 
@@ -474,7 +549,7 @@ export function statusWindow(windowId: string): string {
       declaration: decl,
       manualRef: opts?.manualRef ?? null,
       lastApplied: opts?.lastApplied ?? null,
-      panes: st ? leafPanes(parseLayout(st.layout)).map((n) => `%${n}`) : [],
+      panes: st ? getPaneOrder(windowId) : [],
     },
     null,
     2,

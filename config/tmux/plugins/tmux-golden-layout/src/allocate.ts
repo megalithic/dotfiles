@@ -80,8 +80,9 @@ interface Share {
  * Ties break by lower index.
  */
 function largestRemainder(total: number, weights: number[]): number[] {
-  const sumW = weights.reduce((a, b) => a + b, 0);
-  const raw = weights.map((w) => (sumW > 0 ? (total * w) / sumW : total / weights.length));
+  const usable = weights.map((w) => (Number.isFinite(w) && w > 0 ? w : 0));
+  const sumW = usable.reduce((a, b) => a + b, 0);
+  const raw = usable.map((w) => (sumW > 0 ? (total * w) / sumW : total / usable.length));
   const floors = raw.map(Math.floor);
   let rest = total - floors.reduce((a, b) => a + b, 0);
   const order = raw
@@ -97,6 +98,9 @@ function largestRemainder(total: number, weights: number[]): number[] {
  * per-share minimums. Returns null when the minimums cannot fit.
  */
 export function distribute(total: number, shares: Share[]): number[] | null {
+  if (!Number.isSafeInteger(total) || total < 0) return null;
+  if (shares.length === 0) return total === 0 ? [] : null;
+  if (shares.some(({ min }) => !Number.isSafeInteger(min) || min < 0)) return null;
   const minSum = shares.reduce((a, s) => a + s.min, 0);
   if (total < minSum) return null;
   const result = new Array<number>(shares.length).fill(-1);
@@ -247,18 +251,28 @@ export function declPanes(node: DeclNode): string[] {
   return node.children.flatMap(declPanes);
 }
 
-export function validateDeclaration(decl: Declaration): string | null {
-  const walk = (node: DeclNode): string | null => {
+export function validateDeclaration(decl: unknown): string | null {
+  const walk = (node: unknown): string | null => {
+    if (!node || typeof node !== "object" || Array.isArray(node)) return "node must be an object";
     if ("pane" in node) {
-      if (!/^%\d+$/.test(node.pane)) return `invalid pane id: ${JSON.stringify(node.pane)}`;
+      if (typeof node.pane !== "string" || !/^%\d+$/.test(node.pane)) {
+        return `invalid pane id: ${JSON.stringify(node.pane)}`;
+      }
       return null;
     }
-    if (node.split !== "h" && node.split !== "v") return `invalid split axis: ${JSON.stringify(node.split)}`;
-    if (!Array.isArray(node.children) || node.children.length < 1) return "split has no children";
-    if (node.ratios) {
+    if (!("split" in node) || (node.split !== "h" && node.split !== "v")) {
+      return `invalid split axis: ${JSON.stringify("split" in node ? node.split : undefined)}`;
+    }
+    if (!("children" in node) || !Array.isArray(node.children) || node.children.length < 1) {
+      return "split has no children";
+    }
+    if ("ratios" in node && node.ratios !== undefined) {
+      if (!Array.isArray(node.ratios)) return "ratios must be an array";
       if (node.ratios.length !== node.children.length) return "ratios length != children length";
-      if (node.ratios.some((r) => !(r > 0))) return "ratios must be positive";
-      const sum = node.ratios.reduce((a, b) => a + b, 0);
+      if (node.ratios.some((r) => typeof r !== "number" || !Number.isFinite(r) || !(r > 0))) {
+        return "ratios must be finite and positive";
+      }
+      const sum = node.ratios.reduce<number>((a, b) => a + b, 0);
       if (Math.abs(sum - 1) > 0.01) return `ratios must sum to 1 (got ${sum})`;
     }
     for (const c of node.children) {
@@ -267,9 +281,12 @@ export function validateDeclaration(decl: Declaration): string | null {
     }
     return null;
   };
+  if (!decl || typeof decl !== "object" || Array.isArray(decl) || !("root" in decl)) {
+    return "declaration must contain a root node";
+  }
   const err = walk(decl.root);
   if (err) return err;
-  const panes = declPanes(decl.root);
+  const panes = declPanes(decl.root as DeclNode);
   if (new Set(panes).size !== panes.length) return "duplicate pane in declaration";
   return null;
 }
