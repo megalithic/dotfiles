@@ -271,7 +271,8 @@ local function focusHeliumAndInspect(target)
   local activationOk = pcall(function() activated = app:activate(true) ~= false end)
   if not activationOk or not activated then return false, "Could not focus Helium." end
 
-  local js = "const expectedUrl = " .. hs.json.encode(target.url) .. ";" .. [[
+  local targetJson = hs.json.encode({ url = target.url })
+  local js = "const expectedUrl = (" .. targetJson .. ").url;" .. [[
     new Promise(resolve => {
       const deadline = Date.now() + 4000;
       let clicked = false;
