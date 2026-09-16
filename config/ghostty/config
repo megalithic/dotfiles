@@ -269,6 +269,9 @@ keybind = cmd+shift+m=text:\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1006l
 
 # DO NOT DELETE THIS:
 # this stops me from hitting this mapping thinking i'm using a browser's inspect and end up with passing `C` to nvim and changing to end of line 🤦
+# Also complementary to Hammerspoon's global cmd+shift+c (pidewave handshake):
+# HS's event tap fires before Ghostty, and this `ignore` guarantees the chord
+# never leaks to the terminal/TUI if HS is down. Leave as-is.
 keybind = cmd+shift+c=ignore
 
 # vim: ft=conf

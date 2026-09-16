@@ -77,6 +77,7 @@ req("bindings")
 req("watchers", { watchers = watchers })
 req("quitter"):start()
 req("clipper") -- Auto-inits via req(), starts pasteboard watcher
+req("lib.interop.pidewave") -- Cmd+Shift+C: bind active tmux pi <-> Tidewave tab
 -- Load shade-next last so its Hyper overrides win for shared chords such as
 -- Hyper+Shift+N and Hyper+Ctrl+N.
 req("shade_next") -- inert until shade-next is installed
