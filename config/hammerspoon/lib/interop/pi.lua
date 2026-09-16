@@ -196,8 +196,10 @@ local function getOrConnect(path)
   newConn.socket = sock
   connections[path] = newConn
 
-  -- Connect to Unix domain socket
-  local result = sock:connect(path, function()
+  -- hs.socket passes Unix paths through NSURL, so escape `%` (tmux pane IDs)
+  -- and other URL-reserved characters before connecting.
+  local connectPath = hs.http.encodeForQuery(path)
+  local result = sock:connect(connectPath, function()
     local c = connections[path]
     if c then
       c.connected = true
@@ -214,9 +216,7 @@ local function getOrConnect(path)
     return nil
   end
 
-  -- Connection is async, but return the conn object.
-  -- Caller should check conn.connected before writing.
-  -- For the common case, hs.socket connects very fast for local Unix sockets.
+  -- Connection is async; CocoaAsyncSocket queues writes until it connects.
   return newConn
 end
 
