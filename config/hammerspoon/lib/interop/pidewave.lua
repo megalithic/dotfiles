@@ -52,22 +52,35 @@ local function shellQuote(value)
   return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
 end
 
--- Run a shell command, return trimmed stdout or nil. Never throws.
-local function sh(cmd, cwd)
+local function trim(text)
+  if not text then return nil end
+  local trimmed = text:gsub("%s+$", "")
+  return trimmed ~= "" and trimmed or nil
+end
+
+-- Run a shell command, return trimmed stdout or nil. When requested, merge
+-- stderr into the captured failure detail. Never throws.
+local function sh(cmd, cwd, captureStderr)
   local shellPath = rawget(_G, "PATH") or os.getenv("PATH") or "/usr/bin:/bin:/usr/sbin:/sbin"
   local command = cmd
   if cwd then command = "cd " .. shellQuote(cwd) .. " && " .. cmd end
-  local full = "PATH=" .. shellQuote(shellPath) .. "; export PATH; " .. command
-  local ok, out = pcall(function()
-    local h = io.popen(full .. " 2>/dev/null")
-    if not h then return nil end
+  local full = "PATH=" .. shellQuote(shellPath) .. "; export PATH; { " .. command .. "; }"
+  local redirect = captureStderr and " 2>&1" or " 2>/dev/null"
+  local ok, out, commandError = pcall(function()
+    local h = io.popen(full .. redirect)
+    if not h then return nil, "could not start command" end
     local data = h:read("*a")
     local closed = h:close()
-    if not closed then return nil end
-    return data
+    if not closed then return nil, data end
+    return data, nil
   end)
-  if not ok or not out then return nil end
-  return (out:gsub("%s+$", ""))
+  if not ok then return nil, tostring(out) end
+  return trim(out), trim(commandError)
+end
+
+local function briefError(detail)
+  if not detail then return "CDP error" end
+  return detail:gsub("%s+", " "):sub(1, 240)
 end
 
 -- Active tmux pane facts as seen from a non-TMUX (Hammerspoon) context.
@@ -204,8 +217,10 @@ end
 -- closed so Inspect is never clicked in a random tab.
 local function selectAppTarget(port, preferredUrl)
   if not hs.fs.attributes(CDP) then return nil, "CDP helper is missing." end
-  local list = sh(string.format("CDP_PORT=%d node %s list", CDP_PORT, shellQuote(CDP)))
-  if not list then return nil, "Could not list Helium tabs on CDP port 9223." end
+  local list, listError = sh(string.format("CDP_PORT=%d node %s list", CDP_PORT, shellQuote(CDP)), nil, true)
+  if not list then
+    return nil, "Could not list Helium tabs on CDP port 9223 (" .. briefError(listError) .. ")."
+  end
 
   local targets = {}
   for line in list:gmatch("[^\n]+") do
@@ -259,20 +274,22 @@ local function focusHeliumAndInspect(target)
   if not app then return false, "Helium is not running." end
   if not heliumOwnsCdp(app) then return false, "Helium does not own CDP port 9223." end
 
-  local brought = sh(string.format(
+  local brought, bringError = sh(string.format(
     "CDP_PORT=%d node %s evalraw %s Page.bringToFront '{}'",
     CDP_PORT,
     shellQuote(CDP),
     shellQuote(target.id)
-  ))
-  if not brought then return false, "Could not foreground the Helium app tab via CDP." end
+  ), nil, true)
+  if not brought then
+    return false, "Could not foreground the Helium app tab via CDP (" .. briefError(bringError) .. ")."
+  end
 
   local activated = false
   local activationOk = pcall(function() activated = app:activate(true) ~= false end)
   if not activationOk or not activated then return false, "Could not focus Helium." end
 
   local targetJson = hs.json.encode({ url = target.url })
-  local js = "const expectedUrl = (" .. targetJson .. ").url;" .. [[
+  local js = "(() => { const expectedUrl = (" .. targetJson .. ").url; return (" .. [[
     new Promise(resolve => {
       const deadline = Date.now() + 4000;
       let clicked = false;
@@ -309,17 +326,18 @@ local function focusHeliumAndInspect(target)
       };
       inspect();
     })
-  ]]
-  local res = sh(string.format(
+  ); })() ]]
+  local res, evalError = sh(string.format(
     "CDP_PORT=%d node %s eval %s %s",
     CDP_PORT,
     shellQuote(CDP),
     shellQuote(target.id),
     shellQuote(js)
-  ))
-  log("inspect-click target=%s url=%s result=%s", target.id, target.url, res or "nil")
+  ), nil, true)
+  local result = res or briefError(evalError)
+  log("inspect-click target=%s url=%s result=%s", target.id, target.url, result)
   if res == "active" then return true end
-  return false, "Selected app tab did not enter Tidewave Inspect mode (" .. (res or "CDP error") .. ")."
+  return false, "Selected app tab did not enter Tidewave Inspect mode (" .. result .. ")."
 end
 
 function M.handshake()
