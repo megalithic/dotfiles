@@ -75,10 +75,45 @@ scripts/asana.mjs update <url|gid> '{"name":"..."}'   # PUT arbitrary task field
 scripts/asana.mjs complete <url|gid> [true|false]     # toggle completion
 scripts/asana.mjs api GET '/projects/123/tasks?opt_fields=name' [--all]
 scripts/asana.mjs api POST '/tasks' '{"data":{...}}'  # raw passthrough
+scripts/asana.mjs create <name> [--notes n] [--parent gid] [--project gid] \
+                  [--assignee me|gid] [--json extra] [--no-defaults]
 ```
 
 Output is pretty-printed JSON. `--all` on `api GET` follows `next_page`
 pagination (`subtasks`/`stories` always do).
+
+## Task-creation defaults
+
+`create` merges stored defaults (project, workspace, assignee, tags, custom
+fields) into `POST /tasks` so they don't have to be repeated per call.
+Explicit flags and `--json` win over defaults; `--no-defaults` skips them;
+`--parent` (subtask) ignores project defaults because the task lives under
+its parent. Raw `update`/`api` stay pristine passthroughs — defaults never
+touch them (a future `--with-defaults` opt-in for `update` is planned).
+
+```bash
+scripts/asana.mjs defaults                 # show defaults + validation problems
+scripts/asana.mjs defaults set assignee me
+scripts/asana.mjs defaults set project <gid> --name SPP        # replaces project default
+scripts/asana.mjs defaults set workspace <gid> --name Strive   # used only when no project/parent
+scripts/asana.mjs defaults set tag <gid> --name backend        # upserts by gid
+scripts/asana.mjs defaults set custom-field <field-gid> <option-gid> --name Developer --value-name Seth
+scripts/asana.mjs defaults set custom-field <field-gid> 42 --raw --name Points  # literal value
+scripts/asana.mjs defaults unset custom-field <field-gid>
+```
+
+Defaults live in `defaults.json` next to this SKILL.md — versioned dotfiles
+config, hand-editable (the `defaults` verb just validates and writes
+atomically). It stores **raw gids**; `name`/`value_name` are human-readable
+annotations only — the script never resolves names to gids. Enum custom
+fields need the option gid in `value_gid`; text/number fields use `value`
+(`--raw` forces literal when a value looks like a gid). Invalid gids are
+rejected on every read and write.
+
+Finding gids: copy from Asana URLs, or query the API — e.g.
+`api GET '/workspaces/<ws>/custom_fields?opt_fields=name,enum_options.name'`
+for field + option gids, `api GET '/workspaces/<ws>/projects?opt_fields=name'`
+for projects.
 
 ## Auth (resolved in order)
 
@@ -156,7 +191,7 @@ Useful `opt_fields`: `name,notes,completed,assignee.name,due_on,permalink_url,pa
 ## Notes
 
 - Task gid extraction handles `/task/<gid>` URLs, bare gids, and any long numeric id in the string.
-- Caches live in `~/.local/share/asana/` (`mine.json`, `tasks/<gid>.json`);
+- Caches live in `~/.local/state/pi/asana/` (`mine.json`, `tasks/<gid>.json`);
   the stop-hook reads only these + `.tickets/` — never the API.
 - API docs: https://developers.asana.com/reference/rest-api-reference
 - Mutating actions (comment/update/complete/DELETE, `sync --push`): confirm

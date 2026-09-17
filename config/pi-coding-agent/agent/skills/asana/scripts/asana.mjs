@@ -19,6 +19,12 @@
 //   asana.mjs update <url|gid> <json>               PUT {"data": <json>}
 //   asana.mjs complete <url|gid> [true|false]       toggle completion
 //   asana.mjs api <METHOD> <path> [json-body]       raw API passthrough
+//   asana.mjs create <name> [--notes n] [--parent g] [--project g]
+//             [--assignee a] [--json extra] [--no-defaults]
+//                                                   create a task, applying stored defaults
+//   asana.mjs defaults [list]                       show create defaults + validation problems
+//   asana.mjs defaults set <key> ...                set a default (assignee|workspace|project|tag|custom-field)
+//   asana.mjs defaults unset <key> [gid]            remove a default
 //
 // Asana-first ticket workflow (Asana = source of truth, tk = local layer):
 //   asana.mjs mine [--refresh]                      my open tasks (assignee or "Developer" field), cached 24h
@@ -35,6 +41,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "
 import { homedir } from "os";
 import { dirname, join } from "path";
 import readline from "readline/promises";
+import { fileURLToPath } from "url";
 
 const API_BASE = "https://app.asana.com/api/1.0";
 
@@ -73,6 +80,15 @@ function parseFlags(args) {
 		else if (args[i] === "--yes") flags.yes = true;
 		else if (args[i] === "--branch") flags.branch = args[++i];
 		else if (args[i] === "--gid") flags.gids.push(args[++i]);
+		else if (args[i] === "--name") flags.name = args[++i];
+		else if (args[i] === "--value-name") flags.valueName = args[++i];
+		else if (args[i] === "--raw") flags.raw = true;
+		else if (args[i] === "--notes") flags.notes = args[++i];
+		else if (args[i] === "--parent") flags.parent = args[++i];
+		else if (args[i] === "--project") flags.project = args[++i];
+		else if (args[i] === "--assignee") flags.assignee = args[++i];
+		else if (args[i] === "--json") flags.json = args[++i];
+		else if (args[i] === "--no-defaults") flags.noDefaults = true;
 		else rest.push(args[i]);
 	}
 
@@ -353,7 +369,7 @@ async function requestAll(path) {
 
 // ---------- Asana-first ticket workflow: worktree link + cache ----------
 
-const CACHE_DIR = join(homedir(), ".local", "share", "asana");
+const CACHE_DIR = join(homedir(), ".local", "state", "pi", "asana");
 
 const MINE_MAX_AGE_HOURS = 24;
 
@@ -487,6 +503,78 @@ function saveTaskCache(gid, task) {
 
 function cacheAgeHours(data) {
 	return (Date.now() - Date.parse(data.fetched_at || 0)) / 3_600_000;
+}
+
+// ---------- task-creation defaults ----------
+
+// defaults.json lives next to SKILL.md in the (dotfiles-versioned) skill
+// directory: it is config, unlike the caches under ~/.local/state/pi/asana/.
+// It stores raw gids with optional human-readable name annotations; the
+// script never resolves names to gids.
+const DEFAULTS_PATH = join(
+	dirname(dirname(fileURLToPath(import.meta.url))),
+	"defaults.json",
+);
+
+function loadDefaults() {
+	if (!existsSync(DEFAULTS_PATH)) return null;
+
+	try {
+		return JSON.parse(readFileSync(DEFAULTS_PATH, "utf8"));
+	} catch {
+		die(`malformed defaults file: ${DEFAULTS_PATH} (fix or remove it)`);
+	}
+}
+
+function saveDefaults(defaults) {
+	writeFileAtomic(DEFAULTS_PATH, JSON.stringify(defaults, null, 2) + "\n");
+}
+
+// defaults.json is user-editable and every gid in it ends up in an API body;
+// validate shapes on every read.
+function defaultsProblems(defaults) {
+	const problems = [];
+	const create = defaults?.create;
+
+	if (!create) return problems;
+
+	const checkGid = (label, gid) => {
+		if (!validGid(gid))
+			problems.push(`${label}: invalid gid ${JSON.stringify(gid)}`);
+	};
+
+	if (create.assignee != null && create.assignee !== "me")
+		checkGid("assignee", create.assignee);
+
+	if (create.workspace != null) checkGid("workspace", create.workspace.gid);
+
+	for (const p of create.projects || [])
+		checkGid(`project ${p.name || "?"}`, p.gid);
+
+	for (const t of create.tags || []) checkGid(`tag ${t.name || "?"}`, t.gid);
+
+	for (const f of create.custom_fields || []) {
+		const label = `custom field ${f.name || "?"}`;
+
+		checkGid(label, f.gid);
+
+		if (f.value_gid != null) checkGid(`${label} value`, f.value_gid);
+
+		if (f.value_gid == null && f.value == null)
+			problems.push(`${label}: needs value_gid or value`);
+	}
+
+	return problems;
+}
+
+function createDefaults() {
+	const defaults = loadDefaults();
+	const problems = defaultsProblems(defaults);
+
+	if (problems.length)
+		die(`invalid ${DEFAULTS_PATH}:\n  ${problems.join("\n  ")}`);
+
+	return defaults?.create || null;
 }
 
 // Control bytes (incl. ANSI escape openers): task names are untrusted and get
@@ -1041,6 +1129,203 @@ function cmdStatus() {
 	output(summary);
 }
 
+function upsertByGid(list, entry) {
+	return [...(list || []).filter((e) => e.gid !== entry.gid), entry];
+}
+
+function namedGidEntry(gid, name) {
+	const entry = { gid };
+
+	if (name) entry.name = name;
+
+	return entry;
+}
+
+function setDefault(create, key, args, flags) {
+	switch (key) {
+		case "assignee": {
+			const val = args[0];
+
+			if (val !== "me" && !validGid(val))
+				die("usage: asana defaults set assignee <me|user-gid>");
+			create.assignee = val;
+			break;
+		}
+
+		case "workspace": {
+			if (!validGid(args[0]))
+				die("usage: asana defaults set workspace <gid> [--name n]");
+			create.workspace = namedGidEntry(args[0], flags.name);
+			break;
+		}
+
+		case "project": {
+			if (!validGid(args[0]))
+				die("usage: asana defaults set project <gid> [--name n]");
+			create.projects = [namedGidEntry(args[0], flags.name)];
+			break;
+		}
+
+		case "tag": {
+			if (!validGid(args[0]))
+				die("usage: asana defaults set tag <gid> [--name n]");
+			create.tags = upsertByGid(
+				create.tags,
+				namedGidEntry(args[0], flags.name),
+			);
+			break;
+		}
+
+		case "custom-field": {
+			const [gid, value] = args;
+
+			if (!validGid(gid) || value == null)
+				die(
+					"usage: asana defaults set custom-field <field-gid> <value-gid|value> " +
+						"[--name n] [--value-name v] [--raw]",
+				);
+
+			const entry = namedGidEntry(gid, flags.name);
+
+			// Enum options are gids; --raw forces a literal value for number/text
+			// fields whose value happens to look like a gid.
+			if (!flags.raw && validGid(value)) entry.value_gid = value;
+			else entry.value = value;
+
+			if (flags.valueName) entry.value_name = flags.valueName;
+			create.custom_fields = upsertByGid(create.custom_fields, entry);
+			break;
+		}
+
+		default:
+			die(
+				"usage: asana defaults set <assignee|workspace|project|tag|custom-field> ...",
+			);
+	}
+}
+
+function unsetDefault(create, key, gid) {
+	switch (key) {
+		case "assignee":
+		case "workspace": {
+			delete create[key];
+			break;
+		}
+
+		case "project": {
+			delete create.projects;
+			break;
+		}
+
+		case "tag":
+		case "custom-field": {
+			if (!validGid(gid)) die(`usage: asana defaults unset ${key} <gid>`);
+
+			const listKey = key === "tag" ? "tags" : "custom_fields";
+
+			create[listKey] = (create[listKey] || []).filter((e) => e.gid !== gid);
+			break;
+		}
+
+		default:
+			die(
+				"usage: asana defaults unset <assignee|workspace|project|tag|custom-field> [gid]",
+			);
+	}
+}
+
+function cmdDefaults(flags, rest) {
+	const [action, key, ...args] = rest;
+
+	if (!action || action === "list") {
+		const defaults = loadDefaults();
+
+		output({
+			path: DEFAULTS_PATH,
+			defaults,
+			problems: defaultsProblems(defaults),
+		});
+
+		return;
+	}
+
+	const defaults = loadDefaults() || {};
+
+	defaults.create = defaults.create || {};
+
+	if (action === "set") setDefault(defaults.create, key, args, flags);
+	else if (action === "unset") unsetDefault(defaults.create, key, args[0]);
+	else die("usage: asana defaults [list | set <key> ... | unset <key> [gid]]");
+
+	const problems = defaultsProblems(defaults);
+
+	if (problems.length)
+		die(`refusing to save invalid defaults:\n  ${problems.join("\n  ")}`);
+
+	saveDefaults(defaults);
+	output({ path: DEFAULTS_PATH, defaults });
+}
+
+const CREATE_USAGE =
+	"usage: asana create <name> [--notes n] [--parent gid] [--project gid] " +
+	"[--assignee me|gid] [--json extra] [--no-defaults]";
+
+async function cmdCreate(flags, rest) {
+	const name = rest.join(" ").trim();
+
+	if (!name) die(CREATE_USAGE);
+
+	const defs = flags.noDefaults ? null : createDefaults();
+	const data = { name };
+
+	if (defs?.assignee) data.assignee = defs.assignee;
+
+	if (defs?.tags?.length) data.tags = defs.tags.map((t) => t.gid);
+
+	if (defs?.custom_fields?.length) {
+		data.custom_fields = {};
+
+		for (const f of defs.custom_fields)
+			data.custom_fields[f.gid] = f.value_gid ?? f.value;
+	}
+
+	// A task needs a home: parent (subtask), project, or bare workspace.
+	// Explicit flags win over defaults; a subtask ignores project defaults
+	// because it lives under its parent.
+	if (flags.parent) data.parent = extractGid(flags.parent);
+	else if (flags.project) data.projects = [extractGid(flags.project)];
+	else if (defs?.projects?.length)
+		data.projects = defs.projects.map((p) => p.gid);
+	else if (defs?.workspace) data.workspace = defs.workspace.gid;
+	else
+		die(
+			"create needs --parent, --project, or a project/workspace default " +
+				"(asana defaults set project <gid>)",
+		);
+
+	if (flags.notes) data.notes = flags.notes;
+
+	if (flags.assignee) {
+		if (flags.assignee !== "me" && !validGid(flags.assignee))
+			die("--assignee must be 'me' or a user gid");
+		data.assignee = flags.assignee;
+	}
+
+	if (flags.json) {
+		let extra;
+
+		try {
+			extra = JSON.parse(flags.json);
+		} catch {
+			die("--json must be valid JSON");
+		}
+
+		Object.assign(data, extra);
+	}
+
+	output(await request("POST", "/tasks", { data }));
+}
+
 // ---------- commands ----------
 
 const TASK_FIELDS =
@@ -1149,6 +1434,16 @@ async function main() {
 			break;
 		}
 
+		case "create": {
+			await cmdCreate(flags, rest);
+			break;
+		}
+
+		case "defaults": {
+			cmdDefaults(flags, rest);
+			break;
+		}
+
 		case "mine": {
 			await cmdMine(flags);
 			break;
@@ -1177,7 +1472,7 @@ async function main() {
 		default:
 			die(
 				`unknown command: ${cmd || "(none)"}\n` +
-					"commands: me | task | subtasks | stories | comment | update | complete | api\n" +
+					"commands: me | task | subtasks | stories | comment | update | complete | api | create | defaults\n" +
 					"workflow: mine | link | sync | unlink | status",
 			);
 	}
