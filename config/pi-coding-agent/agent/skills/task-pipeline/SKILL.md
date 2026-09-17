@@ -70,6 +70,10 @@ Prerequisite: `{slug}_TASK.md` must exist. If only GRILL exists, tell the user t
 3. Explore the codebase for file hints and verification commands.
 4. Seed `{slug}.ticket-context.md` if missing (see ticket-creator skill).
 5. Create one ticket per plan step using ticket-creator skill Mode 3.
+   In Asana-linked repos (`.tickets/.asana.json` exists), every created ticket
+   must be a sub-task of a linked mirror (`--parent <mirror-id>`; see the
+   ticket-creator skill's Asana-linked section) — ask the user which mirror
+   when more than one is linked.
 6. Self-validate every time:
    - `tk list` — check all tickets are open.
    - For each ticket: `tk show <id>` — verify file hints exist and acceptance criteria are numbered and independently verifiable.

@@ -7,6 +7,21 @@ description: Work on a single tk ticket end-to-end. Use when the user says 'work
 
 Work on a single ticket from start to finish. Follow each step in order. Do not skip verification.
 
+## Asana-linked repos (check first)
+
+If `.tickets/.asana.json` exists, Asana is the source of truth (see the
+`asana` skill):
+
+- Run `asana.mjs sync` before starting (needs an Asana browser tab; if the
+  script says none is open, report it and continue with the local state).
+- **Mirror tickets** (tagged `asana`, `external-ref: asana-<gid>`) are not
+  worked directly. If asked to work a mirror, work its open sub-task tickets
+  (`tk list` shows `<- [parent]`); if it has none, decompose first
+  (ticket-creator skill) or ask the user.
+- Closing a **sub-task** is local-only — never comment progress to Asana.
+- When the last sub-task closes, ask the user whether to close the mirror and
+  run `asana.mjs sync --push` (confirm-gated) — don't do it unprompted.
+
 ## Workflow
 
 ### 1. Read the ticket

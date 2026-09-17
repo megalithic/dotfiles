@@ -7,6 +7,27 @@ description: Create and refine tickets for the tk ticket system. Use when the us
 
 Create well-structured tickets that the ticket-worker skill can consume without ambiguity.
 
+## Asana-linked repos (check first)
+
+If `.tickets/.asana.json` exists (find the `.tickets/` dir first), Asana is the
+source of truth and local tickets are the sub-task layer (see the `asana`
+skill). In that case:
+
+- **Every new local ticket must be a sub-task of a linked mirror ticket**:
+  `tk create "..." --parent <mirror-id>`. Find mirror ids via
+  `asana.mjs status` (the asana skill's script).
+- If more than one Asana ticket is linked, ask the user which mirror is the
+  parent (`ask_user_question`) — never guess.
+- A work item that isn't decomposition of a linked ticket is an **official
+  ticket** and belongs in Asana, not tk. Tell the user; create it in Asana
+  only if they ask (asana skill, confirm-gated).
+- Never create or hand-edit mirror tickets (tagged `asana`) — `sync` owns them.
+- Sub-tasks follow the same format contract below; deps between sub-tasks of
+  the same mirror are fine.
+
+Repos without `.tickets/.asana.json`: plain tk behavior, everything below
+applies unchanged.
+
 ## Ticket format contract
 
 Every ticket must have:
