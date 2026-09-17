@@ -684,6 +684,30 @@ function Panel:setMedia(image, opts)
   return self
 end
 
+---Update multiple panel fields with one canvas render.
+---@param state { media?: hs.image, mediaOpts?: table, status?: string, statusColor?: string|table, preview?: string|false, previewOpts?: table, content?: table }
+---@return Panel self
+function Panel:setState(state)
+  if state.media ~= nil then self.media = state.media end
+  if state.mediaOpts ~= nil then
+    self.mediaOpts = state.mediaOpts
+    self.mediaClickHandler = state.mediaOpts.onClick
+  end
+  if state.status ~= nil then self.status = state.status end
+  if state.statusColor ~= nil then self.statusColor = state.statusColor end
+  if state.preview ~= nil then
+    if state.preview == false then
+      self.preview = nil
+    else
+      self.preview = state.preview
+    end
+  end
+  if state.previewOpts ~= nil then self.previewOpts = state.previewOpts end
+  if state.content ~= nil then self.content = state.content end
+  self:_updateCanvas()
+  return self
+end
+
 function Panel:setStatus(text, opts)
   opts = opts or {}
   self.status = text
@@ -952,6 +976,7 @@ function Panel:_createCanvas(frame, scale)
       return false
     end,
     onClick = function()
+      if self.onClick then return self.onClick() end
       self:dismiss()
       return true
     end,
@@ -994,7 +1019,20 @@ end
 
 function Panel:_updateCanvas()
   if self.visible and self.canvas then
-    -- Stop any running animations
+    -- Finish the entrance before resizing so two animation timers never mutate
+    -- the same canvas frame concurrently.
+    if self.timers.animation then
+      animator.stop(self.timers.animation)
+      self.timers.animation = nil
+      local current = self.canvas:frame()
+      self.canvas:topLeft({
+        x = current.x,
+        y = self.basePosition and self.basePosition.y or current.y,
+      })
+      self.canvas:alpha(1)
+    end
+
+    -- Stop any running content animations.
     if self.timers.hover then
       animator.stop(self.timers.hover)
       self.timers.hover = nil

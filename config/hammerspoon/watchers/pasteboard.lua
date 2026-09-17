@@ -25,6 +25,8 @@
 ---@field changeCount number Pasteboard change count
 ---@field timestamp number Unix timestamp of change
 ---@field utis string[] Available UTI types
+---@field imageData? string Raw image bytes when image content is available
+---@field imageUTI? string UTI for imageData
 
 ---@class PasteboardWatcherModule
 ---@field hooks table<string, PasteboardHook> Registered hooks by ID
@@ -45,42 +47,65 @@ M.hooks = {}
 M.watcher = nil
 M.lastChangeCount = 0
 M.running = false
+M.ignoredChangeCounts = {}
 
 --------------------------------------------------------------------------------
 -- CONTENT DETECTION
 --------------------------------------------------------------------------------
 
+local IMAGE_UTIS = {
+  "public.png",
+  "public.tiff",
+  "public.jpeg",
+  "public.heic",
+  "com.compuserve.gif",
+  "org.webmproject.webp",
+}
+
+local function firstAvailableUTI(utis, candidates)
+  local available = {}
+  for _, uti in ipairs(utis) do
+    available[uti] = true
+  end
+  for _, uti in ipairs(candidates) do
+    if available[uti] then return uti end
+  end
+  return nil
+end
+
 ---Detect the primary content type on the pasteboard
+---@param pbContents string|nil Text supplied by the watcher callback
 ---@return PasteboardContentType type
 ---@return any content The content value
 ---@return string[] utis Available UTI types
-local function detectContent()
+---@return string|nil imageData Raw image data
+---@return string|nil imageUTI UTI for imageData
+local function detectContent(pbContents)
   local utis = hs.pasteboard.contentTypes() or {}
-  
-  -- Check for image first (highest priority for clipper use case)
-  local image = hs.pasteboard.readImage()
-  if image then
-    return "image", image, utis
+  local imageUTI = firstAvailableUTI(utis, IMAGE_UTIS)
+
+  -- Read the image only after its UTI is known. Raw bytes let consumers move
+  -- conversion and file writes into a subprocess without re-encoding hs.image.
+  if imageUTI then
+    local image = hs.pasteboard.readImage()
+    if image then
+      return "image", image, utis, hs.pasteboard.readDataForUTI(imageUTI), imageUTI
+    end
   end
-  
-  -- Check for file URLs
-  local fileURLs = hs.pasteboard.readDataForUTI("public.file-url")
-  if fileURLs then
-    return "file", fileURLs, utis
+
+  if firstAvailableUTI(utis, { "public.file-url" }) then
+    return "file", hs.pasteboard.readDataForUTI("public.file-url"), utis
   end
-  
-  -- Check for URLs
-  local url = hs.pasteboard.readString()
-  if url and url:match("^https?://") then
-    return "url", url, utis
+
+  -- Reuse the string already supplied by hs.pasteboard.watcher. Calling
+  -- readString() again would ask AppKit for the same representation twice.
+  if pbContents and pbContents ~= "" then
+    if pbContents:match("^https?://") then
+      return "url", pbContents, utis
+    end
+    return "text", pbContents, utis
   end
-  
-  -- Default to text
-  local text = hs.pasteboard.readString()
-  if text then
-    return "text", text, utis
-  end
-  
+
   return "any", nil, utis
 end
 
@@ -123,6 +148,24 @@ function M.clearHooks()
   M.hooks = {}
 end
 
+---Ignore one exact pasteboard generation.
+---Used by clients that write to the pasteboard themselves and do not want to
+---consume their own write on the next poll.
+---@param changeCount number
+function M.ignoreChangeCount(changeCount)
+  if type(changeCount) == "number" then
+    M.ignoredChangeCounts[changeCount] = true
+  end
+end
+
+local function consumeIgnoredChange(changeCount)
+  local ignored = M.ignoredChangeCounts[changeCount] == true
+  for count in pairs(M.ignoredChangeCounts) do
+    if count <= changeCount then M.ignoredChangeCounts[count] = nil end
+  end
+  return ignored
+end
+
 ---Get all hooks, sorted by priority (highest first)
 ---@return PasteboardHook[]
 local function getSortedHooks()
@@ -150,9 +193,14 @@ local function onPasteboardChange(pbContents)
     return
   end
   M.lastChangeCount = changeCount
-  
+
+  if consumeIgnoredChange(changeCount) then
+    U.log.d(fmt("ignored self-authored pasteboard change %d", changeCount))
+    return
+  end
+
   -- Detect content type
-  local contentType, content, utis = detectContent()
+  local contentType, content, utis, imageData, imageUTI = detectContent(pbContents)
   
   -- Skip if no content
   if content == nil and contentType ~= "any" then
@@ -165,6 +213,8 @@ local function onPasteboardChange(pbContents)
     changeCount = changeCount,
     timestamp = os.time(),
     utis = utis,
+    imageData = imageData,
+    imageUTI = imageUTI,
   }
   
   -- Call matching hooks
@@ -194,10 +244,11 @@ function M:start()
   end
   
   M.lastChangeCount = hs.pasteboard.changeCount()
-  
+  M.ignoredChangeCounts = {}
+
+  -- watcher.new() starts polling immediately.
   M.watcher = hs.pasteboard.watcher.new(onPasteboardChange)
-  M.watcher:start()
-  
+
   M.running = true
   U.log.d("watcher started")
   
@@ -217,6 +268,7 @@ function M:stop()
   end
   
   M.running = false
+  M.ignoredChangeCounts = {}
   U.log.d("watcher stopped")
   
   return self

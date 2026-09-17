@@ -22,14 +22,18 @@
 
 local fmt = string.format
 local shade = require("lib.interop.shade")
+local pasteboard = require("watchers.pasteboard")
 
 --------------------------------------------------------------------------------
 -- TYPE DEFINITIONS
 --------------------------------------------------------------------------------
 
 ---@class ClipperCapture
+---@field id number Monotonic capture generation
+---@field changeCount number|nil Source pasteboard generation
 ---@field image hs.image Original captured image
----@field imageData string|nil Raw PNG data for pasting (nil until async load completes)
+---@field imageData string|nil Raw source image data for pasting and async serialization
+---@field imageUTI string|nil UTI for imageData
 ---@field imagePath string Local file path
 ---@field imageName string Filename
 ---@field imageUrl string|nil DO Spaces URL (set after upload)
@@ -48,6 +52,9 @@ local shade = require("lib.interop.shade")
 ---@field hyper table|nil Hyper key binding
 ---@field config ClipperConfig Configuration
 ---@field activeTasks table<string, hs.task> Running tasks for cleanup
+---@field timers table<string, hs.timer> Deferred callbacks for cleanup
+---@field nextCaptureId number Last allocated capture generation
+---@field nextTaskId number Last allocated per-task identifier
 
 ---@class ClipperBinding
 ---@field key string Key to bind
@@ -75,11 +82,14 @@ M.panel = nil
 M.modal = nil
 M.hyper = nil
 M.activeTasks = {}  -- Track running hs.task for cleanup
+M.timers = {}
 M.isModalActive = false
 M.ocrPasteWatcher = nil
 M.clickOutsideWatcher = nil
 M.appWatcher = nil  -- Track app focus changes to exit modal
 M.fullScreenHotkey = nil
+M.nextCaptureId = 0
+M.nextTaskId = 0
 
 -- Configuration
 M.config = {
@@ -122,6 +132,47 @@ function M.hasCapture()
   return elapsed < M.config.captureTimeout
 end
 
+---@param captureId number
+---@return boolean
+local function isCurrentCapture(captureId)
+  return M.capture ~= nil and M.capture.id == captureId
+end
+
+---@param name string
+local function cancelTask(name)
+  local task = M.activeTasks[name]
+  if not task then return end
+
+  -- Relinquish ownership before termination because termination can invoke the
+  -- callback. A callback may only mutate state while it still owns this slot.
+  M.activeTasks[name] = nil
+  if task:isRunning() then task:terminate() end
+end
+
+local function cancelCaptureTasks()
+  for _, name in ipairs({ "save", "upload", "resize", "ocr", "screenshot" }) do
+    cancelTask(name)
+  end
+end
+
+local function stopTimer(name)
+  local timer = M.timers[name]
+  if not timer then return end
+  M.timers[name] = nil
+  timer:stop()
+end
+
+local function schedule(name, delay, callback)
+  stopTimer(name)
+  local timer
+  timer = hs.timer.doAfter(delay, function()
+    if M.timers[name] ~= timer then return end
+    M.timers[name] = nil
+    callback()
+  end)
+  M.timers[name] = timer
+end
+
 --------------------------------------------------------------------------------
 -- HUD PANEL
 --------------------------------------------------------------------------------
@@ -158,12 +209,11 @@ function M.startClickOutsideWatcher()
       local panelFrame = M.panel.canvas:frame()
       
       if not pointInFrame(clickPoint, panelFrame) then
-        -- Click was outside panel - dismiss
+        -- Leaving modal mode must not dismiss the passive processing HUD.
         M.exitModal()
-        return true  -- Consume the click
       end
-      
-      return false  -- Let click through to panel
+
+      return false
     end
   )
   M.clickOutsideWatcher:start()
@@ -197,56 +247,37 @@ function M.startAppWatcher()
   M.appWatcher:start()
 end
 
----Show the clipper HUD panel and enter modal mode
+---Show or update the passive clipper HUD without entering modal mode.
 function M.showPanel()
   if not M.hasCapture() then return end
 
-  -- Dismiss existing panel if any
-  if M.panel then
-    M.panel:dismiss()
-    M.panel = nil
-  end
-
-  -- Create panel (always modal - stays until dismissed)
-  M.panel = HUD.panel({
-    id = "clipper",
-    position = "bottom-center",
-    ephemeral = false,
-  })
-
-  -- Set media (image)
-  if M.capture.image then
-    M.panel:setMedia(M.capture.image, {
-      minWidth = 320,
-      maxWidth = 320,
-      maxHeight = 180,
+  if M.panel and not M.panel.visible then M.panel = nil end
+  if not M.panel then
+    local panel
+    panel = HUD.panel({
+      id = "clipper",
+      position = "bottom-center",
+      ephemeral = false,
       onClick = function()
-        if M.capture and M.capture.imagePath then
-          hs.execute(fmt("open '%s'", M.capture.imagePath))
+        M.dismissPanel()
+        return true
+      end,
+      onDismiss = function()
+        if M.panel == panel and not panel.visible then
+          M.panel = nil
+          M.exitModal()
         end
       end,
     })
+    M.panel = panel
   end
 
-  -- Set status and cheatsheet
   M.updatePanelStatus()
-  M.updatePanelCheatsheet()
-
   M.panel:show()
-
-  -- Enter modal mode
-  M.modal:enter()
-  M.isModalActive = true
-  
-  -- Start watching for clicks outside panel and app focus changes
-  M.startClickOutsideWatcher()
-  M.startAppWatcher()
 end
 
----Generate and update cheatsheet based on current state
-function M.updatePanelCheatsheet()
-  if not M.panel then return end
-
+---Generate cheatsheet content based on current state.
+local function buildPanelCheatsheet()
   local cheatsheet = {}
   local hasUrl = M.capture and M.capture.uploadStatus == "complete"
 
@@ -270,10 +301,10 @@ function M.updatePanelCheatsheet()
     })
   end
 
-  M.panel:setContent(cheatsheet)
+  return cheatsheet
 end
 
----Update panel status without recreating
+---Update panel status with one canvas render.
 ---Shows combined upload + OCR status
 local formatSize
 -- Status display handlers
@@ -341,25 +372,39 @@ function M.updatePanelStatus()
     end
   end
 
-  M.panel:setStatus(statusText, { color = primaryColor })
-
-  -- Set OCR preview if available
+  local preview = false
   if M.capture.ocrStatus == "complete" and M.capture.ocrText then
-    M.panel:setPreview(M.capture.ocrText, { maxLines = 5 })
-  else
-    M.panel:setPreview(nil) -- Clear preview
+    preview = M.capture.ocrText
   end
 
-  -- Regenerate cheatsheet (URL bindings may now be available)
-  M.updatePanelCheatsheet()
+  M.panel:setState({
+    media = M.capture.image,
+    mediaOpts = {
+      minWidth = 320,
+      maxWidth = 320,
+      maxHeight = 180,
+      onClick = function()
+        if M.capture and M.capture.imagePath then hs.open(M.capture.imagePath) end
+      end,
+    },
+    status = statusText,
+    statusColor = primaryColor,
+    preview = preview,
+    previewOpts = { font = "JetBrainsMono Nerd Font Mono", maxLines = 5 },
+    content = buildPanelCheatsheet(),
+  })
 end
 
----Hide the clipper panel
+---Hide the clipper panel explicitly.
 function M.hidePanel()
-  if M.panel then
-    M.panel:dismiss()
-    M.panel = nil
-  end
+  local panel = M.panel
+  M.panel = nil
+  if panel then panel:dismiss() end
+end
+
+function M.dismissPanel()
+  M.exitModal()
+  M.hidePanel()
 end
 
 --------------------------------------------------------------------------------
@@ -412,17 +457,27 @@ end
 
 ---Resize/compress an oversized capture before upload.
 ---@param imagePath string
-function M.resizeForUpload(imagePath)
-  if not M.capture or M.capture.imagePath ~= imagePath then return end
+---@param captureId number
+function M.resizeForUpload(imagePath, captureId)
+  if not isCurrentCapture(captureId) or M.capture.imagePath ~= imagePath then return end
 
+  cancelTask("resize")
+  M.nextTaskId = M.nextTaskId + 1
   local basePath = imagePath:gsub("%.[^/%.]+$", "")
-  local outputPath = basePath .. "_resized.jpg"
+  local outputPath = fmt("%s_resized_%d_%d.jpg", basePath, captureId, M.nextTaskId)
   local imageName = outputPath:gsub(".*/", "")
 
   local task
   task = hs.task.new("/usr/bin/env", function(exitCode, _stdOut, stdErr)
-    if not M.capture or M.capture.imagePath ~= imagePath then return end
-    if M.activeTasks.resize == task then M.activeTasks.resize = nil end
+    if M.activeTasks.resize ~= task then
+      os.remove(outputPath)
+      return
+    end
+    M.activeTasks.resize = nil
+    if not isCurrentCapture(captureId) or M.capture.imagePath ~= imagePath then
+      os.remove(outputPath)
+      return
+    end
 
     if exitCode ~= 0 then
       M.capture.gatekeeperReason = "resize failed"
@@ -457,7 +512,7 @@ function M.resizeForUpload(imagePath)
     M.capture.gatekeeperReason = nil
     U.log.i(fmt("resized capture to %s", formatSize(resizedSizeBytes)))
 
-    M.verifyAndUpload(outputPath)
+    M.verifyAndUpload(outputPath, captureId)
   end, {
     "magick",
     imagePath,
@@ -476,18 +531,26 @@ function M.resizeForUpload(imagePath)
     outputPath,
   })
 
+  if not task then
+    M.capture.gatekeeperReason = "resize task failed to start"
+    M.updatePanelStatus()
+    return
+  end
+
   M.activeTasks.resize = task
-  task:start()
+  if not task:start() then
+    M.activeTasks.resize = nil
+    M.capture.gatekeeperReason = "resize task failed to start"
+    M.updatePanelStatus()
+  end
 end
 
----Run gatekeeper verification and upload if passed
----Called from async context after file is saved
+---Run gatekeeper verification and upload if passed.
 ---@param imagePath string
-function M.verifyAndUpload(imagePath)
-  -- Verify this is still the same capture
-  if not M.capture or M.capture.imagePath ~= imagePath then return end
+---@param captureId number
+function M.verifyAndUpload(imagePath, captureId)
+  if not isCurrentCapture(captureId) or M.capture.imagePath ~= imagePath then return end
 
-  -- Gatekeeper check: verify file size before upload
   local passes, reason = M.checkGatekeeper(imagePath)
   if not passes then
     M.capture.uploadStatus = "gatekeeper"
@@ -495,23 +558,22 @@ function M.verifyAndUpload(imagePath)
     M.updatePanelStatus()
     U.log.w(fmt("gatekeeper blocked upload: %s", reason))
 
-    if reason == "image too large" then
-      M.resizeForUpload(imagePath)
-    end
+    if reason == "image too large" then M.resizeForUpload(imagePath, captureId) end
     return
   end
 
-  -- Gatekeeper passed - start upload
   M.capture.uploadStatus = "uploading"
   M.updatePanelStatus()
+  cancelTask("upload")
 
-  local task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
+  local task
+  task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
+    if M.activeTasks.upload ~= task then return end
     M.activeTasks.upload = nil
-    -- Verify this is still the same capture
-    if not M.capture or M.capture.imagePath ~= imagePath then return end
+    if not isCurrentCapture(captureId) or M.capture.imagePath ~= imagePath then return end
 
-    if exitCode == 0 then
-      local url = stdOut:match("([^\r\n]+)%s*$")
+    local url = stdOut and stdOut:match("([^\r\n]+)%s*$") or nil
+    if exitCode == 0 and url then
       M.capture.imageUrl = url
       M.capture.uploadStatus = "complete"
       U.log.i(fmt("uploaded %s", url))
@@ -523,15 +585,25 @@ function M.verifyAndUpload(imagePath)
     M.updatePanelStatus()
   end, { "capper", imagePath })
 
+  if not task then
+    M.capture.uploadStatus = "failed"
+    M.updatePanelStatus()
+    return
+  end
+
   M.activeTasks.upload = task
-  task:start()
+  if not task:start() then
+    M.activeTasks.upload = nil
+    M.capture.uploadStatus = "failed"
+    M.updatePanelStatus()
+  end
 end
 
 --------------------------------------------------------------------------------
 -- OCR (ASYNC)
 --------------------------------------------------------------------------------
 
----Extract text via OCR asynchronously
+---Extract text via OCR asynchronously.
 ---@param callback fun(text: string|nil)
 function M.extractOcr(callback)
   if not M.capture then
@@ -539,12 +611,12 @@ function M.extractOcr(callback)
     return
   end
 
-  -- Return cached result
   if M.capture.ocrText then
     callback(M.capture.ocrText)
     return
   end
 
+  local captureId = M.capture.id
   local imagePath = M.capture.imagePath
   if not imagePath or not hs.fs.attributes(imagePath) then
     HUD.alert("Still processing...", { iconType = "info" })
@@ -552,71 +624,81 @@ function M.extractOcr(callback)
     return
   end
 
-  -- Update status
+  cancelTask("ocr")
   M.capture.ocrStatus = "processing"
   M.updatePanelStatus()
 
-  -- Try Vision OCR first
-  local task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
+  local task
+  task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, _stdErr)
+    if M.activeTasks.ocr ~= task then return end
     M.activeTasks.ocr = nil
-    -- Verify this is still the same capture
-    if not M.capture or M.capture.imagePath ~= imagePath then
-      callback(nil)
-      return
-    end
+    if not isCurrentCapture(captureId) then return end
 
-    if exitCode == 0 and stdOut and #stdOut > 0 then
-      M.capture.ocrText = stdOut:gsub("^%s*(.-)%s*$", "%1") -- Trim
+    local text = stdOut and stdOut:gsub("^%s*(.-)%s*$", "%1") or ""
+    if exitCode == 0 and #text > 0 then
+      M.capture.ocrText = text
       M.capture.ocrStatus = "complete"
       M.updatePanelStatus()
-      callback(M.capture.ocrText)
+      callback(text)
     else
-      -- Fallback to tesseract
-      M.extractOcrTesseract(imagePath, callback)
+      M.extractOcrTesseract(imagePath, captureId, callback)
     end
   end, { "vision-ocr", imagePath })
 
+  if not task then
+    M.extractOcrTesseract(imagePath, captureId, callback)
+    return
+  end
+
   M.activeTasks.ocr = task
-  task:start()
+  if not task:start() then
+    M.activeTasks.ocr = nil
+    M.extractOcrTesseract(imagePath, captureId, callback)
+  end
 end
 
----Fallback OCR via tesseract
+---Fallback OCR via tesseract. Using stdout avoids shared temporary paths.
 ---@param imagePath string
+---@param captureId number
 ---@param callback fun(text: string|nil)
-function M.extractOcrTesseract(imagePath, callback)
-  local outputPath = "/tmp/clipper_ocr"
+function M.extractOcrTesseract(imagePath, captureId, callback)
+  if not isCurrentCapture(captureId) then return end
 
-  local task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
+  local task
+  task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
+    if M.activeTasks.ocr ~= task then return end
     M.activeTasks.ocr = nil
-    -- Verify this is still the same capture
-    if not M.capture or M.capture.imagePath ~= imagePath then
-      callback(nil)
+    if not isCurrentCapture(captureId) then return end
+
+    local text = stdOut and stdOut:gsub("^%s*(.-)%s*$", "%1") or ""
+    if exitCode == 0 and #text > 0 then
+      M.capture.ocrText = text
+      M.capture.ocrStatus = "complete"
+      M.updatePanelStatus()
+      callback(text)
       return
-    end
-
-    if exitCode == 0 then
-      local file = io.open(outputPath .. ".txt", "r")
-      if file then
-        local content = file:read("*all")
-        file:close()
-        os.remove(outputPath .. ".txt")
-
-        M.capture.ocrText = content:gsub("^%s*(.-)%s*$", "%1")
-        M.capture.ocrStatus = "complete"
-        M.updatePanelStatus()
-        callback(M.capture.ocrText)
-        return
-      end
     end
 
     M.capture.ocrStatus = "failed"
     M.updatePanelStatus()
     U.log.e(fmt("tesseract failed: %s", stdErr))
     callback(nil)
-  end, { "tesseract", imagePath, outputPath, "--psm", "6" })
+  end, { "tesseract", imagePath, "stdout", "--psm", "6" })
+
+  if not task then
+    M.capture.ocrStatus = "failed"
+    M.updatePanelStatus()
+    callback(nil)
+    return
+  end
 
   M.activeTasks.ocr = task
-  task:start()
+  if not task:start() then
+    M.activeTasks.ocr = nil
+    M.capture.ocrStatus = "failed"
+    M.updatePanelStatus()
+    callback(nil)
+  end
 end
 
 --------------------------------------------------------------------------------
@@ -631,18 +713,20 @@ function M.pasteImage()
     return false
   end
 
-  -- If imageData not ready yet (async still processing), use the image object directly
-  if M.capture.imageData then
-    hs.pasteboard.clearContents()
-    hs.pasteboard.writeDataForUTI("public.png", M.capture.imageData)
+  local written = false
+  if M.capture.imageData and M.capture.imageUTI then
+    written = hs.pasteboard.writeDataForUTI(M.capture.imageUTI, M.capture.imageData)
   elseif M.capture.image then
-    hs.pasteboard.clearContents()
-    hs.pasteboard.writeObjects({ M.capture.image })
-  else
+    written = hs.pasteboard.writeObjects({ M.capture.image })
+  end
+
+  if not written then
     U.log.w("no image data available")
     return false
   end
 
+  -- Suppress only this exact generation. Later external writes must still run.
+  pasteboard.ignoreChangeCount(hs.pasteboard.changeCount())
   hs.eventtap.keyStroke({ "cmd" }, "v")
   U.log.n("pasted image")
   return true
@@ -694,37 +778,32 @@ end
 ---Stays in modal until user presses Cmd+V or Escape
 ---@return boolean success
 function M.ocrToClipboard()
+  local captureId = M.capture and M.capture.id
   M.extractOcr(function(text)
+    if not captureId or not isCurrentCapture(captureId) then return end
+
     if text and #text > 0 then
       hs.pasteboard.setContents(text)
-      -- Update panel to show result (guard against cleared capture)
-      if M.capture then
-        M.capture.ocrStatus = "complete"
-        M.capture.ocrText = text
-        M.updatePanelStatus()
-      end
       U.log.n(fmt("OCR copied %d chars", #text))
 
-      -- Stop any existing watcher before creating new one
-      M.stopOcrPasteWatcher()
+      if M.isModalActive then
+        M.stopOcrPasteWatcher()
 
-      -- Watch for Cmd+V to exit modal and allow paste
-      M.ocrPasteWatcher = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(event)
-        local mods = event:getFlags()
-        local key = hs.keycodes.map[event:getKeyCode()]
-        if mods.cmd and not mods.shift and not mods.alt and not mods.ctrl and key == "v" then
-          -- Stop watcher and exit modal
-          M.stopOcrPasteWatcher()
-          M.exitModal()
-          -- Return false to let the paste through
+        -- Watch for Cmd+V to leave modal mode while allowing the paste through.
+        M.ocrPasteWatcher = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(event)
+          local mods = event:getFlags()
+          local key = hs.keycodes.map[event:getKeyCode()]
+          if mods.cmd and not mods.shift and not mods.alt and not mods.ctrl and key == "v" then
+            M.stopOcrPasteWatcher()
+            M.exitModal()
+          end
           return false
-        end
-        return false
-      end)
-      M.ocrPasteWatcher:start()
+        end)
+        M.ocrPasteWatcher:start()
+      end
     else
       HUD.alert("No text found", { iconType = "warning" })
-      if M.capture then
+      if isCurrentCapture(captureId) then
         M.capture.ocrStatus = "idle"
         M.updatePanelStatus()
       end
@@ -746,7 +825,19 @@ function M.editInPreview()
     return false
   end
 
-  hs.execute(fmt("open -a Preview '%s'", M.capture.imagePath))
+  cancelTask("open")
+  local task
+  task = hs.task.new("/usr/bin/open", function()
+    if M.activeTasks.open == task then M.activeTasks.open = nil end
+  end, { "-a", "Preview", M.capture.imagePath })
+  if not task then return false end
+
+  M.activeTasks.open = task
+  if not task:start() then
+    M.activeTasks.open = nil
+    return false
+  end
+
   U.log.n("opened in Preview")
   return true
 end
@@ -755,66 +846,137 @@ end
 -- FULL SCREEN CAPTURE (WITH AUTO-RESIZE)
 --------------------------------------------------------------------------------
 
----Capture full screen and resize if needed to stay under gatekeeper limit
----Uses ImageMagick for resize if image exceeds limit
-function M.captureFullScreen()
-  local screen = hs.screen.mainScreen()
-  local image = screen:snapshot()
+local PASTE_PNG_JXA = [[
+ObjC.import("AppKit")
+ObjC.import("Foundation")
+function run(argv) {
+  const path = $(argv[0])
+  if (!$.NSFileManager.defaultManager.fileExistsAtPath(path)) {
+    throw new Error("unable to read PNG")
+  }
+  const data = $.NSData.dataWithContentsOfFile(path)
+  const pasteboard = $.NSPasteboard.generalPasteboard
+  pasteboard.clearContents
+  if (!pasteboard.setDataForType(data, $("public.png"))) {
+    throw new Error("unable to write PNG to pasteboard")
+  }
+  return "ok"
+}
+]]
 
-  if not image then
+local function removeFiles(paths)
+  for _, path in ipairs(paths) do
+    os.remove(path)
+  end
+end
+
+local function publishFullScreenCapture(imagePath, sizeBytes, cleanupPaths)
+  local task
+  task = hs.task.new("/usr/bin/osascript", function(exitCode, _stdOut, stdErr)
+    removeFiles(cleanupPaths)
+    if M.activeTasks.screenshot ~= task then return end
+    M.activeTasks.screenshot = nil
+
+    if exitCode ~= 0 then
+      HUD.alert("Screenshot failed", { iconType = "error" })
+      U.log.e(fmt("pasteboard write failed: %s", stdErr))
+      return
+    end
+
+    -- This write is intentionally not suppressed: the pasteboard watcher owns
+    -- creating the normal capture state, preview HUD, save, and upload tasks.
+    U.log.i(fmt("full screen capture %s", formatSize(sizeBytes)))
+  end, { "-l", "JavaScript", "-e", PASTE_PNG_JXA, "--", imagePath })
+
+  if not task then
+    M.activeTasks.screenshot = nil
+    removeFiles(cleanupPaths)
     HUD.alert("Screenshot failed", { iconType = "error" })
-    U.log.e("failed to capture screen")
     return
   end
 
-  -- Generate temp path to check size
-  local tmpPath = "/tmp/clipper_fullscreen.png"
-  image:saveToFile(tmpPath)
+  M.activeTasks.screenshot = task
+  if not task:start() then
+    M.activeTasks.screenshot = nil
+    removeFiles(cleanupPaths)
+    HUD.alert("Screenshot failed", { iconType = "error" })
+  end
+end
 
-  -- Check size
-  local sizeBytes = getFileSizeBytes(tmpPath)
-  local needsResize = sizeBytes and sizeBytes > M.config.maxImageSizeBytes
+---Capture the main screen in a subprocess so the hotkey callback never blocks.
+function M.captureFullScreen()
+  cancelTask("screenshot")
 
-  if needsResize then
+  local taskId = hs.host.uuid()
+  local capturePath = fmt("/tmp/clipper_fullscreen_%s.png", taskId)
+  local resizedPath = fmt("/tmp/clipper_fullscreen_%s_resized.png", taskId)
+  local captureTask
+  captureTask = hs.task.new("/usr/sbin/screencapture", function(exitCode, _stdOut, stdErr)
+    if M.activeTasks.screenshot ~= captureTask then
+      removeFiles({ capturePath, resizedPath })
+      return
+    end
+
+    local sizeBytes = getFileSizeBytes(capturePath)
+    if exitCode ~= 0 or not sizeBytes then
+      M.activeTasks.screenshot = nil
+      removeFiles({ capturePath, resizedPath })
+      HUD.alert("Screenshot failed", { iconType = "error" })
+      U.log.e(fmt("screencapture failed: %s", stdErr))
+      return
+    end
+
+    if sizeBytes <= M.config.maxImageSizeBytes then
+      publishFullScreenCapture(capturePath, sizeBytes, { capturePath })
+      return
+    end
+
     U.log.i(fmt("full screen capture %s exceeds limit, resizing...", formatSize(sizeBytes)))
-
-    -- Resize using ImageMagick (25% like file-size-guard recommends)
-    local resizedPath = "/tmp/clipper_fullscreen_resized.png"
-    local task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
-      M.activeTasks.resize = nil  -- Clear task reference
-      if exitCode == 0 then
-        -- Load resized image
-        local resizedImage = hs.image.imageFromPath(resizedPath)
-        if resizedImage then
-          -- Put on clipboard and trigger normal flow
-          hs.pasteboard.clearContents()
-          hs.pasteboard.writeObjects({ resizedImage })
-          -- handleCapture will be called by pasteboard watcher
-          U.log.i(fmt("resized full screen capture from %s", formatSize(sizeBytes)))
-        else
-          HUD.alert("Resize failed", { iconType = "error" })
-          U.log.e("failed to load resized image")
-        end
-
-        -- Cleanup temp files
-        os.remove(tmpPath)
-        os.remove(resizedPath)
-      else
-        HUD.alert("Resize failed", { iconType = "error" })
-        U.log.e(fmt("magick resize failed: %s", stdErr))
-        os.remove(tmpPath)
+    local resizeTask
+    resizeTask = hs.task.new("/usr/bin/env", function(resizeExitCode, _stdOut, resizeErr)
+      if M.activeTasks.screenshot ~= resizeTask then
+        removeFiles({ capturePath, resizedPath })
+        return
       end
-    end, { "magick", tmpPath, "-resize", "25%", resizedPath })
 
-    M.activeTasks.resize = task
-    task:start()
-  else
-    -- Image is small enough, put on clipboard directly
-    hs.pasteboard.clearContents()
-    hs.pasteboard.writeObjects({ image })
-    -- handleCapture will be called by pasteboard watcher
-    U.log.i(fmt("full screen capture %s (no resize needed)", formatSize(sizeBytes or 0)))
-    os.remove(tmpPath)
+      local resizedSize = getFileSizeBytes(resizedPath)
+      if resizeExitCode ~= 0 or not resizedSize then
+        M.activeTasks.screenshot = nil
+        removeFiles({ capturePath, resizedPath })
+        HUD.alert("Resize failed", { iconType = "error" })
+        U.log.e(fmt("magick resize failed: %s", resizeErr))
+        return
+      end
+
+      publishFullScreenCapture(resizedPath, resizedSize, { capturePath, resizedPath })
+    end, { "magick", capturePath, "-resize", "25%", resizedPath })
+
+    if not resizeTask then
+      M.activeTasks.screenshot = nil
+      removeFiles({ capturePath, resizedPath })
+      HUD.alert("Resize failed", { iconType = "error" })
+      return
+    end
+
+    M.activeTasks.screenshot = resizeTask
+    if not resizeTask:start() then
+      M.activeTasks.screenshot = nil
+      removeFiles({ capturePath, resizedPath })
+      HUD.alert("Resize failed", { iconType = "error" })
+    end
+  end, { "-x", "-m", "-t", "png", capturePath })
+
+  if not captureTask then
+    removeFiles({ capturePath, resizedPath })
+    HUD.alert("Screenshot failed", { iconType = "error" })
+    return
+  end
+
+  M.activeTasks.screenshot = captureTask
+  if not captureTask:start() then
+    M.activeTasks.screenshot = nil
+    removeFiles({ capturePath, resizedPath })
+    HUD.alert("Screenshot failed", { iconType = "error" })
   end
 end
 
@@ -856,9 +1018,8 @@ function M.captureQuick()
   if shade.isRunning() then
     trigger()
   else
-    shade.launch(function()
-      hs.timer.doAfter(0.5, trigger)
-    end)
+    shade.launch()
+    schedule("shadeCapture", 1.5, trigger)
   end
 
   return true
@@ -891,16 +1052,15 @@ function M.captureFull()
 
   local function trigger()
     hs.distributednotifications.post("io.shade.note.capture.image", nil, nil)
-    hs.timer.doAfter(0.1, function() shade.show() end)
+    schedule("shadeShow", 0.1, function() shade.show() end)
     U.log.i("full capture sent to Shade")
   end
 
   if shade.isRunning() then
     trigger()
   else
-    shade.launch(function()
-      hs.timer.doAfter(0.5, trigger)
-    end)
+    shade.launch()
+    schedule("shadeCapture", 1.5, trigger)
   end
 
   return true
@@ -918,6 +1078,12 @@ function M.enterModal()
   end
 
   M.showPanel()
+  if M.isModalActive then return end
+
+  M.modal:enter()
+  M.isModalActive = true
+  M.startClickOutsideWatcher()
+  M.startAppWatcher()
   U.log.d("entered modal")
 end
 
@@ -931,13 +1097,13 @@ end
 
 ---Exit modal mode
 function M.exitModal()
+  local wasActive = M.isModalActive
   M.isModalActive = false
   M.stopOcrPasteWatcher()
   M.stopClickOutsideWatcher()
   M.stopAppWatcher()
   if M.modal then M.modal:exit() end
-  M.hidePanel()
-  U.log.d("exited modal")
+  if wasActive then U.log.d("exited modal") end
 end
 
 ---Execute action and exit modal
@@ -951,21 +1117,31 @@ end
 -- CAPTURE HANDLER
 --------------------------------------------------------------------------------
 
----Handle new image on pasteboard
+---Handle a new image from the pasteboard watcher.
 ---@param image hs.image
-function M.handleCapture(image)
+---@param metadata PasteboardMetadata
+function M.handleCapture(image, metadata)
   if not image then return end
 
-  -- Generate filename
-  local date = os.date("%Y-%m-%dT%H-%M-%S%z")
-  local imageName = fmt("cap_%s.png", date)
-  local imagePath = fmt("%s/%s", M.config.capsPath, imageName)
+  M.exitModal()
+  cancelCaptureTasks()
+  M.nextCaptureId = M.nextCaptureId + 1
 
-  -- Set initial capture state immediately (with image for HUD preview)
-  -- File operations happen async below
+  local captureId = M.nextCaptureId
+  local sourceId = metadata and metadata.changeCount or captureId
+  local date = os.date("%Y-%m-%dT%H-%M-%S")
+  local zone = os.date("%z")
+  local imageName = fmt("cap_%s-%d%s.png", date, sourceId, zone)
+  local imagePath = fmt("%s/%s", M.config.capsPath, imageName)
+  local imageData = metadata and metadata.imageData or nil
+  local imageUTI = metadata and metadata.imageUTI or nil
+
   M.capture = {
+    id = captureId,
+    changeCount = metadata and metadata.changeCount or nil,
     image = image,
-    imageData = nil, -- Set async
+    imageData = imageData,
+    imageUTI = imageUTI,
     imagePath = imagePath,
     imageName = imageName,
     imageUrl = nil,
@@ -975,73 +1151,71 @@ function M.handleCapture(image)
     ocrStatus = "idle",
     gatekeeperReason = nil,
     originalImagePath = nil,
-    fileSizeBytes = nil, -- Set async
+    fileSizeBytes = nil,
   }
 
-  -- Show panel IMMEDIATELY with image preview and "Gatekeeper verifying..." status
+  -- This is the complete synchronous capture boundary: state assignment and
+  -- one passive HUD render. Rasterization and disk I/O happen in magick.
   M.showPanel()
   U.log.i(fmt("captured %s (processing async)", imageName))
 
-  -- All file I/O happens async - doesn't block anything
-  hs.timer.doAfter(0, function()
-    -- Verify this is still the same capture (another screenshot may have arrived)
-    if not M.capture or M.capture.imagePath ~= imagePath then return end
+  if not imageData then
+    M.capture.uploadStatus = "failed"
+    M.capture.gatekeeperReason = "image bytes unavailable"
+    M.updatePanelStatus()
+    U.log.e("pasteboard image had no supported raw representation")
+    return
+  end
 
-    -- Save raw PNG data for later pasting
-    local imageData = image:encodeAsURLString()
-    if imageData then
-      imageData = imageData:match("base64,(.+)$")
-      if imageData then
-        imageData = hs.base64.decode(imageData)
-      end
+  local task
+  task = hs.task.new("/usr/bin/env", function(exitCode, _stdOut, stdErr)
+    if M.activeTasks.save ~= task then
+      os.remove(imagePath)
+      return
     end
-
-    -- Fallback: read from UTI if encodeAsURLString failed
-    if not imageData then
-      local tmpPath = "/tmp/clipper_capture.png"
-      image:saveToFile(tmpPath)
-      local f = io.open(tmpPath, "rb")
-      if f then
-        imageData = f:read("*all")
-        f:close()
-      end
-      os.remove(tmpPath)
-    end
-
-    -- Save to permanent location
-    local saved = image:saveToFile(imagePath)
-    if not saved then
-      U.log.e(fmt("failed to save %s", imagePath))
-      -- Verify still same capture before updating state
-      if M.capture and M.capture.imagePath == imagePath then
-        M.capture.uploadStatus = "failed"
-        M.capture.gatekeeperReason = "failed to save file"
-        M.updatePanelStatus()
-      end
+    M.activeTasks.save = nil
+    if not isCurrentCapture(captureId) then
+      os.remove(imagePath)
       return
     end
 
-    -- Verify still same capture before updating state
-    if not M.capture or M.capture.imagePath ~= imagePath then return end
+    if exitCode ~= 0 then
+      M.capture.uploadStatus = "failed"
+      M.capture.gatekeeperReason = "failed to save file"
+      M.updatePanelStatus()
+      U.log.e(fmt("failed to save %s: %s", imagePath, stdErr))
+      return
+    end
 
-    M.capture.imageData = imageData
     M.capture.fileSizeBytes = getFileSizeBytes(imagePath)
+    M.verifyAndUpload(imagePath, captureId)
+  end, { "magick", "-", imagePath })
 
-    -- Start gatekeeper verification and upload
-    M.verifyAndUpload(imagePath)
-  end)
+  if not task then
+    M.capture.uploadStatus = "failed"
+    M.capture.gatekeeperReason = "save task failed to start"
+    M.updatePanelStatus()
+    return
+  end
+
+  M.activeTasks.save = task
+  task:setInput(imageData)
+  if not task:start() then
+    M.activeTasks.save = nil
+    M.capture.uploadStatus = "failed"
+    M.capture.gatekeeperReason = "save task failed to start"
+    M.updatePanelStatus()
+  end
 end
 
 --------------------------------------------------------------------------------
 -- PASTEBOARD HOOK
 --------------------------------------------------------------------------------
 
-local pasteboard = require("watchers.pasteboard")
-
 ---Register pasteboard hook for images
 function M.registerHook()
-  pasteboard.addHook("image", function(image)
-    M.handleCapture(image)
+  pasteboard.addHook("image", function(image, metadata)
+    M.handleCapture(image, metadata)
   end, { id = "clipper", priority = 10 })
 end
 
@@ -1059,7 +1233,7 @@ M.actions = {
   editInPreview = function() M.modalAction(M.editInPreview) end,
   captureQuick = function() M.modalAction(M.captureQuick) end,
   captureFull = function() M.modalAction(M.captureFull) end,
-  exit = function() M.exitModal() end,
+  exit = function() M.dismissPanel() end,
 }
 
 ---Initialize clipper module
@@ -1102,19 +1276,26 @@ function M:stop()
   -- Reset state
   M.isModalActive = false
 
-  -- Stop watchers
+  -- Stop watchers and deferred callbacks.
   M.stopOcrPasteWatcher()
   M.stopClickOutsideWatcher()
   M.stopAppWatcher()
+  local timers = M.timers
+  M.timers = {}
+  for _, timer in pairs(timers) do
+    timer:stop()
+  end
 
-  -- Terminate any running tasks
-  for name, task in pairs(M.activeTasks) do
+  -- Relinquish every task slot before terminating. Termination callbacks may
+  -- run immediately and must see that they no longer own module state.
+  local activeTasks = M.activeTasks
+  M.activeTasks = {}
+  for name, task in pairs(activeTasks) do
     if task and task:isRunning() then
       task:terminate()
       U.log.d(fmt("terminated task: %s", name))
     end
   end
-  M.activeTasks = {}
 
   -- Exit and clean up modal
   if M.modal then
