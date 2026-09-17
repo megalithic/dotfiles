@@ -9,8 +9,8 @@
 --      "connected via tidewave mcp"). Cross-checked by the pi manifest's
 --      tidewaveConnected flag when present.
 --   4. Resolve the pane's pi bridge socket from its manifest (match .pane).
---   5. Find the unambiguous app tab on localhost:<port>, preferring the exact
---      URL saved by the previous handshake and never selecting /tidewave.
+--   5. Find the unambiguous app tab on localhost:<port>, preferring the CDP
+--      target saved by the previous handshake and never selecting /tidewave.
 --   6. Write the optional Tidewave IDE Chat -> tmux pi binding.
 --   7. Bring the app tab forward via CDP, focus Helium, wait until the toolbar
 --      is ready in the foreground tab, then click Inspect.
@@ -166,22 +166,30 @@ local function bindingPath(facts)
   return BINDING_DIR .. "/" .. bindingSlug(facts) .. ".json"
 end
 
-local function previousTabUrl(facts)
-  local url = nil
+local function previousTarget(facts)
+  local target = nil
   pcall(function()
     local f = io.open(bindingPath(facts), "r")
     if not f then return end
     local raw = f:read("*a")
     f:close()
     local decoded = hs.json.decode(raw)
-    if decoded and tonumber(decoded.port) == tonumber(facts.port) and type(decoded.tabUrl) == "string" then
-      url = decoded.tabUrl
+    if decoded and tonumber(decoded.port) == tonumber(facts.port) then
+      target = {
+        prefix = type(decoded.targetPrefix) == "string" and decoded.targetPrefix
+          or type(decoded.targetId) == "string" and decoded.targetId
+          or nil,
+        -- Retained until a legacy binding successfully resolves to a target.
+        url = type(decoded.migrationUrl) == "string" and decoded.migrationUrl
+          or type(decoded.tabUrl) == "string" and decoded.tabUrl
+          or nil,
+      }
     end
   end)
-  return url
+  return target
 end
 
-local function writeBinding(facts, manifest, tabUrl)
+local function writeBinding(facts, manifest, targetPrefix, migrationUrl)
   pcall(function() hs.fs.mkdir(PI_STATE_DIR .. "/tidewave") end)
   pcall(function() hs.fs.mkdir(BINDING_DIR) end)
   local binding = {
@@ -192,7 +200,9 @@ local function writeBinding(facts, manifest, tabUrl)
     window = manifest.window,
     pane = manifest.pane,
     port = facts.port,
-    tabUrl = tabUrl or string.format("http://localhost:%d", facts.port or 0),
+    appUrl = string.format("http://localhost:%d", facts.port or 0),
+    targetPrefix = targetPrefix,
+    migrationUrl = migrationUrl,
     boundAt = os.date("!%Y-%m-%dT%H:%M:%SZ"),
   }
   local path = bindingPath(facts)
@@ -215,9 +225,10 @@ local function appUrl(url, port)
 end
 
 -- Pick an app page without relying on CDP target enumeration order. A saved
--- exact URL resolves multiple same-port app pages; otherwise ambiguity fails
--- closed so Inspect is never clicked in a random tab.
-local function selectAppTarget(port, preferredUrl)
+-- target prefix survives in-tab navigation. An old exact URL is retained until
+-- it successfully migrates; otherwise ambiguity fails closed so Inspect is
+-- never clicked in a random tab.
+local function selectAppTarget(port, preferred)
   if not hs.fs.attributes(CDP) then return nil, "CDP helper is missing." end
   local list, listError = sh(string.format("CDP_PORT=%d node %s list", CDP_PORT, shellQuote(CDP)), nil, true)
   if not list then
@@ -238,14 +249,28 @@ local function selectAppTarget(port, preferredUrl)
     return a.id < b.id
   end)
 
-  if preferredUrl then
+  if preferred and preferred.prefix then
+    local saved = {}
+    for _, target in ipairs(targets) do
+      if target.id:sub(1, #preferred.prefix) == preferred.prefix
+        or preferred.prefix:sub(1, #target.id) == target.id
+      then
+        table.insert(saved, target)
+      end
+    end
+    if #saved == 1 then return saved[1] end
+    if #saved > 1 then
+      return nil, string.format("Saved Helium target prefix %s is no longer unique.", preferred.prefix)
+    end
+  end
+  if preferred and preferred.url then
     local exact = {}
     for _, target in ipairs(targets) do
-      if target.url == preferredUrl then table.insert(exact, target) end
+      if target.url == preferred.url then table.insert(exact, target) end
     end
     if #exact == 1 then return exact[1] end
     if #exact > 1 then
-      return nil, string.format("Multiple Helium tabs have the saved app URL %s.", preferredUrl)
+      return nil, string.format("Multiple Helium tabs have the saved app URL %s.", preferred.url)
     end
   end
   if #targets == 1 then return targets[1] end
@@ -271,7 +296,7 @@ end
 -- Page.bringToFront selects the Chromium tab before Helium itself is activated.
 -- The in-page poll then refuses to click until that tab is visible, fully loaded,
 -- and has an Inspect control in the Tidewave toolbar shadow root.
-local function focusHeliumAndInspect(target)
+local function focusHeliumAndInspect(target, port)
   local app = hs.application.get("net.imput.helium")
   if not app then return false, "Helium is not running." end
   if not heliumOwnsCdp(app) then return false, "Helium does not own CDP port 9223." end
@@ -290,14 +315,18 @@ local function focusHeliumAndInspect(target)
   local activationOk = pcall(function() activated = app:activate(true) ~= false end)
   if not activationOk or not activated then return false, "Could not focus Helium." end
 
-  local targetJson = hs.json.encode({ url = target.url })
-  local js = "(() => { const expectedUrl = (" .. targetJson .. ").url; return (" .. [[
+  local expectedJson = hs.json.encode({ port = tostring(port) })
+  local js = "(() => { const expectedPort = (" .. expectedJson .. ").port; return (" .. [[
     new Promise(resolve => {
       const deadline = Date.now() + 4000;
       let clicked = false;
       const inspect = () => {
-        if (location.href !== expectedUrl) {
-          resolve(`url-changed:${location.href}`);
+        const localApp = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+          && location.port === expectedPort
+          && location.pathname !== '/tidewave'
+          && !location.pathname.startsWith('/tidewave/');
+        if (!localApp) {
+          resolve(`location-mismatch:${location.href}`);
           return;
         }
         const host = document.getElementById('tidewave-toolbar');
@@ -432,9 +461,11 @@ function M.handshake()
       notify(string.format("Tidewave MCP not connected on :%d.", facts.port), true)
       return
     end
-    local preferredUrl = facts.appUrl or previousTabUrl(facts)
-    local target, targetError = selectAppTarget(facts.port, preferredUrl)
-    local binding = writeBinding(facts, manifest, target and target.url or preferredUrl)
+    local preferred = previousTarget(facts)
+    local target, targetError = selectAppTarget(facts.port, preferred)
+    local targetPrefix = target and target.id or preferred and preferred.prefix or nil
+    local migrationUrl = not target and preferred and preferred.url or nil
+    local binding = writeBinding(facts, manifest, targetPrefix, migrationUrl)
     if not binding then
       notify("Optional Tidewave IDE Chat binding failed; continuing with toolbar routing.", true)
     end
@@ -443,12 +474,12 @@ function M.handshake()
       notify("Toolbar routing stopped: " .. targetError .. bindingNote, true)
       return
     end
-    local inspected, inspectError = focusHeliumAndInspect(target)
+    local inspected, inspectError = focusHeliumAndInspect(target, facts.port)
     if not inspected then
       notify("Toolbar routing stopped: " .. inspectError .. bindingNote, true)
       return
     end
-    notify(string.format("Tidewave Inspect ready in %s", target.url))
+    notify(string.format("Tidewave Inspect ready on http://localhost:%d", facts.port))
     armPromptRelay(binding)
   end)
   if not ok then
