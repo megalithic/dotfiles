@@ -1,0 +1,12 @@
+# Project-local dev tooling for the dotfiles repo itself.
+# Separate from the global config at config/mise/config.toml (machine tooling).
+
+[tools]
+# Pinned: tools/oxlint/vendor/oxlint-plugins is vendored at the same version;
+# bump both together (see tools/oxlint/anti-slop/UPSTREAM_REV).
+"npm:oxlint" = "1.78.0"
+"npm:bats" = "latest"
+
+[tasks."lint:ts"]
+description = "Oxlint + vendored anti-slop over dotfiles-managed TS/JS (pi extensions, skill scripts)"
+run = "oxlint -c tools/oxlint/oxlint.config.ts config/pi-coding-agent"

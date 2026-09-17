@@ -28,6 +28,16 @@ local linters = new Mapping<String, Step> {
             effect = "read"
         }
     }
+    ["shfmt"] = Builtins.shfmt
+    // Oxlint + vendored anti-slop over dotfiles-managed TS/JS (see
+    // tools/oxlint/oxlint.config.ts). Staged files only; full run: `mise run lint:ts`.
+    ["oxlint"] = new Step {
+        glob = List("config/pi-coding-agent/**/*.ts", "config/pi-coding-agent/**/*.mjs")
+        check = new CommandSpec {
+            command = "mise exec -- oxlint -c tools/oxlint/oxlint.config.ts {{files}}"
+            effect = "read"
+        }
+    }
     // Nix linters from the old devenv setup — enable once provided by mise:
     // ["deadnix"] = Builtins.deadnix
 }
