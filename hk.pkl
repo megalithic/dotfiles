@@ -6,6 +6,13 @@
 amends "package://github.com/jdx/hk/releases/download/v2.0.1/hk@2.0.1#/Config.pkl"
 import "package://github.com/jdx/hk/releases/download/v2.0.1/hk@2.0.1#/Builtins.pkl"
 
+local disabledPiEntries = List(
+    "config/pi-coding-agent/agent/extensions/_*",
+    "config/pi-coding-agent/agent/skills/_*",
+    "config/pi-coding-agent/agent/prompts/_*",
+    "config/pi-coding-agent/agent/agents/_*"
+)
+
 local linters = new Mapping<String, Step> {
     ["check-added-large-files"] = Builtins.check_added_large_files
     ["check-case-conflict"] = Builtins.check_case_conflict
@@ -23,16 +30,20 @@ local linters = new Mapping<String, Step> {
         scan = "staged"
     }
     ["shellcheck"] = (Builtins.shellcheck) {
+        exclude = disabledPiEntries
         check = new CommandSpec {
             command = "shellcheck --severity=error {{files}}"
             effect = "read"
         }
     }
-    ["shfmt"] = Builtins.shfmt
+    ["shfmt"] = (Builtins.shfmt) {
+        exclude = disabledPiEntries
+    }
     // Oxlint + vendored anti-slop over dotfiles-managed TS/JS (see
     // tools/oxlint/oxlint.config.ts). Staged files only; full run: `mise run lint:ts`.
     ["oxlint"] = new Step {
         glob = List("config/pi-coding-agent/**/*.ts", "config/pi-coding-agent/**/*.mjs")
+        exclude = disabledPiEntries
         check = new CommandSpec {
             command = "mise exec -- oxlint -c tools/oxlint/oxlint.config.ts {{files}}"
             effect = "read"

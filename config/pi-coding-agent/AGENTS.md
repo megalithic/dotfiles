@@ -26,15 +26,15 @@ pi-coding-agent/
 ├── bin/                 # Wrappers linked into ~/.local/bin: pi, p, work-tickets
 ├── scripts/             # Helper installers and setup scripts
 ├── patches/             # pi-bash-live-view widget patch (applied by bin/pi)
-└── disabled/            # Turned-off files kept for possible re-enable
-                         # (former `_`-prefixed). Move back into agent/* to re-enable.
+└── disabled/            # Turned-off wrappers, scripts, and archival files that
+                         # are not deployed through agent/* symlink-each mappings
 ```
 
 ## Conventions
 
-- Disabling an extension/skill: move it into `disabled/` (the nix tree uses a
-  `_` name prefix instead; here `symlink-each` would link `_` entries, so they
-  must live outside `agent/`).
+- Disable an extension, skill, prompt, or agent by prefixing its filename or
+  directory with `_`. Their `symlink-each` mappings exclude `_*` path
+  components and remove previously managed runtime links on the next apply.
 - `agent/settings.json` is a merge source, never a symlink target — pi rewrites
   `~/.pi/agent/settings.json` at runtime.
 - Plannotator is version+sha256 pinned in `scripts/install-pi-tools` and lands

@@ -10,13 +10,13 @@ The former Home Manager module (`nix/home/common/programs/pi-coding-agent/`) and
 
 `mise run up` (alias `dot`) runs named update phases sequentially through `mise/scripts/update-machine` and stops on the first failure. The updater sends each phase's combined stdout and stderr directly to the terminal so child tools retain native TTY behavior, prints each exit code, and reports the failed phase.
 
-`agent/` holds the managed subset of `~/.pi/agent` applied through `[dotfiles]` symlink and `symlink-each` entries; `bin/` holds the `pi`, `p`, and `work-tickets` wrappers linked into `~/.local/bin`. `mise/scripts/update-pi` implements `update:pi`: it installs the sha256-pinned Plannotator helper into `~/.pi/agent/bin`, extracts the nicknisi/sessions plugin in an isolated home, merges settings with jq, cleans redundant extension dependencies, upgrades the mise-managed Pi package, and runs `pi update` plus `pi update --extensions`. `mise run update:pi -- --dry-run` previews helper-bin changes, merged settings, cleanup targets, and Pi update commands without modifying files. The former `pinvim` and `pview` wrappers remain under `disabled/` and are no longer mapped into `~/.local/bin`; active profile resolution runs through `scripts/resolve-profile.mjs` from `bin/pi`. Disabled entries live in `disabled/` instead of using the `_` name-prefix convention because `symlink-each` links every entry.
+`agent/` holds the managed subset of `~/.pi/agent` applied through `[dotfiles]` symlink and `symlink-each` entries; `bin/` holds the `pi`, `p`, and `work-tickets` wrappers linked into `~/.local/bin`. The extension, skill, prompt, and agent mappings exclude every `_*` path component, so disabled entries remain beside active entries with an underscore prefix and disappear from the runtime directories on the next apply. The hk shell and TypeScript linters use matching exclusions, while repository-wide safety checks still inspect those files. `mise/scripts/update-pi` implements `update:pi`: it installs the sha256-pinned Plannotator helper into `~/.pi/agent/bin`, extracts the nicknisi/sessions plugin in an isolated home, merges settings with jq, cleans redundant extension dependencies, upgrades the mise-managed Pi package, and runs `pi update` plus `pi update --extensions`. `mise run update:pi -- --dry-run` previews helper-bin changes, merged settings, cleanup targets, and Pi update commands without modifying files. The former `pinvim` and `pview` wrappers remain under `disabled/` because `~/.local/bin` uses a separate unfiltered mapping; active profile resolution runs through `scripts/resolve-profile.mjs` from `bin/pi`.
 
 `lat` resolves from mise's `npm:lat.md` tool. Mise links `~/.pi/agent/bin/lat` to its stable shim because Pi's lat extension tools launch through that agent-local path; no lat override points back to Devenv.
 
 The managed `agent/extensions/lat.ts` passes arguments directly to `execFileSync`, captures child stderr, and reports command failures through tool results. Its lifecycle hooks stay dormant unless the working tree contains `lat.md/`. LAT diagnostics must never write directly into Pi's alternate-screen TUI because they can overwrite the input editor.
 
-`config/mise/config.toml` prefers canonical mise registry aliases for user-facing tools and keeps backend-qualified names only when the registry has no alias or a specific package source is required. It installs `plannotator-tui` through the Cargo backend. The managed `plannotator-tui` skill uses the tool's standalone TTY mode in an `interactive_shell` overlay because Pi runs in tmux, not Herdr. File annotations persist in Plannotator's data directory and are read back with `plannotator-tui --export`; `plannotator-tui last --host pi` uses the upstream Pi transcript reader, but reply annotations are transient and must be copied before exit.
+`config/mise/config.toml` prefers canonical mise registry aliases for user-facing tools and keeps backend-qualified names only when the registry has no alias or a specific package source is required. It installs `plannotator-tui` through the Cargo backend for manual use. The `_plannotator-tui` skill is disabled until the TUI can open in the current Pi tmux window and exchange feedback with Pi in both directions; the browser-based `@plannotator/pi-extension` remains the active review integration.
 
 ## Package source and wrapper
 
@@ -50,7 +50,7 @@ The `/answer` extension can be invoked by its slash command, Ctrl+. shortcut, or
 
 Pi fullscreen transcript search (`tui.altScreen.search`) keeps Ctrl+Shift+F; the local `files.ts` Finder reveal action moved to Ctrl+Shift+E so no extension shadows that core binding. `files.ts` still owns Ctrl+Shift+O and Ctrl+Shift+R, and `preview.ts` owns Ctrl+Shift+P.
 
-Turned-off extensions (`execute-command`, `pinvim`, and `nvim-review`) live under `disabled/` until re-enabled; the pinvim end-to-end test skill lives there too. Neovim-side pinvim source remains in place, but ordinary Pi no longer loads its socket polling, editor-service RPC, footer updates, or review command.
+Turned-off extensions (`_execute-command.ts`, `_pinvim.ts`, and `_nvim-review.ts`) and the `_pinvim-kitty-test` skill remain beside active entries with underscore prefixes. The mise exclusions keep them out of Pi's runtime directories. Neovim-side pinvim source remains in place, but ordinary Pi no longer loads its socket polling, editor-service RPC, footer updates, or review command.
 
 `multi-sub.ts` owns `/subs`, `/pool`, and multi-sub pool or chain failover. When a rate limit rotates the pool while Pi is still processing the failed turn, retrying the same prompt must use `deliverAs: "steer"` or the core session rejects it as already processing.
 
@@ -148,7 +148,7 @@ It rewrites Anthropic system prompt text from `pi itself`, `pi .md files`, and `
 
 On `message_end`, `mcp__pi__*` `toolCall` names are stripped back to their flat names before Pi resolves execution, while foreign MCP tools pass through untouched. The former `toolAliases` config (`pi-claude-code-use.json`) and alias auto-activation are removed: renaming keeps every extension tool visible, so user-maintained alias maps are unnecessary. `PI_CLAUDE_CODE_USE_DISABLE_TOOL_FILTER=1` now disables renaming (flat names pass through), and `PI_CLAUDE_CODE_USE_DEBUG_LOG` still captures before/after payloads.
 
-The turned-off `disabled/extensions/_pinvim.ts` retains the former shade-next `fill_prompt` handling for future reference, but ordinary Pi no longer loads that path.
+The turned-off `agent/extensions/_pinvim.ts` retains the former shade-next `fill_prompt` handling for future reference, but ordinary Pi no longer loads that path.
 
 ## Web-search config and agent dir
 
@@ -184,7 +184,7 @@ Pi subagent orchestration comes from `git:github.com/amosblomqvist/pi-interactiv
 
 ## Nvim review routing
 
-`nvim-review.ts` now lives at `disabled/extensions/_nvim-review.ts` (turned off), so `/piview` and its paired editor-service RPC route are inactive. Neovim-side review source remains for a future re-enable.
+Mise excludes `agent/extensions/_nvim-review.ts` from Pi's runtime, so `/piview` and its paired editor-service RPC route are inactive. Neovim-side review source remains for a future re-enable.
 
 Scopes are `uncommitted`, `unpushed`, `branch`, `pr`, `ticket`, and `worktrees`. Diff modes are `status`, `worktree`, `staged`, `unstaged`, and `range`; they are forwarded as `{ scope, cwd, diff_mode }`.
 
