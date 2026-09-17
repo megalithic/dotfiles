@@ -16,7 +16,7 @@ The former Home Manager module (`nix/home/common/programs/pi-coding-agent/`) and
 
 The managed `agent/extensions/lat.ts` passes arguments directly to `execFileSync`, captures child stderr, and reports command failures through tool results. Its lifecycle hooks stay dormant unless the working tree contains `lat.md/`. LAT diagnostics must never write directly into Pi's alternate-screen TUI because they can overwrite the input editor.
 
-`config/mise/config.toml` prefers canonical mise registry aliases for user-facing tools and keeps backend-qualified names only when the registry has no alias or a specific package source is required.
+`config/mise/config.toml` prefers canonical mise registry aliases for user-facing tools and keeps backend-qualified names only when the registry has no alias or a specific package source is required. It installs `plannotator-tui` through the Cargo backend. The managed `plannotator-tui` skill uses the tool's standalone TTY mode in an `interactive_shell` overlay because Pi runs in tmux, not Herdr. File annotations persist in Plannotator's data directory and are read back with `plannotator-tui --export`; `plannotator-tui last --host pi` uses the upstream Pi transcript reader, but reply annotations are transient and must be copied before exit.
 
 ## Package source and wrapper
 
