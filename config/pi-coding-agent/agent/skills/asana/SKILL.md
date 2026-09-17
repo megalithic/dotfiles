@@ -17,9 +17,11 @@ Asana task(s)  ──linked via .tickets/.asana.json──▶  mirror tk tickets
                                                           └── local sub-task tk tickets (your decomposition)
 ```
 
-- **Mirror tickets** are plain tk tickets created by `link`/`sync`, keyed by
-  `external-ref: asana-<gid>` and tagged `asana`. Asana wins their content;
-  don't hand-edit them.
+- **Mirror tickets** are plain tk tickets created by `link` (and recreated by
+  `sync` if the file goes missing), keyed by `external-ref: asana-<gid>` and
+  tagged `asana`. Asana wins their content; don't hand-edit them — if you do,
+  sync preserves your edit and warns instead of updating that body until you
+  reconcile.
 - **Sub-task tickets** are normal tk tickets created with
   `tk create "..." --parent <mirror-id>`. They're local-only decomposition;
   each may become its own PR or just commits on the main ticket's PR.
@@ -37,8 +39,14 @@ scripts/asana.mjs link --gid <g> [--gid <g>]  # non-interactive link (after user
 scripts/asana.mjs sync                        # pull linked tasks -> mirror tickets
 scripts/asana.mjs sync --push                 # ...and offer to complete Asana tasks (confirm-gated)
 scripts/asana.mjs unlink <url|gid>            # remove link, keep mirror ticket
-scripts/asana.mjs status                      # links, mirror status, cache age
+scripts/asana.mjs status                      # links, mirror status, orphans, cache age
 ```
+
+Degradation: `mine`/`link` fall back to the stale cache with a warning when
+Asana is unreachable (hard-fail only with no cache). `sync` needs live access;
+per-task 404/403s mark that link `orphaned` and sync continues. Remote
+reopen after a local close reopens the local mirror (Asana wins). `sync
+--push` re-fetches right before completing and aborts on conflict.
 
 ### Hard rules for agents
 

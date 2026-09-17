@@ -30,7 +30,8 @@
 // <path> is relative to https://app.asana.com/api/1.0, e.g. /tasks/123/subtasks
 
 import { execFileSync, execSync } from "child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { createHash } from "crypto";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "fs";
 import { homedir } from "os";
 import { dirname, join } from "path";
 import readline from "readline/promises";
@@ -277,13 +278,13 @@ async function resolveTransport() {
 	}
 
 	if (found) {
-		die(
+		throw new Error(
 			`no ASANA_ACCESS_TOKEN and no app.asana.com tab open in the debuggable browser (port ${found.port}).\n` +
 				`Open Asana in that browser (logged in), or export ASANA_ACCESS_TOKEN.`,
 		);
 	}
 
-	die(
+	throw new Error(
 		"no Asana auth available.\n" +
 			"Either: export ASANA_ACCESS_TOKEN (or write it to ~/.config/asana/token),\n" +
 			"or run a Chromium browser with --remote-debugging-port and an app.asana.com tab open\n" +
@@ -291,16 +292,22 @@ async function resolveTransport() {
 	);
 }
 
-async function request(method, path, body) {
+// Low-level request: throws on transport/auth failure, returns { status, json }
+// for any HTTP response so callers can handle per-entry errors (e.g. 404 on a
+// deleted linked task) without terminating the whole run.
+async function apiRequest(method, path, body) {
 	const t = await resolveTransport();
 
-	const res =
-		t.kind === "token"
-			? await tokenRequest(t.token, method, path, body)
-			: await browserRequest(t.tab, method, path, body);
+	return t.kind === "token"
+		? tokenRequest(t.token, method, path, body)
+		: browserRequest(t.tab, method, path, body);
+}
+
+async function request(method, path, body) {
+	const res = await apiRequest(method, path, body);
 
 	if (res.status >= 400) {
-		die(
+		throw new Error(
 			`Asana API ${method} ${path} -> HTTP ${res.status}\n` +
 				JSON.stringify(res.json, null, 2),
 		);
@@ -314,8 +321,10 @@ async function requestAll(path) {
 	const sep = path.includes("?") ? "&" : "?";
 	let url = `${path}${sep}limit=100`;
 	const items = [];
+	let pages = 0;
+	let truncated = false;
 
-	for (let i = 0; i < 20; i++) {
+	for (;;) {
 		const res = await request("GET", url);
 
 		if (Array.isArray(res.data)) items.push(...res.data);
@@ -323,8 +332,21 @@ async function requestAll(path) {
 		const next = res.next_page?.uri;
 
 		if (!next) break;
+
+		pages++;
+
+		if (pages >= 20) {
+			truncated = true;
+			process.stderr.write(
+				`warning: ${path} truncated after 20 pages (${items.length} items); results are incomplete\n`,
+			);
+			break;
+		}
+
 		url = next.replace(API_BASE, "");
 	}
+
+	if (truncated) return { data: items, truncated };
 
 	return { data: items };
 }
@@ -405,8 +427,29 @@ function loadLinkFile() {
 	}
 }
 
+// Atomic write (temp + rename) so a crash or concurrent reader never sees a
+// partial JSON file. Last-writer-wins is acceptable; full locking is not.
+function writeFileAtomic(path, contents) {
+	const tmp = `${path}.tmp-${process.pid}`;
+
+	writeFileSync(tmp, contents);
+	renameSync(tmp, path);
+}
+
 function saveLinkFile(path, data) {
-	writeFileSync(path, JSON.stringify(data, null, 2) + "\n");
+	writeFileAtomic(path, JSON.stringify(data, null, 2) + "\n");
+}
+
+// gids come from Asana or from the user-editable link file; they must be pure
+// decimal ids before they reach any filesystem path or API path.
+function validGid(gid) {
+	return /^\d{6,}$/.test(String(gid));
+}
+
+// tk ticket ids (e.g. dot-a1b2). Anything else — slashes, dots, absolute
+// paths — is rejected before being joined into a path under .tickets/.
+function validTicketId(id) {
+	return /^[a-z0-9]+-[a-z0-9]+$/.test(String(id));
 }
 
 function loadCache(name, maxAgeHours) {
@@ -430,17 +473,40 @@ function loadCache(name, maxAgeHours) {
 
 function saveCache(name, data) {
 	mkdirSync(join(CACHE_DIR, "tasks"), { recursive: true });
-	writeFileSync(join(CACHE_DIR, name), JSON.stringify(data, null, 2) + "\n");
+	writeFileAtomic(join(CACHE_DIR, name), JSON.stringify(data, null, 2) + "\n");
+}
+
+function saveTaskCache(gid, task) {
+	if (!validGid(gid)) return;
+
+	saveCache(join("tasks", `${gid}.json`), {
+		fetched_at: new Date().toISOString(),
+		task,
+	});
 }
 
 function cacheAgeHours(data) {
 	return (Date.now() - Date.parse(data.fetched_at || 0)) / 3_600_000;
 }
 
+// Control bytes (incl. ANSI escape openers): task names are untrusted and get
+// written to the terminal and into ticket files.
+// oxlint-disable-next-line no-control-regex
+const CONTROL_BYTES = /[\u0000-\u001f\u007f]/g;
+
 function oneLine(text) {
 	return String(text || "")
+		.replace(CONTROL_BYTES, " ")
 		.replace(/\s+/g, " ")
 		.trim();
+}
+
+// tk create parses its first non-option argument as the title; a task name
+// starting with '-' would be swallowed as a flag. Neutralize it.
+function safeTitle(name) {
+	const cleaned = oneLine(name).replace(/^-+\s*/, "");
+
+	return cleaned || "(untitled Asana task)";
 }
 
 function taskBrief(t) {
@@ -450,6 +516,7 @@ function taskBrief(t) {
 		completed: Boolean(t.completed),
 		url: t.permalink_url || null,
 		due_on: t.due_on || null,
+		modified_at: t.modified_at || null,
 		projects: (t.memberships || []).flatMap((m) =>
 			m.project?.name ? [m.project.name] : [],
 		),
@@ -513,11 +580,25 @@ async function loadMine(refresh) {
 		if (cached) return cached;
 	}
 
-	const fresh = await fetchMine();
+	try {
+		const fresh = await fetchMine();
 
-	saveCache("mine.json", fresh);
+		saveCache("mine.json", fresh);
 
-	return fresh;
+		return fresh;
+	} catch (e) {
+		// Degrade to any cache, however stale, with a warning — hard-fail only
+		// when there is nothing local to fall back to.
+		const stale = loadCache("mine.json", null);
+
+		if (!stale) throw e;
+
+		process.stderr.write(
+			`warning: Asana unreachable (${oneLine(e.message)}); using cache from ${stale.fetched_at}\n`,
+		);
+
+		return stale;
+	}
 }
 
 function branchMatchScore(branch, name) {
@@ -566,7 +647,7 @@ function createMirrorTicket(dir, task) {
 		"tk",
 		[
 			"create",
-			task.name,
+			safeTitle(task.name),
 			"-d",
 			description,
 			"--external-ref",
@@ -577,12 +658,14 @@ function createMirrorTicket(dir, task) {
 		{ cwd: dirname(dir) },
 	);
 
-	if (!id) die("tk create failed for mirror ticket");
+	if (!id || !validTicketId(id)) die("tk create failed for mirror ticket");
 
 	return id;
 }
 
 function readTicketFrontmatter(dir, id) {
+	if (!validTicketId(id)) return null;
+
 	const path = join(dir, `${id}.md`);
 
 	if (!existsSync(path)) return null;
@@ -603,26 +686,61 @@ function readTicketFrontmatter(dir, id) {
 	return fm;
 }
 
-function updateMirrorBody(dir, id, task) {
+function bodyHash(text) {
+	return createHash("sha256").update(text).digest("hex").slice(0, 16);
+}
+
+// Rewrites the mirror body from Asana content — but never clobbers local
+// hand-edits: if the current body differs from what we last wrote
+// (entry.body_hash), the file is left alone and a warning is emitted.
+// Returns the new body hash when written, null when skipped.
+function updateMirrorBody(dir, id, task, lastHash) {
+	if (!validTicketId(id)) return null;
+
 	const path = join(dir, `${id}.md`);
 
-	if (!existsSync(path)) return;
+	if (!existsSync(path)) return null;
 
 	const text = readFileSync(path, "utf8");
 	const m = text.match(/^(---\n[\s\S]*?\n---\n)/);
 
-	if (!m) return;
+	if (!m) return null;
 
+	const currentBody = text.slice(m[1].length);
 	const body = `# ${oneLine(task.name)}\n\n${(task.notes || "").trim()}\n\nAsana: ${task.url}\n`;
 
-	writeFileSync(path, m[1] + body);
+	if (currentBody === body) return bodyHash(body);
+
+	if (lastHash && bodyHash(currentBody) !== lastHash) {
+		process.stderr.write(
+			`warning: mirror ${id} has local edits; body not updated (Asana content changed — reconcile manually)\n`,
+		);
+
+		return null;
+	}
+
+	writeFileAtomic(path, m[1] + body);
+
+	return bodyHash(body);
 }
 
 async function fetchTaskDetail(gid) {
-	const res = await request(
+	if (!validGid(gid)) die(`invalid Asana gid: ${gid}`);
+
+	const res = await apiRequest(
 		"GET",
 		`/tasks/${gid}?opt_fields=name,notes,completed,permalink_url,due_on,modified_at`,
 	);
+
+	if (res.status === 404 || res.status === 410 || res.status === 403) {
+		return { gid, notFound: true, status: res.status };
+	}
+
+	if (res.status >= 400) {
+		throw new Error(
+			`Asana API GET /tasks/${gid} -> HTTP ${res.status}\n${JSON.stringify(res.json, null, 2)}`,
+		);
+	}
 
 	const t = res.data;
 
@@ -688,11 +806,23 @@ async function cmdLink(flags) {
 
 		const scored = open
 			.map((t) => ({ ...t, score: branchMatchScore(branch, t.name) }))
-			.sort((a, b) => b.score - a.score);
+			.sort(
+				(a, b) =>
+					b.score - a.score ||
+					String(b.modified_at || "").localeCompare(String(a.modified_at || "")) ||
+					a.gid.localeCompare(b.gid),
+			);
 
-		const candidates = scored.slice(0, 15);
+		const anyMatch = scored.some((t) => t.score > 0);
+		const candidates = (anyMatch ? scored.filter((t) => t.score > 0) : scored).slice(0, 15);
 
 		if (candidates.length === 0) die("no open Asana tasks found; run: asana.mjs mine --refresh");
+
+		if (!anyMatch) {
+			process.stderr.write(
+				`note: no task name matches branch "${branch}" — showing most recently modified tasks instead\n`,
+			);
+		}
 
 		if (!process.stdin.isTTY) {
 			output({ branch, candidates });
@@ -714,7 +844,14 @@ async function cmdLink(flags) {
 		}
 
 		const detail = pick.notes === undefined ? await fetchTaskDetail(pick.gid) : pick;
+
+		if (detail.notFound) {
+			process.stderr.write(`skipped ${pick.gid}: not accessible (HTTP ${detail.status})\n`);
+			continue;
+		}
+
 		const ticketId = createMirrorTicket(dir, detail);
+		const hash = updateMirrorBody(dir, ticketId, detail, null);
 
 		data.linked.push({
 			gid: detail.gid,
@@ -725,9 +862,12 @@ async function cmdLink(flags) {
 			linked_at: new Date().toISOString(),
 			synced_at: new Date().toISOString(),
 			completed: detail.completed,
+			body_hash: hash,
 		});
-		updateMirrorBody(dir, ticketId, detail);
-		saveCache(join("tasks", `${detail.gid}.json`), { fetched_at: new Date().toISOString(), task: detail });
+		// persist after every pick so an interrupted loop never orphans a
+		// created tk ticket outside the link file
+		saveLinkFile(path, data);
+		saveTaskCache(detail.gid, detail);
 		process.stderr.write(`linked: ${detail.name} -> ${ticketId}\n`);
 	}
 
@@ -743,39 +883,98 @@ async function cmdSync(flags) {
 	const { dir, path, data } = link;
 
 	for (const entry of data.linked) {
-		const task = await fetchTaskDetail(entry.gid);
+		if (!validGid(entry.gid) || !validTicketId(entry.ticket_id)) {
+			process.stderr.write(`warning: skipping malformed link entry: ${JSON.stringify(entry.gid)}\n`);
+			continue;
+		}
 
+		let task;
+
+		try {
+			task = await fetchTaskDetail(entry.gid);
+		} catch (e) {
+			process.stderr.write(`warning: sync failed for ${entry.gid}: ${oneLine(e.message)}\n`);
+			continue;
+		}
+
+		if (task.notFound) {
+			entry.orphaned = true;
+			entry.synced_at = new Date().toISOString();
+			process.stderr.write(
+				`warning: linked task ${entry.gid} is gone in Asana (HTTP ${task.status}); mirror ${entry.ticket_id} marked orphaned\n`,
+			);
+			saveLinkFile(path, data);
+			continue;
+		}
+
+		const wasCompleted = entry.completed === true;
+
+		entry.orphaned = false;
 		entry.name = task.name;
 		entry.url = task.url;
 		entry.completed = task.completed;
 		entry.synced_at = new Date().toISOString();
-		updateMirrorBody(dir, entry.ticket_id, task);
-		saveCache(join("tasks", `${entry.gid}.json`), { fetched_at: entry.synced_at, task });
 
-		const fm = readTicketFrontmatter(dir, entry.ticket_id);
+		let fm = readTicketFrontmatter(dir, entry.ticket_id);
 
 		if (!fm) {
-			process.stderr.write(`warning: mirror ticket ${entry.ticket_id} missing\n`);
-			continue;
+			// mirror file vanished: recreate it from the fetched detail
+			const ticketId = createMirrorTicket(dir, task);
+
+			process.stderr.write(
+				`recreated missing mirror ${entry.ticket_id} -> ${ticketId}\n`,
+			);
+			entry.ticket_id = ticketId;
+			entry.body_hash = null;
+			fm = readTicketFrontmatter(dir, ticketId);
 		}
+
+		const newHash = updateMirrorBody(dir, entry.ticket_id, task, entry.body_hash);
+
+		if (newHash) entry.body_hash = newHash;
+
+		saveTaskCache(entry.gid, task);
+
+		let reopenedRemotely = false;
 
 		if (task.completed && fm.status !== "closed") {
 			sh("tk", ["close", entry.ticket_id], { cwd: dirname(dir) });
 			process.stderr.write(`closed locally (completed in Asana): ${entry.ticket_id}\n`);
 		}
 
-		if (flags.push && !task.completed && fm.status === "closed") {
+		if (!task.completed && fm.status === "closed" && wasCompleted) {
+			// remote reopen after we saw it completed: Asana wins — reopen local
+			sh("tk", ["reopen", entry.ticket_id], { cwd: dirname(dir) });
+			reopenedRemotely = true;
+			process.stderr.write(
+				`reopened locally (reopened in Asana): ${entry.ticket_id}\n`,
+			);
+		}
+
+		if (flags.push && !task.completed && fm.status === "closed" && !reopenedRemotely) {
 			const ok = await confirm(
 				`complete in Asana: "${task.name}" (${entry.gid})?`,
 				flags.yes,
 			);
 
 			if (ok) {
-				await request("PUT", `/tasks/${entry.gid}`, { data: { completed: true } });
-				entry.completed = true;
-				process.stderr.write(`completed in Asana: ${entry.gid}\n`);
+				// re-fetch immediately before writing: someone may have changed the
+				// task between our sync read and the user's confirmation
+				const fresh = await fetchTaskDetail(entry.gid);
+
+				if (fresh.notFound || fresh.modified_at !== task.modified_at) {
+					process.stderr.write(
+						`conflict: ${entry.gid} changed in Asana since sync read; not completing — re-run sync\n`,
+					);
+				} else {
+					await request("PUT", `/tasks/${entry.gid}`, { data: { completed: true } });
+					entry.completed = true;
+					process.stderr.write(`completed in Asana: ${entry.gid}\n`);
+				}
 			}
 		}
+
+		saveLinkFile(path, data);
 	}
 
 	saveLinkFile(path, data);
@@ -793,6 +992,17 @@ function cmdUnlink(rest) {
 	if (!entry) die(`not linked: ${gid}`);
 
 	link.data.linked = link.data.linked.filter((l) => l.gid !== gid);
+	link.data.unlinked = link.data.unlinked || [];
+	link.data.unlinked.push({ ...entry, unlinked_at: new Date().toISOString() });
+
+	if (validTicketId(entry.ticket_id)) {
+		sh(
+			"tk",
+			["add-note", entry.ticket_id, `Unlinked from Asana ${entry.gid} (${entry.url || "no url"})`],
+			{ cwd: dirname(link.dir) },
+		);
+	}
+
 	saveLinkFile(link.path, link.data);
 	process.stderr.write(`unlinked ${gid}; mirror ticket ${entry.ticket_id} kept\n`);
 	output(link.data);
@@ -809,7 +1019,9 @@ function cmdStatus() {
 
 	if (link) {
 		for (const entry of link.data.linked) {
-			const fm = readTicketFrontmatter(link.dir, entry.ticket_id);
+			const fm = validTicketId(entry.ticket_id)
+				? readTicketFrontmatter(link.dir, entry.ticket_id)
+				: null;
 
 			summary.linked.push({
 				gid: entry.gid,
@@ -818,9 +1030,12 @@ function cmdStatus() {
 				ticket_id: entry.ticket_id,
 				local_status: fm ? fm.status : "missing",
 				asana_completed: entry.completed,
+				orphaned: entry.orphaned === true,
 				synced_at: entry.synced_at,
 			});
 		}
+
+		summary.unlinked_count = (link.data.unlinked || []).length;
 	}
 
 	output(summary);
