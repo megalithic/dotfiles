@@ -121,15 +121,21 @@ local function showCurrentlyConnected()
   local i = hs.audiodevice.current(true)
   local o = hs.audiodevice.current()
 
-  -- local oIcon = o.name == "Seth R-Phonak hearing aid" and "📢 " or "🔈 "
-  local oIcon = o.name == "megabose" and "🎧 " or "🔈 "
-  oIcon = o.name == "Seth R-Phonak hearing aid" and "📢 " or oIcon
+  if i then
+    local iIcon = i.name == "Samson GoMic" and "🎙️ " or ""
+    iIcon = i.name == "Seth R-Phonak hearing aid" and "📢 " or iIcon
+    U.log.of("input: %s%s (%s)", iIcon, i.name, i.muted and "muted" or "unmuted")
+  else
+    U.log.w("no current input device")
+  end
 
-  local iIcon = i.name == "Samson GoMic" and "🎙️ " or ""
-  iIcon = i.name == "Seth R-Phonak hearing aid" and "📢 " or iIcon
-
-  U.log.of("input: %s%s (%s)", iIcon, i.name, i.muted and "muted" or "unmuted")
-  U.log.of("output: %s%s", oIcon, o.name)
+  if o then
+    local oIcon = o.name == "megabose" and "🎧 " or "🔈 "
+    oIcon = o.name == "Seth R-Phonak hearing aid" and "📢 " or oIcon
+    U.log.of("output: %s%s", oIcon, o.name)
+  else
+    U.log.w("no current output device")
+  end
 end
 
 function M:start()

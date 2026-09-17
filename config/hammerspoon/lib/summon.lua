@@ -211,7 +211,7 @@ end
 
 -- Quickly move to and from a specific app
 -- (Thanks Teije)
-local previousApp = ""
+local previousApp = nil
 
 -- REF: https://github.com/jhkuperus/dotfiles/blob/master/hammerspoon/app-management.lua
 -- nicely swaps between target app/window to the previously focused app/window
@@ -234,7 +234,7 @@ function obj.switchToAndFromApp(appHint)
       if previousApp == nil then
         hs.window.switcher.nextWindow()
       else
-        previousApp:activate()
+        pcall(previousApp.activate, previousApp)
       end
     else
       previousApp = focusedWindow:application()
@@ -275,11 +275,12 @@ function obj.toggle(appHint, shouldHide, opts)
           mainWin:application():activate(true)
         end
       else
-        if mainWin:application() ~= nil then
+        local mainApp = mainWin:application()
+        if mainApp ~= nil then
           -- always activate the entire application (brings all windows to the front);
-          mainWin:application():activate(true)
-          pcall(mainWin:application():unhide())
-          pcall(mainWin:focus())
+          mainApp:activate(true)
+          pcall(mainApp.unhide, mainApp)
+          pcall(mainWin.focus, mainWin)
           -- Show indicator
           hs.timer.doAfter(0.05, function()
             showIndicator(mainWin)

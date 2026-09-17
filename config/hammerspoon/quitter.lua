@@ -18,6 +18,7 @@ obj.doubleDelay = 1 -- seconds window for "double" mode
 
 -- Internal state
 local doubleModal = nil
+local doubleTimer = nil -- auto-exit timer for double mode
 local longTimer = nil
 local quitHotkey = nil
 
@@ -52,6 +53,10 @@ end
 
 -- Clean up double mode modal
 local function exitDoubleMode()
+  if doubleTimer then
+    doubleTimer:stop()
+    doubleTimer = nil
+  end
   if doubleModal then
     doubleModal:exit()
     doubleModal:delete()
@@ -97,8 +102,12 @@ local function onPress()
 
     doubleModal:enter()
 
-    -- Auto-exit after timeout
-    hs.timer.doAfter(obj.doubleDelay, function() exitDoubleMode() end)
+    -- Auto-exit after timeout (tracked: a stale untracked timer from a
+    -- cancelled modal could prematurely exit a newer modal)
+    doubleTimer = hs.timer.doAfter(obj.doubleDelay, function()
+      doubleTimer = nil
+      exitDoubleMode()
+    end)
   elseif mode == "long" then
     -- Long mode: start timer, quit if held long enough
     if longTimer then longTimer:stop() end

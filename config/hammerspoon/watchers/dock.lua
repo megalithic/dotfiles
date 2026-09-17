@@ -239,7 +239,10 @@ function M:start()
 end
 
 function M:stop()
-  if M.watcher then M.watcher:stop() end
+  if M.watcher then
+    M.watcher:stop()
+    M.watcher = nil
+  end
   if M.btPoller then
     M.btPoller:stop()
     M.btPoller = nil

@@ -228,7 +228,7 @@ function obj:splitTab(to_next_screen)
         U.log.i(fmt("[RUN] %s.splitTab/%s (same screen, half)", obj.name, app:bundleID()))
       end
     else
-      U.log.w(fmt("[RUN] %s.splitTab/%s unsupported browser", obj.name, app:bundleID()))
+      U.log.w(fmt("[RUN] %s.splitTab: no supported browser running", obj.name))
     end
   end)
 end

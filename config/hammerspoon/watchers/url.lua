@@ -20,6 +20,10 @@ M.__index = M
 M.name = "watcher.url"
 M.currentHandler = nil
 
+-- Forward declaration: handler actions in M.handlers close over this before
+-- its definition below. Without it they resolved to a nil global at runtime.
+local openUrlWithApp
+
 --------------------------------------------------------------------------------
 -- Configuration (embedded for now, refactor to config.lua later)
 --------------------------------------------------------------------------------
@@ -207,7 +211,7 @@ M.handlers = {
 ---@param bundleID string Application bundle ID
 ---@param opts table|nil Options: { background = true (default) }
 ---@return boolean success
-local function openUrlWithApp(url, bundleID, opts)
+function openUrlWithApp(url, bundleID, opts)
   opts = opts or {}
   local background = opts.background ~= false
 

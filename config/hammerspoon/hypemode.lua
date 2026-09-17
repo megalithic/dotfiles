@@ -204,10 +204,17 @@ function VisualManager:_startTracking(win)
   -- Use fast polling to detect window changes (every 50ms = 20fps)
   -- This is simpler and more reliable than AX watchers
   self._pollTimer = hs.timer.doEvery(0.05, function()
-    if not self._trackedWindow or not self._trackedWindow:isVisible() then
+    if not self._trackedWindow then return end
+
+    -- Window destroyed: detach (stops this poll timer and removes visuals)
+    -- instead of spinning until modal auto-exit.
+    if not self._trackedWindow:id() then
+      self:detach()
       return
     end
-    
+
+    if not self._trackedWindow:isVisible() then return end
+
     local currentFrame = self._trackedWindow:frame()
     if not self._lastFrame 
        or currentFrame.x ~= self._lastFrame.x 

@@ -387,17 +387,19 @@ function M.eventString(e)
 
   if type(e) == "string" then return e end
 
+  -- Keyed by the hs.application.watcher constants themselves; unknown values
+  -- fall through to tostring instead of table.unpack(nil) erroring.
   local enum_tbl = {
-    [0] = { "launching", a.launching },
-    [1] = { "launched", a.launched },
-    [2] = { "terminated", a.terminated },
-    [3] = { "hidden", a.hidden },
-    [4] = { "unhidden", a.unhidden },
-    [5] = { "activated", a.activated },
-    [6] = { "deactivated", a.deactivated },
+    [a.launching] = "launching",
+    [a.launched] = "launched",
+    [a.terminated] = "terminated",
+    [a.hidden] = "hidden",
+    [a.unhidden] = "unhidden",
+    [a.activated] = "activated",
+    [a.deactivated] = "deactivated",
   }
 
-  return table.unpack(enum_tbl[e])
+  return enum_tbl[e] or tostring(e)
 end
 
 function M.tlen(t)
