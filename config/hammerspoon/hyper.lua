@@ -7,6 +7,30 @@ M.name = "hyper"
 M.hyper = nil
 M.key = HYPER
 
+-- Launch/focus an app, then send a keystroke once it is frontmost.
+-- Bounded: hs.timer.waitWhile polls forever (1s default) if the app never
+-- fronts (launch failure, quit during launch); give up after `timeout`s.
+local function sendKeyWhenFrontmost(app, mods, key, timeout)
+  hs.application.launchOrFocusByBundleID(app)
+
+  local deadline = hs.timer.secondsSinceEpoch() + (timeout or 10)
+  local timedOut = false
+  hs.timer.waitWhile(function()
+    if hs.timer.secondsSinceEpoch() > deadline then
+      timedOut = true
+      return false
+    end
+    local appObj = hs.application.get(app)
+    return not appObj or not appObj:isFrontmost()
+  end, function()
+    if timedOut then
+      U.log.wf("gave up waiting for %s to front", app)
+      return
+    end
+    hs.eventtap.keyStroke(mods, key)
+  end, 0.1)
+end
+
 function M:bindPassThrough(mods, key, app)
   -- Build the passthrough modifiers: hyper + any additional mods
   local passthroughMods = { "cmd", "alt", "shift", "ctrl" }
@@ -27,14 +51,7 @@ function M:bindPassThrough(mods, key, app)
     if hs.application.get(app) then
       hs.eventtap.keyStroke(passthroughMods, key)
     else
-      hs.application.launchOrFocusByBundleID(app)
-      hs.timer.waitWhile(
-        function()
-          local appObj = hs.application.get(app)
-          return not appObj or not appObj:isFrontmost()
-        end,
-        function() hs.eventtap.keyStroke(passthroughMods, key) end
-      )
+      sendKeyWhenFrontmost(app, passthroughMods, key)
     end
   end)
 
@@ -53,14 +70,7 @@ function M:bindAppChord(mods, key, app, targetMods, targetKey)
     if appObj and appObj:isFrontmost() then
       hs.eventtap.keyStroke(targetMods, targetKey)
     else
-      hs.application.launchOrFocusByBundleID(app)
-      hs.timer.waitWhile(
-        function()
-          local a = hs.application.get(app)
-          return not a or not a:isFrontmost()
-        end,
-        function() hs.eventtap.keyStroke(targetMods, targetKey) end
-      )
+      sendKeyWhenFrontmost(app, targetMods, targetKey)
     end
   end)
 
@@ -82,8 +92,16 @@ function M:init(opts)
   end
 
   self.id = opts.id
-  self.key = opts.key or HYPER
-  self.hyper = hs.hotkey.bind({}, self.key, function() self:enter() end, function() self:exit() end)
+
+  -- All ids share this one modal (M is a single hs.hotkey.modal); bind the
+  -- physical hyper key only once. Rebinding per id stacked duplicate hotkey
+  -- objects on the same key.
+  if not self.hyper then
+    self.key = opts.key or HYPER
+    self.hyper = hs.hotkey.bind({}, self.key, function() self:enter() end, function() self:exit() end)
+  elseif opts.key and opts.key ~= self.key then
+    U.log.wf("hyper already bound to %s; ignoring key %s for id %s", self.key, opts.key, opts.id)
+  end
 
   _G.Hypers[opts.id] = self
 
