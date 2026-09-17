@@ -72,6 +72,20 @@ Window management uses the custom `wm.lua` grid/geometry path on `hyper+l`; nati
 
 App and window watchers run layout rules on launch and window creation (not `mainWindowChanged`, which fired too often). Rule precedence is per-window: a non-empty title pattern matches first and only the first specific match places the window; a catch-all rule applies only when no specific rule matched. Manual placements bypass one later auto-layout pass through a short-lived per-window suppression entry that `placeApp` consumes.
 
+## App watcher lifecycle
+
+The app/context watcher stack (`watchers/app.lua`, `contexts/`, `lollygagger.lua`) is dormant: `init.lua` only loads the audio, avwatchd, url, and pasteboard watchers. The stack stays lifecycle-correct for re-enablement.
+
+Per-app `hs.uielement` watchers are keyed by PID, matching `hs.uielement`'s own termination cleanup. `hs.application.watcher` terminated events arrive with a nil app name and an app object only useful for its PID, so the global callback routes them to a dedicated terminated handler: it stops and removes the per-app watcher, then runs context deactivation and lollygagger cleanup with the bundle ID cached at watch time. A relaunched app gets a fresh PID and is re-watched; the old bundleID keying blocked re-watching forever.
+
+`contexts:preload()` is idempotent — context scripts load once per Lua state, so watcher restarts reuse existing context modals instead of minting duplicates. Context lifecycle hooks run protected: a failing hook logs instead of erroring the watcher callback (terminated events hand hooks a dead `appObj`). Stopping the app watcher exits any still-entered context modal so its hotkeys release.
+
+The shared Hyper modal binds its physical key once across all `req("hyper", { id })` namespaces. Passthrough and app-chord bindings that wait for an app to front poll at 0.1s and give up after 10s instead of waiting forever. The quitter tracks its double-press auto-exit timer so a stale timer cannot exit a newer confirmation modal.
+
+`config/hammerspoon/tests/run.lua` (run `lua tests/run.lua` from `config/hammerspoon/`) exercises the stack against a mock Hammerspoon runtime with a virtual clock: watcher registration/termination/relaunch, context preload idempotence and frontmost gating, erroring-hook isolation, lollygagger timer cancellation, hyper bind dedupe and bounded waits, and quitter double-press timer races.
+
+Known dormant hotspots, documented not fixed: `watchers/dock.lua` shells out synchronously (BT poll every 5s, kanata switching) and `watchers/camera.lua` runs blocking `lsof`/`ps` in camera callbacks; both need `hs.task` conversion before re-enablement.
+
 ## Miccheck menubar
 
 The old `miccheck.lua` module is gone; push-to-talk/push-to-mute now lives in the standalone [[miccheck]] menubar app, and Hammerspoon only sends it mode commands.
