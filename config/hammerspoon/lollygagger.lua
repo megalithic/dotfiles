@@ -123,10 +123,14 @@ end
 
 -- Main entry point called from app watcher
 -- Called on every app event (activated, deactivated, launched, terminated)
-function obj:run(_elementOrAppName, event, app)
-  if not app then return end
-
-  local bundleID = app:bundleID()
+-- bundleIDHint covers terminated events, where the dead app object may no
+-- longer report a bundleID (the watcher caches it at watch time).
+function obj:run(_elementOrAppName, event, app, bundleIDHint)
+  local bundleID = bundleIDHint
+  if not bundleID and app then
+    local ok, id = pcall(function() return app:bundleID() end)
+    if ok then bundleID = id end
+  end
   if not bundleID then return end
 
   local config = C.lollygaggers[bundleID]

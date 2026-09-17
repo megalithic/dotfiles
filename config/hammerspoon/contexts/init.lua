@@ -23,11 +23,12 @@ M.activationEvents = {
 }
 
 -- Events that trigger context deactivation
+-- NOTE: titleChanged is intentionally absent: it is an activation event above,
+-- and activation is checked first, so listing it here was unreachable.
 M.deactivationEvents = {
   hs.application.watcher.terminated,
   hs.application.watcher.deactivated,
   hs.uielement.watcher.elementDestroyed,
-  hs.uielement.watcher.titleChanged,
   hs.uielement.watcher.applicationDeactivated,
 }
 
@@ -44,6 +45,17 @@ end
 -- Helper: check if event is deactivation type
 local function isDeactivationEvent(event)
   return enum.contains(M.deactivationEvents, event)
+end
+
+-- Helper: run a context lifecycle hook protected. Hooks receive callOpts with
+-- a possibly-dead appObj (e.g. terminated events); an erroring hook must not
+-- propagate into the app watcher callback.
+local function runHook(context, hookName, callOpts, contextId)
+  local hook = context[hookName]
+  if not hook then return false end
+  local ok, err = pcall(hook, context, callOpts)
+  if not ok then U.log.ef("[CTX] %s.%s failed: %s", contextId, hookName, tostring(err)) end
+  return true
 end
 
 -- Helper: exit ALL active modals (defensive cleanup)
@@ -64,7 +76,12 @@ function M:run(opts)
   local event = opts["event"]
   local bundleID = opts["bundleID"]
   local metadata = opts["metadata"]
-  local contextId = opts["bundleID"] and bundleID or app:bundleID()
+  local contextId = bundleID
+  if not contextId and app then
+    local ok, id = pcall(function() return app:bundleID() end)
+    if ok then contextId = id end
+  end
+  if not contextId then return self end
 
   if context == nil or U.tlen(context) == 0 then
     return self
@@ -79,7 +96,7 @@ function M:run(opts)
   local callOpts = {
     event = event,
     appObj = app,
-    bundleID = app:bundleID(),
+    bundleID = contextId,
     metadata = metadata,
   }
 
@@ -104,12 +121,10 @@ function M:run(opts)
       U.log.df("[CTX] MODAL SKIPPED (not frontmost): %s | frontmost=%s", contextId, frontmost and frontmost:bundleID() or "nil")
     end
 
-    -- Call context's custom activation hook if defined
-    if context.onActivate then
-      context:onActivate(callOpts)
-    -- Backward compatibility: call start() if no onActivate
-    elseif context.start then
-      context:start(callOpts)
+    -- Call context's custom activation hook if defined,
+    -- falling back to start() for backward compatibility
+    if not runHook(context, "onActivate", callOpts, contextId) then
+      runHook(context, "start", callOpts, contextId)
     end
 
   elseif isDeactivationEvent(event) then
@@ -123,12 +138,10 @@ function M:run(opts)
       U.log.df("[CTX] MODAL EXITED: %s", contextId)
     end
 
-    -- Call context's custom deactivation hook if defined
-    if context.onDeactivate then
-      context:onDeactivate(callOpts)
-    -- Backward compatibility: call stop() if no onDeactivate
-    elseif context.stop then
-      context:stop(callOpts)
+    -- Call context's custom deactivation hook if defined,
+    -- falling back to stop() for backward compatibility
+    if not runHook(context, "onDeactivate", callOpts, contextId) then
+      runHook(context, "stop", callOpts, contextId)
     end
   end
 
@@ -140,6 +153,11 @@ function M:run(opts)
 end
 
 function M.preload()
+  -- Idempotent: dofile re-executes context scripts and would mint duplicate
+  -- modals (with duplicate bindings) on every watcher restart. Reuse the
+  -- loaded set; a full hs.reload resets the Lua state and reloads anyway.
+  if next(M.contextModals) ~= nil then return M.contextModals end
+
   U.log.i("preloading")
 
   local contextsScriptsPath = U.resourcePath("./")
