@@ -20,7 +20,7 @@
  *
  * Handshake binding (written by Hammerspoon on Cmd+Shift+C):
  *   ${PI_STATE_DIR}/tidewave/bindings/<worktree-slug>.json
- *   { worktree, cwd, socket, session, window, pane, tabUrl, port, boundAt }
+ *   { worktree, cwd, socket, session, window, pane, appUrl, targetPrefix, migrationUrl?, port, boundAt }
  * Matched by exact cwd first, then by worktree-slug filename.
  */
 
@@ -53,7 +53,8 @@ type Binding = {
 	session?: string;
 	window?: string;
 	pane?: string;
-	tabUrl?: string;
+	appUrl?: string;
+	targetPrefix?: string;
 	port?: number;
 	boundAt?: string;
 };
@@ -354,6 +355,9 @@ export default function (pi: ExtensionAPI): void {
 			}
 			const mySocket = process.env.PI_SOCKET;
 			const boundHere = mySocket && b.socket === mySocket;
+			const appUrl =
+				b.appUrl ||
+				(typeof b.port === "number" ? `http://localhost:${b.port}` : undefined);
 			ctx.ui.setWidget?.("pidewave", [
 				ctx.ui.theme.fg(
 					boundHere ? "accent" : "muted",
@@ -361,7 +365,7 @@ export default function (pi: ExtensionAPI): void {
 						? "◉ Tidewave bound here"
 						: "○ Tidewave bound (this worktree)",
 				),
-				...(b.tabUrl ? [ctx.ui.theme.fg("muted", b.tabUrl)] : []),
+				...(appUrl ? [ctx.ui.theme.fg("muted", appUrl)] : []),
 			]);
 		} catch {}
 	};
