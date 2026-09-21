@@ -25,17 +25,16 @@ bell-features = title,attention
 # adjust-underline-position = 25%
 
 macos-option-as-alt = true
-
-# fullscreen = true
-
-# visible-menu
-macos-non-native-fullscreen = visible-menu
+macos-icon = retro
+macos-icon-frame = beige
+macos-window-shadow = false
+macos-non-native-fullscreen = true
+# macos-non-native-fullscreen = visible-menu
 # macos-non-native-fullscreen = padded-notch
 # macos-non-native-fullscreen = true
-macos-window-shadow = false
-
 # macos-titlebar-tabs=false # FIXME: deprecated?
 macos-titlebar-style = hidden
+
 
 window-theme = ghostty
 window-decoration = false
