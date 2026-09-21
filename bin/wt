@@ -1,25 +1,29 @@
 #!/usr/bin/env bash
 # wt — shell-agnostic Worktrunk wrapper core.
 #
-# Holds all the logic that used to live in the fish `wt` function:
-#   - v2 resolve/setup for `wt <branch>` (canonical per-worktree session
-#     presentation by default; `-t cd` cds the same shell instead)
-#   - `-t window|w` 60/40 current-session window presentation
-#   - `-t session|s` canonical per-worktree session presentation
-#   - explicit upstream Worktrunk builtins remain on the compatibility path
-#   - GIT_WORKTREE id derivation ({repo}-{branch-slug}) — the single source of
-#     truth, queryable via `wt id [path]` (aka `wt --worktree-id`). Project
-#     mise configs call this instead of re-deriving the id themselves.
+# Front end for the v2 deterministic lifecycle in bin/wt-v2-lib:
+#   - implicit `wt <branch>` runs resolve/setup with the canonical
+#     per-worktree session presentation by default
+#   - `-t cd` runs the same lifecycle then only cds the invoking shell;
+#     `-t window|w` builds one 60/40 window in the current session;
+#     `-t session|s` is the explicit canonical-session spelling
+#   - explicit v2 commands: ensure|new|open|path|repair|prune, list --json
+#   - GIT_WORKTREE id derivation ({repo}-{branch-slug}) — the single source
+#     of truth, queryable via `wt id [path]` (aka `wt --worktree-id`).
+#     Project mise configs call this instead of re-deriving the id.
 #
-# A child process cannot cd the parent shell or set its env, so thin per-shell
-# wrappers call this script with:
-#   WT_SHELL      fish|posix (directive/env-file syntax; default posix)
+# Anything else (switch, config, step, hook, plain list, help, version, ...)
+# execs the raw mise-pinned Worktrunk backend untouched: no flag injection,
+# no directive files, no tmux. It is the upstream escape hatch; it does not
+# cd the parent shell.
+#
+# A child process cannot cd the parent shell or set its env, so thin
+# per-shell wrappers call this script with:
+#   WT_SHELL      fish|posix (env-file syntax; default posix)
 #   WT_CD_FILE    script writes the final cd target path here
 #   WT_ENV_FILE   script writes GIT_WORKTREE set/unset commands here
-#   WT_EXEC_FILE  script copies Worktrunk exec directives here
-# The wrapper then cds/sources. Without those env vars the script still works;
-# it prints the worktree path instead of cd-ing and evals exec directives
-# itself with sh.
+# The wrapper then cds/sources. Without those env vars the script still
+# works; it prints the worktree path instead of cd-ing.
 
 # ---- worktree-id derivation (single source of truth) ------------------------
 # {repo}-{branch-slug}, repo prefix kept for the tmux session switcher.
@@ -27,13 +31,13 @@
 # collapsed, ends trimmed), so the id — and the db names derived from it —
 # only ever contain alphanumerics, underscores and dashes.
 worktree_id() { # $1 = worktree path
-  local br repo slug
-  br="$(git -C "$1" branch --show-current 2>/dev/null)"
-  [ -n "$br" ] || br="$(basename "$1")"
-  repo="$(basename "$(dirname "$(git -C "$1" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)")")"
-  repo="$(printf '%s' "$repo" | tr -c 'A-Za-z0-9_' '-' | sed -e 's/--*/-/g' -e 's/^-//' -e 's/-*$//')"
-  slug="$(printf '%s' "$br" | tr -c 'A-Za-z0-9_' '-' | sed -e 's/--*/-/g' -e 's/^-//' -e 's/-*$//')"
-  printf '%s-%s' "$repo" "$slug"
+	local br repo slug
+	br="$(git -C "$1" branch --show-current 2>/dev/null)"
+	[ -n "$br" ] || br="$(basename "$1")"
+	repo="$(basename "$(dirname "$(git -C "$1" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)")")"
+	repo="$(printf '%s' "$repo" | tr -c 'A-Za-z0-9_' '-' | sed -e 's/--*/-/g' -e 's/^-//' -e 's/-*$//')"
+	slug="$(printf '%s' "$br" | tr -c 'A-Za-z0-9_' '-' | sed -e 's/--*/-/g' -e 's/^-//' -e 's/-*$//')"
+	printf '%s-%s' "$repo" "$slug"
 }
 
 # `wt id [path]` / `wt --worktree-id [path]`: print the GIT_WORKTREE id and exit
@@ -42,24 +46,27 @@ worktree_id() { # $1 = worktree path
 # checkout) so config treats it as "no worktree". Respects a pre-set
 # GIT_WORKTREE (echoes it verbatim).
 if [ "${1:-}" = id ] || [ "${1:-}" = --worktree-id ]; then
-  q_path="${2:-$PWD}"
-  if [ -n "${GIT_WORKTREE:-}" ]; then printf '%s' "$GIT_WORKTREE"; exit 0; fi
-  q_gd="$(git -C "$q_path" rev-parse --git-dir 2>/dev/null)" || exit 0
-  case "$q_gd" in */worktrees/*) ;; *) exit 0 ;; esac
-  worktree_id "$q_path"
-  exit 0
+	q_path="${2:-$PWD}"
+	if [ -n "${GIT_WORKTREE:-}" ]; then
+		printf '%s' "$GIT_WORKTREE"
+		exit 0
+	fi
+	q_gd="$(git -C "$q_path" rev-parse --git-dir 2>/dev/null)" || exit 0
+	case "$q_gd" in */worktrees/*) ;; *) exit 0 ;; esac
+	worktree_id "$q_path"
+	exit 0
 fi
 
-# ---- v2 deterministic lifecycle and default presentation ------------------
-# Resolve this file's real directory before sourcing the v2 coordinator. The
-# public wrapper is normally reached through a ~/bin symlink.
+# ---- load the v2 coordinator -------------------------------------------------
+# Resolve this file's real directory before sourcing. The public wrapper is
+# normally reached through a ~/bin symlink.
 wt_v2_script_path="${BASH_SOURCE[0]}"
 if [ -L "$wt_v2_script_path" ]; then
-  wt_v2_link="$(readlink "$wt_v2_script_path")"
-  case "$wt_v2_link" in
-    /*) wt_v2_script_path="$wt_v2_link" ;;
-    *) wt_v2_script_path="${wt_v2_script_path%/*}/$wt_v2_link" ;;
-  esac
+	wt_v2_link="$(readlink "$wt_v2_script_path")"
+	case "$wt_v2_link" in
+	/*) wt_v2_script_path="$wt_v2_link" ;;
+	*) wt_v2_script_path="${wt_v2_script_path%/*}/$wt_v2_link" ;;
+	esac
 fi
 wt_v2_script_dir="$(cd "${wt_v2_script_path%/*}" && pwd -P)"
 WT_V2_SELF="$wt_v2_script_dir/$(basename "$wt_v2_script_path")"
@@ -69,375 +76,45 @@ source "$wt_v2_script_dir/wt-lock-lib"
 source "$wt_v2_script_dir/wt-v2-lib"
 
 write_env() { # $1 = set|unset, $2 = value (for set)
-  [ -n "${WT_ENV_FILE:-}" ] || return 0
-  case "${WT_SHELL:-posix}" in
-    fish)
-      if [ "$1" = set ]; then printf "set -gx GIT_WORKTREE '%s'\n" "$2" >"$WT_ENV_FILE"; else printf 'set -ge GIT_WORKTREE\n' >"$WT_ENV_FILE"; fi ;;
-    *)
-      if [ "$1" = set ]; then printf "export GIT_WORKTREE='%s'\n" "$2" >"$WT_ENV_FILE"; else printf 'unset GIT_WORKTREE\n' >"$WT_ENV_FILE"; fi ;;
-  esac
+	[ -n "${WT_ENV_FILE:-}" ] || return 0
+	case "${WT_SHELL:-posix}" in
+	fish)
+		if [ "$1" = set ]; then printf "set -gx GIT_WORKTREE '%s'\n" "$2" >"$WT_ENV_FILE"; else printf 'set -ge GIT_WORKTREE\n' >"$WT_ENV_FILE"; fi
+		;;
+	*)
+		if [ "$1" = set ]; then printf "export GIT_WORKTREE='%s'\n" "$2" >"$WT_ENV_FILE"; else printf 'unset GIT_WORKTREE\n' >"$WT_ENV_FILE"; fi
+		;;
+	esac
 }
 
 emit_cd() {
-  if [ -n "${WT_CD_FILE:-}" ]; then printf '%s\n' "$1" >"$WT_CD_FILE"; else echo "wt: worktree at $1 (no shell wrapper active; cd manually)" >&2; fi
+	if [ -n "${WT_CD_FILE:-}" ]; then printf '%s\n' "$1" >"$WT_CD_FILE"; else echo "wt: worktree at $1 (no shell wrapper active; cd manually)" >&2; fi
 }
 
-# v2 dispatch must happen before legacy backend resolution and auto-prune.
+# ---- dispatch ----------------------------------------------------------------
+# v2 owns targets and its explicit commands; everything else is upstream's.
 case "${1:-}" in
-  -t|--target|-t=*|--target=*) wt_v2_main "$@"; exit $? ;;
+-t | --target | -t=* | --target=*)
+	wt_v2_main "$@"
+	exit $?
+	;;
 esac
 if wt_v2_wants_command "$@" || {
-  case "${1:-}" in
-    help|-h|--help|-V|--version|list|path|prune|repair|open|ensure|new|switch|remove|merge|select|step|hook|config|auto-prune|'') false ;;
-    -) true ;;
-    -*) false ;;
-    *) true ;;
-  esac
-}; then
-  wt_v2_main "$@"
-  exit $?
+	case "${1:-}" in
+	help | -h | --help | -V | --version | list | path | prune | repair | open | ensure | new | switch | remove | merge | select | step | hook | config | '') false ;;
+	-) true ;;
+	-*) false ;;
+	*) true ;;
+	esac
+} then
+	wt_v2_main "$@"
+	exit $?
 fi
 
-# ---- locate the real Worktrunk binary (skip this script) -------------------
-self="$(realpath "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
-wt_bin="${WORKTRUNK_BIN:-}"
-if [ -z "$wt_bin" ]; then
-  while IFS= read -r cand; do
-    [ -x "$cand" ] || continue
-    r="$(realpath "$cand" 2>/dev/null || echo "$cand")"
-    [ "$r" = "$self" ] && continue
-    wt_bin="$cand"
-    break
-  done < <(type -ap wt)
+# ---- raw upstream passthrough -------------------------------------------------
+# Same pinned backend the v2 path verifies; exec'd untouched.
+if ! v2_resolve_backend; then
+	echo "wt: ${V2_ERROR_MESSAGE:-could not resolve pinned Worktrunk}" >&2
+	exit 127
 fi
-if [ -z "$wt_bin" ]; then
-  echo "wt: could not find Worktrunk binary on PATH" >&2
-  exit 127
-fi
-
-# ---- helpers ----------------------------------------------------------------
-gcd="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
-
-# ---- throttled background auto-prune -----------------------------------------
-# Every wrapper invocation (except help/version and explicit `step` calls)
-# kicks a detached `wt step prune --yes` at most once per
-# WT_AUTO_PRUNE_INTERVAL seconds (default 86400; 0 disables) per repo, so
-# merged worktrees/branches disappear without manual pruning. Fish completion
-# (`wt <tab>`) resolves this wrapper for `wt list`, so tab completion triggers
-# it too. Stamp and log live under .git/wt/. `wt auto-prune` runs only this
-# check and exits. WT_AUTO_PRUNE_MIN_AGE (default 1d) passes through to
-# `step prune --min-age`.
-#
-# Async feedback: when the detached prune removed something or failed, the
-# result is written to $XDG_STATE_HOME/wt/auto-prune-note ("<epoch> <repo>:
-# <summary>"); a fish_prompt hook in fish conf.d/wt-auto-prune.fish prints
-# unseen notes at the next prompt. (Universal variables were tried first, but
-# fish 4.8 does not propagate cross-process changes into running shells
-# here.) Silent on "nothing to prune".
-auto_prune() {
-  [ -n "$gcd" ] && [ -d "$gcd" ] || return 0
-  local interval stamp now last
-  interval="${WT_AUTO_PRUNE_INTERVAL:-86400}"
-  case "$interval" in '' | *[!0-9]*) return 0 ;; esac
-  [ "$interval" -gt 0 ] || return 0
-  # Stamp holds the epoch of the last run (content, not mtime: `stat` flags
-  # differ between BSD and GNU coreutils, and GNU stat may shadow /usr/bin).
-  stamp="$gcd/wt/auto-prune.stamp"
-  now="$(date +%s)"
-  last="$(cat "$stamp" 2>/dev/null)"
-  case "$last" in '' | *[!0-9]*) last=0 ;; esac
-  [ $((now - last)) -ge "$interval" ] || return 0
-  mkdir -p "$gcd/wt/logs" 2>/dev/null || return 0
-  printf '%s\n' "$now" >"$stamp"
-  (
-    {
-      root="$(dirname "$gcd")"
-      out="$("$wt_bin" -C "$root" step prune --yes \
-        --min-age="${WT_AUTO_PRUNE_MIN_AGE:-1d}" </dev/null 2>&1)"
-      rc=$?
-      printf '%s\n' "$out" >>"$gcd/wt/logs/auto-prune.log"
-      note=""
-      if [ "$rc" -ne 0 ]; then
-        note="failed (exit $rc; see $gcd/wt/logs/auto-prune.log)"
-      elif printf '%s' "$out" | grep -q -e Removed -e Pruned; then
-        # Final line is Worktrunk's summary; strip the leading status symbol.
-        note="$(printf '%s\n' "$out" | tail -n 1 | sed 's/^[^[:alnum:]]*//')"
-      fi
-      if [ -n "$note" ]; then
-        note_dir="${XDG_STATE_HOME:-$HOME/.local/state}/wt"
-        mkdir -p "$note_dir" 2>/dev/null &&
-          printf '%s %s: %s\n' "$now" "$(basename "$root")" "$note" \
-            >"$note_dir/auto-prune-note"
-      fi
-    } &
-  )
-}
-
-if [ "${1:-}" = auto-prune ]; then
-  auto_prune
-  exit 0
-fi
-
-ensure_pi_lens_config() { # $1 = worktree path; create missing only
-  local path="$1" gd f
-  [ -d "$path" ] || return 0
-  gd="$(git -C "$path" rev-parse --git-dir 2>/dev/null || true)"
-  case "$gd" in */worktrees/*) ;; *) return 0 ;; esac
-
-  f="$path/.pi-lens.json"
-  [ -e "$f" ] && return 0
-  cat >"$f" <<'JSON'
-{
-  "format": {
-    "enabled": false
-  }
-}
-JSON
-}
-
-# ---- split args at `--`; parse -t/--target ----------------------------------
-pre=()
-post=()
-seen_ddash=false
-target=""
-argv=("$@")
-n=$#
-i=0
-while [ "$i" -lt "$n" ]; do
-  a="${argv[$i]}"
-  if [ "$seen_ddash" = true ]; then
-    post+=("$a")
-    i=$((i + 1))
-    continue
-  fi
-  case "$a" in
-    --)
-      seen_ddash=true
-      post+=("$a")
-      ;;
-    -t | --target)
-      # Value is optional: consume only an explicit session|window|cd.
-      nxt=$((i + 1))
-      if [ "$nxt" -lt "$n" ] && { [ "${argv[$nxt]}" = window ] || [ "${argv[$nxt]}" = session ] || [ "${argv[$nxt]}" = cd ]; }; then
-        i="$nxt"
-        target="${argv[$i]}"
-      else
-        target=session
-      fi
-      ;;
-    --target=*) target="${a#--target=}" ;;
-    -t=*) target="${a#-t=}" ;;
-    *) pre+=("$a") ;;
-  esac
-  i=$((i + 1))
-done
-
-if [ -n "$target" ] && [ "$target" != window ] && [ "$target" != session ] && [ "$target" != cd ]; then
-  echo "wt: invalid target '$target' (expected session|window|cd)" >&2
-  exit 2
-fi
-
-# ---- first non-flag token = potential subcommand -----------------------------
-builtins="switch list remove merge select step hook config"
-first_cmd=""
-skip_next=false
-for t in ${pre[@]+"${pre[@]}"}; do
-  if [ "$skip_next" = true ]; then
-    skip_next=false
-    continue
-  fi
-  case "$t" in
-    -C) skip_next=true; continue ;; # -C consumes a path value
-    -*) continue ;;
-  esac
-  first_cmd="$t"
-  break
-done
-
-help_or_version=false
-for t in ${pre[@]+"${pre[@]}"}; do
-  case "$t" in --help | -h | --version | -V) help_or_version=true ;; esac
-done
-[ "$first_cmd" = help ] && help_or_version=true
-
-is_builtin=false
-for b in $builtins; do
-  [ "$first_cmd" = "$b" ] && is_builtin=true
-done
-
-# Kick throttled auto-prune (detached; adds no latency). Skip help/version and
-# explicit `step` calls so a manual `wt step prune` never races itself.
-if [ "$help_or_version" = false ] && [ "$first_cmd" != step ]; then
-  auto_prune
-fi
-
-# ---- implicit `switch` --------------------------------------------------------
-inject_switch=false
-if [ "$help_or_version" = false ]; then
-  if [ -n "$target" ]; then
-    [ "$is_builtin" = false ] && inject_switch=true
-  elif [ "$is_builtin" = false ] && [ "${#pre[@]}" -gt 0 ]; then
-    inject_switch=true
-  fi
-fi
-
-# Default target: explicit `wt switch` flows on this legacy compatibility
-# path open a per-worktree tmux session unless overridden (`-t cd` restores
-# plain cd-in-shell; implicit `wt <branch>` never reaches here — v2 handles
-# it). Other builtins (list, remove, ...) never target.
-target_defaulted=false
-if [ -z "$target" ] && [ "$help_or_version" = false ]; then
-  if [ "$inject_switch" = true ] || [ "$first_cmd" = switch ]; then
-    target=session
-    target_defaulted=true
-  fi
-fi
-[ "$target" = cd ] && target=""
-
-call_args=()
-[ "$inject_switch" = true ] && call_args+=(switch)
-call_args+=(${pre[@]+"${pre[@]}"})
-call_args+=(${post[@]+"${post[@]}"})
-
-has_arg() { # $1 = needle, rest = haystack
-  local needle="$1"
-  shift
-  local x
-  for x in "$@"; do [ "$x" = "$needle" ] && return 0; done
-  return 1
-}
-
-# ---- auto --create when branch doesn't exist (local or origin) ---------------
-if has_arg switch ${call_args[@]+"${call_args[@]}"}; then
-  branch_arg=""
-  seen_switch=false
-  for a in ${call_args[@]+"${call_args[@]}"}; do
-    if [ "$seen_switch" = true ]; then
-      case "$a" in -*) ;; *)
-        branch_arg="$a"
-        break
-        ;;
-      esac
-    fi
-    [ "$a" = switch ] && seen_switch=true
-  done
-
-  if [ -n "$branch_arg" ]; then
-    skip=false
-    # Shortcuts, PR/MR refs, URLs, path-like args.
-    case "$branch_arg" in
-      ^ | - | @) skip=true ;;
-      pr:* | mr:*) skip=true ;;
-      http://* | https://*) skip=true ;;
-      .* | /*) skip=true ;;
-    esac
-    if [ "$skip" = false ]; then
-      branch_exists=false
-      git rev-parse --verify "$branch_arg" >/dev/null 2>&1 && branch_exists=true
-      [ "$branch_exists" = false ] && git rev-parse --verify "origin/$branch_arg" >/dev/null 2>&1 && branch_exists=true
-      if [ "$branch_exists" = false ] &&
-        ! has_arg --create ${call_args[@]+"${call_args[@]}"} &&
-        ! has_arg -c ${call_args[@]+"${call_args[@]}"}; then
-        new_args=()
-        for a in ${call_args[@]+"${call_args[@]}"}; do
-          new_args+=("$a")
-          [ "$a" = switch ] && new_args+=(--create)
-        done
-        call_args=(${new_args[@]+"${new_args[@]}"})
-      fi
-    fi
-  fi
-fi
-
-# ---- auto --yes (hook approval hashes churn; --yes is the stable choice) ------
-if [ "$help_or_version" = false ]; then
-  if ! has_arg --yes ${call_args[@]+"${call_args[@]}"} && ! has_arg -y ${call_args[@]+"${call_args[@]}"}; then
-    call_args+=(--yes)
-  fi
-fi
-
-# ---- target mode: Worktrunk owns the worktree, tmux helper owns nav ----------
-if [ -n "$target" ]; then
-  if ! has_arg switch ${call_args[@]+"${call_args[@]}"}; then
-    call_args=(switch ${call_args[@]+"${call_args[@]}"})
-  fi
-  has_arg --no-cd ${call_args[@]+"${call_args[@]}"} || call_args+=(--no-cd)
-  has_format=false
-  for a in ${call_args[@]+"${call_args[@]}"}; do
-    case "$a" in --format*) has_format=true ;; esac
-  done
-  [ "$has_format" = false ] && call_args+=(--format=json)
-
-  # Capture stdout (JSON); stderr passes through to the terminal.
-  out="$("$wt_bin" "${call_args[@]}")" || exit $?
-
-  branch=""
-  wpath=""
-  while IFS= read -r line; do
-    p="$(printf '%s' "$line" | jq -r '.path // empty' 2>/dev/null)"
-    if [ -n "$p" ]; then
-      wpath="$p"
-      branch="$(printf '%s' "$line" | jq -r '.branch // empty' 2>/dev/null)"
-    fi
-  done <<<"$out"
-  if [ -z "$wpath" ]; then
-    echo "wt: could not parse worktree path from Worktrunk JSON" >&2
-    printf '%s\n' "$out" >&2
-    exit 1
-  fi
-
-  main_root="$(dirname "$gcd")"
-  # Defaulted session target + destination is the main checkout -> plain cd.
-  # An explicit -t session|window still opens tmux for main.
-  if [ "$target_defaulted" = true ] && [ "$wpath" = "$main_root" ]; then
-    emit_cd "$wpath"
-    write_env unset
-    exit 0
-  fi
-
-  ensure_pi_lens_config "$wpath"
-  wt-tmux-target --target "$target" --branch "$branch" --path "$wpath"
-  tmux_rc=$?
-
-  if [ "$wpath" = "$main_root" ]; then
-    write_env unset
-  else
-    write_env set "$(worktree_id "$wpath")"
-  fi
-  exit "$tmux_rc"
-fi
-
-# ---- normal mode: directive files -------------------------------------------
-cd_file="$(mktemp)"
-exec_file="$(mktemp)"
-directive_env=(WORKTRUNK_DIRECTIVE_CD_FILE="$cd_file" WORKTRUNK_DIRECTIVE_EXEC_FILE="$exec_file")
-# WORKTRUNK_SHELL=fish makes the binary escape exec directives for fish eval.
-[ "${WT_SHELL:-posix}" = fish ] && directive_env+=(WORKTRUNK_SHELL=fish)
-
-env "${directive_env[@]}" "$wt_bin" ${call_args[@]+"${call_args[@]}"}
-exit_code=$?
-
-if [ -s "$cd_file" ]; then
-  tgt="$(sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' "$cd_file")"
-  ensure_pi_lens_config "$tgt"
-  emit_cd "$tgt"
-  # GIT_WORKTREE ({repo}-{branch-slug}) for shells/services; erased in main.
-  gd="$(git -C "$tgt" rev-parse --git-dir 2>/dev/null)"
-  case "$gd" in
-    */worktrees/*) write_env set "$(worktree_id "$tgt")" ;;
-    *) write_env unset ;;
-  esac
-fi
-
-if [ -s "$exec_file" ]; then
-  if [ -n "${WT_EXEC_FILE:-}" ]; then
-    cat "$exec_file" >"$WT_EXEC_FILE"
-  else
-    eval "$(cat "$exec_file")"
-    src_exit=$?
-    [ "$exit_code" -eq 0 ] && exit_code=$src_exit
-  fi
-fi
-
-rm -f "$cd_file" "$exec_file"
-exit "$exit_code"
+exec "$V2_BACKEND" "$@"
