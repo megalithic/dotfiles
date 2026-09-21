@@ -12,14 +12,17 @@
 #   network-status -f -n ethernet   # Get service name for ethernet (even if not connected)
 #   network-status -r wifi          # Show full report for just wifi
 #   network-status --report ethernet  # Show full report for just ethernet
+#   network-status --usable-service "Thunderbolt Ethernet Slot 1"
+#                                   # Get an exact service's active IPv4 device
 
 # Function to parse network services and their devices
 # Output format: "Service Name|Device"
 get_all_network_services() {
-    networksetup -listnetworkserviceorder | awk '
+	networksetup -listnetworkserviceorder | awk '
         /^\([0-9]+\) / {
             service = $0
             sub(/^\([0-9]+\) /, "", service)
+            sub(/^\(\*\) /, "", service)
             getline
             if ($0 ~ /\(Hardware Port:.*Device: /) {
                 # Extract device name using sub/gsub
@@ -32,247 +35,289 @@ get_all_network_services() {
     '
 }
 
-# Function to check if a network service has an active connection
-# Returns 0 (true) if connected with an IP, 1 (false) otherwise
-is_service_connected() {
-    local service_name="$1"
-    local info=$(networksetup -getinfo "$service_name" 2>/dev/null)
-
-    # Check if the service has an IP address assigned
-    # A connected service will have "IP address: x.x.x.x" in the output
-    if echo "$info" | grep -q "^IP address:"; then
-        local ip=$(echo "$info" | grep "^IP address:" | awk '{print $3}')
-        # Make sure it's not empty or 0.0.0.0
-        if [[ -n "$ip" && "$ip" != "0.0.0.0" ]]; then
-            return 0
-        fi
-    fi
-
-    return 1
-}
-
 # Function to get IPv4 address from device
 get_ipv4() {
-    local device="$1"
-    ipconfig getifaddr "$device" 2>/dev/null
+	local device="$1"
+	ipconfig getifaddr "$device" 2>/dev/null
 }
 
 # Function to get IPv6 addresses from device (excluding link-local)
 get_ipv6() {
-    local device="$1"
-    /sbin/ifconfig "$device" 2>/dev/null | grep -o 'inet6 [0-9a-f:]*' | grep -v '^inet6 fe80:' | awk '{print $2}'
+	local device="$1"
+	/sbin/ifconfig "$device" 2>/dev/null | grep -o 'inet6 [0-9a-f:]*' | grep -v '^inet6 fe80:' | awk '{print $2}'
 }
 
 # Function to check if device is active via ifconfig
 is_device_active() {
-    local device="$1"
-    /sbin/ifconfig "$device" 2>/dev/null | grep -q "status: active"
+	local device="$1"
+	/sbin/ifconfig "$device" 2>/dev/null | grep -q "status: active"
 }
 
-# Function to check if service is connected (combines both checks)
-is_connected() {
-    local service_name="$1"
-    local device="$2"
+# Check that a service's interface has active link and usable IPv4.
+# Diagnostics are written to stderr for callers such as the dock watcher.
+check_service_connectivity() {
+	local service_name="$1"
+	local device="$2"
+	local info service_ip interface_ip
 
-    if is_service_connected "$service_name" || is_device_active "$device"; then
-        return 0
-    fi
-    return 1
+	if ! is_device_active "$device"; then
+		echo "network interface '$device' is disconnected" >&2
+		return 1
+	fi
+
+	if ! info=$(networksetup -getinfo "$service_name" 2>&1); then
+		echo "could not query network service '$service_name': $info" >&2
+		return 1
+	fi
+
+	service_ip=$(echo "$info" | awk '/^IP address:/ { print $3; exit }')
+	interface_ip=$(get_ipv4 "$device")
+	if [[ -z "$service_ip" || "$service_ip" == "0.0.0.0" || -z "$interface_ip" || "$interface_ip" == "0.0.0.0" ]]; then
+		echo "network interface '$device' has no IPv4 address" >&2
+		return 1
+	fi
+
+	return 0
+}
+
+# Function to check if service is connected.
+is_connected() {
+	check_service_connectivity "$1" "$2" >/dev/null 2>&1
+}
+
+# Return the device for one exact service name.
+get_service_device() {
+	local wanted="$1"
+	local service_name device
+
+	while IFS='|' read -r service_name device; do
+		if [[ "$service_name" == "$wanted" ]]; then
+			echo "$device"
+			return 0
+		fi
+	done <<<"$(get_all_network_services)"
+
+	return 1
+}
+
+# Return an exact service's device only when it has active link and IPv4.
+show_usable_service_device() {
+	local service_name="$1"
+	local device
+
+	if ! device=$(get_service_device "$service_name"); then
+		echo "network service '$service_name' has no hardware interface" >&2
+		return 1
+	fi
+
+	if ! check_service_connectivity "$service_name" "$device"; then
+		return 1
+	fi
+
+	echo "$device"
 }
 
 # Function to find device by fuzzy/regex matching the service name
 find_device_by_name() {
-    local search_term="$1"
-    local force="${2:-false}"
-    local all_services=$(get_all_network_services)
+	local search_term="$1"
+	local force="${2:-false}"
+	local all_services search_normalized service_normalized
 
-    # Convert search term to lowercase and remove non-alphanumeric chars for fuzzy matching
-    local search_normalized=$(echo "$search_term" | tr '[:upper:]' '[:lower:]' | tr -d -c '[:alnum:]')
+	all_services=$(get_all_network_services)
 
-    # Process each network service
-    while IFS='|' read -r service_name device; do
-        # Convert service name to lowercase and remove non-alphanumeric chars
-        local service_normalized=$(echo "$service_name" | tr '[:upper:]' '[:lower:]' | tr -d -c '[:alnum:]')
+	# Convert search term to lowercase and remove non-alphanumeric chars for fuzzy matching
+	search_normalized=$(echo "$search_term" | tr '[:upper:]' '[:lower:]' | tr -d -c '[:alnum:]')
 
-        # Check if search term is contained in service name (fuzzy match)
-        if [[ "$service_normalized" =~ $search_normalized ]]; then
-            # If force mode, return device regardless of connection status
-            if [[ "$force" == "true" ]]; then
-                echo "$device"
-                return 0
-            fi
-            # Otherwise, check if this service is connected
-            if is_connected "$service_name" "$device"; then
-                echo "$device"
-                return 0
-            fi
-        fi
-    done <<< "$all_services"
+	# Process each network service
+	while IFS='|' read -r service_name device; do
+		# Convert service name to lowercase and remove non-alphanumeric chars
+		service_normalized=$(echo "$service_name" | tr '[:upper:]' '[:lower:]' | tr -d -c '[:alnum:]')
 
-    # No matching service found
-    return 1
+		# Check if search term is contained in service name (fuzzy match)
+		if [[ "$service_normalized" =~ $search_normalized ]]; then
+			# If force mode, return device regardless of connection status
+			if [[ "$force" == "true" ]]; then
+				echo "$device"
+				return 0
+			fi
+			# Otherwise, check if this service is connected
+			if is_connected "$service_name" "$device"; then
+				echo "$device"
+				return 0
+			fi
+		fi
+	done <<<"$all_services"
+
+	# No matching service found
+	return 1
 }
 
 # Function to find service name by fuzzy/regex matching
 find_service_name() {
-    local search_term="$1"
-    local force="${2:-false}"
-    local all_services=$(get_all_network_services)
+	local search_term="$1"
+	local force="${2:-false}"
+	local all_services search_normalized service_normalized
 
-    # Convert search term to lowercase and remove non-alphanumeric chars for fuzzy matching
-    local search_normalized=$(echo "$search_term" | tr '[:upper:]' '[:lower:]' | tr -d -c '[:alnum:]')
+	all_services=$(get_all_network_services)
 
-    # Process each network service
-    while IFS='|' read -r service_name device; do
-        # Convert service name to lowercase and remove non-alphanumeric chars
-        local service_normalized=$(echo "$service_name" | tr '[:upper:]' '[:lower:]' | tr -d -c '[:alnum:]')
+	# Convert search term to lowercase and remove non-alphanumeric chars for fuzzy matching
+	search_normalized=$(echo "$search_term" | tr '[:upper:]' '[:lower:]' | tr -d -c '[:alnum:]')
 
-        # Check if search term is contained in service name (fuzzy match)
-        if [[ "$service_normalized" =~ $search_normalized ]]; then
-            # If force mode, return service name regardless of connection status
-            if [[ "$force" == "true" ]]; then
-                echo "$service_name"
-                return 0
-            fi
-            # Otherwise, check if this service is connected
-            if is_connected "$service_name" "$device"; then
-                echo "$service_name"
-                return 0
-            fi
-        fi
-    done <<< "$all_services"
+	# Process each network service
+	while IFS='|' read -r service_name device; do
+		# Convert service name to lowercase and remove non-alphanumeric chars
+		service_normalized=$(echo "$service_name" | tr '[:upper:]' '[:lower:]' | tr -d -c '[:alnum:]')
 
-    # No matching service found
-    return 1
+		# Check if search term is contained in service name (fuzzy match)
+		if [[ "$service_normalized" =~ $search_normalized ]]; then
+			# If force mode, return service name regardless of connection status
+			if [[ "$force" == "true" ]]; then
+				echo "$service_name"
+				return 0
+			fi
+			# Otherwise, check if this service is connected
+			if is_connected "$service_name" "$device"; then
+				echo "$service_name"
+				return 0
+			fi
+		fi
+	done <<<"$all_services"
+
+	# No matching service found
+	return 1
 }
 
 # Function to show full report for a single matched service
 show_service_report() {
-    local search_term="$1"
-    local all_services=$(get_all_network_services)
+	local search_term="$1"
+	local all_services search_normalized service_normalized
 
-    # Convert search term to lowercase and remove non-alphanumeric chars for fuzzy matching
-    local search_normalized=$(echo "$search_term" | tr '[:upper:]' '[:lower:]' | tr -d -c '[:alnum:]')
+	all_services=$(get_all_network_services)
 
-    # Process each network service
-    while IFS='|' read -r service_name device; do
-        # Convert service name to lowercase and remove non-alphanumeric chars
-        local service_normalized=$(echo "$service_name" | tr '[:upper:]' '[:lower:]' | tr -d -c '[:alnum:]')
+	# Convert search term to lowercase and remove non-alphanumeric chars for fuzzy matching
+	search_normalized=$(echo "$search_term" | tr '[:upper:]' '[:lower:]' | tr -d -c '[:alnum:]')
 
-        # Check if search term is contained in service name (fuzzy match)
-        if [[ "$service_normalized" =~ $search_normalized ]]; then
-            # Check if this service is connected
-            if is_connected "$service_name" "$device"; then
-                print_service_info "$service_name" "$device"
-                return 0
-            fi
-        fi
-    done <<< "$all_services"
+	# Process each network service
+	while IFS='|' read -r service_name device; do
+		# Convert service name to lowercase and remove non-alphanumeric chars
+		service_normalized=$(echo "$service_name" | tr '[:upper:]' '[:lower:]' | tr -d -c '[:alnum:]')
 
-    # No matching connected service found
-    return 1
+		# Check if search term is contained in service name (fuzzy match)
+		if [[ "$service_normalized" =~ $search_normalized ]]; then
+			# Check if this service is connected
+			if is_connected "$service_name" "$device"; then
+				print_service_info "$service_name" "$device"
+				return 0
+			fi
+		fi
+	done <<<"$all_services"
+
+	# No matching connected service found
+	return 1
 }
 
 # Function to print network info for a service
 print_service_info() {
-    local service_name="$1"
-    local device="$2"
+	local service_name="$1"
+	local device="$2"
 
-    echo "[$service_name]"
-    echo "  Device: $device"
+	echo "[$service_name]"
+	echo "  Device: $device"
 
-    if is_connected "$service_name" "$device"; then
-        echo "  Status: CONNECTED"
+	if is_connected "$service_name" "$device"; then
+		echo "  Status: CONNECTED"
 
-        # Get IPv4
-        local ipv4=$(get_ipv4 "$device")
-        if [[ -n "$ipv4" ]]; then
-            echo "  IPv4:   $ipv4"
-        else
-            echo "  IPv4:   None"
-        fi
+		# Get IPv4
+		local ipv4
+		ipv4=$(get_ipv4 "$device")
+		if [[ -n "$ipv4" ]]; then
+			echo "  IPv4:   $ipv4"
+		else
+			echo "  IPv4:   None"
+		fi
 
-        # Get IPv6
-        local ipv6=$(get_ipv6 "$device")
-        if [[ -n "$ipv6" ]]; then
-            echo "  IPv6:   $ipv6"
-        else
-            echo "  IPv6:   None"
-        fi
+		# Get IPv6
+		local ipv6
+		ipv6=$(get_ipv6 "$device")
+		if [[ -n "$ipv6" ]]; then
+			echo "  IPv6:   $ipv6"
+		else
+			echo "  IPv6:   None"
+		fi
 
-        return 0  # Connected
-    else
-        echo "  Status: NOT CONNECTED"
-        return 1  # Not connected
-    fi
+		return 0 # Connected
+	else
+		echo "  Status: NOT CONNECTED"
+		return 1 # Not connected
+	fi
 }
 
 # Function to show full report
 show_full_report() {
-    echo "Network Status Report"
-    echo "===================="
-    echo
+	echo "Network Status Report"
+	echo "===================="
+	echo
 
-    # Get all network services
-    all_services=$(get_all_network_services)
+	# Get all network services
+	all_services=$(get_all_network_services)
 
-    # Track connection status
-    wifi_connected=false
-    ethernet_connected=false
-    ethernet_services=()
+	# Track connection status
+	wifi_connected=false
+	ethernet_connected=false
+	ethernet_services=()
 
-    # Process each network service
-    while IFS='|' read -r service_name device; do
-        # Check if this is Wi-Fi
-        if [[ "$service_name" == "Wi-Fi" ]]; then
-            print_service_info "$service_name" "$device"
-            if is_connected "$service_name" "$device"; then
-                wifi_connected=true
-            fi
-            echo
-        # Check if this is a Thunderbolt or USB Ethernet service
-        elif [[ "$service_name" =~ Thunderbolt.*Ethernet ]] || [[ "$service_name" =~ USB.*Ethernet ]]; then
-            # Check if this service is connected
-            if is_connected "$service_name" "$device"; then
-                print_service_info "$service_name" "$device"
-                ethernet_connected=true
-                ethernet_services+=("$service_name")
-                echo
-            fi
-        fi
-    done <<< "$all_services"
+	# Process each network service
+	while IFS='|' read -r service_name device; do
+		# Check if this is Wi-Fi
+		if [[ "$service_name" == "Wi-Fi" ]]; then
+			print_service_info "$service_name" "$device"
+			if is_connected "$service_name" "$device"; then
+				wifi_connected=true
+			fi
+			echo
+		# Check if this is a Thunderbolt or USB Ethernet service
+		elif [[ "$service_name" =~ Thunderbolt.*Ethernet ]] || [[ "$service_name" =~ USB.*Ethernet ]]; then
+			# Check if this service is connected
+			if is_connected "$service_name" "$device"; then
+				print_service_info "$service_name" "$device"
+				ethernet_connected=true
+				ethernet_services+=("$service_name")
+				echo
+			fi
+		fi
+	done <<<"$all_services"
 
-    # Show disconnected ethernet message if none found
-    if [[ "$ethernet_connected" == false ]]; then
-        echo "[Thunderbolt/USB Ethernet]"
-        echo "  Status: NO ACTIVE CONNECTION"
-        echo
-    fi
+	# Show disconnected ethernet message if none found
+	if [[ "$ethernet_connected" == false ]]; then
+		echo "[Thunderbolt/USB Ethernet]"
+		echo "  Status: NO ACTIVE CONNECTION"
+		echo
+	fi
 
-    # Summary
-    echo "Summary"
-    echo "-------"
+	# Summary
+	echo "Summary"
+	echo "-------"
 
-    if $wifi_connected && $ethernet_connected; then
-        echo "Connected via: Wi-Fi AND Ethernet"
-        if [[ ${#ethernet_services[@]} -gt 0 ]]; then
-            echo "Active Ethernet: ${ethernet_services[*]}"
-        fi
-    elif $wifi_connected; then
-        echo "Connected via: Wi-Fi only"
-    elif $ethernet_connected; then
-        echo "Connected via: Ethernet only"
-        if [[ ${#ethernet_services[@]} -gt 0 ]]; then
-            echo "Active Ethernet: ${ethernet_services[*]}"
-        fi
-    else
-        echo "Connected via: NEITHER (No active connection)"
-    fi
+	if $wifi_connected && $ethernet_connected; then
+		echo "Connected via: Wi-Fi AND Ethernet"
+		if [[ ${#ethernet_services[@]} -gt 0 ]]; then
+			echo "Active Ethernet: ${ethernet_services[*]}"
+		fi
+	elif $wifi_connected; then
+		echo "Connected via: Wi-Fi only"
+	elif $ethernet_connected; then
+		echo "Connected via: Ethernet only"
+		if [[ ${#ethernet_services[@]} -gt 0 ]]; then
+			echo "Active Ethernet: ${ethernet_services[*]}"
+		fi
+	else
+		echo "Connected via: NEITHER (No active connection)"
+	fi
 }
 
 # Function to show help
 show_help() {
-    cat << EOF
+	cat <<EOF
 Network Status Script - Check network connection status and details
 
 USAGE:
@@ -293,6 +338,10 @@ OPTIONS:
     -r, --report <term>    Show full report for only the connected service
                           matching <term> (includes device, status, IPs)
 
+    -u, --usable-service <name>
+                          Return the device for the exact service name only
+                          when its interface has active link and IPv4
+
     -h, --help            Show this help message
 
 EXAMPLES:
@@ -302,6 +351,7 @@ EXAMPLES:
     network-status -n ethernet        # Get service name for ethernet
     network-status -f -n ethernet     # Get service name even if not connected
     network-status -r thunderbolt     # Show full info for Thunderbolt Ethernet
+    network-status --usable-service "Thunderbolt Ethernet Slot 1"
 
 NOTES:
     - Search terms use fuzzy matching (case-insensitive, ignores hyphens/spaces)
@@ -315,80 +365,88 @@ device_mode=false
 name_mode=false
 report_mode=false
 force_mode=false
+usable_service=""
 search_term=""
 
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-        -h|--help)
-            show_help
-            exit 0
-            ;;
-        -f|--force)
-            force_mode=true
-            shift
-            ;;
-        -d|--device)
-            device_mode=true
-            search_term="$2"
-            shift 2
-            ;;
-        -n|--name)
-            name_mode=true
-            search_term="$2"
-            shift 2
-            ;;
-        -r|--report)
-            report_mode=true
-            search_term="$2"
-            shift 2
-            ;;
-        *)
-            echo "Unknown option: $1" >&2
-            echo "Usage: $0 [-f|--force] [-d|--device <term>] [-n|--name <term>] [-r|--report <term>] [-h|--help]" >&2
-            exit 1
-            ;;
-    esac
+	case "$1" in
+	-h | --help)
+		show_help
+		exit 0
+		;;
+	-f | --force)
+		force_mode=true
+		shift
+		;;
+	-d | --device)
+		device_mode=true
+		search_term="$2"
+		shift 2
+		;;
+	-n | --name)
+		name_mode=true
+		search_term="$2"
+		shift 2
+		;;
+	-r | --report)
+		report_mode=true
+		search_term="$2"
+		shift 2
+		;;
+	-u | --usable-service)
+		if [[ $# -lt 2 || -z "$2" ]]; then
+			echo "Error: $1 requires a service name" >&2
+			exit 1
+		fi
+		usable_service="$2"
+		shift 2
+		;;
+	*)
+		echo "Unknown option: $1" >&2
+		echo "Usage: $0 [-f|--force] [-d|--device <term>] [-n|--name <term>] [-r|--report <term>] [-u|--usable-service <name>] [-h|--help]" >&2
+		exit 1
+		;;
+	esac
 done
 
 # Execute based on mode
-if $device_mode; then
-    if [[ -z "$search_term" ]]; then
-        echo "Error: -d|--device requires a search term" >&2
-        exit 1
-    fi
+if [[ -n "$usable_service" ]]; then
+	show_usable_service_device "$usable_service"
+elif $device_mode; then
+	if [[ -z "$search_term" ]]; then
+		echo "Error: -d|--device requires a search term" >&2
+		exit 1
+	fi
 
-    device=$(find_device_by_name "$search_term" "$force_mode")
-    if [[ $? -eq 0 ]]; then
-        echo "$device"
-        exit 0
-    else
-        exit 1
-    fi
+	if device=$(find_device_by_name "$search_term" "$force_mode"); then
+		echo "$device"
+		exit 0
+	else
+		exit 1
+	fi
 elif $name_mode; then
-    if [[ -z "$search_term" ]]; then
-        echo "Error: -n|--name requires a search term" >&2
-        exit 1
-    fi
+	if [[ -z "$search_term" ]]; then
+		echo "Error: -n|--name requires a search term" >&2
+		exit 1
+	fi
 
-    service_name=$(find_service_name "$search_term" "$force_mode")
-    if [[ $? -eq 0 ]]; then
-        echo "$service_name"
-        exit 0
-    else
-        exit 1
-    fi
+	if service_name=$(find_service_name "$search_term" "$force_mode"); then
+		echo "$service_name"
+		exit 0
+	else
+		exit 1
+	fi
 elif $report_mode; then
-    if [[ -z "$search_term" ]]; then
-        echo "Error: -r|--report requires a search term" >&2
-        exit 1
-    fi
+	if [[ -z "$search_term" ]]; then
+		echo "Error: -r|--report requires a search term" >&2
+		exit 1
+	fi
 
-    show_service_report "$search_term"
-    if [[ $? -eq 0 ]]; then
-        exit 0
-    else
-        exit 1
-    fi
+	if show_service_report "$search_term"; then
+		exit 0
+	else
+		exit 1
+	fi
 else
-    show_full_report
+	show_full_report
 fi
