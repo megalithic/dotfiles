@@ -45,6 +45,7 @@
     "anthropic/claude-opus-4-8",
     "anthropic/claude-sonnet-5",
     "anthropic/claude-haiku-4-5",
+    "openai-codex/gpt-6-astra",
     "openai-codex/gpt-5.6-sol",
     "openai-codex/gpt-5.6-terra",
     "openai-codex/gpt-5.6-luna",
@@ -65,6 +66,7 @@
   "enabledModelScopes": {
     "mega": [
       "anthropic/claude-fable-5",
+      "my-codex/gpt-6-astra",
       "my-codex/gpt-5.6-sol",
       "my-codex/gpt-5.6-terra",
       "my-codex/gpt-5.6-luna",
@@ -84,6 +86,7 @@
       "anthropic/claude-opus-4-8",
       "anthropic/claude-sonnet-5",
       "anthropic/claude-haiku-4-5",
+      "openai-codex/gpt-6-astra",
       "openai-codex/gpt-5.6-sol",
       "openai-codex/gpt-5.6-terra",
       "openai-codex/gpt-5.6-luna",
@@ -138,15 +141,19 @@
   "subagentRouting": {
     "mega": {
       "worker": {
-        "model": "opencode-go/gpt-5.6-luna",
+        "model": "my-codex/gpt-5.6-luna",
         "thinking": "medium"
       },
       "researcher": {
-        "model": "opencode-go/gpt-5.6-luna",
+        "model": "my-codex/gpt-5.6-terra",
         "thinking": "medium"
       },
+      "reviewer": {
+        "model": "my-codex/gpt-5.6-sol",
+        "thinking": "high"
+      },
       "scout": {
-        "model": "opencode-go/gpt-5.6-luna",
+        "model": "my-codex/gpt-5.6-luna",
         "thinking": "medium"
       }
     },
@@ -156,11 +163,15 @@
         "thinking": "medium"
       },
       "researcher": {
-        "model": "anthropic/claude-sonnet-5",
+        "model": "anthropic/claude-opus-5",
         "thinking": "medium"
       },
+      "reviewer": {
+        "model": "anthropic/claude-fable-5",
+        "thinking": "high"
+      },
       "scout": {
-        "model": "openai-codex/gpt-5.6-luna",
+        "model": "anthropic/claude-sonnet-5",
         "thinking": "medium"
       }
     }
@@ -196,6 +207,11 @@
       {
         "name": "mega",
         "entries": [
+          {
+            "provider": "my-codex",
+            "model": "gpt-6-astra",
+            "enabled": true
+          },
           {
             "provider": "my-codex",
             "model": "gpt-5.6-sol",
@@ -235,6 +251,11 @@
           {
             "provider": "anthropic",
             "model": "claude-haiku-4-5",
+            "enabled": true
+          },
+          {
+            "provider": "openai-codex",
+            "model": "gpt-6-astra",
             "enabled": true
           },
           {
