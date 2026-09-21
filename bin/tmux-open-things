@@ -1,34 +1,134 @@
 #!/usr/bin/env bash
-# Open anything — URLs in browser, files in editor, paths with line:col support.
-# Hook for tmux-fastcopy (shift-action) and extrakto (editor).
+# Open URLs in their registered app, directories in Finder, and files in a new tmux Neovim window.
 
-if (($# == 0)); then
-  echo "usage: tmux-open-things <path-or-url>..." >&2
-  exit 1
+set -euo pipefail
+
+if [[ "${1:-}" == "--nvim-window" ]]; then
+	file="${TMUX_OPEN_FILE:?missing TMUX_OPEN_FILE}"
+	line="${TMUX_OPEN_LINE:-}"
+	column="${TMUX_OPEN_COLUMN:-}"
+	editor="${TMUX_OPEN_EDITOR:-nvim}"
+	editor_args=()
+
+	if [[ -n "$line" ]]; then
+		if [[ -n "$column" ]]; then
+			editor_args+=("+call cursor($line, $column)")
+		else
+			editor_args+=("+$line")
+		fi
+	fi
+
+	exec "$editor" "${editor_args[@]}" -- "$file"
 fi
 
-for arg in "$@"; do
-  if [[ "$arg" =~ ^https?:// ]]; then
-    open "$arg"
-  else
-    # Extract file:line:col pattern (e.g. src/main.ts:42:7)
-    file="${arg%%:*}"
-    rest="${arg#*:}"
-    line=""
-    col=""
+if (($# == 0)); then
+	echo "usage: tmux-open-things <path-or-url>..." >&2
+	exit 1
+fi
 
-    if [[ "$file" != "$arg" ]]; then
-      line="${rest%%:*}"
-      rest="${rest#*:}"
-      if [[ "$line" != "$rest" ]]; then
-        col="$rest"
-      fi
-    fi
+scheme_url_re='^[[:alpha:]][[:alnum:]+.-]*://[^[:space:]<>()]+$'
+bare_url_re='^(localhost|([0-9]{1,3}\.){3}[0-9]{1,3}|\[[0-9A-Fa-f:]+\]|([A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?\.)+[A-Za-z]{2,})(:[0-9]{1,5})?([/?#][^[:space:]<>()]*)?$'
+local_url_re='^(localhost|([0-9]{1,3}\.){3}[0-9]{1,3}|\[[0-9A-Fa-f:]+\])(:[0-9]{1,5})?([/?#]|$)'
 
-    if [[ -n "$line" ]]; then
-      ${EDITOR:-nvim} +"${line}${col:+:$col}" "$file"
-    else
-      ${EDITOR:-nvim} "$arg"
-    fi
-  fi
+unwrap_target() {
+	local value="$1"
+	local before
+	local after
+
+	while [[ "$value" == *$'\n'* ]]; do
+		before="${value%%$'\n'*}"
+		after="${value#*$'\n'}"
+
+		while [[ "$before" == *' ' || "$before" == *$'\t' ]]; do
+			before="${before%?}"
+		done
+
+		value="$before$after"
+	done
+
+	printf '%s' "$value"
+}
+
+open_file_in_tmux() {
+	local file="$1"
+	local line="$2"
+	local column="$3"
+	local context_pane="${TMUX_PANE:-${FASTCOPY_TARGET_PANE_ID:-}}"
+	local session
+	local directory
+	local basename
+	# The selected path contains a literal tilde; expansion happens below.
+	# shellcheck disable=SC2088
+	local tilde_prefix='~/'
+	local runner="exec \"$HOME/bin/tmux-open-things\" --nvim-window"
+
+	if [[ -z "$context_pane" ]]; then
+		echo "tmux-open-things: cannot open a file without a tmux pane context" >&2
+		return 1
+	fi
+
+	if [[ "${file:0:2}" == "$tilde_prefix" ]]; then
+		file="$HOME/${file:2}"
+	elif [[ "$file" != /* ]]; then
+		file="$PWD/$file"
+	fi
+
+	if [[ -d "$file" ]]; then
+		/usr/bin/open "$file"
+		return
+	fi
+
+	directory="$(dirname "$file")"
+	basename="$(basename "$file")"
+
+	if [[ ! -d "$directory" ]]; then
+		echo "tmux-open-things: file directory does not exist: $directory" >&2
+		return 1
+	fi
+
+	directory="$(cd "$directory" && pwd -P)"
+	session="$(tmux display-message -p -t "$context_pane" '#{session_name}')"
+
+	tmux new-window \
+		-t "=$session:" \
+		-c "$directory" \
+		-n "nvim:$basename" \
+		-e "TMUX_OPEN_FILE=$basename" \
+		-e "TMUX_OPEN_LINE=$line" \
+		-e "TMUX_OPEN_COLUMN=$column" \
+		-e "TMUX_OPEN_EDITOR=${EDITOR:-nvim}" \
+		"$runner"
+}
+
+for raw_arg in "$@"; do
+	arg="$(unwrap_target "$raw_arg")"
+
+	if [[ "$arg" =~ $scheme_url_re ]]; then
+		/usr/bin/open "$arg"
+		continue
+	fi
+
+	if [[ "$arg" =~ $bare_url_re ]]; then
+		if [[ "$arg" =~ $local_url_re ]]; then
+			/usr/bin/open "http://$arg"
+		else
+			/usr/bin/open "https://$arg"
+		fi
+		continue
+	fi
+
+	file="$arg"
+	line=""
+	column=""
+
+	if [[ "$file" =~ ^(.*):([0-9]+):([0-9]+)$ ]]; then
+		file="${BASH_REMATCH[1]}"
+		line="${BASH_REMATCH[2]}"
+		column="${BASH_REMATCH[3]}"
+	elif [[ "$file" =~ ^(.*):([0-9]+)$ ]]; then
+		file="${BASH_REMATCH[1]}"
+		line="${BASH_REMATCH[2]}"
+	fi
+
+	open_file_in_tmux "$file" "$line" "$column"
 done

@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Copy a fastcopy selection to the macOS clipboard after trimming outer whitespace.
+
+set -euo pipefail
+
+selection=""
+IFS= read -r -d '' selection || true
+
+while [[ -n "$selection" && "${selection:0:1}" == [[:space:]] ]]; do
+	selection="${selection:1}"
+done
+
+while [[ -n "$selection" && "${selection: -1}" == [[:space:]] ]]; do
+	selection="${selection:0:${#selection}-1}"
+done
+
+printf '%s' "$selection" | /usr/bin/pbcopy
+
+# To also store the trimmed selection in tmux's paste buffer, uncomment:
+# printf '%s' "$selection" | tmux load-buffer -
