@@ -830,7 +830,7 @@ async function fetchTaskDetail(gid) {
 		);
 	}
 
-	const t = res.data;
+	const t = res.json.data;
 
 	return {
 		gid: t.gid,
