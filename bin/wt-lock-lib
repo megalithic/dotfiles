@@ -1,6 +1,6 @@
 # shellcheck shell=bash
-# wt-lock-lib — shared mkdir(2)-based mutation locks for wt, wt-tmux-target,
-# and ftm (worktree-retaining design §1 "Backend result validation and
+# wt-lock-lib — shared mkdir(2)-based mutation locks for wt and ftm
+# (worktree-retaining design §1 "Backend result validation and
 # concurrency"). Sourced, never executed.
 #
 # Layout: <git-common-dir>/wt-wrapper/locks/{repository,worktree-<id>}

@@ -10,10 +10,10 @@ Use the local `wt` wrapper (`~/.dotfiles/bin/wt`) for every worktree operation. 
 Never, while `wt` works:
 
 - run raw `git worktree` commands;
-- call `wt-tmux-target`, `wt-tail-logs`, or build worktree tmux layouts manually;
+- build worktree tmux layouts manually (`ftm` owns session lifecycle);
 - write or derive `GIT_WORKTREE` yourself (query `wt id`);
 - hand-copy ignored files or re-run setup steps `wt` already ran;
-- use `wt switch` for navigation — it is the legacy/upstream escape path, not the workflow.
+- use `wt switch` for navigation — it passes through to the raw upstream backend (no parent-shell cd, no tmux), not the workflow.
 
 ## Availability gate
 
