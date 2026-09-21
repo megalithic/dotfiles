@@ -17,13 +17,6 @@
 #   4. dead MRU entries, then zoxide dirs by frecency
 #   5. remaining layouts, alphabetical
 #
-# Hooks (similar to wt/mise hooks): executable scripts in
-# $TMUX_HOOKS (default ~/.config/tmux/hooks), one per event:
-#   pre-create.sh   before a new session is built
-#   post-create.sh  after a new session is built, before switching
-#   post-switch.sh  after any switch/attach (including brand-new sessions)
-# Each receives: $1 session name, $2 cwd (session path), $3 source
-# (layout|zoxide|default|snapshot), plus FTM_EVENT/FTM_SESSION/FTM_CWD/FTM_SOURCE env.
 #
 # Keybinds in the picker:
 #   enter   switch/create/restore from selection or typed query
@@ -50,7 +43,6 @@ script_dir="$(cd "${script_path%/*}" && pwd)"
 
 TMUX="${TMUX:-}"
 TMUX_LAYOUTS="${TMUX_LAYOUTS:-$HOME/.config/tmux/layouts}"
-TMUX_HOOKS="${TMUX_HOOKS:-$HOME/.config/tmux/hooks}"
 POPUP="false"
 PI_STATE_DIR="${PI_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/pi}"
 FTM_STATE_DIR="${FTM_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ftm}"
@@ -348,10 +340,6 @@ function __help() {
 	printf -- "     %s repair ... [--restart-services]   additive repair of a recognized session\n" "$__base"
 	printf -- "     %s remove --session NAME [--cwd PATH] [--discard-snapshot]\n" "$__base"
 	printf -- "\n"
-	printf -- "   Hooks (executable scripts in \$TMUX_HOOKS, default ~/.config/tmux/hooks):\n"
-	printf -- "     pre-create.sh / post-create.sh / post-switch.sh\n"
-	printf -- "     args: SESSION CWD SOURCE (layout|zoxide|default)\n"
-	printf -- "\n"
 	printf -- "   Dependencies:\n"
 	printf -- "     tmux            (%s)\n" "$tmux_running"
 	printf -- "     fzf             (%s)\n" "$fzf_found"
@@ -406,27 +394,6 @@ function session_id_for() {
 		fi
 	done < <(tmux list-sessions -F '#{session_id} #{session_name}' 2>/dev/null)
 	return 1
-}
-
-# -- run an event hook if present+executable. Never fails the caller.
-function run_hook() {
-	local event="$1" session="$2" cwd="$3" source="$4"
-	local hook="$TMUX_HOOKS/$event.sh"
-	[[ -x $hook ]] || return 0
-	FTM_EVENT="$event" FTM_SESSION="$session" FTM_CWD="$cwd" FTM_SOURCE="$source" \
-		bash "$hook" "$session" "$cwd" "$source" || true
-}
-
-# -- like run_hook but detached (nohup + backgrounded subshell): survives the
-#    caller dying. Needed for post-switch — when ftm runs inside the C-Space
-#    display-popup binding, switch-client collapses the popup and tmux HUPs
-#    the script's process group before anything after the switch can run.
-function run_hook_detached() {
-	local event="$1" session="$2" cwd="$3" source="$4"
-	local hook="$TMUX_HOOKS/$event.sh"
-	[[ -x $hook ]] || return 0
-	(FTM_EVENT="$event" FTM_SESSION="$session" FTM_CWD="$cwd" FTM_SOURCE="$source" \
-		nohup bash "$hook" "$session" "$cwd" "$source" >/dev/null 2>&1 &)
 }
 
 # -- move a session to the top of the MRU state file (source of truth for
@@ -693,7 +660,6 @@ function to_session() {
 	sid="$(session_id_for "$session")" || return 1
 	spath="$(tmux display-message -p -t "$sid" '#{session_path}' 2>/dev/null || true)"
 	bump_recent "$session" "$spath"
-	run_hook_detached post-switch "$session" "$spath" "session"
 	tmux "$change" -t "$sid" ';' refresh-client
 }
 
@@ -713,19 +679,16 @@ function worktree_session_for() { # $1 = directory
 }
 
 # -- new session with pre-defined layout, OR just new basic tmux session.
-#    Fires pre-create/post-create hooks around the build.
 #    Linked-worktree directories are routed through the deterministic
 #    worktree builder (tags + code/agent/services + dev:setup gate) under
 #    their canonical {repo}-{branch-slug} name, so picker/zoxide entry
 #    points converge with `wt`. alt-enter (fresh) skips that and forces a
 #    plain default-layout session.
 function new_session() {
-	local session="$1" cwd="$2" source="${3:-default}" sid restored_cwd wid
+	local session="$1" cwd="$2" source="${3:-default}" wid
 
 	if [[ $source != fresh ]] && wid="$(worktree_session_for "$cwd")"; then
-		run_hook pre-create "$wid" "$cwd" "worktree"
 		if "$0" ensure --kind worktree --cwd "$cwd" --session "$wid" --worktree-id "$wid" --attach never >/dev/null; then
-			run_hook post-create "$wid" "$cwd" "worktree"
 			to_session "$wid"
 			return 0
 		fi
@@ -733,9 +696,6 @@ function new_session() {
 	fi
 
 	if [[ $source != fresh && -f "$(snapshot_file "$session")" ]] && restore_snapshot "$session"; then
-		sid="$(session_id_for "$session")"
-		restored_cwd="$(tmux display-message -p -t "$sid" '#{session_path}' 2>/dev/null || printf '%s' "$cwd")"
-		run_hook post-create "$session" "$restored_cwd" "snapshot"
 		to_session "$session"
 		return 0
 	fi
@@ -746,19 +706,16 @@ function new_session() {
 	fi
 	[[ $force_default == 0 && -n $layouts_dir && -f "$layouts_dir/$session.sh" ]] && source="layout"
 
-	run_hook pre-create "$session" "$cwd" "$source"
-
 	if [[ $source == "layout" ]]; then
 		bash "$layouts_dir/$session.sh" ||
 			tmux new-session -d -s "$session" -c "$cwd"
-	elif [[ -n $layouts_dir && -f "$layouts_dir/default.sh" ]]; then
-		bash "$layouts_dir/default.sh" "$session" "$cwd" ||
-			tmux new-session -d -s "$session" -c "$cwd"
 	else
-		tmux new-session -d -s "$session" -c "$cwd"
+		# Canonical generic builder: same deterministic code/agent/services
+		# lifecycle as worktree sessions, without Git locks or worktree tags
+		# (replaces the deleted layouts/default.sh).
+		"$0" ensure --kind generic --cwd "$cwd" --session "$session" --attach never >/dev/null ||
+			tmux new-session -d -s "$session" -c "$cwd"
 	fi
-
-	run_hook post-create "$session" "$cwd" "$source"
 
 	to_session "$session"
 }
