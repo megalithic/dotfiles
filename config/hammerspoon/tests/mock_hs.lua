@@ -156,6 +156,12 @@ function M.new()
   mock.hotkeys = {} -- hs.hotkey.bind results
   mock.modals = {} -- hs.hotkey.modal.new results
   mock.alerts = {}
+  mock.notifications = {}
+  mock.tasks = {}
+  mock.usbDevices = {}
+  mock.usbWatchers = {}
+  mock.networkWatchers = {}
+  mock.networkOpenError = nil
 
   local hs = {}
 
@@ -238,6 +244,99 @@ function M.new()
     end,
   }
 
+  hs.task = {
+    new = function(launchPath, callback, args)
+      local task = {
+        launchPath = launchPath,
+        callback = callback,
+        args = args or {},
+        started = false,
+        running = false,
+        terminated = false,
+      }
+      function task:start()
+        self.started = true
+        self.running = true
+        return self
+      end
+      function task:isRunning() return self.running end
+      function task:terminate()
+        self.running = false
+        self.terminated = true
+        return self
+      end
+      function task:complete(exitCode, stdOut, stdErr)
+        self.running = false
+        if self.callback then self.callback(exitCode or 0, stdOut or "", stdErr or "") end
+      end
+      table.insert(mock.tasks, task)
+      return task
+    end,
+  }
+
+  hs.usb = {
+    attachedDevices = function() return mock.usbDevices end,
+    watcher = {
+      new = function(callback)
+        local watcher = { callback = callback, started = false, stopped = false }
+        function watcher:start()
+          self.started = true
+          self.stopped = false
+          return self
+        end
+        function watcher:stop()
+          self.started = false
+          self.stopped = true
+          return self
+        end
+        function watcher:emit(data)
+          if self.started then self.callback(data) end
+        end
+        table.insert(mock.usbWatchers, watcher)
+        return watcher
+      end,
+    },
+  }
+
+  hs.network = {
+    configuration = {
+      open = function()
+        if mock.networkOpenError then error(mock.networkOpenError) end
+        local watcher = {
+          callback = nil,
+          monitoredKeys = nil,
+          pattern = nil,
+          started = false,
+          stopped = false,
+        }
+        function watcher:setCallback(callback)
+          self.callback = callback
+          return self
+        end
+        function watcher:monitorKeys(keys, pattern)
+          self.monitoredKeys = keys
+          self.pattern = pattern
+          return self
+        end
+        function watcher:start()
+          self.started = true
+          self.stopped = false
+          return self
+        end
+        function watcher:stop()
+          self.started = false
+          self.stopped = true
+          return self
+        end
+        function watcher:emit(keys)
+          if self.started and self.callback then self.callback(self, keys or {}) end
+        end
+        table.insert(mock.networkWatchers, watcher)
+        return watcher
+      end,
+    },
+  }
+
   hs.hotkey = {
     bind = function(mods, key, pressed, released)
       local hk = { mods = mods, key = key, pressed = pressed, released = released, deleted = false }
@@ -280,6 +379,18 @@ function M.new()
   hs.alert = {
     show = function(msg) table.insert(mock.alerts, msg) end,
     closeAll = function() end,
+  }
+
+  hs.notify = {
+    new = function(opts)
+      local notification = { opts = opts, sent = false }
+      function notification:send()
+        self.sent = true
+        table.insert(mock.notifications, self)
+        return self
+      end
+      return notification
+    end,
   }
 
   hs.fnutils = {
@@ -384,6 +495,7 @@ function M.new()
         end,
         eventString = function(e) return type(e) == "string" and e or tostring(e) end,
         resourcePath = function() return "./contexts/" end,
+        bin = function(command) return "/mock/bin/" .. command end,
       }, { __index = function() return noop end })
     _G.req = function(mod, ...)
       if mod == "hs.fnutils" then return hs.fnutils end

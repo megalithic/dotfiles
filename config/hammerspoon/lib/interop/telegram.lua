@@ -561,7 +561,7 @@ end
 --------------------------------------------------------------------------------
 
 ---Initialize Telegram integration
----@param opts? { pollInterval?: number, onMessage?: function }
+---@param opts? { pollInterval?: number|false, onMessage?: function }
 ---@return boolean success
 function M.init(opts)
 	opts = opts or {}
@@ -583,15 +583,16 @@ function M.init(opts)
 	-- Set message callback
 	M.messageCallback = opts.onMessage
 
-	-- Start polling timer
-	local interval = opts.pollInterval or DEFAULT_POLL_INTERVAL
-	M.pollTimer = hs.timer.doEvery(interval, poll)
-
-	-- Do an initial poll
-	poll()
+	if opts.pollInterval ~= false then
+		local interval = opts.pollInterval or DEFAULT_POLL_INTERVAL
+		M.pollTimer = hs.timer.doEvery(interval, poll)
+		poll()
+		U.log.i("initialized with " .. interval .. "s poll interval")
+	else
+		U.log.i("initialized with polling disabled")
+	end
 
 	M.initialized = true
-	U.log.i("initialized with " .. interval .. "s poll interval")
 
 	return true
 end

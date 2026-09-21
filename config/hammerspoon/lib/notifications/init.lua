@@ -23,7 +23,7 @@ function M.init()
 	local telegram = require("lib.interop.telegram")
 	local telegramOk, telegramErr = pcall(function()
 		return telegram.init({
-			pollInterval = C.notifier and C.notifier.telegramPollInterval or 10,
+			pollInterval = C.notifier and C.notifier.telegramPollInterval,
 			onMessage = function(msg)
 				M.handleTelegramMessage(msg)
 			end,

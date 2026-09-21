@@ -18,9 +18,15 @@ The mise `up` task ends by calling `bin/hs-reload` (non-fatal if Hammerspoon is 
 
 ## Dock watcher
 
-The dock watcher checks the current `kanata.kbd` symlink and launchd state before switching profiles.
+The dock watcher is active and uses the TS4 and Leeloo USB product IDs for dock and external-keyboard state. Bluetooth keyboard polling was removed because Leeloo Bluetooth state was unreliable.
 
-If the requested profile already runs, Hammerspoon logs success and skips `launchctl kickstart`, so config reloads do not bounce Kanata. When a restart fails, the watcher reports stderr only if the stderr file changed during that restart attempt; stale Input Monitoring errors do not appear as fresh failures.
+The TS4 USB product ID alone determines docked or undocked mode. Ethernet never determines dock state; it is only the safety gate for disabling Wi-Fi. One asynchronous shell task computes and applies the complete policy. Undocked mode turns Wi-Fi on. Docked mode turns Wi-Fi off only when `bin/network-status --usable-service` confirms that the exact configured `Thunderbolt Ethernet Slot 1` service has active link and IPv4, `networksetup` reports the service enabled, and that interface owns the default route. Otherwise the same task keeps or restores Wi-Fi. The macOS `Thunderbolt Bridge` service is unrelated. `bin/network-status` uses the same active-link-and-IPv4 rule for its normal connected-service output.
+
+An `hs.network.configuration` dynamic-store watcher monitors `State:/Network/.*`. Network bursts use one fixed one-second coalescing window that cannot be postponed by later events. If reconciliation is already running, events queue one follow-up instead of creating overlapping cancellation and retry state. Undocking preempts active dock work and starts a direct Wi-Fi-on task. Every Wi-Fi task has a ten-second timeout; a timed-out dock reconciliation is terminated and replaced by direct Wi-Fi-on recovery. If the dynamic-store watcher cannot start, the docked reconciliation keeps Wi-Fi on. Shell-level Wi-Fi-on recovery retries once, and stale task callbacks cannot start work after replacement or stop.
+
+Failed checks log the reason and notify once per repeated message; a successful Wi-Fi-off result clears notification deduplication. Kanata switching remains separate: one asynchronous task checks the current `kanata.kbd` symlink and launchd state, changes the symlink, restarts the daemon, waits, and verifies launchd without blocking Hammerspoon's event loop.
+
+Kanata switches are serialized. If USB state changes during a switch, the newest requested profile runs next. An unchanged failed target retries once, then logs and sends a notification. If the requested profile already runs, Hammerspoon logs success and skips `launchctl kickstart`, so config reloads do not bounce Kanata. Restart diagnostics report stderr only if the stderr file changed during that attempt. Stopping the watcher terminates its active tasks and ignores stale callbacks.
 
 ## Reload safety
 
@@ -74,7 +80,7 @@ App and window watchers run layout rules on launch and window creation (not `mai
 
 ## App watcher lifecycle
 
-The app/context watcher stack (`watchers/app.lua`, `contexts/`, `lollygagger.lua`) is dormant: `init.lua` only loads the audio, avwatchd, url, and pasteboard watchers. The stack stays lifecycle-correct for re-enablement.
+The app/context watcher stack (`watchers/app.lua`, `contexts/`, `lollygagger.lua`) is dormant. `init.lua` loads the audio, avwatchd, url, pasteboard, and dock watchers. The stack stays lifecycle-correct for re-enablement.
 
 Per-app `hs.uielement` watchers are keyed by PID, matching `hs.uielement`'s own termination cleanup. `hs.application.watcher` terminated events arrive with a nil app name and an app object only useful for its PID, so the global callback routes them to a dedicated terminated handler: it stops and removes the per-app watcher, then runs context deactivation and lollygagger cleanup with the bundle ID cached at watch time. A relaunched app gets a fresh PID and is re-watched; the old bundleID keying blocked re-watching forever.
 
@@ -82,9 +88,17 @@ Per-app `hs.uielement` watchers are keyed by PID, matching `hs.uielement`'s own 
 
 The shared Hyper modal binds its physical key once across all `req("hyper", { id })` namespaces. Passthrough and app-chord bindings that wait for an app to front poll at 0.1s and give up after 10s instead of waiting forever. The quitter tracks its double-press auto-exit timer so a stale timer cannot exit a newer confirmation modal.
 
-`config/hammerspoon/tests/run.lua` (run `lua tests/run.lua` from `config/hammerspoon/`) exercises the stack against a mock Hammerspoon runtime with a virtual clock: watcher registration/termination/relaunch, context preload idempotence and frontmost gating, erroring-hook isolation, lollygagger timer cancellation, hyper bind dedupe and bounded waits, and quitter double-press timer races.
+`config/hammerspoon/tests/run.lua` (run `lua tests/run.lua` from `config/hammerspoon/`) exercises the stack against a mock Hammerspoon runtime with a virtual clock: USB dock state and wired-guard inputs; network-monitor startup failure; fixed-window event coalescing; queued follow-up reconciliation; task timeout and forced Wi-Fi recovery; undock preemption; stale callback cleanup; notification deduplication; Kanata serialization/retry/cleanup; watcher registration/termination/relaunch; context preload idempotence and frontmost gating; erroring-hook isolation; lollygagger timer cancellation; hyper bind dedupe and bounded waits; and quitter double-press timer races.
 
-Known dormant hotspots, documented not fixed: `watchers/dock.lua` shells out synchronously (BT poll every 5s, kanata switching) and `watchers/camera.lua` runs blocking `lsof`/`ps` in camera callbacks; both need `hs.task` conversion before re-enablement.
+Known dormant hotspot, documented not fixed: `watchers/camera.lua` runs blocking `lsof`/`ps` in camera callbacks and needs `hs.task` conversion before re-enablement.
+
+## Remote notifications
+
+Telegram polling and Contacts lookups are disabled; outbound Telegram notifications remain available.
+
+`C.notifier.telegramPollInterval = false` disables both the initial Telegram poll and its repeating timer. Outbound Telegram delivery stays enabled when credentials are available; incoming messages and button replies are not processed. The notification facade preserves `false` when passing the interval to `lib/interop/telegram.lua`.
+
+`C.notifier.agent.phone.enabled = false` disables iMessage notification delivery, including explicit phone requests and retry escalation. The shared `sendPhone` guard returns before looking up a number, so Hammerspoon does not access the Contacts app.
 
 ## Miccheck menubar
 

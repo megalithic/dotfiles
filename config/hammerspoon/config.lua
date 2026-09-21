@@ -407,8 +407,6 @@ M.dock = {
     productName = "Leeloo",
     vendorID = 7504,
     vendorName = "ZMK Project",
-    bluetoothAddress = "f3-d9-8d-01-16-54",
-    bluetoothPollInterval = 5, -- seconds between BT connection checks
   },
   kanata = {
     enabled = true,
@@ -423,6 +421,7 @@ M.dock = {
   },
   docked = {
     wifi = "off",
+    wiredService = "Thunderbolt Ethernet Slot 1",
     input = "Samson GoMic",
     output = "megabose",
   },
@@ -434,6 +433,8 @@ M.dock = {
 }
 
 M.notifier = {
+  telegramPollInterval = false, -- Keep outbound delivery without polling for replies.
+
   -- Shared HUD/remote routing used by N.send() and bin/ntfy.
   urgencyDisplay = {
     critical = { position = "center", dim = true, phone = true },
@@ -459,7 +460,7 @@ M.notifier = {
     },
 
     phone = {
-      enabled = true,
+      enabled = false, -- Disable iMessage delivery and Contacts lookups.
       cacheTTL = 604800,
     },
   },
