@@ -10,5 +10,5 @@
     "skipLibCheck": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["src", "test", "bun-globals.d.ts"]
+  "include": ["src", "tests", "bun-globals.d.ts"]
 }

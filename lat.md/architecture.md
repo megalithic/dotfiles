@@ -88,7 +88,7 @@ with `MISE_ENV` set to the short hostname.
 `bashrc`, `zshrc` (before their interactive guards), and by `bootstrap.sh`
 right after the hostname prompt. The bootstrap-backed `update:packages`,
 `update:dotfiles`, and `update:system` tasks derive it from the short hostname
-when missing. `clean` and `bin/smoke-test-macos.sh` retain their safety fallback:
+when missing. `clean` and `tests/smoke-test-macos.sh` retain their safety fallback:
 stale shells would otherwise run `mise prune` blind to host config and delete
 host-scoped tool installs.
 
@@ -197,6 +197,8 @@ Global git tooling ignores `.worktrees/` through `config/git/tool-ignore` (linke
 ## Agent guidance and task tooling
 
 Agent guidance is centralized in the repo-root `AGENTS.md`. `CLAUDE.md` and directory-local `AGENTS.md` files are intentionally removed so project policy has one durable source.
+
+The critical test-placement rule requires tests, fixtures, mocks, and test-only helpers under the owning config or tool's `tests/` directory, never beside implementation files. It overrides global adjacent-test guidance. Examples are `config/hammerspoon/tests/`, `config/pi-coding-agent/tests/`, `config/mise/tmpls/elixir/tests/`, and `mise/tests/`. Repo-wide bootstrap and macOS checks live in root `tests/`; individual config tests do not. These are moves within existing ownership boundaries, with no Nix twin or ownership change.
 
 Nix activation guidance is explicit: run `just darwin` for nix-darwin changes, `just home` for Home Manager changes, and `just rebuild` when both changed or scope is unclear, always monitoring output.
 

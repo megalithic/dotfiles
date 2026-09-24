@@ -81,7 +81,7 @@ The build verifies that the patched `cliraop` is arm64, exposes the control-FIFO
 
 The non-sandboxed `LSUIElement` bundle declares `NSAudioCaptureUsageDescription`, `_raop._tcp` in `NSBonjourServices`, and `NSLocalNetworkUsageDescription`. macOS prompts for system-audio and local-network access when first needed.
 
-Mise task `setup:aeroplayd` tracks the build script, all four Swift sources, the cliraop control patch, and the libraop license. LaunchAgent `dev.mise.com.megadots.aeroplayd` runs `~/Applications/AeroPlay.app/Contents/MacOS/aeroplayd` at login with `keep_alive = false`, so Quit lasts until the next login or explicit service start. `bin/smoke-test-macos.sh` verifies the app and nested helper signatures, bundle and team identifiers, hardened runtime, menubar and audio-capture metadata, config symlink, and LaunchAgent executable path.
+Mise task `setup:aeroplayd` tracks the build script, all four Swift sources, the cliraop control patch, and the libraop license. LaunchAgent `dev.mise.com.megadots.aeroplayd` runs `~/Applications/AeroPlay.app/Contents/MacOS/aeroplayd` at login with `keep_alive = false`, so Quit lasts until the next login or explicit service start. `tests/smoke-test-macos.sh` verifies the app and nested helper signatures, bundle and team identifiers, hardened runtime, menubar and audio-capture metadata, config symlink, and LaunchAgent executable path.
 
 ## Verification
 

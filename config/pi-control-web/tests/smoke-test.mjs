@@ -6,7 +6,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { createServer as createSocketServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { createGateway } from "./server.mjs";
+import { createGateway } from "../server.mjs";
 
 const root = mkdtempSync(path.join(tmpdir(), "pi-control-web-"));
 const stateDir = path.join(root, "state");

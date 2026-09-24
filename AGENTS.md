@@ -2,6 +2,14 @@
 
 This repo contains both Nix-managed and mise-managed dotfiles. Host decides which system tools apply.
 
+## Test placement (CRITICAL)
+
+- Put every test suite, fixture, mock, and test-only helper under a `tests/` subdirectory of the owning config or tool's main directory. Never place tests beside implementation files.
+- Examples: Hammerspoon -> `config/hammerspoon/tests/`; Pi -> `config/pi-coding-agent/tests/`; the Elixir template -> `config/mise/tmpls/elixir/tests/`; mise scripts -> `mise/tests/`; the golden-layout plugin -> `config/tmux/plugins/tmux-golden-layout/tests/`.
+- Root `tests/` is only for repo-wide bootstrap and system checks, not a shared bucket for individual configs.
+- When moving tests, update imports, fixtures, runner commands, and documentation. Keep production code in its existing location.
+- This repo-specific rule overrides global or agent guidance to place tests next to the files they test.
+
 ## Host management guard (read first)
 
 Determine the host once from `$HOSTNAME` when it is set. Use `hostname -s` only as a fallback; do not re-query every turn.

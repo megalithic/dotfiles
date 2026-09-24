@@ -31,6 +31,6 @@ No implicit deployment approval: obtain Seth's explicit go-ahead before replacin
 3. A newly agreed live test shows Jam Window capture start/active/stop correctly and clears sharing after stop within the upstream documented bound. Entire screen remains correct; canceling a picker or taking a screenshot does not create sustained sharing.
 4. Verify Window and Entire screen pause/resume against actual stream lifetime, not recorder UI alone. Record microphone/camera toggle behavior where available and keep unsupported recorder-only states explicit.
 5. Verify Hammerspoon receives matching sharing transitions and notification HUD suppression follows sharing; existing meeting, browser-tab sharing, playback, and miccheck integrations retain their behavior.
-6. Run node config/avwatchweb/smoke-test.mjs plus scoped hk validation/checks for changed files. Update lat.md/programs/avwatchd.md with the confirmed behavior, source owner/sync direction, and deployment path; run lat check. Existing applicable checks pass.
+6. Run node config/avwatchweb/tests/smoke-test.mjs plus scoped hk validation/checks for changed files. Update lat.md/programs/avwatchd.md with the confirmed behavior, source owner/sync direction, and deployment path; run lat check. Existing applicable checks pass.
 7. Save a bounded validation report, stop all temporary monitors, and close only after live results satisfy the criteria. No further demo is required while work remains offline.
 

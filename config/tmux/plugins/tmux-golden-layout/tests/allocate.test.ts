@@ -11,8 +11,8 @@ import {
   renderDeclaration,
   scaleReference,
   validateDeclaration,
-} from "./allocate";
-import { type LayoutNode, leafPanes, parseLayout, serializeLayout } from "./layout";
+} from "../src/allocate";
+import { type LayoutNode, leafPanes, parseLayout, serializeLayout } from "../src/layout";
 
 const MINS = DEFAULT_MINS;
 

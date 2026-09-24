@@ -16,6 +16,12 @@ The old nix twin `config/hammerspoon/` is retired and no longer linked anywhere;
 
 The mise `up` task ends by calling `bin/hs-reload` (non-fatal if Hammerspoon is not running) so a freshly synced config is picked up safely.
 
+## Tests
+
+All Hammerspoon tests, mocks, and fixtures live in `config/hammerspoon/tests/`, separate from runtime modules.
+
+Run `mise exec -- lua tests/run.lua` from `config/hammerspoon/`.
+
 ## Dock watcher
 
 The dock watcher is active and uses the TS4 and Leeloo USB product IDs for dock and external-keyboard state. Bluetooth keyboard polling was removed because Leeloo Bluetooth state was unreliable.

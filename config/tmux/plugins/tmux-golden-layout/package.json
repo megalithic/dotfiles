@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "bun test",
-    "test:unit": "bun test src/",
-    "test:integration": "bun test test/"
+    "test:unit": "bun test ./tests/allocate.test.ts ./tests/layout.test.ts",
+    "test:integration": "bun test ./tests/integration.test.ts"
   }
 }

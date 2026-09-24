@@ -119,9 +119,9 @@ its list. The entrypoint is idempotent (indexed hook slot 188, tracked
 ## Tests
 
 ```sh
-bun test            # all
-bun test src/       # unit: parsing, checksum, allocation, scaling
-bun test test/      # integration: isolated tmux server on a private socket
+bun test                  # all tests under tests/
+bun run test:unit         # parsing, checksum, allocation, scaling
+bun run test:integration  # isolated tmux server on a private socket
 ```
 
 Integration tests start their own `tmux -S <tmpdir>/sock -f /dev/null`

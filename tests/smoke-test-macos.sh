@@ -24,45 +24,45 @@ export MISE_ENV="${MISE_ENV:-$(hostname -s)}"
 LOG=/tmp/smoke-aqua.log
 run_bootstrap=1 aqua=0 aqua_run=0
 for arg in "$@"; do
-  case "$arg" in
-  --fast) run_bootstrap=0 ;;
-  --aqua) aqua=1 ;;
-  --aqua-run) aqua_run=1 ;;
-  *)
-    echo "usage: $(basename "$0") [--fast] [--aqua]" >&2
-    exit 2
-    ;;
-  esac
+	case "$arg" in
+	--fast) run_bootstrap=0 ;;
+	--aqua) aqua=1 ;;
+	--aqua-run) aqua_run=1 ;;
+	*)
+		echo "usage: $(basename "$0") [--fast] [--aqua]" >&2
+		exit 2
+		;;
+	esac
 done
 
 FIFO=/tmp/smoke-aqua.fifo
 if [[ "$aqua" -eq 1 ]]; then
-  self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
-  args="--aqua-run"
-  [[ "$run_bootstrap" -eq 0 ]] && args="$args --fast"
-  rm -f "$LOG" "$FIFO"
-  mkfifo "$FIFO"
-  open -na Ghostty --args --command="$self $args"
-  rc="$(cat "$FIFO")" # blocks until the aqua run writes its exit code
-  rm -f "$FIFO"
-  cat "$LOG"
-  exit "${rc:-1}"
+	self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+	args="--aqua-run"
+	[[ "$run_bootstrap" -eq 0 ]] && args="$args --fast"
+	rm -f "$LOG" "$FIFO"
+	mkfifo "$FIFO"
+	open -na Ghostty --args --command="$self $args"
+	rc="$(cat "$FIFO")" # blocks until the aqua run writes its exit code
+	rm -f "$FIFO"
+	cat "$LOG"
+	exit "${rc:-1}"
 fi
 
 [[ "$aqua_run" -eq 1 ]] && exec > >(tee "$LOG") 2>&1
 
 pass=0 fail=0 warn=0
 ok() {
-  printf '  \033[32m✓\033[0m %s\n' "$1"
-  pass=$((pass + 1))
+	printf '  \033[32m✓\033[0m %s\n' "$1"
+	pass=$((pass + 1))
 }
 bad() {
-  printf '  \033[31m✗\033[0m %s\n' "$1"
-  fail=$((fail + 1))
+	printf '  \033[31m✗\033[0m %s\n' "$1"
+	fail=$((fail + 1))
 }
 wrn() {
-  printf '  \033[33m!\033[0m %s\n' "$1"
-  warn=$((warn + 1))
+	printf '  \033[33m!\033[0m %s\n' "$1"
+	warn=$((warn + 1))
 }
 hdr() { printf '\n\033[1m%s\033[0m\n' "$1"; }
 
@@ -78,22 +78,22 @@ grep -q '/nix/store' /etc/shells && bad "/etc/shells still has nix entries" || o
 
 hdr "sudo_local (Touch ID)"
 if [[ -f /etc/pam.d/sudo_local && ! -L /etc/pam.d/sudo_local ]]; then
-  ok "sudo_local is a real file (not nix symlink)"
-  grep -q '/opt/homebrew/lib/pam/pam_reattach.so' /etc/pam.d/sudo_local && ok "pam_reattach = brew copy" || bad "pam_reattach not brew (nix leftover?)"
-  grep -q 'pam_tid.so' /etc/pam.d/sudo_local && ok "pam_tid present" || bad "pam_tid missing"
+	ok "sudo_local is a real file (not nix symlink)"
+	grep -q '/opt/homebrew/lib/pam/pam_reattach.so' /etc/pam.d/sudo_local && ok "pam_reattach = brew copy" || bad "pam_reattach not brew (nix leftover?)"
+	grep -q 'pam_tid.so' /etc/pam.d/sudo_local && ok "pam_tid present" || bad "pam_tid missing"
 else
-  bad "sudo_local missing or still a symlink"
+	bad "sudo_local missing or still a symlink"
 fi
 
 hdr "CLI ownership (mise/brew wins PATH, no nix-profile dupes)"
 for tool in gh jq just node direnv; do
-  p="$(command -v "$tool" 2>/dev/null || true)"
-  case "$p" in
-  *mise* | /opt/homebrew/*) ok "$tool → $p" ;;
-  *.nix-profile*) bad "$tool still resolves to nix profile: $p" ;;
-  "") bad "$tool not found" ;;
-  *) wrn "$tool → $p (unexpected owner)" ;;
-  esac
+	p="$(command -v "$tool" 2>/dev/null || true)"
+	case "$p" in
+	*mise* | /opt/homebrew/*) ok "$tool → $p" ;;
+	*.nix-profile*) bad "$tool still resolves to nix profile: $p" ;;
+	"") bad "$tool not found" ;;
+	*) wrn "$tool → $p (unexpected owner)" ;;
+	esac
 done
 p="$(command -v op 2>/dev/null || true)"
 [[ "$p" == /opt/homebrew/* ]] && ok "op → $p" || bad "op not brew-owned: ${p:-missing}"
@@ -101,10 +101,10 @@ p="$(command -v op 2>/dev/null || true)"
 
 hdr "1Password"
 if [[ -d /Applications/1Password.app ]]; then
-  owner="$(/usr/bin/stat -f '%Su' /Applications/1Password.app)"
-  [[ "$owner" == "$USER" ]] && ok "1Password.app cask-owned (owner $owner)" || bad "1Password.app owner is $owner (nix copy?)"
+	owner="$(/usr/bin/stat -f '%Su' /Applications/1Password.app)"
+	[[ "$owner" == "$USER" ]] && ok "1Password.app cask-owned (owner $owner)" || bad "1Password.app owner is $owner (nix copy?)"
 else
-  bad "/Applications/1Password.app missing"
+	bad "/Applications/1Password.app missing"
 fi
 if op whoami >/dev/null 2>&1; then ok "op whoami (signed in)"; else wrn "op whoami failed (app locked or CLI integration off)"; fi
 fnox get APPLE_TEAM_ID >/dev/null 2>&1 && ok "fnox secret resolution" || bad "fnox get APPLE_TEAM_ID failed"
@@ -113,15 +113,15 @@ sp="$(git config --get gpg.ssh.program 2>/dev/null)"
 
 hdr "GUI apps (cask owns, HM Apps empty)"
 for app in "Brave Browser Nightly" Ghostty Contexts Discord MeetingBar Obsidian "Proton Drive" ProtonVPN ColorSnapper2 "Yubico Authenticator" IINA Inkscape OBS Slack "Tidewave IDE" zoom.us "Okta Verify"; do
-  [[ -d "/Applications/$app.app" ]] && ok "/Applications/$app.app" || bad "/Applications/$app.app missing"
+	[[ -d "/Applications/$app.app" ]] && ok "/Applications/$app.app" || bad "/Applications/$app.app missing"
 done
 hm_apps="$(ls "$HOME/Applications/Home Manager Apps/" 2>/dev/null | sort | tr '\n' ' ')"
 [[ -z "$hm_apps" ]] && ok "HM Apps empty (all GUI apps cask-owned)" || wrn "HM Apps drifted: $hm_apps"
 
 hdr "Key config symlinks (mise [dotfiles])"
 for link in ghostty fish tmux; do
-  target="$(readlink "$HOME/.config/$link" 2>/dev/null || true)"
-  [[ "$target" == *"/.dotfiles/config/$link" ]] && ok "~/.config/$link → mise" || bad "~/.config/$link not mise-linked (→ ${target:-missing})"
+	target="$(readlink "$HOME/.config/$link" 2>/dev/null || true)"
+	[[ "$target" == *"/.dotfiles/config/$link" ]] && ok "~/.config/$link → mise" || bad "~/.config/$link not mise-linked (→ ${target:-missing})"
 done
 
 hdr "Fonts"
@@ -130,28 +130,28 @@ ls "/Library/Fonts/Nix Fonts/" 2>/dev/null | grep -qi 'nerd-fonts' && bad "Nix F
 
 hdr "Compiled Swift programs"
 check_swift_binary() {
-  local binary_name="$1"
-  local identifier="$2"
-  local binary="$HOME/.local/bin/$binary_name"
-  local details
+	local binary_name="$1"
+	local identifier="$2"
+	local binary="$HOME/.local/bin/$binary_name"
+	local details
 
-  if [[ -x "$binary" && ! -L "$binary" ]]; then
-    ok "$binary is a regular executable"
-  else
-    bad "$binary missing, non-executable, or symlinked"
-    return
-  fi
-  if file "$binary" | rg -q 'Mach-O'; then ok "$binary is Mach-O"; else bad "$binary is not Mach-O"; fi
-  if codesign --verify --strict "$binary" >/dev/null 2>&1; then
-    ok "$binary signature valid"
-  else
-    bad "$binary signature invalid"
-    return
-  fi
-  details="$(codesign --display --verbose=4 "$binary" 2>&1)"
-  if [[ "$details" == *"Identifier=$identifier"* ]]; then ok "$binary identifier $identifier"; else bad "$binary wrong identifier"; fi
-  if [[ "$details" == *"TeamIdentifier=3ZJ3F5RFBZ"* ]]; then ok "$binary team 3ZJ3F5RFBZ"; else bad "$binary wrong team"; fi
-  if [[ "$details" == *runtime* ]]; then ok "$binary hardened runtime"; else bad "$binary missing hardened runtime"; fi
+	if [[ -x "$binary" && ! -L "$binary" ]]; then
+		ok "$binary is a regular executable"
+	else
+		bad "$binary missing, non-executable, or symlinked"
+		return
+	fi
+	if file "$binary" | rg -q 'Mach-O'; then ok "$binary is Mach-O"; else bad "$binary is not Mach-O"; fi
+	if codesign --verify --strict "$binary" >/dev/null 2>&1; then
+		ok "$binary signature valid"
+	else
+		bad "$binary signature invalid"
+		return
+	fi
+	details="$(codesign --display --verbose=4 "$binary" 2>&1)"
+	if [[ "$details" == *"Identifier=$identifier"* ]]; then ok "$binary identifier $identifier"; else bad "$binary wrong identifier"; fi
+	if [[ "$details" == *"TeamIdentifier=3ZJ3F5RFBZ"* ]]; then ok "$binary team 3ZJ3F5RFBZ"; else bad "$binary wrong team"; fi
+	if [[ "$details" == *runtime* ]]; then ok "$binary hardened runtime"; else bad "$binary missing hardened runtime"; fi
 }
 check_swift_binary miccheckd com.megadots.miccheck
 check_swift_binary notiwatchd com.megadots.notiwatchd
@@ -161,96 +161,96 @@ aeroplay_app="$HOME/Applications/AeroPlay.app"
 aeroplay_binary="$aeroplay_app/Contents/MacOS/aeroplayd"
 aeroplay_helper="$aeroplay_app/Contents/Resources/cliraop"
 if [[ -d "$aeroplay_app" && -x "$aeroplay_binary" && -x "$aeroplay_helper" ]]; then
-  ok "AeroPlay app and helper installed"
-  if codesign --verify --deep --strict "$aeroplay_app" >/dev/null 2>&1; then
-    ok "AeroPlay nested signatures valid"
-    aeroplay_details="$(codesign --display --verbose=4 "$aeroplay_app" 2>&1)"
-    aeroplay_helper_details="$(codesign --display --verbose=4 "$aeroplay_helper" 2>&1)"
-    if [[ "$aeroplay_details" == *"Identifier=com.megadots.aeroplayd"* ]]; then ok "AeroPlay identifier valid"; else bad "AeroPlay identifier invalid"; fi
-    if [[ "$aeroplay_details" == *"TeamIdentifier=3ZJ3F5RFBZ"* && "$aeroplay_details" == *runtime* ]]; then ok "AeroPlay team and runtime valid"; else bad "AeroPlay team or runtime invalid"; fi
-    if [[ "$aeroplay_helper_details" == *"Identifier=com.megadots.aeroplayd.cliraop"* && "$aeroplay_helper_details" == *"TeamIdentifier=3ZJ3F5RFBZ"* ]]; then ok "AeroPlay helper identity valid"; else bad "AeroPlay helper identity invalid"; fi
-  else
-    bad "AeroPlay nested signature invalid"
-  fi
-  aeroplay_ui_element="$(/usr/libexec/PlistBuddy -c 'Print :LSUIElement' "$aeroplay_app/Contents/Info.plist" 2>/dev/null || true)"
-  aeroplay_usage="$(/usr/libexec/PlistBuddy -c 'Print :NSAudioCaptureUsageDescription' "$aeroplay_app/Contents/Info.plist" 2>/dev/null || true)"
-  if [[ "$aeroplay_ui_element" == true && -n "$aeroplay_usage" ]]; then ok "AeroPlay menubar and audio-capture metadata valid"; else bad "AeroPlay Info.plist metadata invalid"; fi
+	ok "AeroPlay app and helper installed"
+	if codesign --verify --deep --strict "$aeroplay_app" >/dev/null 2>&1; then
+		ok "AeroPlay nested signatures valid"
+		aeroplay_details="$(codesign --display --verbose=4 "$aeroplay_app" 2>&1)"
+		aeroplay_helper_details="$(codesign --display --verbose=4 "$aeroplay_helper" 2>&1)"
+		if [[ "$aeroplay_details" == *"Identifier=com.megadots.aeroplayd"* ]]; then ok "AeroPlay identifier valid"; else bad "AeroPlay identifier invalid"; fi
+		if [[ "$aeroplay_details" == *"TeamIdentifier=3ZJ3F5RFBZ"* && "$aeroplay_details" == *runtime* ]]; then ok "AeroPlay team and runtime valid"; else bad "AeroPlay team or runtime invalid"; fi
+		if [[ "$aeroplay_helper_details" == *"Identifier=com.megadots.aeroplayd.cliraop"* && "$aeroplay_helper_details" == *"TeamIdentifier=3ZJ3F5RFBZ"* ]]; then ok "AeroPlay helper identity valid"; else bad "AeroPlay helper identity invalid"; fi
+	else
+		bad "AeroPlay nested signature invalid"
+	fi
+	aeroplay_ui_element="$(/usr/libexec/PlistBuddy -c 'Print :LSUIElement' "$aeroplay_app/Contents/Info.plist" 2>/dev/null || true)"
+	aeroplay_usage="$(/usr/libexec/PlistBuddy -c 'Print :NSAudioCaptureUsageDescription' "$aeroplay_app/Contents/Info.plist" 2>/dev/null || true)"
+	if [[ "$aeroplay_ui_element" == true && -n "$aeroplay_usage" ]]; then ok "AeroPlay menubar and audio-capture metadata valid"; else bad "AeroPlay Info.plist metadata invalid"; fi
 else
-  bad "AeroPlay app or helper missing"
+	bad "AeroPlay app or helper missing"
 fi
 aeroplay_config_target="$(readlink "$HOME/.config/aeroplayd/config.json" 2>/dev/null || true)"
 if [[ "$aeroplay_config_target" == "$HOME/.dotfiles/config/aeroplayd/config.json" ]]; then
-  ok "AeroPlay runtime config linked"
+	ok "AeroPlay runtime config linked"
 else
-  bad "AeroPlay runtime config link missing or wrong"
+	bad "AeroPlay runtime config link missing or wrong"
 fi
 notiwatchd_config_target="$(readlink "$HOME/.config/notiwatchd" 2>/dev/null || true)"
 if [[ "$notiwatchd_config_target" == "$HOME/.dotfiles/config/notiwatchd" && -f "$HOME/.config/notiwatchd/config.json" ]]; then
-  ok "notiwatchd runtime config linked"
+	ok "notiwatchd runtime config linked"
 else
-  bad "notiwatchd runtime config link missing or wrong"
+	bad "notiwatchd runtime config link missing or wrong"
 fi
 if [[ ! -e "$HOME/.dotfiles/bin/notiwatchd" && ! -L "$HOME/.dotfiles/bin/notiwatchd" &&
-  ! -e "$HOME/.dotfiles/bin/avwatchd" && ! -L "$HOME/.dotfiles/bin/avwatchd" ]]; then
-  ok "no stale repo-local daemon artifacts"
+	! -e "$HOME/.dotfiles/bin/avwatchd" && ! -L "$HOME/.dotfiles/bin/avwatchd" ]]; then
+	ok "no stale repo-local daemon artifacts"
 else
-  bad "stale repo-local daemon artifact"
+	bad "stale repo-local daemon artifact"
 fi
 
 hdr "launchd (mise agents up, no strays)"
 for agent in dev.mise.com.megadots.llama-cpp dev.mise.com.megadots.avwatchd dev.mise.com.megadots.notiwatchd dev.mise.com.megadots.miccheck dev.mise.com.megadots.aeroplayd; do
-  if launchctl list "$agent" >/dev/null 2>&1; then ok "$agent loaded"; else bad "$agent not loaded"; fi
+	if launchctl list "$agent" >/dev/null 2>&1; then ok "$agent loaded"; else bad "$agent not loaded"; fi
 done
 for spec in avwatchd:avwatchd notiwatchd:notiwatchd miccheck:miccheckd; do
-  agent_name="${spec%%:*}"
-  binary_name="${spec#*:}"
-  plist="$HOME/Library/LaunchAgents/dev.mise.com.megadots.$agent_name.plist"
-  program="$(/usr/libexec/PlistBuddy -c 'Print :ProgramArguments:0' "$plist" 2>/dev/null || true)"
-  if [[ "$program" == "$HOME/.local/bin/$binary_name" ]]; then
-    ok "$agent_name agent uses compiled binary"
-  else
-    bad "$agent_name agent program: ${program:-missing}"
-  fi
+	agent_name="${spec%%:*}"
+	binary_name="${spec#*:}"
+	plist="$HOME/Library/LaunchAgents/dev.mise.com.megadots.$agent_name.plist"
+	program="$(/usr/libexec/PlistBuddy -c 'Print :ProgramArguments:0' "$plist" 2>/dev/null || true)"
+	if [[ "$program" == "$HOME/.local/bin/$binary_name" ]]; then
+		ok "$agent_name agent uses compiled binary"
+	else
+		bad "$agent_name agent program: ${program:-missing}"
+	fi
 done
 aeroplay_agent_program="$(/usr/libexec/PlistBuddy -c 'Print :ProgramArguments:0' "$HOME/Library/LaunchAgents/dev.mise.com.megadots.aeroplayd.plist" 2>/dev/null || true)"
 if [[ "$aeroplay_agent_program" == "$aeroplay_binary" ]]; then
-  ok "aeroplayd agent uses signed app executable"
+	ok "aeroplayd agent uses signed app executable"
 else
-  bad "aeroplayd agent program: ${aeroplay_agent_program:-missing}"
+	bad "aeroplayd agent program: ${aeroplay_agent_program:-missing}"
 fi
 notiwatchd_path="$(/usr/libexec/PlistBuddy -c 'Print :EnvironmentVariables:PATH' "$HOME/Library/LaunchAgents/dev.mise.com.megadots.notiwatchd.plist" 2>/dev/null || true)"
 if [[ "$notiwatchd_path" == "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" ]]; then
-  ok "notiwatchd agent PATH is portable"
+	ok "notiwatchd agent PATH is portable"
 else
-  bad "notiwatchd agent PATH: ${notiwatchd_path:-missing}"
+	bad "notiwatchd agent PATH: ${notiwatchd_path:-missing}"
 fi
 for socket in miccheck notiwatchd avwatchd; do
-  if [[ -S "$HOME/.local/state/$socket/sock" ]]; then
-    ok "$socket socket available"
-  else
-    bad "$socket socket missing"
-  fi
+	if [[ -S "$HOME/.local/state/$socket/sock" ]]; then
+		ok "$socket socket available"
+	else
+		bad "$socket socket missing"
+	fi
 done
 old_media_label=dev.mise.com.megadots.media-presenced
 old_media_plist="$HOME/Library/LaunchAgents/$old_media_label.plist"
 old_media_socket="$HOME/.local/state/media-presence/sock"
 if launchctl list "$old_media_label" >/dev/null 2>&1 ||
-  [[ -e "$old_media_plist" || -S "$old_media_socket" ]] ||
-  pgrep -f "$HOME/.dotfiles/bin/media-presenced" >/dev/null 2>&1; then
-  bad "stale media-presenced agent/process/socket"
+	[[ -e "$old_media_plist" || -S "$old_media_socket" ]] ||
+	pgrep -f "$HOME/.dotfiles/bin/media-presenced" >/dev/null 2>&1; then
+	bad "stale media-presenced agent/process/socket"
 else
-  ok "no stale media-presenced agent/process/socket"
+	ok "no stale media-presenced agent/process/socket"
 fi
 avwatch_host="$HOME/Library/Application Support/net.imput.helium/NativeMessagingHosts/com.megadots.avwatchd.json"
 if [[ -f "$avwatch_host" ]]; then
-  host_path="$(/usr/bin/plutil -extract path raw -o - "$avwatch_host" 2>/dev/null || true)"
-  if [[ "$host_path" == "$HOME/.local/bin/avwatchd" ]]; then
-    ok "avwatchweb native host uses compiled avwatchd"
-  else
-    bad "avwatchweb native host path: ${host_path:-missing}"
-  fi
+	host_path="$(/usr/bin/plutil -extract path raw -o - "$avwatch_host" 2>/dev/null || true)"
+	if [[ "$host_path" == "$HOME/.local/bin/avwatchd" ]]; then
+		ok "avwatchweb native host uses compiled avwatchd"
+	else
+		bad "avwatchweb native host path: ${host_path:-missing}"
+	fi
 else
-  bad "avwatchweb native host missing"
+	bad "avwatchweb native host missing"
 fi
 pgrep -q kanata && ok "kanata running" || bad "kanata not running"
 pgrep -fq 'Espanso.app.*worker' && ok "espanso worker running" || bad "espanso worker not running"
@@ -258,35 +258,35 @@ pgrep -fq 'Espanso.app.*worker' && ok "espanso worker running" || bad "espanso w
 hdr "touchid-sudo task idempotency"
 out="$(bash "$HOME/.dotfiles/mise/scripts/setup-pam" 2>&1)"
 if [[ "$out" == *"already current"* ]]; then
-  ok "setup-touchid-sudo: already current"
+	ok "setup-touchid-sudo: already current"
 else
-  wrn "setup-touchid-sudo wants changes: $out"
+	wrn "setup-touchid-sudo wants changes: $out"
 fi
 
 if [[ "$run_bootstrap" -eq 1 ]]; then
-  hdr "mise bootstrap (idempotent converge; --fast skips)"
-  blog="$(mktemp)"
-  if mise bootstrap >"$blog" 2>&1; then
-    ok "mise bootstrap exit 0"
-  else
-    bad "mise bootstrap failed (log: $blog)"
-  fi
-  if grep -q 'mise ERROR' "$blog"; then
-    bad "mise ERROR lines in bootstrap output (log: $blog)"
-  else
-    ok "no mise ERROR in bootstrap output"
-    rm -f "$blog"
-  fi
+	hdr "mise bootstrap (idempotent converge; --fast skips)"
+	blog="$(mktemp)"
+	if mise bootstrap >"$blog" 2>&1; then
+		ok "mise bootstrap exit 0"
+	else
+		bad "mise bootstrap failed (log: $blog)"
+	fi
+	if grep -q 'mise ERROR' "$blog"; then
+		bad "mise ERROR lines in bootstrap output (log: $blog)"
+	else
+		ok "no mise ERROR in bootstrap output"
+		rm -f "$blog"
+	fi
 fi
 
 printf '\n\033[1mResult:\033[0m %d passed, %d failed, %d warnings\n' "$pass" "$fail" "$warn"
 rc=$([[ "$fail" -eq 0 ]] && echo 0 || echo 1)
 
 if [[ "$aqua_run" -eq 1 ]]; then
-  [[ -p "$FIFO" ]] && echo "$rc" >"$FIFO"
-  if [[ "$rc" -ne 0 ]]; then
-    echo "failures above — press enter to close"
-    read -r
-  fi
+	[[ -p "$FIFO" ]] && echo "$rc" >"$FIFO"
+	if [[ "$rc" -ne 0 ]]; then
+		echo "failures above — press enter to close"
+		read -r
+	fi
 fi
 exit "$rc"

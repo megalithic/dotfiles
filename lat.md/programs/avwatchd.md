@@ -90,7 +90,7 @@ Helium keeps `--remote-debugging-port=9223` only for [[helium#Browser automation
 
 ## Validation
 
-Automated smoke test: `node config/avwatchweb/smoke-test.mjs`.
+Automated smoke test: `node config/avwatchweb/tests/smoke-test.mjs`.
 
 It exercises the compiled binary's native framing, session registration, state fusion, schema rejection, direct focus routing, heartbeat delivery, and bridge-exit cleanup. Swift sources are `lib/avwatchd.swift`, `lib/miccheck.swift`, and `lib/notiwatchd.swift`; all use `lib/build-swift`.
 

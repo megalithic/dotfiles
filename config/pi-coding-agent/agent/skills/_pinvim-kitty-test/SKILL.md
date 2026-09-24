@@ -256,7 +256,7 @@ Run these before manual behavior checks:
 
 ```bash
 cd "$WT"
-bin/pinvim-protocol-smoke
+config/pi-coding-agent/tests/disabled/pinvim-protocol-smoke
 nvim --headless '+lua require("pinvim").setup(); vim.cmd("PiDoctor"); print("doctor ok")' +qa
 just validate home
 ```

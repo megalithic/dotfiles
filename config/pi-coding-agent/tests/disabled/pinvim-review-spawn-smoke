@@ -15,15 +15,15 @@
 # The live tmux spawn + paired Nvim round-trip (AC #10) is a human gate.
 set -euo pipefail
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 root="${1:-$repo_root}"
 tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/pinvim-review-spawn-smoke.XXXXXX")"
 state_dir="$tmp_dir/state"
 
 cleanup() {
-  local status=$?
-  trash "$tmp_dir" 2>/dev/null || rm -rf "$tmp_dir"
-  exit "$status"
+	local status=$?
+	trash "$tmp_dir" 2>/dev/null || rm -rf "$tmp_dir"
+	exit "$status"
 }
 trap cleanup EXIT INT TERM
 
@@ -49,18 +49,18 @@ NODE_WID=$(sed -n '1p' "$tmp_dir/node-identity.txt")
 NODE_PARENT_ID=$(sed -n '2p' "$tmp_dir/node-identity.txt")
 
 if [[ -z "$NODE_WID" || -z "$NODE_PARENT_ID" ]]; then
-  echo "review-spawn smoke: node identity adoption failed" >&2
-  cat "$tmp_dir/node-identity.txt" >&2
-  exit 1
+	echo "review-spawn smoke: node identity adoption failed" >&2
+	cat "$tmp_dir/node-identity.txt" >&2
+	exit 1
 fi
 
 # 2. Headless Nvim: Registry.setup must reuse the pre-written parent.id and
 #    compute the same workspace_id.
 NVIM_OUT=$(PI_STATE_DIR="$state_dir" \
-  nvim --headless -u NONE \
-    --cmd "set runtimepath^=$repo_root/config/nvim" \
-    '+lua local api=require("pinvim").setup({transport={link_mode="test"},connection={reconnect_max_retries=0}}); local info=api.info(); io.stdout:write("wid="..tostring(info.registry.workspace_id).."\nparent="..tostring(info.registry.parent_id).."\n")' \
-    +qa 2>/dev/null || true)
+	nvim --headless -u NONE \
+	--cmd "set runtimepath^=$repo_root/config/nvim" \
+	'+lua local api=require("pinvim").setup({transport={link_mode="test"},connection={reconnect_max_retries=0}}); local info=api.info(); io.stdout:write("wid="..tostring(info.registry.workspace_id).."\nparent="..tostring(info.registry.parent_id).."\n")' \
+	+qa 2>/dev/null || true)
 
 NVIM_WID=$(printf '%s\n' "$NVIM_OUT" | rg -o 'wid=[^\n]+' | head -1 | cut -d= -f2)
 NVIM_PARENT=$(printf '%s\n' "$NVIM_OUT" | rg -o 'parent=[^\n]+' | head -1 | cut -d= -f2)
@@ -69,13 +69,13 @@ echo "node   wid=$NODE_WID parent=$NODE_PARENT_ID"
 echo "nvim  wid=$NVIM_WID parent=$NVIM_PARENT"
 
 if [[ "$NVIM_WID" != "$NODE_WID" ]]; then
-  echo "review-spawn smoke: workspace_id mismatch (node=$NODE_WID nvim=$NVIM_WID)" >&2
-  exit 1
+	echo "review-spawn smoke: workspace_id mismatch (node=$NODE_WID nvim=$NVIM_WID)" >&2
+	exit 1
 fi
 
 if [[ "$NVIM_PARENT" != "$NODE_PARENT_ID" ]]; then
-  echo "review-spawn smoke: parent.id not reused (node=$NODE_PARENT_ID nvim=$NVIM_PARENT)" >&2
-  exit 1
+	echo "review-spawn smoke: parent.id not reused (node=$NODE_PARENT_ID nvim=$NVIM_PARENT)" >&2
+	exit 1
 fi
 
 echo "pinvim review-spawn smoke passed (adopted identity matches)"

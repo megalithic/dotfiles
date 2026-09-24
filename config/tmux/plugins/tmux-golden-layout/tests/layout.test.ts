@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { layoutChecksum, leafPanes, parseLayout, samePaneSet, serializeLayout } from "./layout";
+import { layoutChecksum, leafPanes, parseLayout, samePaneSet, serializeLayout } from "../src/layout";
 
 // Captured from a real tmux 3.7c server (200x50 window).
 const REAL_LAYOUTS = [

@@ -123,5 +123,5 @@ GET  /api/events
 
 ```sh
 mise exec node -- node --check config/pi-control-web/server.mjs
-mise exec node -- node config/pi-control-web/smoke-test.mjs
+mise exec node -- node config/pi-control-web/tests/smoke-test.mjs
 ```
