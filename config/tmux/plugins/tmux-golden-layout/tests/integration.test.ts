@@ -22,7 +22,9 @@ const REAL_TMUX = execFileSync("which", ["tmux"], { encoding: "utf8" }).trim();
 
 const dir = mkdtempSync(join(tmpdir(), "gl-itest-"));
 const SOCK = join(dir, "sock");
-const ENV = { ...process.env, GL_TMUX_SOCKET: SOCK, TMUX: `${SOCK},0,0` };
+const ENV = { ...process.env, GL_TMUX_SOCKET: SOCK, TMUX: `${SOCK},0,0`, TMPDIR: dir };
+const previousSocket = process.env.GL_TMUX_SOCKET;
+const previousTmpdir = process.env.TMPDIR;
 
 function tmux(...args: string[]): string {
   return execFileSync("tmux", ["-S", SOCK, ...args], { encoding: "utf8", env: ENV }).trim();
@@ -61,6 +63,8 @@ const TARGET_W = Math.round(W * GOLDEN_FRACTION); // 124
 const TARGET_H = Math.round(H * GOLDEN_FRACTION); // 31
 
 beforeAll(() => {
+  process.env.GL_TMUX_SOCKET = SOCK;
+  process.env.TMPDIR = dir;
   tmux("-f", "/dev/null", "new-session", "-d", "-x", String(W), "-y", String(H));
   tmux("set-option", "-g", "@gl-debug", "on");
   // Load the plugin exactly as tmux would (run-shell during config sourcing).
@@ -74,7 +78,14 @@ afterAll(() => {
   } catch {
     // already gone
   }
-  rmSync(dir, { recursive: true, force: true });
+  try {
+    rmSync(dir, { recursive: true, force: true });
+  } finally {
+    if (previousSocket === undefined) delete process.env.GL_TMUX_SOCKET;
+    else process.env.GL_TMUX_SOCKET = previousSocket;
+    if (previousTmpdir === undefined) delete process.env.TMPDIR;
+    else process.env.TMPDIR = previousTmpdir;
+  }
 });
 
 describe("plugin load", () => {
@@ -94,16 +105,22 @@ describe("plugin load", () => {
   test("serializes concurrent per-window work", async () => {
     let active = 0;
     let maxActive = 0;
-    await Promise.all(
-      Array.from({ length: 20 }, (_, i) =>
-        withWindowLock("@998", async () => {
-          active += 1;
-          maxActive = Math.max(maxActive, active);
-          await Bun.sleep(i % 3);
-          active -= 1;
-        }),
-      ),
-    );
+    const now = Date.now;
+    Date.now = () => 1_800_000_000_000;
+    try {
+      await Promise.all(
+        Array.from({ length: 20 }, (_, i) =>
+          withWindowLock("@998", async () => {
+            active += 1;
+            maxActive = Math.max(maxActive, active);
+            await Bun.sleep(i % 3);
+            active -= 1;
+          }),
+        ),
+      );
+    } finally {
+      Date.now = now;
+    }
     expect(maxActive).toBe(1);
   });
 

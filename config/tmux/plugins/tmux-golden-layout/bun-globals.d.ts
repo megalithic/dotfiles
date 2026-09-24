@@ -7,7 +7,7 @@ declare const Bun: {
 };
 
 declare module "bun:test" {
-  export const test: (name: string, fn: () => unknown | Promise<unknown>) => void;
+  export const test: (name: string, fn: () => unknown | Promise<unknown>, timeout?: number) => void;
   export const describe: (name: string, fn: () => void) => void;
   export const expect: any;
   export const beforeAll: (fn: () => unknown | Promise<unknown>) => void;

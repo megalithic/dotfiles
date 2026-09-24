@@ -106,8 +106,11 @@ its list. The entrypoint is idempotent (indexed hook slot 188, tracked
   with different geometry -> user change -> pause.
 - Races: hooks pass the originating layout (and pane for focus events), so a
   delayed process cannot reinterpret newer window state. A crash-recoverable
-  per-window lock serializes hook and API state transitions; tmux calls time
-  out before the lock's stale-owner deadline. Before applying, each event
+  per-window kernel lock serializes hook and API state transitions. macOS
+  `/usr/bin/lockf` acquires it through an inherited descriptor; the parent
+  keeps ownership until callback completion or process exit. Acquisition
+  times out after 15 seconds without evicting a live owner. Lock files remain
+  in place to preserve inode identity. Before applying, each event
   re-fetches state and aborts if layout, dimensions, or the active pane changed.
   A post-apply check makes one settling pass when focus or dimensions changed
   between verification and apply. Tmux itself is addressed only by stable

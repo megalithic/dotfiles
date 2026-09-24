@@ -7,9 +7,9 @@
  * fired the hook.
  */
 
-import { execFileSync } from "node:child_process";
-import { createHash, randomUUID } from "node:crypto";
-import { closeSync, mkdirSync, openSync, readdirSync, rmdirSync, unlinkSync } from "node:fs";
+import { execFileSync, spawn } from "node:child_process";
+import { createHash } from "node:crypto";
+import { closeSync, mkdirSync, openSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -24,73 +24,31 @@ function socketArgs(): string[] {
   return socket === "default" ? [] : ["-S", socket];
 }
 
-const LOCK_TTL_MS = 10_000;
-const LOCK_WAIT_MS = 15_000;
-
-function processAlive(pid: number): boolean {
-  if (!Number.isSafeInteger(pid) || pid <= 0) return false;
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (err) {
-    return err instanceof Error && "code" in err && err.code === "EPERM";
-  }
-}
-
 /** Serialize state transitions for one window across asynchronous hook processes. */
 export async function withWindowLock<T>(windowId: string, fn: () => T | Promise<T>): Promise<T> {
   const socketHash = createHash("sha256").update(socketPath()).digest("hex").slice(0, 16);
   const root = join(tmpdir(), `tmux-gl-${typeof process.getuid === "function" ? process.getuid() : 0}`, socketHash);
-  const dir = join(root, `lock-${windowId.slice(1)}`);
-  mkdirSync(dir, { recursive: true, mode: 0o700 });
+  mkdirSync(root, { recursive: true, mode: 0o700 });
 
-  // Each process owns a unique contender file. The oldest live contender runs;
-  // dead owners can be removed without ever deleting a newer owner's lock.
-  const started = Date.now();
-  const contender = `${String(started).padStart(13, "0")}-${process.pid}-${randomUUID()}`;
-  const contenderPath = join(dir, contender);
-  closeSync(openSync(contenderPath, "wx", 0o600));
-  const deadline = started + LOCK_WAIT_MS;
-
+  // Each call needs a separate open, including concurrent calls in this process.
+  // Keep the inode: unlinking it would let new callers bypass existing waiters.
+  // The kernel releases ownership on close or process exit, never on a TTL.
+  const fd = openSync(join(root, `lock-${windowId.slice(1)}.flock`), "a", 0o600);
   try {
-    for (;;) {
-      const live: string[] = [];
-      for (const name of readdirSync(dir)) {
-        const match = /^(\d{13})-(\d+)-[0-9a-f-]+$/.exec(name);
-        const ownerStarted = Number.parseInt(match?.[1] ?? "", 10);
-        const ownerPid = Number.parseInt(match?.[2] ?? "", 10);
-        const stale =
-          !match ||
-          !Number.isFinite(ownerStarted) ||
-          !processAlive(ownerPid) ||
-          Date.now() - ownerStarted > LOCK_TTL_MS;
-        if (stale && name !== contender) {
-          try {
-            unlinkSync(join(dir, name));
-          } catch {
-            // another waiter cleaned it first
-          }
-        } else {
-          live.push(name);
-        }
-      }
-      live.sort();
-      if (live[0] === contender) return await fn();
-      if (Date.now() >= deadline) throw new Error(`timed out waiting for layout lock: ${windowId}`);
-      await new Promise<void>((resolve) => setTimeout(resolve, 10));
-    }
+    await new Promise<void>((resolve, reject) => {
+      // Descriptor mode keeps ownership on our open file after the helper exits.
+      const child = spawn("/usr/bin/lockf", ["-s", "-t", "15", "0"], { stdio: [fd, "ignore", "ignore"] });
+      child.once("error", reject);
+      child.once("exit", (code, signal) => {
+        if (code === 0) resolve();
+        else reject(new Error(code === 75
+          ? `timed out waiting for layout lock: ${windowId}`
+          : `could not acquire layout lock: ${windowId} (${signal ?? code})`));
+      });
+    });
+    return await fn();
   } finally {
-    try {
-      unlinkSync(contenderPath);
-    } catch {
-      // A stale-owner recovery may already have removed it.
-    }
-    try {
-      rmdirSync(dir);
-      rmdirSync(root);
-    } catch {
-      // Other windows or contenders still use the socket-specific directory.
-    }
+    closeSync(fd);
   }
 }
 
