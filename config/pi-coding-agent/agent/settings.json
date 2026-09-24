@@ -1,10 +1,16 @@
 {
+  "quietStartup": true,
   "retry": {
     "baseDelayMs": 1000,
     "maxDelayMs": 900000,
     "provider": {
       "timeoutMs": 3600000
     }
+  },
+  "compaction": {
+    "enabled": true,
+    "reserveTokens": 16384,
+    "keepRecentTokens": 30000
   },
   "defaultProvider": "openai-codex",
   "warnings": {
@@ -46,6 +52,7 @@
     "git:github.com/aliou/nvim-pi"
   ],
   "enabledModels": [
+    "anthropic/claude-fable-5-1",
     "anthropic/claude-fable-5",
     "anthropic/claude-opus-5",
     "anthropic/claude-opus-4-8",
@@ -56,10 +63,6 @@
     "openai-codex/gpt-5.6-terra",
     "openai-codex/gpt-5.6-luna",
     "openai-codex/gpt-5.5",
-    "openai-codex/gpt-5.4",
-    "openai-codex/gpt-5.3-codex-spark",
-    "google-vertex/gemini-3.1-pro-preview",
-    "google-vertex/gemini-3-flash-preview",
     "opencode-go/gpt-5.6-luna",
     "opencode-go/kimi-k3",
     "opencode-go/deepseek-v4-pro",
@@ -71,12 +74,12 @@
   ],
   "enabledModelScopes": {
     "mega": [
+      "anthropic/claude-fable-5-1",
       "anthropic/claude-fable-5",
-      "my-codex/gpt-6-astra",
+      "openai-codex/gpt-6-astra",
       "my-codex/gpt-5.6-sol",
       "my-codex/gpt-5.6-terra",
       "my-codex/gpt-5.6-luna",
-      "anthropic/claude-fable-5",
       "opencode-go/gpt-5.6-luna",
       "opencode-go/kimi-k3",
       "opencode-go/deepseek-v4-pro",
@@ -87,6 +90,7 @@
       "llamacpp/deepseek14b"
     ],
     "alt": [
+      "anthropic/claude-fable-5-1",
       "anthropic/claude-fable-5",
       "anthropic/claude-opus-5",
       "anthropic/claude-opus-4-8",
@@ -97,10 +101,6 @@
       "openai-codex/gpt-5.6-terra",
       "openai-codex/gpt-5.6-luna",
       "openai-codex/gpt-5.5",
-      "openai-codex/gpt-5.4",
-      "openai-codex/gpt-5.3-codex-spark",
-      "google-vertex/gemini-3.1-pro-preview",
-      "google-vertex/gemini-3-flash-preview",
       "opencode-go/kimi-k3",
       "opencode-go/deepseek-v4-pro",
       "opencode-go/deepseek-v4-flash",
@@ -110,6 +110,7 @@
   },
   "enabledProfileModels": {
     "mega": [
+      "anthropic/claude-fable-5-1",
       "anthropic/claude-fable-5",
       "my-codex/gpt-5.6-sol",
       "my-codex/gpt-5.6-terra",
@@ -124,6 +125,7 @@
       "llamacpp/deepseek14b"
     ],
     "alt": [
+      "anthropic/claude-fable-5-1",
       "anthropic/claude-fable-5",
       "anthropic/claude-opus-5",
       "anthropic/claude-opus-4-8",
@@ -133,10 +135,6 @@
       "openai-codex/gpt-5.6-terra",
       "openai-codex/gpt-5.6-luna",
       "openai-codex/gpt-5.5",
-      "openai-codex/gpt-5.4",
-      "openai-codex/gpt-5.3-codex-spark",
-      "google-vertex/gemini-3.1-pro-preview",
-      "google-vertex/gemini-3-flash-preview",
       "opencode-go/kimi-k3",
       "opencode-go/deepseek-v4-pro",
       "opencode-go/deepseek-v4-flash",
@@ -214,7 +212,7 @@
         "name": "mega",
         "entries": [
           {
-            "provider": "my-codex",
+            "provider": "openai-codex",
             "model": "gpt-6-astra",
             "enabled": true
           },
@@ -239,6 +237,11 @@
       {
         "name": "alt",
         "entries": [
+          {
+            "provider": "anthropic",
+            "model": "claude-fable-5-1",
+            "enabled": true
+          },
           {
             "provider": "anthropic",
             "model": "claude-fable-5",
