@@ -18,7 +18,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
 
-import { complete, type Message } from "@earendil-works/pi-ai";
+import type { Message } from "@earendil-works/pi-ai";
 import type {
 	ExtensionAPI,
 	SessionEntry,
@@ -57,22 +57,27 @@ export default function (pi: ExtensionAPI) {
 		handler: async (args, ctx) => {
 			if (!ctx.hasUI) {
 				ctx.ui.notify("handoff requires interactive mode", "error");
+
 				return;
 			}
 
 			if (!ctx.model) {
 				ctx.ui.notify("No model selected", "error");
+
 				return;
 			}
 
 			const goal = args.trim();
+
 			if (!goal) {
 				ctx.ui.notify("Usage: /handoff <goal for new thread>", "error");
+
 				return;
 			}
 
 			// Gather conversation context from current branch
 			const branch = ctx.sessionManager.getBranch();
+
 			const messages = branch
 				.filter(
 					(entry): entry is SessionEntry & { type: "message" } =>
@@ -82,6 +87,7 @@ export default function (pi: ExtensionAPI) {
 
 			if (messages.length === 0) {
 				ctx.ui.notify("No conversation to hand off", "error");
+
 				return;
 			}
 
@@ -94,10 +100,13 @@ export default function (pi: ExtensionAPI) {
 			const sessionChain: string[] = currentSessionFile
 				? [currentSessionFile]
 				: [];
+
 			const header = ctx.sessionManager.getHeader();
 			let parentSession = header?.parentSession;
+
 			while (parentSession) {
 				sessionChain.push(parentSession);
+
 				// Try to read parent's header to find its parent
 				try {
 					const { stdout } = await pi.exec("head", ["-1", parentSession]);
@@ -118,18 +127,10 @@ export default function (pi: ExtensionAPI) {
 					theme,
 					`Generating handoff prompt...`,
 				);
+
 				loader.onAbort = () => done({ text: null });
 
 				const doGenerate = async () => {
-					// pi 0.78+: getApiKey(model) renamed to getApiKeyAndHeaders(model)
-					// returning a Result<{ apiKey, headers, ... }> with ok/error discriminator.
-					const authResult = await ctx.modelRegistry.getApiKeyAndHeaders(ctx.model!);
-					if (!authResult.ok) {
-						throw new Error(authResult.error);
-					}
-					const apiKey = authResult.apiKey;
-					const headers = authResult.headers;
-
 					const userMessage: Message = {
 						role: "user",
 						content: [
@@ -141,11 +142,16 @@ export default function (pi: ExtensionAPI) {
 						timestamp: Date.now(),
 					};
 
-					const response = await complete(
+					const thinkingLevel = ctx.thinkingLevel;
+
+					const response = await ctx.modelRegistry.streamSimple(
 						ctx.model!,
 						{ systemPrompt: SYSTEM_PROMPT, messages: [userMessage] },
-						{ apiKey, headers, signal: loader.signal },
-					);
+						{
+							reasoning: thinkingLevel === "off" ? undefined : thinkingLevel,
+							signal: loader.signal,
+						},
+					).result();
 
 					if (response.stopReason === "aborted") {
 						return { text: null };
@@ -184,11 +190,13 @@ export default function (pi: ExtensionAPI) {
 
 			if (result.error) {
 				ctx.ui.notify(`Handoff failed: ${result.error}`, "error");
+
 				return;
 			}
 
 			if (result.text === null) {
 				ctx.ui.notify("Cancelled", "info");
+
 				return;
 			}
 
@@ -199,6 +207,7 @@ export default function (pi: ExtensionAPI) {
 					: "";
 
 			const promptWithHistory = result.text + historySection;
+
 			const handoffDir = join(
 				homedir(),
 				".local",
@@ -207,6 +216,7 @@ export default function (pi: ExtensionAPI) {
 				"handoffs",
 				basename(ctx.cwd),
 			);
+
 			const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
 			const handoffFile = join(handoffDir, `${timestamp}.md`);
 
@@ -219,6 +229,7 @@ export default function (pi: ExtensionAPI) {
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
 				ctx.ui.notify(`Handoff save failed: ${message}`, "error");
+
 				return;
 			}
 
