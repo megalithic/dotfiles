@@ -20,7 +20,9 @@ The managed `agent/extensions/lat.ts` passes arguments directly to `execFileSync
 
 ## Package source and wrapper
 
-Pi comes from the mise tool `npm:@earendil-works/pi-coding-agent`; the `bin/pi` wrapper resolves the CLI through `mise x`.
+Pi comes from the mise tool `npm:@earendil-works/pi-coding-agent`; the managed wrapper at `config/pi-coding-agent/bin/pi`, linked as `~/.local/bin/pi`, resolves the CLI through mise.
+
+The sibling `p` script executes this wrapper directly. `ftm`'s canonical worktree and generic agent windows explicitly launch `"$HOME/.local/bin/pi"`, retaining `-c` or `--session <uuid>`; they do not rely on bare `pi` resolution through `mise exec`. The wrapper itself loads the project environment through mise and enables bridge ingress. This affects newly created agent windows, not already-running processes.
 
 The wrapper resolves the real binary by absolute path (`mise which pi`) and passes it to `mise x` explicitly. Relying on `mise x ... -- pi` PATH lookup broke: mise splices tool paths into the existing PATH block instead of prepending, so the wrapper's own `~/.local/bin` export shadowed the real binary and the wrapper exec'd itself in an infinite loop. A realpath self-check fails closed with exit 127 if resolution ever points back at the wrapper.
 

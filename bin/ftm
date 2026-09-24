@@ -21,7 +21,8 @@
 # Keybinds in the picker:
 #   enter   switch/create/restore from selection or typed query
 #   alt-enter  force fresh creation with default layout
-#   ctrl-k  snapshot and kill selected session (ctrl-x also works)
+#   ctrl-k  snapshot and kill selected session
+#   ctrl-x  confirm kill and forget selected session (snapshot + recent entry)
 #   ctrl-r  rename selected session
 #
 # Dependencies: tmux, fzf (>= 0.53 for native --tmux popups), bun; zoxide optional
@@ -339,6 +340,8 @@ function __help() {
 	printf -- "         [--attach auto|never] [--format json|text]\n"
 	printf -- "     %s repair ... [--restart-services]   additive repair of a recognized session\n" "$__base"
 	printf -- "     %s remove --session NAME [--cwd PATH] [--discard-snapshot]\n" "$__base"
+	printf -- "         --discard-snapshot also forgets the recent entry, even if already stopped\n"
+	printf -- "     Picker: ctrl-k saves and kills; ctrl-x confirms kill and forget\n"
 	printf -- "\n"
 	printf -- "   Dependencies:\n"
 	printf -- "     tmux            (%s)\n" "$tmux_running"
@@ -599,7 +602,7 @@ function print_list() {
 	done
 
 	# 2) remaining running sessions by last-attached
-	for name in "${sess_order[@]}"; do
+	for name in ${sess_order[@]+"${sess_order[@]}"}; do
 		[[ $name == "default" || $name == "$exclude_current" ]] && continue
 		[[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
 		emitted+="$name"$'\n'
@@ -663,36 +666,17 @@ function to_session() {
 	tmux "$change" -t "$sid" ';' refresh-client
 }
 
-# -- canonical worktree session name for a directory: prints the
-#    {repo}-{branch-slug} id when $1 is a linked Git worktree, fails
-#    otherwise. Delegates to `wt id` (the single source of truth) with any
-#    inherited GIT_WORKTREE cleared so a pane inside worktree A cannot
-#    mislabel worktree B.
-function worktree_session_for() { # $1 = directory
-	local gd wid
-	[[ -n ${1:-} && -d $1 ]] || return 1
-	gd="$(git -C "$1" rev-parse --git-dir 2>/dev/null)" || return 1
-	case "$gd" in */worktrees/*) ;; *) return 1 ;; esac
-	wid="$(env -u GIT_WORKTREE "$HOME/.dotfiles/bin/wt" id "$1" 2>/dev/null)" || return 1
-	[[ -n $wid ]] || return 1
-	printf '%s' "$wid"
-}
-
-# -- new session with pre-defined layout, OR just new basic tmux session.
-#    Linked-worktree directories are routed through the deterministic
-#    worktree builder (tags + code/agent/services + dev:setup gate) under
-#    their canonical {repo}-{branch-slug} name, so picker/zoxide entry
-#    points converge with `wt`. alt-enter (fresh) skips that and forces a
-#    plain default-layout session.
+# -- Git directories use wt's full lifecycle, including primary checkouts.
+#    Keep explicit primary-checkout layouts; linked worktrees always use wt.
+#    Alt-enter bypasses both paths and builds a fresh generic session.
 function new_session() {
-	local session="$1" cwd="$2" source="${3:-default}" wid
+	local session="$1" cwd="$2" source="${3:-default}" gd
 
-	if [[ $source != fresh ]] && wid="$(worktree_session_for "$cwd")"; then
-		if "$0" ensure --kind worktree --cwd "$cwd" --session "$wid" --worktree-id "$wid" --attach never >/dev/null; then
-			to_session "$wid"
-			return 0
+	if [[ $source != fresh ]] && gd="$(git -C "$cwd" rev-parse --git-dir 2>/dev/null)"; then
+		if [[ $gd == */worktrees/* || -z $layouts_dir || ! -f "$layouts_dir/$session.sh" ]]; then
+			(cd "$cwd" && env -u GIT_WORKTREE "$script_dir/wt" open .)
+			return $?
 		fi
-		echo "ftm: worktree session setup failed for $cwd - falling back to a generic session" >&2
 	fi
 
 	if [[ $source != fresh && -f "$(snapshot_file "$session")" ]] && restore_snapshot "$session"; then
@@ -783,10 +767,10 @@ function fuzzy_find() {
 
 	if [[ $sessions_count -le 1 ]]; then
 		fzf_prompt_text=" create new session  "
-		fzf_header_text="󰢩 recent dirs & layouts [alt-enter: fresh]"
+		fzf_header_text="󰢩 recent dirs & layouts [ctrl-x: forget / alt-enter: fresh]"
 	else
 		fzf_prompt_text=" new or existing session  "
-		fzf_header_text="󰢩 ${C_ITALIC}${C_MAGENTA}${current_session}${C_RESET} [${C_WHITE}ctrl-k${C_RESET}: ${C_GRAY}kill / ${C_WHITE}ctrl-r${C_RESET}: ${C_GRAY}rename / ${C_WHITE}alt-enter${C_RESET}: ${C_GRAY}fresh${C_RESET}]"
+		fzf_header_text="󰢩 ${C_ITALIC}${C_MAGENTA}${current_session}${C_RESET} [${C_WHITE}ctrl-k${C_RESET}: ${C_GRAY}kill / ${C_WHITE}ctrl-x${C_RESET}: ${C_GRAY}forget / ${C_WHITE}ctrl-r${C_RESET}: ${C_GRAY}rename / ${C_WHITE}alt-enter${C_RESET}: ${C_GRAY}fresh${C_RESET}]"
 	fi
 
 	# -- picker actions; reload regenerates the annotated list so markers stay correct
@@ -801,6 +785,7 @@ function fuzzy_find() {
 	# "=" prefix forces exact session-name match (names like .dotfiles-... otherwise
 	# trip tmux's target parser, which treats a leading dot as a window separator)
 	local kill_action='execute-silent(ftm remove --session "$(printf %s {} | sed -E "s/\t.*$//; s/ [●○]$//")")+reload(ftm --list)' \
+		forget_action='execute(session=$(printf %s {} | sed -E "s/\t.*$//; s/ [●○]$//"); [[ $session =~ ^-+$ ]] && exit 0; printf >&2 "Kill and forget %s (snapshot + recent entry)? [y/N] " "$session"; read -r answer; [[ $answer == y || $answer == Y ]] && ftm remove --session "$session" --discard-snapshot)+reload(ftm --list)' \
 		rename_action='execute(session=$(printf %s {} | sed -E "s/\t.*$//; s/ [●○]$//"); printf >&2 "New session name: "; read -r name; tmux rename-session -t "$(ftm --id="$session")" "${name}")+reload(ftm --list)'
 
 	# native fzf tmux popup unless we're already inside one (-p)
@@ -826,7 +811,7 @@ function fuzzy_find() {
 			--bind="?:toggle-preview" \
 			--bind="ctrl-u:preview-half-page-up,ctrl-d:preview-half-page-down" \
 			--bind="ctrl-k:${kill_action}" \
-			--bind="ctrl-x:${kill_action}" \
+			--bind="ctrl-x:${forget_action}" \
 			--bind="ctrl-r:${rename_action}" \
 			--bind='enter:transform:if [[ $FZF_MATCH_COUNT -eq 0 ]]; then echo print-query; else echo "transform:[[ \{} =~ ^-+$ ]] && echo ignore || echo replace-query+print-query"; fi' \
 			--bind="alt-enter:transform:if [[ \$FZF_MATCH_COUNT -eq 0 ]]; then echo 'print(${FTM_FRESH})+accept'; else echo \"transform:[[ \{} =~ ^-+\$ ]] && echo ignore || echo 'print(${FTM_FRESH})+replace-query+accept'\"; fi" \
@@ -1096,10 +1081,8 @@ function deterministic_build() {
 	else
 		# Exact-cwd Pi: tmux cwd AND process cwd both set to the canonical path;
 		# pi -c continues the latest session stored for exactly that directory.
-		# An explicit Pi session UUID targets a known session instead. Launch
-		# through `mise exec` when available so pi's process env carries the
-		# project's [env] (PHX_PORT etc.) — required for env-interpolated MCP
-		# URLs like ${PHX_PORT} — falling back to a direct launch without mise.
+		# An explicit Pi session UUID targets a known session instead. The
+		# managed wrapper enables bridge ingress and loads project env via mise.
 		local pi_args
 		if [[ -n $DETERMINISTIC_PI_SESSION ]]; then
 			pi_args="--session $DETERMINISTIC_PI_SESSION"
@@ -1111,11 +1094,7 @@ function deterministic_build() {
 		# (pane_current_command stays node for pi detection), and cancelling or
 		# exiting pi returns to the shell prompt instead of killing the window.
 		# The typed line must stay POSIX-and-fish portable.
-		if command -v mise >/dev/null 2>&1; then
-			agent_cmd="mise exec -- pi $pi_args"
-		else
-			agent_cmd="pi $pi_args"
-		fi
+		agent_cmd="\"\$HOME/.local/bin/pi\" $pi_args"
 		wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n agent -c "$DETERMINISTIC_CWD")" ||
 			deterministic_error 7 tmux_failed tmux 'could not create agent window'
 		tmux send-keys -t "$wid" "$agent_cmd" Enter
@@ -1312,13 +1291,48 @@ function deterministic_ensure() {
 	exit 0
 }
 
+function deterministic_discard_saved() {
+	local file line tmp
+	[[ $DETERMINISTIC_DISCARD_SNAPSHOT == 1 ]] || return 0
+	file="$(snapshot_file "$DETERMINISTIC_SESSION")"
+	if [[ -e $file || -L $file ]]; then
+		# trash-cli expands globs and mishandles some escaped paths. Give it
+		# a safe relative name, restoring the snapshot if disposal fails.
+		if ! (
+			cd "${file%/*}" || exit 1
+			tmp="$(mktemp .forget.XXXXXX)" || exit 1
+			mv -- "./$DETERMINISTIC_SESSION" "$tmp" || exit 1
+			if trash -- "./$tmp" && [[ ! -e $tmp && ! -L $tmp ]]; then
+				exit 0
+			fi
+			mv -n -- "$tmp" "./$DETERMINISTIC_SESSION" || exit 1
+			[[ ! -e $tmp && ! -L $tmp ]] || printf 'Snapshot retained at %s/%s\n' "$PWD" "$tmp" >&2
+			exit 1
+		); then
+			deterministic_error 7 state_failed state 'could not discard snapshot'
+		fi
+	fi
+	if [[ -f $recent_file ]]; then
+		tmp="$(mktemp "$recent_file.XXXXXX")" || deterministic_error 7 state_failed state 'could not update recent entries'
+		{
+			while IFS= read -r line || [[ -n $line ]]; do
+				if [[ ${line%%"$TAB"*} != "$DETERMINISTIC_SESSION" ]]; then
+					printf '%s\n' "$line" || deterministic_error 7 state_failed state 'could not write recent entries'
+				fi
+			done <"$recent_file"
+			true
+		} >"$tmp" && mv "$tmp" "$recent_file" || deterministic_error 7 state_failed state 'could not update recent entries'
+	fi
+}
+
 function deterministic_remove() {
-	local sid k p wid_tag base f
+	local sid k p wid_tag base
 	if [[ -n $DETERMINISTIC_CWD ]]; then
 		DETERMINISTIC_CWD="$(cd -- "$DETERMINISTIC_CWD" 2>/dev/null && pwd)" ||
 			deterministic_error 2 usage args "cwd is not a directory: $DETERMINISTIC_CWD"
 	fi
 	if ! sid="$(session_id_for "$DETERMINISTIC_SESSION")"; then
+		deterministic_discard_saved
 		deterministic_release_locks
 		if [[ $DETERMINISTIC_FORMAT == json ]]; then
 			printf '{"schema_version":1,"command":"remove","status":"ok","session":"%s","tmux":{"action":"absent"},"attached":false,"warnings":[]}\n' \
@@ -1354,12 +1368,7 @@ function deterministic_remove() {
 		snapshot_session "$DETERMINISTIC_SESSION" 2>/dev/null || true
 	fi
 	tmux kill-session -t "$sid" || deterministic_error 7 tmux_failed tmux 'kill-session failed'
-	if [[ $DETERMINISTIC_DISCARD_SNAPSHOT == 1 ]] && valid_snapshot_name "$DETERMINISTIC_SESSION"; then
-		f="$(snapshot_file "$DETERMINISTIC_SESSION")"
-		if [[ -e $f ]]; then
-			trash "$f" 2>/dev/null || rm -f -- "$f"
-		fi
-	fi
+	deterministic_discard_saved
 	deterministic_release_locks
 	if [[ $DETERMINISTIC_FORMAT == json ]]; then
 		printf '{"schema_version":1,"command":"remove","status":"ok","session":"%s","tmux":{"action":"removed"},"attached":false,"warnings":[]}\n' \
