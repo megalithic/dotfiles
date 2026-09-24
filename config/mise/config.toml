@@ -148,7 +148,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 # "~/.config" = "~/.dotfiles/config"
 
 # -- pi coding agent: managed subset of ~/.pi/agent; runtime state (sessions/,
-#    npm/, auth.json, settings.json) stays unmanaged. settings.json is merged
+#    npm/, auth.json) stays unmanaged. settings.json is replaced from source
 #    by `mise run update:pi`, not linked. --
 "~/.pi/agent/AGENTS.md" = "~/.dotfiles/config/pi-coding-agent/agent/AGENTS.md"
 "~/.pi/agent/APPEND_SYSTEM.md" = "~/.dotfiles/config/pi-coding-agent/agent/APPEND_SYSTEM.md"

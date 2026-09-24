@@ -4,14 +4,15 @@
 set -euo pipefail
 
 usage() {
-  cat <<'EOF'
+	cat <<'EOF'
 usage: update-pi [--dry-run]
 
 Updates pi-managed imperative state:
+  - ~/.pi/agent/settings.json replaced with validated repo settings
   - pinned helper binaries under ~/.pi/agent/bin
   - nicknisi/sessions plugin extracted with an isolated home
-  - ~/.pi/agent/settings.json merged from repo settings
   - redundant extension deps cleanup
+  - mise-managed Pi package upgrade
   - pi update
   - pi update --extensions
 EOF
@@ -19,18 +20,18 @@ EOF
 
 dry_run=0
 for arg in "$@"; do
-  case "$arg" in
-    --dry-run | -n) dry_run=1 ;;
-    --help | -h)
-      usage
-      exit 0
-      ;;
-    *)
-      echo "update-pi: unknown argument: $arg" >&2
-      usage >&2
-      exit 2
-      ;;
-  esac
+	case "$arg" in
+	--dry-run | -n) dry_run=1 ;;
+	--help | -h)
+		usage
+		exit 0
+		;;
+	*)
+		echo "update-pi: unknown argument: $arg" >&2
+		usage >&2
+		exit 2
+		;;
+	esac
 done
 
 dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
@@ -43,151 +44,165 @@ export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:$
 
 say() { printf '%s\n' "$*"; }
 
+current_step="Initialize updater"
+trap 'status=$?; if [ "$status" -ne 0 ]; then printf "FAILED: %s (exit %d)\n" "$current_step" "$status" >&2; fi' EXIT
+
+run_step() {
+	current_step="$1"
+	shift
+	printf '\n==> %s\n' "$current_step"
+	# Keep this unguarded: an if/|| here disables errexit inside shell functions.
+	"$@"
+	printf 'OK: %s (exit 0)\n' "$current_step"
+}
+
 sha256_file() {
-  shasum -a 256 "$1" | awk '{print $1}'
+	shasum -a 256 "$1" | awk '{print $1}'
 }
 
 report_helper_bin() {
-  local name="$1" sha256="$2" dst actual
-  dst="$agent/bin/$name"
-  if [ -x "$dst" ]; then
-    actual="$(sha256_file "$dst")"
-    if [ "$actual" = "$sha256" ]; then
-      say "[ok] helper $name already matches $dst"
-    else
-      say "[would replace] helper $name at $dst"
-      say "  current sha256: $actual"
-      say "  target  sha256: $sha256"
-    fi
-  elif [ -e "$dst" ]; then
-    say "[would replace] helper $name exists but is not executable: $dst"
-  else
-    say "[would create] helper $name -> $dst"
-  fi
+	local name="$1" sha256="$2" dst actual
+	dst="$agent/bin/$name"
+	if [ -x "$dst" ]; then
+		actual="$(sha256_file "$dst")"
+		if [ "$actual" = "$sha256" ]; then
+			say "[ok] helper $name already matches $dst"
+		else
+			say "[would replace] helper $name at $dst"
+			say "  current sha256: $actual"
+			say "  target  sha256: $sha256"
+		fi
+	elif [ -e "$dst" ]; then
+		say "[would replace] helper $name exists but is not executable: $dst"
+	else
+		say "[would create] helper $name -> $dst"
+	fi
+}
+
+render_settings() {
+	jq -es 'if length == 1 and (.[0] | type == "object") then .[0]
+    else error("managed Pi settings must contain exactly one JSON object") end' "$managed_settings"
 }
 
 print_settings_preview() {
-  say "[settings] source: $managed_settings"
-  say "[settings] target: $settings_file"
-  if [ -f "$settings_file" ]; then
-    say "[would update] merged settings output: $settings_file"
-    jq -s '.[0] * .[1] | del(.subagents)' "$settings_file" "$managed_settings"
-  else
-    say "[would create] merged settings output: $settings_file"
-    jq -s '.[0] * .[1] | del(.subagents)' <(printf '{}\n') "$managed_settings"
-  fi
+	say "[settings] source: $managed_settings"
+	say "[settings] target: $settings_file"
+	say "[would replace] settings with repo contents; runtime-only keys are removed"
+	render_settings
 }
 
-merge_settings() {
-  mkdir -p "$(dirname "$settings_file")"
-  if [ ! -f "$settings_file" ]; then
-    printf '{}\n' >"$settings_file"
-  fi
-
-  local tmp
-  tmp="${settings_file}.tmp.$$"
-  jq -s '.[0] * .[1] | del(.subagents)' "$settings_file" "$managed_settings" >"$tmp"
-  mv "$tmp" "$settings_file"
-  say "merged settings -> $settings_file"
+sync_settings() {
+	local settings tmp
+	settings="$(render_settings)" || return $?
+	mkdir -p "$(dirname "$settings_file")"
+	tmp="$(mktemp "${settings_file}.tmp.XXXXXX")"
+	printf '%s\n' "$settings" >"$tmp"
+	mv "$tmp" "$settings_file"
+	say "synced settings -> $settings_file"
 }
 
 report_cleanup_target() {
-  local f="$1"
-  if [ -e "$f" ]; then
-    say "[would remove] $f"
-  else
-    say "[ok] absent $f"
-  fi
+	local f="$1"
+	if [ -e "$f" ]; then
+		say "[would remove] $f"
+	else
+		say "[ok] absent $f"
+	fi
 }
 
 trash_path() {
-  local f="$1"
-  [ -e "$f" ] || [ -L "$f" ] || return 0
-  if [ -x /usr/bin/trash ]; then
-    # npm trash-cli ignores broken symlinks; macOS trash handles them.
-    /usr/bin/trash "$f"
-  elif command -v trash >/dev/null 2>&1; then
-    trash "$f"
-  else
-    echo "trash command missing; refusing to delete $f" >&2
-    exit 1
-  fi
+	local f="$1"
+	[ -e "$f" ] || [ -L "$f" ] || return 0
+	if [ -x /usr/bin/trash ]; then
+		# npm trash-cli ignores broken symlinks; macOS trash handles them.
+		/usr/bin/trash "$f"
+	elif command -v trash >/dev/null 2>&1; then
+		trash "$f"
+	else
+		echo "trash command missing; refusing to delete $f" >&2
+		exit 1
+	fi
 }
 
 remove_parked_pinvim_links() {
-  local link target
-  for link in \
-    "$HOME/.local/bin/pinvim" \
-    "$HOME/.local/bin/pview" \
-    "$agent/extensions/pinvim.ts" \
-    "$agent/extensions/nvim-review.ts" \
-    "$agent/skills/pinvim-kitty-test"; do
-    if [ -L "$link" ]; then
-      target="$(readlink "$link")"
-    elif [ -L "$link/SKILL.md" ]; then
-      target="$(readlink "$link/SKILL.md")"
-    else
-      continue
-    fi
-    case "$target" in
-      *"/.dotfiles/config/pi-coding-agent/"*)
-        trash_path "$link"
-        say "removed parked pinvim link: $link"
-        ;;
-    esac
-  done
+	local link target
+	for link in \
+		"$HOME/.local/bin/pinvim" \
+		"$HOME/.local/bin/pview" \
+		"$agent/extensions/pinvim.ts" \
+		"$agent/extensions/nvim-review.ts" \
+		"$agent/skills/pinvim-kitty-test"; do
+		if [ -L "$link" ]; then
+			target="$(readlink "$link")"
+		elif [ -L "$link/SKILL.md" ]; then
+			target="$(readlink "$link/SKILL.md")"
+		else
+			continue
+		fi
+		case "$target" in
+		*"/.dotfiles/config/pi-coding-agent/"*)
+			trash_path "$link"
+			say "removed parked pinvim link: $link"
+			;;
+		esac
+	done
 }
 
 install_sessions_plugin() {
-  local fake_home status skill
-  fake_home="$(mktemp -d "${TMPDIR:-/tmp}/sessions-setup.XXXXXX")"
-  mkdir -p "$HOME/.local/share/sessions"
+	local fake_home status skill
+	fake_home="$(mktemp -d "${TMPDIR:-/tmp}/sessions-setup.XXXXXX")"
+	mkdir -p "$HOME/.local/share/sessions"
 
-  status=0
-  SESSIONS_HOME="$fake_home" \
-    SESSIONS_DATA_DIR="$HOME/.local/share/sessions" \
-    sessions setup </dev/null || status=$?
-  trash_path "$fake_home"
-  [ "$status" -eq 0 ] || return "$status"
+	status=0
+	SESSIONS_HOME="$fake_home" \
+		SESSIONS_DATA_DIR="$HOME/.local/share/sessions" \
+		sessions setup </dev/null || status=$?
+	trash_path "$fake_home"
+	[ "$status" -eq 0 ] || return "$status"
 
-  for skill in context memory recall session-metrics standup weekly-summary; do
-    if [ ! -f "$HOME/.local/share/sessions/plugin/skills/$skill/SKILL.md" ]; then
-      echo "sessions plugin skill missing after setup: $skill" >&2
-      return 1
-    fi
-  done
-  say "refreshed sessions plugin -> $HOME/.local/share/sessions/plugin"
+	for skill in context memory recall session-metrics standup weekly-summary; do
+		if [ ! -f "$HOME/.local/share/sessions/plugin/skills/$skill/SKILL.md" ]; then
+			echo "sessions plugin skill missing after setup: $skill" >&2
+			return 1
+		fi
+	done
+	say "refreshed sessions plugin -> $HOME/.local/share/sessions/plugin"
+}
+
+cleanup_extension_deps() {
+	trash_path "$agent/extensions/package.json"
+	trash_path "$agent/extensions/package-lock.json"
+	trash_path "$agent/extensions/node_modules"
 }
 
 if [ "$dry_run" = 1 ]; then
-  say "update:pi dry run"
-  say "[would ensure dir] $agent"
-  say "[would ensure dir] $agent/bin"
-  report_helper_bin plannotator "80c18e2b3e95796e85902b4e3ec92d8f7bf49df8ebfcbd12195c784fa522fdda"
-  say "[would remove] managed pinvim/pview links when still present"
-  say "[would run] isolated sessions setup -> $HOME/.local/share/sessions/plugin"
-  print_settings_preview
-  report_cleanup_target "$agent/extensions/package.json"
-  report_cleanup_target "$agent/extensions/package-lock.json"
-  report_cleanup_target "$agent/extensions/node_modules"
-  say "[would run] $pi_src/bin/pi update"
-  say "[would run] $pi_src/bin/pi update --extensions"
-  exit 0
+	say "update:pi dry run"
+	say "[would ensure dir] $agent"
+	say "[would ensure dir] $agent/bin"
+	print_settings_preview
+	report_helper_bin plannotator "80c18e2b3e95796e85902b4e3ec92d8f7bf49df8ebfcbd12195c784fa522fdda"
+	say "[would remove] managed pinvim/pview links when still present"
+	say "[would run] isolated sessions setup -> $HOME/.local/share/sessions/plugin"
+	report_cleanup_target "$agent/extensions/package.json"
+	report_cleanup_target "$agent/extensions/package-lock.json"
+	report_cleanup_target "$agent/extensions/node_modules"
+	say "[would run] mise upgrade npm:@earendil-works/pi-coding-agent --yes --raw"
+	say "[would run] $pi_src/bin/pi update"
+	say "[would run] $pi_src/bin/pi update --extensions"
+	exit 0
 fi
 
 mkdir -p "$agent" "$agent/bin"
 
-"$pi_src/scripts/install-pi-tools"
-remove_parked_pinvim_links
-install_sessions_plugin
-merge_settings
+run_step "Sync settings" sync_settings
+run_step "Install pinned helpers" "$pi_src/scripts/install-pi-tools"
+run_step "Remove disabled Pi links" remove_parked_pinvim_links
+run_step "Refresh sessions plugin" install_sessions_plugin
+run_step "Clean redundant extension dependencies" cleanup_extension_deps
 
-trash_path "$agent/extensions/package.json"
-trash_path "$agent/extensions/package-lock.json"
-trash_path "$agent/extensions/node_modules"
-
-mise upgrade npm:@earendil-works/pi-coding-agent --yes
-"$pi_src/bin/pi" update
-"$pi_src/bin/pi" update --extensions
+# Mise's animated renderer clears the screen on resize; raw keeps TTY output.
+run_step "Upgrade mise-managed Pi" mise upgrade npm:@earendil-works/pi-coding-agent --yes --raw
+run_step "Check Pi self-update" "$pi_src/bin/pi" update
+run_step "Update extension packages" "$pi_src/bin/pi" update --extensions
 
 echo "update:pi done."
