@@ -6,6 +6,12 @@ Pinvim is disabled on both sides. Pi-side: its extension, review extension, test
 
 The dormant stack ties together `config/nvim/lua/pinvim.lua`, `config/nvim/lua/pinvim/review.lua`, `config/pi-coding-agent/disabled/extensions/_pinvim.ts`, `config/pi-coding-agent/disabled/extensions/_nvim-review.ts`, the turned-off Pi wrappers, Neovim helpers, and tmux. Active tmux config contains no pinvim/pimux command: agent layouts launch plain `pi`, and the former prefix `p`/`C-p` routes are removed.
 
+## Active nvim-pi integration
+
+`config/nvim/lua/plugins/ai/init.lua` loads `aliou/nvim-pi` and binds Ctrl-P to its terminal toggle. Pi loads the companion extension from the global package list in `config/pi-coding-agent/agent/settings.json`.
+
+Neovim sets `load_extension = false` to use that Pi-managed installation and its npm dependencies. The plugin's automatic detection misses the global package and otherwise passes the separate Lazy.nvim checkout through `--extension`; that checkout lacks `@aliou/pi-utils-settings`, causing Pi to exit and the terminal to close. Neovim config has one mise-owned source tree; no Nix twin needs synchronization.
+
 ## Neovim nightly compatibility
 
 Neovim config tracks nightly API changes where small compatibility updates prevent startup warnings and flaky rebuilds.

@@ -42,7 +42,8 @@
     "npm:@ff-labs/pi-fff",
     "npm:@hypabolic/pi-hypa",
     "npm:@sting8k/pi-vcc",
-    "npm:pi-warden"
+    "npm:pi-warden",
+    "git:github.com/aliou/nvim-pi"
   ],
   "enabledModels": [
     "anthropic/claude-fable-5",

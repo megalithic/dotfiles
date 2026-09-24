@@ -34,4 +34,11 @@ return {
       },
     },
   },
+  {
+    "aliou/nvim-pi",
+    config = function()
+      require("pi-nvim").setup({ load_extension = false })
+      vim.keymap.set("n", "<C-p>", require("pi-nvim").toggle, { desc = "Toggle Pi" })
+    end,
+  },
 }

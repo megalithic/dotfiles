@@ -44,6 +44,7 @@
   "nvim-dap-virtual-text": { "branch": "master", "commit": "fbdb48c2ed45f4a8293d0d483f7730d24467ccb6" },
   "nvim-genghis": { "branch": "main", "commit": "401522898169644a5e9e3a20d06382cd56318a3b" },
   "nvim-nio": { "branch": "master", "commit": "edcc181a875301dd21840189aa2f2f9ad69fc172" },
+  "nvim-pi": { "branch": "main", "commit": "102e087179cfe8e65bd6b9ab2edbb86d64cecf2f" },
   "nvim-tree-pairs": { "branch": "main", "commit": "5fce834773cb31087cb0c2814a3462d1428e67b5" },
   "nvim-treesitter": { "branch": "main", "commit": "9a168f6357ed21c3a636e1727bc7d382abc451b8" },
   "nvim-treesitter-context": { "branch": "master", "commit": "f3061339b8eaf9fda873600bc425b8d2d8502533" },
