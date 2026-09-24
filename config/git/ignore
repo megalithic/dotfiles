@@ -157,3 +157,4 @@ deps
 
 # Local (untracked) Claude Code project settings
 **/.claude/settings.local.json
+pi-warden.md

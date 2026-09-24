@@ -30,14 +30,19 @@
     "git:github.com/amosblomqvist/pi-observational-memory",
     "npm:@plannotator/pi-extension",
     "npm:pi-rtk-optimizer",
-    "npm:pi-mono-btw",
+    "~/code/oss/pi-extensions/packages/artifacts",
+    "~/code/oss/pi-extensions/packages/ast-grep",
+    "~/code/oss/pi-extensions/packages/btw",
+    "~/code/oss/pi-extensions/packages/save-md",
+    "~/code/oss/pi-extensions/packages/pin-last-prompt",
     "npm:pi-elixir",
     "npm:@ogulcancelik/pi-ssh-tools",
     "npm:@juicesharp/rpiv-ask-user-question",
     "npm:@juicesharp/rpiv-todo",
     "npm:@ff-labs/pi-fff",
     "npm:@hypabolic/pi-hypa",
-    "npm:@sting8k/pi-vcc"
+    "npm:@sting8k/pi-vcc",
+    "npm:pi-warden"
   ],
   "enabledModels": [
     "anthropic/claude-fable-5",
