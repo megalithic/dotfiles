@@ -1,11 +1,10 @@
-// @ts-nocheck
 /**
  * Pi Bridge Extension
  *
  * Generic non-nvim ingress on a Unix socket.
  * The managed Pi wrapper enables it with PI_BRIDGE_LEGACY_SOCKET=1 so Telegram
  * (via Hammerspoon) and /tell keep working while pinvim is disabled. Bridge has
- * no heartbeat/status polling and does not handle nvim/pinvim peer frames.
+ * no nvim/pinvim peer polling or frame handling.
  *
  * Protocol:
  *   Legacy:   ping, telegram, tell, and tell_ack payloads keep their existing
@@ -23,7 +22,7 @@
  * Socket Configuration:
  *   Auto-detected from tmux session/window/pane when TMUX env is set.
  *   PI_SOCKET env var overrides auto-detection (for explicit control).
- *   Falls back to ${PI_STATE_DIR}/sockets/pi-default-0.sock outside tmux.
+ *   Falls back to a process-specific socket outside tmux.
  *   Logical Pi session IDs and names remain metadata; stable tmux pane IDs own
  *   socket identity.
  *
@@ -36,6 +35,9 @@ import type {
   ExtensionAPI,
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
+import type { AssistantMessage } from "@earendil-works/pi-ai";
+import { Type } from "typebox";
+import { Value } from "typebox/value";
 import { execFile, execSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -49,14 +51,19 @@ import path from "node:path";
 const xdgStateHome =
   process.env.XDG_STATE_HOME ||
   (process.env.HOME ? path.join(process.env.HOME, ".local", "state") : "/tmp");
+
 const PI_STATE_DIR = process.env.PI_STATE_DIR || path.join(xdgStateHome, "pi");
+
 const SOCKET_DIR = path.join(PI_STATE_DIR, "sockets");
+
 const INFO_DIR = path.join(PI_STATE_DIR, "manifests");
+
 const SOCKET_PREFIX = "pi";
 
 // macOS sun_path limit is 104 bytes (incl. NUL terminator). Longer paths make
 // net.Server.listen() throw EINVAL. Keep a safety margin.
 const MAX_SOCKET_PATH_BYTES = 103;
+
 const MAX_CLIENT_BUFFER_CHARS = 1024 * 1024;
 
 /**
@@ -72,18 +79,31 @@ const buildSocketPath = (
   session: string,
   window: string,
   paneId?: string,
+  directory = SOCKET_DIR,
 ): string => {
   const name = [session, window, paneId].filter(Boolean).join("-");
-  const full = `${SOCKET_DIR}/${SOCKET_PREFIX}-${name}.sock`;
+  const full = `${directory}/${SOCKET_PREFIX}-${name}.sock`;
+
   if (utf8Bytes(full) <= MAX_SOCKET_PATH_BYTES) return full;
-  const fixed = utf8Bytes(`${SOCKET_DIR}/${SOCKET_PREFIX}-.sock`) + 9; // "-" + 8 hex
-  const budget = Math.max(MAX_SOCKET_PATH_BYTES - fixed, 8);
+  const fixed = utf8Bytes(`${directory}/${SOCKET_PREFIX}-.sock`) + 9; // "-" + 8 hex
+  const budget = MAX_SOCKET_PATH_BYTES - fixed;
+
+  if (budget < 0) throw new Error("PI_STATE_DIR socket directory exceeds the Unix socket path limit");
+
   const hash = crypto
     .createHash("sha256")
     .update(name)
     .digest("hex")
     .slice(0, 8);
-  return `${SOCKET_DIR}/${SOCKET_PREFIX}-${name.slice(0, budget)}-${hash}.sock`;
+
+  let prefix = "";
+
+  for (const character of name) {
+    if (utf8Bytes(prefix + character) > budget) break;
+    prefix += character;
+  }
+
+  return `${directory}/${SOCKET_PREFIX}-${prefix}-${hash}.sock`;
 };
 
 /** Detect tmux session/window/pane names. Returns null if not in tmux. */
@@ -95,12 +115,14 @@ const detectTmux = (): {
   windowIndex?: string;
 } | null => {
   if (!process.env.TMUX) return null;
+
   try {
     // Target our own pane explicitly: without -t, display-message reports the
     // client's ACTIVE window, not the window this process runs in.
     const target = process.env.TMUX_PANE
       ? `-t '${process.env.TMUX_PANE}' `
       : "";
+
     // Single subprocess: batched tab-separated format. This runs at startup
     // AND on every heartbeat, so collapsing five execSync spawns into one is a
     // 5x reduction in per-interval tmux process churn across all Pi panes.
@@ -108,12 +130,15 @@ const detectTmux = (): {
       `tmux display-message -p ${target}'#{session_name}\t#{window_name}\t#{window_index}\t#{pane_id}\t#{pane_index}'`,
       { encoding: "utf-8", timeout: 2000 },
     );
+
     const [session, winName, winIndex, pane, paneIndex] = raw
       .replace(/\n$/, "")
       .split("\t");
+
     // Use window name if alphanumeric, otherwise index
     const window =
       winName && /^[a-zA-Z0-9_-]+$/.test(winName) ? winName : winIndex;
+
     return session && window
       ? { session, window, pane, paneIndex, windowIndex: winIndex }
       : null;
@@ -122,23 +147,26 @@ const detectTmux = (): {
   }
 };
 
-/** Resolve socket path and session name. */
-const resolveSocket = (): {
-  socketPath: string | null;
+type SocketIdentity = {
+  socketPath: string;
   session: string;
   window: string;
-} => {
-  // Explicit override takes priority
-  if (process.env.PI_SOCKET) {
+};
+
+/** Only unmarked overrides or this process's own published socket are local. */
+const resolveSocket = (
+  env: NodeJS.ProcessEnv = process.env,
+  tmux = detectTmux(),
+  pid = process.pid,
+): SocketIdentity => {
+  if (env.PI_SOCKET && (!env.PI_SOCKET_OWNER_PID || env.PI_SOCKET_OWNER_PID === String(pid))) {
     return {
-      socketPath: process.env.PI_SOCKET,
-      session: process.env.PI_SESSION || "default",
-      window: process.env.PI_WINDOW || "0",
+      socketPath: env.PI_SOCKET,
+      session: env.PI_SESSION || tmux?.session || "default",
+      window: env.PI_WINDOW || tmux?.window || "0",
     };
   }
 
-  // Auto-detect from tmux
-  const tmux = detectTmux();
   if (tmux) {
     return {
       socketPath: buildSocketPath(tmux.session, tmux.window, tmux.pane),
@@ -149,7 +177,7 @@ const resolveSocket = (): {
 
   // Fallback outside tmux
   return {
-    socketPath: `${SOCKET_DIR}/${SOCKET_PREFIX}-default-0.sock`,
+    socketPath: buildSocketPath("process", String(pid)),
     session: "default",
     window: "0",
   };
@@ -160,6 +188,7 @@ const {
   session: PI_SESSION,
   window: PI_WINDOW,
 } = resolveSocket();
+
 const IS_BRIDGE_ENABLED =
   !!SOCKET_PATH && process.env.PI_BRIDGE_LEGACY_SOCKET === "1";
 
@@ -167,55 +196,153 @@ const IS_BRIDGE_ENABLED =
 // Payload Types
 // =============================================================================
 
-type TelegramPayload = {
-  type: "telegram";
-  text: string;
-  source?: string;
-  timestamp?: number;
+const deliveryModeSchema = Type.Union([Type.Literal("steer"), Type.Literal("follow_up")]);
+
+const tellFields = {
+  text: Type.String(),
+  id: Type.Optional(Type.String()),
+  from: Type.Optional(Type.String()),
+  fromSocket: Type.Optional(Type.String()),
+  sessionId: Type.Optional(Type.String()),
+  sessionName: Type.Optional(Type.String()),
+  timestamp: Type.Optional(Type.Number()),
 };
 
-type DeliveryMode = "steer" | "follow_up";
+const telegramSchema = Type.Object({
+  type: Type.Literal("telegram"),
+  text: Type.String(),
+  source: Type.Optional(Type.String()),
+  timestamp: Type.Optional(Type.Number()),
+});
 
-type TellPayload = {
-  type: "tell";
-  protocol?: "pi.tell.v1" | string;
-  id?: string;
-  text: string;
-  from?: string;
-  fromSocket?: string;
-  sessionId?: string;
-  sessionName?: string;
-  timestamp?: number;
-  mode?: DeliveryMode;
+const tellSchema = Type.Object({
+  type: Type.Literal("tell"),
+  ...tellFields,
+  protocol: Type.Optional(Type.String()),
+  mode: Type.Optional(deliveryModeSchema),
+});
+
+const controlEnvelopeFields = {
+  type: Type.Literal("control"),
+  protocol: Type.Optional(Type.String()),
+  id: Type.Optional(Type.String()),
+  operation: Type.Optional(Type.String()),
 };
 
-type ControlOperation = "sessions.list" | "message.last" | "message.send";
+const controlEnvelopeSchema = Type.Object(controlEnvelopeFields);
 
-type ControlPayload = {
-  type: "control";
+const controlSchema = Type.Object({
+  ...controlEnvelopeFields,
+  params: Type.Optional(Type.Object({
+    ...tellFields,
+    text: Type.Optional(Type.String()),
+    messageId: Type.Optional(Type.String()),
+    tellProtocol: Type.Optional(Type.String()),
+    mode: Type.Optional(Type.String()),
+  })),
+});
+
+const tellAckSchema = Type.Object({
+  type: Type.Literal("tell_ack"),
+  id: Type.Optional(Type.String()),
+  to: Type.Optional(Type.String()),
+  timestamp: Type.Optional(Type.Number()),
+});
+
+const pingSchema = Type.Object({ type: Type.Literal("ping") });
+
+const payloadSchema = Type.Union([telegramSchema, tellSchema, controlSchema, tellAckSchema, pingSchema]);
+
+const envelopeSchema = Type.Object({ type: Type.Optional(Type.String()) });
+
+const pongSchema = Type.Object({ ok: Type.Literal(true) });
+
+type TelegramPayload = Type.Static<typeof telegramSchema>;
+
+type TellPayload = Type.Static<typeof tellSchema>;
+
+type ControlPayload = Type.Static<typeof controlSchema>;
+
+type ControlEnvelope = Type.Static<typeof controlEnvelopeSchema>;
+
+type TellAckPayload = Type.Static<typeof tellAckSchema>;
+
+type PingPayload = Type.Static<typeof pingSchema>;
+
+type Payload = Type.Static<typeof payloadSchema>;
+
+type DeliveryMode = Type.Static<typeof deliveryModeSchema>;
+
+const runtimeSchema = Type.Object({
+  version: Type.String(),
+  loadedAt: Type.String(),
+  sourceHash: Type.Union([Type.String(), Type.Null()]),
+});
+
+type RuntimeIdentity = Type.Static<typeof runtimeSchema>;
+
+const bridgeRuntime: RuntimeIdentity = {
+  version: "bridge.v2",
+  loadedAt: new Date().toISOString(),
+  sourceHash: crypto.createHash("sha256").update(fs.readFileSync(new URL(import.meta.url))).digest("hex"),
+};
+
+let tellRuntime: RuntimeIdentity | null = null;
+
+const localHttpEndpointSchema = Type.Object({
+  origin: Type.String(),
+  pathname: Type.String(),
+});
+
+type LocalHttpEndpoint = Type.Static<typeof localHttpEndpointSchema>;
+
+const manifestSchema = Type.Object({
+  socket: Type.String({ minLength: 1 }),
+  cwd: Type.Optional(Type.String()),
+  pid: Type.Optional(Type.Integer({ minimum: 1 })),
+  owner: Type.Optional(Type.String({ minLength: 1 })),
+  session: Type.Optional(Type.String()),
+  window: Type.Optional(Type.String()),
+  pane: Type.Optional(Type.String()),
+  windowIndex: Type.Optional(Type.String()),
+  paneIndex: Type.Optional(Type.String()),
+  sessionId: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  sessionName: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  startedAt: Type.Optional(Type.Union([Type.String(), Type.Number()])),
+  heartbeatAt: Type.Optional(Type.Union([Type.String(), Type.Number()])),
+  ephemeral: Type.Optional(Type.Boolean()),
+  tidewaveConnected: Type.Optional(Type.Boolean()),
+  tidewaveEndpoint: Type.Optional(localHttpEndpointSchema),
+  state: Type.Optional(Type.Union([Type.Literal("idle"), Type.Literal("working"), Type.Literal("input_needed"), Type.Literal("done"), Type.Literal("error")])),
+  statusUpdatedAt: Type.Optional(Type.String()),
+  bridge: Type.Optional(runtimeSchema),
+  tell: Type.Optional(Type.Union([runtimeSchema, Type.Null()])),
+});
+
+type BridgeManifest = Type.Static<typeof manifestSchema>;
+
+type TmuxLocation = Pick<BridgeManifest, "pane" | "windowIndex" | "paneIndex">;
+
+type ControlSession = Omit<BridgeManifest, "owner" | "ephemeral" | "tidewaveConnected" | "tidewaveEndpoint"> & { reachable: boolean };
+
+type ControlData = { sessions: ControlSession[] } | { message: LastAssistantMessage | null } | { accepted: true; messageId?: string; deliveredAs: "direct" | DeliveryMode };
+
+type BridgeResponse = {
+  ok: boolean;
+  type?: string;
   protocol?: string;
   id?: string;
   operation?: string;
-  params?: Record<string, unknown>;
+  error?: string;
+  data?: ControlData;
+  deliveredAs?: "direct" | DeliveryMode;
+  runtime?: { bridge: RuntimeIdentity; tell: RuntimeIdentity | null };
+  pid?: number;
+  sessionId?: string | null;
+  sessionName?: string | null;
+  idle?: boolean;
+  pending?: boolean;
 };
-
-type TellAckPayload = {
-  type: "tell_ack";
-  id?: string;
-  to?: string;
-  timestamp?: number;
-};
-
-type PingPayload = {
-  type: "ping";
-};
-
-type Payload =
-  | TelegramPayload
-  | TellPayload
-  | TellAckPayload
-  | PingPayload
-  | ControlPayload;
 
 const isTelegramPayload = (p: Payload): p is TelegramPayload =>
   "type" in p && p.type === "telegram";
@@ -237,43 +364,102 @@ const isControlPayload = (p: Payload): p is ControlPayload =>
 // =============================================================================
 
 let server: net.Server | null = null;
+
 let latestCtx: ExtensionContext | null = null;
+
 let infoManifestPath: string | null = null;
+
 const clientSockets = new Set<net.Socket>();
+
 const ownerToken = crypto.randomBytes(16).toString("hex");
+
 type BridgeActivityState =
   | "idle"
   | "working"
   | "input_needed"
   | "done"
   | "error";
+
 let activityState: BridgeActivityState = "idle";
+
 let activityBeforePrompt: BridgeActivityState | null = null;
+
 let activityUpdatedAt = new Date().toISOString();
-let latestAssistantResult: {
-  content?: unknown;
-  stopReason?: string;
-  errorMessage?: string;
-} | null = null;
+
+type AssistantResult = Pick<AssistantMessage, "role" | "content" | "stopReason">;
+
+let latestAssistantResult: AssistantResult | null = null;
+
 let socketInode: number | null = null;
+
 let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+
 let watchdogTimer: ReturnType<typeof setInterval> | null = null;
+
 let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
 let shuttingDown = false;
+
+let startAttempt: Promise<void> | null = null;
+
 let tellWidgetTimer: ReturnType<typeof setTimeout> | null = null;
+
 let retryDelay = 250;
+
 let retryLogs = 0;
-// Live tidewave-MCP-connected gate. pi surfaces each connected MCP server as a
-// single tool `mcp__<serverName>` in the built system prompt's selectedTools;
-// it appears only when the server actually connected (not merely configured).
-// Captured in before_agent_start and mirrored into the manifest so Hammerspoon
-// can gate the Tidewave->pi handshake by reading the active pane's manifest.
-const TIDEWAVE_TOOL = "mcp__tidewave";
+
+// Versioned pi-mcp-adapter status events distinguish live connections from
+// cached tools. The bridge publishes this gate even before the first prompt.
+const MCP_STATUS_EVENT = "pi-mcp-adapter/status/v1";
+
+const TIDEWAVE_ENDPOINT_EVENT = "pidewave:endpoint:v1";
+
+const tidewaveEndpointEventSchema = Type.Object({
+  version: Type.Literal(1),
+  endpoint: Type.Optional(localHttpEndpointSchema),
+});
+
+const mcpStatusSchema = Type.Object({
+  version: Type.Literal(1),
+  servers: Type.Array(Type.Object({
+    name: Type.String(),
+    status: Type.String(),
+    disabled: Type.Boolean(),
+  })),
+});
+
 let tidewaveConnected = false;
+
+let tidewaveEndpoint: LocalHttpEndpoint | undefined;
+
+const safeTidewaveEndpoint = (endpoint: LocalHttpEndpoint | undefined): LocalHttpEndpoint | undefined => {
+  if (!endpoint || endpoint.pathname !== "/tidewave/mcp") return undefined;
+
+  try {
+    const url = new URL(endpoint.origin);
+    const port = Number(url.port || (url.protocol === "https:" ? 443 : 80));
+
+    if (
+      !["http:", "https:"].includes(url.protocol) ||
+      !["localhost", "127.0.0.1"].includes(url.hostname) ||
+      url.origin !== endpoint.origin || url.username || url.password || url.search || url.hash ||
+      !Number.isInteger(port) || port < 1 || port > 65535 || port === 9832
+    ) return undefined;
+
+    return { origin: url.origin, pathname: endpoint.pathname };
+  } catch {
+    return undefined;
+  }
+};
+
 const HEARTBEAT_MS = 10_000;
+
 const STALE_HEARTBEAT_MS = 45_000;
+
 const MAX_RETRY_MS = 8_000;
+
 const MAX_RETRY_LOGS = 5;
+
 const BRIDGE_LOG = path.join(PI_STATE_DIR, "logs", "bridge.log");
 
 type PiSessionIdentity = {
@@ -289,10 +475,25 @@ type LastAssistantMessage = {
 
 const piSessionIdentity = (ctx: ExtensionContext | null): PiSessionIdentity => {
   const manager = ctx?.sessionManager;
+
   return {
     sessionId: manager?.getSessionId?.() || null,
     sessionName: manager?.getSessionName?.() || null,
   };
+};
+
+const refreshTmuxLocation = (
+  manifest: TmuxLocation,
+  tmux: ReturnType<typeof detectTmux>,
+): boolean => {
+  // Headless and spawned Pi processes have no tmux metadata. Optional chaining
+  // alone is unsafe here: `undefined === manifest.pane` is true when both are
+  // absent, then dereferencing tmux crashes the process on the heartbeat.
+  if (!tmux || tmux.pane !== manifest.pane) return false;
+  manifest.windowIndex = tmux.windowIndex;
+  manifest.paneIndex = tmux.paneIndex;
+
+  return true;
 };
 
 const summarizeTellText = (text: string, maxLength = 160): string => {
@@ -304,15 +505,19 @@ const summarizeTellText = (text: string, maxLength = 160): string => {
     .join(" ")
     .replace(/\s+/g, " ")
     .trim();
+
   if (cleaned.length <= maxLength) return cleaned;
+
   return `${cleaned.slice(0, Math.max(0, maxLength - 3))}...`;
 };
 
 const notifyTellViaNtfy = (from: string, text: string): void => {
   const home = process.env.HOME || "";
+
   const commands = [home && path.join(home, "bin", "ntfy"), "ntfy"].filter(
     Boolean,
-  ) as string[];
+  );
+
   const args = [
     "send",
     "-t",
@@ -322,13 +527,16 @@ const notifyTellViaNtfy = (from: string, text: string): void => {
     "-s",
     "pi tell",
   ];
+
   const tryNext = (index: number): void => {
     const command = commands[index];
+
     if (!command) return;
     execFile(command, args, { timeout: 2000 }, (error) => {
       if (error) tryNext(index + 1);
     });
   };
+
   tryNext(0);
 };
 
@@ -380,13 +588,18 @@ const deliverTell = (
 ): "direct" | DeliveryMode => {
   if (!ctx || ctx.isIdle()) {
     void pi.sendUserMessage(text);
+
     return "direct";
   }
+
   if (mode === "steer") {
     void pi.sendUserMessage(text, { deliverAs: "steer" });
+
     return "steer";
   }
+
   void pi.sendUserMessage(text, { deliverAs: "followUp" });
+
   return "follow_up";
 };
 
@@ -394,10 +607,13 @@ const latestAssistantMessage = (
   ctx: ExtensionContext | null,
 ): LastAssistantMessage | null => {
   const branch = ctx?.sessionManager.getBranch() || [];
+
   for (let i = branch.length - 1; i >= 0; i--) {
     const entry = branch[i];
+
     if (entry.type !== "message" || entry.message.role !== "assistant")
       continue;
+
     const content = Array.isArray(entry.message.content)
       ? entry.message.content
           .filter(
@@ -408,6 +624,7 @@ const latestAssistantMessage = (
           .join("\n")
           .trim()
       : String(entry.message.content).trim();
+
     if (content) {
       return {
         role: "assistant",
@@ -416,6 +633,7 @@ const latestAssistantMessage = (
       };
     }
   }
+
   return null;
 };
 
@@ -427,9 +645,11 @@ const logBridge = (message: string): void => {
 };
 
 const pidAlive = (pid: number | undefined): boolean => {
-  if (!pid || !Number.isFinite(pid)) return false;
+  if (!pid || !Number.isSafeInteger(pid) || pid < 1) return false;
+
   try {
     process.kill(pid, 0);
+
     return true;
   } catch {
     return false;
@@ -439,18 +659,61 @@ const pidAlive = (pid: number | undefined): boolean => {
 const manifestForSocket = (socket: string): string =>
   path.join(INFO_DIR, `${path.basename(socket).replace(/\.sock$/, "")}.info`);
 
-const readManifest = (manifestPath: string): Record<string, unknown> | null => {
+const readManifest = (manifestPath: string): BridgeManifest | null => {
   try {
-    return JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    const value: unknown = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+
+    return Value.Check(manifestSchema, value) ? value : null;
   } catch {
     return null;
+  }
+};
+
+const claimSchema = Type.Object({ owner: Type.String(), pid: Type.Integer({ minimum: 1 }) });
+
+type SocketClaim = { path: string; ino: number; dev: number; owner: string };
+
+const acquireSocketClaim = (socket: string): SocketClaim | null => {
+  const claimPath = `${socket}.claim`;
+  let fd: number;
+
+  try {
+    fd = fs.openSync(claimPath, "wx", 0o600);
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "EEXIST") return null;
+    throw error;
+  }
+
+  try {
+    fs.writeFileSync(fd, JSON.stringify({ owner: ownerToken, pid: process.pid }) + "\n");
+    const stat = fs.fstatSync(fd);
+
+    return { path: claimPath, ino: stat.ino, dev: stat.dev, owner: ownerToken };
+  } finally {
+    fs.closeSync(fd);
+  }
+};
+
+const releaseSocketClaim = (claim: SocketClaim): void => {
+  try {
+    const stat = fs.lstatSync(claim.path);
+    const value: unknown = JSON.parse(fs.readFileSync(claim.path, "utf8"));
+
+    if (stat.ino === claim.ino && stat.dev === claim.dev && Value.Check(claimSchema, value) && value.owner === claim.owner && value.pid === process.pid) {
+      fs.unlinkSync(claim.path);
+    }
+  } catch {
+    // Missing, replaced, or malformed claims are never removed by this owner.
   }
 };
 
 const pingSocket = (socket: string): Promise<boolean> =>
   new Promise((resolve) => {
     const client = net.createConnection(socket);
+    client.setEncoding("utf8");
     let settled = false;
+    let buffer = "";
+
     const finish = (ok: boolean): void => {
       if (settled) return;
       settled = true;
@@ -458,42 +721,55 @@ const pingSocket = (socket: string): Promise<boolean> =>
       client.destroy();
       resolve(ok);
     };
+
     const timer = setTimeout(() => finish(false), 250);
     client.once("connect", () => client.write('{"type":"ping"}\n'));
-    client.once("data", (data) => {
+    client.on("data", (data) => {
+      buffer += data.toString();
+
+      if (buffer.length > MAX_CLIENT_BUFFER_CHARS) return finish(false);
+      const newline = buffer.indexOf("\n");
+
+      if (newline === -1) return;
+
       try {
-        finish(JSON.parse(String(data).split("\n")[0]).ok === true);
+        finish(Value.Check(pongSchema, JSON.parse(buffer.slice(0, newline))));
       } catch {
         finish(false);
       }
     });
     client.once("error", () => finish(false));
+    client.once("close", () => finish(false));
   });
 
 const canReclaim = async (socket: string): Promise<boolean> => {
   const manifestPath = manifestForSocket(socket);
+
   try {
     const initialStat = fs.statSync(socket);
+
     if (!initialStat.isSocket()) return false;
     const initial = readManifest(manifestPath);
-    if (!initial || initial.socket !== socket || (await pingSocket(socket)))
+
+    if (!initial?.owner || !initial.pid || initial.heartbeatAt === undefined || initial.socket !== socket || (await pingSocket(socket)))
       return false;
-    const heartbeatValue = initial.heartbeatAt || initial.startedAt || "";
-    const heartbeat =
-      typeof heartbeatValue === "number"
-        ? heartbeatValue
-        : Date.parse(String(heartbeatValue));
+    const heartbeat = new Date(initial.heartbeatAt).getTime();
+
     const recent =
       Number.isFinite(heartbeat) && Date.now() - heartbeat < STALE_HEARTBEAT_MS;
-    if (pidAlive(Number(initial.pid)) || recent) return false;
+
+    if (pidAlive(initial.pid) || recent || !Number.isFinite(heartbeat)) return false;
 
     const current = readManifest(manifestPath);
     const currentStat = fs.statSync(socket);
+
     if (
       !current ||
       current.owner !== initial.owner ||
       current.pid !== initial.pid ||
       current.socket !== socket ||
+      current.heartbeatAt !== initial.heartbeatAt ||
+      current.startedAt !== initial.startedAt ||
       currentStat.dev !== initialStat.dev ||
       currentStat.ino !== initialStat.ino
     )
@@ -504,12 +780,14 @@ const canReclaim = async (socket: string): Promise<boolean> => {
     );
     fs.unlinkSync(socket);
     const finalManifest = readManifest(manifestPath);
+
     if (
       finalManifest?.owner === initial.owner &&
       finalManifest?.pid === initial.pid
     ) {
       fs.unlinkSync(manifestPath);
     }
+
     return true;
   } catch {
     return false;
@@ -518,11 +796,14 @@ const canReclaim = async (socket: string): Promise<boolean> => {
 
 const ownedSocket = (): boolean => {
   if (!SOCKET_PATH || socketInode === null || !infoManifestPath) return false;
+
   try {
     const stat = fs.statSync(SOCKET_PATH);
     const manifest = readManifest(infoManifestPath);
+
     return (
       stat.ino === socketInode &&
+      manifest?.pid === process.pid &&
       manifest?.owner === ownerToken &&
       manifest?.socket === SOCKET_PATH
     );
@@ -535,8 +816,9 @@ const ownedSocket = (): boolean => {
 // Response Helpers
 // =============================================================================
 
-const respond = (socket: net.Socket, data: Record<string, unknown>): void => {
+const respond = (socket: net.Socket, data: BridgeResponse): void => {
   if (socket.destroyed || !socket.writable) return;
+
   try {
     socket.write(JSON.stringify(data) + "\n");
   } catch {
@@ -544,7 +826,7 @@ const respond = (socket: net.Socket, data: Record<string, unknown>): void => {
   }
 };
 
-const respondOk = (socket: net.Socket, extra?: Record<string, unknown>): void =>
+const respondOk = (socket: net.Socket, extra?: Omit<BridgeResponse, "ok">): void =>
   respond(socket, { ok: true, ...extra });
 
 const respondError = (socket: net.Socket, error: string): void =>
@@ -557,6 +839,7 @@ const sendTellAck = async (
   tellId?: string,
 ): Promise<void> => {
   const client = net.createConnection(toSocket);
+
   const ack: TellAckPayload = {
     type: "tell_ack",
     id: tellId,
@@ -565,6 +848,7 @@ const sendTellAck = async (
   };
 
   const timeoutMs = 500;
+
   const timer = setTimeout(() => {
     client.destroy();
   }, timeoutMs);
@@ -580,6 +864,7 @@ const sendTellAck = async (
     } catch {
       // Ignore errors sending ack
     }
+
     clearTimeout(timer);
     client.destroy();
   });
@@ -589,31 +874,38 @@ const sendTellAck = async (
 // Info Manifest
 // =============================================================================
 
-const writeManifestAtomic = (manifest: Record<string, unknown>): boolean => {
+const writeManifestAtomic = (manifest: BridgeManifest): boolean => {
   if (!infoManifestPath) return false;
   const temp = `${infoManifestPath}.${ownerToken}.tmp`;
+
   try {
     fs.writeFileSync(temp, JSON.stringify(manifest) + "\n", { mode: 0o600 });
     fs.renameSync(temp, infoManifestPath);
+
     return true;
   } catch {
     try {
       fs.unlinkSync(temp);
     } catch {}
+
     return false;
   }
 };
 
-const writeInfoManifest = (): boolean => {
+const writeInfoManifest = (restoreOnly = false): boolean => {
   if (!SOCKET_PATH || !PI_SESSION) return false;
+
   try {
     fs.mkdirSync(INFO_DIR, { recursive: true });
     infoManifestPath = manifestForSocket(SOCKET_PATH);
     const now = new Date().toISOString();
     const tmux = detectTmux();
-    return writeManifestAtomic({
+
+    if (restoreOnly && fs.existsSync(infoManifestPath)) return false;
+
+    const manifest: BridgeManifest = {
       socket: SOCKET_PATH,
-      cwd: process.cwd(),
+      cwd: latestCtx?.cwd || process.cwd(),
       pid: process.pid,
       session: PI_SESSION,
       window: PI_WINDOW,
@@ -627,10 +919,23 @@ const writeInfoManifest = (): boolean => {
         /-eph-[^-]+-[^-]+\.sock$/.test(SOCKET_PATH),
       startedAt: now,
       tidewaveConnected,
+      tidewaveEndpoint,
       state: activityState,
       statusUpdatedAt: activityUpdatedAt,
+      bridge: bridgeRuntime,
+      tell: tellRuntime,
       ...piSessionIdentity(latestCtx),
-    });
+    };
+
+    if (restoreOnly) {
+      // Exclusive creation cannot replace a foreign registration appearing
+      // between the watchdog's missing-file check and this write.
+      fs.writeFileSync(infoManifestPath, JSON.stringify(manifest) + "\n", { flag: "wx", mode: 0o600 });
+
+      return true;
+    }
+
+    return writeManifestAtomic(manifest);
   } catch {
     return false;
   }
@@ -638,8 +943,10 @@ const writeInfoManifest = (): boolean => {
 
 const cleanupInfoManifest = (): void => {
   if (!infoManifestPath) return;
+
   try {
     const manifest = readManifest(infoManifestPath);
+
     if (manifest?.owner === ownerToken && manifest?.pid === process.pid) {
       fs.unlinkSync(infoManifestPath);
     }
@@ -652,9 +959,12 @@ const updateActivityState = (
 ): void => {
   activityState = state;
   activityUpdatedAt = new Date().toISOString();
+
   if (ctx) latestCtx = ctx;
+
   if (!ownedSocket() || !infoManifestPath) return;
   const manifest = readManifest(infoManifestPath);
+
   if (manifest?.owner !== ownerToken || manifest?.pid !== process.pid) return;
   manifest.state = activityState;
   manifest.statusUpdatedAt = activityUpdatedAt;
@@ -673,23 +983,19 @@ const endPrompt = (ctx: ExtensionContext | null = latestCtx): void => {
   updateActivityState(next, ctx);
 };
 
-const captureAssistantResult = (message: unknown): void => {
-  if (
-    !message ||
-    typeof message !== "object" ||
-    (message as { role?: string }).role !== "assistant"
-  )
-    return;
-  latestAssistantResult = message as typeof latestAssistantResult;
+const captureAssistantResult = (message: AssistantResult): void => {
+  latestAssistantResult = message;
 };
 
 const assistantResultText = (): string => {
   const content = latestAssistantResult?.content;
+
   if (!Array.isArray(content)) return "";
+
   return content
     .filter(
       (part): part is { type: "text"; text: string } =>
-        part?.type === "text" && typeof part.text === "string",
+        part.type === "text",
     )
     .map((part) => part.text)
     .join("\n")
@@ -698,6 +1004,7 @@ const assistantResultText = (): string => {
 
 const settledActivityState = (): BridgeActivityState => {
   if (latestAssistantResult?.stopReason === "error") return "error";
+
   return /\?[\s*_`"')\]]*$/.test(assistantResultText().trimEnd())
     ? "input_needed"
     : "done";
@@ -707,61 +1014,51 @@ const settledActivityState = (): BridgeActivityState => {
 // Control protocol
 // =============================================================================
 
-const controlSessions = (): Array<Record<string, unknown>> => {
+const controlSessions = async (): Promise<ControlSession[]> => {
   try {
-    return fs
-      .readdirSync(INFO_DIR)
+    const manifests = fs.readdirSync(INFO_DIR)
       .filter((entry) => entry.endsWith(".info"))
       .flatMap((entry) => {
         const manifest = readManifest(path.join(INFO_DIR, entry));
-        if (
-          !manifest ||
-          manifest.ephemeral === true ||
-          typeof manifest.socket !== "string"
-        ) {
-          return [];
-        }
-        let socketExists = false;
-        try {
-          socketExists = fs.statSync(manifest.socket).isSocket();
-        } catch {}
-        return [
-          {
-            sessionId: manifest.sessionId ?? null,
-            sessionName: manifest.sessionName ?? null,
-            socket: manifest.socket,
-            cwd: manifest.cwd,
-            pid: manifest.pid,
-            session: manifest.session,
-            window: manifest.window,
-            windowIndex: manifest.windowIndex,
-            pane: manifest.pane,
-            paneIndex: manifest.paneIndex,
-            startedAt: manifest.startedAt,
-            heartbeatAt: manifest.heartbeatAt,
-            state: manifest.state ?? "idle",
-            statusUpdatedAt: manifest.statusUpdatedAt ?? manifest.heartbeatAt,
-            reachable: socketExists && pidAlive(Number(manifest.pid)),
-          },
-        ];
-      })
-      .sort((a, b) =>
-        String(
-          a.sessionName || a.session || a.sessionId || a.socket,
-        ).localeCompare(
-          String(b.sessionName || b.session || b.sessionId || b.socket),
-        ),
-      );
+
+        return manifest && !manifest.ephemeral ? [manifest] : [];
+      });
+
+    const sessions = await Promise.all(manifests.map(async (manifest) => ({
+      sessionId: manifest.sessionId ?? null,
+      sessionName: manifest.sessionName ?? null,
+      socket: manifest.socket,
+      cwd: manifest.cwd,
+      pid: manifest.pid,
+      session: manifest.session,
+      window: manifest.window,
+      windowIndex: manifest.windowIndex,
+      pane: manifest.pane,
+      paneIndex: manifest.paneIndex,
+      startedAt: manifest.startedAt,
+      heartbeatAt: manifest.heartbeatAt,
+      state: manifest.state ?? "idle",
+      statusUpdatedAt: manifest.statusUpdatedAt,
+      bridge: manifest.bridge,
+      tell: manifest.tell,
+      reachable: await pingSocket(manifest.socket),
+    })));
+
+    return sessions.sort((a, b) =>
+      (a.sessionName || a.session || a.sessionId || a.socket).localeCompare(
+        b.sessionName || b.session || b.sessionId || b.socket,
+      ),
+    );
   } catch {
     return [];
   }
 };
 
 const controlResponse = (
-  request: ControlPayload,
-  data?: unknown,
+  request: ControlEnvelope,
+  data?: ControlData,
   error?: string,
-): Record<string, unknown> => ({
+): BridgeResponse => ({
   ok: !error,
   type: "control_response",
   protocol: "pi.control.v1",
@@ -770,14 +1067,15 @@ const controlResponse = (
   ...(error ? { error } : { data }),
 });
 
-const handleControl = (
+const handleControl = async (
   request: ControlPayload,
   pi: ExtensionAPI,
   ctx: ExtensionContext | null,
-): Record<string, unknown> => {
+): Promise<BridgeResponse> => {
   if (request.protocol !== "pi.control.v1") {
     return controlResponse(request, undefined, "unsupported control protocol");
   }
+
   if (!request.id) {
     return controlResponse(
       request,
@@ -785,24 +1083,29 @@ const handleControl = (
       "control request id is required",
     );
   }
-  const operations: ControlOperation[] = [
+
+  const operations = [
     "sessions.list",
     "message.last",
     "message.send",
   ];
-  if (!operations.includes(request.operation as ControlOperation)) {
+
+  if (!operations.includes(request.operation || "")) {
     return controlResponse(
       request,
       undefined,
       `unsupported control operation: ${String(request.operation || "unknown")}`,
     );
   }
+
   if (request.operation === "sessions.list") {
-    return controlResponse(request, { sessions: controlSessions() });
+    return controlResponse(request, { sessions: await controlSessions() });
   }
+
   if (!ctx) {
     return controlResponse(request, undefined, "session not ready");
   }
+
   if (request.operation === "message.last") {
     return controlResponse(request, {
       message: latestAssistantMessage(ctx),
@@ -810,13 +1113,15 @@ const handleControl = (
   }
 
   const params = request.params || {};
-  if (typeof params.text !== "string" || !params.text.trim()) {
+
+  if (!params.text?.trim()) {
     return controlResponse(
       request,
       undefined,
       "message.send requires non-empty params.text",
     );
   }
+
   if (
     params.mode !== undefined &&
     params.mode !== "steer" &&
@@ -832,25 +1137,23 @@ const handleControl = (
   const payload: TellPayload = {
     type: "tell",
     text: params.text,
-    id: typeof params.messageId === "string" ? params.messageId : request.id,
-    from: typeof params.from === "string" ? params.from : undefined,
-    fromSocket:
-      typeof params.fromSocket === "string" ? params.fromSocket : undefined,
-    sessionId:
-      typeof params.sessionId === "string" ? params.sessionId : undefined,
-    sessionName:
-      typeof params.sessionName === "string" ? params.sessionName : undefined,
-    protocol:
-      typeof params.tellProtocol === "string" ? params.tellProtocol : undefined,
-    timestamp:
-      typeof params.timestamp === "number" ? params.timestamp : undefined,
-    mode: params.mode as DeliveryMode | undefined,
+    id: params.messageId ?? request.id,
+    from: params.from,
+    fromSocket: params.fromSocket,
+    sessionId: params.sessionId,
+    sessionName: params.sessionName,
+    protocol: params.tellProtocol,
+    timestamp: params.timestamp,
+    mode: params.mode,
   };
+
   persistAndSurfaceTell(pi, ctx, payload);
   const deliveredAs = deliverTell(pi, ctx, payload.text, payload.mode);
+
   if (payload.fromSocket && payload.protocol === "pi.tell.v1") {
     void sendTellAck(payload.fromSocket, payload.from || "unknown", payload.id);
   }
+
   return controlResponse(request, {
     accepted: true,
     messageId: payload.id,
@@ -870,25 +1173,29 @@ const scheduleRetry = (
   if (shuttingDown || retryTimer) return;
   const delay = retryDelay;
   retryDelay = Math.min(retryDelay * 2, MAX_RETRY_MS);
+
   if (retryLogs < MAX_RETRY_LOGS) {
     logBridge(`retrying in ${delay}ms reason=${reason} socket=${SOCKET_PATH}`);
     retryLogs += 1;
   }
+
   retryTimer = setTimeout(() => {
     retryTimer = null;
+
     if (!shuttingDown) void startServer(pi, ctx);
   }, delay);
   retryTimer.unref?.();
 };
 
-const startWatchdog = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
-  if (watchdogTimer) return;
-  watchdogTimer = setInterval(() => {
+const checkRegistration = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
     if (shuttingDown) return;
+
     if (!server) {
       scheduleRetry(pi, ctx, "listener missing");
+
       return;
     }
+
     if (ownedSocket()) return;
 
     // If only our manifest disappeared, restore it while the pathname still
@@ -899,7 +1206,7 @@ const startWatchdog = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
         SOCKET_PATH &&
         socketInode !== null &&
         fs.statSync(SOCKET_PATH).ino === socketInode &&
-        writeInfoManifest()
+        writeInfoManifest(true)
       )
         return;
     } catch {}
@@ -909,18 +1216,39 @@ const startWatchdog = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
     // replacement. Leave the unreachable listener unrefed; process exit closes
     // its file descriptor without path cleanup.
     server.unref();
+
     for (const socket of clientSockets) socket.destroy();
     clientSockets.clear();
     server = null;
     socketInode = null;
+
     if (heartbeatTimer) clearInterval(heartbeatTimer);
     heartbeatTimer = null;
     scheduleRetry(pi, ctx, "registration lost");
-  }, HEARTBEAT_MS);
+};
+
+const startWatchdog = (pi: ExtensionAPI, ctx: ExtensionContext): void => {
+  if (watchdogTimer) return;
+  watchdogTimer = setInterval(() => checkRegistration(pi, ctx), HEARTBEAT_MS);
   watchdogTimer.unref?.();
 };
 
-const startServer = async (
+const startServer = (
+  pi: ExtensionAPI,
+  ctx: ExtensionContext,
+): Promise<void> => {
+  if (startAttempt) return startAttempt;
+  startAttempt = startListener(pi, ctx).catch((error) => {
+    logBridge(`listener setup failed: ${String(error)}`);
+    scheduleRetry(pi, ctx, "listener setup failed");
+  }).finally(() => {
+    startAttempt = null;
+  });
+
+  return startAttempt;
+};
+
+const startListener = async (
   pi: ExtensionAPI,
   ctx: ExtensionContext,
 ): Promise<void> => {
@@ -929,21 +1257,48 @@ const startServer = async (
   const socketDir = path.dirname(SOCKET_PATH);
   fs.mkdirSync(socketDir, { recursive: true, mode: 0o700 });
   fs.mkdirSync(INFO_DIR, { recursive: true, mode: 0o700 });
+
   if (socketDir === SOCKET_DIR) fs.chmodSync(socketDir, 0o700);
   fs.chmodSync(INFO_DIR, 0o700);
+  const claim = acquireSocketClaim(SOCKET_PATH);
 
+  if (!claim) {
+    scheduleRetry(pi, ctx, "socket claim held; abandoned claims require manual cleanup");
+
+    return;
+  }
+
+  try {
+    await bindListener(pi, ctx);
+  } finally {
+    releaseSocketClaim(claim);
+  }
+};
+
+const bindListener = async (pi: ExtensionAPI, ctx: ExtensionContext): Promise<void> => {
   // Reclaim only an explicitly stale owner. Never unlink based on ping failure.
   if (fs.existsSync(SOCKET_PATH)) {
     const reclaimed = await canReclaim(SOCKET_PATH);
+
     if (shuttingDown) return;
+
     if (!reclaimed) {
       scheduleRetry(pi, ctx, "socket owned");
+
       return;
     }
   }
+
   if (shuttingDown) return;
 
   server = net.createServer((socket) => {
+    if (server !== pendingServer || shuttingDown) {
+      socket.destroy();
+
+      return;
+    }
+
+    socket.setEncoding("utf8");
     let buffer = "";
     clientSockets.add(socket);
     socket.once("close", () => clientSockets.delete(socket));
@@ -954,15 +1309,30 @@ const startServer = async (
     });
 
     socket.on("data", (chunk) => {
+      if (server !== pendingServer || shuttingDown) {
+        socket.destroy();
+
+        return;
+      }
+
       buffer += chunk.toString();
+
       if (buffer.length > MAX_CLIENT_BUFFER_CHARS) {
         respondError(socket, "request too large");
         socket.destroy();
+
         return;
       }
 
       let idx = buffer.indexOf("\n");
+
       while (idx !== -1) {
+        if (server !== pendingServer || shuttingDown) {
+          socket.destroy();
+
+          return;
+        }
+
         const line = buffer.slice(0, idx).trim();
         buffer = buffer.slice(idx + 1);
         idx = buffer.indexOf("\n");
@@ -970,16 +1340,40 @@ const startServer = async (
         if (!line) continue;
 
         try {
-          const payload = JSON.parse(line) as Payload;
+          const payload: unknown = JSON.parse(line);
+
+          if (!Value.Check(payloadSchema, payload)) {
+            if (Value.Check(controlEnvelopeSchema, payload)) {
+              respond(socket, controlResponse(payload, undefined, "invalid control parameters"));
+              continue;
+            }
+
+            const error = Value.Check(envelopeSchema, payload) && payload.type && !["ping", "telegram", "tell", "tell_ack", "control"].includes(payload.type)
+              ? `unsupported payload type: ${payload.type}`
+              : "invalid bridge payload";
+
+            respondError(socket, error);
+            continue;
+          }
 
           if (isControlPayload(payload)) {
-            respond(socket, handleControl(payload, pi, latestCtx));
+            void handleControl(payload, pi, latestCtx).then(
+              (response) => respond(socket, response),
+              () => respond(socket, controlResponse(payload, undefined, "control request failed")),
+            );
             continue;
           }
 
           // Handle ping/pong
           if (isPingPayload(payload)) {
-            respondOk(socket, { type: "pong" });
+            respondOk(socket, {
+              type: "pong",
+              runtime: { bridge: bridgeRuntime, tell: tellRuntime },
+              pid: process.pid,
+              ...piSessionIdentity(latestCtx),
+              idle: latestCtx?.isIdle() ?? false,
+              pending: latestCtx?.hasPendingMessages() ?? false,
+            });
             continue;
           }
 
@@ -1000,27 +1394,32 @@ const startServer = async (
                 deliverAs: "followUp",
               });
             }
+
             respondOk(socket);
             continue;
           }
 
           // Handle tell/delegate messages from other pi agents
           if (isTellPayload(payload)) {
-            if (typeof payload.text !== "string" || !payload.text.trim()) {
+            if (!payload.text.trim()) {
               respondError(socket, "tell text is required");
               continue;
             }
+
             const fromSession = payload.from || "unknown";
             persistAndSurfaceTell(pi, latestCtx, payload);
+
             const deliveredAs = deliverTell(
               pi,
               latestCtx,
               payload.text,
               payload.mode,
             );
+
             if (payload.fromSocket && payload.protocol === "pi.tell.v1") {
               void sendTellAck(payload.fromSocket, fromSession, payload.id);
             }
+
             respondOk(socket, {
               id: payload.id,
               type: "tell_ack",
@@ -1038,19 +1437,10 @@ const startServer = async (
             if (currentCtx?.hasUI) {
               currentCtx.ui.notify(`Tell acknowledged by ${toLabel}`, "info");
             }
+
             respondOk(socket);
             continue;
           }
-
-          if ("type" in payload) {
-            respondError(
-              socket,
-              `unsupported payload type: ${String(payload.type)}`,
-            );
-            continue;
-          }
-
-          respondError(socket, "unsupported untyped bridge payload");
         } catch {
           respondError(socket, "invalid JSON");
         }
@@ -1059,29 +1449,32 @@ const startServer = async (
   });
 
   const pendingServer = server;
+  await new Promise<void>((resolve) => {
   pendingServer.once("error", (err) => {
-    if (server === pendingServer) server = null;
-    socketInode = null;
-    scheduleRetry(pi, ctx, `listen failed: ${String(err)}`);
+    if (server === pendingServer) {
+      server = null;
+      socketInode = null;
+      scheduleRetry(pi, ctx, `listen failed: ${String(err)}`);
+    }
+
+    resolve();
   });
   pendingServer.listen(SOCKET_PATH, () => {
-    if (shuttingDown) {
-      // Shutdown may have run after listen() but before this callback. This
-      // pending server still owns the path, so close it instead of leaving an
-      // unrefed listener that blocks the replacement runtime.
-      pendingServer.close();
-      return;
-    }
+    resolve();
+
     if (server !== pendingServer) return;
+
     try {
       fs.chmodSync(SOCKET_PATH, 0o600);
       socketInode = fs.statSync(SOCKET_PATH).ino;
     } catch {
       socketInode = null;
     }
+
     if (socketInode === null || !writeInfoManifest()) {
       const failedServer = server;
       server = null;
+
       try {
         if (
           socketInode !== null &&
@@ -1090,13 +1483,16 @@ const startServer = async (
           fs.unlinkSync(SOCKET_PATH);
         }
       } catch {}
+
       socketInode = null;
       // Do not call close(): Node may unlink a replacement bound after our
       // manual unlink. The unrefed listener dies with the process.
       failedServer?.unref();
+
       for (const socket of clientSockets) socket.destroy();
       clientSockets.clear();
       scheduleRetry(pi, ctx, "manifest write failed");
+
       return;
     }
 
@@ -1105,22 +1501,20 @@ const startServer = async (
     heartbeatTimer = setInterval(() => {
       if (!ownedSocket() || !infoManifestPath) return;
       const manifest = readManifest(infoManifestPath);
+
       if (manifest?.owner !== ownerToken || manifest?.pid !== process.pid)
         return;
       manifest.heartbeatAt = new Date().toISOString();
       manifest.tidewaveConnected = tidewaveConnected;
+      manifest.tidewaveEndpoint = tidewaveEndpoint;
+      manifest.cwd = latestCtx?.cwd || process.cwd();
       Object.assign(manifest, piSessionIdentity(latestCtx));
-      const tmux = detectTmux();
-      if (tmux?.pane === manifest.pane) {
-        manifest.windowIndex = tmux.windowIndex;
-        manifest.paneIndex = tmux.paneIndex;
-      }
+      refreshTmuxLocation(manifest, detectTmux());
       writeManifestAtomic(manifest);
     }, HEARTBEAT_MS);
     heartbeatTimer.unref?.();
   });
-
-  // Update status to connected
+  });
 };
 
 // =============================================================================
@@ -1132,6 +1526,7 @@ export const _test = {
   beginPrompt,
   buildSocketPath,
   canReclaim,
+  checkRegistration,
   captureAssistantResult,
   controlResponse,
   controlSessions,
@@ -1142,13 +1537,42 @@ export const _test = {
   manifestForSocket,
   piSessionIdentity,
   pidAlive,
+  pingSocket,
+  resolveSocket,
+  readManifest,
+  startServer,
+  refreshTmuxLocation,
   settledActivityState,
   summarizeTellText,
   updateActivityState,
 };
 
 export default function (pi: ExtensionAPI): void {
+  tellRuntime = null;
+  let reportedTidewaveEndpoint: LocalHttpEndpoint | undefined;
+  let reportedTidewaveConnected = false;
+  let sessionActive = false;
+
+  const unsubscribeRuntime = pi.events.on("tell:runtime", (data) => {
+    if (!Value.Check(runtimeSchema, data)) return;
+    tellRuntime = data;
+
+    if (!ownedSocket() || !infoManifestPath) return;
+    const manifest = readManifest(infoManifestPath);
+
+    if (!manifest) return;
+    manifest.tell = tellRuntime;
+    writeManifestAtomic(manifest);
+  });
+
   pi.on("session_start", (_event, ctx) => {
+    shuttingDown = false;
+    retryDelay = 250;
+    retryLogs = 0;
+    // Earlier startup hooks may have already published either half of the gate.
+    tidewaveEndpoint = reportedTidewaveConnected ? reportedTidewaveEndpoint : undefined;
+    tidewaveConnected = !!tidewaveEndpoint;
+    sessionActive = true;
     latestCtx = ctx;
     activityState = "idle";
     activityBeforePrompt = null;
@@ -1157,49 +1581,54 @@ export default function (pi: ExtensionAPI): void {
 
     // Start generic ingress only when explicitly enabled by the Pi wrapper.
     if (IS_BRIDGE_ENABLED) {
+      process.env.PI_SOCKET = SOCKET_PATH;
+      process.env.PI_SOCKET_OWNER_PID = String(process.pid);
       startWatchdog(pi, ctx);
       void startServer(pi, ctx);
-
-      if (ctx.hasUI) {
-        ctx.ui.notify(`Bridge listening: ${SOCKET_PATH}`, "info");
-      }
     }
   });
 
   const refreshSessionContext = (ctx: ExtensionContext): void => {
     latestCtx = ctx;
+
     if (!ownedSocket() || !infoManifestPath) return;
     const manifest = readManifest(infoManifestPath);
+
     if (manifest?.owner !== ownerToken || manifest?.pid !== process.pid) return;
     Object.assign(manifest, piSessionIdentity(ctx));
+    manifest.cwd = ctx.cwd;
+    manifest.tidewaveConnected = tidewaveConnected;
+    manifest.tidewaveEndpoint = tidewaveEndpoint;
     manifest.heartbeatAt = new Date().toISOString();
     writeManifestAtomic(manifest);
   };
 
-  // Capture the live tidewave-MCP gate. selectedTools lists `mcp__tidewave`
-  // only when the server actually connected, so this refreshes per turn and
-  // writes the current truth into the manifest for Hammerspoon to read.
-  pi.on("before_agent_start", (event, ctx) => {
-    const selected =
-      (event as { systemPromptOptions?: { selectedTools?: string[] } })
-        .systemPromptOptions?.selectedTools ??
-      ctx.getSystemPromptOptions?.().selectedTools ??
-      [];
-    const next = selected.includes(TIDEWAVE_TOOL);
-    if (next !== tidewaveConnected) {
-      tidewaveConnected = next;
-      refreshSessionContext(ctx);
-    } else {
-      latestCtx = ctx;
-    }
-    return undefined;
+  const publishTidewave = (): void => {
+    const endpoint = reportedTidewaveConnected ? reportedTidewaveEndpoint : undefined;
+
+    if (!sessionActive || (
+      endpoint?.origin === tidewaveEndpoint?.origin &&
+      endpoint?.pathname === tidewaveEndpoint?.pathname
+    )) return;
+    tidewaveEndpoint = endpoint;
+    tidewaveConnected = !!endpoint;
+
+    if (latestCtx) refreshSessionContext(latestCtx);
+  };
+
+  const unsubscribeMcpStatus = pi.events.on(MCP_STATUS_EVENT, (data) => {
+    const servers = Value.Check(mcpStatusSchema, data)
+      ? data.servers.filter((server) => server.name === "tidewave") : [];
+
+    reportedTidewaveConnected = servers.length === 1 &&
+      servers[0].status === "connected" && !servers[0].disabled;
+    publishTidewave();
   });
 
-  pi.on("session_switch", (_event, ctx) => {
-    latestAssistantResult = null;
-    activityBeforePrompt = null;
-    updateActivityState("idle", ctx);
-    refreshSessionContext(ctx);
+  const unsubscribeTidewaveEndpoint = pi.events.on(TIDEWAVE_ENDPOINT_EVENT, (data) => {
+    reportedTidewaveEndpoint = Value.Check(tidewaveEndpointEventSchema, data)
+      ? safeTidewaveEndpoint(data.endpoint) : undefined;
+    publishTidewave();
   });
 
   pi.on("session_info_changed", (_event, ctx) => {
@@ -1222,12 +1651,13 @@ export default function (pi: ExtensionAPI): void {
   });
 
   pi.on("message_end", (event) => {
-    captureAssistantResult(event.message);
+    if (event.message.role === "assistant") captureAssistantResult(event.message);
   });
 
   pi.on("agent_end", (event) => {
     for (let i = event.messages.length - 1; i >= 0; i--) {
       const message = event.messages[i];
+
       if (message?.role === "assistant") {
         captureAssistantResult(message);
         break;
@@ -1249,10 +1679,24 @@ export default function (pi: ExtensionAPI): void {
   });
 
   pi.on("session_shutdown", async () => {
+    sessionActive = false;
+    reportedTidewaveConnected = false;
+    reportedTidewaveEndpoint = undefined;
+    tidewaveEndpoint = undefined;
+    tidewaveConnected = false;
+
+    if (latestCtx) refreshSessionContext(latestCtx);
     shuttingDown = true;
+    unsubscribeRuntime();
+    unsubscribeMcpStatus();
+    unsubscribeTidewaveEndpoint();
+
     if (retryTimer) clearTimeout(retryTimer);
+
     if (watchdogTimer) clearInterval(watchdogTimer);
+
     if (heartbeatTimer) clearInterval(heartbeatTimer);
+
     if (tellWidgetTimer) clearTimeout(tellWidgetTimer);
     retryTimer = null;
     watchdogTimer = null;
@@ -1260,8 +1704,15 @@ export default function (pi: ExtensionAPI): void {
     tellWidgetTimer = null;
     latestCtx?.ui?.setWidget?.("tell", undefined);
 
+    // Drain asynchronous reclaim/listen before closing so old startup work
+    // cannot bind a socket after the replacement runtime starts.
+    await startAttempt;
+
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
+    heartbeatTimer = null;
     const ownsPath = ownedSocket();
     const activeServer = server;
+
     for (const socket of clientSockets) socket.destroy();
     clientSockets.clear();
 
@@ -1274,6 +1725,7 @@ export default function (pi: ExtensionAPI): void {
       // Closing a displaced Node Unix server could unlink its replacement path.
       activeServer?.unref();
     }
+
     server = null;
     socketInode = null;
   });

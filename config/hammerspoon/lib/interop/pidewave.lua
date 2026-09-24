@@ -2,13 +2,10 @@
 -- Tidewave tab for its worktree, then focus Helium and engage inspect mode.
 --
 -- Flow on hotkey:
---   1. Resolve the active tmux pane -> cwd (worktree root) + pane_id + pid.
---   2. Verify the pane's foreground process is `pi` (gate: "in a pi instance").
---   3. Derive the Phoenix port from cwd (phx-port.sh) and the worktree facts
---      (worktree-for-port.sh). Probe /tidewave/mcp for liveness (gate:
---      "connected via tidewave mcp"). Cross-checked by the pi manifest's
---      tidewaveConnected flag when present.
---   4. Resolve the pane's pi bridge socket from its manifest (match .pane).
+--   1. Resolve the focused Ghostty title to an exact, active tmux pane.
+--   2. Require a fresh connected manifest owned by that tty's foreground Pi.
+--   3. Cross-check the reported endpoint against the live Phoenix worktree.
+--   4. Revalidate the focused registration before any browser side effects.
 --   5. Find the unambiguous app tab on localhost:<port>, preferring the CDP
 --      target saved by the previous handshake and never selecting /tidewave.
 --   6. Write the optional Tidewave IDE Chat -> tmux pi binding.
@@ -24,7 +21,8 @@ local M = {}
 M.name = "pidewave"
 
 local DOTFILES = os.getenv("HOME") .. "/.dotfiles"
-local PHX_PORT_SH = DOTFILES .. "/config/mise/tmpls/elixir/scripts/phx-port.sh"
+local FOCUS_HELPER = DOTFILES .. "/config/hammerspoon/lib/interop/pidewave-focus.py"
+local FOCUS_TIMEOUT = 0.20
 local WT_FOR_PORT_SH = DOTFILES .. "/config/mise/tmpls/elixir/scripts/worktree-for-port.sh"
 local CDP = os.getenv("HOME") .. "/.pi/agent/skills/chrome-cdp/scripts/cdp.mjs"
 local CDP_PORT = 9223
@@ -44,15 +42,11 @@ local function log(fmt, ...)
 end
 
 local function notify(text, isError)
-  pcall(function()
-    hs.notify.new({ title = "Pidewave", informativeText = text, withdrawAfter = 4 }):send()
-  end)
+  pcall(function() hs.notify.new({ title = "Pidewave", informativeText = text, withdrawAfter = 4 }):send() end)
   log("%s%s", isError and "ERROR: " or "", text)
 end
 
-local function shellQuote(value)
-  return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
-end
+local function shellQuote(value) return "'" .. tostring(value):gsub("'", "'\\''") .. "'" end
 
 local function trim(text)
   if not text then return nil end
@@ -85,76 +79,109 @@ local function briefError(detail)
   return detail:gsub("%s+", " "):sub(1, 240)
 end
 
--- Active tmux pane facts as seen from a non-TMUX (Hammerspoon) context.
-local function activePane()
-  -- tmux replaces control-character separators with underscores when invoked
-  -- from Hammerspoon, so use a printable delimiter and parse the last field.
-  local raw = sh("tmux display-message -p '#{pane_id}|#{pane_current_path}|#{pane_pid}'")
-  if not raw or raw == "" then return nil end
-  local pane, cwd, pid = raw:match("^([^|]+)|(.*)|(%d+)$")
-  if not pane then return nil end
-  return { pane = pane, cwd = cwd, pid = tonumber(pid) }
+local function focusedTerminal()
+  local app = hs.application.frontmostApplication()
+  if not app or app:bundleID() ~= "com.mitchellh.ghostty" then return nil end
+  local win = hs.window.focusedWindow()
+  local appWindow = app:focusedWindow()
+  if not win or not appWindow or win:id() ~= appWindow:id() then return nil end
+  return win:id(), win:title()
 end
 
--- Is `pi` the foreground process under the pane's shell?
-local function paneRunsPi(panePid)
-  if not panePid then return false end
-  local kids = sh(string.format("pgrep -P %d", panePid))
-  if not kids then return false end
-  for kid in kids:gmatch("%d+") do
-    local cmd = sh(string.format("ps -o command= -p %s", kid))
-    if cmd and cmd:match("^%s*pi%f[%s\0]") then return true end
-    if cmd and cmd:match("/pi%f[%s\0]") then return true end
+local function endpointPort(endpoint)
+  if type(endpoint) ~= "table" or endpoint.pathname ~= "/tidewave/mcp" or type(endpoint.origin) ~= "string" then
+    return nil
   end
-  return false
+  local scheme, host, digits = endpoint.origin:match("^(https?)://([^/:]+):(%d+)$")
+  if not scheme then
+    scheme, host = endpoint.origin:match("^(https?)://([^/:]+)$")
+  end
+  if not scheme or (host ~= "localhost" and host ~= "127.0.0.1") then return nil end
+  local port = digits and tonumber(digits) or (scheme == "https" and 443 or 80)
+  if port < 1 or port > 65535 or port == 9832 then return nil end
+  return port
 end
 
--- Resolve the pane's pi bridge socket by matching the manifest `.pane` field.
-local function socketForPane(pane)
-  local sock = nil
-  pcall(function()
-    for file in hs.fs.dir(MANIFEST_DIR) do
-      if file:match("%.info$") then
-        local f = io.open(MANIFEST_DIR .. "/" .. file, "r")
-        local raw = f and f:read("*a") or nil
-        if f then f:close() end
-        local ok, m = pcall(hs.json.decode, raw or "")
-        if ok and m and m.pane == pane and m.socket and hs.fs.attributes(m.socket) then
-          sock = m
-          break
-        end
-      end
-    end
-  end)
-  return sock -- full manifest table, or nil
+-- The watchdog bounds the entire gate, including filesystem reads and all
+-- subprocesses. Slow/missing helpers pass the key through, never use a cache.
+local function focusedConnection()
+  local windowId, title = focusedTerminal()
+  if not title or not title:match("^[^:]+:%d+:%d+:%d+%s") then return nil end
+  local started = hs.timer.absoluteTime()
+  local raw = sh(
+    string.format(
+      "/opt/homebrew/bin/gtimeout --signal=KILL %.2f python3 %s %s %s",
+      FOCUS_TIMEOUT,
+      shellQuote(FOCUS_HELPER),
+      shellQuote(MANIFEST_DIR),
+      shellQuote(title)
+    )
+  )
+  if not raw or (hs.timer.absoluteTime() - started) / 1e9 > FOCUS_TIMEOUT then return nil end
+  local currentWindow, currentTitle = focusedTerminal()
+  if windowId ~= currentWindow or title ~= currentTitle then return nil end
+  local ok, connection = pcall(hs.json.decode, raw)
+  if
+    not ok
+    or type(connection) ~= "table"
+    or type(connection.pane) ~= "table"
+    or type(connection.manifest) ~= "table"
+  then
+    return nil
+  end
+  local pane, manifest = connection.pane, connection.manifest
+  if
+    type(pane.pane) ~= "string"
+    or not pane.pane:match("^%%%d+$")
+    or type(pane.pid) ~= "number"
+    or type(pane.cwd) ~= "string"
+    or manifest.pane ~= pane.pane
+    or type(manifest.pid) ~= "number"
+    or type(manifest.owner) ~= "string"
+    or type(manifest.socket) ~= "string"
+    or type(manifest.cwd) ~= "string"
+    or manifest.tidewaveConnected ~= true
+    or not endpointPort(manifest.tidewaveEndpoint)
+  then
+    return nil
+  end
+  pane.windowId = windowId
+  return connection
 end
 
--- Derive Phoenix port + worktree facts from the worktree cwd.
-local function worktreeFacts(cwd)
-  local port = sh("bash " .. shellQuote(PHX_PORT_SH), cwd)
-  if not port or not port:match("^%d+$") then return nil end
+local function sameConnection(a, b)
+  return a
+    and b
+    and a.pane.pane == b.pane.pane
+    and a.pane.pid == b.pane.pid
+    and a.pane.windowId == b.pane.windowId
+    and a.pane.cwd == b.pane.cwd
+    and a.manifest.pid == b.manifest.pid
+    and a.manifest.owner == b.manifest.owner
+    and a.manifest.socket == b.manifest.socket
+    and a.manifest.cwd == b.manifest.cwd
+    and a.manifest.tidewaveEndpoint.origin == b.manifest.tidewaveEndpoint.origin
+end
+
+local function worktreeFacts(manifest)
+  local port = endpointPort(manifest.tidewaveEndpoint)
+  if not port then return nil end
+  local root = sh("git rev-parse --show-toplevel", manifest.cwd)
   local factsJson = sh("bash " .. shellQuote(WT_FOR_PORT_SH) .. " " .. port)
-  local facts = nil
-  if factsJson and factsJson:match("^{") then
-    local ok, decoded = pcall(hs.json.decode, factsJson)
-    if ok then facts = decoded end
+  if not root or not factsJson then return nil end
+  local ok, facts = pcall(hs.json.decode, factsJson)
+  if
+    not ok
+    or type(facts) ~= "table"
+    or facts.port ~= port
+    or facts.root ~= root
+    or type(facts.pid) ~= "number"
+    or facts.pid <= 0
+  then
+    return nil
   end
-  facts = facts or {}
-  facts.port = facts.port or tonumber(port)
+  facts.appUrl = manifest.tidewaveEndpoint.origin
   return facts
-end
-
--- Probe the tidewave MCP endpoint for liveness (belt to the manifest flag's suspenders).
-local function tidewaveLive(port)
-  if not port then return false end
-  local code = sh(string.format(
-    "curl -s --connect-timeout 1 --max-time 3 -o /dev/null -w '%%{http_code}' -X POST http://localhost:%d/tidewave/mcp "
-      .. "-H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' "
-      .. "-d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"pidewave\",\"version\":\"0\"}}}'",
-    port
-  ))
-  -- Any non-000/404/405 response means the MCP route answered.
-  return code ~= nil and code ~= "000" and code ~= "404" and code ~= "405"
 end
 
 local function bindingSlug(facts)
@@ -162,9 +189,7 @@ local function bindingSlug(facts)
   return slug:lower():gsub("[^a-z0-9]", "-"):gsub("%-+", "-"):gsub("^%-", ""):gsub("%-$", "")
 end
 
-local function bindingPath(facts)
-  return BINDING_DIR .. "/" .. bindingSlug(facts) .. ".json"
-end
+local function bindingPath(facts) return BINDING_DIR .. "/" .. bindingSlug(facts) .. ".json" end
 
 local function previousTarget(facts)
   local target = nil
@@ -189,7 +214,7 @@ local function previousTarget(facts)
   return target
 end
 
-local function writeBinding(facts, manifest, targetPrefix, migrationUrl)
+local function writeBinding(facts, manifest, targetPrefix)
   pcall(function() hs.fs.mkdir(PI_STATE_DIR .. "/tidewave") end)
   pcall(function() hs.fs.mkdir(BINDING_DIR) end)
   local binding = {
@@ -200,9 +225,8 @@ local function writeBinding(facts, manifest, targetPrefix, migrationUrl)
     window = manifest.window,
     pane = manifest.pane,
     port = facts.port,
-    appUrl = string.format("http://localhost:%d", facts.port or 0),
+    appUrl = facts.appUrl,
     targetPrefix = targetPrefix,
-    migrationUrl = migrationUrl,
     boundAt = os.date("!%Y-%m-%dT%H:%M:%SZ"),
   }
   local path = bindingPath(facts)
@@ -215,10 +239,9 @@ local function writeBinding(facts, manifest, targetPrefix, migrationUrl)
   return nil, nil
 end
 
-local function appUrl(url, port)
-  local _, host, urlPort, rest = url:match("^(https?)://([^/:?#]+):(%d+)(.*)$")
-  if not host or (host ~= "localhost" and host ~= "127.0.0.1") then return nil end
-  if tonumber(urlPort) ~= tonumber(port) then return nil end
+local function appUrl(url, origin)
+  local actualOrigin, rest = url:match("^(https?://[^/?#]+)(.*)$")
+  if actualOrigin ~= origin then return nil end
   local path = (rest or ""):match("^([^?#]*)") or "/"
   if path == "" then path = "/" end
   return { path = path, tidewave = path == "/tidewave" or path:match("^/tidewave/") ~= nil }
@@ -228,21 +251,17 @@ end
 -- target prefix survives in-tab navigation. An old exact URL is retained until
 -- it successfully migrates; otherwise ambiguity fails closed so Inspect is
 -- never clicked in a random tab.
-local function selectAppTarget(port, preferred)
+local function selectAppTarget(origin, preferred)
   if not hs.fs.attributes(CDP) then return nil, "CDP helper is missing." end
   local list, listError = sh(string.format("CDP_PORT=%d node %s list", CDP_PORT, shellQuote(CDP)), nil, true)
-  if not list then
-    return nil, "Could not list Helium tabs on CDP port 9223 (" .. briefError(listError) .. ")."
-  end
+  if not list then return nil, "Could not list Helium tabs on CDP port 9223 (" .. briefError(listError) .. ")." end
 
   local targets = {}
   for line in list:gmatch("[^\n]+") do
     local id = line:match("^(%x+)")
     local url = line:match("(https?://%S+)%s*$")
-    local parsed = url and appUrl(url, port) or nil
-    if id and parsed and not parsed.tidewave then
-      table.insert(targets, { id = id, url = url, path = parsed.path })
-    end
+    local parsed = url and appUrl(url, origin) or nil
+    if id and parsed and not parsed.tidewave then table.insert(targets, { id = id, url = url, path = parsed.path }) end
   end
   table.sort(targets, function(a, b)
     if a.url ~= b.url then return a.url < b.url end
@@ -252,7 +271,8 @@ local function selectAppTarget(port, preferred)
   if preferred and preferred.prefix then
     local saved = {}
     for _, target in ipairs(targets) do
-      if target.id:sub(1, #preferred.prefix) == preferred.prefix
+      if
+        target.id:sub(1, #preferred.prefix) == preferred.prefix
         or preferred.prefix:sub(1, #target.id) == target.id
       then
         table.insert(saved, target)
@@ -269,18 +289,13 @@ local function selectAppTarget(port, preferred)
       if target.url == preferred.url then table.insert(exact, target) end
     end
     if #exact == 1 then return exact[1] end
-    if #exact > 1 then
-      return nil, string.format("Multiple Helium tabs have the saved app URL %s.", preferred.url)
-    end
+    if #exact > 1 then return nil, string.format("Multiple Helium tabs have the saved app URL %s.", preferred.url) end
   end
   if #targets == 1 then return targets[1] end
   if #targets == 0 then
-    return nil, string.format("No normal app tab found on localhost:%d (Tidewave pages are ignored).", port)
+    return nil, string.format("No normal app tab found on %s (Tidewave pages are ignored).", origin)
   end
-  return nil, string.format(
-    "Multiple app tabs are open on localhost:%d; keep only the intended tab open, then retry.",
-    port
-  )
+  return nil, string.format("Multiple app tabs are open on %s; keep only the intended tab open, then retry.", origin)
 end
 
 local function heliumOwnsCdp(app)
@@ -296,17 +311,24 @@ end
 -- Page.bringToFront selects the Chromium tab before Helium itself is activated.
 -- The in-page poll then refuses to click until that tab is visible, fully loaded,
 -- and has an Inspect control in the Tidewave toolbar shadow root.
-local function focusHeliumAndInspect(target, port)
+local function focusHeliumAndInspect(target, origin, connection)
   local app = hs.application.get("net.imput.helium")
   if not app then return false, "Helium is not running." end
   if not heliumOwnsCdp(app) then return false, "Helium does not own CDP port 9223." end
+  if not sameConnection(connection, focusedConnection()) then
+    return false, "Focused Pi or Tidewave connection changed; retry from Pi."
+  end
 
-  local brought, bringError = sh(string.format(
-    "CDP_PORT=%d node %s evalraw %s Page.bringToFront '{}'",
-    CDP_PORT,
-    shellQuote(CDP),
-    shellQuote(target.id)
-  ), nil, true)
+  local brought, bringError = sh(
+    string.format(
+      "CDP_PORT=%d node %s evalraw %s Page.bringToFront '{}'",
+      CDP_PORT,
+      shellQuote(CDP),
+      shellQuote(target.id)
+    ),
+    nil,
+    true
+  )
   if not brought then
     return false, "Could not foreground the Helium app tab via CDP (" .. briefError(bringError) .. ")."
   end
@@ -315,14 +337,16 @@ local function focusHeliumAndInspect(target, port)
   local activationOk = pcall(function() activated = app:activate(true) ~= false end)
   if not activationOk or not activated then return false, "Could not focus Helium." end
 
-  local expectedJson = hs.json.encode({ port = tostring(port) })
-  local js = "(() => { const expectedPort = (" .. expectedJson .. ").port; return (" .. [[
+  local expectedJson = hs.json.encode({ origin = origin })
+  local js = "(() => { const expectedOrigin = ("
+    .. expectedJson
+    .. ").origin; return ("
+    .. [[
     new Promise(resolve => {
       const deadline = Date.now() + 4000;
       let clicked = false;
       const inspect = () => {
-        const localApp = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-          && location.port === expectedPort
+        const localApp = location.origin === expectedOrigin
           && location.pathname !== '/tidewave'
           && !location.pathname.startsWith('/tidewave/');
         if (!localApp) {
@@ -338,13 +362,13 @@ local function focusHeliumAndInspect(target, port)
         const visible = enabled && button.isConnected && (button.checkVisibility
           ? button.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })
           : rect.width > 0 && rect.height > 0);
-        const active = visible && button.classList.contains('bg-accent')
-          && root.querySelector('[data-testid="inspector-panel"]');
+        const selected = visible && button.classList.contains('bg-accent');
+        const active = selected && root.querySelector('[data-testid="inspector-panel"]');
         if (document.readyState === 'complete' && document.visibilityState === 'visible' && active) {
           resolve('active');
           return;
         }
-        if (document.readyState === 'complete' && document.visibilityState === 'visible' && visible && !clicked) {
+        if (document.readyState === 'complete' && document.visibilityState === 'visible' && visible && !selected && !clicked) {
           button.click();
           clicked = true;
         }
@@ -358,13 +382,11 @@ local function focusHeliumAndInspect(target, port)
       inspect();
     })
   ); })() ]]
-  local res, evalError = sh(string.format(
-    "CDP_PORT=%d node %s eval %s %s",
-    CDP_PORT,
-    shellQuote(CDP),
-    shellQuote(target.id),
-    shellQuote(js)
-  ), nil, true)
+  local res, evalError = sh(
+    string.format("CDP_PORT=%d node %s eval %s %s", CDP_PORT, shellQuote(CDP), shellQuote(target.id), shellQuote(js)),
+    nil,
+    true
+  )
   local result = res or briefError(evalError)
   log("inspect-click target=%s url=%s result=%s", target.id, target.url, result)
   if res == "active" then return true end
@@ -413,11 +435,15 @@ local function armPromptRelay(binding)
       if type(contents) ~= "string" then return end
       if not contents:find("<user_prompt>", 1, true) then return end
       if contents == M._lastForwardedPrompt then return end
-      M._lastForwardedPrompt = contents
       if forwardPrompt(binding, contents) then
+        M._lastForwardedPrompt = contents
         -- Write-initiated only: bridge errors surface asynchronously in logs.
         notify(
-          string.format("Tidewave prompt forwarded to %s (%s); confirm in tmux.", binding.session or "pi", binding.pane or "?")
+          string.format(
+            "Tidewave prompt forwarded to %s (%s); confirm in tmux.",
+            binding.session or "pi",
+            binding.pane or "?"
+          )
         )
       else
         notify("Copied Tidewave prompt was not delivered to the bound pi.", true)
@@ -431,79 +457,79 @@ local function armPromptRelay(binding)
   end
 end
 
-function M.handshake()
+function M.handshake(expected)
   -- A new handshake invalidates any armed relay immediately: a failed run must
   -- not leave a previous binding's watcher forwarding prompts.
   stopPromptRelay()
   local ok, err = pcall(function()
-    local pane = activePane()
-    if not pane then
-      notify("No active tmux pane found.", true)
+    local connection = focusedConnection()
+    if not connection or (expected and not sameConnection(expected, connection)) then
+      notify("Focus a Pi with a current Tidewave connection first.", true)
       return
     end
-    if not paneRunsPi(pane.pid) then
-      notify("Active pane is not running pi. Focus a pi instance first.", true)
-      return
-    end
-    local manifest = socketForPane(pane.pane)
-    if not manifest then
-      notify("No pi bridge socket for this pane (is PI_BRIDGE_LEGACY_SOCKET=1?).", true)
-      return
-    end
-    local facts = worktreeFacts(pane.cwd)
+    local manifest = connection.manifest
+    local facts = worktreeFacts(manifest)
     if not facts or not facts.port then
-      notify("Could not derive Phoenix port for this worktree.", true)
+      notify("Connected Tidewave endpoint does not match a live Phoenix server in this worktree.", true)
       return
     end
-    -- Gate: tidewave must be live. Prefer manifest flag, fall back to probe.
-    local gated = manifest.tidewaveConnected == true or tidewaveLive(facts.port)
-    if not gated then
-      notify(string.format("Tidewave MCP not connected on :%d.", facts.port), true)
+    local app = hs.application.get("net.imput.helium")
+    if not app or not heliumOwnsCdp(app) then
+      notify("Helium must already be running and own CDP port 9223.", true)
       return
     end
     local preferred = previousTarget(facts)
-    local target, targetError = selectAppTarget(facts.port, preferred)
-    local targetPrefix = target and target.id or preferred and preferred.prefix or nil
-    local migrationUrl = not target and preferred and preferred.url or nil
-    local binding = writeBinding(facts, manifest, targetPrefix, migrationUrl)
-    if not binding then
-      notify("Optional Tidewave IDE Chat binding failed; continuing with toolbar routing.", true)
-    end
-    local bindingNote = binding and " Optional IDE Chat binding was updated." or ""
+    local target, targetError = selectAppTarget(facts.appUrl, preferred)
     if not target then
-      notify("Toolbar routing stopped: " .. targetError .. bindingNote, true)
+      notify("Toolbar routing stopped: " .. targetError, true)
       return
     end
-    local inspected, inspectError = focusHeliumAndInspect(target, facts.port)
+    local inspected, inspectError = focusHeliumAndInspect(target, facts.appUrl, connection)
     if not inspected then
-      notify("Toolbar routing stopped: " .. inspectError .. bindingNote, true)
+      notify("Toolbar routing stopped: " .. inspectError, true)
       return
     end
-    notify(string.format("Tidewave Inspect ready on http://localhost:%d", facts.port))
-    armPromptRelay(binding)
+    local binding = writeBinding(facts, manifest, target.id)
+    if not binding then notify("Optional IDE Chat binding failed; clipboard relay still targets this Pi.", true) end
+    notify("Tidewave Inspect ready on " .. facts.appUrl)
+    armPromptRelay(binding or manifest)
   end)
-  if not ok then
-    notify("handshake crashed (guarded): " .. tostring(err), true)
-  end
+  if not ok then notify("handshake crashed (guarded): " .. tostring(err), true) end
 end
 
 function M:init()
-  pcall(function()
-    if M._hotkey then M._hotkey:delete() end
-    M._hotkey = hs.hotkey.bind(HOTKEY_MODS, HOTKEY_KEY, function() M.handshake() end)
-    log("bound %s+%s", table.concat(HOTKEY_MODS, "+"), HOTKEY_KEY)
-  end)
+  self:stop()
+  M._keyWatcher = hs.eventtap
+    .new({ hs.eventtap.event.types.keyDown }, function(event)
+      if event:getKeyCode() ~= hs.keycodes.map[HOTKEY_KEY] or not event:getFlags():containExactly(HOTKEY_MODS) then
+        return false
+      end
+      local ok, connection = pcall(focusedConnection)
+      if not ok or not connection then return false end
+      if not M._pending then
+        -- Keep CDP/worktree work outside the event tap. Execution revalidates
+        -- the captured registration, never silently switching to another Pi.
+        M._pending = hs.timer.doAfter(0, function()
+          M._pending = nil
+          M.handshake(connection)
+        end)
+      end
+      return true
+    end)
+    :start()
   return M
 end
 
 function M:stop()
   stopPromptRelay()
-  pcall(function()
-    if M._hotkey then
-      M._hotkey:delete()
-      M._hotkey = nil
-    end
-  end)
+  if M._keyWatcher then
+    M._keyWatcher:stop()
+    M._keyWatcher = nil
+  end
+  if M._pending then
+    M._pending:stop()
+    M._pending = nil
+  end
 end
 
 return M
