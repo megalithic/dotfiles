@@ -12,6 +12,8 @@ macOS Ghostty supports the XDG path, so `~/.config/ghostty/config` is the only c
 
 Ghostty handles fish shell integration itself; no shell module sources Ghostty integration files. Ghostty uses native `maximize = true` instead of oversized explicit window dimensions, and the animated boo cursor shader is disabled by default. Cursor shaders ship alongside the config in `config/ghostty/shaders/`.
 
+The quick terminal opens at the top with `quick-terminal-size = 40%`. Global Ctrl+grave toggles it; the existing global Cmd+Ctrl+Shift+Option+grave binding remains available. Both bindings call `toggle_quick_terminal` in the same mise-owned config.
+
 ## Bell-driven Pi notifications
 
 `bell-features = title,attention,border` and `working-directory = ~/.dotfiles` are set in the raw config. Pi's notification path emits BEL so Ghostty triggers its configured title, attention, and border bell effects when a session needs attention.

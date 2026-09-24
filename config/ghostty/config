@@ -251,6 +251,10 @@ keybind = cmd+t=text:\x00\x63
 
 keybind = super+shift+r=reload_config
 keybind = global:cmd+ctrl+shift+opt+`=toggle_quick_terminal
+keybind = global:ctrl+grave_accent=toggle_quick_terminal
+
+quick-terminal-position = top
+quick-terminal-size = 40%
 
 # Fix sending shift+enter for Claude Code
 # keybind = shift+enter=text:\x1b\r
