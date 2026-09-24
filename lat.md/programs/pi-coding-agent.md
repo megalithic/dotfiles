@@ -132,9 +132,11 @@ The sessions tool is wired without running `sessions setup` against the real hom
 
 ### Sentinel guardrail rules
 
-`extensions/sentinel.ts` is active because `agent/extensions/` is `symlink-each`-linked into `~/.pi/agent/extensions`.
+Sentinel and the stop hook are disabled in managed source; their unchanged implementations remain as `_sentinel.ts` and `_stop-hook.ts` under `config/pi-coding-agent/agent/extensions/`.
 
-Sentinel is the runtime rule source for Pi command guardrails, replacing the former JSON rule file. `extensions/sentinel-rules.json` is no longer installed or read. Debug logging is opt-in through `PI_SENTINEL_DEBUG_LOG` or `PI_SENTINEL_DEBUG`; it writes to a file instead of stdout/stderr so guardrail messages cannot corrupt the TUI editor. When enabled, startup logs 14 conceptual classifier rules instead of expanding every interactive command and preferred-tool entry into separate runtime rules.
+The mise `symlink-each` mapping excludes `_*` entries, so neither is selected for installation. On workbookpro, the old runtime links still point to the now-absent unprefixed paths; their presence does not establish activation. Existing sessions may retain previously loaded extensions until reload or restart. No runtime cleanup or reload is implied by these source renames.
+
+The following describes the retained Sentinel implementation, not a currently enforced policy. When explicitly loaded, Sentinel supplies Pi command guardrails, replacing the former JSON rule file. `extensions/sentinel-rules.json` is no longer installed or read. Debug logging is opt-in through `PI_SENTINEL_DEBUG_LOG` or `PI_SENTINEL_DEBUG`; it writes to a file instead of stdout/stderr so guardrail messages cannot corrupt the TUI editor. When enabled, startup logs 14 conceptual classifier rules instead of expanding every interactive command and preferred-tool entry into separate runtime rules.
 
 The classifier rules are `hard-interactive`, `hard-vcs-editor`, `hard-managed-config-write`, `hard-nix-build-result`, `hard-destructive-system-rm`, `hard-secret-tools`, `hard-gatekeeper-secrets`, `confirm-security-sensitive-bash`, `confirm-remote-effects`, `confirm-package-install`, `confirm-history-destructive`, `confirm-tcc-reset`, `rewrite-preferred-tools`, and `rewrite-builtin-grep`.
 
