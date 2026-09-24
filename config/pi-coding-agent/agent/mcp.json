@@ -1,6 +1,12 @@
 {
 	"settings": {
-		"mcpFooterStatus": "compact"
+		"mcpFooterStatus": "compact",
+		"jev": {
+			"semanticSearch": true,
+			"scriptEvaluation": true,
+			"allowedServers": ["github"],
+			"maxEvaluationTokensPerScript": 32768
+		}
 	},
 	"mcpServers": {
 		"chrome-devtools": {

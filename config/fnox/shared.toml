@@ -76,6 +76,7 @@ HOMEBREW_GITHUB_API_TOKEN = { provider = "onepass", value = "op://Crypt/github/t
 MISE_GITHUB_API_TOKEN = { provider = "onepass", value = "op://Crypt/github/token" }
 GITHUB_CLI_TOKEN = { provider = "onepass", value = "op://Crypt/github/cli_token" }
 RX_SENTRY_CLI_TOKEN = { provider = "onepass", value = "op://Crypt/sentry-rxv/api_key" }
+TYPESAFE_API_KEY = { provider = "onepass", value = "op://Crypt/typesafe/api_key" }
 
 # Legacy env and s3cfg 1Password blob items are intentionally not referenced;
 # retain the items only through their clean cutover verification periods.
