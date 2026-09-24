@@ -160,8 +160,12 @@ function M.new()
   mock.tasks = {}
   mock.usbDevices = {}
   mock.usbWatchers = {}
-  mock.networkWatchers = {}
-  mock.networkOpenError = nil
+  mock.wifiDetails = { interface = "en0", power = true }
+  mock.wifiReads = 0
+  mock.wifiChanges = {}
+  mock.wifiSetResult = true
+  mock.wifiSetError = nil
+  mock.logs = {}
 
   local hs = {}
 
@@ -298,43 +302,16 @@ function M.new()
     },
   }
 
-  hs.network = {
-    configuration = {
-      open = function()
-        if mock.networkOpenError then error(mock.networkOpenError) end
-        local watcher = {
-          callback = nil,
-          monitoredKeys = nil,
-          pattern = nil,
-          started = false,
-          stopped = false,
-        }
-        function watcher:setCallback(callback)
-          self.callback = callback
-          return self
-        end
-        function watcher:monitorKeys(keys, pattern)
-          self.monitoredKeys = keys
-          self.pattern = pattern
-          return self
-        end
-        function watcher:start()
-          self.started = true
-          self.stopped = false
-          return self
-        end
-        function watcher:stop()
-          self.started = false
-          self.stopped = true
-          return self
-        end
-        function watcher:emit(keys)
-          if self.started and self.callback then self.callback(self, keys or {}) end
-        end
-        table.insert(mock.networkWatchers, watcher)
-        return watcher
-      end,
-    },
+  hs.wifi = {
+    interfaceDetails = function()
+      mock.wifiReads = mock.wifiReads + 1
+      return mock.wifiDetails
+    end,
+    setPower = function(power, interface)
+      table.insert(mock.wifiChanges, { power = power, interface = interface })
+      if mock.wifiSetResult then mock.wifiDetails.power = power end
+      return mock.wifiSetResult, mock.wifiSetError
+    end,
   }
 
   hs.hotkey = {
@@ -473,7 +450,11 @@ function M.new()
   -- Globals expected by the modules under test
   --------------------------------------------------------------------------
   local noop = function() end
-  local logStub = setmetatable({}, { __index = function() return noop end })
+  local logStub = setmetatable({}, {
+    __index = function()
+      return function(message, ...) table.insert(mock.logs, string.format(message, ...)) end
+    end,
+  })
 
   mock.hs = hs
 
@@ -506,7 +487,9 @@ function M.new()
       if type(loaded) == "table" and type(loaded.init) == "function" then loaded:init(...) end
       return loaded
     end
-    package.preload["hs.styledtext"] = function() return { new = function(s) return s end } end
+    package.preload["hs.styledtext"] = function()
+      return { new = function(s) return s end }
+    end
     return mock
   end
 

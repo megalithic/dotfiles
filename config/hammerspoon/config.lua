@@ -421,7 +421,6 @@ M.dock = {
   },
   docked = {
     wifi = "off",
-    wiredService = "Thunderbolt Ethernet Slot 1",
     input = "Samson GoMic",
     output = "megabose",
   },
