@@ -202,7 +202,7 @@ The critical test-placement rule requires tests, fixtures, mocks, and test-only 
 
 Nix activation guidance is explicit: run `just darwin` for nix-darwin changes, `just home` for Home Manager changes, and `just rebuild` when both changed or scope is unclear, always monitoring output.
 
-`docs/` is ignored and treated as local or generated reference. Durable design notes belong in `lat.md/`. Ad-hoc research and audit docs go to `~/.local/share/pi/docs/.dotfiles/`, mirroring the handoffs and plans layout. The repo no longer depends on the old file-backed task tracker; agent tooling uses jj/git state plus harness-provided ticket context.
+`docs/` is ignored and treated as local or generated reference. Durable design notes belong in `lat.md/`. Ad-hoc research and audit docs go to `~/.local/share/pi/docs/.dotfiles/`, mirroring the handoffs and plans layout. The vendored `bin/tk` manages retained `.tickets/` records separately from harness task tracking. Its ripgrep wrapper uses `rg --no-config` so user search configuration cannot change ticket parsing or output.
 
 ## Global Pi agent policy
 

@@ -65,7 +65,7 @@ TICKET_PAGER="${TICKET_PAGER:-${PAGER:-}}"
 
 # Prefer ripgrep if available, fall back to grep
 if command -v rg &>/dev/null; then
-	_grep() { rg "$@"; }
+	_grep() { rg --no-config "$@"; }
 else
 	_grep() { grep "$@"; }
 fi
