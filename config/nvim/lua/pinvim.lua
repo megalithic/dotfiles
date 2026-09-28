@@ -3721,7 +3721,7 @@ function M.setup(opts)
 				loader = "config/nvim/after/plugin/pinvim.lua",
 				module = "config/nvim/lua/pinvim.lua",
 				bridge = "non-nvim ingress only while Hammerspoon/tell replacements land",
-				extension = "config/pi-coding-agent/disabled/extensions/_pinvim.ts",
+				extension = "home/.pi/disabled/extensions/_pinvim.ts",
 			},
 		}
 	end

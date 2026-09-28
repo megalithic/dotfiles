@@ -6,7 +6,7 @@
 --
 -- SOCKET CONFIGURATION (mise is single source of truth):
 --   Pattern: ${PI_STATE_DIR}/sockets/pi-{session}-{window}-{paneId}.sock (one socket per Pi pane)
---   Env vars and wrapper live under ~/.dotfiles/config/pi-coding-agent/:
+--   Env vars and wrapper live under ~/.dotfiles/home/.pi/:
 --     - PI_STATE_DIR: ~/.local/state/pi
 --     - PI_SESSION: tmux session name
 --     - PI_WINDOW: tmux window index

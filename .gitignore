@@ -13,6 +13,7 @@ config/mise/config.local.toml
 config/mise/conf.d/
 
 .pi
+!home/.pi/
 .nvim.lua
 lat.md/.cache/
 result

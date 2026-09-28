@@ -24,7 +24,7 @@ Coordinate with dot-gew8 (edits same bridge.ts socket/manifest layer).
 
 ## Increment 2: thin ACP forwarder shim (acp.ts)
 
-Dropped the vendored pi-acp adapter and the pidewave.ts conduit in favor of a single dual-role file `config/pi-coding-agent/agent/extensions/acp.ts`:
+Dropped the vendored pi-acp adapter and the pidewave.ts conduit in favor of a single dual-role file `home/.pi/agent/extensions/acp.ts`:
 - CLI role (Tidewave External Agent command, e.g. `bun ~/.pi/agent/extensions/acp.ts`): zero-dep ACP agent (ndjson JSON-RPC 2.0, protocol v1) implementing initialize/authenticate/session·new/session·prompt. Prompt text is forwarded to the handshaken tmux pi via bridge `pi.control.v1 message.send` (follow_up, from=tidewave); one agent_message_chunk reports the outcome; returns end_turn immediately. Input-only: no spawned pi, no response streaming.
 - Extension role (pi auto-loads extensions/*.ts): binding-indicator widget only; CLI guarded by argv[1]-is-this-file check.
 - Binding source unchanged: ${PI_STATE_DIR}/tidewave/bindings/<worktree-slug>.json written by Hammerspoon Cmd+Shift+C (config/hammerspoon/lib/interop/pidewave.lua).

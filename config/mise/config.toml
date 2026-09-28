@@ -147,27 +147,35 @@ up = "cd $HOME/.dotfiles && mise run up"
 [dotfiles]
 # "~/.config" = "~/.dotfiles/config"
 
-# -- pi coding agent: managed subset of ~/.pi/agent; runtime state (sessions/,
-#    npm/, auth.json) stays unmanaged. settings.json is replaced from source
-#    by `mise run update:pi`, not linked. --
-"~/.pi/agent/AGENTS.md" = "~/.dotfiles/config/pi-coding-agent/agent/AGENTS.md"
-"~/.pi/agent/APPEND_SYSTEM.md" = "~/.dotfiles/config/pi-coding-agent/agent/APPEND_SYSTEM.md"
-"~/.pi/agent/keybindings.json" = "~/.dotfiles/config/pi-coding-agent/agent/keybindings.json"
-"~/.pi/agent/models.json" = "~/.dotfiles/config/pi-coding-agent/agent/models.json"
-"~/.pi/agent/mcp.json" = "~/.dotfiles/config/pi-coding-agent/agent/mcp.json"
-"~/.pi/web-search.json" = "~/.dotfiles/config/pi-coding-agent/web-search.json"
-"~/.pi/agent/web-search.json" = "~/.dotfiles/config/pi-coding-agent/web-search.json"
-"~/.config/pi/web-search.json" = "~/.dotfiles/config/pi-coding-agent/web-search.json"
-"~/.pi/agent/extensions" = { source = "~/.dotfiles/config/pi-coding-agent/agent/extensions", mode = "symlink-each", exclude = ["_*"] }
-"~/.pi/agent/skills" = { source = "~/.dotfiles/config/pi-coding-agent/agent/skills", mode = "symlink-each", exclude = ["_*"] }
-"~/.pi/agent/prompts" = { source = "~/.dotfiles/config/pi-coding-agent/agent/prompts", mode = "symlink-each", exclude = ["_*"] }
-"~/.pi/agent/agents" = { source = "~/.dotfiles/config/pi-coding-agent/agent/agents", mode = "symlink-each", exclude = ["_*"] }
+# -- pi coding agent: managed files under ~/.pi; runtime state (sessions/,
+#    npm/, auth.json) stays unmanaged. Pi writes settings through its symlink. --
+"~/.pi/agent/AGENTS.md" = "~/.dotfiles/home/.pi/agent/AGENTS.md"
+"~/.pi/agent/APPEND_SYSTEM.md" = "~/.dotfiles/home/.pi/agent/APPEND_SYSTEM.md"
+"~/.pi/agent/settings.json" = "~/.dotfiles/home/.pi/agent/settings.json"
+"~/.pi/agent/keybindings.json" = "~/.dotfiles/home/.pi/agent/keybindings.json"
+"~/.pi/agent/models.json" = "~/.dotfiles/home/.pi/agent/models.json"
+"~/.pi/agent/mcp.json" = "~/.dotfiles/home/.pi/agent/mcp.json"
+"~/.pi/web-search.json" = "~/.dotfiles/home/.pi/web-search.json"
+"~/.pi/agent/web-search.json" = "~/.dotfiles/home/.pi/web-search.json"
+"~/.config/pi/web-search.json" = "~/.dotfiles/home/.pi/web-search.json"
+"~/.pi/agent/extensions" = { source = "~/.dotfiles/home/.pi/agent/extensions", mode = "symlink-each", exclude = [
+  "_*",
+] }
+"~/.pi/agent/skills" = { source = "~/.dotfiles/home/.pi/agent/skills", mode = "symlink-each", exclude = [
+  "_*",
+] }
+"~/.pi/agent/prompts" = { source = "~/.dotfiles/home/.pi/agent/prompts", mode = "symlink-each", exclude = [
+  "_*",
+] }
+"~/.pi/agent/agents" = { source = "~/.dotfiles/home/.pi/agent/agents", mode = "symlink-each", exclude = [
+  "_*",
+] }
 # Lat extension tools launch through this agent-local path; point it at mise's
 # stable shim rather than the removed Devenv profile.
 "~/.pi/agent/bin/lat" = "~/.local/share/mise/shims/lat"
-"~/.local/bin/pi" = "~/.dotfiles/config/pi-coding-agent/bin/pi"
-"~/.local/bin/p" = "~/.dotfiles/config/pi-coding-agent/bin/p"
-"~/.local/bin/work-tickets" = "~/.dotfiles/config/pi-coding-agent/bin/work-tickets"
+"~/.local/bin/pi" = "~/.dotfiles/home/.pi/bin/pi"
+"~/.local/bin/p" = "~/.dotfiles/home/.pi/bin/p"
+"~/.local/bin/work-tickets" = "~/.dotfiles/home/.pi/bin/work-tickets"
 # "~/Library/Developer/Xcode/UserData/FontAndColorThemes/tokyo-night.xccolortheme" = ".config/xcode/tokyo-night.xccolortheme"
 # Keep global config, host overlays, and templates together.
 "~/.config/mise" = "~/.dotfiles/config/mise"
@@ -853,7 +861,7 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/update-fnox"
 raw = true
 
 [tasks."update:pi"]
-description = "Update Pi, settings, tools, and extensions"
+description = "Update Pi, tools, and extensions"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/update-pi"
 
 [tasks."reload:hammerspoon"]

@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
-exec bash "$dotfiles/config/pi-coding-agent/scripts/work-tickets.sh" "$@"

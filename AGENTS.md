@@ -5,7 +5,7 @@ This repo contains both Nix-managed and mise-managed dotfiles. Host decides whic
 ## Test placement (CRITICAL)
 
 - Put every test suite, fixture, mock, and test-only helper under a `tests/` subdirectory of the owning config or tool's main directory. Never place tests beside implementation files.
-- Examples: Hammerspoon -> `config/hammerspoon/tests/`; Pi -> `config/pi-coding-agent/tests/`; the Elixir template -> `config/mise/tmpls/elixir/tests/`; mise scripts -> `mise/tests/`; the golden-layout plugin -> `config/tmux/plugins/tmux-golden-layout/tests/`.
+- Examples: Hammerspoon -> `config/hammerspoon/tests/`; Pi -> `home/.pi/tests/`; the Elixir template -> `config/mise/tmpls/elixir/tests/`; mise scripts -> `mise/tests/`; the golden-layout plugin -> `config/tmux/plugins/tmux-golden-layout/tests/`.
 - Root `tests/` is only for repo-wide bootstrap and system checks, not a shared bucket for individual configs.
 - When moving tests, update imports, fixtures, runner commands, and documentation. Keep production code in its existing location.
 - This repo-specific rule overrides global or agent guidance to place tests next to the files they test.
@@ -66,7 +66,7 @@ When `op`, 1Password CLI integration, or fnox secret resolution fails, follow th
 
 **Common nix-managed paths:**
 
-- `~/.pi/agent/*` → `config/pi-coding-agent/` (mise-managed symlinks plus runtime state merged by `mise run update:pi`)
+- `~/.pi/agent/*` -> `home/.pi/agent/` (mise-managed symlinks, including writable `settings.json`; auth, sessions, and installed packages stay unmanaged)
 - `~/.config/fish/*` → `config/fish/` (mise-managed symlink)
 - `~/.config/ghostty/*` → `config/ghostty/` (mise-managed symlink)
 - `~/.config/tmux/*` → `config/tmux/` (mise-managed symlink)

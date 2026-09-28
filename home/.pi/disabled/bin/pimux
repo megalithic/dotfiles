@@ -1,0 +1,652 @@
+#!/usr/bin/env bash
+# pimux: show, hide, and reuse pi panes in tmux.
+#
+# Fresh pinvim/tmux owner for nvim↔pi pane lifecycle.
+#
+# Model:
+#   - From nvim/vim pane: ensure/toggle a 30% right split running pi.
+#   - Hide parks durable main pi panes in hidden "agent" windows.
+#   - Child/legacy ephemeral panes are not parked by default; hiding them kills the pane.
+#   - Show restores parked pane history, preferring explicit socket, active, last,
+#     MRU, then any parked pi pane.
+#   - From non-nvim pane: focus the agent window instead of joining a split.
+#
+# Options:
+#   --ensure       Ensure pi is visible; do not hide if already visible.
+#   --socket PATH  Prefer pi pane linked to socket PATH.
+#   --bell PATH    Ring bell in pane linked to socket PATH, then exit.
+#   --new          Spawn child pi in current nvim window split only.
+#                  Sets PI_SOCKET/PI_EPHEMERAL. Auto-generates legacy socket path
+#                  if --socket not given.
+#
+# Tmux session user option schema:
+#   @pimux.active_socket   current visible/focused socket path, or empty
+#   @pimux.active_pane     current visible/focused tmux pane id, or empty
+#   @pimux.last_socket     last visible socket path, or empty
+#   @pimux.last_pane       last visible tmux pane id, or empty
+#   @pimux.mru_sockets     | separated socket paths, newest first
+#   @pimux.parked_sockets  | separated entries: socket_path=pane_id
+#
+# Socket paths cannot contain | or =. Pane ids are tmux %N identifiers.
+
+set -euo pipefail
+
+ENSURE=false
+NEW=false
+TARGET_SOCKET=""
+BELL_SOCKET=""
+SPLIT_SIZE="30%"
+AGENT_WINDOW="agent"
+PARKED_WINDOW_PREFIX="pimux"
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+	--ensure)
+		ENSURE=true
+		shift
+		;;
+	--new)
+		NEW=true
+		shift
+		;;
+	--socket)
+		TARGET_SOCKET="${2:-}"
+		shift 2
+		;;
+	--bell)
+		BELL_SOCKET="${2:-}"
+		shift 2
+		;;
+	*) shift ;;
+	esac
+done
+
+TARGET_PANE="${PIMUX_PANE:-${TMUX_PANE:-}}"
+
+tmux_here() {
+	if [[ -n "$TARGET_PANE" ]]; then
+		tmux display-message -t "$TARGET_PANE" -p "$1"
+	else
+		tmux display-message -p "$1"
+	fi
+}
+
+IFS=$'\t' read -r SESSION CURRENT_WINDOW CURRENT_WINDOW_IDX CURRENT_PANE < <(
+	tmux_here '#{session_name}	#{window_name}	#{window_index}	#{pane_id}'
+)
+PI_STATE_DIR="${PI_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/pi}"
+SOCKET_DIR="$PI_STATE_DIR/sockets"
+MANIFEST_DIR="$PI_STATE_DIR/manifests"
+PINVIM_REGISTRY_DIR="$PI_STATE_DIR/pinvim"
+SOCKET_PREFIX="pi"
+mkdir -p "$SOCKET_DIR" "$PINVIM_REGISTRY_DIR"
+
+# dot-satx: this Nvim's pair id, forwarded so pimux can prefer the pane
+# already paired with the launching Nvim instead of any same-window pi.
+PINVIM_PAIR_ID="${PINVIM_PAIR_ID:-}"
+
+PINVIM_FORWARD_ENV=(
+	PINVIM_PAIR_ID
+	PINVIM_PARENT_ID
+	PINVIM_WORKSPACE_ID
+	PINVIM_INSTANCE_ID
+	PINVIM_SESSION_ID
+	PINVIM_SESSION_ROLE
+	PINVIM_REGISTRY_ROOT
+	PINVIM_NVIM_LISTEN_ADDRESS
+	PINVIM_LINK_MODE
+	PIMUX_FROM_NVIM
+	PI_STATE_DIR
+	PI_SOCKET
+	PI_EPHEMERAL
+)
+TMUX_ENV_ARGS=()
+
+build_tmux_env_args() {
+	local overrides=("$@") name override skip
+	TMUX_ENV_ARGS=()
+	for name in "${PINVIM_FORWARD_ENV[@]}"; do
+		skip=false
+		for override in "${overrides[@]}"; do
+			[[ "${override%%=*}" == "$name" ]] && skip=true
+		done
+		if [[ "$skip" == false && -n "${!name+x}" ]]; then
+			TMUX_ENV_ARGS+=(-e "$name=${!name}")
+		fi
+	done
+	for override in "${overrides[@]}"; do
+		TMUX_ENV_ARGS+=(-e "$override")
+	done
+}
+
+opt_get() { tmux show-option -qv -t "$SESSION" "$1" 2>/dev/null || true; }
+opt_set() { tmux set-option -q -t "$SESSION" "$1" "$2"; }
+
+socket_to_window() {
+	local sock="$1" base rest
+	base=$(basename "$sock" .sock)
+	rest="${base#"${SOCKET_PREFIX}"-"${SESSION}"-}"
+	printf '%s\n' "${rest%%-eph-*}"
+}
+
+tmux_socket_window_token() {
+	local name="$1" index="${2:-}"
+	if [[ "$name" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+		printf '%s\n' "$name"
+	else
+		printf '%s\n' "$index"
+	fi
+}
+
+is_explicit_only_socket() {
+	local sock="$1"
+	[[ "$sock" == */pinvim/*/children/*/*.sock || "$sock" == *-eph-*.sock ]]
+}
+
+# dot-itag: probe a pi socket's recorded pair id from its manifest. This is the
+# reuse-decision input for strict pairing; returns empty when unknown.
+socket_pair_id() {
+	local sock="$1" base manifest
+	[[ -z "$sock" ]] && return 0
+	base=$(basename "$sock" .sock)
+	manifest="$MANIFEST_DIR/$base.info"
+	[[ -f "$manifest" ]] || return 0
+	# Manifest is single-line JSON; pull the pairId field without a JSON dep.
+	sed -n 's/.*"pairId":"\([^"]*\)".*/\1/p' "$manifest" 2>/dev/null | head -n1
+}
+
+# dot-r0f8: a socket is pair-eligible when we have no pair id (legacy/no strict
+# pairing) or its manifest pair id matches this Nvim's pair id. Unknown pair id
+# is not eligible in strict mode; otherwise another same-session Nvim can steal it.
+socket_pair_matches() {
+	local sock="$1" sock_pair
+	[[ -z "$PINVIM_PAIR_ID" ]] && return 0
+	sock_pair=$(socket_pair_id "$sock")
+	[[ "$sock_pair" == "$PINVIM_PAIR_ID" ]]
+}
+
+socket_for_window() {
+	local name="$1" index="${2:-$1}" token
+	token=$(tmux_socket_window_token "$name" "$index")
+	printf '%s/%s-%s-%s.sock\n' "$SOCKET_DIR" "$SOCKET_PREFIX" "$SESSION" "$token"
+}
+
+is_pi_title() { [[ "$1" == π* ]]; }
+
+is_pi_pane() {
+	local pane="$1" title cmd start
+	[[ -z "$pane" ]] && return 1
+	title=$(tmux display-message -t "$pane" -p '#{pane_title}' 2>/dev/null || true)
+	cmd=$(tmux display-message -t "$pane" -p '#{pane_current_command}' 2>/dev/null || true)
+	start=$(tmux display-message -t "$pane" -p '#{pane_start_command}' 2>/dev/null || true)
+	is_pi_title "$title" || [[ "$cmd" == "pi" || "$cmd" == "pinvim" || "$start" == *"pinvim"* || "$start" == *" pi"* ]]
+}
+
+is_invoked_from_pi() {
+	is_pi_pane "$CURRENT_PANE"
+}
+
+safe_select_non_pi_neighbor() {
+	local pane title
+	while IFS=$'\t' read -r pane title; do
+		[[ "$pane" == "$CURRENT_PANE" ]] && continue
+		if ! is_pi_title "$title"; then
+			tmux select-pane -t "$pane" 2>/dev/null || true
+			return 0
+		fi
+	done < <(tmux list-panes -t "$SESSION:$CURRENT_WINDOW_IDX" -F '#{pane_id}\t#{pane_title}')
+	return 1
+}
+
+is_nvim_here() {
+	local cmd start
+	[[ "${PIMUX_FROM_NVIM:-}" == "1" ]] && return 0
+	IFS=$'\t' read -r cmd start < <(tmux_here '#{pane_current_command}	#{pane_start_command}')
+	[[ "$cmd" == "nvim" || "$cmd" == "vim" || "$start" == *"nvim"* || "$start" == *"vim"* ]]
+}
+
+window_index_by_name() {
+	local name="$1"
+	tmux list-windows -t "$SESSION" -F '#{window_index}:#{window_name}' |
+		awk -F: -v name="$name" '$2 == name { print $1; exit }'
+}
+
+is_parked_window() {
+	local name="$1"
+	[[ "$name" == "$AGENT_WINDOW" || "$name" == "$PARKED_WINDOW_PREFIX"-* ]]
+}
+
+window_has_pi() {
+	local window_idx="$1" title
+	[[ -z "$window_idx" ]] && return 1
+	while IFS= read -r title; do
+		is_pi_title "$title" && return 0
+	done < <(tmux list-panes -t "$SESSION:$window_idx" -F '#{pane_title}' 2>/dev/null || true)
+	return 1
+}
+
+parked_window_name_for_pane() {
+	if [[ -z "$(window_index_by_name "$PARKED_WINDOW_PREFIX")" ]]; then
+		printf '%s\n' "$PARKED_WINDOW_PREFIX"
+	else
+		printf '%s-%s\n' "$PARKED_WINDOW_PREFIX" "${1#%}"
+	fi
+}
+
+pane_exists() {
+	[[ -n "$1" ]] && tmux display-message -t "$1" -p '#{pane_id}' >/dev/null 2>&1
+}
+
+list_remove_socket() {
+	local list="$1" sock="$2" out="" entry entry_sock
+	local -a entries=()
+	[[ -z "$list" ]] && {
+		printf '%s\n' ""
+		return 0
+	}
+	IFS='|' read -r -a entries <<<"$list"
+	for entry in "${entries[@]}"; do
+		[[ -z "$entry" ]] && continue
+		entry_sock="${entry%%=*}"
+		[[ "$entry_sock" == "$sock" ]] && continue
+		[[ -z "$out" ]] && out="$entry" || out="$out|$entry"
+	done
+	printf '%s\n' "$out"
+}
+
+mru_add() {
+	local sock="$1" current out="" count=0 entry
+	[[ -z "$sock" ]] && return 0
+	current=$(list_remove_socket "$(opt_get @pimux.mru_sockets)" "$sock")
+	IFS='|' read -r -a entries <<<"$current"
+	for entry in "${entries[@]}"; do
+		[[ -z "$entry" ]] && continue
+		out="$out|$entry"
+		count=$((count + 1))
+		[[ "$count" -ge 9 ]] && break
+	done
+	opt_set @pimux.mru_sockets "$sock$out"
+}
+
+unpark_socket() {
+	local sock="$1"
+	[[ -z "$sock" ]] && return 0
+	opt_set @pimux.parked_sockets "$(list_remove_socket "$(opt_get @pimux.parked_sockets)" "$sock")"
+}
+
+park_socket() {
+	local sock="$1" pane="$2" parked
+	[[ -z "$sock" ]] && return 0
+	parked=$(list_remove_socket "$(opt_get @pimux.parked_sockets)" "$sock")
+	[[ -z "$parked" ]] && parked="$sock=$pane" || parked="$sock=$pane|$parked"
+	opt_set @pimux.parked_sockets "$parked"
+	opt_set @pimux.last_socket "$sock"
+	opt_set @pimux.last_pane "$pane"
+	opt_set @pimux.active_socket ""
+	opt_set @pimux.active_pane ""
+	mru_add "$sock"
+}
+
+activate_socket() {
+	local sock="$1" pane="$2" current
+	[[ -z "$sock" ]] && return 0
+	current=$(opt_get @pimux.active_socket)
+	if [[ -n "$current" && "$current" != "$sock" ]]; then
+		opt_set @pimux.last_socket "$current"
+		opt_set @pimux.last_pane "$(opt_get @pimux.active_pane)"
+	fi
+	opt_set @pimux.active_socket "$sock"
+	opt_set @pimux.active_pane "$pane"
+	unpark_socket "$sock"
+	mru_add "$sock"
+}
+
+deactivate_socket() {
+	local sock="$1" active
+	[[ -z "$sock" ]] && return 0
+	active=$(opt_get @pimux.active_socket)
+	if [[ "$active" == "$sock" ]]; then
+		opt_set @pimux.active_socket ""
+		opt_set @pimux.active_pane ""
+	fi
+	unpark_socket "$sock"
+}
+
+registry_pane_is_safe() {
+	local pane="$1"
+	pane_exists "$pane" && is_pi_pane "$pane"
+}
+
+candidate_sockets() {
+	local value entry entry_sock active_socket active_pane last_socket last_pane
+	active_socket=$(opt_get @pimux.active_socket)
+	active_pane=$(opt_get @pimux.active_pane)
+	last_socket=$(opt_get @pimux.last_socket)
+	last_pane=$(opt_get @pimux.last_pane)
+	registry_pane_is_safe "$active_pane" || active_socket=""
+	registry_pane_is_safe "$last_pane" || last_socket=""
+
+	for value in "$TARGET_SOCKET" "$active_socket" "$last_socket" "$(opt_get @pimux.mru_sockets)" "$(opt_get @pimux.parked_sockets)"; do
+		IFS='|' read -r -a entries <<<"$value"
+		for entry in "${entries[@]}"; do
+			[[ -z "$entry" ]] && continue
+			entry_sock="${entry%%=*}"
+			if is_explicit_only_socket "$entry_sock" && [[ "$entry_sock" != "$TARGET_SOCKET" ]]; then
+				continue
+			fi
+			# dot-r0f8: skip panes paired with a different Nvim. An explicit
+			# --socket TARGET_SOCKET always wins and is never pair-filtered.
+			if [[ "$entry_sock" != "$TARGET_SOCKET" ]] && ! socket_pair_matches "$entry_sock"; then
+				continue
+			fi
+			printf '%s\n' "$entry_sock"
+		done
+	done | awk '!seen[$0]++'
+}
+
+parked_pane_for_socket() {
+	local sock="$1" entry entry_sock pane
+	IFS='|' read -r -a entries <<<"$(opt_get @pimux.parked_sockets)"
+	for entry in "${entries[@]}"; do
+		[[ -z "$entry" ]] && continue
+		entry_sock="${entry%%=*}"
+		pane="${entry#*=}"
+		if [[ "$entry_sock" == "$sock" ]] && pane_exists "$pane"; then
+			printf '%s\n' "$pane"
+			return 0
+		fi
+	done
+	return 1
+}
+
+find_pi_in_current_window() {
+	local pane title active active_window
+	active=$(opt_get @pimux.active_pane)
+	if pane_exists "$active"; then
+		active_window=$(tmux display-message -t "$active" -p '#{window_index}' 2>/dev/null || true)
+		if [[ "$active_window" == "$CURRENT_WINDOW_IDX" ]]; then
+			printf '%s\n' "$active"
+			return 0
+		fi
+	fi
+
+	while IFS=$'\t' read -r pane title; do
+		if is_pi_title "$title"; then
+			printf '%s\n' "$pane"
+			return 0
+		fi
+	done < <(tmux list-panes -t "$SESSION:$CURRENT_WINDOW_IDX" -F '#{pane_id}	#{pane_title}')
+	return 1
+}
+
+find_any_parked_pi_pane() {
+	local entry entry_sock pane
+	IFS='|' read -r -a entries <<<"$(opt_get @pimux.parked_sockets)"
+	for entry in "${entries[@]}"; do
+		[[ -z "$entry" ]] && continue
+		entry_sock="${entry%%=*}"
+		pane="${entry#*=}"
+		# dot-r0f8: never fall back to a pane paired with a different Nvim.
+		if ! is_explicit_only_socket "$entry_sock" && socket_pair_matches "$entry_sock" && registry_pane_is_safe "$pane"; then
+			printf '%s\t%s\n' "$pane" "$entry_sock"
+			return 0
+		fi
+	done
+	return 1
+}
+
+find_pane_for_socket() {
+	local sock="$1" pane target_window window window_idx title active_socket active_pane
+	[[ -z "$sock" ]] && return 1
+
+	pane=$(parked_pane_for_socket "$sock") && {
+		printf '%s\n' "$pane"
+		return 0
+	}
+
+	active_socket=$(opt_get @pimux.active_socket)
+	active_pane=$(opt_get @pimux.active_pane)
+	if [[ "$active_socket" == "$sock" ]] && registry_pane_is_safe "$active_pane"; then
+		printf '%s\n' "$active_pane"
+		return 0
+	fi
+
+	target_window=$(socket_to_window "$sock")
+	# Explicit --socket encodes target window, so scan that window first instead of
+	# always walking every pane in the session.
+	if tmux display-message -t "$SESSION:$target_window" -p '#{window_index}' >/dev/null 2>&1; then
+		while IFS=$'\t' read -r pane title; do
+			if is_pi_title "$title"; then
+				printf '%s\n' "$pane"
+				return 0
+			fi
+		done < <(tmux list-panes -t "$SESSION:$target_window" -F '#{pane_id}	#{pane_title}' 2>/dev/null || true)
+	fi
+
+	while IFS=$'\t' read -r pane window window_idx title; do
+		if is_pi_title "$title" && { [[ "$window" == "$target_window" ]] || [[ "$window_idx" == "$target_window" ]]; }; then
+			printf '%s\n' "$pane"
+			return 0
+		fi
+	done < <(tmux list-panes -s -t "$SESSION" -F '#{pane_id}	#{window_name}	#{window_index}	#{pane_title}')
+
+	return 1
+}
+
+find_preferred_pi_pane() {
+	local sock pane
+	while read -r sock; do
+		pane=$(find_pane_for_socket "$sock") && {
+			printf '%s\t%s\n' "$pane" "$sock"
+			return 0
+		}
+	done < <(candidate_sockets)
+
+	find_any_parked_pi_pane && return 0
+	return 1
+}
+
+known_socket_for_pane() {
+	local pane="$1" pane_window candidate active_pane active_socket
+	active_pane=$(opt_get @pimux.active_pane)
+	active_socket=$(opt_get @pimux.active_socket)
+	if [[ "$pane" == "$active_pane" && -n "$active_socket" ]]; then
+		printf '%s\n' "$active_socket"
+		return 0
+	fi
+
+	pane_window=$(tmux display-message -t "$pane" -p '#{window_name}' 2>/dev/null || true)
+	if [[ -n "$pane_window" ]] && ! is_parked_window "$pane_window"; then
+		local pane_window_idx
+		pane_window_idx=$(tmux display-message -t "$pane" -p '#{window_index}' 2>/dev/null || true)
+		candidate=$(socket_for_window "$pane_window" "$pane_window_idx")
+		if [[ -S "$candidate" ]]; then
+			printf '%s\n' "$candidate"
+			return 0
+		fi
+	fi
+
+	return 1
+}
+
+infer_socket_for_pane() {
+	local pane="$1" fallback="${2:-}" known
+	known=$(known_socket_for_pane "$pane") && {
+		printf '%s\n' "$known"
+		return 0
+	}
+	[[ -n "$fallback" ]] && {
+		printf '%s\n' "$fallback"
+		return 0
+	}
+	printf '%s\n' "$(opt_get @pimux.last_socket)"
+}
+
+lock_window_name() {
+	local idx="$1" name="$2"
+	tmux rename-window -t "$SESSION:$idx" "$name"
+	tmux set-option -t "$SESSION:$idx" -w automatic-rename off
+	tmux set-option -t "$SESSION:$idx" -w allow-rename off
+}
+
+lock_agent_window() {
+	lock_window_name "$1" "$AGENT_WINDOW"
+}
+
+create_agent_window() {
+	local last_idx target_idx
+	last_idx=$(tmux list-windows -t "$SESSION" -F '#{window_index}' | sort -n | tail -1)
+	target_idx=$((last_idx + 1))
+	build_tmux_env_args
+	tmux new-window -d -t "$SESSION:$target_idx" -n "$AGENT_WINDOW" "${TMUX_ENV_ARGS[@]}" "pinvim"
+	lock_agent_window "$target_idx"
+	printf '%s\n' "$target_idx"
+}
+
+ensure_agent_window() {
+	local agent_idx
+	agent_idx=$(window_index_by_name "$AGENT_WINDOW")
+	[[ -n "$agent_idx" ]] && {
+		printf '%s\n' "$agent_idx"
+		return 0
+	}
+	create_agent_window
+}
+
+park_pane() {
+	local pane="$1" sock="$2" agent_idx park_name park_idx
+	if [[ "$pane" == "$CURRENT_PANE" ]] && is_invoked_from_pi; then
+		safe_select_non_pi_neighbor || true
+		return 0
+	fi
+
+	agent_idx=$(window_index_by_name "$AGENT_WINDOW")
+	if [[ -z "$agent_idx" ]]; then
+		tmux break-pane -d -s "$pane" -n "$AGENT_WINDOW"
+		park_idx=$(window_index_by_name "$AGENT_WINDOW")
+		[[ -n "$park_idx" ]] && lock_window_name "$park_idx" "$AGENT_WINDOW"
+	else
+		park_name=$(parked_window_name_for_pane "$pane")
+		tmux break-pane -d -s "$pane" -n "$park_name"
+		park_idx=$(window_index_by_name "$park_name")
+		[[ -n "$park_idx" ]] && lock_window_name "$park_idx" "$park_name"
+	fi
+	park_socket "$sock" "$pane"
+}
+
+show_pane_as_split() {
+	local pane="$1" sock="$2"
+	if [[ "$pane" == "$CURRENT_PANE" ]]; then
+		activate_socket "$sock" "$pane"
+		return 0
+	fi
+	tmux join-pane -h -s "$pane" -t "$CURRENT_PANE" -l "$SPLIT_SIZE"
+	activate_socket "$sock" "$pane"
+	tmux select-pane -t "$pane"
+}
+
+focus_pane_window() {
+	local pane="$1" sock="$2" win
+	win=$(tmux display-message -t "$pane" -p '#{window_index}')
+	activate_socket "$sock" "$pane"
+	tmux select-window -t "$SESSION:$win"
+	tmux select-pane -t "$pane"
+}
+
+spawn_visible_split() {
+	local sock="${1:-}" new_pane
+	if [[ -n "$sock" ]]; then
+		build_tmux_env_args "PI_SOCKET=$sock" "PINVIM_SESSION_ROLE=${PINVIM_SESSION_ROLE:-main}" "PINVIM_LINK_MODE=${PINVIM_LINK_MODE:-main}"
+		new_pane=$(tmux split-window -P -F '#{pane_id}' -h -l "$SPLIT_SIZE" -t "$CURRENT_PANE" "${TMUX_ENV_ARGS[@]}" "pinvim")
+	else
+		sock=$(socket_for_window "$CURRENT_WINDOW" "$CURRENT_WINDOW_IDX")
+		build_tmux_env_args "PINVIM_SESSION_ROLE=${PINVIM_SESSION_ROLE:-main}" "PINVIM_LINK_MODE=${PINVIM_LINK_MODE:-main}"
+		new_pane=$(tmux split-window -P -F '#{pane_id}' -h -l "$SPLIT_SIZE" -t "$CURRENT_PANE" "${TMUX_ENV_ARGS[@]}" "pinvim")
+	fi
+	activate_socket "$sock" "$new_pane"
+}
+
+spawn_ephemeral_split() {
+	# Child sessions are explicit: caller (nvim) provides PINVIM_SESSION_ROLE=child
+	# and PINVIM_SESSION_ID via env. Keep PI_EPHEMERAL=1 so legacy pi-side paths
+	# still treat the pane as explicit-only.
+	local new_pane role="${PINVIM_SESSION_ROLE:-child}"
+	build_tmux_env_args "PI_SOCKET=$TARGET_SOCKET" "PI_EPHEMERAL=1" "PINVIM_SESSION_ROLE=$role"
+	new_pane=$(tmux split-window -P -F '#{pane_id}' -h -l "$SPLIT_SIZE" -t "$CURRENT_PANE" \
+		"${TMUX_ENV_ARGS[@]}" \
+		"pinvim")
+	activate_socket "$TARGET_SOCKET" "$new_pane"
+}
+
+ring_bell() {
+	local sock="$1" pane tty
+	pane=$(find_pane_for_socket "$sock") || return 1
+	tty=$(tmux display-message -t "$pane" -p '#{pane_tty}' 2>/dev/null || true)
+	[[ -n "$tty" ]] && printf '\a' >"$tty" 2>/dev/null || true
+}
+
+main() {
+	if [[ "$NEW" == true && -z "$TARGET_SOCKET" ]]; then
+		TARGET_SOCKET=$(printf '%s/%s-%s-%s-eph-%d-%d.sock' "$SOCKET_DIR" "$SOCKET_PREFIX" "$SESSION" "$(tmux_socket_window_token "$CURRENT_WINDOW" "$CURRENT_WINDOW_IDX")" "$(date +%s)" "$$")
+	fi
+
+	if [[ "$NEW" == true ]]; then
+		if ! is_nvim_here || is_invoked_from_pi; then
+			tmux display-message -t "$CURRENT_PANE" "pimux: ephemeral split only works from nvim" 2>/dev/null || true
+			exit 0
+		fi
+		spawn_ephemeral_split
+		exit 0
+	fi
+
+	if is_invoked_from_pi && [[ -z "$BELL_SOCKET" ]]; then
+		tmux display-message -t "$CURRENT_PANE" "pimux: ignored from pi pane; run from nvim/shell" 2>/dev/null || true
+		exit 0
+	fi
+
+	if [[ -n "$BELL_SOCKET" ]]; then
+		ring_bell "$BELL_SOCKET"
+		exit 0
+	fi
+
+	local current_pi current_sock sock match pane
+	current_pi=$(find_pi_in_current_window) || current_pi=""
+	if [[ -n "$current_pi" ]]; then
+		current_sock=$(known_socket_for_pane "$current_pi") || current_sock=""
+		if [[ -z "$TARGET_SOCKET" || "$current_sock" == "$TARGET_SOCKET" ]]; then
+			[[ "$ENSURE" == true ]] && exit 0
+			sock=$(infer_socket_for_pane "$current_pi" "$TARGET_SOCKET")
+			if is_explicit_only_socket "$sock"; then
+				deactivate_socket "$sock"
+				tmux kill-pane -t "$current_pi"
+			else
+				park_pane "$current_pi" "$sock"
+			fi
+			exit 0
+		fi
+	fi
+
+	match=$(find_preferred_pi_pane) || match=""
+	if [[ -n "$match" ]]; then
+		pane=${match%%$'\t'*}
+		sock=${match#*$'\t'}
+		[[ -z "$sock" ]] && sock=$(infer_socket_for_pane "$pane" "$TARGET_SOCKET")
+		if is_nvim_here; then
+			show_pane_as_split "$pane" "$sock"
+		else
+			focus_pane_window "$pane" "$sock"
+		fi
+		exit 0
+	fi
+
+	if is_nvim_here; then
+		spawn_visible_split "$TARGET_SOCKET"
+	else
+		local agent_idx
+		agent_idx=$(ensure_agent_window)
+		opt_set @pimux.last_socket "$(socket_for_window "$AGENT_WINDOW")"
+		tmux select-window -t "$SESSION:$agent_idx"
+	fi
+}
+
+main "$@"

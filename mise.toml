@@ -9,4 +9,4 @@
 
 [tasks."lint:ts"]
 description = "Oxlint + vendored anti-slop over dotfiles-managed TS/JS (pi extensions, skill scripts)"
-run = "oxlint -c tools/oxlint/oxlint.config.ts config/pi-coding-agent"
+run = "oxlint -c tools/oxlint/oxlint.config.ts home/.pi"

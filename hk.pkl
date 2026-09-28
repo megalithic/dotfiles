@@ -7,10 +7,10 @@ amends "package://github.com/jdx/hk/releases/download/v2.0.1/hk@2.0.1#/Config.pk
 import "package://github.com/jdx/hk/releases/download/v2.0.1/hk@2.0.1#/Builtins.pkl"
 
 local disabledPiEntries = List(
-    "config/pi-coding-agent/agent/extensions/_*",
-    "config/pi-coding-agent/agent/skills/_*",
-    "config/pi-coding-agent/agent/prompts/_*",
-    "config/pi-coding-agent/agent/agents/_*"
+    "home/.pi/agent/extensions/_*",
+    "home/.pi/agent/skills/_*",
+    "home/.pi/agent/prompts/_*",
+    "home/.pi/agent/agents/_*"
 )
 
 local linters = new Mapping<String, Step> {
@@ -41,11 +41,13 @@ local linters = new Mapping<String, Step> {
     }
     // Oxlint + vendored anti-slop over dotfiles-managed TS/JS (see
     // tools/oxlint/oxlint.config.ts). Staged files only; full run: `mise run lint:ts`.
+    // The helper skips staged renames whose index and working copy remain byte-identical
+    // from config/pi-coding-agent; once the old HEAD path is gone, normal linting resumes.
     ["oxlint"] = new Step {
-        glob = List("config/pi-coding-agent/**/*.ts", "config/pi-coding-agent/**/*.mjs")
+        glob = List("home/.pi/**/*.ts", "home/.pi/**/*.mjs")
         exclude = disabledPiEntries
         check = new CommandSpec {
-            command = "mise exec -- oxlint -c tools/oxlint/oxlint.config.ts {{files}}"
+            command = "mise exec -- mise/scripts/lint-pi-files {{files}}"
             effect = "read"
         }
     }

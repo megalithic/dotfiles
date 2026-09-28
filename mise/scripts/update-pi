@@ -8,7 +8,6 @@ usage() {
 usage: update-pi [--dry-run]
 
 Updates pi-managed imperative state:
-  - ~/.pi/agent/settings.json replaced with validated repo settings
   - pinned helper binaries under ~/.pi/agent/bin
   - nicknisi/sessions plugin extracted with an isolated home
   - redundant extension deps cleanup
@@ -35,10 +34,8 @@ for arg in "$@"; do
 done
 
 dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
-pi_src="$dotfiles/config/pi-coding-agent"
+pi_src="$dotfiles/home/.pi"
 agent="$HOME/.pi/agent"
-settings_file="$agent/settings.json"
-managed_settings="$pi_src/agent/settings.json"
 
 export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:/opt/homebrew/bin:$PATH"
 
@@ -79,28 +76,6 @@ report_helper_bin() {
 	fi
 }
 
-render_settings() {
-	jq -es 'if length == 1 and (.[0] | type == "object") then .[0]
-    else error("managed Pi settings must contain exactly one JSON object") end' "$managed_settings"
-}
-
-print_settings_preview() {
-	say "[settings] source: $managed_settings"
-	say "[settings] target: $settings_file"
-	say "[would replace] settings with repo contents; runtime-only keys are removed"
-	render_settings
-}
-
-sync_settings() {
-	local settings tmp
-	settings="$(render_settings)" || return $?
-	mkdir -p "$(dirname "$settings_file")"
-	tmp="$(mktemp "${settings_file}.tmp.XXXXXX")"
-	printf '%s\n' "$settings" >"$tmp"
-	mv "$tmp" "$settings_file"
-	say "synced settings -> $settings_file"
-}
-
 report_cleanup_target() {
 	local f="$1"
 	if [ -e "$f" ]; then
@@ -124,9 +99,10 @@ trash_path() {
 	fi
 }
 
-remove_parked_pinvim_links() {
+remove_retired_pi_links() {
 	local link target
 	for link in \
+		"$HOME/.local/bin/pi-acp" \
 		"$HOME/.local/bin/pinvim" \
 		"$HOME/.local/bin/pview" \
 		"$agent/extensions/pinvim.ts" \
@@ -140,12 +116,22 @@ remove_parked_pinvim_links() {
 			continue
 		fi
 		case "$target" in
-		*"/.dotfiles/config/pi-coding-agent/"*)
+		*"/.dotfiles/mise/config/pi-coding-agent/"* | *"/.dotfiles/config/pi-coding-agent/"* | *"/.dotfiles/home/.pi/"*)
 			trash_path "$link"
-			say "removed parked pinvim link: $link"
+			say "removed retired Pi link: $link"
 			;;
 		esac
 	done
+
+	link="$agent/SYSTEM.md"
+	[ -L "$link" ] || return 0
+	target="$(readlink "$link")"
+	case "$target" in
+	*"/.dotfiles/mise/config/pi-coding-agent/agent/SYSTEM.md" | *"/.dotfiles/config/pi-coding-agent/agent/SYSTEM.md")
+		trash_path "$link"
+		say "removed retired Pi SYSTEM link: $link"
+		;;
+	esac
 }
 
 install_sessions_plugin() {
@@ -179,9 +165,8 @@ if [ "$dry_run" = 1 ]; then
 	say "update:pi dry run"
 	say "[would ensure dir] $agent"
 	say "[would ensure dir] $agent/bin"
-	print_settings_preview
 	report_helper_bin plannotator "80c18e2b3e95796e85902b4e3ec92d8f7bf49df8ebfcbd12195c784fa522fdda"
-	say "[would remove] managed pinvim/pview links when still present"
+	say "[would remove] retired Pi links when still present"
 	say "[would run] isolated sessions setup -> $HOME/.local/share/sessions/plugin"
 	report_cleanup_target "$agent/extensions/package.json"
 	report_cleanup_target "$agent/extensions/package-lock.json"
@@ -194,9 +179,8 @@ fi
 
 mkdir -p "$agent" "$agent/bin"
 
-run_step "Sync settings" sync_settings
+run_step "Remove retired Pi links" remove_retired_pi_links
 run_step "Install pinned helpers" "$pi_src/scripts/install-pi-tools"
-run_step "Remove disabled Pi links" remove_parked_pinvim_links
 run_step "Refresh sessions plugin" install_sessions_plugin
 run_step "Clean redundant extension dependencies" cleanup_extension_deps
 

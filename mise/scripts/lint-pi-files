@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+files=()
+for file in "$@"; do
+	case "$file" in
+	home/.pi/*)
+		old="config/pi-coding-agent/${file#home/.pi/}"
+		old_deleted=$(git diff --cached --no-renames --diff-filter=D --name-only -- "$old")
+		new_added=$(git diff --cached --no-renames --diff-filter=A --name-only -- "$file")
+		if [ "$old_deleted" = "$old" ] &&
+			[ "$new_added" = "$file" ] &&
+			[ "$(git rev-parse "HEAD:$old")" = "$(git rev-parse ":$file")" ] &&
+			[ "$(git rev-parse "HEAD:$old")" = "$(git hash-object -- "$file")" ]; then
+			continue
+		fi
+		;;
+	esac
+	files+=("$file")
+done
+
+if ((${#files[@]} == 0)); then
+	exit 0
+fi
+
+exec oxlint -c tools/oxlint/oxlint.config.ts "${files[@]}"

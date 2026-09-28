@@ -13,7 +13,7 @@ tags: [sentinel, extensions, validation, ready-for-development]
 
 # Validate Sentinel simplification, docs, and mise mirror
 
-Finish the Sentinel simplification by validating runtime behavior, docs, and the mise twin after classifier refactor work lands. Use ~/.local/share/pi/plans/.dotfiles/sentinel-simplification_PLAN.md as context. Relevant files: home/common/programs/pi-coding-agent/extensions/sentinel.ts, config/pi-coding-agent/agent/extensions/sentinel.ts, lat.md/programs/pi-coding-agent.md, home/common/programs/pi-coding-agent/default.nix.
+Finish the Sentinel simplification by validating runtime behavior, docs, and the mise twin after classifier refactor work lands. Use ~/.local/share/pi/plans/.dotfiles/sentinel-simplification_PLAN.md as context. Relevant files: home/common/programs/pi-coding-agent/extensions/sentinel.ts, home/.pi/agent/extensions/sentinel.ts, lat.md/programs/pi-coding-agent.md, home/common/programs/pi-coding-agent/default.nix.
 
 ## Acceptance criteria
 

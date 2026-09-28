@@ -20,7 +20,7 @@ vim.g.notes_path = vim.env.NOTES_HOME or (vim.env.HOME .. "/notes")
 
 vim.g.disabled_plugins = {
 	"winbar",
-	"pinvim", -- turned off together with pi-side pinvim; code kept in config/pi-coding-agent/disabled/. Comment this line out to turn it back on.
+	"pinvim", -- turned off together with pi-side pinvim; code kept in home/.pi/disabled/. Comment this line out to turn it back on.
 }
 
 vim.g.indent_scope_char = "│"
