@@ -7,7 +7,8 @@
 
 [preflight]
 description = "Preflight project setup"
-shell = "bash -c"
+# Default `sh -o errexit -c`: a custom `shell = "bash -c"` drops errexit, which
+# let a failed bootstrap continue into setup.
 run = '''
 mise trust
 mise install
@@ -20,7 +21,7 @@ description = "Bootstrap local agent tooling (.pi dir: APPEND_SYSTEM.md + mcp.js
 depends = ["bootstrap:pi"]
 
 ["bootstrap:pi"]
-description = "Generate project-local Pi guidance and merge tidewave into .pi/mcp.json"
+description = "Generate project-local Pi guidance and the Pidewave URL in .pi/mcp.json"
 run = 'bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/bootstrap-pi.sh"'
 
 [setup]
