@@ -84,6 +84,7 @@ local function setup()
   end
   hs.fs.attributes = function(path)
     if path:match("cdp%.mjs$") and not state.missingCdp then return {} end
+    if path == "/opt/homebrew/bin/tmux" and state.homebrewTmux then return {} end
   end
   hs.fs.mkdir = function() return true end
   io.open = function(_, mode)
@@ -193,12 +194,27 @@ for name, mutate in pairs({
 test("eligible chord uses bounded helper and defers browser work", function(s)
   assert(#s.mock.hotkeys == 0, "no global hotkey")
   assert(s.press() == true)
-  assert(s.focusCommand:find("/opt/homebrew/bin/gtimeout --signal=KILL 0.20 python3", 1, true))
+  assert(s.focusCommand:find("/opt/homebrew/bin/gtimeout --signal=KILL 0.20 /usr/bin/python3", 1, true))
   assert(s.focusCommand:find("'project:2:1:100 pi'", 1, true))
   assert(s.cdpCalls == 0 and s.writes == 0)
   s.mock.advance(0)
   assert(s.activated == 1 and s.inspected == 1 and s.binding.targetPrefix == "ABC123")
   assert(s.binding.appUrl == "http://localhost:4123" and #s.watchers == 1)
+end)
+
+test("helper runs on a real tmux and the system PATH, never mise shims", function(s)
+  s.homebrewTmux = true
+  assert(s.press() == true)
+  assert(s.focusCommand:find("PATH='/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin' /opt/homebrew/bin/gtimeout", 1, true))
+  local helper = s.focusCommand:sub(s.focusCommand:find("{ PATH=", 1, true))
+  assert(not helper:find("mise/shims", 1, true))
+end)
+
+test("helper falls back to the global PATH when no real tmux is found", function(s)
+  PATH = "/Users/x/.local/share/mise/shims:/usr/bin:/bin"
+  assert(s.press() == true)
+  assert(s.focusCommand:find("PATH='/Users/x/.local/share/mise/shims:/usr/bin:/bin' /opt/homebrew/bin/gtimeout", 1, true))
+  PATH = nil
 end)
 
 test("unrelated keys and modifiers pass through", function(s)

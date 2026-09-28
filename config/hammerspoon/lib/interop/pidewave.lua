@@ -23,6 +23,15 @@ M.name = "pidewave"
 local DOTFILES = os.getenv("HOME") .. "/.dotfiles"
 local FOCUS_HELPER = DOTFILES .. "/config/hammerspoon/lib/interop/pidewave-focus.py"
 local FOCUS_TIMEOUT = 0.20
+-- The helper execs python plus several tmux calls inside FOCUS_TIMEOUT. A mise
+-- shim costs ~0.5 s per exec, so it runs on the system python and a real tmux.
+local FOCUS_PYTHON = "/usr/bin/python3"
+local FOCUS_TMUX_DIRS = {
+  os.getenv("HOME") .. "/.local/share/mise/installs/tmux/latest",
+  "/opt/homebrew/bin",
+  "/usr/local/bin",
+}
+local FOCUS_SYSTEM_PATH = "/usr/bin:/bin:/usr/sbin:/sbin"
 local WT_FOR_PORT_SH = DOTFILES .. "/config/mise/tmpls/elixir/scripts/worktree-for-port.sh"
 local CDP = os.getenv("HOME") .. "/.pi/agent/skills/chrome-cdp/scripts/cdp.mjs"
 local CDP_PORT = 9223
@@ -104,14 +113,23 @@ end
 
 -- The watchdog bounds the entire gate, including filesystem reads and all
 -- subprocesses. Slow/missing helpers pass the key through, never use a cache.
+local function focusPath()
+  for _, dir in ipairs(FOCUS_TMUX_DIRS) do
+    if hs.fs.attributes(dir .. "/tmux") then return dir .. ":" .. FOCUS_SYSTEM_PATH end
+  end
+  return rawget(_G, "PATH") or os.getenv("PATH") or FOCUS_SYSTEM_PATH
+end
+
 local function focusedConnection()
   local windowId, title = focusedTerminal()
   if not title or not title:match("^[^:]+:%d+:%d+:%d+%s") then return nil end
   local started = hs.timer.absoluteTime()
   local raw = sh(
     string.format(
-      "/opt/homebrew/bin/gtimeout --signal=KILL %.2f python3 %s %s %s",
+      "PATH=%s /opt/homebrew/bin/gtimeout --signal=KILL %.2f %s %s %s %s",
+      shellQuote(focusPath()),
       FOCUS_TIMEOUT,
+      FOCUS_PYTHON,
       shellQuote(FOCUS_HELPER),
       shellQuote(MANIFEST_DIR),
       shellQuote(title)
