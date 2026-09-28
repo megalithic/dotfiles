@@ -90,7 +90,6 @@ JJ_EDITOR = "nvim -O"
 MANPAGER = "nvim +Man!"
 # MANPAGER = "less -X"
 PLUG_EDITOR = "zed://file/__FILE__:__LINE__"
-ECTO_EDITOR = "zed __FILE__:__LINE__"
 ELIXIR_EDITOR = "zed __FILE__:__LINE__"
 
 _.path = [
