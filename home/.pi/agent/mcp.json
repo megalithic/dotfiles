@@ -1,6 +1,7 @@
 {
 	"settings": {
 		"mcpFooterStatus": "compact",
+		"allowInstall": false,
 		"jev": {
 			"semanticSearch": true,
 			"scriptEvaluation": true,
