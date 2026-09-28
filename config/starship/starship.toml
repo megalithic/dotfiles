@@ -210,11 +210,16 @@ style = "#7c8377"
 format = '[$output](fg:$style)'
 
 [directory]
-truncation_length = 2
-truncation_symbol = "…/"
-truncate_to_repo = true
-fish_style_pwd_dir_length = 1
+# truncation_length = 2
+# truncation_symbol = "…/"
+# truncate_to_repo = true
+# fish_style_pwd_dir_length = 1
+# style = "bold blue"
+
 style = "bold blue"
+truncation_length = 0
+truncate_to_repo = false
+home_symbol = "~"
 
 # [directory]
 # format = "[$path](bold $style)[$read_only]($read_only_style) "
