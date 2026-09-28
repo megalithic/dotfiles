@@ -47,8 +47,8 @@ The service worker bypasses `/api/` requests. It uses `/` as the cache key for n
 
 ## Validation and rollout
 
-The gateway smoke test covers the HTTP-to-bridge path, while Bun tests under `config/pi-coding-agent/tests/` cover notifications and bridge activity state.
+The gateway smoke test covers the HTTP-to-bridge path, while Bun tests under `home/.pi/tests/` cover notifications and bridge activity state.
 
-`config/pi-control-web/tests/smoke-test.mjs` starts a mock `pi.control.v1` socket and an ephemeral gateway. It checks authentication, response sanitization, latest-message reads, both send modes, SSE snapshots, and shutdown with an open SSE client. Notification and bridge-state tests live under `config/pi-coding-agent/tests/`.
+`config/pi-control-web/tests/smoke-test.mjs` starts a mock `pi.control.v1` socket and an ephemeral gateway. It checks authentication, response sanitization, latest-message reads, both send modes, SSE snapshots, and shutdown with an open SSE client. Notification and bridge-state tests live under `home/.pi/tests/`.
 
 The LaunchAgent and Tailscale Serve route can be validated locally, but final rollout still requires two external checks: apply and inspect the central tailnet policy, then verify login, session reads, both delivery modes, live status, and Home Screen installation from `megaphone`. Existing Pi processes must restart before they load changed extension code.
