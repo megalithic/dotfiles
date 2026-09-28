@@ -62,10 +62,11 @@ type BindingFixture = {
 const lifecycle = () => {
   const hooks = new Map<string, Hook>();
 
-  // SAFETY: Only lifecycle registration, shared events and getThinkingLevel are used.
+  // SAFETY: Only lifecycle and command registration, shared events and getThinkingLevel are used.
   const pi = {
     events: { emit: () => {}, on: () => () => {} },
     on: (name: string, hook: Hook) => { hooks.set(name, hook); },
+    registerCommand: () => {},
     getThinkingLevel: () => "off",
   } as ExtensionAPI;
 

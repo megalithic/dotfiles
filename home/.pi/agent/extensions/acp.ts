@@ -491,6 +491,13 @@ const MCP_REGISTER_EVENT = "pi-mcp-adapter:runtime-register:v1";
 
 const MCP_SNAPSHOT_EVENT = "pi-mcp-adapter:runtime-snapshot:v1";
 
+// /pidewave hands off across /reload: the old runtime opens the handoff, the
+// reloaded runtime attaches its own reconnect callback.
+type ReloadHandoff = { reconnect?: () => Promise<void> };
+
+// SAFETY: Only this file reads or writes this dotfiles-owned global slot.
+const shared = globalThis as typeof globalThis & { __dotfilesPidewaveHandoff?: ReloadHandoff };
+
 type RuntimeRegistration = { dispose(): Promise<void> };
 
 type RegistrationRequest = {
@@ -561,10 +568,16 @@ export default function (pi: ExtensionAPI): void {
 	let registration: RuntimeRegistration | undefined;
 	let registeredUrl: URL | undefined;
 	let unsubscribeStatus: (() => void) | undefined;
+	// Latest adapter status for tidewave and whether our runtime registration owns it.
+	let tidewaveStatus: string | undefined;
+	let owned = false;
+	let onTidewaveStatus: (() => void) | undefined;
 
 	const revokeEndpoint = (): void => pi.events.emit(ENDPOINT_EVENT, { version: 1 });
 
 	const publishEndpoint = (): void => {
+		owned = false;
+
 		if (stopped || !registration || !registeredUrl) return;
 		const request: SnapshotRequest = { version: 1, name: "tidewave" };
 
@@ -575,6 +588,7 @@ export default function (pi: ExtensionAPI): void {
 			// Acceptance can precede startup; a configured server may still shadow us.
 			if (snapshot?.name === "tidewave" && snapshot.runtime === true && snapshot.persisted === false &&
 				snapshot.definition?.url === registeredUrl.href) {
+				owned = true;
 				pi.events.emit(ENDPOINT_EVENT, {
 					version: 1,
 					endpoint: { origin: registeredUrl.origin, pathname: registeredUrl.pathname },
@@ -607,7 +621,16 @@ export default function (pi: ExtensionAPI): void {
 			if (request.result?.ok !== true) throw new Error("Registration unavailable");
 			registration = request.result.registration;
 			registeredUrl = url;
-			unsubscribeStatus = pi.events.on(MCP_STATUS_EVENT, publishEndpoint);
+			unsubscribeStatus = pi.events.on(MCP_STATUS_EVENT, (data: JsonValue) => {
+				const servers = isJsonObject(data) && Array.isArray(data.servers)
+					? data.servers.filter((server) => isJsonObject(server) && server.name === "tidewave")
+					: [];
+
+				const server = servers.length === 1 && isJsonObject(servers[0]) ? servers[0] : undefined;
+				tidewaveStatus = server?.disabled === true ? "disabled" : isJsonString(server?.status) ? server.status : undefined;
+				publishEndpoint();
+				onTidewaveStatus?.();
+			});
 			publishEndpoint();
 		} catch {
 			revokeEndpoint();
@@ -642,11 +665,84 @@ export default function (pi: ExtensionAPI): void {
 		}
 	};
 
-	pi.on("session_start", (_e, ctx) => {
+	// Runs in the reloaded runtime, after /reload has fully finished.
+	const reconnectTidewave = async (ctx: ExtensionContext): Promise<void> => {
+		if (stopped) return;
+
+		if (!registration) {
+			ctx.ui.notify("Pidewave: reloaded, but no Tidewave endpoint is registered for this project.", "warning");
+
+			return;
+		}
+
+		// Without the adapter's command the text would reach the model as chat.
+		if (!pi.getCommands().some((command) => command.name === "mcp")) {
+			ctx.ui.notify("Pidewave: reloaded, but the /mcp command is unavailable.", "error");
+
+			return;
+		}
+
+		// The adapter publishes status before its reconnect command returns;
+		// wait briefly only if no tidewave status arrived meanwhile.
+		tidewaveStatus = undefined;
+		await pi.sendUserMessage("/mcp reconnect tidewave", { expandPromptTemplates: true });
+
+		if (tidewaveStatus === undefined) {
+			await new Promise<void>((resolve) => {
+				const timer = setTimeout(done, 3000);
+
+				function done(): void {
+					clearTimeout(timer);
+					onTidewaveStatus = undefined;
+					resolve();
+				}
+
+				onTidewaveStatus = done;
+			});
+		}
+
+		if (stopped) return;
+		const origin = registeredUrl?.origin;
+
+		if (owned && tidewaveStatus === "connected") {
+			ctx.ui.notify(`Pidewave: Tidewave connected at ${origin}.`, "info");
+
+			return;
+		}
+
+		const reason = !owned
+			? "the runtime registration is not active; a configured tidewave server may shadow it"
+			: `adapter status: ${tidewaveStatus ?? "no status reported"}; check that Phoenix is running there`;
+
+		ctx.ui.notify(`Pidewave: Tidewave did not connect at ${origin} (${reason}).`, "error");
+	};
+
+	pi.registerCommand("pidewave", {
+		description: "Reload Pi, then reconnect the project's Tidewave MCP server",
+		handler: async (_args, ctx) => {
+			const handoff: ReloadHandoff = {};
+			shared.__dotfilesPidewaveHandoff = handoff;
+
+			try {
+				await ctx.reload();
+			} finally {
+				delete shared.__dotfilesPidewaveHandoff;
+			}
+
+			// Unset when reload refused (streaming or compacting); it already said why.
+			await handoff.reconnect?.();
+		},
+	});
+
+	pi.on("session_start", (e, ctx) => {
 		clearInterval(poll);
 		poll = undefined;
 		lastStatus = undefined;
 		startEndpoint(ctx);
+
+		const handoff = shared.__dotfilesPidewaveHandoff;
+
+		if (e.reason === "reload" && handoff) handoff.reconnect = () => reconnectTidewave(ctx);
 
 		if (!ctx.hasUI) return;
 

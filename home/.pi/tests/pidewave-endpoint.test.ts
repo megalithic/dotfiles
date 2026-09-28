@@ -32,11 +32,16 @@ afterEach(async () => {
 type Request = {
   version: number;
   name: string;
+  servers?: { name: string; status: string; disabled: boolean }[];
   definition?: { httpTransport: string; url: string; lifecycle: string };
   result?: unknown;
 };
 
 type Hook = (event: { reason?: string }, ctx: ExtensionContext) => void | Promise<void>;
+
+type CommandHandler = (args: string, ctx: { reload: () => Promise<void> }) => Promise<void>;
+
+type SendOptions = { expandPromptTemplates?: boolean };
 
 type SnapshotFixture = {
   name?: string;
@@ -72,9 +77,11 @@ const eventBus = () => {
 
 const harness = (options: {
   trusted?: boolean; hasUI?: boolean; adapter?: boolean; active?: boolean;
-  bus?: ReturnType<typeof eventBus>;
+  bus?: ReturnType<typeof eventBus>; cwd?: string; commands?: string[];
+  // Adapter status the reconnect command publishes before returning.
+  reconnectStatus?: string;
 } = {}) => {
-  const cwd = fs.mkdtempSync("/tmp/pidewave-endpoint-");
+  const cwd = options.cwd ?? fs.mkdtempSync("/tmp/pidewave-endpoint-");
   const file = path.join(cwd, ".pi", "mcp.json");
   const hooks = new Map<string, Hook>();
   const bus = options.bus ?? eventBus();
@@ -105,8 +112,22 @@ const harness = (options: {
     }));
   }
 
-  // SAFETY: Exercise only lifecycle hooks and the synchronous shared event contract.
-  const pi = { on: (name: string, hook: Hook) => hooks.set(name, hook), events: { on, emit } } as ExtensionAPI;
+  const commands = new Map<string, CommandHandler>();
+  const sent: [string, SendOptions][] = [];
+
+  // SAFETY: Exercise only lifecycle hooks, commands, and the synchronous shared event contract.
+  const pi = {
+    on: (name: string, hook: Hook) => hooks.set(name, hook), events: { on, emit },
+    registerCommand: (name: string, command: { handler: CommandHandler }) => { commands.set(name, command.handler); },
+    getCommands: () => (options.commands ?? ["mcp"]).map((name) => ({ name })),
+    sendUserMessage: async (text: string, sendOptions: SendOptions) => {
+      sent.push([text, sendOptions]);
+
+      if (options.reconnectStatus) {
+        emit(STATUS, { version: 1, name: "unused", servers: [{ name: "tidewave", status: options.reconnectStatus, disabled: false }] });
+      }
+    },
+  } as ExtensionAPI;
 
   // SAFETY: Endpoint and footer hooks only use these context fields.
   const ctx = {
@@ -118,11 +139,11 @@ const harness = (options: {
   } as ExtensionContext;
 
   acp(pi);
-  const fire = (name: string) => hooks.get(name)?.({}, ctx);
+  const fire = (name: string, event: { reason?: string } = {}) => hooks.get(name)?.(event, ctx);
   cleanups.push(async () => { await fire("session_shutdown"); });
 
   return {
-    pi, ctx, requests, publications, notices, dispose, file, fire, bus,
+    pi, ctx, requests, publications, notices, dispose, file, fire, bus, commands, sent,
     stopAdapter: () => { for (const off of adapterUnsubscribers.splice(0)) off(); },
     write: (config: ConfigFixture = { pidewave: { url } }) => {
       fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -346,6 +367,110 @@ describe("Pidewave runtime endpoint", () => {
     await stopping;
     expect(next.endpoint()).toEqual(published("http://localhost:4400"));
     expect(h.dispose).toHaveBeenCalledTimes(1);
+  });
+
+  describe("/pidewave", () => {
+    const handoff = "__dotfilesPidewaveHandoff";
+
+    // Simulates Pi's reload: old runtime shuts down, a fresh one starts with reason "reload".
+    const reloadInto = (h: ReturnType<typeof harness>, options: Parameters<typeof harness>[0] = {}) => {
+      const order: string[] = [];
+      let next: ReturnType<typeof harness> | undefined;
+
+      const ctx = {
+        reload: async () => {
+          await h.fire("session_shutdown");
+          h.stopAdapter();
+          next = harness({ bus: h.bus, cwd: h.ctx.cwd, ...options });
+          next.fire("session_start", { reason: "reload" });
+          order.push("reloaded");
+        },
+      };
+
+      return {
+        order,
+        next: () => next!,
+        run: async () => { await h.commands.get("pidewave")!("", ctx); order.push("returned"); },
+      };
+    };
+
+    test("reloads, reconnects from the reloaded runtime, and confirms the connection", async () => {
+      const h = harness();
+      h.write();
+      h.fire("session_start");
+      const reload = reloadInto(h, { reconnectStatus: "connected" });
+      await reload.run();
+      expect(reload.order).toEqual(["reloaded", "returned"]);
+      expect(h.sent).toEqual([]);
+      expect(reload.next().sent).toEqual([["/mcp reconnect tidewave", { expandPromptTemplates: true }]]);
+      expect(reload.next().endpoint()).toEqual(published());
+      expect(reload.next().notices).toEqual(["Pidewave: Tidewave connected at http://localhost:4300."]);
+      expect(Object.hasOwn(globalThis, handoff)).toBe(false);
+    });
+
+    test("reports a failed reconnect with the adapter status", async () => {
+      const h = harness();
+      h.write();
+      h.fire("session_start");
+      const reload = reloadInto(h, { reconnectStatus: "failed" });
+      await reload.run();
+      expect(reload.next().notices).toEqual([
+        "Pidewave: Tidewave did not connect at http://localhost:4300 (adapter status: failed; check that Phoenix is running there).",
+      ]);
+    });
+
+    test("reports a connected but shadowed registration as not connected", async () => {
+      const h = harness();
+      h.write();
+      h.fire("session_start");
+      const reload = reloadInto(h, { reconnectStatus: "connected", active: false });
+      await reload.run();
+      expect(reload.next().notices).toEqual([
+        "Pidewave: Tidewave did not connect at http://localhost:4300 (the runtime registration is not active; a configured tidewave server may shadow it).",
+      ]);
+    });
+
+    test("waits briefly, then reports when no status arrives", async () => {
+      const h = harness();
+      h.write();
+      h.fire("session_start");
+      const reload = reloadInto(h);
+      await reload.run();
+      expect(reload.next().notices).toEqual([
+        "Pidewave: Tidewave did not connect at http://localhost:4300 (adapter status: no status reported; check that Phoenix is running there).",
+      ]);
+    }, 10_000);
+
+    test("a refused reload sends nothing and does not arm later reloads", async () => {
+      const h = harness();
+      h.write();
+      h.fire("session_start");
+      await h.commands.get("pidewave")!("", { reload: async () => {} });
+      expect(Object.hasOwn(globalThis, handoff)).toBe(false);
+      const next = harness({ bus: h.bus, cwd: h.ctx.cwd });
+      next.fire("session_start", { reason: "reload" });
+      expect(h.sent).toEqual([]);
+      expect(next.sent).toEqual([]);
+    });
+
+    test("without a registered endpoint it warns instead of reconnecting", async () => {
+      const h = harness();
+      h.fire("session_start");
+      const reload = reloadInto(h);
+      await reload.run();
+      expect(reload.next().sent).toEqual([]);
+      expect(reload.next().notices).toEqual(["Pidewave: reloaded, but no Tidewave endpoint is registered for this project."]);
+    });
+
+    test("never sends chat text when /mcp is unavailable", async () => {
+      const h = harness();
+      h.write();
+      h.fire("session_start");
+      const reload = reloadInto(h, { commands: [] });
+      await reload.run();
+      expect(reload.next().sent).toEqual([]);
+      expect(reload.next().notices).toEqual(["Pidewave: reloaded, but the /mcp command is unavailable."]);
+    });
   });
 
   test("adapter disposal failure is contained", async () => {
