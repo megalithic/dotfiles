@@ -171,34 +171,29 @@ if not hs.ipc.cliStatus() then hs.ipc.cliInstall() end
 require("hs.ipc")
 
 --------------------------------------------------------------------------------
--- PATH SETUP (for mise/Homebrew binaries in GUI app context)
+-- PATH AND TASK ENVIRONMENT (GUI app context lacks the shell's setup)
 --------------------------------------------------------------------------------
--- Load mise-owned PATH data from ~/.local/share/hammerspoon/nix_path.lua.
--- mise links the committed fragment from mise/fragments/hammerspoon/nix_path.lua.
-local dataHome = os.getenv("HOME") .. "/.local/share/hammerspoon"
-package.path = package.path .. ";" .. dataHome .. "/?.lua"
-
-pcall(require, "nix_path")
-NIX_PATH = NIX_PATH or nil
-NIX_ENV = NIX_ENV or {} -- Environment variables from Nix (NOTES_HOME, XDG_*, etc.)
-if NIX_PATH then
-  PATH = table.concat({
-    NIX_PATH,
-    "/opt/homebrew/bin",
-    os.getenv("HOME") .. "/.dotfiles/bin",
-    os.getenv("HOME") .. "/bin",
-    os.getenv("HOME") .. "/.local/bin",
-    os.getenv("HOME") .. "/.cargo/bin",
-    os.getenv("PATH"),
-  }, ":")
-else
-  PATH = table.concat({
-    "/opt/homebrew/bin",
-    os.getenv("HOME") .. "/.dotfiles/bin",
-    os.getenv("HOME") .. "/bin",
-    os.getenv("PATH"),
-  }, ":")
-end
+-- mise shims lead so every hs.task shell-out reaches mise-managed tools.
+-- overrides.lua injects PATH and TASK_ENV into each hs.task environment.
+local home = os.getenv("HOME")
+PATH = table.concat({
+  home .. "/.local/share/mise/shims",
+  "/opt/homebrew/bin",
+  home .. "/.dotfiles/bin",
+  home .. "/bin",
+  home .. "/.local/bin",
+  home .. "/.cargo/bin",
+  os.getenv("PATH"),
+}, ":")
+TASK_ENV = {
+  NOTES_HOME = home .. "/iclouddrive/Documents/_notes",
+  OBSIDIAN_HOME = home .. "/iclouddrive/Documents/_notes",
+  NVIM_DB_HOME = home .. "/protondrive/configs/sql",
+  DOTS = home .. "/.dotfiles",
+  XDG_CONFIG_HOME = home .. "/.config",
+  XDG_DATA_HOME = home .. "/.local/share",
+  XDG_CACHE_HOME = home .. "/.cache",
+}
 
 -- Load monkey-patches (must come AFTER PATH is set)
 require("overrides")

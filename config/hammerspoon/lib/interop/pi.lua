@@ -25,9 +25,7 @@ local M = {}
 local function join_path(...) return table.concat({ ... }, "/") end
 
 local home = os.getenv("HOME") or "~"
-local xdgStateHome = (NIX_ENV and NIX_ENV.XDG_STATE_HOME)
-  or os.getenv("XDG_STATE_HOME")
-  or join_path(home, ".local", "state")
+local xdgStateHome = os.getenv("XDG_STATE_HOME") or join_path(home, ".local", "state")
 local PI_STATE_DIR = os.getenv("PI_STATE_DIR") or join_path(xdgStateHome, "pi")
 local SOCKET_DIR = join_path(PI_STATE_DIR, "sockets")
 local MANIFEST_DIR = join_path(PI_STATE_DIR, "manifests")

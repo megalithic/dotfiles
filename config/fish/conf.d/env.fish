@@ -1,10 +1,4 @@
-# Portable environment setup. Nix-specific PATH setup is generated at ~/.local/share/fish/nix.fish.
-
-set -l data_home "$XDG_DATA_HOME"
-test -z "$data_home"; and set data_home "$HOME/.local/share"
-
-set -l nix_fish "$data_home/fish/nix.fish"
-test -f "$nix_fish"; and source "$nix_fish"
+# Portable environment setup.
 
 set -g fish_prompt_pwd_dir_length 20
 

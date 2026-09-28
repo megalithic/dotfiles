@@ -138,7 +138,7 @@ in
   programs = {
     bash.enable = true;
     # fish: mise/brew-owned (shells wave); babelfish env import replaced by
-    # mise fragments/fish/nix.fish.
+    # the guarded Nix-profile PATH entries in config/fish/conf.d/00-path.fish.
     gnupg.agent = {
       enable = true;
       enableSSHSupport = true;

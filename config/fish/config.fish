@@ -1,6 +1,5 @@
 # Standalone fish config — non-nix port of nix/home/common/programs/fish.
 # No external plugins; everything lives in this directory.
-# Nix-only setup still loads from ~/.local/share/fish/nix.fish when present (see conf.d/env.fish).
 
 if status is-interactive
     set -g fish_greeting

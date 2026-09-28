@@ -38,14 +38,13 @@ hs.task.new = function(launchPath, callbackFnOrStreamFn, streamFnOrArgs, argumen
   end
 
   if task then
-    -- Merge PATH and NIX_ENV into inherited environment (don't replace everything)
+    -- Merge PATH and TASK_ENV (preflight.lua) into the inherited environment
+    -- (don't replace everything)
     local env = task:environment() or {}
     if PATH then env.PATH = PATH end
     if not env.HOME then env.HOME = os.getenv("HOME") end
-    -- Inject mise-owned environment variables (NOTES_HOME, XDG_*, etc.).
-    -- NIX_ENV is loaded from the committed nix_path.lua compatibility fragment.
-    if NIX_ENV then
-      for k, v in pairs(NIX_ENV) do
+    if TASK_ENV then
+      for k, v in pairs(TASK_ENV) do
         if v and v ~= "" then env[k] = v end
       end
     end

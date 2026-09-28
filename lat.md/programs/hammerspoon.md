@@ -10,7 +10,7 @@ The former HM module (`nix/home/common/programs/hammerspoon/`) is removed; its l
 
 The old setup installed `pkgs.brewCasks.hammerspoon`, generated `nix_path.lua`, and ran a launchd launcher agent that opened the Home Manager Apps copy. Duplicates happened because macOS window-resume relaunched the previous session's raw `/nix/store/...` path while the launchd agent opened the HM Apps path, and every rebuild minted a new store path that LaunchServices registered as a distinct app.
 
-Now Hammerspoon's own `hs.autoLaunch` login item points at stable `/Applications/Hammerspoon.app`. mise owns `MJConfigFile`, and no Hammerspoon launch agent, Home Manager app copy, or nix-darwin preference remains. `~/.local/share/hammerspoon/nix_path.lua` is the committed static `mise/fragments/hammerspoon/nix_path.lua` (mise shims PATH; the `NIX_PATH`/`NIX_ENV` global names are kept for compatibility).
+Now Hammerspoon's own `hs.autoLaunch` login item points at stable `/Applications/Hammerspoon.app`. mise owns `MJConfigFile`, and no Hammerspoon launch agent, Home Manager app copy, or nix-darwin preference remains. `config/hammerspoon/preflight.lua` sets the global `PATH` (mise shims first, then Homebrew and `~/bin` paths) and `TASK_ENV` (NOTES_HOME, XDG_*, DOTS) inline; `overrides.lua` injects both into every `hs.task`. The former `~/.local/share/hammerspoon/nix_path.lua` fragment and its `NIX_PATH`/`NIX_ENV` globals are gone.
 
 The old nix twin `config/hammerspoon/` is retired and no longer linked anywhere; `config/hammerspoon/` is the sole source. Historical divergences that lived across the twins (kanata `daemonLabel` `dev.mise.` prefix, kanata stderr log path) are now just the mise values — the `dev.mise.` label comment in `config.lua` remains until kanata's own ownership is unified. EmmyLua's generated `annotations/timestamps.json` is repo-ignored runtime state.
 
@@ -40,7 +40,7 @@ Kanata switches are serialized. If USB state changes during a switch, the newest
 
 `bin/hs-reload` prefers `open -g hammerspoon://hs-reload`, which Hammerspoon handles inside its own process by calling the wrapped `hs.reload()` cleanup path. It does not use `hs` CLI reload or `hs` CLI menu selection, because those IPC paths can crash/kill Hammerspoon while reloading.
 
-If the running config is too old to have the URL handler, `bin/hs-reload` falls back to a System Events menu click and fails with an Accessibility-permission error instead of trying unsafe IPC fallbacks. Hammerspoon's preflight adds `~/.local/share/hammerspoon` to Lua `package.path` so generated data-only fragments such as `fragments/shade-next.lua` can be required without editing the generated file.
+If the running config is too old to have the URL handler, `bin/hs-reload` falls back to a System Events menu click and fails with an Accessibility-permission error instead of trying unsafe IPC fallbacks. Hammerspoon loads no data from `~/.local/share/hammerspoon`; all configuration lives in `config/hammerspoon/`.
 
 ## Tidewave inspector handoff
 
@@ -78,7 +78,7 @@ Hammerspoon can act as the HTTP/S handler for app deep links while preserving br
 
 shade-next bindings are split between generated data and handwritten lifecycle code.
 
-mise `[dotfiles]` links `~/.local/share/hammerspoon/fragments/shade-next.lua` from the static `mise/fragments/hammerspoon/shade-next.lua` and `~/.config/shade-next/config.toml` from `config/shade-next/config.toml` (the former nix shade-next module that generated both is removed); `config/hammerspoon/shade_next.lua` reads the fragment. The panel design spec lives in `~/.local/share/pi/docs/shade-next/panel-design.md`.
+mise `[dotfiles]` links `~/.config/shade-next/config.toml` from `config/shade-next/config.toml` (the former nix shade-next module is removed). `config/hammerspoon/shade_next.lua` carries the app, launch, chord, and prefill data inline (derived from `HOME`), replacing the former `~/.local/share/hammerspoon/fragments/shade-next.lua` fragment. The panel design spec lives in `~/.local/share/pi/docs/shade-next/panel-design.md`.
 
 Key behavior: one panel-height rule across all states; block types are result cards, section lists, message rows, composer, and preview; Esc always hides the panel; route keys reserve Ctrl+n for note, Ctrl+p for Pi, Ctrl+c for calc. Compact launch geometry starts at `900×104` points and grows result panels to visible rows before clamping to the configured max height.
 

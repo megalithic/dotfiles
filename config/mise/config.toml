@@ -206,10 +206,6 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.config/nvim" = "~/.dotfiles/config/nvim"
 "~/.config/tmux" = "~/.dotfiles/config/tmux"
 
-# -- generated fragments → committed static files (replaces Home Manager Nix interpolation) --
-"~/.local/share/hammerspoon/nix_path.lua" = "~/.dotfiles/mise/fragments/hammerspoon/nix_path.lua"
-"~/.local/share/hammerspoon/fragments/shade-next.lua" = "~/.dotfiles/mise/fragments/hammerspoon/shade-next.lua"
-"~/.local/share/fish/nix.fish" = "~/.dotfiles/mise/fragments/fish/nix.fish"
 "~/.config/shade-next/config.toml" = "~/.dotfiles/config/shade-next/config.toml"
 
 # -- kanata: individual .kbd files (parent dir has mutable state; active kanata.kbd is mutable) --

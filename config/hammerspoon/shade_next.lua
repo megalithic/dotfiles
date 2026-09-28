@@ -1,25 +1,45 @@
 -- shade-next Hyper bindings.
 --
--- Loads the Nix-generated, data-only fragment at
--- ~/.local/share/hammerspoon/fragments/shade-next.lua. Hyper+return toggles
--- shade-next directly through its control channel; Hyper+n enters a shade-next
--- modal where keys like p/n prefill specific routes.
+-- Hyper+return toggles shade-next directly through its control channel;
+-- Hyper+n enters a shade-next modal where keys like p/n prefill specific
+-- routes.
 --
 -- This module stays INERT until shade-next is actually built/installed, so the
 -- current `shade` workflow is unaffected during the transition.
 
 local M = {}
 
-local FRAGMENT = os.getenv("HOME") .. "/.local/share/hammerspoon/fragments/shade-next.lua"
+local home = os.getenv("HOME")
 
-local function loadFragment()
-  local f = io.open(FRAGMENT, "r")
-  if not f then return nil end
-  f:close()
-  local ok, data = pcall(dofile, FRAGMENT)
-  if ok and type(data) == "table" then return data end
-  return nil
-end
+-- App, launch, and chord data (formerly a generated fragment under
+-- ~/.local/share/hammerspoon/fragments/).
+local CONFIG = {
+  app = {
+    name = "shade-next",
+    bundle_id = "io.shade.next",
+    url_scheme = "shade-next://",
+  },
+  launch = {
+    repo = home .. "/code/shade-next",
+    config = home .. "/.config/shade-next/config.toml",
+    socket = home .. "/.local/state/shade-next/shade-next.sock",
+    wrapper = home .. "/.local/share/mise/shims/shade-next",
+    binaries = {
+      debug = home .. "/code/shade-next/.build/debug/shade-next",
+      release = home .. "/code/shade-next/.build/release/shade-next",
+    },
+  },
+  chords = {
+    toggle = { mods = { "cmd" }, key = "return" },
+    search = { mods = { "cmd" }, key = "f" },
+  },
+  -- Keys inside the Hyper+n shade-next modal that launch/focus shade-next
+  -- prefilled with a route.
+  prefills = {
+    { mods = {}, key = "p", route = "pi", focus = true },
+    { mods = {}, key = "n", route = "note", focus = true },
+  },
+}
 
 -- Percent-encode a query value for the URL fallback.
 local function urlEncode(s)
@@ -119,11 +139,7 @@ local function binaryInstalled(frag)
 end
 
 function M:init(_)
-  local frag = loadFragment()
-  if not frag or not frag.app or not frag.app.bundle_id then
-    U.log.i("shade-next: no fragment found; skipping Hyper bindings")
-    return self
-  end
+  local frag = CONFIG
 
   -- Keep current `shade` untouched until shade-next is real.
   if not binaryInstalled(frag) then

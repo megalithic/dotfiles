@@ -22,7 +22,7 @@ The repo generates `/etc/nix/nix.custom.conf` declaratively (trusted users, extr
 
 `environment.systemPath` explicitly adds `/nix/var/nix/profiles/system/sw/bin` and `/opt/homebrew/bin` because Determinate Nix does not create the `/run/current-system` symlink.
 
-System programs enabled in common include `bash` and `gnupg.agent` with SSH support (`programs.fish`/babelfish removed - fish is mise/brew-owned and `mise/fragments/fish/nix.fish` imports the nix environment). Tailscale's standalone macOS package is mise-owned through `brew-cask:tailscale-app`; the former nix-darwin installer module is removed. The SSH auth socket points at 1Password's agent through `environment.extraInit`.
+System programs enabled in common include `bash` and `gnupg.agent` with SSH support (`programs.fish`/babelfish removed - fish is mise/brew-owned and `config/fish/conf.d/00-path.fish` adds the Nix profile bins when present). Tailscale's standalone macOS package is mise-owned through `brew-cask:tailscale-app`; the former nix-darwin installer module is removed. The SSH auth socket points at 1Password's agent through `environment.extraInit`.
 
 ## Homebrew and Mac App Store
 

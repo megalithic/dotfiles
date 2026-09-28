@@ -215,18 +215,12 @@ Rules:
   scripts installed for activation
 - Test activation from both interactive terminal AND agent/tmux context
 
-### Nix-generated config fragments
+### No generated config fragments
 
-For config files that need nix-interpolated values but live in out-of-store
-symlinked directories:
-
-1. Generate a fragment file via `xdg.dataFile` (e.g.,
-   `~/.local/share/fish/nix.fish`)
-2. Source it from the main config file
-
-Pattern (already used):
-
-- `~/.local/share/fish/nix.fish` - Nix profile paths for Fish
+Do not generate fragment files under `~/.local/share/...` for config that needs
+host-specific values. Derive paths from `$HOME`/`$USER` inside the committed
+config and guard host-only entries with existence checks (see
+`config/fish/conf.d/00-path.fish` and `config/hammerspoon/preflight.lua`).
 
 ### Custom app packages (nix/pkgs/default.nix)
 
