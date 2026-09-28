@@ -28,6 +28,8 @@ async function inspect(initial = {}, onTick = () => {}) {
     ariaDisabled: false,
     connected: true,
     visible: true,
+    pillPresent: true,
+    expandEvents: [],
     width: 20,
     height: 20,
     readyState: "complete",
@@ -50,10 +52,27 @@ async function inspect(initial = {}, onTick = () => {}) {
     classList: { contains: (name) => name === "bg-accent" && state.selected },
     click() { state.clicks++; },
   };
+  const pill = {
+    dispatchEvent(event) {
+      state.expandEvents.push(event);
+      return true;
+    },
+  };
+  const logo = { parentElement: pill };
   const root = {
     querySelectorAll: () => state.buttonPresent ? [button] : [],
-    querySelector: (selector) => selector === '[data-testid="inspector-panel"]' && state.panel ? {} : null,
+    querySelector(selector) {
+      if (selector === '[data-testid="inspector-panel"]') return state.panel ? {} : null;
+      if (selector === '[aria-label="Tidewave"]') return state.pillPresent ? logo : null;
+      return null;
+    },
   };
+  class MouseEvent {
+    constructor(type, init = {}) {
+      this.type = type;
+      this.bubbles = init.bubbles === true;
+    }
+  }
   const context = {
     location: {
       get origin() { return state.origin; },
@@ -69,6 +88,7 @@ async function inspect(initial = {}, onTick = () => {}) {
       },
     },
     Date: { now: () => state.now },
+    MouseEvent,
     setTimeout(callback, delay) { timers.push({ callback, at: state.now + delay }); },
   };
   const pending = script.runInNewContext(context, { timeout: 1000 });
@@ -82,6 +102,56 @@ async function inspect(initial = {}, onTick = () => {}) {
   }
   return { result: await pending, ...state };
 }
+
+test("collapsed toolbar gets one mouseover on the logo pill, then clicks once visible", async () => {
+  const result = await inspect({ visible: false }, (state) => {
+    assert.equal(state.expandEvents.length, 1);
+    if (state.now >= 300) state.visible = true;
+    if (state.now >= 400) assert.equal(state.clicks, 1);
+    if (state.now >= 500) {
+      state.selected = true;
+      state.panel = true;
+    }
+  });
+  assert.equal(result.result, "active");
+  assert.equal(result.expandEvents.length, 1);
+  assert.equal(result.expandEvents[0].type, "mouseover");
+  assert.equal(result.expandEvents[0].bubbles, true);
+  assert.equal(result.clicks, 1);
+  assert.equal(result.now, 500);
+});
+
+test("already-expanded toolbar is not hovered again", async () => {
+  const result = await inspect({}, (state) => {
+    state.selected = true;
+    state.panel = true;
+  });
+  assert.equal(result.result, "active");
+  assert.equal(result.expandEvents.length, 0);
+  assert.equal(result.clicks, 1);
+});
+
+for (const [name, initial] of [
+  ["disabled button", { visible: false, disabled: true }],
+  ["loading page", { visible: false, readyState: "loading" }],
+  ["background page", { visible: false, visibilityState: "hidden" }],
+  ["missing pill", { visible: false, pillPresent: false }],
+]) {
+  test(`hidden button with ${name} never expands the toolbar`, async () => {
+    const result = await inspect(initial);
+    assert.equal(result.expandEvents.length, 0);
+    assert.equal(result.clicks, 0);
+    assert.equal(result.now, 4000);
+  });
+}
+
+test("expanded toolbar that stays hidden times out as expand-unconfirmed", async () => {
+  const result = await inspect({ visible: false });
+  assert.equal(result.result, "not-ready:complete:visible:toolbar:expand-unconfirmed");
+  assert.equal(result.expandEvents.length, 1);
+  assert.equal(result.clicks, 0);
+  assert.equal(result.now, 4000);
+});
 
 test("already-selected Inspect waits for delayed panel without clicking", async () => {
   const result = await inspect({ selected: true }, (state) => {
@@ -164,7 +234,7 @@ for (const [name, initial, clicks, suffix] of [
   ["missing shadow root", { shadowRootPresent: false }, 0, "toolbar:no-button"],
   ["missing button", { buttonPresent: false }, 0, "toolbar:no-button"],
   ["disabled button", { disabled: true }, 0, "toolbar:button-disabled"],
-  ["hidden button", { visible: false }, 0, "toolbar:button-hidden"],
+  ["hidden button without a pill", { visible: false, pillPresent: false }, 0, "toolbar:button-hidden"],
   ["unconfirmed click", {}, 1, "toolbar:click-unconfirmed"],
   ["selected button without panel", { selected: true }, 0, "toolbar:button"],
 ]) {

@@ -328,7 +328,9 @@ end
 
 -- Page.bringToFront selects the Chromium tab before Helium itself is activated.
 -- The in-page poll then refuses to click until that tab is visible, fully loaded,
--- and has an Inspect control in the Tidewave toolbar shadow root.
+-- and has an Inspect control in the Tidewave toolbar shadow root. The toolbar
+-- collapses to its logo pill until hovered (React onMouseEnter), so a hidden
+-- button gets one synthetic mouseover on the pill before the poll continues.
 local function focusHeliumAndInspect(target, origin, connection)
   local app = hs.application.get("net.imput.helium")
   if not app then return false, "Helium is not running." end
@@ -363,6 +365,7 @@ local function focusHeliumAndInspect(target, origin, connection)
     new Promise(resolve => {
       const deadline = Date.now() + 4000;
       let clicked = false;
+      let expanded = false;
       const inspect = () => {
         const localApp = location.origin === expectedOrigin
           && location.pathname !== '/tidewave'
@@ -382,16 +385,23 @@ local function focusHeliumAndInspect(target, origin, connection)
           : rect.width > 0 && rect.height > 0);
         const selected = visible && button.classList.contains('bg-accent');
         const active = selected && root.querySelector('[data-testid="inspector-panel"]');
-        if (document.readyState === 'complete' && document.visibilityState === 'visible' && active) {
+        const ready = document.readyState === 'complete' && document.visibilityState === 'visible';
+        if (ready && active) {
           resolve('active');
           return;
         }
-        if (document.readyState === 'complete' && document.visibilityState === 'visible' && visible && !selected && !clicked) {
+        const logo = root && root.querySelector('[aria-label="Tidewave"]');
+        const pill = logo && logo.parentElement;
+        if (ready && enabled && !visible && pill && !expanded) {
+          pill.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+          expanded = true;
+        }
+        if (ready && visible && !selected && !clicked) {
           button.click();
           clicked = true;
         }
         if (Date.now() >= deadline) {
-          const buttonState = !button ? 'no-button' : !enabled ? 'button-disabled' : !visible ? 'button-hidden' : clicked ? 'click-unconfirmed' : 'button';
+          const buttonState = !button ? 'no-button' : !enabled ? 'button-disabled' : !visible ? (expanded ? 'expand-unconfirmed' : 'button-hidden') : clicked ? 'click-unconfirmed' : 'button';
           resolve(`not-ready:${document.readyState}:${document.visibilityState}:${host ? 'toolbar' : 'no-toolbar'}:${buttonState}`);
           return;
         }
