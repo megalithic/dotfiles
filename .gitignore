@@ -37,6 +37,7 @@ todo.txt
 .elixir-tools
 .lexical
 node_modules
+__pycache__/
 .opencode
 .claude
 !.ignore
