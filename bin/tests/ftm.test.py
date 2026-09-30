@@ -1,6 +1,7 @@
 """Isolated ftm CLI regressions. Run with: python3 -B bin/tests/ftm.test.py"""
 
 import base64
+import fcntl
 import json
 import os
 from pathlib import Path
@@ -9,11 +10,14 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import termios
+import threading
 import unittest
 
 
 BIN = Path(__file__).resolve().parent.parent
 BASH = os.environ.get("FTM_TEST_BASH") or shutil.which("bash") or "/bin/bash"
+FZF = shutil.which("fzf")
 FAKE_COMMAND = r'''
 import glob
 import json
@@ -63,8 +67,11 @@ elif name == "trash":
             path = Path(match)
             path.rename(root / "trashed" / path.name)
 elif name == "fzf":
-    sys.stdin.read()
+    (root / "picker-rows").write_text(sys.stdin.read())
     print(os.environ.get("FZF_OUTPUT", ""), end="")
+elif name == "ftm-grid-preview":
+    if not args or args[0] != "--manifest-panes":
+        print("grid-preview")
 elif name == "mise":
     sys.exit(1)
 elif name == "ps":
@@ -114,7 +121,8 @@ elif name == "tmux":
         state[option("-s")] = {"id": "$99", "cwd": option("-c")}
         state_file.write_text(json.dumps(state))
     elif command in ("set-option", "setenv", "switch-client", "attach-session",
-                     "select-window", "select-pane", "select-layout", "respawn-pane"):
+                     "select-window", "select-pane", "select-layout", "respawn-pane",
+                     "rename-session"):
         pass
     else:
         print("Unexpected fake tmux command: " + repr(args), file=sys.stderr)
@@ -140,7 +148,8 @@ class FtmTest(unittest.TestCase):
         self.ftm = self.bin / "ftm"
         shutil.copy2(BIN / "ftm", self.ftm)
         shutil.copy2(BIN / "wt-lock-lib", self.bin / "wt-lock-lib")
-        for name in ("tmux", "wt", "zoxide", "trash", "fzf", "mise", "ps"):
+        for name in ("tmux", "wt", "zoxide", "trash", "fzf", "mise", "ps",
+                     "ftm-grid-preview"):
             path = self.bin / name
             path.write_text("#!" + sys.executable + "\n" + FAKE_COMMAND)
             path.chmod(0o755)
@@ -470,6 +479,126 @@ class FtmTest(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(result.stdout.splitlines(), ["managed", *pi_args])
 
+    def native_picker(self, rows, query, key):
+        self.run_ftm()
+        args = self.calls("fzf")[-1]["args"]
+        binding = next(arg for arg in args if arg.startswith(f"--bind={key}:"))
+        action = binding.split(":", 1)[1]
+        master, slave = os.openpty()
+        with os.fdopen(master, "rb", buffering=0) as terminal:
+            def drain():
+                try:
+                    while terminal.read(4096):
+                        pass
+                except OSError:
+                    pass
+            process = subprocess.Popen(
+                [FZF, "--no-height", "--no-tmux", "--ansi", "--delimiter=\t",
+                 "--with-nth=3..", "--print-query", "--query=" + query,
+                 "--with-shell=" + BASH + " -c", "--bind=load:" + action],
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=slave,
+                start_new_session=True, preexec_fn=lambda: fcntl.ioctl(2, termios.TIOCSCTTY, 0),
+                env={**self.env, "TERM": "xterm-256color"})
+            os.close(slave)
+            reader = threading.Thread(target=drain, daemon=True)
+            reader.start()
+            try:
+                output, _ = process.communicate(rows.encode(), timeout=8)
+                self.assertIn(process.returncode, (0, 1))
+                return output.decode()
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.wait()
+                reader.join(timeout=2)
+
+    @unittest.skipUnless(FZF, "native fzf is not installed")
+    def test_native_picker_accepts_identity_rows_and_no_match_queries(self):
+        row = " project ●  \t\tDisplay ICON\n"
+        for key in ("enter", "alt-enter"):
+            for query, selected in (("Display", True), ("missing", False)):
+                with self.subTest(key=key, query=query):
+                    output = self.native_picker(row, query, key)
+                    lines = output.splitlines()
+                    self.assertEqual(lines[0], query)
+                    self.assertEqual("__FTM_FRESH__" in lines, key == "alt-enter")
+                    self.assertEqual(row.rstrip("\n") in lines, selected)
+
+    def test_picker_identity_is_independent_of_status_icons(self):
+        name = " project ●  "
+        self.set_sessions({name: {"id": "$7", "cwd": str(self.root)}})
+        self.run_ftm()
+        rows = (self.root / "picker-rows").read_text().splitlines()
+        row = next(row for row in rows if row.startswith(name + "\t"))
+        self.assertEqual(row.split("\t", 2)[:2], [name, ""])
+        # A selected empty-path row must reset path/source from the query.
+        self.env["FZF_OUTPUT"] = "wrong\t/wrong/path\n" + row + "\n"
+        self.run_ftm()
+        switches = [c["args"] for c in self.calls("tmux") if c["args"][0] == "switch-client"]
+        self.assertEqual(switches[-1][1:3], ["-t", "$7"])
+        result = self.run_ftm("--preview=" + name + "\t\t")
+        self.assertEqual(result.stdout, "grid-preview\n")
+        self.assertEqual(self.calls("ftm-grid-preview")[-1]["args"], [name, "%1"])
+        self.assertFalse(any(c["args"][0] == "new-session" for c in self.calls("tmux")))
+
+    def test_status_glyphs_only_appear_in_display_fields(self):
+        self.set_sessions({"project": {"id": "$7", "cwd": str(self.root)}})
+        status = self.root / "pi" / "status" / "pi-project-agent.status"
+        status.parent.mkdir(parents=True)
+        self.ftm.write_text(self.ftm.read_text().replace("", "BUSY!").replace("", "IDLE!"))
+        for state, icon in (("working", "BUSY!"), ("asking", "BUSY!"), ("idle", "IDLE!")):
+            with self.subTest(state=state):
+                status.write_text(f"{state} {os.getpid()} project\n")
+                self.run_ftm()
+                row = (self.root / "picker-rows").read_text().splitlines()[0]
+                self.assertEqual(row.split("\t", 2)[:2], ["project", ""])
+                self.assertIn(icon, row.split("\t", 2)[2])
+
+    def test_directory_and_layout_rows_keep_data_out_of_display(self):
+        cwd = self.home / "dir with spaces"
+        cwd.mkdir()
+        (self.state / "recent").write_text(f"project\t{cwd}\n")
+        (self.layouts / "layout.sh").write_text("# layout preview\n")
+        self.run_ftm()
+        rows = (self.root / "picker-rows").read_text().splitlines()
+        directory = next(row for row in rows if row.startswith("project\t"))
+        layout = next(row for row in rows if row.startswith("layout\t"))
+        self.assertEqual(directory.split("\t")[:2], ["project", str(cwd)])
+        self.assertIn("~/dir with spaces", directory.split("\t", 2)[2])
+        self.assertEqual(layout.split("\t")[:2], ["layout", ""])
+        self.assertEqual(self.run_ftm("--preview=layout\t\t").stdout, "# layout preview\n")
+        preview = self.run_ftm("--preview=project\t" + str(cwd) + "\t")
+        self.assertIn("~/dir with spaces", preview.stdout)
+        self.env["FZF_OUTPUT"] = "query\n" + directory + "\n"
+        self.run_ftm()
+        create = next(c["args"] for c in self.calls("tmux") if c["args"][0] == "new-session")
+        self.assertEqual(create[create.index("-c") + 1], str(cwd))
+
+    def test_picker_omits_paths_with_row_delimiters(self):
+        cwd = self.home / "parent\tdir" / "project"
+        cwd.mkdir(parents=True)
+        (self.state / "recent").write_text(f"project\t{cwd}\n")
+        self.run_ftm()
+        self.assertNotIn("project", (self.root / "picker-rows").read_text())
+
+    def test_picker_kill_and_rename_use_exact_name_field(self):
+        self.name = " project ●  "
+        self.set_sessions({self.name: {"id": "$7", "cwd": str(self.root)}})
+        self.run_ftm()
+        args = self.calls("fzf")[-1]["args"]
+        self.assertIn("--with-nth=3..", args)
+        self.assertIn("--delimiter=\t", args)
+        for key, verb in (("ctrl-r", "rename-session"), ("ctrl-k", "kill-session")):
+            with self.subTest(key=key):
+                binding = next(arg for arg in args if arg.startswith(f"--bind={key}:"))
+                action = binding.split("(", 1)[1].rsplit(")+reload(", 1)[0]
+                result = subprocess.run([BASH, "-c", action.replace("{s1}", shlex.quote(self.name))],
+                                        input="renamed\n", env=self.env, cwd=self.root,
+                                        text=True, capture_output=True, timeout=15)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                call = next(c["args"] for c in self.calls("tmux") if c["args"][0] == verb)
+                self.assertEqual(call[call.index("-t") + 1], "$7")
+
     def test_picker_ctrl_x_confirms_forget_while_ctrl_k_preserves_snapshot(self):
         self.run_ftm()
         args = self.calls("fzf")[0]["args"]
@@ -486,8 +615,7 @@ class FtmTest(unittest.TestCase):
         args = self.calls("fzf")[-1]["args"]
         binding = next(arg for arg in args if arg.startswith("--bind=ctrl-x:"))
         action = binding.split("execute(", 1)[1].rsplit(")+reload(", 1)[0]
-        selection = self.name + "\t/selected/path"
-        return subprocess.run([BASH, "-c", action.replace("{}", shlex.quote(selection))],
+        return subprocess.run([BASH, "-c", action.replace("{s1}", shlex.quote(self.name))],
                               input=answer, env=self.env, cwd=self.root,
                               text=True, capture_output=True, timeout=15)
 

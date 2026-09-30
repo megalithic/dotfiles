@@ -1,5 +1,8 @@
 {
-	"provider": "exa",
+	"searchRouting": {
+		"providers": ["brave", "exa", "duckduckgo"],
+		"fallbackOn": ["transient", "quota", "network", "invalid-response"]
+	},
 	"workflow": "auto-summary",
 	"allowBrowserCookies": false
 }

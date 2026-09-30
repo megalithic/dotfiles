@@ -144,7 +144,7 @@ describe("pidewave binding status", () => {
     h.write({ cwd: `${h.cwd}/../${path.basename(h.cwd)}`, socket, appUrl: url }, `exact-${fixtureId}.json`);
     fs.writeFileSync(path.join(bindingDir, "00-malformed.json"), "{");
     h.fire("session_start");
-    expect(h.status()).toEqual({ url, boundHere: true });
+    expect(h.status()).toEqual({ url, boundHere: true, connected: false });
   });
 
   test("a malformed exact-cwd binding cannot fall through to a different slug binding", () => {
@@ -160,7 +160,7 @@ describe("pidewave binding status", () => {
     process.env.PI_SOCKET = socket;
     h.write({ cwd: "/old/location", socket, port: 4321 });
     h.fire("session_start");
-    expect(h.status()).toEqual({ url: "http://localhost:4321", boundHere: true });
+    expect(h.status()).toEqual({ url: "http://localhost:4321", boundHere: true, connected: false });
   });
 
   test.each([0, -1, 65536, 4.5, "4000", null])("rejects invalid fallback port %p", (port) => {
@@ -177,7 +177,7 @@ describe("pidewave binding status", () => {
     else process.env.PI_SOCKET = currentSocket;
     h.write({ socket, appUrl: url, port: 9999 });
     h.fire("session_start");
-    expect(h.status()).toEqual({ url, boundHere: currentSocket === socket });
+    expect(h.status()).toEqual({ url, boundHere: currentSocket === socket, connected: false });
   });
 
   test.each([undefined, "", 123, null, true, ["pi.sock"], { toString: "pi.sock" }].map((bindingSocket) => ({ bindingSocket })))("requires a nonempty binding socket (%p)", ({ bindingSocket }) => {
@@ -218,12 +218,12 @@ describe("pidewave binding status", () => {
     expect(timer.hasRef()).toBe(false);
     const file = h.write({ socket, appUrl: url });
     h.tick();
-    expect(h.status()).toEqual({ url, boundHere: true });
+    expect(h.status()).toEqual({ url, boundHere: true, connected: false });
     h.tick();
     expect(h.statusCalls).toHaveLength(2);
     h.write({ socket: "other.sock", appUrl: "https://app.test:4443/path" });
     h.tick();
-    expect(h.status()).toEqual({ url: "https://app.test:4443/path", boundHere: false });
+    expect(h.status()).toEqual({ url: "https://app.test:4443/path", boundHere: false, connected: false });
     // Remove it from the binding namespace, retaining the fixture for inspection.
     fs.renameSync(file, `${file}.deleted`);
     h.tick();
@@ -369,7 +369,7 @@ describe("standalone ACP boundaries", () => {
   );
 });
 
-const colors = new Map([["accent", "\x1b[36m"], ["muted", "\x1b[90m"]]);
+const colors = new Map([["accent", "\x1b[36m"], ["muted", "\x1b[90m"], ["success", "\x1b[32m"]]);
 
 const theme = {
   fg: (name: string, text: string) => `${colors.get(name) || "\x1b[37m"}${text}\x1b[0m`,
@@ -415,11 +415,11 @@ const footerHarness = (statuses: Map<string, string>) => {
   return (width = 240) => component.render(width);
 };
 
-const status = (boundHere = true, appUrl = "https://app.test:4443/path?query=hidden#fragment") =>
-  JSON.stringify({ url: appUrl, boundHere });
+const status = (boundHere = true, appUrl = "https://app.test:4443/path?query=hidden#fragment", connected?: boolean) =>
+  JSON.stringify({ url: appUrl, boundHere, connected });
 
 describe("pidewave footer rendering", () => {
-  test.each([true, false])("URL occurs once immediately after canonical MCP, boundHere=%p", (boundHere) => {
+  test.each([true, false])("URL occurs once, first among extension statuses, boundHere=%p", (boundHere) => {
     const render = footerHarness(new Map([
       ["pidewave", status(boundHere)], ["mcp-other", "1/2"],
       ["n-status", "between"], ["mcp", "MCP: 2/3"],
@@ -427,7 +427,7 @@ describe("pidewave footer rendering", () => {
 
     const line = render()[1];
     const plain = stripVTControlCharacters(line);
-    expect(plain).toContain(" 2/3 https://app.test:4443 │  1/2 │ between");
+    expect(plain).toContain("https://app.test:4443 │  2/3 │  1/2 │ between");
     expect(plain.match(/https:\/\/app\.test:4443/g)).toHaveLength(1);
     expect(line).toContain(theme.fg(boundHere ? "accent" : "muted", "https://app.test:4443"));
     expect(plain).not.toContain("query");
@@ -436,23 +436,30 @@ describe("pidewave footer rendering", () => {
 
   test.each([true, false])("URL ownership color ignores zero live MCP servers, boundHere=%p", (boundHere) => {
     const line = footerHarness(new Map([["mcp", "MCP 0/3"], ["pidewave", status(boundHere)]]))()[1];
-    expect(stripVTControlCharacters(line)).toContain(" 0/3 https://app.test:4443");
+    expect(stripVTControlCharacters(line)).toContain("https://app.test:4443 │  0/3");
     expect(line).toContain(theme.fg(boundHere ? "accent" : "muted", "https://app.test:4443"));
   });
 
-  test.each([undefined, "MCP connecting..."])("hides URL when canonical MCP is unavailable (%p)", (mcp) => {
-    const statuses = new Map([["pidewave", status(false)], ["mcp-other", "MCP 1/2"]]);
+  test.each([undefined, "MCP connecting...", "MCP: 2 servers enabled (1 connected)"])(
+    "shows URL even when canonical MCP is absent or unparsed (%p)", (mcp) => {
+      const statuses = new Map([["pidewave", status(false, url, true)]]);
 
-    if (mcp !== undefined) statuses.set("mcp", mcp);
-    const plain = stripVTControlCharacters(footerHarness(statuses)()[1]);
-    expect(plain).toContain(" 1/2");
-    expect(plain).not.toContain("app.test");
-    expect(plain).not.toContain("boundHere");
+      if (mcp !== undefined) statuses.set("mcp", mcp);
+      const line = footerHarness(statuses)()[1];
+      expect(line).toContain(theme.fg("success", url));
+      expect(stripVTControlCharacters(line)).not.toContain("boundHere");
+    },
+  );
+
+  test("connected overrides binding ownership color", () => {
+    const line = footerHarness(new Map([["pidewave", status(true, url, true)]]))()[1];
+    expect(line).toContain(theme.fg("success", url));
   });
 
   test.each([
     "{", "null", "[]", "{}", JSON.stringify({ url, boundHere: "true" }),
     JSON.stringify({ url: 4000, boundHere: true }),
+    JSON.stringify({ url, boundHere: true, connected: "yes" }),
     status(true, "not a URL"), status(true, "ftp://app.test"),
     status(true, "javascript:alert(1)"), status(true, "file:///tmp/app"),
     status(true, "https://user:secret@app.test"), status(true, "http://user@app.test"),
@@ -472,7 +479,7 @@ describe("pidewave footer rendering", () => {
 
   test("normalizes HTTP origins and stays within narrow terminal widths", () => {
     const render = footerHarness(new Map([["mcp", "MCP 2/3"], ["pidewave", status(true, "http://LOCALHOST:80/path")]]));
-    expect(stripVTControlCharacters(render()[1])).toContain(" 2/3 http://localhost");
+    expect(stripVTControlCharacters(render()[1])).toContain("http://localhost │  2/3");
 
     for (const width of [1, 2, 3, 8, 16, 30, 40, 60, 80]) {
       const lines = render(width);

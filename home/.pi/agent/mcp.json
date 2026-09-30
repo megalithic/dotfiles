@@ -1,65 +1,55 @@
 {
-	"settings": {
-		"mcpFooterStatus": "compact",
-		"allowInstall": false,
-		"jev": {
-			"semanticSearch": true,
-			"scriptEvaluation": true,
-			"allowedServers": ["github"],
-			"maxEvaluationTokensPerScript": 32768
-		}
-	},
-	"mcpServers": {
-		"chrome-devtools": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"chrome-devtools-mcp@latest",
-				"--executable-path=/Applications/Helium.app/Contents/MacOS/Helium",
-				"--isolated"
-			],
-			"disabled": true
-		},
-		"chrome-devtools-profile": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"chrome-devtools-mcp@latest",
-				"--executable-path=/Applications/Helium.app/Contents/MacOS/Helium",
-				"--userDataDir=~/.cache/agent-web/profile-copy"
-			],
-			"disabled": true
-		},
-		"chrome-devtools-attach": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"chrome-devtools-mcp@latest",
-				"--browserUrl=http://localhost:9223"
-			]
-		},
-		"context7": {
-			"url": "https://mcp.context7.com/mcp",
-			"headers": {
-				"CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
-			}
-		},
-		"githits": {
-			"url": "https://mcp.githits.com/",
-			"auth": "bearer",
-			"bearerTokenEnv": "GITHITS_API_KEY"
-		},
-		"mise": {
-			"command": "mise",
-			"args": ["mcp"],
-			"env": {
-				"MISE_EXPERIMENTAL": "1"
-			}
-		},
-		"sessions": {
-			"type": "stdio",
-			"command": "sessions",
-			"args": ["--mcp"]
-		}
-	}
+  "mcpServers": {
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--executable-path=/Applications/Helium.app/Contents/MacOS/Helium",
+        "--isolated"
+      ],
+      "disabled": true
+    },
+    "chrome-devtools-profile": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--executable-path=/Applications/Helium.app/Contents/MacOS/Helium",
+        "--userDataDir=~/.cache/agent-web/profile-copy"
+      ],
+      "disabled": true
+    },
+    "chrome-devtools-attach": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--browserUrl=http://localhost:9223"
+      ]
+    },
+    "context7": {
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
+      }
+    },
+    "githits": {
+      "url": "https://mcp.githits.com/",
+      "auth": "bearer",
+      "bearerTokenEnv": "GITHITS_API_KEY"
+    },
+    "mise": {
+      "command": "mise",
+      "args": ["mcp"],
+      "env": {
+        "MISE_EXPERIMENTAL": "1"
+      }
+    },
+    "sessions": {
+      "type": "stdio",
+      "command": "sessions",
+      "args": ["--mcp"]
+    }
+  }
 }

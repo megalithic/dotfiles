@@ -5789,6 +5789,24 @@ async function handlePresetMenu(
 }
 
 // ==========================================================================
+// Providers-only entry (multi-sub-providers/providers.ts)
+// ==========================================================================
+
+// Registers the global subscription clones and nothing else: no presets,
+// pools, project restriction, or commands. Restricted children launched with
+// `--no-extensions -e .../providers.ts --model <alias>/...` resolve alias
+// models without activatePreset overriding the explicit model.
+export function registerSubscriptionProviders(pi: ExtensionAPI): void {
+	const subs = normalizeEntries(
+		mergeConfigs(loadGlobalConfig(), parseEnvConfig()),
+	);
+	for (const entry of subs) registerSub(pi, undefined, entry);
+	pi.on("session_start", (_event, ctx) => {
+		for (const entry of subs) registerSub(pi, ctx.modelRegistry, entry);
+	});
+}
+
+// ==========================================================================
 // Extension entry point
 // ==========================================================================
 

@@ -12,11 +12,12 @@
     "reserveTokens": 16384,
     "keepRecentTokens": 30000
   },
-  "defaultProvider": "openai-codex",
+  "defaultProvider": "anthropic",
+  "defaultModel": "claude-opus-5-5",
+  "defaultThinkingLevel": "high",
   "warnings": {
     "anthropicExtraUsage": false
   },
-  "defaultThinkingLevel": "high",
   "doubleEscapeAction": "tree",
   "enableSkillCommands": true,
   "hideThinkingBlock": true,
@@ -29,17 +30,19 @@
   "tuiMode": "fullscreen",
   "editorPaddingX": 1,
   "packages": [
-    "npm:pi-mcp-adapter",
     "npm:pi-interactive-shell",
     "git:github.com/amosblomqvist/pi-interactive-subagents",
-    "git:github.com/amosblomqvist/pi-observational-memory",
     "npm:@plannotator/pi-extension",
     "npm:pi-rtk-optimizer",
     "~/code/oss/pi-extensions/packages/artifacts",
     "~/code/oss/pi-extensions/packages/ast-grep",
     "~/code/oss/pi-extensions/packages/btw",
     "~/code/oss/pi-extensions/packages/save-md",
+    "~/code/oss/pi-extensions/packages/stash",
+    "~/code/oss/pi-extensions/packages/session-name",
     "~/code/oss/pi-extensions/packages/pin-last-prompt",
+    "~/code/oss/pi-extensions/packages/compact-tools",
+    "npm:pi-typesafe",
     "npm:pi-elixir",
     "npm:@ogulcancelik/pi-ssh-tools",
     "npm:@juicesharp/rpiv-ask-user-question",
@@ -48,7 +51,10 @@
     "npm:@hypabolic/pi-hypa",
     "npm:@sting8k/pi-vcc",
     "npm:pi-warden",
-    "git:github.com/aliou/nvim-pi"
+    "git:github.com/aliou/nvim-pi",
+    "npm:pi-web-access",
+    "npm:pi-simplify",
+    "git:github.com/DietrichGebert/ponytail"
   ],
   "enabledModels": [
     "anthropic/claude-fable-5-1",
@@ -65,9 +71,7 @@
     "opencode-go/deepseek-v4-pro",
     "opencode-go/deepseek-v4-flash",
     "opencode-go/qwen3.7-max",
-    "opencode-go/qwen3.7-plus",
-    "llamacpp/gemma4",
-    "llamacpp/deepseek14b"
+    "opencode-go/qwen3.7-plus"
   ],
   "enabledModelScopes": {
     "mega": [
@@ -82,9 +86,7 @@
       "opencode-go/deepseek-v4-pro",
       "opencode-go/deepseek-v4-flash",
       "opencode-go/qwen3.7-max",
-      "opencode-go/qwen3.7-plus",
-      "llamacpp/gemma4",
-      "llamacpp/deepseek14b"
+      "opencode-go/qwen3.7-plus"
     ],
     "alt": [
       "anthropic/claude-fable-5-1",
@@ -115,9 +117,7 @@
       "opencode-go/deepseek-v4-pro",
       "opencode-go/deepseek-v4-flash",
       "opencode-go/qwen3.7-max",
-      "opencode-go/qwen3.7-plus",
-      "llamacpp/gemma4",
-      "llamacpp/deepseek14b"
+      "opencode-go/qwen3.7-plus"
     ],
     "alt": [
       "anthropic/claude-fable-5-1",
@@ -195,10 +195,7 @@
       {
         "name": "codex-pool",
         "baseProvider": "my-codex",
-        "members": [
-          "openai-codex",
-          "my-codex"
-        ],
+        "members": ["openai-codex", "my-codex"],
         "enabled": true
       }
     ],

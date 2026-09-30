@@ -47,10 +47,17 @@ __pycache__/
 **/.jj
 
 weechat
-nix/home/config/weechat
+config/weechat
 .direnv/
 _planned
 .playwright-mcp/
 result
 .handoff/
 _plans/
+.tickets.archive
+lat.md.archive
+
+home/.pi/agent/mcp-cache.json
+home/.pi/agent/mcp-auth.json
+home/.pi/agent/mcp.log*
+home/.pi/agent/mcp-npx-cache.json

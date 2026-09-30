@@ -33,12 +33,12 @@ set -euo pipefail
 __base="${0##*/}"
 script_path="${BASH_SOURCE[0]}"
 if [[ -L $script_path ]]; then
-	link_target="$(readlink "$script_path")"
-	if [[ $link_target == /* ]]; then
-		script_path="$link_target"
-	else
-		script_path="${script_path%/*}/$link_target"
-	fi
+  link_target="$(readlink "$script_path")"
+  if [[ $link_target == /* ]]; then
+    script_path="$link_target"
+  else
+    script_path="${script_path%/*}/$link_target"
+  fi
 fi
 script_dir="$(cd "${script_path%/*}" && pwd)"
 
@@ -62,367 +62,357 @@ C_RED=$'\e[31m'
 C_GREEN=$'\e[32m'
 C_BOLD=$'\e[1m'
 C_DIM=$'\e[2m'
+ICON_ATTENTION=''
+ICON_WORKING=''
+ICON_IDLE=''
 
 TAB=$'\t'
 FTM_FRESH='__FTM_FRESH__'
-# replacement for $HOME in displayed paths; a literal \~ replacement keeps the
-# backslash under bash 3.2 (breaks try_session's ~ re-expansion), a variable is
-# version-safe
+# A variable keeps the displayed ~ literal on both bash 3.2 and newer bash.
 TILDE='~'
 
 function b64_encode() {
-	[[ -n $1 ]] || {
-		printf -- '-'
-		return
-	}
-	printf '%s' "$1" | base64 | tr -d '\n'
+  [[ -n $1 ]] || {
+    printf -- '-'
+    return
+  }
+  printf '%s' "$1" | base64 | tr -d '\n'
 }
 function b64_decode() {
-	local value
-	value="$(cat)"
-	[[ $value != - ]] || return 0
-	if base64 -D </dev/null >/dev/null 2>&1; then
-		printf '%s' "$value" | base64 -D
-	else
-		printf '%s' "$value" | base64 --decode
-	fi
+  local value
+  value="$(cat)"
+  [[ $value != - ]] || return 0
+  if base64 -D </dev/null >/dev/null 2>&1; then
+    printf '%s' "$value" | base64 -D
+  else
+    printf '%s' "$value" | base64 --decode
+  fi
 }
 function valid_snapshot_name() {
-	[[ -n $1 && $1 != . && $1 != .. && $1 != */* && $1 != *$'\n'* && $1 != *$'\t'* ]]
+  [[ -n $1 && $1 != . && $1 != .. && $1 != */* && $1 != *$'\n'* && $1 != *$'\t'* ]]
 }
 function snapshot_file() { printf '%s/snapshots/%s' "$FTM_STATE_DIR" "$1"; }
 function foreground_command() {
-	local tty="$1" line pid tpgid args
-	while read -r pid tpgid args; do
-		[[ $pid == "$tpgid" && -n $args ]] && {
-			printf '%s' "$args"
-			return
-		}
-	done < <(ps -t "${tty##*/}" -o pid=,tpgid=,args= 2>/dev/null || true)
-	printf '%s' "${2:-}"
+  local tty="$1" line pid tpgid args
+  while read -r pid tpgid args; do
+    [[ $pid == "$tpgid" && -n $args ]] && {
+      printf '%s' "$args"
+      return
+    }
+  done < <(ps -t "${tty##*/}" -o pid=,tpgid=,args= 2>/dev/null || true)
+  printf '%s' "${2:-}"
 }
 
 function snapshot_session() {
-	local session="$1" sid path tmp w p line win_name layout active zoom cwd cmd pi_id pane_tty pane_active panes
-	valid_snapshot_name "$session" || return 1
-	sid="$(session_id_for "$session")" || return 0
-	umask 077
-	mkdir -p "$FTM_STATE_DIR/snapshots"
-	chmod 700 "$FTM_STATE_DIR" "$FTM_STATE_DIR/snapshots" 2>/dev/null || true
-	tmp="$(mktemp "$FTM_STATE_DIR/snapshots/.snapshot.XXXXXX")"
-	path="$(tmux display-message -p -t "$sid" '#{session_path}')"
-	{
-		printf 'version%s1\n' "$TAB"
-		printf 'path%s%s\n' "$TAB" "$(b64_encode "$path")"
-		printf 'active%s%s\n' "$TAB" "$(tmux display-message -p -t "$sid" '#{window_index}')"
-		while IFS= read -r line; do
-			w="${line%%"$TAB"*}"
-			line="${line#*"$TAB"}"
-			win_name="${line%%"$TAB"*}"
-			line="${line#*"$TAB"}"
-			layout="${line%%"$TAB"*}"
-			line="${line#*"$TAB"}"
-			active="${line%%"$TAB"*}"
-			zoom="${line#*"$TAB"}"
-			printf 'window%s%s%s%s%s%s%s%s%s%s\n' "$TAB" "$w" "$TAB" "$(b64_encode "$win_name")" "$TAB" "$(b64_encode "$layout")" "$TAB" "$active" "$TAB" "$zoom"
-			while IFS= read -r p; do
-				p="${p//$TAB$TAB/$TAB-$TAB}"
-				IFS=$TAB read -r _ cwd cmd pi_id pane_tty pane_active <<EOF
+  local session="$1" sid path tmp w p line win_name layout active zoom cwd cmd pi_id pane_tty pane_active panes
+  valid_snapshot_name "$session" || return 1
+  sid="$(session_id_for "$session")" || return 0
+  umask 077
+  mkdir -p "$FTM_STATE_DIR/snapshots"
+  chmod 700 "$FTM_STATE_DIR" "$FTM_STATE_DIR/snapshots" 2>/dev/null || true
+  tmp="$(mktemp "$FTM_STATE_DIR/snapshots/.snapshot.XXXXXX")"
+  path="$(tmux display-message -p -t "$sid" '#{session_path}')"
+  {
+    printf 'version%s1\n' "$TAB"
+    printf 'path%s%s\n' "$TAB" "$(b64_encode "$path")"
+    printf 'active%s%s\n' "$TAB" "$(tmux display-message -p -t "$sid" '#{window_index}')"
+    while IFS= read -r line; do
+      w="${line%%"$TAB"*}"
+      line="${line#*"$TAB"}"
+      win_name="${line%%"$TAB"*}"
+      line="${line#*"$TAB"}"
+      layout="${line%%"$TAB"*}"
+      line="${line#*"$TAB"}"
+      active="${line%%"$TAB"*}"
+      zoom="${line#*"$TAB"}"
+      printf 'window%s%s%s%s%s%s%s%s%s%s\n' "$TAB" "$w" "$TAB" "$(b64_encode "$win_name")" "$TAB" "$(b64_encode "$layout")" "$TAB" "$active" "$TAB" "$zoom"
+      while IFS= read -r p; do
+        p="${p//$TAB$TAB/$TAB-$TAB}"
+        IFS=$TAB read -r _ cwd cmd pi_id pane_tty pane_active <<EOF
 $p
 EOF
-				[[ $pi_id == - ]] && pi_id=""
-				cmd="$(foreground_command "$pane_tty" "$cmd")"
-				printf 'pane%s%s%s%s%s%s%s%s%s%s%s%s\n' "$TAB" "$w" "$TAB" "${p%%"$TAB"*}" "$TAB" "$(b64_encode "$cwd")" "$TAB" "$(b64_encode "$cmd")" "$TAB" "$(b64_encode "$pi_id")" "$TAB" "$pane_active"
-			done < <(tmux list-panes -t "$sid:$w" -F '#{pane_index}'"$TAB"'#{pane_current_path}'"$TAB"'#{pane_current_command}'"$TAB"'#{@pi_session_id}'"$TAB"'#{pane_tty}'"$TAB"'#{pane_active}' 2>/dev/null)
-		done < <(tmux list-windows -t "$sid" -F '#{window_index}'"$TAB"'#{window_name}'"$TAB"'#{window_layout}'"$TAB"'#{window_active}'"$TAB"'#{window_zoomed_flag}')
-	} >"$tmp" && mv "$tmp" "$(snapshot_file "$session")"
+        [[ $pi_id == - ]] && pi_id=""
+        cmd="$(foreground_command "$pane_tty" "$cmd")"
+        printf 'pane%s%s%s%s%s%s%s%s%s%s%s%s\n' "$TAB" "$w" "$TAB" "${p%%"$TAB"*}" "$TAB" "$(b64_encode "$cwd")" "$TAB" "$(b64_encode "$cmd")" "$TAB" "$(b64_encode "$pi_id")" "$TAB" "$pane_active"
+      done < <(tmux list-panes -t "$sid:$w" -F '#{pane_index}'"$TAB"'#{pane_current_path}'"$TAB"'#{pane_current_command}'"$TAB"'#{@pi_session_id}'"$TAB"'#{pane_tty}'"$TAB"'#{pane_active}' 2>/dev/null)
+    done < <(tmux list-windows -t "$sid" -F '#{window_index}'"$TAB"'#{window_name}'"$TAB"'#{window_layout}'"$TAB"'#{window_active}'"$TAB"'#{window_zoomed_flag}')
+  } >"$tmp" && mv "$tmp" "$(snapshot_file "$session")"
 }
 
 function snapshot_all() {
-	local line
-	while IFS= read -r line; do snapshot_session "${line#* }"; done < <(tmux list-sessions -F '#{session_id} #{session_name}' 2>/dev/null || true)
+  local line
+  while IFS= read -r line; do snapshot_session "${line#* }"; done < <(tmux list-sessions -F '#{session_id} #{session_name}' 2>/dev/null || true)
 }
 
 function snapshot_value() { printf '%s' "$1" | b64_decode; }
 function valid_snapshot() {
-	local file="$1" kind a b c d e f w active_index=""
-	local versions=0 paths=0 actives=0 window_count=0 pane_count=0
-	local windows=$'\n' pane_windows=$'\n'
-	while IFS=$TAB read -r kind a b c d e f; do
-		case $kind in
-		version)
-			[[ $a == 1 ]] || return 1
-			versions=$((versions + 1))
-			;;
-		path)
-			[[ -n $a ]] && snapshot_value "$a" >/dev/null || return 1
-			paths=$((paths + 1))
-			;;
-		active)
-			[[ $a =~ ^[0-9]+$ ]] || return 1
-			active_index="$a"
-			actives=$((actives + 1))
-			;;
-		window)
-			[[ $a =~ ^[0-9]+$ && -n $b && -n $c && $d =~ ^[01]$ && $e =~ ^[01]$ ]] || return 1
-			snapshot_value "$b" >/dev/null && snapshot_value "$c" >/dev/null || return 1
-			windows+="$a"$'\n'
-			window_count=$((window_count + 1))
-			;;
-		pane)
-			[[ $a =~ ^[0-9]+$ && $b =~ ^[0-9]+$ && -n $c && -n $d && -n $e && $f =~ ^[01]$ ]] || return 1
-			snapshot_value "$c" >/dev/null && snapshot_value "$d" >/dev/null && snapshot_value "$e" >/dev/null || return 1
-			pane_windows+="$a"$'\n'
-			pane_count=$((pane_count + 1))
-			;;
-		*) return 1 ;;
-		esac
-	done <"$file"
-	[[ $versions == 1 && $paths == 1 && $actives == 1 && $window_count -gt 0 && $pane_count -gt 0 ]] || return 1
-	[[ $windows == *$'\n'"$active_index"$'\n'* ]] || return 1
-	while IFS= read -r w; do
-		[[ -z $w || $pane_windows == *$'\n'"$w"$'\n'* ]] || return 1
-	done <<<"$windows"
-	while IFS= read -r w; do
-		[[ -z $w || $windows == *$'\n'"$w"$'\n'* ]] || return 1
-	done <<<"$pane_windows"
+  local file="$1" kind a b c d e f w active_index=""
+  local versions=0 paths=0 actives=0 window_count=0 pane_count=0
+  local windows=$'\n' pane_windows=$'\n'
+  while IFS=$TAB read -r kind a b c d e f; do
+    case $kind in
+      version)
+        [[ $a == 1 ]] || return 1
+        versions=$((versions + 1))
+        ;;
+      path)
+        [[ -n $a ]] && snapshot_value "$a" >/dev/null || return 1
+        paths=$((paths + 1))
+        ;;
+      active)
+        [[ $a =~ ^[0-9]+$ ]] || return 1
+        active_index="$a"
+        actives=$((actives + 1))
+        ;;
+      window)
+        [[ $a =~ ^[0-9]+$ && -n $b && -n $c && $d =~ ^[01]$ && $e =~ ^[01]$ ]] || return 1
+        snapshot_value "$b" >/dev/null && snapshot_value "$c" >/dev/null || return 1
+        windows+="$a"$'\n'
+        window_count=$((window_count + 1))
+        ;;
+      pane)
+        [[ $a =~ ^[0-9]+$ && $b =~ ^[0-9]+$ && -n $c && -n $d && -n $e && $f =~ ^[01]$ ]] || return 1
+        snapshot_value "$c" >/dev/null && snapshot_value "$d" >/dev/null && snapshot_value "$e" >/dev/null || return 1
+        pane_windows+="$a"$'\n'
+        pane_count=$((pane_count + 1))
+        ;;
+      *) return 1 ;;
+    esac
+  done <"$file"
+  [[ $versions == 1 && $paths == 1 && $actives == 1 && $window_count -gt 0 && $pane_count -gt 0 ]] || return 1
+  [[ $windows == *$'\n'"$active_index"$'\n'* ]] || return 1
+  while IFS= read -r w; do
+    [[ -z $w || $pane_windows == *$'\n'"$w"$'\n'* ]] || return 1
+  done <<<"$windows"
+  while IFS= read -r w; do
+    [[ -z $w || $windows == *$'\n'"$w"$'\n'* ]] || return 1
+  done <<<"$pane_windows"
 }
 function discard_restored_session() {
-	local sid
-	sid="$(session_id_for "$1")" || return 0
-	tmux kill-session -t "$sid" 2>/dev/null || true
+  local sid
+  sid="$(session_id_for "$1")" || return 0
+  tmux kill-session -t "$sid" 2>/dev/null || true
 }
 function restore_snapshot() {
-	local session="$1" file="$FTM_STATE_DIR/snapshots/" sid w path active first=1 win_name layout wactive zoom _idx cwd cmd pi_id pane_active pane_count pane_cwd shell pane_target window_target current_index
-	local -a pane_targets=()
-	valid_snapshot_name "$session" || return 1
-	file="$(snapshot_file "$session")"
-	[[ -s $file ]] || return 1
-	IFS=$TAB read -r version value <"$file"
-	[[ $version == version && $value == 1 ]] || return 1
-	valid_snapshot "$file" || return 1
-	path=""
-	active=""
-	while IFS=$TAB read -r kind a b c d e; do
-		case $kind in
-		path) path="$(snapshot_value "$a")" ;;
-		active) active="$a" ;;
-		window)
-			w="$a"
-			win_name="$(snapshot_value "$b")"
-			layout="$(snapshot_value "$c")"
-			wactive="$d"
-			zoom="$e"
-			[[ -d $path ]] || path="$HOME/code"
-			[[ -d $path ]] || path="$HOME"
-			if [[ $first == 1 ]]; then
-				tmux new-session -d -s "$session" -n "$win_name" -c "$path" || return 1
-				first=0
-				sid="$(session_id_for "$session")" || {
-					discard_restored_session "$session"
-					return 1
-				}
-				window_target="$(tmux display-message -p -t "$sid" '#{window_id}')" || {
-					discard_restored_session "$session"
-					return 1
-				}
-				current_index="$(tmux display-message -p -t "$window_target" '#{window_index}')" || {
-					discard_restored_session "$session"
-					return 1
-				}
-				[[ $current_index == "$w" ]] || tmux move-window -s "$window_target" -t "$sid:$w" || {
-					discard_restored_session "$session"
-					return 1
-				}
-			else
-				window_target="$(tmux new-window -d -P -F '#{window_id}' -t "$sid:$w" -n "$win_name" -c "$path")" || {
-					discard_restored_session "$session"
-					return 1
-				}
-			fi
-			pane_count=0
-			pane_targets=()
-			while IFS=$TAB read -r pk pw _idx cwd cmd pi_id pane_active; do
-				[[ $pk == pane && $pw == "$w" ]] || continue
-				pane_cwd="$(snapshot_value "$cwd")"
-				[[ -d $pane_cwd ]] || pane_cwd="$path"
-				if [[ $pane_count == 0 ]]; then
-					pane_target="$(tmux display-message -p -t "$window_target" '#{pane_id}')" || {
-						discard_restored_session "$session"
-						return 1
-					}
-					tmux respawn-pane -k -t "$pane_target" -c "$pane_cwd" || {
-						discard_restored_session "$session"
-						return 1
-					}
-				else
-					pane_target="$(tmux split-window -d -P -F '#{pane_id}' -t "$window_target" -c "$pane_cwd")" || {
-						discard_restored_session "$session"
-						return 1
-					}
-				fi
-				pane_targets[pane_count]="$pane_target"
-				pane_count=$((pane_count + 1))
-			done <"$file"
-			tmux select-layout -t "$window_target" "$layout" 2>/dev/null || {
-				discard_restored_session "$session"
-				return 1
-			}
-			if [[ $wactive == 1 ]]; then
-				tmux select-window -t "$window_target" || {
-					discard_restored_session "$session"
-					return 1
-				}
-			fi
-			if [[ $zoom == 1 ]]; then
-				tmux resize-pane -Z -t "$window_target" || {
-					discard_restored_session "$session"
-					return 1
-				}
-			fi
-			pane_count=0
-			while IFS=$TAB read -r pk pw _idx cwd cmd pi_id pane_active; do
-				[[ $pk == pane && $pw == "$w" ]] || continue
-				pane_target="${pane_targets[pane_count]}"
-				pane_count=$((pane_count + 1))
-				cwd="$(snapshot_value "$cwd")"
-				cmd="$(snapshot_value "$cmd")"
-				pi_id="$(snapshot_value "$pi_id")"
-				[[ -d $cwd ]] || cwd="$path"
-				shell="${cmd%% *}"
-				shell="${shell##*/}"
-				shell="${shell#-}"
-				if [[ $pane_active == 1 ]]; then
-					tmux select-pane -t "$pane_target" || {
-						discard_restored_session "$session"
-						return 1
-					}
-				fi
-				case "$shell" in fish | bash | zsh | sh) continue ;; esac
-				[[ -n $pi_id ]] && cmd="pi --session $pi_id"
-				if [[ -n $cmd ]]; then
-					tmux send-keys -t "$pane_target" "cd $(printf %q "$cwd") && $cmd" Enter || {
-						discard_restored_session "$session"
-						return 1
-					}
-				fi
-			done <"$file"
-			;;
-		esac
-	done <"$file"
-	if [[ -n $active ]]; then
-		tmux select-window -t "$sid:$active" 2>/dev/null || {
-			discard_restored_session "$session"
-			return 1
-		}
-	fi
-	bump_recent "$session" "$path"
-	return 0
+  local session="$1" file="$FTM_STATE_DIR/snapshots/" sid w path active first=1 win_name layout wactive zoom _idx cwd cmd pi_id pane_active pane_count pane_cwd shell pane_target window_target current_index
+  local -a pane_targets=()
+  valid_snapshot_name "$session" || return 1
+  file="$(snapshot_file "$session")"
+  [[ -s $file ]] || return 1
+  IFS=$TAB read -r version value <"$file"
+  [[ $version == version && $value == 1 ]] || return 1
+  valid_snapshot "$file" || return 1
+  path=""
+  active=""
+  while IFS=$TAB read -r kind a b c d e; do
+    case $kind in
+      path) path="$(snapshot_value "$a")" ;;
+      active) active="$a" ;;
+      window)
+        w="$a"
+        win_name="$(snapshot_value "$b")"
+        layout="$(snapshot_value "$c")"
+        wactive="$d"
+        zoom="$e"
+        [[ -d $path ]] || path="$HOME/code"
+        [[ -d $path ]] || path="$HOME"
+        if [[ $first == 1 ]]; then
+          tmux new-session -d -s "$session" -n "$win_name" -c "$path" || return 1
+          first=0
+          sid="$(session_id_for "$session")" || {
+            discard_restored_session "$session"
+            return 1
+          }
+          window_target="$(tmux display-message -p -t "$sid" '#{window_id}')" || {
+            discard_restored_session "$session"
+            return 1
+          }
+          current_index="$(tmux display-message -p -t "$window_target" '#{window_index}')" || {
+            discard_restored_session "$session"
+            return 1
+          }
+          [[ $current_index == "$w" ]] || tmux move-window -s "$window_target" -t "$sid:$w" || {
+            discard_restored_session "$session"
+            return 1
+          }
+        else
+          window_target="$(tmux new-window -d -P -F '#{window_id}' -t "$sid:$w" -n "$win_name" -c "$path")" || {
+            discard_restored_session "$session"
+            return 1
+          }
+        fi
+        pane_count=0
+        pane_targets=()
+        while IFS=$TAB read -r pk pw _idx cwd cmd pi_id pane_active; do
+          [[ $pk == pane && $pw == "$w" ]] || continue
+          pane_cwd="$(snapshot_value "$cwd")"
+          [[ -d $pane_cwd ]] || pane_cwd="$path"
+          if [[ $pane_count == 0 ]]; then
+            pane_target="$(tmux display-message -p -t "$window_target" '#{pane_id}')" || {
+              discard_restored_session "$session"
+              return 1
+            }
+            tmux respawn-pane -k -t "$pane_target" -c "$pane_cwd" || {
+              discard_restored_session "$session"
+              return 1
+            }
+          else
+            pane_target="$(tmux split-window -d -P -F '#{pane_id}' -t "$window_target" -c "$pane_cwd")" || {
+              discard_restored_session "$session"
+              return 1
+            }
+          fi
+          pane_targets[pane_count]="$pane_target"
+          pane_count=$((pane_count + 1))
+        done <"$file"
+        tmux select-layout -t "$window_target" "$layout" 2>/dev/null || {
+          discard_restored_session "$session"
+          return 1
+        }
+        if [[ $wactive == 1 ]]; then
+          tmux select-window -t "$window_target" || {
+            discard_restored_session "$session"
+            return 1
+          }
+        fi
+        if [[ $zoom == 1 ]]; then
+          tmux resize-pane -Z -t "$window_target" || {
+            discard_restored_session "$session"
+            return 1
+          }
+        fi
+        pane_count=0
+        while IFS=$TAB read -r pk pw _idx cwd cmd pi_id pane_active; do
+          [[ $pk == pane && $pw == "$w" ]] || continue
+          pane_target="${pane_targets[pane_count]}"
+          pane_count=$((pane_count + 1))
+          cwd="$(snapshot_value "$cwd")"
+          cmd="$(snapshot_value "$cmd")"
+          pi_id="$(snapshot_value "$pi_id")"
+          [[ -d $cwd ]] || cwd="$path"
+          shell="${cmd%% *}"
+          shell="${shell##*/}"
+          shell="${shell#-}"
+          if [[ $pane_active == 1 ]]; then
+            tmux select-pane -t "$pane_target" || {
+              discard_restored_session "$session"
+              return 1
+            }
+          fi
+          case "$shell" in fish | bash | zsh | sh) continue ;; esac
+          [[ -n $pi_id ]] && cmd="pi --session $pi_id"
+          if [[ -n $cmd ]]; then
+            tmux send-keys -t "$pane_target" "cd $(printf %q "$cwd") && $cmd" Enter || {
+              discard_restored_session "$session"
+              return 1
+            }
+          fi
+        done <"$file"
+        ;;
+    esac
+  done <"$file"
+  if [[ -n $active ]]; then
+    tmux select-window -t "$sid:$active" 2>/dev/null || {
+      discard_restored_session "$session"
+      return 1
+    }
+  fi
+  bump_recent "$session" "$path"
+  return 0
 }
 
 function __help() {
-	local tmux_running fzf_found
-	[[ -n $TMUX ]] && tmux_running="running" || tmux_running="not running"
-	command -v fzf &>/dev/null && fzf_found="installed" || fzf_found="not installed"
+  local tmux_running fzf_found
+  [[ -n $TMUX ]] && tmux_running="running" || tmux_running="not running"
+  command -v fzf &>/dev/null && fzf_found="installed" || fzf_found="not installed"
 
-	printf -- "Usage: %s [options] [SESSION_NAME | FUZZY_PATTERN]\n" "$__base"
-	printf -- "\n"
-	printf -- "   Options:\n"
-	printf -- "     -p              Run fzf directly (already inside a tmux popup); default uses fzf --tmux\n"
-	printf -- "     -h              This help text you're presently reading. 😄\n"
-	printf -- "     --snapshot=NAME Save a running session snapshot\n"
-	printf -- "     --snapshot-all Save snapshots for all running sessions\n"
-	printf -- "\n"
-	printf -- "   Deterministic (non-picker) session lifecycle:\n"
-	printf -- "     %s ensure --kind worktree|generic --cwd PATH --session NAME \\\n" "$__base"
-	printf -- "         [--worktree-id ID] [--lease TOKEN] [--pi-session UUID] \\\n"
-	printf -- "         [--presentation cd|window|session] [--primary] \\\n"
-	printf -- "         [--attach auto|never] [--format json|text]\n"
-	printf -- "     %s repair ... [--restart-services]   additive repair of a recognized session\n" "$__base"
-	printf -- "     %s remove --session NAME [--cwd PATH] [--discard-snapshot]\n" "$__base"
-	printf -- "         --discard-snapshot also forgets the recent entry, even if already stopped\n"
-	printf -- "     Picker: ctrl-k saves and kills; ctrl-x confirms kill and forget\n"
-	printf -- "\n"
-	printf -- "   Dependencies:\n"
-	printf -- "     tmux            (%s)\n" "$tmux_running"
-	printf -- "     fzf             (%s)\n" "$fzf_found"
-	printf -- "\n"
+  printf -- "Usage: %s [options] [SESSION_NAME | FUZZY_PATTERN]\n" "$__base"
+  printf -- "\n"
+  printf -- "   Options:\n"
+  printf -- "     -p              Run fzf directly (already inside a tmux popup); default uses fzf --tmux\n"
+  printf -- "     -h              This help text you're presently reading. 😄\n"
+  printf -- "     --snapshot=NAME Save a running session snapshot\n"
+  printf -- "     --snapshot-all Save snapshots for all running sessions\n"
+  printf -- "\n"
+  printf -- "   Deterministic (non-picker) session lifecycle:\n"
+  printf -- "     %s ensure --kind worktree|generic --cwd PATH --session NAME \\\n" "$__base"
+  printf -- "         [--worktree-id ID] [--lease TOKEN] [--pi-session UUID] \\\n"
+  printf -- "         [--presentation cd|window|session] [--primary] \\\n"
+  printf -- "         [--attach auto|never] [--format json|text]\n"
+  printf -- "     %s repair ... [--restart-services]   additive repair of a recognized session\n" "$__base"
+  printf -- "     %s remove --session NAME [--cwd PATH] [--discard-snapshot]\n" "$__base"
+  printf -- "         --discard-snapshot also forgets the recent entry, even if already stopped\n"
+  printf -- "     Picker: ctrl-k saves and kills; ctrl-x confirms kill and forget\n"
+  printf -- "\n"
+  printf -- "   Dependencies:\n"
+  printf -- "     tmux            (%s)\n" "$tmux_running"
+  printf -- "     fzf             (%s)\n" "$fzf_found"
+  printf -- "\n"
 
-	exit 0
+  exit 0
 }
 
 if ! command -v fzf &>/dev/null && [[ ${1:-} != --snapshot=* && ${1:-} != --snapshot-all && ${1:-} != -s &&
-	${1:-} != ensure && ${1:-} != repair && ${1:-} != remove ]]; then
-	printf -- "ERROR: %s requires fzf to be installed\n" "$__base"
-	__help
-	# shellcheck disable=SC2317 # defensive; __help exits
-	exit 1
+  ${1:-} != ensure && ${1:-} != repair && ${1:-} != remove ]]; then
+  printf -- "ERROR: %s requires fzf to be installed\n" "$__base"
+  __help
+  # shellcheck disable=SC2317 # defensive; __help exits
+  exit 1
 fi
-
-# -- strip the pi status dot and any zoxide path column (running sessions
-#    render bold instead of carrying a text marker; fzf's --ansi strips the
-#    styling before selections reach us)
-function strip_markers() {
-	local s="$1"
-	s="${s%%"$TAB"*}"
-	s="${s% ●}"
-	s="${s% ○}"
-	printf '%s' "$s"
-}
 
 # -- dim divider between running sessions and everything else: dashes sized
 #    to the list. FZF_COLUMNS is exported to reload commands (ftm --list);
 #    the initial call estimates from the tmux client width (popup is 70%
 #    wide) minus padding/pointer/scrollbar columns.
 function divider_line() {
-	local cols="${FZF_COLUMNS:-0}"
-	if [[ $cols -le 0 ]]; then
-		cols="$(tmux display-message -p '#{client_width}' 2>/dev/null || printf 80)"
-		[[ $POPUP == "true" ]] || cols=$((cols * 70 / 100))
-	fi
-	cols=$((cols - 6))
-	[[ $cols -lt 3 ]] && cols=3
-	printf '%*s' "$cols" '' | tr ' ' '-'
+  local cols="${FZF_COLUMNS:-0}"
+  if [[ $cols -le 0 ]]; then
+    cols="$(tmux display-message -p '#{client_width}' 2>/dev/null || printf 80)"
+    [[ $POPUP == "true" ]] || cols=$((cols * 70 / 100))
+  fi
+  cols=$((cols - 6))
+  [[ $cols -lt 3 ]] && cols=3
+  printf '%*s' "$cols" '' | tr ' ' '-'
 }
 
 # -- resolve a session name to its id ($N). tmux target parsing mangles names
 #    with a leading dot (reads it as a window separator; "=" doesn't help), so
 #    every tmux command targeting an existing session goes through ids.
 function session_id_for() {
-	local name="$1" line
-	while IFS= read -r line; do
-		if [[ ${line#* } == "$name" ]]; then
-			printf '%s' "${line%% *}"
-			return 0
-		fi
-	done < <(tmux list-sessions -F '#{session_id} #{session_name}' 2>/dev/null)
-	return 1
+  local name="$1" line
+  while IFS= read -r line; do
+    if [[ ${line#* } == "$name" ]]; then
+      printf '%s' "${line%% *}"
+      return 0
+    fi
+  done < <(tmux list-sessions -F '#{session_id} #{session_name}' 2>/dev/null)
+  return 1
 }
 
 # -- move a session to the top of the MRU state file (source of truth for
 #    picker ordering); keeps the newest 50 entries. Lines are "name<TAB>cwd"
 #    (cwd may be empty) so dead sessions with a live dir still render.
 function bump_recent() {
-	local session="$1" cwd="${2:-}" line count=0 tmp
-	[[ -n $session ]] || return 0
-	mkdir -p "$FTM_STATE_DIR"
-	tmp="$recent_file.tmp.$$"
-	{
-		if [[ -n $cwd ]]; then
-			printf '%s\t%s\n' "$session" "$cwd"
-		else
-			printf '%s\n' "$session"
-		fi
-		if [[ -f $recent_file ]]; then
-			while IFS= read -r line; do
-				[[ -z $line || ${line%%"$TAB"*} == "$session" ]] && continue
-				printf '%s\n' "$line"
-				count=$((count + 1))
-				[[ $count -ge 49 ]] && break
-			done <"$recent_file"
-		fi
-	} >"$tmp"
-	mv "$tmp" "$recent_file"
+  local session="$1" cwd="${2:-}" line count=0 tmp
+  [[ -n $session ]] || return 0
+  mkdir -p "$FTM_STATE_DIR"
+  tmp="$recent_file.tmp.$$"
+  {
+    if [[ -n $cwd ]]; then
+      printf '%s\t%s\n' "$session" "$cwd"
+    else
+      printf '%s\n' "$session"
+    fi
+    if [[ -f $recent_file ]]; then
+      while IFS= read -r line; do
+        [[ -z $line || ${line%%"$TAB"*} == "$session" ]] && continue
+        printf '%s\n' "$line"
+        count=$((count + 1))
+        [[ $count -ge 49 ]] && break
+      done <"$recent_file"
+    fi
+  } >"$tmp"
+  mv "$tmp" "$recent_file"
 }
 
 # -- true when the pane tty has a process titled "pi": pi runs as a node
@@ -430,103 +420,116 @@ function bump_recent() {
 #    only distinguishing mark (trick from nicknisi's tmux-smart-name).
 # shellcheck disable=SC2009 # pgrep can't filter by tty
 function is_pi_pane() {
-	ps -t "${1#/dev/}" -o comm= 2>/dev/null | grep -qx pi
+  ps -t "${1#/dev/}" -o comm= 2>/dev/null | grep -qx pi
 }
 
 # -- Find every live Pi pane. Manifest and status records are a union; both
 #    paths still validate the pane's process title before exposing it.
 function pi_panes_for() {
-	local session="$1" sid="$2" f pane pid win panes
-	local wname windex wpane wcmd wtty seen=$'\n' seen_windows=$'\n' _st _sess
-	panes="$(tmux list-panes -s -t "$sid" -F '#{window_name}'"$TAB"'#{window_index}'"$TAB"'#{pane_id}'"$TAB"'#{pane_current_command}'"$TAB"'#{pane_tty}' 2>/dev/null || true)"
-	while IFS=$TAB read -r pane pid; do
-		[[ -n $pane ]] || continue
-		[[ $pid =~ ^[0-9]+$ ]] && ! kill -0 "$pid" 2>/dev/null && continue
-		while IFS=$TAB read -r wname windex wpane wcmd wtty; do
-			if [[ $wpane == "$pane" && $wcmd == node ]] && is_pi_pane "$wtty" && [[ $seen != *$'\n'"$pane"$'\n'* ]]; then
-				seen+="$pane"$'\n'
-				seen_windows+="$wname"$'\n'"$windex"$'\n'
-				printf '%s\n' "$pane"
-				break
-			fi
-		done <<<"$panes"
-	done < <("$script_dir/ftm-grid-preview" --manifest-panes "$session" "$PI_STATE_DIR/manifests")
-	for f in "$PI_STATE_DIR/status/pi-$session-"*.status; do
-		[[ -e $f ]] || continue
-		win="${f##*/pi-"$session"-}"
-		win="${win%.status}"
-		IFS=' ' read -r _st pid _sess <"$f" || true
-		[[ $_sess == "$session" ]] || continue
-		[[ $pid =~ ^[0-9]+$ ]] && ! kill -0 "$pid" 2>/dev/null && continue
-		[[ $seen_windows == *$'\n'"$win"$'\n'* ]] && continue
-		while IFS=$TAB read -r wname windex wpane wcmd wtty; do
-			if [[ ($wname == "$win" || $windex == "$win") && $wcmd == node ]] && is_pi_pane "$wtty" && [[ $seen != *$'\n'"$wpane"$'\n'* ]]; then
-				seen+="$wpane"$'\n'
-				printf '%s\n' "$wpane"
-				break
-			fi
-		done <<<"$panes"
-	done
+  local session="$1" sid="$2" f pane pid win panes
+  local wname windex wpane wcmd wtty seen=$'\n' seen_windows=$'\n' _st _sess
+  panes="$(tmux list-panes -s -t "$sid" -F '#{window_name}'"$TAB"'#{window_index}'"$TAB"'#{pane_id}'"$TAB"'#{pane_current_command}'"$TAB"'#{pane_tty}' 2>/dev/null || true)"
+  while IFS=$TAB read -r pane pid; do
+    [[ -n $pane ]] || continue
+    [[ $pid =~ ^[0-9]+$ ]] && ! kill -0 "$pid" 2>/dev/null && continue
+    while IFS=$TAB read -r wname windex wpane wcmd wtty; do
+      if [[ $wpane == "$pane" && $wcmd == node ]] && is_pi_pane "$wtty" && [[ $seen != *$'\n'"$pane"$'\n'* ]]; then
+        seen+="$pane"$'\n'
+        seen_windows+="$wname"$'\n'"$windex"$'\n'
+        printf '%s\n' "$pane"
+        break
+      fi
+    done <<<"$panes"
+  done < <("$script_dir/ftm-grid-preview" --manifest-panes "$session" "$PI_STATE_DIR/manifests")
+  for f in "$PI_STATE_DIR/status/pi-$session-"*.status; do
+    [[ -e $f ]] || continue
+    win="${f##*/pi-"$session"-}"
+    win="${win%.status}"
+    IFS=' ' read -r _st pid _sess <"$f" || true
+    [[ $_sess == "$session" ]] || continue
+    [[ $pid =~ ^[0-9]+$ ]] && ! kill -0 "$pid" 2>/dev/null && continue
+    [[ $seen_windows == *$'\n'"$win"$'\n'* ]] && continue
+    while IFS=$TAB read -r wname windex wpane wcmd wtty; do
+      if [[ ($wname == "$win" || $windex == "$win") && $wcmd == node ]] && is_pi_pane "$wtty" && [[ $seen != *$'\n'"$wpane"$'\n'* ]]; then
+        seen+="$wpane"$'\n'
+        printf '%s\n' "$wpane"
+        break
+      fi
+    done <<<"$panes"
+  done
 }
 
 # -- fzf preview stdout is a stream of complete frames; the helper owns the
 #    ANSI-safe grid and refreshes it without terminal cursor control.
 function preview_entry() {
-	local line="$1" name path sid pane
-	local -a targets=()
-	if [[ $line == *"$TAB"* ]]; then
-		path="${line#*"$TAB"}"
-		printf '%s%s%s\n' "$C_GRAY" "$path" "$C_RESET"
-		return 0
-	fi
-	name="$(strip_markers "$line")"
-	[[ -n $name ]] || return 0
-	if sid="$(session_id_for "$name")"; then
-		while IFS= read -r pane; do
-			[[ -n $pane ]] && targets+=("$pane")
-		done < <(pi_panes_for "$name" "$sid")
-		if [[ ${#targets[@]} -eq 0 ]]; then
-			pane="$(tmux display-message -p -t "$sid" '#{pane_id}' 2>/dev/null || true)"
-			[[ -n $pane ]] && targets+=("$pane")
-		fi
-		if [[ ${#targets[@]} -gt 0 ]]; then
-			"$script_dir/ftm-grid-preview" "$name" "${targets[@]}"
-		fi
-	elif [[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]]; then
-		cat "$layouts_dir/$name.sh"
-	fi
-	return 0
+  local line="$1" name path="" sid pane
+  local -a targets=()
+  name="${line%%"$TAB"*}"
+  if [[ $line == *"$TAB"* ]]; then
+    path="${line#*"$TAB"}"
+    path="${path%%"$TAB"*}"
+  fi
+  if [[ -n $path ]]; then
+    printf '%s%s%s\n' "$C_GRAY" "${path/#$HOME/$TILDE}" "$C_RESET"
+    return 0
+  fi
+  [[ -n $name ]] || return 0
+  if sid="$(session_id_for "$name")"; then
+    while IFS= read -r pane; do
+      [[ -n $pane ]] && targets+=("$pane")
+    done < <(pi_panes_for "$name" "$sid")
+    if [[ ${#targets[@]} -eq 0 ]]; then
+      pane="$(tmux display-message -p -t "$sid" '#{pane_id}' 2>/dev/null || true)"
+      [[ -n $pane ]] && targets+=("$pane")
+    fi
+    if [[ ${#targets[@]} -gt 0 ]]; then
+      "$script_dir/ftm-grid-preview" "$name" "${targets[@]}"
+    fi
+  elif [[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]]; then
+    cat "$layouts_dir/$name.sh"
+  fi
+  return 0
 }
 
 # -- pre-defined layout names (one glob, no subshells)
 function get_layouts() {
-	local f
-	[[ -n $layouts_dir ]] || return 0
-	for f in "$layouts_dir"/*.sh; do
-		[[ -e $f ]] || continue
-		f="${f##*/}"
-		printf '%s\n' "${f%.sh}"
-	done
+  local f
+  [[ -n $layouts_dir ]] || return 0
+  for f in "$layouts_dir"/*.sh; do
+    [[ -e $f ]] || continue
+    f="${f##*/}"
+    printf '%s\n' "${f%.sh}"
+  done
+}
+
+# -- picker row: plain name<TAB>raw path (optional)<TAB>ANSI display.
+function print_entry() {
+  local name="$1" path="${2:-}" icon="${3:-}" color="${4:-$C_DIM}"
+  # Tabs/newlines cannot be represented in the picker row protocol.
+  [[ $name != *$TAB* && $path != *$TAB* && $name != *$'\n'* && $path != *$'\n'* ]] || return 0
+  printf '%s\t%s\t%s%s%s' "$name" "$path" "$color" "$name" "$C_RESET"
+  [[ -z $icon ]] || printf ' %s' "$icon"
+  [[ -z $path ]] || printf '\t%s%s%s' "$C_GRAY" "${path/#$HOME/$TILDE}" "$C_RESET"
+  printf '\n'
 }
 
 # -- print a running-session row: bold name plus a pi status icon following
 #    the common three-state agent model (workmux/fleet/claude-squad):
-#      red ●    needs attention — blocked on a structured question or the
-#               turn ended with an error (states asking/error)
-#      green ●  actively working, no issues (state working)
-#      white ○  idle — no prompt yet or turn completed cleanly (idle/done)
+#      red    needs attention — blocked on a structured question or the
+#              turn ended with an error (states asking/error)
+#      green  actively working, no issues (state working)
+#      white  idle — no prompt yet or turn completed cleanly (idle/done)
 #    Sessions without a live pi status file render no icon.
 function print_running() {
-	local name="$1"
-	if [[ $status_red == *$'\n'"$name"$'\n'* ]]; then
-		printf '%s%s%s %s●%s\n' "$C_BOLD" "$name" "$C_RESET" "$C_RED" "$C_RESET"
-	elif [[ $status_green == *$'\n'"$name"$'\n'* ]]; then
-		printf '%s%s%s %s●%s\n' "$C_BOLD" "$name" "$C_RESET" "$C_GREEN" "$C_RESET"
-	elif [[ $status_idle == *$'\n'"$name"$'\n'* ]]; then
-		printf '%s%s%s %s○%s\n' "$C_BOLD" "$name" "$C_RESET" "$C_WHITE" "$C_RESET"
-	else
-		printf '%s%s%s\n' "$C_BOLD" "$name" "$C_RESET"
-	fi
+  local name="$1" icon=""
+  if [[ $status_red == *$'\n'"$name"$'\n'* ]]; then
+    icon="$C_RED$ICON_ATTENTION$C_RESET"
+  elif [[ $status_green == *$'\n'"$name"$'\n'* ]]; then
+    icon="$C_GREEN$ICON_WORKING$C_RESET"
+  elif [[ $status_idle == *$'\n'"$name"$'\n'* ]]; then
+    icon="$C_WHITE$ICON_IDLE$C_RESET"
+  fi
+  print_entry "$name" "" "$icon" "$C_BOLD"
 }
 
 # -- annotated picker list. Running sessions render bold (non-running
@@ -538,119 +541,119 @@ function print_running() {
 #    path". Ordering: MRU file, then running sessions by last-attached, then
 #    zoxide by frecency, then layouts alphabetically.
 function print_list() {
-	local exclude_current="${1:-}"
-	local emitted=$'\n' sess_wrapped=$'\n'
-	local s name path line zi mi n f st st_pid st_sess running_count=0
-	local status_red=$'\n' status_green=$'\n' status_idle=$'\n'
-	local -a sess_order=() zx_names=() zx_paths=() mru_names=() mru_paths=()
+  local exclude_current="${1:-}"
+  local emitted=$'\n' sess_wrapped=$'\n'
+  local s name path line zi mi n f st st_pid st_sess running_count=0
+  local status_red=$'\n' status_green=$'\n' status_idle=$'\n'
+  local -a sess_order=() zx_names=() zx_paths=() mru_names=() mru_paths=()
 
-	# pi agent states (dead pids skipped)
-	for f in "$PI_STATE_DIR/status"/pi-*.status; do
-		[[ -e $f ]] || continue
-		IFS=' ' read -r st st_pid st_sess <"$f" || true
-		[[ -n $st_sess ]] || continue
-		[[ $st_pid =~ ^[0-9]+$ ]] && ! kill -0 "$st_pid" 2>/dev/null && continue
-		case $st in
-		asking | error) status_red+="$st_sess"$'\n' ;;
-		working) status_green+="$st_sess"$'\n' ;;
-		idle | done) status_idle+="$st_sess"$'\n' ;;
-		esac
-	done
+  # pi agent states (dead pids skipped)
+  for f in "$PI_STATE_DIR/status"/pi-*.status; do
+    [[ -e $f ]] || continue
+    IFS=' ' read -r st st_pid st_sess <"$f" || true
+    [[ -n $st_sess ]] || continue
+    [[ $st_pid =~ ^[0-9]+$ ]] && ! kill -0 "$st_pid" 2>/dev/null && continue
+    case $st in
+      asking | error) status_red+="$st_sess"$'\n' ;;
+      working) status_green+="$st_sess"$'\n' ;;
+      idle | done) status_idle+="$st_sess"$'\n' ;;
+    esac
+  done
 
-	# running sessions, most recently attached first
-	while IFS= read -r line; do
-		s="${line#* }"
-		[[ -n $s ]] || continue
-		sess_order+=("$s")
-		sess_wrapped+="$s"$'\n'
-	done < <(tmux list-sessions -F '#{session_last_attached} #{session_name}' 2>/dev/null | sort -rn)
+  # running sessions, most recently attached first
+  while IFS= read -r line; do
+    s="${line#* }"
+    [[ -n $s ]] || continue
+    sess_order+=("$s")
+    sess_wrapped+="$s"$'\n'
+  done < <(tmux list-sessions -F '#{session_last_attached} #{session_name}' 2>/dev/null | sort -rn)
 
-	# top zoxide dirs by frecency
-	n=0
-	if command -v zoxide &>/dev/null; then
-		while IFS= read -r path; do
-			[[ $n -ge $FTM_ZOXIDE_LIMIT ]] && break
-			[[ -d $path ]] || continue
-			zx_names+=("${path##*/}")
-			zx_paths+=("$path")
-			n=$((n + 1))
-		done < <(zoxide query -l 2>/dev/null || true)
-	fi
+  # top zoxide dirs by frecency
+  n=0
+  if command -v zoxide &>/dev/null; then
+    while IFS= read -r path; do
+      [[ $n -ge $FTM_ZOXIDE_LIMIT ]] && break
+      [[ -d $path ]] || continue
+      zx_names+=("${path##*/}")
+      zx_paths+=("$path")
+      n=$((n + 1))
+    done < <(zoxide query -l 2>/dev/null || true)
+  fi
 
-	# MRU entries, most recent first: "name<TAB>cwd" (cwd may be empty)
-	if [[ -f $recent_file ]]; then
-		while IFS= read -r line; do
-			[[ -n $line ]] || continue
-			mru_names+=("${line%%"$TAB"*}")
-			if [[ $line == *"$TAB"* ]]; then
-				mru_paths+=("${line#*"$TAB"}")
-			else
-				mru_paths+=("")
-			fi
-		done <"$recent_file"
-	fi
+  # MRU entries, most recent first: "name<TAB>cwd" (cwd may be empty)
+  if [[ -f $recent_file ]]; then
+    while IFS= read -r line; do
+      [[ -n $line ]] || continue
+      mru_names+=("${line%%"$TAB"*}")
+      if [[ $line == *"$TAB"* ]]; then
+        mru_paths+=("${line#*"$TAB"}")
+      else
+        mru_paths+=("")
+      fi
+    done <"$recent_file"
+  fi
 
-	# 1) MRU running sessions, then remaining running sessions by last-attached.
-	for mi in "${!mru_names[@]}"; do
-		name="${mru_names[$mi]}"
-		[[ $name == "default" || $name == "$exclude_current" ]] && continue
-		[[ $sess_wrapped == *$'\n'"$name"$'\n'* ]] || continue
-		[[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
-		emitted+="$name"$'\n'
-		running_count=$((running_count + 1))
-		print_running "$name"
-	done
+  # 1) MRU running sessions, then remaining running sessions by last-attached.
+  for mi in "${!mru_names[@]}"; do
+    name="${mru_names[$mi]}"
+    [[ $name == "default" || $name == "$exclude_current" ]] && continue
+    [[ $sess_wrapped == *$'\n'"$name"$'\n'* ]] || continue
+    [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
+    emitted+="$name"$'\n'
+    running_count=$((running_count + 1))
+    print_running "$name"
+  done
 
-	# 2) remaining running sessions by last-attached
-	for name in ${sess_order[@]+"${sess_order[@]}"}; do
-		[[ $name == "default" || $name == "$exclude_current" ]] && continue
-		[[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
-		emitted+="$name"$'\n'
-		running_count=$((running_count + 1))
-		print_running "$name"
-	done
+  # 2) remaining running sessions by last-attached
+  for name in ${sess_order[@]+"${sess_order[@]}"}; do
+    [[ $name == "default" || $name == "$exclude_current" ]] && continue
+    [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
+    emitted+="$name"$'\n'
+    running_count=$((running_count + 1))
+    print_running "$name"
+  done
 
-	[[ $running_count -gt 0 ]] && printf '%s%s%s\n' "$C_DIM" "$(divider_line)" "$C_RESET"
+  [[ $running_count -gt 0 ]] && print_entry "$(divider_line)"
 
-	# 3) dead MRU entries, then zoxide dirs and layouts.
-	for mi in "${!mru_names[@]}"; do
-		name="${mru_names[$mi]}"
-		[[ $name == "default" || $name == "$exclude_current" ]] && continue
-		[[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
-		if [[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]]; then
-			emitted+="$name"$'\n'
-			printf '%s%s%s\n' "$C_DIM" "$name" "$C_RESET"
-		elif [[ -n ${mru_paths[$mi]} && -d ${mru_paths[$mi]} ]]; then
-			emitted+="$name"$'\n'
-			printf '%s%s%s\t%s%s%s\n' "$C_DIM" "$name" "$C_RESET" "$C_GRAY" "${mru_paths[$mi]/#$HOME/$TILDE}" "$C_RESET"
-		else
-			for zi in "${!zx_names[@]}"; do
-				if [[ ${zx_names[$zi]} == "$name" ]]; then
-					emitted+="$name"$'\n'
-					printf '%s%s%s\t%s%s%s\n' "$C_DIM" "$name" "$C_RESET" "$C_GRAY" "${zx_paths[$zi]/#$HOME/$TILDE}" "$C_RESET"
-					break
-				fi
-			done
-		fi
-	done
+  # 3) dead MRU entries, then zoxide dirs and layouts.
+  for mi in "${!mru_names[@]}"; do
+    name="${mru_names[$mi]}"
+    [[ $name == "default" || $name == "$exclude_current" ]] && continue
+    [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
+    if [[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]]; then
+      emitted+="$name"$'\n'
+      print_entry "$name"
+    elif [[ -n ${mru_paths[$mi]} && -d ${mru_paths[$mi]} ]]; then
+      emitted+="$name"$'\n'
+      print_entry "$name" "${mru_paths[$mi]}"
+    else
+      for zi in "${!zx_names[@]}"; do
+        if [[ ${zx_names[$zi]} == "$name" ]]; then
+          emitted+="$name"$'\n'
+          print_entry "$name" "${zx_paths[$zi]}"
+          break
+        fi
+      done
+    fi
+  done
 
-	# remaining zoxide dirs by frecency (layout name wins → deferred to 4)
-	for zi in "${!zx_names[@]}"; do
-		name="${zx_names[$zi]}"
-		[[ -z $name || $name == "default" || $name == "$exclude_current" ]] && continue
-		[[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
-		[[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]] && continue
-		emitted+="$name"$'\n'
-		printf '%s%s%s\t%s%s%s\n' "$C_DIM" "$name" "$C_RESET" "$C_GRAY" "${zx_paths[$zi]/#$HOME/$TILDE}" "$C_RESET"
-	done
+  # remaining zoxide dirs by frecency (layout name wins → deferred to 4)
+  for zi in "${!zx_names[@]}"; do
+    name="${zx_names[$zi]}"
+    [[ -z $name || $name == "default" || $name == "$exclude_current" ]] && continue
+    [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
+    [[ -n $layouts_dir && -f "$layouts_dir/$name.sh" ]] && continue
+    emitted+="$name"$'\n'
+    print_entry "$name" "${zx_paths[$zi]}"
+  done
 
-	# 4) remaining layouts (glob order = alphabetical)
-	while IFS= read -r name; do
-		[[ -z $name || $name == "default" || $name == "$exclude_current" ]] && continue
-		[[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
-		emitted+="$name"$'\n'
-		printf '%s%s%s\n' "$C_DIM" "$name" "$C_RESET"
-	done < <(get_layouts)
+  # 4) remaining layouts (glob order = alphabetical)
+  while IFS= read -r name; do
+    [[ -z $name || $name == "default" || $name == "$exclude_current" ]] && continue
+    [[ $emitted == *$'\n'"$name"$'\n'* ]] && continue
+    emitted+="$name"$'\n'
+    print_entry "$name"
+  done < <(get_layouts)
 }
 
 # -- change to the given existing session. MRU write and the post-switch hook
@@ -658,169 +661,162 @@ function print_list() {
 #    binding, switch-client collapses the popup and tmux HUPs this script, so
 #    nothing after the switch is guaranteed to run.
 function to_session() {
-	local session sid spath
-	session="$(strip_markers "$1")"
-	sid="$(session_id_for "$session")" || return 1
-	spath="$(tmux display-message -p -t "$sid" '#{session_path}' 2>/dev/null || true)"
-	bump_recent "$session" "$spath"
-	tmux "$change" -t "$sid" ';' refresh-client
+  local session="$1" sid spath
+  sid="$(session_id_for "$session")" || return 1
+  spath="$(tmux display-message -p -t "$sid" '#{session_path}' 2>/dev/null || true)"
+  bump_recent "$session" "$spath"
+  tmux "$change" -t "$sid" ';' refresh-client
 }
 
 # -- Git directories use wt's full lifecycle, including primary checkouts.
 #    Keep explicit primary-checkout layouts; linked worktrees always use wt.
 #    Alt-enter bypasses both paths and builds a fresh generic session.
 function new_session() {
-	local session="$1" cwd="$2" source="${3:-default}" gd
+  local session="$1" cwd="$2" source="${3:-default}" gd
 
-	if [[ $source != fresh ]] && gd="$(git -C "$cwd" rev-parse --git-dir 2>/dev/null)"; then
-		if [[ $gd == */worktrees/* || -z $layouts_dir || ! -f "$layouts_dir/$session.sh" ]]; then
-			(cd "$cwd" && env -u GIT_WORKTREE "$script_dir/wt" open .)
-			return $?
-		fi
-	fi
+  if [[ $source != fresh ]] && gd="$(git -C "$cwd" rev-parse --git-dir 2>/dev/null)"; then
+    if [[ $gd == */worktrees/* || -z $layouts_dir || ! -f "$layouts_dir/$session.sh" ]]; then
+      (cd "$cwd" && env -u GIT_WORKTREE "$script_dir/wt" open .)
+      return $?
+    fi
+  fi
 
-	if [[ $source != fresh && -f "$(snapshot_file "$session")" ]] && restore_snapshot "$session"; then
-		to_session "$session"
-		return 0
-	fi
-	local force_default=0
-	if [[ $source == fresh ]]; then
-		source="default"
-		force_default=1
-	fi
-	[[ $force_default == 0 && -n $layouts_dir && -f "$layouts_dir/$session.sh" ]] && source="layout"
+  if [[ $source != fresh && -f "$(snapshot_file "$session")" ]] && restore_snapshot "$session"; then
+    to_session "$session"
+    return 0
+  fi
+  local force_default=0
+  if [[ $source == fresh ]]; then
+    source="default"
+    force_default=1
+  fi
+  [[ $force_default == 0 && -n $layouts_dir && -f "$layouts_dir/$session.sh" ]] && source="layout"
 
-	if [[ $source == "layout" ]]; then
-		bash "$layouts_dir/$session.sh" ||
-			tmux new-session -d -s "$session" -c "$cwd"
-	else
-		# Canonical generic builder: same deterministic code/agent/services
-		# lifecycle as worktree sessions, without Git locks or worktree tags
-		# (replaces the deleted layouts/default.sh).
-		"$0" ensure --kind generic --cwd "$cwd" --session "$session" --attach never >/dev/null ||
-			tmux new-session -d -s "$session" -c "$cwd"
-	fi
+  if [[ $source == "layout" ]]; then
+    bash "$layouts_dir/$session.sh" ||
+      tmux new-session -d -s "$session" -c "$cwd"
+  else
+    # Canonical generic builder: same deterministic code/agent/services
+    # lifecycle as worktree sessions, without Git locks or worktree tags
+    # (replaces the deleted layouts/default.sh).
+    "$0" ensure --kind generic --cwd "$cwd" --session "$session" --attach never >/dev/null ||
+      tmux new-session -d -s "$session" -c "$cwd"
+  fi
 
-	to_session "$session"
+  to_session "$session"
 }
 
 # -- try to change to an existing session; otherwise, create a new one
 function try_session() {
-	local session cwd source line fresh=0
-	# fzf output: query line first; alt-enter's accept appends the FTM_FRESH
-	# marker after it (print() mimics --expect: query, marker, selection) —
-	# scan every line, honor the marker anywhere, keep the first session line
-	session="" cwd="" source="default"
-	while IFS= read -r line; do
-		[[ -n $line ]] || continue
-		if [[ $line == "$FTM_FRESH" ]]; then
-			fresh=1
-			continue
-		fi
-		[[ -n $session ]] && continue
-		if [[ $line == *$TAB* ]]; then
-			# zoxide entry: "name<TAB>path" (~ shortened for display)
-			session="${line%%"$TAB"*}"
-			cwd="${line#*"$TAB"}"
-			cwd="${cwd#\\}" # heal rows rendered by bash 3.2's \~ replacement
-			cwd="${cwd/#\~/$HOME}"
-			source="zoxide"
-		else
-			session="$(strip_markers "$line")"
-		fi
-	done <<<"$1"
-	[[ -n $session ]] || exit 0
-	# divider row (all dashes): backstop — the enter bind already ignores it
-	[[ $session =~ ^-+$ ]] && exit 0
+  local session cwd="" source="default" line selected="" fresh=0
+  # fzf prints query, optional fresh marker, then the selected raw row.
+  # Prefer the last non-marker line; a query or raw CLI name also works.
+  while IFS= read -r line; do
+    [[ -n $line ]] || continue
+    if [[ $line == "$FTM_FRESH" ]]; then
+      fresh=1
+      continue
+    fi
+    selected="$line"
+  done <<<"$1"
+  session="${selected%%"$TAB"*}"
+  if [[ $selected == *"$TAB"* ]]; then
+    cwd="${selected#*"$TAB"}"
+    cwd="${cwd%%"$TAB"*}"
+    [[ -z $cwd ]] || source="zoxide"
+  fi
+  [[ -n $session ]] || exit 0
+  # divider row (all dashes): backstop — the enter bind already ignores it
+  [[ $session =~ ^-+$ ]] && exit 0
 
-	if [[ -z $cwd ]]; then
-		cwd=$(zoxide query "$session" 2>/dev/null || true)
-		[[ -n $cwd ]] && source="zoxide"
-	fi
+  if [[ -z $cwd ]]; then
+    cwd=$(zoxide query "$session" 2>/dev/null || true)
+    [[ -n $cwd ]] && source="zoxide"
+  fi
 
-	# backup plan: use code dir if zoxide finds nothing
-	if [[ -z "$cwd" ]]; then
-		cwd="$HOME/code"
-		source="default"
-	fi
+  # backup plan: use code dir if zoxide finds nothing
+  if [[ -z "$cwd" ]]; then
+    cwd="$HOME/code"
+    source="default"
+  fi
 
-	to_session "$session" 2>/dev/null || {
-		if [[ $fresh == 1 ]]; then
-			new_session "$session" "$cwd" fresh
-		else
-			new_session "$session" "$cwd" "$source"
-		fi
-	}
+  to_session "$session" 2>/dev/null || {
+    if [[ $fresh == 1 ]]; then
+      new_session "$session" "$cwd" fresh
+    else
+      new_session "$session" "$cwd" "$source"
+    fi
+  }
 }
 
 function fuzzy_find() {
-	local current_session sessions_count fzf_list
-	local fzf_prompt_text fzf_header_text selected_session
-	declare -a fzf_extra_args=()
+  local current_session sessions_count fzf_list
+  local fzf_prompt_text fzf_header_text selected_session
+  declare -a fzf_extra_args=()
 
-	current_session="$(tmux display-message -p '#S')"
-	fzf_list="$(print_list "$current_session")"
+  current_session="$(tmux display-message -p '#S')"
+  fzf_list="$(print_list "$current_session")"
 
-	sessions_count=0
-	while IFS= read -r _; do sessions_count=$((sessions_count + 1)); done \
-		< <(tmux list-sessions -F '#S' 2>/dev/null || true)
+  sessions_count=0
+  while IFS= read -r _; do sessions_count=$((sessions_count + 1)); done \
+    < <(tmux list-sessions -F '#S' 2>/dev/null || true)
 
-	if [[ $sessions_count -le 1 ]]; then
-		fzf_prompt_text=" create new session  "
-		fzf_header_text="󰢩 recent dirs & layouts [ctrl-x: forget / alt-enter: fresh]"
-	else
-		fzf_prompt_text=" new or existing session  "
-		fzf_header_text="󰢩 ${C_ITALIC}${C_MAGENTA}${current_session}${C_RESET} [${C_WHITE}ctrl-k${C_RESET}: ${C_GRAY}kill / ${C_WHITE}ctrl-x${C_RESET}: ${C_GRAY}forget / ${C_WHITE}ctrl-r${C_RESET}: ${C_GRAY}rename / ${C_WHITE}alt-enter${C_RESET}: ${C_GRAY}fresh${C_RESET}]"
-	fi
+  if [[ $sessions_count -le 1 ]]; then
+    fzf_prompt_text=" create new session  "
+    fzf_header_text="󰢩 recent dirs & layouts [ctrl-x: forget / alt-enter: fresh]"
+  else
+    fzf_prompt_text=" new or existing session  "
+    fzf_header_text="󰢩 ${C_ITALIC}${C_MAGENTA}${current_session}${C_RESET} [${C_WHITE}ctrl-k${C_RESET}: ${C_GRAY}kill / ${C_WHITE}ctrl-x${C_RESET}: ${C_GRAY}forget / ${C_WHITE}ctrl-r${C_RESET}: ${C_GRAY}rename / ${C_WHITE}alt-enter${C_RESET}: ${C_GRAY}fresh${C_RESET}]"
+  fi
 
-	# -- picker actions; reload regenerates the annotated list so markers stay correct
-	# Enter/Alt-Enter nest their divider check: fzf skips any action whose
-	# template contains a bare {} when nothing matches, which made Enter a no-op
-	# on typed queries with no matching row. The outer transform is
-	# placeholder-free ($FZF_MATCH_COUNT env, \{} escaped), so it always runs;
-	# the {} dash-check only runs when a current item exists. Alt-Enter uses
-	# accept, not print-query: print() mimics --expect (query, marker, selection
-	# output order) and print-query drops queued print() lines entirely.
-	# shellcheck disable=SC2016 # fzf action templates: {} and $() expand in fzf's shell, not here
-	# "=" prefix forces exact session-name match (names like .dotfiles-... otherwise
-	# trip tmux's target parser, which treats a leading dot as a window separator)
-	local kill_action='execute-silent(ftm remove --session "$(printf %s {} | sed -E "s/\t.*$//; s/ [●○]$//")")+reload(ftm --list)' \
-		forget_action='execute(session=$(printf %s {} | sed -E "s/\t.*$//; s/ [●○]$//"); [[ $session =~ ^-+$ ]] && exit 0; printf >&2 "Kill and forget %s (snapshot + recent entry)? [y/N] " "$session"; read -r answer; [[ $answer == y || $answer == Y ]] && ftm remove --session "$session" --discard-snapshot)+reload(ftm --list)' \
-		rename_action='execute(session=$(printf %s {} | sed -E "s/\t.*$//; s/ [●○]$//"); printf >&2 "New session name: "; read -r name; tmux rename-session -t "$(ftm --id="$session")" "${name}")+reload(ftm --list)'
+  # -- picker actions; reload regenerates the annotated list so markers stay correct
+  # Enter/Alt-Enter nest their divider check: fzf skips any action whose
+  # template contains an item placeholder when nothing matches, which made
+  # Enter a no-op on typed queries with no matching row. The outer transform is
+  # placeholder-free ($FZF_MATCH_COUNT env, \{s1} escaped), so it always runs;
+  # the name dash-check only runs when a current item exists. Alt-Enter uses
+  # accept, not print-query: print() mimics --expect (query, marker, selection
+  # output order) and print-query drops queued print() lines entirely.
+  # shellcheck disable=SC2016 # fzf action templates expand in fzf's shell, not here
+  local kill_action='execute-silent(ftm remove --session {s1})+reload(ftm --list)' \
+    forget_action='execute(session={s1}; [[ $session =~ ^-+$ ]] && exit 0; printf >&2 "Kill and forget %s (snapshot + recent entry)? [y/N] " "$session"; read -r answer; [[ $answer == y || $answer == Y ]] && ftm remove --session "$session" --discard-snapshot)+reload(ftm --list)' \
+    rename_action='execute(session={s1}; printf >&2 "New session name: "; read -r name; tmux rename-session -t "$(ftm --id="$session")" "${name}")+reload(ftm --list)'
 
-	# native fzf tmux popup unless we're already inside one (-p)
-	[[ $POPUP == "true" ]] || fzf_extra_args+=(--tmux "center,70%,75%")
+  # native fzf tmux popup unless we're already inside one (-p)
+  [[ $POPUP == "true" ]] || fzf_extra_args+=(--tmux "center,70%,75%")
 
-	# shellcheck disable=SC2016 # fzf transform templates: $FZF_MATCH_COUNT and {} expand in fzf's shell
-	selected_session="$(
-		fzf \
-			${fzf_extra_args[@]+"${fzf_extra_args[@]}"} \
-			--height=100% \
-			--ansi \
-			--reverse \
-			--border=none \
-			--scrollbar="▌▐" \
-			--padding="1" \
-			--prompt="${fzf_prompt_text}" \
-			--header="${fzf_header_text}" \
-			--color="bg:#3c474d,bg+:#323d43,preview-bg:#262b31" \
-			--preview="ftm --preview={}" \
-			--preview-window="down,65%,nowrap" \
-			--with-shell="bash -c" \
-			--bind="change:first" \
-			--bind="?:toggle-preview" \
-			--bind="ctrl-u:preview-half-page-up,ctrl-d:preview-half-page-down" \
-			--bind="ctrl-k:${kill_action}" \
-			--bind="ctrl-x:${forget_action}" \
-			--bind="ctrl-r:${rename_action}" \
-			--bind='enter:transform:if [[ $FZF_MATCH_COUNT -eq 0 ]]; then echo print-query; else echo "transform:[[ \{} =~ ^-+$ ]] && echo ignore || echo replace-query+print-query"; fi' \
-			--bind="alt-enter:transform:if [[ \$FZF_MATCH_COUNT -eq 0 ]]; then echo 'print(${FTM_FRESH})+accept'; else echo \"transform:[[ \{} =~ ^-+\$ ]] && echo ignore || echo 'print(${FTM_FRESH})+replace-query+accept'\"; fi" \
-			--pointer='▌' \
-			--marker='󰛄' \
-			--print-query <<<"$fzf_list"
-	)" || true
+  # shellcheck disable=SC2016 # fzf transform templates: $FZF_MATCH_COUNT and {} expand in fzf's shell
+  selected_session="$(
+    fzf \
+      ${fzf_extra_args[@]+"${fzf_extra_args[@]}"} \
+      --height=100% \
+      --ansi \
+      --delimiter="$TAB" \
+      --with-nth=3.. \
+      --reverse \
+      --border=none \
+      --scrollbar="▌▐" \
+      --padding="1" \
+      --prompt="${fzf_prompt_text}" \
+      --header="${fzf_header_text}" \
+      --color="bg:#3c474d,bg+:#323d43,preview-bg:#262b31" \
+      --preview="ftm --preview={s1..2}" \
+      --preview-window="down,65%,nowrap" \
+      --with-shell="bash -c" \
+      --bind="change:first" \
+      --bind="?:toggle-preview" \
+      --bind="ctrl-u:preview-half-page-up,ctrl-d:preview-half-page-down" \
+      --bind="ctrl-k:${kill_action}" \
+      --bind="ctrl-x:${forget_action}" \
+      --bind="ctrl-r:${rename_action}" \
+      --bind='enter:transform:if [[ $FZF_MATCH_COUNT -eq 0 ]]; then echo print-query; else echo "transform:[[ \{s1} =~ ^-+$ ]] && echo ignore || echo accept"; fi' \
+      --bind="alt-enter:transform:if [[ \$FZF_MATCH_COUNT -eq 0 ]]; then echo 'print(${FTM_FRESH})+accept'; else echo \"transform:[[ \{s1} =~ ^-+\$ ]] && echo ignore || echo 'print(${FTM_FRESH})+accept'\"; fi" \
+      --pointer='▌' \
+      --marker='󰛄' \
+      --print-query <<<"$fzf_list"
+  )" || true
 
-	try_session "$selected_session"
+  try_session "$selected_session"
 }
 
 # ---------------------------------------------------------------------------
@@ -842,132 +838,132 @@ DETERMINISTIC_GCD="" DETERMINISTIC_OWNED_LEASE="" DETERMINISTIC_SETUP_STATE=skip
 DETERMINISTIC_TMUX_ACTION="" DETERMINISTIC_W_CODE="" DETERMINISTIC_W_AGENT="" DETERMINISTIC_W_SERVICES="" DETERMINISTIC_WINDOW_ID=""
 
 function deterministic_json_escape() {
-	local s="$1"
-	s="${s//\\/\\\\}"
-	s="${s//\"/\\\"}"
-	s="${s//$'\n'/\\n}"
-	s="${s//$'\r'/\\r}"
-	s="${s//$'\t'/\\t}"
-	printf '%s' "$s"
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  s="${s//$'\n'/\\n}"
+  s="${s//$'\r'/\\r}"
+  s="${s//$'\t'/\\t}"
+  printf '%s' "$s"
 }
 
 function deterministic_release_locks() {
-	[[ -n $DETERMINISTIC_OWNED_LEASE && -n $DETERMINISTIC_GCD ]] || return 0
-	wtlock_release "$DETERMINISTIC_GCD" "$DETERMINISTIC_WID" "$DETERMINISTIC_OWNED_LEASE" || true
-	DETERMINISTIC_OWNED_LEASE=""
+  [[ -n $DETERMINISTIC_OWNED_LEASE && -n $DETERMINISTIC_GCD ]] || return 0
+  wtlock_release "$DETERMINISTIC_GCD" "$DETERMINISTIC_WID" "$DETERMINISTIC_OWNED_LEASE" || true
+  DETERMINISTIC_OWNED_LEASE=""
 }
 
 # deterministic_error EXIT CODE PHASE MESSAGE — emit one JSON error document (or a
 # stderr line in text mode), release owned locks, and exit.
 function deterministic_error() {
-	local exit_code="$1" code="$2" phase="$3" message="$4"
-	deterministic_release_locks
-	if [[ $DETERMINISTIC_FORMAT == json ]]; then
-		printf '{"schema_version":1,"command":"%s","status":"error","phase":"%s","error":{"code":"%s","message":"%s"},"attached":false,"warnings":[]}\n' \
-			"$(deterministic_json_escape "$DETERMINISTIC_CMD")" "$(deterministic_json_escape "$phase")" \
-			"$(deterministic_json_escape "$code")" "$(deterministic_json_escape "$message")"
-	else
-		printf 'ftm %s: %s: %s\n' "$DETERMINISTIC_CMD" "$code" "$message" >&2
-	fi
-	exit "$exit_code"
+  local exit_code="$1" code="$2" phase="$3" message="$4"
+  deterministic_release_locks
+  if [[ $DETERMINISTIC_FORMAT == json ]]; then
+    printf '{"schema_version":1,"command":"%s","status":"error","phase":"%s","error":{"code":"%s","message":"%s"},"attached":false,"warnings":[]}\n' \
+      "$(deterministic_json_escape "$DETERMINISTIC_CMD")" "$(deterministic_json_escape "$phase")" \
+      "$(deterministic_json_escape "$code")" "$(deterministic_json_escape "$message")"
+  else
+    printf 'ftm %s: %s: %s\n' "$DETERMINISTIC_CMD" "$code" "$message" >&2
+  fi
+  exit "$exit_code"
 }
 
 function deterministic_wait_ms() {
-	# JSON/noninteractive callers never wait; interactive callers wait bounded.
-	if [[ $DETERMINISTIC_FORMAT == json ]]; then printf 0; else printf '%s' "${FTM_LOCK_WAIT_MS:-5000}"; fi
+  # JSON/noninteractive callers never wait; interactive callers wait bounded.
+  if [[ $DETERMINISTIC_FORMAT == json ]]; then printf 0; else printf '%s' "${FTM_LOCK_WAIT_MS:-5000}"; fi
 }
 
 function deterministic_parse() {
-	DETERMINISTIC_CMD="$1"
-	shift
-	local a
-	# Pre-scan for --format so even usage errors honor JSON mode.
-	local -a argv=("$@")
-	local i=0
-	while [[ $i -lt $# ]]; do
-		if [[ ${argv[$i]} == --format && $((i + 1)) -lt $# && ${argv[$((i + 1))]} == json ]]; then
-			DETERMINISTIC_FORMAT=json
-		fi
-		i=$((i + 1))
-	done
-	while [[ $# -gt 0 ]]; do
-		a="$1"
-		case "$a" in
-		--kind | --cwd | --session | --worktree-id | --lease | --attach | --format | --pi-session)
-			[[ $# -ge 2 ]] || deterministic_error 2 usage args "missing value for $a"
-			case "$a" in
-			--kind) DETERMINISTIC_KIND="$2" ;;
-			--cwd) DETERMINISTIC_CWD="$2" ;;
-			--session) DETERMINISTIC_SESSION="$2" ;;
-			--worktree-id) DETERMINISTIC_WID="$2" ;;
-			--lease) DETERMINISTIC_LEASE="$2" ;;
-			--attach) DETERMINISTIC_ATTACH="$2" ;;
-			--format) DETERMINISTIC_FORMAT="$2" ;;
-			--pi-session) DETERMINISTIC_PI_SESSION="$2" ;;
-			esac
-			shift 2
-			;;
-		--presentation)
-			[[ $# -ge 2 ]] || deterministic_error 2 usage args 'missing value for --presentation'
-			DETERMINISTIC_PRESENTATION="$2"
-			shift 2
-			[[ $DETERMINISTIC_PRESENTATION == cd || $DETERMINISTIC_PRESENTATION == window || $DETERMINISTIC_PRESENTATION == session ]] || deterministic_error 2 usage args '--presentation must be cd|window|session'
-			;;
-		--primary)
-			[[ $DETERMINISTIC_CMD == ensure || $DETERMINISTIC_CMD == repair ]] || deterministic_error 2 usage args '--primary is valid only for ensure/repair'
-			DETERMINISTIC_PRIMARY=1
-			shift
-			;;
-		--restart-services)
-			DETERMINISTIC_RESTART_SERVICES=1
-			shift
-			;;
-		--discard-snapshot)
-			DETERMINISTIC_DISCARD_SNAPSHOT=1
-			shift
-			;;
-		*) deterministic_error 2 usage args "unknown argument: $a" ;;
-		esac
-	done
-	[[ $DETERMINISTIC_FORMAT == json || $DETERMINISTIC_FORMAT == text ]] || deterministic_error 2 usage args "--format must be json|text"
-	[[ $DETERMINISTIC_ATTACH == auto || $DETERMINISTIC_ATTACH == never ]] || deterministic_error 2 usage args "--attach must be auto|never"
-	[[ -n $DETERMINISTIC_SESSION ]] || deterministic_error 2 usage args '--session is required'
-	valid_snapshot_name "$DETERMINISTIC_SESSION" || deterministic_error 2 usage args 'invalid session name'
-	if [[ -n $DETERMINISTIC_PI_SESSION && ! $DETERMINISTIC_PI_SESSION =~ ^[0-9a-fA-F][0-9a-fA-F-]*$ ]]; then
-		deterministic_error 2 usage args 'invalid --pi-session UUID'
-	fi
-	if [[ $DETERMINISTIC_CMD == ensure || $DETERMINISTIC_CMD == repair ]]; then
-		[[ -n $DETERMINISTIC_KIND ]] || deterministic_error 2 usage args '--kind is required'
-		[[ $DETERMINISTIC_KIND == worktree || $DETERMINISTIC_KIND == generic ]] || deterministic_error 2 usage args "--kind must be worktree|generic"
-		[[ $DETERMINISTIC_PRIMARY == 0 || $DETERMINISTIC_KIND == worktree ]] || deterministic_error 2 usage args '--primary requires --kind worktree'
-		[[ -n $DETERMINISTIC_CWD ]] || deterministic_error 2 usage args '--cwd is required'
-		if [[ $DETERMINISTIC_KIND == worktree ]]; then
-			[[ -n $DETERMINISTIC_WID ]] || deterministic_error 2 usage args '--worktree-id is required for --kind worktree'
-		fi
-	fi
+  DETERMINISTIC_CMD="$1"
+  shift
+  local a
+  # Pre-scan for --format so even usage errors honor JSON mode.
+  local -a argv=("$@")
+  local i=0
+  while [[ $i -lt $# ]]; do
+    if [[ ${argv[$i]} == --format && $((i + 1)) -lt $# && ${argv[$((i + 1))]} == json ]]; then
+      DETERMINISTIC_FORMAT=json
+    fi
+    i=$((i + 1))
+  done
+  while [[ $# -gt 0 ]]; do
+    a="$1"
+    case "$a" in
+      --kind | --cwd | --session | --worktree-id | --lease | --attach | --format | --pi-session)
+        [[ $# -ge 2 ]] || deterministic_error 2 usage args "missing value for $a"
+        case "$a" in
+          --kind) DETERMINISTIC_KIND="$2" ;;
+          --cwd) DETERMINISTIC_CWD="$2" ;;
+          --session) DETERMINISTIC_SESSION="$2" ;;
+          --worktree-id) DETERMINISTIC_WID="$2" ;;
+          --lease) DETERMINISTIC_LEASE="$2" ;;
+          --attach) DETERMINISTIC_ATTACH="$2" ;;
+          --format) DETERMINISTIC_FORMAT="$2" ;;
+          --pi-session) DETERMINISTIC_PI_SESSION="$2" ;;
+        esac
+        shift 2
+        ;;
+      --presentation)
+        [[ $# -ge 2 ]] || deterministic_error 2 usage args 'missing value for --presentation'
+        DETERMINISTIC_PRESENTATION="$2"
+        shift 2
+        [[ $DETERMINISTIC_PRESENTATION == cd || $DETERMINISTIC_PRESENTATION == window || $DETERMINISTIC_PRESENTATION == session ]] || deterministic_error 2 usage args '--presentation must be cd|window|session'
+        ;;
+      --primary)
+        [[ $DETERMINISTIC_CMD == ensure || $DETERMINISTIC_CMD == repair ]] || deterministic_error 2 usage args '--primary is valid only for ensure/repair'
+        DETERMINISTIC_PRIMARY=1
+        shift
+        ;;
+      --restart-services)
+        DETERMINISTIC_RESTART_SERVICES=1
+        shift
+        ;;
+      --discard-snapshot)
+        DETERMINISTIC_DISCARD_SNAPSHOT=1
+        shift
+        ;;
+      *) deterministic_error 2 usage args "unknown argument: $a" ;;
+    esac
+  done
+  [[ $DETERMINISTIC_FORMAT == json || $DETERMINISTIC_FORMAT == text ]] || deterministic_error 2 usage args "--format must be json|text"
+  [[ $DETERMINISTIC_ATTACH == auto || $DETERMINISTIC_ATTACH == never ]] || deterministic_error 2 usage args "--attach must be auto|never"
+  [[ -n $DETERMINISTIC_SESSION ]] || deterministic_error 2 usage args '--session is required'
+  valid_snapshot_name "$DETERMINISTIC_SESSION" || deterministic_error 2 usage args 'invalid session name'
+  if [[ -n $DETERMINISTIC_PI_SESSION && ! $DETERMINISTIC_PI_SESSION =~ ^[0-9a-fA-F][0-9a-fA-F-]*$ ]]; then
+    deterministic_error 2 usage args 'invalid --pi-session UUID'
+  fi
+  if [[ $DETERMINISTIC_CMD == ensure || $DETERMINISTIC_CMD == repair ]]; then
+    [[ -n $DETERMINISTIC_KIND ]] || deterministic_error 2 usage args '--kind is required'
+    [[ $DETERMINISTIC_KIND == worktree || $DETERMINISTIC_KIND == generic ]] || deterministic_error 2 usage args "--kind must be worktree|generic"
+    [[ $DETERMINISTIC_PRIMARY == 0 || $DETERMINISTIC_KIND == worktree ]] || deterministic_error 2 usage args '--primary requires --kind worktree'
+    [[ -n $DETERMINISTIC_CWD ]] || deterministic_error 2 usage args '--cwd is required'
+    if [[ $DETERMINISTIC_KIND == worktree ]]; then
+      [[ -n $DETERMINISTIC_WID ]] || deterministic_error 2 usage args '--worktree-id is required for --kind worktree'
+    fi
+  fi
 }
 
 function deterministic_tag() { # $1 = session id, $2 = option name
-	tmux show-options -t "$1" -qv "$2" 2>/dev/null || true
+  tmux show-options -t "$1" -qv "$2" 2>/dev/null || true
 }
 
 # Sessions other than the target that are tagged for the same worktree
 # path/id. Any hit is an ambiguity: never choose between duplicates.
 function deterministic_find_tagged_conflicts() {
-	local line sid name k p i
-	while IFS= read -r line; do
-		sid="${line%% *}"
-		name="${line#* }"
-		[[ $name == "$DETERMINISTIC_SESSION" ]] && continue
-		k="$(deterministic_tag "$sid" @ftm_kind)"
-		[[ $k == worktree ]] || continue
-		p="$(deterministic_tag "$sid" @ftm_worktree)"
-		i="$(deterministic_tag "$sid" @ftm_worktree_id)"
-		if [[ $p == "$DETERMINISTIC_CWD" || (-n $DETERMINISTIC_WID && $i == "$DETERMINISTIC_WID") ]]; then
-			printf '%s\n' "$name"
-		fi
-	done < <(tmux list-sessions -F '#{session_id} #{session_name}' 2>/dev/null || true)
-	return 0
+  local line sid name k p i
+  while IFS= read -r line; do
+    sid="${line%% *}"
+    name="${line#* }"
+    [[ $name == "$DETERMINISTIC_SESSION" ]] && continue
+    k="$(deterministic_tag "$sid" @ftm_kind)"
+    [[ $k == worktree ]] || continue
+    p="$(deterministic_tag "$sid" @ftm_worktree)"
+    i="$(deterministic_tag "$sid" @ftm_worktree_id)"
+    if [[ $p == "$DETERMINISTIC_CWD" || (-n $DETERMINISTIC_WID && $i == "$DETERMINISTIC_WID") ]]; then
+      printf '%s\n' "$name"
+    fi
+  done < <(tmux list-sessions -F '#{session_id} #{session_name}' 2>/dev/null || true)
+  return 0
 }
 
 # Read-only identity validation of the requested session before setup or any
@@ -975,481 +971,481 @@ function deterministic_find_tagged_conflicts() {
 # only when the session cwd and every standard-window pane cwd equal the
 # requested canonical path. Everything else is a conflict — never mutate.
 function deterministic_validate_existing() { # $1 = session id
-	local k p i spath wname pcwd
-	k="$(deterministic_tag "$1" @ftm_kind)"
-	if [[ -n $k ]]; then
-		[[ $k == "$DETERMINISTIC_KIND" ]] ||
-			deterministic_error 5 session_conflict identity "session '$DETERMINISTIC_SESSION' is tagged kind '$k', expected '$DETERMINISTIC_KIND'"
-		if [[ $DETERMINISTIC_KIND == worktree ]]; then
-			p="$(deterministic_tag "$1" @ftm_worktree)"
-			i="$(deterministic_tag "$1" @ftm_worktree_id)"
-			[[ $p == "$DETERMINISTIC_CWD" && $i == "$DETERMINISTIC_WID" ]] ||
-				deterministic_error 5 session_conflict identity "session '$DETERMINISTIC_SESSION' is tagged for a different worktree"
-		fi
-		return 0
-	fi
-	spath="$(tmux display-message -p -t "$1" '#{session_path}' 2>/dev/null || true)"
-	[[ $spath == "$DETERMINISTIC_CWD" ]] ||
-		deterministic_error 5 session_conflict identity "session '$DETERMINISTIC_SESSION' path '$spath' does not match '$DETERMINISTIC_CWD'"
-	while IFS=$TAB read -r wname pcwd; do
-		case "$wname" in
-		code | agent | services | services-[0-9]*)
-			[[ $pcwd == "$DETERMINISTIC_CWD" ]] ||
-				deterministic_error 5 session_conflict identity "window '$wname' pane cwd '$pcwd' does not match '$DETERMINISTIC_CWD'"
-			;;
-		esac
-	done < <(tmux list-panes -s -t "$1" -F '#{window_name}'"$TAB"'#{pane_current_path}' 2>/dev/null || true)
-	return 0
+  local k p i spath wname pcwd
+  k="$(deterministic_tag "$1" @ftm_kind)"
+  if [[ -n $k ]]; then
+    [[ $k == "$DETERMINISTIC_KIND" ]] ||
+      deterministic_error 5 session_conflict identity "session '$DETERMINISTIC_SESSION' is tagged kind '$k', expected '$DETERMINISTIC_KIND'"
+    if [[ $DETERMINISTIC_KIND == worktree ]]; then
+      p="$(deterministic_tag "$1" @ftm_worktree)"
+      i="$(deterministic_tag "$1" @ftm_worktree_id)"
+      [[ $p == "$DETERMINISTIC_CWD" && $i == "$DETERMINISTIC_WID" ]] ||
+        deterministic_error 5 session_conflict identity "session '$DETERMINISTIC_SESSION' is tagged for a different worktree"
+    fi
+    return 0
+  fi
+  spath="$(tmux display-message -p -t "$1" '#{session_path}' 2>/dev/null || true)"
+  [[ $spath == "$DETERMINISTIC_CWD" ]] ||
+    deterministic_error 5 session_conflict identity "session '$DETERMINISTIC_SESSION' path '$spath' does not match '$DETERMINISTIC_CWD'"
+  while IFS=$TAB read -r wname pcwd; do
+    case "$wname" in
+      code | agent | services | services-[0-9]*)
+        [[ $pcwd == "$DETERMINISTIC_CWD" ]] ||
+          deterministic_error 5 session_conflict identity "window '$wname' pane cwd '$pcwd' does not match '$DETERMINISTIC_CWD'"
+        ;;
+    esac
+  done < <(tmux list-panes -s -t "$1" -F '#{window_name}'"$TAB"'#{pane_current_path}' 2>/dev/null || true)
+  return 0
 }
 
 function deterministic_task_exists() { # $1 = mise task name, probed in the target cwd
-	command -v mise >/dev/null 2>&1 || return 1
-	(cd "$DETERMINISTIC_CWD" && mise tasks info --json "$1" </dev/null >/dev/null 2>&1)
+  command -v mise >/dev/null 2>&1 || return 1
+  (cd "$DETERMINISTIC_CWD" && mise tasks info --json "$1" </dev/null >/dev/null 2>&1)
 }
 
 # Blocking dev:setup gate: runs after identity validation and before any tmux
 # mutation. A missing task is reported as missing, not failed.
 function deterministic_run_setup() {
-	if deterministic_task_exists dev:setup; then
-		# Worktree mode supplies the canonical GIT_WORKTREE so project env
-		# derivation (ports, db names) consumes the exact id instead of
-		# re-deriving it (setup runs in ftm's process, not a tmux pane, so the
-		# session environment does not apply here).
-		local -a setup_env=()
-		[[ $DETERMINISTIC_KIND == worktree && -n $DETERMINISTIC_WID && $DETERMINISTIC_PRIMARY == 0 ]] && setup_env=("GIT_WORKTREE=$DETERMINISTIC_WID")
-		if (cd "$DETERMINISTIC_CWD" && env ${setup_env[@]+"${setup_env[@]}"} mise run dev:setup </dev/null >&2); then
-			DETERMINISTIC_SETUP_STATE=completed
-		else
-			deterministic_error 4 setup_failed setup 'dev:setup exited nonzero'
-		fi
-	else
-		DETERMINISTIC_SETUP_STATE=missing
-	fi
+  if deterministic_task_exists dev:setup; then
+    # Worktree mode supplies the canonical GIT_WORKTREE so project env
+    # derivation (ports, db names) consumes the exact id instead of
+    # re-deriving it (setup runs in ftm's process, not a tmux pane, so the
+    # session environment does not apply here).
+    local -a setup_env=()
+    [[ $DETERMINISTIC_KIND == worktree && -n $DETERMINISTIC_WID && $DETERMINISTIC_PRIMARY == 0 ]] && setup_env=("GIT_WORKTREE=$DETERMINISTIC_WID")
+    if (cd "$DETERMINISTIC_CWD" && env ${setup_env[@]+"${setup_env[@]}"} mise run dev:setup </dev/null >&2); then
+      DETERMINISTIC_SETUP_STATE=completed
+    else
+      deterministic_error 4 setup_failed setup 'dev:setup exited nonzero'
+    fi
+  else
+    DETERMINISTIC_SETUP_STATE=missing
+  fi
 }
 
 function deterministic_shell_pane() { # $1 = target; true when the pane runs a plain interactive shell
-	local cmd
-	cmd="$(tmux display-message -p -t "$1" '#{pane_current_command}' 2>/dev/null || true)"
-	case "$cmd" in fish | bash | zsh | sh | dash | ksh) return 0 ;; *) return 1 ;; esac
+  local cmd
+  cmd="$(tmux display-message -p -t "$1" '#{pane_current_command}' 2>/dev/null || true)"
+  case "$cmd" in fish | bash | zsh | sh | dash | ksh) return 0 ;; *) return 1 ;; esac
 }
 
 function deterministic_window_id() { # $1 = session id, $2 = exact window name
-	tmux list-windows -t "$1" -F '#{window_id} #{window_name}' 2>/dev/null |
-		awk -v n="$2" '$2 == n { print $1; exit }' || true
+  tmux list-windows -t "$1" -F '#{window_id} #{window_name}' 2>/dev/null |
+    awk -v n="$2" '$2 == n { print $1; exit }' || true
 }
 
 function deterministic_services_window_id() { # $1 = session id; recognizes legacy services-NNNN
-	tmux list-windows -t "$1" -F '#{window_id} #{window_name}' 2>/dev/null |
-		awk '$2 ~ /^services(-[0-9]+)?$/ { print $1; exit }' || true
+  tmux list-windows -t "$1" -F '#{window_id} #{window_name}' 2>/dev/null |
+    awk '$2 ~ /^services(-[0-9]+)?$/ { print $1; exit }' || true
 }
 
 # Additive canonical layout: create only missing code/agent/services windows,
 # tag the session, and never touch unrelated windows or panes.
 function deterministic_build() {
-	local sid agent_cmd wid created_any=0
-	if sid="$(session_id_for "$DETERMINISTIC_SESSION")"; then
-		DETERMINISTIC_TMUX_ACTION=reused
-	else
-		tmux new-session -d -s "$DETERMINISTIC_SESSION" -n code -c "$DETERMINISTIC_CWD" ||
-			deterministic_error 7 tmux_failed tmux 'could not create session'
-		sid="$(session_id_for "$DETERMINISTIC_SESSION")" ||
-			deterministic_error 7 tmux_failed tmux 'created session not found'
-		DETERMINISTIC_TMUX_ACTION=created
-	fi
-	tmux set-option -t "$sid" @ftm_kind "$DETERMINISTIC_KIND"
-	tmux set-option -t "$sid" @ftm_schema 1
-	if [[ $DETERMINISTIC_KIND == worktree ]]; then
-		tmux set-option -t "$sid" @ftm_worktree "$DETERMINISTIC_CWD"
-		tmux set-option -t "$sid" @ftm_worktree_id "$DETERMINISTIC_WID"
-		if [[ $DETERMINISTIC_PRIMARY == 1 ]]; then
-			tmux setenv -u -t "$sid" GIT_WORKTREE 2>/dev/null || true
-		else
-			tmux setenv -t "$sid" GIT_WORKTREE "$DETERMINISTIC_WID"
-		fi
-	fi
+  local sid agent_cmd wid created_any=0
+  if sid="$(session_id_for "$DETERMINISTIC_SESSION")"; then
+    DETERMINISTIC_TMUX_ACTION=reused
+  else
+    tmux new-session -d -s "$DETERMINISTIC_SESSION" -n code -c "$DETERMINISTIC_CWD" ||
+      deterministic_error 7 tmux_failed tmux 'could not create session'
+    sid="$(session_id_for "$DETERMINISTIC_SESSION")" ||
+      deterministic_error 7 tmux_failed tmux 'created session not found'
+    DETERMINISTIC_TMUX_ACTION=created
+  fi
+  tmux set-option -t "$sid" @ftm_kind "$DETERMINISTIC_KIND"
+  tmux set-option -t "$sid" @ftm_schema 1
+  if [[ $DETERMINISTIC_KIND == worktree ]]; then
+    tmux set-option -t "$sid" @ftm_worktree "$DETERMINISTIC_CWD"
+    tmux set-option -t "$sid" @ftm_worktree_id "$DETERMINISTIC_WID"
+    if [[ $DETERMINISTIC_PRIMARY == 1 ]]; then
+      tmux setenv -u -t "$sid" GIT_WORKTREE 2>/dev/null || true
+    else
+      tmux setenv -t "$sid" GIT_WORKTREE "$DETERMINISTIC_WID"
+    fi
+  fi
 
-	if [[ -n "$(deterministic_window_id "$sid" code)" ]]; then
-		DETERMINISTIC_W_CODE=present
-	else
-		tmux new-window -d -t "$sid" -n code -c "$DETERMINISTIC_CWD"
-		DETERMINISTIC_W_CODE=created
-		created_any=1
-	fi
+  if [[ -n "$(deterministic_window_id "$sid" code)" ]]; then
+    DETERMINISTIC_W_CODE=present
+  else
+    tmux new-window -d -t "$sid" -n code -c "$DETERMINISTIC_CWD"
+    DETERMINISTIC_W_CODE=created
+    created_any=1
+  fi
 
-	if [[ -n "$(deterministic_window_id "$sid" agent)" ]]; then
-		DETERMINISTIC_W_AGENT=present
-	else
-		# Exact-cwd Pi: tmux cwd AND process cwd both set to the canonical path;
-		# pi -c continues the latest session stored for exactly that directory.
-		# An explicit Pi session UUID targets a known session instead. The
-		# managed wrapper enables bridge ingress and loads project env via mise.
-		local pi_args
-		if [[ -n $DETERMINISTIC_PI_SESSION ]]; then
-			pi_args="--session $DETERMINISTIC_PI_SESSION"
-		else
-			pi_args="-c"
-		fi
-		# The window is a plain interactive shell and the command is typed via
-		# send-keys: the shell's job control keeps pi as the foreground process
-		# (pane_current_command stays node for pi detection), and cancelling or
-		# exiting pi returns to the shell prompt instead of killing the window.
-		# The typed line must stay POSIX-and-fish portable.
-		agent_cmd="\"\$HOME/.local/bin/pi\" $pi_args"
-		wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n agent -c "$DETERMINISTIC_CWD")" ||
-			deterministic_error 7 tmux_failed tmux 'could not create agent window'
-		tmux send-keys -t "$wid" "$agent_cmd" Enter
-		DETERMINISTIC_W_AGENT=created
-		created_any=1
-	fi
+  if [[ -n "$(deterministic_window_id "$sid" agent)" ]]; then
+    DETERMINISTIC_W_AGENT=present
+  else
+    # Exact-cwd Pi: tmux cwd AND process cwd both set to the canonical path;
+    # pi -c continues the latest session stored for exactly that directory.
+    # An explicit Pi session UUID targets a known session instead. The
+    # managed wrapper enables bridge ingress and loads project env via mise.
+    local pi_args
+    if [[ -n $DETERMINISTIC_PI_SESSION ]]; then
+      pi_args="--session $DETERMINISTIC_PI_SESSION"
+    else
+      pi_args="-c"
+    fi
+    # The window is a plain interactive shell and the command is typed via
+    # send-keys: the shell's job control keeps pi as the foreground process
+    # (pane_current_command stays node for pi detection), and cancelling or
+    # exiting pi returns to the shell prompt instead of killing the window.
+    # The typed line must stay POSIX-and-fish portable.
+    agent_cmd="\"\$HOME/.local/bin/pi\" $pi_args"
+    wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n agent -c "$DETERMINISTIC_CWD")" ||
+      deterministic_error 7 tmux_failed tmux 'could not create agent window'
+    tmux send-keys -t "$wid" "$agent_cmd" Enter
+    DETERMINISTIC_W_AGENT=created
+    created_any=1
+  fi
 
-	wid="$(deterministic_services_window_id "$sid")"
-	if [[ -n $wid ]]; then
-		tmux set-option -w -t "$wid" remain-on-exit on 2>/dev/null || true
-		# services-NNNN is the canonical runtime title (dev-services.sh renames
-		# the window to services-<port> when the runner starts) — never rename
-		# it back; deterministic_services_window_id recognizes both spellings.
-		# Stopped = dead pane, OR a plain shell sitting where the runner should be
-		# (the runner was cancelled back to the prompt) while dev:services exists.
-		if [[ "$(tmux display-message -p -t "$wid" '#{pane_dead}' 2>/dev/null || true)" == 1 ]] ||
-			{ deterministic_task_exists dev:services && deterministic_shell_pane "$wid"; }; then
-			if [[ $DETERMINISTIC_CMD == repair && $DETERMINISTIC_RESTART_SERVICES == 1 ]] && deterministic_task_exists dev:services; then
-				tmux respawn-pane -k -t "$wid" -c "$DETERMINISTIC_CWD"
-				tmux send-keys -t "$wid" 'mise run dev:services' Enter
-				DETERMINISTIC_W_SERVICES=started
-				created_any=1
-			else
-				DETERMINISTIC_W_SERVICES=dead
-			fi
-		else
-			DETERMINISTIC_W_SERVICES=present
-		fi
-	else
-		# The window is a plain interactive shell with remain-on-exit set before
-		# the runner is typed via send-keys: job control keeps `mise` as the
-		# foreground process, startup failures stay visible, and cancelling the
-		# runner returns to the shell prompt instead of killing the pane.
-		wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n services -c "$DETERMINISTIC_CWD")" ||
-			deterministic_error 7 tmux_failed tmux 'could not create services window'
-		tmux set-option -w -t "$wid" remain-on-exit on
-		if deterministic_task_exists dev:services; then
-			tmux send-keys -t "$wid" 'mise run dev:services' Enter
-			DETERMINISTIC_W_SERVICES=started
-		else
-			DETERMINISTIC_W_SERVICES=shell
-		fi
-		created_any=1
-	fi
+  wid="$(deterministic_services_window_id "$sid")"
+  if [[ -n $wid ]]; then
+    tmux set-option -w -t "$wid" remain-on-exit on 2>/dev/null || true
+    # services-NNNN is the canonical runtime title (dev-services.sh renames
+    # the window to services-<port> when the runner starts) — never rename
+    # it back; deterministic_services_window_id recognizes both spellings.
+    # Stopped = dead pane, OR a plain shell sitting where the runner should be
+    # (the runner was cancelled back to the prompt) while dev:services exists.
+    if [[ "$(tmux display-message -p -t "$wid" '#{pane_dead}' 2>/dev/null || true)" == 1 ]] ||
+      { deterministic_task_exists dev:services && deterministic_shell_pane "$wid"; }; then
+      if [[ $DETERMINISTIC_CMD == repair && $DETERMINISTIC_RESTART_SERVICES == 1 ]] && deterministic_task_exists dev:services; then
+        tmux respawn-pane -k -t "$wid" -c "$DETERMINISTIC_CWD"
+        tmux send-keys -t "$wid" 'mise run dev:services' Enter
+        DETERMINISTIC_W_SERVICES=started
+        created_any=1
+      else
+        DETERMINISTIC_W_SERVICES=dead
+      fi
+    else
+      DETERMINISTIC_W_SERVICES=present
+    fi
+  else
+    # The window is a plain interactive shell with remain-on-exit set before
+    # the runner is typed via send-keys: job control keeps `mise` as the
+    # foreground process, startup failures stay visible, and cancelling the
+    # runner returns to the shell prompt instead of killing the pane.
+    wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n services -c "$DETERMINISTIC_CWD")" ||
+      deterministic_error 7 tmux_failed tmux 'could not create services window'
+    tmux set-option -w -t "$wid" remain-on-exit on
+    if deterministic_task_exists dev:services; then
+      tmux send-keys -t "$wid" 'mise run dev:services' Enter
+      DETERMINISTIC_W_SERVICES=started
+    else
+      DETERMINISTIC_W_SERVICES=shell
+    fi
+    created_any=1
+  fi
 
-	if [[ $DETERMINISTIC_TMUX_ACTION == reused && $created_any == 1 ]]; then
-		DETERMINISTIC_TMUX_ACTION=repaired
-	fi
+  if [[ $DETERMINISTIC_TMUX_ACTION == reused && $created_any == 1 ]]; then
+    DETERMINISTIC_TMUX_ACTION=repaired
+  fi
 }
 
 function deterministic_window_build() {
-	local sid wid left right candidate count=0 name path id roles cpath cid role
-	if [[ -z ${TMUX:-} || -z ${TMUX_PANE:-} ]]; then
-		DETERMINISTIC_PRESENTATION="cd"
-		return 0
-	fi
-	sid="$(tmux display-message -p -t "$TMUX_PANE" '#{session_id}' 2>/dev/null || true)"
-	if [[ -z $sid ]]; then
-		DETERMINISTIC_PRESENTATION="cd"
-		return 0
-	fi
-	while IFS=$TAB read -r candidate name; do
-		path="$(tmux show-options -w -t "$candidate" -qv @ftm_worktree 2>/dev/null || true)"
-		id="$(tmux show-options -w -t "$candidate" -qv @ftm_worktree_id 2>/dev/null || true)"
-		if [[ $name == "wt:$DETERMINISTIC_WID" && ($path != "$DETERMINISTIC_CWD" || $id != "$DETERMINISTIC_WID") ]]; then
-			deterministic_error 5 window_conflict identity "window name '$name' is already used"
-		fi
-		if [[ $path == "$DETERMINISTIC_CWD" || $id == "$DETERMINISTIC_WID" ]]; then
-			[[ $path == "$DETERMINISTIC_CWD" && $id == "$DETERMINISTIC_WID" ]] || deterministic_error 5 window_conflict identity 'window tags match only part of the worktree identity'
-			count=$((count + 1))
-			wid="$candidate"
-		fi
-	done < <(tmux list-windows -t "$sid" -F '#{window_id}'"$TAB"'#{window_name}' 2>/dev/null || true)
-	[[ $count -le 1 ]] || deterministic_error 5 ambiguous_window identity 'multiple windows match the worktree'
-	if [[ $count == 1 ]]; then
-		roles="$(tmux list-panes -t "$wid" -F '#{pane_id}'"$TAB"'#{@ftm_role}'"$TAB"'#{@ftm_worktree}'"$TAB"'#{@ftm_worktree_id}' 2>/dev/null || true)"
-		left=
-		right=
-		cpath=
-		cid=
-		role=
-		while IFS=$TAB read -r candidate role cpath cid; do
-			[[ $cpath == "$DETERMINISTIC_CWD" && $cid == "$DETERMINISTIC_WID" ]] || deterministic_error 5 window_conflict identity 'tagged pane identity does not match worktree'
-			case "$role" in code) left="$candidate" ;; services) right="$candidate" ;; *) deterministic_error 5 window_conflict identity 'window has an unknown tagged pane role' ;; esac
-		done <<<"$roles"
-		[[ -n $left && -n $right ]] || deterministic_error 5 window_conflict identity 'reused window lacks exact code/services panes'
-		[[ $(printf '%s\n' "$roles" | wc -l | tr -d ' ') == 2 ]] || deterministic_error 5 window_conflict identity 'reused window must contain exactly two tagged panes'
-		DETERMINISTIC_W_CODE="$left"
-		DETERMINISTIC_W_SERVICES="$right"
-		DETERMINISTIC_WINDOW_ID="$wid"
-		DETERMINISTIC_TMUX_ACTION=reused
-		return 0
-	fi
-	wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n "wt:$DETERMINISTIC_WID" -c "$DETERMINISTIC_CWD")" || deterministic_error 7 tmux_failed tmux 'could not create worktree window'
-	tmux set-option -w -t "$wid" @ftm_kind worktree
-	tmux set-option -w -t "$wid" @ftm_worktree "$DETERMINISTIC_CWD"
-	tmux set-option -w -t "$wid" @ftm_worktree_id "$DETERMINISTIC_WID"
-	tmux set-option -w -t "$wid" @ftm_role worktree
-	left="$(tmux display-message -p -t "$wid" '#{pane_id}')"
-	right="$(tmux split-window -h -p 40 -d -P -F '#{pane_id}' -t "$left" -c "$DETERMINISTIC_CWD")" || deterministic_error 7 tmux_failed tmux 'could not split worktree window'
-	tmux set-option -p -t "$left" @ftm_worktree "$DETERMINISTIC_CWD"
-	tmux set-option -p -t "$left" @ftm_worktree_id "$DETERMINISTIC_WID"
-	tmux set-option -p -t "$left" @ftm_role code
-	tmux set-option -p -t "$right" @ftm_worktree "$DETERMINISTIC_CWD"
-	tmux set-option -p -t "$right" @ftm_worktree_id "$DETERMINISTIC_WID"
-	tmux set-option -p -t "$right" @ftm_role services
-	if [[ $DETERMINISTIC_PRIMARY == 1 ]]; then
-		tmux send-keys -t "$left" 'unset GIT_WORKTREE' Enter
-	else
-		tmux send-keys -t "$left" "export GIT_WORKTREE=$(printf %q "$DETERMINISTIC_WID")" Enter
-	fi
-	tmux set-option -w -t "$wid" remain-on-exit on
-	# The right pane stays a plain interactive shell; env and runner are typed
-	# via send-keys so cancelling the runner returns to the prompt instead of
-	# killing the pane. `export`/`unset` work in both fish and POSIX shells.
-	if [[ $DETERMINISTIC_PRIMARY == 1 ]]; then
-		tmux send-keys -t "$right" 'unset GIT_WORKTREE' Enter
-	else
-		tmux send-keys -t "$right" "export GIT_WORKTREE=$(printf %q "$DETERMINISTIC_WID")" Enter
-	fi
-	if deterministic_task_exists dev:services; then
-		tmux send-keys -t "$right" 'mise run dev:services' Enter
-	fi
-	DETERMINISTIC_W_CODE="$left"
-	DETERMINISTIC_W_SERVICES="$right"
-	DETERMINISTIC_TMUX_ACTION=created
-	DETERMINISTIC_WINDOW_ID="$wid"
+  local sid wid left right candidate count=0 name path id roles cpath cid role
+  if [[ -z ${TMUX:-} || -z ${TMUX_PANE:-} ]]; then
+    DETERMINISTIC_PRESENTATION="cd"
+    return 0
+  fi
+  sid="$(tmux display-message -p -t "$TMUX_PANE" '#{session_id}' 2>/dev/null || true)"
+  if [[ -z $sid ]]; then
+    DETERMINISTIC_PRESENTATION="cd"
+    return 0
+  fi
+  while IFS=$TAB read -r candidate name; do
+    path="$(tmux show-options -w -t "$candidate" -qv @ftm_worktree 2>/dev/null || true)"
+    id="$(tmux show-options -w -t "$candidate" -qv @ftm_worktree_id 2>/dev/null || true)"
+    if [[ $name == "wt:$DETERMINISTIC_WID" && ($path != "$DETERMINISTIC_CWD" || $id != "$DETERMINISTIC_WID") ]]; then
+      deterministic_error 5 window_conflict identity "window name '$name' is already used"
+    fi
+    if [[ $path == "$DETERMINISTIC_CWD" || $id == "$DETERMINISTIC_WID" ]]; then
+      [[ $path == "$DETERMINISTIC_CWD" && $id == "$DETERMINISTIC_WID" ]] || deterministic_error 5 window_conflict identity 'window tags match only part of the worktree identity'
+      count=$((count + 1))
+      wid="$candidate"
+    fi
+  done < <(tmux list-windows -t "$sid" -F '#{window_id}'"$TAB"'#{window_name}' 2>/dev/null || true)
+  [[ $count -le 1 ]] || deterministic_error 5 ambiguous_window identity 'multiple windows match the worktree'
+  if [[ $count == 1 ]]; then
+    roles="$(tmux list-panes -t "$wid" -F '#{pane_id}'"$TAB"'#{@ftm_role}'"$TAB"'#{@ftm_worktree}'"$TAB"'#{@ftm_worktree_id}' 2>/dev/null || true)"
+    left=
+    right=
+    cpath=
+    cid=
+    role=
+    while IFS=$TAB read -r candidate role cpath cid; do
+      [[ $cpath == "$DETERMINISTIC_CWD" && $cid == "$DETERMINISTIC_WID" ]] || deterministic_error 5 window_conflict identity 'tagged pane identity does not match worktree'
+      case "$role" in code) left="$candidate" ;; services) right="$candidate" ;; *) deterministic_error 5 window_conflict identity 'window has an unknown tagged pane role' ;; esac
+    done <<<"$roles"
+    [[ -n $left && -n $right ]] || deterministic_error 5 window_conflict identity 'reused window lacks exact code/services panes'
+    [[ $(printf '%s\n' "$roles" | wc -l | tr -d ' ') == 2 ]] || deterministic_error 5 window_conflict identity 'reused window must contain exactly two tagged panes'
+    DETERMINISTIC_W_CODE="$left"
+    DETERMINISTIC_W_SERVICES="$right"
+    DETERMINISTIC_WINDOW_ID="$wid"
+    DETERMINISTIC_TMUX_ACTION=reused
+    return 0
+  fi
+  wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n "wt:$DETERMINISTIC_WID" -c "$DETERMINISTIC_CWD")" || deterministic_error 7 tmux_failed tmux 'could not create worktree window'
+  tmux set-option -w -t "$wid" @ftm_kind worktree
+  tmux set-option -w -t "$wid" @ftm_worktree "$DETERMINISTIC_CWD"
+  tmux set-option -w -t "$wid" @ftm_worktree_id "$DETERMINISTIC_WID"
+  tmux set-option -w -t "$wid" @ftm_role worktree
+  left="$(tmux display-message -p -t "$wid" '#{pane_id}')"
+  right="$(tmux split-window -h -p 40 -d -P -F '#{pane_id}' -t "$left" -c "$DETERMINISTIC_CWD")" || deterministic_error 7 tmux_failed tmux 'could not split worktree window'
+  tmux set-option -p -t "$left" @ftm_worktree "$DETERMINISTIC_CWD"
+  tmux set-option -p -t "$left" @ftm_worktree_id "$DETERMINISTIC_WID"
+  tmux set-option -p -t "$left" @ftm_role code
+  tmux set-option -p -t "$right" @ftm_worktree "$DETERMINISTIC_CWD"
+  tmux set-option -p -t "$right" @ftm_worktree_id "$DETERMINISTIC_WID"
+  tmux set-option -p -t "$right" @ftm_role services
+  if [[ $DETERMINISTIC_PRIMARY == 1 ]]; then
+    tmux send-keys -t "$left" 'unset GIT_WORKTREE' Enter
+  else
+    tmux send-keys -t "$left" "export GIT_WORKTREE=$(printf %q "$DETERMINISTIC_WID")" Enter
+  fi
+  tmux set-option -w -t "$wid" remain-on-exit on
+  # The right pane stays a plain interactive shell; env and runner are typed
+  # via send-keys so cancelling the runner returns to the prompt instead of
+  # killing the pane. `export`/`unset` work in both fish and POSIX shells.
+  if [[ $DETERMINISTIC_PRIMARY == 1 ]]; then
+    tmux send-keys -t "$right" 'unset GIT_WORKTREE' Enter
+  else
+    tmux send-keys -t "$right" "export GIT_WORKTREE=$(printf %q "$DETERMINISTIC_WID")" Enter
+  fi
+  if deterministic_task_exists dev:services; then
+    tmux send-keys -t "$right" 'mise run dev:services' Enter
+  fi
+  DETERMINISTIC_W_CODE="$left"
+  DETERMINISTIC_W_SERVICES="$right"
+  DETERMINISTIC_TMUX_ACTION=created
+  DETERMINISTIC_WINDOW_ID="$wid"
 }
 
 function deterministic_emit_ok() {
-	deterministic_release_locks
-	if [[ $DETERMINISTIC_FORMAT == json ]]; then
-		printf '{"schema_version":1,"command":"%s","status":"ok","kind":"%s","session":"%s","cwd":"%s","setup":{"state":"%s"},"presentation":"%s","tmux":{"session":"%s","window_id":"%s","left_pane":"%s","action":"%s","windows":{"code":"%s","agent":"%s","services":"%s"}},"attached":false,"warnings":[]}\n' \
-			"$(deterministic_json_escape "$DETERMINISTIC_CMD")" "$(deterministic_json_escape "$DETERMINISTIC_KIND")" \
-			"$(deterministic_json_escape "$DETERMINISTIC_SESSION")" "$(deterministic_json_escape "$DETERMINISTIC_CWD")" \
-			"$DETERMINISTIC_SETUP_STATE" "$DETERMINISTIC_PRESENTATION" "$(deterministic_json_escape "$DETERMINISTIC_SESSION")" "$DETERMINISTIC_WINDOW_ID" "$DETERMINISTIC_W_CODE" "$DETERMINISTIC_TMUX_ACTION" \
-			"$DETERMINISTIC_W_CODE" "$DETERMINISTIC_W_AGENT" "$DETERMINISTIC_W_SERVICES"
-	else
-		printf 'ftm %s: session %s %s (code=%s agent=%s services=%s setup=%s)\n' \
-			"$DETERMINISTIC_CMD" "$DETERMINISTIC_SESSION" "$DETERMINISTIC_TMUX_ACTION" \
-			"$DETERMINISTIC_W_CODE" "$DETERMINISTIC_W_AGENT" "$DETERMINISTIC_W_SERVICES" "$DETERMINISTIC_SETUP_STATE" >&2
-	fi
+  deterministic_release_locks
+  if [[ $DETERMINISTIC_FORMAT == json ]]; then
+    printf '{"schema_version":1,"command":"%s","status":"ok","kind":"%s","session":"%s","cwd":"%s","setup":{"state":"%s"},"presentation":"%s","tmux":{"session":"%s","window_id":"%s","left_pane":"%s","action":"%s","windows":{"code":"%s","agent":"%s","services":"%s"}},"attached":false,"warnings":[]}\n' \
+      "$(deterministic_json_escape "$DETERMINISTIC_CMD")" "$(deterministic_json_escape "$DETERMINISTIC_KIND")" \
+      "$(deterministic_json_escape "$DETERMINISTIC_SESSION")" "$(deterministic_json_escape "$DETERMINISTIC_CWD")" \
+      "$DETERMINISTIC_SETUP_STATE" "$DETERMINISTIC_PRESENTATION" "$(deterministic_json_escape "$DETERMINISTIC_SESSION")" "$DETERMINISTIC_WINDOW_ID" "$DETERMINISTIC_W_CODE" "$DETERMINISTIC_TMUX_ACTION" \
+      "$DETERMINISTIC_W_CODE" "$DETERMINISTIC_W_AGENT" "$DETERMINISTIC_W_SERVICES"
+  else
+    printf 'ftm %s: session %s %s (code=%s agent=%s services=%s setup=%s)\n' \
+      "$DETERMINISTIC_CMD" "$DETERMINISTIC_SESSION" "$DETERMINISTIC_TMUX_ACTION" \
+      "$DETERMINISTIC_W_CODE" "$DETERMINISTIC_W_AGENT" "$DETERMINISTIC_W_SERVICES" "$DETERMINISTIC_SETUP_STATE" >&2
+  fi
 }
 
 function deterministic_attach() {
-	[[ $DETERMINISTIC_ATTACH == auto ]] || return 0
-	[[ $DETERMINISTIC_FORMAT != json ]] || return 0
-	[[ -z ${FTM_NO_ATTACH:-} ]] || return 0
-	local sid
-	sid="$(session_id_for "$DETERMINISTIC_SESSION")" || return 0
-	bump_recent "$DETERMINISTIC_SESSION" "$DETERMINISTIC_CWD"
-	if [[ -n $TMUX ]]; then
-		tmux switch-client -t "$sid"
-	else
-		tmux attach-session -t "$sid"
-	fi
+  [[ $DETERMINISTIC_ATTACH == auto ]] || return 0
+  [[ $DETERMINISTIC_FORMAT != json ]] || return 0
+  [[ -z ${FTM_NO_ATTACH:-} ]] || return 0
+  local sid
+  sid="$(session_id_for "$DETERMINISTIC_SESSION")" || return 0
+  bump_recent "$DETERMINISTIC_SESSION" "$DETERMINISTIC_CWD"
+  if [[ -n $TMUX ]]; then
+    tmux switch-client -t "$sid"
+  else
+    tmux attach-session -t "$sid"
+  fi
 }
 
 function deterministic_ensure() {
-	# Absolutize only; do not resolve symlinks. Callers (wt) supply the exact
-	# canonical worktree path, and tags/adoption checks must use it verbatim.
-	DETERMINISTIC_CWD="$(cd -- "$DETERMINISTIC_CWD" 2>/dev/null && pwd)" ||
-		deterministic_error 2 usage args "cwd is not a directory: $DETERMINISTIC_CWD"
-	if [[ $DETERMINISTIC_KIND == worktree ]]; then
-		DETERMINISTIC_GCD="$(git -C "$DETERMINISTIC_CWD" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" ||
-			deterministic_error 7 git_context_failed resolve "not a Git worktree: $DETERMINISTIC_CWD"
-		if [[ -n $DETERMINISTIC_LEASE ]]; then
-			wtlock_validate_lease "$DETERMINISTIC_GCD" "$DETERMINISTIC_WID" "$DETERMINISTIC_LEASE" ||
-				deterministic_error 7 invalid_lease lock 'lease token does not match held locks'
-		else
-			DETERMINISTIC_OWNED_LEASE="$(wtlock_acquire "$DETERMINISTIC_GCD" "$DETERMINISTIC_WID" "$(deterministic_wait_ms)")" ||
-				deterministic_error 7 busy lock 'repository or worktree lock is held by another operation'
-		fi
-	fi
-	local sid conflicts
-	if [[ $DETERMINISTIC_PRESENTATION == session && $DETERMINISTIC_KIND == worktree ]]; then
-		conflicts="$(deterministic_find_tagged_conflicts)"
-		[[ -z $conflicts ]] ||
-			deterministic_error 5 ambiguous_session identity "other sessions tagged for this worktree: ${conflicts//$'\n'/, }"
-	fi
-	if sid="$(session_id_for "$DETERMINISTIC_SESSION")" && [[ $DETERMINISTIC_PRESENTATION == session ]]; then
-		deterministic_validate_existing "$sid"
-	fi
-	deterministic_run_setup
-	if [[ $DETERMINISTIC_PRESENTATION == cd ]]; then
-		DETERMINISTIC_TMUX_ACTION=skipped
-	elif [[ $DETERMINISTIC_PRESENTATION == window ]]; then
-		deterministic_window_build
-	else
-		deterministic_build
-	fi
-	deterministic_emit_ok
-	[[ $DETERMINISTIC_PRESENTATION == session ]] && deterministic_attach
-	exit 0
+  # Absolutize only; do not resolve symlinks. Callers (wt) supply the exact
+  # canonical worktree path, and tags/adoption checks must use it verbatim.
+  DETERMINISTIC_CWD="$(cd -- "$DETERMINISTIC_CWD" 2>/dev/null && pwd)" ||
+    deterministic_error 2 usage args "cwd is not a directory: $DETERMINISTIC_CWD"
+  if [[ $DETERMINISTIC_KIND == worktree ]]; then
+    DETERMINISTIC_GCD="$(git -C "$DETERMINISTIC_CWD" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" ||
+      deterministic_error 7 git_context_failed resolve "not a Git worktree: $DETERMINISTIC_CWD"
+    if [[ -n $DETERMINISTIC_LEASE ]]; then
+      wtlock_validate_lease "$DETERMINISTIC_GCD" "$DETERMINISTIC_WID" "$DETERMINISTIC_LEASE" ||
+        deterministic_error 7 invalid_lease lock 'lease token does not match held locks'
+    else
+      DETERMINISTIC_OWNED_LEASE="$(wtlock_acquire "$DETERMINISTIC_GCD" "$DETERMINISTIC_WID" "$(deterministic_wait_ms)")" ||
+        deterministic_error 7 busy lock 'repository or worktree lock is held by another operation'
+    fi
+  fi
+  local sid conflicts
+  if [[ $DETERMINISTIC_PRESENTATION == session && $DETERMINISTIC_KIND == worktree ]]; then
+    conflicts="$(deterministic_find_tagged_conflicts)"
+    [[ -z $conflicts ]] ||
+      deterministic_error 5 ambiguous_session identity "other sessions tagged for this worktree: ${conflicts//$'\n'/, }"
+  fi
+  if sid="$(session_id_for "$DETERMINISTIC_SESSION")" && [[ $DETERMINISTIC_PRESENTATION == session ]]; then
+    deterministic_validate_existing "$sid"
+  fi
+  deterministic_run_setup
+  if [[ $DETERMINISTIC_PRESENTATION == cd ]]; then
+    DETERMINISTIC_TMUX_ACTION=skipped
+  elif [[ $DETERMINISTIC_PRESENTATION == window ]]; then
+    deterministic_window_build
+  else
+    deterministic_build
+  fi
+  deterministic_emit_ok
+  [[ $DETERMINISTIC_PRESENTATION == session ]] && deterministic_attach
+  exit 0
 }
 
 function deterministic_discard_saved() {
-	local file line tmp
-	[[ $DETERMINISTIC_DISCARD_SNAPSHOT == 1 ]] || return 0
-	file="$(snapshot_file "$DETERMINISTIC_SESSION")"
-	if [[ -e $file || -L $file ]]; then
-		# trash-cli expands globs and mishandles some escaped paths. Give it
-		# a safe relative name, restoring the snapshot if disposal fails.
-		if ! (
-			cd "${file%/*}" || exit 1
-			tmp="$(mktemp .forget.XXXXXX)" || exit 1
-			mv -- "./$DETERMINISTIC_SESSION" "$tmp" || exit 1
-			if trash -- "./$tmp" && [[ ! -e $tmp && ! -L $tmp ]]; then
-				exit 0
-			fi
-			mv -n -- "$tmp" "./$DETERMINISTIC_SESSION" || exit 1
-			[[ ! -e $tmp && ! -L $tmp ]] || printf 'Snapshot retained at %s/%s\n' "$PWD" "$tmp" >&2
-			exit 1
-		); then
-			deterministic_error 7 state_failed state 'could not discard snapshot'
-		fi
-	fi
-	if [[ -f $recent_file ]]; then
-		tmp="$(mktemp "$recent_file.XXXXXX")" || deterministic_error 7 state_failed state 'could not update recent entries'
-		{
-			while IFS= read -r line || [[ -n $line ]]; do
-				if [[ ${line%%"$TAB"*} != "$DETERMINISTIC_SESSION" ]]; then
-					printf '%s\n' "$line" || deterministic_error 7 state_failed state 'could not write recent entries'
-				fi
-			done <"$recent_file"
-			true
-		} >"$tmp" && mv "$tmp" "$recent_file" || deterministic_error 7 state_failed state 'could not update recent entries'
-	fi
+  local file line tmp
+  [[ $DETERMINISTIC_DISCARD_SNAPSHOT == 1 ]] || return 0
+  file="$(snapshot_file "$DETERMINISTIC_SESSION")"
+  if [[ -e $file || -L $file ]]; then
+    # trash-cli expands globs and mishandles some escaped paths. Give it
+    # a safe relative name, restoring the snapshot if disposal fails.
+    if ! (
+      cd "${file%/*}" || exit 1
+      tmp="$(mktemp .forget.XXXXXX)" || exit 1
+      mv -- "./$DETERMINISTIC_SESSION" "$tmp" || exit 1
+      if trash -- "./$tmp" && [[ ! -e $tmp && ! -L $tmp ]]; then
+        exit 0
+      fi
+      mv -n -- "$tmp" "./$DETERMINISTIC_SESSION" || exit 1
+      [[ ! -e $tmp && ! -L $tmp ]] || printf 'Snapshot retained at %s/%s\n' "$PWD" "$tmp" >&2
+      exit 1
+    ); then
+      deterministic_error 7 state_failed state 'could not discard snapshot'
+    fi
+  fi
+  if [[ -f $recent_file ]]; then
+    tmp="$(mktemp "$recent_file.XXXXXX")" || deterministic_error 7 state_failed state 'could not update recent entries'
+    {
+      while IFS= read -r line || [[ -n $line ]]; do
+        if [[ ${line%%"$TAB"*} != "$DETERMINISTIC_SESSION" ]]; then
+          printf '%s\n' "$line" || deterministic_error 7 state_failed state 'could not write recent entries'
+        fi
+      done <"$recent_file"
+      true
+    } >"$tmp" && mv "$tmp" "$recent_file" || deterministic_error 7 state_failed state 'could not update recent entries'
+  fi
 }
 
 function deterministic_remove() {
-	local sid k p wid_tag base
-	if [[ -n $DETERMINISTIC_CWD ]]; then
-		DETERMINISTIC_CWD="$(cd -- "$DETERMINISTIC_CWD" 2>/dev/null && pwd)" ||
-			deterministic_error 2 usage args "cwd is not a directory: $DETERMINISTIC_CWD"
-	fi
-	if ! sid="$(session_id_for "$DETERMINISTIC_SESSION")"; then
-		deterministic_discard_saved
-		deterministic_release_locks
-		if [[ $DETERMINISTIC_FORMAT == json ]]; then
-			printf '{"schema_version":1,"command":"remove","status":"ok","session":"%s","tmux":{"action":"absent"},"attached":false,"warnings":[]}\n' \
-				"$(deterministic_json_escape "$DETERMINISTIC_SESSION")"
-		else
-			printf 'ftm remove: session %s already absent\n' "$DETERMINISTIC_SESSION" >&2
-		fi
-		exit 0
-	fi
-	k="$(deterministic_tag "$sid" @ftm_kind)"
-	p="$(deterministic_tag "$sid" @ftm_worktree)"
-	if [[ -n $DETERMINISTIC_CWD && -n $p && $p != "$DETERMINISTIC_CWD" ]]; then
-		deterministic_error 5 session_conflict identity "session '$DETERMINISTIC_SESSION' is tagged for '$p', not '$DETERMINISTIC_CWD'"
-	fi
-	if [[ $k == worktree ]]; then
-		wid_tag="$(deterministic_tag "$sid" @ftm_worktree_id)"
-		[[ -n $DETERMINISTIC_WID ]] || DETERMINISTIC_WID="$wid_tag"
-		base="${p:-$DETERMINISTIC_CWD}"
-		if [[ -n $base ]] && DETERMINISTIC_GCD="$(git -C "$base" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"; then
-			if [[ -n $DETERMINISTIC_LEASE ]]; then
-				wtlock_validate_lease "$DETERMINISTIC_GCD" "$DETERMINISTIC_WID" "$DETERMINISTIC_LEASE" ||
-					deterministic_error 7 invalid_lease lock 'lease token does not match held locks'
-			else
-				DETERMINISTIC_OWNED_LEASE="$(wtlock_acquire "$DETERMINISTIC_GCD" "$DETERMINISTIC_WID" "$(deterministic_wait_ms)")" ||
-					deterministic_error 7 busy lock 'repository or worktree lock is held by another operation'
-			fi
-		fi
-	fi
-	# Snapshot before killing so the removed session stays recoverable; the
-	# global session-closed hook only snapshots survivors. Skipped when the
-	# caller explicitly discards the snapshot.
-	if [[ $DETERMINISTIC_DISCARD_SNAPSHOT != 1 ]]; then
-		snapshot_session "$DETERMINISTIC_SESSION" 2>/dev/null || true
-	fi
-	tmux kill-session -t "$sid" || deterministic_error 7 tmux_failed tmux 'kill-session failed'
-	deterministic_discard_saved
-	deterministic_release_locks
-	if [[ $DETERMINISTIC_FORMAT == json ]]; then
-		printf '{"schema_version":1,"command":"remove","status":"ok","session":"%s","tmux":{"action":"removed"},"attached":false,"warnings":[]}\n' \
-			"$(deterministic_json_escape "$DETERMINISTIC_SESSION")"
-	else
-		printf 'ftm remove: session %s removed\n' "$DETERMINISTIC_SESSION" >&2
-	fi
-	exit 0
+  local sid k p wid_tag base
+  if [[ -n $DETERMINISTIC_CWD ]]; then
+    DETERMINISTIC_CWD="$(cd -- "$DETERMINISTIC_CWD" 2>/dev/null && pwd)" ||
+      deterministic_error 2 usage args "cwd is not a directory: $DETERMINISTIC_CWD"
+  fi
+  if ! sid="$(session_id_for "$DETERMINISTIC_SESSION")"; then
+    deterministic_discard_saved
+    deterministic_release_locks
+    if [[ $DETERMINISTIC_FORMAT == json ]]; then
+      printf '{"schema_version":1,"command":"remove","status":"ok","session":"%s","tmux":{"action":"absent"},"attached":false,"warnings":[]}\n' \
+        "$(deterministic_json_escape "$DETERMINISTIC_SESSION")"
+    else
+      printf 'ftm remove: session %s already absent\n' "$DETERMINISTIC_SESSION" >&2
+    fi
+    exit 0
+  fi
+  k="$(deterministic_tag "$sid" @ftm_kind)"
+  p="$(deterministic_tag "$sid" @ftm_worktree)"
+  if [[ -n $DETERMINISTIC_CWD && -n $p && $p != "$DETERMINISTIC_CWD" ]]; then
+    deterministic_error 5 session_conflict identity "session '$DETERMINISTIC_SESSION' is tagged for '$p', not '$DETERMINISTIC_CWD'"
+  fi
+  if [[ $k == worktree ]]; then
+    wid_tag="$(deterministic_tag "$sid" @ftm_worktree_id)"
+    [[ -n $DETERMINISTIC_WID ]] || DETERMINISTIC_WID="$wid_tag"
+    base="${p:-$DETERMINISTIC_CWD}"
+    if [[ -n $base ]] && DETERMINISTIC_GCD="$(git -C "$base" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"; then
+      if [[ -n $DETERMINISTIC_LEASE ]]; then
+        wtlock_validate_lease "$DETERMINISTIC_GCD" "$DETERMINISTIC_WID" "$DETERMINISTIC_LEASE" ||
+          deterministic_error 7 invalid_lease lock 'lease token does not match held locks'
+      else
+        DETERMINISTIC_OWNED_LEASE="$(wtlock_acquire "$DETERMINISTIC_GCD" "$DETERMINISTIC_WID" "$(deterministic_wait_ms)")" ||
+          deterministic_error 7 busy lock 'repository or worktree lock is held by another operation'
+      fi
+    fi
+  fi
+  # Snapshot before killing so the removed session stays recoverable; the
+  # global session-closed hook only snapshots survivors. Skipped when the
+  # caller explicitly discards the snapshot.
+  if [[ $DETERMINISTIC_DISCARD_SNAPSHOT != 1 ]]; then
+    snapshot_session "$DETERMINISTIC_SESSION" 2>/dev/null || true
+  fi
+  tmux kill-session -t "$sid" || deterministic_error 7 tmux_failed tmux 'kill-session failed'
+  deterministic_discard_saved
+  deterministic_release_locks
+  if [[ $DETERMINISTIC_FORMAT == json ]]; then
+    printf '{"schema_version":1,"command":"remove","status":"ok","session":"%s","tmux":{"action":"removed"},"attached":false,"warnings":[]}\n' \
+      "$(deterministic_json_escape "$DETERMINISTIC_SESSION")"
+  else
+    printf 'ftm remove: session %s removed\n' "$DETERMINISTIC_SESSION" >&2
+  fi
+  exit 0
 }
 
 case "${1:-}" in
-ensure | repair | remove)
-	# shellcheck source=bin/wt-lock-lib
-	source "$script_dir/wt-lock-lib"
-	deterministic_parse "$@"
-	if [[ $DETERMINISTIC_CMD == remove ]]; then
-		deterministic_remove
-	else
-		deterministic_ensure
-	fi
-	# Defensive stop: deterministic calls must never fall through to the picker.
-	# shellcheck disable=SC2317
-	exit 0
-	;;
+  ensure | repair | remove)
+    # shellcheck source=bin/wt-lock-lib
+    source "$script_dir/wt-lock-lib"
+    deterministic_parse "$@"
+    if [[ $DETERMINISTIC_CMD == remove ]]; then
+      deterministic_remove
+    else
+      deterministic_ensure
+    fi
+    # Defensive stop: deterministic calls must never fall through to the picker.
+    # shellcheck disable=SC2317
+    exit 0
+    ;;
 esac
 
 while getopts "phs:-:" OPTION; do
-	case $OPTION in
-	p)
-		export TMUX_POPUP=1
-		POPUP="true"
-		;;
-	h)
-		__help
-		;;
-	s)
-		snapshot_session "$OPTARG"
-		exit 0
-		;;
-	-)
-		case "$OPTARG" in
-		snapshot=*)
-			snapshot_session "${OPTARG#snapshot=}"
-			exit 0
-			;;
-		snapshot-all)
-			snapshot_all
-			exit 0
-			;;
-		list)
-			# internal: annotated list for fzf reload binds
-			print_list "$(tmux display-message -p '#S' 2>/dev/null || true)"
-			exit 0
-			;;
-		id=*)
-			# internal: session name -> id for picker actions
-			session_id_for "${OPTARG#id=}"
-			exit $?
-			;;
-		preview=*)
-			# internal: fzf preview for a picker entry
-			preview_entry "${OPTARG#preview=}"
-			exit 0
-			;;
-		help) __help ;;
-		*)
-			echo "Invalid Option: --$OPTARG" 1>&2
-			exit 1
-			;;
-		esac
-		;;
-	\?)
-		# bash leaves OPTARG unset for invalid options; guard for set -u
-		echo "Invalid Option: -${OPTARG:-}" 1>&2
-		exit 1
-		;;
-	:)
-		echo "Invalid Option: -${OPTARG:-} requires an argument" 1>&2
-		exit 1
-		;;
-	esac
+  case $OPTION in
+    p)
+      export TMUX_POPUP=1
+      POPUP="true"
+      ;;
+    h)
+      __help
+      ;;
+    s)
+      snapshot_session "$OPTARG"
+      exit 0
+      ;;
+    -)
+      case "$OPTARG" in
+        snapshot=*)
+          snapshot_session "${OPTARG#snapshot=}"
+          exit 0
+          ;;
+        snapshot-all)
+          snapshot_all
+          exit 0
+          ;;
+        list)
+          # internal: annotated list for fzf reload binds
+          print_list "$(tmux display-message -p '#S' 2>/dev/null || true)"
+          exit 0
+          ;;
+        id=*)
+          # internal: session name -> id for picker actions
+          session_id_for "${OPTARG#id=}"
+          exit $?
+          ;;
+        preview=*)
+          # internal: fzf preview for a picker entry
+          preview_entry "${OPTARG#preview=}"
+          exit 0
+          ;;
+        help) __help ;;
+        *)
+          echo "Invalid Option: --$OPTARG" 1>&2
+          exit 1
+          ;;
+      esac
+      ;;
+    \?)
+      # bash leaves OPTARG unset for invalid options; guard for set -u
+      echo "Invalid Option: -${OPTARG:-}" 1>&2
+      exit 1
+      ;;
+    :)
+      echo "Invalid Option: -${OPTARG:-} requires an argument" 1>&2
+      exit 1
+      ;;
+  esac
 done
 shift "$((OPTIND - 1))"
 
@@ -1460,10 +1456,10 @@ session_name="${1:-}"
 
 # -- if we pass in a session_name: attach/switch to it or, create new session
 if [[ $session_name ]]; then
-	try_session "$session_name"
-	exit 0
+  try_session "$session_name"
+  exit 0
 elif [[ -z $TMUX ]]; then
-	__help
+  __help
 fi
 
 fuzzy_find

@@ -18,18 +18,11 @@
 experimental = true
 auto_install = true
 env_shell_expand = true
-# quiet = true
-# verbose = false
 activate_aggressive = true
 color_theme = "everforest"
 system_packages.managers = ["brew", "brew-cask", "mas"]
 idiomatic_version_file_enable_tools = ["node"]
-# No global lockfile: version pins live in this config (pin = true). Projects
-# that want a lockfile set `lockfile = true` in their own mise.toml.
 pin = true
-# supply chain security: only allow installing new versions of tools that have
-# been released for at least 8 hours, to avoid 0-day supply chain attacks.
-# Exclude some tools that are frequently updated and have a low risk profile.
 minimum_release_age = "8h"
 minimum_release_age_excludes = [
   "npm:@earendil-works/pi-coding-agent",
@@ -62,10 +55,7 @@ RIPGREP_CONFIG_PATH = "$HOME/.config/ripgrep/rc"
 HK_MISE = "1"
 HK_HIDE_WHEN_DONE = "true"
 MISE_EXPERIMENTAL = "1"
-# GitHub API auth is inherited from `fnox activate` or `fnox exec`.
-# Unauthenticated mise release lookups are limited to 60 requests/hour.
 OP_COMMAND = "op"
-
 DOTS = "{{env.HOME}}/.dotfiles"
 DOTFILES_DIR = "{{env.HOME}}/.dotfiles"
 CODE = "{{env.HOME}}/code"
@@ -78,19 +68,16 @@ PI_CODING_AGENT_DIR = "{{env.HOME}}/.pi/agent"
 TMUX_LAYOUTS = "{{env.HOME}}/.config/tmux/layouts"
 TMUX_PLUGIN_MANAGER_PATH = "{{env.HOME}}/.local/share/tmux/plugins"
 TMUX_PLUGINS_HOME = "{{env.HOME}}/.local/share/tmux/plugins"
-
-# 1Password SSH agent (was nix environment.extraInit; ssh's IdentityAgent in
-# the mise-owned ssh config points at the same socket)
 SSH_AUTH_SOCK = "{{env.HOME}}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
-
 EDITOR = "nvim -O"
 VISUAL = "nvim -O"
 GIT_EDITOR = "nvim -O"
 JJ_EDITOR = "nvim -O"
 MANPAGER = "nvim +Man!"
 # MANPAGER = "less -X"
-PLUG_EDITOR = "zed://file/__FILE__:__LINE__"
-ELIXIR_EDITOR = "zed __FILE__:__LINE__"
+# PLUG_EDITOR = "zed://file/__FILE__:__LINE__"
+# ELIXIR_EDITOR = "zed __FILE__:__LINE__"
+# ECTO_EDITOR = "zed __FILE__:__LINE__"
 
 _.path = [
   "/opt/homebrew/opt/coreutils/libexec/gnubin",
@@ -111,12 +98,6 @@ _.path = [
   "$HOME/.cargo/bin",
   "/Applications/Postgres.app/Contents/Versions/latest/bin",
 ]
-# Do not load secrets through mise-env-fnox or a PATH-resolved `_.source`.
-# Either approach runs `fnox export` on every mise config load. Inside a
-# `fnox exec` launcher such as Pi, that creates a second secret-resolution pass
-# and blocks command startup. Secrets reach consumers through maintained paths:
-#   interactive shells -> `fnox activate` in each shell config
-#   non-shell Pi/capper -> `fnox exec` in each launcher
 
 [shell_alias]
 "...." = "cd ../../.."
@@ -144,16 +125,13 @@ pir = "pi -r"
 up = "cd $HOME/.dotfiles && mise run up"
 
 [dotfiles]
-# "~/.config" = "~/.dotfiles/config"
+# Scoped source globs include future matches; keep them before exact overrides.
+"~/.pi/agent/*" = "~/.dotfiles/home/.pi/agent/*"
+"~/.local/bin/*" = "~/.dotfiles/home/.pi/bin/*"
+"~/.config/kanata/*.kbd" = "~/.dotfiles/config/kanata/*.kbd"
 
 # -- pi coding agent: managed files under ~/.pi; runtime state (sessions/,
 #    npm/, auth.json) stays unmanaged. Pi writes settings through its symlink. --
-"~/.pi/agent/AGENTS.md" = "~/.dotfiles/home/.pi/agent/AGENTS.md"
-"~/.pi/agent/APPEND_SYSTEM.md" = "~/.dotfiles/home/.pi/agent/APPEND_SYSTEM.md"
-"~/.pi/agent/settings.json" = "~/.dotfiles/home/.pi/agent/settings.json"
-"~/.pi/agent/keybindings.json" = "~/.dotfiles/home/.pi/agent/keybindings.json"
-"~/.pi/agent/models.json" = "~/.dotfiles/home/.pi/agent/models.json"
-"~/.pi/agent/mcp.json" = "~/.dotfiles/home/.pi/agent/mcp.json"
 "~/.pi/web-search.json" = "~/.dotfiles/home/.pi/web-search.json"
 "~/.pi/agent/web-search.json" = "~/.dotfiles/home/.pi/web-search.json"
 "~/.config/pi/web-search.json" = "~/.dotfiles/home/.pi/web-search.json"
@@ -172,9 +150,6 @@ up = "cd $HOME/.dotfiles && mise run up"
 # Lat extension tools launch through this agent-local path; point it at mise's
 # stable shim rather than the removed Devenv profile.
 "~/.pi/agent/bin/lat" = "~/.local/share/mise/shims/lat"
-"~/.local/bin/pi" = "~/.dotfiles/home/.pi/bin/pi"
-"~/.local/bin/p" = "~/.dotfiles/home/.pi/bin/p"
-"~/.local/bin/work-tickets" = "~/.dotfiles/home/.pi/bin/work-tickets"
 # "~/Library/Developer/Xcode/UserData/FontAndColorThemes/tokyo-night.xccolortheme" = ".config/xcode/tokyo-night.xccolortheme"
 # Keep global config, host overlays, and templates together.
 "~/.config/mise" = "~/.dotfiles/config/mise"
@@ -192,8 +167,8 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.profile" = "~/.dotfiles/config/bash/profile"
 "~/.bashrc" = "~/.dotfiles/config/bash/bashrc"
 "~/.bash_profile" = "~/.dotfiles/config/bash/bash_profile"
-"~/.zshrc" = "~/.dotfiles/config/zsh/zshrc"
-"~/.zprofile" = "~/.dotfiles/config/zsh/zprofile"
+"~/.zshenv" = "~/.dotfiles/home/.zshenv"
+"~/.config/zsh" = "~/.dotfiles/config/zsh"
 "~/.config/fzf" = "~/.dotfiles/config/fzf"
 "~/.config/jj/config.toml" = "~/.dotfiles/config/jj/config.toml"
 # worktrunk: per-file — approvals.toml{,.lock} in the same dir are mutable runtime state
@@ -208,9 +183,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 
 "~/.config/shade-next/config.toml" = "~/.dotfiles/config/shade-next/config.toml"
 
-# -- kanata: individual .kbd files (parent dir has mutable state; active kanata.kbd is mutable) --
-"~/.config/kanata/macbook.kbd" = "~/.dotfiles/config/kanata/macbook.kbd"
-"~/.config/kanata/macbook-disabled.kbd" = "~/.dotfiles/config/kanata/macbook-disabled.kbd"
+# -- kanata: .kbd profiles use the scoped glob above; active kanata.kbd stays unmanaged --
 "~/.config/kanata/icons" = "~/.dotfiles/config/kanata/icons"
 
 # -- SSH: individual files (directory holds mutable keys/known_hosts).
@@ -240,11 +213,9 @@ up = "cd $HOME/.dotfiles && mise run up"
 "~/.ignore" = "~/.dotfiles/config/git/tool-ignore"
 
 # -- static tool configs (small, single-file configs previously Nix-store-backed) --
-"~/.config/bat/config" = "~/.dotfiles/config/bat/config"
 # bat theme/syntax referenced by config (--theme=everforest, ghostty map-syntax);
 # run `bat cache --build` if these change
-"~/.config/bat/themes/everforest.tmTheme" = "~/.dotfiles/config/bat/themes/everforest.tmTheme"
-"~/.config/bat/syntaxes/ghostty.sublime-syntax" = "~/.dotfiles/config/bat/syntaxes/ghostty.sublime-syntax"
+"~/.config/bat" = { source = "~/.dotfiles/config/bat", mode = "symlink-each" }
 "~/.config/direnv/direnv.toml" = "~/.dotfiles/config/direnv/direnv.toml"
 "~/.config/starship.toml" = "~/.dotfiles/config/starship/starship.toml"
 "~/.config/karabiner/karabiner.json" = "~/.dotfiles/config/karabiner/karabiner.json"

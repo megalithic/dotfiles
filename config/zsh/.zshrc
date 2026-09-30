@@ -1,0 +1,213 @@
+export ZSH=$DOTFILES/zsh
+
+source "$ZDOTDIR/.zsh_functions"
+
+# source local config (after functions are available)
+[[ -f "$HOME/.localrc" ]] && source "$HOME/.localrc"
+
+########################################################
+# Configuration
+########################################################
+
+# initialize autocomplete (rebuild dump once per day)
+autoload -U compinit add-zsh-hook
+if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
+  compinit
+else
+  compinit -C
+fi
+
+autoload -Uz edit-command-line
+zle -N edit-command-line
+bindkey '^g' edit-command-line
+
+# register completions for directory nav functions (defined in .zsh_functions)
+compdef _c c
+compdef _h h
+
+# setup PATH
+for dir in $HOME/.bun/bin $HOME/.cargo/bin $HOME/.local/bin /usr/local/opt/grep/libexec/gnubin /usr/local/sbin $DOTFILES/bin $HOME/bin; do
+  prepend_path $dir
+done
+
+# define the code directory
+# This is where my code exists and where I want the `c` autocomplete to work from exclusively
+if [[ -d ~/code ]]; then
+  export CODE_DIR=~/code
+elif [[ -d ~/Developer ]]; then
+  export CODE_DIR=~/Developer
+fi
+
+# display how long all tasks over 10 seconds take
+export REPORTTIME=10
+export KEYTIMEOUT=1              # 10ms delay for key sequences
+
+# don't prompt for confirmation on brew upgrade
+export HOMEBREW_NO_ASK=1
+
+setopt NO_BG_NICE
+setopt NO_HUP                    # don't kill background jobs when the shell exits
+setopt NO_LIST_BEEP
+setopt LOCAL_OPTIONS
+setopt LOCAL_TRAPS
+setopt PROMPT_SUBST
+
+# history
+setopt EXTENDED_HISTORY          # write the history file in the ":start:elapsed;command" format.
+setopt HIST_REDUCE_BLANKS        # remove superfluous blanks before recording entry.
+setopt SHARE_HISTORY             # share history between all sessions.
+setopt HIST_IGNORE_ALL_DUPS      # delete old recorded entry if new entry is a duplicate.
+
+setopt COMPLETE_ALIASES
+
+# make terminal command navigation sane again
+# navigation key bindings
+bindkey "^[[1;5C" forward-word      # [Ctrl-right] - forward one word
+bindkey "^[[1;5D" backward-word     # [Ctrl-left] - backward one word
+bindkey '^[^[[C' forward-word
+bindkey '^[^[[D' backward-word
+bindkey '^[[1;3D' beginning-of-line  # [Alt-left] - beginning of line
+bindkey '^[[1;3C' end-of-line        # [Alt-right] - end of line
+bindkey '^[[5D' beginning-of-line
+bindkey '^[[5C' end-of-line
+bindkey '^?' backward-delete-char
+
+# delete key handling
+if [[ -n "${terminfo[kdch1]}" ]]; then
+  bindkey "${terminfo[kdch1]}" delete-char
+else
+  for key in "^[[3~" "^[3;5~" "\e[3~"; do
+    bindkey "$key" delete-char
+  done
+fi
+
+# vi mode bindings
+bindkey "^A" vi-beginning-of-line
+bindkey -M viins "^F" vi-forward-word
+bindkey -M viins "^E" vi-add-eol
+bindkey "^J" history-beginning-search-forward
+bindkey "^K" history-beginning-search-backward
+
+# matches case insensitive for lowercase
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+
+# pasting with tabs doesn't perform completion
+zstyle ':completion:*' insert-tab pending
+
+# default to file completion
+zstyle ':completion:*' completer _expand _complete _files _correct _approximate
+
+zstyle ':completion:*' verbose yes
+zstyle ':completion:*:descriptions' format '%B%d%b'
+zstyle ':completion:*:messages' format '%d'
+zstyle ':completion:*:warnings' format 'No matches for: %d'
+zstyle ':completion:*' group-name ''
+
+
+########################################################
+# Plugin setup
+########################################################
+
+# mise: per-directory tool version switching (interactive shells)
+# For cron/scripts, set PATH=$HOME/.local/share/mise/shims:... in the crontab
+# or use `mise exec -- <cmd>` directly.
+if command -v mise &>/dev/null; then
+  eval "$(mise activate zsh)"
+fi
+
+
+export ZPLUGDIR="$CACHEDIR/zsh/plugins"
+[[ -d "$ZPLUGDIR" ]] || mkdir -p "$ZPLUGDIR"
+# array containing plugin information (managed by zfetch)
+typeset -A plugins
+
+zfetch mafredri/zsh-async async.plugin.zsh
+zfetch zsh-users/zsh-syntax-highlighting
+zfetch zsh-users/zsh-autosuggestions
+zfetch grigorii-zander/zsh-npm-scripts-autocomplete
+zfetch Aloxaf/fzf-tab
+
+########################################################
+# Setup
+########################################################
+
+if command -v fzf &>/dev/null; then
+  export FZF_DEFAULT_COMMAND='fd --type f'
+  export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+  _fzf_theme="$HOME/.local/state/theme/current/theme/fzf.opts"
+  if [[ -f "$_fzf_theme" ]]; then
+    export FZF_DEFAULT_OPTS_FILE="$_fzf_theme"
+  else
+    export FZF_DEFAULT_OPTS="--color bg:-1,bg+:-1,fg:-1,fg+:#feffff,hl:#993f84,hl+:#d256b5,info:#676767,prompt:#676767,pointer:#676767"
+  fi
+  unset _fzf_theme
+  source <(fzf --zsh)
+fi
+
+# LazyGit merges the stable behavior config with the active rendered palette.
+# Both paths are XDG/Home based, so this is identical on Linux and macOS.
+export LG_CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/lazygit/config.yml,$HOME/.local/state/theme/current/theme/lazygit.yml"
+
+# colored man pages
+export MANROFFOPT='-c'
+typeset -A man_colors=(
+  mb "$(tput bold; tput setaf 2)"
+  md "$(tput bold; tput setaf 6)"
+  me "$(tput sgr0)"
+  so "$(tput bold; tput setaf 3; tput setab 4)"
+  se "$(tput rmso; tput sgr0)"
+  us "$(tput smul; tput bold; tput setaf 7)"
+  ue "$(tput rmul; tput sgr0)"
+  mr "$(tput rev)"
+  mh "$(tput dim)"
+)
+for key val in "${(@kv)man_colors}"; do
+  export LESS_TERMCAP_$key=$val
+done
+
+# directory jumping: prefer zoxide over z.sh
+if command -v zoxide &>/dev/null; then
+  eval "$(zoxide init zsh --hook pwd)"
+elif [[ -f "$(brew --prefix 2>/dev/null)/etc/profile.d/z.sh" ]]; then
+  source "$(brew --prefix)/etc/profile.d/z.sh"
+fi
+
+# detect ls flavor and set color flag
+colorflag=$(ls --color &>/dev/null && echo "--color" || echo "-G")
+
+# source local and config files
+for file in ~/.zshrc.local "$ZDOTDIR/.zsh_aliases"; do
+  [[ -f "$file" ]] && source "$file"
+done
+
+
+if command -v pnpm &>/dev/null; then
+  if [[ "$OSTYPE" == darwin* ]]; then
+    export PNPM_HOME="$HOME/Library/pnpm"
+  else
+    export PNPM_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/pnpm"
+  fi
+  [[ ":$PATH:" != *":$PNPM_HOME:"* ]] && export PATH="$PNPM_HOME:$PATH"
+fi
+
+if command -v jj &>/dev/null; then
+  source <(jj util completion zsh)
+fi
+
+# bun completions
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
+if command -v starship &>/dev/null; then
+  # Starship has no include directive, so bin/theme renders the whole config
+  # (this repo's config/starship.toml plus the active pack's palette) into the
+  # theme state dir rather than rewriting the tracked file on every switch.
+  #
+  # Guarded: a machine that has not run `theme` yet has no rendered copy, and
+  # pointing STARSHIP_CONFIG at a missing file drops starship to its built-in
+  # defaults instead of falling back to ~/.config/starship.toml.
+  _starship_themed="$HOME/.local/state/theme/current/theme/starship.toml"
+  [[ -f $_starship_themed ]] && export STARSHIP_CONFIG="$_starship_themed"
+  unset _starship_themed
+
+  eval "$(starship init zsh)"
+fi

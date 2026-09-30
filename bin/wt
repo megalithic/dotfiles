@@ -31,13 +31,13 @@
 # collapsed, ends trimmed), so the id — and the db names derived from it —
 # only ever contain alphanumerics, underscores and dashes.
 worktree_id() { # $1 = worktree path
-	local br repo slug
-	br="$(git -C "$1" branch --show-current 2>/dev/null)"
-	[ -n "$br" ] || br="$(basename "$1")"
-	repo="$(basename "$(dirname "$(git -C "$1" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)")")"
-	repo="$(printf '%s' "$repo" | tr -c 'A-Za-z0-9_' '-' | sed -e 's/--*/-/g' -e 's/^-//' -e 's/-*$//')"
-	slug="$(printf '%s' "$br" | tr -c 'A-Za-z0-9_' '-' | sed -e 's/--*/-/g' -e 's/^-//' -e 's/-*$//')"
-	printf '%s-%s' "$repo" "$slug"
+  local br repo slug
+  br="$(git -C "$1" branch --show-current 2>/dev/null)"
+  [ -n "$br" ] || br="$(basename "$1")"
+  repo="$(basename "$(dirname "$(git -C "$1" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)")")"
+  repo="$(printf '%s' "$repo" | tr -c 'A-Za-z0-9_' '-' | sed -e 's/--*/-/g' -e 's/^-//' -e 's/-*$//')"
+  slug="$(printf '%s' "$br" | tr -c 'A-Za-z0-9_' '-' | sed -e 's/--*/-/g' -e 's/^-//' -e 's/-*$//')"
+  printf '%s-%s' "$repo" "$slug"
 }
 
 # `wt id [path]` / `wt --worktree-id [path]`: print the GIT_WORKTREE id and exit
@@ -46,15 +46,15 @@ worktree_id() { # $1 = worktree path
 # checkout) so config treats it as "no worktree". Respects a pre-set
 # GIT_WORKTREE (echoes it verbatim).
 if [ "${1:-}" = id ] || [ "${1:-}" = --worktree-id ]; then
-	q_path="${2:-$PWD}"
-	if [ -n "${GIT_WORKTREE:-}" ]; then
-		printf '%s' "$GIT_WORKTREE"
-		exit 0
-	fi
-	q_gd="$(git -C "$q_path" rev-parse --git-dir 2>/dev/null)" || exit 0
-	case "$q_gd" in */worktrees/*) ;; *) exit 0 ;; esac
-	worktree_id "$q_path"
-	exit 0
+  q_path="${2:-$PWD}"
+  if [ -n "${GIT_WORKTREE:-}" ]; then
+    printf '%s' "$GIT_WORKTREE"
+    exit 0
+  fi
+  q_gd="$(git -C "$q_path" rev-parse --git-dir 2>/dev/null)" || exit 0
+  case "$q_gd" in */worktrees/*) ;; *) exit 0 ;; esac
+  worktree_id "$q_path"
+  exit 0
 fi
 
 # ---- load the v2 coordinator -------------------------------------------------
@@ -62,11 +62,11 @@ fi
 # normally reached through a ~/bin symlink.
 wt_v2_script_path="${BASH_SOURCE[0]}"
 if [ -L "$wt_v2_script_path" ]; then
-	wt_v2_link="$(readlink "$wt_v2_script_path")"
-	case "$wt_v2_link" in
-	/*) wt_v2_script_path="$wt_v2_link" ;;
-	*) wt_v2_script_path="${wt_v2_script_path%/*}/$wt_v2_link" ;;
-	esac
+  wt_v2_link="$(readlink "$wt_v2_script_path")"
+  case "$wt_v2_link" in
+    /*) wt_v2_script_path="$wt_v2_link" ;;
+    *) wt_v2_script_path="${wt_v2_script_path%/*}/$wt_v2_link" ;;
+  esac
 fi
 wt_v2_script_dir="$(cd "${wt_v2_script_path%/*}" && pwd -P)"
 WT_V2_SELF="$wt_v2_script_dir/$(basename "$wt_v2_script_path")"
@@ -76,45 +76,75 @@ source "$wt_v2_script_dir/wt-lock-lib"
 source "$wt_v2_script_dir/wt-v2-lib"
 
 write_env() { # $1 = set|unset, $2 = value (for set)
-	[ -n "${WT_ENV_FILE:-}" ] || return 0
-	case "${WT_SHELL:-posix}" in
-	fish)
-		if [ "$1" = set ]; then printf "set -gx GIT_WORKTREE '%s'\n" "$2" >"$WT_ENV_FILE"; else printf 'set -ge GIT_WORKTREE\n' >"$WT_ENV_FILE"; fi
-		;;
-	*)
-		if [ "$1" = set ]; then printf "export GIT_WORKTREE='%s'\n" "$2" >"$WT_ENV_FILE"; else printf 'unset GIT_WORKTREE\n' >"$WT_ENV_FILE"; fi
-		;;
-	esac
+  [ -n "${WT_ENV_FILE:-}" ] || return 0
+  case "${WT_SHELL:-posix}" in
+    fish)
+      if [ "$1" = set ]; then printf "set -gx GIT_WORKTREE '%s'\n" "$2" >"$WT_ENV_FILE"; else printf 'set -ge GIT_WORKTREE\n' >"$WT_ENV_FILE"; fi
+      ;;
+    *)
+      if [ "$1" = set ]; then printf "export GIT_WORKTREE='%s'\n" "$2" >"$WT_ENV_FILE"; else printf 'unset GIT_WORKTREE\n' >"$WT_ENV_FILE"; fi
+      ;;
+  esac
 }
 
 emit_cd() {
-	if [ -n "${WT_CD_FILE:-}" ]; then printf '%s\n' "$1" >"$WT_CD_FILE"; else echo "wt: worktree at $1 (no shell wrapper active; cd manually)" >&2; fi
+  if [ -n "${WT_CD_FILE:-}" ]; then printf '%s\n' "$1" >"$WT_CD_FILE"; else echo "wt: worktree at $1 (no shell wrapper active; cd manually)" >&2; fi
 }
 
 # ---- dispatch ----------------------------------------------------------------
 # v2 owns targets and its explicit commands; everything else is upstream's.
 case "${1:-}" in
--t | --target | -t=* | --target=*)
-	wt_v2_main "$@"
-	exit $?
-	;;
+  -t | --target | -t=* | --target=*)
+    wt_v2_main "$@"
+    exit $?
+    ;;
 esac
 if wt_v2_wants_command "$@" || {
-	case "${1:-}" in
-	help | -h | --help | -V | --version | list | path | prune | repair | open | ensure | new | switch | remove | merge | select | step | hook | config | '') false ;;
-	-) true ;;
-	-*) false ;;
-	*) true ;;
-	esac
+  case "${1:-}" in
+    help | -h | --help | -V | --version | list | path | prune | repair | open | ensure | new | switch | remove | merge | select | step | hook | config | '') false ;;
+    -) true ;;
+    -*) false ;;
+    *) true ;;
+  esac
 } then
-	wt_v2_main "$@"
-	exit $?
+  wt_v2_main "$@"
+  exit $?
 fi
+
+# ---- wrapper hints ------------------------------------------------------------
+# Bare `wt` and help requests fall through to upstream help below; prefix it
+# with the wrapper-specific commands and common usages upstream doesn't know.
+wrapper_hints() {
+  cat <<'EOF'
+wt wrapper (~/.dotfiles/bin/wt) — lifecycle + tmux on top of Worktrunk
+
+  wt NAME                          ensure worktree, run setup, open tmux session
+  wt NAME --base BRANCH            ...creating the branch from BRANCH
+  wt NAME --base @                 ...creating the branch from the current HEAD
+  wt -t cd NAME                    same lifecycle, only cd (no tmux)
+  wt -t w NAME                     same lifecycle, one 60/40 window in this session
+  wt new NAME [--base BRANCH]      create only; refuses if the branch exists
+  wt ensure NAME [--base X] --json full lifecycle, no cd/attach (agents)
+  wt repair [NAME]                 rerun setup + rebuild the tmux session
+  wt path NAME | wt path .         print the worktree path
+  wt list --json                   normalized worktree list
+  wt prune NAME                    safe removal of a clean, integrated worktree
+  wt id [PATH]                     print GIT_WORKTREE id ({repo}-{branch-slug})
+
+  --base shortcuts: @ (current HEAD)  ^ (previous worktree)  - (previous branch)
+  Everything else passes through to Worktrunk unchanged (help below).
+
+EOF
+}
+
+case "${1:-}" in
+  '' | help | -h | --help) wrapper_hints ;;
+esac
 
 # ---- raw upstream passthrough -------------------------------------------------
 # Same pinned backend the v2 path verifies; exec'd untouched.
 if ! v2_resolve_backend; then
-	echo "wt: ${V2_ERROR_MESSAGE:-could not resolve pinned Worktrunk}" >&2
-	exit 127
+  echo "wt: ${V2_ERROR_MESSAGE:-could not resolve pinned Worktrunk}" >&2
+  exit 127
 fi
 exec "$V2_BACKEND" "$@"

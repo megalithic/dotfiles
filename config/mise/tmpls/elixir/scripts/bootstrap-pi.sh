@@ -19,10 +19,10 @@ url='http://localhost:${PHX_PORT}/tidewave/mcp'
 nl=$'\n'
 
 for f in "$mcp" "$append"; do
-	if [ -L "$f" ] || { [ -e "$f" ] && [ ! -f "$f" ]; }; then
-		echo "error: refusing to modify non-regular file or symlink: $PWD/$f" >&2
-		exit 1
-	fi
+  if [ -L "$f" ] || { [ -e "$f" ] && [ ! -f "$f" ]; }; then
+    echo "error: refusing to modify non-regular file or symlink: $PWD/$f" >&2
+    exit 1
+  fi
 done
 
 # Remove only the old generated mcpServers.tidewave entry (custom definitions
@@ -51,9 +51,24 @@ Local tooling is managed by mise (`.config/mise.toml`).
 
 ## Development requirements
 
-- Prefer the `tidewave` MCP server registered by Pi's `acp.ts` extension for
-  code introspection, editing, REPL usage, and database access before shell tools.
-  Use the MCP proxy; runtime registrations do not expose direct tools.
+- Tidewave (MCP server `tidewave`, registered by Pi's `acp.ts` extension) is the
+  required tool for anything that touches the running Elixir app. Call it through
+  the MCP proxy; runtime registrations do not expose direct tools.
+  - Never run `mix run -e`, `iex`, `elixir -e`, or `mix run` scripts through
+    bash to evaluate code; use `tidewave_project_eval`.
+  - Never run `psql` or `mix ecto` queries to inspect data; use
+    `tidewave_execute_sql_query`.
+  - Never look up a dependency's docs with `rg` in `deps/` or
+    `mix usage_rules.docs`; use `tidewave_get_docs`.
+  - Never `rg 'def name'` to find a definition; use
+    `tidewave_get_source_location`.
+  - Never tail `log/` files for runtime errors; use `tidewave_get_logs`.
+  - Never drive the dev site with curl or a browser MCP for LiveView checks;
+    use `tidewave_browser_eval`.
+  - Bash remains for git, mise tasks, `mix format`, `mix test`, `mix check`,
+    and file searches outside the running app.
+  - If Tidewave is unreachable (Phoenix down, port changed), say so and
+    reconnect (`/mcp reconnect tidewave`) before falling back to bash.
 
 ## Testing requirements
 
@@ -101,12 +116,12 @@ existing=''
 [ ! -e "$append" ] || existing="$(cat "$append")"
 counts="$(printf '%s\n' "$existing" | awk -v b="$begin" -v e="$end" 'index($0, b) { nb++ } index($0, e) { ne++ } END { print nb + 0, ne + 0 }')"
 case "$counts" in
-"0 0") guidance="${existing:+$existing$nl$nl}$block" ;;
-"1 1") guidance="${existing%%"$begin"*}$block${existing#*"$end"}" ;;
-*)
-	echo "error: expected exactly one generated block in $PWD/$append" >&2
-	exit 1
-	;;
+  "0 0") guidance="${existing:+$existing$nl$nl}$block" ;;
+  "1 1") guidance="${existing%%"$begin"*}$block${existing#*"$end"}" ;;
+  *)
+    echo "error: expected exactly one generated block in $PWD/$append" >&2
+    exit 1
+    ;;
 esac
 
 mkdir -p .pi

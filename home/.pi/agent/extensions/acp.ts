@@ -643,6 +643,7 @@ export default function (pi: ExtensionAPI): void {
 		if (!ctx.hasUI) return;
 
 		let status: string | undefined;
+		const connected = owned && tidewaveStatus === "connected";
 
 		try {
 			const b = readBindingForCwd(ctx.cwd);
@@ -654,10 +655,16 @@ export default function (pi: ExtensionAPI): void {
 					status = JSON.stringify({
 						url: appUrl,
 						boundHere: Boolean(process.env.PI_SOCKET && b.socket === process.env.PI_SOCKET),
+						connected,
 					});
 				}
 			}
 		} catch {}
+
+		// A live Tidewave MCP connection is worth showing even without a browser binding.
+		if (!status && connected && registeredUrl) {
+			status = JSON.stringify({ url: registeredUrl.origin, boundHere: false, connected });
+		}
 
 		if (status !== lastStatus) {
 			ctx.ui.setStatus("pidewave", status);

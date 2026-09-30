@@ -1,0 +1,69 @@
+#!/usr/bin/env zsh
+
+# reload zsh config
+alias reload!="RELOAD=1 source $XDG_CONFIG_HOME/zsh/.zshrc"
+
+# Filesystem aliases
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....="cd ../../.."
+alias .....="cd ../../../.."
+
+# Helpers
+alias grep='grep --color=auto'
+alias df='df -h' # disk free, in Gigabytes, not bytes
+alias du='du -h -c' # calculate disk usage for a folder
+
+alias lpath='echo $PATH | tr ":" "\n"' # list the PATH separated by new lines
+
+# Applications
+alias ios='open -a /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app'
+
+# Hide/show all desktop icons (useful when presenting)
+alias hidedesktop="defaults write com.apple.finder CreateDesktop -bool false && killall Finder"
+alias showdesktop="defaults write com.apple.finder CreateDesktop -bool true && killall Finder"
+
+# Recursively delete `.DS_Store` files
+alias cleanup="find . -name '*.DS_Store' -type f -ls -delete"
+# remove broken symlinks
+alias clsym="find -L . -name . -o -type d -prune -o -type l -exec rm {} +"
+
+
+# use eza if available
+if [[ -x "$(command -v eza)" ]]; then
+  alias ll="eza --icons --git --long"
+  alias l="eza --icons --git --all --long"
+else
+  alias l="ls -lah ${colorflag}"
+  alias ll="ls -lFh ${colorflag}"
+fi
+alias la="ls -AF ${colorflag}"
+alias lld="ls -l | grep ^d"
+alias rmf="rm -rf"
+
+# git aliases
+alias gs='git s'
+alias glog="git l"
+
+# tmux aliases
+alias ta='tmux attach'
+alias tls='tmux ls'
+alias tat='tmux attach -t'
+alias tns='tmux new-session -s'
+
+# use nvim, but don't make me think about it
+if [[ -n "$(command -v nvim)" ]]; then
+    alias vim="nvim"
+    # shortcut to open vim and immediately update vim-plug and all installed plugins
+    alias vimu="nvim --headless \"+Lazy! sync\" +qa"
+    # immediately open to fugitive's status screen
+    alias vimg="nvim +Ge:"
+fi
+
+# Claude aliases
+alias claude!="claude --dangerously-skip-permissions"
+alias cc="claude"
+alias cc!="claude!"
+
+# pi aliases
+alias upp="pi update && pi update --extensions"

@@ -157,6 +157,7 @@ function formatPinvimStatus(
 const pidewaveStatusSchema = Type.Object({
   url: Type.String(),
   boundHere: Type.Boolean(),
+  connected: Type.Optional(Type.Boolean()),
 });
 
 function formatPidewaveStatus(
@@ -172,7 +173,10 @@ function formatPidewaveStatus(
 
     if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) return undefined;
 
-    return theme.fg(status.boundHere ? "accent" : "muted", url.origin);
+    // Green means Tidewave MCP is live; accent means only the browser binding targets this Pi.
+    const color = status.connected ? "success" : status.boundHere ? "accent" : "muted";
+
+    return theme.fg(color, url.origin);
   } catch {
     return undefined;
   }
@@ -578,20 +582,17 @@ export default function (pi: ExtensionAPI) {
           // Merge remaining extension statuses into stats line.
           // Multi-pass owns the right side. Caveman never belongs in the footer.
           if (extensionStatuses.size > 0) {
-            const excludedKeys = new Set<string>(["multi-pass", "caveman", "pidewave"]);
+            const excludedKeys = new Set<string>(["multi-pass", "caveman"]);
             const rawMcpStatus = extensionStatuses.get("mcp") || "";
             const parsedMcpStatus = formatMcpStatus("mcp", rawMcpStatus);
-
-            const pidewaveStatus = formatPidewaveStatus(
-              extensionStatuses.get("pidewave") || "", theme,
-            ) || "";
 
             const mcpFullyConnected = parsedMcpStatus
               ? parsedMcpStatus.activeCount >= parsedMcpStatus.totalCount
               : false;
 
             const statusParts = Array.from(extensionStatuses.entries())
-              .sort(([a], [b]) => a.localeCompare(b))
+              // Pidewave first so width truncation clips less important statuses.
+              .sort(([a], [b]) => Number(b === "pidewave") - Number(a === "pidewave") || a.localeCompare(b))
               .filter(([key]) => !excludedKeys.has(key))
               .map(([key, text]) => {
                 if (key === "mcp-error") {
@@ -603,6 +604,10 @@ export default function (pi: ExtensionAPI) {
                     : "";
                 }
 
+                if (key === "pidewave") {
+                  return formatPidewaveStatus(text, theme) || "";
+                }
+
                 if (key === "pinvim") {
                   return formatPinvimStatus(text, theme) || "";
                 }
@@ -611,9 +616,8 @@ export default function (pi: ExtensionAPI) {
 
                 if (mcpStatus) {
                   const color = mcpStatus.activeCount > 0 ? "accent" : "dim";
-                  const url = key === "mcp" && pidewaveStatus ? ` ${pidewaveStatus}` : "";
 
-                  return theme.fg(color, mcpStatus.text) + url;
+                  return theme.fg(color, mcpStatus.text);
                 }
 
                 if (/mcp/i.test(key) || /mcp/i.test(text)) return "";

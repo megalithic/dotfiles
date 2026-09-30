@@ -2,6 +2,10 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
 
+const ICON_ATTENTION = '';
+const ICON_WORKING = '';
+const ICON_IDLE = '';
+
 function printManifestPanes(session, directory) {
   try {
     for (const entry of readdirSync(directory)) {
@@ -70,9 +74,9 @@ function statusIcon(window) {
   try {
     const text = readFileSync(`${stateDir}/status/pi-${session}-${window}.status`, "utf8");
     switch (text.trim().split(/\s+/)[0]) {
-      case "working": return "\x1b[32m●\x1b[0m";
-      case "asking": case "error": return "\x1b[31m●\x1b[0m";
-      case "idle": case "done": return "\x1b[38;5;255m○\x1b[0m";
+      case "working": return `\x1b[32m${ICON_WORKING}\x1b[0m`;
+      case "asking": case "error": return `\x1b[31m${ICON_ATTENTION}\x1b[0m`;
+      case "idle": case "done": return `\x1b[38;5;255m${ICON_IDLE}\x1b[0m`;
       default: return "";
     }
   } catch { return ""; }

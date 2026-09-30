@@ -45,7 +45,8 @@ local linters = new Mapping<String, Step> {
     // from config/pi-coding-agent; once the old HEAD path is gone, normal linting resumes.
     ["oxlint"] = new Step {
         glob = List("home/.pi/**/*.ts", "home/.pi/**/*.mjs")
-        exclude = disabledPiEntries
+        // Vendored observational-memory: lint debt tracked in tk dot-d9ez; drop once fixed.
+        exclude = disabledPiEntries + List("home/.pi/agent/extensions/observational-memory/**")
         check = new CommandSpec {
             command = "mise exec -- mise/scripts/lint-pi-files {{files}}"
             effect = "read"

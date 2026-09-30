@@ -473,6 +473,30 @@ describe("Pidewave runtime endpoint", () => {
     });
   });
 
+  test("footer status shows the registered origin only while owned Tidewave is connected", () => {
+    const h = harness({ hasUI: true });
+    const statuses: (string | undefined)[] = [];
+
+    h.ctx.ui.setStatus = (key: string, value: string | undefined) => { if (key === "pidewave") statuses.push(value); };
+
+    h.write();
+    h.fire("session_start");
+
+    const connect = (status: string) => h.bus.emit(STATUS, {
+      version: 1, name: "unused", servers: [{ name: "tidewave", status, disabled: false }],
+    });
+
+    connect("connecting");
+    h.fire("before_agent_start");
+    expect(statuses.at(-1)).toBeUndefined();
+    connect("connected");
+    h.fire("before_agent_start");
+    expect(JSON.parse(statuses.at(-1)!)).toEqual({ url: "http://localhost:4300", boundHere: false, connected: true });
+    connect("failed");
+    h.fire("before_agent_start");
+    expect(statuses.at(-1)).toBeUndefined();
+  });
+
   test("adapter disposal failure is contained", async () => {
     const h = harness();
     h.write();
