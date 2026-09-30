@@ -97,7 +97,9 @@
 
   c = commit
   cv = commit -v
+  cvi = !HK=0 git commit -v
   cm = commit -m
+  cmi = !HK=0 git commit -m
   ; cm = !git commit -m "$(gum input)" -m "$(gum write)"
   ca = commit --amend
   cp = commit -p
