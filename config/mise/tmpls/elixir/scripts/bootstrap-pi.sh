@@ -64,7 +64,12 @@ Local tooling is managed by mise (`.config/mise.toml`).
     `tidewave_get_source_location`.
   - Never tail `log/` files for runtime errors; use `tidewave_get_logs`.
   - Never drive the dev site with curl or a browser MCP for LiveView checks;
-    use `tidewave_browser_eval`.
+    use `tidewave_browser_eval`. It takes `action` (`help`, `new-session`,
+    `eval`), `sid`, and `action_inputs` (`code` using the `browser` object). If
+    it reports no browser connected, open the control page yourself
+    (`open http://localhost:$PHX_PORT/tidewave`), wait a few seconds, then call
+    `action: "help"` to receive the active `sid` (or `new-session` to reserve
+    one) and continue; do not fall back to curl or another browser tool.
   - Bash remains for git, mise tasks, `mix format`, `mix test`, `mix check`,
     and file searches outside the running app.
   - If Tidewave is unreachable (Phoenix down, port changed), say so and
