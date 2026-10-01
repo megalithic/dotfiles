@@ -27,6 +27,8 @@ local function setup()
     },
     writes = 0, inspected = 0, activated = 0, forwarded = {}, watchers = {}, taps = {},
     focusCalls = 0, cdpCalls = 0, ownerChecks = 0, brought = 0, sendResult = true,
+    -- Browser path: published manifests and the CDP target whose document has focus.
+    manifests = {}, focusedTab = nil, probes = 0,
   }
   local window = { id = function() return state.windowId end, title = function() return state.title end }
   state.ghostty = mock.makeApp({ bundleID = "com.mitchellh.ghostty", windows = { window } })
@@ -82,16 +84,32 @@ local function setup()
     if encoded[value] == nil then error("invalid JSON") end
     return copy(encoded[value])
   end
-  hs.fs.attributes = function(path)
+  hs.fs.attributes = function(path, attribute)
     if path:match("cdp%.mjs$") and not state.missingCdp then return {} end
     if path == "/opt/homebrew/bin/tmux" and state.homebrewTmux then return {} end
+    if path:match("%.sock$") and not state.deadSocket then return attribute == "mode" and "socket" or { mode = "socket" } end
   end
   hs.fs.mkdir = function() return true end
-  io.open = function(_, mode)
+  hs.fs.dir = function()
+    local i = 0
+    return function()
+      i = i + 1
+      return state.manifests[i] and state.manifests[i].name
+    end
+  end
+  io.open = function(path, mode)
     if mode == "w" then
       state.writes = state.writes + 1
       if state.writeFails then return nil, "permission denied" end
       return { write = function(_, raw) state.binding = hs.json.decode(raw) end, close = function() end }
+    end
+    if path:match("%.info$") then
+      for _, entry in ipairs(state.manifests) do
+        if path:match("/" .. entry.name:gsub("%p", "%%%0") .. "$") then
+          return { read = function() return entry.raw or hs.json.encode(entry.manifest) end, close = function() end }
+        end
+      end
+      return nil
     end
     if state.binding then return { read = function() return hs.json.encode(state.binding) end, close = function() end } end
   end
@@ -120,6 +138,9 @@ local function setup()
       elseif command:find(" evalraw ", 1, true) and command:find(" Page.bringToFront '{}'", 1, true) then
         state.brought = state.brought + 1
         output = not state.bringFails and "{}" or nil
+      elseif command:find("document.hasFocus()", 1, true) then
+        state.probes = state.probes + 1
+        output = command:match(" eval '(%x+)' ") == state.focusedTab and "true" or "false"
       elseif command:find(" eval ", 1, true) then
         state.inspected = state.inspected + 1
         output = state.inspect
@@ -268,6 +289,111 @@ test("manifest subdirectory resolves to matching worktree root", function(s)
   s.connection.manifest.cwd = "/work/project/apps/web"
   s.module.handshake()
   assert(s.inspected == 1 and s.binding.cwd == "/work/project")
+end)
+
+-- Browser-initiated handshake: Helium frontmost, the focused app tab picks the Pi.
+local function browserSetup(s, overrides)
+  s.mock.frontmost = s.helium
+  s.focusedTab = "ABC123"
+  local manifest = copy(s.connection.manifest)
+  manifest.heartbeatAt = os.date("!%Y-%m-%dT%H:%M:%S.000Z")
+  for key, value in pairs(overrides or {}) do manifest[key] = value end
+  s.manifests = { { name = "pi-42.info", manifest = manifest } }
+  return manifest
+end
+
+test("browser chord binds the Pi connected to the focused app tab", function(s)
+  local manifest = browserSetup(s)
+  assert(s.press() == true)
+  assert(s.focusCalls == 0 and s.cdpCalls == 0, "gate must not spawn helpers or CDP")
+  s.mock.advance(0)
+  assert(s.probes == 1 and s.inspected == 1 and s.writes == 1 and s.activated == 1)
+  assert(s.binding.socket == manifest.socket and s.binding.appUrl == "http://localhost:4123")
+  assert(s.binding.targetPrefix == "ABC123" and #s.watchers == 1)
+  assert(#s.mock.keystrokes == 0)
+end)
+
+for name, mutate in pairs({
+  ["no manifests"] = function(s) s.manifests = {} end,
+  ["stale heartbeat"] = function(s) browserSetup(s, { heartbeatAt = "2000-01-01T00:00:00.000Z" }) end,
+  ["malformed heartbeat"] = function(s) browserSetup(s, { heartbeatAt = "yesterday" }) end,
+  ["disconnected"] = function(s) browserSetup(s, { tidewaveConnected = false }) end,
+  ["ephemeral"] = function(s) browserSetup(s, { ephemeral = true }) end,
+  ["missing socket"] = function(s) browserSetup(s).socket = nil end,
+  ["dead socket"] = function(s) browserSetup(s); s.deadSocket = true end,
+  ["remote endpoint"] = function(s) browserSetup(s, { tidewaveEndpoint = { origin = "http://example.com:4123", pathname = "/tidewave/mcp" } }) end,
+  ["unreadable manifest"] = function(s) browserSetup(s); s.manifests[1].raw = "not JSON" end,
+}) do test("browser chord passes through: " .. name, function(s)
+  s.mock.frontmost = s.helium
+  mutate(s)
+  rejected(s)
+  assert(#s.commands == 0 and #s.mock.keystrokes == 0)
+end) end
+
+for name, mutate in pairs({
+  ["unfocused app tab"] = function(s) s.focusedTab = nil end,
+  ["Tidewave page focused"] = function(s) s.tabs = "ABC123 Tidewave http://localhost:4123/tidewave" end,
+  ["other origin focused"] = function(s) s.tabs = "ABC123 Other http://localhost:4999/" end,
+  ["Helium without CDP"] = function(s) s.cdpOwner = false end,
+}) do test("browser chord re-posts Cmd+Shift+C for " .. name, function(s)
+  browserSetup(s)
+  mutate(s)
+  assert(s.press() == true)
+  s.mock.advance(0)
+  assert(s.writes == 0 and #s.mock.notifications == 0)
+  noBrowserEffects(s)
+  assert(#s.mock.keystrokes == 1)
+  assert(s.mock.keystrokes[1].key == "c")
+  assert(s.press() == false, "the re-posted chord passes through once")
+  assert(s.press() == true, "later chords are handled again")
+  s.mock.advance(0.5)
+end) end
+
+test("browser chord fails closed when two Pi sessions share the origin", function(s)
+  local manifest = browserSetup(s)
+  local other = copy(manifest)
+  other.pid, other.socket, other.owner = 201, "/state/pi-%43.sock", "owner-b"
+  table.insert(s.manifests, { name = "pi-43.info", manifest = other })
+  assert(s.press() == true)
+  s.mock.advance(0)
+  assert(s.writes == 0 and #s.mock.keystrokes == 0 and #s.mock.notifications > 0)
+  noBrowserEffects(s)
+end)
+
+test("browser chord fails closed when several tabs report focus", function(s)
+  browserSetup(s)
+  s.tabs = "ABC123 App http://localhost:4123/orders\nDEF456 App http://localhost:4123/items"
+  s.focusedTab = nil
+  local probed = io.popen
+  io.popen = function(command)
+    if command:find("document.hasFocus()", 1, true) then
+      s.probes = s.probes + 1
+      return { read = function() return "true" end, close = function() return true end }
+    end
+    return probed(command)
+  end
+  assert(s.press() == true)
+  s.mock.advance(0)
+  assert(s.probes == 2 and s.writes == 0 and #s.mock.keystrokes == 0 and #s.mock.notifications > 0)
+  noBrowserEffects(s)
+end)
+
+test("browser chord revalidates the Pi before touching the tab", function(s)
+  browserSetup(s)
+  s.onList = function() s.manifests = {} end
+  assert(s.press() == true)
+  s.mock.advance(0)
+  assert(s.writes == 0 and s.brought == 0 and s.inspected == 0 and #s.watchers == 0)
+  assert(#s.mock.notifications > 0)
+end)
+
+test("browser chord relays copied prompts to the bound Pi", function(s)
+  local manifest = browserSetup(s)
+  s.module.handshake({ source = "browser" })
+  assert(#s.watchers == 1)
+  s.watchers[1].callback("<user_prompt>fix it</user_prompt>")
+  assert(#s.forwarded == 1 and s.forwarded[1].socket == manifest.socket)
+  assert(s.forwarded[1].payload.params.from == "tidewave")
 end)
 
 test("stop cancels queued handshake; init is idempotent", function(s)

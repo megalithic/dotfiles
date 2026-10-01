@@ -2,8 +2,12 @@
 -- Tidewave tab for its worktree, then focus Helium and engage inspect mode.
 --
 -- Flow on hotkey:
---   1. Resolve the focused Ghostty title to an exact, active tmux pane.
---   2. Require a fresh connected manifest owned by that tty's foreground Pi.
+--   1. Resolve the focused Ghostty title to an exact, active tmux pane, or,
+--      when Helium is frontmost, the focused app tab whose origin matches a
+--      fresh connected Pi manifest (Cmd+Shift+C passes through to Helium when
+--      no such tab is focused).
+--   2. Require a fresh connected manifest owned by that tty's foreground Pi,
+--      or the single Pi connected to the focused tab's origin.
 --   3. Cross-check the reported endpoint against the live Phoenix worktree.
 --   4. Revalidate the focused registration before any browser side effects.
 --   5. Find the unambiguous app tab on localhost:<port>, preferring the CDP
@@ -167,18 +171,107 @@ local function focusedConnection()
   return connection
 end
 
+-- Browser-initiated connections have no pane; both sides must agree on that.
 local function sameConnection(a, b)
-  return a
-    and b
-    and a.pane.pane == b.pane.pane
-    and a.pane.pid == b.pane.pid
-    and a.pane.windowId == b.pane.windowId
-    and a.pane.cwd == b.pane.cwd
-    and a.manifest.pid == b.manifest.pid
+  if not a or not b or (a.pane == nil) ~= (b.pane == nil) then return false end
+  if
+    a.pane
+    and (
+      a.pane.pane ~= b.pane.pane
+      or a.pane.pid ~= b.pane.pid
+      or a.pane.windowId ~= b.pane.windowId
+      or a.pane.cwd ~= b.pane.cwd
+    )
+  then
+    return false
+  end
+  return a.manifest.pid == b.manifest.pid
     and a.manifest.owner == b.manifest.owner
     and a.manifest.socket == b.manifest.socket
     and a.manifest.cwd == b.manifest.cwd
     and a.manifest.tidewaveEndpoint.origin == b.manifest.tidewaveEndpoint.origin
+end
+
+local function parseUtc(text)
+  local y, mo, d, h, mi, s = tostring(text):match("^(%d%d%d%d)%-(%d%d)%-(%d%d)T(%d%d):(%d%d):(%d%d)%.%d%d%dZ$")
+  if not y then return nil end
+  return os.time({
+    year = tonumber(y), month = tonumber(mo), day = tonumber(d),
+    hour = tonumber(h), min = tonumber(mi), sec = tonumber(s), isdst = false,
+  })
+end
+
+-- Same freshness contract as pidewave-focus.py fresh_manifest, minus the tty
+-- checks that only apply to a focused pane.
+local function freshManifest(m, nowUtc)
+  if
+    type(m) ~= "table"
+    or m.tidewaveConnected ~= true
+    or (m.ephemeral ~= nil and m.ephemeral ~= false)
+    or type(m.pid) ~= "number"
+    or m.pid <= 0
+    or not endpointPort(m.tidewaveEndpoint)
+  then
+    return false
+  end
+  for _, key in ipairs({ "owner", "cwd", "socket" }) do
+    if type(m[key]) ~= "string" or m[key] == "" then return false end
+  end
+  local heartbeat = parseUtc(m.heartbeatAt)
+  if not heartbeat then return false end
+  local age = nowUtc - heartbeat
+  if age < 0 or age >= 45 then return false end
+  return hs.fs.attributes(m.socket, "mode") == "socket"
+end
+
+local function freshManifests()
+  local manifests = {}
+  local nowUtc = os.time(os.date("!*t"))
+  pcall(function()
+    for name in hs.fs.dir(MANIFEST_DIR) do
+      if name:match("%.info$") then
+        local f = io.open(MANIFEST_DIR .. "/" .. name, "r")
+        if f then
+          local raw = f:read("*a")
+          f:close()
+          local ok, manifest = pcall(hs.json.decode, raw)
+          if ok and freshManifest(manifest, nowUtc) then table.insert(manifests, manifest) end
+        end
+      end
+    end
+  end)
+  return manifests
+end
+
+local function manifestsByOrigin()
+  local byOrigin = {}
+  for _, manifest in ipairs(freshManifests()) do
+    local origin = manifest.tidewaveEndpoint.origin
+    byOrigin[origin] = byOrigin[origin] or {}
+    table.insert(byOrigin[origin], manifest)
+  end
+  return byOrigin
+end
+
+-- The single Pi connected to an origin; two sessions in one worktree are
+-- ambiguous from the browser, so that case must start from the Pi instead.
+local function connectionForOrigin(origin)
+  local manifests = manifestsByOrigin()[origin] or {}
+  if #manifests ~= 1 then return nil, #manifests end
+  return { source = "browser", manifest = manifests[1] }, 1
+end
+
+local function currentConnection(connection)
+  if connection.source == "browser" then
+    return (connectionForOrigin(connection.manifest.tidewaveEndpoint.origin))
+  end
+  return focusedConnection()
+end
+
+local function frontmostHelium()
+  local app = hs.application.frontmostApplication()
+  if app and app:bundleID() == "net.imput.helium" then return app end
+  return nil
 end
 
 local function worktreeFacts(manifest)
@@ -335,8 +428,8 @@ local function focusHeliumAndInspect(target, origin, connection)
   local app = hs.application.get("net.imput.helium")
   if not app then return false, "Helium is not running." end
   if not heliumOwnsCdp(app) then return false, "Helium does not own CDP port 9223." end
-  if not sameConnection(connection, focusedConnection()) then
-    return false, "Focused Pi or Tidewave connection changed; retry from Pi."
+  if not sameConnection(connection, currentConnection(connection)) then
+    return false, "Focused Pi or Tidewave connection changed; retry."
   end
 
   local brought, bringError = sh(
@@ -464,15 +557,9 @@ local function armPromptRelay(binding)
       if not contents:find("<user_prompt>", 1, true) then return end
       if contents == M._lastForwardedPrompt then return end
       if forwardPrompt(binding, contents) then
+        -- The receiving pi notifies on arrival (bridge.ts persistAndSurfaceTell);
+        -- bridge errors surface asynchronously in logs.
         M._lastForwardedPrompt = contents
-        -- Write-initiated only: bridge errors surface asynchronously in logs.
-        notify(
-          string.format(
-            "Tidewave prompt forwarded to %s (%s); confirm in tmux.",
-            binding.session or "pi",
-            binding.pane or "?"
-          )
-        )
       else
         notify("Copied Tidewave prompt was not delivered to the bound pi.", true)
       end
@@ -485,15 +572,79 @@ local function armPromptRelay(binding)
   end
 end
 
+-- Not an app tab of a connected Pi: hand Helium its own Cmd+Shift+C (DevTools
+-- inspect). The flag lets the re-posted chord through the event tap once and
+-- expires in case the tap never sees the synthetic event.
+local function passthrough()
+  local app = frontmostHelium()
+  if not app then return end
+  M._passthrough = true
+  if not pcall(hs.eventtap.keyStroke, HOTKEY_MODS, HOTKEY_KEY, 0, app) then
+    M._passthrough = false
+    return
+  end
+  pcall(function() hs.timer.doAfter(0.5, function() M._passthrough = false end) end)
+end
+
+-- Browser-initiated handshake: the focused Helium app tab picks the Pi whose
+-- Tidewave endpoint matches its origin. Returns connection, reason, target;
+-- no connection and no reason means the chord is not ours.
+local function browserConnection()
+  local app = frontmostHelium()
+  if not app or not heliumOwnsCdp(app) then return nil end
+  local byOrigin = manifestsByOrigin()
+  if next(byOrigin) == nil then return nil end
+  if not hs.fs.attributes(CDP) then return nil end
+  local list, listError = sh(string.format("CDP_PORT=%d node %s list", CDP_PORT, shellQuote(CDP)), nil, true)
+  if not list then return nil, "Could not list Helium tabs on CDP port 9223 (" .. briefError(listError) .. ")." end
+  local focused = {}
+  for line in list:gmatch("[^\n]+") do
+    local id = line:match("^(%x+)")
+    local url = line:match("(https?://%S+)%s*$")
+    local origin = url and url:match("^(https?://[^/?#]+)")
+    local parsed = origin and byOrigin[origin] and appUrl(url, origin) or nil
+    if id and parsed and not parsed.tidewave then
+      local probe = sh(
+        string.format(
+          "CDP_PORT=%d node %s eval %s %s",
+          CDP_PORT,
+          shellQuote(CDP),
+          shellQuote(id),
+          shellQuote("document.hasFocus() && document.visibilityState === 'visible'")
+        )
+      )
+      if probe == "true" then table.insert(focused, { id = id, url = url, path = parsed.path, origin = origin }) end
+    end
+  end
+  if #focused == 0 then return nil end
+  if #focused > 1 then return nil, "Several Helium app tabs report focus; retry from Pi." end
+  local target = focused[1]
+  local connection, count = connectionForOrigin(target.origin)
+  if not connection then
+    return nil, string.format("%d Pi sessions are connected to %s; press Cmd+Shift+C in the Pi you want.", count, target.origin)
+  end
+  return connection, nil, target
+end
+
 function M.handshake(expected)
   -- A new handshake invalidates any armed relay immediately: a failed run must
   -- not leave a previous binding's watcher forwarding prompts.
   stopPromptRelay()
   local ok, err = pcall(function()
-    local connection = focusedConnection()
-    if not connection or (expected and not sameConnection(expected, connection)) then
-      notify("Focus a Pi with a current Tidewave connection first.", true)
-      return
+    local connection, target
+    if expected and expected.source == "browser" then
+      local reason
+      connection, reason, target = browserConnection()
+      if not connection then
+        if reason then notify(reason, true) else passthrough() end
+        return
+      end
+    else
+      connection = focusedConnection()
+      if not connection or (expected and not sameConnection(expected, connection)) then
+        notify("Focus a Pi with a current Tidewave connection first.", true)
+        return
+      end
     end
     local manifest = connection.manifest
     local facts = worktreeFacts(manifest)
@@ -506,11 +657,13 @@ function M.handshake(expected)
       notify("Helium must already be running and own CDP port 9223.", true)
       return
     end
-    local preferred = previousTarget(facts)
-    local target, targetError = selectAppTarget(facts.appUrl, preferred)
     if not target then
-      notify("Toolbar routing stopped: " .. targetError, true)
-      return
+      local targetError
+      target, targetError = selectAppTarget(facts.appUrl, previousTarget(facts))
+      if not target then
+        notify("Toolbar routing stopped: " .. targetError, true)
+        return
+      end
     end
     local inspected, inspectError = focusHeliumAndInspect(target, facts.appUrl, connection)
     if not inspected then
@@ -532,14 +685,24 @@ function M:init()
       if event:getKeyCode() ~= hs.keycodes.map[HOTKEY_KEY] or not event:getFlags():containExactly(HOTKEY_MODS) then
         return false
       end
+      if M._passthrough then
+        M._passthrough = false
+        return false
+      end
       local ok, connection = pcall(focusedConnection)
-      if not ok or not connection then return false end
+      local expected = ok and connection or nil
+      if not expected then
+        -- Cheap gate only: CDP work happens in the deferred handshake.
+        local eligible, browser = pcall(function() return frontmostHelium() ~= nil and #freshManifests() > 0 end)
+        if not eligible or not browser then return false end
+        expected = { source = "browser" }
+      end
       if not M._pending then
         -- Keep CDP/worktree work outside the event tap. Execution revalidates
         -- the captured registration, never silently switching to another Pi.
         M._pending = hs.timer.doAfter(0, function()
           M._pending = nil
-          M.handshake(connection)
+          M.handshake(expected)
         end)
       end
       return true
