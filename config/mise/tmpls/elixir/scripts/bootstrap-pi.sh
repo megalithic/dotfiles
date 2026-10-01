@@ -52,19 +52,19 @@ Local tooling is managed by mise (`.config/mise.toml`).
 ## Development requirements
 
 - Tidewave (MCP server `tidewave`, registered by Pi's `acp.ts` extension) is the
-  required tool for anything that touches the running Elixir app. Call it through
-  the MCP proxy; runtime registrations do not expose direct tools.
+  required tool for anything that touches the running Elixir app. Its tools are
+  declared directly as `mcp__tidewave__<tool>`.
   - Never run `mix run -e`, `iex`, `elixir -e`, or `mix run` scripts through
-    bash to evaluate code; use `tidewave_project_eval`.
+    bash to evaluate code; use `mcp__tidewave__project_eval`.
   - Never run `psql` or `mix ecto` queries to inspect data; use
-    `tidewave_execute_sql_query`.
+    `mcp__tidewave__execute_sql_query`.
   - Never look up a dependency's docs with `rg` in `deps/` or
-    `mix usage_rules.docs`; use `tidewave_get_docs`.
+    `mix usage_rules.docs`; use `mcp__tidewave__get_docs`.
   - Never `rg 'def name'` to find a definition; use
-    `tidewave_get_source_location`.
-  - Never tail `log/` files for runtime errors; use `tidewave_get_logs`.
+    `mcp__tidewave__get_source_location`.
+  - Never tail `log/` files for runtime errors; use `mcp__tidewave__get_logs`.
   - Never drive the dev site with curl or a browser MCP for LiveView checks;
-    use `tidewave_browser_eval`. It takes `action` (`help`, `new-session`,
+    use `mcp__tidewave__browser_eval`. It takes `action` (`help`, `new-session`,
     `eval`), `sid`, and `action_inputs` (`code` using the `browser` object). If
     it reports no browser connected, open the control page yourself
     (`open http://localhost:$PHX_PORT/tidewave`), wait a few seconds, then call
@@ -73,7 +73,8 @@ Local tooling is managed by mise (`.config/mise.toml`).
   - Bash remains for git, mise tasks, `mix format`, `mix test`, `mix check`,
     and file searches outside the running app.
   - If Tidewave is unreachable (Phoenix down, port changed), say so and
-    reconnect (`/mcp reconnect tidewave`) before falling back to bash.
+    reconnect (`/pidewave`, or `/mcp reconnect tidewave`) before falling back
+    to bash.
 
 ## Testing requirements
 
@@ -88,10 +89,10 @@ Local tooling is managed by mise (`.config/mise.toml`).
 - `PHX_PORT` is exported by mise via the dotfiles template `phx-port.sh`.
 - Tidewave MCP: `http://localhost:$PHX_PORT/tidewave/mcp` (requires Phoenix in dev);
   `.pi/mcp.json` stores the literal `${PHX_PORT}` in `pidewave.url`. ACP resolves
-  it once per Pi session. Reload Pi after changing the URL; restart Pi from
+  it once per Pi session. Run `/pidewave` after changing the URL; restart Pi from
   the updated shell environment after changing an environment variable.
-- With a deferred MCP runtime, use an MCP operation (such as `/mcp reconnect
-  tidewave`) to initialize it. Cmd+Shift+C stays inactive until connected.
+- ACP pings Tidewave every 10s; the footer URL turns green and Cmd+Shift+C
+  becomes active only while it answers.
 - Do not add Tidewave to `.mcp.json` or `mcpServers`; that shadows the ACP
   registration.
 

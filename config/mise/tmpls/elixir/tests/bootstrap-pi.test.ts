@@ -42,7 +42,8 @@ for (const bash of shells) {
       expect(guidance).toStartWith("Keep project notes\n\n<!-- mise-tmpl-gen:elixir:begin -->");
       expect(guidance).toEndWith("<!-- mise-tmpl-gen:elixir:end -->\n");
       expect(guidance).toContain("pidewave.url");
-      expect(guidance).toContain("Cmd+Shift+C stays inactive until connected");
+      expect(guidance).toContain("mcp__tidewave__project_eval");
+      expect(guidance).toContain("Cmd+Shift+C\n  becomes active only while it answers");
       expect(fs.readFileSync(path.join(h.cwd, "AGENTS.md"), "utf8")).toBe("Project-owned guidance\n");
       expect(h.run().exitCode).toBe(0);
       expect(fs.readFileSync(h.guidance, "utf8")).toBe(guidance);

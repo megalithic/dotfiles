@@ -8,7 +8,7 @@
         "--executable-path=/Applications/Helium.app/Contents/MacOS/Helium",
         "--isolated"
       ],
-      "disabled": true
+      "enabled": false
     },
     "chrome-devtools-profile": {
       "command": "npx",
@@ -18,7 +18,7 @@
         "--executable-path=/Applications/Helium.app/Contents/MacOS/Helium",
         "--userDataDir=~/.cache/agent-web/profile-copy"
       ],
-      "disabled": true
+      "enabled": false
     },
     "chrome-devtools-attach": {
       "command": "npx",
@@ -36,8 +36,9 @@
     },
     "githits": {
       "url": "https://mcp.githits.com/",
-      "auth": "bearer",
-      "bearerTokenEnv": "GITHITS_API_KEY"
+      "headers": {
+        "Authorization": "Bearer ${GITHITS_API_KEY}"
+      }
     },
     "mise": {
       "command": "mise",

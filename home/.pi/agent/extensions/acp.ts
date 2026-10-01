@@ -13,11 +13,12 @@
  *    immediately. No pi subprocess is spawned; replies are read in tmux.
  *
  * 2. Extension (auto-loaded by pi from extensions/*.ts):
- *    Registers the trusted worktree's Tidewave MCP endpoint and publishes
- *    its verified runtime identity. Also publishes the bound app URL and
- *    local ownership for the custom footer. The CLI entrypoint is guarded by an
- *    argv[1]-is-this-file check, so loading as an extension is side-effect
- *    free.
+ *    Registers the trusted worktree's Tidewave MCP endpoint with Pi's native
+ *    MCP support (`pi.registerMcpServer`) and pings it with Pi's own MCP client
+ *    so the footer and the Cmd+Shift+C gate only see a live endpoint. Also
+ *    publishes the bound app URL and local ownership for the custom footer. The
+ *    CLI entrypoint is guarded by an argv[1]-is-this-file check, so loading as
+ *    an extension is side-effect free, and Pi itself is only imported lazily.
  *
  * Handshake binding (written by Hammerspoon on Cmd+Shift+C):
  *   ${PI_STATE_DIR}/tidewave/bindings/<worktree-slug>.json
@@ -28,12 +29,9 @@
 import net from "node:net";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { createInterface } from "node:readline";
-import type {
-	ExtensionAPI,
-	ExtensionContext,
-} from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 // =============================================================================
 // Shared: binding lookup + bridge control client
@@ -480,42 +478,42 @@ const isMain = (() => {
 if (isMain) runAcpShim();
 
 // =============================================================================
-// Extension role: runtime Tidewave endpoint + binding footer status
+// Extension role: native Tidewave MCP registration + liveness + binding footer status
 // =============================================================================
 
 const ENDPOINT_EVENT = "pidewave:endpoint:v1";
 
-const MCP_STATUS_EVENT = "pi-mcp-adapter/status/v1";
+const SERVER_NAME = "tidewave";
 
-const MCP_REGISTER_EVENT = "pi-mcp-adapter:runtime-register:v1";
+const PING_INTERVAL_MS = 10_000;
 
-const MCP_SNAPSHOT_EVENT = "pi-mcp-adapter:runtime-snapshot:v1";
+const PING_TIMEOUT_MS = 3_000;
 
-// /pidewave hands off across /reload: the old runtime opens the handoff, the
-// reloaded runtime attaches its own reconnect callback.
-type ReloadHandoff = { reconnect?: () => Promise<void> };
+/** Liveness probe: Pi's own MCP client, connected to the registered URL. */
+type Probe = { ping(options?: { timeoutMs?: number }): Promise<void>; close(): Promise<void> };
 
-// SAFETY: Only this file reads or writes this dotfiles-owned global slot.
-const shared = globalThis as typeof globalThis & { __dotfilesPidewaveHandoff?: ReloadHandoff };
+type Connect = (url: URL) => Promise<Probe>;
 
-type RuntimeRegistration = { dispose(): Promise<void> };
+// `@earendil-works/pi-mcp` is ESM-only and not jiti-aliased for extensions, so
+// resolve its manifest from the running Pi install (node >= 22.14). Loaded
+// lazily so the ACP CLI role never imports Pi.
+const connectTidewave: Connect = async (url) => {
+	const [{ getPackageDir }, { findPackageJSON }] = await Promise.all([
+		import("@earendil-works/pi-coding-agent"),
+		import("node:module"),
+	]);
 
-type RegistrationRequest = {
-	version: 1;
-	name: "tidewave";
-	definition: { httpTransport: "streamable-http"; url: string; lifecycle: "keep-alive" };
-	result?: { ok: true; registration: RuntimeRegistration } | { ok: false };
-};
+	const manifest = findPackageJSON("@earendil-works/pi-mcp", pathToFileURL(path.join(getPackageDir(), "package.json")).href);
 
-type SnapshotRequest = {
-	version: 1;
-	name: "tidewave";
-	result?: { ok: true; snapshot: {
-		name: string;
-		definition: { url?: string };
-		runtime: boolean;
-		persisted: boolean;
-	} } | { ok: false };
+	if (!manifest) throw new Error("@earendil-works/pi-mcp is not installed next to Pi");
+	const pkg: JsonValue = JSON.parse(fs.readFileSync(manifest, "utf8"));
+	const main = isJsonObject(pkg) && isJsonString(pkg.main) ? pkg.main : "dist/index.js";
+	const { McpClient, StreamableHttpTransport } = await import(pathToFileURL(path.join(path.dirname(manifest), main)).href);
+	const client = new McpClient({ name: "pidewave", version: "1.0.0", requestTimeoutMs: PING_TIMEOUT_MS });
+
+	await client.connect(new StreamableHttpTransport({ url, openGetStream: false }));
+
+	return client;
 };
 
 const readEndpoint = (ctx: ExtensionContext): URL | undefined => {
@@ -529,6 +527,11 @@ const readEndpoint = (ctx: ExtensionContext): URL | undefined => {
 
 	if (!isJsonObject(config.pidewave) || !isJsonString(config.pidewave.url)) {
 		throw new Error("Invalid Pidewave configuration");
+	}
+
+	// A configured server of the same name takes precedence over our registration.
+	if (isJsonObject(config.mcpServers) && config.mcpServers[SERVER_NAME] !== undefined) {
+		throw new Error("Configured tidewave server shadows Pidewave");
 	}
 
 	const env = (_match: string, name: string): string => {
@@ -558,92 +561,144 @@ const readEndpoint = (ctx: ExtensionContext): URL | undefined => {
 	return url;
 };
 
-export default function (pi: ExtensionAPI): void {
+// Only acp's own messages reach the UI; JSON, URL, and Pi error text could echo file contents.
+const OWN_FAILURES = [
+	"Invalid Pidewave configuration",
+	"Missing Pidewave environment variable",
+	"Unsafe Pidewave endpoint",
+	"Configured tidewave server shadows Pidewave",
+	"MCP registration refused",
+];
+
+const endpointFailureReason = (error: Error): string =>
+	OWN_FAILURES.includes(error.message) ? error.message : "unreadable .pi/mcp.json or endpoint URL";
+
+const asError = (thrown: Error | string | undefined): Error => thrown instanceof Error ? thrown : new Error();
+
+type PidewaveRecord = { event: string; at: string; [key: string]: string | boolean | undefined };
+
+// Durable trace of endpoint state, kept out of model context (docs/extensions.md:
+// "Persist non-context session data → pi.appendEntry()"). Grep the session JSONL
+// for "pidewave" or ask vcc_recall. appendEntry is unavailable before a session
+// exists, so a failure to record never breaks the endpoint itself.
+const record = (pi: ExtensionAPI, event: string, data: Omit<PidewaveRecord, "event" | "at"> = {}): void => {
+	try {
+		pi.appendEntry<PidewaveRecord>("pidewave", { event, at: new Date().toISOString(), ...data });
+	} catch {}
+};
+
+export default function (pi: ExtensionAPI, connect: Connect = connectTidewave): void {
 	if (isMain) return; // defensive: never register hooks in CLI mode.
 
+	let ctxRef: ExtensionContext | undefined;
 	let poll: ReturnType<typeof setInterval> | undefined;
+	let monitor: ReturnType<typeof setInterval> | undefined;
 	let lastStatus: string | undefined;
-	let started = false;
-	let stopped = false;
-	let registration: RuntimeRegistration | undefined;
 	let registeredUrl: URL | undefined;
-	let unsubscribeStatus: (() => void) | undefined;
-	// Latest adapter status for tidewave and whether our runtime registration owns it.
-	let tidewaveStatus: string | undefined;
-	let owned = false;
-	let onTidewaveStatus: (() => void) | undefined;
+	let probe: Probe | undefined;
+	let checking: Promise<void> | undefined;
+	let live = false;
 
-	const revokeEndpoint = (): void => pi.events.emit(ENDPOINT_EVENT, { version: 1 });
+	const publish = (): void => {
+		pi.events.emit(ENDPOINT_EVENT, live && registeredUrl
+			? { version: 1, endpoint: { origin: registeredUrl.origin, pathname: registeredUrl.pathname } }
+			: { version: 1 });
+	};
 
-	const publishEndpoint = (): void => {
-		owned = false;
+	const setLive = (next: boolean): void => {
+		if (next === live) return;
+		live = next;
+		record(pi, "status", { status: next ? "connected" : "unreachable", url: registeredUrl?.origin });
+		publish();
 
-		if (stopped || !registration || !registeredUrl) return;
-		const request: SnapshotRequest = { version: 1, name: "tidewave" };
+		if (ctxRef) updateBindingStatus(ctxRef);
+	};
+
+	// One MCP session per registration; a failed ping drops it and the next tick reconnects.
+	const run = async (): Promise<void> => {
+		const url = registeredUrl;
+
+		if (!url) return;
 
 		try {
-			pi.events.emit(MCP_SNAPSHOT_EVENT, request);
-			const snapshot = request.result?.ok === true ? request.result.snapshot : undefined;
+			const current = probe ?? await connect(url);
 
-			// Acceptance can precede startup; a configured server may still shadow us.
-			if (snapshot?.name === "tidewave" && snapshot.runtime === true && snapshot.persisted === false &&
-				snapshot.definition?.url === registeredUrl.href) {
-				owned = true;
-				pi.events.emit(ENDPOINT_EVENT, {
-					version: 1,
-					endpoint: { origin: registeredUrl.origin, pathname: registeredUrl.pathname },
-				});
+			// Stopped or re-registered while connecting.
+			if (registeredUrl !== url) {
+				await current.close().catch(() => {});
 
 				return;
 			}
-		} catch {}
 
-		revokeEndpoint();
+			probe = current;
+			await current.ping({ timeoutMs: PING_TIMEOUT_MS });
+
+			if (registeredUrl === url) setLive(true);
+		} catch {
+			const dead = probe;
+			probe = undefined;
+
+			if (registeredUrl === url) setLive(false);
+			await dead?.close().catch(() => {});
+		}
+	};
+
+	const check = (): Promise<void> => {
+		checking ??= run().finally(() => { checking = undefined; });
+
+		return checking;
 	};
 
 	const startEndpoint = (ctx: ExtensionContext): void => {
-		if (started || stopped) return;
-		started = true;
-		revokeEndpoint();
+		if (registeredUrl) return;
+		publish(); // Revoked until the first successful ping.
 
 		try {
 			const url = readEndpoint(ctx);
 
 			if (!url) return;
 
-			const request: RegistrationRequest = {
-				version: 1, name: "tidewave",
-				definition: { httpTransport: "streamable-http", url: url.href, lifecycle: "keep-alive" },
-			};
+			try {
+				pi.registerMcpServer(SERVER_NAME, { url: url.href, exposure: "direct" });
+			} catch {
+				throw new Error("MCP registration refused");
+			}
 
-			pi.events.emit(MCP_REGISTER_EVENT, request);
-
-			if (request.result?.ok !== true) throw new Error("Registration unavailable");
-			registration = request.result.registration;
 			registeredUrl = url;
-			unsubscribeStatus = pi.events.on(MCP_STATUS_EVENT, (data: JsonValue) => {
-				const servers = isJsonObject(data) && Array.isArray(data.servers)
-					? data.servers.filter((server) => isJsonObject(server) && server.name === "tidewave")
-					: [];
+			record(pi, "registered", { url: url.origin });
+			monitor = setInterval(() => void check(), PING_INTERVAL_MS);
+			monitor.unref();
+			void check();
+		} catch (error) {
+			const reason = endpointFailureReason(asError(error));
+			record(pi, "unavailable", { reason, trusted: ctx.isProjectTrusted?.() === true });
 
-				const server = servers.length === 1 && isJsonObject(servers[0]) ? servers[0] : undefined;
-				tidewaveStatus = server?.disabled === true ? "disabled" : isJsonString(server?.status) ? server.status : undefined;
-				publishEndpoint();
-				onTidewaveStatus?.();
-			});
-			publishEndpoint();
-		} catch {
-			revokeEndpoint();
-
-			if (ctx.hasUI) ctx.ui.notify("Pidewave endpoint unavailable; check project configuration and MCP registration.", "warning");
+			if (ctx.hasUI) ctx.ui.notify(`Pidewave endpoint unavailable: ${reason}.`, "warning");
 		}
+	};
+
+	const stopEndpoint = async (): Promise<void> => {
+		clearInterval(monitor);
+		monitor = undefined;
+		const url = registeredUrl;
+		registeredUrl = undefined;
+		const dead = probe;
+		probe = undefined;
+		setLive(false);
+
+		if (url) {
+			try {
+				pi.unregisterMcpServer(SERVER_NAME);
+			} catch {} // The runtime may already be shutting down.
+		}
+
+		await dead?.close().catch(() => {});
 	};
 
 	const updateBindingStatus = (ctx: ExtensionContext): void => {
 		if (!ctx.hasUI) return;
 
 		let status: string | undefined;
-		const connected = owned && tidewaveStatus === "connected";
 
 		try {
 			const b = readBindingForCwd(ctx.cwd);
@@ -655,15 +710,15 @@ export default function (pi: ExtensionAPI): void {
 					status = JSON.stringify({
 						url: appUrl,
 						boundHere: Boolean(process.env.PI_SOCKET && b.socket === process.env.PI_SOCKET),
-						connected,
+						connected: live,
 					});
 				}
 			}
 		} catch {}
 
 		// A live Tidewave MCP connection is worth showing even without a browser binding.
-		if (!status && connected && registeredUrl) {
-			status = JSON.stringify({ url: registeredUrl.origin, boundHere: false, connected });
+		if (!status && live && registeredUrl) {
+			status = JSON.stringify({ url: registeredUrl.origin, boundHere: false, connected: live });
 		}
 
 		if (status !== lastStatus) {
@@ -672,84 +727,79 @@ export default function (pi: ExtensionAPI): void {
 		}
 	};
 
-	// Runs in the reloaded runtime, after /reload has fully finished.
-	const reconnectTidewave = async (ctx: ExtensionContext): Promise<void> => {
-		if (stopped) return;
+	// Pi resolves project trust once at startup; a reload keeps the old state.
+	// Saving the decision here still needs a restart before readEndpoint sees it.
+	const ensureTrusted = async (ctx: ExtensionContext): Promise<boolean> => {
+		if (ctx.isProjectTrusted?.() === true) return true;
 
-		if (!registration) {
-			ctx.ui.notify("Pidewave: reloaded, but no Tidewave endpoint is registered for this project.", "warning");
+		const cwd = path.resolve(ctx.cwd);
+		const parent = path.dirname(cwd);
+		const options = ["Trust this folder", `Trust parent folder (${parent})`, "Cancel"];
+		const selected = await ctx.ui.select(`Pidewave needs project trust to read .pi/mcp.json.\n${cwd}`, options);
+		const target = selected === options[0] ? cwd : selected === options[1] ? parent : undefined;
 
-			return;
+		if (!target) {
+			record(pi, "trust-declined", { cwd });
+			ctx.ui.notify("Pidewave: project is not trusted, so no Tidewave endpoint can be registered.", "warning");
+
+			return false;
 		}
 
-		// Without the adapter's command the text would reach the model as chat.
-		if (!pi.getCommands().some((command) => command.name === "mcp")) {
-			ctx.ui.notify("Pidewave: reloaded, but the /mcp command is unavailable.", "error");
+		const { getAgentDir, ProjectTrustStore } = await import("@earendil-works/pi-coding-agent");
+		new ProjectTrustStore(getAgentDir()).set(target, true);
+		record(pi, "trust-saved", { path: target });
+		ctx.ui.notify(`Pidewave: trusted ${target}. Restart Pi, then run /pidewave again.`, "info");
 
-			return;
-		}
-
-		// The adapter publishes status before its reconnect command returns;
-		// wait briefly only if no tidewave status arrived meanwhile.
-		tidewaveStatus = undefined;
-		await pi.sendUserMessage("/mcp reconnect tidewave", { expandPromptTemplates: true });
-
-		if (tidewaveStatus === undefined) {
-			await new Promise<void>((resolve) => {
-				const timer = setTimeout(done, 3000);
-
-				function done(): void {
-					clearTimeout(timer);
-					onTidewaveStatus = undefined;
-					resolve();
-				}
-
-				onTidewaveStatus = done;
-			});
-		}
-
-		if (stopped) return;
-		const origin = registeredUrl?.origin;
-
-		if (owned && tidewaveStatus === "connected") {
-			ctx.ui.notify(`Pidewave: Tidewave connected at ${origin}.`, "info");
-
-			return;
-		}
-
-		const reason = !owned
-			? "the runtime registration is not active; a configured tidewave server may shadow it"
-			: `adapter status: ${tidewaveStatus ?? "no status reported"}; check that Phoenix is running there`;
-
-		ctx.ui.notify(`Pidewave: Tidewave did not connect at ${origin} (${reason}).`, "error");
+		return false;
 	};
 
 	pi.registerCommand("pidewave", {
-		description: "Reload Pi, then reconnect the project's Tidewave MCP server",
+		description: "Check project trust and config, then re-register and ping the project's Tidewave MCP server",
 		handler: async (_args, ctx) => {
-			const handoff: ReloadHandoff = {};
-			shared.__dotfilesPidewaveHandoff = handoff;
+			if (!(await ensureTrusted(ctx))) return;
+
+			let url: URL | undefined;
 
 			try {
-				await ctx.reload();
-			} finally {
-				delete shared.__dotfilesPidewaveHandoff;
+				url = readEndpoint(ctx);
+			} catch (error) {
+				ctx.ui.notify(`Pidewave: ${endpointFailureReason(asError(error))}.`, "error");
+
+				return;
 			}
 
-			// Unset when reload refused (streaming or compacting); it already said why.
-			await handoff.reconnect?.();
+			if (!url) {
+				ctx.ui.notify("Pidewave: no pidewave.url in .pi/mcp.json; run `mise run bootstrap` to generate it.", "warning");
+
+				return;
+			}
+
+			// Re-registering forces Pi's MCP connection to reconnect, not only our probe.
+			await stopEndpoint();
+			startEndpoint(ctx);
+
+			if (!registeredUrl) return; // startEndpoint already said why.
+			await check();
+			const origin = registeredUrl.origin;
+
+			if (live) {
+				record(pi, "reconnected", { url: origin });
+				ctx.ui.notify(`Pidewave: Tidewave connected at ${origin}.`, "info");
+
+				return;
+			}
+
+			record(pi, "reconnect-failed", { url: origin });
+			ctx.ui.notify(`Pidewave: Tidewave did not answer at ${origin}; start Phoenix there with \`mise run start:server\`.`, "error");
 		},
 	});
 
-	pi.on("session_start", (e, ctx) => {
+	pi.on("session_start", (_e, ctx) => {
+		ctxRef = ctx;
 		clearInterval(poll);
 		poll = undefined;
 		lastStatus = undefined;
 		startEndpoint(ctx);
-
-		const handoff = shared.__dotfilesPidewaveHandoff;
-
-		if (e.reason === "reload" && handoff) handoff.reconnect = () => reconnectTidewave(ctx);
 
 		if (!ctx.hasUI) return;
 
@@ -762,21 +812,12 @@ export default function (pi: ExtensionAPI): void {
 	});
 	pi.on("before_agent_start", (_e, ctx) => updateBindingStatus(ctx));
 	pi.on("session_shutdown", async (_e, ctx) => {
-		stopped = true;
-		revokeEndpoint();
-		unsubscribeStatus?.();
-		unsubscribeStatus = undefined;
-		const current = registration;
-		registration = undefined;
-		registeredUrl = undefined;
+		ctxRef = undefined;
 		clearInterval(poll);
 		poll = undefined;
 		lastStatus = undefined;
 
 		if (ctx.hasUI) ctx.ui.setStatus("pidewave", undefined);
-
-		try {
-			await current?.dispose();
-		} catch {} // The adapter may already have shut down.
+		await stopEndpoint();
 	});
 }

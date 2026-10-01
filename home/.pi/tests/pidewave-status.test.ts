@@ -379,9 +379,6 @@ const theme = {
 const footerHarness = (statuses: Map<string, string>) => {
   const { pi, fire } = lifecycle();
   let component: { render(width: number): string[]; dispose(): void };
-  const guardKey = Symbol.for("pi.mcp-error-guard.state");
-  const originalGuard = Object.getOwnPropertyDescriptor(globalThis, guardKey);
-  const originalError = console.error;
 
   // SAFETY: Rendering uses only these context fields; UI callbacks receive real footer code.
   const ctx = {
@@ -404,10 +401,6 @@ const footerHarness = (statuses: Map<string, string>) => {
   cleanups.push(() => {
     component?.dispose();
     fire("session_shutdown", ctx);
-    console.error = originalError;
-
-    if (originalGuard) Object.defineProperty(globalThis, guardKey, originalGuard);
-    else Reflect.deleteProperty(globalThis, guardKey);
   });
   customFooter(pi);
   fire("session_start", ctx);
@@ -421,23 +414,24 @@ const status = (boundHere = true, appUrl = "https://app.test:4443/path?query=hid
 describe("pidewave footer rendering", () => {
   test.each([true, false])("URL occurs once, first among extension statuses, boundHere=%p", (boundHere) => {
     const render = footerHarness(new Map([
-      ["pidewave", status(boundHere)], ["mcp-other", "1/2"],
-      ["n-status", "between"], ["mcp", "MCP: 2/3"],
+      ["pidewave", status(boundHere, undefined, true)], ["z-status", "last"],
+      ["n-status", "between"], ["a-status", "first"],
     ]));
 
     const line = render()[1];
     const plain = stripVTControlCharacters(line);
-    expect(plain).toContain("https://app.test:4443 │  2/3 │  1/2 │ between");
+    expect(plain).toContain("https://app.test:4443 │ first │ between │ last");
     expect(plain.match(/https:\/\/app\.test:4443/g)).toHaveLength(1);
-    expect(line).toContain(theme.fg(boundHere ? "accent" : "muted", "https://app.test:4443"));
+    expect(line).toContain(theme.fg("success", "https://app.test:4443"));
     expect(plain).not.toContain("query");
     expect(plain).not.toContain("boundHere");
   });
 
-  test.each([true, false])("URL ownership color ignores zero live MCP servers, boundHere=%p", (boundHere) => {
+  test.each([true, false])("a binding without a live Tidewave connection shows nothing, boundHere=%p", (boundHere) => {
     const line = footerHarness(new Map([["mcp", "MCP 0/3"], ["pidewave", status(boundHere)]]))()[1];
-    expect(stripVTControlCharacters(line)).toContain("https://app.test:4443 │  0/3");
-    expect(line).toContain(theme.fg(boundHere ? "accent" : "muted", "https://app.test:4443"));
+    const plain = stripVTControlCharacters(line);
+    expect(plain).not.toContain("app.test");
+    expect(plain).toContain("0/3");
   });
 
   test.each([undefined, "MCP connecting...", "MCP: 2 servers enabled (1 connected)"])(
@@ -451,7 +445,7 @@ describe("pidewave footer rendering", () => {
     },
   );
 
-  test("connected overrides binding ownership color", () => {
+  test("connected is green regardless of binding ownership", () => {
     const line = footerHarness(new Map([["pidewave", status(true, url, true)]]))()[1];
     expect(line).toContain(theme.fg("success", url));
   });
@@ -478,8 +472,8 @@ describe("pidewave footer rendering", () => {
   });
 
   test("normalizes HTTP origins and stays within narrow terminal widths", () => {
-    const render = footerHarness(new Map([["mcp", "MCP 2/3"], ["pidewave", status(true, "http://LOCALHOST:80/path")]]));
-    expect(stripVTControlCharacters(render()[1])).toContain("http://localhost │  2/3");
+    const render = footerHarness(new Map([["other", "ok"], ["pidewave", status(true, "http://LOCALHOST:80/path", true)]]));
+    expect(stripVTControlCharacters(render()[1])).toContain("http://localhost │ ok");
 
     for (const width of [1, 2, 3, 8, 16, 30, 40, 60, 80]) {
       const lines = render(width);

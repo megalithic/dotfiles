@@ -112,8 +112,6 @@ type BusHandler = Parameters<ExtensionAPI["events"]["on"]>[1];
 
 const tidewaveEndpoint = { origin: "http://localhost:4300", pathname: "/tidewave/mcp" };
 
-const connectedTidewave = { name: "tidewave", status: "connected", disabled: false };
-
 const harness = (cwd = process.cwd()) => {
   const hooks = new Map<string, LifecycleHook>();
   const events = new Map<string, BusHandler>();
@@ -155,7 +153,6 @@ const harness = (cwd = process.cwd()) => {
     persistedTexts,
     connectTidewave: (endpoint = tidewaveEndpoint) => {
       events.get("pidewave:endpoint:v1")?.({ version: 1, endpoint });
-      events.get("pi-mcp-adapter/status/v1")?.({ version: 1, servers: [connectedTidewave] });
     },
     beforeAgentStart: async (selectedTools: string[]) => {
       await hooks.get("before_agent_start")?.({ systemPromptOptions: { selectedTools } }, ctx);
@@ -287,18 +284,13 @@ describe("bridge Tidewave connection publication", () => {
 
   test("publishes connections before the first prompt, regardless of startup ordering", async () => {
     for (const reason of ["startup", "reload"] as const) {
-      for (const order of [
-        ["endpoint", "status", "start"], ["status", "endpoint", "start"],
-        ["endpoint", "start", "status"], ["status", "start", "endpoint"],
-        ["start", "endpoint", "status"], ["start", "status", "endpoint"],
-      ]) {
+      for (const order of [["endpoint", "start"], ["start", "endpoint"]]) {
         const runtime = harness();
 
         try {
           for (const step of order) {
             if (step === "start") await runtime.start(reason);
-            else if (step === "endpoint") runtime.events.get("pidewave:endpoint:v1")?.({ version: 1, endpoint: tidewaveEndpoint });
-            else runtime.events.get("pi-mcp-adapter/status/v1")?.({ version: 1, servers: [connectedTidewave] });
+            else runtime.events.get("pidewave:endpoint:v1")?.({ version: 1, endpoint: tidewaveEndpoint });
           }
 
           expect(manifest()?.tidewaveConnected).toBe(true);
@@ -310,28 +302,8 @@ describe("bridge Tidewave connection publication", () => {
     }
   });
 
-  test("a later early snapshot replaces an obsolete connection grant", async () => {
-    for (const snapshot of [
-      { version: 1, servers: [] },
-      { version: 1, servers: [{ ...connectedTidewave, status: "not-connected" }] },
-      { version: 1, servers: [{ ...connectedTidewave, disabled: true }] },
-      null,
-    ]) {
-      const runtime = harness();
-
-      try {
-        runtime.connectTidewave();
-        runtime.events.get("pi-mcp-adapter/status/v1")?.(snapshot);
-        await runtime.start("reload");
-        expect(manifest()?.tidewaveConnected).toBe(false);
-        expect(manifest()?.tidewaveEndpoint).toBeUndefined();
-      } finally { await runtime.stop(); }
-    }
-  });
-
   test("shutdown revokes the manifest before draining and ignores late callbacks", async () => {
     const runtime = harness();
-    const listener = runtime.events.get("pi-mcp-adapter/status/v1");
     const endpointListener = runtime.events.get("pidewave:endpoint:v1");
 
     try {
@@ -343,7 +315,6 @@ describe("bridge Tidewave connection publication", () => {
       try {
         expect(manifest()?.tidewaveConnected).toBe(false);
         expect(manifest()?.tidewaveEndpoint).toBeUndefined();
-        listener?.({ version: 1, servers: [connectedTidewave] });
         endpointListener?.({ version: 1, endpoint: tidewaveEndpoint });
         expect(manifest()?.tidewaveConnected).toBe(false);
         expect(manifest()?.tidewaveEndpoint).toBeUndefined();
@@ -351,25 +322,6 @@ describe("bridge Tidewave connection publication", () => {
 
       expect(manifest()).toBeNull();
     } finally { await runtime.stop(); }
-  });
-
-  test("neither endpoint nor connected status alone authorizes, including legacy adapter metadata", async () => {
-    for (const endpointFirst of [true, false]) {
-      const runtime = harness();
-
-      try {
-        await runtime.start();
-
-        if (endpointFirst) runtime.events.get("pidewave:endpoint:v1")?.({ version: 1, endpoint: tidewaveEndpoint });
-        else runtime.events.get("pi-mcp-adapter/status/v1")?.({
-          version: 1, servers: [{ ...connectedTidewave, localHttpEndpoint: tidewaveEndpoint }],
-        });
-        expect(manifest()?.tidewaveConnected).toBe(false);
-        expect(manifest()?.tidewaveEndpoint).toBeUndefined();
-        runtime.connectTidewave();
-        expect(manifest()?.tidewaveConnected).toBe(true);
-      } finally { await runtime.stop(); }
-    }
   });
 
   test("endpoint revocation and malformed events replace early and active grants", async () => {
@@ -385,8 +337,6 @@ describe("bridge Tidewave connection publication", () => {
           if (early) await runtime.start();
           expect(manifest()?.tidewaveConnected).toBe(false);
           expect(manifest()?.tidewaveEndpoint).toBeUndefined();
-          runtime.events.get("pi-mcp-adapter/status/v1")?.({ version: 1, servers: [connectedTidewave] });
-          expect(manifest()?.tidewaveConnected).toBe(false);
         } finally { await runtime.stop(); }
       }
     }
@@ -402,40 +352,6 @@ describe("bridge Tidewave connection publication", () => {
       runtime.connectTidewave();
       await runtime.beforeAgentStart([]);
       expect(manifest()?.tidewaveConnected).toBe(true);
-    } finally { await runtime.stop(); }
-  });
-
-  test("disconnect, disabled, missing, and invalid snapshots revoke authorization", async () => {
-    const runtime = harness();
-
-    const snapshots: unknown[] = [
-      ...["cached", "failed", "needs-auth", "not-connected", "disabled"].map((status) => ({
-        version: 1, servers: [{ ...connectedTidewave, status }],
-      })),
-      { version: 1, servers: [{ ...connectedTidewave, disabled: true }] },
-      { version: 1, servers: [{ ...connectedTidewave, name: "another-server" }] },
-      { version: 1, servers: [] },
-      { version: 2, servers: [connectedTidewave] },
-      { version: 1, servers: [{ name: "tidewave", status: "connected" }] },
-      ...["connected", "not-connected", "disabled"].map((status) => ({
-        version: 1, servers: [
-          connectedTidewave,
-          { ...connectedTidewave, status, disabled: status === "disabled" },
-        ],
-      })),
-      null,
-    ];
-
-    try {
-      await runtime.start();
-
-      for (const snapshot of snapshots) {
-        runtime.connectTidewave();
-        expect(manifest()?.tidewaveConnected).toBe(true);
-        runtime.events.get("pi-mcp-adapter/status/v1")?.(snapshot);
-        expect(manifest()?.tidewaveConnected).toBe(false);
-        expect(manifest()?.tidewaveEndpoint).toBeUndefined();
-      }
     } finally { await runtime.stop(); }
   });
 
@@ -505,9 +421,8 @@ describe("bridge Tidewave connection publication", () => {
     } finally { await runtime.stop(); }
   });
 
-  test("reload clears authorization and retires the old status subscriber", async () => {
+  test("reload clears authorization and retires the old endpoint subscriber", async () => {
     const first = harness();
-    const oldListener = first.events.get("pi-mcp-adapter/status/v1");
     const oldEndpointListener = first.events.get("pidewave:endpoint:v1");
 
     try {
@@ -516,7 +431,6 @@ describe("bridge Tidewave connection publication", () => {
       expect(manifest()?.tidewaveConnected).toBe(true);
     } finally { await first.stop(); }
 
-    expect(first.events.has("pi-mcp-adapter/status/v1")).toBe(false);
     expect(first.events.has("pidewave:endpoint:v1")).toBe(false);
     expect(manifest()).toBeNull();
 
@@ -526,7 +440,6 @@ describe("bridge Tidewave connection publication", () => {
       await next.start("reload");
       expect(manifest()?.tidewaveConnected).toBe(false);
       expect(manifest()?.tidewaveEndpoint).toBeUndefined();
-      oldListener?.({ version: 1, servers: [connectedTidewave] });
       oldEndpointListener?.({ version: 1, endpoint: tidewaveEndpoint });
       expect(manifest()?.tidewaveConnected).toBe(false);
       expect(manifest()?.tidewaveEndpoint).toBeUndefined();

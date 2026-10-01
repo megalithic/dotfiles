@@ -1,167 +1,48 @@
 ---
 name: mcpctl
-description: Manage MCP server configurations — add, remove, list, inspect, troubleshoot. Use when asked to "add mcp server", "remove mcp", "list mcp servers", "mcp status", "configure mcp", "troubleshoot mcp", or any MCP server management task.
+description: Manage MCP server configurations for Pi's built-in MCP support — add, remove, list, inspect, troubleshoot. Use when asked to "add mcp server", "remove mcp", "list mcp servers", "mcp status", "configure mcp", "troubleshoot mcp", or any MCP server management task.
 ---
 
 # mcpctl — MCP server management
 
-Manage MCP server configurations for pi-mcp-adapter. Supports global and project scopes, stdio and HTTP server types.
-
-## Load order
-
-pi-mcp-adapter merges configs in this order (later wins):
-
-1. **Global** — `~/.pi/agent/mcp.json`
-2. **Imports** — configs from other tools (vscode, cursor, claude-code, codex, windsurf)
-3. **Project** — `.pi/mcp.json` in project root
-
-Project-level entries override global entries with the same name.
-
-## Imports
-
-Project `.pi/mcp.json` can import servers from other tools:
-
-```json
-{
-  "imports": ["vscode", "cursor", "claude-code"],
-  "mcpServers": {
-    "my-server": { ... }
-  }
-}
-```
-
-Supported import sources: `vscode`, `cursor`, `claude-code`, `codex`, `windsurf`. Imported servers are merged between global and project configs.
+Pi connects MCP servers natively; no adapter extension is installed. Full reference: Pi's `docs/mcp.md` (resolve it under the installed `@earendil-works/pi-coding-agent` package).
 
 ## Scope rules
 
-| Scope       | Config file                   | Managed by         | How to edit                                                                        |
-| ----------- | ----------------------------- | ------------------ | ---------------------------------------------------------------------------------- |
-| **Global**  | `~/.pi/agent/mcp.json`        | Mise `[dotfiles]`  | Edit `~/.dotfiles/home/.pi/agent/mcp.json`; symlink is live     |
-| **Project** | `.pi/mcp.json` (project root) | Direct             | Write file directly                                                                |
+| Scope       | Config file                   | How to edit                                                                 |
+| ----------- | ----------------------------- | --------------------------------------------------------------------------- |
+| **Global**  | `~/.pi/agent/mcp.json`        | Symlink to `~/.dotfiles/home/.pi/agent/mcp.json`; edit the source directly  |
+| **Project** | `.pi/mcp.json` (project root) | Write directly; read only once the project is trusted                      |
 
-**Global is mise-managed.** The file at `~/.pi/agent/mcp.json` links directly to the repo source. To change it:
+Project entries replace global entries with the same name. Both files use the `mcpServers` shape shared by other MCP clients.
 
-1. Edit `~/.dotfiles/home/.pi/agent/mcp.json`
-2. Reload pi with `/reload`
+## Commands
 
-**Project is direct.** Write `.pi/mcp.json` in the project root. No rebuild needed — just `/reload`.
-
-## Server types
-
-### Stdio — runs a local command
-
-```json
-{
-  "mcpServers": {
-    "server-name": {
-      "command": "npx",
-      "args": ["-y", "package-name@latest"],
-      "env": { "KEY": "value" },
-      "cwd": "/optional/working/dir"
-    }
-  }
-}
+```bash
+pi mcp add <name> -- <command> [args...]          # stdio server
+pi mcp add <name> --url <url> [--bearer-token-env-var NAME]   # streamable HTTP
+pi mcp add -l <name> ...                            # project scope
+pi mcp remove <name>
+pi mcp list                                         # connects, prints state, tools, errors
+pi mcp login <name>                                 # OAuth sign-in
 ```
 
-### HTTP — connects to a URL
+In a session: `/mcp` (manager), `/mcp reconnect <name>`, `/mcp login <name>`, `/mcp logout <name>`. Run `/reload` after editing a file.
 
-```json
-{
-  "mcpServers": {
-    "server-name": {
-      "url": "http://localhost:8080/mcp",
-      "headers": { "Authorization": "Bearer token" }
-    }
-  }
-}
-```
+## Native field names
 
-Short form (URL only, type inferred):
+- HTTP auth: `"headers": { "Authorization": "Bearer ${TOKEN_ENV}" }` (no `auth` / `bearerTokenEnv`).
+- Disable without removing: `"enabled": false` (no `disabled`).
+- Transport is inferred from `command` (stdio) or `url` (streamable HTTP); `sse` is rejected.
+- `exposure`: `codemode` (default), `codemode-deferred`, `deferred`, `direct`, `hidden`; `toolExposure` per tool.
 
-```json
-{
-  "mcpServers": {
-    "server-name": {
-      "url": "https://example.com/mcp"
-    }
-  }
-}
-```
+## Tidewave (Elixir projects)
 
-### Config options (all optional)
+`acp.ts` registers `tidewave` at runtime from `pidewave.url` in the project `.pi/mcp.json` and pings it. Never add `mcpServers.tidewave`; a configured entry shadows the registration. Use `/pidewave` to re-register and ping, or `mise run bootstrap` to regenerate the URL.
 
-| Field            | Type                                  | Description                           |
-| ---------------- | ------------------------------------- | ------------------------------------- |
-| `command`        | string                                | Executable to run (stdio)             |
-| `args`           | string[]                              | Command arguments (stdio)             |
-| `env`            | object                                | Environment variables (stdio)         |
-| `cwd`            | string                                | Working directory (stdio)             |
-| `url`            | string                                | Server URL (HTTP)                     |
-| `headers`        | object                                | HTTP headers (HTTP)                   |
-| `auth`           | `"oauth"` or `"bearer"`               | Auth method (HTTP)                    |
-| `bearerToken`    | string                                | Static bearer token                   |
-| `bearerTokenEnv` | string                                | Env var name for bearer token         |
-| `lifecycle`      | `"lazy"` / `"eager"` / `"keep-alive"` | Connection strategy (default: `lazy`) |
-| `idleTimeout`    | number                                | Minutes before idle disconnect        |
-| `debug`          | boolean                               | Show server stderr                    |
+## Troubleshoot
 
-Lifecycle modes:
-
-- **lazy** (default) — connects on first tool call, disconnects after idle timeout
-- **eager** — connects at session start, no auto-disconnect
-- **keep-alive** — connects at start, auto-reconnects if dropped
-
-## Operations
-
-### Add
-
-1. Ask scope if not obvious (global for cross-project, project for local)
-2. Ask server type if not obvious (stdio or HTTP)
-3. Gather config (command/url, args, env, etc.)
-4. Read target config file (source file for global, `.pi/mcp.json` for project)
-5. Warn if server name already exists — confirm before overwriting
-6. Merge new server into existing `mcpServers` object
-7. Write updated JSON
-8. For global: edit the mise source file, then `/reload`
-9. For project: write directly, then `/reload`
-10. Verify: `mcp({ connect: "server-name" })` then `mcp({ server: "server-name" })`
-
-### Remove
-
-1. Determine which scope has the server (check project first, then global)
-2. Read the config file
-3. Remove the server entry from `mcpServers`
-4. Write updated JSON
-5. For global: edit the mise source; the live symlink needs no apply step
-6. `/reload` to apply
-
-### List
-
-1. Read global config: `~/.dotfiles/home/.pi/agent/mcp.json`
-2. Read project config: `.pi/mcp.json` in cwd (if exists)
-3. Show all servers with:
-   - Name
-   - Type (stdio/HTTP)
-   - Scope (global/project/imported)
-   - Connection info (command or URL)
-4. Use `mcp({})` to check which are currently connected and list their tools
-
-### Inspect
-
-1. Show full config for the named server
-2. Show which scope it comes from
-3. Use `mcp({ server: "server-name" })` to list available tools
-4. Use `mcp({ connect: "server-name" })` to test connection if not connected
-
-### Troubleshoot
-
-When a server isn't working:
-
-1. Check config syntax — read and validate the JSON
-2. Check scope — is it in the right config file?
-3. Check connection — `mcp({ connect: "server-name" })`
-4. For stdio: verify command exists (`which <command>`), check env vars
-5. For HTTP: verify URL is reachable (`curl -s -o /dev/null -w "%{http_code}" <url>`)
-6. Check for name conflicts — same name in global and project?
-7. Check lifecycle — eager/keep-alive servers should connect at start
-8. Report findings with specific fix suggestions
+1. `pi mcp list` — validates config, connects every enabled server, shows stderr of failed stdio servers.
+2. Scope: is the entry in the file you expect? Same name in both files?
+3. stdio: `which <command>`; env vars referenced as `${NAME}` must be set in the shell that started Pi.
+4. HTTP: `curl -s -o /dev/null -w "%{http_code}" <url>`; 401 without an `Authorization` header means OAuth, run `pi mcp login <name>`.

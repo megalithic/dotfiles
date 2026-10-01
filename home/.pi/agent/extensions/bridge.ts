@@ -408,24 +408,13 @@ let retryDelay = 250;
 
 let retryLogs = 0;
 
-// Versioned pi-mcp-adapter status events distinguish live connections from
-// cached tools. The bridge publishes this gate even before the first prompt.
-const MCP_STATUS_EVENT = "pi-mcp-adapter/status/v1";
-
+// acp.ts publishes the endpoint only while its Tidewave ping succeeds, so one
+// event carries identity and liveness. Published even before the first prompt.
 const TIDEWAVE_ENDPOINT_EVENT = "pidewave:endpoint:v1";
 
 const tidewaveEndpointEventSchema = Type.Object({
   version: Type.Literal(1),
   endpoint: Type.Optional(localHttpEndpointSchema),
-});
-
-const mcpStatusSchema = Type.Object({
-  version: Type.Literal(1),
-  servers: Type.Array(Type.Object({
-    name: Type.String(),
-    status: Type.String(),
-    disabled: Type.Boolean(),
-  })),
 });
 
 let tidewaveConnected = false;
@@ -1550,7 +1539,6 @@ export const _test = {
 export default function (pi: ExtensionAPI): void {
   tellRuntime = null;
   let reportedTidewaveEndpoint: LocalHttpEndpoint | undefined;
-  let reportedTidewaveConnected = false;
   let sessionActive = false;
 
   const unsubscribeRuntime = pi.events.on("tell:runtime", (data) => {
@@ -1569,8 +1557,8 @@ export default function (pi: ExtensionAPI): void {
     shuttingDown = false;
     retryDelay = 250;
     retryLogs = 0;
-    // Earlier startup hooks may have already published either half of the gate.
-    tidewaveEndpoint = reportedTidewaveConnected ? reportedTidewaveEndpoint : undefined;
+    // Earlier startup hooks may have already published the endpoint.
+    tidewaveEndpoint = reportedTidewaveEndpoint;
     tidewaveConnected = !!tidewaveEndpoint;
     sessionActive = true;
     latestCtx = ctx;
@@ -1604,7 +1592,7 @@ export default function (pi: ExtensionAPI): void {
   };
 
   const publishTidewave = (): void => {
-    const endpoint = reportedTidewaveConnected ? reportedTidewaveEndpoint : undefined;
+    const endpoint = reportedTidewaveEndpoint;
 
     if (!sessionActive || (
       endpoint?.origin === tidewaveEndpoint?.origin &&
@@ -1615,15 +1603,6 @@ export default function (pi: ExtensionAPI): void {
 
     if (latestCtx) refreshSessionContext(latestCtx);
   };
-
-  const unsubscribeMcpStatus = pi.events.on(MCP_STATUS_EVENT, (data) => {
-    const servers = Value.Check(mcpStatusSchema, data)
-      ? data.servers.filter((server) => server.name === "tidewave") : [];
-
-    reportedTidewaveConnected = servers.length === 1 &&
-      servers[0].status === "connected" && !servers[0].disabled;
-    publishTidewave();
-  });
 
   const unsubscribeTidewaveEndpoint = pi.events.on(TIDEWAVE_ENDPOINT_EVENT, (data) => {
     reportedTidewaveEndpoint = Value.Check(tidewaveEndpointEventSchema, data)
@@ -1680,7 +1659,6 @@ export default function (pi: ExtensionAPI): void {
 
   pi.on("session_shutdown", async () => {
     sessionActive = false;
-    reportedTidewaveConnected = false;
     reportedTidewaveEndpoint = undefined;
     tidewaveEndpoint = undefined;
     tidewaveConnected = false;
@@ -1688,7 +1666,6 @@ export default function (pi: ExtensionAPI): void {
     if (latestCtx) refreshSessionContext(latestCtx);
     shuttingDown = true;
     unsubscribeRuntime();
-    unsubscribeMcpStatus();
     unsubscribeTidewaveEndpoint();
 
     if (retryTimer) clearTimeout(retryTimer);
