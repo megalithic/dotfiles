@@ -935,8 +935,8 @@ sources = [
   "{{env.DOTFILES_DIR}}/lib/aeroplayd-cli.swift",
   "{{env.DOTFILES_DIR}}/lib/aeroplayd-idle.swift",
   "{{env.DOTFILES_DIR}}/lib/aeroplayd-ui.swift",
-  "{{env.DOTFILES_DIR}}/config/aeroplayd/cliraop-control.patch",
-  "{{env.DOTFILES_DIR}}/config/aeroplayd/libraop-LICENSE.txt",
+  "{{env.DOTFILES_DIR}}/tools/aeroplayd/cliraop-control.patch",
+  "{{env.DOTFILES_DIR}}/tools/aeroplayd/libraop-LICENSE.txt",
 ]
 outputs = [
   "{{env.HOME}}/Applications/AeroPlay.app/Contents/MacOS/aeroplayd",

@@ -4,7 +4,7 @@
 set -euo pipefail
 
 usage() {
-	cat <<'EOF'
+  cat <<'EOF'
 usage: update-pi [--dry-run]
 
 Updates pi-managed imperative state:
@@ -19,18 +19,18 @@ EOF
 
 dry_run=0
 for arg in "$@"; do
-	case "$arg" in
-	--dry-run | -n) dry_run=1 ;;
-	--help | -h)
-		usage
-		exit 0
-		;;
-	*)
-		echo "update-pi: unknown argument: $arg" >&2
-		usage >&2
-		exit 2
-		;;
-	esac
+  case "$arg" in
+    --dry-run | -n) dry_run=1 ;;
+    --help | -h)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "update-pi: unknown argument: $arg" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
 done
 
 dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
@@ -45,136 +45,136 @@ current_step="Initialize updater"
 trap 'status=$?; if [ "$status" -ne 0 ]; then printf "FAILED: %s (exit %d)\n" "$current_step" "$status" >&2; fi' EXIT
 
 run_step() {
-	current_step="$1"
-	shift
-	printf '\n==> %s\n' "$current_step"
-	# Keep this unguarded: an if/|| here disables errexit inside shell functions.
-	"$@"
-	printf 'OK: %s (exit 0)\n' "$current_step"
+  current_step="$1"
+  shift
+  printf '\n==> %s\n' "$current_step"
+  # Keep this unguarded: an if/|| here disables errexit inside shell functions.
+  "$@"
+  printf 'OK: %s (exit 0)\n' "$current_step"
 }
 
 sha256_file() {
-	shasum -a 256 "$1" | awk '{print $1}'
+  shasum -a 256 "$1" | awk '{print $1}'
 }
 
 report_helper_bin() {
-	local name="$1" sha256="$2" dst actual
-	dst="$agent/bin/$name"
-	if [ -x "$dst" ]; then
-		actual="$(sha256_file "$dst")"
-		if [ "$actual" = "$sha256" ]; then
-			say "[ok] helper $name already matches $dst"
-		else
-			say "[would replace] helper $name at $dst"
-			say "  current sha256: $actual"
-			say "  target  sha256: $sha256"
-		fi
-	elif [ -e "$dst" ]; then
-		say "[would replace] helper $name exists but is not executable: $dst"
-	else
-		say "[would create] helper $name -> $dst"
-	fi
+  local name="$1" sha256="$2" dst actual
+  dst="$agent/bin/$name"
+  if [ -x "$dst" ]; then
+    actual="$(sha256_file "$dst")"
+    if [ "$actual" = "$sha256" ]; then
+      say "[ok] helper $name already matches $dst"
+    else
+      say "[would replace] helper $name at $dst"
+      say "  current sha256: $actual"
+      say "  target  sha256: $sha256"
+    fi
+  elif [ -e "$dst" ]; then
+    say "[would replace] helper $name exists but is not executable: $dst"
+  else
+    say "[would create] helper $name -> $dst"
+  fi
 }
 
 report_cleanup_target() {
-	local f="$1"
-	if [ -e "$f" ]; then
-		say "[would remove] $f"
-	else
-		say "[ok] absent $f"
-	fi
+  local f="$1"
+  if [ -e "$f" ]; then
+    say "[would remove] $f"
+  else
+    say "[ok] absent $f"
+  fi
 }
 
 trash_path() {
-	local f="$1"
-	[ -e "$f" ] || [ -L "$f" ] || return 0
-	if [ -x /usr/bin/trash ]; then
-		# npm trash-cli ignores broken symlinks; macOS trash handles them.
-		/usr/bin/trash "$f"
-	elif command -v trash >/dev/null 2>&1; then
-		trash "$f"
-	else
-		echo "trash command missing; refusing to delete $f" >&2
-		exit 1
-	fi
+  local f="$1"
+  [ -e "$f" ] || [ -L "$f" ] || return 0
+  if [ -x /usr/bin/trash ]; then
+    # npm trash-cli ignores broken symlinks; macOS trash handles them.
+    /usr/bin/trash "$f"
+  elif command -v trash >/dev/null 2>&1; then
+    trash "$f"
+  else
+    echo "trash command missing; refusing to delete $f" >&2
+    exit 1
+  fi
 }
 
 remove_retired_pi_links() {
-	local link target
-	for link in \
-		"$HOME/.local/bin/pi-acp" \
-		"$HOME/.local/bin/pinvim" \
-		"$HOME/.local/bin/pview" \
-		"$agent/extensions/pinvim.ts" \
-		"$agent/extensions/nvim-review.ts" \
-		"$agent/skills/pinvim-kitty-test"; do
-		if [ -L "$link" ]; then
-			target="$(readlink "$link")"
-		elif [ -L "$link/SKILL.md" ]; then
-			target="$(readlink "$link/SKILL.md")"
-		else
-			continue
-		fi
-		case "$target" in
-		*"/.dotfiles/mise/config/pi-coding-agent/"* | *"/.dotfiles/config/pi-coding-agent/"* | *"/.dotfiles/home/.pi/"*)
-			trash_path "$link"
-			say "removed retired Pi link: $link"
-			;;
-		esac
-	done
+  local link target
+  for link in \
+    "$HOME/.local/bin/pi-acp" \
+    "$HOME/.local/bin/pinvim" \
+    "$HOME/.local/bin/pview" \
+    "$agent/extensions/pinvim.ts" \
+    "$agent/extensions/nvim-review.ts" \
+    "$agent/skills/pinvim-kitty-test"; do
+    if [ -L "$link" ]; then
+      target="$(readlink "$link")"
+    elif [ -L "$link/SKILL.md" ]; then
+      target="$(readlink "$link/SKILL.md")"
+    else
+      continue
+    fi
+    case "$target" in
+      *"/.dotfiles/mise/config/pi-coding-agent/"* | *"/.dotfiles/config/pi-coding-agent/"* | *"/.dotfiles/home/.pi/"*)
+        trash_path "$link"
+        say "removed retired Pi link: $link"
+        ;;
+    esac
+  done
 
-	link="$agent/SYSTEM.md"
-	[ -L "$link" ] || return 0
-	target="$(readlink "$link")"
-	case "$target" in
-	*"/.dotfiles/mise/config/pi-coding-agent/agent/SYSTEM.md" | *"/.dotfiles/config/pi-coding-agent/agent/SYSTEM.md")
-		trash_path "$link"
-		say "removed retired Pi SYSTEM link: $link"
-		;;
-	esac
+  link="$agent/SYSTEM.md"
+  [ -L "$link" ] || return 0
+  target="$(readlink "$link")"
+  case "$target" in
+    *"/.dotfiles/mise/config/pi-coding-agent/agent/SYSTEM.md" | *"/.dotfiles/config/pi-coding-agent/agent/SYSTEM.md")
+      trash_path "$link"
+      say "removed retired Pi SYSTEM link: $link"
+      ;;
+  esac
 }
 
 install_sessions_plugin() {
-	local fake_home status skill
-	fake_home="$(mktemp -d "${TMPDIR:-/tmp}/sessions-setup.XXXXXX")"
-	mkdir -p "$HOME/.local/share/sessions"
+  local fake_home status skill
+  fake_home="$(mktemp -d "${TMPDIR:-/tmp}/sessions-setup.XXXXXX")"
+  mkdir -p "$HOME/.local/share/sessions"
 
-	status=0
-	SESSIONS_HOME="$fake_home" \
-		SESSIONS_DATA_DIR="$HOME/.local/share/sessions" \
-		sessions setup </dev/null || status=$?
-	trash_path "$fake_home"
-	[ "$status" -eq 0 ] || return "$status"
+  status=0
+  SESSIONS_HOME="$fake_home" \
+    SESSIONS_DATA_DIR="$HOME/.local/share/sessions" \
+    sessions setup </dev/null || status=$?
+  trash_path "$fake_home"
+  [ "$status" -eq 0 ] || return "$status"
 
-	for skill in context memory recall session-metrics standup weekly-summary; do
-		if [ ! -f "$HOME/.local/share/sessions/plugin/skills/$skill/SKILL.md" ]; then
-			echo "sessions plugin skill missing after setup: $skill" >&2
-			return 1
-		fi
-	done
-	say "refreshed sessions plugin -> $HOME/.local/share/sessions/plugin"
+  for skill in context memory recall session-metrics standup weekly-summary; do
+    if [ ! -f "$HOME/.local/share/sessions/plugin/skills/$skill/SKILL.md" ]; then
+      echo "sessions plugin skill missing after setup: $skill" >&2
+      return 1
+    fi
+  done
+  say "refreshed sessions plugin -> $HOME/.local/share/sessions/plugin"
 }
 
 cleanup_extension_deps() {
-	trash_path "$agent/extensions/package.json"
-	trash_path "$agent/extensions/package-lock.json"
-	trash_path "$agent/extensions/node_modules"
+  trash_path "$agent/extensions/package.json"
+  trash_path "$agent/extensions/package-lock.json"
+  trash_path "$agent/extensions/node_modules"
 }
 
 if [ "$dry_run" = 1 ]; then
-	say "update:pi dry run"
-	say "[would ensure dir] $agent"
-	say "[would ensure dir] $agent/bin"
-	report_helper_bin plannotator "80c18e2b3e95796e85902b4e3ec92d8f7bf49df8ebfcbd12195c784fa522fdda"
-	say "[would remove] retired Pi links when still present"
-	say "[would run] isolated sessions setup -> $HOME/.local/share/sessions/plugin"
-	report_cleanup_target "$agent/extensions/package.json"
-	report_cleanup_target "$agent/extensions/package-lock.json"
-	report_cleanup_target "$agent/extensions/node_modules"
-	say "[would run] mise upgrade npm:@earendil-works/pi-coding-agent --yes --raw"
-	say "[would run] $pi_src/bin/pi update"
-	say "[would run] $pi_src/bin/pi update --extensions"
-	exit 0
+  say "update:pi dry run"
+  say "[would ensure dir] $agent"
+  say "[would ensure dir] $agent/bin"
+  report_helper_bin plannotator "80c18e2b3e95796e85902b4e3ec92d8f7bf49df8ebfcbd12195c784fa522fdda"
+  say "[would remove] retired Pi links when still present"
+  say "[would run] isolated sessions setup -> $HOME/.local/share/sessions/plugin"
+  report_cleanup_target "$agent/extensions/package.json"
+  report_cleanup_target "$agent/extensions/package-lock.json"
+  report_cleanup_target "$agent/extensions/node_modules"
+  say "[would run] mise upgrade npm:@earendil-works/pi-coding-agent --yes --raw"
+  say "[would run] $dotfiles/bin/pi update"
+  say "[would run] $dotfiles/bin/pi update --extensions"
+  exit 0
 fi
 
 mkdir -p "$agent" "$agent/bin"
@@ -186,7 +186,7 @@ run_step "Clean redundant extension dependencies" cleanup_extension_deps
 
 # Mise's animated renderer clears the screen on resize; raw keeps TTY output.
 run_step "Upgrade mise-managed Pi" mise upgrade npm:@earendil-works/pi-coding-agent --yes --raw
-run_step "Check Pi self-update" "$pi_src/bin/pi" update
-run_step "Update extension packages" "$pi_src/bin/pi" update --extensions
+run_step "Check Pi self-update" "$dotfiles/bin/pi" update
+run_step "Update extension packages" "$dotfiles/bin/pi" update --extensions
 
 echo "update:pi done."
