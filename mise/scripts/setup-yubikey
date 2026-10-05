@@ -50,8 +50,10 @@ PIN_POLICY="${YK_PIN_POLICY:-never}"
 TOUCH_POLICY="${YK_TOUCH_POLICY:-cached}"
 
 dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
-fnox_dir="$dotfiles/config/fnox"
-combined_identity="$fnox_dir/yubikey-identity.txt"
+# Per-serial stubs and the fnox shared config are generation inputs; the
+# combined identity file is the deployed ~/.config/fnox/yubikey-identity.txt.
+fnox_dir="$dotfiles/mise/templates/fnox"
+combined_identity="$dotfiles/config/fnox/yubikey-identity.txt"
 home_identity="${XDG_CONFIG_HOME:-$HOME/.config}/fnox/yubikey-identity.txt"
 fnox_config="$fnox_dir/shared.toml"
 
@@ -139,7 +141,7 @@ fi
 recipient_added=0
 if grep -q "$recipient" "$fnox_config"; then
   ok "Recipient already in fnox config"
-elif python3 - "$fnox_config" "$recipient" "$serial" <<'PY'; then
+elif python3 - "$fnox_config" "$recipient" "$serial" <<'PY'
 import re, sys
 path, rec, serial = sys.argv[1], sys.argv[2], sys.argv[3]
 with open(path) as f:
@@ -156,6 +158,7 @@ s = s[: m.start(2)] + new_body + s[m.end(2):]
 with open(path, "w") as f:
     f.write(s)
 PY
+then
   recipient_added=1
   ok "Appended recipient to fnox config"
   echo "NOTE: existing age-encrypted secrets are still encrypted to the OLD"

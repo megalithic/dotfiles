@@ -8,26 +8,26 @@ config=""
 output=""
 while [[ "$#" -gt 0 ]]; do
   case "$1" in
-  --config)
-    [[ "$#" -ge 2 && -n "$2" ]] || {
-      echo "render-s3cfg: --config requires a path" >&2
+    --config)
+      [[ "$#" -ge 2 && -n "$2" ]] || {
+        echo "render-s3cfg: --config requires a path" >&2
+        exit 1
+      }
+      config="$2"
+      shift 2
+      ;;
+    --output)
+      [[ "$#" -ge 2 && -n "$2" ]] || {
+        echo "render-s3cfg: --output requires a path" >&2
+        exit 1
+      }
+      output="$2"
+      shift 2
+      ;;
+    *)
+      echo "render-s3cfg: unknown argument: $1" >&2
       exit 1
-    }
-    config="$2"
-    shift 2
-    ;;
-  --output)
-    [[ "$#" -ge 2 && -n "$2" ]] || {
-      echo "render-s3cfg: --output requires a path" >&2
-      exit 1
-    }
-    output="$2"
-    shift 2
-    ;;
-  *)
-    echo "render-s3cfg: unknown argument: $1" >&2
-    exit 1
-    ;;
+      ;;
   esac
 done
 
@@ -36,7 +36,7 @@ command -v fnox &>/dev/null || {
   exit 1
 }
 
-template="${DOTFILES_DIR:-$HOME/.dotfiles}/config/s3cmd/s3cfg.template"
+template="${DOTFILES_DIR:-$HOME/.dotfiles}/mise/templates/s3cmd/s3cfg.template"
 output="${output:-${XDG_DATA_HOME:-$HOME/.local/share}/fnox/generated/s3cfg}"
 output_dir="$(dirname "$output")"
 tmp=""
@@ -66,7 +66,7 @@ done
 
 cleanup() {
   if [[ -n "$tmp" && -f "$tmp" ]]; then
-    : > "$tmp"
+    : >"$tmp"
     trash "$tmp" >/dev/null 2>&1 || true
   fi
 }
@@ -84,7 +84,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   line="${line//'{{DO_SPACES_CAPS_SECRET}}'/$DO_SPACES_CAPS_SECRET}"
   line="${line//'{{DO_SPACES_CAPS_REGION}}'/$DO_SPACES_CAPS_REGION}"
   printf '%s\n' "$line"
-done < "$template" > "$tmp"
+done <"$template" >"$tmp"
 
 if rg -q '\{\{DO_SPACES_CAPS_[A-Z_]+\}\}' "$tmp"; then
   echo "render-s3cfg: unresolved DO Spaces placeholder" >&2
@@ -93,7 +93,7 @@ fi
 
 chmod 0600 "$tmp"
 if [[ -f "$output" ]] && cmp -s "$tmp" "$output"; then
-  : > "$tmp"
+  : >"$tmp"
   trash "$tmp"
   tmp=""
   echo "render-s3cfg: unchanged $output"

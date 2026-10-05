@@ -24,7 +24,7 @@ done
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fnox_dir="${XDG_CONFIG_HOME:-$HOME/.config}/fnox"
-shared_source="${DOTFILES_DIR:-$HOME/.dotfiles}/config/fnox/shared.toml"
+shared_source="${DOTFILES_DIR:-$HOME/.dotfiles}/mise/templates/fnox/shared.toml"
 config_target="$fnox_dir/config.toml"
 cache_key="$fnox_dir/age-cache-key.txt"
 artifact_target="${XDG_DATA_HOME:-$HOME/.local/share}/fnox/generated/s3cfg"
@@ -38,7 +38,7 @@ activation_complete=0
 
 wipe_trash() {
   local path="$1"
-  [[ -n "$path" && ( -e "$path" || -L "$path" ) ]] || return 0
+  [[ -n "$path" && (-e "$path" || -L "$path") ]] || return 0
   [[ -f "$path" && ! -L "$path" ]] && : >"$path"
   trash "$path" >/dev/null 2>&1 || true
 }

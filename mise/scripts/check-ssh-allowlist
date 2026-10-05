@@ -1,0 +1,13 @@
+#!/bin/sh
+# Fail when Git's index holds anything under home/.ssh/ besides the four
+# deployable SSH sources. .gitignore stops ordinary adds; this catches
+# force-adds and files tracked before the ignore rules existed.
+set -eu
+unexpected=$(git ls-files -- home/.ssh | grep -vxF \
+  -e home/.ssh/allowed_signers \
+  -e home/.ssh/shared.config \
+  -e home/.ssh/config.workbookpro \
+  -e home/.ssh/config.megabookpro || true)
+[ -z "$unexpected" ] && exit 0
+printf 'check-ssh-allowlist: not allowed under home/.ssh/:\n%s\n' "$unexpected" >&2
+exit 1

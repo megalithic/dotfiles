@@ -9,7 +9,7 @@ Applied through `config/mise/config.toml`:
 - `[tools]`: `atuin = "latest"`
 - `[dotfiles]`: `~/.config/atuin/config.toml` → `config/atuin/config.toml`
 - Shell hooks:
-  - bash: `config/bash/bashrc`
+  - bash: `home/.bashrc`
   - zsh: `config/zsh/zshrc`
   - fish: `config/fish/conf.d/atuin.fish`
 

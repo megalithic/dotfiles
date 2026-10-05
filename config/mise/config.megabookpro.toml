@@ -4,8 +4,8 @@
 # hostname in shell init and bootstrap.sh). workbookpro twin lives next door.
 
 [dotfiles]
-# Host-specific ~/.ssh/config; Include-s config/ssh/shared.config.
-"~/.ssh/config" = "~/.dotfiles/config/ssh/config.megabookpro"
+# Host-specific ~/.ssh/config; Include-s ~/.ssh/shared.config (home/ tree).
+"~/.ssh/config" = "~/.dotfiles/home/.ssh/config.megabookpro"
 
 # AirConnect (AirPlay -> UPnP/Sonos bridge, https://github.com/philippe44/AirConnect).
 # The release zip carries binaries for every platform; postinstall marks the

@@ -21,7 +21,6 @@ git/
 │                 #   untracked `config.local` for machine-local overrides
 ├── ignore        # → ~/.config/git/ignore — global excludes (former
 │                 #   ~/.gitignore content + adopted local additions)
-├── tool-ignore   # → ~/.ignore — rg/fd global ignore (not read by git)
 └── disabled/     # parked files, unwired in nix too (kept for parity):
     ├── gitconfig_macos   # osxkeychain/gh credential helpers, commit template
     ├── gitconfig_linux   # linuxbrew gh credential helper
@@ -35,9 +34,9 @@ git/
 - Signing needs 1Password installed in `/Applications` (op-ssh-sign lives in
   the app bundle; `brew-cask:1password` in `[bootstrap.packages]`) and
   `~/.ssh/allowed_signers` for verification (`git log --show-signature`;
-  linked from `config/ssh/allowed_signers`). The agent's key selection
+  linked from `home/.ssh/allowed_signers`). The agent's key selection
   comes from `~/.config/1Password/ssh/agent.toml`
-  (`config/1password/agent.toml`).
+  (`config/1Password/ssh/agent.toml`).
 - Runtime deps referenced by `config`: delta (pager), git-lfs (filter), nvim
   (editor + codediff diff/merge tool), fzf (`cof` alias), worktrunk (`wt`
   alias), brew git contrib (`jump` alias). All but worktrunk are in
@@ -46,7 +45,7 @@ git/
 ## Applying
 
 ```sh
-mise bootstrap dotfiles apply   # links config, ignore, tool-ignore
+mise bootstrap dotfiles apply   # links config, ignore (rg/fd ignore: home/.ignore)
 git config --list --show-origin # verify origins point at ~/.config/git/config
 ```
 

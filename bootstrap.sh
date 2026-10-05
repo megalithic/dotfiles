@@ -132,10 +132,10 @@ repair_nix_pinned_taps() {
   for tap_path in "$taps_dir" "$taps_dir"/* "$taps_dir"/*/*; do
     [ -L "$tap_path" ] || continue
     case "$(readlink "$tap_path")" in
-    /nix/store/*)
-      warn "Removing nix-pinned Homebrew tap link: $tap_path"
-      rm -f "$tap_path"
-      ;;
+      /nix/store/*)
+        warn "Removing nix-pinned Homebrew tap link: $tap_path"
+        rm -f "$tap_path"
+        ;;
     esac
   done
   [ -d "$taps_dir" ] || mkdir -p "$taps_dir"
@@ -146,10 +146,10 @@ repair_nix_pinned_taps() {
 remove_store_link() {
   [ -L "$1" ] || return 0
   case "$(readlink "$1")" in
-  /nix/store/*)
-    info "Removing nix-managed symlink: $1"
-    rm -f "$1"
-    ;;
+    /nix/store/*)
+      info "Removing nix-managed symlink: $1"
+      rm -f "$1"
+      ;;
   esac
 }
 
@@ -214,24 +214,24 @@ update_dotfiles_checkout() {
     say "  [a]bort"
     UPDATE_CHOICE=$(ask_tty "Update action [r/h/s/a]:")
     case "$UPDATE_CHOICE" in
-    r | R | retry)
-      pull_dotfiles && return 0
-      ;;
-    h | H | https)
-      ensure_dotfiles_branch &&
-        GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 git -C "$DOTFILES_DIR" pull --ff-only "$DOTFILES_REPO_URL" HEAD && return 0
-      ;;
-    s | S | stash)
-      git -C "$DOTFILES_DIR" stash push -u -m "bootstrap before update $(date +%Y%m%d-%H%M%S)" || warn "Stash failed."
-      ensure_dotfiles_branch &&
-        GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 git -C "$DOTFILES_DIR" pull --ff-only "$DOTFILES_REPO_URL" HEAD && return 0
-      ;;
-    a | A | abort)
-      die "Could not update $DOTFILES_DIR; fix git auth/local changes and retry"
-      ;;
-    *)
-      warn "Choose r, h, s, or a."
-      ;;
+      r | R | retry)
+        pull_dotfiles && return 0
+        ;;
+      h | H | https)
+        ensure_dotfiles_branch &&
+          GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 git -C "$DOTFILES_DIR" pull --ff-only "$DOTFILES_REPO_URL" HEAD && return 0
+        ;;
+      s | S | stash)
+        git -C "$DOTFILES_DIR" stash push -u -m "bootstrap before update $(date +%Y%m%d-%H%M%S)" || warn "Stash failed."
+        ensure_dotfiles_branch &&
+          GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 git -C "$DOTFILES_DIR" pull --ff-only "$DOTFILES_REPO_URL" HEAD && return 0
+        ;;
+      a | A | abort)
+        die "Could not update $DOTFILES_DIR; fix git auth/local changes and retry"
+        ;;
+      *)
+        warn "Choose r, h, s, or a."
+        ;;
     esac
   done
 }
@@ -245,20 +245,20 @@ usage() {
 
 while [ $# -gt 0 ]; do
   case "$1" in
-  --force) FORCE=1 ;;
-  --host)
-    shift
-    [ $# -gt 0 ] || die "--host requires a value"
-    FORCE_HOST="$1"
-    ;;
-  -h | --help)
-    usage
-    exit 0
-    ;;
-  *)
-    usage >&2
-    die "Unknown argument: $1"
-    ;;
+    --force) FORCE=1 ;;
+    --host)
+      shift
+      [ $# -gt 0 ] || die "--host requires a value"
+      FORCE_HOST="$1"
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      usage >&2
+      die "Unknown argument: $1"
+      ;;
   esac
   shift
 done
@@ -381,17 +381,17 @@ fi
 
 xcode_license_check=$(xcodebuild -license check 2>&1 || true)
 case "$xcode_license_check" in
-*"requires Xcode"*"CommandLineTools"*)
-  info "Skipping Xcode license check (CLT-only install)."
-  ;;
-"")
-  :
-  ;;
-*)
-  warn "Xcode license not accepted."
-  sudo xcodebuild -license accept
-  ok "Xcode license accepted"
-  ;;
+  *"requires Xcode"*"CommandLineTools"*)
+    info "Skipping Xcode license check (CLT-only install)."
+    ;;
+  "")
+    :
+    ;;
+  *)
+    warn "Xcode license not accepted."
+    sudo xcodebuild -license accept
+    ok "Xcode license accepted"
+    ;;
 esac
 
 # Rosetta is optional for this bootstrap path: Homebrew and mise install native
@@ -423,13 +423,15 @@ fi
 cd "$DOTFILES_DIR" || die "Unable to change to $DOTFILES_DIR"
 [ -f "$BOOTSTRAP_MISE_CONFIG" ] || die "Missing $BOOTSTRAP_MISE_CONFIG; checkout is stale or incomplete"
 
-# Keep bootstrap pinned to the repo-managed global config, not whichever
-# ~/.config/mise/config.toml may exist on the machine already.
-MISE_GLOBAL_CONFIG_FILE="$BOOTSTRAP_MISE_CONFIG"
-export MISE_GLOBAL_CONFIG_FILE
+# Keep bootstrap pinned to the repo-managed global config dir, not whichever
+# ~/.config/mise may exist on the machine already. A config dir (not a pinned
+# file) also loads the config.$MISE_ENV.toml host overlay.
+MISE_CONFIG_DIR="$(dirname "$BOOTSTRAP_MISE_CONFIG")"
+export MISE_CONFIG_DIR
 
 info "Trusting mise global config..."
-mise trust "$MISE_GLOBAL_CONFIG_FILE"
+mise trust "$BOOTSTRAP_MISE_CONFIG"
+[ -f "$MISE_CONFIG_DIR/config.$HOST.toml" ] && mise trust "$MISE_CONFIG_DIR/config.$HOST.toml"
 
 clean_nix_managed_targets
 
@@ -570,22 +572,22 @@ run_mise_bootstrap() {
     say "  [a]bort"
     BOOTSTRAP_CHOICE=$(ask_tty "Bootstrap action [r/c/a]:")
     case "$BOOTSTRAP_CHOICE" in
-    r | R | retry)
-      attempt_mise_bootstrap && return 0
-      if sudo_rescue_app_rename || rescue_stuck_launchd_agent; then
+      r | R | retry)
         attempt_mise_bootstrap && return 0
-      fi
-      ;;
-    c | C | continue)
-      warn "Continuing with mise bootstrap unfinished; re-run bootstrap.sh (or 'mise bootstrap') after fixing permissions."
-      return 0
-      ;;
-    a | A | abort)
-      die "mise bootstrap failed"
-      ;;
-    *)
-      warn "Choose r, c, or a."
-      ;;
+        if sudo_rescue_app_rename || rescue_stuck_launchd_agent; then
+          attempt_mise_bootstrap && return 0
+        fi
+        ;;
+      c | C | continue)
+        warn "Continuing with mise bootstrap unfinished; re-run bootstrap.sh (or 'mise bootstrap') after fixing permissions."
+        return 0
+        ;;
+      a | A | abort)
+        die "mise bootstrap failed"
+        ;;
+      *)
+        warn "Choose r, c, or a."
+        ;;
     esac
   done
 }

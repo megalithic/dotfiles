@@ -4,8 +4,8 @@
 # hostname in shell init and bootstrap.sh).
 
 [dotfiles]
-# Host-specific ~/.ssh/config; Include-s config/ssh/shared.config.
-"~/.ssh/config" = "~/.dotfiles/config/ssh/config.workbookpro"
+# Host-specific ~/.ssh/config; Include-s ~/.ssh/shared.config (home/ tree).
+"~/.ssh/config" = "~/.dotfiles/home/.ssh/config.workbookpro"
 
 [tools]
 ansible = "latest"

@@ -19,9 +19,9 @@ Applied through `config/mise/config.toml`:
 | `pkgs.worktrunk` binary | `[tools]` `worktrunk` |
 | `xdg.configFile worktrunk/config.toml` (worktree-path template) | this dir's `config.toml` |
 | `enableFishIntegration = false` + local `wt` fish function (vendored directives, implicit switch, tmux targets) | already migrated: `config/fish/functions/wt.fish` + completions |
-| `enableBashIntegration/ZshIntegration` (`eval "$(wt config shell init bash | zsh)"` in rc files) | migrated: `config/bash/bashrc` and `config/zsh/zshrc` run the upstream init after `mise activate` |
+| `enableBashIntegration/ZshIntegration` (`eval "$(wt config shell init bash | zsh)"` in rc files) | migrated: `home/.bashrc` and `config/zsh/zshrc` run the upstream init after `mise activate` |
 | gitconfig `wt = !wt` alias | already migrated: `config/git/config` |
-| global ignore project `.config/` dirs, `.worktrees/` (via tool-ignore) | already migrated: `config/git/ignore` + `tool-ignore` |
+| global ignore project `.config/` dirs, `.worktrees/` (via tool-ignore) | already migrated: `config/git/ignore` + `home/.ignore` |
 
 ## Applying
 

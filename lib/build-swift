@@ -44,8 +44,14 @@ else
   OUT="$HOME/.local/bin/$OUTPUT_NAME"
 fi
 
-[[ "$(uname -s)" == Darwin ]] || { echo "$PROGRAM build: macOS required" >&2; exit 1; }
-[[ -f "$SRC" ]] || { echo "$PROGRAM build: missing source $SRC" >&2; exit 1; }
+[[ "$(uname -s)" == Darwin ]] || {
+  echo "$PROGRAM build: macOS required" >&2
+  exit 1
+}
+[[ -f "$SRC" ]] || {
+  echo "$PROGRAM build: missing source $SRC" >&2
+  exit 1
+}
 if [[ "$PROGRAM" == aeroplayd ]]; then
   for extra_source in aeroplayd-cli.swift aeroplayd-ui.swift; do
     [[ -f "$DOTFILES_DIR/lib/$extra_source" ]] || {
@@ -53,7 +59,7 @@ if [[ "$PROGRAM" == aeroplayd ]]; then
       exit 1
     }
   done
-  [[ -f "$DOTFILES_DIR/config/aeroplayd/libraop-LICENSE.txt" ]] || {
+  [[ -f "$DOTFILES_DIR/tools/aeroplayd/libraop-LICENSE.txt" ]] || {
     echo "$PROGRAM build: missing libraop license" >&2
     exit 1
   }
@@ -96,7 +102,7 @@ build_aeroplayd() {
   local revision="4fe461a809eadd5230e3b587a3b3c948f90d9617"
   local patched_source_sha="5b80845bd11b2a07e58c998ac6bc89a2d83da3f9dae4b05a738d2ebe563a2f88"
   local helper_recipe="1-arm64"
-  local helper_patch="$DOTFILES_DIR/config/aeroplayd/cliraop-control.patch"
+  local helper_patch="$DOTFILES_DIR/tools/aeroplayd/cliraop-control.patch"
   local patch_sha=""
   local toolchain_sha=""
   local cache_dir="$HOME/Library/Caches/AeroPlay"
@@ -166,10 +172,10 @@ build_aeroplayd() {
 
   tmp_app="$(mktemp -d "$(dirname "$OUT")/.AeroPlay.app.tmp.XXXXXX")"
   cleanup_app() {
-    if [[ -n "$tmp_app" && ( -e "$tmp_app" || -L "$tmp_app" ) ]]; then
+    if [[ -n "$tmp_app" && (-e "$tmp_app" || -L "$tmp_app") ]]; then
       trash "$tmp_app" >/dev/null 2>&1 || true
     fi
-    if [[ -n "$backup_app" && ( -e "$backup_app" || -L "$backup_app" ) ]]; then
+    if [[ -n "$backup_app" && (-e "$backup_app" || -L "$backup_app") ]]; then
       if [[ ! -e "$OUT" && ! -L "$OUT" ]]; then
         mv "$backup_app" "$OUT" || true
       else
@@ -222,7 +228,7 @@ PLIST
     "$DOTFILES_DIR/lib/aeroplayd-ui.swift" \
     -o "$tmp_app/Contents/MacOS/aeroplayd"
   cp "$cached_helper" "$tmp_app/Contents/Resources/cliraop"
-  cp "$DOTFILES_DIR/config/aeroplayd/libraop-LICENSE.txt" \
+  cp "$DOTFILES_DIR/tools/aeroplayd/libraop-LICENSE.txt" \
     "$tmp_app/Contents/Resources/libraop-LICENSE.txt"
 
   echo "$PROGRAM build: signing nested helper with $IDENTITY"
@@ -306,7 +312,7 @@ DETAILS="$(/usr/bin/codesign --display --verbose=4 "$TMP" 2>&1)"
 }
 
 remove_stale_artifact() {
-  if [[ -n "$STALE_LINK_TARGET" && ( -e "$STALE_LINK_TARGET" || -L "$STALE_LINK_TARGET" ) ]]; then
+  if [[ -n "$STALE_LINK_TARGET" && (-e "$STALE_LINK_TARGET" || -L "$STALE_LINK_TARGET") ]]; then
     trash "$STALE_LINK_TARGET"
     echo "$PROGRAM build: removed stale artifact $STALE_LINK_TARGET"
   fi

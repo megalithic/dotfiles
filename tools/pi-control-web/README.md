@@ -47,7 +47,7 @@ Paste it once into the PWA login form. The PWA does not store the token in JavaS
 For a foreground development run:
 
 ```sh
-mise exec node -- node config/pi-control-web/server.mjs
+mise exec node -- node tools/pi-control-web/server.mjs
 ```
 
 ## Tailscale Serve
@@ -122,6 +122,6 @@ GET  /api/events
 ## Validation
 
 ```sh
-mise exec node -- node --check config/pi-control-web/server.mjs
-mise exec node -- node config/pi-control-web/tests/smoke-test.mjs
+mise exec node -- node --check tools/pi-control-web/server.mjs
+mise exec node -- node tools/pi-control-web/tests/smoke-test.mjs
 ```

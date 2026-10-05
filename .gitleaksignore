@@ -566,7 +566,7 @@ ce6b3fba84cc0c044f64e124a239bab5a8338c18:weechat/weechat.symlink/sec.conf:generi
 ce6b3fba84cc0c044f64e124a239bab5a8338c18:weechat/weechat.symlink/sec.conf:generic-api-key:23
 ce6b3fba84cc0c044f64e124a239bab5a8338c18:weechat/weechat.symlink/sec.conf:generic-api-key:33
 ce6b3fba84cc0c044f64e124a239bab5a8338c18:weechat/weechat.symlink/sec.conf:generic-api-key:34
-config/avwatchweb/manifest.json:generic-api-key:6
+tools/avwatchweb/manifest.json:generic-api-key:6
 d0bd23e660ac161e308ccd74e153b6058161a7d6:weechat/weechat.symlink/sec.conf:generic-api-key:20
 d0bd23e660ac161e308ccd74e153b6058161a7d6:weechat/weechat.symlink/sec.conf:generic-api-key:23
 d0bd23e660ac161e308ccd74e153b6058161a7d6:weechat/weechat.symlink/sec.conf:generic-api-key:33

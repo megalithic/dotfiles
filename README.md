@@ -105,7 +105,7 @@ first failure:
 
 1. `update:tools` - update standalone mise, plugins, and declared tools
 2. `update:packages` - apply and upgrade declared system packages
-3. `update:dotfiles` - force-apply managed dotfile targets
+3. `update:dotfiles` - apply managed dotfile targets without overwriting conflicts
 4. `install:fonts` - install declared Nerd Fonts when inputs changed
 5. `update:system` - build signed miccheckd, notiwatchd, and avwatchd binaries,
    configure Helium, apply LaunchAgents, and apply MacOS defaults
@@ -113,6 +113,23 @@ first failure:
 7. `update:fnox` - refresh the fnox cache and generated secret artifacts
 8. `update:pi` - update Pi settings, tools, and extensions
 9. `reload:hammerspoon` - reload Hammerspoon
+
+Existing real files and conflicting targets are preserved by refusal. Inspect and
+reconcile conflicts before retrying; do not use force to bypass them.
+
+### Layout
+
+Managed files mirror their destinations: `config/<path>` deploys to
+`~/.config/<path>` and `home/<path>` to `~/<path>`, each as a per-file symlink
+from a Git-indexed tree (`[dotfiles]` in `config/mise/config.toml`). Only
+tracked files deploy, so untracked or ignored files never leave the repo. Add a
+tracked file at the matching source path instead of a new declaration.
+Exception entries (`~/bin`, `~/.local/bin`, generated `~/.s3cfg`, the Pi lat
+shim, host-specific `~/.ssh/config`) are listed next to the trees.
+
+Source-only code (browser extensions, servers, build inputs) lives in `tools/`;
+generation inputs that never deploy as-is (fnox shared config, templates) live
+in `mise/templates/`.
 
 Task declarations live in `config/mise/config.toml`. Multi-step mise helpers
 live in `mise/scripts/`; shared Swift sources and their signed build helper stay

@@ -1,0 +1,38 @@
+{
+    "^R" = "refreshMailbox:";
+    "j" = "selectNextMessageRow:";
+    "k" = "selectPreviousMessageRow:";
+    "^j" = "selectNextMailboxRow:";
+    "^n" = "selectNextCountedMailbox:";
+    "^k" = "selectPreviousMailboxRow:";
+    "^p" = "selectPreviousCountedMailbox:";
+    "l" = "expandThread:";
+    ";" = "nextUnreadMessage:";
+    "h" = "collapseThread:";
+    "g" = { "g" = "selectFirstMessageRow:"; };
+    "G" = "selectLastMessageRow:";
+    "^f" = "scrollPageDown:";
+    "^b" = "scrollPageUp:";
+    "^d" = "scrollPageDown:";
+    "^u" = "scrollPageUp:";
+    "m" = "toggleReadState:";
+    "u" = "undo:";
+    "^r" = "redo:";
+
+    "`" = { "`" = "markAllAsRead:"; };
+
+    "@\U000A" = "send:";
+    "@\U000D" = "send:";
+
+    "c" = "newMessage:";
+    "/" = "searchAllMessages:";
+    "n" = "nextMessage:";
+    "p" = "previousMessage:";
+    "e" = "archive:";
+    "s" = "toggleFlag:";
+    "!" = "moveToJunk:";
+    "r" = "reply:";
+    "a" = "replyAll:";
+    "f" = "forwardMessage:";
+    "x" = "deleteMessage:";
+}

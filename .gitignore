@@ -61,3 +61,20 @@ home/.pi/agent/mcp-cache.json
 home/.pi/agent/mcp-auth.json
 home/.pi/agent/mcp.log*
 home/.pi/agent/mcp-npx-cache.json
+
+# Deployable SSH sources (home/ tree -> ~/.ssh): only these four. Keys,
+# known_hosts, sockets, authorized_keys and local overrides must never be
+# added. The parent re-include is needed because the global swap-file pattern
+# [._]s[a-w][a-z] also matches `.ssh`. Force-adds bypass this; hk's
+# ssh-allowlist step checks the index.
+!/home/.ssh/
+/home/.ssh/*
+!/home/.ssh/allowed_signers
+!/home/.ssh/shared.config
+!/home/.ssh/config.workbookpro
+!/home/.ssh/config.megabookpro
+
+# Claude: only user settings are managed (home/ tree -> ~/.claude).
+!/home/.claude/
+/home/.claude/*
+!/home/.claude/settings.json

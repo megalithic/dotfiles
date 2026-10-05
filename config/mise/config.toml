@@ -1,19 +1,5 @@
 #:tombi schema.strict = false
 
-# Useful mise-based dotfiles repos and patterns:
-#
-# REFS:
-# https://github.com/kryota-dev/dotfiles - uses tart and macos vms to test mise bootstrap runs
-# https://github.com/sedalu/dotfiles - auto-env based on machine name, not just arch/os; and container based install :mindblown:
-# https://github.com/AllySummers/dotfiles - hk, pkl, usage releated stuff, too
-# https://github.com/hashiiiii/dotfiles
-# https://github.com/disrupted/dotfiles/blob/master/.config/mise/config.toml - tools i typically use
-# https://github.com/JJGadgets/Biohazard/blob/main/.mise.toml - lots of aqua use
-# https://github.com/disrupted/dotfiles/blob/master/.config/mise/config.toml - elixir related
-# https://github.com/AxlAlm/neovim-setup/blob/master/mise/README.md - language mise configs (not tmpl, manual cp)
-# https://github.com/mfilej/dotfiles/blob/main/README.md - perhaps a more simplified and less bespoke script version of bootstraping with mise (also an elixirist)
-# https://github.com/leandrocp/dotfiles/tree/master/config/mise - well known elixirist that uses mise/pi/nvim/zed/etc
-
 [settings]
 experimental = true
 auto_install = true
@@ -120,117 +106,104 @@ tmux = "direnv exec / tmux"
 copy = "pbcopy"
 paste = "pbpaste"
 cat = "bat"
+p = "pi"
 pic = "pi -c"
 pir = "pi -r"
 up = "cd $HOME/.dotfiles && mise run up"
 
 [dotfiles]
-# Scoped source globs include future matches; keep them before exact overrides.
-"~/.pi/agent/*" = "~/.dotfiles/home/.pi/agent/*"
-"~/.local/bin/*" = "~/.dotfiles/home/.pi/bin/*"
-"~/.config/kanata/*.kbd" = "~/.dotfiles/config/kanata/*.kbd"
+# Sources mirror their destinations: config/<path> -> ~/.config/<path> and
+# home/<path> -> ~/<path>, each as a per-file link from a Git-indexed tree.
+# `manifest = "git"` deploys only files in Git's index: untracked or ignored
+# files (secrets, runtime state, fish_variables, mise conf.d/) never deploy.
+# Targets become real directories holding per-file links, so unmanaged
+# neighbours (fnox/config.toml, jj/repos, Pi sessions, SSH keys) stay in place.
+# Apply with `mise run update:dotfiles`, never --force: through a directory
+# symlink at a target, --force would replace repo source files with
+# self-referential links.
+#
+# Exclude patterns: no "/" matches any path component; with "/" the pattern is
+# anchored to the tree root (a leading "/" says so explicitly).
+"~/.config" = { source = "~/.dotfiles/config", mode = "symlink-each", manifest = "git", exclude = [
+  # repo docs and parked files, not app config
+  "AGENTS.md",
+  "git/disabled/**",
+] }
 
-# -- pi coding agent: managed files under ~/.pi; runtime state (sessions/,
-#    npm/, auth.json) stays unmanaged. Pi writes settings through its symlink. --
-"~/.pi/web-search.json" = "~/.dotfiles/home/.pi/web-search.json"
-"~/.pi/agent/web-search.json" = "~/.dotfiles/home/.pi/web-search.json"
-"~/.config/pi/web-search.json" = "~/.dotfiles/home/.pi/web-search.json"
-"~/.pi/agent/extensions" = { source = "~/.dotfiles/home/.pi/agent/extensions", mode = "symlink-each", exclude = [
-  "_*",
+# home/: one entry per top-level file or directory rather than a single "~"
+# tree. On the first apply of a symlink-each target without an ownership
+# record, mise walks the whole target for stale links; for "~" that is all of
+# HOME, including ~/Library/CloudStorage (hours through the File Provider).
+# Bounded targets keep the walk to the directory that holds the files.
+"~/.bashrc" = "~/.dotfiles/home/.bashrc"
+"~/.profile" = "~/.dotfiles/home/.profile"
+"~/.bash_profile" = "~/.dotfiles/home/.bash_profile"
+"~/.iex.exs" = "~/.dotfiles/home/.iex.exs"
+# rg/fd global ignore file (not read by git)
+"~/.ignore" = "~/.dotfiles/home/.ignore"
+# Only the four tracked sources deploy (.gitignore allowlist + hk ssh-allowlist);
+# keys, known_hosts and sockets stay unmanaged. The host overlay links
+# ~/.ssh/config to one of the two selectors, which Include ~/.ssh/shared.config.
+"~/.ssh" = { source = "~/.dotfiles/home/.ssh", mode = "symlink-each", manifest = "git", exclude = [
+  "config.workbookpro",
+  "config.megabookpro",
 ] }
-"~/.pi/agent/skills" = { source = "~/.dotfiles/home/.pi/agent/skills", mode = "symlink-each", exclude = [
-  "_*",
-] }
-"~/.pi/agent/prompts" = { source = "~/.dotfiles/home/.pi/agent/prompts", mode = "symlink-each", exclude = [
-  "_*",
-] }
-"~/.pi/agent/agents" = { source = "~/.dotfiles/home/.pi/agent/agents", mode = "symlink-each", exclude = [
-  "_*",
+# Claude: only settings.json is tracked (.gitignore allowlist).
+"~/.claude" = { source = "~/.dotfiles/home/.claude", mode = "symlink-each", manifest = "git" }
+# Pi: runtime state (sessions/, npm/, auth.json, mcp-*.json) stays unmanaged;
+# Pi writes settings through its symlink. Support material beside the config
+# is not deployed; underscore-prefixed resources are disabled.
+"~/.pi" = { source = "~/.dotfiles/home/.pi", mode = "symlink-each", manifest = "git", exclude = [
+  "/AGENTS.md",
+  "scripts/**",
+  "tests/**",
+  "patches/**",
+  "disabled/**",
+  "agent/extensions/_*",
+  "agent/extensions/_*/**",
+  "agent/skills/_*",
+  "agent/skills/_*/**",
+  "agent/prompts/_*",
+  "agent/prompts/_*/**",
+  "agent/agents/_*",
+  "agent/agents/_*/**",
 ] }
 # Lat extension tools launch through this agent-local path; point it at mise's
 # stable shim rather than the removed Devenv profile.
 "~/.pi/agent/bin/lat" = "~/.local/share/mise/shims/lat"
-# "~/Library/Developer/Xcode/UserData/FontAndColorThemes/tokyo-night.xccolortheme" = ".config/xcode/tokyo-night.xccolortheme"
-# Keep global config, host overlays, and templates together.
-"~/.config/mise" = "~/.dotfiles/config/mise"
-# Host-specific mise config: mise merges config.$MISE_ENV.toml on top of
-# config.toml. MISE_ENV = short hostname, exported by shell init (fish env.fish,
-# bashrc, zshrc) and bootstrap.sh.
-"~/.config/atuin/config.toml" = "~/.dotfiles/config/atuin/config.toml"
-"~/.config/aeroplayd/config.json" = "~/.dotfiles/config/aeroplayd/config.json"
-"~/.config/notiwatchd" = "~/.dotfiles/config/notiwatchd"
-# fnox: ~/.config/fnox/config.toml is intentionally NOT linked here. `mise run
-# fnox` generates it from config/fnox/shared.toml and atomically installs
-# its age-encrypted cache. Secret-bearing artifacts stay outside the repo.
-"~/.s3cfg" = "~/.local/share/fnox/generated/s3cfg"
-"~/.config/fish" = "~/.dotfiles/config/fish"
-"~/.profile" = "~/.dotfiles/config/bash/profile"
-"~/.bashrc" = "~/.dotfiles/config/bash/bashrc"
-"~/.bash_profile" = "~/.dotfiles/config/bash/bash_profile"
-"~/.zshenv" = "~/.dotfiles/home/.zshenv"
-"~/.config/zsh" = "~/.dotfiles/config/zsh"
-"~/.config/fzf" = "~/.dotfiles/config/fzf"
-"~/.config/jj/config.toml" = "~/.dotfiles/config/jj/config.toml"
-# worktrunk: per-file — approvals.toml{,.lock} in the same dir are mutable runtime state
-"~/.config/worktrunk/config.toml" = "~/.dotfiles/config/worktrunk/config.toml"
-"~/.config/surfingkeys/config.js" = "~/.dotfiles/config/surfingkeys/config.js"
-"~/.config/ghostty" = "~/.dotfiles/config/ghostty"
-"~/.config/hammerspoon" = "~/.dotfiles/config/hammerspoon"
-"~/.config/tuna" = "~/.dotfiles/config/tuna"
-"~/.config/kitty" = "~/.dotfiles/config/kitty"
-"~/.config/nvim" = "~/.dotfiles/config/nvim"
-"~/.config/tmux" = "~/.dotfiles/config/tmux"
+# App Support configs (not XDG). MailMate holds the custom key bindings
+# selected by MmCustomKeyBindingsName in [bootstrap.macos.defaults].
+"~/Library/Application Support/espanso" = { source = "~/.dotfiles/home/Library/Application Support/espanso", mode = "symlink-each", manifest = "git" }
+"~/Library/Application Support/MailMate" = { source = "~/.dotfiles/home/Library/Application Support/MailMate", mode = "symlink-each", manifest = "git" }
 
-"~/.config/shade-next/config.toml" = "~/.dotfiles/config/shade-next/config.toml"
+# Notes for paths inside ~/.config:
+# - mise: host overlays config.$MISE_ENV.toml sit beside config.toml (MISE_ENV =
+#   short hostname, exported by shell init and bootstrap.sh).
+# - fnox: ~/.config/fnox/config.toml is generated by `mise run update:fnox`
+#   from mise/templates/fnox/shared.toml; only the non-secret
+#   yubikey-identity.txt stub is tracked. Secret-bearing artifacts stay outside Git.
+# - git: ignore is git's default excludes path. A leftover Home Manager
+#   ~/.gitconfig (megabookpro, until that host leaves Nix) wins per-key over
+#   config/git/config.
+# - bat: run `bat cache --build` after changing config/bat.
+# - kanata: the active ~/.config/kanata/kanata.kbd stays unmanaged.
+# - worktrunk: approvals.toml{,.lock} beside config.toml are runtime state.
+# - 1Password: ssh/agent.toml selects SSH agent keys by vault/item; it holds
+#   metadata, not key material. GUI (cask) + CLI (formula) come from
+#   [bootstrap.packages].
 
-# -- kanata: .kbd profiles use the scoped glob above; active kanata.kbd stays unmanaged --
-"~/.config/kanata/icons" = "~/.dotfiles/config/kanata/icons"
-
-# -- SSH: individual files (directory holds mutable keys/known_hosts).
-#    ~/.ssh/config is host-specific: mapped in config.<hostname>.toml to
-#    config/ssh/config.<hostname>, each Include-ing shared.config. --
-"~/.ssh/allowed_signers" = "~/.dotfiles/config/ssh/allowed_signers"
-# 1Password SSH agent key selection (vault/item); GUI (cask) + CLI (formula)
-# both come from brew via [bootstrap.packages], replacing nix-darwin's
-# _1password module.
-"~/.config/1Password/ssh/agent.toml" = "~/.dotfiles/config/1password/agent.toml"
-# YubiKey age identity stub (non-secret; key material stays on the YubiKey).
-# Written by `mise run setup:yubikey`; used by the fnox age provider.
-"~/.config/fnox/yubikey-identity.txt" = "~/.dotfiles/config/fnox/yubikey-identity.txt"
-
-# -- home-dir dotfiles: sources live in home/ (symlinked to ~/*) --
-"~/.iex.exs" = "~/.dotfiles/home/iex.exs"
-
-# -- espanso: app support path, not XDG config --
-"~/Library/Application Support/espanso" = "~/.dotfiles/config/espanso"
-
-# -- git: XDG-native; single merged config, ignore is git's default excludes path.
-#    No ~/.gitconfig or ~/.gitignore in the mise world (HM-era split collapsed).
-#    NOTE: while nix still owns ~/.gitconfig it wins per-key over the XDG file;
-#    values are identical today — mirror edits until the HM git module is dropped. --
-"~/.config/git/config" = "~/.dotfiles/config/git/config"
-"~/.config/git/ignore" = "~/.dotfiles/config/git/ignore"
-"~/.ignore" = "~/.dotfiles/config/git/tool-ignore"
-
-# -- static tool configs (small, single-file configs previously Nix-store-backed) --
-# bat theme/syntax referenced by config (--theme=everforest, ghostty map-syntax);
-# run `bat cache --build` if these change
-"~/.config/bat" = { source = "~/.dotfiles/config/bat", mode = "symlink-each" }
-"~/.config/direnv/direnv.toml" = "~/.dotfiles/config/direnv/direnv.toml"
-"~/.config/starship.toml" = "~/.dotfiles/config/starship/starship.toml"
-"~/.config/karabiner/karabiner.json" = "~/.dotfiles/config/karabiner/karabiner.json"
-"~/.config/eza/theme.yml" = "~/.dotfiles/config/eza/theme.yml"
-"~/.config/ripgrep/rc" = "~/.dotfiles/config/ripgrep/rc"
-"~/.config/ripgrep/ignore" = "~/.dotfiles/config/fd/ignore"
-"~/.config/fd/ignore" = "~/.dotfiles/config/fd/ignore"
-
-# Keep ~/bin as one directory symlink. Home Manager's megabookpro link resolves
-# through its generation to the same source; symlink-each would follow it and
-# overwrite source files with self-referential links.
+# Keep ~/bin as one directory symlink. A leftover Home Manager link on
+# megabookpro resolves through its generation to the same source; symlink-each
+# would follow it and overwrite source files with self-referential links.
 "~/bin" = "~/.dotfiles/bin"
+# Existing mutable dir (mise, avwatchd and other installed binaries live here).
+"~/.local/bin" = { source = "~/.dotfiles/bin", mode = "symlink-each", manifest = "git", exclude = [
+  "tests/**",
+] }
 
-# -- symlink-each targets (existing mutable dirs, needs per-entry reconciliation) --
-"~/.local/bin" = { source = "~/.dotfiles/bin", mode = "symlink-each" }
+# Generated outside the repo by `mise run update:fnox` (render-s3cfg); the
+# secret-bearing file never enters Git.
+"~/.s3cfg" = "~/.local/share/fnox/generated/s3cfg"
 
 [tools]
 "aqua:openai/codex" = "latest"
@@ -333,7 +306,7 @@ lazydocker = "latest"
 "llama.cpp" = "latest"
 lua = "latest"
 lua-language-server = "latest"
-neovim = "nightly"                                                                   # nightly, stable, tags
+neovim = "nightly"                                                                   # latest, nightly, stable, tags
 node = "latest"
 ollama = "latest"
 pnpm = "latest"
@@ -348,11 +321,11 @@ rust = { version = "nightly", components = "rust-src,rust-analyzer,rustfmt,clipp
 shellcheck = "latest"
 shfmt = "latest"
 sqlite = "latest"
+superfile = "latest"
 starship = "latest"
 stylua = "latest"
 tailpipe = "latest"
 taplo = "latest"
-tmux = "latest"
 tokei = "latest"
 tree-sitter = "latest"
 typos = "latest"
@@ -362,6 +335,24 @@ worktrunk = "0.76.0"
 yamlfmt = "latest"
 zig = "0.16.0"
 zoxide = "latest"
+
+[tools.tmux]
+version = "3.8-rc3"
+os = ["macos"]
+url = "https://github.com/tmux/tmux/archive/{{version}}.tar.gz"
+strip_components = 1
+bin_path = "bin"
+postinstall = '''
+set -eu
+cd "${MISE_TOOL_INSTALL_PATH:?}"
+export PATH="/opt/homebrew/opt/bison/bin:/opt/homebrew/bin:$PATH"
+export PKG_CONFIG_PATH="/opt/homebrew/opt/libevent/lib/pkgconfig:/opt/homebrew/opt/ncurses/lib/pkgconfig:/opt/homebrew/opt/utf8proc/lib/pkgconfig:/opt/homebrew/opt/jemalloc/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+sh autogen.sh
+./configure CC=clang --prefix="$MISE_TOOL_INSTALL_PATH" --enable-utf8proc --enable-jemalloc
+make -j4
+make install
+./bin/tmux -V
+'''
 
 # postinstall chain: mise/scripts/install-app mounts/copies the DMG, then setup-helium
 # re-bakes the Chromium prodversion into the External Extensions update URLs
@@ -413,6 +404,7 @@ adopt = true
 "brew:bat" = "latest"
 "brew:automake" = "latest"
 "brew:bash" = "latest"
+"brew:bison" = "latest"
 "brew:btop" = "latest"
 "brew:cmark-gfm" = "latest"
 "brew:codespell" = "latest"
@@ -427,12 +419,15 @@ adopt = true
 "brew:gnupg" = "latest"
 "brew:grep" = "latest"
 "brew:htop" = "latest"         # HM htop module removed (CLI dedupe 2026-08); htoprc is self-managed
+"brew:jemalloc" = "latest"
 "brew:kanata" = "latest"       # keyboard remapper; setup verifies 1.12.0 with VHID 6.10.0, then copies/signs it to stable /usr/local/bin/kanata
+"brew:libevent" = "latest"
 "brew:luarocks" = "latest"
 "brew:make" = "latest"
 "brew:mas" = "latest"
 "brew:mole" = "latest"
 "brew:mosh" = "latest"
+"brew:ncurses" = "latest"
 "brew:openssl@3" = "latest"    # required by Python (ssl module) and networking Rust crates
 "brew:pam-reattach" = "latest" # Touch ID for sudo inside tmux; wired into sudo_local by setup:touchid-sudo
 "brew:pgcli" = "latest"
@@ -444,6 +439,7 @@ adopt = true
 "brew:sox" = "latest"          # rec audio capture for pi-dictate
 "brew:trash" = "latest"
 "brew:tree" = "latest"
+"brew:utf8proc" = "latest"
 "brew:unzip" = "latest"
 "brew:vim" = "latest"
 "brew:wget" = "latest"
@@ -592,6 +588,28 @@ DSDontWriteUSBStores = true
 
 [bootstrap.macos.defaults."com.apple.print.PrintingPrefs"]
 "Quit When Finished" = true
+
+[bootstrap.macos.defaults."com.freron.MailMate"]
+SoftwareUpdateChannel = "beta"
+MmShowTips = "never"
+
+MmCustomKeyBindingsEnabled = true
+MmCustomKeyBindingsName = "megamate"
+
+MmComposerInitialFocus = "alwaysTextView"
+MmShowAttachmentsFirst = true
+MmSingleMessageWindowClosesAfterMove = true
+
+MmHeadersViewWebKitDefaultFontSize = 14
+MmHeadersViewWebKitStandardFont = "Helvetica"
+MmMessagesWebViewMinimumFontSize = 14
+MmMessagesWebViewWebKitDefaultFixedFontSize = 14
+MmMessagesWebViewWebKitDefaultFontSize = 14
+MmMessagesWebViewWebKitMinimumFontSize = 14
+MmMessagesWebViewWebKitStandardFont = "Helvetica"
+
+MmMessagesOutlineOpenMessageOnDoubleClick = true
+MmMessagesOutlineShowUnreadMessagesInBold = true
 
 [bootstrap.macos.defaults."com.mitchellh.ghostty"]
 SUAutomaticallyUpdate = false
@@ -785,11 +803,15 @@ mise bootstrap packages upgrade --yes
 '''
 
 [tasks."update:dotfiles"]
-description = "Force-apply declared dotfile targets"
+description = "Apply declared dotfile targets without overwriting conflicts"
+# Read config from the repo directory, not through ~/.config/mise: the apply
+# may itself be converting that path. A config dir (not a pinned file) keeps
+# the config.$MISE_ENV.toml host overlay.
 run = '''
 set -eu
 export MISE_ENV="${MISE_ENV:-$(hostname -s)}"
-mise --verbose bootstrap dotfiles apply --force --yes
+export MISE_CONFIG_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}/config/mise"
+mise --verbose bootstrap dotfiles apply --yes
 '''
 
 [tasks."install:fonts"]

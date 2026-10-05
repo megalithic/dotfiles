@@ -25,6 +25,15 @@ local linters = new Mapping<String, Step> {
         // This scanner contains private-key marker regexes as test patterns.
         exclude = List("bin/gatekeeper")
     }
+    // Index-wide: rejects force-added or already-tracked files under
+    // home/.ssh/ outside the four deployable sources (see .gitignore).
+    ["ssh-allowlist"] = new Step {
+        glob = List("home/.ssh/**")
+        check = new CommandSpec {
+            command = "mise/scripts/check-ssh-allowlist"
+            effect = "read"
+        }
+    }
     // Match the old devenv setup and only scan staged changes.
     ["gitleaks"] = (Builtins.gitleaks) {
         scan = "staged"
@@ -69,6 +78,12 @@ hooks {
     }
     ["pre-push"] {
         steps {
+            ["ssh-allowlist"] {
+                check = new CommandSpec {
+                    command = "mise/scripts/check-ssh-allowlist"
+                    effect = "read"
+                }
+            }
             ["gitleaks-history"] {
                 check = new CommandSpec {
                     command = "gitleaks git --redact --no-banner ."
