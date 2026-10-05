@@ -97,6 +97,7 @@ while IFS='|' read -r target source; do link_to "$target" "$source"; done <<'EOF
 .bash_profile|home/.bash_profile
 .iex.exs|home/.iex.exs
 .ignore|home/.ignore
+.zshenv|home/.zshenv
 .claude/settings.json|home/.claude/settings.json
 .ssh/allowed_signers|home/.ssh/allowed_signers
 .ssh/shared.config|home/.ssh/shared.config
@@ -136,7 +137,6 @@ EOF
 [ "$(readlink "$home/.pi/agent/bin/lat")" = "$home/.local/share/mise/shims/lat" ] || fail ".pi/agent/bin/lat link"
 
 while read -r path; do absent "$path"; done <<'EOF'
-.zshenv
 .ssh/config.workbookpro
 .ssh/config.megabookpro
 .ssh/id_probe

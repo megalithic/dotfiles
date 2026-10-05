@@ -130,51 +130,40 @@ up = "cd $HOME/.dotfiles && mise run up"
   "git/disabled/**",
 ] }
 
-# home/: one entry per top-level file or directory rather than a single "~"
-# tree. On the first apply of a symlink-each target without an ownership
-# record, mise walks the whole target for stale links; for "~" that is all of
-# HOME, including ~/Library/CloudStorage (hours through the File Provider).
-# Bounded targets keep the walk to the directory that holds the files.
-"~/.bashrc" = "~/.dotfiles/home/.bashrc"
-"~/.profile" = "~/.dotfiles/home/.profile"
-"~/.bash_profile" = "~/.dotfiles/home/.bash_profile"
-"~/.iex.exs" = "~/.dotfiles/home/.iex.exs"
-# rg/fd global ignore file (not read by git)
-"~/.ignore" = "~/.dotfiles/home/.ignore"
-# Only the four tracked sources deploy (.gitignore allowlist + hk ssh-allowlist);
-# keys, known_hosts and sockets stay unmanaged. The host overlay links
-# ~/.ssh/config to one of the two selectors, which Include ~/.ssh/shared.config.
-"~/.ssh" = { source = "~/.dotfiles/home/.ssh", mode = "symlink-each", manifest = "git", exclude = [
-  "config.workbookpro",
-  "config.megabookpro",
+"~" = { source = "~/.dotfiles/home", mode = "symlink-each", manifest = "git", exclude = [
+  # host selectors: the host overlay links one of them to ~/.ssh/config
+  ".ssh/config.workbookpro",
+  ".ssh/config.megabookpro",
+  # Pi support material that stays beside its config but is not deployed
+  "/.pi/AGENTS.md",
+  ".pi/scripts/**",
+  ".pi/tests/**",
+  ".pi/patches/**",
+  ".pi/disabled/**",
+  # underscore-prefixed Pi resources are disabled
+  ".pi/agent/extensions/_*",
+  ".pi/agent/extensions/_*/**",
+  ".pi/agent/skills/_*",
+  ".pi/agent/skills/_*/**",
+  ".pi/agent/prompts/_*",
+  ".pi/agent/prompts/_*/**",
+  ".pi/agent/agents/_*",
+  ".pi/agent/agents/_*/**",
 ] }
-# Claude: only settings.json is tracked (.gitignore allowlist).
-"~/.claude" = { source = "~/.dotfiles/home/.claude", mode = "symlink-each", manifest = "git" }
-# Pi: runtime state (sessions/, npm/, auth.json, mcp-*.json) stays unmanaged;
-# Pi writes settings through its symlink. Support material beside the config
-# is not deployed; underscore-prefixed resources are disabled.
-"~/.pi" = { source = "~/.dotfiles/home/.pi", mode = "symlink-each", manifest = "git", exclude = [
-  "/AGENTS.md",
-  "scripts/**",
-  "tests/**",
-  "patches/**",
-  "disabled/**",
-  "agent/extensions/_*",
-  "agent/extensions/_*/**",
-  "agent/skills/_*",
-  "agent/skills/_*/**",
-  "agent/prompts/_*",
-  "agent/prompts/_*/**",
-  "agent/agents/_*",
-  "agent/agents/_*/**",
-] }
+# First apply of a symlink-each target without an ownership record walks the
+# whole target for stale links; for "~" that includes ~/Library/CloudStorage
+# (hours through the File Provider). It runs once; later applies are
+# proportional to the source tree. Leave it running; nothing depends on it.
+#
+# Inside the tree: .ssh deploys only its four tracked sources (.gitignore
+# allowlist + hk ssh-allowlist), keys and known_hosts stay unmanaged;
+# .claude deploys only settings.json; Pi runtime state (sessions/, npm/,
+# auth.json, mcp-*.json) stays unmanaged and Pi writes settings through its
+# symlink; Library/Application Support holds espanso and the MailMate key
+# bindings selected by MmCustomKeyBindingsName in [bootstrap.macos.defaults].
 # Lat extension tools launch through this agent-local path; point it at mise's
 # stable shim rather than the removed Devenv profile.
 "~/.pi/agent/bin/lat" = "~/.local/share/mise/shims/lat"
-# App Support configs (not XDG). MailMate holds the custom key bindings
-# selected by MmCustomKeyBindingsName in [bootstrap.macos.defaults].
-"~/Library/Application Support/espanso" = { source = "~/.dotfiles/home/Library/Application Support/espanso", mode = "symlink-each", manifest = "git" }
-"~/Library/Application Support/MailMate" = { source = "~/.dotfiles/home/Library/Application Support/MailMate", mode = "symlink-each", manifest = "git" }
 
 # Notes for paths inside ~/.config:
 # - mise: host overlays config.$MISE_ENV.toml sit beside config.toml (MISE_ENV =
