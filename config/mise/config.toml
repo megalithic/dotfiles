@@ -727,8 +727,9 @@ run = [
   "mise run setup:helium",
 ]
 
-[bootstrap.hooks.post-defaults]
-run = "killall Finder SystemUIServer Dock || true"
+# No post-defaults hook: mise runs it even when no default changed, so a
+# Finder/SystemUIServer/Dock restart there fired on every `mise run up`.
+# mise prints a relaunch hint when a default does change.
 
 # Full machine bootstrap reaches this hook once after tool install. Scoped
 # update tasks call their phases directly and do not run post-tools.
