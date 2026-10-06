@@ -1,0 +1,7 @@
+{
+  "name": "mise-npm-install",
+  "private": true,
+  "dependencies": {
+    "tailwindcss-language-server": "0.0.1"
+  }
+}

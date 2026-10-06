@@ -1,0 +1,5 @@
+[project]
+name = "mise-pypi-tool-environment"
+version = "0.0.0"
+requires-python = ">=3.12"
+dependencies = ["ansible==14.4.0", "ansible-core"]

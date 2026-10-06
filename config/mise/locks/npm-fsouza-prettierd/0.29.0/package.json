@@ -1,0 +1,7 @@
+{
+  "name": "mise-npm-install",
+  "private": true,
+  "dependencies": {
+    "@fsouza/prettierd": "0.29.0"
+  }
+}

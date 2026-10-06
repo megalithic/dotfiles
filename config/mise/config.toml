@@ -134,6 +134,8 @@ up = "cd $HOME/.dotfiles && mise run up"
   # repo docs and parked files, not app config
   "AGENTS.md",
   "git/disabled",
+  # lockfile sidecars: mise resolves them beside the symlinked lockfile's target
+  "mise/locks",
 ] }
 
 "~" = { source = "~/.dotfiles/home", mode = "symlink-each", manifest = "git", exclude = [
