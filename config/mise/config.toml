@@ -26,6 +26,10 @@ task.monorepo_depth = 2
 # mise also hashes this file as a source of every task it defines, so any
 # content edit here reruns all sourced tasks once.
 task.source_freshness_hash_contents = true
+# Never read or write lockfiles by default, so tracked or stray mise.lock files
+# in other repos stay untouched. ~/.dotfiles/mise.toml turns them back on there,
+# which also covers this config's lockfiles; tasks that change tools run there.
+lockfile = false
 github.use_git_credentials = true
 npm.package_manager = "aube"
 cargo.binstall = true
@@ -762,11 +766,13 @@ nerd_fonts = "JetBrainsMono FiraCode Iosevka VictorMono FantasqueSansMono NerdFo
 [tasks.up]
 alias = "dot"
 description = "Update and converge this machine"
+dir = "{{env.DOTFILES_DIR}}"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/update-machine"
 raw = true
 
 [tasks."update:tools"]
 description = "Update mise, plugins, and declared tools"
+dir = "{{env.DOTFILES_DIR}}"
 run = [
   "mise self-update --yes",
   "mise plugins update --yes",
@@ -832,6 +838,7 @@ raw = true
 
 [tasks."update:pi"]
 description = "Update Pi, tools, and extensions"
+dir = "{{env.DOTFILES_DIR}}"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/update-pi"
 
 [tasks."reload:hammerspoon"]

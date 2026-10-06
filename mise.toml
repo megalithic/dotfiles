@@ -1,6 +1,11 @@
 # Project-local dev tooling for the dotfiles repo itself.
 # Separate from the global config at config/mise/config.toml (machine tooling).
 
+[settings]
+# The global config sets lockfile = false; lockfiles apply only inside this
+# repo (mise.lock here and config/mise/mise*.lock for the global tools).
+lockfile = true
+
 [tools]
 # Pinned: tools/oxlint/vendor/oxlint-plugins is vendored at the same version;
 # bump both together (see tools/oxlint/anti-slop/UPSTREAM_REV).
