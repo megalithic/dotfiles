@@ -1264,7 +1264,7 @@ function M:init()
   end)
 
   -- Register pasteboard hook (watcher started via watchers system)
-  M.registerHook()
+  -- M.registerHook()
 
   U.log.i("initialized")
   return self
