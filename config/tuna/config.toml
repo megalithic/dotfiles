@@ -33,6 +33,12 @@ sortOrders = []
         kind = 'none'
 
     [[catalogs.globalScopes]]
+    catalogIdentifier = 'tuna.smart-folders'
+
+        [catalogs.globalScopes.scope]
+        kind = 'none'
+
+    [[catalogs.globalScopes]]
     catalogIdentifier = 'tuna.windows'
 
         [catalogs.globalScopes.scope]
