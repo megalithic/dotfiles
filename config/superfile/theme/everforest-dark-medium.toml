@@ -1,0 +1,76 @@
+##############################################
+#                                            #
+#        Everforest Dark Medium Theme        #
+#                                            #
+##############################################
+
+# This theme was created by: https://github.com/dotintegral ! Thank you <3
+
+# This contains the theme config file for superfile! For more details see:
+# https://superfile.dev/configure/custom-theme/
+
+###############################################################################
+#                           Code Syntax Highlighting                          #
+###############################################################################
+
+# Find one you like at: https://github.com/alecthomas/chroma/blob/master/styles.
+
+code_syntax_highlight = "catppuccin-macchiato"
+
+###############################################################################
+#                                 Base Colors                                 #
+###############################################################################
+
+#-- Full Screen
+full_screen_fg = "#d3c6aa"
+full_screen_bg = "#2d353b"
+
+#-- Gradient
+# Note: This currently only supports two colors.
+gradient_color = ["#a7c080", "#e67e80"]
+
+#-- File Panel
+file_panel_fg = "#d3c6aa"
+file_panel_bg = "#2d353b"
+file_panel_border = "#859289"
+file_panel_border_active = "#fff1c5"
+file_panel_top_directory_icon = "#a7c080"
+file_panel_top_path = "#7fbbb3"
+file_panel_item_selected_fg = "#d699b6"
+file_panel_item_selected_bg = "#232a2e"
+
+#-- Footer
+footer_fg = "#d3c6aa"
+footer_bg = "#2d353b"
+footer_border = "#859289"
+footer_border_active = "#dbbc7f"
+
+#-- Sidebar
+sidebar_fg = "#d3c6aa"
+sidebar_bg = "#2d353b"
+sidebar_title = "#d699b6"
+sidebar_border = "#2d353b"
+sidebar_border_active = "#dbbc7f"
+sidebar_item_selected_fg = "#e69875"
+sidebar_item_selected_bg = "#2d353b"
+sidebar_divider = "#859289"
+
+#-- Modals
+modal_fg = "#d3c6aa"
+modal_bg = "#2d353b"
+modal_border_active = "#859289"
+modal_cancel_fg = "#d3c6aa"
+modal_cancel_bg = "#232a2e"
+modal_confirm_fg = "#d3c6aa"
+modal_confirm_bg = "#e69875"
+
+#-- Help Menu
+help_menu_hotkey = "#a7c080"
+help_menu_title = "#e69875"
+
+#-- Special
+cursor = "#a7c080"
+correct = "#a7c080"
+error = "#e67e80"
+hint = "#7fbbb3"
+cancel = "#859289"

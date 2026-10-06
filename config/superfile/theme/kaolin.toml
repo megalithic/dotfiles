@@ -1,0 +1,76 @@
+##############################################
+#                                            #
+#                Kaolin Theme                #
+#                                            #
+##############################################
+
+# This theme was created by: https://github.com/AnshumanNeon ! Thank you <3
+
+# This contains the theme config file for superfile! For more details see:
+# https://superfile.dev/configure/custom-theme/
+
+###############################################################################
+#                           Code Syntax Highlighting                          #
+###############################################################################
+
+# Find one you like at: https://github.com/alecthomas/chroma/blob/master/styles.
+
+code_syntax_highlight = "catppuccin-macchiato"
+
+###############################################################################
+#                                 Base Colors                                 #
+###############################################################################
+
+#-- Full Screen
+full_screen_fg = "#efefef"
+full_screen_bg = "#17171a"
+
+#-- Gradient
+# Note: This currently only supports two colors.
+gradient_color = ["#74b09a", "#c74a4d"]
+
+#-- File Panel
+file_panel_fg = "#efefef"
+file_panel_bg = "#17171a"
+file_panel_border = "#74b09a"
+file_panel_border_active = "#74b09a"
+file_panel_top_directory_icon = "#f5c791"
+file_panel_top_path = "#d7936d"
+file_panel_item_selected_fg = "#4fa8a3"
+file_panel_item_selected_bg = "#17171a"
+
+#-- Footer
+footer_fg = "#efefef"
+footer_bg = "#17171a"
+footer_border = "#74b09a"
+footer_border_active = "#57b2c2"
+
+#-- Sidebar
+sidebar_fg = "#efefef"
+sidebar_bg = "#17171a"
+sidebar_title = "#f5c791"
+sidebar_border = "#17171a"
+sidebar_border_active = "#57b2c2"
+sidebar_item_selected_fg = "#ba667d"
+sidebar_item_selected_bg = "#17171a"
+sidebar_divider = "#868686"
+
+#-- Modals
+modal_fg = "#efefef"
+modal_bg = "#17171a"
+modal_border_active = "#868686"
+modal_cancel_fg = "#eedcc1"
+modal_cancel_bg = "#c74a4d"
+modal_confirm_fg = "#eedcc1"
+modal_confirm_bg = "#3e594a"
+
+#-- Help Menu
+help_menu_hotkey = "#4fa8a3"
+help_menu_title = "#f5c791"
+
+#-- Special
+cursor = "#f5c791"
+correct = "#74b09a"
+error = "#c74a4d"
+hint = "#4fa8a3"
+cancel = "#d7936d"
