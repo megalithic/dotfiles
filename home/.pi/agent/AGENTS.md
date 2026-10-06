@@ -63,6 +63,7 @@ When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-f
 
 ## General workflow
 
+- For macOS setup, installation, native build, or service validation, load `macos-vm-testing` and use a disposable macOS VM unless the user explicitly authorizes host testing. Keep provisioning approval and report what the VM cannot validate.
 - Always clarify users intention unless request is completely clear
 - If uncertain, say so immediately - don't guess what to implement
 - When debugging, run diagnostic commands and present findings before proposing a fix. Don't jump to solutions.

@@ -1,0 +1,20 @@
+[tool_alias]
+tmux = "http:tmux"
+
+[tools.tmux]
+version = "master"
+os = ["macos"]
+url = "https://github.com/tmux/tmux/archive/{{version}}.tar.gz"
+strip_components = 1
+bin_path = "bin"
+postinstall = '''
+set -eu
+cd "${MISE_TOOL_INSTALL_PATH:?}"
+export PATH="/opt/homebrew/opt/bison/bin:/opt/homebrew/bin:$PATH"
+export PKG_CONFIG_PATH="/opt/homebrew/opt/libevent/lib/pkgconfig:/opt/homebrew/opt/ncurses/lib/pkgconfig:/opt/homebrew/opt/utf8proc/lib/pkgconfig:/opt/homebrew/opt/jemalloc/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+sh autogen.sh
+./configure CC=clang --prefix="$MISE_TOOL_INSTALL_PATH" --enable-utf8proc --enable-jemalloc
+make -j4
+make install
+./bin/tmux -V
+'''
