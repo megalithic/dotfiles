@@ -9,6 +9,9 @@ M._stopped = true
 M._switch_lock = false
 M._desired_profile = nil
 M._switchTask = nil
+M._keyboardTimer = nil
+M._pendingSwitchResult = nil
+M._keyboardScanFailed = false
 
 local KANATA_SWITCH_SCRIPT = [[
 profile=$1
@@ -127,6 +130,21 @@ local function notifyKanataFailure(profile, detail)
   hs.notify.new({ title = "Hammerspoon dock", subTitle = message }):send()
 end
 
+local function resumeKanataSwitch()
+  if M._stopped or M._keyboardTimer or M._switchTask then return end
+  local result = M._pendingSwitchResult
+  if not result then return end
+  M._pendingSwitchResult = nil
+
+  if M._desired_profile ~= result.profile then
+    startKanataSwitch(M._desired_profile, 0)
+  elseif result.exitCode ~= 0 and result.attempt < 1 then
+    startKanataSwitch(result.profile, result.attempt + 1)
+  elseif result.exitCode ~= 0 then
+    notifyKanataFailure(result.profile, result.detail)
+  end
+end
+
 local function reconcileKanata(profile, attempt, exitCode, stdOut, stdErr)
   M._switch_lock = false
   if M._stopped then return end
@@ -141,13 +159,9 @@ local function reconcileKanata(profile, attempt, exitCode, stdOut, stdErr)
     U.log.wf("Kanata switch to %s failed (attempt %d): %s", profile, attempt + 1, trim(stdErr))
   end
 
-  if M._desired_profile ~= profile then
-    startKanataSwitch(M._desired_profile, 0)
-  elseif exitCode ~= 0 and attempt < 1 then
-    startKanataSwitch(profile, attempt + 1)
-  elseif exitCode ~= 0 then
-    notifyKanataFailure(profile, trim(stdErr))
-  end
+  -- Keep the result until USB settles; even a retry could target a stale profile.
+  M._pendingSwitchResult = { profile = profile, attempt = attempt, exitCode = exitCode, detail = trim(stdErr) }
+  resumeKanataSwitch()
 end
 
 startKanataSwitch = function(profile, attempt)
@@ -173,7 +187,7 @@ end
 local function requestKanataProfile(profile)
   if not C.dock.kanata.enabled then return end
   M._desired_profile = profile
-  if not M._switchTask then startKanataSwitch(profile, 0) end
+  if not M._switchTask and not M._pendingSwitchResult and not M._keyboardTimer then startKanataSwitch(profile, 0) end
 end
 
 local function dockChangedState(connected)
@@ -209,21 +223,49 @@ local function isDock(device)
   return device.vendorID == C.dock.target_alt.vendorID and device.productID == C.dock.target_alt.productID
 end
 
-local function usbWatcherCallback(data)
-  if M._stopped then return end
-  if isDock(data) and (data.eventType == "added" or data.eventType == "removed") then
-    dockChangedState(data.eventType == "added")
-  end
-  if data.productID == C.dock.keyboard.productID then keyboardChangedState(data.eventType) end
+local function isKeyboard(device)
+  return device.vendorID == C.dock.keyboard.vendorID and device.productID == C.dock.keyboard.productID
 end
 
 function M.isDocked() return enum.find(hs.usb.attachedDevices() or {}, isDock) ~= nil end
 
 function M.isExternalKeyboardConnected()
-  return enum.find(
-    hs.usb.attachedDevices() or {},
-    function(device) return device.productID == C.dock.keyboard.productID end
-  ) ~= nil
+  local devices = hs.usb.attachedDevices()
+  if not devices then return nil end
+  return enum.find(devices, isKeyboard) ~= nil
+end
+
+local debounceKeyboard
+
+local function sampleKeyboard()
+  local connected = M.isExternalKeyboardConnected()
+  if connected == nil then
+    if not M._keyboardScanFailed then U.log.w("Cannot read USB keyboards; keeping Kanata profile and retrying scan") end
+    M._keyboardScanFailed = true
+    debounceKeyboard()
+    return
+  end
+
+  M._keyboardScanFailed = false
+  keyboardChangedState(connected and "added" or "removed")
+  resumeKanataSwitch()
+end
+
+debounceKeyboard = function()
+  if M._keyboardTimer then M._keyboardTimer:stop() end
+  local timer
+  timer = hs.timer.doAfter(C.dock.keyboard.debounceSeconds or 3, function()
+    if M._stopped or M._keyboardTimer ~= timer then return end
+    M._keyboardTimer = nil
+    sampleKeyboard()
+  end)
+  M._keyboardTimer = timer
+end
+
+local function usbWatcherCallback(data)
+  if M._stopped or (data.eventType ~= "added" and data.eventType ~= "removed") then return end
+  if isDock(data) then dockChangedState(data.eventType == "added") end
+  if isKeyboard(data) then debounceKeyboard() end
 end
 
 function M:start()
@@ -233,13 +275,15 @@ function M:start()
   M.is_keyboard_connected = nil
   M._desired_profile = nil
 
-  M.watcher = hs.usb.watcher.new(usbWatcherCallback)
+  local watcher
+  watcher = hs.usb.watcher.new(function(data)
+    if M.watcher == watcher then usbWatcherCallback(data) end
+  end)
+  M.watcher = watcher
   M.watcher:start()
 
   dockChangedState(M.isDocked())
-
-  local keyboardConnected = M.isExternalKeyboardConnected()
-  keyboardChangedState(keyboardConnected and "added" or "removed", true)
+  sampleKeyboard()
 end
 
 function M:stop()
@@ -251,6 +295,10 @@ function M:stop()
   end
 
   stopTask("_switchTask")
+  if M._keyboardTimer then M._keyboardTimer:stop() end
+  M._keyboardTimer = nil
+  M._pendingSwitchResult = nil
+  M._keyboardScanFailed = false
   M._switch_lock = false
   M._desired_profile = nil
 end

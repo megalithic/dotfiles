@@ -59,7 +59,7 @@ end
 local function configureDock()
   C.dock = {
     target_alt = { vendorID = 100, productID = 200 },
-    keyboard = { productID = 300, productName = "Test Keyboard" },
+    keyboard = { vendorID = 400, productID = 300, productName = "Test Keyboard", debounceSeconds = 3 },
     kanata = {
       enabled = true,
       connected = "external.kbd",
@@ -92,6 +92,11 @@ end
 
 local function emitDock(watcher, eventType)
   watcher:emit({ vendorID = C.dock.target_alt.vendorID, productID = C.dock.target_alt.productID, eventType = eventType })
+end
+
+local function emitKeyboard(mock, watcher, eventType, devices)
+  mock.usbDevices = devices or (eventType == "added" and { C.dock.keyboard } or {})
+  watcher:emit({ vendorID = C.dock.keyboard.vendorID, productID = C.dock.keyboard.productID, eventType = eventType })
 end
 
 --------------------------------------------------------------------------------
@@ -285,7 +290,7 @@ end)
 
 test("dock watcher: keyboard changes reconcile the latest profile under lock", function(mock)
   configureDock()
-  mock.usbDevices = { { productID = C.dock.keyboard.productID } }
+  mock.usbDevices = { C.dock.keyboard }
 
   local dock = require("watchers.dock")
   dock:start()
@@ -296,7 +301,8 @@ test("dock watcher: keyboard changes reconcile the latest profile under lock", f
   check(switches[1].args[4] == "/tmp/kanata/external.kbd", "connected profile requested")
   check(dock._switch_lock == true, "switch lock held while task runs")
 
-  watcher:emit({ productID = C.dock.keyboard.productID, eventType = "removed" })
+  emitKeyboard(mock, watcher, "removed")
+  mock.advance(C.dock.keyboard.debounceSeconds)
   check(#tasksNamed(mock, "hammerspoon-kanata") == 1, "keyboard change does not overlap active switch")
 
   switches[1]:complete(0, "switched\n", "")
@@ -304,7 +310,8 @@ test("dock watcher: keyboard changes reconcile the latest profile under lock", f
   check(#switches == 2, "latest queued profile starts after active switch")
   check(switches[2].args[4] == "/tmp/kanata/internal.kbd", "disconnected profile wins")
 
-  watcher:emit({ productID = C.dock.keyboard.productID, eventType = "added" })
+  emitKeyboard(mock, watcher, "added")
+  mock.advance(C.dock.keyboard.debounceSeconds)
   switches[2]:complete(1, "", "restart failed")
   switches = tasksNamed(mock, "hammerspoon-kanata")
   check(#switches == 3, "changed target starts fresh instead of retrying stale target")
@@ -329,7 +336,8 @@ test("dock watcher: dock and keyboard actions stay independent", function(mock)
   emitDock(watcher, "removed")
   check(#tasksNamed(mock, "hammerspoon-kanata") == 1, "undocking does not change Kanata")
   check(mock.wifiDetails.power == true, "undocking still turns Wi-Fi on")
-  watcher:emit({ productID = C.dock.keyboard.productID, eventType = "removed" })
+  emitKeyboard(mock, watcher, "removed")
+  mock.advance(C.dock.keyboard.debounceSeconds)
   switches = tasksNamed(mock, "hammerspoon-kanata")
   check(
     #switches == 2 and switches[2].args[4] == "/tmp/kanata/internal.kbd",
@@ -341,7 +349,7 @@ end)
 
 test("dock watcher: Kanata failure retries once and notifies", function(mock)
   configureDock()
-  mock.usbDevices = { { productID = C.dock.keyboard.productID } }
+  mock.usbDevices = { C.dock.keyboard }
 
   local dock = require("watchers.dock")
   dock:start()
@@ -362,7 +370,7 @@ end)
 
 test("dock watcher: stop terminates Kanata tasks", function(mock)
   configureDock()
-  mock.usbDevices = { { productID = C.dock.keyboard.productID } }
+  mock.usbDevices = { C.dock.keyboard }
 
   local dock = require("watchers.dock")
   dock:start()
@@ -375,6 +383,253 @@ test("dock watcher: stop terminates Kanata tasks", function(mock)
   local count = #mock.tasks
   switchTask:complete(0, "switched\n", "")
   check(#mock.tasks == count, "stale callbacks do not start new tasks")
+end)
+
+test("dock watcher: reported USB chatter causes no profile restarts", function(mock)
+  configureDock()
+  mock.usbDevices = { C.dock.keyboard }
+  local dock = require("watchers.dock")
+  dock:start()
+  local watcher = mock.usbWatchers[#mock.usbWatchers]
+  tasksNamed(mock, "hammerspoon-kanata")[1]:complete(0, "switched\n", "")
+
+  -- Seconds from 15:36:54 in the reported sequence; initially connected.
+  local events = {
+    { 0, "removed" },
+    { 2, "added" },
+    { 6, "removed" },
+    { 8, "added" },
+    { 8, "removed" },
+    { 10, "added" },
+    { 19, "removed" },
+    { 21, "added" },
+  }
+  for _, event in ipairs(events) do
+    mock.advance(event[1] - mock.now)
+    emitKeyboard(mock, watcher, event[2])
+    check(mock.pendingTimers() == 1, "chatter keeps only one pending timer")
+    check(dock.is_keyboard_connected == true, "raw chatter does not change settled state")
+  end
+  mock.advance(10)
+  check(#tasksNamed(mock, "hammerspoon-kanata") == 1, "reported chatter never restarts Kanata")
+  check(mock.pendingTimers() == 0, "no background polling after successful scan")
+  check(not table.concat(mock.logs, "\n"):find("External keyboard disconnected", 1, true), "no false disconnect log")
+  dock:stop()
+end)
+
+test("dock watcher: every matching event restarts the quiet period", function(mock)
+  configureDock()
+  mock.usbDevices = { C.dock.keyboard }
+  local dock = require("watchers.dock")
+  dock:start()
+  local watcher = mock.usbWatchers[#mock.usbWatchers]
+  tasksNamed(mock, "hammerspoon-kanata")[1]:complete(0, "already\n", "")
+
+  emitKeyboard(mock, watcher, "removed")
+  local oldTimer = dock._keyboardTimer
+  mock.advance(2)
+  emitKeyboard(mock, watcher, "removed")
+  oldTimer.fn() -- A canceled callback must not clear or bypass the new timer.
+  mock.advance(2)
+  check(#mock.tasks == 1 and dock.is_keyboard_connected, "duplicate event extends the quiet period")
+  mock.advance(1)
+  check(#mock.tasks == 2 and not dock.is_keyboard_connected, "stable removal switches once after quiet period")
+  check(mock.tasks[2].args[4] == "/tmp/kanata/internal.kbd", "stable removal selects internal profile")
+  dock:stop()
+end)
+
+test("dock watcher: keyboard identity and actual presence decide the profile", function(mock)
+  configureDock()
+  mock.usbDevices = { { vendorID = 999, productID = C.dock.keyboard.productID } }
+  local dock = require("watchers.dock")
+  dock:start()
+  local watcher = mock.usbWatchers[#mock.usbWatchers]
+  check(dock.is_keyboard_connected == false, "same product ID from another vendor is not the keyboard")
+  mock.tasks[1]:complete(0, "already\n", "")
+  watcher:emit({ vendorID = 999, productID = C.dock.keyboard.productID, eventType = "added" })
+  watcher:emit({ vendorID = C.dock.keyboard.vendorID, productID = 999, eventType = "added" })
+  watcher:emit({ vendorID = C.dock.keyboard.vendorID, productID = C.dock.keyboard.productID, eventType = "unknown" })
+  check(mock.pendingTimers() == 0, "partial matches and unknown events do not schedule work")
+
+  emitKeyboard(mock, watcher, "removed", { C.dock.keyboard, C.dock.keyboard })
+  mock.advance(3)
+  check(dock.is_keyboard_connected == true and #mock.tasks == 2, "snapshot wins over removed event")
+  mock.tasks[2]:complete(0, "switched\n", "")
+  emitKeyboard(mock, watcher, "removed", { C.dock.keyboard })
+  mock.advance(3)
+  check(#mock.tasks == 2 and dock.is_keyboard_connected, "one remaining matching keyboard prevents disconnect")
+  emitKeyboard(mock, watcher, "added", {})
+  mock.advance(3)
+  check(#mock.tasks == 3 and not dock.is_keyboard_connected, "empty snapshot wins over added event")
+  dock:stop()
+end)
+
+test("dock watcher: custom debounce delay applies to a stable attachment", function(mock)
+  configureDock()
+  C.dock.keyboard.debounceSeconds = 5
+  local dock = require("watchers.dock")
+  dock:start()
+  local watcher = mock.usbWatchers[#mock.usbWatchers]
+  mock.tasks[1]:complete(0, "already\n", "")
+  emitKeyboard(mock, watcher, "added")
+  mock.advance(3)
+  check(#mock.tasks == 1, "configured delay replaces the default")
+  mock.advance(2)
+  check(#mock.tasks == 2 and dock.is_keyboard_connected, "stable attachment applies after configured delay")
+  dock:stop()
+end)
+
+test("dock watcher: completion during debounce does not launch an outdated queued profile", function(mock)
+  configureDock()
+  mock.usbDevices = { C.dock.keyboard }
+  local dock = require("watchers.dock")
+  dock:start()
+  local watcher = mock.usbWatchers[#mock.usbWatchers]
+  emitKeyboard(mock, watcher, "removed")
+  mock.advance(3)
+  check(dock._desired_profile == "internal.kbd", "settled removal queues internal behind active external")
+  emitKeyboard(mock, watcher, "added")
+  mock.tasks[1]:complete(0, "switched\n", "")
+  check(#mock.tasks == 1, "completion waits for the new quiet period")
+  mock.advance(3)
+  check(#mock.tasks == 1 and dock._desired_profile == "external.kbd", "return to completed profile needs no restart")
+  check(dock._pendingSwitchResult == nil, "completed result is consumed once")
+  dock:stop()
+end)
+
+test("dock watcher: completion during debounce applies a genuinely changed profile", function(mock)
+  configureDock()
+  mock.usbDevices = { C.dock.keyboard }
+  local dock = require("watchers.dock")
+  dock:start()
+  local watcher = mock.usbWatchers[#mock.usbWatchers]
+  emitKeyboard(mock, watcher, "removed")
+  mock.tasks[1]:complete(0, "switched\n", "")
+  check(#mock.tasks == 1, "successful completion does not bypass debounce")
+  mock.advance(3)
+  check(#mock.tasks == 2 and mock.tasks[2].args[4] == "/tmp/kanata/internal.kbd", "settled change starts once")
+  dock:stop()
+end)
+
+test("dock watcher: failures during chatter retain one retry and its error", function(mock)
+  configureDock()
+  mock.usbDevices = { C.dock.keyboard }
+  local dock = require("watchers.dock")
+  dock:start()
+  local watcher = mock.usbWatchers[#mock.usbWatchers]
+  emitKeyboard(mock, watcher, "removed")
+  mock.tasks[1]:complete(1, "", "first failure")
+  check(#mock.tasks == 1, "failure does not retry during chatter")
+  emitKeyboard(mock, watcher, "added")
+  mock.advance(3)
+  check(#mock.tasks == 2, "unchanged settled state still resumes the deferred retry")
+
+  emitKeyboard(mock, watcher, "added")
+  mock.tasks[2]:complete(1, "", "second failure")
+  check(#mock.notifications == 0, "final failure waits until target is settled")
+  mock.advance(3)
+  check(#mock.tasks == 2 and #mock.notifications == 1, "second failure notifies without a third attempt")
+  check(
+    table.concat(mock.logs, "\n"):find("after one retry: second failure", 1, true) ~= nil,
+    "failure detail survives debounce"
+  )
+  emitKeyboard(mock, watcher, "added")
+  mock.advance(3)
+  check(#mock.tasks == 2 and #mock.notifications == 1, "duplicates neither reset retry budget nor repeat notification")
+  dock:stop()
+end)
+
+test("dock watcher: a changed target supersedes a deferred failed switch", function(mock)
+  configureDock()
+  mock.usbDevices = { C.dock.keyboard }
+  local dock = require("watchers.dock")
+  dock:start()
+  local watcher = mock.usbWatchers[#mock.usbWatchers]
+  emitKeyboard(mock, watcher, "removed")
+  mock.tasks[1]:complete(1, "", "old target failed")
+  mock.advance(3)
+  check(#mock.tasks == 2 and mock.tasks[2].args[4] == "/tmp/kanata/internal.kbd", "new target replaces stale retry")
+  mock.tasks[2]:complete(1, "", "new target failed")
+  check(#mock.tasks == 3 and #mock.notifications == 0, "new target has its own one-retry budget")
+  mock.tasks[3]:complete(1, "", "retry failed")
+  check(#mock.tasks == 3 and #mock.notifications == 1, "new target still has a bounded retry")
+  dock:stop()
+end)
+
+test("dock watcher: failed USB scans keep the profile and recover without another event", function(mock)
+  configureDock()
+  mock.usbDevices = { C.dock.keyboard }
+  local dock = require("watchers.dock")
+  dock:start()
+  local watcher = mock.usbWatchers[#mock.usbWatchers]
+  emitKeyboard(mock, watcher, "removed")
+  mock.tasks[1]:complete(1, "", "restart failed")
+  mock.usbDevices = nil
+  mock.advance(3)
+  check(
+    dock.is_keyboard_connected == true and #mock.tasks == 1,
+    "unknown USB state neither disconnects nor retries Kanata"
+  )
+  local logCount = #mock.logs
+  mock.advance(30)
+  check(#mock.logs == logCount and mock.pendingTimers() == 1, "failed scans keep one timer without repeated warnings")
+  mock.usbDevices = {}
+  mock.advance(3)
+  check(
+    #mock.tasks == 2 and not dock.is_keyboard_connected,
+    "scan recovery applies actual state without a new USB event"
+  )
+  check(mock.tasks[2].args[4] == "/tmp/kanata/internal.kbd", "recovery supersedes the old failed target")
+  check(mock.pendingTimers() == 0, "scan polling ends after recovery")
+  dock:stop()
+end)
+
+test("dock watcher: unknown startup USB state does not select a profile", function(mock)
+  configureDock()
+  mock.usbDevices = nil
+  local dock = require("watchers.dock")
+  dock:start()
+  check(dock.is_keyboard_connected == nil and #mock.tasks == 0, "startup scan failure is not a disconnect")
+  check(mock.pendingTimers() == 1, "startup failure schedules a rescan")
+  mock.usbDevices = { C.dock.keyboard }
+  mock.advance(3)
+  check(#mock.tasks == 1 and dock.is_keyboard_connected, "startup recovers when enumeration succeeds")
+  dock:stop()
+end)
+
+test("dock watcher: stop and restart reject old timers, watchers and task results", function(mock)
+  configureDock()
+  mock.usbDevices = { C.dock.keyboard }
+  local dock = require("watchers.dock")
+  dock:start()
+  local oldWatcher = mock.usbWatchers[#mock.usbWatchers]
+  local oldTask = mock.tasks[1]
+  emitKeyboard(mock, oldWatcher, "removed")
+  local oldTimer = dock._keyboardTimer
+  oldTask:complete(1, "", "deferred failure")
+  dock:stop()
+  oldTimer.fn()
+  check(mock.pendingTimers() == 0 and #mock.tasks == 1, "stop cancels pending timer and deferred retry")
+
+  dock:start()
+  check(#mock.tasks == 2 and not dock.is_keyboard_connected, "restart samples present state immediately")
+  local watcher = mock.usbWatchers[#mock.usbWatchers]
+  emitKeyboard(mock, watcher, "added")
+  local newTimer = dock._keyboardTimer
+  local reads = mock.wifiReads
+  oldWatcher.callback({ vendorID = 100, productID = 200, eventType = "added" })
+  oldWatcher.callback({ vendorID = 400, productID = 300, eventType = "removed" })
+  oldTimer.fn()
+  oldTask:complete(1, "", "late old failure")
+  check(
+    dock._keyboardTimer == newTimer and mock.pendingTimers() == 1,
+    "old callbacks cannot replace or clear new timer"
+  )
+  check(mock.wifiReads == reads and #mock.tasks == 2, "old lifecycle cannot affect Wi-Fi or Kanata")
+  mock.advance(3)
+  mock.tasks[2]:complete(0, "switched\n", "")
+  check(#mock.tasks == 3 and mock.tasks[3].args[4] == "/tmp/kanata/external.kbd", "new lifecycle reconciles normally")
+  dock:stop()
 end)
 
 test("app watcher: watch, terminate cleanup, relaunch re-watch", function(mock)

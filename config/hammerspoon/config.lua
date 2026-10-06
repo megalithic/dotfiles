@@ -407,6 +407,7 @@ M.dock = {
     productName = "Leeloo",
     vendorID = 7504,
     vendorName = "ZMK Project",
+    debounceSeconds = 3, -- Wait for USB chatter to stop before changing the Kanata profile.
   },
   kanata = {
     enabled = true,
