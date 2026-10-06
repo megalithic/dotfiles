@@ -195,7 +195,10 @@
       {
         "name": "codex-pool",
         "baseProvider": "my-codex",
-        "members": ["openai-codex", "my-codex"],
+        "members": [
+          "openai-codex",
+          "my-codex"
+        ],
         "enabled": true
       }
     ],
@@ -312,5 +315,5 @@
     "debugLog": false
   },
   "theme": "dark",
-  "lastChangelogVersion": "0.87.1"
+  "lastChangelogVersion": "1.0.3"
 }
