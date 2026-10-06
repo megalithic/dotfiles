@@ -196,8 +196,13 @@ local function parseUtc(text)
   local y, mo, d, h, mi, s = tostring(text):match("^(%d%d%d%d)%-(%d%d)%-(%d%d)T(%d%d):(%d%d):(%d%d)%.%d%d%dZ$")
   if not y then return nil end
   return os.time({
-    year = tonumber(y), month = tonumber(mo), day = tonumber(d),
-    hour = tonumber(h), min = tonumber(mi), sec = tonumber(s), isdst = false,
+    year = tonumber(y),
+    month = tonumber(mo),
+    day = tonumber(d),
+    hour = tonumber(h),
+    min = tonumber(mi),
+    sec = tonumber(s),
+    isdst = false,
   })
 end
 
@@ -262,9 +267,7 @@ local function connectionForOrigin(origin)
 end
 
 local function currentConnection(connection)
-  if connection.source == "browser" then
-    return (connectionForOrigin(connection.manifest.tidewaveEndpoint.origin))
-  end
+  if connection.source == "browser" then return (connectionForOrigin(connection.manifest.tidewaveEndpoint.origin)) end
   return focusedConnection()
 end
 
@@ -583,7 +586,9 @@ local function passthrough()
     M._passthrough = false
     return
   end
-  pcall(function() hs.timer.doAfter(0.5, function() M._passthrough = false end) end)
+  pcall(function()
+    hs.timer.doAfter(0.5, function() M._passthrough = false end)
+  end)
 end
 
 -- Browser-initiated handshake: the focused Helium app tab picks the Pi whose
@@ -621,7 +626,8 @@ local function browserConnection()
   local target = focused[1]
   local connection, count = connectionForOrigin(target.origin)
   if not connection then
-    return nil, string.format("%d Pi sessions are connected to %s; press Cmd+Shift+C in the Pi you want.", count, target.origin)
+    return nil,
+      string.format("%d Pi sessions are connected to %s; press Cmd+Shift+C in the Pi you want.", count, target.origin)
   end
   return connection, nil, target
 end
@@ -636,7 +642,11 @@ function M.handshake(expected)
       local reason
       connection, reason, target = browserConnection()
       if not connection then
-        if reason then notify(reason, true) else passthrough() end
+        if reason then
+          notify(reason, true)
+        else
+          passthrough()
+        end
         return
       end
     else
@@ -672,7 +682,7 @@ function M.handshake(expected)
     end
     local binding = writeBinding(facts, manifest, target.id)
     if not binding then notify("Optional IDE Chat binding failed; clipboard relay still targets this Pi.", true) end
-    notify("Tidewave Inspect ready on " .. facts.appUrl)
+    -- notify("Tidewave Inspect ready on " .. facts.appUrl)
     armPromptRelay(binding or manifest)
   end)
   if not ok then notify("handshake crashed (guarded): " .. tostring(err), true) end
