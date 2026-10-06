@@ -1448,91 +1448,91 @@ url = "https://nodejs.org/dist/v26.10.0/node-v26.10.0-darwin-arm64.tar.gz"
 
 [[tools."npm:@earendil-works/pi-coding-agent"]]
 version = "1.0.4"
-aube = { path = "locks/npm-earendil-works-pi-coding-agent/1.0.4", digest = "sha256:967892669af2a4ffe3260da716fb625a5a0282a5bae7250b6adebcce059c6958" }
+aube = { path = ".mise/locks/npm-earendil-works-pi-coding-agent/1.0.4", digest = "sha256:967892669af2a4ffe3260da716fb625a5a0282a5bae7250b6adebcce059c6958" }
 backend = "npm:@earendil-works/pi-coding-agent"
 specifiers = ["latest"]
 
 [[tools."npm:@fsouza/prettierd"]]
 version = "0.29.0"
-aube = { path = "locks/npm-fsouza-prettierd/0.29.0", digest = "sha256:cb00f244aa4ee9433b7f99013a728b2dda657042b83dfb6d83a19f39b6d14217" }
+aube = { path = ".mise/locks/npm-fsouza-prettierd/0.29.0", digest = "sha256:cb00f244aa4ee9433b7f99013a728b2dda657042b83dfb6d83a19f39b6d14217" }
 backend = "npm:@fsouza/prettierd"
 specifiers = ["latest"]
 
 [[tools."npm:basedpyright"]]
 version = "1.40.2"
-aube = { path = "locks/npm-basedpyright/1.40.2", digest = "sha256:8116b433fddb365461054ea4757a09368720191eef85831af468fbe1300ab870" }
+aube = { path = ".mise/locks/npm-basedpyright/1.40.2", digest = "sha256:8116b433fddb365461054ea4757a09368720191eef85831af468fbe1300ab870" }
 backend = "npm:basedpyright"
 specifiers = ["latest"]
 
 [[tools."npm:bash-language-server"]]
 version = "5.8.1"
-aube = { path = "locks/npm-bash-language-server/5.8.1", digest = "sha256:8884e71e19a3bb70df45b356a06194f6c0cf3e99f83f1332f8ca26a62eacb6ef" }
+aube = { path = ".mise/locks/npm-bash-language-server/5.8.1", digest = "sha256:8884e71e19a3bb70df45b356a06194f6c0cf3e99f83f1332f8ca26a62eacb6ef" }
 backend = "npm:bash-language-server"
 specifiers = ["latest"]
 
 [[tools."npm:chrome-devtools-mcp"]]
 version = "1.10.1"
-aube = { path = "locks/npm-chrome-devtools-mcp/1.10.1", digest = "sha256:d0ad9551fb0928d247af33705d0cf1ea01382aa6691da825a4480ae9505dcf70" }
+aube = { path = ".mise/locks/npm-chrome-devtools-mcp/1.10.1", digest = "sha256:d0ad9551fb0928d247af33705d0cf1ea01382aa6691da825a4480ae9505dcf70" }
 backend = "npm:chrome-devtools-mcp"
 specifiers = ["latest"]
 
 [[tools."npm:hunkdiff"]]
 version = "0.23.0"
-aube = { path = "locks/npm-hunkdiff/0.23.0", digest = "sha256:6075971cde92d2580f9635f4b3e6d8488a9f163e3b0458b69aa78667cb3346bd" }
+aube = { path = ".mise/locks/npm-hunkdiff/0.23.0", digest = "sha256:6075971cde92d2580f9635f4b3e6d8488a9f163e3b0458b69aa78667cb3346bd" }
 backend = "npm:hunkdiff"
 specifiers = ["latest"]
 
 [[tools."npm:lat.md"]]
 version = "0.12.2"
-aube = { path = "locks/npm-lat-md/0.12.2", digest = "sha256:10cfed4ae5e9e0cc0d2f91e92b8a05127e8be0805d998a88b2c437205fa951c0" }
+aube = { path = ".mise/locks/npm-lat-md/0.12.2", digest = "sha256:10cfed4ae5e9e0cc0d2f91e92b8a05127e8be0805d998a88b2c437205fa951c0" }
 backend = "npm:lat.md"
 specifiers = ["latest"]
 
 [[tools."npm:pyright"]]
 version = "1.1.414"
-aube = { path = "locks/npm-pyright/1.1.414", digest = "sha256:69cd62e5613c907964fbb78b05a85eb9d12a503285d716f6529144cc884cf656" }
+aube = { path = ".mise/locks/npm-pyright/1.1.414", digest = "sha256:69cd62e5613c907964fbb78b05a85eb9d12a503285d716f6529144cc884cf656" }
 backend = "npm:pyright"
 specifiers = ["latest"]
 
 [[tools."npm:tailwindcss-language-server"]]
 version = "0.0.1"
-aube = { path = "locks/npm-tailwindcss-language-server/0.0.1", digest = "sha256:ecb945a9e4f7271822a04b4680c6d8750992ecebdab0d7a981c5d0a61833b41b" }
+aube = { path = ".mise/locks/npm-tailwindcss-language-server/0.0.1", digest = "sha256:ecb945a9e4f7271822a04b4680c6d8750992ecebdab0d7a981c5d0a61833b41b" }
 backend = "npm:tailwindcss-language-server"
 specifiers = ["latest"]
 
 [[tools."npm:trash-cli"]]
 version = "7.2.0"
-aube = { path = "locks/npm-trash-cli/7.2.0", digest = "sha256:767e1fabcf91ec38c4710d9320efa24641644ce31d432340be6675238d65834b" }
+aube = { path = ".mise/locks/npm-trash-cli/7.2.0", digest = "sha256:767e1fabcf91ec38c4710d9320efa24641644ce31d432340be6675238d65834b" }
 backend = "npm:trash-cli"
 specifiers = ["latest"]
 
 [[tools."npm:typescript"]]
 version = "7.0.2"
-aube = { path = "locks/npm-typescript/7.0.2", digest = "sha256:3d06b3b23564c68cdad7815c356edb1506fab1c42bfb8c54234134fd9650ec17" }
+aube = { path = ".mise/locks/npm-typescript/7.0.2", digest = "sha256:3d06b3b23564c68cdad7815c356edb1506fab1c42bfb8c54234134fd9650ec17" }
 backend = "npm:typescript"
 specifiers = ["latest"]
 
 [[tools."npm:typescript-language-server"]]
 version = "6.0.1"
-aube = { path = "locks/npm-typescript-language-server/6.0.1", digest = "sha256:cd5db34273d07076d582ba959987cbd36e89c20d479a4671433aca4f6bdc3c7e" }
+aube = { path = ".mise/locks/npm-typescript-language-server/6.0.1", digest = "sha256:cd5db34273d07076d582ba959987cbd36e89c20d479a4671433aca4f6bdc3c7e" }
 backend = "npm:typescript-language-server"
 specifiers = ["latest"]
 
 [[tools."npm:varlock"]]
 version = "1.21.1"
-aube = { path = "locks/npm-varlock/1.21.1", digest = "sha256:0140bf2ca101b6ede45d7ff590e6b6d19080467b375e9adbdae715c590b7d777" }
+aube = { path = ".mise/locks/npm-varlock/1.21.1", digest = "sha256:0140bf2ca101b6ede45d7ff590e6b6d19080467b375e9adbdae715c590b7d777" }
 backend = "npm:varlock"
 specifiers = ["latest"]
 
 [[tools."npm:vscode-langservers-extracted"]]
 version = "4.10.0"
-aube = { path = "locks/npm-vscode-langservers-extracted/4.10.0", digest = "sha256:8c37c53ce46961037a4464ce307c15cfe5bd44479ea3b082d3412c0a27b760da" }
+aube = { path = ".mise/locks/npm-vscode-langservers-extracted/4.10.0", digest = "sha256:8c37c53ce46961037a4464ce307c15cfe5bd44479ea3b082d3412c0a27b760da" }
 backend = "npm:vscode-langservers-extracted"
 specifiers = ["latest"]
 
 [[tools."npm:yaml-language-server"]]
 version = "1.24.0"
-aube = { path = "locks/npm-yaml-language-server/1.24.0", digest = "sha256:31712c1e1e84bba5931a8620976b61fe375f362eee123b94e3393936afc8f7c3" }
+aube = { path = ".mise/locks/npm-yaml-language-server/1.24.0", digest = "sha256:31712c1e1e84bba5931a8620976b61fe375f362eee123b94e3393936afc8f7c3" }
 backend = "npm:yaml-language-server"
 specifiers = ["latest"]
 
@@ -1560,19 +1560,19 @@ url_api = "https://api.github.com/repos/pypa/pipx/releases/assets/608756700"
 version = "2.1.1"
 backend = "pipx:huggingface-hub"
 specifiers = ["latest"]
-uv = { path = "locks/pipx-huggingface-hub/2.1.1", digest = "sha256:28bf30b26336a4a7dcbdd6320c4e3e025bbac49b48563f56b4c3e86a823534a6" }
+uv = { path = ".mise/locks/pipx-huggingface-hub/2.1.1", digest = "sha256:28bf30b26336a4a7dcbdd6320c4e3e025bbac49b48563f56b4c3e86a823534a6" }
 
 [[tools."pipx:s3cmd"]]
 version = "2.4.0"
 backend = "pipx:s3cmd"
 specifiers = ["latest"]
-uv = { path = "locks/pipx-s3cmd/2.4.0", digest = "sha256:a84702eb55007607366e62981d7553be5ef147d51544f172d80581302879091b" }
+uv = { path = ".mise/locks/pipx-s3cmd/2.4.0", digest = "sha256:a84702eb55007607366e62981d7553be5ef147d51544f172d80581302879091b" }
 
 [[tools."pipx:yubikey-manager"]]
 version = "5.9.2"
 backend = "pipx:yubikey-manager"
 specifiers = ["latest"]
-uv = { path = "locks/pipx-yubikey-manager/5.9.2", digest = "sha256:fe89ce4b952957ce25b7d777d44e6ddb306d2e42ae24c012ef2e651f792b05df" }
+uv = { path = ".mise/locks/pipx-yubikey-manager/5.9.2", digest = "sha256:fe89ce4b952957ce25b7d777d44e6ddb306d2e42ae24c012ef2e651f792b05df" }
 
 [[tools.pitchfork]]
 version = "2.29.0"
@@ -1598,7 +1598,7 @@ provenance = "github-attestations"
 
 [[tools.prettier]]
 version = "3.9.9"
-aube = { path = "locks/prettier/3.9.9", digest = "sha256:815f6667505e41ac2d03ecbac86b79f1beb78d45783879428193c9adc80760a3" }
+aube = { path = ".mise/locks/prettier/3.9.9", digest = "sha256:815f6667505e41ac2d03ecbac86b79f1beb78d45783879428193c9adc80760a3" }
 backend = "npm:prettier"
 specifiers = ["latest"]
 

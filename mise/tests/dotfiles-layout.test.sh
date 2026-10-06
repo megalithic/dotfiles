@@ -160,7 +160,7 @@ while read -r path; do absent "$path"; done <<'EOF'
 .config/llama-cpp
 .config/fish/fish_variables
 .config/mise/conf.d
-.config/mise/locks
+.config/mise/.mise
 .local/bin/hs-reload
 .local/bin/tests
 EOF
