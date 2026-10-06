@@ -342,6 +342,21 @@ const currentMachineName = (): string | undefined => {
 	return name || undefined;
 };
 
+const sessionTarget = (machine: string, sessionId: string): string =>
+	`pi:${machine}:${encodeURIComponent(sessionId)}`;
+
+const parseSessionTarget = (target: string): { machine: string; sessionId: string } | undefined => {
+	const match = target.trim().match(/^pi:([a-zA-Z0-9][a-zA-Z0-9._@-]*):([^\s:]+)$/);
+
+	if (!match) return undefined;
+
+	try {
+		return { machine: match[1], sessionId: decodeURIComponent(match[2]) };
+	} catch {
+		return undefined;
+	}
+};
+
 const looksLikeMachineTarget = (token: string | undefined): boolean => {
 	if (!token) return false;
 	const normalized = token.toLowerCase();
@@ -1161,6 +1176,25 @@ const selectCandidate = async (
 ): Promise<SelectionResult> => {
 	const candidates = inventory || (await discoverCandidates());
 
+	if (target && /^pi:/i.test(target.trim())) {
+		const identity = parseSessionTarget(target);
+
+		const matches = identity ? candidates.filter((candidate) =>
+			candidate.sessionId === identity.sessionId && sameMachine(candidate.machine, identity.machine)) : [];
+
+		if (matches.length === 1 && matches[0].reachable) {
+			return { ok: true, candidate: matches[0] };
+		}
+
+		return {
+			ok: false,
+			error: !identity ? "Invalid Pi session target. Copy the full ID from /tell id."
+				: matches.length > 1 ? "Pi session is open in multiple instances. Use an exact socket or candidate ID."
+					: `Pi session ${target.trim()} is unavailable. No message sent.`,
+			candidates,
+		};
+	}
+
 	const nonCurrentReachable = candidates.filter(
 		(candidate) => candidate.reachable && !candidate.current,
 	).sort(compareCandidates);
@@ -1686,6 +1720,9 @@ const isLocalMachine = (machine: string | undefined): boolean => {
 	);
 };
 
+const sameMachine = (left: string | undefined, right: string): boolean =>
+	left !== undefined && (left.toLowerCase() === right.toLowerCase() || (isLocalMachine(left) && isLocalMachine(right)));
+
 const originInfo = async (
 	ctx: ExtensionContext,
 	includeMachineReply: boolean,
@@ -1802,6 +1839,16 @@ const routeFromTargetHint = (
 	const trimmedTarget = targetText?.trim();
 
 	if (!trimmedTarget) return normalizeRoute({ machine, message, mode });
+
+	const identity = parseSessionTarget(trimmedTarget);
+
+	if (identity) {
+		if (machine && !sameMachine(machine, identity.machine)) {
+			throw new Error(`Machine ${machine} conflicts with the /tell id machine ${identity.machine}. Pass the ID as target without a machine override.`);
+		}
+
+		return normalizeRoute({ machine: identity.machine, target: trimmedTarget, message, mode });
+	}
 
 	const stableMachine = trimmedTarget.match(/^([^:\s]+):/);
 
@@ -2071,7 +2118,7 @@ const splitCommandArgs = (args: string): Partial<TellRoute> => {
 
 	if (!tokens.length) return { mode };
 
-	if (looksLikeMachineTarget(tokens[0]) && tokens[1]) {
+	if (!/^pi:/i.test(tokens[0]) && looksLikeMachineTarget(tokens[0]) && tokens[1]) {
 		return {
 			machine: tokens[0],
 			target: tokens[1],
@@ -2098,7 +2145,12 @@ const listSessions = async (
 const formatSessionList = (candidates: Candidate[]): string => {
 	if (!candidates.length) return "No Pi sessions found.";
 
-	return candidates.map((candidate) => `- ${candidate.label}`).join("\n");
+	return candidates.map((candidate) => {
+		const target = candidate.sessionId && candidate.machine
+			? ` target=${sessionTarget(candidate.machine, candidate.sessionId)}` : "";
+
+		return `- ${candidate.label}${target}`;
+	}).join("\n");
 };
 
 const controlLastMessage = (
@@ -2144,6 +2196,7 @@ export const _test = {
 	REMOTE_INVENTORY_SCRIPT,
 	REMOTE_TELL_NODE,
 	buildCandidate,
+	sessionTarget,
 	compareCandidates,
 	pickerItem,
 	pickCandidate,
@@ -2183,8 +2236,15 @@ export default function (pi: ExtensionAPI): void {
 
 	// @lat: [[pi-coding-agent#Session and routing extensions]]
 	pi.registerCommand("tell", {
-		description: "Send async guidance to another running Pi instance",
+		description: "Send async guidance to another Pi; /tell id shows this session's target ID",
 		handler: async (args, ctx) => {
+			if (args.trim() === "id") {
+				const target = sessionTarget(currentMachineName() || "localhost", ctx.sessionManager.getSessionId());
+				ctx.ui.notify(`${target}\nUse this as tell_pi's target, or /tell ${target} <message>.`, "info");
+
+				return;
+			}
+
 			const parsed = splitCommandArgs(args);
 			const machine = parsed.machine;
 			const mode = parsed.mode;
@@ -2233,12 +2293,8 @@ export default function (pi: ExtensionAPI): void {
 				}
 			}
 
-			const result = await sendTell(ctx, {
-				machine,
-				target,
-				message,
-				mode,
-			}, selectedSocket);
+			const result = await sendTell(ctx,
+				routeFromTargetHint(target, message, machine, mode), selectedSocket);
 
 			if (!result.ok) {
 				ctx.ui.notify(`Tell failed: ${result.error || "unknown error"}`, "error");
@@ -2324,12 +2380,13 @@ export default function (pi: ExtensionAPI): void {
 		name: "tell_pi",
 		label: "Tell Pi",
 		description:
-			"Send asynchronous guidance to another running Pi instance by machine and target name/session/window.",
+			"Send asynchronous guidance to another running Pi instance. Accepts the exact ID from /tell id, or a machine and target name/session/window.",
 		promptSnippet:
-			"Send async guidance to another running Pi instance selected by machine, target name, or fuzzy selector.",
+			"Send async guidance to another running Pi instance using its /tell id target, machine, target name, or fuzzy selector.",
 		promptGuidelines: [
 			"Use tell_pi when the user asks to tell, notify, guide, or hand work to another running Pi instance.",
 			"tell_pi is Pi-only; do not use it for external agents like Claude Code, opencode, aider, or codex.",
+			"Pass a supplied /tell id value (pi:<machine>:<session-id>) unchanged as target; it routes exactly without fuzzy fallback.",
 		],
 		parameters: Type.Object({
 			machine: Type.Optional(
@@ -2340,7 +2397,7 @@ export default function (pi: ExtensionAPI): void {
 			target: Type.Optional(
 				Type.String({
 					description:
-						"Pi target hint such as machine + session, session, session:window, cwd basename, pane, or loose description.",
+						"Exact /tell id value (pi:<machine>:<session-id>), or a hint such as machine + session, session:window, cwd basename, or pane.",
 				}),
 			),
 			message: Type.String({ description: "Guidance/prompt to send." }),
@@ -2403,7 +2460,7 @@ export default function (pi: ExtensionAPI): void {
 		name: "list_pi_sessions",
 		label: "List Pi Sessions",
 		description:
-			"List discoverable Pi sessions locally or on an SSH-accessible machine.",
+			"List discoverable Pi sessions and their exact target IDs locally or on an SSH-accessible machine.",
 		parameters: Type.Object({
 			machine: Type.Optional(
 				Type.String({
@@ -2435,7 +2492,7 @@ export default function (pi: ExtensionAPI): void {
 			),
 			target: Type.String({
 				description:
-					"Exact or fuzzy Pi target using the same selection rules as tell_pi.",
+					"Exact /tell id value (pi:<machine>:<session-id>), or a fuzzy target using the same selection rules as tell_pi.",
 			}),
 		}),
 		async execute(...args) {

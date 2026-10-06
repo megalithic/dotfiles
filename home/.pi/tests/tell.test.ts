@@ -1106,6 +1106,199 @@ test("remote transport preserves fragmented UTF-8 and drains large replies befor
 	expect(_test.controlLastMessage(_test.parseWireResponse(stdout))?.content).toBe(content);
 }, 10_000);
 
+describe("tell session IDs", () => {
+	test("/tell id reads a fresh session ID on every invocation without opening UI or sending", async () => {
+		const previousHostname = process.env.HOSTNAME;
+		process.env.HOSTNAME = "unknown-short-host";
+		let sessionId = "first/session";
+		const notifications: string[] = [];
+		let handler: ((args: string, ctx: ExtensionCommandContext) => Promise<void>) | undefined;
+
+		try {
+			// SAFETY: this fixture only registers and invokes the tell command.
+			extension({
+				on() {},
+				registerCommand(name, command) { if (name === "tell") handler = command.handler; },
+				registerTool() {},
+				appendEntry() {},
+			} as ExtensionAPI);
+
+			// SAFETY: the /tell id branch only uses the session ID and notification APIs.
+			const ctx = {
+				mode: "rpc",
+				hasUI: true,
+				sessionManager: { getSessionId: () => sessionId, getSessionName: () => "sender" },
+				ui: {
+					notify(text: string) { notifications.push(text); },
+					async select() { throw new Error("picker should not open"); },
+					async editor() { throw new Error("editor should not open"); },
+				},
+			} as ExtensionCommandContext;
+
+			expect(handler).toBeDefined();
+			await handler!("id", ctx);
+			sessionId = "second session";
+			await handler!("id", ctx);
+
+			expect(notifications).toEqual([
+				"pi:unknown-short-host:first%2Fsession\nUse this as tell_pi's target, or /tell pi:unknown-short-host:first%2Fsession <message>.",
+				"pi:unknown-short-host:second%20session\nUse this as tell_pi's target, or /tell pi:unknown-short-host:second%20session <message>.",
+			]);
+		} finally {
+			if (previousHostname === undefined) delete process.env.HOSTNAME;
+			else process.env.HOSTNAME = previousHostname;
+		}
+	});
+
+	test("routes strict IDs locally, remotely, and through dotted-host command syntax", () => {
+		const previousHostname = process.env.HOSTNAME;
+		process.env.HOSTNAME = "short-host";
+
+		try {
+			const id = _test.sessionTarget("short-host", "session/one");
+			expect(_test.routeFromTargetHint(id, "message")).toEqual({ target: id, message: "message" });
+			expect(_test.routeFromTargetHint(_test.sessionTarget("other-short", "session/one"), "message")).toEqual({
+				machine: "other-short", target: "pi:other-short:session%2Fone", message: "message",
+			});
+			const userHostId = _test.sessionTarget("user@remote.example", "session/one");
+			expect(_test.routeFromTargetHint(userHostId, "message")).toEqual({
+				machine: "user@remote.example", target: userHostId, message: "message",
+			});
+			expect(() => _test.routeFromTargetHint(userHostId, "message", "other-short")).toThrow(/machine.*conflict/i);
+			expect(_test.routeFromTargetHint(id, "message", "LOCALHOST")).toEqual({ target: id, message: "message" });
+			expect(_test.routeFromTargetHint(userHostId, "message", "USER@REMOTE.EXAMPLE")).toEqual({
+				machine: "user@remote.example", target: userHostId, message: "message", mode: undefined,
+			});
+			expect(_test.splitCommandArgs("host.example pi:host.example:session%2Fone hello there")).toEqual({
+				machine: "host.example", target: "pi:host.example:session%2Fone", message: "hello there",
+			});
+			expect(_test.routeFromTargetHint("pi:host.example:%ZZ", "message")).toEqual({
+				target: "pi:host.example:%ZZ", message: "message",
+			});
+		} finally {
+			if (previousHostname === undefined) delete process.env.HOSTNAME;
+			else process.env.HOSTNAME = previousHostname;
+		}
+	});
+
+	test("selects only the exact session ID and fails closed for namesakes, unavailable, duplicates, and malformed reserved targets", async () => {
+		const exact = candidate("%id-exact");
+		exact.machine = "machine";
+		exact.sessionId = "session/one";
+		const namesake = candidate("%id-namesake");
+		namesake.sessionName = "session/one";
+		const target = _test.sessionTarget("machine", exact.sessionId);
+
+		expect(await _test.selectCandidate(target, context(neverSelect), [namesake, exact])).toEqual({ ok: true, candidate: exact });
+		expect(await _test.selectCandidate(target, context(neverSelect), [{ ...exact, machine: "other-machine" }, exact])).toEqual({ ok: true, candidate: exact });
+		expect((await _test.selectCandidate(target, context(neverSelect), [{ ...exact, reachable: false }])).ok).toBe(false);
+		expect((await _test.selectCandidate(target, context(neverSelect), [exact, { ...exact, socket: `${stateDir}/other.sock` }])).ok).toBe(false);
+		expect((await _test.selectCandidate("pi:machine:%ZZ", context(neverSelect), [exact])).ok).toBe(false);
+		expect((await _test.selectCandidate("PI:machine:session%2Ftwo", context(neverSelect), [exact])).ok).toBe(false);
+		expect((await _test.selectCandidate("pi:machine:session%2Ftwo", context(neverSelect), [exact])).ok).toBe(false);
+	});
+
+	test("prints a reusable exact target in session listings", () => {
+		const item = candidate("%listed");
+		item.machine = "user@remote.example";
+		item.sessionId = "session/one";
+
+		expect(_test.formatSessionList([item])).toContain("target=pi:user@remote.example:session%2Fone");
+	});
+});
+
+test("exact IDs dispatch tell_pi, get_pi_last_message, and tell-last over mocked SSH", async () => {
+	const previousHostname = process.env.HOSTNAME;
+	process.env.HOSTNAME = "local-sender";
+	const target = _test.sessionTarget("user@remote.example", "remote/session");
+	const remoteSocket = "/remote/pi.sock";
+	const inventory = [{ socket: remoteSocket, sessionId: "remote/session", session: "remote", window: "agent", pane: "%remote", reachable: true }];
+	const requests: string[] = [];
+
+	const exec = spyOn(childProcess, "execFile").mockImplementation((_file, args, _options, callback) => {
+		const command = args.at(-1) || "";
+
+		if (_file !== "ssh") {
+			expect(["tmux", "ps"]).toContain(_file);
+			callback(null, "", "");
+
+			return new childProcess.ChildProcess();
+		}
+
+		expect(args).toContain("user@remote.example");
+
+		if (!command.includes("payload_b64")) {
+			callback(null, JSON.stringify(inventory), "");
+		} else {
+			expect(command).toContain(remoteSocket);
+			const encoded = command.match(/payload_b64=[^\n]*?(ey[A-Za-z0-9+/]+=*)/)?.[1];
+			expect(encoded).toBeDefined();
+			const request = JSON.parse(Buffer.from(encoded!, "base64").toString());
+			requests.push(request.operation);
+			const data = request.operation === "message.last" ? { message: { content: "Remote assistant message" } } : {};
+			callback(null, JSON.stringify({ ok: true, type: "control_response", protocol: "pi.control.v1", id: request.id, operation: request.operation, data }), "");
+		}
+
+		return new childProcess.ChildProcess();
+	});
+
+	try {
+		let tellTool: Parameters<ExtensionAPI["registerTool"]>[0] | undefined;
+		let lastTool: Parameters<ExtensionAPI["registerTool"]>[0] | undefined;
+		let tellCommand: ((args: string, ctx: ExtensionCommandContext) => Promise<void>) | undefined;
+		let lastCommand: ((args: string, ctx: ExtensionCommandContext) => Promise<void>) | undefined;
+		const appended: unknown[] = [];
+		// SAFETY: this fixture registers only the command and tools under test.
+		extension({
+			on() {},
+			registerCommand(name, command) {
+				if (name === "tell") tellCommand = command.handler;
+
+				if (name === "tell-last") lastCommand = command.handler;
+			},
+			registerTool(tool) {
+				if (tool.name === "tell_pi") tellTool = tool;
+
+				if (tool.name === "get_pi_last_message") lastTool = tool;
+			},
+			appendEntry(_type, entry) { appended.push(entry); },
+		} as ExtensionAPI);
+
+		// SAFETY: the fixture supplies the session and UI methods used by these handlers.
+		const ctx = {
+			cwd: "/project",
+			mode: "rpc",
+			hasUI: true,
+			sessionManager: { getSessionId: () => "sender", getSessionName: () => "Sender" },
+			ui: { async editor() {}, notify() {} },
+		} as ExtensionCommandContext;
+
+		expect(tellTool).toBeDefined();
+		expect(lastTool).toBeDefined();
+		expect(tellCommand).toBeDefined();
+		const sent = await tellTool!.execute(null, { target, message: "Remote guidance" }, null, null, ctx);
+		expect(sent).toMatchObject({ content: [{ text: expect.stringContaining("Sent ") }] });
+		await tellCommand!(target + " Command guidance", ctx);
+		expect(appended).toHaveLength(2);
+
+		const fetched = await lastTool!.execute(null, { target }, null, null, ctx);
+		expect(fetched).toMatchObject({ content: [{ text: "Remote assistant message" }] });
+
+		const editorValues: string[] = [];
+		ctx.ui.editor = async (_title, value) => { editorValues.push(value || ""); };
+
+		expect(lastCommand).toBeDefined();
+		await lastCommand!(target, ctx);
+		expect(editorValues).toEqual(["Remote assistant message"]);
+		expect(requests).toEqual(["message.send", "message.send", "message.last", "message.last"]);
+	} finally {
+		exec.mockRestore();
+
+		if (previousHostname === undefined) delete process.env.HOSTNAME;
+		else process.env.HOSTNAME = previousHostname;
+	}
+});
+
 test("tell runtime identity is captured once and published on session start", async () => {
 	let start: (() => void) | undefined;
 	const emitted: Array<{ version: string; loadedAt: string; sourceHash: string }> = [];
