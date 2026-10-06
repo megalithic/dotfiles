@@ -21,6 +21,11 @@ dotfiles.root = "~/.dotfiles"
 python.compile = false
 pipx.uvx = true
 task.monorepo_depth = 2
+# Task sources/outputs freshness by content, not mtime: touches without edits
+# (checkout, rebase, no-op reformat) no longer rebuild the Swift daemons.
+# mise also hashes this file as a source of every task it defines, so any
+# content edit here reruns all sourced tasks once.
+task.source_freshness_hash_contents = true
 github.use_git_credentials = true
 npm.package_manager = "aube"
 cargo.binstall = true
@@ -965,10 +970,20 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-avwatchd"
 # Declarative Helium profile setup (External Extensions with baked
 # prodversion, NSUserKeyEquivalents, Sparkle kill switch, en-US dictionary).
 # Also chained from the helium tool's postinstall, so it reruns on upgrades.
+# sources/outputs skip it in `mise run up` until a script, avwatchd, or the
+# Helium version (Info.plist) changes.
 [tasks."setup:helium"]
 description = "Seed Helium extensions, preferences, dictionary, and avwatchweb native messaging"
 depends = ["build:avwatchd"]
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-helium"
+sources = [
+  "{{env.DOTFILES_DIR}}/mise/scripts/setup-helium",
+  "{{env.DOTFILES_DIR}}/mise/scripts/setup-avwatchd",
+  "{{env.DOTFILES_DIR}}/lib/build-swift",
+  "{{env.DOTFILES_DIR}}/lib/avwatchd.swift",
+  "/Applications/Helium.app/Contents/Info.plist",
+]
+outputs = { auto = true }
 
 [tasks."setup:touchid-sudo"]
 description = "Install /etc/pam.d/sudo_local with pam_tid (+ pam_reattach for tmux); replaces nix-darwin enableSudoTouchIdAuth"

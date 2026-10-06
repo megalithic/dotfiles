@@ -21,9 +21,10 @@ check "brew on PATH" command -v brew
 check "mise on PATH" command -v mise
 check "fish installed" command -v fish
 check "fish is login shell" sh -c 'dscl . -read "/Users/$USER" UserShell | grep -q fish'
-check "~/.config/fish linked" test -L "$HOME/.config/fish"
+check "~/.config/fish/config.fish linked" test -L "$HOME/.config/fish/config.fish"
 check "~/.config/git/config linked" test -L "$HOME/.config/git/config"
 check "~/.local/bin/pi linked" test -e "$HOME/.local/bin/pi"
+check "~/.ssh mode 700" sh -c 'test "$(/usr/bin/stat -f %Lp "$HOME/.ssh")" = 700'
 if [ "${BOOTSTRAP_SKIP_TOOL_CHECK:-0}" != 1 ]; then
   check "no missing mise tools" sh -c 'test -z "$(mise ls --missing 2>/dev/null)"'
 fi
