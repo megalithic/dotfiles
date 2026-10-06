@@ -13,6 +13,13 @@ local disabledPiEntries = List(
     "home/.pi/agent/agents/_*"
 )
 
+// Index-wide: rejects force-added or already-tracked files under home/.ssh/
+// outside the four deployable sources (see .gitignore).
+local sshAllowlistCheck = new CommandSpec {
+    command = "mise/scripts/check-ssh-allowlist"
+    effect = "read"
+}
+
 local linters = new Mapping<String, Step> {
     ["check-added-large-files"] = Builtins.check_added_large_files
     ["check-case-conflict"] = Builtins.check_case_conflict
@@ -25,14 +32,9 @@ local linters = new Mapping<String, Step> {
         // This scanner contains private-key marker regexes as test patterns.
         exclude = List("bin/gatekeeper")
     }
-    // Index-wide: rejects force-added or already-tracked files under
-    // home/.ssh/ outside the four deployable sources (see .gitignore).
     ["ssh-allowlist"] = new Step {
         glob = List("home/.ssh/**")
-        check = new CommandSpec {
-            command = "mise/scripts/check-ssh-allowlist"
-            effect = "read"
-        }
+        check = sshAllowlistCheck
     }
     // Match the old devenv setup and only scan staged changes.
     ["gitleaks"] = (Builtins.gitleaks) {
@@ -79,10 +81,7 @@ hooks {
     ["pre-push"] {
         steps {
             ["ssh-allowlist"] {
-                check = new CommandSpec {
-                    command = "mise/scripts/check-ssh-allowlist"
-                    effect = "read"
-                }
+                check = sshAllowlistCheck
             }
             ["gitleaks-history"] {
                 check = new CommandSpec {

@@ -128,11 +128,12 @@ up = "cd $HOME/.dotfiles && mise run up"
 # self-referential links.
 #
 # Exclude patterns: no "/" matches any path component; with "/" the pattern is
-# anchored to the tree root (a leading "/" says so explicitly).
+# anchored to the tree root (a leading "/" says so explicitly). Excluding a
+# directory excludes everything under it.
 "~/.config" = { source = "~/.dotfiles/config", mode = "symlink-each", manifest = "git", exclude = [
   # repo docs and parked files, not app config
   "AGENTS.md",
-  "git/disabled/**",
+  "git/disabled",
 ] }
 
 "~" = { source = "~/.dotfiles/home", mode = "symlink-each", manifest = "git", exclude = [
@@ -141,33 +142,25 @@ up = "cd $HOME/.dotfiles && mise run up"
   ".ssh/config.megabookpro",
   # Pi support material that stays beside its config but is not deployed
   "/.pi/AGENTS.md",
-  ".pi/scripts/**",
-  ".pi/tests/**",
-  ".pi/patches/**",
-  ".pi/disabled/**",
+  ".pi/scripts",
+  ".pi/tests",
+  ".pi/patches",
+  ".pi/disabled",
   # underscore-prefixed Pi resources are disabled
   ".pi/agent/extensions/_*",
-  ".pi/agent/extensions/_*/**",
   ".pi/agent/skills/_*",
-  ".pi/agent/skills/_*/**",
   ".pi/agent/prompts/_*",
-  ".pi/agent/prompts/_*/**",
   ".pi/agent/agents/_*",
-  ".pi/agent/agents/_*/**",
 ] }
 # First apply of a symlink-each target without an ownership record walks the
 # whole target for stale links; for "~" that includes ~/Library/CloudStorage
 # (hours through the File Provider). It runs once; later applies are
 # proportional to the source tree. Leave it running; nothing depends on it.
 #
-# Inside the tree: .ssh deploys only its four tracked sources (.gitignore
-# allowlist + hk ssh-allowlist), keys and known_hosts stay unmanaged;
-# .claude deploys only settings.json; Pi runtime state (sessions/, npm/,
-# auth.json, mcp-*.json) stays unmanaged and Pi writes settings through its
-# symlink; Library/Application Support holds espanso and the MailMate key
-# bindings selected by MmCustomKeyBindingsName in [bootstrap.macos.defaults].
-# Lat extension tools launch through this agent-local path; point it at mise's
-# stable shim rather than the removed Devenv profile.
+# .gitignore limits what home/.ssh, home/.claude and home/.local may track.
+# Pi writes settings through its symlink. MailMate loads the key bindings named
+# by MmCustomKeyBindingsName in [bootstrap.macos.defaults].
+# Lat extension tools launch through this agent-local path.
 "~/.pi/agent/bin/lat" = "~/.local/share/mise/shims/lat"
 
 # Notes for paths inside ~/.config:
@@ -180,8 +173,6 @@ up = "cd $HOME/.dotfiles && mise run up"
 #   ~/.gitconfig (megabookpro, until that host leaves Nix) wins per-key over
 #   config/git/config.
 # - bat: run `bat cache --build` after changing config/bat.
-# - kanata: the active ~/.config/kanata/kanata.kbd stays unmanaged.
-# - worktrunk: approvals.toml{,.lock} beside config.toml are runtime state.
 # - 1Password: ssh/agent.toml selects SSH agent keys by vault/item; it holds
 #   metadata, not key material. GUI (cask) + CLI (formula) come from
 #   [bootstrap.packages].

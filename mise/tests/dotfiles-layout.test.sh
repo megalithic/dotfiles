@@ -143,6 +143,7 @@ while read -r path; do absent "$path"; done <<'EOF'
 .pi/AGENTS.md
 .pi/scripts
 .pi/tests
+.pi/patches
 .pi/disabled
 .pi/agent/extensions/_sentinel.ts
 .pi/agent/extensions/_lat.ts
