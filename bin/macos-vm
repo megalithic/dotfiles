@@ -1,0 +1,62 @@
+#!/bin/bash
+set -euo pipefail
+
+usage() {
+  printf '%s\n' \
+    'Usage: macos-vm create NAME IMAGE' \
+    '       macos-vm run|stop|status NAME' \
+    '       macos-vm exec NAME COMMAND [ARG...]' \
+    '       macos-vm list' \
+    '' \
+    'Provisioning requires approval. run uses NAT, without host shares or clipboard.' \
+    'exec forwards stdin and returns the guest command exit status.'
+}
+
+fail() {
+  printf 'macos-vm: %s\n' "$*" >&2
+  exit 1
+}
+
+action="${1:-help}"
+[[ $# -eq 0 ]] || shift
+case "$action" in
+  help | --help | -h)
+    usage
+    exit 0
+    ;;
+  create) [[ $# -eq 2 ]] || fail 'create needs NAME and IMAGE' ;;
+  run | stop | status) [[ $# -eq 1 ]] || fail "$action needs NAME" ;;
+  exec) [[ $# -ge 2 ]] || fail 'exec needs NAME and COMMAND' ;;
+  list) [[ $# -eq 0 ]] || fail 'list takes no arguments' ;;
+  *) fail "unknown action: $action" ;;
+esac
+
+if [[ "$action" != list ]]; then
+  name="$1"
+  shift
+  [[ "$name" =~ ^[a-zA-Z0-9][a-zA-Z0-9_-]*$ ]] || fail 'NAME must be a local name, not a path or option'
+fi
+[[ "$(uname -s):$(uname -m)" == Darwin:arm64 ]] || fail 'requires macOS arm64'
+command -v mise >/dev/null || fail 'mise is not installed'
+install_dir="$(MISE_AUTO_INSTALL=false mise --no-config where aqua:openai/tart@2.40.1)" ||
+  fail 'after approval, install with: mise --no-config install aqua:openai/tart@2.40.1'
+tart="$install_dir/tart.app/Contents/MacOS/tart"
+[[ -x "$tart" ]] || fail "missing Tart app executable: $tart"
+
+case "$action" in
+  create)
+    [[ "$1" != -* ]] || fail 'IMAGE must not be an option'
+    set -- clone "$1" "$name"
+    ;;
+  run) set -- run --no-graphics --no-audio --no-usb-accessories --no-clipboard "$name" ;;
+  exec) set -- exec -i "$name" "$@" ;;
+  stop) set -- stop "$name" ;;
+  status) set -- get "$name" --format json ;;
+  list) set -- list ;;
+esac
+
+exec /usr/bin/env -i \
+  HOME="$HOME" USER="${USER:-$(id -un)}" \
+  PATH=/usr/bin:/bin:/usr/sbin:/sbin \
+  TART_HOME="$HOME/.local/share/pi/macos-vms" TART_NO_AUTO_PRUNE=1 \
+  "$tart" "$@"
