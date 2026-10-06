@@ -17,6 +17,7 @@ backend = "vfox:mise-plugins/vfox-gcloud"
 specifiers = ["latest"]
 
 [tools.gcloud."platforms.macos-arm64"]
+checksum = "sha256:df787f3e524a6cb2d4b97e5c9bc5c55a233ac24fdd5398d7687fc9c7d19b042f"
 url = "https://storage.googleapis.com/cloud-sdk-release/google-cloud-sdk-587.0.0-darwin-arm.tar.gz"
 
 [[tools.opentofu]]

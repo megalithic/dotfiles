@@ -197,7 +197,6 @@ up = "cd $HOME/.dotfiles && mise run up"
 "aqua:remoteoss/dexter" = "latest"              # super fast elixir ls
 "aqua:artempyanykh/marksman" = "latest"
 "aqua:astral-sh/ruff" = "latest"
-"aqua:mvdan/sh" = "latest"
 "aqua:tidewave-ai/tidewave_app" = "latest"
 
 "pipx:yubikey-manager" = "latest"

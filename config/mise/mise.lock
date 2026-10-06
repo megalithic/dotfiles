@@ -630,16 +630,6 @@ checksum = "sha256:d5e757c5cc608fefb7450dd4d395aaf9fc6a52f194af220c9a1fe7ed38570
 url = "https://github.com/kubie-org/kubie/releases/download/v0.28.0/kubie-darwin-arm64"
 url_api = "https://api.github.com/repos/kubie-org/kubie/releases/assets/429011454"
 
-[[tools."aqua:mvdan/sh"]]
-version = "3.14.1"
-backend = "aqua:mvdan/sh"
-specifiers = ["latest"]
-
-[tools."aqua:mvdan/sh"."platforms.macos-arm64"]
-checksum = "sha256:b7c872db63553ccffc7253aba3ed7d4885a27d83f1ba567b1138c6315a5847e5"
-url = "https://github.com/mvdan/sh/releases/download/v3.14.1/shfmt_v3.14.1_darwin_arm64"
-url_api = "https://api.github.com/repos/mvdan/sh/releases/assets/547320930"
-
 [[tools."aqua:openai/codex"]]
 version = "0.160.1"
 backend = "aqua:openai/codex"
@@ -708,6 +698,7 @@ backend = "aqua:aws/aws-cli"
 specifiers = ["latest"]
 
 [tools.awscli."platforms.macos-arm64"]
+checksum = "sha256:a2fae32b07ca81c4327e3858ea810b1042bdfc91745a97ca30f9d5297e21834c"
 url = "https://awscli.amazonaws.com/AWSCLIV2-2.37.9.pkg"
 
 [[tools.bat]]
@@ -1048,6 +1039,7 @@ backend = "vfox:mise-plugins/vfox-gcloud"
 specifiers = ["latest"]
 
 [tools.gcloud."platforms.macos-arm64"]
+checksum = "sha256:df787f3e524a6cb2d4b97e5c9bc5c55a233ac24fdd5398d7687fc9c7d19b042f"
 url = "https://storage.googleapis.com/cloud-sdk-release/google-cloud-sdk-587.0.0-darwin-arm.tar.gz"
 
 [[tools.git-lfs]]
@@ -1343,6 +1335,7 @@ backend = "aqua:fiatjaf/jiq"
 specifiers = ["latest"]
 
 [tools.jiq."platforms.macos-arm64"]
+checksum = "sha256:a09ad10e3071892c553ad312c7e8f85dac8e72c323e4f819ec270cdc29d5ad46"
 url = "https://github.com/fiatjaf/jiq/releases/download/v0.7.2/jiq_darwin_amd64"
 url_api = "https://api.github.com/repos/fiatjaf/jiq/releases/assets/43247983"
 
@@ -1417,6 +1410,7 @@ backend = "vfox:mise-plugins/vfox-lua"
 specifiers = ["latest"]
 
 [tools.lua."platforms.macos-arm64"]
+checksum = "sha256:1c4b4068d67061f2a2231ad2b5422e77acea1487ea9890f6320af614f4373dce"
 url = "https://www.lua.org/ftp/lua-5.5.1.tar.gz"
 
 [[tools.lua-language-server]]
@@ -1435,6 +1429,7 @@ backend = "vfox:mise-plugins/vfox-neovim"
 specifiers = ["nightly"]
 
 [tools.neovim."platforms.macos-arm64"]
+checksum = "sha256:475d8a6cf7abd0b435a3073a28fbbdcf5df94085b02945d4170e9bfe9a9d660d"
 url = "https://github.com/neovim/neovim/releases/download/nightly/nvim-macos-arm64.tar.gz"
 
 [[tools.node]]
@@ -1656,6 +1651,16 @@ checksum = "sha256:56affdd8de5527894dca6dc3d7e0a99a873b0f004d7aabc30ae407d3f48b0
 url = "https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.darwin.aarch64.tar.xz"
 url_api = "https://api.github.com/repos/koalaman/shellcheck/releases/assets/279056932"
 
+[[tools.shfmt]]
+version = "3.14.1"
+backend = "aqua:mvdan/sh"
+specifiers = ["latest"]
+
+[tools.shfmt."platforms.macos-arm64"]
+checksum = "sha256:b7c872db63553ccffc7253aba3ed7d4885a27d83f1ba567b1138c6315a5847e5"
+url = "https://github.com/mvdan/sh/releases/download/v3.14.1/shfmt_v3.14.1_darwin_arm64"
+url_api = "https://api.github.com/repos/mvdan/sh/releases/assets/547320930"
+
 [[tools.sqlite]]
 version = "3.53.4"
 backend = "conda:sqlite"
@@ -1720,6 +1725,7 @@ backend = "aqua:tamasfe/taplo"
 specifiers = ["latest"]
 
 [tools.taplo."platforms.macos-arm64"]
+checksum = "sha256:713734314c3e71894b9e77513c5349835eefbd52908445a0d73b0c7dc469347d"
 url = "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-darwin-aarch64.gz"
 url_api = "https://api.github.com/repos/tamasfe/taplo/releases/assets/257323110"
 
