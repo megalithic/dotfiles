@@ -32,7 +32,7 @@ done <<'EOF'
 .pi/agent/skills/bro/SKILL.md home/.pi/agent/skills/bro/SKILL.md
 .pi/agent/prompts/plan.md home/.pi/agent/prompts/plan.md
 .pi/agent/agents/scout.md home/.pi/agent/agents/scout.md
-.local/bin/pi bin/pi
+.local/bin/pi home/.local/bin/pi
 EOF
 
 [ ! -e "$test_home/.pi/agent/extensions/_sentinel.ts" ]

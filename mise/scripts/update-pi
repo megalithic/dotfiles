@@ -172,8 +172,8 @@ if [ "$dry_run" = 1 ]; then
   report_cleanup_target "$agent/extensions/package-lock.json"
   report_cleanup_target "$agent/extensions/node_modules"
   say "[would run] mise upgrade npm:@earendil-works/pi-coding-agent --yes --raw"
-  say "[would run] $dotfiles/bin/pi update"
-  say "[would run] $dotfiles/bin/pi update --extensions"
+  say "[would run] $dotfiles/home/.local/bin/pi update"
+  say "[would run] $dotfiles/home/.local/bin/pi update --extensions"
   exit 0
 fi
 
@@ -186,7 +186,7 @@ run_step "Clean redundant extension dependencies" cleanup_extension_deps
 
 # Mise's animated renderer clears the screen on resize; raw keeps TTY output.
 run_step "Upgrade mise-managed Pi" mise upgrade npm:@earendil-works/pi-coding-agent --yes --raw
-run_step "Check Pi self-update" "$dotfiles/bin/pi" update
-run_step "Update extension packages" "$dotfiles/bin/pi" update --extensions
+run_step "Check Pi self-update" "$dotfiles/home/.local/bin/pi" update
+run_step "Update extension packages" "$dotfiles/home/.local/bin/pi" update --extensions
 
 echo "update:pi done."

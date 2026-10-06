@@ -124,8 +124,10 @@ Managed files mirror their destinations: `config/<path>` deploys to
 from a Git-indexed tree (`[dotfiles]` in `config/mise/config.toml`). Only
 tracked files deploy, so untracked or ignored files never leave the repo. Add a
 tracked file at the matching source path instead of a new declaration.
-Exception entries (`~/bin`, `~/.local/bin`, generated `~/.s3cfg`, the Pi lat
-shim, host-specific `~/.ssh/config`) are listed next to the trees.
+Exception entries (`~/bin`, generated `~/.s3cfg`, the Pi lat shim, host-specific
+`~/.ssh/config`) are listed next to the trees. Wrapper scripts live in
+`home/.local/bin/` and deploy to `~/.local/bin`, while `bin/` contains user
+scripts deployed as `~/bin`.
 
 Source-only code (browser extensions, servers, build inputs) lives in `tools/`;
 generation inputs that never deploy as-is (fnox shared config, templates) live

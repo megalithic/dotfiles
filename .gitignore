@@ -76,5 +76,9 @@ home/.pi/agent/mcp-npx-cache.json
 
 # Claude: only user settings are managed (home/ tree -> ~/.claude).
 !/home/.claude/
+
+# Wrapper scripts deploy through the home tree to ~/.local/bin.
+!/home/.local/
+!/home/.local/bin/
 /home/.claude/*
 !/home/.claude/settings.json

@@ -43,7 +43,7 @@ git_fixture ls-files --error-unmatch home/.ssh/id_probe >/dev/null 2>&1 && fail 
 git_fixture ls-files --error-unmatch home/.claude/history.jsonl >/dev/null 2>&1 && fail "home/.claude/history.jsonl entered the index"
 "$repo/mise/scripts/check-ssh-allowlist" >/dev/null || fail "check-ssh-allowlist rejected the fixture index"
 # Paths the exclude lists must hide have to be in the index for the checks to mean anything.
-for tracked in home/.ssh/allowed_signers home/.zshenv home/.pi/agent/extensions/_sentinel.ts home/.pi/agent/skills/_handoff/SKILL.md config/git/disabled/gitmessage config/atuin/AGENTS.md bin/tests/ftm.test.py; do
+for tracked in home/.ssh/allowed_signers home/.zshenv home/.local/bin/pi home/.pi/agent/extensions/_sentinel.ts home/.pi/agent/skills/_handoff/SKILL.md config/git/disabled/gitmessage config/atuin/AGENTS.md bin/tests/ftm.test.py; do
   git_fixture ls-files --error-unmatch "$tracked" >/dev/null 2>&1 || fail "$tracked missing from the fixture index"
 done
 
@@ -128,9 +128,8 @@ Library/Application Support/MailMate/Resources/KeyBindings/megamate.plist|home/L
 .config/kanata/icons/base.png|config/kanata/icons/base.png
 .config/fnox/yubikey-identity.txt|config/fnox/yubikey-identity.txt
 .config/aeroplayd/config.json|config/aeroplayd/config.json
-.local/bin/pi|bin/pi
-.local/bin/work-tickets|bin/work-tickets
-.local/bin/hs-reload|bin/hs-reload
+.local/bin/pi|home/.local/bin/pi
+.local/bin/work-tickets|home/.local/bin/work-tickets
 bin|bin
 EOF
 [ "$(readlink "$home/.s3cfg")" = "$home/.local/share/fnox/generated/s3cfg" ] || fail ".s3cfg link"
@@ -159,6 +158,7 @@ while read -r path; do absent "$path"; done <<'EOF'
 .config/llama-cpp
 .config/fish/fish_variables
 .config/mise/conf.d
+.local/bin/hs-reload
 .local/bin/tests
 EOF
 # config/superfile and config/zsh/.zcompdump are untracked in the real repo;
