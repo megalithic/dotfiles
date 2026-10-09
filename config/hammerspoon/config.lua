@@ -378,7 +378,7 @@ M.launchers = {
   { "com.tdesktop.Telegram", "t" },
   { "org.hammerspoon.Hammerspoon", "r" },
   -- { "com.kapeli.dashdoc", { { "shift" }, "d" }, { passThrough = { "d" } } },
-  -- { "com.electron.postbird", { { "shift" }, "p" } },
+  { "com.pais.handy", nil, { passThrough={ "g" } } },
   { "com.1password.1password", "1" },
   -- { "commonplace.canonize.app", nil, { passThrough = { { { "shift" }, "s" } } } },
   { "com.apple.dt.Xcode", "x", { focusOnly = true } },

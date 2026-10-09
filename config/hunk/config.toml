@@ -1,0 +1,251 @@
+# ------------------------------------------------------------------------------
+# Hunk Config
+# ------------------------------------------------------------------------------
+
+theme = "custom"
+agent_notes = true
+menu_bar = false
+prompt_save_view_preferences = false
+
+
+# ---------------------------------------------------------------------------
+# Keybindings
+# ---------------------------------------------------------------------------
+
+[keybindings]
+"hunk.review.halfPageDown" = ["d", "ctrl+d"]
+"hunk.review.halfPageUp" = ["u", "ctrl+u"]
+
+
+# ---------------------------------------------------------------------------
+# Miami Nights Theme
+# ---------------------------------------------------------------------------
+
+[custom_theme]
+base = "github-dark-default"
+label = "miami-nights"
+background = "#18181a"
+panel = "#18181a"
+panelAlt = "#1f1f1f"
+border = "#323232"
+accent = "#ffffff"
+accentMuted = "#535353"
+text = "#a7a7a7"
+muted = "#535353"
+addedBg = "#1b2823"
+removedBg = "#2e2127"
+addedContentBg = "#2a3a32"
+removedContentBg = "#443039"
+contextBg = "#18181a"
+contextContentBg = "#18181a"
+movedAddedBg = "#1a2a2c"
+movedRemovedBg = "#1a2a2c"
+addedSignColor = "#a6e3a1"
+removedSignColor = "#e06c75"
+lineNumberBg = "#18181a"
+lineNumberFg = "#535353"
+selectedHunk = "#1f1f1f"
+badgeAdded = "#a6e3a1"
+badgeRemoved = "#e06c75"
+badgeNeutral = "#949494"
+fileNew = "#a6e3a1"
+fileDeleted = "#e06c75"
+fileRenamed = "#47bac0"
+fileModified = "#ffbf63"
+fileUntracked = "#47bac0"
+noteBorder = "#ffbf63"
+noteBackground = "#1f1f1f"
+noteTitleBackground = "#1f1f1f"
+noteTitleText = "#d5d5d5"
+
+# ---------------------------------------------------------------------------
+# Syntax Scopes
+# ---------------------------------------------------------------------------
+# Hunk uses TextMate/Shiki selectors, whereas Neovim uses treesitter,
+# so these were mostly all translated with help from the robots 🤖
+# Colors are mostly based off noirbuddy's miami-nights preset,
+# which includes a monochrome-like 'noir' scale palette:
+#
+# - primary   #e4609b  strings, numbers, booleans, macros, etc.
+# - secondary #47bac0  variables, support, types, constants, entity, etc.
+# - noir_0    #ffffff  function names, etc.
+# - noir_2    #d5d5d5  properties, params, punctuation, etc.
+# - noir_5    #a7a7a7  keywords / storage, etc.
+# - noir_6    #737373  operators, brackets, etc.
+# - noir_7    #535353  comments, etc.
+# ---------------------------------------------------------------------------
+
+[custom_theme.syntax_scopes]
+
+# Default source text
+"source" = "#a7a7a7"
+
+# Comments
+"comment" = "#535353"
+"punctuation.definition.comment" = "#535353"
+"string.comment" = "#535353"
+
+# Keywords / storage
+"keyword" = "#a7a7a7"
+"keyword.control" = "#a7a7a7"
+"keyword.other" = "#a7a7a7"
+"storage" = "#a7a7a7"
+"storage.type" = "#a7a7a7"
+"storage.modifier" = "#a7a7a7"
+
+# Operators
+"keyword.operator" = "#737373"
+"keyword.operator.accessor" = "#737373"
+"keyword.operator.assignment" = "#737373"
+"keyword.operator.comparison" = "#737373"
+"keyword.operator.logical" = "#737373"
+"keyword.operator.arithmetic" = "#737373"
+
+# Imports
+"keyword.control.import" = "#737373"
+"keyword.control.from" = "#737373"
+"keyword.control.export" = "#737373"
+"storage.modifier.import" = "#737373"
+"storage.modifier.package" = "#737373"
+
+# Strings
+"string" = "#e4609b"
+"string.quoted" = "#e4609b"
+"string.template" = "#e4609b"
+"string.interpolated" = "#e4609b"
+"string.regexp" = "#e4609b"
+"string punctuation.section.embedded source" = "#e4609b"
+
+# Numbers / booleans
+"constant.numeric" = "#e4609b"
+"constant.language" = "#e4609b"
+"constant.language.boolean" = "#e4609b"
+"constant.language.null" = "#e4609b"
+"constant.language.undefined" = "#e4609b"
+"constant" = "#47bac0"
+"constant.other" = "#47bac0"
+"constant.other.placeholder" = "#47bac0"
+"constant.character" = "#47bac0"
+"constant.character.escape" = "#d5d5d5"
+"entity" = "#47bac0"
+"entity.name" = "#47bac0"
+"entity.name.constant" = "#47bac0"
+"entity.name.namespace" = "#47bac0"
+"entity.name.type" = "#47bac0"
+"entity.name.class" = "#47bac0"
+"entity.other.inherited-class" = "#47bac0"
+"support" = "#47bac0"
+"support.function" = "#d5d5d5"
+"support.class" = "#47bac0"
+"support.type" = "#47bac0"
+"support.type.property-name" = "#47bac0"
+"support.type.property-name.json" = "#47bac0"
+"support.constant" = "#47bac0"
+"support.variable" = "#47bac0"
+"support.module" = "#47bac0"
+"meta.property-name" = "#47bac0"
+"meta.module-reference" = "#47bac0"
+"variable" = "#47bac0"
+"variable.other" = "#47bac0"
+"variable.other.readwrite" = "#47bac0"
+"variable.other.object" = "#47bac0"
+"variable.other.constant" = "#47bac0"
+"variable.other.enummember" = "#47bac0"
+"variable.language" = "#47bac0"
+"variable.language.this" = "#47bac0"
+"variable.language.super" = "#47bac0"
+"variable.language.self" = "#47bac0"
+"meta.definition.variable" = "#47bac0"
+"meta.definition.variable.name" = "#47bac0"
+"string variable" = "#47bac0"
+
+# Parameters / properties
+"variable.parameter" = "#d5d5d5"
+"variable.parameter.function" = "#d5d5d5"
+"variable.other.property" = "#d5d5d5"
+"variable.other.object.property" = "#d5d5d5"
+"support.variable.property" = "#d5d5d5"
+"meta.object-literal.key" = "#d5d5d5"
+"meta.object.member" = "#d5d5d5"
+
+# Functions
+"entity.name.function" = "#ffffff"
+"variable.function" = "#d5d5d5"
+"meta.function-call" = "#d5d5d5"
+"entity.name.function.member" = "#f5f5f5"
+
+# Macros / preprocessor
+"meta.preprocessor" = "#e4609b"
+"entity.name.function.preprocessor" = "#e4609b"
+
+# Punctuation
+"punctuation" = "#d5d5d5"
+"punctuation.separator" = "#737373"
+"punctuation.terminator" = "#737373"
+"punctuation.accessor" = "#737373"
+"punctuation.definition.parameters" = "#737373"
+"punctuation.definition.arguments" = "#737373"
+"meta.brace" = "#737373"
+"meta.brace.round" = "#737373"
+"meta.brace.square" = "#737373"
+"meta.brace.curly" = "#737373"
+"punctuation.definition.template-expression" = "#e4609b"
+"punctuation.section.embedded" = "#e4609b"
+
+# Tags
+"entity.name.tag" = "#737373"
+"support.class.component" = "#737373"
+"entity.other.attribute-name" = "#a7a7a7"
+"punctuation.definition.tag" = "#b4b4b4"
+
+# Markup / markdown
+"markup.heading" = "#e6e6e6"
+"markup.heading.markdown" = "#e6e6e6"
+"markup.heading entity.name" = "#e6e6e6"
+"entity.name.section" = "#e6e6e6"
+"entity.name.section.markdown" = "#e6e6e6"
+"punctuation.definition.heading" = "#e6e6e6"
+"punctuation.definition.heading.markdown" = "#e6e6e6"
+"markup.inline" = "#e6e6e6"
+"markup.inline.raw" = "#e6e6e6"
+"markup.inline.raw.string" = "#e6e6e6"
+"markup.inline.raw.string.markdown" = "#e6e6e6"
+"markup.raw" = "#e6e6e6"
+"markup.raw.inline" = "#e6e6e6"
+"markup.fenced_code" = "#e6e6e6"
+"markup.fenced_code.block" = "#e6e6e6"
+"markup.fenced_code.block.markdown" = "#e6e6e6"
+"punctuation.definition.raw" = "#a7a7a7"
+"punctuation.definition.raw.markdown" = "#a7a7a7"
+"markup.bold" = "#f5f5f5"
+"markup.italic" = "#d5d5d5"
+"markup.list" = "#a7a7a7"
+"markup.quote" = "#a7a7a7"
+"punctuation.definition.list" = "#737373"
+"punctuation.definition.list.begin" = "#737373"
+"punctuation.definition.list.begin.markdown" = "#737373"
+"punctuation.definition.quote" = "#737373"
+
+# Horizontal rules / thematic breaks (`---`)
+"meta.separator" = "#737373"
+"meta.separator.markdown" = "#737373"
+"punctuation.definition.thematic-break" = "#737373"
+"punctuation.definition.thematic-break.markdown" = "#737373"
+"markup.heading.setext" = "#737373"
+
+# Diff chrome in patches
+"meta.diff.header" = "#a7a7a7"
+"meta.output" = "#a7a7a7"
+
+# Links
+"markup.underline.link" = "#47bac0"
+"meta.link.inline.markdown" = "#47bac0"
+"string.other.link" = "#47bac0"
+"constant.other.reference.link" = "#47bac0"
+"string.other.link.title.markdown" = "#e6e6e6"
+"string.other.link.description" = "#a7a7a7"
+"meta.link.inline.markdown string" = "#e6e6e6"
+"meta.image.inline.markdown string" = "#e6e6e6"
+
+# Shell constants etc.
+"keyword.other.unit" = "#ffbf63"

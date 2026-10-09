@@ -2,7 +2,9 @@
 
 [settings]
 experimental = true
-auto_install = true
+# Tasks, shims, and `mise x` never install tools. Installs happen only in
+# bootstrap.sh (`mise bootstrap` tools phase) and `mise run update:tools`.
+auto_install = false
 env_shell_expand = true
 activate_aggressive = true
 color_theme = "everforest"

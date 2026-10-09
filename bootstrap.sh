@@ -268,7 +268,8 @@ MISE_DOTFILES_FLAGS=""
 # mise 2026.7.5 launchd apply fails on clean Tahoe VMs with launchctl bootout
 # EIO before services converge. Its user step also calls chsh, which prompts
 # for a password on macOS. Skip both and handle the login shell below with sudo.
-# Tools are NOT skipped — mise bootstrap installs the full toolchain.
+# Tools are NOT skipped — mise bootstrap installs the full toolchain. Never
+# skip them: auto_install is off, so nothing else installs tools on first use.
 # Tasks remain enabled for post-tool bootstrap work. Secrets are resolved
 # directly by fnox; bootstrap never renders or sources secret files.
 MISE_BOOTSTRAP_FLAGS="--skip launchd --skip user"
