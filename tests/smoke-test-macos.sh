@@ -128,11 +128,13 @@ hdr "Fonts"
 ls "$HOME/Library/Fonts/" 2>/dev/null | grep -q 'FiraCodeNerdFont' && ok "nerd fonts in ~/Library/Fonts (mise)" || bad "mise nerd fonts missing"
 ls "/Library/Fonts/Nix Fonts/" 2>/dev/null | grep -qi 'nerd-fonts' && bad "Nix Fonts still ships nerd-fonts" || ok "Nix Fonts free of nerd-fonts"
 
-hdr "Compiled Swift programs"
+hdr "Swifties release programs"
+swifties_installs="$HOME/.local/share/mise/installs"
+swifties_version="0.1.0"
 check_swift_binary() {
   local binary_name="$1"
   local identifier="$2"
-  local binary="$HOME/.local/bin/$binary_name"
+  local binary="$swifties_installs/$binary_name/$swifties_version/$binary_name"
   local details
 
   if [[ -x "$binary" && ! -L "$binary" ]]; then
@@ -157,7 +159,7 @@ check_swift_binary miccheckd com.megadots.miccheck
 check_swift_binary notiwatchd com.megadots.notiwatchd
 check_swift_binary avwatchd com.megadots.avwatchd
 
-aeroplay_app="$HOME/Applications/AeroPlay.app"
+aeroplay_app="$swifties_installs/aeroplay/$swifties_version/AeroPlay.app"
 aeroplay_binary="$aeroplay_app/Contents/MacOS/aeroplayd"
 aeroplay_helper="$aeroplay_app/Contents/Resources/cliraop"
 if [[ -d "$aeroplay_app" && -x "$aeroplay_binary" && -x "$aeroplay_helper" ]]; then
@@ -206,8 +208,8 @@ for spec in avwatchd:avwatchd notiwatchd:notiwatchd miccheck:miccheckd; do
   binary_name="${spec#*:}"
   plist="$HOME/Library/LaunchAgents/dev.mise.com.megadots.$agent_name.plist"
   program="$(/usr/libexec/PlistBuddy -c 'Print :ProgramArguments:0' "$plist" 2>/dev/null || true)"
-  if [[ "$program" == "$HOME/.local/bin/$binary_name" ]]; then
-    ok "$agent_name agent uses compiled binary"
+  if [[ "$program" == "$swifties_installs/$binary_name/$swifties_version/$binary_name" ]]; then
+    ok "$agent_name agent uses pinned release binary"
   else
     bad "$agent_name agent program: ${program:-missing}"
   fi
@@ -244,8 +246,8 @@ fi
 avwatch_host="$HOME/Library/Application Support/net.imput.helium/NativeMessagingHosts/com.megadots.avwatchd.json"
 if [[ -f "$avwatch_host" ]]; then
   host_path="$(/usr/bin/plutil -extract path raw -o - "$avwatch_host" 2>/dev/null || true)"
-  if [[ "$host_path" == "$HOME/.local/bin/avwatchd" ]]; then
-    ok "avwatchweb native host uses compiled avwatchd"
+  if [[ "$host_path" == "$swifties_installs/avwatchd/$swifties_version/avwatchd" ]]; then
+    ok "avwatchweb native host uses pinned release avwatchd"
   else
     bad "avwatchweb native host path: ${host_path:-missing}"
   fi

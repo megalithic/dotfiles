@@ -1,5 +1,7 @@
 #!/bin/sh
 # Install avwatchweb native messaging and retire the old media-presenced agent.
+# Points the native host at the avwatchd the applied LaunchAgent runs (the
+# pinned Swifties release), so run it after `mise bootstrap launchd apply`.
 set -eu
 
 [ "$(uname -s)" = Darwin ] || exit 0
@@ -11,14 +13,29 @@ OLD_SOCKET="$HOME/.local/state/media-presence/sock"
 HOST_DIR="$HOME/Library/Application Support/net.imput.helium/NativeMessagingHosts"
 HOST_MANIFEST="$HOST_DIR/com.megadots.avwatchd.json"
 EXTENSION_ID=ogfaajbfamngmlmkppahdpkoliobdemk
-AVWATCHD_BIN="$HOME/.local/bin/avwatchd"
+AVWATCHD_PLIST="$HOME/Library/LaunchAgents/dev.mise.com.megadots.avwatchd.plist"
+INSTALLS_DIR="$HOME/.local/share/mise/installs/avwatchd"
+
+[ -f "$AVWATCHD_PLIST" ] || {
+  echo "setup-avwatchd: missing $AVWATCHD_PLIST; apply launchd agents first" >&2
+  exit 1
+}
+AVWATCHD_BIN=$(/usr/libexec/PlistBuddy -c 'Print :ProgramArguments:0' "$AVWATCHD_PLIST")
+case "$AVWATCHD_BIN" in
+  "$INSTALLS_DIR"/*/avwatchd) ;;
+  *)
+    echo "setup-avwatchd: agent runs $AVWATCHD_BIN, not a mise avwatchd install under $INSTALLS_DIR" >&2
+    exit 1
+    ;;
+esac
+AVWATCHWEB="$(dirname "$AVWATCHD_BIN")/avwatchweb"
 
 [ -x "$AVWATCHD_BIN" ] || {
   echo "setup-avwatchd: missing executable $AVWATCHD_BIN" >&2
   exit 1
 }
-[ -f "$DOTFILES_DIR/tools/avwatchweb/manifest.json" ] || {
-  echo "setup-avwatchd: missing avwatchweb extension" >&2
+[ -f "$AVWATCHWEB/manifest.json" ] || {
+  echo "setup-avwatchd: missing avwatchweb extension at $AVWATCHWEB" >&2
   exit 1
 }
 
@@ -67,7 +84,9 @@ for old_log in "$HOME/.cache/media-presence-stdout.log" "$HOME/.cache/media-pres
 done
 
 mkdir -p "$HOME/.local/state/avwatchd" "$HOST_DIR"
-cat >"$HOST_MANIFEST" <<EOF
+tmp_manifest="$HOST_MANIFEST.tmp.$$"
+trap 'rm -f "$tmp_manifest"' EXIT
+(umask 077 && cat >"$tmp_manifest") <<EOF
 {
   "name": "com.megadots.avwatchd",
   "description": "avwatchweb bridge to avwatchd",
@@ -76,7 +95,7 @@ cat >"$HOST_MANIFEST" <<EOF
   "allowed_origins": ["chrome-extension://$EXTENSION_ID/"]
 }
 EOF
-chmod 600 "$HOST_MANIFEST"
+mv -f "$tmp_manifest" "$HOST_MANIFEST"
 
 echo "setup-avwatchd: installed $HOST_MANIFEST"
 echo "setup-avwatchd: restart Helium to load avwatchweb"

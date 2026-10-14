@@ -10,7 +10,15 @@
 set -euo pipefail
 
 HELIUM="/Applications/Helium.app/Contents/MacOS/Helium"
-AVWATCHWEB="${DOTFILES_DIR:-$HOME/.dotfiles}/tools/avwatchweb"
+# Load the avwatchweb copy shipped beside the avwatchd the native host runs
+# (written by mise/scripts/setup-avwatchd), so extension and daemon match.
+AVWATCH_HOST="$HOME/Library/Application Support/net.imput.helium/NativeMessagingHosts/com.megadots.avwatchd.json"
+if [ ! -f "$AVWATCH_HOST" ]; then
+  echo "avwatchd native host manifest not found: $AVWATCH_HOST (run mise/scripts/setup-avwatchd)" >&2
+  exit 1
+fi
+AVWATCHD_BIN="$(/usr/bin/plutil -extract path raw -o - "$AVWATCH_HOST")"
+AVWATCHWEB="$(dirname "$AVWATCHD_BIN")/avwatchweb"
 if [ ! -x "$HELIUM" ]; then
   echo "Helium executable not found: $HELIUM" >&2
   exit 1

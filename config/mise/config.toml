@@ -677,11 +677,14 @@ stderr_path = "~/Library/Logs/llama-cpp/stderr.log"
 # nicknisi/sessions indexes transcripts on demand through its CLI and MCP server.
 # No session-indexing launchd agent is needed.
 
+# Swifties agents run the pinned [tools.<alias>] release in place. Bumping a
+# pin means updating its program path here, then applying launchd agents.
+#
 # avwatchd: compiled native/browser AV state daemon. avwatchweb reaches the
 # same stable binary through Chrome native messaging; consumers subscribe to
 # ~/.local/state/avwatchd/sock.
 [bootstrap.macos.launchd.agents."com.megadots.avwatchd"]
-program = "~/.local/bin/avwatchd"
+program = "~/.local/share/mise/installs/avwatchd/0.1.0/avwatchd"
 run_at_load = true
 keep_alive = true
 stdout_path = "/dev/null"
@@ -693,7 +696,7 @@ stderr_path = "~/Library/Logs/avwatchd.log"
 # ~/.local/state/notiwatchd/sock, and routes to bin/ntfy/exec/webhook sinks.
 # The binary needs one-time Full Disk Access and Accessibility grants.
 [bootstrap.macos.launchd.agents."com.megadots.notiwatchd"]
-program = "~/.local/bin/notiwatchd"
+program = "~/.local/share/mise/installs/notiwatchd/0.1.0/notiwatchd"
 environment = { PATH = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" }
 run_at_load = true
 keep_alive = true
@@ -702,7 +705,7 @@ stderr_path = "~/.cache/notiwatchd-stderr.log"
 
 # miccheck: compiled menubar push-to-talk/push-to-mute app.
 [bootstrap.macos.launchd.agents."com.megadots.miccheck"]
-program = "~/.local/bin/miccheckd"
+program = "~/.local/share/mise/installs/miccheckd/0.1.0/miccheckd"
 run_at_load = true
 keep_alive = true
 stdout_path = "~/.cache/miccheck-stdout.log"
@@ -710,7 +713,7 @@ stderr_path = "~/.cache/miccheck-stderr.log"
 
 # AeroPlay: route one app's audio only to a selected AirPlay or CoreAudio output.
 [bootstrap.macos.launchd.agents."com.megadots.aeroplayd"]
-program = "~/Applications/AeroPlay.app/Contents/MacOS/aeroplayd"
+program = "~/.local/share/mise/installs/aeroplay/0.1.0/AeroPlay.app/Contents/MacOS/aeroplayd"
 run_at_load = true
 keep_alive = false
 stdout_path = "~/.cache/aeroplayd-stdout.log"
