@@ -67,6 +67,53 @@ settings.tabsMRUOrder = false;
 // Input box true
 settings.cursorAtEndOfInput = false;
 
+// GitHub's React 19 document root removes Surfingkeys' UI host; put it back.
+if (/^https?:$/.test(location.protocol)) {
+  const skFrame = (n) =>
+    n.nodeType === 1 && n.shadowRoot?.querySelector("iframe.sk_ui");
+  new MutationObserver((muts) => {
+    for (const m of muts)
+      for (const host of m.removedNodes) {
+        const frame = skFrame(host);
+        if (!frame) continue;
+        // Surfingkeys removes its own host on tab switch after dropping its
+        // message listener. If that listener is alive it swallows this probe.
+        const probe = Math.random();
+        let seen = false;
+        const onMsg = (e) => {
+          if (e.data?.surfingkeys_uihost_data?.skReattachProbe === probe)
+            seen = true;
+        };
+        window.addEventListener("message", onMsg, true);
+        window.postMessage(
+          { surfingkeys_uihost_data: { skReattachProbe: probe } },
+          location.origin,
+        );
+        setTimeout(() => {
+          window.removeEventListener("message", onMsg, true);
+          if (seen || host.isConnected) return;
+          frame.addEventListener(
+            "load",
+            () =>
+              frame.contentWindow.postMessage(
+                {
+                  surfingkeys_frontend_data: {
+                    action: "initFrontend",
+                    ack: true,
+                    winSize: [innerWidth, innerHeight],
+                    origin: location.origin,
+                  },
+                },
+                new URL(frame.src).origin,
+              ),
+            { once: true },
+          );
+          document.documentElement.appendChild(host);
+        }, 50);
+      }
+  }).observe(document.documentElement, { childList: true });
+}
+
 // -- UNMAPS
 // (Unused; unmap these first so they can be mapped to other things)
 //
