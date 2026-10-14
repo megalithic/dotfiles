@@ -193,6 +193,12 @@ up = "cd $HOME/.dotfiles && mise run up"
 # secret-bearing file never enters Git.
 "~/.s3cfg" = "~/.local/share/fnox/generated/s3cfg"
 
+[tool_alias]
+aeroplay = "github:megalithic/swifties"
+miccheckd = "github:megalithic/swifties"
+notiwatchd = "github:megalithic/swifties"
+avwatchd = "github:megalithic/swifties"
+
 [tools]
 "aqua:openai/codex" = "latest"
 "aqua:derailed/k9s" = "latest"
@@ -322,6 +328,27 @@ worktrunk = "0.76.0"
 yamlfmt = "latest"
 zig = "0.16.0"
 zoxide = "latest"
+
+[tools.aeroplay]
+version = "0.1.0"
+os = ["macos"]
+asset_pattern = "aeroplay-{{ version }}-macos26-arm64.zip"
+bin_path = "AeroPlay.app/Contents/MacOS"
+
+[tools.miccheckd]
+version = "0.1.0"
+os = ["macos"]
+asset_pattern = "miccheckd-{{ version }}-macos26-arm64.zip"
+
+[tools.notiwatchd]
+version = "0.1.0"
+os = ["macos"]
+asset_pattern = "notiwatchd-{{ version }}-macos26-arm64.zip"
+
+[tools.avwatchd]
+version = "0.1.0"
+os = ["macos"]
+asset_pattern = "avwatchd-{{ version }}-macos26-arm64.zip"
 
 [tools.tmux]
 version = "3.8-rc3"
