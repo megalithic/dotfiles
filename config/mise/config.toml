@@ -999,17 +999,12 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-avwatchd"
 # Declarative Helium profile setup (External Extensions with baked
 # prodversion, NSUserKeyEquivalents, Sparkle kill switch, en-US dictionary).
 # Also chained from the helium tool's postinstall, so it reruns on upgrades.
-# sources/outputs skip it in `mise run up` until a script, avwatchd, or the
-# Helium version (Info.plist) changes.
+# sources/outputs skip it until the setup script or Helium version changes.
 [tasks."setup:helium"]
-description = "Seed Helium extensions, preferences, dictionary, and avwatchweb native messaging"
-depends = ["build:avwatchd"]
+description = "Seed Helium extensions, preferences, and dictionary"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-helium"
 sources = [
   "{{env.DOTFILES_DIR}}/mise/scripts/setup-helium",
-  "{{env.DOTFILES_DIR}}/mise/scripts/setup-avwatchd",
-  "{{env.DOTFILES_DIR}}/lib/build-swift",
-  "{{env.DOTFILES_DIR}}/lib/avwatchd.swift",
   "/Applications/Helium.app/Contents/Info.plist",
 ]
 outputs = { auto = true }

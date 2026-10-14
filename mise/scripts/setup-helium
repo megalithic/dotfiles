@@ -113,5 +113,4 @@ else
   fi
 fi
 
-mise run setup:avwatchd
-echo "setup-helium: done (restart Helium to load avwatchweb and apply extensions/shortcuts)"
+echo "setup-helium: done (restart Helium to apply extensions/shortcuts)"
