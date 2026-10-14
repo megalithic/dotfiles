@@ -130,11 +130,11 @@ ls "/Library/Fonts/Nix Fonts/" 2>/dev/null | grep -qi 'nerd-fonts' && bad "Nix F
 
 hdr "Swifties release programs"
 swifties_installs="$HOME/.local/share/mise/installs"
-swifties_version="0.1.0"
+swifties_version="0.2.0"
+miccheck_binary="$swifties_installs/miccheckd/$swifties_version/MicCheck.app/Contents/MacOS/miccheckd"
 check_swift_binary() {
-  local binary_name="$1"
+  local binary="$1"
   local identifier="$2"
-  local binary="$swifties_installs/$binary_name/$swifties_version/$binary_name"
   local details
 
   if [[ -x "$binary" && ! -L "$binary" ]]; then
@@ -155,9 +155,9 @@ check_swift_binary() {
   if [[ "$details" == *"TeamIdentifier=3ZJ3F5RFBZ"* ]]; then ok "$binary team 3ZJ3F5RFBZ"; else bad "$binary wrong team"; fi
   if [[ "$details" == *runtime* ]]; then ok "$binary hardened runtime"; else bad "$binary missing hardened runtime"; fi
 }
-check_swift_binary miccheckd com.megadots.miccheck
-check_swift_binary notiwatchd com.megadots.notiwatchd
-check_swift_binary avwatchd com.megadots.avwatchd
+check_swift_binary "$miccheck_binary" io.swifties.miccheck
+check_swift_binary "$HOME/.local/bin/notiwatchd" io.swifties.notiwatch
+check_swift_binary "$HOME/.local/bin/avwatchd" io.swifties.avwatch
 
 aeroplay_app="$swifties_installs/aeroplay/$swifties_version/AeroPlay.app"
 aeroplay_binary="$aeroplay_app/Contents/MacOS/aeroplayd"
@@ -168,9 +168,9 @@ if [[ -d "$aeroplay_app" && -x "$aeroplay_binary" && -x "$aeroplay_helper" ]]; t
     ok "AeroPlay nested signatures valid"
     aeroplay_details="$(codesign --display --verbose=4 "$aeroplay_app" 2>&1)"
     aeroplay_helper_details="$(codesign --display --verbose=4 "$aeroplay_helper" 2>&1)"
-    if [[ "$aeroplay_details" == *"Identifier=com.megadots.aeroplayd"* ]]; then ok "AeroPlay identifier valid"; else bad "AeroPlay identifier invalid"; fi
+    if [[ "$aeroplay_details" == *"Identifier=io.swifties.aeroplay"* ]]; then ok "AeroPlay identifier valid"; else bad "AeroPlay identifier invalid"; fi
     if [[ "$aeroplay_details" == *"TeamIdentifier=3ZJ3F5RFBZ"* && "$aeroplay_details" == *runtime* ]]; then ok "AeroPlay team and runtime valid"; else bad "AeroPlay team or runtime invalid"; fi
-    if [[ "$aeroplay_helper_details" == *"Identifier=com.megadots.aeroplayd.cliraop"* && "$aeroplay_helper_details" == *"TeamIdentifier=3ZJ3F5RFBZ"* ]]; then ok "AeroPlay helper identity valid"; else bad "AeroPlay helper identity invalid"; fi
+    if [[ "$aeroplay_helper_details" == *"Identifier=io.swifties.aeroplay.cliraop"* && "$aeroplay_helper_details" == *"TeamIdentifier=3ZJ3F5RFBZ"* ]]; then ok "AeroPlay helper identity valid"; else bad "AeroPlay helper identity invalid"; fi
   else
     bad "AeroPlay nested signature invalid"
   fi
@@ -200,27 +200,22 @@ else
 fi
 
 hdr "launchd (mise agents up, no strays)"
-for agent in dev.mise.com.megadots.llama-cpp dev.mise.com.megadots.avwatchd dev.mise.com.megadots.notiwatchd dev.mise.com.megadots.miccheck dev.mise.com.megadots.aeroplayd; do
+for agent in dev.mise.com.megadots.llama-cpp dev.mise.io.swifties.avwatch dev.mise.io.swifties.notiwatch dev.mise.io.swifties.miccheck dev.mise.io.swifties.aeroplay; do
   if launchctl list "$agent" >/dev/null 2>&1; then ok "$agent loaded"; else bad "$agent not loaded"; fi
 done
-for spec in avwatchd:avwatchd notiwatchd:notiwatchd miccheck:miccheckd; do
-  agent_name="${spec%%:*}"
-  binary_name="${spec#*:}"
-  plist="$HOME/Library/LaunchAgents/dev.mise.com.megadots.$agent_name.plist"
-  program="$(/usr/libexec/PlistBuddy -c 'Print :ProgramArguments:0' "$plist" 2>/dev/null || true)"
-  if [[ "$program" == "$swifties_installs/$binary_name/$swifties_version/$binary_name" ]]; then
-    ok "$agent_name agent uses pinned release binary"
-  else
-    bad "$agent_name agent program: ${program:-missing}"
-  fi
+for old_agent in dev.mise.com.megadots.avwatchd dev.mise.com.megadots.notiwatchd dev.mise.com.megadots.miccheck dev.mise.com.megadots.aeroplayd; do
+  if launchctl list "$old_agent" >/dev/null 2>&1; then bad "$old_agent still loaded"; else ok "$old_agent gone"; fi
 done
-aeroplay_agent_program="$(/usr/libexec/PlistBuddy -c 'Print :ProgramArguments:0' "$HOME/Library/LaunchAgents/dev.mise.com.megadots.aeroplayd.plist" 2>/dev/null || true)"
-if [[ "$aeroplay_agent_program" == "$aeroplay_binary" ]]; then
-  ok "aeroplayd agent uses signed app executable"
-else
-  bad "aeroplayd agent program: ${aeroplay_agent_program:-missing}"
-fi
-notiwatchd_path="$(/usr/libexec/PlistBuddy -c 'Print :EnvironmentVariables:PATH' "$HOME/Library/LaunchAgents/dev.mise.com.megadots.notiwatchd.plist" 2>/dev/null || true)"
+check_agent_program() { # label expected-program
+  local program
+  program="$(/usr/libexec/PlistBuddy -c 'Print :ProgramArguments:0' "$HOME/Library/LaunchAgents/dev.mise.$1.plist" 2>/dev/null || true)"
+  if [[ "$program" == "$2" ]]; then ok "$1 agent runs $2"; else bad "$1 agent program: ${program:-missing}"; fi
+}
+check_agent_program io.swifties.avwatch "$HOME/.local/bin/avwatchd"
+check_agent_program io.swifties.notiwatch "$HOME/.local/bin/notiwatchd"
+check_agent_program io.swifties.miccheck "$miccheck_binary"
+check_agent_program io.swifties.aeroplay "$aeroplay_binary"
+notiwatchd_path="$(/usr/libexec/PlistBuddy -c 'Print :EnvironmentVariables:PATH' "$HOME/Library/LaunchAgents/dev.mise.io.swifties.notiwatch.plist" 2>/dev/null || true)"
 if [[ "$notiwatchd_path" == "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" ]]; then
   ok "notiwatchd agent PATH is portable"
 else
@@ -243,11 +238,11 @@ if launchctl list "$old_media_label" >/dev/null 2>&1 ||
 else
   ok "no stale media-presenced agent/process/socket"
 fi
-avwatch_host="$HOME/Library/Application Support/net.imput.helium/NativeMessagingHosts/com.megadots.avwatchd.json"
+avwatch_host="$HOME/Library/Application Support/net.imput.helium/NativeMessagingHosts/io.swifties.avwatch.json"
 if [[ -f "$avwatch_host" ]]; then
   host_path="$(/usr/bin/plutil -extract path raw -o - "$avwatch_host" 2>/dev/null || true)"
-  if [[ "$host_path" == "$swifties_installs/avwatchd/$swifties_version/avwatchd" ]]; then
-    ok "avwatchweb native host uses pinned release avwatchd"
+  if [[ "$host_path" == "$HOME/.local/bin/avwatchd" ]]; then
+    ok "avwatchweb native host uses stable avwatchd"
   else
     bad "avwatchweb native host path: ${host_path:-missing}"
   fi

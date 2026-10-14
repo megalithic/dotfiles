@@ -1,7 +1,7 @@
 #!/bin/sh
 # Install avwatchweb native messaging and retire the old media-presenced agent.
-# Points the native host at the avwatchd the applied LaunchAgent runs (the
-# pinned Swifties release), so run it after `mise bootstrap launchd apply`.
+# Points the native host at the stable avwatchd copy written by the avwatchd
+# tool postinstall; run once after the first install.
 set -eu
 
 [ "$(uname -s)" = Darwin ] || exit 0
@@ -11,24 +11,11 @@ OLD_LABEL=dev.mise.com.megadots.media-presenced
 OLD_PLIST="$HOME/Library/LaunchAgents/$OLD_LABEL.plist"
 OLD_SOCKET="$HOME/.local/state/media-presence/sock"
 HOST_DIR="$HOME/Library/Application Support/net.imput.helium/NativeMessagingHosts"
-HOST_MANIFEST="$HOST_DIR/com.megadots.avwatchd.json"
+HOST_MANIFEST="$HOST_DIR/io.swifties.avwatch.json"
+OLD_HOST_MANIFEST="$HOST_DIR/com.megadots.avwatchd.json"
 EXTENSION_ID=ogfaajbfamngmlmkppahdpkoliobdemk
-AVWATCHD_PLIST="$HOME/Library/LaunchAgents/dev.mise.com.megadots.avwatchd.plist"
-INSTALLS_DIR="$HOME/.local/share/mise/installs/avwatchd"
-
-[ -f "$AVWATCHD_PLIST" ] || {
-  echo "setup-avwatchd: missing $AVWATCHD_PLIST; apply launchd agents first" >&2
-  exit 1
-}
-AVWATCHD_BIN=$(/usr/libexec/PlistBuddy -c 'Print :ProgramArguments:0' "$AVWATCHD_PLIST")
-case "$AVWATCHD_BIN" in
-  "$INSTALLS_DIR"/*/avwatchd) ;;
-  *)
-    echo "setup-avwatchd: agent runs $AVWATCHD_BIN, not a mise avwatchd install under $INSTALLS_DIR" >&2
-    exit 1
-    ;;
-esac
-AVWATCHWEB="$(dirname "$AVWATCHD_BIN")/avwatchweb"
+AVWATCHD_BIN="$HOME/.local/bin/avwatchd"
+AVWATCHWEB="$HOME/.local/share/avwatchd/avwatchweb"
 
 [ -x "$AVWATCHD_BIN" ] || {
   echo "setup-avwatchd: missing executable $AVWATCHD_BIN" >&2
@@ -88,7 +75,7 @@ tmp_manifest="$HOST_MANIFEST.tmp.$$"
 trap 'rm -f "$tmp_manifest"' EXIT
 (umask 077 && cat >"$tmp_manifest") <<EOF
 {
-  "name": "com.megadots.avwatchd",
+  "name": "io.swifties.avwatch",
   "description": "avwatchweb bridge to avwatchd",
   "path": "$AVWATCHD_BIN",
   "type": "stdio",
@@ -96,6 +83,7 @@ trap 'rm -f "$tmp_manifest"' EXIT
 }
 EOF
 mv -f "$tmp_manifest" "$HOST_MANIFEST"
+[ ! -e "$OLD_HOST_MANIFEST" ] || trash "$OLD_HOST_MANIFEST"
 
 echo "setup-avwatchd: installed $HOST_MANIFEST"
 echo "setup-avwatchd: restart Helium to load avwatchweb"

@@ -330,25 +330,49 @@ zig = "0.16.0"
 zoxide = "latest"
 
 [tools.aeroplay]
-version = "0.1.0"
+version = "0.2.0"
 os = ["macos"]
 asset_pattern = "aeroplay-{{ version }}-macos26-arm64.zip"
 bin_path = "AeroPlay.app/Contents/MacOS"
 
 [tools.miccheckd]
-version = "0.1.0"
+version = "0.2.0"
 os = ["macos"]
 asset_pattern = "miccheckd-{{ version }}-macos26-arm64.zip"
+bin_path = "MicCheck.app/Contents/MacOS"
 
 [tools.notiwatchd]
-version = "0.1.0"
+version = "0.2.0"
 os = ["macos"]
 asset_pattern = "notiwatchd-{{ version }}-macos26-arm64.zip"
+# TCC keys bare executables by path: copy to a stable path so grants survive
+# version bumps. Runs only on install; the agent keeps the old binary until
+# restarted.
+postinstall = '''
+set -eu
+mkdir -p "$HOME/.local/bin"
+cp "$MISE_TOOL_INSTALL_PATH/notiwatchd" "$HOME/.local/bin/.notiwatchd.tmp"
+mv -f "$HOME/.local/bin/.notiwatchd.tmp" "$HOME/.local/bin/notiwatchd"
+'''
 
 [tools.avwatchd]
-version = "0.1.0"
+version = "0.2.0"
 os = ["macos"]
 asset_pattern = "avwatchd-{{ version }}-macos26-arm64.zip"
+# Same stable-path copy as notiwatchd. avwatchweb is swapped in by rename so
+# Helium never loads a half-copied extension.
+postinstall = '''
+set -eu
+bin="$HOME/.local/bin" web="$HOME/.local/share/avwatchd/avwatchweb"
+mkdir -p "$bin" "$(dirname "$web")"
+cp "$MISE_TOOL_INSTALL_PATH/avwatchd" "$bin/.avwatchd.tmp"
+rm -rf "$web.tmp" "$web.old"
+ditto "$MISE_TOOL_INSTALL_PATH/avwatchweb" "$web.tmp"
+mv -f "$bin/.avwatchd.tmp" "$bin/avwatchd"
+if [ -e "$web" ]; then mv "$web" "$web.old"; fi
+mv "$web.tmp" "$web"
+rm -rf "$web.old"
+'''
 
 [tools.tmux]
 version = "3.8-rc3"
@@ -677,14 +701,16 @@ stderr_path = "~/Library/Logs/llama-cpp/stderr.log"
 # nicknisi/sessions indexes transcripts on demand through its CLI and MCP server.
 # No session-indexing launchd agent is needed.
 
-# Swifties agents run the pinned [tools.<alias>] release in place. Bumping a
-# pin means updating its program path here, then applying launchd agents.
+# Swifties agents. avwatchd and notiwatchd run the stable ~/.local/bin copies
+# their [tools.<alias>] postinstall writes: a pin bump needs only a restart.
+# MicCheck and AeroPlay run their app bundles in place: a pin bump means
+# updating the program path here, then applying launchd agents.
 #
 # avwatchd: compiled native/browser AV state daemon. avwatchweb reaches the
 # same stable binary through Chrome native messaging; consumers subscribe to
 # ~/.local/state/avwatchd/sock.
-[bootstrap.macos.launchd.agents."com.megadots.avwatchd"]
-program = "~/.local/share/mise/installs/avwatchd/0.1.0/avwatchd"
+[bootstrap.macos.launchd.agents."io.swifties.avwatch"]
+program = "~/.local/bin/avwatchd"
 run_at_load = true
 keep_alive = true
 stdout_path = "/dev/null"
@@ -695,8 +721,8 @@ stderr_path = "~/Library/Logs/avwatchd.log"
 # ~/.local/share/notiwatchd/notifications.db, broadcasts NDJSON on
 # ~/.local/state/notiwatchd/sock, and routes to bin/ntfy/exec/webhook sinks.
 # The binary needs one-time Full Disk Access and Accessibility grants.
-[bootstrap.macos.launchd.agents."com.megadots.notiwatchd"]
-program = "~/.local/share/mise/installs/notiwatchd/0.1.0/notiwatchd"
+[bootstrap.macos.launchd.agents."io.swifties.notiwatch"]
+program = "~/.local/bin/notiwatchd"
 environment = { PATH = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" }
 run_at_load = true
 keep_alive = true
@@ -704,16 +730,16 @@ stdout_path = "~/.cache/notiwatchd-stdout.log"
 stderr_path = "~/.cache/notiwatchd-stderr.log"
 
 # miccheck: compiled menubar push-to-talk/push-to-mute app.
-[bootstrap.macos.launchd.agents."com.megadots.miccheck"]
-program = "~/.local/share/mise/installs/miccheckd/0.1.0/miccheckd"
+[bootstrap.macos.launchd.agents."io.swifties.miccheck"]
+program = "~/.local/share/mise/installs/miccheckd/0.2.0/MicCheck.app/Contents/MacOS/miccheckd"
 run_at_load = true
 keep_alive = true
 stdout_path = "~/.cache/miccheck-stdout.log"
 stderr_path = "~/.cache/miccheck-stderr.log"
 
 # AeroPlay: route one app's audio only to a selected AirPlay or CoreAudio output.
-[bootstrap.macos.launchd.agents."com.megadots.aeroplayd"]
-program = "~/.local/share/mise/installs/aeroplay/0.1.0/AeroPlay.app/Contents/MacOS/aeroplayd"
+[bootstrap.macos.launchd.agents."io.swifties.aeroplay"]
+program = "~/.local/share/mise/installs/aeroplay/0.2.0/AeroPlay.app/Contents/MacOS/aeroplayd"
 run_at_load = true
 keep_alive = false
 stdout_path = "~/.cache/aeroplayd-stdout.log"
