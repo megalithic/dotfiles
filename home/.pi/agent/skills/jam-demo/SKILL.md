@@ -3,7 +3,7 @@ name: jam-demo
 description: Record a captioned demo video of the Strive Provider Portal (provider_portal / rx Phoenix dev app, main checkout or any worktree) from a natural-language prompt and upload it to jam.dev. Turns the prompt into a step script, drives the app through Tidewave browser_eval with vision-mode recording (burned-in overlay captions, no audio), transcodes the WebM to H.264 with ffmpeg, uploads it with the Jam CLI into the "Demos (Seth)" Jam folder, and reports the share link plus any DB side effects. Holds a global recorder lock so only one pi instance records at a time. Use when asked to "record a demo", "make a jam of X", "jam demo", "demo video of the X flow", "record X for stakeholders", or "show X in a video", and when a message starts with "jam-demo:" (recorder waiting/available hand-offs).
 ---
 
-# Jam demo — prompt to captioned jam.dev video
+# Jam demo - prompt to captioned jam.dev video
 
 - **Capture:** Tidewave vision mode records the app iframe to WebM
   (`browser.startRecording` / `stopRecording`). `browser.overlay(text)` burns a
@@ -106,6 +106,9 @@ Rules:
 
 - One caption per action. Write it in the present tense from the viewer's side
   ("The provider sees…"), in at most ~80 characters so it stays on one line.
+- Never use an em dash (U+2014) or an en dash (U+2013) in the title, captions
+  or description, not even for ranges. Use a plain hyphen `-`: `STEPS 1-3`,
+  `Page 2 - practice details`.
 - Each caption stays up about 5 seconds whatever its length. `overlay()`
   returns at once, and the next `overlay()` waits for the current one to finish,
   so each action runs while its caption is on screen.
@@ -330,14 +333,43 @@ ffmpeg -y -loglevel error -i "$f" -vf "scale=1920:-2,fps=30" -c:v libx264 -pix_f
 
 ### 9. Upload to Jam
 
-Same shell as step 8, with `title` and `path` from the script:
+First look for a pull request on the branch this checkout serves (the main
+checkout or a worktree). Run it from that checkout's root:
 
 ```bash
-title="Enrollment invitation page"; path="/invitations"
-jq -n --arg v "$PWD/$mp4" --arg t "$title" --arg u "http://localhost:$PHX_PORT$path" \
-  '{kind: "video", videoPath: $v, title: $t, url: $u, screenDimensions: {width: 1440, height: 900}, micEnabled: false}' \
-  | mise exec -- jam --json create jam --folder ymfx
+gh pr list --head "$(git branch --show-current)" --state all --json url --jq '.[0].url // empty'
 ```
+
+- A URL means the branch has a PR (open, draft, merged or closed). The Jam
+  description is `PR: <url>`.
+- No output means no PR, so the Jam gets no description. The main checkout's
+  `main` never has one.
+
+Write the title, start URL and description into the command as quoted
+literals, never through shell variables (see Pitfalls). Pass `--arg d ''`
+when there is no PR. The `jq -e` check stops the upload if the title is empty
+or any text has an em or en dash:
+
+```bash
+jq -n \
+  --arg v "$PWD/tmp/tidewave/recordings/recording-<timestamp>.mp4" \
+  --arg t 'Enrollment invitation page' \
+  --arg u "http://localhost:$PHX_PORT/invitations" \
+  --arg d 'PR: https://github.com/EVIRTSHEALTH/rx/pull/<number>' \
+  '{kind: "video", videoPath: $v, title: $t, url: $u, screenDimensions: {width: 1440, height: 900}, micEnabled: false} + (if $d == "" then {} else {description: $d} end)' \
+  > /tmp/jam-payload.json
+jq -e '(.title | length > 0) and ([.title, (.description // "")] | all(test("[\u2013\u2014]") | not))' /tmp/jam-payload.json \
+  && mise exec -- jam --json create jam @/tmp/jam-payload.json --folder ymfx
+```
+
+Then read the Jam back and confirm the title and description:
+
+```bash
+mise exec -- jam --json get jam <id> | jq '{title, description}'
+```
+
+If either is wrong, fix it in place with
+`mise exec -- jam update jam <id> --title '<title>' --description 'PR: <url>'`.
 
 - The receipt carries `id` and `url`.
 - `micEnabled: false` tells Jam there is no narration, so it skips the
@@ -348,6 +380,7 @@ jq -n --arg v "$PWD/$mp4" --arg t "$title" --arg u "http://localhost:$PHX_PORT$p
 ### 10. Report
 
 - Jam share URL and the local WebM path.
+- The PR link from step 9, or "no PR" when the branch has none.
 - The script: each step's caption and action.
 - DB side effects: rows seeded, rows changed during recording, and whether
   `db.restore` put them back. Say "none" when nothing was written.
@@ -405,6 +438,11 @@ If `acquire` is busy again, repeat this section with the new holder.
 - `action_inputs.timeout` must be an integer in milliseconds, not a string.
 - Tool calls cap at about 60 seconds and recordings at 5 minutes; split long
   scripts.
+- Pi's Bash tool loses a quoted shell assignment that shares its line with
+  `;` or `&&`: `title="Demo"; path="/x"` leaves both variables empty, and Jam
+  then stores the title as `{}`. A quoted assignment alone on its line, or an
+  unquoted one, survives. Each tool call is a new shell anyway, so pass Jam
+  values to `jq` as quoted literals.
 - `saveScreenshot()` produces full-page images at DPR 3.5. Use recording for
   demos.
 - Tests touching this app need `POOL_SIZE=2 mix test …`; at the default pool
