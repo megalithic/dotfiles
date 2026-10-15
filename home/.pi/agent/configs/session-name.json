@@ -1,0 +1,4 @@
+{
+  "autoName": "llm",
+  "llmModel": "anthropic/claude-haiku-5-5"
+}

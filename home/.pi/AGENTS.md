@@ -19,6 +19,7 @@ home/.pi/
 │   ├── models.json      # Custom model/provider definitions
 │   ├── mcp.json         # Global MCP server config
 │   ├── settings.json    # Writable source linked to ~/.pi/agent/settings.json
+│   ├── configs/         # Extension configs (session-name.json: LLM session titles)
 │   ├── extensions/      # .ts extensions (symlink-each into ~/.pi/agent/extensions)
 │   ├── skills/          # Skill directories (symlink-each)
 │   ├── prompts/         # Prompt templates (symlink-each)
