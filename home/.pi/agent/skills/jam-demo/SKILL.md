@@ -1,6 +1,6 @@
 ---
 name: jam-demo
-description: Record a captioned demo video of the Strive Provider Portal (provider_portal / rx Phoenix dev app, main checkout or any worktree) from a natural-language prompt and upload it to jam.dev. Turns the prompt into a step script, drives the app through Tidewave browser_eval with vision-mode recording (burned-in overlay captions, no audio), transcodes the WebM to H.264 with ffmpeg, uploads it with the Jam CLI into the "Demos (Seth)" Jam folder, and reports the share link plus any DB side effects. Holds a global recorder lock so only one pi instance records at a time. Use when asked to "record a demo", "make a jam of X", "jam demo", "demo video of the X flow", "record X for stakeholders", or "show X in a video", and when a message starts with "jam-demo:" (recorder waiting/available hand-offs).
+description: Record a captioned demo video of the Strive Provider Portal (provider_portal / rx Phoenix dev app, main checkout or any worktree) from a natural-language prompt. Turns the prompt into a step script, drives the app through Tidewave browser_eval with vision-mode recording (burned-in overlay captions, no audio), transcodes the WebM to H.264 with ffmpeg, opens the local recordings folder, asks before uploading to the "Demos (Seth)" Jam folder, and reports local paths or share links plus any DB side effects. Holds a global recorder lock so only one pi instance records at a time. Use when asked to "record a demo", "make a jam of X", "jam demo", "demo video of the X flow", "record X for stakeholders", or "show X in a video", and when a message starts with "jam-demo:" (recorder waiting/available hand-offs).
 ---
 
 # Jam demo - prompt to captioned jam.dev video
@@ -9,8 +9,10 @@ description: Record a captioned demo video of the Strive Provider Portal (provid
   (`browser.startRecording` / `stopRecording`). `browser.overlay(text)` burns a
   subtitle into the video, and `click`/`fill` are animated. Captions replace
   narration; there is no audio.
-- **Upload:** ffmpeg transcodes the WebM to a 1920-wide H.264 MP4, and the Jam
-  CLI (`jam create jam`) uploads it as a video Jam and prints the share URL.
+- **Output:** ffmpeg transcodes the WebM to a 1920-wide H.264 MP4. The
+  workflow opens the recordings folder and asks before uploading to Jam.
+- **Upload:** On approval, the Jam CLI (`jam create jam`) uploads the MP4 as a
+  video Jam and prints the share URL.
 - **Never drive the Jam browser extension.** It injects nothing until a real
   user gesture, accepts messages only from `*.jam.dev`, and its shortcuts ignore
   synthetic key events.
@@ -331,7 +333,30 @@ mp4="${f%.webm}.mp4"
 ffmpeg -y -loglevel error -i "$f" -vf "scale=1920:-2,fps=30" -c:v libx264 -pix_fmt yuv420p -crf 20 -preset medium -an -movflags +faststart "$mp4"
 ```
 
-### 9. Upload to Jam
+### 9. Open the recordings folder and decide whether to upload
+
+After transcoding the final video, open the folder containing the new MP4 files:
+
+```bash
+open "$(dirname "$mp4")"
+```
+
+When one request records several demos, transcode each video and open the folder
+once after the last one. Ask the user with `ask_user_question`:
+
+- Question: `Upload the recorded demo(s) to Jam?`
+- Header: `Upload to Jam?`
+- `Yes`: upload with the Jam CLI into the "Demos (Seth)" folder.
+- `No`: keep the local MP4s only and skip the upload.
+
+If the original prompt explicitly asks to upload, such as "record and upload",
+"upload it to Jam", or "jam it", skip both the question and opening the folder,
+and upload directly. Otherwise, wait for the user's answer before continuing.
+
+### 10. Upload to Jam
+
+On `Yes`, or when the original prompt explicitly requested an upload, continue
+with this step. On `No`, skip to step 11 and report the local MP4 paths.
 
 First look for a pull request on the branch this checkout serves (the main
 checkout or a worktree). Run it from that checkout's root:
@@ -362,7 +387,8 @@ jq -e '(.title | length > 0) and ([.title, (.description // "")] | all(test("[\u
   && mise exec -- jam --json create jam @/tmp/jam-payload.json --folder ymfx
 ```
 
-Then read the Jam back and confirm the title and description:
+Repeat the payload and Jam CLI commands for each recorded MP4. Then read each
+Jam back and confirm its title and description:
 
 ```bash
 mise exec -- jam --json get jam <id> | jq '{title, description}'
@@ -371,16 +397,19 @@ mise exec -- jam --json get jam <id> | jq '{title, description}'
 If either is wrong, fix it in place with
 `mise exec -- jam update jam <id> --title '<title>' --description 'PR: <url>'`.
 
-- The receipt carries `id` and `url`.
+- Each receipt carries an `id` and `url`.
 - `micEnabled: false` tells Jam there is no narration, so it skips the
   transcript.
 - Uploaded video Jams carry no console, network, or device data; Jam captures
   those only when it records.
 
-### 10. Report
+### 11. Report
 
-- Jam share URL and the local WebM path.
-- The PR link from step 9, or "no PR" when the branch has none.
+When uploaded, report the Jam share URL and the local WebM and MP4 paths. When
+not uploaded, say "not uploaded" and report the local MP4 and WebM paths.
+
+- The PR link from step 10, or "no PR" when the branch has none. Say "no PR"
+  when the upload was skipped.
 - The script: each step's caption and action.
 - DB side effects: rows seeded, rows changed during recording, and whether
   `db.restore` put them back. Say "none" when nothing was written.
