@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * /tell extension - async Pi-to-Pi guidance messages.
  *
@@ -7,6 +6,9 @@
  * instance. New peers use pi.control.v1 and fall back to pi.tell.v1 only when an
  * older peer explicitly rejects the control envelope. The receiver injects the
  * message as a user prompt and can reply with /tell or tell_pi.
+ *
+ * Requires tmux. Targets are discovered and addressed by tmux session, window
+ * and pane, and the picker's live pane preview and Ctrl+G jump run tmux.
  */
 
 import { execFile } from "node:child_process";
@@ -20,9 +22,11 @@ import { stripVTControlCharacters } from "node:util";
 import type {
 	ExtensionAPI,
 	ExtensionContext,
+	Theme,
+	ThemeColor,
 } from "@earendil-works/pi-coding-agent";
 import { StringEnum } from "@earendil-works/pi-ai";
-import { Input, SelectList, truncateToWidth, visibleWidth, wrapTextWithAnsi, type AutocompleteProvider } from "@earendil-works/pi-tui";
+import { Editor, Input, matchesKey, truncateToWidth, visibleWidth, wrapTextWithAnsi, type AutocompleteProvider } from "@earendil-works/pi-tui";
 import { Type, type Static } from "typebox";
 import { Check } from "typebox/value";
 
@@ -177,6 +181,7 @@ type SendResult = {
 	candidates?: Candidate[];
 	target?: Candidate;
 	id?: string;
+	note?: string;
 	response?: WireResponse;
 	error?: string;
 };
@@ -244,7 +249,7 @@ type ControlResponse = {
 };
 
 type SelectionResult =
-	| { ok: true; candidate: Candidate }
+	| { ok: true; candidate: Candidate; note?: string }
 	| { ok: false; error: string; candidates: Candidate[] };
 
 const fileExists = async (file: string): Promise<boolean> => {
@@ -579,7 +584,8 @@ const listTmuxPanes = (run: typeof execFile = execFile): Promise<
 		paneIndex: string;
 		title: string;
 		cwd?: string;
-		pid?: number;
+		// Rows without a Pi process are dropped below.
+		pid: number;
 	}>
 > =>
 	new Promise((resolve) => {
@@ -879,14 +885,28 @@ const pickerItem = (candidate: Candidate, now = Date.now()) => {
 		: seconds < 86400 ? `${Math.floor(seconds / 3600)}h ago`
 		: `${Math.floor(seconds / 86400)}d ago`;
 
-	const name = candidate.sessionName || candidate.displayTitle || candidate.windowName || candidate.window || "unnamed";
 	const state = candidate.state === "input_needed" ? "needs input" : candidate.state || "unknown";
+	// Numeric window names repeat the index already in the address.
+	const windowName = candidate.windowIndex !== undefined && candidate.windowName !== candidate.windowIndex ? candidate.windowName : undefined;
+	const target = candidate.sessionId && candidate.machine ? sessionTarget(candidate.machine, candidate.sessionId) : "no tell id";
 
 	return {
 		value: candidate.socket,
-		label: pickerText(`${address}${candidate.pane ? ` ${candidate.pane}` : ""}`),
-		description: pickerText(`${state.padEnd(12)} ${age.padEnd(16)} ${name}`),
+		summary: pickerText(candidate.sessionName?.trim() || `Unnamed session in ${compactPath(candidate.cwd || candidate.root)}`),
+		detail: pickerText([address, windowName, candidate.pane, target].filter(Boolean).join(" · ")),
+		status: pickerText(`${state} · ${age}`),
+		target,
+		color: pickerStateColor(candidate),
 	};
+};
+
+// Same three-state colors as bin/ftm: red needs attention, green working, plain idle.
+const pickerStateColor = (candidate: Candidate): ThemeColor => {
+	if (!candidate.reachable) return "dim";
+
+	if (candidate.state === "input_needed" || candidate.state === "error") return "error";
+
+	return candidate.state === "working" ? "success" : "text";
 };
 
 const previewText = (text: string): string => {
@@ -901,6 +921,29 @@ const previewText = (text: string): string => {
 };
 
 // A pane's root PID is usually the shell, not Pi. Check the tty's foreground job.
+// The tmux pane this client can jump to; remote Pis and Pis outside tmux have none.
+const localTmuxPane = (candidate: Candidate) =>
+	process.env.TMUX && candidate.session && candidate.pane && (!candidate.machine || isLocalMachine(candidate.machine))
+		? { session: candidate.session, windowIndex: candidate.windowIndex, pane: candidate.pane }
+		: undefined;
+
+// Switch this tmux client to the candidate's session, window and pane. Resolves an error message on failure.
+const switchToCandidatePane = (candidate: Candidate): Promise<string | undefined> => new Promise((resolve) => {
+	const target = localTmuxPane(candidate);
+
+	if (!target) return resolve("Only local tmux panes can be switched to.");
+
+	// "=" makes tmux match the session name exactly instead of by prefix.
+	const window = target.windowIndex === undefined ? target.pane : `=${target.session}:${target.windowIndex}`;
+
+	execFile(
+		"tmux",
+		["switch-client", "-t", `=${target.session}`, ";", "select-window", "-t", window, ";", "select-pane", "-t", target.pane],
+		{ encoding: "utf8", timeout: 2000 },
+		(error, _stdout, stderr) => resolve(error ? stderr.trim() || error.message : undefined),
+	);
+});
+
 const captureCandidatePane = async (candidate: Candidate, signal: AbortSignal): Promise<string | undefined> => {
 	if (!candidate.pane || !candidate.pid || (candidate.machine && !isLocalMachine(candidate.machine))) return undefined;
 
@@ -937,38 +980,128 @@ const captureCandidatePane = async (candidate: Candidate, signal: AbortSignal): 
 		.trimEnd().split("\n").slice(-120).join("\n").slice(-16000);
 };
 
+type PickResult = { candidate: Candidate; note?: string };
+
+type PickOptions = {
+	signal?: AbortSignal;
+	query?: string;
+	// Tab completion runs inside the editor, so it opens above it instead of replacing it.
+	overlay?: boolean;
+	allowNote?: boolean;
+};
+
+type PickerItem = ReturnType<typeof pickerItem>;
+
+const PICKER_SIDE_BY_SIDE_WIDTH = 100;
+
+const PICKER_VISIBLE_OPTIONS = 10;
+
+// Border plus six preview lines, so one or two peers still get a readable card.
+const PICKER_MIN_CARD_ROWS = 8;
+
+const PICKER_STACKED_PREVIEW_LINES = 6;
+
+// Rows the option list needs: up to ten two-line options plus the position line.
+const optionListHeight = (count: number): number => {
+	const shown = Math.min(count, PICKER_VISIBLE_OPTIONS);
+
+	return shown * 2 + (count > shown ? 1 : 0);
+};
+
+// Card with labels set into its top and bottom edges, matching ask_user_question's preview box.
+const renderCard = (title: string, footer: string, lines: string[], width: number, border: (text: string) => string): string[] => {
+	if (width < 6) return lines.map((line) => truncateToWidth(line, width, ""));
+
+	const edge = (left: string, text: string, right: string) => {
+		const label = truncateToWidth(text ? ` ${text} ` : "", width - 3, "");
+
+		return border(`${left}─${label}${"─".repeat(Math.max(0, width - 3 - visibleWidth(label)))}${right}`);
+	};
+
+	return [
+		edge("┌", title, "┐"),
+		...lines.map((line) => `${border("│")} ${truncateToWidth(line, width - 4, "", true)} ${border("│")}`),
+		edge("└", footer, "┘"),
+	];
+};
+
+// Two rows per option: numbered summary, then tmux location and tell ID aligned under it.
+const renderOptionRows = (items: PickerItem[], selected: number, width: number, maxRows: number, theme: Theme): string[] => {
+	if (!items.length) return [theme.fg("warning", truncateToWidth("  No matching Pi instances", width))];
+
+	const capacity = Math.min(PICKER_VISIBLE_OPTIONS, Math.max(1, Math.floor(maxRows / 2)));
+	// The position line only fits when at least one option still shows above it.
+	const overflow = items.length > capacity && maxRows >= 3;
+	const visible = Math.max(1, Math.min(capacity, Math.floor((maxRows - (overflow ? 1 : 0)) / 2)));
+	const start = Math.max(0, Math.min(selected - Math.floor(visible / 2), items.length - visible));
+	const digits = String(items.length).length;
+
+	const rows = items.slice(start, start + visible).flatMap((item, offset) => {
+		const index = start + offset;
+		const active = index === selected;
+		const prefix = `${active ? "❯" : " "} ${String(index + 1).padStart(digits)}. `;
+		const indent = " ".repeat(visibleWidth(prefix) + 2);
+		const room = Math.max(1, width - indent.length);
+		const summary = truncateToWidth(item.summary, room);
+
+		return [
+			truncateToWidth(`${active ? theme.fg("accent", prefix) : prefix}${theme.fg(item.color, "●")} ${active ? theme.fg("accent", theme.bold(summary)) : summary}`, width),
+			truncateToWidth(`${indent}${theme.fg("muted", truncateToWidth(item.detail, room))}`, width),
+		];
+	});
+
+	return overflow ? [...rows, theme.fg("dim", truncateToWidth(`  (${selected + 1}/${items.length})`, width))] : rows;
+};
+
 const pickCandidate = async (
 	choices: Candidate[],
 	ctx: ExtensionContext,
 	title: string,
-	options?: { signal?: AbortSignal; query?: string },
-): Promise<Candidate | undefined> => {
-	if (options?.signal?.aborted) return undefined;
+	options: PickOptions = {},
+): Promise<PickResult | undefined> => {
+	if (options.signal?.aborted) return undefined;
 
 	if (ctx.mode !== "tui") {
 		const labels = new Map(choices.map((candidate) => [candidate.label, candidate]));
 		const selected = await ctx.ui.select(title, [...labels.keys()]);
+		const candidate = selected === undefined ? undefined : labels.get(selected);
 
-		return labels.get(selected);
+		return candidate ? { candidate } : undefined;
 	}
 
-	const bySocket = new Map(choices.map((candidate) => [candidate.socket, candidate]));
+	return ctx.ui.custom<PickResult | undefined>((tui, theme, keybindings, done) => {
+		const input = new Input({ prompt: "Filter: ", placeholder: "type to filter", placeholderStyle: (text) => theme.fg("dim", text) });
 
-	const selected = await ctx.ui.custom<string | undefined>((tui, theme, keybindings, done) => {
-		const input = options ? new Input({ prompt: "Filter: " }) : undefined;
-		input?.setValue(options?.query || "");
-		const filteredItems = () => choices.flatMap((candidate) => !input?.getValue() || scoreCandidate(candidate, input.getValue()) > 0 ? [pickerItem(candidate)] : []);
-		let items = filteredItems();
+		// Typed, not setValue(), so the cursor lands after the preloaded text.
+		if (options.query) input.handleInput(options.query);
 
-		const makeList = (maxVisible: number) => new SelectList(items, maxVisible, {
-			selectedPrefix: (text) => theme.fg("accent", text),
-			selectedText: (text) => theme.fg("accent", text),
-			description: (text) => theme.fg("muted", text),
-			scrollInfo: (text) => theme.fg("dim", text),
-			noMatch: (text) => theme.fg("warning", text),
-		}, { minPrimaryColumnWidth: 24, maxPrimaryColumnWidth: 48 });
+		const editor = new Editor(tui, {
+			borderColor: (text) => theme.fg("borderMuted", text),
+			selectList: {
+				selectedPrefix: (text) => theme.fg("accent", text),
+				selectedText: (text) => theme.fg("accent", text),
+				description: (text) => theme.fg("muted", text),
+				scrollInfo: (text) => theme.fg("dim", text),
+				noMatch: (text) => theme.fg("warning", text),
+			},
+		});
 
-		let list = makeList(1);
+		const accent = (text: string) => theme.fg("accent", text);
+		const currentTarget = sessionTarget(currentMachineName() || "localhost", ctx.sessionManager.getSessionId());
+
+		// Measured once over every choice so filtering does not shift the columns.
+		const widest = Math.max(0, ...choices.map((candidate) => {
+			const item = pickerItem(candidate);
+
+			return Math.max(visibleWidth(item.summary), visibleWidth(item.detail));
+		})) + String(choices.length).length + 6;
+
+		let visibleChoices = choices;
+		let selected = 0;
+		let note = "";
+		let noteOpen = false;
+		let notice = "";
+		let focused = false;
 		let closed = false;
 		let previewSocket: string | undefined | null = null;
 		let preview = "Loading...";
@@ -980,16 +1113,29 @@ const pickCandidate = async (
 			closed = true;
 			clearTimeout(previewTimer);
 			previewAbort.abort();
-			options?.signal?.removeEventListener("abort", abort);
+			options.signal?.removeEventListener("abort", abort);
 		};
 
-		const close = (value: string | undefined) => {
+		const close = (value: PickResult | undefined) => {
 			if (closed) return;
 			dispose();
 			done(value);
 		};
 
 		const abort = () => close(undefined);
+
+		const syncFocus = () => {
+			input.focused = focused && !noteOpen;
+			editor.focused = focused && noteOpen;
+		};
+
+		const filter = () => {
+			const socket = visibleChoices[selected]?.socket;
+			const query = input.getValue();
+
+			visibleChoices = query ? choices.filter((candidate) => scoreCandidate(candidate, query) > 0) : choices;
+			selected = Math.max(0, visibleChoices.findIndex((candidate) => candidate.socket === socket));
+		};
 
 		const loadPreview = async (candidate: Candidate, signal: AbortSignal) => {
 			const pane = await captureCandidatePane(candidate, signal);
@@ -1017,117 +1163,181 @@ const pickCandidate = async (
 		};
 
 		const updatePreview = () => {
-			const socket = list.getSelectedItem()?.value;
+			const candidate = visibleChoices[selected];
 
-			if (closed || socket === previewSocket) return;
-			previewSocket = socket;
+			if (closed || candidate?.socket === previewSocket) return;
+			previewSocket = candidate?.socket;
 			clearTimeout(previewTimer);
 			previewAbort.abort();
 			previewAbort = new AbortController();
 			previewLive = false;
-			preview = socket ? "Loading..." : "No matching Pi instances.";
-			const candidate = socket && bySocket.get(socket);
+			preview = candidate ? "Loading..." : "No matching Pi instances.";
 
 			if (candidate) void loadPreview(candidate, previewAbort.signal);
 		};
 
-		const bindList = () => {
-			list.onSelect = (item) => close(item.value);
-			list.onCancel = () => close(undefined);
+		const previewLines = (count: number, width: number): string[] => {
+			// tmux pads captured rows to the pane width; trim so only real overflow gets "...".
+			const lines = previewLive ? preview.split("\n").map((line) => truncateToWidth(line.trimEnd(), width)) : wrapTextWithAnsi(preview, width);
+
+			if (previewLive) return lines.slice(-count);
+
+			if (lines.length <= count) return lines;
+
+			if (count === 1) return [`${truncateToWidth(lines[0] || "", Math.max(0, width - 3), "")}...`];
+
+			return [...lines.slice(0, count - 1), "[Preview truncated]"];
 		};
 
-		bindList();
-		options?.signal?.addEventListener("abort", abort, { once: true });
+		// Preview card exactly `rows` tall: state in the top edge, cwd in the bottom edge.
+		const cardColumn = (item: PickerItem | undefined, candidate: Candidate | undefined, width: number, rows: number): string[] => {
+			const count = Math.max(1, rows - 2);
+			const shown = previewLines(count, Math.max(1, width - 4));
+			const heading = `${previewLive ? "Live pane" : "Last message"}${item ? ` · ${item.status}` : ""}`;
+			const cwd = candidate ? pickerText(compactPath(candidate.cwd || candidate.root)) : "";
+
+			return renderCard(heading, cwd, [...shown, ...Array<string>(count - shown.length).fill("")], width, accent);
+		};
+
+		options.signal?.addEventListener("abort", abort, { once: true });
+		filter();
 		updatePreview();
 
 		return {
-			get focused() { return input?.focused ?? false; },
-			set focused(value: boolean) { if (input) input.focused = value; },
+			get focused() { return focused; },
+			set focused(value: boolean) {
+				focused = value;
+				syncFocus();
+			},
 			render(width: number) {
-				const height = tui.terminal.rows;
-				const item = list.getSelectedItem();
-				const candidate = item && bySocket.get(item.value);
+				const terminalRows = tui.terminal.rows;
+				// Inline pickers sit in the editor slot, so leave part of the transcript visible.
+				const rows = options.overlay ? terminalRows : Math.min(terminalRows, Math.max(12, Math.floor(terminalRows * 0.7)));
+				const roomy = rows >= 24;
+				const rule = accent("─".repeat(width));
+				const now = Date.now();
+				const items = visibleChoices.map((candidate) => pickerItem(candidate, now));
+				const item = items[selected];
+				const candidate = visibleChoices[selected];
 
-				const detail = candidate ? [
-					...[
-						(candidate.machine || "local") + " / " + item.label,
-						candidate.sessionName || candidate.displayTitle || candidate.windowName || candidate.window || "unnamed",
-						item.description || "",
-						compactPath(candidate.cwd || candidate.root),
-					].map((line) => truncateToWidth(pickerText(line), width)),
-					...wrapTextWithAnsi(pickerText("Session ID: " + (candidate.sessionId?.trim() || "unknown")), Math.max(1, width)),
-				].slice(0, Math.max(0, height - 6 - (input ? 1 : 0))) : [];
-
-				const index = items.findIndex((entry) => entry.value === item?.value);
-				list = makeList(Math.max(1, Math.min(8, items.length, height - detail.length - 8 - (input ? 1 : 0))));
-				list.setSelectedIndex(Math.max(0, index));
-				bindList();
-
-				const prefix = [
-					theme.fg("accent", truncateToWidth(title, width)),
-					...(input?.render(width) || []),
-					...list.render(width),
-					...detail.map((line) => theme.fg("muted", line)),
+				const top = [
+					rule,
+					...(roomy ? ["", ` ${theme.bg("selectedBg", " Tell ")}`] : []),
+					theme.fg("dim", ` ${truncateToWidth(`Current: ${currentTarget}`, Math.max(1, width - 1))}`),
+					...(roomy ? [""] : []),
+					` ${theme.bold(truncateToWidth(title, Math.max(1, width - 1)))}`,
+					...input.render(Math.max(1, width - 1)).map((line) => ` ${line}`),
+					...(roomy ? [""] : []),
 				];
 
-				const framed = height >= 20 && width >= 22;
-				const innerWidth = Math.max(1, width - (framed ? 2 : 0));
-				const maxLines = Math.max(1, Math.min(12, height - prefix.length - (framed ? 3 : 2)));
-				const lines = previewLive ? preview.split("\n").map((line) => truncateToWidth(line, innerWidth)) : wrapTextWithAnsi(preview, innerWidth);
-				const shown = previewLive ? lines.slice(-maxLines) : lines.slice(0, maxLines);
+				const hint = noteOpen
+					? ["Enter to save note", "Shift+Enter for newline", "Esc to close note"]
+					: ["Enter to select", "↑/↓ to navigate", ...(options.allowNote ? ["Ctrl+N to add a note"] : []), ...(candidate && localTmuxPane(candidate) ? ["Ctrl+G to go to pane"] : []), "Esc to cancel"];
 
-				if (!previewLive && lines.length > maxLines) {
-					shown[maxLines - 1] = maxLines === 1
-						? truncateToWidth(shown[0], Math.max(0, innerWidth - 3), "") + "..."
-						: "[Preview truncated]";
+				const noteRow = note ? `Note: ${note.split("\n")[0]}${note.includes("\n") ? " …" : ""}` : "Note: press Ctrl+N to add a note";
+
+				const bottom = [
+					...(noteOpen ? [theme.fg("muted", " Note:"), ...editor.render(Math.max(1, width - 2)).map((line) => ` ${line}`)] : []),
+					...(options.allowNote && !noteOpen ? [theme.fg("dim", ` ${truncateToWidth(noteRow, Math.max(1, width - 1))}`)] : []),
+					...(notice ? [theme.fg("warning", ` ${truncateToWidth(notice, Math.max(1, width - 1))}`)] : []),
+					...(roomy ? [""] : []),
+					rule,
+					...(roomy ? [""] : []),
+					theme.fg("dim", ` ${truncateToWidth(hint.join(" · "), Math.max(1, width - 1))}`),
+				];
+
+				// One full two-line option always fits; tiny terminals lose the hint instead.
+				const bodyRows = Math.max(2, rows - top.length - bottom.length);
+				let body: string[];
+
+				if (width >= PICKER_SIDE_BY_SIDE_WIDTH) {
+					const leftWidth = Math.min(Math.floor(width * 0.55), Math.max(30, widest));
+					// The card spans the option list; a short list still gets a readable card.
+					const height = Math.min(bodyRows, Math.max(optionListHeight(choices.length), PICKER_MIN_CARD_ROWS));
+					const left = renderOptionRows(items, selected, leftWidth, height, theme);
+					const right = cardColumn(item, candidate, width - leftWidth - 2, height);
+
+					body = Array.from({ length: height }, (_, row) =>
+						`${truncateToWidth(left[row] || "", leftWidth, "", true)}  ${right[row] || ""}`);
+				} else {
+					const gap = roomy ? 1 : 0;
+					const listBudget = Math.max(2, Math.min(optionListHeight(choices.length), bodyRows - gap - 3));
+					const list = renderOptionRows(items, selected, width, listBudget, theme);
+					const cardRows = Math.min(PICKER_STACKED_PREVIEW_LINES + 2, bodyRows - list.length - gap);
+					// Height of the unfiltered layout, so filtering does not shrink the picker.
+					const height = Math.min(bodyRows, listBudget + gap + Math.max(3, Math.min(PICKER_STACKED_PREVIEW_LINES + 2, bodyRows - listBudget - gap)));
+
+					body = [
+						...list,
+						...Array<string>(gap).fill(""),
+						...cardColumn(item, candidate, width, cardRows),
+					];
+					body.push(...Array<string>(Math.max(0, height - body.length)).fill(""));
 				}
 
-				const heading = previewLive ? "Live pane preview" : "Latest assistant message";
-
-				return [
-					...prefix,
-					theme.fg("accent", truncateToWidth(framed ? "+- " + heading + " " + "-".repeat(width) : heading, width)),
-					...shown.map((line) => {
-						const clipped = truncateToWidth(line, innerWidth);
-
-						return theme.fg("muted", framed ? "|" + clipped + " ".repeat(Math.max(0, innerWidth - visibleWidth(clipped))) + "|" : clipped);
-					}),
-					...(framed ? [theme.fg("accent", "+" + "-".repeat(width - 2) + "+")] : []),
-					theme.fg("dim", truncateToWidth("Up/down: choose | Enter: select | Esc: cancel", width)),
-				].slice(0, height).map((line) => truncateToWidth(line, width));
+				return [...top, ...body.slice(0, bodyRows), ...bottom]
+					.slice(0, rows)
+					.map((line) => truncateToWidth(line, width, ""));
 			},
-			invalidate: () => { list.invalidate(); input?.invalidate(); },
+			invalidate: () => {
+				input.invalidate();
+				editor.invalidate();
+			},
 			dispose,
 			handleInput(data: string) {
 				if (closed) return;
 
-				if (keybindings.matches(data, "tui.select.confirm")) close(list.getSelectedItem()?.value);
-				else if (keybindings.matches(data, "tui.select.cancel")) close(undefined);
-				else if (!input && (data === "j" || data === "k")) {
-					const index = items.findIndex((item) => item.value === list.getSelectedItem()?.value);
-					list.setSelectedIndex((index + (data === "j" ? 1 : -1) + items.length) % items.length);
-				} else {
-					const navigate = keybindings.matches(data, "tui.select.up") || keybindings.matches(data, "tui.select.down") || data === "\x1b[A" || data === "\x1b[B";
+				notice = "";
 
-					if (!input || navigate) list.handleInput(data);
-					else {
-						const before = input.getValue();
-						input.handleInput(data);
+				if (noteOpen) {
+					const newline = keybindings.matches(data, "tui.input.newLine");
+					const submit = !newline && (keybindings.matches(data, "tui.select.confirm") || keybindings.matches(data, "tui.input.submit"));
 
-						if (before !== input.getValue()) {
-							items = filteredItems();
-							list = makeList(Math.max(1, Math.min(8, items.length)));
-							bindList();
-						}
+					if (submit || keybindings.matches(data, "tui.select.cancel")) {
+						note = editor.getText().trim();
+						noteOpen = false;
+						syncFocus();
+					} else editor.handleInput(data);
+				} else if (keybindings.matches(data, "tui.select.confirm")) {
+					const candidate = visibleChoices[selected];
+
+					if (candidate) close({ candidate, note: note || undefined });
+				} else if (keybindings.matches(data, "tui.select.cancel")) close(undefined);
+				else if (options.allowNote && matchesKey(data, "ctrl+n")) {
+					noteOpen = true;
+					editor.setText(note);
+					syncFocus();
+				} else if (matchesKey(data, "ctrl+g")) {
+					const candidate = visibleChoices[selected];
+
+					// The picker stays open, so coming back to this pane still offers the choice.
+					if (candidate && localTmuxPane(candidate)) {
+						void switchToCandidatePane(candidate).then((error) => {
+							if (closed || !error) return;
+							notice = `Could not switch panes: ${error}`;
+							tui.requestRender();
+						});
 					}
+				} else if (keybindings.matches(data, "tui.select.up") || matchesKey(data, "up")) {
+					selected = visibleChoices.length ? (selected - 1 + visibleChoices.length) % visibleChoices.length : 0;
+				} else if (keybindings.matches(data, "tui.select.down") || matchesKey(data, "down")) {
+					selected = visibleChoices.length ? (selected + 1) % visibleChoices.length : 0;
+				} else {
+					const before = input.getValue();
+					input.handleInput(data);
+
+					if (before !== input.getValue()) filter();
 				}
 
-				if (!closed) { updatePreview(); tui.requestRender(); }
+				if (!closed) {
+					updatePreview();
+					tui.requestRender();
+				}
 			},
 		};
-	}, options ? { overlay: true, overlayOptions: { width: "95%", maxHeight: "100%" } } : undefined);
-
-	return selected ? bySocket.get(selected) : undefined;
+	}, options.overlay
+		? { overlay: true, overlayOptions: { anchor: "bottom-center", width: "100%", maxHeight: "100%", margin: { left: 0, right: 0, bottom: 0 } } }
+		: undefined);
 };
 
 const STOPWORDS = new Set(["pi", "agent", "instance", "the", "a", "an", "to"]);
@@ -1200,11 +1410,15 @@ const createTellAutocompleteProvider = (
 					return null;
 				}
 
-				const selected = await pickCandidate(candidates, ctx, "Select Pi instance", { signal: options.signal, query: completion.query });
+				const picked = await pickCandidate(candidates, ctx, "Select Pi instance", { signal: options.signal, query: completion.query, overlay: true, allowNote: true });
 
-				if (!selected || options.signal.aborted) return null;
-				const uniqueSession = selected.sessionId && selected.machine && candidates.filter((candidate) => candidate.sessionId === selected.sessionId && candidate.machine === selected.machine).length === 1;
-				const item = { value: uniqueSession ? sessionTarget(selected.machine!, selected.sessionId!) : JSON.stringify(selected.socket), label: selected.label };
+				if (!picked || options.signal.aborted) return null;
+				const { sessionId, machine, socket, label } = picked.candidate;
+				const uniqueSession = sessionId && machine && candidates.filter((candidate) => candidate.sessionId === sessionId && candidate.machine === machine).length === 1;
+				const target = uniqueSession ? sessionTarget(machine, sessionId) : JSON.stringify(socket);
+				// The draft is one line and /tell joins message words with spaces anyway.
+				const note = picked.note?.replace(/\s+/g, " ");
+				const item = { value: note ? `${target} ${note}` : target, label };
 				completed.add(item);
 
 				return { items: [item], prefix: completion.query };
@@ -1345,6 +1559,7 @@ const selectCandidate = async (
 	target: string | undefined,
 	ctx: ExtensionContext,
 	inventory?: Candidate[],
+	pick: Pick<PickOptions, "signal" | "allowNote"> = {},
 ): Promise<SelectionResult> => {
 	const candidates = inventory || (await discoverCandidates());
 
@@ -1449,9 +1664,9 @@ const selectCandidate = async (
 
 		if (ctx.hasUI && choices.length > 0) {
 			try {
-				const candidate = await pickCandidate(choices, ctx, "Select matching Pi instance");
+				const picked = await pickCandidate(choices, ctx, "Select matching Pi instance", pick);
 
-				if (candidate) return { ok: true, candidate };
+				if (picked) return { ok: true, ...picked };
 			} catch (err) {
 				return {
 					ok: false,
@@ -1482,16 +1697,16 @@ const selectCandidate = async (
 	}
 
 	try {
-		const candidate = await pickCandidate(nonCurrentReachable, ctx, "Select Pi instance - latest activity first");
+		const picked = await pickCandidate(nonCurrentReachable, ctx, "Select Pi instance - latest activity first", pick);
 
-		if (!candidate)
+		if (!picked)
 			return {
 				ok: false,
 				error: "No Pi instance selected; retry with an exact target.",
 				candidates,
 			};
 
-		return { ok: true, candidate };
+		return { ok: true, ...picked };
 	} catch (err) {
 		return {
 			ok: false,
@@ -2047,10 +2262,15 @@ const routeFromTargetHint = (
 	return normalizeRoute({ machine, target: trimmedTarget, message, mode });
 };
 
+// A picker note goes before the message it accompanies.
+const withNote = (note: string | undefined, message: string): string =>
+	[note?.trim(), message.trim()].filter(Boolean).join("\n\n");
+
 const sendTell = async (
 	ctx: ExtensionContext,
 	rawRoute: TellRoute,
 	selectedSocket?: string,
+	signal?: AbortSignal,
 ): Promise<SendResult> => {
 	const route = normalizeRoute(rawRoute);
 
@@ -2071,6 +2291,7 @@ const sendTell = async (
 
 	const selection = await selectCandidate(route.target, ctx,
 		selectedSocket ? inventory.filter((candidate) => candidate.socket === selectedSocket) : inventory,
+		{ allowNote: true, signal },
 	);
 
 	if (!selection.ok) {
@@ -2082,8 +2303,9 @@ const sendTell = async (
 	}
 
 	const id = makeMessageId();
+	const { note } = selection;
 
-	const legacyPayload = await buildTellPayload(ctx, route.message, id, {
+	const legacyPayload = await buildTellPayload(ctx, withNote(note, route.message), id, {
 		includeMachineReply: Boolean(route.machine),
 		includeFromSocket: !route.machine,
 		mode: route.mode,
@@ -2143,6 +2365,7 @@ const sendTell = async (
 				ok: true,
 				target: resolvedTarget,
 				id,
+				note,
 				response: remoteResponse.response,
 			};
 		}
@@ -2167,7 +2390,7 @@ const sendTell = async (
 			};
 		}
 
-		return { ok: true, target, id, response };
+		return { ok: true, target, id, note, response };
 	} catch (err) {
 		return {
 			ok: false,
@@ -2182,6 +2405,7 @@ const requestControl = async (
 	ctx: ExtensionContext,
 	rawRoute: TellRoute,
 	operation: Exclude<ControlOperation, "message.send">,
+	signal?: AbortSignal,
 ): Promise<SendResult> => {
 	const route = normalizeRoute(rawRoute);
 
@@ -2197,7 +2421,7 @@ const requestControl = async (
 		return { ok: false, error: error instanceof Error ? error.message : String(error) };
 	}
 
-	const selection = await selectCandidate(route.target, ctx, inventory);
+	const selection = await selectCandidate(route.target, ctx, inventory, { signal });
 
 	if (!selection.ok) {
 		return {
@@ -2401,6 +2625,7 @@ export const _test = {
 	createTellAutocompleteProvider,
 	captureCandidatePane,
 	splitCommandArgs,
+	withNote,
 	tokenizeHint,
 };
 
@@ -2452,8 +2677,10 @@ export default function (pi: ExtensionAPI): void {
 					return;
 				}
 
+				let note: string | undefined;
+
 				if (!target) {
-					const selected = await selectCandidate(undefined, ctx);
+					const selected = await selectCandidate(undefined, ctx, undefined, { allowNote: true });
 
 					if (selected.ok === false) {
 						ctx.ui.notify(selected.error, "error");
@@ -2463,11 +2690,14 @@ export default function (pi: ExtensionAPI): void {
 
 					selectedSocket = selected.candidate.socket;
 					target = selectedSocket;
+					note = selected.note;
 				}
 
-				message = await ctx.ui.editor("Tell Pi", "");
+				const typed = await ctx.ui.editor("Tell Pi", "");
 
-				if (message === undefined || !message.trim()) {
+				message = typed === undefined ? "" : withNote(note, typed);
+
+				if (!message) {
 					ctx.ui.notify("Cancelled", "info");
 
 					return;
@@ -2488,7 +2718,7 @@ export default function (pi: ExtensionAPI): void {
 				direction: "sent",
 				target: result.target?.label,
 				socket: result.target?.socket,
-				message,
+				message: withNote(result.note, message),
 				mode: mode || "follow_up",
 				timestamp: Date.now(),
 			});
@@ -2589,9 +2819,8 @@ export default function (pi: ExtensionAPI): void {
 				}),
 			),
 		}),
-		async execute(...args) {
-			const [, params, , , ctx] = args;
-
+		annotations: { destructiveHint: false, openWorldHint: false },
+		async execute(_toolCallId, params, signal, _onUpdate, ctx) {
 			const result = await sendTell(
 				ctx,
 				routeFromTargetHint(
@@ -2600,6 +2829,8 @@ export default function (pi: ExtensionAPI): void {
 					params.machine,
 					params.mode,
 				),
+				undefined,
+				signal,
 			);
 
 			if (!result.ok) {
@@ -2615,7 +2846,7 @@ export default function (pi: ExtensionAPI): void {
 				direction: "sent",
 				target: result.target?.label,
 				socket: result.target?.socket,
-				message: params.message,
+				message: withNote(result.note, params.message),
 				mode: params.mode || "follow_up",
 				timestamp: Date.now(),
 			});
@@ -2624,13 +2855,14 @@ export default function (pi: ExtensionAPI): void {
 				content: [
 					{
 						type: "text",
-						text: `Sent ${result.id} to ${result.target?.label}`,
+						text: `Sent ${result.id} to ${result.target?.label}${result.note ? `\nThe user added this note before your message: ${result.note}` : ""}`,
 					},
 				],
 				details: {
 					id: result.id,
 					target: result.target?.label,
 					socket: result.target?.socket,
+					note: result.note,
 					response: result.response,
 				},
 			};
@@ -2642,6 +2874,7 @@ export default function (pi: ExtensionAPI): void {
 		label: "List Pi Sessions",
 		description:
 			"List discoverable Pi sessions and their exact target IDs locally or on an SSH-accessible machine.",
+		annotations: { readOnlyHint: true, openWorldHint: false },
 		parameters: Type.Object({
 			machine: Type.Optional(
 				Type.String({
@@ -2649,8 +2882,7 @@ export default function (pi: ExtensionAPI): void {
 				}),
 			),
 		}),
-		async execute(...args) {
-			const [, params] = args;
+		async execute(_toolCallId, params) {
 			const candidates = await listSessions(params.machine);
 
 			return {
@@ -2676,10 +2908,10 @@ export default function (pi: ExtensionAPI): void {
 					"Exact /tell id value (pi:<machine>:<session-id>), or a fuzzy target using the same selection rules as tell_pi.",
 			}),
 		}),
-		async execute(...args) {
-			const [, params, , , ctx] = args;
+		annotations: { readOnlyHint: true, openWorldHint: false },
+		async execute(_toolCallId, params, signal, _onUpdate, ctx) {
 			const route = routeFromTargetHint(params.target, "", params.machine);
-			const result = await requestControl(ctx, route, "message.last");
+			const result = await requestControl(ctx, route, "message.last", signal);
 
 			if (!result.ok) {
 				return {

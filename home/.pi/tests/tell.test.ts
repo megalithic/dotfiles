@@ -59,6 +59,9 @@ const context = (select: (title: string, options: string[]) => Promise<string | 
 	return { mode: "rpc", hasUI, ui: { select } } as ExtensionContext;
 };
 
+// SAFETY: picker rendering only uses these theme helpers.
+const fakeTheme = { fg: (_color: string, text: string) => text, bg: (_color: string, text: string) => text, bold: (text: string) => text };
+
 const neverSelect = async () => {
 	throw new Error("Unexpected picker");
 };
@@ -103,24 +106,31 @@ describe("tell activity ordering", () => {
 });
 
 describe("tell picker display and routing", () => {
-	test("shows zero-based tmux addresses, state, name and honest activity age", () => {
+	test("shows the summary, zero-based tmux location, tell ID, state and honest activity age", () => {
 		const item = candidate("%0", "2026-09-01T11:58:00Z");
 		item.state = "input_needed";
+		item.sessionId = "01a0c3f4";
 		const row = _test.pickerItem(item, now);
 
 		expect(row.value).toBe(item.socket);
-		expect(row.label).toBe("work:0.0 %0");
-		expect(row.description).toContain("needs input");
-		expect(row.description).toContain("2m ago");
-		expect(row.description).toContain("Fix auth");
-		expect(_test.pickerItem(candidate("%2"), now).description).toContain("activity unknown");
+		expect(row.summary).toBe("Fix auth");
+		expect(row.detail).toBe(`work:0.0 \u00b7 agent \u00b7 %0 \u00b7 pi:${item.machine}:01a0c3f4`);
+		expect(row.status).toBe("needs input \u00b7 2m ago");
+		expect(row.color).toBe("error");
+		expect(_test.pickerItem(candidate("%2"), now).status).toContain("activity unknown");
+		expect(_test.pickerItem(candidate("%2"), now).detail).toEndWith("no tell id");
+
+		const unnamed = candidate("%3");
+		unnamed.sessionName = null;
+		expect(_test.pickerItem(unnamed, now).summary).toBe("Unnamed session in /project");
 	});
 
 	test("replaces control characters in picker metadata", () => {
 		const item = candidate("%0");
 		item.sessionName = "name\n\x1b[2J";
 
-		expect(_test.pickerItem(item, now).description).not.toMatch(/\p{Cc}/u);
+		expect(_test.pickerItem(item, now).summary).not.toMatch(/\p{Cc}/u);
+		expect(_test.pickerItem(item, now).detail).not.toMatch(/\p{Cc}/u);
 	});
 
 	test("an exact selected socket wins even over a peer with that logical name", async () => {
@@ -152,21 +162,22 @@ describe("tell picker display and routing", () => {
 		expect((await _test.selectCandidate(undefined, context(neverSelect, false), inventory)).ok).toBe(false);
 	});
 
-	test.each(["\x1b[B", "j", "k"])("custom TUI navigation %s renders bounded rows and returns the exact socket", async (key) => {
+	test.each(["\x1b[B", "\x1b[A"])("custom TUI navigation %s renders aligned two-line rows and returns the exact socket", async (key) => {
 		const choices = [candidate("%0"), candidate("%1")];
-		let selected: string | undefined;
+		let selected: { candidate: ReturnType<typeof candidate> } | undefined;
 
 		// SAFETY: this fixture implements the custom picker APIs used by pickCandidate.
 		const ctx = {
 			mode: "tui",
+			sessionManager: { getSessionId: () => "self-session" },
 			hasUI: true,
 			ui: {
 				async custom(factory) {
 					const component = factory(
 						{ terminal: { rows: 24 }, requestRender() {} },
-						{ fg: (_color: string, text: string) => text },
+						fakeTheme,
 						{ matches: (data: string, key: string) => data === "\r" && key === "tui.select.confirm" },
-						(value: string | undefined) => { selected = value; },
+						(value: typeof selected) => { selected = value; },
 					);
 
 					component.handleInput(key);
@@ -179,6 +190,11 @@ describe("tell picker display and routing", () => {
 						expect(lines.join("\n")).toContain("Fix auth");
 					}
 
+					const lines = component.render(120);
+					const active = lines.findIndex((line: string) => line.includes("\u276f 2. "));
+
+					expect(lines[active].indexOf("Fix auth")).toBe(lines[active + 1].indexOf("work:0.1"));
+					expect(lines[active + 1]).toContain("%1 \u00b7 no tell id");
 					component.handleInput("\r");
 
 					return selected;
@@ -186,7 +202,7 @@ describe("tell picker display and routing", () => {
 			},
 		} as ExtensionContext;
 
-		expect(await _test.pickCandidate(choices, ctx, "Select Pi instance")).toBe(choices[1]);
+		expect((await _test.pickCandidate(choices, ctx, "Select Pi instance"))?.candidate).toBe(choices[1]);
 	});
 });
 
@@ -265,13 +281,14 @@ const withPicker = async (
 	choices: ReturnType<typeof candidate>[],
 	run: (picker: PickerFixture) => Promise<void>,
 	rows = 24,
-	options?: { signal?: AbortSignal; query?: string },
+	options?: { signal?: AbortSignal; query?: string; allowNote?: boolean },
 ) => {
-	let selected: string | undefined;
+	let selected: unknown;
 
 	// SAFETY: the fixture implements the APIs used by the custom picker.
 	const ctx = {
 		mode: "tui",
+		sessionManager: { getSessionId: () => "self-session" },
 		hasUI: true,
 		ui: {
 			async custom(factory) {
@@ -280,7 +297,7 @@ const withPicker = async (
 
 				const component = factory(
 					{ terminal, requestRender() { renders += 1; } },
-					{ fg: (_color: string, text: string) => text },
+					fakeTheme,
 					{ matches: (data: string, key: string) => (data === "\r" && key === "tui.select.confirm") || (data === "\x1b" && key === "tui.select.cancel") },
 					(value: string | undefined) => { selected = value; },
 				);
@@ -300,7 +317,7 @@ const withPicker = async (
 };
 
 describe("tell highlighted session preview", () => {
-	test("fetches the initial highlight and wraps the full logical UUID at narrow widths", async () => {
+	test("fetches the initial highlight and shows the full tell ID where line 2 fits it", async () => {
 		const received = deferred<PreviewRequest>();
 		const peer = await previewPeer(received.resolve);
 		peer.sessionId = "01a0c3f4-f229-7745-82ff-232f32b6859c";
@@ -311,20 +328,21 @@ describe("tell highlighted session preview", () => {
 			expect(request.payload).toMatchObject({ type: "control", protocol: "pi.control.v1", operation: "message.last" });
 			await request.reply(lastMessageResponse(request, "Initial highlighted reply"));
 
-			for (const width of [12, 20, 40, 80, 120]) {
+			for (const width of [12, 20, 40, 80, 120, 200]) {
 				const lines = picker.render(width);
 				expect(lines.every((line) => visibleWidth(line) <= width)).toBe(true);
-				expect(lines.join("").replace(/\s/g, "")).toContain(peer.sessionId);
 			}
+
+			expect(picker.render(200).join("\n")).toContain(`pi:${peer.machine}:${peer.sessionId}`);
 
 			expect(picker.render(80).join("\n")).toContain("Initial highlighted reply");
 			picker.handleInput("\r");
 		});
 
-		expect(selected).toBe(peer);
+		expect(selected?.candidate).toBe(peer);
 	});
 
-	test.each(["\x1b[B", "j", "k"])("navigation %s clears the preview and ignores late responses", async (key) => {
+	test.each(["\x1b[B", "\x1b[A"])("navigation %s clears the preview and ignores late responses", async (key) => {
 		const firstRequest = deferred<PreviewRequest>();
 		const secondRequest = deferred<PreviewRequest>();
 		const first = await previewPeer(firstRequest.resolve);
@@ -355,9 +373,9 @@ describe("tell highlighted session preview", () => {
 
 		await withPicker([first, second], async (picker) => {
 			const oldRequest = await oldFirst.promise;
-			picker.handleInput("j");
+			picker.handleInput("\x1b[B");
 			const middleRequest = await secondRequest.promise;
-			picker.handleInput("k");
+			picker.handleInput("\x1b[A");
 			const newRequest = await newFirst.promise;
 			await newRequest.reply(lastMessageResponse(newRequest, "Fresh first reply"));
 			await oldRequest.reply(lastMessageResponse(oldRequest, "Stale first reply"));
@@ -378,7 +396,7 @@ describe("tell highlighted session preview", () => {
 			else picker.handleInput(action === "cancel" ? "\x1b" : "\r");
 			const renders = picker.renderCount();
 			await request.reply(lastMessageResponse(request, "Late reply"));
-			picker.handleInput("j");
+			picker.handleInput("\x1b[B");
 			expect(picker.renderCount()).toBe(renders);
 		});
 	});
@@ -400,7 +418,7 @@ describe("tell highlighted session preview", () => {
 					: kind === "error" ? { ...response, ok: false, error: "Peer refused request" } : response);
 			const rendered = picker.render(120).join("\n");
 			expect(rendered).toContain(expected);
-			expect(rendered).toContain("Session ID: unknown");
+			expect(rendered).toContain("no tell id");
 			expect(rendered).not.toContain("Rejected private text");
 			expect(rendered).not.toContain("Peer refused request");
 		});
@@ -419,11 +437,15 @@ describe("tell highlighted session preview", () => {
 				expect(lines.every((line) => visibleWidth(line) <= width)).toBe(true);
 				expect(lines.length).toBeLessThanOrEqual(24);
 
+				// pi-tui's own fake-cursor markers end in BEL; only peer text must be clean.
+				const text = lines.join("\n").replaceAll("\x1b_pi:fc\x07", "").replaceAll("\x1b_pi:/fc\x07", "");
+
 				for (const control of ["\x00", "\x07", "\x08", "\u202e", "\x1b[2J", "\x1b]52"]) {
-					expect(lines.join("\n")).not.toContain(control);
+					expect(text).not.toContain(control);
 				}
 
-				expect(lines.join("\n")).toContain("[Preview truncated]");
+				// The card border leaves 16 columns at width 20, so the marker itself is clipped there.
+				expect(lines.join("\n")).toContain(width > 20 ? "[Preview truncated]" : "[Preview");
 			}
 		});
 	});
@@ -438,15 +460,136 @@ describe("tell highlighted session preview", () => {
 			const request = await received.promise;
 			await request.reply(lastMessageResponse(request, "Visible reply text ".repeat(100)));
 
-			for (const [width, height] of [[80, 24], [40, 16], [20, 16], [20, 13]]) {
+			for (const [width, height] of [[200, 40], [80, 24], [40, 16], [30, 16], [20, 13]]) {
 				picker.resize(height);
 				const lines = picker.render(width);
 				expect(lines.length).toBeLessThanOrEqual(height);
 				expect(lines.every((line) => visibleWidth(line) <= width)).toBe(true);
-				expect(lines.join("").replace(/\s/g, "")).toContain(peer.sessionId);
 				expect(lines.join("\n")).toContain("Visible reply");
+				expect(lines.join("\n")).toContain("Current: pi:");
+
+				// Line 2 truncates the tell ID once the option column is narrower than the ID.
+				if (width >= 200) expect(lines.join("\n")).toContain(peer.sessionId);
 			}
 		});
+	});
+
+	test("shows the current tell ID, ten options at a time, and a card as tall as the list", async () => {
+		const choices = Array.from({ length: 12 }, (_, index) => candidate(`%tall${index}`));
+
+		await withPicker(choices, async (picker) => {
+			picker.resize(60);
+			const lines = picker.render(160);
+			const first = lines.findIndex((line) => line.includes("\u276f  1. "));
+			const cardTop = lines.findIndex((line) => line.includes("\u250c\u2500"));
+			const cardBottom = lines.findIndex((line) => line.includes("\u2514\u2500"));
+
+			expect(lines.join("\n")).toContain(`Current: pi:${choices[0].machine}:self-session`);
+			expect(lines.filter((line) => /^[\u276f ] +\d+\. /u.test(line))).toHaveLength(10);
+			expect(lines.join("\n")).toContain("(1/12)");
+			expect(cardTop).toBe(first);
+			// Ten two-line options plus the position line.
+			expect(cardBottom - cardTop + 1).toBe(21);
+			expect(lines[cardBottom]).toContain("/project");
+
+			for (let step = 0; step < 11; step += 1) picker.handleInput("\x1b[B");
+
+			const scrolled = picker.render(160).join("\n");
+
+			expect(scrolled).toContain("\u276f 12. ");
+			expect(scrolled).toContain("(12/12)");
+			picker.handleInput("\x1b");
+		});
+	});
+
+	test("Ctrl+N adds a note that returns with the selection", async () => {
+		const peer = candidate("%note");
+
+		const result = await withPicker([peer], async (picker) => {
+			expect(picker.render(120).join("\n")).toContain("Note: press Ctrl+N to add a note");
+			picker.handleInput("\x0e");
+			expect(picker.render(120).join("\n")).toContain("Enter to save note");
+
+			for (const key of "check logs") picker.handleInput(key);
+
+			picker.handleInput("\r");
+			expect(picker.render(120).join("\n")).toContain("Note: check logs");
+			// Typing after the note closes filters again instead of editing the note.
+			picker.handleInput("x");
+			expect(picker.render(120).join("\n")).toContain("Filter: x");
+			picker.handleInput("\x7f");
+			picker.handleInput("\r");
+		}, 24, { allowNote: true });
+
+		expect(result).toEqual({ candidate: peer, note: "check logs" });
+	});
+
+	test("Ctrl+G switches tmux to the selected local pane, reports failures and keeps the picker open", async () => {
+		const previousTmux = process.env.TMUX;
+		const local = candidate("%jump");
+		const remote = candidate("%remote-jump");
+		const tmuxCalls: string[][] = [];
+		let fail = false;
+
+		process.env.TMUX = "/tmp/tmux-test,1,0";
+		local.windowIndex = "3";
+		remote.machine = "remote.example";
+
+		const exec = spyOn(childProcess, "execFile").mockImplementation((file, args, _options, callback) => {
+			if (file === "tmux") tmuxCalls.push(args);
+			callback(fail ? new Error("exit 1") : null, "", fail ? "can't find session: work" : "");
+
+			return new childProcess.ChildProcess();
+		});
+
+		try {
+			const result = await withPicker([local, remote], async (picker) => {
+				expect(picker.render(160).join("\n")).toContain("Ctrl+G to go to pane");
+				picker.handleInput("\x07");
+				await Promise.resolve();
+				expect(tmuxCalls).toEqual([["switch-client", "-t", "=work", ";", "select-window", "-t", "=work:3", ";", "select-pane", "-t", "%jump"]]);
+
+				picker.handleInput("\x1b[B");
+				expect(picker.render(160).join("\n")).not.toContain("Ctrl+G");
+				picker.handleInput("\x07");
+				expect(tmuxCalls).toHaveLength(1);
+
+				fail = true;
+				picker.handleInput("\x1b[A");
+				picker.handleInput("\x07");
+				await Promise.resolve();
+				expect(picker.render(160).join("\n")).toContain("Could not switch panes: can't find session: work");
+				picker.handleInput("\x1b");
+			});
+
+			expect(result).toBeUndefined();
+		} finally {
+			exec.mockRestore();
+
+			if (previousTmux === undefined) delete process.env.TMUX;
+			else process.env.TMUX = previousTmux;
+		}
+	});
+
+	test("pickers that cannot send keep Ctrl+N out of the hint and the result", async () => {
+		const peer = candidate("%nonote");
+
+		const result = await withPicker([peer], async (picker) => {
+			picker.handleInput("\x0e");
+			const rendered = picker.render(120).join("\n");
+
+			expect(rendered).not.toContain("Ctrl+N");
+			expect(rendered).not.toContain("save note");
+			picker.handleInput("\r");
+		});
+
+		expect(result).toEqual({ candidate: peer });
+	});
+
+	test("a note goes before the message it accompanies", () => {
+		expect(_test.withNote(" also check CI ", "Review this")).toBe("also check CI\n\nReview this");
+		expect(_test.withNote(undefined, "Review this")).toBe("Review this");
+		expect(_test.withNote("Only the note", " ")).toBe("Only the note");
 	});
 
 	test("reports unreachable sockets without opening another selector", async () => {
@@ -1316,7 +1459,8 @@ describe("tell target completion", () => {
 		expect(_test.splitCommandArgs('"/tmp/exact socket.sock" hello')).toMatchObject({ target: "/tmp/exact socket.sock", message: "hello" });
 	});
 
-	test.each(["\r", "\x1b"])("real Editor Tab opens an overlay and selects or cancels (%s)", async (key) => {
+	test.each([["\r"], ["\x1b"], ["\x0e", "c", "i", "\r", "\r"]])("real Editor Tab opens an overlay and selects, cancels or adds a note (%s)", async (...keys) => {
+		const key = keys.at(-1);
 		const item = candidate("%editor");
 		item.sessionId = "editor-session";
 		const completed = deferred<void>();
@@ -1325,6 +1469,7 @@ describe("tell target completion", () => {
 		// SAFETY: the fake implements only custom UI and notification, used by the picker.
 		const ctx = {
 			mode: "tui", hasUI: true,
+			sessionManager: { getSessionId: () => "self-session" },
 			ui: {
 				notify(text: string) { throw new Error(text); },
 				async custom(factory, options) {
@@ -1333,13 +1478,13 @@ describe("tell target completion", () => {
 
 					const component = factory(
 						{ terminal: { rows: 24 }, requestRender() {} },
-						{ fg: (_color: string, text: string) => text },
+						fakeTheme,
 						{ matches: (data: string, action: string) => (data === "\r" && action === "tui.select.confirm") || (data === "\x1b" && action === "tui.select.cancel") },
 						(value: string | undefined) => { selected = value; },
 					);
 
 					try {
-						component.handleInput(key);
+						for (const input of keys) component.handleInput(input);
 
 						return selected;
 					} finally { component.dispose(); }
@@ -1374,7 +1519,9 @@ describe("tell target completion", () => {
 		editor.handleInput("\t");
 		await completed.promise;
 
-		if (key === "\r") expect(await changed.promise).toBe(`/tell pi:${item.machine}:editor-session `);
+		const note = keys.length > 1 ? "ci " : "";
+
+		if (key === "\r") expect(await changed.promise).toBe(`/tell pi:${item.machine}:editor-session ${note}`);
 		else expect(editor.getText()).toBe("/tell ");
 	});
 
@@ -1416,6 +1563,24 @@ describe("tell target completion", () => {
 		controller.abort();
 		scan.resolve([peer]);
 		expect(await pending).toBeNull();
+	});
+
+	test("text typed before Tab preloads the filter", async () => {
+		const first = candidate("%query1");
+		const second = candidate("%query2");
+		first.searchText = "jack project";
+		second.searchText = "other project";
+
+		const result = await withPicker([first, second], async (picker) => {
+			const rendered = picker.render(120).join("\n");
+
+			expect(rendered).toContain("Filter: jack");
+			expect(rendered).toContain("%query1");
+			expect(rendered).not.toContain("%query2");
+			picker.handleInput("\r");
+		}, 24, { query: "jack" });
+
+		expect(result).toEqual({ candidate: first });
 	});
 
 	test("filters j/k as text, clears unmatched previews and cancels on abort", async () => {
@@ -1471,7 +1636,7 @@ describe("tell live pane preview", () => {
 			await withPicker([peer], async (picker) => {
 				for (let tick = 0; tick < 12; tick++) await Promise.resolve();
 				const rendered = picker.render(80).join("\n");
-				expect(rendered).toContain("Live pane preview");
+				expect(rendered).toContain("Live pane");
 				expect(rendered).toContain("current output");
 				expect(rendered).not.toContain("old scrollback");
 			});
