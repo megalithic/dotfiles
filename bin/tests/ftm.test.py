@@ -73,7 +73,9 @@ elif name == "ftm-grid-preview":
     if not args or args[0] != "--manifest-panes":
         print("grid-preview")
 elif name == "mise":
-    sys.exit(1)
+    if args[:3] == ["tasks", "info", "--json"]:
+        sys.exit(0 if os.environ.get("MISE_TASKS") else 1)
+    sys.exit(0 if os.environ.get("MISE_TASKS") else 1)
 elif name == "ps":
     sys.exit(0)
 elif name == "tmux":
@@ -100,6 +102,7 @@ elif name == "tmux":
         state_file.write_text(json.dumps(state))
     elif command == "display-message":
         values = {"#{session_path}": session["cwd"] if session else str(root),
+                  "#{session_id}": session["id"] if session else "$current",
                   "#{window_index}": "0", "#{window_id}": "@1",
                   "#{pane_id}": "%1", "#{pane_dead}": "0",
                   "#{pane_current_command}": "bash", "#{client_width}": "100",
@@ -113,6 +116,8 @@ elif name == "tmux":
                   else "@1 code\n@2 agent\n@3 services")
     elif command == "new-window":
         print("@4")
+    elif command == "split-window":
+        print("@5")
     elif command == "send-keys":
         pass
     elif command == "list-panes":
@@ -451,6 +456,36 @@ class FtmTest(unittest.TestCase):
         self.assertIn("code", creates[0])
         self.assertNotIn("saved-window", creates[0])
         self.assertFalse(any(c["args"][0] == "respawn-pane" for c in self.calls("tmux")))
+
+    def test_no_services_session_keeps_services_window_as_shell(self):
+        self.env["MISE_TASKS"] = "1"
+        self.run_ftm("ensure", "--kind", "generic", "--cwd", str(self.root),
+                     "--session", "project", "--attach", "never", "--format", "json",
+                     "--no-services")
+        sends = [call["args"] for call in self.calls("tmux")
+                 if call["args"][0] == "send-keys"]
+        self.assertFalse(any("mise run dev:services" in call for call in sends))
+        self.assertIn('"services":"shell"', self.run_ftm(
+            "ensure", "--kind", "generic", "--cwd", str(self.root),
+            "--session", "project", "--attach", "never", "--format", "json",
+            "--no-services").stdout)
+
+    def test_no_services_window_keeps_services_pane_as_shell(self):
+        self.env["MISE_TASKS"] = "1"
+        self.env["TMUX_PANE"] = "%1"
+        self.run_ftm("ensure", "--kind", "generic", "--cwd", str(self.root),
+                     "--worktree-id", "repo-topic", "--session", "project",
+                     "--attach", "never", "--format", "json",
+                     "--presentation", "window", "--no-services")
+        sends = [call["args"] for call in self.calls("tmux")
+                 if call["args"][0] == "send-keys"]
+        self.assertFalse(any("mise run dev:services" in call for call in sends))
+
+    def test_no_services_conflicts_with_restart_services(self):
+        result = self.run_ftm("ensure", "--kind", "generic", "--cwd", str(self.root),
+                              "--session", "project", "--attach", "never",
+                              "--no-services", "--restart-services", expected=2)
+        self.assertIn("cannot be combined", result.stderr)
 
     def test_agent_launch_uses_managed_wrapper(self):
         self.env["MISSING_AGENT"] = "1"

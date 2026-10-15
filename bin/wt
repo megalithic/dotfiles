@@ -125,6 +125,7 @@ wt wrapper (~/.dotfiles/bin/wt) — lifecycle + tmux on top of Worktrunk
   wt -t w NAME                     same lifecycle, one 60/40 window in this session
   wt new NAME [--base BRANCH]      create only; refuses if the branch exists
   wt ensure NAME [--base X] --json full lifecycle, no cd/attach (agents)
+  wt NAME --no-services            keep the services pane as a shell
   wt repair [NAME]                 rerun setup + rebuild the tmux session
   wt path NAME | wt path .         print the worktree path
   wt list --json                   normalized worktree list

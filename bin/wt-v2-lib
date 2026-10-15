@@ -33,6 +33,7 @@ V2_EXPECTED_HEAD=
 V2_COPY='{}'
 V2_FTM='{}'
 V2_RESTART=0
+V2_NO_SERVICES=0
 V2_ERROR_CODE=
 V2_ERROR_MESSAGE=
 V2_ERROR_PHASE=
@@ -384,6 +385,7 @@ v2_call_ftm() { # ensure|repair|remove
       args=("$operation" --kind worktree --cwd "$V2_PATH" --session "$V2_SESSION" --worktree-id "$V2_WID" --lease "$V2_LEASE" --attach never --format json --presentation "$V2_PRESENTATION")
       [ "$V2_PRIMARY" -eq 1 ] && args+=(--primary)
       [ "$V2_RESTART" -eq 0 ] || args+=(--restart-services)
+      [ "$V2_NO_SERVICES" -eq 0 ] || args+=(--no-services)
       ;;
     remove)
       args=(remove --kind worktree --cwd "$V2_PATH" --session "$V2_SESSION" --worktree-id "$V2_WID" --lease "$V2_LEASE" --discard-snapshot --attach never --format json)
@@ -610,6 +612,7 @@ v2_parse_args() {
   V2_BASE=
   V2_JSON=0
   V2_RESTART=0
+  V2_NO_SERVICES=0
   V2_PRESENTATION=session
   V2_REQUESTED_PRESENTATION=session
   V2_PRIMARY=0
@@ -622,6 +625,7 @@ v2_parse_args() {
         V2_BASE="$2"; shift 2
         ;;
       --restart-services) V2_RESTART=1; shift ;;
+      --no-services) V2_NO_SERVICES=1; shift ;;
       -t|--target)
         if [ "$#" -ge 2 ]; then
           case "$2" in
@@ -648,9 +652,12 @@ v2_parse_args() {
     esac
   done
 
+  [ "$V2_RESTART" -eq 0 ] || [ "$V2_NO_SERVICES" -eq 0 ] ||
+    { v2_set_error usage '--no-services cannot be combined with --restart-services' args 2; return 1; }
+
   case "$V2_CMD" in
     list)
-      [ "$V2_JSON" -eq 1 ] && [ -z "$V2_TARGET" ] && [ -z "$V2_BASE" ] && [ "$V2_RESTART" -eq 0 ] ||
+      [ "$V2_JSON" -eq 1 ] && [ -z "$V2_TARGET" ] && [ -z "$V2_BASE" ] && [ "$V2_RESTART" -eq 0 ] && [ "$V2_NO_SERVICES" -eq 0 ] ||
         { v2_set_error usage 'list v2 requires only --json' args 2; return 1; }
       ;;
     open)
@@ -662,6 +669,7 @@ v2_parse_args() {
     ensure | path | prune)
       [ -n "$V2_TARGET" ] || { v2_set_error usage 'target is required' args 2; return 1; }
       [ "$V2_RESTART" -eq 0 ] || { v2_set_error usage "$V2_CMD does not accept --restart-services" args 2; return 1; }
+      [ "$V2_CMD" = ensure ] || [ "$V2_NO_SERVICES" -eq 0 ] || { v2_set_error usage "$V2_CMD does not accept --no-services" args 2; return 1; }
       [ "$V2_CMD" = ensure ] || [ -z "$V2_BASE" ] || { v2_set_error usage "$V2_CMD does not accept --base" args 2; return 1; }
       ;;
     new)

@@ -337,7 +337,7 @@ function __help() {
   printf -- "   Deterministic (non-picker) session lifecycle:\n"
   printf -- "     %s ensure --kind worktree|generic --cwd PATH --session NAME \\\n" "$__base"
   printf -- "         [--worktree-id ID] [--lease TOKEN] [--pi-session UUID] \\\n"
-  printf -- "         [--presentation cd|window|session] [--primary] \\\n"
+  printf -- "         [--presentation cd|window|session] [--primary] [--no-services] \\\n"
   printf -- "         [--attach auto|never] [--format json|text]\n"
   printf -- "     %s repair ... [--restart-services]   additive repair of a recognized session\n" "$__base"
   printf -- "     %s remove --session NAME [--cwd PATH] [--discard-snapshot]\n" "$__base"
@@ -833,7 +833,7 @@ function fuzzy_find() {
 DETERMINISTIC_CMD="" DETERMINISTIC_KIND="" DETERMINISTIC_CWD="" DETERMINISTIC_SESSION="" DETERMINISTIC_WID=""
 DETERMINISTIC_LEASE="" DETERMINISTIC_ATTACH=auto DETERMINISTIC_FORMAT=text DETERMINISTIC_PI_SESSION=""
 DETERMINISTIC_PRESENTATION=session DETERMINISTIC_PRIMARY=0
-DETERMINISTIC_RESTART_SERVICES=0 DETERMINISTIC_DISCARD_SNAPSHOT=0
+DETERMINISTIC_RESTART_SERVICES=0 DETERMINISTIC_NO_SERVICES=0 DETERMINISTIC_DISCARD_SNAPSHOT=0
 DETERMINISTIC_GCD="" DETERMINISTIC_OWNED_LEASE="" DETERMINISTIC_SETUP_STATE=skipped
 DETERMINISTIC_TMUX_ACTION="" DETERMINISTIC_W_CODE="" DETERMINISTIC_W_AGENT="" DETERMINISTIC_W_SERVICES="" DETERMINISTIC_WINDOW_ID=""
 
@@ -918,6 +918,10 @@ function deterministic_parse() {
         DETERMINISTIC_RESTART_SERVICES=1
         shift
         ;;
+      --no-services)
+        DETERMINISTIC_NO_SERVICES=1
+        shift
+        ;;
       --discard-snapshot)
         DETERMINISTIC_DISCARD_SNAPSHOT=1
         shift
@@ -925,6 +929,8 @@ function deterministic_parse() {
       *) deterministic_error 2 usage args "unknown argument: $a" ;;
     esac
   done
+  [[ $DETERMINISTIC_RESTART_SERVICES == 0 || $DETERMINISTIC_NO_SERVICES == 0 ]] || deterministic_error 2 usage args '--no-services cannot be combined with --restart-services'
+  [[ $DETERMINISTIC_NO_SERVICES == 0 || $DETERMINISTIC_CMD == ensure || $DETERMINISTIC_CMD == repair ]] || deterministic_error 2 usage args '--no-services is valid only for ensure/repair'
   [[ $DETERMINISTIC_FORMAT == json || $DETERMINISTIC_FORMAT == text ]] || deterministic_error 2 usage args "--format must be json|text"
   [[ $DETERMINISTIC_ATTACH == auto || $DETERMINISTIC_ATTACH == never ]] || deterministic_error 2 usage args "--attach must be auto|never"
   [[ -n $DETERMINISTIC_SESSION ]] || deterministic_error 2 usage args '--session is required'
@@ -1106,9 +1112,11 @@ function deterministic_build() {
     # it back; deterministic_services_window_id recognizes both spellings.
     # Stopped = dead pane, OR a plain shell sitting where the runner should be
     # (the runner was cancelled back to the prompt) while dev:services exists.
-    if [[ "$(tmux display-message -p -t "$wid" '#{pane_dead}' 2>/dev/null || true)" == 1 ]] ||
+    if [[ $DETERMINISTIC_NO_SERVICES == 1 ]] && deterministic_shell_pane "$wid"; then
+      DETERMINISTIC_W_SERVICES=shell
+    elif [[ "$(tmux display-message -p -t "$wid" '#{pane_dead}' 2>/dev/null || true)" == 1 ]] ||
       { deterministic_task_exists dev:services && deterministic_shell_pane "$wid"; }; then
-      if [[ $DETERMINISTIC_CMD == repair && $DETERMINISTIC_RESTART_SERVICES == 1 ]] && deterministic_task_exists dev:services; then
+      if [[ $DETERMINISTIC_NO_SERVICES == 0 && $DETERMINISTIC_CMD == repair && $DETERMINISTIC_RESTART_SERVICES == 1 ]] && deterministic_task_exists dev:services; then
         tmux respawn-pane -k -t "$wid" -c "$DETERMINISTIC_CWD"
         tmux send-keys -t "$wid" 'mise run dev:services' Enter
         DETERMINISTIC_W_SERVICES=started
@@ -1127,7 +1135,7 @@ function deterministic_build() {
     wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n services -c "$DETERMINISTIC_CWD")" ||
       deterministic_error 7 tmux_failed tmux 'could not create services window'
     tmux set-option -w -t "$wid" remain-on-exit on
-    if deterministic_task_exists dev:services; then
+    if [[ $DETERMINISTIC_NO_SERVICES == 0 ]] && deterministic_task_exists dev:services; then
       tmux send-keys -t "$wid" 'mise run dev:services' Enter
       DETERMINISTIC_W_SERVICES=started
     else
@@ -1211,7 +1219,7 @@ function deterministic_window_build() {
   else
     tmux send-keys -t "$right" "export GIT_WORKTREE=$(printf %q "$DETERMINISTIC_WID")" Enter
   fi
-  if deterministic_task_exists dev:services; then
+  if [[ $DETERMINISTIC_NO_SERVICES == 0 ]] && deterministic_task_exists dev:services; then
     tmux send-keys -t "$right" 'mise run dev:services' Enter
   fi
   DETERMINISTIC_W_CODE="$left"
