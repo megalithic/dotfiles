@@ -22,7 +22,7 @@ import type {
 	ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 import { StringEnum } from "@earendil-works/pi-ai";
-import { SelectList, truncateToWidth, wrapTextWithAnsi } from "@earendil-works/pi-tui";
+import { Input, SelectList, truncateToWidth, visibleWidth, wrapTextWithAnsi, type AutocompleteProvider } from "@earendil-works/pi-tui";
 import { Type, type Static } from "typebox";
 import { Check } from "typebox/value";
 
@@ -358,7 +358,7 @@ const parseSessionTarget = (target: string): { machine: string; sessionId: strin
 };
 
 const looksLikeMachineTarget = (token: string | undefined): boolean => {
-	if (!token) return false;
+	if (!token || /[:/]/.test(token)) return false;
 	const normalized = token.toLowerCase();
 
 	return (
@@ -900,22 +900,65 @@ const previewText = (text: string): string => {
 	return clean + (text.length > bounded.length ? "\n[Preview truncated]" : "");
 };
 
+// A pane's root PID is usually the shell, not Pi. Check the tty's foreground job.
+const captureCandidatePane = async (candidate: Candidate, signal: AbortSignal): Promise<string | undefined> => {
+	if (!candidate.pane || !candidate.pid || (candidate.machine && !isLocalMachine(candidate.machine))) return undefined;
+
+	const run = (file: string, args: string[]): Promise<string | undefined> => new Promise((resolve) => {
+		if (signal.aborted) return resolve(undefined);
+		let child: ReturnType<typeof execFile> | undefined;
+		const abort = () => { child?.kill(); resolve(undefined); };
+
+		signal.addEventListener("abort", abort, { once: true });
+		child = execFile(file, args, { encoding: "utf8", timeout: 800, maxBuffer: 128 * 1024 },
+			(error, stdout) => { signal.removeEventListener("abort", abort); resolve(error ? undefined : stdout); });
+
+		if (signal.aborted) abort();
+	});
+
+	const tty = (await run("tmux", ["display-message", "-p", "-t", candidate.pane, "#{pane_tty}"]))?.trim();
+
+	if (!tty?.startsWith("/dev/")) return undefined;
+	const processes = await run("ps", ["-t", tty.slice(5), "-o", "pid=,pgid=,tpgid=,comm="]);
+
+	const ownsForeground = processes?.split("\n").some((line) => {
+		const match = line.trim().match(/^(\d+)\s+(\d+)\s+(\d+)\s+(.*)$/);
+
+		return match && Number(match[1]) === candidate.pid && match[2] === match[3] && path.basename(match[4]) === "pi";
+	});
+
+	if (!ownsForeground) return undefined;
+	const output = await run("tmux", ["capture-pane", "-p", "-t", candidate.pane, "-S", "-120"]);
+
+	if (!output?.trim()) return undefined;
+
+	return stripVTControlCharacters(output).replace(/\r\n?/g, "\n")
+		.replace(/[\p{Cc}\p{Cf}]/gu, (char) => char === "\n" ? char : " ")
+		.trimEnd().split("\n").slice(-120).join("\n").slice(-16000);
+};
+
 const pickCandidate = async (
 	choices: Candidate[],
 	ctx: ExtensionContext,
 	title: string,
+	options?: { signal?: AbortSignal; query?: string },
 ): Promise<Candidate | undefined> => {
-	if (ctx.mode !== "tui") {
-		const options = new Map(choices.map((candidate) => [candidate.label, candidate]));
-		const selected = await ctx.ui.select(title, [...options.keys()]);
+	if (options?.signal?.aborted) return undefined;
 
-		return options.get(selected);
+	if (ctx.mode !== "tui") {
+		const labels = new Map(choices.map((candidate) => [candidate.label, candidate]));
+		const selected = await ctx.ui.select(title, [...labels.keys()]);
+
+		return labels.get(selected);
 	}
 
 	const bySocket = new Map(choices.map((candidate) => [candidate.socket, candidate]));
 
 	const selected = await ctx.ui.custom<string | undefined>((tui, theme, keybindings, done) => {
-		const items = choices.map((candidate) => pickerItem(candidate));
+		const input = options ? new Input({ prompt: "Filter: " }) : undefined;
+		input?.setValue(options?.query || "");
+		const filteredItems = () => choices.flatMap((candidate) => !input?.getValue() || scoreCandidate(candidate, input.getValue()) > 0 ? [pickerItem(candidate)] : []);
+		let items = filteredItems();
 
 		const makeList = (maxVisible: number) => new SelectList(items, maxVisible, {
 			selectedPrefix: (text) => theme.fg("accent", text),
@@ -926,36 +969,51 @@ const pickCandidate = async (
 		}, { minPrimaryColumnWidth: 24, maxPrimaryColumnWidth: 48 });
 
 		let list = makeList(1);
-
-		const detail = {
-			render(width: number) {
-				const item = list.getSelectedItem();
-				const candidate = item && bySocket.get(item.value);
-
-				if (!candidate) return [];
-
-				return [
-					...[
-						`${candidate.machine || "local"} / ${item.label}`,
-						candidate.sessionName || candidate.displayTitle || candidate.windowName || candidate.window || "unnamed",
-						item.description || "",
-						compactPath(candidate.cwd || candidate.root),
-					].map((line) => truncateToWidth(pickerText(line), width)),
-					...wrapTextWithAnsi(pickerText(`Session ID: ${candidate.sessionId?.trim() || "unknown"}`), Math.max(1, width)),
-				].map((line) => theme.fg("muted", line));
-			},
-			invalidate() {},
-		};
-
 		let closed = false;
-		let revision = 0;
-		let previewSocket: string | undefined;
+		let previewSocket: string | undefined | null = null;
 		let preview = "Loading...";
+		let previewLive = false;
+		let previewTimer: ReturnType<typeof setTimeout> | undefined;
+		let previewAbort = new AbortController();
+
+		const dispose = () => {
+			closed = true;
+			clearTimeout(previewTimer);
+			previewAbort.abort();
+			options?.signal?.removeEventListener("abort", abort);
+		};
 
 		const close = (value: string | undefined) => {
 			if (closed) return;
-			closed = true;
+			dispose();
 			done(value);
+		};
+
+		const abort = () => close(undefined);
+
+		const loadPreview = async (candidate: Candidate, signal: AbortSignal) => {
+			const pane = await captureCandidatePane(candidate, signal);
+
+			if (closed || signal.aborted) return;
+
+			if (pane !== undefined) {
+				preview = pane;
+				previewLive = true;
+			} else {
+				const result = await requestCandidateControl(candidate, "message.last");
+
+				if (closed || signal.aborted) return;
+				previewLive = false;
+				preview = result.ok
+					? previewText(controlLastMessage(result.response)?.content || "") || "No assistant message yet."
+					: isUnsupportedControlResponse(result.response)
+						? "Preview unavailable: target needs pi.control.v1 reload."
+						: "Preview unavailable.";
+			}
+
+			tui.requestRender();
+			// Schedule after completion so a slow peer cannot pile up refreshes.
+			previewTimer = setTimeout(() => { void loadPreview(candidate, signal); }, 1000);
 		};
 
 		const updatePreview = () => {
@@ -963,42 +1021,14 @@ const pickCandidate = async (
 
 			if (closed || socket === previewSocket) return;
 			previewSocket = socket;
+			clearTimeout(previewTimer);
+			previewAbort.abort();
+			previewAbort = new AbortController();
+			previewLive = false;
+			preview = socket ? "Loading..." : "No matching Pi instances.";
 			const candidate = socket && bySocket.get(socket);
-			const currentRevision = ++revision;
-			preview = "Loading...";
 
-			if (!candidate) return;
-
-			void requestCandidateControl(candidate, "message.last").then((result) => {
-				if (closed || currentRevision !== revision) return;
-				preview = result.ok
-					? previewText(controlLastMessage(result.response)?.content || "") || "No assistant message yet."
-					: isUnsupportedControlResponse(result.response)
-						? "Preview unavailable: target needs pi.control.v1 reload."
-						: "Preview unavailable.";
-				tui.requestRender();
-			});
-		};
-
-		const messagePreview = {
-			render(width: number) {
-				const available = tui.terminal.rows - list.render(width).length - detail.render(width).length - 5;
-				const maxLines = Math.max(1, Math.min(6, available));
-				const lines = wrapTextWithAnsi(preview, Math.max(1, width));
-				const shown = lines.slice(0, maxLines);
-
-				if (lines.length > maxLines) {
-					shown[maxLines - 1] = maxLines === 1
-						? `${truncateToWidth(shown[0], Math.max(0, width - 3), "")}...`
-						: "[Preview truncated]";
-				}
-
-				return [
-					theme.fg("accent", truncateToWidth("Latest assistant message", width)),
-					...shown.map((line) => theme.fg("muted", truncateToWidth(line, width))),
-				];
-			},
-			invalidate() {},
+			if (candidate) void loadPreview(candidate, previewAbort.signal);
 		};
 
 		const bindList = () => {
@@ -1007,44 +1037,95 @@ const pickCandidate = async (
 		};
 
 		bindList();
+		options?.signal?.addEventListener("abort", abort, { once: true });
 		updatePreview();
 
 		return {
+			get focused() { return input?.focused ?? false; },
+			set focused(value: boolean) { if (input) input.focused = value; },
 			render(width: number) {
-				const index = items.findIndex((item) => item.value === list.getSelectedItem()?.value);
-				const available = tui.terminal.rows - detail.render(width).length - 8;
-				list = makeList(Math.max(1, Math.min(8, choices.length, available)));
-				list.setSelectedIndex(index);
+				const height = tui.terminal.rows;
+				const item = list.getSelectedItem();
+				const candidate = item && bySocket.get(item.value);
+
+				const detail = candidate ? [
+					...[
+						(candidate.machine || "local") + " / " + item.label,
+						candidate.sessionName || candidate.displayTitle || candidate.windowName || candidate.window || "unnamed",
+						item.description || "",
+						compactPath(candidate.cwd || candidate.root),
+					].map((line) => truncateToWidth(pickerText(line), width)),
+					...wrapTextWithAnsi(pickerText("Session ID: " + (candidate.sessionId?.trim() || "unknown")), Math.max(1, width)),
+				].slice(0, Math.max(0, height - 6 - (input ? 1 : 0))) : [];
+
+				const index = items.findIndex((entry) => entry.value === item?.value);
+				list = makeList(Math.max(1, Math.min(8, items.length, height - detail.length - 8 - (input ? 1 : 0))));
+				list.setSelectedIndex(Math.max(0, index));
 				bindList();
 
-				return [
+				const prefix = [
 					theme.fg("accent", truncateToWidth(title, width)),
+					...(input?.render(width) || []),
 					...list.render(width),
-					...detail.render(width),
-					...messagePreview.render(width),
-					theme.fg("dim", truncateToWidth("Up/down: choose | Enter: select | Esc: cancel", width)),
+					...detail.map((line) => theme.fg("muted", line)),
 				];
+
+				const framed = height >= 20 && width >= 22;
+				const innerWidth = Math.max(1, width - (framed ? 2 : 0));
+				const maxLines = Math.max(1, Math.min(12, height - prefix.length - (framed ? 3 : 2)));
+				const lines = previewLive ? preview.split("\n").map((line) => truncateToWidth(line, innerWidth)) : wrapTextWithAnsi(preview, innerWidth);
+				const shown = previewLive ? lines.slice(-maxLines) : lines.slice(0, maxLines);
+
+				if (!previewLive && lines.length > maxLines) {
+					shown[maxLines - 1] = maxLines === 1
+						? truncateToWidth(shown[0], Math.max(0, innerWidth - 3), "") + "..."
+						: "[Preview truncated]";
+				}
+
+				const heading = previewLive ? "Live pane preview" : "Latest assistant message";
+
+				return [
+					...prefix,
+					theme.fg("accent", truncateToWidth(framed ? "+- " + heading + " " + "-".repeat(width) : heading, width)),
+					...shown.map((line) => {
+						const clipped = truncateToWidth(line, innerWidth);
+
+						return theme.fg("muted", framed ? "|" + clipped + " ".repeat(Math.max(0, innerWidth - visibleWidth(clipped))) + "|" : clipped);
+					}),
+					...(framed ? [theme.fg("accent", "+" + "-".repeat(width - 2) + "+")] : []),
+					theme.fg("dim", truncateToWidth("Up/down: choose | Enter: select | Esc: cancel", width)),
+				].slice(0, height).map((line) => truncateToWidth(line, width));
 			},
-			invalidate: () => list.invalidate(),
-			dispose() { closed = true; },
+			invalidate: () => { list.invalidate(); input?.invalidate(); },
+			dispose,
 			handleInput(data: string) {
 				if (closed) return;
 
 				if (keybindings.matches(data, "tui.select.confirm")) close(list.getSelectedItem()?.value);
 				else if (keybindings.matches(data, "tui.select.cancel")) close(undefined);
-				else if (data === "j" || data === "k") {
+				else if (!input && (data === "j" || data === "k")) {
 					const index = items.findIndex((item) => item.value === list.getSelectedItem()?.value);
-
 					list.setSelectedIndex((index + (data === "j" ? 1 : -1) + items.length) % items.length);
-				} else list.handleInput(data);
+				} else {
+					const navigate = keybindings.matches(data, "tui.select.up") || keybindings.matches(data, "tui.select.down") || data === "\x1b[A" || data === "\x1b[B";
 
-				if (!closed) {
-					updatePreview();
-					tui.requestRender();
+					if (!input || navigate) list.handleInput(data);
+					else {
+						const before = input.getValue();
+						input.handleInput(data);
+
+						if (before !== input.getValue()) {
+							items = filteredItems();
+							list = makeList(Math.max(1, Math.min(8, items.length)));
+							bindList();
+						}
+					}
 				}
+
+				if (!closed) { updatePreview(); tui.requestRender(); }
 			},
 		};
-	});
+	}, options ? { overlay: true, overlayOptions: { width: "95%", maxHeight: "100%" } } : undefined);
 
 	return selected ? bySocket.get(selected) : undefined;
 };
@@ -1059,6 +1140,97 @@ const normalizeTarget = (target: string): string =>
 		.replace(/[^\p{L}\p{N}:@._-]+/gu, " ")
 		.replace(/\s+/g, " ")
 		.toLowerCase();
+
+type TellCompletionContext = {
+	query: string;
+	machine?: string;
+	start: number;
+	end: number;
+};
+
+const tellCompletionContext = (draft: string): TellCompletionContext | undefined => {
+	if (draft.includes("\n") || !/^\s*\/tell\s/.test(draft)) return undefined;
+	const trailingSpace = /\s$/.test(draft);
+	const tokens = draft.trim().split(/\s+/).slice(1);
+
+	if (["--steer", "--follow-up", "--follow_up"].includes(tokens[0])) {
+		if (tokens.length === 1 && !trailingSpace) return undefined;
+		tokens.shift();
+	}
+
+	if (tokens[0] === "id" || tokens[0]?.startsWith("--")) return undefined;
+	const machine = looksLikeMachineTarget(tokens[0]) && (tokens.length > 1 || trailingSpace) ? tokens.shift() : undefined;
+
+	if (tokens.length > 1 || (tokens.length === 1 && trailingSpace)) return undefined;
+	const query = tokens[0] || "";
+
+	return { query, machine, start: draft.length - query.length, end: draft.length };
+};
+
+const applyTellCompletion = (draft: string, context: TellCompletionContext, target: string): string =>
+	draft.slice(0, context.start) + target + " " + draft.slice(context.end);
+
+const createTellAutocompleteProvider = (
+	current: AutocompleteProvider,
+	ctx: ExtensionContext,
+	inventory = listSessions,
+): AutocompleteProvider => {
+	const completed = new WeakSet<object>();
+
+	const position = (lines: string[], row: number, col: number) =>
+		lines.length === 1 && row === 0 && col === lines[0].length ? tellCompletionContext(lines[0]) : undefined;
+
+	return {
+		triggerCharacters: current.triggerCharacters,
+		async getSuggestions(lines, cursorLine, cursorCol, options) {
+			const completion = options.force && position(lines, cursorLine, cursorCol);
+
+			if (!completion) return current.getSuggestions(lines, cursorLine, cursorCol, options);
+
+			if (options.signal.aborted) return null;
+
+			try {
+				const candidates = (await inventory(completion.machine)).filter((candidate) => candidate.reachable && !candidate.current).sort(compareCandidates);
+
+				if (options.signal.aborted) return null;
+
+				if (!candidates.length) {
+					ctx.ui.notify("No running Pi targets found.", "info");
+
+					return null;
+				}
+
+				const selected = await pickCandidate(candidates, ctx, "Select Pi instance", { signal: options.signal, query: completion.query });
+
+				if (!selected || options.signal.aborted) return null;
+				const uniqueSession = selected.sessionId && selected.machine && candidates.filter((candidate) => candidate.sessionId === selected.sessionId && candidate.machine === selected.machine).length === 1;
+				const item = { value: uniqueSession ? sessionTarget(selected.machine!, selected.sessionId!) : JSON.stringify(selected.socket), label: selected.label };
+				completed.add(item);
+
+				return { items: [item], prefix: completion.query };
+			} catch (error) {
+				if (!options.signal.aborted) ctx.ui.notify(error instanceof Error ? error.message : String(error), "error");
+
+				return null;
+			}
+		},
+		applyCompletion(lines, cursorLine, cursorCol, item, prefix) {
+			const completion = position(lines, cursorLine, cursorCol);
+
+			if (completed.has(item) && completion && completion.query === prefix) {
+				completed.delete(item);
+				const line = applyTellCompletion(lines[0], completion, item.value);
+
+				return { lines: [line], cursorLine: 0, cursorCol: line.length };
+			}
+
+			return current.applyCompletion(lines, cursorLine, cursorCol, item, prefix);
+		},
+		shouldTriggerFileCompletion(lines, cursorLine, cursorCol) {
+			return Boolean(position(lines, cursorLine, cursorCol)) || (current.shouldTriggerFileCompletion?.(lines, cursorLine, cursorCol) ?? true);
+		},
+	};
+};
 
 const tokenizeHint = (input: string): string[] => {
 	const tokens: string[] = [];
@@ -2224,14 +2396,23 @@ export const _test = {
 	routeFromTargetHint,
 	scoreCandidate,
 	selectCandidate,
+	tellCompletionContext,
+	applyTellCompletion,
+	createTellAutocompleteProvider,
+	captureCandidatePane,
 	splitCommandArgs,
 	tokenizeHint,
 };
 
 export default function (pi: ExtensionAPI): void {
+	// Use the editor's supported autocomplete stack so Tab is only handled while
+	// the core editor has focus; this also gives us cancellation for stale scans.
 	pi.on("session_start", (_event, ctx) => {
 		pi.events.emit("tell:runtime", tellRuntime);
 		restoreRecentTellWidget(ctx);
+
+		if (ctx.mode !== "tui" || !ctx.hasUI) return;
+		ctx.ui.addAutocompleteProvider((current) => createTellAutocompleteProvider(current, ctx));
 	});
 
 	// @lat: [[pi-coding-agent#Session and routing extensions]]

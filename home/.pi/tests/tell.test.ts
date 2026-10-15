@@ -6,7 +6,7 @@ import crypto from "node:crypto";
 import net from "node:net";
 import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
-const { visibleWidth } = await import("@earendil-works/pi-tui");
+const { Editor, visibleWidth } = await import("@earendil-works/pi-tui");
 
 const stateDir = await mkdtemp("/tmp/pi-tell-");
 
@@ -265,6 +265,7 @@ const withPicker = async (
 	choices: ReturnType<typeof candidate>[],
 	run: (picker: PickerFixture) => Promise<void>,
 	rows = 24,
+	options?: { signal?: AbortSignal; query?: string },
 ) => {
 	let selected: string | undefined;
 
@@ -295,7 +296,7 @@ const withPicker = async (
 		},
 	} as ExtensionContext;
 
-	return _test.pickCandidate(choices, ctx, "Select Pi instance");
+	return _test.pickCandidate(choices, ctx, "Select Pi instance", options);
 };
 
 describe("tell highlighted session preview", () => {
@@ -1297,6 +1298,220 @@ test("exact IDs dispatch tell_pi, get_pi_last_message, and tell-last over mocked
 		if (previousHostname === undefined) delete process.env.HOSTNAME;
 		else process.env.HOSTNAME = previousHostname;
 	}
+});
+
+describe("tell target completion", () => {
+	test.each(["/tell --steer", "/tell id", "/tell target ", "/tell target message", "/tell remote.example target "])("leaves completed arguments alone: %s", (draft) => {
+		expect(_test.tellCompletionContext(draft)).toBeUndefined();
+	});
+
+	test.each(["/tell ", "/tell --steer ", "/tell --follow_up remote.example "])("inserts a target with a separating space: %s", (draft) => {
+		const position = _test.tellCompletionContext(draft)!;
+		expect(_test.applyTellCompletion(draft, position, "pi:remote.example:id")).toBe(`${draft}pi:remote.example:id `);
+	});
+
+	test("recognizes remote inventory and does not mistake socket paths for machines", () => {
+		expect(_test.tellCompletionContext("/tell remote.example ")).toMatchObject({ machine: "remote.example", query: "" });
+		expect(_test.tellCompletionContext("/tell --steer remote.example auth")).toMatchObject({ machine: "remote.example", query: "auth" });
+		expect(_test.splitCommandArgs('"/tmp/exact socket.sock" hello')).toMatchObject({ target: "/tmp/exact socket.sock", message: "hello" });
+	});
+
+	test.each(["\r", "\x1b"])("real Editor Tab opens an overlay and selects or cancels (%s)", async (key) => {
+		const item = candidate("%editor");
+		item.sessionId = "editor-session";
+		const completed = deferred<void>();
+		const changed = deferred<string>();
+
+		// SAFETY: the fake implements only custom UI and notification, used by the picker.
+		const ctx = {
+			mode: "tui", hasUI: true,
+			ui: {
+				notify(text: string) { throw new Error(text); },
+				async custom(factory, options) {
+					expect(options?.overlay).toBe(true);
+					let selected: string | undefined;
+
+					const component = factory(
+						{ terminal: { rows: 24 }, requestRender() {} },
+						{ fg: (_color: string, text: string) => text },
+						{ matches: (data: string, action: string) => (data === "\r" && action === "tui.select.confirm") || (data === "\x1b" && action === "tui.select.cancel") },
+						(value: string | undefined) => { selected = value; },
+					);
+
+					try {
+						component.handleInput(key);
+
+						return selected;
+					} finally { component.dispose(); }
+				},
+			},
+		} as ExtensionContext;
+
+		const current = {
+			async getSuggestions() { return null; },
+			applyCompletion() { throw new Error("native apply should not handle a tell selection"); },
+		};
+
+		const provider = _test.createTellAutocompleteProvider(current, ctx, async () => [item]);
+		const getSuggestions = provider.getSuggestions;
+		provider.getSuggestions = async (...args) => {
+			try { return await getSuggestions(...args); }
+			finally { completed.resolve(); }
+		};
+
+		// SAFETY: Editor only requests rendering from this TUI during text/Tab handling.
+		const tui = { requestRender() {} } as ConstructorParameters<typeof Editor>[0];
+
+		const editor = new Editor(tui, {
+			borderColor: (text: string) => text,
+			selectList: { selectedPrefix: (text: string) => text, selectedText: (text: string) => text, description: (text: string) => text, scrollInfo: (text: string) => text, noMatch: (text: string) => text },
+		});
+
+		editor.setAutocompleteProvider(provider);
+		editor.onChange = (text) => { if (text.includes("editor-session")) changed.resolve(text); };
+
+		editor.setText("/tell ");
+		editor.handleInput("\t");
+		await completed.promise;
+
+		if (key === "\r") expect(await changed.promise).toBe(`/tell pi:${item.machine}:editor-session `);
+		else expect(editor.getText()).toBe("/tell ");
+	});
+
+	test("delegates native items, uses remote inventory, and ignores cancelled scans", async () => {
+		const peer = candidate("%remote-complete");
+		peer.machine = "remote.example";
+		peer.sessionId = "remote-id";
+
+		class NativeProvider {
+			triggerCharacters = ["#"];
+			async getSuggestions() { return { items: [{ value: "native", label: "Native" }], prefix: "" }; }
+			applyCompletion() { return { lines: ["native"], cursorLine: 0, cursorCol: 6 }; }
+			shouldTriggerFileCompletion() { return false; }
+		}
+
+		const machines: Array<string | undefined> = [];
+		const ctx = context(async (_title, labels) => labels[0]);
+
+		const provider = _test.createTellAutocompleteProvider(new NativeProvider(), ctx, async (machine) => {
+			machines.push(machine);
+
+			return [peer];
+		});
+
+		const signal = new AbortController().signal;
+		const draft = "/tell --steer remote.example ";
+		const result = await provider.getSuggestions([draft], 0, draft.length, { force: true, signal });
+		expect(machines).toEqual(["remote.example"]);
+		expect(provider.applyCompletion([draft], 0, draft.length, result!.items[0], result!.prefix).lines).toEqual([`${draft}pi:remote.example:remote-id `]);
+		expect(provider.triggerCharacters).toEqual(["#"]);
+		expect(provider.shouldTriggerFileCompletion!([draft], 0, draft.length)).toBe(true);
+		expect(provider.shouldTriggerFileCompletion!(["hello"], 0, 5)).toBe(false);
+		const native = await provider.getSuggestions([draft], 0, draft.length, { force: false, signal });
+		expect(provider.applyCompletion([draft], 0, draft.length, native!.items[0], native!.prefix).lines).toEqual(["native"]);
+		const scan = deferred<ReturnType<typeof candidate>[]>();
+		const controller = new AbortController();
+		const cancelled = _test.createTellAutocompleteProvider(new NativeProvider(), context(neverSelect), () => scan.promise);
+		const pending = cancelled.getSuggestions(["/tell "], 0, 6, { force: true, signal: controller.signal });
+		controller.abort();
+		scan.resolve([peer]);
+		expect(await pending).toBeNull();
+	});
+
+	test("filters j/k as text, clears unmatched previews and cancels on abort", async () => {
+		const first = candidate("%filter1");
+		const second = candidate("%filter2");
+		first.searchText = "jack project";
+		second.searchText = "other project";
+		const controller = new AbortController();
+
+		const result = await withPicker([first, second], async (picker) => {
+			picker.handleInput("j");
+			picker.handleInput("a");
+			picker.handleInput("c");
+			picker.handleInput("k");
+			expect(picker.render(80).join("\n")).toContain("Filter: jack");
+			picker.handleInput("z");
+
+			for (const [width, height] of [[20, 13], [8, 6]]) {
+				picker.resize(height);
+				const lines = picker.render(width);
+				expect(lines.length).toBeLessThanOrEqual(height);
+				expect(lines.every((line) => visibleWidth(line) <= width)).toBe(true);
+				expect(lines.join("\n")).not.toContain("Loading");
+			}
+
+			controller.abort();
+			picker.handleInput("\r");
+		}, 24, { signal: controller.signal });
+
+		expect(result).toBeUndefined();
+	});
+});
+
+const mockPane = (peer: ReturnType<typeof candidate>, foreground: boolean, output: string) => spyOn(childProcess, "execFile").mockImplementation((file, args, _options, callback) => {
+	if (file === "ps") callback(null, `${peer.pid} 100 ${foreground ? 100 : 200} pi\n`, "");
+	else if (args[0] === "display-message") callback(null, "/dev/ttys123\n", "");
+	else if (args[0] === "capture-pane") callback(null, output, "");
+	else throw new Error(`Unexpected command ${file}`);
+
+	return new childProcess.ChildProcess();
+});
+
+describe("tell live pane preview", () => {
+	test("checks foreground ownership and renders the current tail, not old scrollback", async () => {
+		const peer = candidate("%live");
+		peer.pid = 12345;
+		const exec = mockPane(peer, true, `old scrollback\n${"filler\n".repeat(119)}current output\n\n`);
+
+		try {
+			const captured = await _test.captureCandidatePane(peer, new AbortController().signal);
+			expect(captured).not.toContain("old scrollback");
+			expect(captured).toEndWith("current output");
+			await withPicker([peer], async (picker) => {
+				for (let tick = 0; tick < 12; tick++) await Promise.resolve();
+				const rendered = picker.render(80).join("\n");
+				expect(rendered).toContain("Live pane preview");
+				expect(rendered).toContain("current output");
+				expect(rendered).not.toContain("old scrollback");
+			});
+		} finally { exec.mockRestore(); }
+	});
+
+	test("falls back when the Pi process no longer owns the foreground", async () => {
+		const received = deferred<PreviewRequest>();
+		const peer = await previewPeer(received.resolve);
+		peer.pid = 12345;
+		const exec = mockPane(peer, false, "Unrelated pane output");
+
+		try {
+			await withPicker([peer], async (picker) => {
+				const request = await received.promise;
+				await request.reply(lastMessageResponse(request, "Correct Pi message"));
+				expect(picker.render(80).join("\n")).toContain("Correct Pi message");
+				expect(picker.render(80).join("\n")).not.toContain("Unrelated pane");
+			});
+			expect(exec.mock.calls.some((call) => call[1][0] === "capture-pane")).toBe(false);
+		} finally { exec.mockRestore(); }
+	});
+
+	test("does not capture remote panes and kills an in-flight local capture on abort", async () => {
+		const peer = candidate("%abort");
+		peer.pid = 12345;
+		const controller = new AbortController();
+		const child = new childProcess.ChildProcess();
+		const killed = spyOn(child, "kill").mockReturnValue(true);
+		const exec = spyOn(childProcess, "execFile").mockImplementation(() => child);
+
+		try {
+			expect(await _test.captureCandidatePane({ ...peer, machine: "elsewhere.example" }, controller.signal)).toBeUndefined();
+			expect(exec).not.toHaveBeenCalled();
+			const capture = _test.captureCandidatePane(peer, controller.signal);
+			controller.abort();
+			expect(await capture).toBeUndefined();
+			expect(killed).toHaveBeenCalledTimes(1);
+		} finally { exec.mockRestore(); killed.mockRestore(); }
+	});
 });
 
 test("tell runtime identity is captured once and published on session start", async () => {
