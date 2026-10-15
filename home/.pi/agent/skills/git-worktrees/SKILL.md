@@ -1,98 +1,117 @@
 ---
 name: git-worktrees
-description: Manage, query, enter, and remove Git worktrees with Worktrunk through the local `wt` wrapper and mise project templates. First verify `wt` can reach Worktrunk. If unavailable, use preserved legacy git-worktree workflow.
+description: All Git worktree work through our custom `wt` (~/.dotfiles/bin/wt, v2): create, open, list, repair, prune, and hand work off to a new Pi agent in a fresh worktree. Use when the user mentions a worktree, `wt`, branching work into a new checkout, or says things like "tell the agent in a new worktree X to take over this work" (optionally "in a window").
 ---
 
 # Worktrees
 
-Use the local `wt` wrapper (`~/.dotfiles/bin/wt`) for every worktree operation. It runs a pinned Worktrunk (0.76.0 through mise), validates worktree identity, runs blocking project setup (`mise run dev:setup`), copies ignored files, derives `GIT_WORKTREE`, and owns tmux presentation through `ftm`.
+`wt` is `~/.dotfiles/bin/wt`, the v2 lifecycle wrapper over a pinned Worktrunk backend. One `wt` call creates or reuses the worktree under `<repo>/.worktrees/<branch>`, copies ignored files, runs blocking `mise run dev:setup`, exports `GIT_WORKTREE`, and builds the tmux presentation through `ftm`. Do not repeat any of that by hand.
 
-Never, while `wt` works:
+It works from any checkout of the repo: the primary checkout or any linked worktree. New worktrees always land under the primary repo's `.worktrees/`.
 
-- run raw `git worktree` commands;
-- build worktree tmux layouts manually (`ftm` owns session lifecycle);
-- write or derive `GIT_WORKTREE` yourself (query `wt id`);
-- hand-copy ignored files or re-run setup steps `wt` already ran;
-- use `wt switch` for navigation — it passes through to the raw upstream backend (no parent-shell cd, no tmux), not the workflow.
+Never:
 
-## Availability gate
+- run raw `git worktree`, `git branch -D`, or `wt remove --force*`;
+- build tmux windows or sessions yourself, or start `dev:services` yourself;
+- compute `GIT_WORKTREE` (use `wt id [path]`);
+- use `wt switch` (raw upstream passthrough: no setup, no tmux).
 
-Run before any worktree action:
+If `wt --version` fails, stop and report the error. There is no fallback workflow.
 
-```bash
-if command -v wt >/dev/null 2>&1 && wt --version >/dev/null 2>&1; then
-  echo "Worktrunk available: $(wt --version)"
-else
-  echo "Worktrunk wrapper unavailable"
-fi
-```
-
-If either check fails:
-
-1. Report failed command and output.
-2. Read `references/legacy-git-worktrees.md` fully.
-3. Follow legacy workflow unchanged for this task.
-4. Do not install Worktrunk or alter global mise config without user request.
-
-## Command contract
+## Commands
 
 | Command | Effect |
 | --- | --- |
-| `wt NAME` | Ensure the worktree exists (create branch/worktree when missing), run copy-ignored plus blocking `dev:setup`, then create or repair the canonical per-worktree session (`code`, `agent`, `services` windows) and switch/attach to it — same presentation as `wt open`. |
-| `wt -t cd NAME` | Same lifecycle, but only cd the invoking interactive shell into the worktree — no tmux session or windows (escape hatch). |
-| `wt -t w NAME` (`-t window`) | Same lifecycle; inside tmux, create or reuse one tagged `wt:<id>` window in the current session — left pane interactive shell (60%), right pane `mise run dev:services` or a shell (40%). Outside tmux, falls back to cd behavior. |
-| `wt -t s NAME` (`-t session`) | Same lifecycle; create or repair the canonical per-worktree session (`code`, `agent`, `services` windows) and switch/attach to it. |
-| `wt open NAME` | Alias for the session presentation. |
-| `wt ensure NAME [--json]` | Full lifecycle with no presentation: never cds, selects, or attaches. Preferred for agents. |
-| `wt new NAME [--base BRANCH]` | Like ensure, but refuses when the branch already exists locally or on a remote. |
-| `wt repair` | Bare: infer the containing checkout from the cwd (nested directories and the primary checkout both work), run full setup, and repair the canonical session. Never attaches. `wt repair NAME` targets another worktree. |
-| `wt path NAME` / `wt path .` | Print the validated worktree path (`.` resolves the containing checkout). |
-| `wt list --json` | Normalized JSON: `.items[].branch`, `.items[].worktree.path`. |
-| `wt prune NAME` | Safe removal of one clean, integrated (or empty), non-main, non-current local worktree: removes the tmux session, then the worktree and branch, then verifies. |
-| `wt id [path]` | Print the `GIT_WORKTREE` id (`{repo}-{branch-slug}`); empty in the primary checkout. |
+| `wt NAME` | Ensure worktree + setup, build the canonical session (`code`, `agent` running `pi -c`, `services` running `dev:services`), switch the client to it. |
+| `wt -t w NAME` | Same lifecycle; one `wt:<id>` window in the current session. Left pane (60%) is a shell, right pane (40%) runs `dev:services`. Outside tmux falls back to cd. |
+| `wt -t cd NAME` | Same lifecycle; only cd the interactive shell. No tmux. |
+| `wt ensure NAME --json` | Same lifecycle; builds the canonical session detached. Never cds, selects, or attaches. |
+| `wt new NAME [--base B]` | Like `ensure`, but refuses if the branch exists locally or on a remote. |
+| `... --no-services` | Full lifecycle, but the services pane/window stays a plain shell. Use only when the user asks for no services. |
+| `... --base B` | Base for a new branch only (error if the branch exists). Shortcuts: `@` current HEAD, `^` default branch, `-` previous branch. |
+| `wt repair [NAME] [--restart-services]` | Rerun setup and rebuild the session. Never attaches. |
+| `wt path NAME` / `wt path .` | Print the validated worktree path. |
+| `wt list --json` | `.repo.default_branch`, `.items[].branch`, `.items[].worktree.path`. |
+| `wt prune NAME` | Safe removal of a clean, integrated, non-current worktree plus its session and branch. |
+| `wt id [path]` | `GIT_WORKTREE` id (`{repo}-{branch-slug}`); empty in the primary checkout. |
 
-The primary checkout is a valid target: it skips copy-ignored and unsets `GIT_WORKTREE`. Upstream builtins (`wt list`, `wt merge`, `wt step`, `wt hook`, `wt config`, `wt remove`, `wt switch`) pass through to Worktrunk unchanged.
+All `--json` results are one `schema_version: 1` document. `.status` is `ok`, `refused`, `partial`, or `error`; `.error.code` names the failure; `.completed_phases` shows progress. `busy` means another `wt`/`ftm` holds the lock: wait and retry.
 
-## Agent usage
+Agent bash calls can't change the parent shell's cwd. Run follow-up commands with `cd "$(wt path NAME)" && ...`.
 
-Agent bash calls cannot change the parent shell cwd, so the cd presentation only helps interactive shells. From an agent:
+## Choosing the base for a new branch
+
+Only when `NAME` doesn't exist yet (no local branch, no `origin/NAME`). An existing branch gets no `--base`.
 
 ```bash
-wt ensure feature/login --json          # full setup, structured result, no attach
-wtp="$(wt path feature/login)"          # then run commands from that path
-cd "$wtp" && mise run <task>
+default="$(wt list --json | jq -r '.repo.default_branch // "main"')"
+current="$(git branch --show-current)"
+git rev-parse --verify --quiet "refs/heads/$NAME" >/dev/null ||
+  git rev-parse --verify --quiet "refs/remotes/origin/$NAME" >/dev/null || echo new
 ```
 
-- JSON results are one `schema_version: 1` document. `.status` is `ok`, `refused`, `partial`, or `error`; `.error.code` names the failure; `.completed_phases` shows progress.
-- Use `-t w` / `-t s` only when the user asked for tmux presentation. Both are idempotent: they reuse tagged windows/sessions and never duplicate or kill panes.
-- `busy` errors mean another `wt`/`ftm` operation holds the repository or worktree lock; wait and retry rather than working around it.
-- Setup and services run through project mise tasks (`dev:setup`, `dev:services`). A missing task is reported `missing`, not failed. Do not start project services yourself; the services pane or `wt repair --restart-services` owns that.
+- If `current` is the default branch (or empty/detached): use the default branch without asking.
+- Otherwise ask with `ask_user_question` (header "Base branch"):
+  - `<default> (latest origin)` (Recommended)
+  - `<current> (local HEAD)`
+- Default branch: always `git fetch origin "$default"` first, then pass `--base "origin/$default"`. Local `main` can be stale and `wt` never fetches.
+- Current branch: pass `--base @`. If `git status --porcelain` is non-empty, warn that uncommitted changes stay behind.
+
+## Hand work to a new agent ("tell the agent in a new worktree X ...")
+
+1. Pick the base (section above).
+2. Write the handoff brief before creating anything. It must stand alone: goal, context and decisions from this conversation, relevant files, what's done, next steps, how to verify. Add the reply target `pi:$(hostname -s):$PI_SESSION_ID` so the new agent can report back.
+3. Create the worktree and start Pi:
+
+   In a window (user said "in a window"):
+
+   ```bash
+   out="$(wt -t w NAME --base BASE --json)"; echo "$out"
+   path="$(jq -r .worktree.path <<<"$out")"
+   pane="$(jq -r .tmux.left_pane <<<"$out")"
+   win="$(jq -r .tmux.window_id <<<"$out")"
+   tmux send-keys -t "$pane" '"$HOME/.local/bin/pi"' Enter
+   ```
+
+   Default (own session; `ftm` starts `pi -c` in its `agent` window):
+
+   ```bash
+   out="$(wt ensure NAME --base BASE --json)"; echo "$out"
+   path="$(jq -r .worktree.path <<<"$out")"
+   id="$(jq -r .worktree.id <<<"$out")"
+   pane=  # match on cwd only
+   ```
+
+   Stop and report if `.status != "ok"`.
+
+4. Wait for the new Pi to register, then build its tell id:
+
+   ```bash
+   for _ in $(seq 60); do
+     sid="$(jq -rs --arg cwd "$path" --arg pane "$pane" \
+       '[.[] | select(.cwd == $cwd and ($pane == "" or .pane == $pane))][0].sessionId // empty' \
+       "${PI_STATE_DIR:-$HOME/.local/state/pi}"/manifests/*.info 2>/dev/null)"
+     [ -n "$sid" ] && break; sleep 1
+   done
+   echo "pi:$(hostname -s):$sid"
+   ```
+
+   On timeout, run `list_pi_sessions` and match the worktree path (and pane). Don't guess.
+
+5. Send the brief with `tell_pi` (target = that exact id, message = brief).
+6. Switch the user over: `tmux select-window -t "$win"` (window) or `ftm "$id"` (session).
+7. Report the worktree path, branch, base, tell id, and the services state from `.tmux`.
+
+Use `wt ensure NAME --json` with no tell when the user only wants a worktree created. Plain `wt NAME` and `-t w` without `--json` are for when the user asks to open it themselves.
 
 ## Prune and recovery
 
-`wt prune NAME` refuses (exit 3/6, `.status == "refused"`): dirty worktrees, branches not `integrated`/`empty`, the main worktree, the worktree you are standing in, remote-only targets, and ambiguous tmux session matches.
+`wt prune NAME` refuses (exit 3/6, `.status == "refused"`) for: dirty worktrees, branches not integrated or empty, the main worktree, the worktree you are in, remote-only targets, and ambiguous tmux sessions. Report the refusal; don't work around it.
 
-Partial results (`.status == "partial"`, e.g. the tmux session was removed but Worktrunk removal failed or the branch moved): nothing retries with force. Recover with `wt repair NAME` to rebuild the session, fix the reported cause, then rerun `wt prune NAME`. Never fall back to `git worktree remove`, `git branch -D`, or `wt remove --force*` without explicit user approval — those destroy the safety checks prune exists for.
+On `.status == "partial"`, nothing retries with force. Run `wt repair NAME`, fix the reported cause, then rerun `wt prune NAME`. Destructive escapes need explicit user approval.
 
-A background auto-prune (`wt step prune`, throttled daily per repo) also removes merged worktrees; unexpected disappearance of an integrated worktree is normal.
+A background auto-prune (`wt step prune`, daily per repo) removes merged worktrees, so an integrated worktree disappearing is normal.
 
 ## Project templates
 
-Project config lives at `<repo>/.config/wt.toml` plus a mise stub. Generate only when missing and the stack is known:
-
-```bash
-mise run gen:elixir      # mise task stub (dev:setup / dev:services)
-mise run gen:wt-elixir   # Worktrunk hook config
-mise run gen:shopify && mise run gen:wt-shopify
-```
-
-Generation is idempotent; do not overwrite existing config or guess the stack. `wt` still works without a template — setup and services are then reported `missing`.
-
-## Rules
-
-- Use `wt`, never bare `worktrunk` or raw `git worktree`, while the availability gate passes.
-- Prefer `wt ensure --json` + `wt path` in agent contexts; presentation flags only on user request.
-- Use `wt list --json` for discovery and `wt id` for the worktree id.
-- Keep worktree commands scoped with `cd "$(wt path NAME)"` or `wt -C`.
-- Use `wt prune` for cleanup; `wt remove` only as an approved upstream escape.
-- If `wt` is unavailable, use only the preserved legacy reference.
+Setup and services come from `<repo>/.config/wt.toml` plus the project's `dev:setup` / `dev:services` mise tasks. If a task is missing, `wt` reports it `missing` rather than failing. Generate config only when it's missing and the stack is known (`mise run gen:elixir && mise run gen:wt-elixir`, `mise run gen:shopify && mise run gen:wt-shopify`). Never overwrite existing config.
