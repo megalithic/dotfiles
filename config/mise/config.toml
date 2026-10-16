@@ -1,25 +1,15 @@
 #:tombi schema.strict = false
 
 [settings]
+dotfiles.root = "~/.dotfiles"
 experimental = true
-# Tasks, shims, and `mise x` never install tools. Installs happen only in
-# bootstrap.sh (`mise bootstrap` tools phase) and `mise run update:tools`.
 auto_install = false
 env_shell_expand = true
 activate_aggressive = true
-color_theme = "everforest"
 system_packages.managers = ["brew", "brew-cask", "mas"]
 idiomatic_version_file_enable_tools = ["node"]
 pin = true
-minimum_release_age = "8h"
-minimum_release_age_excludes = [
-  "npm:@earendil-works/pi-coding-agent",
-  "npm:@openai/codex",
-  "claude-code",
-  "erlang",
-  "elixir",
-]
-dotfiles.root = "~/.dotfiles"
+minimum_release_age = "0s"
 python.compile = false
 pipx.uvx = true
 task.monorepo_depth = 2
@@ -46,6 +36,7 @@ DO_NOT_TRACK = "true"
 ERL_AFLAGS = "-kernel shell_history enabled"
 FLYCTL_HOME = "$HOME/.fly"
 GH_TELEMETRY = "false"
+HOSTNAME = "{{ exec(command='hostname -s') }}"
 KERL_BUILD_DOCS = "yes"
 MIX_OS_DEPS_COMPILE_PARTITION_COUNT = "5"
 RIPGREP_CONFIG_PATH = "$HOME/.config/ripgrep/rc"
@@ -85,7 +76,6 @@ _.path = [
   "/opt/homebrew/opt/make/libexec/gnubin",
   "/opt/homebrew/opt/unzip/bin",
   "/opt/homebrew/opt/zip/bin",
-  "/opt/homebrew/opt/openjdk/bin",
   "$HOME/.bin",
   "$HOME/.local/bin",
   "$HOME/.dotfiles/bin",
@@ -114,7 +104,8 @@ q = "exit"
 dns_reset = "dscacheutil -flushcache && killall -HUP mDNSResponder"
 mega = "ftm mega"
 tmux = "direnv exec / tmux"
-copy = "pbcopy"
+yank = "pbcopy"
+copy = "yank"
 paste = "pbpaste"
 cat = "bat"
 p = "pi"
@@ -160,16 +151,6 @@ up = "cd $HOME/.dotfiles && mise run up"
   ".pi/agent/prompts/_*",
   ".pi/agent/agents/_*",
 ] }
-# First apply of a symlink-each target without an ownership record walks the
-# whole target for stale links; for "~" that includes ~/Library/CloudStorage
-# (hours through the File Provider). It runs once; later applies are
-# proportional to the source tree. Leave it running; nothing depends on it.
-#
-# .gitignore limits what home/.ssh, home/.claude and home/.local may track.
-# Pi writes settings through its symlink. MailMate loads the key bindings named
-# by MmCustomKeyBindingsName in [bootstrap.macos.defaults].
-# Lat extension tools launch through this agent-local path.
-"~/.pi/agent/bin/lat" = "~/.local/share/mise/shims/lat"
 
 # Notes for paths inside ~/.config:
 # - mise: host overlays config.$MISE_ENV.toml sit beside config.toml (MISE_ENV =
@@ -497,21 +478,26 @@ adopt = true
 "brew-cask:contexts" = "latest"
 "brew-cask:discord" = "latest"
 "brew-cask:font-atkinson-hyperlegible" = "latest"
+"brew-cask:font-fantasque-sans-mono-nerd-font" = "latest"
 "brew-cask:font-fira-code" = "latest"
+"brew-cask:font-fira-code-nerd-font" = "latest"
 "brew-cask:font-fira-mono" = "latest"
 "brew-cask:font-fontawesome" = "latest"
 "brew-cask:font-inter" = "latest"
+"brew-cask:font-iosevka-nerd-font" = "latest"
+"brew-cask:font-jetbrains-mono-nerd-font" = "latest"
 "brew-cask:font-maple-mono" = "latest"
 "brew-cask:font-maple-mono-nf" = "latest"
 "brew-cask:font-noto-color-emoji" = "latest"
+"brew-cask:font-symbols-only-nerd-font" = "latest"
 "brew-cask:font-twitter-color-emoji" = "latest"
 "brew-cask:font-victor-mono" = "latest"
+"brew-cask:font-victor-mono-nerd-font" = "latest"
 "brew-cask:ghostty@tip" = "latest"
 "brew-cask:handy" = "latest"
 "brew-cask:hammerspoon" = "latest"
 "brew-cask:iina" = "latest"
-"brew-cask:inkscape" = "latest"
-"brew-cask:meetingbar" = "latest"
+# "brew-cask:meetingbar" = "latest"
 "brew-cask:obs@beta" = "latest"
 "brew-cask:obsidian" = "latest"
 "brew-cask:okta-verify" = "latest"
@@ -522,6 +508,7 @@ adopt = true
 "brew-cask:tailscale-app" = "latest"
 "brew-cask:tuna" = "latest"
 "brew-cask:slack" = "latest"
+"brew-cask:vorssaint" = "latest"
 "brew-cask:yubico-authenticator" = "latest"
 "brew-cask:zed@preview" = "latest"
 
@@ -630,14 +617,11 @@ DSDontWriteUSBStores = true
 [bootstrap.macos.defaults."com.freron.MailMate"]
 SoftwareUpdateChannel = "beta"
 MmShowTips = "never"
-
 MmCustomKeyBindingsEnabled = true
 MmCustomKeyBindingsName = "megamate"
-
 MmComposerInitialFocus = "alwaysTextView"
 MmShowAttachmentsFirst = true
 MmSingleMessageWindowClosesAfterMove = true
-
 MmHeadersViewWebKitDefaultFontSize = 14
 MmHeadersViewWebKitStandardFont = "Helvetica"
 MmMessagesWebViewMinimumFontSize = 14
@@ -645,7 +629,6 @@ MmMessagesWebViewWebKitDefaultFixedFontSize = 14
 MmMessagesWebViewWebKitDefaultFontSize = 14
 MmMessagesWebViewWebKitMinimumFontSize = 14
 MmMessagesWebViewWebKitStandardFont = "Helvetica"
-
 MmMessagesOutlineOpenMessageOnDoubleClick = true
 MmMessagesOutlineShowUnreadMessagesInBold = true
 
@@ -655,10 +638,6 @@ SUEnableAutomaticChecks = false
 SUHasLaunchedBefore = true
 SUSendProfileInfo = false
 
-# Helium: Sparkle auto-update kill switch (updates come from the mise tool /
-# mise/scripts/install-app path instead). Twin of nix/modules/system.nix
-# CustomUserPreferences."net.imput.helium". setup:helium also writes these for
-# direct and post-package runs; update:system reapplies all macOS defaults.
 [bootstrap.macos.defaults."net.imput.helium"]
 SUAutomaticallyUpdate = false
 SUEnableAutomaticChecks = false
@@ -666,11 +645,6 @@ SUScheduledCheckInterval = 0
 SUHasLaunchedBefore = true
 SUSendProfileInfo = false
 
-# Proton Drive: Sparkle auto-update kill switch (brew cask owns updates).
-# 2026-08-11: a Sparkle update stuck mid-flight + the keepalive SMAppService
-# agent respawn-looped Proton Drive every 10s for ~8.5 days (73,510 runs),
-# churning kTCCServiceListenEvent arbitration in WindowServer -> systemwide
-# keyboard stalls. Doc: pi docs workbookpro-keyboard-input-loss.md
 [bootstrap.macos.defaults."ch.protonmail.drive"]
 SUAutomaticallyUpdate = false
 SUEnableAutomaticChecks = false
@@ -697,9 +671,6 @@ run_at_load = true
 keep_alive = true
 stdout_path = "~/Library/Logs/llama-cpp/stdout.log"
 stderr_path = "~/Library/Logs/llama-cpp/stderr.log"
-
-# nicknisi/sessions indexes transcripts on demand through its CLI and MCP server.
-# No session-indexing launchd agent is needed.
 
 # Swifties agents. avwatchd and notiwatchd run the stable ~/.local/bin copies
 # their [tools.<alias>] postinstall writes: a pin bump needs only a restart.
@@ -745,16 +716,6 @@ keep_alive = false
 stdout_path = "~/.cache/aeroplayd-stdout.log"
 stderr_path = "~/.cache/aeroplayd-stderr.log"
 
-# Spotlight exclusions only touch user-owned development directories, so a
-# user LaunchAgent replaces the former root nix-darwin daemon.
-[bootstrap.macos.launchd.agents."com.megadots.spotlight-exclude"]
-program = "~/.dotfiles/mise/scripts/spotlight-exclude"
-run_at_load = true
-keep_alive = false
-start_interval = 21600
-stdout_path = "~/.cache/spotlight-exclude.log"
-stderr_path = "~/.cache/spotlight-exclude.err.log"
-
 # kanata daemon (dev.mise.org.kanata.daemon) and kanata-bar agents are
 # written and loaded by mise/scripts/setup-kanata (post-tools hook), because
 # bootstrap.sh always passes `--skip launchd`. This entry stays as the
@@ -771,18 +732,19 @@ keep_alive = false
 stdout_path = "/tmp/kanata-bar.log"
 stderr_path = "/tmp/kanata-bar.err"
 
+[bootstrap.hooks.pre-packages]
+run = """
+  if [ "$(uname)" = "Darwin" ]; then
+    mise run brew
+  fi
+"""
+
 [bootstrap.hooks.post-packages]
-# Casks kept on real Brew because their verified service/lifecycle path still
-# differs from the direct mise backend:
-# - espanso: real Brew installs the app/CLI before espanso-service converges its
-#   LaunchAgent
-# - zoom: cask source uses `on_arch_conditional`; keep the verified package hook
-#   until a clean-machine direct-backend install is proven
-# hooks: no template expansion, cwd = config root, [env] not applied
+# REFS:
+# 
+# Example usages of post-packages to steup MacOS LaunchAgents "dynamically"
+# - https://github.com/nicknisi/dotfiles/blob/main/config/mise/config.toml#L194C1-L231
 run = [
-  # op CLI comes from [bootstrap.packages] brew:1password-cli — official
-  # documented install; real signed binary works with the app's 'Integrate with
-  # 1Password CLI' setting (mise shims break the socket handshake).
   "[ -d /Applications/Espanso.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask espanso",
   "[ -d /Applications/zoom.us.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask zoom",
   "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/espanso-service",
@@ -790,38 +752,68 @@ run = [
   "mise run setup:helium",
 ]
 
-# No post-defaults hook: mise runs it even when no default changed, so a
-# Finder/SystemUIServer/Dock restart there fired on every `mise run up`.
-# mise prints a relaunch hint when a default does change.
+# Defaults don't take effect until the app restarts, and these two aren't
+# `defaults` at all: an array value mise can't write, and a file flag.
+[bootstrap.hooks.post-defaults]
+run = """
+  if [ "$(uname)" = "Darwin" ]; then
+    chflags nohidden ~/Library
+    for app in Safari Finder Dock SystemUIServer; do killall "$app" 2>/dev/null || true; done
+  fi
+"""
 
 # Full machine bootstrap reaches this hook once after tool install. Scoped
 # update tasks call their phases directly and do not run post-tools.
-[bootstrap.hooks.post-tools]
-run = [
-  "mise run setup:hk",
-  "mise run install:fonts",
-  "mise run setup:kanata",
-  "mise run update:fnox",
-]
+# [bootstrap.hooks.post-tools]
+# run = [
+#   "mise run setup:hk",
+#   "mise run setup:kanata",
+#   "mise run update:fnox",
+# ]
 
 [bootstrap.user]
-login_shell = "/opt/homebrew/bin/fish"
+login_shell = "/opt/homebrew/bin/zsh"
 
-# -- Nerd Fonts: declare the font list here (mirrors nix fonts.packages in
-#    nix/hosts/common.nix). Names are release asset stems from
-#    https://github.com/ryanoasis/nerd-fonts/releases (<Name>.tar.xz).
-#    Add/remove a font = edit the list; `mise run install:fonts` converges.
-#    Full bootstrap and `mise run up` call it explicitly; sources/outputs make
-#    repeated runs no-ops when nothing changed.
-[vars]
-nerd_fonts_version = "3.4.0"
-nerd_fonts = "JetBrainsMono FiraCode Iosevka VictorMono FantasqueSansMono NerdFontsSymbolsOnly"
+[tasks.install-homebrew]
+description = "Install homebrew onto the system."
+run = """
+  if command -v brew >/dev/null 2>&1; then
+    echo "homebrew already installed at $(brew --prefix)"
+    exit 0
+  fi
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+"""
+
+[tasks.brew]
+description = "Install or upgrade Brewfile packages that mise can't manage"
+depends = ["install-homebrew"]
+run = """
+set -eu
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+brew trust --tap FelixKratz/formulae leandrocp/lumis nikitabobko/homebrew-tap
+brew bundle install --file "$HOME/.dotfiles/Brewfile" --upgrade
+"""
 
 [tasks.up]
 alias = "dot"
 description = "Update and converge this machine"
 dir = "{{env.DOTFILES_DIR}}"
-run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/update-machine"
+run = [
+  '''
+  if [ -n "$(git status --porcelain --untracked-files=normal)" ]; then
+    printf 'WARNING: dotfiles Git status is dirty. Untracked files or unstaged changes may not take effect with this task. Review git status and git add any files you want included.\n' >&2
+  fi
+  ''',
+  { task = "update:tools" },
+  { task = "update:packages" },
+  { task = "update:dotfiles" },
+  { task = "update:system" },
+  { task = "update:nvim" },
+  { task = "update:fnox" },
+  { task = "update:pi" },
+  { task = "reload:hammerspoon" },
+  # "mise run setup:hk",
+]
 raw = true
 
 [tasks."update:tools"]
@@ -832,7 +824,6 @@ run = [
   "mise plugins update --yes",
   "mise install --yes",
   "mise upgrade --yes",
-  "mise run setup:hk",
 ]
 
 [tasks."update:packages"]
@@ -856,21 +847,11 @@ export MISE_CONFIG_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}/config/mise"
 mise --verbose bootstrap dotfiles apply --yes
 '''
 
-[tasks."install:fonts"]
-description = "Install declared Nerd Fonts"
-run = "NERD_FONTS_VERSION={{vars.nerd_fonts_version}} ${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/install-fonts {{vars.nerd_fonts}}"
-sources = [
-  "{{env.HOME}}/.dotfiles/config/mise/config.toml",
-  "{{env.HOME}}/.dotfiles/mise/scripts/install-fonts",
-]
-outputs = { auto = true }
-
 [tasks."update:system"]
 description = "Converge local daemons, LaunchAgents, and macOS defaults"
 run = '''
 set -eu
 export MISE_ENV="${MISE_ENV:-$(hostname -s)}"
-mise run setup:helium
 mise bootstrap macos launchd-agents apply --yes
 mise bootstrap --only macos-defaults --yes
 '''

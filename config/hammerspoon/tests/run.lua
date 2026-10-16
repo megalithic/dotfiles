@@ -22,9 +22,11 @@ end
 local FRESH_MODULES = {
   "watchers.app",
   "watchers.dock",
+  "watchers.hotspot",
   "contexts",
   "lollygagger",
   "hyper",
+  "bindings",
   "quitter",
   "utils",
   "tests.mock_hs",
@@ -67,8 +69,6 @@ local function configureDock()
       configPath = "/tmp/kanata",
       daemonLabel = "test.kanata",
     },
-    docked = { wifi = "off" },
-    undocked = { wifi = "on" },
   }
 end
 
@@ -151,50 +151,234 @@ test("hyper passthrough sends key when app fronts", function(mock)
   check(mock.pendingTimers() == 0, "wait timer stopped after firing")
 end)
 
+test("hold passthrough posts down immediately for a running background app", function(mock)
+  local hyper = req("hyper", { id = "apps" })
+  mock.makeApp({ bundleID = "com.hold.app" })
+  hyper:bindPassThrough({ "shift" }, "g", "com.hold.app", true)
+  local bind = hyper.binds[#hyper.binds]
+
+  bind.pressed()
+  check(#mock.keyEvents == 1, "hold posts keydown without requiring focus")
+  check(mock.keyEvents[1].isDown == true, "first event is keydown")
+  check(mock.keyEvents[1].key == "g", "hold preserves key")
+  check(#mock.launched == 0, "running background app is not relaunched")
+  bind.released()
+  check(#mock.keyEvents == 2 and mock.keyEvents[2].isDown == false, "release posts keyup")
+end)
+
+test("hold passthrough ignores repeat and duplicate release", function(mock)
+  local hyper = req("hyper", { id = "apps" })
+  mock.makeApp({ bundleID = "com.hold.app" })
+  hyper:bindPassThrough({}, "g", "com.hold.app", true)
+  local bind = hyper.binds[#hyper.binds]
+
+  bind.pressed()
+  bind.pressed()
+  if bind.repeatFn then bind.repeatFn() end
+  bind.released()
+  bind.released()
+  check(#mock.keyEvents == 2, "repeat and duplicate release do not duplicate events")
+end)
+
+test("hold passthrough flushes all holds on hyper exit", function(mock)
+  local hyper = req("hyper", { id = "apps" })
+  mock.makeApp({ bundleID = "com.hold.app" })
+  hyper:bindPassThrough({}, "g", "com.hold.app", true)
+  hyper:bindPassThrough({ "shift" }, "h", "com.hold.app", true)
+  local first, second = hyper.binds[#hyper.binds - 1], hyper.binds[#hyper.binds]
+
+  first.pressed()
+  second.pressed()
+  hyper:exit()
+  check(#mock.keyEvents == 4, "exit releases both simultaneous holds")
+  check(mock.keyEvents[3].isDown == false and mock.keyEvents[4].isDown == false, "exit posts keyups")
+  first.released()
+  second.released()
+  check(#mock.keyEvents == 4, "key release after exit does not duplicate keyup")
+end)
+
+test("hold passthrough stop releases a live hold and cancels a pending hold", function(mock)
+  local hyper = req("hyper", { id = "apps" })
+  mock.makeApp({ bundleID = "com.stop.app" })
+  hyper:bindPassThrough({}, "g", "com.stop.app", true)
+  local live = hyper.binds[#hyper.binds]
+  live.pressed()
+  hyper:bindPassThrough({}, "h", "com.pending.app", true)
+  local pending = hyper.binds[#hyper.binds]
+  pending.pressed()
+  hyper:stop()
+  check(#mock.keyEvents == 2 and not mock.keyEvents[2].isDown, "stop releases live hold")
+  mock.advance(15)
+  check(#mock.keyEvents == 2 and mock.pendingTimers() == 0,
+    "stop cancels pending hold without late keydown or stray keyup")
+end)
+
+test("hold passthrough reset releases live hold and cancels pending hold", function(mock)
+  local hyper = req("hyper", { id = "apps" })
+  mock.makeApp({ bundleID = "com.reset.app" })
+  hyper:bindPassThrough({}, "g", "com.reset.app", true)
+  local live = hyper.binds[#hyper.binds]
+  live.pressed()
+
+  local pendingHyper = req("hyper", { id = "pending-reset" })
+  pendingHyper:bindPassThrough({}, "h", "com.pending.reset", true)
+  pendingHyper.binds[#pendingHyper.binds].pressed()
+  require("lib.state").resetHypers()
+  mock.advance(15)
+  check(#mock.keyEvents == 2 and not mock.keyEvents[2].isDown, "reset releases live hold and cancels pending hold")
+end)
+
+test("hold passthrough exit cancels a pending cold launch", function(mock)
+  local hyper = req("hyper", { id = "apps" })
+  hyper:bindPassThrough({}, "g", "com.exit.app", true)
+  hyper.binds[#hyper.binds].pressed()
+  hyper:exit()
+  mock.advance(15)
+  check(#mock.keyEvents == 0 and mock.pendingTimers() == 0, "exit cancels pending hold without late events")
+end)
+
+test("held cold launch timeout stops without sending a key", function(mock)
+  local hyper = req("hyper", { id = "apps" })
+  hyper:bindPassThrough({}, "g", "com.timeout.app", true)
+  local bind = hyper.binds[#hyper.binds]
+  bind.pressed()
+  mock.advance(15)
+  check(#mock.keyEvents == 0 and mock.pendingTimers() == 0, "held timeout sends no key and stops timer")
+  bind.released()
+  check(#mock.keyEvents == 0, "release after timeout sends no stray keyup")
+end)
+
+test("hold passthrough cancels cold launch on early release", function(mock)
+  local hyper = req("hyper", { id = "apps" })
+  hyper:bindPassThrough({}, "g", "com.cold.app", true)
+  local bind = hyper.binds[#hyper.binds]
+  bind.pressed()
+  check(#mock.launched == 1 and mock.pendingTimers() > 0, "cold hold launches and waits")
+  bind.released()
+  mock.advance(15)
+  check(#mock.keyEvents == 0, "early release prevents late keydown")
+  check(mock.pendingTimers() == 0, "early release cancels launch wait")
+end)
+
+test("hold passthrough cold launch posts down then up after focus", function(mock)
+  local hyper = req("hyper", { id = "apps" })
+  hyper:bindPassThrough({}, "g", "com.cold.app", true)
+  local bind = hyper.binds[#hyper.binds]
+  bind.pressed()
+  local app = mock.makeApp({ bundleID = "com.cold.app" })
+  mock.frontmost = app
+  mock.advance(0.2)
+  check(#mock.keyEvents == 1 and mock.keyEvents[1].isDown, "cold launch posts keydown after focus")
+  bind.released()
+  check(#mock.keyEvents == 2 and not mock.keyEvents[2].isDown, "focused cold hold posts keyup")
+end)
+
+test("hold passthrough can be pressed again after cancellation", function(mock)
+  local hyper = req("hyper", { id = "apps" })
+  hyper:bindPassThrough({}, "g", "com.retry.app", true)
+  local bind = hyper.binds[#hyper.binds]
+  bind.pressed()
+  bind.released()
+  local app = mock.makeApp({ bundleID = "com.retry.app" })
+  mock.frontmost = app
+  bind.pressed()
+  bind.released()
+  check(#mock.keyEvents == 2, "second gesture emits down and up")
+  check(mock.keyEvents[1].isDown and not mock.keyEvents[2].isDown, "second gesture has correct edge order")
+end)
+
+test("bindings routes tap and hold passthrough lists", function(mock)
+  local launcher = {
+    "noop.app",
+    nil,
+    {
+      passThrough = { "p" },
+      passThroughHold = { "g", { { "shift" }, "h" } },
+    },
+  }
+  C.launchers = { launcher }
+  local bindings = require("bindings")
+  bindings.loadApps()
+  local hyper = req("hyper", { id = "apps" })
+  local tap, plainHold, modifiedHold
+  for _, candidate in ipairs(hyper.binds or {}) do
+    if candidate.key == "p" then tap = candidate end
+    if candidate.key == "g" then plainHold = candidate end
+    if candidate.key == "h" then modifiedHold = candidate end
+  end
+  check(tap ~= nil and tap.pressed == nil and tap.released ~= nil and tap.repeatFn == nil,
+    "tap passthrough keeps release-only semantics")
+  check(plainHold ~= nil and plainHold.pressed ~= nil and plainHold.released ~= nil,
+    "string hold binding is routed")
+  check(modifiedHold ~= nil and modifiedHold.mods[1] == "shift",
+    "modifier hold binding preserves modifiers")
+  mock.makeApp({ bundleID = "noop.app" })
+  modifiedHold.pressed()
+  modifiedHold.released()
+  check(#mock.keyEvents == 2 and mock.keyEvents[1].isDown and not mock.keyEvents[2].isDown,
+    "hold routing posts global down/up events")
+  local hasShift = false
+  for _, mod in ipairs(mock.keyEvents[1].mods) do
+    if mod == "shift" then hasShift = true end
+  end
+  check(mock.keyEvents[1].mods[1] == "cmd" and hasShift,
+    "hold routing includes hyper and extra modifiers")
+end)
+
+test("bindAppChord uses bounded cold-launch helper", function(mock)
+  local hyper = req("hyper", { id = "apps" })
+  hyper:bindAppChord({}, "c", "com.chord.app", { "cmd" }, "k")
+  local bind = hyper.binds[#hyper.binds]
+  bind.released()
+  check(#mock.launched == 1 and mock.pendingTimers() > 0, "app chord launches and waits")
+  mock.advance(15)
+  check(#mock.keystrokes == 0 and mock.pendingTimers() == 0, "app chord timeout is bounded")
+end)
+
 test("dock watcher: startup applies connected state without tasks or timers", function(mock)
-  mock.wifiDetails.interface = "en5"
   local dock, watcher = startDocked(mock)
 
   check(watcher.started, "USB watcher started")
   check(dock.is_docked == true, "matching TS4 is docked at startup")
-  check(mock.wifiReads == 1, "startup reads actual Wi-Fi power once")
-  check(#mock.wifiChanges == 1 and mock.wifiChanges[1].power == false, "startup turns Wi-Fi off")
-  check(mock.wifiChanges[1].interface == "en5", "uses actual Wi-Fi interface, not hardcoded en0")
-  check(table.concat(mock.logs, "\n"):find("Wi-Fi off on en5", 1, true) ~= nil, "power change is logged")
   mock.advance(3600)
-  check(mock.wifiReads == 1 and #mock.wifiChanges == 1, "elapsed time causes no Wi-Fi work")
-  check(#mock.tasks == 0 and mock.pendingTimers() == 0, "Wi-Fi uses no shell tasks or timers")
+  check(#mock.tasks == 0 and mock.pendingTimers() == 0, "dock state uses no shell tasks or timers")
 
   dock:stop()
   check(watcher.stopped, "USB watcher stopped")
 end)
 
-test("dock watcher: startup undocked turns Wi-Fi on", function(mock)
+test("dock watcher: startup without TS4 is undocked", function(mock)
   configureDock()
   C.dock.kanata.enabled = false
-  mock.wifiDetails.power = false
   local dock = require("watchers.dock")
   dock:start()
 
   check(dock.is_docked == false, "no TS4 means undocked")
-  check(#mock.wifiChanges == 1 and mock.wifiChanges[1].power == true, "undocked startup restores Wi-Fi")
   dock:stop()
 end)
 
-test("dock watcher: only state transitions change Wi-Fi", function(mock)
+test("dock watcher: only state transitions update dock state", function(mock)
   local dock, watcher = startDocked(mock)
   local logs = #mock.logs
   emitDock(watcher, "added")
-  check(mock.wifiReads == 1 and #mock.logs == logs, "duplicate connected event does nothing")
+  check(#mock.logs == logs, "duplicate connected event does nothing")
 
   emitDock(watcher, "removed")
-  check(dock.is_docked == false and mock.wifiDetails.power == true, "disconnect immediately turns Wi-Fi on")
+  check(dock.is_docked == false and #mock.logs == logs + 1, "disconnect updates state once")
   emitDock(watcher, "removed")
-  check(mock.wifiReads == 2, "duplicate disconnected event does nothing")
+  check(#mock.logs == logs + 1, "duplicate disconnected event does nothing")
 
   emitDock(watcher, "added")
-  check(dock.is_docked == true and mock.wifiDetails.power == false, "reconnect turns Wi-Fi off")
-  check(#mock.wifiChanges == 3, "one power change per transition")
+  check(dock.is_docked == true and #mock.logs == logs + 2, "reconnect updates state once")
+  dock:stop()
+end)
+
+test("dock watcher: docking and undocking never touch Wi-Fi", function(mock)
+  local dock, watcher = startDocked(mock)
+  emitDock(watcher, "removed")
+  emitDock(watcher, "added")
+  check(mock.wifiReads == 0 and #mock.wifiChanges == 0, "Wi-Fi power is left alone")
+  check(#mock.notifications == 0, "no Wi-Fi notifications")
   dock:stop()
 end)
 
@@ -204,7 +388,7 @@ test("dock watcher: unrelated USB events and unknown event types do nothing", fu
   watcher:emit({ vendorID = 999, productID = 200, eventType = "removed" })
   watcher:emit({ vendorID = 100, productID = 999, eventType = "removed" })
   emitDock(watcher, "unknown")
-  check(dock.is_docked == true and mock.wifiReads == 1, "both vendor and product must match a known event")
+  check(dock.is_docked == true, "both vendor and product must match a known event")
   check(#mock.logs == logs, "ignored events do not log")
   dock:stop()
 end)
@@ -216,63 +400,6 @@ test("dock watcher: startup uses the same vendor and product match", function(mo
   local dock = require("watchers.dock")
   dock:start()
   check(dock.is_docked == false, "partial USB matches are not the dock")
-  check(#mock.wifiChanges == 0, "already-on Wi-Fi is unchanged while undocked")
-  dock:stop()
-end)
-
-test("dock watcher: already-correct Wi-Fi is not set or logged", function(mock)
-  mock.wifiDetails.power = false
-  local dock, watcher = startDocked(mock)
-  check(#mock.wifiChanges == 0, "already-off Wi-Fi is unchanged while docked")
-  check(table.concat(mock.logs, "\n"):find("Wi-Fi", 1, true) == nil, "no Wi-Fi log for a no-op")
-
-  mock.wifiDetails.power = true -- Changed externally, not by the dock watcher.
-  emitDock(watcher, "removed")
-  check(#mock.wifiChanges == 0, "disconnect checks actual power instead of cached target")
-  check(table.concat(mock.logs, "\n"):find("Wi-Fi", 1, true) == nil, "no Wi-Fi log for already-on power")
-  dock:stop()
-end)
-
-test("dock watcher: unavailable Wi-Fi interface notifies without retries", function(mock)
-  mock.wifiDetails = nil
-  local dock, watcher = startDocked(mock)
-  check(#mock.wifiChanges == 0, "unavailable interface is not written")
-  check(#mock.notifications == 1, "unavailable interface notifies")
-  check(mock.notifications[1].opts.subTitle == "Cannot read Wi-Fi interface", "failure identifies interface lookup")
-  emitDock(watcher, "added")
-  mock.advance(60)
-  check(mock.wifiReads == 1 and #mock.notifications == 1, "no duplicate event or background retries")
-  dock:stop()
-end)
-
-test("dock watcher: incomplete Wi-Fi details do not select a fallback interface", function(mock)
-  mock.wifiDetails = { power = true }
-  local dock, watcher = startDocked(mock)
-  check(#mock.wifiChanges == 0 and #mock.notifications == 1, "missing interface name notifies without guessing")
-  mock.wifiDetails = { interface = "en0" }
-  emitDock(watcher, "removed")
-  check(#mock.wifiChanges == 0 and #mock.notifications == 2, "missing power state notifies without guessing")
-  dock:stop()
-end)
-
-test("dock watcher: Wi-Fi power failures notify without success logs", function(mock)
-  mock.wifiSetResult = false
-  mock.wifiSetError = "permission denied"
-  local dock, watcher = startDocked(mock)
-  check(mock.wifiDetails.power == true, "failed power change leaves actual power unchanged")
-  check(#mock.notifications == 1, "failed power change notifies")
-  check(mock.notifications[1].opts.subTitle:find("permission denied", 1, true) ~= nil, "failure includes API error")
-  check(table.concat(mock.logs, "\n"):find("Wi-Fi off on", 1, true) == nil, "failed change never logs success")
-  emitDock(watcher, "added")
-  mock.advance(60)
-  check(#mock.wifiChanges == 1 and mock.pendingTimers() == 0, "failed change does not start retry machinery")
-
-  mock.wifiDetails.power = false
-  mock.wifiSetResult = nil
-  mock.wifiSetError = nil
-  emitDock(watcher, "removed")
-  check(#mock.notifications == 2, "nil setPower result also notifies")
-  check(table.concat(mock.logs, "\n"):find("Wi-Fi on on", 1, true) == nil, "nil result never logs success")
   dock:stop()
 end)
 
@@ -280,11 +407,11 @@ test("dock watcher: stop ignores stale USB callbacks and restart reapplies state
   local dock, watcher = startDocked(mock)
   dock:stop()
   watcher.callback({ vendorID = 100, productID = 200, eventType = "removed" })
-  check(mock.wifiReads == 1 and #mock.wifiChanges == 1, "stale callback does nothing after stop")
+  check(dock.is_docked == true, "stale callback does nothing after stop")
   mock.usbDevices = {}
   dock:start()
-  check(dock.is_docked == false and mock.wifiDetails.power == true, "restart applies fresh USB state")
-  check(#mock.tasks == 0 and mock.pendingTimers() == 0, "restart creates no Wi-Fi tasks or timers")
+  check(dock.is_docked == false, "restart applies fresh USB state")
+  check(#mock.tasks == 0 and mock.pendingTimers() == 0, "restart creates no tasks or timers")
   dock:stop()
 end)
 
@@ -335,7 +462,6 @@ test("dock watcher: dock and keyboard actions stay independent", function(mock)
 
   emitDock(watcher, "removed")
   check(#tasksNamed(mock, "hammerspoon-kanata") == 1, "undocking does not change Kanata")
-  check(mock.wifiDetails.power == true, "undocking still turns Wi-Fi on")
   emitKeyboard(mock, watcher, "removed")
   mock.advance(C.dock.keyboard.debounceSeconds)
   switches = tasksNamed(mock, "hammerspoon-kanata")
@@ -343,7 +469,6 @@ test("dock watcher: dock and keyboard actions stay independent", function(mock)
     #switches == 2 and switches[2].args[4] == "/tmp/kanata/internal.kbd",
     "keyboard removal selects internal profile"
   )
-  check(mock.wifiReads == 2 and #mock.wifiChanges == 2, "keyboard removal does not touch Wi-Fi")
   dock:stop()
 end)
 
@@ -616,7 +741,6 @@ test("dock watcher: stop and restart reject old timers, watchers and task result
   local watcher = mock.usbWatchers[#mock.usbWatchers]
   emitKeyboard(mock, watcher, "added")
   local newTimer = dock._keyboardTimer
-  local reads = mock.wifiReads
   oldWatcher.callback({ vendorID = 100, productID = 200, eventType = "added" })
   oldWatcher.callback({ vendorID = 400, productID = 300, eventType = "removed" })
   oldTimer.fn()
@@ -625,7 +749,7 @@ test("dock watcher: stop and restart reject old timers, watchers and task result
     dock._keyboardTimer == newTimer and mock.pendingTimers() == 1,
     "old callbacks cannot replace or clear new timer"
   )
-  check(mock.wifiReads == reads and #mock.tasks == 2, "old lifecycle cannot affect Wi-Fi or Kanata")
+  check(dock.is_docked == false and #mock.tasks == 2, "old lifecycle cannot affect dock state or Kanata")
   mock.advance(3)
   mock.tasks[2]:complete(0, "switched\n", "")
   check(#mock.tasks == 3 and mock.tasks[3].args[4] == "/tmp/kanata/external.kbd", "new lifecycle reconciles normally")
@@ -821,6 +945,173 @@ test("quitter: stale double-mode timer cannot exit a newer modal", function(mock
   check(not modal2.active and modal2.deleted, "second modal auto-exits on its own timeout")
 
   quitter:stop()
+end)
+
+--------------------------------------------------------------------------------
+-- hotspot watcher: service order follows whether Wi-Fi is on the phone hotspot
+
+local ETHERNET = "Thunderbolt Ethernet Slot 1"
+local NETWORKSETUP = "/usr/sbin/networksetup"
+
+local function serviceOrderOutput(names)
+  local lines = { "An asterisk (*) denotes that a network service is disabled." }
+  for i, name in ipairs(names) do
+    local index = name == "Tailscale" and "*" or tostring(i)
+    table.insert(lines, ("(%s) %s"):format(index, name))
+    table.insert(lines, ("(Hardware Port: %s, Device: en%d)"):format(name, i))
+    table.insert(lines, "")
+  end
+  return table.concat(lines, "\n")
+end
+
+local ETHERNET_FIRST = serviceOrderOutput({ ETHERNET, "Thunderbolt Bridge", "Wi-Fi", "Tailscale" })
+local WIFI_FIRST = serviceOrderOutput({ "Wi-Fi", ETHERNET, "Thunderbolt Bridge", "Tailscale" })
+
+local function setHotspot(mock, on)
+  mock.netState["State:/Network/Interface/en0/IPv4"] = { Addresses = { on and "172.20.10.10" or "192.168.1.20" } }
+end
+
+local function startHotspot(mock, on)
+  C.hotspot = { interface = "en0", subnetPrefix = "172.20.10.", wifiService = "Wi-Fi", ethernetService = ETHERNET }
+  setHotspot(mock, on)
+  local hotspot = require("watchers.hotspot")
+  hotspot:start()
+  return hotspot, mock.netStores[#mock.netStores]
+end
+
+local function lastTask(mock) return mock.tasks[#mock.tasks] end
+
+local function sameList(a, b)
+  if #a ~= #b then return false end
+  for i = 1, #a do
+    if a[i] ~= b[i] then return false end
+  end
+  return true
+end
+
+local function isReorder(task, names)
+  local expected = { "-ordernetworkservices" }
+  for _, name in ipairs(names) do
+    table.insert(expected, name)
+  end
+  return task.launchPath == NETWORKSETUP and sameList(task.args, expected)
+end
+
+test("hotspot watcher: parses service order including disabled services", function()
+  local hotspot = require("watchers.hotspot")
+  local names = hotspot.parseOrder(ETHERNET_FIRST)
+  check(sameList(names, { ETHERNET, "Thunderbolt Bridge", "Wi-Fi", "Tailscale" }), "names in order, (*) kept")
+end)
+
+test("hotspot watcher: moveAhead only moves the one service", function()
+  local hotspot = require("watchers.hotspot")
+  local names = { ETHERNET, "Thunderbolt Bridge", "Wi-Fi", "Tailscale" }
+  local order = hotspot.moveAhead(names, "Wi-Fi", ETHERNET)
+  check(order and sameList(order, { "Wi-Fi", ETHERNET, "Thunderbolt Bridge", "Tailscale" }), "Wi-Fi moved ahead")
+  check(hotspot.moveAhead(order, "Wi-Fi", ETHERNET) == nil, "no change when already ahead")
+  check(hotspot.moveAhead({ "Wi-Fi" }, ETHERNET, "Wi-Fi") == nil, "no change when a service is missing")
+end)
+
+test("hotspot watcher: joining the hotspot puts Wi-Fi ahead of Ethernet", function(mock)
+  local hotspot, store = startHotspot(mock, false)
+  check(store.started and store.keys[1] == "State:/Network/Interface/en0/IPv4", "watches Wi-Fi IPv4")
+  check(#mock.tasks == 1 and lastTask(mock).args[1] == "-listnetworkserviceorder", "startup reads order")
+  lastTask(mock):complete(0, ETHERNET_FIRST)
+  check(#mock.tasks == 1, "Ethernet already ahead: no reorder")
+
+  setHotspot(mock, true)
+  store:emit()
+  lastTask(mock):complete(0, ETHERNET_FIRST)
+  check(
+    isReorder(lastTask(mock), { "Wi-Fi", ETHERNET, "Thunderbolt Bridge", "Tailscale" }),
+    "networksetup reorders Wi-Fi first without sudo"
+  )
+  lastTask(mock):complete(0)
+  check(#mock.notifications == 0, "success does not notify")
+  hotspot:stop()
+end)
+
+test("hotspot watcher: leaving the hotspot puts Ethernet back ahead", function(mock)
+  local hotspot, store = startHotspot(mock, true)
+  lastTask(mock):complete(0, WIFI_FIRST)
+  check(#mock.tasks == 1, "Wi-Fi already ahead: no reorder")
+
+  setHotspot(mock, false)
+  store:emit()
+  lastTask(mock):complete(0, WIFI_FIRST)
+  check(
+    isReorder(lastTask(mock), { ETHERNET, "Wi-Fi", "Thunderbolt Bridge", "Tailscale" }),
+    "networksetup reorders Ethernet first"
+  )
+  hotspot:stop()
+end)
+
+test("hotspot watcher: a change during a run is applied after it", function(mock)
+  local hotspot, store = startHotspot(mock, false)
+  setHotspot(mock, true)
+  store:emit()
+  check(#mock.tasks == 1, "no second task while one runs")
+
+  lastTask(mock):complete(0, ETHERNET_FIRST)
+  check(#mock.tasks == 2 and lastTask(mock).args[1] == "-listnetworkserviceorder", "reruns after first run")
+  lastTask(mock):complete(0, ETHERNET_FIRST)
+  check(isReorder(lastTask(mock), { "Wi-Fi", ETHERNET, "Thunderbolt Bridge", "Tailscale" }), "rerun uses new state")
+  hotspot:stop()
+end)
+
+test("hotspot watcher: a failed reorder notifies and logs the error", function(mock)
+  local hotspot = startHotspot(mock, true)
+  lastTask(mock):complete(0, ETHERNET_FIRST)
+  lastTask(mock):complete(4, "** Error: The parameters were not valid.\n", "")
+  check(#mock.notifications == 1, "one notification")
+  check(mock.notifications[1].opts.subTitle == "Cannot put Wi-Fi ahead of " .. ETHERNET, "names the change")
+  check(table.concat(mock.logs, "\n"):find("parameters were not valid", 1, true) ~= nil, "logs networksetup output")
+  check(table.concat(mock.logs, "\n"):find("now ahead of", 1, true) == nil, "failure never logs success")
+  hotspot:stop()
+end)
+
+test("hotspot + dock watchers: docking leaves Wi-Fi and order alone; hotspot still reorders", function(mock)
+  local dock, usb = startDocked(mock)
+  local hotspot, store = startHotspot(mock, false)
+  lastTask(mock):complete(0, ETHERNET_FIRST)
+  local tasks = #mock.tasks
+
+  emitDock(usb, "removed")
+  emitDock(usb, "added")
+  check(#mock.tasks == tasks, "dock events start no networksetup tasks")
+  check(mock.wifiReads == 0 and #mock.wifiChanges == 0, "dock events never touch Wi-Fi power")
+
+  setHotspot(mock, true)
+  store:emit()
+  lastTask(mock):complete(0, ETHERNET_FIRST)
+  check(
+    isReorder(lastTask(mock), { "Wi-Fi", ETHERNET, "Thunderbolt Bridge", "Tailscale" }),
+    "joining the hotspot while docked puts Wi-Fi first"
+  )
+  lastTask(mock):complete(0)
+
+  emitDock(usb, "removed")
+  check(#mock.tasks == tasks + 2, "undocking on the hotspot keeps Wi-Fi first")
+  setHotspot(mock, false)
+  store:emit()
+  lastTask(mock):complete(0, WIFI_FIRST)
+  check(
+    isReorder(lastTask(mock), { ETHERNET, "Wi-Fi", "Thunderbolt Bridge", "Tailscale" }),
+    "leaving the hotspot restores Ethernet first"
+  )
+  dock:stop()
+  hotspot:stop()
+end)
+
+test("hotspot watcher: stop ignores late results and store events", function(mock)
+  local hotspot, store = startHotspot(mock, true)
+  local listTask = lastTask(mock)
+  hotspot:stop()
+  check(not store.started, "store stopped")
+  listTask:complete(0, ETHERNET_FIRST)
+  store.started = true
+  store:emit()
+  check(#mock.tasks == 1, "no tasks after stop")
 end)
 
 --------------------------------------------------------------------------------

@@ -43,6 +43,9 @@ for (const bash of shells) {
       expect(guidance).toEndWith("<!-- mise-tmpl-gen:elixir:end -->\n");
       expect(guidance).toContain("pidewave.url");
       expect(guidance).toContain("mcp__tidewave__project_eval");
+      expect(guidance).toContain("open http://localhost:$PHX_PORT/tidewave/connect");
+      expect(guidance).toContain("Tidewave.BrowserSessions.list_clients() != []");
+      expect(guidance).not.toContain("wait a few seconds");
       expect(guidance).toContain("Cmd+Shift+C\n  becomes active only while it answers");
       expect(fs.readFileSync(path.join(h.cwd, "AGENTS.md"), "utf8")).toBe("Project-owned guidance\n");
       expect(h.run().exitCode).toBe(0);

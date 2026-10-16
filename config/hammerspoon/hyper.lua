@@ -1,5 +1,6 @@
 local fmt = string.format
 local M = hs.hotkey.modal.new({}, nil)
+local releasePassThroughs = {}
 _G.Hypers = {}
 
 M.__index = M
@@ -7,15 +8,15 @@ M.name = "hyper"
 M.hyper = nil
 M.key = HYPER
 
--- Launch/focus an app, then send a keystroke once it is frontmost.
+-- Launch/focus an app, then send once it is frontmost.
 -- Bounded: hs.timer.waitWhile polls forever (1s default) if the app never
 -- fronts (launch failure, quit during launch); give up after `timeout`s.
-local function sendKeyWhenFrontmost(app, mods, key, timeout)
+local function sendWhenFrontmost(app, send, timeout)
   hs.application.launchOrFocusByBundleID(app)
 
   local deadline = hs.timer.secondsSinceEpoch() + (timeout or 10)
   local timedOut = false
-  hs.timer.waitWhile(function()
+  return hs.timer.waitWhile(function()
     if hs.timer.secondsSinceEpoch() > deadline then
       timedOut = true
       return false
@@ -27,11 +28,11 @@ local function sendKeyWhenFrontmost(app, mods, key, timeout)
       U.log.wf("gave up waiting for %s to front", app)
       return
     end
-    hs.eventtap.keyStroke(mods, key)
+    send()
   end, 0.1)
 end
 
-function M:bindPassThrough(mods, key, app)
+function M:bindPassThrough(mods, key, app, hold)
   -- Build the passthrough modifiers: hyper + any additional mods
   local passthroughMods = { "cmd", "alt", "shift", "ctrl" }
   if mods and #mods > 0 then
@@ -47,15 +48,57 @@ function M:bindPassThrough(mods, key, app)
     end
   end
 
-  self:bind(mods, key, nil, function()
-    if hs.application.get(app) then
-      hs.eventtap.keyStroke(passthroughMods, key)
-    else
-      sendKeyWhenFrontmost(app, passthroughMods, key)
+  if hold then
+    local pressed, sent = false, false
+    local waitTimer
+
+    local function release()
+      pressed = false
+      if waitTimer then
+        waitTimer:stop()
+        waitTimer = nil
+      end
+      if sent then
+        sent = false
+        hs.eventtap.event.newKeyEvent(passthroughMods, key, false):post()
+      end
     end
-  end)
+
+    local function sendDown()
+      if not pressed or sent then return end
+      sent = true
+      hs.eventtap.event.newKeyEvent(passthroughMods, key, true):post()
+    end
+
+    table.insert(releasePassThroughs, release)
+    self:bind(mods, key, function()
+      if pressed then return end
+      pressed = true
+      if hs.application.get(app) then
+        sendDown()
+      else
+        waitTimer = sendWhenFrontmost(app, sendDown)
+      end
+    end, release)
+  else
+    local function sendTap() hs.eventtap.keyStroke(passthroughMods, key) end
+    self:bind(mods, key, nil, function()
+      if hs.application.get(app) then
+        sendTap()
+      else
+        sendWhenFrontmost(app, sendTap)
+      end
+    end)
+  end
 
   return self
+end
+
+function M:exited()
+  -- Hyper can be released before the chord key, disabling its release callback.
+  for _, release in ipairs(releasePassThroughs) do
+    release()
+  end
 end
 
 -- Bind a Hyper chord (mods+key, evaluated inside the Hyper modal) so that it
@@ -70,7 +113,7 @@ function M:bindAppChord(mods, key, app, targetMods, targetKey)
     if appObj and appObj:isFrontmost() then
       hs.eventtap.keyStroke(targetMods, targetKey)
     else
-      sendKeyWhenFrontmost(app, targetMods, targetKey)
+      sendWhenFrontmost(app, function() hs.eventtap.keyStroke(targetMods, targetKey) end)
     end
   end)
 
@@ -113,6 +156,8 @@ end
 function M:start(opts) return self end
 
 function M:stop()
+  self:exited()
+
   -- Remove from global registry using correct key (self.id, not self)
   if self.id and _G.Hypers[self.id] then
     _G.Hypers[self.id] = nil

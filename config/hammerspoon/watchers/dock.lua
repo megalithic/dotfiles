@@ -99,29 +99,6 @@ local function startTrackedTask(slot, launchPath, args, callback)
   return task
 end
 
-local function notifyWifi(message)
-  U.log.w(message)
-  hs.notify.new({ title = "Hammerspoon dock", subTitle = message }):send()
-end
-
-local function setWifi(power)
-  local wifi = hs.wifi.interfaceDetails()
-  if not wifi or not wifi.interface or type(wifi.power) ~= "boolean" then
-    notifyWifi("Cannot read Wi-Fi interface")
-    return
-  end
-
-  if wifi.power == power then return end
-
-  local ok, err = hs.wifi.setPower(power, wifi.interface)
-  if not ok then
-    notifyWifi("Cannot change Wi-Fi power: " .. tostring(err or "interface unavailable"))
-    return
-  end
-
-  U.log.of("Wi-Fi %s on %s", power and "on" or "off", wifi.interface)
-end
-
 local startKanataSwitch
 
 local function notifyKanataFailure(profile, detail)
@@ -194,8 +171,8 @@ local function dockChangedState(connected)
   if M._stopped or M.is_docked == connected then return end
 
   M.is_docked = connected
+  -- Wi-Fi stays on in both states; watchers/hotspot.lua owns network priority.
   U.log.i(connected and "Dock connected" or "Dock disconnected")
-  setWifi(not connected)
 end
 
 local function keyboardChangedState(state, force)

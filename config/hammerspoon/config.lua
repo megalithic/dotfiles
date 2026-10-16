@@ -2,8 +2,12 @@ local M = {}
 
 HYPER = "F19"
 BROWSER = "net.imput.helium"
+-- Cold starts of BROWSER must go through this script (CDP 9223 + avwatchweb);
+-- LaunchServices forwards no flags. Used by the hyper+j launcher and watchers/url.
+BROWSER_LAUNCH = os.getenv("HOME") .. "/bin/helium-launch"
 -- BROWSER = "com.nix.brave-browser-nightly"
 -- BROWSER = "com.brave.Browser.nightly"
+-- TERMINAL = "net.kovidgoyal.kitty"
 TERMINAL = "com.mitchellh.ghostty"
 
 -- Bundle ID aliases: wrapper bundle ID -> actual running app bundle ID
@@ -348,7 +352,7 @@ M.lollygaggers = {
 M.launchers = {
   -- launchCommand: cold-start only. It loads avwatchweb and keeps CDP 9223
   -- for chrome-devtools-attach. Running app keeps normal cycle/focus behavior.
-  { BROWSER, "j", { cycleWindows = true, launchCommand = os.getenv("HOME") .. "/bin/helium-launch" } },
+  { BROWSER, "j", { cycleWindows = true, launchCommand = BROWSER_LAUNCH } },
   { TERMINAL, "k", { passThrough = { "`" } } },
   -- { "net.kovidgoyal.kitty", "k" },
   { "com.apple.MobileSMS", "m" }, -- NOOP for now.. TODO: implement a binding feature that let's us require n-presses before we execute
@@ -378,7 +382,7 @@ M.launchers = {
   { "com.tdesktop.Telegram", "t" },
   { "org.hammerspoon.Hammerspoon", "r" },
   -- { "com.kapeli.dashdoc", { { "shift" }, "d" }, { passThrough = { "d" } } },
-  { "com.pais.handy", nil, { passThrough={ "g" } } },
+  { "com.pais.handy", nil, { passThroughHold = { "g" } } },
   { "com.1password.1password", "1" },
   -- { "commonplace.canonize.app", nil, { passThrough = { { { "shift" }, "s" } } } },
   { "com.apple.dt.Xcode", "x", { focusOnly = true } },
@@ -421,15 +425,21 @@ M.dock = {
     daemonLabel = "dev.mise.org.kanata.daemon",
   },
   docked = {
-    wifi = "off",
     input = "Samson GoMic",
     output = "megabose",
   },
   undocked = {
-    wifi = "on",
     input = "megabose",
     output = "megabose",
   },
+}
+
+-- watchers/hotspot.lua: prefer Wi-Fi over Ethernet while on the phone hotspot.
+M.hotspot = {
+  interface = "en0", -- Wi-Fi
+  subnetPrefix = "172.20.10.", -- iPhone Personal Hotspot always hands out 172.20.10.0/28
+  wifiService = "Wi-Fi",
+  ethernetService = "Thunderbolt Ethernet Slot 1", -- CalDigit TS4 port
 }
 
 M.notifier = {

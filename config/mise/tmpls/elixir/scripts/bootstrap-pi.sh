@@ -65,11 +65,19 @@ Local tooling is managed by mise (`.config/mise.toml`).
   - Never tail `log/` files for runtime errors; use `mcp__tidewave__get_logs`.
   - Never drive the dev site with curl or a browser MCP for LiveView checks;
     use `mcp__tidewave__browser_eval`. It takes `action` (`help`, `new-session`,
-    `eval`), `sid`, and `action_inputs` (`code` using the `browser` object). If
-    it reports no browser connected, open the control page yourself
-    (`open http://localhost:$PHX_PORT/tidewave`), wait a few seconds, then call
-    `action: "help"` to receive the active `sid` (or `new-session` to reserve
-    one) and continue; do not fall back to curl or another browser tool.
+    `eval`), `sid`, and `action_inputs` (`code` using the `browser` object).
+    Start with `action: "new-session"`: it opens a session on its own, so never
+    create one through the control page UI. If it reports no browser connected:
+    1. Run `open http://localhost:$PHX_PORT/tidewave/connect`. Never open bare
+       `/tidewave`: it loads the Tidewave IDE, which never connects.
+    2. Do not sleep. Make one `mcp__tidewave__project_eval` call that waits
+       for the page to register:
+       `Enum.find_value(1..200, fn _ -> Tidewave.BrowserSessions.list_clients() != [] || (Process.sleep(50) && nil) end) || :timeout`.
+       It returns `true` as soon as the page connects (usually under a
+       second) or `:timeout` after 10s. On `:timeout`, report it to the user
+       instead of retrying.
+    3. Call `new-session` again and continue. Do not fall back to curl or
+       another browser tool.
   - Bash remains for git, mise tasks, `mix format`, `mix test`, `mix check`,
     and file searches outside the running app.
   - If Tidewave is unreachable (Phoenix down, port changed), say so and

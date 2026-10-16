@@ -74,6 +74,7 @@ function M.new()
   mock.apps = {} -- pid -> app
   mock.frontmost = nil
   mock.keystrokes = {}
+  mock.keyEvents = {} -- hs.eventtap.event.newKeyEvent(...):post() records
   mock.launched = {}
 
   local nextPid = 1000
@@ -165,6 +166,8 @@ function M.new()
   mock.wifiChanges = {}
   mock.wifiSetResult = true
   mock.wifiSetError = nil
+  mock.netState = {} -- configd key -> value for hs.network.configuration stores
+  mock.netStores = {}
   mock.logs = {}
 
   local hs = {}
@@ -314,6 +317,37 @@ function M.new()
     end,
   }
 
+  hs.network = {
+    configuration = {
+      open = function()
+        local store = { keys = {}, started = false }
+        function store:setCallback(fn)
+          self.callback = fn
+          return self
+        end
+        function store:monitorKeys(keys)
+          self.keys = keys
+          return self
+        end
+        function store:start()
+          self.started = true
+          return self
+        end
+        function store:stop()
+          self.started = false
+          return self
+        end
+        function store:contents(key) return { [key] = mock.netState[key] } end
+        -- test helper: configd reports a change to the monitored keys
+        function store:emit()
+          if self.started and self.callback then self.callback(self, self.keys) end
+        end
+        table.insert(mock.netStores, store)
+        return store
+      end,
+    },
+  }
+
   hs.hotkey = {
     bind = function(mods, key, pressed, released)
       local hk = { mods = mods, key = key, pressed = pressed, released = released, deleted = false }
@@ -328,7 +362,13 @@ function M.new()
     new = function()
       local modal = { binds = {}, active = false, deleted = false }
       function modal:bind(mods, key, pressedOrNil, releasedOrNil, repeatOrNil)
-        table.insert(self.binds, { mods = mods, key = key, pressed = pressedOrNil, released = releasedOrNil })
+        table.insert(self.binds, {
+          mods = mods,
+          key = key,
+          pressed = pressedOrNil,
+          released = releasedOrNil,
+          repeatFn = repeatOrNil,
+        })
         return self
       end
       function modal:enter()
@@ -351,6 +391,16 @@ function M.new()
     keyStroke = function(mods, key) table.insert(mock.keystrokes, { mods = mods, key = key }) end,
     keyStrokes = function(text) table.insert(mock.keystrokes, { text = text }) end,
     checkKeyboardModifiers = function() return {} end,
+    event = {
+      newKeyEvent = function(mods, key, isDown)
+        local event = { mods = mods, key = key, isDown = isDown }
+        function event:post()
+          table.insert(mock.keyEvents, self)
+          return self
+        end
+        return event
+      end,
+    },
   }
 
   hs.alert = {

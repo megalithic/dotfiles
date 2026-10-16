@@ -80,7 +80,7 @@ db:                                      # project_eval snippets; null when unus
   restore: null                          # nothing is submitted
 steps:
   - caption: An invited provider opens their Strive Provider Portal enrollment invitation
-    do: wait 1500
+    do: wait 2000
   - caption: The heading names the practice that sent the invitation
     do: zoom 1.8 '#invitations-heading'
   - caption: The page shows their login email and the NPI the practice invited
@@ -111,9 +111,18 @@ Rules:
 - Never use an em dash (U+2014) or an en dash (U+2013) in the title, captions
   or description, not even for ranges. Use a plain hyphen `-`: `STEPS 1-3`,
   `Page 2 - practice details`.
-- Each caption stays up about 5 seconds whatever its length. `overlay()`
+- Each caption stays up 5.0 seconds whatever its length. `overlay()`
   returns at once, and the next `overlay()` waits for the current one to finish,
   so each action runs while its caption is on screen.
+- Pace every step as `overlay`, `wait 1000`, action, `wait 1500`. Measured:
+  `click` takes about 1.4 s (cursor travel plus click), `zoom N S` returns at
+  once and animates for about 0.7 s, `zoom 1` takes about 0.7 s. Without the
+  first wait the cursor starts moving the instant the caption appears, before
+  anyone has read it; the second wait keeps the result on screen. A step
+  therefore lasts max(5 s, 1 s + action + 1.5 s); make the trailing wait
+  longer when the result needs more than the remaining caption time.
+- Give the establishing caption `wait 2000` and the summary caption
+  `wait 5000`.
 - Open with an establishing caption on the start page. Close with a summary
   caption followed by `wait 5000`, because `stopRecording()` does not wait for
   the last caption.
@@ -124,7 +133,8 @@ Rules:
 - Add a step that writes data only when the prompt asks for it. List the rows
   it touches.
 
-Map each step to `await browser.overlay(caption);` followed by its action:
+Map each step to `await browser.overlay(caption); await browser.wait(1000);`,
+its action, then `await browser.wait(1500);`:
 
 | `do` | Code |
 |---|---|
@@ -257,17 +267,26 @@ await browser.reload('/invitations');
 await browser.eval(async () => { let t = null; for (let i = 0; i < 40 && !(t = document.getElementById('tidewave-toolbar')); i++) await new Promise((r) => setTimeout(r, 100)); if (t) t.style.setProperty('display', 'none', 'important'); });
 await browser.startRecording({ description: 'Enrollment invitation page', sfx: false, narration: false });
 await browser.overlay('An invited provider opens their Strive Provider Portal enrollment invitation');
-await browser.wait(1500);
+await browser.wait(2000);
 await browser.overlay('The heading names the practice that sent the invitation');
+await browser.wait(1000);
 await browser.zoom(1.8, browser.locator('#invitations-heading'));
+await browser.wait(1500);
 await browser.overlay('The page shows their login email and the NPI the practice invited');
+await browser.wait(1000);
 await browser.zoom(1.8, browser.locator('#practice-invitations'));
+await browser.wait(1500);
 await browser.overlay('They confirm the details and consent to a license and NPI review');
+await browser.wait(1000);
 await browser.zoom(1);
 await browser.click(browser.locator('input[type="checkbox"][name="user[license_review_consent]"]'));
+await browser.wait(1500);
 await browser.overlay('Accepting adds them to CSV Test Clinic as a Physician');
+await browser.wait(1000);
 await browser.zoom(1.6, browser.locator('#invitation-accept'));
+await browser.wait(1500);
 await browser.overlay('Demo stops before submitting, so the invitation stays pending');
+await browser.wait(1000);
 await browser.zoom(1);
 await browser.wait(5000);
 await browser.stopRecording();

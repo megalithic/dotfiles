@@ -3,6 +3,12 @@ searchPriorities = []
 sortOrders = []
 
     [[catalogs.globalScopes]]
+    catalogIdentifier = 'camera-preview.commands'
+
+        [catalogs.globalScopes.scope]
+        kind = 'none'
+
+    [[catalogs.globalScopes]]
     catalogIdentifier = 'obsidian.notes'
 
         [catalogs.globalScopes.scope]
@@ -33,16 +39,13 @@ sortOrders = []
         kind = 'none'
 
     [[catalogs.globalScopes]]
-    catalogIdentifier = 'tuna.smart-folders'
-
-        [catalogs.globalScopes.scope]
-        kind = 'none'
-
-    [[catalogs.globalScopes]]
     catalogIdentifier = 'tuna.windows'
 
         [catalogs.globalScopes.scope]
         kind = 'none'
+
+[comboMode]
+bindings = []
 
 [hotkeys]
 custom = []
@@ -52,7 +55,10 @@ custom = []
     carbonModifiers = 256
 
 [settings]
+mainWindowAnimationsEnabled = false
+resultListNavigationBindings = 'macOSStandard'
 screenPreference = 'primary'
+showResultsImmediatelyOnActivation = true
 switchToTextModeWhenNoResults = true
 
 [[catalogSettings]]

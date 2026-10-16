@@ -71,7 +71,7 @@ hs.loadSpoon("EmmyLua")
 
 -- notiwatchd owns native notification watching and routing. Hammerspoon keeps
 -- avwatchd state only for notification HUD suppression during screen sharing.
-local watchers = { "audio", "avwatchd", "url", "pasteboard", "dock" }
+local watchers = { "audio", "avwatchd", "url", "pasteboard", "dock", "hotspot" }
 
 req("bindings")
 req("watchers", { watchers = watchers })

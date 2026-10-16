@@ -1,6 +1,7 @@
 ---
 name: git-worktrees
-description: All Git worktree work through our custom `wt` (~/.dotfiles/bin/wt, v2): create, open, list, repair, prune, and hand work off to a new Pi agent in a fresh worktree. Use when the user mentions a worktree, `wt`, branching work into a new checkout, or says things like "tell the agent in a new worktree X to take over this work" (optionally "in a window").
+description: >-
+  All Git worktree work through our custom `wt` (~/.dotfiles/bin/wt, v2): create, open, list, repair, prune, and hand work off to a new Pi agent in a fresh worktree. Use when the user mentions a worktree, `wt`, branching work into a new checkout, or says things like "tell the agent in a new worktree X to take over this work" (optionally "in a window").
 ---
 
 # Worktrees

@@ -219,6 +219,13 @@ function openUrlWithApp(url, bundleID, opts)
   local app = hs.application.get(bundleID)
   local appName = app and app:name()
 
+  -- Cold start of BROWSER must go through BROWSER_LAUNCH (see config.lua):
+  -- openURLWithBundle would start it without CDP 9223 and avwatchweb.
+  if not app and bundleID == BROWSER then
+    hs.task.new(BROWSER_LAUNCH, nil, { url }):start()
+    return true
+  end
+
   -- If app not running or background mode not requested, use standard method
   if not appName or not background then return hs.urlevent.openURLWithBundle(url, bundleID) end
 

@@ -1,0 +1,46 @@
+# AirConnect airupnp bridge for the NAS: re-advertises the Office Sonos as an
+# AirPlay 1 receiver named "Office+" so AeroPlay's office button can target it.
+#
+# Deploy via UGOS Pro: Docker app > Project > Create > paste this file > Deploy.
+#   UGREEN KB 475 deploys Home Assistant the same way, with network_mode: host:
+#   https://support.ugnas.com/detail/article/en-US/475
+# Image:    https://github.com/GioF71/airconnect-docker (entrypoint app/bin/run.sh)
+# Upstream: https://github.com/philippe44/AirConnect (README + airupnp -h, v1.12.4)
+#
+# Only one airupnp bridge may run on the LAN at a time, or "Office+" is
+# advertised twice. megabookpro's com.megadots.airupnp LaunchAgent
+# (config/mise/config.megabookpro.toml) must be removed once this works.
+services:
+  airupnp:
+    # Dated tag pinned to the build that bundles AirConnect 1.12.4
+    # (airconnect-docker changelog 2026-10-05). Bump deliberately.
+    image: giof71/airconnect:debian-2026-10-05
+    container_name: airupnp
+    # Upstream README "Installing" item 7: "In Docker, you must use 'host' mode
+    # to enable audio webserver." Also needed for mDNS (UDP 5353) and UPnP
+    # multicast discovery. No ports: section is needed or honored in host mode.
+    network_mode: host
+    environment:
+      # run.sh: "upnp" runs only airupnp-linux (Sonos/UPnP), never aircast.
+      - AIRCONNECT_MODE=upnp
+      # run.sh appends "-l ${LATENCY}". Upstream README: "For Sonos & Heos
+      # players, set latency by adding -l 1000:2000". Same value megabookpro
+      # used (mise/scripts/airupnp-launchd). run.sh always adds -Z itself.
+      - LATENCY=1000:2000
+      # run.sh default: picks the interface from `ip route get 1.1.1.1` and
+      # passes its IP to -b. Set NETWORK_SELECT to the NAS LAN IP only if the
+      # NAS is multi-homed and auto-detect lands on the wrong interface.
+      # - NETWORK_SELECT=
+      # run.sh creates this uid/gid and chowns /config to it. Must be able to
+      # write the mapped folder below; otherwise config falls back to /tmp
+      # and is regenerated on every start (log: "Config directory [/config]
+      # is not writable"). Check with UGREEN KB 369 "How to Get PUID and PGID".
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      # First start with no config.xml: run.sh runs `airupnp -i config.xml`,
+      # which per -h "discover players, save <config file> and exit". The
+      # container exits once; the restart policy brings it back and the second
+      # start runs the bridge with -x /config/config.xml. Expected, not a bug.
+      - ./config:/config
+    restart: unless-stopped

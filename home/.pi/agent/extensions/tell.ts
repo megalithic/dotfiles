@@ -341,7 +341,7 @@ const detectTmux = (): Promise<TmuxInfo | null> =>
 	});
 
 const currentMachineName = (): string | undefined => {
-	const raw = process.env.HOSTNAME || process.env.HOST || os.hostname();
+	const raw = process.env.HOSTNAME || os.hostname();
 	const name = raw.split(".")[0]?.trim();
 
 	return name || undefined;

@@ -4,6 +4,7 @@ import { execFileSync } from "node:child_process";
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import crypto from "node:crypto";
 import net from "node:net";
+import os from "node:os";
 import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 const { Editor, visibleWidth } = await import("@earendil-works/pi-tui");
@@ -1291,6 +1292,49 @@ describe("tell session IDs", () => {
 		} finally {
 			if (previousHostname === undefined) delete process.env.HOSTNAME;
 			else process.env.HOSTNAME = previousHostname;
+		}
+	});
+
+	test("uses the OS hostname instead of Phoenix HOST when HOSTNAME is unset", async () => {
+		const previousHostname = process.env.HOSTNAME;
+		const previousHost = process.env.HOST;
+		delete process.env.HOSTNAME;
+		process.env.HOST = "127.0.0.1";
+		let handler: ((args: string, ctx: ExtensionCommandContext) => Promise<void>) | undefined;
+
+		try {
+			// SAFETY: this fixture only registers and invokes the tell command.
+			extension({
+				on() {},
+				registerCommand(name, command) { if (name === "tell") handler = command.handler; },
+				registerTool() {},
+				appendEntry() {},
+			} as ExtensionAPI);
+
+			const notifications: string[] = [];
+
+			// SAFETY: the test context supplies the APIs used by the /tell id branch.
+			const ctx = {
+				mode: "rpc",
+				hasUI: true,
+				sessionManager: { getSessionId: () => "session-id", getSessionName: () => "sender" },
+				ui: {
+					notify(text: string) { notifications.push(text); },
+					async select() { throw new Error("picker should not open"); },
+					async editor() { throw new Error("editor should not open"); },
+				},
+			} as ExtensionCommandContext;
+
+			expect(handler).toBeDefined();
+			await handler!("id", ctx);
+			expect(notifications[0]).toBe(`pi:${os.hostname().split(".")[0]}:session-id` +
+				"\nUse this as tell_pi's target, or /tell " + `pi:${os.hostname().split(".")[0]}:session-id <message>.`);
+		} finally {
+			if (previousHostname === undefined) delete process.env.HOSTNAME;
+			else process.env.HOSTNAME = previousHostname;
+
+			if (previousHost === undefined) delete process.env.HOST;
+			else process.env.HOST = previousHost;
 		}
 	});
 

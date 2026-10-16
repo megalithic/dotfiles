@@ -94,25 +94,30 @@ mise run up
 ```
 
 Normal runs mutate machine state and stream each phase directly to the terminal.
-To print each phase without running it, use the updater's dry-run mode:
+To preview tasks without running them, use mise's built-in dry-run mode:
 
 ```bash
-mise run up -- --dry-run
+mise run --dry-run up
 ```
 
-`mise/scripts/update-machine` runs these phases sequentially and stops on the
-first failure:
+The same flag works with any task: `mise run --dry-run update:system`. It prints
+commands without executing them; it does not inspect commands inside scripts.
+
+`tasks.up` in `config/mise/config.toml` warns about dirty Git status, then runs
+these phases sequentially and stops on the first failure:
 
 1. `update:tools` - update standalone mise, plugins, and declared tools
-2. `update:packages` - apply and upgrade declared system packages
+2. `update:packages` - apply and upgrade declared system packages, including font casks
 3. `update:dotfiles` - apply managed dotfile targets without overwriting conflicts
-4. `install:fonts` - install declared Nerd Fonts when inputs changed
-5. `update:system` - build signed miccheckd, notiwatchd, and avwatchd binaries,
-   configure Helium, apply LaunchAgents, and apply MacOS defaults
-6. `update:nvim` - update Neovim plugins and Treesitter parsers
-7. `update:fnox` - refresh the fnox cache and generated secret artifacts
-8. `update:pi` - update Pi settings, tools, and extensions
-9. `reload:hammerspoon` - reload Hammerspoon
+4. `update:system` - apply LaunchAgents and MacOS defaults
+5. `update:nvim` - update Neovim plugins and Treesitter parsers
+6. `update:fnox` - refresh the fnox cache and generated secret artifacts
+7. `update:pi` - update Pi settings, tools, and extensions
+8. `reload:hammerspoon` - reload Hammerspoon
+
+Native app and daemon builds now live in
+[megalithic/swifties](https://github.com/megalithic/swifties); `update:system`
+does not build them or configure Helium.
 
 Existing real files and conflicting targets are preserved by refusal. Inspect and
 reconcile conflicts before retrying; do not use force to bypass them.

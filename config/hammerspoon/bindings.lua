@@ -24,7 +24,7 @@ end
 function M.loadApps()
   local hyper = req("hyper", { id = "apps" }):start()
   enum.each(C.launchers, function(bindingTable)
-    local bundleID, globalBind, opts = table.unpack(bindingTable)
+    local bundleID, globalBind, opts = table.unpack(bindingTable, 1, 3)
     opts = opts or {}
 
     if globalBind ~= nil then
@@ -48,6 +48,11 @@ function M.loadApps()
     enum.each(opts.passThrough or {}, function(bind)
       local mods, key = unpackBind(bind)
       hyper:bindPassThrough(mods, key, bundleID)
+    end)
+
+    enum.each(opts.passThroughHold or {}, function(bind)
+      local mods, key = unpackBind(bind)
+      hyper:bindPassThrough(mods, key, bundleID, true)
     end)
 
     enum.each(opts.urlSchemes or {}, function(binding)
