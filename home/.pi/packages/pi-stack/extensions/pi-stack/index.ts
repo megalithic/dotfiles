@@ -106,7 +106,7 @@ export default function piStack(pi: ExtensionAPI) {
 	pi.on("session_tree", async (_event, ctx) => restore(ctx));
 
 	pi.registerCommand("poteto-mode", {
-		description: "Poteto mode (pstack): on | off | auto | status",
+		description: "Poteto mode (pstack): on | off | auto | status, or a task to run in the mode",
 		getArgumentCompletions: (prefix) =>
 			["on", "off", "auto", "status"].flatMap((v) => (v.startsWith(prefix.trim()) ? [{ value: v, label: v }] : [])),
 		handler: async (args, ctx) => {
@@ -134,8 +134,19 @@ export default function piStack(pi: ExtensionAPI) {
 					return;
 				}
 
-				case "invalid":
-					ctx.ui.notify(`Unknown argument "${cmd.text}". Use on, off, auto, or status.`, "warning");
+				case "task": {
+					// Upstream's `/poteto-mode <task>`: turn the mode on so the map is in the prompt, then run the skill.
+					pi.appendEntry(STATE_ENTRY, { on: true });
+					on = true;
+					source = "override";
+					status(ctx);
+
+					// sendUserMessage expands /skill: only with expandPromptTemplates.
+					const message = `/skill:poteto-mode ${cmd.text}`;
+
+					if (ctx.isIdle()) pi.sendUserMessage(message, { expandPromptTemplates: true });
+					else pi.sendUserMessage(message, { expandPromptTemplates: true, deliverAs: "followUp" });
+				}
 			}
 		},
 	});
@@ -165,12 +176,12 @@ export default function piStack(pi: ExtensionAPI) {
 
 			// Written fresh each run so $available never goes stale; role lines are kept.
 			const next: ModelsFile = {
-				$comment: 'One line per role: "provider/id:thinking", a list of them for panel roles (one seat per entry), or inherit-parent. Delete a line to inherit the parent model.',
+				$comment: 'Add one line per role from $roles: "provider/id:thinking", or a list of them for a panel role (one reviewer per entry; give panels two or more models). A role with no line runs on the parent model.',
+				$roles: [...ROLES],
 				$available: available,
 				...current,
 			};
 
-			for (const role of ROLES) if (next[role] === undefined) next[role] = "inherit-parent";
 			writeFileSync(tablePath, JSON.stringify(next, null, 2) + "\n");
 			ctx.ui.notify(`Wrote ${tablePath} (${available.length} models visible). Edit the role lines, add activation paths to ${cfgPath}, then /reload.`, "info");
 		},

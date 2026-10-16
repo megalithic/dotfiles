@@ -1,5 +1,5 @@
-import type { Config, ModelRef, Role, RoleTable } from "./config.ts";
-import { PANEL_ROLES, ROLES } from "./config.ts";
+import type { Config, ModelRef, RoleTable } from "./config.ts";
+import { ROLES } from "./config.ts";
 
 export const SECTION_ROUTE = "pi-stack";
 
@@ -48,7 +48,11 @@ export function routeSection(input: SectionInput): string {
 
 /** The per-role model table, rendered only for roles the config sets. Absent roles inherit the parent model. */
 export function rolesSection(roles: RoleTable): string | undefined {
-	const rows = ROLES.filter((role) => roles[role] !== undefined).map((role) => `${role}: ${renderRef(roles[role]!)}`);
+	const rows = ROLES.flatMap((role) => {
+		const ref = roles[role];
+
+		return ref === undefined || ref === "inherit-parent" || ref === "auto" ? [] : [`${role}: ${renderRef(ref)}`];
+	});
 
 	if (rows.length === 0) return undefined;
 
@@ -61,10 +65,6 @@ export function rolesSection(roles: RoleTable): string | undefined {
 
 function renderRef(ref: ModelRef | ModelRef[]): string {
 	return Array.isArray(ref) ? ref.join(", ") : ref;
-}
-
-export function isPanelRole(role: Role): boolean {
-	return PANEL_ROLES.includes(role);
 }
 
 /**

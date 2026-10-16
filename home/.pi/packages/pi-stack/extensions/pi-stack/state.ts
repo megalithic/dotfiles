@@ -3,11 +3,6 @@ import { Value } from "typebox/value";
 
 export const STATE_ENTRY = "pi-stack-mode";
 
-export interface ModeEntry {
-	/** `null` clears an earlier override and returns to the cwd rule. */
-	on: boolean | null;
-}
-
 /** The shape of a session entry pi-stack cares about; everything else is ignored. */
 export interface SessionEntryLike {
 	type: string;
@@ -15,7 +10,7 @@ export interface SessionEntryLike {
 	data?: unknown;
 }
 
-/** Validates `entry.data` against the `ModeEntry` contract at the session-branch I/O boundary. */
+/** A mode entry: `on: null` clears an earlier override and returns to the cwd rule. */
 const ModeEntrySchema = Type.Object({ on: Type.Union([Type.Boolean(), Type.Null()]) });
 
 export interface ModeResolution {
@@ -43,9 +38,9 @@ export function resolveMode(branch: readonly SessionEntryLike[], autoOn: boolean
 	return { on: autoOn, source: "auto" };
 }
 
-export type Command = { kind: "set"; on: boolean } | { kind: "auto" } | { kind: "status" } | { kind: "invalid"; text: string };
+export type Command = { kind: "set"; on: boolean } | { kind: "auto" } | { kind: "status" } | { kind: "task"; text: string };
 
-/** Parses the `/poteto-mode` argument. Bare means on. */
+/** Parses the `/poteto-mode` argument. Bare means on; anything else is a task to run in the mode. */
 export function parseCommand(args: string): Command {
 	const text = args.trim().toLowerCase();
 
@@ -57,5 +52,5 @@ export function parseCommand(args: string): Command {
 
 	if (text === "status") return { kind: "status" };
 
-	return { kind: "invalid", text };
+	return { kind: "task", text: args.trim() };
 }

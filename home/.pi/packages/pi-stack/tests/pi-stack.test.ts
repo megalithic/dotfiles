@@ -51,6 +51,7 @@ describe("config files", () => {
 		expect(() => validateRoleTable({ "how critics": "x" })).toThrow(/unknown role "how critics"/);
 		expect(() => validateRoleTable({ "bug-fix": 3 })).toThrow(/\/bug-fix/);
 		expect(() => validate({ activate: "not-a-list" })).toThrow(/array/);
+		expect(() => validate({ activates: ["/x"] })).toThrow(/activates|additional/i);
 		expect(() => validate({ activate: [3] })).toThrow(/\/activate\/0/);
 	});
 	test("$-prefixed keys in models.json are comments", () => {
@@ -84,7 +85,7 @@ describe("mode restore from the session branch", () => {
 		expect(parseCommand(" OFF ")).toEqual({ kind: "set", on: false });
 		expect(parseCommand("auto")).toEqual({ kind: "auto" });
 		expect(parseCommand("status")).toEqual({ kind: "status" });
-		expect(parseCommand("lite")).toEqual({ kind: "invalid", text: "lite" });
+		expect(parseCommand(" Fix the Login bug ")).toEqual({ kind: "task", text: "Fix the Login bug" });
 	});
 });
 
@@ -143,6 +144,14 @@ describe("prompt sections", () => {
 		expect(roles).toContain("bug-fix: anthropic/claude-opus-5-5:xhigh");
 		expect(roles).toContain("interrogate reviewers: anthropic/claude-opus-5-5:xhigh, openai-codex/gpt-6-astra:high");
 		expect(roles).not.toContain("hillclimb");
+	});
+
+	test("inherit-parent and auto lines are left out of the role table", () => {
+		const sections: Record<string, string> = {};
+
+		applySections(sections, true, { ...base(), roles: { "bug-fix": "inherit-parent", hillclimb: "auto" } });
+
+		expect(sections[SECTION_ROLES]).toBeUndefined();
 	});
 
 	test("every shipped agent is recognized as a pi-stack delegate", () => {

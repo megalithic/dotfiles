@@ -4,7 +4,7 @@ import { isAbsolute, join, resolve, sep } from "node:path";
 import { type Static, Type } from "typebox";
 import { Value } from "typebox/value";
 
-/** Upstream pstack roles, one line each in setup-pstack. Panel roles hold a list. */
+/** Upstream pstack roles. Panel roles (arena, architect, interrogate) take a list, one seat per entry. */
 export const ROLES = [
 	"feature, refactoring",
 	"bug-fix",
@@ -27,8 +27,6 @@ export const ROLES = [
 
 export type Role = (typeof ROLES)[number];
 
-export const PANEL_ROLES: readonly Role[] = ["arena runners", "arena cross-judge pool", "architect runners", "interrogate reviewers"];
-
 /** "provider/id:thinking", or an alias meaning "run on the parent model". */
 const ModelRefSchema = Type.String({ minLength: 1 });
 
@@ -39,7 +37,7 @@ const ConfigSchema = Type.Object({
 	activate: Type.Array(Type.String(), { default: [] }),
 	/** Prompt section names from other extensions to delete while the mode is on. */
 	supersedes: Type.Array(Type.String(), { default: [] }),
-});
+}, { additionalProperties: false });
 
 export type Config = Static<typeof ConfigSchema>;
 
