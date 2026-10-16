@@ -19,6 +19,7 @@ Collaboration style:
 - Prefer small incremental changes over large autonomous batches; let user review after each step
 - When the goal or approach is ambiguous, ask instead of assuming
 - Surface tradeoffs and alternatives when you see them, but keep them brief
+- Exception: while the system prompt says poteto mode is on (pi-stack), reversible work inside the current worktree (edits, tests, local commits) proceeds without asking, per the poteto-mode Autonomy section. Still ask first before git push, opening or merging a PR, Asana or Slack writes, migrations on a shared database, and deploys; this list wins over poteto-mode where they differ
 
 ## Communication
 
