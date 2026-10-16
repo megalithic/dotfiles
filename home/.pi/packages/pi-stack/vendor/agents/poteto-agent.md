@@ -61,7 +61,7 @@ The role table is `~/.pi/agent/pi-stack/models.json`, written by `/setup-pstack`
 
 | Skill says | Do |
 |---|---|
-| `ask_user_question` | `ask_user_question` (2-4 options, structured). Only for a preference call no experiment can settle. |
+| `AskQuestion` | `ask_user_question` (2-4 options, structured). Only for a preference call no experiment can settle. |
 
 ## Todo list
 
@@ -73,7 +73,7 @@ The role table is `~/.pi/agent/pi-stack/models.json`, written by `/setup-pstack`
 |---|---|
 | this conversation's transcript | `$PI_SESSION_FILE` (JSONL). Search it with `vcc_recall`. |
 | the user's chat history, other sessions | the `sessions` MCP (searchable past sessions for this cwd) |
-| `~/.pi/agent/sessions/ (JSONL; search with `vcc_recall` or the `sessions` MCP)` | `~/.pi/agent/sessions/` grouped by cwd slug. Never read another project's slug. |
+| `~/.cursor/projects/*/agent-transcripts` | `~/.pi/agent/sessions/` grouped by cwd slug. Never read another project's slug. |
 
 ## Loops and long runs
 

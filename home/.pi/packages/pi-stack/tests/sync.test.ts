@@ -64,6 +64,14 @@ describe("vendored skills", () => {
 	test("poteto-mode keeps disable-model-invocation so the catalog stays small", () => {
 		expect(readFileSync(join(skills, "poteto-mode/SKILL.md"), "utf8")).toMatch(/^disable-model-invocation: true$/m);
 	});
+	test("every agent file carries the primitive map verbatim", () => {
+		const map = readFileSync(join(root, "references/pi-primitives.md"), "utf8").trim();
+
+		for (const name of readdirSync(join(root, "vendor/agents"))) {
+			expect(readFileSync(join(root, "vendor/agents", name), "utf8")).toContain(map);
+		}
+	});
+
 	test("the pin file matches what was vendored", () => {
 		const pin = JSON.parse(readFileSync(join(root, "scripts/upstream.json"), "utf8"));
 		const vendored = JSON.parse(readFileSync(join(root, "vendor/UPSTREAM.json"), "utf8"));

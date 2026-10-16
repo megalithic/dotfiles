@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-// Vendors upstream pstack (cursor/plugins/pstack) into ./skills and ./agents at the
-// commit pinned in upstream.json, applies scripts/substitutions.json, and fails on
-// any denied Cursor-only pattern that survives. Idempotent: rerun after bumping the
-// pin. Usage: node scripts/sync.mjs [--check] [--from <local pstack dir>]
-//   --check  rebuild into a temp dir and diff against ./skills; exit 1 on drift
+// Vendors upstream pstack (cursor/plugins/pstack) into ./vendor at the commit pinned in
+// upstream.json, applies scripts/substitutions.json, and fails on any denied Cursor-only
+// pattern that survives or any rule that matches nothing. Builds in a temp dir and replaces
+// ./vendor only when the build is clean. Usage: node scripts/sync.mjs [--check] [--from <dir>]
+//   --check  rebuild into a temp dir and diff against ./vendor; exit 1 on drift
 //   --from   use a local checkout of cursor/plugins/pstack instead of cloning
 
 import { execFileSync } from "node:child_process";
-import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync, mkdirSync } from "node:fs";
+import { cpSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -25,6 +25,11 @@ const check = args.includes("--check");
 const fromIdx = args.indexOf("--from");
 
 const fromDir = fromIdx >= 0 ? args[fromIdx + 1] : null;
+
+if (fromIdx >= 0 && !fromDir) {
+  console.error("sync: --from needs a directory");
+  process.exit(1);
+}
 
 function fetchUpstream() {
   if (fromDir) return fromDir;
@@ -75,9 +80,7 @@ export function findDenied(text, patterns) {
 }
 
 function build(src, dest) {
-  rmSync(dest, { recursive: true, force: true });
   mkdirSync(join(dest, "skills"), { recursive: true });
-  mkdirSync(join(dest, "agents"), { recursive: true });
 
   for (const skill of readdirSync(join(src, "skills"))) {
     if (table.exclude.skills.includes(skill)) continue;
@@ -87,12 +90,11 @@ function build(src, dest) {
 
   cpSync(join(src, "agents"), join(dest, "agents-upstream"), { recursive: true });
   cpSync(join(src, "LICENSE"), join(dest, "LICENSE-pstack"));
-  buildAgents(dest);
 
   const problems = [];
   const used = new Set();
 
-  for (const file of walk(dest)) {
+  for (const file of [...walk(join(dest, "skills")), ...walk(join(dest, "agents-upstream"))]) {
     if (!file.endsWith(".md")) continue;
     let text = applyRules(readFileSync(file, "utf8"), table.rules, used);
     const rel = relative(dest, file);
@@ -110,6 +112,9 @@ function build(src, dest) {
   for (const rule of table.rules) {
     if (!used.has(rule.id)) problems.push({ file: "scripts/substitutions.json", line: 0, pattern: rule.id, text: "rule matched nothing" });
   }
+
+  // After the rule pass: the map's left column names Cursor terms on purpose.
+  buildAgents(dest);
 
   writeFileSync(
     join(dest, "UPSTREAM.json"),
@@ -141,20 +146,23 @@ function diffDirs(a, b) {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// realpath both sides: through a symlinked package dir, argv[1] is the link path.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const src = fetchUpstream();
-  const dest = check ? mkdtempSync(join(tmpdir(), "pi-stack-check-")) : join(root, "vendor");
+  const dest = mkdtempSync(join(tmpdir(), "pi-stack-build-"));
+  const vendor = join(root, "vendor");
   const problems = build(src, dest);
 
   if (problems.length) {
-    console.error(`sync: ${problems.length} problem(s): denied patterns that survived substitution, or rules that matched nothing:`);
+    rmSync(dest, { recursive: true, force: true });
+    console.error(`sync: ${problems.length} problem(s): denied patterns that survived substitution, or rules that matched nothing. ./vendor is unchanged:`);
 
     for (const p of problems) console.error(`  ${p.file}:${p.line}  ${p.pattern}  ${p.text}`);
     process.exit(1);
   }
 
   if (check) {
-    const same = diffDirs(join(root, "vendor"), dest);
+    const same = diffDirs(vendor, dest);
     rmSync(dest, { recursive: true, force: true });
 
     if (!same) {
@@ -164,6 +172,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
     console.log("sync --check: vendor is current");
   } else {
-    console.log(`synced pstack ${pin.version} (${pin.commit.slice(0, 7)}) into ${relative(process.cwd(), dest)}`);
+    rmSync(vendor, { recursive: true, force: true });
+    cpSync(dest, vendor, { recursive: true });
+    rmSync(dest, { recursive: true, force: true });
+    console.log(`synced pstack ${pin.version} (${pin.commit.slice(0, 7)}) into ${relative(process.cwd(), vendor)}`);
   }
 }
