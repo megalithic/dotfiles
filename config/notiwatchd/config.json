@@ -16,7 +16,7 @@
         "body": ["@seth", "\\burgent\\b"]
       },
       "urgency": "high",
-      "actions": ["ntfy"]
+      "actions": ["dismiss", "ntfy"]
     },
     {
       "name": "urgent-messages",
@@ -26,13 +26,13 @@
         "body": ["\\?"]
       },
       "urgency": "critical",
-      "actions": ["ntfy"]
+      "actions": ["dismiss", "ntfy"]
     },
     {
       "name": "messages",
       "match": { "bundle_id": ["com.apple.mobilesms", "com.apple.ichat"] },
       "urgency": "normal",
-      "actions": ["ntfy"]
+      "actions": ["dismiss", "ntfy"]
     }
   ]
 }
