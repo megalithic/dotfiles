@@ -58,10 +58,10 @@ The prompt section lists any missing tool (`subagent`, `todo`, `ask_user_questio
 
 `scripts/sync.mjs` copies upstream `skills/` into `vendor/skills/` at the commit in `scripts/upstream.json`, then applies `scripts/substitutions.json`:
 
-- 24 rewrite rules, for example `Task` to `subagent`, `AskQuestion` to `ask_user_question`, and `/name` to `/skill:name`.
+- 21 rewrite rules, for example `Task` to `subagent`, `AskQuestion` to `ask_user_question`, and `/name` to `/skill:name`.
 - Every skill's `name:` becomes its directory name, so `/skill:poteto-mode` resolves.
 - Excluded skills: `make-bot-ui`, `bro`, `setup-pstack`. Renamed: `recall` to `pstack-recall`.
-- The sync fails if a denied Cursor pattern survives, such as `~/.cursor/` or `Task tool`.
+- The sync fails if a denied Cursor pattern survives, such as `~/.cursor/` or `Task tool`, or if a rule matches nothing because upstream reworded its target.
 
 It also builds `vendor/agents/` from `agents-src/` plus the primitive map.
 

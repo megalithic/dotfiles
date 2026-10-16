@@ -26,12 +26,6 @@
       "replace": "the `subagent` tool"
     },
     {
-      "id": "task-tool-cap",
-      "why": "same, sentence start",
-      "pattern": "\\bTask tool\\b",
-      "replace": "`subagent` tool"
-    },
-    {
       "id": "cursor-plugins-dir",
       "why": "poteto-agent searches the Cursor plugin dir for its own SKILL.md; ours is in the package",
       "pattern": "~/\\.cursor/plugins/",
@@ -48,12 +42,6 @@
       "why": "project skills live in .pi/skills or .agents/skills",
       "pattern": "\\.cursor/skills/",
       "replace": ".pi/skills/"
-    },
-    {
-      "id": "cursor-rules-dir",
-      "why": "always-applied Cursor rules are AGENTS.md context files in pi",
-      "pattern": "\\.cursor/rules/",
-      "replace": "AGENTS.md (pi context file) "
     },
     {
       "id": "transcripts-no-glob",
@@ -126,12 +114,6 @@
       "why": "upstream recall is vendored as pstack-recall (name collision with the user's sessions-recall skill)",
       "pattern": "(^|[\\s(`])/recall(?![\\w/-])",
       "replace": "$1/skill:pstack-recall"
-    },
-    {
-      "id": "recall-skill-name",
-      "why": "same rename, for prose that names the skill",
-      "pattern": "\\bthe \\*\\*recall\\*\\* skill\\b",
-      "replace": "the **pstack-recall** skill"
     },
     {
       "id": "slash-bro-dropped",

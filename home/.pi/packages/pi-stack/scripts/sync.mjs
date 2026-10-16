@@ -47,11 +47,14 @@ function walk(dir, out = []) {
   return out;
 }
 
-export function applyRules(text, rules) {
+export function applyRules(text, rules, used = new Set()) {
   let out = text;
 
   for (const rule of rules) {
-    out = out.replace(new RegExp(rule.pattern, "gm"), rule.replace);
+    const re = new RegExp(rule.pattern, "gm");
+
+    if (re.test(out)) used.add(rule.id);
+    out = out.replace(re, rule.replace);
   }
 
   return out;
@@ -87,10 +90,11 @@ function build(src, dest) {
   buildAgents(dest);
 
   const problems = [];
+  const used = new Set();
 
   for (const file of walk(dest)) {
     if (!file.endsWith(".md")) continue;
-    let text = applyRules(readFileSync(file, "utf8"), table.rules);
+    let text = applyRules(readFileSync(file, "utf8"), table.rules, used);
     const rel = relative(dest, file);
     // pi registers /skill:<name> from the frontmatter name and only warns on an invalid one.
     // Upstream's "Poteto Mode" would never resolve, so every skill takes its directory name.
@@ -100,6 +104,11 @@ function build(src, dest) {
     writeFileSync(file, text);
 
     for (const hit of findDenied(text, table.deny.patterns)) problems.push({ file: rel, ...hit });
+  }
+
+  // A rule that matches nothing means upstream reworded its target; fix or delete the rule.
+  for (const rule of table.rules) {
+    if (!used.has(rule.id)) problems.push({ file: "scripts/substitutions.json", line: 0, pattern: rule.id, text: "rule matched nothing" });
   }
 
   writeFileSync(
@@ -138,7 +147,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const problems = build(src, dest);
 
   if (problems.length) {
-    console.error(`sync: ${problems.length} denied pattern(s) survived substitution:`);
+    console.error(`sync: ${problems.length} problem(s): denied patterns that survived substitution, or rules that matched nothing:`);
 
     for (const p of problems) console.error(`  ${p.file}:${p.line}  ${p.pattern}  ${p.text}`);
     process.exit(1);

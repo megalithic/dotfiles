@@ -27,6 +27,15 @@ describe("substitution rules", () => {
 		const out = applyRules("Type /interrogate review this, or /poteto-mode, or /setup-pstack, or /recall x, or /bro.", table.rules);
 		expect(out).toBe("Type /skill:interrogate review this, or /poteto-mode, or /setup-pstack, or /skill:pstack-recall x, or /skill:bro.");
 	});
+	test("applyRules records which rules matched", () => {
+		const used = new Set<string>();
+
+		applyRules("Use the Task tool.", table.rules, used);
+
+		expect(used.size).toBeGreaterThan(0);
+		expect(used.size).toBeLessThan(table.rules.length);
+	});
+
 	test("a prose path through a word is not rewritten", () => {
 		expect(applyRules("the /how-to guide", table.rules)).toBe("the /how-to guide");
 	});
