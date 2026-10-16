@@ -49,16 +49,27 @@ export default function piStack(pi: ExtensionAPI) {
 	let on = false;
 	let source: "override" | "auto" = "auto";
 
+	// The two files fail independently: a bad models.json must not turn activation off.
 	function loadConfig(ctx: ExtensionContext) {
+		const errors: string[] = [];
+
 		try {
 			config = readConfig(agentDir());
-			roles = readRoleTable(agentDir());
-			configError = undefined;
 		} catch (error) {
 			config = DEFAULT_CONFIG;
-			configError = error instanceof Error ? error.message : String(error);
-			ctx.ui.notify(configError, "error");
+			errors.push(error instanceof Error ? error.message : String(error));
 		}
+
+		try {
+			roles = readRoleTable(agentDir());
+		} catch (error) {
+			roles = {};
+			errors.push(error instanceof Error ? error.message : String(error));
+		}
+
+		configError = errors.length ? errors.join("; ") : undefined;
+
+		if (configError) ctx.ui.notify(configError, "error");
 	}
 
 	function restore(ctx: ExtensionContext) {
@@ -142,8 +153,17 @@ export default function piStack(pi: ExtensionAPI) {
 
 			const available = ctx.modelRegistry.getAvailable().map((m) => `${m.provider}/${m.id}`);
 			const tablePath = modelsPath(agentDir());
-			const current = existsSync(tablePath) ? JSON.parse(readFileSync(tablePath, "utf8")) : {};
+			let current: RoleTable;
 
+			try {
+				current = readRoleTable(agentDir());
+			} catch (error) {
+				ctx.ui.notify(`${error instanceof Error ? error.message : String(error)}. Fix it, then rerun /setup-pstack.`, "error");
+
+				return;
+			}
+
+			// Written fresh each run so $available never goes stale; role lines are kept.
 			const next: ModelsFile = {
 				$comment: 'One line per role: "provider/id:thinking", a list of them for panel roles (one seat per entry), or inherit-parent. Delete a line to inherit the parent model.',
 				$available: available,

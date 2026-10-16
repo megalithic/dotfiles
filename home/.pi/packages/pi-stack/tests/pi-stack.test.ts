@@ -48,7 +48,7 @@ describe("config files", () => {
 		expect(() => readConfig(dir)).toThrow(/config\.json/);
 	});
 	test("unknown roles and wrong shapes are rejected", () => {
-		expect(() => validateRoleTable({ "how critics": "x" })).toThrow(/how critics|additional|unexpected/i);
+		expect(() => validateRoleTable({ "how critics": "x" })).toThrow(/unknown role "how critics"/);
 		expect(() => validateRoleTable({ "bug-fix": 3 })).toThrow(/\/bug-fix/);
 		expect(() => validate({ activate: "not-a-list" })).toThrow(/array/);
 		expect(() => validate({ activate: [3] })).toThrow(/\/activate\/0/);
