@@ -53,6 +53,8 @@ XDG_STATE_HOME = "{{env.HOME}}/.local/state"
 XDG_CACHE_HOME = "{{env.HOME}}/.cache"
 PI_STATE_DIR = "{{env.HOME}}/.local/state/pi"
 PI_CODING_AGENT_DIR = "{{env.HOME}}/.pi/agent"
+# ponytail stays installed for /ponytail-review, -audit, -debt; its always-on rules live in home/.pi/agent/APPEND_SYSTEM.md
+PONYTAIL_DEFAULT_MODE = "off"
 TMUX_LAYOUTS = "{{env.HOME}}/.config/tmux/layouts"
 TMUX_PLUGIN_MANAGER_PATH = "{{env.HOME}}/.local/share/tmux/plugins"
 TMUX_PLUGINS_HOME = "{{env.HOME}}/.local/share/tmux/plugins"
