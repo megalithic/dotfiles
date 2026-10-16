@@ -1,0 +1,171 @@
+{
+  "$comment": "Applied in order to every vendored .md file. Only mechanical rewrites live here. Everything semantic (how a Task spawn becomes a subagent call) lives in references/pi-primitives.md, which is the single instruction source. Keep this table short: a new entry needs a line in the sync log explaining why the map could not cover it.",
+  "rules": [
+    {
+      "id": "models-rule-path",
+      "why": "pstack's per-role model table lives in a Cursor rule file; ours is a JSON file the extension injects.",
+      "pattern": "~/\\.cursor/rules/pstack-models\\.mdc",
+      "replace": "~/.pi/agent/pi-stack/models.json"
+    },
+    {
+      "id": "models-rule-name",
+      "why": "same table, referenced by bare name; upstream calls it a rule because Cursor stores it as one",
+      "pattern": "`pstack-models\\.mdc` rule",
+      "replace": "`models.json` table"
+    },
+    {
+      "id": "ask-question-tool",
+      "why": "Cursor's AskQuestion tool is pi's ask_user_question (rpiv)",
+      "pattern": "`?\\bAskQuestion\\b`?",
+      "replace": "`ask_user_question`"
+    },
+    {
+      "id": "task-tool",
+      "why": "Cursor's Task tool is the subagent tool",
+      "pattern": "\\bthe Task tool\\b",
+      "replace": "the `subagent` tool"
+    },
+    {
+      "id": "task-tool-cap",
+      "why": "same, sentence start",
+      "pattern": "\\bTask tool\\b",
+      "replace": "`subagent` tool"
+    },
+    {
+      "id": "cursor-plugins-dir",
+      "why": "poteto-agent searches the Cursor plugin dir for its own SKILL.md; ours is in the package",
+      "pattern": "~/\\.cursor/plugins/",
+      "replace": "~/.pi/agent/ (the pi-stack package's `skills/` directory)"
+    },
+    {
+      "id": "cursor-skills-dir",
+      "why": "user skills live in the pi agent dir",
+      "pattern": "~/\\.cursor/skills/",
+      "replace": "~/.pi/agent/skills/"
+    },
+    {
+      "id": "project-cursor-skills-dir",
+      "why": "project skills live in .pi/skills or .agents/skills",
+      "pattern": "\\.cursor/skills/",
+      "replace": ".pi/skills/"
+    },
+    {
+      "id": "cursor-rules-dir",
+      "why": "always-applied Cursor rules are AGENTS.md context files in pi",
+      "pattern": "\\.cursor/rules/",
+      "replace": "AGENTS.md (pi context file) "
+    },
+    {
+      "id": "transcripts-no-glob",
+      "why": "upstream warns against globbing other workspaces' transcripts",
+      "pattern": "Do(?:n't| not) glob across `~/\\.cursor/projects/\\*/`[,.]? ?(?:that|That) crosses workspace boundaries and reads private chats from unrelated projects[.)]?",
+      "replace": "Do not read other projects' session files; that reads unrelated private chats."
+    },
+    {
+      "id": "transcripts-dir-named",
+      "why": "pi names no transcripts dir in the system prompt; the session file is $PI_SESSION_FILE",
+      "pattern": "(?:under|in) the (?:active workspace's )?`agent-transcripts/` directory(?: the system prompt names| \\(the system prompt names (?:this|the) path\\.?\\)?)?",
+      "replace": "in the session file `$PI_SESSION_FILE` (past sessions for this cwd: `vcc_recall` or the `sessions` MCP)"
+    },
+    {
+      "id": "transcripts-ls",
+      "why": "the reflect shell snippet lists Cursor transcript layouts; pi has one session file",
+      "pattern": "ls -t <agent-transcripts>/\\*\\.jsonl <agent-transcripts>/\\*/\\*\\.jsonl <agent-transcripts>/\\*/subagents/\\*\\.jsonl 2>/dev/null \\| head -10",
+      "replace": "ls -l \"$PI_SESSION_FILE\""
+    },
+    {
+      "id": "transcripts-layouts",
+      "why": "follows the ls snippet; pi has no legacy layouts",
+      "pattern": "That covers the legacy flat \\(`<id>\\.jsonl`\\), current nested \\(`<id>/<id>\\.jsonl`\\), and subagent \\(`<parent>/subagents/<child>\\.jsonl`\\) layouts\\. For each candidate, read the first JSONL line\\. Take the file whose `message\\.content\\[0\\]\\.text` contains the conversation's opening user prompt\\. If none matches, pass a tight digest of the session instead\\.",
+      "replace": "Subagent sessions are separate JSONL files under the same sessions directory; `subagent_message` and the Subagents widget name them. If the file is unavailable, pass a tight digest of the session instead."
+    },
+    {
+      "id": "transcripts-local",
+      "why": "orchestrate: reading local transcripts",
+      "pattern": "Reading local transcripts under `agent-transcripts/`\\.",
+      "replace": "Reading local session files."
+    },
+    {
+      "id": "cursor-worktrees-path",
+      "why": "Cursor stores worktrees under .cursor/worktrees; the user's wt tool stores them under <repo>/.worktrees",
+      "pattern": "`\\.cursor/worktrees/myrepo/x`",
+      "replace": "`<repo>/.worktrees/x`"
+    },
+    {
+      "id": "transcripts-phrase",
+      "why": "the system prompt does not name a transcripts dir in pi; the session file is $PI_SESSION_FILE and past sessions are searchable",
+      "pattern": "The system prompt names the workspace's `agent-transcripts/` directory\\. Use only that path\\.",
+      "replace": "In pi the current session is the JSONL file at `$PI_SESSION_FILE`; past sessions for this cwd are searchable with `vcc_recall` and the `sessions` MCP. Use only this project's sessions."
+    },
+    {
+      "id": "cursor-projects-dir",
+      "why": "upstream warns against reading other workspaces' transcripts; pi sessions are grouped by cwd slug under ~/.pi/agent/sessions",
+      "pattern": "Don't glob across `~/\\.cursor/projects/\\*/`\\.",
+      "replace": "Don't read sessions from other projects' cwd slugs."
+    },
+    {
+      "id": "transcripts-dir",
+      "why": "Cursor transcripts live under ~/.cursor/projects; pi sessions are JSONL under ~/.pi/agent/sessions, searchable with vcc_recall and the sessions MCP",
+      "pattern": "~/\\.cursor/projects/[^ `]*agent-transcripts[^ `]*",
+      "replace": "~/.pi/agent/sessions/ (JSONL; search with `vcc_recall` or the `sessions` MCP)"
+    },
+    {
+      "id": "create-skill-builtin",
+      "why": "Cursor's built-in create-skill is the authoring-a-skill playbook plus pi's skills.md",
+      "pattern": "Cursor's built-in `create-skill`",
+      "replace": "pi's skill format (see `references/pi-primitives.md`, Skills)"
+    },
+    {
+      "id": "slash-skill-commands",
+      "why": "pi invokes skills as /skill:name, not /name. Only rewrite the documented pstack skill commands.",
+      "pattern": "(^|[\\s(`])/(poteto-help|how|why|architect|arena|swarm|interrogate|unslop|no-comments|tdd|reflect|correct|teach|sharpen|ketchup|blast-radius|automate-me|figure-it-out|show-me-your-work|create-verification-skill|maintain-verification-skill|benchmark-checklist|technical-writing|typescript-best-practices|in-your-own-words)(?![\\w/-])",
+      "replace": "$1/skill:$2"
+    },
+    {
+      "id": "slash-recall-renamed",
+      "why": "upstream recall is vendored as pstack-recall (name collision with the user's sessions-recall skill)",
+      "pattern": "(^|[\\s(`])/recall(?![\\w/-])",
+      "replace": "$1/skill:pstack-recall"
+    },
+    {
+      "id": "recall-skill-name",
+      "why": "same rename, for prose that names the skill",
+      "pattern": "\\bthe \\*\\*recall\\*\\* skill\\b",
+      "replace": "the **pstack-recall** skill"
+    },
+    {
+      "id": "slash-bro-dropped",
+      "why": "upstream bro is not vendored; the user's own /skill:bro does the same job",
+      "pattern": "(^|[\\s(`])/bro(?![\\w/-])",
+      "replace": "$1/skill:bro"
+    },
+    {
+      "id": "bro-link",
+      "why": "bro is not vendored (the user owns a bro skill); the relative link would dangle",
+      "pattern": "\\[`/skill:bro`\\]\\(\\.\\./bro/SKILL\\.md\\)",
+      "replace": "`/skill:bro`"
+    }
+  ],
+  "deny": {
+    "$comment": "Patterns that must not survive in vendored text. A hit fails the sync; fix with a rule above or a line in references/pi-primitives.md, then rerun.",
+    "patterns": [
+      "\\bAskQuestion\\b",
+      "~/\\.cursor/",
+      "pstack-models\\.mdc",
+      "\\bTask tool\\b",
+      "\\.cursor/",
+      "agent-transcripts"
+    ]
+  },
+  "exclude": {
+    "$comment": "Upstream skills not vendored. make-bot-ui is a Grok Bot webhook UI builder (Cursor-only). bro and recall collide with skills the user already owns; pstack's versions are kept under other names. setup-pstack is replaced by the /setup-pstack command.",
+    "skills": [
+      "make-bot-ui",
+      "bro",
+      "setup-pstack"
+    ],
+    "rename": {
+      "recall": "pstack-recall"
+    }
+  }
+}

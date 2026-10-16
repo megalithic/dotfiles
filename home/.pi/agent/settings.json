@@ -54,7 +54,8 @@
     "git:github.com/aliou/nvim-pi",
     "npm:pi-web-access",
     "npm:pi-simplify",
-    "git:github.com/DietrichGebert/ponytail"
+    "git:github.com/DietrichGebert/ponytail",
+    "~/.pi/packages/pi-stack"
   ],
   "enabledModels": [
     "anthropic/claude-fable-5-1",

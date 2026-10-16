@@ -145,6 +145,10 @@ up = "cd $HOME/.dotfiles && mise run up"
   ".pi/tests",
   ".pi/patches",
   ".pi/disabled",
+  # pi-stack package: tests and research sources stay in the repo
+  ".pi/packages/pi-stack/tests",
+  ".pi/packages/pi-stack/agents-src",
+  ".pi/packages/pi-stack/vendor/agents-upstream",
   # underscore-prefixed Pi resources are disabled
   ".pi/agent/extensions/_*",
   ".pi/agent/skills/_*",
