@@ -83,16 +83,16 @@ function parseJsonFile(path: string): JsonValue {
 	try {
 		return JSON.parse(readFileSync(path, "utf8"));
 	} catch (error) {
-		throw new Error(`pi-stack: ${path} is not valid JSON: ${errorMessage(error)}`);
+		throw new Error(`pi-stack: ${path} is not valid JSON: ${error instanceof Error ? error.message : String(error)}`);
 	}
 }
 
-type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 export function validate(raw: JsonValue, path = "config"): Config {
 	const withDefaults = Value.Default(ConfigSchema, raw);
 
-	if (!Value.Check(ConfigSchema, withDefaults)) throw new Error(`pi-stack: ${path}: ${firstError(ConfigSchema, withDefaults)}`);
+	if (!Value.Check(ConfigSchema, withDefaults)) throw new Error(`pi-stack: ${path}: ${firstError(Value.Errors(ConfigSchema, withDefaults))}`);
 
 	return withDefaults;
 }
@@ -104,23 +104,19 @@ export function validateRoleTable(raw: JsonValue, path = "models.json"): RoleTab
 
 	// Keys that start with `$` are comments the setup command writes ($comment, $available).
 	const table = Object.fromEntries(Object.entries(raw).filter(([key]) => !key.startsWith("$")));
-	const unknown = Object.keys(table).find((key) => !(ROLES as readonly string[]).includes(key));
+	const unknown = Object.keys(table).find((key) => !ROLES.some((role) => role === key));
 
 	if (unknown !== undefined) throw new Error(`pi-stack: ${path}: unknown role "${unknown}"`);
 
-	if (!Value.Check(RoleTableSchema, table)) throw new Error(`pi-stack: ${path}: ${firstError(RoleTableSchema, table)}`);
+	if (!Value.Check(RoleTableSchema, table)) throw new Error(`pi-stack: ${path}: ${firstError(Value.Errors(RoleTableSchema, table))}`);
 
 	return table;
 }
 
-function firstError(schema: Parameters<typeof Value.Errors>[0], value: JsonValue): string {
-	for (const error of Value.Errors(schema, value)) return `${error.path || "/"} ${error.message}`;
+function firstError(errors: ReturnType<typeof Value.Errors>): string {
+	for (const error of errors) return `${error.instancePath || "/"} ${error.message}`;
 
 	return "invalid";
-}
-
-function errorMessage(error: Error | string | null | undefined): string {
-	return error instanceof Error ? error.message : String(error);
 }
 
 export function expandHome(path: string, home = homedir()): string {

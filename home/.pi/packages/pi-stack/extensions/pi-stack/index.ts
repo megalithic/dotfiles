@@ -2,16 +2,21 @@ import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-a
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { type Config, DEFAULT_CONFIG, ROLES, type RoleTable, configPath, matchesActivation, modelsPath, readConfig, readRoleTable } from "./config.ts";
+import { type Config, type JsonValue, DEFAULT_CONFIG, ROLES, type RoleTable, configPath, matchesActivation, modelsPath, readConfig, readRoleTable } from "./config.ts";
 import { applySections } from "./sections.ts";
 import { STATE_ENTRY, parseCommand, resolveMode } from "./state.ts";
 
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+
 const PRIMITIVES = readFileSync(join(PACKAGE_ROOT, "references", "pi-primitives.md"), "utf8");
 
 /** Reads the agent dir the way pi does, without importing pi's config module at load time. */
 function agentDir(): string {
 	return process.env.PI_CODING_AGENT_DIR ?? join(process.env.HOME ?? "", ".pi", "agent");
+}
+
+interface ModelsFile {
+	[key: string]: JsonValue;
 }
 
 export default function piStack(pi: ExtensionAPI) {
@@ -33,7 +38,7 @@ export default function piStack(pi: ExtensionAPI) {
 			configError = undefined;
 		} catch (error) {
 			config = DEFAULT_CONFIG;
-			configError = (error as Error).message;
+			configError = error instanceof Error ? error.message : String(error);
 			ctx.ui.notify(configError, "error");
 		}
 	}
@@ -80,9 +85,10 @@ export default function piStack(pi: ExtensionAPI) {
 	pi.registerCommand("poteto-mode", {
 		description: "Poteto mode (pstack): on | off | auto | status",
 		getArgumentCompletions: (prefix) =>
-			["on", "off", "auto", "status"].filter((v) => v.startsWith(prefix.trim())).map((v) => ({ value: v, label: v })),
+			["on", "off", "auto", "status"].flatMap((v) => (v.startsWith(prefix.trim()) ? [{ value: v, label: v }] : [])),
 		handler: async (args, ctx) => {
 			const cmd = parseCommand(args);
+
 			switch (cmd.kind) {
 				case "set":
 					pi.appendEntry(STATE_ENTRY, { on: cmd.on });
@@ -90,17 +96,21 @@ export default function piStack(pi: ExtensionAPI) {
 					source = "override";
 					status(ctx);
 					ctx.ui.notify(`Poteto mode ${cmd.on ? "on" : "off"} for this session.`, "info");
+
 					return;
 				case "auto":
 					pi.appendEntry(STATE_ENTRY, { on: null });
 					restore(ctx);
 					ctx.ui.notify(`Poteto mode follows the cwd rule: ${on ? "on" : "off"} here.`, "info");
+
 					return;
 				case "status": {
 					const where = configError ? `config error: ${configError}` : `${config.activate.length} activation path(s)`;
 					ctx.ui.notify(`Poteto mode ${on ? "on" : "off"} (${source}); ${where}; config ${configPath(agentDir())}`, "info");
+
 					return;
 				}
+
 				case "invalid":
 					ctx.ui.notify(`Unknown argument "${cmd.text}". Use on, off, auto, or status.`, "warning");
 			}
@@ -113,17 +123,21 @@ export default function piStack(pi: ExtensionAPI) {
 			const dir = join(agentDir(), "pi-stack");
 			mkdirSync(dir, { recursive: true });
 			const cfgPath = configPath(agentDir());
+
 			if (!existsSync(cfgPath)) {
 				writeFileSync(cfgPath, JSON.stringify({ activate: [], supersedes: [] }, null, 2) + "\n");
 			}
+
 			const available = ctx.modelRegistry.getAvailable().map((m) => `${m.provider}/${m.id}`);
 			const tablePath = modelsPath(agentDir());
 			const current = existsSync(tablePath) ? JSON.parse(readFileSync(tablePath, "utf8")) : {};
-			const next: Record<string, unknown> = {
+
+			const next: ModelsFile = {
 				$comment: 'One line per role: "provider/id:thinking", a list of them for panel roles (one seat per entry), or inherit-parent. Delete a line to inherit the parent model.',
 				$available: available,
 				...current,
 			};
+
 			for (const role of ROLES) if (next[role] === undefined) next[role] = "inherit-parent";
 			writeFileSync(tablePath, JSON.stringify(next, null, 2) + "\n");
 			ctx.ui.notify(`Wrote ${tablePath} (${available.length} models visible). Edit the role lines, add activation paths to ${cfgPath}, then /reload.`, "info");

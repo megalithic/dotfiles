@@ -2,6 +2,7 @@ import type { Config, ModelRef, Role, RoleTable } from "./config.ts";
 import { PANEL_ROLES, ROLES } from "./config.ts";
 
 export const SECTION_ROUTE = "pi-stack";
+
 export const SECTION_ROLES = "pi-stack-roles";
 
 export interface SectionInput {
@@ -26,7 +27,8 @@ const CAPABILITIES: ReadonlyArray<{ tool: string; missing: string }> = [
 /** The routing mandate plus the primitive map. Injected on every run while the mode is on. */
 export function routeSection(input: SectionInput): string {
 	const skillPath = `${input.packageRoot}/vendor/skills/poteto-mode/SKILL.md`;
-	const missing = CAPABILITIES.filter((c) => !input.tools.includes(c.tool)).map((c) => `- ${c.missing}`);
+	const missing = CAPABILITIES.flatMap((c) => (input.tools.includes(c.tool) ? [] : [`- ${c.missing}`]));
+
 	const lines = [
 		"Poteto mode is on for this session (pi-stack). For any task that needs rigor (a bug, a feature, a refactor, a perf question, an investigation with a cited answer, shipping, or anything the user wants to trust later), read the poteto-mode skill in full before acting and follow it:",
 		"",
@@ -38,14 +40,18 @@ export function routeSection(input: SectionInput): string {
 		"",
 		input.primitives.trim(),
 	];
+
 	if (missing.length) lines.push("", "## Missing in this session", "", ...missing);
+
 	return lines.join("\n");
 }
 
 /** The per-role model table, rendered only for roles the config sets. Absent roles inherit the parent model. */
 export function rolesSection(roles: RoleTable): string | undefined {
 	const rows = ROLES.filter((role) => roles[role] !== undefined).map((role) => `${role}: ${renderRef(roles[role]!)}`);
+
 	if (rows.length === 0) return undefined;
+
 	return [
 		"pi-stack role table (from ~/.pi/agent/pi-stack/models.json). Pass the value as `model` to `subagent`. A list is one seat per entry. `inherit-parent` or `auto` means omit `model`. A role not listed here runs on the parent model.",
 		"",
@@ -69,11 +75,15 @@ export function applySections(sections: Record<string, string>, on: boolean, inp
 	if (!on) {
 		delete sections[SECTION_ROUTE];
 		delete sections[SECTION_ROLES];
+
 		return;
 	}
+
 	sections[SECTION_ROUTE] = routeSection(input);
 	const roles = rolesSection(input.roles);
+
 	if (roles) sections[SECTION_ROLES] = roles;
 	else delete sections[SECTION_ROLES];
+
 	for (const name of input.config.supersedes) delete sections[name];
 }

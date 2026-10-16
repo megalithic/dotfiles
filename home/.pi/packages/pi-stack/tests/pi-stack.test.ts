@@ -7,6 +7,7 @@ import { SECTION_ROLES, SECTION_ROUTE, applySections } from "../extensions/pi-st
 import { STATE_ENTRY, parseCommand, resolveMode } from "../extensions/pi-stack/state.ts";
 
 const HOME = "/Users/me";
+
 const WORK = ["~/code/work/strive/*"];
 
 describe("activation by cwd", () => {
@@ -48,8 +49,9 @@ describe("config files", () => {
 	});
 	test("unknown roles and wrong shapes are rejected", () => {
 		expect(() => validateRoleTable({ "how critics": "x" })).toThrow(/how critics|additional|unexpected/i);
-		expect(() => validateRoleTable({ "bug-fix": 3 })).toThrow(/bug-fix|string/i);
+		expect(() => validateRoleTable({ "bug-fix": 3 })).toThrow(/\/bug-fix/);
 		expect(() => validate({ activate: "not-a-list" })).toThrow(/array/);
+		expect(() => validate({ activate: [3] })).toThrow(/\/activate\/0/);
 	});
 	test("$-prefixed keys in models.json are comments", () => {
 		expect(validateRoleTable({ $available: ["a/b"], "bug-fix": "a/b:high" })).toEqual({ "bug-fix": "a/b:high" });
@@ -72,6 +74,11 @@ describe("mode restore from the session branch", () => {
 	test("entries of other extensions are ignored", () => {
 		expect(resolveMode([{ type: "custom", customType: "ponytail-mode", data: { mode: "off" } }], true)).toEqual({ on: true, source: "auto" });
 	});
+	test("malformed mode entries do not erase a valid override", () => {
+		for (const data of [undefined, null, false, 3, "on", [], {}, { on: "true" }]) {
+			expect(resolveMode([custom(true), { type: "custom", customType: STATE_ENTRY, data }], false)).toEqual({ on: true, source: "override" });
+		}
+	});
 	test("/poteto-mode arguments", () => {
 		expect(parseCommand("")).toEqual({ kind: "set", on: true });
 		expect(parseCommand(" OFF ")).toEqual({ kind: "set", on: false });
@@ -91,7 +98,10 @@ describe("prompt sections", () => {
 	});
 
 	test("on: adds the route section with the absolute skill path and the map, and deletes superseded sections", () => {
-		const sections: Record<string, string> = { ponytail: "lazy dev rules", other: "keep" };
+		const sections: Record<string, string> = {};
+
+		sections.ponytail = "lazy dev rules";
+		sections.other = "keep";
 		applySections(sections, true, base());
 		expect(sections.ponytail).toBeUndefined();
 		expect(sections.other).toBe("keep");
@@ -102,7 +112,11 @@ describe("prompt sections", () => {
 	});
 
 	test("off: removes our sections and leaves everyone else's alone", () => {
-		const sections: Record<string, string> = { [SECTION_ROUTE]: "stale", [SECTION_ROLES]: "stale", ponytail: "lazy dev rules" };
+		const sections: Record<string, string> = {};
+
+		sections[SECTION_ROUTE] = "stale";
+		sections[SECTION_ROLES] = "stale";
+		sections.ponytail = "lazy dev rules";
 		applySections(sections, false, base());
 		expect(sections[SECTION_ROUTE]).toBeUndefined();
 		expect(sections[SECTION_ROLES]).toBeUndefined();
@@ -134,6 +148,7 @@ describe("prompt sections", () => {
 	test("the route section stays under a token budget", () => {
 		const sections: Record<string, string> = {};
 		const primitives = Bun.file(join(import.meta.dir, "..", "references", "pi-primitives.md"));
+
 		return primitives.text().then((text) => {
 			applySections(sections, true, { ...base(), primitives: text });
 			// About 4 chars per token; the whole section must stay near 2k tokens so it is cheap on every turn.

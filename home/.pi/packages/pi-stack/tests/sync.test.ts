@@ -4,14 +4,17 @@ import { join } from "node:path";
 import { applyRules, findDenied } from "../scripts/sync.mjs";
 
 const root = join(import.meta.dir, "..");
+
 const table = JSON.parse(readFileSync(join(root, "scripts/substitutions.json"), "utf8"));
 
 function walk(dir: string, out: string[] = []): string[] {
 	for (const name of readdirSync(dir)) {
 		const p = join(dir, name);
+
 		if (statSync(p).isDirectory()) walk(p, out);
 		else if (p.endsWith(".md")) out.push(p);
 	}
+
 	return out;
 }
 
