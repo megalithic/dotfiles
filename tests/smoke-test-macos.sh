@@ -130,7 +130,7 @@ ls "/Library/Fonts/Nix Fonts/" 2>/dev/null | grep -qi 'nerd-fonts' && bad "Nix F
 
 hdr "Swifties release programs"
 swifties_installs="$HOME/.local/share/mise/installs"
-swifties_version="0.2.0"
+swifties_version="0.3.0"
 miccheck_binary="$swifties_installs/miccheckd/$swifties_version/MicCheck.app/Contents/MacOS/miccheckd"
 check_swift_binary() {
   local binary="$1"
