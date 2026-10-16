@@ -85,5 +85,12 @@ export function applySections(sections: Record<string, string>, on: boolean, inp
 	if (roles) sections[SECTION_ROLES] = roles;
 	else delete sections[SECTION_ROLES];
 
-	for (const name of input.config.supersedes) delete sections[name];
+	dropSections(sections, input.config.supersedes);
+}
+
+/** Delegates pi-stack ships; a full-tool one loads every extension, so it drops superseded sections too. */
+export const PI_STACK_AGENTS: ReadonlySet<string> = new Set(["poteto-agent", "comment-sicko", "pstack-reviewer"]);
+
+export function dropSections(sections: Record<string, string>, names: readonly string[]): void {
+	for (const name of names) delete sections[name];
 }

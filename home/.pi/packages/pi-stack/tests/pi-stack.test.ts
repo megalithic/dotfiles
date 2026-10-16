@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DEFAULT_CONFIG, matchesActivation, readConfig, readRoleTable, validate, validateRoleTable } from "../extensions/pi-stack/config.ts";
-import { SECTION_ROLES, SECTION_ROUTE, applySections } from "../extensions/pi-stack/sections.ts";
+import { PI_STACK_AGENTS, SECTION_ROLES, SECTION_ROUTE, applySections } from "../extensions/pi-stack/sections.ts";
 import { STATE_ENTRY, parseCommand, resolveMode } from "../extensions/pi-stack/state.ts";
 
 const HOME = "/Users/me";
@@ -143,6 +143,12 @@ describe("prompt sections", () => {
 		expect(roles).toContain("bug-fix: anthropic/claude-opus-5-5:xhigh");
 		expect(roles).toContain("interrogate reviewers: anthropic/claude-opus-5-5:xhigh, openai-codex/gpt-6-astra:high");
 		expect(roles).not.toContain("hillclimb");
+	});
+
+	test("every shipped agent is recognized as a pi-stack delegate", () => {
+		const shipped = readdirSync(join(import.meta.dir, "..", "agents-src")).map((file) => file.replace(/\.md$/, ""));
+
+		expect([...PI_STACK_AGENTS].sort()).toEqual(shipped.sort());
 	});
 
 	test("the route section stays under a token budget", () => {

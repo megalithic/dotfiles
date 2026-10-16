@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { type Config, type JsonValue, DEFAULT_CONFIG, ROLES, type RoleTable, configPath, matchesActivation, modelsPath, readConfig, readRoleTable } from "./config.ts";
-import { applySections } from "./sections.ts";
+import { PI_STACK_AGENTS, applySections, dropSections } from "./sections.ts";
 import { STATE_ENTRY, parseCommand, resolveMode } from "./state.ts";
 
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -20,16 +20,34 @@ interface ModelsFile {
 }
 
 export default function piStack(pi: ExtensionAPI) {
-	// A subagent child never runs the playbook. It still sees the vendored skills and the
-	// primitive map, which its agent file carries in its own system prompt.
-	if (process.env.PI_SUBAGENT_AGENT) return;
+	// A subagent child never runs the playbook; its agent file carries the primitive map.
+	// Our own delegates still drop superseded sections, since full-tool children load every extension.
+	const child = process.env.PI_SUBAGENT_AGENT;
+
+	if (child !== undefined) {
+		if (!PI_STACK_AGENTS.has(child)) return;
+
+		let supersedes: string[] = [];
+
+		pi.on("session_start", async (_event, ctx) => {
+			try {
+				supersedes = readConfig(agentDir()).supersedes;
+			} catch (error) {
+				ctx.ui.notify(error instanceof Error ? error.message : String(error), "error");
+			}
+		});
+		pi.on("before_agent_start", async (event) => {
+			dropSections(event.systemPromptOptions.sections, supersedes);
+		});
+
+		return;
+	}
 
 	let config: Config = DEFAULT_CONFIG;
 	let roles: RoleTable = {};
 	let configError: string | undefined;
 	let on = false;
 	let source: "override" | "auto" = "auto";
-	let handlerRegistered = false;
 
 	function loadConfig(ctx: ExtensionContext) {
 		try {
@@ -57,27 +75,21 @@ export default function piStack(pi: ExtensionAPI) {
 		ctx.ui.setStatus("pi-stack", label);
 	}
 
-	// Registered from session_start, not from the factory, so this handler runs after every
-	// handler other extensions registered at load time. That is what lets `supersedes` delete
-	// a section another extension (ponytail) just wrote, whatever the package order.
-	function registerPromptHandler() {
-		if (handlerRegistered) return;
-		handlerRegistered = true;
-		pi.on("before_agent_start", async (event) => {
-			applySections(event.systemPromptOptions.sections, on, {
-				packageRoot: PACKAGE_ROOT,
-				config,
-				roles,
-				tools: event.systemPromptOptions.selectedTools,
-				primitives: PRIMITIVES,
-			});
+	// Handlers run grouped by extension load order, so `supersedes` only removes a section
+	// written by an extension that loads before pi-stack (keep pi-stack last in packages).
+	pi.on("before_agent_start", async (event) => {
+		applySections(event.systemPromptOptions.sections, on, {
+			packageRoot: PACKAGE_ROOT,
+			config,
+			roles,
+			tools: event.systemPromptOptions.selectedTools,
+			primitives: PRIMITIVES,
 		});
-	}
+	});
 
 	pi.on("session_start", async (_event, ctx) => {
 		loadConfig(ctx);
 		restore(ctx);
-		registerPromptHandler();
 	});
 
 	pi.on("session_tree", async (_event, ctx) => restore(ctx));
