@@ -311,19 +311,19 @@ zig = "0.16.0"
 zoxide = "latest"
 
 [tools.aeroplay]
-version = "0.3.0"
+version = "0.3.1"
 os = ["macos"]
 asset_pattern = "aeroplay-{{ version }}-macos26-arm64.zip"
 bin_path = "AeroPlay.app/Contents/MacOS"
 
 [tools.miccheckd]
-version = "0.3.0"
+version = "0.3.1"
 os = ["macos"]
 asset_pattern = "miccheckd-{{ version }}-macos26-arm64.zip"
 bin_path = "MicCheck.app/Contents/MacOS"
 
 [tools.notiwatchd]
-version = "0.3.0"
+version = "0.3.1"
 os = ["macos"]
 asset_pattern = "notiwatchd-{{ version }}-macos26-arm64.zip"
 # TCC keys bare executables by path: copy to a stable path so grants survive
@@ -337,7 +337,7 @@ mv -f "$HOME/.local/bin/.notiwatchd.tmp" "$HOME/.local/bin/notiwatchd"
 '''
 
 [tools.avwatchd]
-version = "0.3.0"
+version = "0.3.1"
 os = ["macos"]
 asset_pattern = "avwatchd-{{ version }}-macos26-arm64.zip"
 # Same stable-path copy as notiwatchd. avwatchweb is swapped in by rename so
@@ -702,7 +702,7 @@ stderr_path = "~/.cache/notiwatchd-stderr.log"
 
 # miccheck: compiled menubar push-to-talk/push-to-mute app.
 [bootstrap.macos.launchd.agents."io.swifties.miccheck"]
-program = "~/.local/share/mise/installs/miccheckd/0.3.0/MicCheck.app/Contents/MacOS/miccheckd"
+program = "~/.local/share/mise/installs/miccheckd/0.3.1/MicCheck.app/Contents/MacOS/miccheckd"
 run_at_load = true
 keep_alive = true
 stdout_path = "~/.cache/miccheck-stdout.log"
@@ -710,7 +710,7 @@ stderr_path = "~/.cache/miccheck-stderr.log"
 
 # AeroPlay: route one app's audio only to a selected AirPlay or CoreAudio output.
 [bootstrap.macos.launchd.agents."io.swifties.aeroplay"]
-program = "~/.local/share/mise/installs/aeroplay/0.3.0/AeroPlay.app/Contents/MacOS/aeroplayd"
+program = "~/.local/share/mise/installs/aeroplay/0.3.1/AeroPlay.app/Contents/MacOS/aeroplayd"
 run_at_load = true
 keep_alive = false
 stdout_path = "~/.cache/aeroplayd-stdout.log"
