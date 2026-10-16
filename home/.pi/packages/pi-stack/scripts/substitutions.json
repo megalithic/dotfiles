@@ -35,7 +35,7 @@
       "id": "cursor-plugins-dir",
       "why": "poteto-agent searches the Cursor plugin dir for its own SKILL.md; ours is in the package",
       "pattern": "~/\\.cursor/plugins/",
-      "replace": "~/.pi/agent/ (the pi-stack package's `skills/` directory)"
+      "replace": "~/.pi/ (the pi-stack package's `vendor/skills/` directory)"
     },
     {
       "id": "cursor-skills-dir",

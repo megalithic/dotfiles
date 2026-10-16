@@ -56,7 +56,7 @@ pstack's skills were written for Cursor. This page is the only translation. When
 | "fast" slugs (`-fast`) | pi has no fast variants. Use the same model at standard speed. |
 | "If the `subagent` tool rejects a slug" | It errors with the valid ids. Use the role's default and say so. |
 
-What the parent sends: the brief, exact file paths, the absolute path of `skills/poteto-mode/SKILL.md` for a `poteto-agent`, and success criteria. What comes back: the delegate's final message, delivered as a steer message with its name. You own the result. Read the diff it produced; do not pass its summary through.
+What the parent sends: the brief, exact file paths, the absolute path of `vendor/skills/poteto-mode/SKILL.md` for a `poteto-agent`, and success criteria. What comes back: the delegate's final message, delivered as a steer message with its name. You own the result. Read the diff it produced; do not pass its summary through.
 
 Completion: a playbook step is done when its verification ran against the real artifact and you can point at the output. A delegate saying "done" is not evidence.
 
@@ -121,4 +121,4 @@ Parallel workers get their own worktree. Use the `wt` tool when the repo has it 
 
 ## Skills
 
-Invoke a skill as `/skill:<name>`. Read a bundled skill by path: `skills/<name>/SKILL.md` relative to the pi-stack package root named in your system prompt. Principle leaves are `skills/principle-<title>/SKILL.md`.
+Invoke a skill as `/skill:<name>`. Read a bundled skill by path: `vendor/skills/<name>/SKILL.md` under the pi-stack package root, the directory that holds the poteto-mode path in your system prompt. Principle leaves are `vendor/skills/principle-<title>/SKILL.md`.

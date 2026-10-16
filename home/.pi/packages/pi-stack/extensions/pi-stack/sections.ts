@@ -89,7 +89,7 @@ export function applySections(sections: Record<string, string>, on: boolean, inp
 }
 
 /** Delegates pi-stack ships; a full-tool one loads every extension, so it drops superseded sections too. */
-export const PI_STACK_AGENTS: ReadonlySet<string> = new Set(["poteto-agent", "comment-sicko", "pstack-reviewer"]);
+export const PI_STACK_AGENTS: ReadonlySet<string> = new Set(["general-purpose", "poteto-agent", "comment-sicko", "pstack-reviewer"]);
 
 export function dropSections(sections: Record<string, string>, names: readonly string[]): void {
 	for (const name of names) delete sections[name];
