@@ -2,6 +2,24 @@
   "$comment": "Applied in order to every vendored .md file. Only mechanical rewrites live here. Everything semantic (how a Task spawn becomes a subagent call) lives in references/pi-primitives.md, which is the single instruction source. Keep this table short: a new entry needs a line in the sync log explaining why the map could not cover it.",
   "rules": [
     {
+      "id": "mega-names",
+      "why": "pi-stack runs upstream's mode, help skill, and delegate agent as mega-mode, mega-help, and mega-agent (skill dirs via exclude.rename, the agent via agents-src)",
+      "pattern": "\\bpoteto-(mode|help|agent)\\b",
+      "replace": "mega-$1"
+    },
+    {
+      "id": "mega-headings",
+      "why": "same rename for the page headings",
+      "pattern": "^# Poteto (mode|help|subagent)$",
+      "replace": "# Mega $1"
+    },
+    {
+      "id": "mega-trigger",
+      "why": "same rename for the trigger phrase in the mode's description; 'poteto's agent style' stays as credit",
+      "pattern": "\\bUse for poteto, ",
+      "replace": "Use for mega mode, "
+    },
+    {
       "id": "models-rule-path",
       "why": "pstack's per-role model table lives in a Cursor rule file; ours is a JSON file the extension injects.",
       "pattern": "~/\\.cursor/rules/pstack-models\\.mdc",
@@ -27,7 +45,7 @@
     },
     {
       "id": "cursor-plugins-dir",
-      "why": "poteto-agent and reflect reviewers search the Cursor plugin dir for skills; ours sit under the pi-stack package (path shown for the default install)",
+      "why": "mega-agent and reflect reviewers search the Cursor plugin dir for skills; ours sit under the pi-stack package (path shown for the default install)",
       "pattern": "~/\\.cursor/plugins/",
       "replace": "~/.pi/packages/pi-stack/vendor/skills/"
     },
@@ -106,7 +124,7 @@
     {
       "id": "slash-skill-commands",
       "why": "pi invokes skills as /skill:name, not /name. Only rewrite the documented pstack skill commands.",
-      "pattern": "(^|[\\s(`])/(poteto-help|how|why|architect|arena|swarm|interrogate|unslop|no-comments|tdd|reflect|correct|teach|sharpen|ketchup|blast-radius|automate-me|figure-it-out|show-me-your-work|create-verification-skill|maintain-verification-skill|benchmark-checklist|technical-writing|typescript-best-practices|in-your-own-words)(?![\\w/-])",
+      "pattern": "(^|[\\s(`])/(mega-help|how|why|architect|arena|swarm|interrogate|unslop|no-comments|tdd|reflect|correct|teach|sharpen|ketchup|blast-radius|automate-me|figure-it-out|show-me-your-work|create-verification-skill|maintain-verification-skill|benchmark-checklist|technical-writing|typescript-best-practices|in-your-own-words)(?![\\w/-])",
       "replace": "$1/skill:$2"
     },
     {
@@ -142,18 +160,21 @@
       "pstack-models\\.mdc",
       "\\bTask tool\\b",
       "\\.cursor/",
-      "agent-transcripts"
+      "agent-transcripts",
+      "\\b[Pp]oteto\\b(?!'s agent style)"
     ]
   },
   "exclude": {
-    "$comment": "Upstream skills not vendored. make-bot-ui is a Grok Bot webhook UI builder (Cursor-only). bro and recall collide with skills the user already owns: bro is dropped, recall is renamed pstack-recall. setup-pstack is replaced by the /setup-pstack command.",
+    "$comment": "Upstream skills not vendored. make-bot-ui is a Grok Bot webhook UI builder (Cursor-only). bro and recall collide with skills the user already owns: bro is dropped, recall is renamed pstack-recall. poteto-mode and poteto-help run as mega-mode and mega-help. setup-pstack is replaced by the /setup-pstack command.",
     "skills": [
       "make-bot-ui",
       "bro",
       "setup-pstack"
     ],
     "rename": {
-      "recall": "pstack-recall"
+      "recall": "pstack-recall",
+      "poteto-mode": "mega-mode",
+      "poteto-help": "mega-help"
     }
   }
 }

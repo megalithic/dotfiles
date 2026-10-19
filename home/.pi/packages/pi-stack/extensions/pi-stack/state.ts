@@ -40,7 +40,7 @@ export function resolveMode(branch: readonly SessionEntryLike[], autoOn: boolean
 
 export type Command = { kind: "set"; on: boolean } | { kind: "auto" } | { kind: "status" } | { kind: "task"; text: string };
 
-/** Parses the `/poteto-mode` argument. Bare means on; anything else is a task to run in the mode. */
+/** Parses the `/mega-mode` argument. Bare means on; anything else is a task to run in the mode. */
 export function parseCommand(args: string): Command {
 	const text = args.trim().toLowerCase();
 

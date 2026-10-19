@@ -24,8 +24,8 @@ describe("substitution rules", () => {
 		expect(out).toBe("Use the `subagent` tool, then `ask_user_question`. The rule is `~/.pi/agent/pi-stack/models.json`.");
 	});
 	test("documented slash commands become /skill: commands; extension commands stay", () => {
-		const out = applyRules("Type /interrogate review this, or /poteto-mode, or /setup-pstack, or /recall x, or /bro.", table.rules);
-		expect(out).toBe("Type /skill:interrogate review this, or /poteto-mode, or /setup-pstack, or /skill:pstack-recall x, or /skill:bro.");
+		const out = applyRules("Type /interrogate review this, or /poteto-mode, or /poteto-help, or /setup-pstack, or /recall x, or /bro.", table.rules);
+		expect(out).toBe("Type /skill:interrogate review this, or /mega-mode, or /skill:mega-help, or /setup-pstack, or /skill:pstack-recall x, or /skill:bro.");
 	});
 	test("applyRules records which rules matched", () => {
 		const used = new Set<string>();
@@ -40,8 +40,8 @@ describe("substitution rules", () => {
 		expect(applyRules("the /how-to guide", table.rules)).toBe("the /how-to guide");
 	});
 	test("denylist catches what the rules missed", () => {
-		const hits = findDenied("see ~/.cursor/projects/x\nfine line\n`Task tool`", table.deny.patterns);
-		expect([...new Set(hits.map((h) => h.line))].sort()).toEqual([1, 3]);
+		const hits = findDenied("see ~/.cursor/projects/x\nfine line\n`Task tool`\npoteto's agent style, credited\nrun /poteto-mode\n# Poteto mode", table.deny.patterns);
+		expect([...new Set(hits.map((h) => h.line))].sort()).toEqual([1, 3, 5, 6]);
 	});
 });
 
@@ -58,11 +58,13 @@ describe("vendored skills", () => {
 		expect(names).not.toContain("make-bot-ui");
 		expect(names).not.toContain("bro");
 		expect(names).not.toContain("recall");
+		expect(names).not.toContain("poteto-mode");
+		expect(names).not.toContain("poteto-help");
 		expect(names).toContain("pstack-recall");
 		expect(readFileSync(join(skills, "pstack-recall/SKILL.md"), "utf8")).toMatch(/^name: pstack-recall$/m);
 	});
-	test("poteto-mode keeps disable-model-invocation so the catalog stays small", () => {
-		expect(readFileSync(join(skills, "poteto-mode/SKILL.md"), "utf8")).toMatch(/^disable-model-invocation: true$/m);
+	test("mega-mode keeps disable-model-invocation so the catalog stays small", () => {
+		expect(readFileSync(join(skills, "mega-mode/SKILL.md"), "utf8")).toMatch(/^disable-model-invocation: true$/m);
 	});
 	test("every agent file carries the primitive map verbatim", () => {
 		const map = readFileSync(join(root, "references/pi-primitives.md"), "utf8").trim();

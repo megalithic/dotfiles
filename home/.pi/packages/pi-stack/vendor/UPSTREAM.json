@@ -3,8 +3,11 @@
   "subdir": "pstack",
   "commit": "f713f14203cd6420cec13cd7c55c32d598dbab68",
   "version": "0.15.25",
-  "syncedAt": "2026-10-16T17:29:01.464Z",
+  "syncedAt": "2026-10-19T12:06:21.404Z",
   "rules": [
+    "mega-names",
+    "mega-headings",
+    "mega-trigger",
     "models-rule-path",
     "models-rule-name",
     "ask-question-tool",

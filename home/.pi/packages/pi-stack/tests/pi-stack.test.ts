@@ -80,7 +80,7 @@ describe("mode restore from the session branch", () => {
 			expect(resolveMode([custom(true), { type: "custom", customType: STATE_ENTRY, data }], false)).toEqual({ on: true, source: "override" });
 		}
 	});
-	test("/poteto-mode arguments", () => {
+	test("/mega-mode arguments", () => {
 		expect(parseCommand("")).toEqual({ kind: "set", on: true });
 		expect(parseCommand(" OFF ")).toEqual({ kind: "set", on: false });
 		expect(parseCommand("auto")).toEqual({ kind: "auto" });
@@ -106,7 +106,7 @@ describe("prompt sections", () => {
 		applySections(sections, true, base());
 		expect(sections.ponytail).toBeUndefined();
 		expect(sections.other).toBe("keep");
-		expect(sections[SECTION_ROUTE]).toContain("/pkg/vendor/skills/poteto-mode/SKILL.md");
+		expect(sections[SECTION_ROUTE]).toContain("/pkg/vendor/skills/mega-mode/SKILL.md");
 		expect(sections[SECTION_ROUTE]).toContain("MAP BODY");
 		expect(sections[SECTION_ROUTE]).not.toContain("Missing in this session");
 		expect(sections[SECTION_ROLES]).toBeUndefined();

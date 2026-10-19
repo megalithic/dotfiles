@@ -99,7 +99,7 @@ function build(src, dest) {
     let text = applyRules(readFileSync(file, "utf8"), table.rules, used);
     const rel = relative(dest, file);
     // pi registers /skill:<name> from the frontmatter name and only warns on an invalid one.
-    // Upstream's "Poteto Mode" would never resolve, so every skill takes its directory name.
+    // Upstream's `name: Poteto Mode` would never resolve, so every skill takes its directory name (mega-mode).
     const skillDir = rel.match(/^skills\/([^/]+)\/SKILL\.md$/)?.[1];
 
     if (skillDir) text = text.replace(/^name: .*$/m, `name: ${skillDir}`);

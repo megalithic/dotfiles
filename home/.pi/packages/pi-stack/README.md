@@ -1,17 +1,17 @@
 # pi-stack
 
-Lauren Tan's [pstack](https://github.com/cursor/plugins/tree/main/pstack) ("poteto mode") for the [pi](https://pi.dev) coding agent. It vendors the upstream skills at a pinned commit, rewrites their Cursor-only instructions for pi, and turns the mode on only in the repos you list.
+Lauren Tan's [pstack](https://github.com/cursor/plugins/tree/main/pstack) ("poteto mode") for the [pi](https://pi.dev) coding agent. It vendors the upstream skills at a pinned commit, rewrites their Cursor-only instructions for pi, and turns the mode on only in the repos you list. Here the mode is called mega mode: upstream's `poteto-mode`, `poteto-help`, and `poteto-agent` run as `mega-mode`, `mega-help`, and `mega-agent`.
 
 pi-stack ships no tools of its own. Delegation, todos, and questions go through tools you already run, mainly `subagent` from [pi-interactive-subagents](https://github.com/amosblomqvist/pi-interactive-subagents).
 
 ## What it does
 
-- In an activated repo, every run gets a `pi-stack` system prompt section. It tells the model to read `vendor/skills/poteto-mode/SKILL.md` before rigorous work and carries the map from Cursor terms to pi tools (`references/pi-primitives.md`).
+- In an activated repo, every run gets a `pi-stack` system prompt section. It tells the model to read `vendor/skills/mega-mode/SKILL.md` before rigorous work and carries the map from Cursor terms to pi tools (`references/pi-primitives.md`).
 - A `pi-stack-roles` section lists the model for each pstack role, from your `models.json`.
 - Sections named in `supersedes` (for example another style extension's `ponytail`) are removed while the mode is on.
 - Outside activated repos, pi-stack adds nothing.
 - Subagent children never run the playbook. The four agents pi-stack ships carry the map in their own prompt:
-  - `general-purpose` and `poteto-agent` have every tool, also drop `supersedes` sections, and never push, open PRs, write to trackers or chat, migrate shared databases, or deploy. They report back instead.
+  - `general-purpose` and `mega-agent` have every tool, also drop `supersedes` sections, and never push, open PRs, write to trackers or chat, migrate shared databases, or deploy. They report back instead.
   - `pstack-reviewer` has read tools and `safe_bash`. `safe_bash` blocks only dangerous commands, so the reviewer is read-only by instruction, not by capability.
   - `comment-sicko` adds `edit`, for deleting comments.
 
@@ -49,10 +49,10 @@ The two files fail independently. A broken `models.json` drops the role table bu
 
 ## Commands
 
-- `/poteto-mode on|off|auto|status`: override the mode for this session branch, return to the `activate` rule, or show the state.
-- `/poteto-mode <task>`: turn the mode on for this session and run the task through the poteto-mode skill. Use this outside activated repos.
+- `/mega-mode on|off|auto|status`: override the mode for this session branch, return to the `activate` rule, or show the state.
+- `/mega-mode <task>`: turn the mode on for this session and run the task through the mega-mode skill. Use this outside activated repos.
 - `/setup-pstack`: write or refresh the config files.
-- `/skill:<name>`: run a vendored skill directly, for example `/skill:interrogate`. The map from Cursor terms to pi tools is in the prompt only while the mode is on, so outside activated repos run `/poteto-mode on` first.
+- `/skill:<name>`: run a vendored skill directly, for example `/skill:interrogate`. The map from Cursor terms to pi tools is in the prompt only while the mode is on, so outside activated repos run `/mega-mode on` first.
 
 ## Without pi-interactive-subagents
 
@@ -62,10 +62,10 @@ The prompt section lists any missing tool (`subagent`, `todo`, `ask_user_questio
 
 `scripts/sync.mjs` copies upstream `skills/` into `vendor/skills/` at the commit in `scripts/upstream.json`, then applies `scripts/substitutions.json`:
 
-- 21 rewrite rules, for example `Task` to `subagent`, `AskQuestion` to `ask_user_question`, and `/name` to `/skill:name`.
-- Every skill's `name:` becomes its directory name, so `/skill:poteto-mode` resolves.
-- Excluded skills: `make-bot-ui`, `bro`, `setup-pstack`. Renamed: `recall` to `pstack-recall`.
-- The sync fails if a denied Cursor pattern survives, such as `~/.cursor/` or `Task tool`, or if a rule matches nothing because upstream reworded its target.
+- Rewrite rules, for example `Task` to `subagent`, `AskQuestion` to `ask_user_question`, and `/name` to `/skill:name`, and `poteto-*` names to `mega-*`.
+- Every skill's `name:` becomes its directory name, so `/skill:mega-mode` resolves.
+- Excluded skills: `make-bot-ui`, `bro`, `setup-pstack`. Renamed: `recall` to `pstack-recall`, `poteto-mode` to `mega-mode`, `poteto-help` to `mega-help`.
+- The sync fails if a denied Cursor pattern survives, such as `~/.cursor/`, `Task tool`, or a `poteto` name, or if a rule matches nothing because upstream reworded its target.
 
 It also builds `vendor/agents/` from `agents-src/` plus the primitive map.
 

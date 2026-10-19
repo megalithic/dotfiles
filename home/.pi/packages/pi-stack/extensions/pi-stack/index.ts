@@ -82,7 +82,7 @@ export default function piStack(pi: ExtensionAPI) {
 
 	function status(ctx: ExtensionContext) {
 		if (!ctx.hasUI) return;
-		const label = on ? `poteto ${source === "auto" ? "auto" : "on"}` : source === "override" ? "poteto off" : undefined;
+		const label = on ? `mega ${source === "auto" ? "auto" : "on"}` : source === "override" ? "mega off" : undefined;
 		ctx.ui.setStatus("pi-stack", label);
 	}
 
@@ -105,8 +105,8 @@ export default function piStack(pi: ExtensionAPI) {
 
 	pi.on("session_tree", async (_event, ctx) => restore(ctx));
 
-	pi.registerCommand("poteto-mode", {
-		description: "Poteto mode (pstack): on | off | auto | status, or a task to run in the mode",
+	pi.registerCommand("mega-mode", {
+		description: "Mega mode (pstack): on | off | auto | status, or a task to run in the mode",
 		getArgumentCompletions: (prefix) =>
 			["on", "off", "auto", "status"].flatMap((v) => (v.startsWith(prefix.trim()) ? [{ value: v, label: v }] : [])),
 		handler: async (args, ctx) => {
@@ -118,31 +118,31 @@ export default function piStack(pi: ExtensionAPI) {
 					on = cmd.on;
 					source = "override";
 					status(ctx);
-					ctx.ui.notify(`Poteto mode ${cmd.on ? "on" : "off"} for this session.`, "info");
+					ctx.ui.notify(`Mega mode ${cmd.on ? "on" : "off"} for this session.`, "info");
 
 					return;
 				case "auto":
 					pi.appendEntry(STATE_ENTRY, { on: null });
 					restore(ctx);
-					ctx.ui.notify(`Poteto mode follows the cwd rule: ${on ? "on" : "off"} here.`, "info");
+					ctx.ui.notify(`Mega mode follows the cwd rule: ${on ? "on" : "off"} here.`, "info");
 
 					return;
 				case "status": {
 					const where = configError ? `config error: ${configError}` : `${config.activate.length} activation path(s)`;
-					ctx.ui.notify(`Poteto mode ${on ? "on" : "off"} (${source}); ${where}; config ${configPath(agentDir())}`, "info");
+					ctx.ui.notify(`Mega mode ${on ? "on" : "off"} (${source}); ${where}; config ${configPath(agentDir())}`, "info");
 
 					return;
 				}
 
 				case "task": {
-					// Upstream's `/poteto-mode <task>`: turn the mode on so the map is in the prompt, then run the skill.
+					// Upstream's `/poteto-mode <task>`, here `/mega-mode <task>`: turn the mode on so the map is in the prompt, then run the skill.
 					pi.appendEntry(STATE_ENTRY, { on: true });
 					on = true;
 					source = "override";
 					status(ctx);
 
 					// sendUserMessage expands /skill: only with expandPromptTemplates.
-					const message = `/skill:poteto-mode ${cmd.text}`;
+					const message = `/skill:mega-mode ${cmd.text}`;
 
 					if (ctx.isIdle()) pi.sendUserMessage(message, { expandPromptTemplates: true });
 					else pi.sendUserMessage(message, { expandPromptTemplates: true, deliverAs: "followUp" });

@@ -23,7 +23,7 @@ pstack's skills were written for Cursor. This page is the only translation. When
 | Skill says | Do |
 |---|---|
 | spawn a `Task`, `subagent_type: generalPurpose` | `subagent({ agent: "general-purpose", task, model })` |
-| `subagent_type: poteto-agent` | `subagent({ agent: "poteto-agent", task, model })` |
+| `subagent_type: mega-agent` | `subagent({ agent: "mega-agent", task, model })` |
 | `subagent_type: comment-sicko` | `subagent({ agent: "comment-sicko", task })` |
 | `readonly: true` | `agent: "pstack-reviewer"` (no write or edit tool; read-only by instruction) |
 | `run_in_background: true` | Every `subagent` call is already async. The result arrives as a message that starts your next turn. Never poll, sleep, or tail a file for it. |
@@ -33,7 +33,7 @@ pstack's skills were written for Cursor. This page is the only translation. When
 | "fast" slugs (`-fast`) | pi has no fast variants. Use the same model at standard speed. |
 | "If the `subagent` tool rejects a slug" | It errors with the valid ids. Use the role's default and say so. |
 
-What the parent sends: the brief, exact file paths, the absolute path of `vendor/skills/poteto-mode/SKILL.md` for a `poteto-agent`, and success criteria. What comes back: the delegate's final message, delivered as a steer message with its name. You own the result. Read the diff it produced; do not pass its summary through.
+What the parent sends: the brief, exact file paths, the absolute path of `vendor/skills/mega-mode/SKILL.md` for a `mega-agent`, and success criteria. What comes back: the delegate's final message, delivered as a steer message with its name. You own the result. Read the diff it produced; do not pass its summary through.
 
 Completion: a playbook step is done when its verification ran against the real artifact and you can point at the output. A delegate saying "done" is not evidence.
 
@@ -45,7 +45,7 @@ Missing capability: if `subagent` is not in your tool list, say so in the reply,
 |---|---|---|
 | `general-purpose` | full | implementers, explorers, explainers, investigators, synthesizers |
 | `pstack-reviewer` | read, safe_bash | interrogate reviewers, arena judges, any `readonly: true` spawn |
-| `poteto-agent` | full | code delegates inside a playbook step; reads poteto-mode in full first |
+| `mega-agent` | full | code delegates inside a playbook step; reads mega-mode in full first |
 | `comment-sicko` | read, safe_bash, edit (comments only) | the no-comments skill |
 
 Spawn one call per panel seat in the same message, each with a distinct `name` (Reviewer A, Reviewer B) and its own `model`. A panel on one model is not a panel.
@@ -98,4 +98,4 @@ Parallel workers get their own worktree. Use the `wt` tool when the repo has it 
 
 ## Skills
 
-Invoke a skill as `/skill:<name>`. Read a bundled skill by path: `vendor/skills/<name>/SKILL.md` under the pi-stack package root, the directory that holds the poteto-mode path in your system prompt or brief. Without either, find it with `find ~/.pi -path '*/pi-stack/vendor/skills' -type d`. A delegate cannot run `/skill:` commands; it reads the file instead. Principle leaves are `vendor/skills/principle-<title>/SKILL.md`.
+Invoke a skill as `/skill:<name>`. Read a bundled skill by path: `vendor/skills/<name>/SKILL.md` under the pi-stack package root, the directory that holds the mega-mode path in your system prompt or brief. Without either, find it with `find ~/.pi -path '*/pi-stack/vendor/skills' -type d`. A delegate cannot run `/skill:` commands; it reads the file instead. Principle leaves are `vendor/skills/principle-<title>/SKILL.md`.

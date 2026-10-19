@@ -26,15 +26,15 @@ const CAPABILITIES: ReadonlyArray<{ tool: string; missing: string }> = [
 
 /** The routing mandate plus the primitive map. Injected on every run while the mode is on. */
 export function routeSection(input: SectionInput): string {
-	const skillPath = `${input.packageRoot}/vendor/skills/poteto-mode/SKILL.md`;
+	const skillPath = `${input.packageRoot}/vendor/skills/mega-mode/SKILL.md`;
 	const missing = CAPABILITIES.flatMap((c) => (input.tools.includes(c.tool) ? [] : [`- ${c.missing}`]));
 
 	const lines = [
-		"Poteto mode is on for this session (pi-stack). For any task that needs rigor (a bug, a feature, a refactor, a perf question, an investigation with a cited answer, shipping, or anything the user wants to trust later), read the poteto-mode skill in full before acting and follow it:",
+		"Mega mode is on for this session (pi-stack). For any task that needs rigor (a bug, a feature, a refactor, a perf question, an investigation with a cited answer, shipping, or anything the user wants to trust later), read the mega-mode skill in full before acting and follow it:",
 		"",
 		`    ${skillPath}`,
 		"",
-		"Match the task to one of its playbooks, open the playbook's steps as todo items verbatim, and route to the other skills as the steps fire. For a trivial exchange (a one-line answer, a lookup, a yes or no) stay out of the way and answer plainly. Put that absolute path in every poteto-agent brief. Principle leaves are at `../principle-<title>/SKILL.md` from that file.",
+		"Match the task to one of its playbooks, open the playbook's steps as todo items verbatim, and route to the other skills as the steps fire. For a trivial exchange (a one-line answer, a lookup, a yes or no) stay out of the way and answer plainly. Put that absolute path in every mega-agent brief. Principle leaves are at `../principle-<title>/SKILL.md` from that file.",
 		"",
 		"Delegates (subagent children) never run the playbook; the chat that owns this session does.",
 		"",
@@ -89,7 +89,7 @@ export function applySections(sections: Record<string, string>, on: boolean, inp
 }
 
 /** Delegates pi-stack ships; a full-tool one loads every extension, so it drops superseded sections too. */
-export const PI_STACK_AGENTS: ReadonlySet<string> = new Set(["general-purpose", "poteto-agent", "comment-sicko", "pstack-reviewer"]);
+export const PI_STACK_AGENTS: ReadonlySet<string> = new Set(["general-purpose", "mega-agent", "comment-sicko", "pstack-reviewer"]);
 
 export function dropSections(sections: Record<string, string>, names: readonly string[]): void {
 	for (const name of names) delete sections[name];

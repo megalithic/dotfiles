@@ -1,1 +1,0 @@
-../../packages/pi-stack/vendor/agents/poteto-agent.md
