@@ -1,6 +1,7 @@
 import { visibleWidth } from "@earendil-works/pi-tui";
 import type { QuestionData } from "../../../tool/types.js";
 import type { WrappingSelectItem } from "../wrapping-select.js";
+import { cardText } from "./markdown-content-cache.js";
 import { BORDER_HORIZONTAL_OVERHEAD, BORDER_INNER_PADDING_HORIZONTAL } from "./preview-box-renderer.js";
 
 /** Min terminal/pane width for the side-by-side layout to engage. */
@@ -116,9 +117,7 @@ export function previewSourceWidth(question: QuestionData): number {
 	let max = 0;
 
 	for (const option of question.options) {
-		const text = option.preview;
-
-		if (!text) continue;
+		const text = cardText(option);
 
 		for (const line of text.split("\n")) {
 			const w = visibleWidth(line);

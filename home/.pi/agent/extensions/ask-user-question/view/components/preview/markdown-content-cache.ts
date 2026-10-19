@@ -1,8 +1,13 @@
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import { Markdown, type MarkdownTheme, visibleWidth } from "@earendil-works/pi-tui";
 import { t } from "../../../state/i18n-bridge.js";
-import type { QuestionData } from "../../../tool/types.js";
+import type { OptionData, QuestionData } from "../../../tool/types.js";
 import { stripFenceMarkers } from "./preview-box-renderer.js";
+
+/** The option's context card: its preview, or its description when the preview is blank. */
+export function cardText(option: OptionData): string {
+	return option.preview.trim() ? option.preview : option.description;
+}
 
 /** CC parity in side-by-side layout. */
 export const MAX_PREVIEW_HEIGHT_SIDE_BY_SIDE = 20;
@@ -37,9 +42,10 @@ export class MarkdownContentCache {
 		this.previewTexts = new Map();
 
 		for (let i = 0; i < question.options.length; i++) {
-			const raw = question.options[i]?.preview;
+			const option = question.options[i];
+			const raw = option ? cardText(option) : "";
 
-			if (raw && raw.length > 0) this.previewTexts.set(i, raw);
+			if (raw.length > 0) this.previewTexts.set(i, raw);
 		}
 
 		this.markdownCache = new Map();

@@ -3,6 +3,7 @@ import { truncateToWidth, visibleWidth, wrapTextWithAnsi } from "@earendil-works
 import { displayLabel } from "../../state/i18n-bridge.js";
 import type { QuestionData } from "../../tool/types.js";
 import type { StatefulView } from "../stateful-view.js";
+import type { PreviewBlockRenderer } from "./preview/preview-block-renderer.js";
 import { renderInlineInputRow } from "./inline-input.js";
 
 const ACTIVE_POINTER = "❯ ";
@@ -71,6 +72,7 @@ export class MultiSelectView implements StatefulView<MultiSelectViewProps> {
 	constructor(
 		private readonly theme: Theme,
 		private readonly question: QuestionData,
+		private readonly cards: PreviewBlockRenderer,
 	) {
 		this.props = {
 			rows: [],
@@ -118,6 +120,11 @@ export class MultiSelectView implements StatefulView<MultiSelectViewProps> {
 		if (this.props.other.active) build.focusedRange = [otherStart, build.lines.length];
 
 		this.appendNextRow(build, width);
+
+		// The focused option's context card sits under the list; sentinel rows have none.
+		const focused = this.props.rows.findIndex((row) => row.active);
+
+		if (focused >= 0) build.lines.push("", ...this.cards.renderCard(width, focused));
 
 		const value = { lines: build.lines, focusedRange: build.focusedRange };
 		this.cachedLayout = { width, value };

@@ -206,7 +206,7 @@ class QuestionnaireBuilder {
 			previewBlock,
 		});
 
-		const multiSelect = question.multiSelect ? new MultiSelectView(this.theme, question) : undefined;
+		const multiSelect = question.multiSelect ? new MultiSelectView(this.theme, question, previewBlock) : undefined;
 		const bodyHeights = this.buildBodyHeights(question, preview, multiSelect);
 
 		return { optionList, preview, multiSelect, bodyHeights };

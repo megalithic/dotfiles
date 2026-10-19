@@ -53,12 +53,11 @@ export const OptionSchema = Type.Object({
 		description:
 			"Explanation of what this option means or what will happen if chosen. Useful for providing context about trade-offs or implications.",
 	}),
-	preview: Type.Optional(
-		Type.String({
-			description:
-				"Optional preview content rendered when this option is focused. Use for mockups, code snippets, or visual comparisons that help users compare options. See the tool description for the expected content format.",
-		}),
-	),
+	preview: Type.String({
+		minLength: 1,
+		description:
+			"Required context card shown beside this option while it is focused (markdown in a monospace box). Restate everything the user needs to decide without scrolling back: current state, exact paths or names, what changes if chosen, and trade-offs. Never refer to text the user cannot see. See the tool description for the format.",
+	}),
 });
 
 export const QuestionSchema = Type.Object({

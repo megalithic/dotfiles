@@ -111,6 +111,16 @@ export class PreviewBlockRenderer {
 		this.cache.invalidate();
 	}
 
+	/** Just the bordered card for `optionIndex`, capped like the stacked layout. Used by multi-select. */
+	renderCard(width: number, optionIndex: number): string[] {
+		const maxInnerWidth = innerWidthFor(width);
+		const raw = this.cache.bodyFor(optionIndex, maxInnerWidth);
+		const lines = raw.slice(0, contentBudgetFor("stacked"));
+		const { boxWidth } = computeBoxDimensions(lines, maxInnerWidth);
+
+		return renderBorderedBox(lines, boxWidth, (s) => this.theme.fg("accent", s), raw.length - lines.length);
+	}
+
 	/**
 	 * Height contribution of the preview block — always equal to `renderBlock(...).length`
 	 * for the same arguments (the affordance overhead is not gated by the `NotesAffordance`).

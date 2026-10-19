@@ -376,7 +376,7 @@ export const DEFAULT_PROMPT_SNIPPET = `Ask the user up to ${MAX_QUESTIONS} struc
 export const DEFAULT_PROMPT_GUIDELINES: string[] = [
 	`Use ask_user_question whenever the user's request is underspecified and you cannot proceed without concrete decisions — you can ask up to ${MAX_QUESTIONS} questions per invocation.`,
 	`Each question MUST have ${MIN_OPTIONS}-${MAX_OPTIONS} options. Every option requires a concise label (1-5 words) and a description explaining what the choice means or its trade-offs. The user can additionally type a custom answer via the automatically appended "Type something." row on every question, or press Esc to abandon the questionnaire. Do NOT author "Other" or "Type something." labels yourself — reserved labels are rejected at runtime.`,
-	`Set multiSelect: true when multiple answers are valid. Provide an options[].preview markdown string when an option benefits from richer side-by-side context (mockups, code snippets, diagrams, configs) — single-select only. The "Type something." row is appended to every question; in preview mode it expands to the full pane width while typing so the custom answer is not cramped into the narrow options column. If you recommend a specific option, make that the first option and append "(Recommended)" to its label.`,
+	`Set multiSelect: true when multiple answers are valid. Every option needs a preview: a markdown context card the user sees while that option is focused (beside the list for single-select, under it for multiSelect). Restate the context needed to decide (current state, exact paths or names, what changes, trade-offs); never refer to text the user cannot see. The "Type something." row is appended to every question; in preview mode it expands to the full pane width while typing so the custom answer is not cramped into the narrow options column. If you recommend a specific option, make that the first option and append "(Recommended)" to its label.`,
 	"Do not stack multiple ask_user_question calls back-to-back — group all clarifying questions into one invocation.",
 ];
 
@@ -391,14 +391,14 @@ Usage notes:
 - Use multiSelect: true when multiple answers are valid. The "Type something." row is available on every question, including when options carry a \`preview\`; in preview mode it expands to the full pane width while typing so the custom answer is not cramped into the narrow options column.
 - If you recommend a specific option, make that the first option in the list and add "(Recommended)" at the end of the label.
 
-Preview feature:
-Use the optional \`preview\` field on options when presenting concrete artifacts that users need to visually compare:
-- ASCII mockups of UI layouts or components
-- Code snippets showing different implementations
-- Diagram variations
-- Configuration examples
+Context cards (required):
+Every option carries a \`preview\`: the context card shown while that option is focused. Single-select shows it beside the option list (stacked on narrow terminals); multiSelect shows it under the list. Write it so the user can decide from the card alone:
+- the current state and why the question comes up
+- exact paths, names, or commands the option touches
+- what changes if this option is chosen, and its trade-offs
+- mockups, code snippets, diagrams, or config examples when comparing artifacts
 
-Preview content is rendered as markdown in a monospace box. Multi-line text with newlines is supported. When any option has a preview, the UI switches to a side-by-side layout with a vertical option list on the left and preview on the right. Do not use previews for simple preference questions where labels and descriptions suffice. Note: previews are only supported for single-select questions (not multiSelect).`;
+Never refer to text the user cannot see (an earlier message, a hidden file). Card content is rendered as markdown in a monospace box; multi-line text is supported. A blank preview falls back to the option's description.`;
 
 export function registerAskUserQuestionTool(pi: ExtensionAPI): void {
 	pi.registerTool({
