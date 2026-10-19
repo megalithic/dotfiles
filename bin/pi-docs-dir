@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# pi-docs-dir KIND [PATH] - create and print the directory where agents keep
+# documents of KIND for the checkout at PATH (default: the current directory).
+#
+#   linked worktree:  <worktree>/.config/pi/KIND   (.config/ is git-ignored)
+#   anything else:    ~/.local/share/pi/KIND/<repo>, <repo> being the checkout's
+#                     directory name, or PATH's name outside git
+#
+# `wt prune` offers to archive a worktree's .config/pi/ before removing it.
+set -euo pipefail
+
+usage() {
+  echo "usage: pi-docs-dir docs|audits|plans|handoffs|reviews [PATH]" >&2
+  exit 2
+}
+
+kind="${1:-}"
+case "$kind" in
+  docs | audits | plans | handoffs | reviews) ;;
+  *) usage ;;
+esac
+target="$(cd "${2:-$PWD}" && pwd -P)" || usage
+
+# A linked worktree has its own git dir; the main checkout's equals the common dir.
+if info="$(git -C "$target" rev-parse --path-format=absolute --git-dir --git-common-dir --show-toplevel 2>/dev/null)"; then
+  {
+    read -r git_dir
+    read -r common_dir
+    read -r top
+  } <<<"$info"
+  if [ "$git_dir" != "$common_dir" ]; then
+    out="$top/.config/pi/$kind"
+  else
+    out="$HOME/.local/share/pi/$kind/$(basename "$top")"
+  fi
+else
+  out="$HOME/.local/share/pi/$kind/$(basename "$target")"
+fi
+
+mkdir -p "$out"
+printf '%s\n' "$out"
