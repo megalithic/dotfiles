@@ -515,6 +515,27 @@ v2_session_preflight() {
   fi
 }
 
+# Agent docs in <worktree>/.config/pi/<kind>/ (bin/pi-docs-dir) are git-ignored, so removal
+# deletes them. On a terminal, ask (default no); yes copies each kind to
+# ~/.local/share/pi/<kind>/<repo>/<worktree>/ before anything is removed.
+v2_keep_agent_artifacts() {
+  local src="$V2_PATH/.config/pi" dir kind dest answer
+  [ -n "$(ls -A "$src" 2>/dev/null)" ] || return 0
+  [ "$V2_JSON" -eq 0 ] && [ -t 0 ] || return 0
+  printf 'wt prune: keep agent artifacts from %s? [y/N] ' "$src" >&2
+  read -r answer || answer=
+  case "$answer" in y | Y | yes | YES) ;; *) return 0 ;; esac
+  for dir in "$src"/*/; do
+    kind="$(basename "$dir")"
+    dest="$HOME/.local/share/pi/$kind/$(basename "$V2_REPO_ROOT")/$(basename "$V2_PATH")"
+    # A worktree name can come back; never overwrite an earlier archive.
+    [ -e "$dest" ] && dest="$dest-$(date +%Y%m%d%H%M%S)"
+    mkdir -p "$dest" && cp -Rp "$dir." "$dest/" ||
+      { v2_set_error archive_failed "could not copy $dir to $dest" prune_preflight 6 refused; return 1; }
+    printf 'wt prune: kept %s in %s\n' "$kind" "$dest" >&2
+  done
+}
+
 v2_prune_refresh() {
   v2_backend_list || return 1
   v2_classify "$V2_TARGET" || return 1
@@ -552,6 +573,7 @@ v2_run_prune() {
   v2_validate_identity || return 1
   v2_acquire_worktree_lock || return 1
   v2_session_preflight || return 1
+  v2_keep_agent_artifacts || return 1
   old_head="$V2_HEAD"
   old_ref="refs/heads/$V2_BRANCH"
   before_remote="$(git -C "$V2_REPO_ROOT" for-each-ref --format='%(refname) %(objectname)' refs/remotes | sort)"

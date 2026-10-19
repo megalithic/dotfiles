@@ -1,4 +1,7 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
+import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import type { AssistantMessage } from "@earendil-works/pi-ai";
 import { initTheme, type ExtensionAPI, type ExtensionCommandContext, type ModelRegistry, type Theme } from "@earendil-works/pi-coding-agent";
 import { getKeybindings, type Component, type TUI } from "@earendil-works/pi-tui";
@@ -10,9 +13,10 @@ type ThinkingLevel = ExtensionCommandContext["thinkingLevel"];
 
 type Request = Parameters<ModelRegistry["streamSimple"]>;
 
-function harness(stopReason: AssistantMessage["stopReason"] = "aborted") {
+function harness(stopReason: AssistantMessage["stopReason"] = "aborted", text?: string) {
 	const calls: Request[] = [];
 	const notifications: string[] = [];
+	const drafts: string[] = [];
 	let thinkingLevel: ThinkingLevel = "low";
 
 	let handler: (args: string, ctx: ExtensionCommandContext) => Promise<void> = async () => {
@@ -31,7 +35,7 @@ function harness(stopReason: AssistantMessage["stopReason"] = "aborted") {
 
 	const response: AssistantMessage = {
 		role: "assistant",
-		content: [],
+		content: text ? [{ type: "text", text }] : [],
 		api: "openai-responses",
 		provider: "test-provider",
 		model: "test-model",
@@ -83,12 +87,19 @@ function harness(stopReason: AssistantMessage["stopReason"] = "aborted") {
 				}
 			},
 		},
-		newSession: async () => { throw new Error("Must not replace the session after failed generation"); },
+		newSession: async (options) => {
+			if (!text) throw new Error("Must not replace the session after failed generation");
+			// SAFETY: withSession only uses ui.setEditorText and ui.notify.
+			await options?.withSession?.({ ui: { setEditorText: (draft: string) => drafts.push(draft), notify: (message: string) => notifications.push(message) } } as never);
+
+			return { cancelled: false };
+		},
 	} as ExtensionCommandContext;
 
 	return {
 		calls,
 		notifications,
+		drafts,
 		ctx,
 		setThinking: (level: ThinkingLevel) => { thinkingLevel = level; },
 		run: () => handler("Continue the task", ctx),
@@ -132,5 +143,39 @@ describe("handoff thinking level", () => {
 		await h.run();
 
 		expect(h.notifications).toEqual(["Handoff failed: Test provider failed"]);
+	});
+});
+
+describe("handoff save", () => {
+	const path = process.env.PATH;
+
+	afterEach(() => {
+		process.env.PATH = path;
+	});
+
+	test("writes the prompt into the directory pi-docs-dir prints", async () => {
+		const bin = mkdtempSync(join(tmpdir(), "handoff-bin-"));
+		const out = mkdtempSync(join(tmpdir(), "handoff-out-"));
+		writeFileSync(join(bin, "pi-docs-dir"), `#!/bin/sh\necho ${out}\n`);
+		chmodSync(join(bin, "pi-docs-dir"), 0o755);
+		process.env.PATH = `${bin}:${path}`;
+		const h = harness("stop", "Next task");
+
+		await h.run();
+
+		const saved = h.notifications.at(-1)?.match(/^Handoff saved to (.+\.md)\. Submit when ready\.$/)?.[1];
+		expect(saved?.startsWith(out)).toBe(true);
+		expect(readFileSync(saved ?? "", "utf8")).toBe("Next task");
+		expect(h.drafts).toEqual(["Next task"]);
+	});
+
+	test("still opens the draft when pi-docs-dir is missing", async () => {
+		process.env.PATH = mkdtempSync(join(tmpdir(), "handoff-empty-"));
+		const h = harness("stop", "Next task");
+
+		await h.run();
+
+		expect(h.notifications.at(-1)).toMatch(/^Handoff not saved: .*pi-docs-dir.*\. Submit when ready\.$/);
+		expect(h.drafts).toEqual(["Next task"]);
 	});
 });

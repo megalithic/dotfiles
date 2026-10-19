@@ -1,0 +1,359 @@
+import { getMarkdownTheme, type Theme } from "@earendil-works/pi-coding-agent";
+import { Editor, type EditorTheme, type TUI } from "@earendil-works/pi-tui";
+import type { QuestionData } from "../tool/types.js";
+import {
+	type BoundGlobalBinding,
+	type BoundPerTabBinding,
+	globalBinding,
+	perTabBinding,
+} from "../view/component-binding.js";
+import { MultiSelectView } from "../view/components/multi-select-view.js";
+import { OptionListView } from "../view/components/option-list-view.js";
+import { PreviewBlockRenderer } from "../view/components/preview/preview-block-renderer.js";
+import { crossTabLeftWidthWithDonation } from "../view/components/preview/preview-layout-decider.js";
+import type { PreviewPaneProps } from "../view/components/preview/preview-pane.js";
+import { PreviewPane } from "../view/components/preview/preview-pane.js";
+import { SubmitPicker } from "../view/components/submit-picker.js";
+import { TabBar } from "../view/components/tab-bar.js";
+import type { WrappingSelectItem, WrappingSelectTheme } from "../view/components/wrapping-select.js";
+import { DialogView } from "../view/dialog-builder.js";
+import { QuestionnairePropsAdapter } from "../view/props-adapter.js";
+import type { StatefulView } from "../view/stateful-view.js";
+import type { TabBodyHeights, TabComponents } from "../view/tab-components.js";
+import type { PerTabSelector } from "./selectors/contract.js";
+import { selectActivePreviewPaneIndex } from "./selectors/derivations.js";
+import {
+	selectDialogProps,
+	selectMultiSelectProps,
+	selectOptionListProps,
+	selectPreviewPaneProps,
+	selectSubmitPickerProps,
+	selectTabBarProps,
+} from "./selectors/projections.js";
+import type { QuestionnaireState } from "./state.js";
+
+export interface QuestionnaireBuildConfig {
+	tui: TUI;
+	theme: Theme;
+	questions: readonly QuestionData[];
+	itemsByTab: ReadonlyArray<readonly WrappingSelectItem[]>;
+	isMulti: boolean;
+	initialState: QuestionnaireState;
+	getCurrentTab: () => number;
+	/**
+	 * Resolved collapse key spec (`"ctrl+]"`, `"alt+o"`, or `"off"`). Threaded to
+	 * `DialogConfig` as construction-time config so the footer hint can name the
+	 * real key — deliberately NOT part of `QuestionnaireState`, which stays free
+	 * of runtime context.
+	 */
+	collapseKey: string;
+	/**
+	 * Maps `tui.terminal.rows` to the rows the dialog may render — identity for the
+	 * overlay, a capped share for the inline editor slot (`../presentation.ts`). Applied
+	 * inside `getTerminalRows`, so `DialogView`'s overflow partition is mode-agnostic.
+	 */
+	rowBudget: (terminalRows: number) => number;
+}
+
+export interface QuestionnaireBuilt {
+	adapter: QuestionnairePropsAdapter;
+	notesInput: Editor;
+	inlineInput: Editor;
+	render: (width: number) => string[];
+	invalidate: () => void;
+}
+
+interface HeightComputers {
+	global: (width: number) => number;
+	current: (width: number) => number;
+}
+
+function previewBodyHeights(pane: PreviewPane): (width: number) => TabBodyHeights {
+	return (width) => {
+		const current = pane.naturalHeight(width);
+
+		return { current, max: Math.max(current, pane.maxNaturalHeight(width)) };
+	};
+}
+
+function editorTheme(theme: Theme): EditorTheme {
+	return {
+		borderColor: (text) => theme.fg("borderMuted", text),
+		selectList: {
+			selectedPrefix: (text) => theme.bg("selectedBg", theme.fg("accent", text)),
+			selectedText: (text) => theme.bg("selectedBg", theme.bold(text)),
+			description: (text) => theme.fg("muted", text),
+			scrollInfo: (text) => theme.fg("dim", text),
+			noMatch: (text) => theme.fg("warning", text),
+		},
+	};
+}
+
+function multiSelectBodyHeights(view: MultiSelectView): (width: number) => TabBodyHeights {
+	return (width) => {
+		const h = view.naturalHeight(width);
+
+		return { current: h, max: h };
+	};
+}
+
+const isActiveTab: PerTabSelector<boolean> = (s, ctx) =>
+	ctx.i === selectActivePreviewPaneIndex(s.currentTab, ctx.totalQuestions);
+
+/**
+ * Pure factory: assembles every TUI component, the props adapter, and a
+ * lifecycle handle. Session-state dependencies arrive via `getCurrentTab`; live
+ * custom text stays in the headless Editor. Initial paint is delegated to
+ * `adapter.apply(initialState)` (called by the session at construction-end);
+ * no selector is invoked here.
+ */
+export function buildQuestionnaire(config: QuestionnaireBuildConfig): QuestionnaireBuilt {
+	return new QuestionnaireBuilder(config).build();
+}
+
+/**
+ * Programming-by-intention assembly: each private method names one
+ * construction step from `build()`. Read top-down; the class is build-only and
+ * discarded once the handle is returned.
+ */
+class QuestionnaireBuilder {
+	private readonly tui: QuestionnaireBuildConfig["tui"];
+	private readonly theme: Theme;
+	private readonly questions: readonly QuestionData[];
+	private readonly itemsByTab: ReadonlyArray<readonly WrappingSelectItem[]>;
+	private readonly isMulti: boolean;
+	private readonly initialState: QuestionnaireState;
+	private readonly getCurrentTab: () => number;
+	private readonly collapseKey: string;
+	private readonly rowBudget: (terminalRows: number) => number;
+
+	private readonly selectTheme: WrappingSelectTheme;
+	private readonly markdownTheme = getMarkdownTheme();
+	private readonly notesInput: Editor;
+	private readonly inlineInput: Editor;
+	private readonly getTerminalWidth = () => this.tui.terminal.columns;
+	private readonly getTerminalRows = () => this.rowBudget(this.tui.terminal.rows);
+
+	constructor(config: QuestionnaireBuildConfig) {
+		this.tui = config.tui;
+		this.theme = config.theme;
+		this.questions = config.questions;
+		this.itemsByTab = config.itemsByTab;
+		this.isMulti = config.isMulti;
+		this.initialState = config.initialState;
+		this.getCurrentTab = config.getCurrentTab;
+		this.collapseKey = config.collapseKey;
+		this.rowBudget = config.rowBudget;
+
+		this.selectTheme = this.makeSelectTheme();
+		const textEditorTheme = editorTheme(this.theme);
+		this.notesInput = new Editor(this.tui, textEditorTheme);
+		this.inlineInput = new Editor(this.tui, textEditorTheme);
+		// The key router owns confirm/submit semantics; keys reaching these headless
+		// editors are text-editing only. Without this, a `tui.input.submit` match inside
+		// Editor.handleInput would run submitValue(), which resets the buffer and
+		// silently destroys the draft — no onSubmit is wired here, so the text is
+		// unrecoverable (#156).
+		this.notesInput.disableSubmit = true;
+		this.inlineInput.disableSubmit = true;
+	}
+
+	build(): QuestionnaireBuilt {
+		const tabs = this.buildTabComponents();
+		this.injectGlobalLeftWidth(tabs);
+		const submitPicker = this.buildSubmitPicker();
+		const tabBar = this.buildTabBar();
+		const heights = this.buildHeightComputers(tabs);
+		const dialog = this.buildDialog(tabs, submitPicker, tabBar, heights);
+		const globalBindings = this.buildGlobalBindings(dialog, submitPicker, tabBar);
+		const perTabBindings = this.buildPerTabBindings();
+		const adapter = this.buildAdapter(tabs, globalBindings, perTabBindings);
+
+		return this.handle(adapter, dialog);
+	}
+
+	private makeSelectTheme(): WrappingSelectTheme {
+		const t = this.theme;
+
+		return {
+			selectedText: (s) => t.fg("accent", t.bold(s)),
+			description: (s) => t.fg("muted", s),
+			scrollInfo: (s) => t.fg("dim", s),
+		};
+	}
+
+	private buildTabComponents(): ReadonlyArray<TabComponents> {
+		return this.questions.map((q, i) => this.buildTabFor(q, i));
+	}
+
+	private buildTabFor(question: QuestionData, index: number): TabComponents {
+		const optionList = new OptionListView({
+			items: this.itemsByTab[index] ?? [],
+			theme: this.selectTheme,
+		});
+
+		const previewBlock = new PreviewBlockRenderer({
+			question,
+			theme: this.theme,
+			markdownTheme: this.markdownTheme,
+		});
+
+		const preview = new PreviewPane({
+			question,
+			theme: this.theme,
+			getTerminalWidth: this.getTerminalWidth,
+			optionListView: optionList,
+			previewBlock,
+		});
+
+		const multiSelect = question.multiSelect ? new MultiSelectView(this.theme, question, previewBlock) : undefined;
+		const bodyHeights = this.buildBodyHeights(question, preview, multiSelect);
+
+		return { optionList, preview, multiSelect, bodyHeights };
+	}
+
+	private buildBodyHeights(
+		question: QuestionData,
+		preview: PreviewPane,
+		multiSelect: MultiSelectView | undefined,
+	): (width: number) => TabBodyHeights {
+		return question.multiSelect ? multiSelectBodyHeights(multiSelect!) : previewBodyHeights(preview);
+	}
+
+	/**
+	 * Compute cross-tab max adaptive left width and inject into each PreviewPane.
+	 * Mirrors buildHeightComputers pattern — iterates all tabs, takes max.
+	 * Called after buildTabComponents, before buildDialog (so setGlobalLeftWidth
+	 * is set before any rendering occurs).
+	 */
+	private injectGlobalLeftWidth(tabs: ReadonlyArray<TabComponents>): void {
+		const questions = this.questions;
+		const itemsByTab = this.itemsByTab;
+		const tabsDescriptor = questions.map((q) => ({ multiSelect: q.multiSelect }));
+
+		const globalLeftWidth = (paneWidth: number): number =>
+			crossTabLeftWidthWithDonation(tabsDescriptor, itemsByTab, questions, paneWidth);
+
+		for (const tab of tabs) {
+			tab.preview.setGlobalLeftWidth(globalLeftWidth);
+		}
+	}
+
+	private buildSubmitPicker(): SubmitPicker | undefined {
+		return this.isMulti ? new SubmitPicker(this.theme) : undefined;
+	}
+
+	private buildTabBar(): TabBar | undefined {
+		return this.isMulti ? new TabBar(this.theme) : undefined;
+	}
+
+	private buildHeightComputers(tabs: ReadonlyArray<TabComponents>): HeightComputers {
+		const global = (width: number): number => {
+			let max = 0;
+
+			for (const tab of tabs) {
+				const h = tab.bodyHeights(width).max;
+
+				if (h > max) max = h;
+			}
+
+			return Math.max(1, max);
+		};
+
+		const current = (width: number): number => {
+			const idx = Math.min(this.getCurrentTab(), tabs.length - 1);
+
+			return Math.max(0, tabs[idx]?.bodyHeights(width).current ?? 0);
+		};
+
+		return { global, current };
+	}
+
+	private pickInitialActivePreview(tabs: ReadonlyArray<TabComponents>): StatefulView<PreviewPaneProps> {
+		const idx = selectActivePreviewPaneIndex(this.initialState.currentTab, this.questions.length);
+
+		return tabs[idx]?.preview ?? tabs[0]!.preview;
+	}
+
+	private buildDialog(
+		tabs: ReadonlyArray<TabComponents>,
+		submitPicker: SubmitPicker | undefined,
+		tabBar: TabBar | undefined,
+		heights: HeightComputers,
+	): DialogView {
+		return new DialogView(
+			{
+				theme: this.theme,
+				questions: this.questions,
+				tabBar,
+				notesInput: this.notesInput,
+				isMulti: this.isMulti,
+				tabsByIndex: tabs,
+				submitPicker,
+				getBodyHeight: heights.global,
+				getCurrentBodyHeight: heights.current,
+				getTerminalRows: this.getTerminalRows,
+				collapseKey: this.collapseKey,
+			},
+			{ state: this.initialState, activePreviewPane: this.pickInitialActivePreview(tabs) },
+		);
+	}
+
+	private buildGlobalBindings(
+		dialog: DialogView,
+		submitPicker: SubmitPicker | undefined,
+		tabBar: TabBar | undefined,
+	): ReadonlyArray<BoundGlobalBinding> {
+		return [
+			globalBinding({ component: dialog, select: selectDialogProps }),
+			...(submitPicker ? [globalBinding({ component: submitPicker, select: selectSubmitPickerProps })] : []),
+			...(tabBar ? [globalBinding({ component: tabBar, select: selectTabBarProps })] : []),
+		];
+	}
+
+	private buildPerTabBindings(): ReadonlyArray<BoundPerTabBinding> {
+		return [
+			perTabBinding({
+				resolve: (tab) => tab.optionList,
+				predicate: isActiveTab,
+				select: selectOptionListProps,
+			}),
+			perTabBinding({
+				resolve: (tab) => tab.preview,
+				predicate: isActiveTab,
+				select: selectPreviewPaneProps,
+			}),
+			perTabBinding({
+				resolve: (tab) => tab.multiSelect,
+				select: selectMultiSelectProps,
+			}),
+		];
+	}
+
+	private buildAdapter(
+		tabs: ReadonlyArray<TabComponents>,
+		globalBindings: ReadonlyArray<BoundGlobalBinding>,
+		perTabBindings: ReadonlyArray<BoundPerTabBinding>,
+	): QuestionnairePropsAdapter {
+		return new QuestionnairePropsAdapter({
+			tui: this.tui,
+			questions: this.questions,
+			itemsByTab: this.itemsByTab,
+			tabsByIndex: tabs,
+			inlineInput: this.inlineInput,
+			globalBindings,
+			perTabBindings,
+			extraInvalidatables: [this.notesInput],
+		});
+	}
+
+	private handle(adapter: QuestionnairePropsAdapter, dialog: DialogView): QuestionnaireBuilt {
+		return {
+			adapter,
+			notesInput: this.notesInput,
+			inlineInput: this.inlineInput,
+			render: (w) => dialog.render(w),
+			invalidate: () => adapter.invalidate(),
+		};
+	}
+}

@@ -10,7 +10,9 @@ local disabledPiEntries = List(
     "home/.pi/agent/extensions/_*",
     "home/.pi/agent/skills/_*",
     "home/.pi/agent/prompts/_*",
-    "home/.pi/agent/agents/_*"
+    "home/.pi/agent/agents/_*",
+    // Verbatim upstream pstack (cursor/plugins), rewritten only by scripts/sync.mjs.
+    "home/.pi/packages/pi-stack/vendor/**"
 )
 
 // Index-wide: rejects force-added or already-tracked files under home/.ssh/

@@ -1,0 +1,378 @@
+import type { Theme } from "@earendil-works/pi-coding-agent";
+import { type Component, Container, type Editor, Spacer, Text, truncateToWidth } from "@earendil-works/pi-tui";
+import { COLLAPSE_KEY_OFF, formatKeySpecForDisplay } from "../config.js";
+import { t } from "../state/i18n-bridge.js";
+import { selectSavedNote } from "../state/selectors/derivations.js";
+import { formatAnswerScalar } from "../tool/format-answer.js";
+import type { QuestionData } from "../tool/types.js";
+import type { PreviewPane, PreviewPaneProps } from "./components/preview/preview-pane.js";
+import type { DialogState } from "./dialog-builder.js";
+import {
+	HINT_PART_CANCEL,
+	HINT_PART_CLEAR,
+	HINT_PART_COLLAPSE_TEMPLATE,
+	HINT_PART_ENTER,
+	HINT_PART_NAV,
+	HINT_PART_NEW_LINE,
+	HINT_PART_NOTES,
+	HINT_PART_TAB,
+	HINT_PART_TOGGLE,
+	INCOMPLETE_WARNING_PREFIX,
+	KEY_PLACEHOLDER,
+	READY_PROMPT,
+	REVIEW_HEADING,
+} from "./dialog-copy.js";
+import type { StatefulView } from "./stateful-view.js";
+import type { TabComponents } from "./tab-components.js";
+
+const NOTES_HEADER = "Notes:";
+
+const GLOBAL_NOTES_HEADER = "Global note:";
+
+const REVIEW_GLOBAL_HINT = "n to add a note";
+
+const REVIEW_NOTE_LABEL = "Note";
+
+/** Label for a question's saved note — the question tab's resting row and the review entry (#197). */
+const SAVED_NOTE_LABEL = "Note for this answer:";
+
+/**
+ * Single-row, width-clipped chrome cell. The footer row count is invariant
+ * (`QuestionTabStrategy.footerRowCount = 2`) — pi-tui's `Text` word-wraps when
+ * the styled hint exceeds `width`, inflating that row count and desyncing the
+ * `bodyHeight + footerRowCount` math in `DialogView.render`. Clipping with
+ * `truncateToWidth` (ANSI-aware, matches `multi-select-view.ts` usage) keeps
+ * the hint on one line; the collapse affordance falls off the right edge with
+ * `…` on terminals too narrow to advertise it.
+ */
+class OneLineClippedText implements Component {
+	constructor(
+		private readonly text: string,
+		private readonly paddingLeft: number = 0,
+	) {}
+
+	render(width: number): string[] {
+		const pad = " ".repeat(this.paddingLeft);
+		const avail = Math.max(0, width - this.paddingLeft);
+
+		return [pad + truncateToWidth(this.text, avail, "…", false)];
+	}
+
+	invalidate(): void {}
+
+	handleInput(_data: string): void {}
+}
+
+/**
+ * Per-tab content provider. Pure functional — closes over construction-time
+ * config; per-tick state threads through method args. The chrome wrapper
+ * enforces height equality across tabs via `bodyHeight + footerRowCount`.
+ */
+export interface TabContentStrategy {
+	/** Total RENDERED footer rows — MUST equal what `footerRows()` actually emits. Drives residual math. */
+	readonly footerRowCount: number;
+
+	/** Variable rows above the body, after top chrome (border + tabBar + Spacer). */
+	headingRows(state: DialogState): Component[];
+
+	/** Body Component placed at the body slot. */
+	bodyComponent(state: DialogState): Component;
+
+	/** Natural rendered height of `bodyComponent(state)` at given width. */
+	bodyHeight(width: number, state: DialogState): number;
+
+	/** Optional rows between body's trailing Spacer and the bottom border. */
+	midRows(state: DialogState): Component[];
+
+	/** Footer rows below the bottom border. Rendered row count MUST equal `footerRowCount`. */
+	footerRows(state: DialogState): Component[];
+
+	/** Row range of the focused item within the body's rendered output, or undefined if no interactive focus. */
+	focusedItemRowRange(width: number, state: DialogState): [number, number] | undefined;
+}
+
+export interface QuestionTabStrategyConfig {
+	theme: Theme;
+	questions: readonly QuestionData[];
+	getPreviewPane: () => StatefulView<PreviewPaneProps>;
+	tabsByIndex: ReadonlyArray<TabComponents>;
+	notesInput: Editor;
+	isMulti: boolean;
+	getCurrentBodyHeight: (width: number) => number;
+	/** Resolved collapse key spec (`"ctrl+]"`, `"alt+o"`, or `"off"`). Drives the footer's collapse hint. */
+	collapseKey: string;
+}
+
+export class QuestionTabStrategy implements TabContentStrategy {
+	/** Spacer(1) + OneLineClippedText(hint, 1) = 2 rendered rows. */
+	readonly footerRowCount = 2;
+
+	constructor(private readonly config: QuestionTabStrategyConfig) {}
+
+	headingRows(state: DialogState): Component[] {
+		const out: Component[] = [];
+		const question = this.config.questions[state.currentTab];
+
+		// In multi-question mode the tab bar already shows the header; suppress the inline badge.
+		if (!this.config.isMulti && question?.header && question.header.length > 0) {
+			out.push(new Text(this.config.theme.bg("selectedBg", ` ${question.header} `), 1, 0));
+			out.push(new Spacer(1));
+		}
+
+		if (question) {
+			out.push(new Text(this.config.theme.bold(question.question), 1, 0));
+			out.push(new Spacer(1));
+		}
+
+		return out;
+	}
+
+	bodyComponent(state: DialogState): Component {
+		const question = this.config.questions[state.currentTab];
+		const mso = this.config.tabsByIndex[state.currentTab]?.multiSelect;
+
+		if (question?.multiSelect === true && mso) return mso;
+
+		return this.config.getPreviewPane();
+	}
+
+	bodyHeight(width: number, _state: DialogState): number {
+		return this.config.getCurrentBodyHeight(width);
+	}
+
+	midRows(state: DialogState): Component[] {
+		if (state.notesVisible) {
+			return [
+				new Text(this.config.theme.fg("muted", t("notes.header", NOTES_HEADER)), 1, 0),
+				this.config.notesInput,
+				new Spacer(1),
+			];
+		}
+
+		// A saved note stays visible once its editor closes (#197): one clipped row, so a long
+		// or multi-line note cannot crowd the options — `n` reopens it in full. Mid rows are
+		// subtracted from the body allowance (`DialogView.rowsAroundBody`), so the row is
+		// height-safe.
+		const note = selectSavedNote(state.notesByTab, state.answers, state.currentTab);
+
+		if (note === undefined) return [];
+		const [firstLine = "", ...rest] = note.split("\n");
+		const text = `${t("notes.saved_label", SAVED_NOTE_LABEL)} ${firstLine}${rest.length > 0 ? " …" : ""}`;
+
+		return [new OneLineClippedText(this.config.theme.fg("dim", text), 1)];
+	}
+
+	footerRows(state: DialogState): Component[] {
+		const question = this.config.questions[state.currentTab];
+
+		// OneLineClippedText (not pi-tui `Text`) — `buildHintText` includes the collapse
+		// affordance, pushing the rendered string past 80 columns; `Text` would wrap and
+		// break the strategy's `footerRowCount = 2` invariant. Clipping on narrow terminals
+		// drops the trailing parts (collapse hint first, then cancel) with `…`.
+		return [
+			new Spacer(1),
+			new OneLineClippedText(
+				this.config.theme.fg("dim", buildHintText(question, this.config.isMulti, state, this.config.collapseKey)),
+				1,
+			),
+		];
+	}
+
+	focusedItemRowRange(width: number, state: DialogState): [number, number] | undefined {
+		const question = this.config.questions[state.currentTab];
+		const mso = this.config.tabsByIndex[state.currentTab]?.multiSelect;
+
+		if (question?.multiSelect === true && mso) return mso.focusedItemRowRange(width);
+
+		// SAFETY: the config adapter supplies the preview pane implementation.
+		return (this.config.getPreviewPane() as PreviewPane).focusedItemRowRange(width);
+	}
+}
+
+export interface SubmitTabStrategyConfig {
+	theme: Theme;
+	questions: readonly QuestionData[];
+	submitPicker: Component | undefined;
+	/** Shared notes Editor — mounted into midRows while the global-note editor is open on this tab. */
+	notesInput: Editor;
+}
+
+export class SubmitTabStrategy implements TabContentStrategy {
+	/** Spacer(1) + Text(prompt, 1) + submitPicker(2) + OneLineClippedText(hint, 1) = 5 rendered rows. Fallback path lands at 5 via 2 Spacer(1)s in the picker slot. */
+	readonly footerRowCount = 5;
+
+	constructor(private readonly config: SubmitTabStrategyConfig) {}
+
+	headingRows(_state: DialogState): Component[] {
+		return [
+			new Text(this.config.theme.bold(this.config.theme.fg("accent", t("review.heading", REVIEW_HEADING))), 1, 0),
+			new Spacer(1),
+		];
+	}
+
+	bodyComponent(state: DialogState): Component {
+		const c = new Container();
+
+		for (let i = 0; i < this.config.questions.length; i++) {
+			const q = this.config.questions[i];
+			const a = state.answers.get(i);
+
+			if (!a) continue;
+			const label = q.header && q.header.length > 0 ? q.header : `Q${i + 1}`;
+			const answerText = formatAnswerScalar(a, "summary");
+			c.addChild(new Text(this.config.theme.fg("muted", ` ● ${label}`), 1, 0));
+			c.addChild(
+				new Text(`   ${this.config.theme.fg("muted", "→")} ${this.config.theme.fg("text", answerText)}`, 1, 0),
+			);
+
+			if (a.notes && a.notes.length > 0) {
+				c.addChild(
+					new Text(
+						this.config.theme.fg("dim", `     ${t("notes.saved_label", SAVED_NOTE_LABEL)} ${a.notes}`),
+						1,
+						0,
+					),
+				);
+			}
+		}
+
+		// Committed global note (#182) as a review entry — pressing `n` gets visible
+		// feedback and the note is reviewable before submit. Same presence predicate as
+		// the reducer's doneFor lift. Hidden while the editor is open: the midRows editor
+		// (seeded with this text) is the live surface then, and a stale copy above it
+		// would read as a second note.
+		const globalNote = state.notesByTab.get(this.config.questions.length);
+
+		if (!state.notesVisible && globalNote && globalNote.length > 0) {
+			c.addChild(new Text(this.config.theme.fg("muted", ` ● ${t("review.note_label", REVIEW_NOTE_LABEL)}`), 1, 0));
+			c.addChild(
+				new Text(`   ${this.config.theme.fg("muted", "→")} ${this.config.theme.fg("text", globalNote)}`, 1, 0),
+			);
+		}
+
+		return c;
+	}
+
+	bodyHeight(width: number, state: DialogState): number {
+		return this.bodyComponent(state).render(width).length;
+	}
+
+	midRows(state: DialogState): Component[] {
+		// notesVisible-gated mirror of QuestionTabStrategy.midRows: while the global-note
+		// editor is open, the shared notesInput mounts below the answer summary under its
+		// own header. The pseudo-index draft (notesByTab[questions.length]) is reducer-owned
+		// state; the strategy only renders.
+		if (!state.notesVisible) return [];
+
+		return [
+			new Text(this.config.theme.fg("muted", t("notes.global_header", GLOBAL_NOTES_HEADER)), 1, 0),
+			this.config.notesInput,
+			new Spacer(1),
+		];
+	}
+
+	footerRows(state: DialogState): Component[] {
+		const missing: string[] = [];
+
+		for (let i = 0; i < this.config.questions.length; i++) {
+			const q = this.config.questions[i];
+
+			if (!state.answers.has(i)) {
+				missing.push(q.header && q.header.length > 0 ? q.header : `Q${i + 1}`);
+			}
+		}
+
+		const promptText =
+			missing.length === 0
+				? this.config.theme.fg("muted", t("review.ready", READY_PROMPT))
+				: this.config.theme.fg(
+						"warning",
+						`${t("review.incomplete", INCOMPLETE_WARNING_PREFIX)} ${missing.join(", ")}`,
+					);
+
+		// One row, never wrapped: `footerRowCount` counts it as one, and a wrapped prompt
+		// (long list of unanswered headers) would desync the chrome's row math (#261).
+		const out: Component[] = [new Spacer(1), new OneLineClippedText(promptText, 1)];
+
+		if (this.config.submitPicker) {
+			out.push(this.config.submitPicker);
+		} else {
+			// Padding when the picker isn't wired — keeps rendered row count at footerRowCount=5.
+			out.push(new Spacer(1));
+			out.push(new Spacer(1));
+		}
+
+		// Bottom key-hint row, mirroring QuestionTabStrategy's footer idiom (one dim
+		// `·`-joined line below everything) — the prompt reads straight into its picker
+		// with no hint wedged between them. Always present so footerRowCount stays
+		// exactly 5. OneLineClippedText (not pi-tui Text) — a wrapped hint would inflate
+		// the footer past footerRowCount and desync the chrome's cross-tab height math.
+		out.push(new OneLineClippedText(this.config.theme.fg("dim", buildSubmitHintText(state)), 1));
+
+		return out;
+	}
+
+	focusedItemRowRange(_width: number, _state: DialogState): [number, number] | undefined {
+		return undefined;
+	}
+}
+
+/**
+ * Build the controls hint line. Order:
+ *   Enter · ↑/↓ [· Space toggle] [· n notes] [· Tab switch] · Esc [· <key> collapse]
+ *   [· Shift+Enter newline] [· Ctrl+U clear]
+ *
+ * `NOTES` is part of the resting (notes-closed) core — it drops while the notes
+ * editor or custom-answer input has the keyboard. Ctrl+G is Pi's global external-
+ * editor shortcut and needs no local hint; the context-specific clear shortcut is
+ * appended at the far right while input mode is active.
+ *
+ * The collapse part interpolates the configured `collapseKey` (display-cased)
+ * and is omitted entirely when the shortcut is `"off"` — `routeKey` and the raw
+ * terminal listener both refuse to collapse in that case, so advertising a key
+ * would be a lie.
+ */
+export function buildHintText(
+	question: QuestionData | undefined,
+	isMulti: boolean,
+	state: DialogState,
+	collapseKey: string,
+): string {
+	const parts: string[] = [t("hint.enter", HINT_PART_ENTER), t("hint.navigate", HINT_PART_NAV)];
+
+	if (question?.multiSelect === true) parts.push(t("hint.toggle", HINT_PART_TOGGLE));
+
+	if (question && !state.notesVisible && !state.inputMode) parts.push(t("hint.notes", HINT_PART_NOTES));
+
+	if (isMulti) parts.push(t("hint.tab", HINT_PART_TAB));
+	parts.push(t("hint.cancel", HINT_PART_CANCEL));
+
+	if (collapseKey !== COLLAPSE_KEY_OFF) {
+		parts.push(
+			t("hint.collapse", HINT_PART_COLLAPSE_TEMPLATE).replace(KEY_PLACEHOLDER, formatKeySpecForDisplay(collapseKey)),
+		);
+	}
+
+	if (state.notesVisible || state.inputMode) parts.push(t("hint.newline", HINT_PART_NEW_LINE));
+
+	if (state.inputMode) parts.push(t("hint.clear", HINT_PART_CLEAR));
+
+	return parts.join(" · ");
+}
+
+/**
+ * Submit-tab counterpart of `buildHintText` — the same `·`-joined bottom-row idiom.
+ * Resting: Enter · ↑/↓ · `n to add a note` · Esc. While the global-note editor is
+ * open the note part drops (the editor is the affordance then) and the Shift+Enter
+ * newline hint is appended after cancel, mirroring the question tabs' notes-open shape.
+ */
+export function buildSubmitHintText(state: DialogState): string {
+	const parts: string[] = [t("hint.enter", HINT_PART_ENTER), t("hint.navigate", HINT_PART_NAV)];
+
+	if (!state.notesVisible) parts.push(t("review.global_hint", REVIEW_GLOBAL_HINT));
+	parts.push(t("hint.cancel", HINT_PART_CANCEL));
+
+	if (state.notesVisible) parts.push(t("hint.newline", HINT_PART_NEW_LINE));
+
+	return parts.join(" · ");
+}

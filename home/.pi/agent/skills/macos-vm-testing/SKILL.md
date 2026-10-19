@@ -64,7 +64,7 @@ Use an official non-vanilla Cirrus Labs macOS image with the Tart Guest Agent. T
 
 5. Test the actual entry point and behavior, not just syntax. A source build needs a successful install, native `file`/`lipo` results, expected runtime libraries, version output, and a small real operation. Use isolated sockets/configs for service tests. Record every failure and corrected rerun; a missing binary or failed hook is not a pass.
 
-6. Save evidence outside the repo under `~/.local/share/pi/docs/<repo>/`: exact tested inputs, dependency/compiler versions, complete logs, exit statuses, and observed outputs. Use `set -o pipefail` when piping through `tee`. For binary transfers, run the pipeline from a script or uncompressed shell; output-compressing tool wrappers must not process the archive bytes. Archive explicitly named outputs, not sockets or the entire guest home.
+6. Save evidence outside git under `$(pi-docs-dir docs)/`: exact tested inputs, dependency/compiler versions, complete logs, exit statuses, and observed outputs. Use `set -o pipefail` when piping through `tee`. For binary transfers, run the pipeline from a script or uncompressed shell; output-compressing tool wrappers must not process the archive bytes. Archive explicitly named outputs, not sockets or the entire guest home.
 
 7. Stop the VM even when validation fails, then confirm `State` is `stopped`:
 

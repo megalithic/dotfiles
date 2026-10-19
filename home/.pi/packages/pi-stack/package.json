@@ -1,0 +1,34 @@
+{
+  "name": "pi-stack",
+  "version": "0.1.0",
+  "description": "Lauren Tan's pstack (poteto-mode) for the pi coding agent: upstream skills vendored at a pinned commit, a sticky mode scoped to the repos you choose, and delegation through the subagent tool you already run.",
+  "license": "MIT",
+  "type": "module",
+  "keywords": [
+    "pi-package",
+    "pstack",
+    "mega-mode",
+    "workflow"
+  ],
+  "pi": {
+    "extensions": [
+      "./extensions/pi-stack/index.ts"
+    ],
+    "skills": [
+      "./vendor/skills"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "scripts": {
+    "sync": "node scripts/sync.mjs",
+    "sync:check": "node scripts/sync.mjs --check",
+    "test": "bun test tests"
+  },
+  "devDependencies": {
+    "typebox": "1.3.27",
+    "@types/bun": "latest"
+  }
+}
