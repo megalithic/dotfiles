@@ -24,6 +24,7 @@ home/.pi/
 │   ├── skills/          # Skill directories (symlink-each)
 │   ├── prompts/         # Prompt templates (symlink-each)
 │   └── agents/          # Custom agent .md definitions (symlink-each)
+├── packages/            # Local pi packages linked into ~/.pi/packages (pi-stack)
 ├── bin/                 # Wrappers linked into ~/.local/bin: pi, p, work-tickets
 ├── scripts/             # Helper installers and setup scripts
 ├── patches/             # Reference patches kept for upstream regressions

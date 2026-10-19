@@ -10,7 +10,10 @@ pi-stack ships no tools of its own. Delegation, todos, and questions go through 
 - A `pi-stack-roles` section lists the model for each pstack role, from your `models.json`.
 - Sections named in `supersedes` (for example another style extension's `ponytail`) are removed while the mode is on.
 - Outside activated repos, pi-stack adds nothing.
-- Subagent children never run the playbook. The four agents pi-stack ships (`general-purpose`, `poteto-agent`, `pstack-reviewer`, `comment-sicko`) carry the map in their own prompt and also drop `supersedes` sections.
+- Subagent children never run the playbook. The four agents pi-stack ships carry the map in their own prompt:
+  - `general-purpose` and `poteto-agent` have every tool, also drop `supersedes` sections, and never push, open PRs, write to trackers or chat, migrate shared databases, or deploy. They report back instead.
+  - `pstack-reviewer` has read tools and `safe_bash`. `safe_bash` blocks only dangerous commands, so the reviewer is read-only by instruction, not by capability.
+  - `comment-sicko` adds `edit`, for deleting comments.
 
 ## Install
 
@@ -37,18 +40,19 @@ Then run `/setup-pstack` once. It writes `~/.pi/agent/pi-stack/config.json` and 
 }
 ```
 
-- `activate`: absolute paths or globs (`*` one segment, `**` any depth, `~` allowed). The mode is on in a matching directory and everything below it, worktrees included. Relative entries never match.
+- `activate`: absolute paths or globs (`*` one segment, `**` any depth, `~` allowed). The mode is on in a matching directory and everything below it, worktrees included. Relative entries never match. Matching uses the physical path, so list real directories, not symlinks. An unknown key is an error.
 - `supersedes`: prompt section names to remove while the mode is on.
 
-`~/.pi/agent/pi-stack/models.json` maps each pstack role to `"provider/id:thinking"`, a list of them for panel roles (one reviewer per entry), or `inherit-parent`. Keys starting with `$` are comments. A missing role runs on the parent model. Each `/setup-pstack` run refreshes `$available` and keeps your role lines.
+`~/.pi/agent/pi-stack/models.json` maps each pstack role to `"provider/id:thinking"` or, for panel roles, a list of them (one reviewer per entry). A role with no line runs on the parent model. Give each panel role two or more models; a panel on one model is labeled "single model, not an independent panel". Keys starting with `$` are comments. Each `/setup-pstack` run rewrites `$comment`, `$roles` (the role names), and `$available` (the models pi can see) and keeps your role lines.
 
 The two files fail independently. A broken `models.json` drops the role table but keeps activation.
 
 ## Commands
 
 - `/poteto-mode on|off|auto|status`: override the mode for this session branch, return to the `activate` rule, or show the state.
+- `/poteto-mode <task>`: turn the mode on for this session and run the task through the poteto-mode skill. Use this outside activated repos.
 - `/setup-pstack`: write or refresh the config files.
-- `/skill:<name>`: run a vendored skill directly, for example `/skill:interrogate`.
+- `/skill:<name>`: run a vendored skill directly, for example `/skill:interrogate`. The map from Cursor terms to pi tools is in the prompt only while the mode is on, so outside activated repos run `/poteto-mode on` first.
 
 ## Without pi-interactive-subagents
 
@@ -72,7 +76,7 @@ node scripts/sync.mjs --check            # rebuild to a temp dir; fail if vendor
 bun test tests
 ```
 
-To move to a new release, change `commit` and `version` in `scripts/upstream.json`, run the sync, and fix any denied pattern it reports by adding a rule.
+To move to a new release, change `commit` and `version` in `scripts/upstream.json`, run the sync, and fix what it reports: add a rule for a denied pattern, and fix or delete a rule that matches nothing. A failed sync leaves `vendor/` unchanged.
 
 ## Gating irreversible actions
 
@@ -90,6 +94,8 @@ pi-stack does not gate commands. With [pi-warden](https://github.com/DevMortimer
   }
 }
 ```
+
+Agents with a `tools:` line (such as `pstack-reviewer`) start with `--no-extensions`, so pi-warden does not run inside them.
 
 pi-warden saves this file with an atomic rename, so a dotfiles symlink at that path is replaced by a plain file on the next `/warden` setting change.
 
