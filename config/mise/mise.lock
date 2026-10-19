@@ -879,9 +879,9 @@ backend = "aqua:bootandy/dust"
 specifiers = ["latest"]
 
 [tools.dust."platforms.macos-arm64"]
-checksum = "sha256:7603c92462bd56305847732eb25d70ab06386d7bcfbce7532b7cf3937fd9684f"
-url = "https://github.com/bootandy/dust/releases/download/v1.2.6/dust-v1.2.6-x86_64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/bootandy/dust/releases/assets/568852877"
+checksum = "sha256:5c37ee0d353165c73aedd6b21b9133182221efe08f9a5e76c082d9d6d5a0935d"
+url = "https://github.com/bootandy/dust/releases/download/v1.2.6/dust-v1.2.6-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/bootandy/dust/releases/assets/568852617"
 
 [[tools.elixir]]
 version = "main-otp-29"
@@ -1786,13 +1786,13 @@ url_api = "https://api.github.com/repos/tamasfe/taplo/releases/assets/257323110"
 
 [[tools.tmux]]
 version = "3.8-rc3"
-backend = "aqua:tmux/tmux-builds"
-specifiers = ["3.8-rc3"]
+backend = "http:tmux"
 
 [tools.tmux.options]
-"vars.bin_path" = "bin"
-"vars.strip_components" = "1"
-"vars.url" = "https://github.com/tmux/tmux/archive/{version}.tar.gz"
+strip_components = "1"
+
+[tools.tmux."platforms.macos-arm64"]
+url = "https://github.com/tmux/tmux/archive/3.8-rc3.tar.gz"
 
 [[tools.tokei]]
 version = "15.0.0"

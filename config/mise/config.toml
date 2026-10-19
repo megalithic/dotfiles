@@ -179,6 +179,9 @@ aeroplay = "github:megalithic/swifties"
 miccheckd = "github:megalithic/swifties"
 notiwatchd = "github:megalithic/swifties"
 avwatchd = "github:megalithic/swifties"
+# Source build via [tools.tmux] url/postinstall; without this the registry
+# resolves tmux to aqua:tmux/tmux-builds, which has no release candidates.
+tmux = "http:tmux"
 
 [tools]
 "aqua:openai/codex" = "latest"
