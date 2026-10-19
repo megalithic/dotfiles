@@ -53,7 +53,10 @@ Local tooling is managed by mise (`.config/mise.toml`).
 
 - Tidewave (MCP server `tidewave`, registered by Pi's `acp.ts` extension) is the
   required tool for anything that touches the running Elixir app. Its tools are
-  declared directly as `mcp__tidewave__<tool>`.
+  declared directly as `mcp__tidewave__<tool>`. Codemode's `ALL_TOOLS` and
+  `searchTools` never list them, so never use codemode to decide whether they
+  exist, and never call `/tidewave/mcp` with curl. Their liveness check is one
+  `mcp__tidewave__project_eval` call; if it errors, the server is down.
   - Never run `mix run -e`, `iex`, `elixir -e`, or `mix run` scripts through
     bash to evaluate code; use `mcp__tidewave__project_eval`.
   - Never run `psql` or `mix ecto` queries to inspect data; use
@@ -66,6 +69,11 @@ Local tooling is managed by mise (`.config/mise.toml`).
   - Never drive the dev site with curl or a browser MCP for LiveView checks;
     use `mcp__tidewave__browser_eval`. It takes `action` (`help`, `new-session`,
     `eval`), `sid`, and `action_inputs` (`code` using the `browser` object).
+    Call `action: "help"` once per Pi session before the first `eval` and
+    follow it exactly. `browser.eval` takes a function, not a string, and
+    reports only through `console.log`; nothing is returned:
+    `await browser.eval(() => { console.log(location.href); });`. When an
+    `eval` errors, re-read `help` before retrying.
     Start with `action: "new-session"`: it opens a session on its own, so never
     create one through the control page UI. If it reports no browser connected:
     1. Run `open http://localhost:$PHX_PORT/tidewave/connect`. Never open bare
@@ -78,6 +86,16 @@ Local tooling is managed by mise (`.config/mise.toml`).
        instead of retrying.
     3. Call `new-session` again and continue. Do not fall back to curl or
        another browser tool.
+    The Connect tab must stay in the foreground. Hidden, Chrome freezes rAF
+    and CSS transitions, and after five minutes throttles timers to one per
+    minute: evals stall, the channel rejoins, every `sid` is lost, and
+    `new-session` reports "No browser is connected" even though
+    `Tidewave.BrowserSessions.list_clients()` is non-empty (that message also
+    covers a 5s broadcast timeout). Ask the user to foreground the tab; do
+    not open a second one. `document.hasFocus()` stays false until the user
+    clicks inside the preview, so `focusin`/`focusout`, `phx-focus` and
+    `phx-blur` never fire even though `activeElement` moves; `:focus-within`
+    and class checks still work.
   - Bash remains for git, mise tasks, `mix format`, `mix test`, `mix check`,
     and file searches outside the running app.
   - If Tidewave is unreachable (Phoenix down, port changed), say so and
