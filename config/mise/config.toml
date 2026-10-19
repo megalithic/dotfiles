@@ -192,7 +192,7 @@ avwatchd = "github:megalithic/swifties"
 "aqua:astral-sh/ruff" = "latest"
 "aqua:tidewave-ai/tidewave_app" = "latest"
 
-"pipx:yubikey-manager" = "latest"
+"pipx:yubikey-manager" = { version = "latest", python = "3.13" }
 "pipx:s3cmd" = "latest"
 "pipx:huggingface-hub" = "latest"
 
@@ -288,7 +288,7 @@ pipx = "latest"
 pitchfork = "latest"
 prettier = "latest"
 "npm:@fsouza/prettierd" = "latest"
-python = "3"
+python = "latest"
 ripgrep = "latest"
 ruby = "latest"
 rust = { version = "nightly", components = "rust-src,rust-analyzer,rustfmt,clippy" }

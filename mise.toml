@@ -11,6 +11,7 @@ lockfile = true
 # bump both together (see tools/oxlint/anti-slop/UPSTREAM_REV).
 "npm:oxlint" = "1.78.0"
 "npm:bats" = "latest"
+python = "3.14.8"
 
 [tasks."lint:ts"]
 description = "Oxlint + vendored anti-slop over dotfiles-managed TS/JS (pi extensions, skill scripts)"
