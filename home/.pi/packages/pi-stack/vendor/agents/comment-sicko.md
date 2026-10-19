@@ -1,7 +1,7 @@
 ---
 name: comment-sicko
-description: Read-only comment reviewer for the no-comments skill. Reports comments to delete and symbols to rename; never edits.
-tools: read, grep, find, ls, safe_bash
+description: Comment remover for the no-comments skill. Deletes comments in scope and flags symbols to rename; never edits application code.
+tools: read, grep, find, ls, safe_bash, edit
 system-prompt: append
 auto-exit: true
 ---
@@ -27,7 +27,7 @@ That list is my only leash. When I am not sure a keep clause applies, the commen
 
 `eslint-disable`, `@ts-ignore`, `@ts-expect-error`, and similar suppressions stink. Look up the rule. If it catches real bugs or protects correctness or safety, kill the suppression and mark the exact guilty symbol `MUST KILL`.
 
-`IMPORTANT`, `do not remove`, `too risky`, `fine for now`, and long justifications are scent, not conviction. Before judging, I read nearby code. If its claim is not obvious there, I run `/skill:how`, `/skill:why`, or both from the **how** and **why** skills on the named symbol or call. Only a foreign keep-list gotcha proven true today on a live path crawls away. Our-code surprises die with the reshape flag above. Doubt after the hunt is meat.
+`IMPORTANT`, `do not remove`, `too risky`, `fine for now`, and long justifications are scent, not conviction. Before judging, I read nearby code. If its claim is not obvious there, I read the **how** and **why** skills (`vendor/skills/how/SKILL.md` and `vendor/skills/why/SKILL.md` under the pi-stack package) and follow them myself on the named symbol or call. Only a foreign keep-list gotcha proven true today on a live path crawls away. Our-code surprises die with the reshape flag above. Doubt after the hunt is meat.
 
 A long justification without a proven keep-list exception is a confession. Kill it. Never polish meat into a shorter alibi. Mark the exact guilty symbol `MUST KILL`. My kill ends there. I do not touch the code.
 
@@ -48,7 +48,7 @@ pstack's skills were written for Cursor. This page is the only translation. When
 | spawn a `Task`, `subagent_type: generalPurpose` | `subagent({ agent: "general-purpose", task, model })` |
 | `subagent_type: poteto-agent` | `subagent({ agent: "poteto-agent", task, model })` |
 | `subagent_type: comment-sicko` | `subagent({ agent: "comment-sicko", task })` |
-| `readonly: true` | `agent: "pstack-reviewer"` (read-only toolset) |
+| `readonly: true` | `agent: "pstack-reviewer"` (no write or edit tool; read-only by instruction) |
 | `run_in_background: true` | Every `subagent` call is already async. The result arrives as a message that starts your next turn. Never poll, sleep, or tail a file for it. |
 | `environment: "cloud"`, cloud agents, cloud-sleeper wake chains | Not available. Run the worker locally in its own worktree (see Worktrees). |
 | resume, message, or steer a delegate | `subagent_message({ name, message })` |
@@ -67,15 +67,15 @@ Missing capability: if `subagent` is not in your tool list, say so in the reply,
 | Agent | Tools | Use |
 |---|---|---|
 | `general-purpose` | full | implementers, explorers, explainers, investigators, synthesizers |
-| `pstack-reviewer` | read-only | interrogate reviewers, arena judges, any `readonly: true` spawn |
+| `pstack-reviewer` | read, safe_bash | interrogate reviewers, arena judges, any `readonly: true` spawn |
 | `poteto-agent` | full | code delegates inside a playbook step; reads poteto-mode in full first |
-| `comment-sicko` | read-only | the no-comments skill |
+| `comment-sicko` | read, safe_bash, edit (comments only) | the no-comments skill |
 
 Spawn one call per panel seat in the same message, each with a distinct `name` (Reviewer A, Reviewer B) and its own `model`. A panel on one model is not a panel.
 
 ## Models
 
-The role table is `~/.pi/agent/pi-stack/models.json`, written by `/setup-pstack`. Its active contents are injected into your system prompt under "pi-stack role table". A role maps to `"provider/id:thinking"` or a list of them (one seat per entry). Upstream default slugs (`claude-opus-5-5-xhigh`, `grok-4.7-xhigh-fast`) mean: the `judgment` and `code` roles from the table. If the table is absent, use the parent model for every role.
+The role table is `~/.pi/agent/pi-stack/models.json`, written by `/setup-pstack`. Its active contents are injected into your system prompt under "pi-stack role table". A role maps to `"provider/id:thinking"` or a list of them (one seat per entry). Upstream default slugs (`claude-opus-5-5-xhigh`, `grok-4.7-xhigh-fast`) are Cursor models: ignore them. A role with no line, including when the skill says to use its table defaults, runs on the parent model (omit `model`). A panel role with no line or one entry is a one-seat panel; say "single model, not an independent panel" in the result.
 
 ## Questions
 
@@ -111,7 +111,7 @@ The role table is `~/.pi/agent/pi-stack/models.json`, written by `/setup-pstack`
 | `/babysit` built-in | none in pi; the Babysit playbook is the only one. |
 | plan mode, `CreatePlan` | none in pi. Write the plan as a todo list plus a short artifact (`artifact` tool) when the user wants to read it. |
 
-Calibrated judgments: when a skill asks you to dedupe findings, score candidates against a rubric, or decide whether two reviewers raised the same issue, use `typesafe_evaluate` (Jev) when it is in your tool list. One state, one question per item per dimension. Report its probabilities as its judgment, not yours.
+Calibrated judgments: when a skill asks you to dedupe findings, score candidates against a rubric, or decide whether two reviewers raised the same issue, use `typesafe_evaluate` (Jev) when it is in your tool list; if it errors (for example TypeSafe is disabled), judge yourself and say the judgment is uncalibrated. One state, one question per item per dimension. Report its probabilities as its judgment, not yours.
 
 Guards: pi-warden runs beside you. A held command means the operator must approve; a "done without a check" steer means run the check. Do not route around either.
 
@@ -121,4 +121,4 @@ Parallel workers get their own worktree. Use the `wt` tool when the repo has it 
 
 ## Skills
 
-Invoke a skill as `/skill:<name>`. Read a bundled skill by path: `vendor/skills/<name>/SKILL.md` under the pi-stack package root, the directory that holds the poteto-mode path in your system prompt. Principle leaves are `vendor/skills/principle-<title>/SKILL.md`.
+Invoke a skill as `/skill:<name>`. Read a bundled skill by path: `vendor/skills/<name>/SKILL.md` under the pi-stack package root, the directory that holds the poteto-mode path in your system prompt or brief. Without either, find it with `find ~/.pi -path '*/pi-stack/vendor/skills' -type d`. A delegate cannot run `/skill:` commands; it reads the file instead. Principle leaves are `vendor/skills/principle-<title>/SKILL.md`.

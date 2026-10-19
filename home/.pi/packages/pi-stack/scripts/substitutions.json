@@ -27,9 +27,9 @@
     },
     {
       "id": "cursor-plugins-dir",
-      "why": "poteto-agent searches the Cursor plugin dir for its own SKILL.md; ours is in the package",
+      "why": "poteto-agent and reflect reviewers search the Cursor plugin dir for skills; ours sit under the pi-stack package (path shown for the default install)",
       "pattern": "~/\\.cursor/plugins/",
-      "replace": "~/.pi/ (the pi-stack package's `vendor/skills/` directory)"
+      "replace": "~/.pi/packages/pi-stack/vendor/skills/"
     },
     {
       "id": "cursor-skills-dir",
@@ -95,7 +95,7 @@
       "id": "transcripts-dir",
       "why": "Cursor transcripts live under ~/.cursor/projects; pi sessions are JSONL under ~/.pi/agent/sessions, searchable with vcc_recall and the sessions MCP",
       "pattern": "~/\\.cursor/projects/[^ `]*agent-transcripts[^ `]*",
-      "replace": "~/.pi/agent/sessions/ (JSONL; search with `vcc_recall` or the `sessions` MCP)"
+      "replace": "~/.pi/agent/sessions/<slug>/"
     },
     {
       "id": "create-skill-builtin",
@@ -126,6 +126,12 @@
       "why": "bro is not vendored (the user owns a bro skill); the relative link would dangle",
       "pattern": "\\[`/skill:bro`\\]\\(\\.\\./bro/SKILL\\.md\\)",
       "replace": "`/skill:bro`"
+    },
+    {
+      "id": "transcripts-slug",
+      "why": "pi slugs a cwd as --Users-you-proj--, not Cursor Users-you-proj; JSONL search tools exist",
+      "pattern": "is the workspace path with the leading slash dropped and each \"/\" turned into \"-\" \\(so `/Users/you/proj` becomes `Users-you-proj`\\)\\. Every line is one chat message\\.",
+      "replace": "is the cwd with each \"/\" turned into \"-\" and wrapped in \"--\" (so `/Users/you/proj` becomes `--Users-you-proj--`). Each file is one session in JSONL; search them with `vcc_recall` or the `sessions` MCP."
     }
   ],
   "deny": {
@@ -140,7 +146,7 @@
     ]
   },
   "exclude": {
-    "$comment": "Upstream skills not vendored. make-bot-ui is a Grok Bot webhook UI builder (Cursor-only). bro and recall collide with skills the user already owns; pstack's versions are kept under other names. setup-pstack is replaced by the /setup-pstack command.",
+    "$comment": "Upstream skills not vendored. make-bot-ui is a Grok Bot webhook UI builder (Cursor-only). bro and recall collide with skills the user already owns: bro is dropped, recall is renamed pstack-recall. setup-pstack is replaced by the /setup-pstack command.",
     "skills": [
       "make-bot-ui",
       "bro",

@@ -8,7 +8,7 @@ auto-exit: true
 
 # pstack reviewer
 
-You are one seat on an independent review panel. Your parent gave you the intent, the diff or files, and a rubric. Review from your own angle; do not guess what other reviewers will say. Read the surrounding code the diff touches, not only the diff. Use `safe_bash` for read-only commands (`git diff`, `git log`, `rg`); never write, commit, or push.
+You are one seat on an independent review panel. Your parent gave you the intent, the diff or files, and a rubric. Review from your own angle; do not guess what other reviewers will say. Read the surrounding code the diff touches, not only the diff. Use `safe_bash` for read-only commands (`git diff`, `git log`, `rg`). It blocks only dangerous commands, so staying read-only is on you: never write, commit, or push.
 
 Your final message is your findings, each with `file:line`, severity, why it matters, and the evidence you saw. Mark each as read, inferred, or guess. Say what you looked for and did not find.
 
@@ -25,7 +25,7 @@ pstack's skills were written for Cursor. This page is the only translation. When
 | spawn a `Task`, `subagent_type: generalPurpose` | `subagent({ agent: "general-purpose", task, model })` |
 | `subagent_type: poteto-agent` | `subagent({ agent: "poteto-agent", task, model })` |
 | `subagent_type: comment-sicko` | `subagent({ agent: "comment-sicko", task })` |
-| `readonly: true` | `agent: "pstack-reviewer"` (read-only toolset) |
+| `readonly: true` | `agent: "pstack-reviewer"` (no write or edit tool; read-only by instruction) |
 | `run_in_background: true` | Every `subagent` call is already async. The result arrives as a message that starts your next turn. Never poll, sleep, or tail a file for it. |
 | `environment: "cloud"`, cloud agents, cloud-sleeper wake chains | Not available. Run the worker locally in its own worktree (see Worktrees). |
 | resume, message, or steer a delegate | `subagent_message({ name, message })` |
@@ -44,15 +44,15 @@ Missing capability: if `subagent` is not in your tool list, say so in the reply,
 | Agent | Tools | Use |
 |---|---|---|
 | `general-purpose` | full | implementers, explorers, explainers, investigators, synthesizers |
-| `pstack-reviewer` | read-only | interrogate reviewers, arena judges, any `readonly: true` spawn |
+| `pstack-reviewer` | read, safe_bash | interrogate reviewers, arena judges, any `readonly: true` spawn |
 | `poteto-agent` | full | code delegates inside a playbook step; reads poteto-mode in full first |
-| `comment-sicko` | read-only | the no-comments skill |
+| `comment-sicko` | read, safe_bash, edit (comments only) | the no-comments skill |
 
 Spawn one call per panel seat in the same message, each with a distinct `name` (Reviewer A, Reviewer B) and its own `model`. A panel on one model is not a panel.
 
 ## Models
 
-The role table is `~/.pi/agent/pi-stack/models.json`, written by `/setup-pstack`. Its active contents are injected into your system prompt under "pi-stack role table". A role maps to `"provider/id:thinking"` or a list of them (one seat per entry). Upstream default slugs (`claude-opus-5-5-xhigh`, `grok-4.7-xhigh-fast`) mean: the `judgment` and `code` roles from the table. If the table is absent, use the parent model for every role.
+The role table is `~/.pi/agent/pi-stack/models.json`, written by `/setup-pstack`. Its active contents are injected into your system prompt under "pi-stack role table". A role maps to `"provider/id:thinking"` or a list of them (one seat per entry). Upstream default slugs (`claude-opus-5-5-xhigh`, `grok-4.7-xhigh-fast`) are Cursor models: ignore them. A role with no line, including when the skill says to use its table defaults, runs on the parent model (omit `model`). A panel role with no line or one entry is a one-seat panel; say "single model, not an independent panel" in the result.
 
 ## Questions
 
@@ -88,7 +88,7 @@ The role table is `~/.pi/agent/pi-stack/models.json`, written by `/setup-pstack`
 | `/babysit` built-in | none in pi; the Babysit playbook is the only one. |
 | plan mode, `CreatePlan` | none in pi. Write the plan as a todo list plus a short artifact (`artifact` tool) when the user wants to read it. |
 
-Calibrated judgments: when a skill asks you to dedupe findings, score candidates against a rubric, or decide whether two reviewers raised the same issue, use `typesafe_evaluate` (Jev) when it is in your tool list. One state, one question per item per dimension. Report its probabilities as its judgment, not yours.
+Calibrated judgments: when a skill asks you to dedupe findings, score candidates against a rubric, or decide whether two reviewers raised the same issue, use `typesafe_evaluate` (Jev) when it is in your tool list; if it errors (for example TypeSafe is disabled), judge yourself and say the judgment is uncalibrated. One state, one question per item per dimension. Report its probabilities as its judgment, not yours.
 
 Guards: pi-warden runs beside you. A held command means the operator must approve; a "done without a check" steer means run the check. Do not route around either.
 
@@ -98,4 +98,4 @@ Parallel workers get their own worktree. Use the `wt` tool when the repo has it 
 
 ## Skills
 
-Invoke a skill as `/skill:<name>`. Read a bundled skill by path: `vendor/skills/<name>/SKILL.md` under the pi-stack package root, the directory that holds the poteto-mode path in your system prompt. Principle leaves are `vendor/skills/principle-<title>/SKILL.md`.
+Invoke a skill as `/skill:<name>`. Read a bundled skill by path: `vendor/skills/<name>/SKILL.md` under the pi-stack package root, the directory that holds the poteto-mode path in your system prompt or brief. Without either, find it with `find ~/.pi -path '*/pi-stack/vendor/skills' -type d`. A delegate cannot run `/skill:` commands; it reads the file instead. Principle leaves are `vendor/skills/principle-<title>/SKILL.md`.
