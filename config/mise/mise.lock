@@ -1785,14 +1785,15 @@ url = "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-darwin-aa
 url_api = "https://api.github.com/repos/tamasfe/taplo/releases/assets/257323110"
 
 [[tools.tmux]]
-version = "3.8-rc3"
+version = "3.8"
 backend = "http:tmux"
+specifiers = ["3.8"]
 
 [tools.tmux.options]
 strip_components = "1"
 
 [tools.tmux."platforms.macos-arm64"]
-url = "https://github.com/tmux/tmux/archive/3.8-rc3.tar.gz"
+url = "https://github.com/tmux/tmux/archive/3.8.tar.gz"
 
 [[tools.tokei]]
 version = "15.0.0"

@@ -359,7 +359,7 @@ rm -rf "$web.old"
 '''
 
 [tools.tmux]
-version = "3.8-rc3"
+version = "3.8"
 os = ["macos"]
 url = "https://github.com/tmux/tmux/archive/{{version}}.tar.gz"
 strip_components = 1
