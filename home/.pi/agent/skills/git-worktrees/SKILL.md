@@ -109,6 +109,8 @@ Use `wt ensure NAME --json` with no tell when the user only wants a worktree cre
 
 `wt prune NAME` refuses (exit 3/6, `.status == "refused"`) for: dirty worktrees, branches not integrated or empty, the main worktree, the worktree you are in, remote-only targets, and ambiguous tmux sessions. Report the refusal; don't work around it.
 
+Removal deletes the worktree's git-ignored agent docs in `.config/pi/` (see `pi-docs-dir`). On a terminal, `wt prune` asks whether to keep them (default no); yes copies each kind to `~/.local/share/pi/<kind>/<repo>/<worktree>/` first. With `--json` or no terminal it never asks, so before `wt prune NAME --json` on a worktree whose `.config/pi/` has files, ask the user whether to keep them and copy them there yourself if they say yes.
+
 On `.status == "partial"`, nothing retries with force. Run `wt repair NAME`, fix the reported cause, then rerun `wt prune NAME`. Destructive escapes need explicit user approval.
 
 A background auto-prune (`wt step prune`, daily per repo) removes merged worktrees, so an integrated worktree disappearing is normal.

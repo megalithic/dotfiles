@@ -93,6 +93,6 @@ When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-f
 
 - Agent-generated documents go in the directory that `pi-docs-dir <kind>` prints (it also creates it). Never commit them.
   - Kinds: `docs` (research notes, mental-model writeups, investigation reports), `audits` (audits, decision trails), `plans`, `handoffs`, `reviews`.
-  - In a linked worktree: `<worktree>/.config/pi/<kind>/`. `.config/` is git-ignored, so the documents stay with the worktree.
+  - In a linked worktree: `<worktree>/.config/pi/<kind>/`. `.config/` is git-ignored, so the documents stay with the worktree. `wt prune` asks whether to keep them (default no).
   - Anywhere else, including the main checkout: `~/.local/share/pi/<kind>/<repo>/`.
 - Use a descriptive filename, e.g. `helium-audit.md`, `widevine-research.md`. Companion artifacts (HTML, diagrams) sit next to the markdown with the same stem.
