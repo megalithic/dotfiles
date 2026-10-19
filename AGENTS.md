@@ -146,8 +146,8 @@ Nix/Home Manager remains active while mise migration proceeds. Treat `config/mis
 
 ## Research and audit artifacts
 
-- Ad-hoc agent-generated docs (audits, research, mental-model writeups, investigation reports) live in `~/.local/share/pi/docs/.dotfiles/`, NOT in the repo.
-- Pattern mirrors `~/.local/share/pi/handoffs/.dotfiles/` and plans. Filename should be descriptive (e.g., `helium-audit.md`); companion HTML/diagrams sit next to the markdown.
+- Agent-generated docs (audits, decision trails, research, investigation reports, plans, handoffs, reviews) go in `$(pi-docs-dir <kind>)`, NOT in the repo: `.worktrees/<name>/.config/pi/<kind>/` in a worktree (git-ignored), `~/.local/share/pi/<kind>/.dotfiles/` in the main checkout. See `bin/pi-docs-dir` for the kinds.
+- Filename should be descriptive (e.g., `helium-audit.md`); companion HTML/diagrams sit next to the markdown.
 - The in-repo `docs/` directory holds only curated, durable architecture docs and skill/agent/command resources that ship with the repo.
 - Promote an ad-hoc doc into `docs/` (or `lat.md/`) only when it becomes durable reference material.
 
