@@ -9,10 +9,10 @@ A phased workflow for complex tasks. State lives in files, not session memory. A
 
 ## File structure
 
-Docs live outside the repo:
+Docs live in the directory `pi-docs-dir plans` prints (and creates): `<worktree>/.config/pi/plans/` in a linked worktree, else `~/.local/share/pi/plans/<repo>/`. Both are outside git.
 
 ```text
-~/.local/share/pi/plans/$(basename $PWD)/
+$(pi-docs-dir plans)/
   {slug}_grill.md          # optional grill-me output; uppercase _GRILL.md is also valid
   {slug}_TASK.md           # research findings
   {slug}_PLAN.md           # implementation plan
@@ -94,7 +94,7 @@ For commands with an explicit argument that is a slug, use it directly.
 
 For commands without a slug:
 
-1. Scan `~/.local/share/pi/plans/$(basename $PWD)/` for `*_grill.md`, `*_GRILL.md`, `*_TASK.md`, `*_PLAN.md`, and `*.ticket-context.md`.
+1. Scan `$(pi-docs-dir plans)/` for `*_grill.md`, `*_GRILL.md`, `*_TASK.md`, `*_PLAN.md`, and `*.ticket-context.md`.
 2. Group files by slug.
 3. Sort groups by newest file mtime.
 4. If zero groups exist, report the relevant start command.

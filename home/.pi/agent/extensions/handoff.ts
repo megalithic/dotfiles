@@ -14,9 +14,9 @@
  * a draft in pi's editor. The user can open the draft in an external editor.
  */
 
-import { mkdirSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
-import { basename, join } from "node:path";
+import { execFileSync } from "node:child_process";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
 
 import type { Message } from "@earendil-works/pi-ai";
 import type {
@@ -208,29 +208,24 @@ export default function (pi: ExtensionAPI) {
 
 			const promptWithHistory = result.text + historySection;
 
-			const handoffDir = join(
-				homedir(),
-				".local",
-				"share",
-				"pi",
-				"handoffs",
-				basename(ctx.cwd),
-			);
-
 			const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-			const handoffFile = join(handoffDir, `${timestamp}.md`);
+			let saved: string;
+			let level: "info" | "warning" = "info";
 
 			try {
-				mkdirSync(handoffDir, { recursive: true });
+				// pi-docs-dir (~/.dotfiles/bin) creates the dir: the worktree's .config/pi/handoffs, else ~/.local/share/pi/handoffs/<repo>.
+				const handoffDir = execFileSync("pi-docs-dir", ["handoffs"], { cwd: ctx.cwd, encoding: "utf8" }).trim();
+				const handoffFile = join(handoffDir, `${timestamp}.md`);
 				writeFileSync(handoffFile, promptWithHistory, {
 					encoding: "utf-8",
 					flag: "wx",
 				});
+				saved = `Handoff saved to ${handoffFile}.`;
 			} catch (error) {
+				// Keep going: the generated prompt still reaches the new session's editor.
 				const message = error instanceof Error ? error.message : String(error);
-				ctx.ui.notify(`Handoff save failed: ${message}`, "error");
-
-				return;
+				saved = `Handoff not saved: ${message}.`;
+				level = "warning";
 			}
 
 			// Create new session with parent tracking. After replacement, only use
@@ -239,10 +234,7 @@ export default function (pi: ExtensionAPI) {
 				parentSession: currentSessionFile,
 				withSession: async (ctx) => {
 					ctx.ui.setEditorText(promptWithHistory);
-					ctx.ui.notify(
-						`Handoff saved to ${handoffFile}. Submit when ready.`,
-						"info",
-					);
+					ctx.ui.notify(`${saved} Submit when ready.`, level);
 				},
 			});
 

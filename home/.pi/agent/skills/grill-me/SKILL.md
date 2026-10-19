@@ -60,11 +60,10 @@ When the user gives a hedge or a placeholder ("I dunno, maybe X"):
 When grilling converges and the next action is possible, **before taking that action**, write a markdown log to:
 
 ```
-
-~/.local/share/pi/plans/$(basename $PWD)/<slug>_grill.md";
+$(pi-docs-dir plans)/<slug>_grill.md
 ```
 
-where `<slug>` is a kebab-case summary of the topic. Create the directory if it does not exist.
+where `<slug>` is a kebab-case summary of the topic. `pi-docs-dir plans` creates the directory and prints it: `<worktree>/.config/pi/plans` in a linked worktree, else `~/.local/share/pi/plans/<repo>`.
 
 Use this structure. **Delete any section that ended up empty** — do not leave "TBD" placeholders.
 

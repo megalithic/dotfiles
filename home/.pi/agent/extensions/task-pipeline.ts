@@ -10,9 +10,11 @@
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
-const DIR_HINT = "Dir = ~/.local/share/pi/plans/$(basename $PWD)/";
+const DIR_HINT = "Dir = $(pi-docs-dir plans)  (prints and creates it: <worktree>/.config/pi/plans in a linked worktree, else ~/.local/share/pi/plans/<repo>)";
+
 const SKILL_REF =
   "Load the task-pipeline skill for slug resolution rules and workflow details.";
+
 const GRILL_HINT =
   "Treat <Dir>/{slug}_GRILL.md and <Dir>/{slug}_grill.md as pre-research context. GRILL-only means next step is /task {slug}.";
 
@@ -35,6 +37,7 @@ export default function (pi: ExtensionAPI) {
             "If no slug can be resolved, tell the user to provide a description: /task <description>",
           ].join("\n"),
         );
+
         return;
       }
 
