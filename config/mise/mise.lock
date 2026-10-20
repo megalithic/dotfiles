@@ -1615,12 +1615,6 @@ backend = "pipx:s3cmd"
 specifiers = ["latest"]
 uv = { path = ".mise/locks/pipx-s3cmd/2.4.0", digest = "sha256:a84702eb55007607366e62981d7553be5ef147d51544f172d80581302879091b" }
 
-[[tools."pipx:yubikey-manager"]]
-version = "5.9.2"
-backend = "pipx:yubikey-manager"
-specifiers = ["latest"]
-uv = { path = ".mise/locks/pipx-yubikey-manager/5.9.2", digest = "sha256:fe89ce4b952957ce25b7d777d44e6ddb306d2e42ae24c012ef2e651f792b05df" }
-
 [[tools.pitchfork]]
 version = "2.29.0"
 backend = "packslip:github.com/jdx/pitchfork"

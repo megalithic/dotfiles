@@ -195,7 +195,6 @@ tmux = "http:tmux"
 "aqua:astral-sh/ruff" = "latest"
 "aqua:tidewave-ai/tidewave_app" = "latest"
 
-"pipx:yubikey-manager" = { version = "latest", python = "3.13" }
 "pipx:s3cmd" = "latest"
 "pipx:huggingface-hub" = "latest"
 
@@ -466,6 +465,7 @@ adopt = true
 "brew:vim" = "latest"
 "brew:wget" = "latest"
 "brew:wxwidgets" = "latest"
+"brew:ykman" = "latest" # not pipx: pyscard ships no py3.14 macOS wheel
 "brew:zip" = "latest"
 "brew:p7zip" = "latest"
 "brew:zsh" = "latest"

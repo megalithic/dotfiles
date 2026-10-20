@@ -60,7 +60,7 @@ fnox_config="$fnox_dir/shared.toml"
 # -- 1. prerequisites + target serial ----------------------------------------
 command -v age-plugin-yubikey &>/dev/null ||
   fail "age-plugin-yubikey not found. Run 'mise install' first."
-command -v ykman &>/dev/null || fail "ykman not found. Run 'mise install' first."
+command -v ykman &>/dev/null || fail "ykman not found. Run 'mise bootstrap packages apply brew:ykman' first."
 command -v fnox &>/dev/null || fail "fnox not found. Run 'mise install' first."
 command -v op &>/dev/null || fail "op not found (brew 1password-cli@beta)."
 
