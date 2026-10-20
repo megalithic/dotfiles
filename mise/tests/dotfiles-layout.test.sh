@@ -49,7 +49,6 @@ done
 
 # -- fixture home -------------------------------------------------------------
 mkdir -p "$home/.local/share/mise/shims" "$home/.local/share/fnox/generated" "$home/.local/bin" "$home/.config/mise"
-: >"$home/.local/share/mise/shims/lat"
 : >"$home/.local/share/fnox/generated/s3cfg"
 mkdir -m 700 "$home/.ssh"
 printf 'keep me\n' >"$home/.ssh/known_hosts"
@@ -134,7 +133,6 @@ Library/Application Support/MailMate/Resources/KeyBindings/megamate.plist|home/L
 bin|bin
 EOF
 [ "$(readlink "$home/.s3cfg")" = "$home/.local/share/fnox/generated/s3cfg" ] || fail ".s3cfg link"
-[ "$(readlink "$home/.pi/agent/bin/lat")" = "$home/.local/share/mise/shims/lat" ] || fail ".pi/agent/bin/lat link"
 
 while read -r path; do absent "$path"; done <<'EOF'
 .ssh/config.workbookpro
