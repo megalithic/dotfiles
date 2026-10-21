@@ -1,5 +1,6 @@
 {
-    "^R" = "refreshMailbox:";
+    // ALL_JUNK_DELETED = every mailbox in every account; refreshMailbox: drops read messages kept in Unread
+    "^R" = ( "synchronize:", "ALL_JUNK_DELETED", "refreshMailbox:" );
     "j" = "selectNextMessageRow:";
     "k" = "selectPreviousMessageRow:";
     "^j" = "selectNextMailboxRow:";
@@ -28,7 +29,7 @@
     "/" = "searchAllMessages:";
     "n" = "nextMessage:";
     "p" = "previousMessage:";
-    "e" = "archive:";
+    "e" = ( "setTag:", "\\Seen", "archive:", "refreshMailbox:" );
     "s" = "toggleFlag:";
     "!" = "moveToJunk:";
     "r" = "reply:";

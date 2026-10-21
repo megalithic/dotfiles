@@ -167,7 +167,8 @@ in
     # ,https://github.com/sheriferson/dotfiles/blob/main/MailMate/Resources/KeyBindings/sherif_mm_keys.plist
     "Library/Application Support/MailMate/Resources/KeyBindings/Mega.plist".text = ''
       {
-          "^R" = "refreshMailbox:";
+          // ALL_JUNK_DELETED = every mailbox in every account; refreshMailbox: drops read messages kept in Unread
+          "^R" = ( "synchronize:", "ALL_JUNK_DELETED", "refreshMailbox:" );
           "j" = "selectNextMessageRow:";
           "k" = "selectPreviousMessageRow:";
           "^j" = "selectNextMailboxRow:";
@@ -196,7 +197,7 @@ in
           "/"     = "searchAllMessages:";
           "n"     = "nextMessage:";
           "p"     = "previousMessage:";
-          "e"     = "archive:";
+          "e"     = ( "setTag:", "\\Seen", "archive:", "refreshMailbox:" );
           "s"     = "toggleFlag:";
           "!"     = "moveToJunk:";
           "r"     = "reply:";
