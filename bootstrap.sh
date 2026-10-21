@@ -8,7 +8,7 @@
 
 set -eu
 
-BOOTSTRAP_UPDATED="2026-07-20 16:35 EDT"
+BOOTSTRAP_UPDATED="2026-10-21 (pull watchdog, dangling-link cleanup)"
 
 DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-https://github.com/megalithic/dotfiles.git}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
@@ -158,12 +158,17 @@ remove_store_link() {
 # with EACCES in the store. Unlink store symlinks at managed targets (and one
 # level inside real dirs, for symlink-each entries) before applying.
 clean_nix_managed_targets() {
-  [ -d /nix/store ] || return 0
   sed -n '/^\[dotfiles\]/,/^\[/s/^"\(~\/[^"]*\)".*/\1/p' "$BOOTSTRAP_MISE_CONFIG" |
     while IFS= read -r target; do
       path="$HOME${target#\~}"
       remove_store_link "$path"
-      if [ -d "$path" ] && [ ! -L "$path" ]; then
+      # A dangling symlink at a managed target (e.g. ~/bin -> /nix/store/...
+      # after /nix is uninstalled) blocks apply; clear it so apply can relink.
+      if [ -L "$path" ] && [ ! -e "$path" ]; then
+        info "Removing dangling symlink at managed target: $path"
+        rm -f "$path"
+      fi
+      if [ -d /nix/store ] && [ -d "$path" ] && [ ! -L "$path" ]; then
         for entry in "$path"/* "$path"/.[!.]*; do
           remove_store_link "$entry"
         done
@@ -194,8 +199,40 @@ stash_dotfiles_changes() {
   git -C "$DOTFILES_DIR" stash push -u -m "bootstrap auto-stash $(date +%Y%m%d-%H%M%S)"
 }
 
+# The configured remote is ssh://..., which HANGS (not fails) when the ssh
+# agent (e.g. 1Password) is unavailable. Bound the attempt with a watchdog;
+# on timeout or failure, fall back to an HTTPS pull with scrubbed git config
+# (the user gitconfig rewrites https://github.com/ -> ssh://, which would
+# hang the same way). The interactive menu below remains as the last resort.
+DOTFILES_PULL_TIMEOUT="${DOTFILES_PULL_TIMEOUT:-45}"
+
+pull_configured_remote() {
+  git -C "$DOTFILES_DIR" pull --ff-only &
+  pull_pid=$!
+  (
+    sleep "$DOTFILES_PULL_TIMEOUT"
+    kill "$pull_pid" 2>/dev/null
+  ) &
+  watchdog_pid=$!
+  wait "$pull_pid" 2>/dev/null
+  pull_rc=$?
+  kill "$watchdog_pid" 2>/dev/null
+  wait "$watchdog_pid" 2>/dev/null
+  return "$pull_rc"
+}
+
+pull_dotfiles_https() {
+  GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 \
+    git -C "$DOTFILES_DIR" pull --ff-only "$DOTFILES_REPO_URL" "$(dotfiles_default_branch)"
+}
+
 pull_dotfiles() {
-  stash_dotfiles_changes && ensure_dotfiles_branch && git -C "$DOTFILES_DIR" pull --ff-only
+  stash_dotfiles_changes && ensure_dotfiles_branch || return 1
+  if pull_configured_remote; then
+    return 0
+  fi
+  warn "Configured-remote pull failed or timed out; trying HTTPS fallback."
+  pull_dotfiles_https
 }
 
 update_dotfiles_checkout() {
