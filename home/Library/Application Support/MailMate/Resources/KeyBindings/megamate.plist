@@ -1,6 +1,5 @@
 {
-    // ALL_JUNK_DELETED = every mailbox in every account; refreshMailbox: drops read messages kept in Unread
-    "^R" = ( "synchronize:", "ALL_JUNK_DELETED", "refreshMailbox:" );
+    "^R" = "refreshMailbox:";
     "j" = "selectNextMessageRow:";
     "k" = "selectPreviousMessageRow:";
     "^j" = "selectNextMailboxRow:";

@@ -634,6 +634,9 @@ MmMessagesWebViewWebKitMinimumFontSize = 14
 MmMessagesWebViewWebKitStandardFont = "Helvetica"
 MmMessagesOutlineOpenMessageOnDoubleClick = true
 MmMessagesOutlineShowUnreadMessagesInBold = true
+# App Shortcuts (@ Cmd, ~ Opt, $ Shift, ^ Ctrl). No key binding selector syncs all
+# sources, so bind the menu item; Root of Thread moves off its default ⌃⌘R.
+NSUserKeyEquivalents = { "All Sources" = "@^r", "Root of Thread" = "@~^r" }
 
 [bootstrap.macos.defaults."com.mitchellh.ghostty"]
 SUAutomaticallyUpdate = false
