@@ -334,7 +334,6 @@
         #   # Disable inline attachments (just show the icons)
         #   DisableInlineAttachmentViewing = true;
         # };
-        # MailMate settings moved to home/common/programs/mailmate/default.nix
 
         "com.apple.SoftwareUpdate" = {
           AutomaticCheckEnabled = true;
