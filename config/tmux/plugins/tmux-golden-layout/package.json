@@ -2,7 +2,7 @@
   "name": "tmux-golden-layout",
   "version": "0.1.0",
   "private": true,
-  "description": "Golden-ratio focused-pane resizing and declarative per-window layouts for tmux",
+  "description": "Golden-ratio focused-pane resizing for tmux 3.8+",
   "type": "module",
   "scripts": {
     "test": "bun test",

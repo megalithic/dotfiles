@@ -1,16 +1,15 @@
 /**
- * Size allocation: exact golden-ratio focus resizing, declarative layouts,
- * and drift-free reference scaling.
+ * Size allocation: exact golden-ratio focus resizing and drift-free
+ * reference scaling.
  *
- * Every allocation starts from exact values (1/phi, declared ratios, or an
- * immutable reference layout) and current outer dimensions — never from a
+ * Every allocation starts from exact values (1/phi or an immutable reference
+ * layout) and current outer dimensions — never from a
  * previously rounded result — so repeated cycles cannot accumulate drift.
  */
 
 import {
   type Axis,
   type LayoutNode,
-  type Split,
   assignCoords,
   containsPane,
   leafCount,
@@ -226,145 +225,14 @@ export function computeGolden(
   return root;
 }
 
-// ── Declarations ──
-
-export interface DeclSplit {
-  split: Axis;
-  /** optional exact ratios, same length as children; defaults to equal */
-  ratios?: number[];
-  children: DeclNode[];
-}
-
-export interface DeclPane {
-  /** tmux pane id, e.g. "%12" */
-  pane: string;
-}
-
-export type DeclNode = DeclSplit | DeclPane;
-
-export interface Declaration {
-  root: DeclNode;
-}
-
-export function declPanes(node: DeclNode): string[] {
-  if ("pane" in node) return [node.pane];
-  return node.children.flatMap(declPanes);
-}
-
-export function validateDeclaration(decl: unknown): string | null {
-  const walk = (node: unknown): string | null => {
-    if (!node || typeof node !== "object" || Array.isArray(node)) return "node must be an object";
-    if ("pane" in node) {
-      if (typeof node.pane !== "string" || !/^%\d+$/.test(node.pane)) {
-        return `invalid pane id: ${JSON.stringify(node.pane)}`;
-      }
-      return null;
-    }
-    if (!("split" in node) || (node.split !== "h" && node.split !== "v")) {
-      return `invalid split axis: ${JSON.stringify("split" in node ? node.split : undefined)}`;
-    }
-    if (!("children" in node) || !Array.isArray(node.children) || node.children.length < 1) {
-      return "split has no children";
-    }
-    if ("ratios" in node && node.ratios !== undefined) {
-      if (!Array.isArray(node.ratios)) return "ratios must be an array";
-      if (node.ratios.length !== node.children.length) return "ratios length != children length";
-      if (node.ratios.some((r) => typeof r !== "number" || !Number.isFinite(r) || !(r > 0))) {
-        return "ratios must be finite and positive";
-      }
-      const sum = node.ratios.reduce<number>((a, b) => a + b, 0);
-      if (Math.abs(sum - 1) > 0.01) return `ratios must sum to 1 (got ${sum})`;
-    }
-    for (const c of node.children) {
-      const err = walk(c);
-      if (err) return err;
-    }
-    return null;
-  };
-  if (!decl || typeof decl !== "object" || Array.isArray(decl) || !("root" in decl)) {
-    return "declaration must contain a root node";
-  }
-  const err = walk(decl.root);
-  if (err) return err;
-  const panes = declPanes(decl.root as DeclNode);
-  if (new Set(panes).size !== panes.length) return "duplicate pane in declaration";
-  return null;
-}
-
-function declToTopology(node: DeclNode): LayoutNode {
-  if ("pane" in node) {
-    return { type: "leaf", width: 0, height: 0, x: 0, y: 0, paneId: Number.parseInt(node.pane.slice(1), 10) };
-  }
-  return {
-    type: "split",
-    axis: node.split,
-    width: 0,
-    height: 0,
-    x: 0,
-    y: 0,
-    children: node.children.map(declToTopology),
-  };
-}
-
-function sizeDeclared(node: LayoutNode, decl: DeclNode, width: number, height: number, mins: Mins): boolean {
-  node.width = width;
-  node.height = height;
-  if (node.type === "leaf") return true;
-  const d = decl as DeclSplit;
-  const content = axisSize(node.axis, width, height) - (node.children.length - 1);
-  const alloc = distribute(
-    content,
-    node.children.map((c, i) => ({
-      weight: d.ratios ? d.ratios[i] : leafCount(c),
-      min: minAlong(c, node.axis, mins),
-    })),
-  );
-  if (!alloc) return false;
-  return node.children.every((c, i) => {
-    const cw = node.axis === "h" ? alloc[i] : width;
-    const ch = node.axis === "h" ? height : alloc[i];
-    return sizeDeclared(c, d.children[i], cw, ch, mins);
-  });
-}
-
-/**
- * Render a declaration to a sized layout tree at the given dimensions.
- * Ratios are reapplied from their exact declared values on every call.
- */
-export function renderDeclaration(
-  decl: Declaration,
-  width: number,
-  height: number,
-  mins: Mins = DEFAULT_MINS,
-): LayoutNode | null {
-  const root = declToTopology(decl.root);
-  if (!sizeDeclared(root, decl.root, width, height, mins)) return null;
-  assignCoords(root, 0, 0);
-  return root;
-}
-
-/** Build an even grid declaration (rows of columns) for a set of panes. */
-export function gridDeclaration(panes: string[]): Declaration {
-  if (panes.length === 1) return { root: { pane: panes[0] } };
-  if (panes.length === 2) {
-    return { root: { split: "v", children: [{ pane: panes[0] }, { pane: panes[1] }] } };
-  }
-  const cols = Math.ceil(Math.sqrt(panes.length));
-  const rows: DeclNode[] = [];
-  for (let i = 0; i < panes.length; i += cols) {
-    const rowPanes = panes.slice(i, i + cols).map((p): DeclNode => ({ pane: p }));
-    rows.push(rowPanes.length === 1 ? rowPanes[0] : { split: "h", children: rowPanes });
-  }
-  return { root: rows.length === 1 ? rows[0] : { split: "v", children: rows } };
-}
-
 // ── Reference scaling ──
 
 function sizeScaled(node: LayoutNode, ref: LayoutNode, width: number, height: number, mins: Mins): boolean {
   node.width = width;
   node.height = height;
-  if (node.type === "leaf") return true;
-  const r = ref as Split;
+  if (node.type === "leaf") return ref.type === "leaf";
+  if (ref.type !== "split" || ref.axis !== node.axis || ref.children.length !== node.children.length) return false;
+  const r = ref;
   const content = axisSize(node.axis, width, height) - (node.children.length - 1);
   const alloc = distribute(
     content,
@@ -382,18 +250,16 @@ function sizeScaled(node: LayoutNode, ref: LayoutNode, width: number, height: nu
 }
 
 /**
- * Scale an immutable reference layout to new outer dimensions, preserving
- * its proportions. The reference is never mutated, so repeated grow/shrink
- * cycles that return to the original size reproduce the original layout.
+ * Size `current` to its own outer dimensions with the proportions of an
+ * immutable reference layout. The reference is never mutated, so repeated
+ * grow/shrink cycles that return to the original size reproduce it exactly.
+ * Pane fields and floating panes come from `current`, never from the
+ * (possibly stale) reference. Returns null when the split structure differs
+ * or minimums cannot fit.
  */
-export function scaleReference(
-  ref: LayoutNode,
-  width: number,
-  height: number,
-  mins: Mins = DEFAULT_MINS,
-): LayoutNode | null {
-  const root = cloneTopology(ref);
-  if (!sizeScaled(root, ref, width, height, mins)) return null;
+export function scaleReference(ref: LayoutNode, current: LayoutNode, mins: Mins = DEFAULT_MINS): LayoutNode | null {
+  const root = cloneTopology(current);
+  if (!sizeScaled(root, ref, current.width, current.height, mins)) return null;
   assignCoords(root, 0, 0);
   return root;
 }

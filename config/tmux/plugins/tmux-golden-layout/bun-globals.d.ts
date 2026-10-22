@@ -2,7 +2,6 @@
 // without adding a bun-types dependency. `bun test`/`bun run` provide the
 // real implementations.
 declare const Bun: {
-  stdin: { stream(): ReadableStream<Uint8Array> };
   sleep(ms: number): Promise<void>;
 };
 

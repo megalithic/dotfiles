@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # tmux-golden-layout entrypoint (TPM-compatible).
 #
-# Registers indexed hooks (slot 188) for focus/layout/resize events and binds
-# the resume key. Safe to re-source: indexed set-hook slots and bind-key are
+# Requires tmux 3.8 (JSON layouts, #{hook} and #{hook_window}). Registers
+# indexed hooks (slot 188) for focus, layout, and unzoom events and binds the
+# resume key. Safe to re-source: indexed set-hook slots and bind-key are
 # replaced in place, never appended.
 #
 # Options (set before sourcing):
@@ -17,14 +18,15 @@ set -u
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GL="$CURRENT_DIR/bin/gl"
 HOOK_INDEX=188
+HOOKS="window-pane-changed window-layout-changed window-unzoomed"
+# Registered by pre-3.8 versions of this plugin; removed on every load.
+OLD_HOOKS="after-select-pane after-split-window after-resize-pane window-resized"
 BOUND_RESUME_KEY="$(tmux show-options -gqv @gl-bound-resume-key)"
 
 unregister() {
-  tmux set-hook -gu "after-select-pane[$HOOK_INDEX]" 2>/dev/null || true
-  tmux set-hook -gu "after-split-window[$HOOK_INDEX]" 2>/dev/null || true
-  tmux set-hook -gu "after-resize-pane[$HOOK_INDEX]" 2>/dev/null || true
-  tmux set-hook -gu "window-layout-changed[$HOOK_INDEX]" 2>/dev/null || true
-  tmux set-hook -gu "window-resized[$HOOK_INDEX]" 2>/dev/null || true
+  for h in $HOOKS $OLD_HOOKS; do
+    tmux set-hook -gu "${h}[$HOOK_INDEX]" 2>/dev/null || true
+  done
   if [ -n "$BOUND_RESUME_KEY" ]; then
     tmux unbind-key "$BOUND_RESUME_KEY" 2>/dev/null || true
   fi
@@ -59,15 +61,15 @@ if [ -n "$SOCKET" ]; then
   ENV_PREFIX="GL_TMUX_SOCKET='$SOCKET' $ENV_PREFIX"
 fi
 
-hook() {
-  tmux set-hook -g "$1[$HOOK_INDEX]" "run-shell -b \"$ENV_PREFIX '$GL' $2\""
-}
-
-hook "after-select-pane" "event focus '#{window_id}' '#{pane_id}' '#{window_layout}'"
-hook "after-split-window" "event topology '#{window_id}' '#{window_layout}'"
-hook "after-resize-pane" "event manual '#{window_id}' '#{window_layout}'"
-hook "window-layout-changed" "event layout '#{window_id}' '#{window_layout}'"
-hook "window-resized" "event resized '#{window_id}' '#{window_layout}'"
+for h in $OLD_HOOKS; do
+  tmux set-hook -gu "${h}[$HOOK_INDEX]" 2>/dev/null || true
+done
+# window-pane-changed: any focus change (keys, mouse, last-pane, kill, split).
+# window-layout-changed: splits, kills, outer resizes, manual resizes, and
+# other tools' select-layout. window-unzoomed: settle after a zoom.
+for h in $HOOKS; do
+  tmux set-hook -g "${h}[$HOOK_INDEX]" "run-shell -b \"$ENV_PREFIX '$GL' event '#{hook}' '#{hook_window}'\""
+done
 
 RESUME_KEY="$(tmux show-options -gqv @gl-resume-key)"
 RESUME_KEY="${RESUME_KEY:-=}"

@@ -1,129 +1,84 @@
 # tmux-golden-layout
 
-Golden-ratio focused-pane resizing and a declarative per-window layout API
-for tmux. Local, dotfiles-owned plugin with a TPM-compatible structure
-(`golden-layout.tmux` entrypoint), implemented in TypeScript and run with Bun.
+Golden-ratio resizing of the focused pane for tmux 3.8 and later. Local,
+dotfiles-owned plugin with a TPM-compatible structure (`golden-layout.tmux`
+entrypoint), written in TypeScript and run with Bun.
 
 ## Behavior
 
-- Always on. In every ordinary window the focused pane is resized to exactly
-  `1/phi` of the window width and height wherever the topology has siblings
-  along that axis. It grows and shrinks to the target.
-- Unfocused branches divide the remaining space by leaf count; nested
-  unfocused groups are equalized.
-- Works for horizontal, vertical, repeated-axis, and arbitrarily nested
-  layouts: the plugin parses `#{window_layout}`, rebuilds the full tree
-  (dimensions, coordinates, separators, checksum), and applies it with a
-  single `select-layout`.
-- Every computation starts from exact values (1/phi, declared ratios, or an
-  immutable manual reference) and the current outer dimensions, so outer
-  window resizes and repeated focus changes never accumulate rounding drift.
-- A manual pane resize (or any foreign layout change, e.g. another plugin's
-  `select-layout`) pauses automation for that window only and shows
+- Always on. In every window the focused pane gets exactly `1/phi` (61.8%)
+  of the window width and height wherever it has neighbours along that axis.
+- The other branches split the remaining space by pane count. Nested
+  unfocused groups are split evenly.
+- Works for horizontal, vertical, repeated-axis, and nested layouts. The
+  plugin parses `#{window_layout}`, rebuilds the whole tree, and applies it
+  with a single `select-layout`.
+- Floating panes are left exactly where they are; tiled panes keep resizing
+  around them. Focusing a floating pane changes nothing.
+- Every computation starts from exact values (1/phi or an immutable manual
+  reference) and the current window size, so resizes and repeated focus
+  changes never accumulate rounding drift.
+- A manual pane resize, or another tool's `select-layout`, pauses automation
+  for that window and shows
   `Auto resize paused for this window; prefix+= to resume`. While paused,
-  outer resizes still scale the captured manual reference proportionally.
-- `prefix + =` resumes and immediately reapplies the active declaration, or
-  golden resizing if none exists.
-- Zoomed windows defer all changes; they apply after unzoom. Tmux 3.7 cannot
-  restore custom layouts containing floating panes, so the plugin also defers
-  while a floating pane exists and reapplies pending work after it closes.
-- Minimum pane sizes derive from topology, pane count, and separators. When
-  the golden target cannot fit, the focused pane is clamped to the largest
-  legal size; when even minimums cannot fit, the current layout is kept.
-- State is keyed by stable window ids via window-scoped `@gl_*` user options
-  (they die with the window). Multi-client behavior follows tmux's native
-  shared-window semantics under `window-size latest`.
+  window resizes scale the manual layout proportionally.
+- `prefix + =` resumes and reapplies golden resizing immediately.
+- Zoomed windows are left alone and settle after unzoom.
+- Minimum pane sizes come from the topology and separators. When the golden
+  target cannot fit, the focused pane gets the largest legal size; when even
+  the minimums cannot fit, the current layout stays.
 
 ## Options (set before the plugin loads)
 
-| option           | default | meaning                                  |
-| ---------------- | ------- | ---------------------------------------- |
-| `@gl-enabled`    | `on`    | `off` unregisters hooks/key on next load |
-| `@gl-min-width`  | `4`     | minimum leaf pane width (cells)          |
-| `@gl-min-height` | `2`     | minimum leaf pane height (cells)         |
-| `@gl-resume-key` | `=`     | prefix key that resumes a paused window  |
-| `@gl-debug`      | `off`   | log to `$TMPDIR/tmux-gl-<uid>/<sock>/log`|
-
-## Declarative API
-
-`bin/gl` is the transport for Nvim, Pi, and other tools. Callers never set
-tmux options or marks themselves. All ids are stable tmux ids (`@5`, `%12`).
-
-```sh
-gl declare <window-id> '<json>'   # set/replace a declaration (also: '-' = stdin)
-gl grid <window-id> [pane-id...]  # even 1/2-row/grid declaration convenience
-gl clear <window-id>              # remove declaration, back to golden
-gl apply <window-id>              # reapply declaration/golden now
-gl pause <window-id>              # pause automation (silent)
-gl resume <window-id>             # resume + reapply
-gl companion <companion-window> <source-window> <owner-pane>
-gl status <window-id>             # JSON debug state
-```
-
-Declaration JSON is a recursive topology with exact ratios and ordered pane
-ids. The declared pane set must equal the window's pane set; panes are
-physically reordered (swap-pane) to match declared order when needed.
-
-```json
-{
-  "root": {
-    "split": "h",
-    "ratios": [0.65, 0.35],
-    "children": [{ "pane": "%1" }, { "pane": "%2" }]
-  }
-}
-```
-
-Known declarations this supports: Nvim/Pi 65/35; standalone Pi 50/50 with a
-nested subagent grid on the right; full-window subagent grids in companion
-windows (`gl grid`); Hunk in its own linked companion window (`gl companion`
-stores the source-window/owner-pane association).
-
-A declaration suppresses golden focus resizing for that window while it
-exists; outer resizes still reapply the declared ratios from their exact
-values. A manual pause suppresses both until `prefix + =`.
+| option           | default | meaning                                   |
+| ---------------- | ------- | ----------------------------------------- |
+| `@gl-enabled`    | `on`    | `off` unregisters hooks/key on next load  |
+| `@gl-min-width`  | `4`     | minimum pane width (cells)                |
+| `@gl-min-height` | `2`     | minimum pane height (cells)               |
+| `@gl-resume-key` | `=`     | prefix key that resumes a paused window   |
+| `@gl-debug`      | `off`   | log to `$TMPDIR/tmux-gl-<uid>/<sock>/log` |
 
 ## Loading
 
-Loaded from `plugins.tmux.conf` with a direct
-`run-shell .../golden-layout.tmux` rather than through TPM: TPM's installer
-would try to clone it, `prefix+U` would `git pull` inside the dotfiles
-checkout, and `prefix+M-u` would delete anything under the plugin path not in
-its list. The entrypoint is idempotent (indexed hook slot 188, tracked
-`bind-key` replacement) so config reloads and resume-key changes are safe.
+`plugins.tmux.conf` loads the entrypoint with `run-shell` instead of TPM.
+TPM's installer would try to clone it, `prefix+U` would `git pull` inside the
+dotfiles checkout, and `prefix+M-u` would delete anything under the plugin
+path not in its list. Re-sourcing is safe: hooks use indexed slot 188 and the
+resume key is replaced in place.
 
-## Engine notes
+## How it works
 
-- Hooks: `after-select-pane`, `after-split-window`, `after-resize-pane`
-  (session table) and `window-layout-changed`, `window-resized` (window
-  table), all at index 188, all `run-shell -b`.
-- Loop prevention: every applied layout gets a short-lived, layout-keyed
-  window option (`@gl_history_<hash>`). Separate options prevent concurrent
-  applies from overwriting each other's echo guards. Older entries count as
-  echoes only when the pane set still matches `@gl_last_applied`.
-- Classification of `window-layout-changed`: topology change -> recompute;
-  root dims changed -> outer resize -> recompute/scale; same panes and dims
-  with different geometry -> user change -> pause.
-- Races: hooks pass the originating layout (and pane for focus events), so a
-  delayed process cannot reinterpret newer window state. A crash-recoverable
-  per-window kernel lock serializes hook and API state transitions. macOS
-  `/usr/bin/lockf` acquires it through an inherited descriptor; the parent
-  keeps ownership until callback completion or process exit. Acquisition
-  times out after 15 seconds without evicting a live owner. Lock files remain
-  in place to preserve inode identity. Before applying, each event
-  re-fetches state and aborts if layout, dimensions, or the active pane changed.
-  A post-apply check makes one settling pass when focus or dimensions changed
-  between verification and apply. Tmux itself is addressed only by stable
-  `@id`/`%id`.
-- `tmux select-layout` maps layout leaves to panes by window order, not by the
-  pane ids embedded in the string; declarations therefore reorder panes first
-  and golden layouts always preserve the parsed leaf order.
+- Hooks (slot 188, all `run-shell -b gl event '#{hook}' '#{hook_window}'`):
+  - `window-pane-changed`: any focus change, including mouse, `last-pane`,
+    split, and kill.
+  - `window-layout-changed`: splits, kills, window resizes, manual resizes,
+    and other tools' layouts.
+  - `window-unzoomed`: settle after a zoom.
+- Layouts use the tmux 3.8 JSON format. `select-layout` also applies the
+  active pane, last-pane order, and floating-pane stacking from the string,
+  so the plugin always writes these fields back as read from the current
+  layout.
+- Each event reads one snapshot of the window. Changes are committed with
+  one tmux command list: store the expected state in `@gl_expect`, then
+  `if-shell -F` compares it with the live window and only then runs
+  `select-layout`. tmux runs the check and the apply back to back, so work
+  computed from a stale snapshot is dropped and the newer event's hook
+  settles the window instead. No lock files or timers.
+- Window options hold the per-window state and vanish with the window:
+  `@gl_applied` (last layout applied or accepted), `@gl_paused`, and
+  `@gl_ref` (manual layout captured at pause).
+- `window-layout-changed` compares the live layout with `@gl_applied`:
+  - different pane set or window size: resettle;
+  - same tiled geometry: the plugin's own change, ignored;
+  - panes only swapped places: resettle;
+  - anything else: a manual change, so pause (or refine the paused
+    reference).
 
 ## Tests
 
 ```sh
 bun test                  # all tests under tests/
-bun run test:unit         # parsing, checksum, allocation, scaling
+bun run test:unit         # parsing, allocation, scaling
 bun run test:integration  # isolated tmux server on a private socket
 ```
 
