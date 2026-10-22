@@ -724,7 +724,7 @@ stderr_path = "~/.cache/aeroplayd-stderr.log"
 
 # kanata daemon (dev.mise.org.kanata.daemon) and kanata-bar agents are
 # written and loaded by mise/scripts/setup-kanata (post-tools hook), because
-# bootstrap.sh always passes `--skip launchd`. This entry stays as the
+# bootstrap.sh always passes `--skip macos-launchd-agents`. This entry stays as the
 # declarative owner for whenever `mise bootstrap launchd` runs manually —
 # it generates the same dev.mise.-prefixed label kanata-setup writes.
 # NOTE: brew services CANNOT own the kanata daemon: the formula service is
@@ -778,7 +778,7 @@ run = """
 # ]
 
 [bootstrap.user]
-login_shell = "/opt/homebrew/bin/zsh"
+login_shell = "/opt/homebrew/bin/fish"
 
 [tasks.install-homebrew]
 description = "Install homebrew onto the system."

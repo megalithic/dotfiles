@@ -123,8 +123,8 @@ ensure_mise_standalone() {
 
 # nix-homebrew pins Homebrew taps as symlinks into /nix/store. After nix is
 # uninstalled (or while it's read-only) those links break `brew update` and
-# `brew tap` with 'Permission denied'. Unlink them; brew works API-based
-# without any taps and re-clones real ones on demand.
+# `brew tap` with 'Permission denied'. Unlink them; the pre-packages hook
+# (`mise run brew`) re-taps the ones the Brewfile declares.
 repair_nix_pinned_taps() {
   brew_repo=$(brew --repository 2>/dev/null) || return 0
   [ -n "$brew_repo" ] || return 0
@@ -309,7 +309,7 @@ MISE_DOTFILES_FLAGS=""
 # skip them: auto_install is off, so nothing else installs tools on first use.
 # Tasks remain enabled for post-tool bootstrap work. Secrets are resolved
 # directly by fnox; bootstrap never renders or sources secret files.
-MISE_BOOTSTRAP_FLAGS="--skip launchd --skip user"
+MISE_BOOTSTRAP_FLAGS="--skip macos-launchd-agents --skip user"
 if [ "$FORCE" = 1 ]; then
   MISE_DOTFILES_FLAGS="$MISE_DOTFILES_FLAGS --force"
   MISE_BOOTSTRAP_FLAGS="$MISE_BOOTSTRAP_FLAGS --force-dotfiles"
