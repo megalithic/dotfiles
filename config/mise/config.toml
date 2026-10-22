@@ -796,7 +796,6 @@ depends = ["install-homebrew"]
 run = """
 set -eu
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
-brew trust --tap FelixKratz/formulae leandrocp/lumis nikitabobko/homebrew-tap
 brew bundle install --file "$HOME/.dotfiles/Brewfile" --upgrade
 """
 
