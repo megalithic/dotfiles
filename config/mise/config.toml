@@ -838,6 +838,8 @@ description = "Apply and upgrade declared system packages"
 run = '''
 set -eu
 export MISE_ENV="${MISE_ENV:-$(hostname -s)}"
+# `packages apply` skips the pre-packages hook, so run the Brewfile here too.
+mise run brew
 mise bootstrap packages apply --yes
 mise bootstrap packages upgrade --yes
 '''
