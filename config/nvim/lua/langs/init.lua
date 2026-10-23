@@ -188,7 +188,7 @@ local function discover_langs()
     local langs_dir = rtp .. "/lua/langs"
     if vim.fn.isdirectory(langs_dir) == 1 then
       for name, ftype in vim.fs.dir(langs_dir) do
-        if ftype == "file" and name:match("%.lua$") then
+        if (ftype == "file" or ftype == "link") and name:match("%.lua$") then
           local lang_name = name:gsub("%.lua$", "")
           -- Skip init.lua (this file) and files starting with _
           if lang_name ~= "init" and not lang_name:match("^_") and not seen[lang_name] then
