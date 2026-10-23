@@ -1,7 +1,7 @@
 ---
 name: git-worktrees
 description: >-
-  All Git worktree work through our custom `wt` (~/.dotfiles/bin/wt, v2): create, open, list, repair, prune, and hand work off to a new Pi agent in a fresh worktree. Use when the user mentions a worktree, `wt`, branching work into a new checkout, or says things like "tell the agent in a new worktree X to take over this work" (optionally "in a window").
+  All Git worktree work through our custom `wt` (~/.dotfiles/bin/wt, v2): create, open, list, repair, prune, and hand work off to a Pi agent in a new or existing worktree. Use when the user mentions a worktree, `wt`, branching work into a new checkout, or says things like "tell the agent in a new worktree X to take over this work" (optionally "in a window").
 ---
 
 # Worktrees
@@ -58,11 +58,32 @@ git rev-parse --verify --quiet "refs/heads/$NAME" >/dev/null ||
 - Default branch: always `git fetch origin "$default"` first, then pass `--base "origin/$default"`. Local `main` can be stale and `wt` never fetches.
 - Current branch: pass `--base @`. If `git status --porcelain` is non-empty, warn that uncommitted changes stay behind.
 
-## Hand work to a new agent ("tell the agent in a new worktree X ...")
+## Hand work to an agent in a new or existing worktree ("tell the agent in a new worktree X ...")
 
-1. Pick the base (section above).
-2. Write the handoff brief before creating anything. It must stand alone: goal, context and decisions from this conversation, relevant files, what's done, next steps, how to verify. Add the reply target `pi:$(hostname -s):$PI_SESSION_ID` so the new agent can report back.
-3. Create the worktree and start Pi:
+1. Resolve the target: `path="$(wt path NAME)"`. Exit 3 (`target_not_found`) means no worktree exists yet: use 3a. Otherwise use 3b. If the user names the worktree loosely, match it against the `wt list --json` items that have a non-null `.worktree.path`, and ask when more than one fits.
+2. Write the handoff brief before creating or starting anything. Every brief, for a new or existing worktree, must stand alone and always include:
+   - Explicit instructions: what the agent should do, as a direct task, not just background.
+   - Goal, context and decisions from this conversation, relevant files, what's done, next steps, how to verify.
+   - A closing line: "No communication back to the calling agent is needed; work with the user directly." Only when the user asks for updates or a report, replace it with that request and the reply target `pi:$(hostname -s):$PI_SESSION_ID`.
+3. Get a live agent in the worktree.
+
+   Each bash call is a fresh shell, so define these helpers in every call that uses them. `find_agents PATH` lists live Pi agents whose cwd is exactly `PATH`. It skips stale manifests (no heartbeat for 60s; Pi beats every 10s), headless `pi -p` runs (no tmux pane), and you. `agent_pane PATH` prints `<pane_id> <command>` for the `agent` window of the ftm session tagged with that worktree.
+
+   ```bash
+   find_agents() {
+     jq -s -c --arg cwd "$1" --arg self "${PI_SESSION_ID:-}" --argjson now "$(date +%s)" '
+       [.[] | select(.cwd == $cwd and .pane != null and .sessionId != null and .sessionId != $self
+                     and ($now - (.heartbeatAt | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601)) < 60)
+        | {sessionId, session, window, pane, state, sessionName}]' \
+       "${PI_STATE_DIR:-$HOME/.local/state/pi}"/manifests/*.info 2>/dev/null
+   }
+   agent_pane() {
+     tmux list-panes -a -F '#{@ftm_worktree}|#{window_name}|#{pane_id} #{pane_current_command}' |
+       awk -F'|' -v p="$1" '$1 == p && $2 == "agent" { print $3; exit }'
+   }
+   ```
+
+   **3a. New worktree.** Pick the base (section above), then create the worktree and start Pi.
 
    In a window (user said "in a window"):
 
@@ -80,28 +101,55 @@ git rev-parse --verify --quiet "refs/heads/$NAME" >/dev/null ||
    out="$(wt ensure NAME --base BASE --json)"; echo "$out"
    path="$(jq -r .worktree.path <<<"$out")"
    id="$(jq -r .worktree.id <<<"$out")"
-   pane=  # match on cwd only
+   pane="$(agent_pane "$path" | cut -d' ' -f1)"
    ```
 
-   Stop and report if `.status != "ok"`.
+   Stop and report if `.status != "ok"`. Then wait for registration (step 4).
 
-4. Wait for the new Pi to register, then build its tell id:
+   **3b. Existing worktree.** Don't run `wt` first; look for a live agent:
+
+   ```bash
+   find_agents "$path"; agent_pane "$path"
+   ```
+
+   - One agent: use its `sessionId` and skip step 4.
+   - Several: use the one whose `.pane` matches the `agent_pane` id. If none matches, ask with `ask_user_question`, one option per agent showing `session:window`, `state`, and `sessionName`. Don't guess.
+   - None: start Pi in the worktree's `agent` window, then wait for registration (step 4). `pi -c` resumes that directory's latest session, so the agent keeps its earlier context.
+
+     ```bash
+     read -r pane cmd <<<"$(agent_pane "$path")"
+     if [ -z "$pane" ]; then
+       out="$(wt ensure NAME --json)"; echo "$out"
+       read -r pane cmd <<<"$(agent_pane "$path")"
+     else
+       case "$cmd" in
+         fish|zsh|bash|sh) tmux send-keys -t "$pane" '"$HOME/.local/bin/pi" -c' Enter ;;
+         *) echo "agent pane runs $cmd, not a shell" ;;
+       esac
+     fi
+     ```
+
+     With no `agent` window, `wt ensure` rebuilds the session (rerunning setup) and starts `pi -c` itself; stop and report if `.status != "ok"`. If the pane runs anything other than a shell, stop and report it. Never type into it.
+
+4. Wait for a newly started Pi to register, then build its tell id:
 
    ```bash
    for _ in $(seq 60); do
-     sid="$(jq -rs --arg cwd "$path" --arg pane "$pane" \
-       '[.[] | select(.cwd == $cwd and ($pane == "" or .pane == $pane))][0].sessionId // empty' \
-       "${PI_STATE_DIR:-$HOME/.local/state/pi}"/manifests/*.info 2>/dev/null)"
+     sid="$(find_agents "$path" | jq -r --arg pane "$pane" \
+       '[.[] | select($pane == "" or .pane == $pane)][0].sessionId // empty')"
      [ -n "$sid" ] && break; sleep 1
    done
    echo "pi:$(hostname -s):$sid"
    ```
 
-   On timeout, run `list_pi_sessions` and match the worktree path (and pane). Don't guess.
+   On timeout, run `list_pi_sessions` and match the worktree path and pane. Ignore entries marked `busy/unreachable`; they are stale. Don't guess.
 
-5. Send the brief with `tell_pi` (target = that exact id, message = brief).
-6. Switch the user over: `tmux select-window -t "$win"` (window) or `ftm "$id"` (session).
-7. Report the worktree path, branch, base, tell id, and the services state from `.tmux`.
+5. Send the brief with `tell_pi` (target = `pi:$(hostname -s):<sessionId>`, message = brief). Keep the default `follow_up` mode so a busy agent gets the brief after its current turn. Use `steer` only when the user wants to interrupt it.
+6. Switch the user over:
+   - 3a window: `tmux select-window -t "$win"`.
+   - 3a session: `ftm "$id"`.
+   - 3b: `tmux switch-client -t "$session" \; select-window -t "$pane" \; select-pane -t "$pane"`, using the agent's `.session` and `.pane`.
+7. Report the worktree path, branch, base (new worktrees only), tell id, whether the agent was found or started, and the services state from `.tmux` when `wt` ran.
 
 Use `wt ensure NAME --json` with no tell when the user only wants a worktree created. Plain `wt NAME` and `-t w` without `--json` are for when the user asks to open it themselves.
 
