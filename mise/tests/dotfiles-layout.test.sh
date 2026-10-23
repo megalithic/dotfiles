@@ -108,7 +108,6 @@ while IFS='|' read -r target source; do link_to "$target" "$source"; done <<'EOF
 .pi/agent/skills/bro/SKILL.md|home/.pi/agent/skills/bro/SKILL.md
 .pi/agent/prompts/plan.md|home/.pi/agent/prompts/plan.md
 .pi/agent/agents/scout.md|home/.pi/agent/agents/scout.md
-Library/Application Support/espanso/match/base.yml|home/Library/Application Support/espanso/match/base.yml
 Library/Application Support/MailMate/Resources/KeyBindings/megamate.plist|home/Library/Application Support/MailMate/Resources/KeyBindings/megamate.plist
 .config/starship.toml|config/starship.toml
 .config/1Password/ssh/agent.toml|config/1Password/ssh/agent.toml
@@ -131,6 +130,7 @@ Library/Application Support/MailMate/Resources/KeyBindings/megamate.plist|home/L
 .local/bin/pi|home/.local/bin/pi
 .local/bin/work-tickets|home/.local/bin/work-tickets
 bin|bin
+.config/espanso|config/espanso
 EOF
 [ "$(readlink "$home/.s3cfg")" = "$home/.local/share/fnox/generated/s3cfg" ] || fail ".s3cfg link"
 
@@ -165,7 +165,7 @@ EOF
 # config/superfile and config/zsh/.zcompdump are untracked in the real repo;
 # the fixture index may include them, so no assertion either way.
 
-for dir in .config .config/fish .config/mise .config/nvim .config/git .config/1Password/ssh .ssh .pi/agent .pi/agent/extensions .pi/agent/extensions/observational-memory .pi/agent/skills/bro "Library/Application Support/espanso" "Library/Application Support/espanso/match" "Library/Application Support/MailMate/Resources/KeyBindings" .claude .local/bin; do
+for dir in .config .config/fish .config/mise .config/nvim .config/git .config/1Password/ssh .ssh .pi/agent .pi/agent/extensions .pi/agent/extensions/observational-memory .pi/agent/skills/bro "Library/Application Support/MailMate/Resources/KeyBindings" .claude .local/bin; do
   real_dir "$dir"
 done
 [ "$(/usr/bin/stat -f %Lp "$home/.ssh")" = 700 ] || fail "~/.ssh mode changed to $(/usr/bin/stat -f %Lp "$home/.ssh")"

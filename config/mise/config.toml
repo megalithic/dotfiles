@@ -133,6 +133,8 @@ up = "cd $HOME/.dotfiles && mise run up"
   "git/disabled",
   # lockfile sidecars: mise resolves them beside the symlinked lockfile's target
   "mise/.mise",
+  # linked as one folder below
+  "/espanso",
 ] }
 
 "~" = { source = "~/.dotfiles/home", mode = "symlink-each", manifest = "git", exclude = [
@@ -170,6 +172,9 @@ up = "cd $HOME/.dotfiles && mise run up"
 # megabookpro resolves through its generation to the same source; symlink-each
 # would follow it and overwrite source files with self-referential links.
 "~/bin" = "~/.dotfiles/bin"
+# One folder link so Espanso's file watcher sees edits and auto-reloads: macOS
+# reports no change in a folder of per-file links when a link's target changes.
+"~/.config/espanso" = "~/.dotfiles/config/espanso"
 # Generated outside the repo by `mise run update:fnox` (render-s3cfg); the
 # secret-bearing file never enters Git.
 "~/.s3cfg" = "~/.local/share/fnox/generated/s3cfg"
@@ -480,6 +485,7 @@ adopt = true
 "brew-cask:colorsnapper" = "latest"
 "brew-cask:contexts" = "latest"
 "brew-cask:discord" = "latest"
+"brew-cask:espanso" = "latest" # open once by hand (Gatekeeper); its wizard runs `espanso service register`
 "brew-cask:font-atkinson-hyperlegible" = "latest"
 "brew-cask:font-fantasque-sans-mono-nerd-font" = "latest"
 "brew-cask:font-fira-code" = "latest"
@@ -751,9 +757,7 @@ run = """
 # Example usages of post-packages to steup MacOS LaunchAgents "dynamically"
 # - https://github.com/nicknisi/dotfiles/blob/main/config/mise/config.toml#L194C1-L231
 run = [
-  "[ -d /Applications/Espanso.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask espanso",
   "[ -d /Applications/zoom.us.app ] || HOMEBREW_NO_ASK=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 brew install --cask zoom",
-  "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/espanso-service",
   "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-pam",
   "mise run setup:helium",
 ]

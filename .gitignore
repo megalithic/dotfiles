@@ -11,6 +11,8 @@ config/fish/fish_variables
 config/hammerspoon/Spoons/EmmyLua.spoon/annotations/timestamps.json
 config/mise/config.local.toml
 config/mise/conf.d/
+# `espanso package install` writes here through the ~/.config/espanso folder link
+config/espanso/match/packages/
 
 .pi
 !home/.pi/
