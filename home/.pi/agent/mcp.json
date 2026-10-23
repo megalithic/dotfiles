@@ -51,6 +51,9 @@
       "type": "stdio",
       "command": "sessions",
       "args": ["--mcp"]
+    },
+    "executor": {
+      "url": "https://mcp.executor.sh/mcp"
     }
   }
 }
