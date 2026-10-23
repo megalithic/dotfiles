@@ -1,0 +1,26 @@
+# Deploy in UGOS Docker > Project, then open the login URL in container logs.
+# No auth key: browser approval enrolls wolfhall and the volume preserves its identity.
+services:
+  tailscale:
+    image: tailscale/tailscale:v1.104.1
+    container_name: tailscale
+    network_mode: host
+    environment:
+      TS_HOSTNAME: wolfhall
+      TS_AUTH_ONCE: "true"
+      TS_BOOT_TIMEOUT: "10m"
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "false"
+      TS_EXTRA_ARGS: --accept-dns=false
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    restart: unless-stopped
+
+# Contains device credentials; keep this volume when recreating the project.
+volumes:
+  tailscale-state:
