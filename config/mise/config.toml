@@ -216,9 +216,6 @@ tmux = "http:tmux"
 "cargo:emmylua_check" = "latest"
 "cargo:emmylua_ls" = "latest"
 "cargo:plannotator-tui" = "latest"
-# "cargo:forgejo-cli" = "latest"
-# "cargo:jj-vine" = "latest"
-# "cargo:tree-sitter-cli" = "latest"
 
 "go:golang.org/x/tools/gopls" = "latest"
 
@@ -331,9 +328,6 @@ bin_path = "MicCheck.app/Contents/MacOS"
 version = "0.4.1"
 os = ["macos"]
 asset_pattern = "notiwatchd-{{ version }}-macos26-arm64.zip"
-# TCC keys bare executables by path: copy to a stable path so grants survive
-# version bumps. Runs only on install; the agent keeps the old binary until
-# restarted.
 postinstall = '''
 set -eu
 mkdir -p "$HOME/.local/bin"
@@ -345,8 +339,6 @@ mv -f "$HOME/.local/bin/.notiwatchd.tmp" "$HOME/.local/bin/notiwatchd"
 version = "0.4.1"
 os = ["macos"]
 asset_pattern = "avwatchd-{{ version }}-macos26-arm64.zip"
-# Same stable-path copy as notiwatchd. avwatchweb is swapped in by rename so
-# Helium never loads a half-copied extension.
 postinstall = '''
 set -eu
 bin="$HOME/.local/bin" web="$HOME/.local/share/avwatchd/avwatchweb"
@@ -378,35 +370,12 @@ make install
 ./bin/tmux -V
 '''
 
-# postinstall chain: mise/scripts/install-app mounts/copies the DMG, then setup-helium
-# re-bakes the Chromium prodversion into the External Extensions update URLs
-# (mise equivalent of the nix module's eval-time readDir; goes stale on
-# Chromium bumps otherwise) and reapplies defaults/dictionary.
-# [tools."github:tidewave-ai/tidewave_app"]
-# version = "latest"
-# os = ["macos"]
-# asset_pattern = "tidewave-app-aarch64.dmg"
-# postinstall = "$DOTFILES_DIR/mise/scripts/install-app"
-
 [tools."github:megalithic/helium-macos-releases"]
 version = "latest"
 os = ["macos"]
-# Gotchas learned during the megabookpro cutover (2026-08):
-# - If this tool is in MISE_DISABLE_TOOLS anywhere in the environment (old
-#   shells, tmux server env), mise drops ALL tool options — asset_pattern and
-#   postinstall vanish, autodetection runs, and .dmg assets are hard-excluded,
-#   yielding "No matching asset found for platform macos-arm64" with the DMG
-#   plainly listed. Check `mise tool <name>` shows Tool Options before blaming
-#   the pattern; purge stale env with `tmux set-environment -gu MISE_DISABLE_TOOLS`.
-# - mise 2026.8.5's github backend 404'd by prepending `v` to the release tag;
-#   fixed by `mise self-update` (bootstrap.sh keeps the binary current).
-# asset_pattern supports globs and {{version}} templating equally.
 asset_pattern = "helium_{{version}}_arm64-macos.dmg"
 postinstall = "$DOTFILES_DIR/mise/scripts/install-app && $DOTFILES_DIR/mise/scripts/setup-helium"
 
-# Kanata Bar v1.1.10 publishes only generic `kanata-bar.app.zip` and `.dmg`
-# assets. The ZIP is arm64-only, so keep the explicit URL and checksum until
-# upstream publishes platform-qualified assets with checksum sidecars.
 [tools."http:kanata-bar"]
 version = "1.1.10"
 checksum = "sha256:ba07e3caeb41d1b2a667e2c246cc3b0ef632a2d812ceeac0ce2eed9441d63b35"
@@ -418,11 +387,6 @@ platforms.macos-arm64.url = "https://github.com/not-in-stock/kanata-bar/releases
 adopt = true
 
 [bootstrap.packages]
-# op via brew formula — official documented install method. A real signed binary
-# at /opt/homebrew/bin/op is required for desktop-app integration (biometric
-# unlock): the app socket handshake rejects the mise vfox shim (shim -> mise
-# re-exec), which broke fnox on workbookpro and triggered the recurring
-# system-modal 'Set up Touch ID' dialog that wedged input (2026-07-28).
 "brew:apfel" = "latest"        # Apple Intelligence CLI/server — shade-next compact_ai interpreter
 "brew:autoconf" = "latest"
 "brew:bat" = "latest"
@@ -473,9 +437,8 @@ adopt = true
 "brew:p7zip" = "latest"
 "brew:zsh" = "latest"
 
-"mas:497799835" = "latest"  # Xcode
-"mas:975937182" = "latest"  # Fantastical
-"mas:1236045954" = "latest" # Canary
+"mas:497799835" = "latest" # Xcode
+"mas:975937182" = "latest" # Fantastical
 
 "brew-cask:1password@beta" = "latest"
 "brew-cask:1password-cli@beta" = "latest"
@@ -504,7 +467,6 @@ adopt = true
 "brew-cask:handy" = "latest"
 "brew-cask:hammerspoon" = "latest"
 "brew-cask:iina" = "latest"
-# "brew-cask:meetingbar" = "latest"
 "brew-cask:obs@beta" = "latest"
 "brew-cask:obsidian" = "latest"
 "brew-cask:okta-verify" = "latest"
@@ -819,7 +781,6 @@ run = [
   { task = "update:fnox" },
   { task = "update:pi" },
   { task = "reload:hammerspoon" },
-  # "mise run setup:hk",
 ]
 raw = true
 
