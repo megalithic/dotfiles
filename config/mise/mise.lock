@@ -1494,8 +1494,8 @@ url = "https://github.com/megalithic/swifties/releases/download/v0.4.1/notiwatch
 url_api = "https://api.github.com/repos/megalithic/swifties/releases/assets/667125286"
 
 [[tools."npm:@earendil-works/pi-coding-agent"]]
-version = "1.3.0"
-aube = { path = ".mise/locks/npm-earendil-works-pi-coding-agent/1.3.0", digest = "sha256:dc90f10d0bbe046249db98c8b60b292f0d96ff2752caa34413c7a81f3368a02b" }
+version = "1.4.0"
+aube = { path = ".mise/locks/npm-earendil-works-pi-coding-agent/1.4.0", digest = "sha256:e982ff84b20c8ea18fbe9ee6ea7de0ff2a73de70f52fb23fc40537b645ae2469" }
 backend = "npm:@earendil-works/pi-coding-agent"
 specifiers = ["latest"]
 
