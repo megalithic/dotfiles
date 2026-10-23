@@ -232,12 +232,33 @@ css = """
 .ccr .muted { color:var(--muted); font-weight:normal; }
 .ccr details.raw { margin:10px 0; } .ccr details.raw pre { max-height:600px; }
 .ccr .legend { font-size:.85em; color:var(--muted); margin:8px 0 16px; }
-.ccr .engineer { border:1px solid var(--accent); border-radius:8px; padding:10px 16px; margin:12px 0 20px; }
-.ccr .engineer h2 { margin-top:4px; }
+.ccr .engineer { position:relative; border:1px solid var(--accent); border-radius:8px; padding:10px 16px; margin:12px 0 20px; }
+.ccr .engineer h2 { margin-top:4px; padding-right:96px; }
 .ccr .engineer details { margin-top:8px; }
 .ccr .engineer pre { max-height:none; }
+.ccr .copy-md { position:absolute; top:10px; right:12px; display:inline-flex; align-items:center; gap:6px; padding:5px 10px; font:inherit; font-size:.8em; line-height:1; color:var(--fg); background:var(--code-bg); border:1px solid var(--border); border-radius:6px; cursor:pointer; }
+.ccr .copy-md:hover { border-color:var(--accent); }
+.ccr .copy-md:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.ccr .copy-md svg { fill:currentColor; }
+.ccr .copy-md .ic-check { display:none; }
+.ccr .copy-md.copied { color:#1a7f37; border-color:#1a7f37; }
+.ccr .copy-md.copied .ic-copy { display:none; }
+.ccr .copy-md.copied .ic-check { display:inline; }
 </style>
 """
+
+copy_button = (
+    '<button type="button" class="copy-md" title="Copy raw markdown" aria-label="Copy summary as markdown" onclick="'
+    "const b=this,l=b.querySelector('.copy-label');"
+    "navigator.clipboard.writeText(b.closest('.engineer').querySelector('details pre').textContent)"
+    ".then(()=>{b.classList.add('copied');l.textContent='Copied';"
+    "setTimeout(()=>{b.classList.remove('copied');l.textContent='Copy'},2000)})"
+    ".catch(()=>{l.textContent='Copy failed'})"
+    '">'
+    '<svg class="ic-copy" aria-hidden="true" viewBox="0 0 16 16" width="16" height="16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"></path><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"></path></svg>'
+    '<svg class="ic-check" aria-hidden="true" viewBox="0 0 16 16" width="16" height="16"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path></svg>'
+    '<span class="copy-label">Copy</span></button>'
+)
 
 title = meta.get("title") or "Consensus code review"
 target = meta.get("target", "")
@@ -248,7 +269,7 @@ body = f"""
 <p class="legend">Target: <code>{e(target)}</code> · base <code>{e(meta.get("base", ""))}</code> → head <code>{e(meta.get("head", ""))}</code>.
 Three independent reviewers (A: {e(labels["A"])} · B: {e(labels["B"])} · C: {e(labels["C"])}) → arbiter {e(arbiter_label)} clustered and verified every finding against the checkout → {e(jev_model)} independently judged each item. Each card keeps context, question, reviewer positions and answer together.</p>
 <p>{count_html} · {len(clusters)} items</p>
-{f'<div class="engineer" id="engineer-summary"><h2>Summary for the PR author</h2>{md_to_html(engineer_md)}<details><summary>Raw markdown (copy for Slack / GitHub)</summary><pre>{e(engineer_md)}</pre></details></div>' if engineer_md else ''}
+{f'<div class="engineer" id="engineer-summary">{copy_button}<h2>Summary for the PR author</h2>{md_to_html(engineer_md)}<details><summary>Raw markdown (copy for Slack / GitHub)</summary><pre>{e(engineer_md)}</pre></details></div>' if engineer_md else ''}
 <div class="summary"><h2>Arbiter summary</h2>{md_to_html(summary_md)}</div>
 <h2>Items</h2>
 {toc(clusters)}
