@@ -7,28 +7,13 @@
 # Host-specific ~/.ssh/config; Include-s ~/.ssh/shared.config (home/ tree).
 "~/.ssh/config" = "~/.dotfiles/home/.ssh/config.megabookpro"
 
-# Former nix-only tools still called by repo code (nix removal, 2026-10).
 [tools]
-"npm:dockerfile-language-server-nodejs" = "latest" # docker-langserver (config/nvim/lua/langs/docker.lua)
+"npm:dockerfile-language-server-nodejs" = "latest"   # docker-langserver (config/nvim/lua/langs/docker.lua)
 "npm:@microsoft/compose-language-service" = "latest" # docker-compose-langserver
 
 [bootstrap.packages]
 "brew:switchaudio-osx" = "latest" # SwitchAudioSource (bin/switch_audio_*)
-"brew:tesseract" = "latest" # Hammerspoon clipper OCR fallback
-"brew:chafa" = "latest" # bin/preview image fallback
-"brew:curlie" = "latest" # bin/slck
-"brew:openconnect" = "latest" # bin/vpn*
-"brew:openvpn" = "latest" # bin/vpn*
-
-# AirConnect (AirPlay -> UPnP/Sonos bridge, https://github.com/philippe44/AirConnect).
-# The release zip carries binaries for every platform; postinstall marks the
-# macOS ones executable. No brew formula or nixpkgs package exists.
-[tools."github:philippe44/AirConnect"]
-version = "latest"
-os = ["macos"]
-asset_pattern = "AirConnect-{{version}}.zip"
-postinstall = "find \"$MISE_TOOL_INSTALL_PATH\" -name '*-macos-*' -type f -exec chmod +x {} +"
-
-# No LaunchAgent: the airupnp bridge runs on the NAS (config/nas/airupnp/).
-# Two bridges advertise "Office+" twice. Manual fallback only:
-# ~/.dotfiles/mise/scripts/airupnp-launchd
+"brew:tesseract" = "latest"       # Hammerspoon clipper OCR fallback
+"brew:chafa" = "latest"           # bin/preview image fallback
+"brew:curlie" = "latest"          # bin/slck
+"brew-cask:orcaslicer" = "latest"
