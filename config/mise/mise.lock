@@ -539,17 +539,17 @@ url = "https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hf451053_7.co
 checksum = "sha256:da867f5092eb0cb746d353694f0098031fd9817a4ce7d5743121209ae0f406ca"
 
 [[tools.aeroplay]]
-version = "0.4.0"
+version = "0.4.1"
 backend = "github:megalithic/swifties"
-specifiers = ["0.4.0"]
+specifiers = ["0.4.1"]
 
 [tools.aeroplay.options]
 asset_pattern = "aeroplay-{{ version }}-macos26-arm64.zip"
 
 [tools.aeroplay."platforms.macos-arm64"]
-checksum = "sha256:6b5db2af2c08ac3d50ea6cf6123b7dcccf1e61227cdc4bd0b6c640387b892e16"
-url = "https://github.com/megalithic/swifties/releases/download/v0.4.0/aeroplay-0.4.0-macos26-arm64.zip"
-url_api = "https://api.github.com/repos/megalithic/swifties/releases/assets/666843049"
+checksum = "sha256:961e55c76b392c4d1faed6045a8d0f49c8d760387243101ee3ea40937c098274"
+url = "https://github.com/megalithic/swifties/releases/download/v0.4.1/aeroplay-0.4.1-macos26-arm64.zip"
+url_api = "https://api.github.com/repos/megalithic/swifties/releases/assets/667125288"
 
 [[tools.age]]
 version = "1.3.2"
@@ -706,17 +706,17 @@ signer = "sigstore-oidc:https://github.com/aubepkg/aube/.github/workflows/releas
 repository_ids = { repository = "1214542327" }
 
 [[tools.avwatchd]]
-version = "0.4.0"
+version = "0.4.1"
 backend = "github:megalithic/swifties"
-specifiers = ["0.4.0"]
+specifiers = ["0.4.1"]
 
 [tools.avwatchd.options]
 asset_pattern = "avwatchd-{{ version }}-macos26-arm64.zip"
 
 [tools.avwatchd."platforms.macos-arm64"]
-checksum = "sha256:024d6a524d089bc8a17b886dc02b872cff5f5d43f8f015b6b8c9f3c4313501d8"
-url = "https://github.com/megalithic/swifties/releases/download/v0.4.0/avwatchd-0.4.0-macos26-arm64.zip"
-url_api = "https://api.github.com/repos/megalithic/swifties/releases/assets/666843047"
+checksum = "sha256:919cd64139136b1e878293f605f76102c8398cb05460ac6dc192c9793c0a9654"
+url = "https://github.com/megalithic/swifties/releases/download/v0.4.1/avwatchd-0.4.1-macos26-arm64.zip"
+url_api = "https://api.github.com/repos/megalithic/swifties/releases/assets/667125290"
 
 [[tools.awscli]]
 version = "2.37.9"
@@ -1450,17 +1450,17 @@ url = "https://github.com/LuaLS/lua-language-server/releases/download/3.19.1/lua
 url_api = "https://api.github.com/repos/LuaLS/lua-language-server/releases/assets/513570627"
 
 [[tools.miccheckd]]
-version = "0.4.0"
+version = "0.4.1"
 backend = "github:megalithic/swifties"
-specifiers = ["0.4.0"]
+specifiers = ["0.4.1"]
 
 [tools.miccheckd.options]
 asset_pattern = "miccheckd-{{ version }}-macos26-arm64.zip"
 
 [tools.miccheckd."platforms.macos-arm64"]
-checksum = "sha256:6a1c5ea29c76824610b1cfe279bed6124b91b0b1086d39e0e06641106779b650"
-url = "https://github.com/megalithic/swifties/releases/download/v0.4.0/miccheckd-0.4.0-macos26-arm64.zip"
-url_api = "https://api.github.com/repos/megalithic/swifties/releases/assets/666843046"
+checksum = "sha256:478eaec682302cbc3163dfaf0d7696f9f583198e9b3bdf13d17809694d983f5b"
+url = "https://github.com/megalithic/swifties/releases/download/v0.4.1/miccheckd-0.4.1-macos26-arm64.zip"
+url_api = "https://api.github.com/repos/megalithic/swifties/releases/assets/667125285"
 
 [[tools.neovim]]
 version = "nightly"
@@ -1481,17 +1481,17 @@ checksum = "sha256:751fdf7439f115d87ee2a8f3f18c065b6151852068e3e666ac60ac2996f75
 url = "https://nodejs.org/dist/v26.10.0/node-v26.10.0-darwin-arm64.tar.gz"
 
 [[tools.notiwatchd]]
-version = "0.4.0"
+version = "0.4.1"
 backend = "github:megalithic/swifties"
-specifiers = ["0.4.0"]
+specifiers = ["0.4.1"]
 
 [tools.notiwatchd.options]
 asset_pattern = "notiwatchd-{{ version }}-macos26-arm64.zip"
 
 [tools.notiwatchd."platforms.macos-arm64"]
-checksum = "sha256:afc51ba80f91a7edd477dc5f929bf4457142cb065913590133d83b1fd351f189"
-url = "https://github.com/megalithic/swifties/releases/download/v0.4.0/notiwatchd-0.4.0-macos26-arm64.zip"
-url_api = "https://api.github.com/repos/megalithic/swifties/releases/assets/666843052"
+checksum = "sha256:00f90397d4709c7ea8d6d90f4c785807f717077f40dcb86564bca08fa69ca876"
+url = "https://github.com/megalithic/swifties/releases/download/v0.4.1/notiwatchd-0.4.1-macos26-arm64.zip"
+url_api = "https://api.github.com/repos/megalithic/swifties/releases/assets/667125286"
 
 [[tools."npm:@earendil-works/pi-coding-agent"]]
 version = "1.3.0"
