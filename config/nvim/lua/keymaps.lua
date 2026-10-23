@@ -263,6 +263,5 @@ end, { desc = "[spell] suggestions" })
 -- [[ selections ]] ------------------------------------------------------------
 map("n", "gv", "`[v`]", { desc = "reselect pasted content" })
 map("n", "<leader>V", "V`]", { desc = "reselect pasted content" })
-map("n", "gp", "`[v`]", { desc = "reselect pasted content" })
 map("n", "gV", "ggVG", { desc = "select whole buffer" })
 map("n", "<leader>v", "ggVG", { desc = "select whole buffer" })

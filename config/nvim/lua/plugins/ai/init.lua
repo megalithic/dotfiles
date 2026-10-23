@@ -39,6 +39,13 @@ return {
     config = function()
       require("pi-nvim").setup({ load_extension = false })
       vim.keymap.set("n", "<C-p>", require("pi-nvim").toggle, { desc = "Toggle Pi" })
+      vim.keymap.set(
+        { "n", "x" },
+        "gp",
+        function() require("pi_prompt").prompt() end,
+        { desc = "Pi: prompt with editor context" }
+      )
+      vim.keymap.set("n", "yp", function() require("pi_prompt").yank() end, { desc = "Pi: yank editor context" })
     end,
   },
 }
