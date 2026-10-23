@@ -1152,6 +1152,16 @@ checksum = "sha256:80254e4a5a185bbc7931e413883ea0428feafca60745387b46dc2fafbd57b
 url = "https://github.com/nicknisi/sessions/releases/download/v1.30.0/sessions-darwin-arm64.tar.gz"
 url_api = "https://api.github.com/repos/nicknisi/sessions/releases/assets/564653500"
 
+[[tools."github:radiosilence/fastmail-cli"]]
+version = "3.7.2"
+backend = "github:radiosilence/fastmail-cli"
+specifiers = ["latest"]
+
+[tools."github:radiosilence/fastmail-cli"."platforms.macos-arm64"]
+checksum = "sha256:5fb68aaec99538eb63e14c238216975ccf82fad5e6184a09ed75c8a697ca76de"
+url = "https://github.com/radiosilence/fastmail-cli/releases/download/v3.7.2/fastmail-cli-darwin-aarch64.tar.gz"
+url_api = "https://api.github.com/repos/radiosilence/fastmail-cli/releases/assets/654151139"
+
 [[tools."github:rtk-ai/rtk"]]
 version = "0.51.0"
 backend = "github:rtk-ai/rtk"
