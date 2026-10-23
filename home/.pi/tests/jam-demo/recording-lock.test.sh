@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-lock="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/recording-lock.mjs"
+lock="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../../agent/skills/jam-demo/scripts/recording-lock.mjs"
 JAM_DEMO_STATE_DIR=$(mktemp -d)
 export JAM_DEMO_STATE_DIR JAM_DEMO_RECORDERS='[]'
 trap 'trash "$JAM_DEMO_STATE_DIR"' EXIT
@@ -39,5 +39,13 @@ export JAM_DEMO_RECORDERS='[{"target":"T1","origin":"http://localhost:4000","url
 busy=$("$lock" acquire pi:d http://localhost:4000/ "D demo" || true)
 echo "$busy" | jq -e '.busy and .holder == null and .recording[0].url == "http://localhost:4000/invitations"' >/dev/null
 [ ! -e "$JAM_DEMO_STATE_DIR/recording.lock" ]
+
+# A holder between takes leaves vision mode on: its stale lock must stay busy, not be taken over.
+mkdir "$JAM_DEMO_STATE_DIR/recording.lock"
+echo '{"owner":"pi:slow","url":"http://localhost:4000/","title":"slow","startedAt":"2020-01-01T00:00:00Z"}' >"$JAM_DEMO_STATE_DIR/recording.lock/owner.json"
+export JAM_DEMO_RECORDERS='[{"target":"T1","origin":"http://localhost:4000","url":"http://localhost:4000/","vision":true,"active":true}]'
+busy=$("$lock" acquire pi:e http://localhost:4000/ "E demo" || true)
+echo "$busy" | jq -e '.busy and .holder.owner == "pi:slow" and .recording[0].vision' >/dev/null
+"$lock" acquire pi:slow http://localhost:4000/ "slow" | jq -e '.reentered == true' >/dev/null
 
 echo "recording-lock: all checks passed"

@@ -41,12 +41,19 @@ function tabRecorder(target, origin) {
       JSON.stringify({ objectId: list.objects.objectId, functionDeclaration: "function () { return this.map((r) => r.state); }", returnByValue: true }),
     ]).result.value;
 
-    const url = cdpText(["eval", target, '[...document.querySelectorAll("input")].map((i) => i.value).find((v) => /^https?:/.test(v)) || ""'])
-      .trim()
-      .split("\n")
-      .pop();
+    // Vision mode stays on between takes, so it counts as active and keeps a 15-minute-old lock from going stale.
+    const { url, vision } = JSON.parse(
+      cdpText([
+        "eval",
+        target,
+        'JSON.stringify({ url: [...document.querySelectorAll("input")].map((i) => i.value).find((v) => /^https?:/.test(v)) || "", vision: document.querySelector("[role=switch]")?.getAttribute("aria-checked") === "true" })',
+      ])
+        .trim()
+        .split("\n")
+        .pop(),
+    );
 
-    return { target, origin, url, active: states.some((state) => state !== "inactive") };
+    return { target, origin, url, vision, active: states.some((state) => state !== "inactive") || vision };
   } catch (error) {
     return { target, origin, url: "", active: false, error: String(error.message).split("\n")[0] };
   }

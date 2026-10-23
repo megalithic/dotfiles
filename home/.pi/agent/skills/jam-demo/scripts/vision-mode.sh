@@ -33,9 +33,9 @@ if [ "$current" != "$target_state" ]; then
   fi
   read -r x y < <($cdp eval "$t" '(b => Math.round(b.x + b.width / 2) + " " + Math.round(b.y + b.height / 2))(document.querySelector("[role=switch]").getBoundingClientRect())' | tail -1)
   $cdp clickxy "$t" "$x" "$y" >/dev/null
-  for _ in $(seq 1 45); do
+  for _ in $(seq 1 180); do
     [ "$(state)" = "$target_state" ] && break
-    sleep 2
+    sleep 0.5
   done
 fi
 
