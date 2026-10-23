@@ -1797,6 +1797,7 @@ specifiers = ["3.8"]
 strip_components = "1"
 
 [tools.tmux."platforms.macos-arm64"]
+checksum = "blake3:4179fd2d0d065e0c3ba46c4a666640860f72323afdcb0dce1fd829d6285e7986"
 url = "https://github.com/tmux/tmux/archive/3.8.tar.gz"
 
 [[tools.tokei]]
