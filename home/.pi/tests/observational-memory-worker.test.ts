@@ -6,8 +6,8 @@ import { AGENT_EXTENSION_PATH, buildWorkerArgv } from "../agent/extensions/obser
 import { rpc, tempAgentDir, testEnv } from "./pi-rpc.fixture.ts";
 
 // OM workers spawn `pi --no-extensions ... -e <worker>` directly, bypassing the
-// bin/pi wrapper. buildWorkerArgv must add the multi-sub providers-only entry
-// so the configured my-codex alias resolves, without loading full multi-sub.
+// bin/pi wrapper. multi-sub is disabled, so only the worker extension loads and
+// the observer uses the built-in openai-codex provider.
 
 const extensions = resolve(import.meta.dir, "../agent/extensions");
 
@@ -17,7 +17,6 @@ const managed = JSON.parse(readFileSync(resolve(import.meta.dir, "../agent/setti
 const agentDir = tempAgentDir(
 	"om-worker-",
 	JSON.stringify({
-		multiSub: { subscriptions: [{ provider: "openai-codex", alias: "my-codex" }] },
 		"observational-memory": managed["observational-memory"],
 	}),
 );
@@ -47,18 +46,18 @@ describe("observational-memory worker launch", () => {
 
 	const argv = buildWorkerArgv({ model, sessionName: "om-observer-test", kickoffPrompt: "unused" });
 
-	test("uses the managed my-codex observer model", () => {
-		expect(model).toMatchObject({ provider: "my-codex", id: "gpt-5.6-luna", thinking: "low" });
+	test("uses the managed openai-codex observer model", () => {
+		expect(model).toMatchObject({ provider: "openai-codex", id: "gpt-5.6-luna", thinking: "low" });
 	});
 
-	test("passes the providers-only entry and the worker, never full multi-sub", () => {
-		expect(extensionArgs(argv)).toEqual([join(agentDir, "extensions/multi-sub-providers/providers.ts"), AGENT_EXTENSION_PATH]);
+	test("passes only the worker extension", () => {
+		expect(extensionArgs(argv)).toEqual([AGENT_EXTENSION_PATH]);
 		expect(AGENT_EXTENSION_PATH.endsWith("/agent/worker.ts")).toBe(true);
 		expect(existsSync(AGENT_EXTENSION_PATH)).toBe(true);
 	});
 
 	test(
-		"resolves my-codex/gpt-5.6-luna offline with the worker flag set",
+		"resolves openai-codex/gpt-5.6-luna offline with the worker flag set",
 		async () => {
 			// Keep the worker flags; drop the binary prefix and the -n/-p pairs (no prompt is sent).
 			const flags = argv.slice(argv.indexOf("--no-extensions"));
@@ -67,7 +66,7 @@ describe("observational-memory worker launch", () => {
 
 			const { state, commands } = await rpc(workerFlags, env);
 
-			expect(state.model).toMatchObject({ provider: "my-codex", id: "gpt-5.6-luna" });
+			expect(state.model).toMatchObject({ provider: "openai-codex", id: "gpt-5.6-luna" });
 			expect(state.thinkingLevel).toBe("low");
 			expect(commands).not.toContain("subs");
 		},

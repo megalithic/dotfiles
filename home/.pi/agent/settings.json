@@ -61,234 +61,24 @@
     "anthropic/claude-opus-5",
     "anthropic/claude-sonnet-5",
     "anthropic/claude-haiku-4-5",
+    "openai-codex/gpt-6-1-astra",
     "openai-codex/gpt-6-astra",
     "openai-codex/gpt-5.6-sol",
     "openai-codex/gpt-5.6-terra",
     "openai-codex/gpt-5.6-luna",
-    "opencode-go/gpt-5.6-luna",
-    "opencode-go/kimi-k3",
-    "opencode-go/deepseek-v4-pro",
-    "opencode-go/deepseek-v4-flash",
-    "opencode-go/qwen3.7-max",
-    "opencode-go/qwen3.7-plus"
+    "opencode-go-console/gpt-5.6-luna",
+    "opencode-go-console/kimi-k3",
+    "opencode-go-console/deepseek-v4-pro",
+    "opencode-go-console/deepseek-v4-flash",
+    "opencode-go-console/glm-5.3",
+    "opencode-go-console/qwen3.8-max",
+    "opencode-go-console/qwen3.8-plus"
   ],
-  "enabledModelScopes": {
-    "mega": [
-      "anthropic/claude-fable-5-1",
-      "anthropic/claude-opus-5-5",
-      "openai-codex/gpt-6-astra",
-      "my-codex/gpt-5.6-sol",
-      "my-codex/gpt-5.6-terra",
-      "my-codex/gpt-5.6-luna",
-      "opencode-go/gpt-5.6-luna",
-      "opencode-go/kimi-k3",
-      "opencode-go/deepseek-v4-pro",
-      "opencode-go/deepseek-v4-flash",
-      "opencode-go/qwen3.7-max",
-      "opencode-go/qwen3.7-plus"
-    ],
-    "alt": [
-      "anthropic/claude-fable-5-1",
-      "anthropic/claude-opus-5-5",
-      "anthropic/claude-sonnet-5",
-      "anthropic/claude-haiku-4-5",
-      "openai-codex/gpt-6-astra",
-      "openai-codex/gpt-5.6-sol",
-      "openai-codex/gpt-5.6-terra",
-      "openai-codex/gpt-5.6-luna",
-      "opencode-go/kimi-k3",
-      "opencode-go/deepseek-v4-pro",
-      "opencode-go/deepseek-v4-flash",
-      "opencode-go/qwen3.7-max",
-      "opencode-go/qwen3.7-plus"
-    ]
-  },
-  "enabledProfileModels": {
-    "mega": [
-      "anthropic/claude-fable-5-1",
-      "anthropic/claude-opus-5-5",
-      "openai-codex/gpt-6-astra",
-      "my-codex/gpt-5.6-sol",
-      "my-codex/gpt-5.6-terra",
-      "my-codex/gpt-5.6-luna",
-      "opencode-go/gpt-5.6-luna",
-      "opencode-go/kimi-k3",
-      "opencode-go/deepseek-v4-pro",
-      "opencode-go/deepseek-v4-flash",
-      "opencode-go/qwen3.7-max",
-      "opencode-go/qwen3.7-plus"
-    ],
-    "alt": [
-      "anthropic/claude-fable-5-1",
-      "anthropic/claude-opus-5-5",
-      "anthropic/claude-sonnet-5",
-      "anthropic/claude-haiku-4-5",
-      "openai-codex/gpt-6-astra",
-      "openai-codex/gpt-5.6-sol",
-      "openai-codex/gpt-5.6-terra",
-      "openai-codex/gpt-5.6-luna",
-      "opencode-go/kimi-k3",
-      "opencode-go/deepseek-v4-pro",
-      "opencode-go/deepseek-v4-flash",
-      "opencode-go/qwen3.7-max",
-      "opencode-go/qwen3.7-plus"
-    ]
-  },
-  "subagentRouting": {
-    "mega": {
-      "worker": {
-        "model": "my-codex/gpt-5.6-luna",
-        "thinking": "medium"
-      },
-      "researcher": {
-        "model": "my-codex/gpt-5.6-sol",
-        "thinking": "high"
-      },
-      "reviewer": {
-        "model": "openai-codex/gpt-6-astra",
-        "thinking": "high"
-      },
-      "scout": {
-        "model": "my-codex/gpt-5.6-luna",
-        "thinking": "medium"
-      }
-    },
-    "alt": {
-      "worker": {
-        "model": "anthropic/claude-sonnet-5",
-        "thinking": "medium"
-      },
-      "researcher": {
-        "model": "anthropic/claude-opus-5-5",
-        "thinking": "high"
-      },
-      "reviewer": {
-        "model": "anthropic/claude-fable-5-1",
-        "thinking": "xhigh"
-      },
-      "scout": {
-        "model": "anthropic/claude-sonnet-5",
-        "thinking": "medium"
-      }
-    }
-  },
   "terminal": {
     "showTerminalProgress": true,
     "imageWidthCells": 120
   },
   "shellCommandPrefix": "export GIT_MERGE_AUTOEDIT=no\nGIT_EDITOR=true\nexport GIT_SEQUENCE_EDITOR=true\nexport GIT_TERMINAL_PROMPT=0\nexport PI_TMUX_IMAGES=1",
-  "multiSub": {
-    "subscriptions": [
-      {
-        "provider": "openai-codex",
-        "alias": "openai-codex",
-        "label": "openai-codex"
-      },
-      {
-        "provider": "openai-codex",
-        "alias": "my-codex",
-        "label": "my-codex"
-      }
-    ],
-    "pools": [
-      {
-        "name": "codex-pool",
-        "baseProvider": "my-codex",
-        "members": [
-          "openai-codex",
-          "my-codex"
-        ],
-        "enabled": true
-      }
-    ],
-    "chains": [],
-    "presets": [
-      {
-        "name": "mega",
-        "entries": [
-          {
-            "provider": "openai-codex",
-            "model": "gpt-6-astra",
-            "enabled": true
-          },
-          {
-            "provider": "my-codex",
-            "model": "gpt-5.6-sol",
-            "enabled": true
-          },
-          {
-            "provider": "my-codex",
-            "model": "gpt-5.6-terra",
-            "enabled": true
-          },
-          {
-            "provider": "my-codex",
-            "model": "gpt-5.6-luna",
-            "enabled": true
-          }
-        ],
-        "enabled": true
-      },
-      {
-        "name": "alt",
-        "entries": [
-          {
-            "provider": "anthropic",
-            "model": "claude-fable-5-1",
-            "enabled": true
-          },
-          {
-            "provider": "anthropic",
-            "model": "claude-fable-5",
-            "enabled": true
-          },
-          {
-            "provider": "anthropic",
-            "model": "claude-opus-5",
-            "enabled": true
-          },
-          {
-            "provider": "anthropic",
-            "model": "claude-sonnet-5",
-            "enabled": true
-          },
-          {
-            "provider": "anthropic",
-            "model": "claude-haiku-4-5",
-            "enabled": true
-          },
-          {
-            "provider": "openai-codex",
-            "model": "gpt-6-astra",
-            "enabled": true
-          },
-          {
-            "provider": "openai-codex",
-            "model": "gpt-5.6-sol",
-            "enabled": true
-          },
-          {
-            "provider": "openai-codex",
-            "model": "gpt-5.6-terra",
-            "enabled": true
-          },
-          {
-            "provider": "openai-codex",
-            "model": "gpt-5.6-luna",
-            "enabled": true
-          }
-        ],
-        "enabled": true
-      }
-    ],
-    "directoryProfiles": [
-      {
-        "glob": "~/code/work/strive/**",
-        "preset": "alt",
-        "modelScope": "alt"
-      }
-    ]
-  },
   "observational-memory": {
     "chunkTokens": 5000,
     "chunkOverlapTokens": 0,
@@ -300,12 +90,12 @@
     "observerConcurrency": 4,
     "models": {
       "observer": {
-        "provider": "my-codex",
+        "provider": "openai-codex",
         "id": "gpt-5.6-luna",
         "thinking": "low"
       },
       "consolidator": {
-        "provider": "my-codex",
+        "provider": "openai-codex",
         "id": "gpt-5.6-luna",
         "thinking": "medium"
       }
