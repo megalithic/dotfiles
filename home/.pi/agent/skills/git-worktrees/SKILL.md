@@ -60,11 +60,24 @@ git rev-parse --verify --quiet "refs/heads/$NAME" >/dev/null ||
 
 ## Hand work to an agent in a new or existing worktree ("tell the agent in a new worktree X ...")
 
+You only orchestrate; the agent in the worktree does the work. Your whole job: resolve or create the worktree, get a live agent there, send it the brief with `tell_pi`, switch the user over, and report.
+
+- Never do any of the task yourself: no edits, commands, tests, or commits in the target worktree, before or after the handoff, and no continuing it in your own checkout.
+- If a step fails (`wt` error, no registration, `tell_pi` error), stop and report it. Never fall back to doing the work yourself.
+- A new worktree gets its own tmux session (`wt ensure`). Use a window in the current session only when the user says "in a window".
+- Communication is one-way by default. You send one brief; don't wait for, poll for, or expect a reply, and don't send follow-up tells. Updates flow back only when the user's initial request asks for them ("keep me posted", "report back", "let me know when it's done").
+
 1. Resolve the target: `path="$(wt path NAME)"`. Exit 3 (`target_not_found`) means no worktree exists yet: use 3a. Otherwise use 3b. If the user names the worktree loosely, match it against the `wt list --json` items that have a non-null `.worktree.path`, and ask when more than one fits.
 2. Write the handoff brief before creating or starting anything. Every brief, for a new or existing worktree, must stand alone and always include:
    - Explicit instructions: what the agent should do, as a direct task, not just background.
    - Goal, context and decisions from this conversation, relevant files, what's done, next steps, how to verify.
-   - A closing line: "No communication back to the calling agent is needed; work with the user directly." Only when the user asks for updates or a report, replace it with that request and the reply target `pi:$(hostname -s):$PI_SESSION_ID`.
+   - A closing section on communication. By default, end with:
+
+     > Do not contact the calling agent. Send it no `tell_pi` or `/tell` messages: no progress, questions, or final report. Work with the user directly in this session.
+
+     Only when the user's initial request asks for updates, end with this instead. Fill in the reply target from `echo "pi:$(hostname -s):$PI_SESSION_ID"`:
+
+     > Report meaningful updates to the calling agent with `tell_pi` (target `<reply target>`, mode `follow_up`): when you start, at each milestone, when you are blocked or need a decision, and when done, with verification results. Skip step-by-step chatter. Keep working with the user directly in this session.
 3. Get a live agent in the worktree.
 
    Each bash call is a fresh shell, so define these helpers in every call that uses them. `find_agents PATH` lists live Pi agents whose cwd is exactly `PATH`. It skips stale manifests (no heartbeat for 60s; Pi beats every 10s), headless `pi -p` runs (no tmux pane), and you. `agent_pane PATH` prints `<pane_id> <command>` for the `agent` window of the ftm session tagged with that worktree.
@@ -144,12 +157,12 @@ git rev-parse --verify --quiet "refs/heads/$NAME" >/dev/null ||
 
    On timeout, run `list_pi_sessions` and match the worktree path and pane. Ignore entries marked `busy/unreachable`; they are stale. Don't guess.
 
-5. Send the brief with `tell_pi` (target = `pi:$(hostname -s):<sessionId>`, message = brief). Keep the default `follow_up` mode so a busy agent gets the brief after its current turn. Use `steer` only when the user wants to interrupt it.
+5. Send the brief with `tell_pi` (target = `pi:$(hostname -s):<sessionId>`, message = brief). Keep the default `follow_up` mode so a busy agent gets the brief after its current turn. Use `steer` only when the user wants to interrupt it. Never type the brief into the pane. The brief is the only message you send.
 6. Switch the user over:
    - 3a window: `tmux select-window -t "$win"`.
    - 3a session: `ftm "$id"`.
    - 3b: `tmux switch-client -t "$session" \; select-window -t "$pane" \; select-pane -t "$pane"`, using the agent's `.session` and `.pane`.
-7. Report the worktree path, branch, base (new worktrees only), tell id, whether the agent was found or started, and the services state from `.tmux` when `wt` ran.
+7. Report the worktree path, branch, base (new worktrees only), tell id, whether the agent was found or started, whether updates were requested, and the services state from `.tmux` when `wt` ran. Then end your turn. If updates were requested, relay each one to the user when it arrives; don't act on the work yourself.
 
 Use `wt ensure NAME --json` with no tell when the user only wants a worktree created. Plain `wt NAME` and `-t w` without `--json` are for when the user asks to open it themselves.
 
