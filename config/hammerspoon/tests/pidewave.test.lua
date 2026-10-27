@@ -29,6 +29,8 @@ local function setup()
     focusCalls = 0, cdpCalls = 0, ownerChecks = 0, brought = 0, sendResult = true,
     -- Browser path: published manifests and the CDP target whose document has focus.
     manifests = {}, focusedTab = nil, probes = 0,
+    -- Helium's org.chromium.source-url for the current clipboard contents.
+    sourceUrl = "http://localhost:4123/tidewave/connect",
   }
   local window = { id = function() return state.windowId end, title = function() return state.title end }
   state.ghostty = mock.makeApp({ bundleID = "com.mitchellh.ghostty", windows = { window } })
@@ -67,7 +69,10 @@ local function setup()
     function watcher:stop() self.stopped = true end
     table.insert(state.watchers, watcher)
     return watcher
-  end } }
+  end }, readDataForUTI = function(uti)
+    assert(uti == "org.chromium.source-url")
+    return state.sourceUrl
+  end }
   package.loaded["lib.interop.pi"] = { sendPayload = function(socket, payload)
     table.insert(state.forwarded, { socket = socket, payload = payload })
     if state.sendThrows then error("socket unavailable") end
@@ -90,11 +95,17 @@ local function setup()
     if path:match("%.sock$") and not state.deadSocket then return attribute == "mode" and "socket" or { mode = "socket" } end
   end
   hs.fs.mkdir = function() return true end
-  hs.fs.dir = function()
+  hs.fs.dir = function(path)
+    local names = {}
+    if path:match("/bindings$") then
+      if state.binding then names[1] = "project.json" end
+    else
+      for _, entry in ipairs(state.manifests) do table.insert(names, entry.name) end
+    end
     local i = 0
     return function()
       i = i + 1
-      return state.manifests[i] and state.manifests[i].name
+      return names[i]
     end
   end
   io.open = function(path, mode)
@@ -150,6 +161,8 @@ local function setup()
   end
   package.loaded["lib.interop.pidewave"] = nil
   state.module = require("lib.interop.pidewave"):init()
+  -- The always-on Connect relay; state.watchers keeps only handshake relays.
+  state.connectWatcher = table.remove(state.watchers, 1)
   return state
 end
 
@@ -396,6 +409,89 @@ test("browser chord relays copied prompts to the bound Pi", function(s)
   assert(s.forwarded[1].payload.params.from == "tidewave")
 end)
 
+test("browser chord on a focused Tidewave Connect tab engages Inspect there", function(s)
+  local manifest = browserSetup(s)
+  s.tabs = "ABC123 Tidewave Connect http://localhost:4123/tidewave/connect"
+  assert(s.press() == true)
+  s.mock.advance(0)
+  assert(s.probes == 1 and s.inspected == 1 and s.activated == 1)
+  assert(s.binding.targetPrefix == "ABC123" and s.binding.socket == manifest.socket)
+  assert(#s.mock.keystrokes == 0)
+end)
+
+-- Tidewave Connect prompts carry their page URL and a browser_eval sid.
+local function connectPrompt(origin)
+  return "<user_prompt>\nfix it\n</user_prompt>\n<context name=\"current-page\">\nThe user is looking at a page.\n<url>\n"
+    .. (origin or "http://localhost:4123")
+    .. "/orders\n</url>\n</context>\n<context name=\"tidewave-browser-eval\">\n"
+    .. "You can directly access this page by using Tidewave browser_eval tool with sid: calm-river#1\n</context>\n"
+end
+
+test("connect prompts reach the Pi on their origin without a handshake", function(s)
+  local manifest = browserSetup(s)
+  s.connectWatcher.callback(connectPrompt())
+  s.connectWatcher.callback(connectPrompt())
+  assert(#s.forwarded == 1 and s.forwarded[1].socket == manifest.socket)
+  local params = s.forwarded[1].payload.params
+  assert(params.text == connectPrompt() and params.mode == "follow_up" and params.from == "tidewave")
+  assert(s.cdpCalls == 0 and s.writes == 0 and #s.mock.notifications == 0)
+end)
+
+for name, mutate in pairs({
+  ["ordinary prompt"] = function() return "<user_prompt>fix it</user_prompt>" end,
+  ["missing source page"] = function(s) s.sourceUrl = nil end,
+  ["copy from another site"] = function(s) s.sourceUrl = "https://evil.example/tidewave/connect" end,
+  ["copy from another app port"] = function(s) s.sourceUrl = "http://localhost:4999/" end,
+  ["missing page URL"] = function() return (connectPrompt():gsub("<url>.-</url>", "")) end,
+}) do test("connect relay ignores " .. name, function(s)
+  browserSetup(s)
+  s.connectWatcher.callback(mutate(s) or connectPrompt())
+  assert(#s.forwarded == 0 and #s.mock.notifications == 0)
+end) end
+
+test("connect relay reports an origin with no connected Pi", function(s)
+  s.connectWatcher.callback(connectPrompt())
+  assert(#s.forwarded == 0 and #s.mock.notifications == 1)
+end)
+
+test("connect relay uses the last live binding when several Pis share the origin", function(s)
+  local manifest = browserSetup(s)
+  local other = copy(manifest)
+  other.pid, other.socket, other.owner = 201, "/state/pi-%43.sock", "owner-b"
+  table.insert(s.manifests, { name = "pi-43.info", manifest = other })
+  s.connectWatcher.callback(connectPrompt())
+  s.binding = { appUrl = "http://localhost:4123", socket = "/state/gone.sock", port = 4123 }
+  s.connectWatcher.callback(connectPrompt())
+  assert(#s.forwarded == 0 and #s.mock.notifications == 2)
+  s.binding.socket = other.socket
+  s.connectWatcher.callback(connectPrompt())
+  assert(#s.forwarded == 1 and s.forwarded[1].socket == other.socket)
+end)
+
+test("connect relay retries an identical prompt after a failed send", function(s)
+  browserSetup(s)
+  s.sendResult = false
+  s.connectWatcher.callback(connectPrompt())
+  s.sendResult = true
+  s.connectWatcher.callback(connectPrompt())
+  assert(#s.forwarded == 2 and #s.mock.notifications == 1)
+end)
+
+test("armed handshake relay leaves Connect prompts to the connect relay", function(s)
+  s.module.handshake()
+  assert(#s.watchers == 1)
+  s.watchers[1].callback(connectPrompt())
+  assert(#s.forwarded == 0)
+end)
+
+test("stop cancels the connect relay and init restarts it", function(s)
+  local first = s.connectWatcher
+  s.module:stop()
+  assert(first.stopped)
+  s.module:init()
+  assert(#s.watchers == 1 and not s.watchers[1].stopped)
+end)
+
 test("stop cancels queued handshake; init is idempotent", function(s)
   assert(s.press())
   s.module:stop()
@@ -409,6 +505,8 @@ for name, tabs in pairs({
   missing = "", ambiguous = "ABC123 A http://localhost:4123/a\nDEF456 B http://localhost:4123/b",
   tidewave = "ABC123 Tidewave http://localhost:4123/tidewave",
   tidewaveChild = "ABC123 Tidewave http://localhost:4123/tidewave/mcp?x=1",
+  connectChild = "ABC123 Tidewave http://localhost:4123/tidewave/connect/x",
+  ambiguousConnect = "ABC123 C http://localhost:4123/tidewave/connect\nDEF456 C http://localhost:4123/tidewave/connect",
   wrongPort = "ABC123 App http://localhost:4999/", wrongScheme = "ABC123 App https://localhost:4123/",
   wrongHost = "ABC123 App http://127.0.0.1:4123/", remote = "ABC123 App http://example.com:4123/",
 }) do test("tab routing refuses " .. name, function(s)
@@ -426,6 +524,22 @@ for _, origin in ipairs({ "http://localhost:4123", "https://localhost:4123", "ht
     assert(s.inspected == 1 and s.binding.appUrl == origin and s.binding.targetPrefix == "ABC123")
   end)
 end
+
+test("handshake falls back to the only Tidewave Connect tab", function(s)
+  s.tabs = "ABC123 Tidewave Connect http://localhost:4123/tidewave/connect"
+  s.module.handshake()
+  assert(s.inspected == 1 and s.binding.targetPrefix == "ABC123" and #s.watchers == 1)
+end)
+
+test("an app tab wins over a Connect tab unless the Connect tab was saved", function(s)
+  s.tabs = "ABC123 App http://localhost:4123/orders\nDEF456 Tidewave Connect http://localhost:4123/tidewave/connect"
+  s.module.handshake()
+  assert(s.binding.targetPrefix == "ABC123")
+  s.binding.targetPrefix = "DEF456"
+  s.mock.frontmost = s.ghostty
+  s.module.handshake()
+  assert(s.inspected == 2 and s.binding.targetPrefix == "DEF456")
+end)
 
 test("saved target survives in-tab navigation and wins over other same-origin pages", function(s)
   s.binding = { port = 4123, targetPrefix = "ABC123" }

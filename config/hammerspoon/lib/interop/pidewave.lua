@@ -3,20 +3,24 @@
 --
 -- Flow on hotkey:
 --   1. Resolve the focused Ghostty title to an exact, active tmux pane, or,
---      when Helium is frontmost, the focused app tab whose origin matches a
---      fresh connected Pi manifest (Cmd+Shift+C passes through to Helium when
---      no such tab is focused).
+--      when Helium is frontmost, the focused app or Tidewave Connect tab whose
+--      origin matches a fresh connected Pi manifest (Cmd+Shift+C passes
+--      through to Helium when no such tab is focused).
 --   2. Require a fresh connected manifest owned by that tty's foreground Pi,
 --      or the single Pi connected to the focused tab's origin.
 --   3. Cross-check the reported endpoint against the live Phoenix worktree.
 --   4. Revalidate the focused registration before any browser side effects.
 --   5. Find the unambiguous app tab on localhost:<port>, preferring the CDP
---      target saved by the previous handshake and never selecting /tidewave.
+--      target saved by the previous handshake. A /tidewave/connect tab is used
+--      when saved or when no app tab is open; other /tidewave pages never are.
 --   6. Write the optional Tidewave IDE Chat -> tmux pi binding.
 --   7. Bring the app tab forward via CDP, focus Helium, wait until the toolbar
---      is ready in the foreground tab, then click Inspect.
+--      is ready in the foreground tab (the visible session frame of a Connect
+--      tab), then click Inspect.
 --   8. Watch the clipboard briefly; forward copied Tidewave prompts
 --      (<user_prompt> payloads) to the bound pi as follow_up messages.
+--      Tidewave Connect prompts skip the handshake: an always-on watcher
+--      routes them by page origin (see relayConnectPrompt).
 --
 -- Everything is best-effort and pcall-guarded: interop failures (tmux absent,
 -- Helium closed, cdp.mjs missing, pi not running) must never crash Hammerspoon.
@@ -358,7 +362,11 @@ local function appUrl(url, origin)
   if actualOrigin ~= origin then return nil end
   local path = (rest or ""):match("^([^?#]*)") or "/"
   if path == "" then path = "/" end
-  return { path = path, tidewave = path == "/tidewave" or path:match("^/tidewave/") ~= nil }
+  return {
+    path = path,
+    tidewave = path == "/tidewave" or path:match("^/tidewave/") ~= nil,
+    connect = path == "/tidewave/connect",
+  }
 end
 
 -- Pick an app page without relying on CDP target enumeration order. A saved
@@ -375,7 +383,9 @@ local function selectAppTarget(origin, preferred)
     local id = line:match("^(%x+)")
     local url = line:match("(https?://%S+)%s*$")
     local parsed = url and appUrl(url, origin) or nil
-    if id and parsed and not parsed.tidewave then table.insert(targets, { id = id, url = url, path = parsed.path }) end
+    if id and parsed and (parsed.connect or not parsed.tidewave) then
+      table.insert(targets, { id = id, url = url, path = parsed.path, connect = parsed.connect })
+    end
   end
   table.sort(targets, function(a, b)
     if a.url ~= b.url then return a.url < b.url end
@@ -405,11 +415,22 @@ local function selectAppTarget(origin, preferred)
     if #exact == 1 then return exact[1] end
     if #exact > 1 then return nil, string.format("Multiple Helium tabs have the saved app URL %s.", preferred.url) end
   end
-  if #targets == 1 then return targets[1] end
-  if #targets == 0 then
-    return nil, string.format("No normal app tab found on %s (Tidewave pages are ignored).", origin)
+  -- Without a saved target an app tab wins; a Connect tab is the fallback.
+  local apps, connects = {}, {}
+  for _, target in ipairs(targets) do
+    table.insert(target.connect and connects or apps, target)
   end
-  return nil, string.format("Multiple app tabs are open on %s; keep only the intended tab open, then retry.", origin)
+  local pool = #apps > 0 and apps or connects
+  if #pool == 1 then return pool[1] end
+  if #pool == 0 then
+    return nil, string.format("No app or Tidewave Connect tab found on %s (other Tidewave pages are ignored).", origin)
+  end
+  return nil,
+    string.format(
+      "Multiple %s tabs are open on %s; keep only the intended tab open, then retry.",
+      #apps > 0 and "app" or "Tidewave Connect",
+      origin
+    )
 end
 
 local function heliumOwnsCdp(app)
@@ -427,6 +448,8 @@ end
 -- and has an Inspect control in the Tidewave toolbar shadow root. The toolbar
 -- collapses to its logo pill until hovered (React onMouseEnter), so a hidden
 -- button gets one synthetic mouseover on the pill before the poll continues.
+-- On a Tidewave Connect tab the poll runs in the session frame shown on top
+-- (same origin), falling back to the focused one.
 local function focusHeliumAndInspect(target, origin, connection)
   local app = hs.application.get("net.imput.helium")
   if not app then return false, "Helium is not running." end
@@ -463,14 +486,29 @@ local function focusHeliumAndInspect(target, origin, connection)
       let clicked = false;
       let expanded = false;
       const inspect = () => {
-        const localApp = location.origin === expectedOrigin
-          && location.pathname !== '/tidewave'
-          && !location.pathname.startsWith('/tidewave/');
+        let doc = document;
+        if (location.origin === expectedOrigin && location.pathname === '/tidewave/connect') {
+          const frames = [...document.querySelectorAll('iframe[name^="tidewave-control-session-"]')];
+          const shown = frames.filter(f => {
+            const r = f.getBoundingClientRect();
+            return r.width > 0 && r.height > 0
+              && document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2) === f;
+          });
+          const frame = shown.length === 1 ? shown[0] : frames.find(f => f === document.activeElement);
+          doc = frame && frame.contentDocument;
+          if (!doc) {
+            resolve(`no-session:${frames.length}:${shown.length}`);
+            return;
+          }
+        }
+        const localApp = doc.location.origin === expectedOrigin
+          && doc.location.pathname !== '/tidewave'
+          && !doc.location.pathname.startsWith('/tidewave/');
         if (!localApp) {
-          resolve(`location-mismatch:${location.href}`);
+          resolve(`location-mismatch:${doc.location.href}`);
           return;
         }
-        const host = document.getElementById('tidewave-toolbar');
+        const host = doc.getElementById('tidewave-toolbar');
         const root = host && host.shadowRoot;
         const button = root && [...root.querySelectorAll('button,[role=button]')]
           .find(b => /inspect/i.test((b.getAttribute('aria-label') || b.title || b.textContent || '')));
@@ -481,7 +519,7 @@ local function focusHeliumAndInspect(target, origin, connection)
           : rect.width > 0 && rect.height > 0);
         const selected = visible && button.classList.contains('bg-accent');
         const active = selected && root.querySelector('[data-testid="inspector-panel"]');
-        const ready = document.readyState === 'complete' && document.visibilityState === 'visible';
+        const ready = doc.readyState === 'complete' && doc.visibilityState === 'visible';
         if (ready && active) {
           resolve('active');
           return;
@@ -498,7 +536,7 @@ local function focusHeliumAndInspect(target, origin, connection)
         }
         if (Date.now() >= deadline) {
           const buttonState = !button ? 'no-button' : !enabled ? 'button-disabled' : !visible ? (expanded ? 'expand-unconfirmed' : 'button-hidden') : clicked ? 'click-unconfirmed' : 'button';
-          resolve(`not-ready:${document.readyState}:${document.visibilityState}:${host ? 'toolbar' : 'no-toolbar'}:${buttonState}`);
+          resolve(`not-ready:${doc.readyState}:${doc.visibilityState}:${host ? 'toolbar' : 'no-toolbar'}:${buttonState}`);
           return;
         }
         setTimeout(inspect, 100);
@@ -521,6 +559,10 @@ end
 -- prompt to the clipboard. Relay those copies to the bound pi over its bridge
 -- socket so the prompt lands in tmux without a manual paste.
 local PROMPT_RELAY_TTL = 300 -- seconds
+-- Tidewave Connect session frames add this context, naming their browser_eval sid.
+local CONNECT_MARKER = '<context name="tidewave-browser-eval">'
+-- Chromium tags every clipboard write with the page that made it.
+local SOURCE_URL_UTI = "org.chromium.source-url"
 
 local function stopPromptRelay()
   pcall(function()
@@ -558,6 +600,8 @@ local function armPromptRelay(binding)
     M._promptWatcher = hs.pasteboard.watcher.new(function(contents)
       if type(contents) ~= "string" then return end
       if not contents:find("<user_prompt>", 1, true) then return end
+      -- relayConnectPrompt owns Connect prompts, so they are never sent twice.
+      if contents:find(CONNECT_MARKER, 1, true) then return end
       if contents == M._lastForwardedPrompt then return end
       if forwardPrompt(binding, contents) then
         -- The receiving pi notifies on arrival (bridge.ts persistAndSurfaceTell);
@@ -572,6 +616,62 @@ local function armPromptRelay(binding)
   if not ok or not M._promptWatcher then
     stopPromptRelay()
     notify("Could not watch the clipboard for copied Tidewave prompts.", true)
+  end
+end
+
+local function urlOrigin(url) return type(url) == "string" and url:match("^(https?://[^/?#%s<]+)") or nil end
+
+-- The Pi saved by the last Cmd+Shift+C on this origin, if it is still one of
+-- the connected candidates.
+local function boundManifest(origin, manifests)
+  local found = {}
+  pcall(function()
+    for name in hs.fs.dir(BINDING_DIR) do
+      local f = name:match("%.json$") and io.open(BINDING_DIR .. "/" .. name, "r")
+      if f then
+        local raw = f:read("*a")
+        f:close()
+        local ok, binding = pcall(hs.json.decode, raw)
+        if ok and type(binding) == "table" and binding.appUrl == origin then
+          for _, manifest in ipairs(manifests) do
+            if manifest.socket == binding.socket then table.insert(found, manifest) end
+          end
+        end
+      end
+    end
+  end)
+  if #found == 1 then return found[1] end
+  return nil
+end
+
+-- Always on, no handshake needed: a Connect prompt names its page URL, and
+-- Helium tags the copy with its source page. Forward only when both share an
+-- origin with a connected Pi, so prompts copied from anywhere else (another
+-- site, the Pi transcript in a terminal) are ignored. When several Pis share
+-- the origin, the last Cmd+Shift+C binding picks one.
+local function relayConnectPrompt(contents)
+  if type(contents) ~= "string" or contents == M._lastConnectPrompt then return end
+  if not contents:find("<user_prompt>", 1, true) or not contents:find(CONNECT_MARKER, 1, true) then return end
+  local origin = urlOrigin(contents:match('<context name="current%-page">.-<url>%s*(%S+)'))
+  if not origin or urlOrigin(hs.pasteboard.readDataForUTI(SOURCE_URL_UTI)) ~= origin then return end
+  local manifests = manifestsByOrigin()[origin] or {}
+  local manifest = #manifests == 1 and manifests[1] or boundManifest(origin, manifests)
+  if not manifest then
+    notify(
+      #manifests == 0 and ("No Pi is connected to " .. origin .. "; the copied Tidewave prompt was not forwarded.")
+        or string.format(
+          "%d Pi sessions are connected to %s; press Cmd+Shift+C in the Pi you want.",
+          #manifests,
+          origin
+        ),
+      true
+    )
+    return
+  end
+  if forwardPrompt(manifest, contents) then
+    M._lastConnectPrompt = contents
+  else
+    notify("Copied Tidewave prompt was not delivered to the connected Pi.", true)
   end
 end
 
@@ -608,7 +708,7 @@ local function browserConnection()
     local url = line:match("(https?://%S+)%s*$")
     local origin = url and url:match("^(https?://[^/?#]+)")
     local parsed = origin and byOrigin[origin] and appUrl(url, origin) or nil
-    if id and parsed and not parsed.tidewave then
+    if id and parsed and (parsed.connect or not parsed.tidewave) then
       local probe = sh(
         string.format(
           "CDP_PORT=%d node %s eval %s %s",
@@ -690,6 +790,9 @@ end
 
 function M:init()
   self:stop()
+  local watching, watcher = pcall(hs.pasteboard.watcher.new, relayConnectPrompt)
+  M._connectWatcher = watching and watcher or nil
+  if not M._connectWatcher then notify("Could not watch the clipboard for Tidewave Connect prompts.", true) end
   M._keyWatcher = hs.eventtap
     .new({ hs.eventtap.event.types.keyDown }, function(event)
       if event:getKeyCode() ~= hs.keycodes.map[HOTKEY_KEY] or not event:getFlags():containExactly(HOTKEY_MODS) then
@@ -723,6 +826,10 @@ end
 
 function M:stop()
   stopPromptRelay()
+  if M._connectWatcher then
+    pcall(function() M._connectWatcher:stop() end)
+    M._connectWatcher = nil
+  end
   if M._keyWatcher then
     M._keyWatcher:stop()
     M._keyWatcher = nil

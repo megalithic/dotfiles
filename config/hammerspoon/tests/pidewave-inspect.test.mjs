@@ -36,6 +36,9 @@ async function inspect(initial = {}, onTick = () => {}) {
     visibilityState: "visible",
     origin,
     pathname: "/orders",
+    connect: false,
+    shownFrame: 1,
+    focusedFrame: null,
     ...initial,
   };
   const timers = [];
@@ -73,20 +76,43 @@ async function inspect(initial = {}, onTick = () => {}) {
       this.bubbles = init.bubbles === true;
     }
   }
-  const context = {
+  const appDocument = {
     location: {
       get origin() { return state.origin; },
       get pathname() { return state.pathname; },
       get href() { return state.origin + state.pathname; },
     },
-    document: {
-      get readyState() { return state.readyState; },
-      get visibilityState() { return state.visibilityState; },
-      getElementById(id) {
-        assert.equal(id, "tidewave-toolbar");
-        return state.toolbarPresent ? { shadowRoot: state.shadowRootPresent ? root : null } : null;
-      },
+    get readyState() { return state.readyState; },
+    get visibilityState() { return state.visibilityState; },
+    getElementById(id) {
+      assert.equal(id, "tidewave-toolbar");
+      return state.toolbarPresent ? { shadowRoot: state.shadowRootPresent ? root : null } : null;
     },
+  };
+  // Tidewave Connect: frame 0 is another session, frame 1 holds the app page.
+  const otherDocument = {
+    location: { origin, pathname: "/other", href: `${origin}/other` },
+    readyState: "complete",
+    visibilityState: "visible",
+    getElementById: () => null,
+  };
+  const frames = [otherDocument, appDocument].map((doc) => ({
+    getBoundingClientRect: () => ({ x: 0, y: 0, width: 100, height: 100 }),
+    contentDocument: doc,
+  }));
+  const connectDocument = {
+    location: { origin, pathname: "/tidewave/connect", href: `${origin}/tidewave/connect` },
+    querySelectorAll(selector) {
+      assert.equal(selector, 'iframe[name^="tidewave-control-session-"]');
+      return frames;
+    },
+    elementFromPoint: () => frames[state.shownFrame] ?? null,
+    get activeElement() { return frames[state.focusedFrame] ?? null; },
+  };
+  const document = state.connect ? connectDocument : appDocument;
+  const context = {
+    location: document.location,
+    document,
     Date: { now: () => state.now },
     MouseEvent,
     setTimeout(callback, delay) { timers.push({ callback, at: state.now + delay }); },
@@ -219,6 +245,37 @@ for (const [name, initial] of [
     assert.equal(result.now, 0);
   });
 }
+
+test("Connect tab clicks Inspect in the session frame shown on top", async () => {
+  const result = await inspect({ connect: true }, (state) => {
+    state.selected = true;
+    state.panel = true;
+  });
+  assert.equal(result.result, "active");
+  assert.equal(result.clicks, 1);
+});
+
+test("Connect tab falls back to the focused session frame", async () => {
+  const result = await inspect({ connect: true, shownFrame: null, focusedFrame: 1 }, (state) => {
+    state.selected = true;
+    state.panel = true;
+  });
+  assert.equal(result.result, "active");
+  assert.equal(result.clicks, 1);
+});
+
+test("Connect tab without a shown or focused session never clicks", async () => {
+  const result = await inspect({ connect: true, shownFrame: null });
+  assert.equal(result.result, "no-session:2:0");
+  assert.equal(result.clicks, 0);
+  assert.equal(result.now, 0);
+});
+
+test("Connect session on another origin never clicks", async () => {
+  const result = await inspect({ connect: true, origin: "http://localhost:4999" });
+  assert.match(result.result, /^location-mismatch:http:\/\/localhost:4999/);
+  assert.equal(result.clicks, 0);
+});
 
 test("location is rechecked while waiting for readiness", async () => {
   const result = await inspect({ disabled: true }, (state) => {
