@@ -491,6 +491,13 @@ class FtmTest(unittest.TestCase):
                  if call["args"][0] == "send-keys"]
         self.assertFalse(any("mise run dev:services" in call for call in sends))
 
+    def test_pi_fresh_conflicts_with_pi_session(self):
+        result = self.run_ftm("ensure", "--kind", "generic", "--cwd", str(self.root),
+                              "--session", "project", "--attach", "never", "--pi-fresh",
+                              "--pi-session", "01a069c5-9dbc-76ed-a951-1b70905357d5",
+                              expected=2)
+        self.assertIn("cannot be combined", result.stderr)
+
     def test_no_services_conflicts_with_restart_services(self):
         result = self.run_ftm("ensure", "--kind", "generic", "--cwd", str(self.root),
                               "--session", "project", "--attach", "never",
@@ -500,20 +507,22 @@ class FtmTest(unittest.TestCase):
     def test_agent_launch_uses_managed_wrapper(self):
         self.env["MISSING_AGENT"] = "1"
         session_id = "01a069c5-9dbc-76ed-a951-1b70905357d5"
-        for pi_args in (["-c"], ["--session", session_id]):
+        cases = ((["-c"], []),
+                 (["--session", session_id], ["--pi-session", session_id]),
+                 ([], ["--pi-fresh"]))
+        for pi_args, ftm_args in cases:
             with self.subTest(pi_args=pi_args):
                 self.run_ftm("ensure", "--kind", "generic", "--cwd", str(self.root),
-                             "--session", "project", "--attach", "never",
-                             *([] if pi_args == ["-c"] else ["--pi-session", session_id]))
+                             "--session", "project", "--attach", "never", *ftm_args)
                 sends = [call["args"] for call in self.calls("tmux")
                          if call["args"][0] == "send-keys"]
                 command = sends[-1][3]
-                self.assertEqual(command, '"$HOME/.local/bin/pi" ' + " ".join(pi_args))
+                self.assertEqual(command, " ".join(['"$HOME/.local/bin/pi"', *pi_args]))
                 # Exercise shell quoting with a spaced HOME and a shadowing PATH pi.
                 home = self.root / "home with spaces"
                 wrapper = home / ".local" / "bin" / "pi"
                 wrapper.parent.mkdir(parents=True, exist_ok=True)
-                wrapper.write_text('#!/bin/sh\nprintf "managed\\n"\nprintf "%s\\n" "$@"\n')
+                wrapper.write_text('#!/bin/sh\nprintf "managed\\n"\nfor a; do printf "%s\\n" "$a"; done\n')
                 wrapper.chmod(0o755)
                 shadow = self.bin / "pi"
                 shadow.write_text("#!/bin/sh\nexit 99\n")

@@ -337,7 +337,7 @@ function __help() {
   printf -- "\n"
   printf -- "   Deterministic (non-picker) session lifecycle:\n"
   printf -- "     %s ensure --kind worktree|generic --cwd PATH --session NAME \\\n" "$__base"
-  printf -- "         [--worktree-id ID] [--lease TOKEN] [--pi-session UUID] \\\n"
+  printf -- "         [--worktree-id ID] [--lease TOKEN] [--pi-session UUID | --pi-fresh] \\\n"
   printf -- "         [--presentation cd|window|session] [--primary] [--no-services] \\\n"
   printf -- "         [--attach auto|never] [--format json|text]\n"
   printf -- "     %s repair ... [--restart-services]   additive repair of a recognized session\n" "$__base"
@@ -859,7 +859,7 @@ function fuzzy_find() {
 # mode uses the same lifecycle without Git locks or worktree tags.
 
 DETERMINISTIC_CMD="" DETERMINISTIC_KIND="" DETERMINISTIC_CWD="" DETERMINISTIC_SESSION="" DETERMINISTIC_WID=""
-DETERMINISTIC_LEASE="" DETERMINISTIC_ATTACH=auto DETERMINISTIC_FORMAT=text DETERMINISTIC_PI_SESSION=""
+DETERMINISTIC_LEASE="" DETERMINISTIC_ATTACH=auto DETERMINISTIC_FORMAT=text DETERMINISTIC_PI_SESSION="" DETERMINISTIC_PI_FRESH=0
 DETERMINISTIC_PRESENTATION=session DETERMINISTIC_PRIMARY=0
 DETERMINISTIC_RESTART_SERVICES=0 DETERMINISTIC_NO_SERVICES=0 DETERMINISTIC_DISCARD_SNAPSHOT=0
 DETERMINISTIC_GCD="" DETERMINISTIC_OWNED_LEASE="" DETERMINISTIC_SETUP_STATE=skipped
@@ -954,6 +954,10 @@ function deterministic_parse() {
         DETERMINISTIC_DISCARD_SNAPSHOT=1
         shift
         ;;
+      --pi-fresh)
+        DETERMINISTIC_PI_FRESH=1
+        shift
+        ;;
       *) deterministic_error 2 usage args "unknown argument: $a" ;;
     esac
   done
@@ -966,6 +970,7 @@ function deterministic_parse() {
   if [[ -n $DETERMINISTIC_PI_SESSION && ! $DETERMINISTIC_PI_SESSION =~ ^[0-9a-fA-F][0-9a-fA-F-]*$ ]]; then
     deterministic_error 2 usage args 'invalid --pi-session UUID'
   fi
+  [[ $DETERMINISTIC_PI_FRESH == 0 || -z $DETERMINISTIC_PI_SESSION ]] || deterministic_error 2 usage args '--pi-fresh cannot be combined with --pi-session'
   if [[ $DETERMINISTIC_CMD == ensure || $DETERMINISTIC_CMD == repair ]]; then
     [[ -n $DETERMINISTIC_KIND ]] || deterministic_error 2 usage args '--kind is required'
     [[ $DETERMINISTIC_KIND == worktree || $DETERMINISTIC_KIND == generic ]] || deterministic_error 2 usage args "--kind must be worktree|generic"
@@ -1111,20 +1116,24 @@ function deterministic_build() {
   else
     # Exact-cwd Pi: tmux cwd AND process cwd both set to the canonical path;
     # pi -c continues the latest session stored for exactly that directory.
-    # An explicit Pi session UUID targets a known session instead. The
-    # managed wrapper enables bridge ingress and loads project env via mise.
+    # An explicit Pi session UUID targets a known session instead, and
+    # --pi-fresh (a just-created worktree) skips sessions left behind by an
+    # earlier worktree at the same path. The managed wrapper enables bridge
+    # ingress and loads project env via mise.
     local pi_args
     if [[ -n $DETERMINISTIC_PI_SESSION ]]; then
-      pi_args="--session $DETERMINISTIC_PI_SESSION"
+      pi_args=" --session $DETERMINISTIC_PI_SESSION"
+    elif [[ $DETERMINISTIC_PI_FRESH == 1 ]]; then
+      pi_args=""
     else
-      pi_args="-c"
+      pi_args=" -c"
     fi
     # The window is a plain interactive shell and the command is typed via
     # send-keys: the shell's job control keeps pi as the foreground process
     # (pane_current_command stays node for pi detection), and cancelling or
     # exiting pi returns to the shell prompt instead of killing the window.
     # The typed line must stay POSIX-and-fish portable.
-    agent_cmd="\"\$HOME/.local/bin/pi\" $pi_args"
+    agent_cmd="\"\$HOME/.local/bin/pi\"$pi_args"
     wid="$(tmux new-window -d -P -F '#{window_id}' -t "$sid" -n agent -c "$DETERMINISTIC_CWD")" ||
       deterministic_error 7 tmux_failed tmux 'could not create agent window'
     tmux send-keys -t "$wid" "$agent_cmd" Enter

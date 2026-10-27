@@ -386,6 +386,7 @@ v2_call_ftm() { # ensure|repair|remove
       [ "$V2_PRIMARY" -eq 1 ] && args+=(--primary)
       [ "$V2_RESTART" -eq 0 ] || args+=(--restart-services)
       [ "$V2_NO_SERVICES" -eq 0 ] || args+=(--no-services)
+      [ "$operation" != ensure ] || [ "$V2_ACTION" != created ] || args+=(--pi-fresh)
       ;;
     remove)
       args=(remove --kind worktree --cwd "$V2_PATH" --session "$V2_SESSION" --worktree-id "$V2_WID" --lease "$V2_LEASE" --discard-snapshot --attach never --format json)

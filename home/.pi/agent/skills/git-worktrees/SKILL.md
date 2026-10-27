@@ -23,7 +23,7 @@ If `wt --version` fails, stop and report the error. There is no fallback workflo
 
 | Command | Effect |
 | --- | --- |
-| `wt NAME` | Ensure worktree + setup, build the canonical session (`code`, `agent` running `pi -c`, `services` running `dev:services`), switch the client to it. |
+| `wt NAME` | Ensure worktree + setup, build the canonical session (`code`, `agent` running Pi, `services` running `dev:services`), switch the client to it. Pi starts fresh in a just-created worktree and as `pi -c` otherwise. |
 | `wt -t w NAME` | Same lifecycle; one `wt:<id>` window in the current session. Left pane (60%) is a shell, right pane (40%) runs `dev:services`. Outside tmux falls back to cd. |
 | `wt -t cd NAME` | Same lifecycle; only cd the interactive shell. No tmux. |
 | `wt ensure NAME --json` | Same lifecycle; builds the canonical session detached. Never cds, selects, or attaches. |
@@ -95,7 +95,7 @@ git rev-parse --verify --quiet "refs/heads/$NAME" >/dev/null ||
    tmux send-keys -t "$pane" '"$HOME/.local/bin/pi"' Enter
    ```
 
-   Default (own session; `ftm` starts `pi -c` in its `agent` window):
+   Default (own session; `ftm` starts a fresh `pi` in its `agent` window, never resuming sessions left by an earlier worktree at the same path):
 
    ```bash
    out="$(wt ensure NAME --base BASE --json)"; echo "$out"
