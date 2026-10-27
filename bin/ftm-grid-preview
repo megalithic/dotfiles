@@ -15,8 +15,10 @@ function printManifestPanes(session, directory) {
         if (manifest.session !== session || typeof manifest.pane !== "string" || manifest.ephemeral === true) continue;
         const socketBase = typeof manifest.socket === "string" ? basename(manifest.socket) : "";
         if (typeof manifest.window === "string" && socketBase.startsWith(`pi-${manifest.session}-${manifest.window}-eph-`)) continue;
-        const pid = Number.isInteger(manifest.pid) ? manifest.pid : "";
-        process.stdout.write(`${manifest.pane}\t${pid}\n`);
+        // "-" placeholders: bash `IFS=$TAB read` collapses empty fields.
+        const pid = Number.isInteger(manifest.pid) ? manifest.pid : "-";
+        const sessionId = typeof manifest.sessionId === "string" && manifest.sessionId ? manifest.sessionId : "-";
+        process.stdout.write(`${manifest.pane}\t${pid}\t${sessionId}\n`);
       } catch {}
     }
   } catch {}

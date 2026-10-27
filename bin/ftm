@@ -24,6 +24,7 @@
 #   ctrl-k  snapshot and kill selected session
 #   ctrl-x  confirm kill and forget selected session (snapshot + recent entry)
 #   ctrl-r  rename selected session
+#   ctrl-y  copy tell id (exactly one Pi) or "session: X / worktree: Y"
 #
 # Dependencies: tmux, fzf (>= 0.53 for native --tmux popups), bun; zoxide optional
 #
@@ -342,7 +343,7 @@ function __help() {
   printf -- "     %s repair ... [--restart-services]   additive repair of a recognized session\n" "$__base"
   printf -- "     %s remove --session NAME [--cwd PATH] [--discard-snapshot]\n" "$__base"
   printf -- "         --discard-snapshot also forgets the recent entry, even if already stopped\n"
-  printf -- "     Picker: ctrl-k saves and kills; ctrl-x confirms kill and forget\n"
+  printf -- "     Picker: ctrl-k saves and kills; ctrl-x confirms kill and forget; ctrl-y copies tell id or session/worktree\n"
   printf -- "\n"
   printf -- "   Dependencies:\n"
   printf -- "     tmux            (%s)\n" "$tmux_running"
@@ -423,20 +424,21 @@ function is_pi_pane() {
   ps -t "${1#/dev/}" -o comm= 2>/dev/null | grep -qx pi
 }
 
-# -- Find every live Pi pane. Manifest and status records are a union; both
-#    paths still validate the pane's process title before exposing it.
+# -- Find every live Pi pane, printed as "pane<TAB>pi session id" ("-" when
+#    unknown). Manifest and status records are a union; both paths still
+#    validate the pane's process title before exposing it.
 function pi_panes_for() {
-  local session="$1" sid="$2" f pane pid win panes
+  local session="$1" sid="$2" f pane pid pi_sid win panes
   local wname windex wpane wcmd wtty seen=$'\n' seen_windows=$'\n' _st _sess
   panes="$(tmux list-panes -s -t "$sid" -F '#{window_name}'"$TAB"'#{window_index}'"$TAB"'#{pane_id}'"$TAB"'#{pane_current_command}'"$TAB"'#{pane_tty}' 2>/dev/null || true)"
-  while IFS=$TAB read -r pane pid; do
+  while IFS=$TAB read -r pane pid pi_sid; do
     [[ -n $pane ]] || continue
     [[ $pid =~ ^[0-9]+$ ]] && ! kill -0 "$pid" 2>/dev/null && continue
     while IFS=$TAB read -r wname windex wpane wcmd wtty; do
       if [[ $wpane == "$pane" && $wcmd == node ]] && is_pi_pane "$wtty" && [[ $seen != *$'\n'"$pane"$'\n'* ]]; then
         seen+="$pane"$'\n'
         seen_windows+="$wname"$'\n'"$windex"$'\n'
-        printf '%s\n' "$pane"
+        printf '%s\t%s\n' "$pane" "${pi_sid:--}"
         break
       fi
     done <<<"$panes"
@@ -452,7 +454,7 @@ function pi_panes_for() {
     while IFS=$TAB read -r wname windex wpane wcmd wtty; do
       if [[ ($wname == "$win" || $windex == "$win") && $wcmd == node ]] && is_pi_pane "$wtty" && [[ $seen != *$'\n'"$wpane"$'\n'* ]]; then
         seen+="$wpane"$'\n'
-        printf '%s\n' "$wpane"
+        printf '%s\t-\n' "$wpane"
         break
       fi
     done <<<"$panes"
@@ -475,7 +477,7 @@ function preview_entry() {
   fi
   [[ -n $name ]] || return 0
   if sid="$(session_id_for "$name")"; then
-    while IFS= read -r pane; do
+    while IFS=$TAB read -r pane _; do
       [[ -n $pane ]] && targets+=("$pane")
     done < <(pi_panes_for "$name" "$sid")
     if [[ ${#targets[@]} -eq 0 ]]; then
@@ -489,6 +491,31 @@ function preview_entry() {
     cat "$layouts_dir/$name.sh"
   fi
   return 0
+}
+
+# -- ctrl-y: copy the tell id when the session runs exactly one Pi with a
+#    known session id; otherwise one labeled line with the session and its
+#    worktree (branch, else dir basename: the same rule as wt's worktree id).
+#    Rows that are not running sessions copy nothing.
+function copy_entry() {
+  local name="$1" sid wt branch pane pi_sid count=0 tell="" text
+  sid="$(session_id_for "$name")" || return 0
+  while IFS=$TAB read -r pane pi_sid; do
+    [[ -n $pane ]] || continue
+    count=$((count + 1))
+    tell="$pi_sid"
+  done < <(pi_panes_for "$name" "$sid")
+  if [[ $count == 1 && -n $tell && $tell != - ]]; then
+    text="pi:${HOSTNAME%%.*}:$tell"
+  else
+    text="session: $name"
+    wt="$(tmux show-options -t "$sid" -qv @ftm_worktree 2>/dev/null || true)"
+    if [[ -n $wt ]]; then
+      branch="$(git -C "$wt" branch --show-current 2>/dev/null || true)"
+      text+=" / worktree: ${branch:-${wt##*/}}"
+    fi
+  fi
+  printf '%s' "$text" | pbcopy
 }
 
 # -- pre-defined layout names (one glob, no subshells)
@@ -766,7 +793,7 @@ function fuzzy_find() {
     fzf_header_text="󰢩 recent dirs & layouts [ctrl-x: forget / alt-enter: fresh]"
   else
     fzf_prompt_text=" new or existing session  "
-    fzf_header_text="󰢩 ${C_ITALIC}${C_MAGENTA}${current_session}${C_RESET} [${C_WHITE}ctrl-k${C_RESET}: ${C_GRAY}kill / ${C_WHITE}ctrl-x${C_RESET}: ${C_GRAY}forget / ${C_WHITE}ctrl-r${C_RESET}: ${C_GRAY}rename / ${C_WHITE}alt-enter${C_RESET}: ${C_GRAY}fresh${C_RESET}]"
+    fzf_header_text="󰢩 ${C_ITALIC}${C_MAGENTA}${current_session}${C_RESET} [${C_WHITE}ctrl-k${C_RESET}: ${C_GRAY}kill / ${C_WHITE}ctrl-x${C_RESET}: ${C_GRAY}forget / ${C_WHITE}ctrl-r${C_RESET}: ${C_GRAY}rename / ${C_WHITE}ctrl-y${C_RESET}: ${C_GRAY}copy / ${C_WHITE}alt-enter${C_RESET}: ${C_GRAY}fresh${C_RESET}]"
   fi
 
   # -- picker actions; reload regenerates the annotated list so markers stay correct
@@ -809,6 +836,7 @@ function fuzzy_find() {
       --bind="ctrl-k:${kill_action}" \
       --bind="ctrl-x:${forget_action}" \
       --bind="ctrl-r:${rename_action}" \
+      --bind="ctrl-y:execute-silent(ftm --copy={s1})" \
       --bind='enter:transform:if [[ $FZF_MATCH_COUNT -eq 0 ]]; then echo print-query; else echo "transform:[[ \{s1} =~ ^-+$ ]] && echo ignore || echo accept"; fi' \
       --bind="alt-enter:transform:if [[ \$FZF_MATCH_COUNT -eq 0 ]]; then echo 'print(${FTM_FRESH})+accept'; else echo \"transform:[[ \{s1} =~ ^-+\$ ]] && echo ignore || echo 'print(${FTM_FRESH})+accept'\"; fi" \
       --pointer='▌' \
@@ -1431,6 +1459,11 @@ while getopts "phs:-:" OPTION; do
           # internal: session name -> id for picker actions
           session_id_for "${OPTARG#id=}"
           exit $?
+          ;;
+        copy=*)
+          # internal: ctrl-y clipboard copy for a picker entry
+          copy_entry "${OPTARG#copy=}"
+          exit 0
           ;;
         preview=*)
           # internal: fzf preview for a picker entry

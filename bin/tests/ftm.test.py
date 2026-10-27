@@ -72,11 +72,17 @@ elif name == "fzf":
 elif name == "ftm-grid-preview":
     if not args or args[0] != "--manifest-panes":
         print("grid-preview")
+    elif os.environ.get("MANIFEST_PANES"):
+        print(os.environ["MANIFEST_PANES"])
+elif name == "pbcopy":
+    (root / "clipboard").write_text(sys.stdin.read())
 elif name == "mise":
     if args[:3] == ["tasks", "info", "--json"]:
         sys.exit(0 if os.environ.get("MISE_TASKS") else 1)
     sys.exit(0 if os.environ.get("MISE_TASKS") else 1)
 elif name == "ps":
+    if os.environ.get("PS_COMM"):
+        print(os.environ["PS_COMM"])
     sys.exit(0)
 elif name == "tmux":
     state_file = root / "sessions.json"
@@ -94,7 +100,8 @@ elif name == "tmux":
             else:
                 print(value["id"] + " " + key)
     elif command == "show-options":
-        pass
+        if args[-1] == "@ftm_worktree" and os.environ.get("FTM_WORKTREE"):
+            print(os.environ["FTM_WORKTREE"])
     elif command == "kill-session":
         if session is None:
             sys.exit(1)
@@ -121,7 +128,10 @@ elif name == "tmux":
     elif command == "send-keys":
         pass
     elif command == "list-panes":
-        print("0\t" + str(root) + "\tbash\t-\t/dev/fake\t1")
+        if option("-F").startswith("#{window_name}") and os.environ.get("PI_PANES"):
+            print(os.environ["PI_PANES"])
+        else:
+            print("0\t" + str(root) + "\tbash\t-\t/dev/fake\t1")
     elif command == "new-session":
         state[option("-s")] = {"id": "$99", "cwd": option("-c")}
         state_file.write_text(json.dumps(state))
@@ -154,7 +164,7 @@ class FtmTest(unittest.TestCase):
         shutil.copy2(BIN / "ftm", self.ftm)
         shutil.copy2(BIN / "wt-lock-lib", self.bin / "wt-lock-lib")
         for name in ("tmux", "wt", "zoxide", "trash", "fzf", "mise", "ps",
-                     "ftm-grid-preview"):
+                     "ftm-grid-preview", "pbcopy"):
             path = self.bin / name
             path.write_text("#!" + sys.executable + "\n" + FAKE_COMMAND)
             path.chmod(0o755)
@@ -633,6 +643,36 @@ class FtmTest(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 call = next(c["args"] for c in self.calls("tmux") if c["args"][0] == verb)
                 self.assertEqual(call[call.index("-t") + 1], "$7")
+
+    def copy(self, name="project"):
+        clipboard = self.root / "clipboard"
+        clipboard.unlink(missing_ok=True)
+        self.run_ftm("--copy=" + name)
+        return clipboard.read_text() if clipboard.exists() else None
+
+    def test_picker_ctrl_y_copies_tell_id_or_session_and_worktree(self):
+        self.run_ftm()
+        self.assertIn("--bind=ctrl-y:execute-silent(ftm --copy={s1})", self.calls("fzf")[-1]["args"])
+        self.set_sessions({"project": {"id": "$7", "cwd": str(self.root)}})
+        self.env.update({"HOSTNAME": "testhost.local", "PS_COMM": "pi",
+                         "PI_PANES": "agent\t1\t%1\tnode\t/dev/fake1\n"
+                                     "agent2\t2\t%2\tnode\t/dev/fake2"})
+        pid = os.getpid()
+        self.env["MANIFEST_PANES"] = f"%1\t{pid}\tsession-uuid"
+        self.assertEqual(self.copy(), "pi:testhost:session-uuid")
+        self.assertIsNone(self.copy("not-running"))
+        self.assertIsNone(self.copy("-----"))
+        cwd = self.git_cwd(linked=True)
+        for manifests, worktree, expected in (
+                (f"%1\t{pid}\tsession-uuid\n%2\t{pid}\tother-uuid", str(cwd.parent),
+                 "session: project / worktree: topic"),
+                (f"%1\t{pid}\t-", str(self.root / "plain-dir"),
+                 "session: project / worktree: plain-dir"),
+                ("", "", "session: project")):
+            with self.subTest(expected=expected):
+                self.env["MANIFEST_PANES"] = manifests
+                self.env["FTM_WORKTREE"] = worktree
+                self.assertEqual(self.copy(), expected)
 
     def test_picker_ctrl_x_confirms_forget_while_ctrl_k_preserves_snapshot(self):
         self.run_ftm()
