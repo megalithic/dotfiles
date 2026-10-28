@@ -14,13 +14,13 @@
   },
   "defaultProvider": "anthropic",
   "defaultModel": "claude-opus-5-5",
-  "defaultThinkingLevel": "xhigh",
+  "defaultThinkingLevel": "high",
   "warnings": {
     "anthropicExtraUsage": false
   },
   "doubleEscapeAction": "tree",
   "enableSkillCommands": true,
-  "hideThinkingBlock": false,
+  "hideThinkingBlock": true,
   "steeringMode": "all",
   "followUpMode": "all",
   "treeFilterMode": "no-tools",
@@ -53,26 +53,26 @@
     "git:github.com/aliou/nvim-pi",
     "git:github.com/amosblomqvist/pi-interactive-subagents",
     "git:github.com/DietrichGebert/ponytail",
-    "git:github.com/christomitov/pi-elixir@fix/host-packages-peer-deps"
+    "git:github.com/christomitov/pi-elixir@fix/host-packages-peer-deps",
+    "git:github.com/cloudflare/security-audit-skill"
   ],
   "enabledModels": [
     "anthropic/claude-fable-5-1",
     "anthropic/claude-opus-5-5",
-    "anthropic/claude-opus-5",
-    "anthropic/claude-sonnet-5",
-    "anthropic/claude-haiku-4-5",
-    "openai-codex/gpt-6-1-astra",
+    "anthropic/claude-sonnet-5-5",
+    "anthropic/claude-haiku-5-5",
     "openai-codex/gpt-6-astra",
-    "openai-codex/gpt-5.6-sol",
-    "openai-codex/gpt-5.6-terra",
-    "openai-codex/gpt-5.6-luna",
-    "opencode-go-console/gpt-5.6-luna",
+    "openai-codex/gpt-6.1-sol",
+    "openai-codex/gpt-6.1-terra",
+    "openai-codex/gpt-6-luna",
+    "opencode-go-console/kimi-k3.1-pro",
     "opencode-go-console/kimi-k3",
     "opencode-go-console/deepseek-v4-pro",
-    "opencode-go-console/deepseek-v4-flash",
+    "opencode-go-console/deepseek-v4.1-flash",
     "opencode-go-console/glm-5.3",
+    "opencode-go-console/glm-5.3-flash",
     "opencode-go-console/qwen3.8-max",
-    "opencode-go-console/qwen3.8-plus"
+    "opencode-go-console/qwen3.8-flash"
   ],
   "terminal": {
     "showTerminalProgress": true,
