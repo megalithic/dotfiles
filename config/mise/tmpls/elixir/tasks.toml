@@ -17,7 +17,7 @@ mise run start:db
 '''
 
 [bootstrap]
-description = "Bootstrap local agent tooling (.pi dir: APPEND_SYSTEM.md + mcp.json)"
+description = "Bootstrap local agent tooling (.pi dir: AGENTS.md + mcp.json)"
 depends = ["bootstrap:pi"]
 
 ["bootstrap:pi"]

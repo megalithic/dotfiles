@@ -10,17 +10,19 @@ const generated = { type: "streamable-http", url, lifecycle: "keep-alive" };
 const shells = [...new Set(["/bin/bash", Bun.which("bash")].filter((s): s is string => !!s && fs.existsSync(s)))];
 
 for (const bash of shells) {
-  const fixture = (config?: object) => {
+  // `notes` is the file seeded with project notes; APPEND_SYSTEM.md is the pre-migration path.
+  const fixture = (config?: object, notes = "AGENTS.md") => {
     const cwd = fs.mkdtempSync("/tmp/pi-bootstrap-test-");
     expect(Bun.spawnSync(["git", "init", "--quiet", cwd]).exitCode).toBe(0);
     fs.mkdirSync(path.join(cwd, ".pi"));
     const mcp = path.join(cwd, ".pi/mcp.json");
-    const guidance = path.join(cwd, ".pi/APPEND_SYSTEM.md");
+    const guidance = path.join(cwd, ".pi/AGENTS.md");
+    const old = path.join(cwd, ".pi/APPEND_SYSTEM.md");
     fs.writeFileSync(path.join(cwd, "AGENTS.md"), "Project-owned guidance\n");
-    fs.writeFileSync(guidance, "Keep project notes\n");
+    fs.writeFileSync(path.join(cwd, ".pi", notes), "Keep project notes\n");
     if (config) fs.writeFileSync(mcp, JSON.stringify(config));
     return {
-      cwd, mcp, guidance,
+      cwd, mcp, guidance, old,
       run: () => Bun.spawnSync([bash, script], { cwd }),
       read: () => JSON.parse(fs.readFileSync(mcp, "utf8")),
       files: () => fs.readdirSync(path.join(cwd, ".pi")).sort(),
@@ -55,7 +57,7 @@ for (const bash of shells) {
       expect(fs.readFileSync(path.join(h.cwd, "AGENTS.md"), "utf8")).toBe("Project-owned guidance\n");
       expect(h.run().exitCode).toBe(0);
       expect(fs.readFileSync(h.guidance, "utf8")).toBe(guidance);
-      expect(h.files()).toEqual(["APPEND_SYSTEM.md", "mcp.json"]);
+      expect(h.files()).toEqual(["AGENTS.md", "mcp.json"]);
     });
 
     test("creates .pi and runs from a subdirectory", () => {
@@ -88,7 +90,7 @@ for (const bash of shells) {
         expect(result.stderr.toString()).toContain("custom tidewave definition");
         expect(fs.readFileSync(h.mcp, "utf8")).toBe(original);
         expect(fs.readFileSync(h.guidance, "utf8")).toBe("Keep project notes\n");
-        expect(h.files()).toEqual(["APPEND_SYSTEM.md", "mcp.json"]);
+        expect(h.files()).toEqual(["AGENTS.md", "mcp.json"]);
       }
     });
 
@@ -109,6 +111,34 @@ for (const bash of shells) {
         expect(fs.readFileSync(h.mcp, "utf8")).toBe(original);
         expect(fs.readFileSync(h.guidance, "utf8")).toBe("Keep project notes\n");
       }
+    });
+
+    test("renames the old APPEND_SYSTEM.md once and refreshes its block", () => {
+      const h = fixture(undefined, "APPEND_SYSTEM.md");
+      fs.appendFileSync(h.old, "\n<!-- mise-tmpl-gen:elixir:begin -->\nstale\n<!-- mise-tmpl-gen:elixir:end -->\nKeep trailing notes\n");
+      expect(h.run().exitCode).toBe(0);
+      expect(h.files()).toEqual(["AGENTS.md", "mcp.json"]);
+      const guidance = fs.readFileSync(h.guidance, "utf8");
+      expect(guidance).toStartWith("Keep project notes\n\n<!-- mise-tmpl-gen:elixir:begin -->\n# Elixir project guidance");
+      expect(guidance).toEndWith("<!-- mise-tmpl-gen:elixir:end -->\nKeep trailing notes\n");
+      expect(guidance).not.toContain("stale");
+    });
+
+    test("migrates nothing when mcp.json is invalid", () => {
+      const h = fixture({ mcpServers: { tidewave: null } }, "APPEND_SYSTEM.md");
+      expect(h.run().exitCode).not.toBe(0);
+      expect(h.files()).toEqual(["APPEND_SYSTEM.md", "mcp.json"]);
+      expect(fs.readFileSync(h.old, "utf8")).toBe("Keep project notes\n");
+    });
+
+    test("warns and keeps both files when old and new guidance exist", () => {
+      const h = fixture();
+      fs.writeFileSync(h.old, "Old notes\n");
+      const result = h.run();
+      expect(result.exitCode).toBe(0);
+      expect(result.stderr.toString()).toContain("still shadows the global APPEND_SYSTEM.md");
+      expect(fs.readFileSync(h.old, "utf8")).toBe("Old notes\n");
+      expect(fs.readFileSync(h.guidance, "utf8")).toStartWith("Keep project notes\n\n<!-- mise-tmpl-gen:elixir:begin -->");
     });
 
     test("rejects duplicated generated blocks", () => {
@@ -136,6 +166,11 @@ for (const bash of shells) {
       expect(linked.run().exitCode).not.toBe(0);
       expect(fs.readFileSync(target, "utf8")).toBe("{}");
       expect(fs.readFileSync(linked.guidance, "utf8")).toBe("Keep project notes\n");
+
+      const linkedOld = fixture();
+      fs.symlinkSync(linkedOld.guidance, linkedOld.old);
+      expect(linkedOld.run().exitCode).not.toBe(0);
+      expect(fs.readFileSync(linkedOld.guidance, "utf8")).toBe("Keep project notes\n");
     });
   });
 }

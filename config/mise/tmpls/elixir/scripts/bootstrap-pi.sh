@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
-# Generate project-local Pi guidance (.pi/APPEND_SYSTEM.md) and the Pidewave
-# URL (.pi/mcp.json). Run by `mise run bootstrap:pi`. Project-owned AGENTS.md is
-# intentionally never touched.
+# Generate project-local Pi guidance (.pi/AGENTS.md) and the Pidewave URL
+# (.pi/mcp.json). Run by `mise run bootstrap:pi`. Project-owned AGENTS.md is
+# intentionally never touched. Pi does not read .pi/AGENTS.md itself; the
+# project-guidance.ts extension adds it beside the project AGENTS.md. The old
+# .pi/APPEND_SYSTEM.md target replaced the global APPEND_SYSTEM.md, so it is
+# renamed once.
 #
 # Must run under macOS /bin/bash 3.2 as well as current Bash: no heredoc inside
 # $(...), which Bash 3.2 misparses, and no EXIT trap, which makes Bash 3.2 exit
@@ -10,7 +13,8 @@ set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 mcp=.pi/mcp.json
-append=.pi/APPEND_SYSTEM.md
+guide=.pi/AGENTS.md
+old=.pi/APPEND_SYSTEM.md
 begin='<!-- mise-tmpl-gen:elixir:begin -->'
 end='<!-- mise-tmpl-gen:elixir:end -->'
 # Stored literally; ACP (acp.ts) resolves it once per Pi session.
@@ -18,7 +22,7 @@ end='<!-- mise-tmpl-gen:elixir:end -->'
 url='http://localhost:${PHX_PORT}/tidewave/mcp'
 nl=$'\n'
 
-for f in "$mcp" "$append"; do
+for f in "$mcp" "$guide" "$old"; do
   if [ -L "$f" ] || { [ -e "$f" ] && [ ! -f "$f" ]; }; then
     echo "error: refusing to modify non-regular file or symlink: $PWD/$f" >&2
     exit 1
@@ -144,25 +148,34 @@ mcp_in='{}'
 [ ! -e "$mcp" ] || mcp_in="$(cat "$mcp")"
 mcp_out="$(printf '%s\n' "$mcp_in" | jq -e --arg url "$url" "$filter")"
 
+# One-time migration, after validation so a bad mcp.json changes nothing.
+if [ -e "$old" ]; then
+  if [ -e "$guide" ]; then
+    echo "warning: $PWD/$old still shadows the global APPEND_SYSTEM.md; merge it into $guide and delete it" >&2
+  else
+    mv "$old" "$guide"
+  fi
+fi
+
 existing=''
-[ ! -e "$append" ] || existing="$(cat "$append")"
+[ ! -e "$guide" ] || existing="$(cat "$guide")"
 counts="$(printf '%s\n' "$existing" | awk -v b="$begin" -v e="$end" 'index($0, b) { nb++ } index($0, e) { ne++ } END { print nb + 0, ne + 0 }')"
 case "$counts" in
   "0 0") guidance="${existing:+$existing$nl$nl}$block" ;;
   "1 1") guidance="${existing%%"$begin"*}$block${existing#*"$end"}" ;;
   *)
-    echo "error: expected exactly one generated block in $PWD/$append" >&2
+    echo "error: expected exactly one generated block in $PWD/$guide" >&2
     exit 1
     ;;
 esac
 
 mkdir -p .pi
 mcp_tmp="$(mktemp "$mcp.XXXXXX")"
-append_tmp="$(mktemp "$append.XXXXXX")"
+guide_tmp="$(mktemp "$guide.XXXXXX")"
 printf '%s\n' "$mcp_out" >"$mcp_tmp"
-printf '%s\n' "$guidance" >"$append_tmp"
+printf '%s\n' "$guidance" >"$guide_tmp"
 # Each mv is atomic and replaces the path itself, never a symlink target.
-mv "$append_tmp" "$append"
+mv "$guide_tmp" "$guide"
 mv "$mcp_tmp" "$mcp"
 
 # shellcheck disable=SC2016 # literal ${PHX_PORT} is the stored value

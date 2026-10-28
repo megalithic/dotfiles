@@ -45,6 +45,12 @@ home/.pi/
   `mise x npm:@earendil-works/pi-coding-agent`, injects secrets with
   `fnox exec --replace`, and exports non-secret `LAT_LLM_*` metadata. The
   live-view widget patch is reference-only and is not applied at launch.
+- `agent/APPEND_SYSTEM.md` is the only append file. Pi uses a project
+  `.pi/APPEND_SYSTEM.md` instead of it, never with it, so template bootstraps
+  (`config/mise/tmpls/elixir/scripts/bootstrap-pi.sh`) write generated guidance
+  to the gitignored `<project>/.pi/AGENTS.md`. `extensions/project-guidance.ts`
+  adds that file to the project context on every run. Disable it with
+  `PI_PROJECT_GUIDANCE_DISABLE=1`.
 
 ## Applying
 
