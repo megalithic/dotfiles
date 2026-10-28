@@ -43,7 +43,12 @@ setup() {
     'printf "pi stdout: %s\n" "$*"; printf "pi stderr: %s\n" "$*" >&2' \
     'if [ "$*" = update ]; then exit "${PI_SELF_STATUS:-0}"; fi' \
     'exit "${PI_EXTENSIONS_STATUS:-0}"' >"$pi_bin"
+  export PI_INSTALL="$test_dir/pi-install"
+  mkdir -p "$PI_INSTALL/node_modules/@earendil-works/pi-coding-agent"
+  printf '%s\n' '{"version":"9.9.9","dependencies":{"typebox":"1.2.3"}}' \
+    >"$PI_INSTALL/node_modules/@earendil-works/pi-coding-agent/package.json"
   printf '%s\n' '#!/usr/bin/env bash' \
+    'if [ "$1" = where ]; then printf "%s\n" "$PI_INSTALL"; exit 0; fi' \
     'printf "mise %s\n" "$*" >>"$CALLS"' \
     'if [ "${EXPECT_TTY:-0}" = 1 ]; then [ -t 0 ] && [ -t 1 ] && [ -t 2 ] || exit 91; fi' \
     'if [[ " $* " != *" --raw "* ]]; then printf "\033[H\033[2J"; fi' \
@@ -57,6 +62,10 @@ setup() {
     'mkdir -p "$SESSIONS_DATA_DIR/plugin/skills/$skill"' \
     'touch "$SESSIONS_DATA_DIR/plugin/skills/$skill/SKILL.md"' \
     'done' >"$XDG_DATA_HOME/mise/shims/sessions"
+  printf '%s\n' '#!/usr/bin/env bash' \
+    '[ "$PWD" = "$DOTFILES_DIR" ] || exit 94' \
+    'printf "bun %s\n" "$*" >>"$CALLS"' \
+    'exit "${BUN_STATUS:-0}"' >"$XDG_DATA_HOME/mise/shims/bun"
   chmod +x "$src/scripts/install-pi-tools" "$pi_bin" "$XDG_DATA_HOME/mise/shims/"*
 }
 
@@ -177,7 +186,7 @@ test_progress_and_command_order() {
   local remaining="$output" step marker
   for step in "Remove retired Pi links" "Install pinned helpers" \
     "Refresh sessions plugin" "Clean redundant extension dependencies" \
-    "Upgrade mise-managed Pi" "Check Pi self-update" "Update extension packages"; do
+    "Upgrade mise-managed Pi" "Pin Pi types" "Check Pi self-update" "Update extension packages"; do
     for marker in "==> $step" "OK: $step (exit 0)"; do
       [[ "$remaining" == *"$marker"* ]]
       remaining="${remaining#*"$marker"}"
@@ -187,16 +196,17 @@ test_progress_and_command_order() {
   [[ "$output" == *'pi stdout: update --extensions'* ]]
   [[ "$output" == *'pi stderr: update --extensions'* ]]
   [[ "$output" != *$'\033[2J'* ]]
-  [ "$(<"$CALLS")" = $'mise upgrade npm:@earendil-works/pi-coding-agent --yes --raw\npi update\npi update --extensions' ]
+  [ "$(<"$CALLS")" = $'mise upgrade npm:@earendil-works/pi-coding-agent --yes --raw\nbun add --dev --exact @earendil-works/pi-agent-core@9.9.9 @earendil-works/pi-ai@9.9.9 @earendil-works/pi-coding-agent@9.9.9 @earendil-works/pi-tui@9.9.9 typebox@1.2.3\npi update\npi update --extensions' ]
 }
 
 test_step_failures_stop_updates() {
   local failure step
-  for failure in SESSIONS_STATUS MISE_STATUS PI_SELF_STATUS PI_EXTENSIONS_STATUS; do
+  for failure in SESSIONS_STATUS MISE_STATUS BUN_STATUS PI_SELF_STATUS PI_EXTENSIONS_STATUS; do
     : >"$CALLS"
     case "$failure" in
       SESSIONS_STATUS) step="Refresh sessions plugin" ;;
       MISE_STATUS) step="Upgrade mise-managed Pi" ;;
+      BUN_STATUS) step="Pin Pi types" ;;
       PI_SELF_STATUS) step="Check Pi self-update" ;;
       PI_EXTENSIONS_STATUS) step="Update extension packages" ;;
     esac
@@ -207,7 +217,7 @@ test_step_failures_stop_updates() {
     [[ "$output" != *'update:pi done.'* ]]
     case "$failure" in
       SESSIONS_STATUS) [ ! -s "$CALLS" ] ;;
-      MISE_STATUS) [[ "$(<"$CALLS")" != *'pi update'* ]] ;;
+      MISE_STATUS | BUN_STATUS) [[ "$(<"$CALLS")" != *'pi update'* ]] ;;
       PI_SELF_STATUS) [[ "$(<"$CALLS")" != *'pi update --extensions'* ]] ;;
     esac
   done

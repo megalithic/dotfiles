@@ -3,16 +3,26 @@
 // comply; rules are not relaxed to accommodate existing style. The Effect
 // rule group is intentionally not registered (no Effect usage).
 //
-// The oxlint binary is mise-managed (repo-local mise.toml, pinned to the
-// vendored @oxlint/plugins version). No package.json / node_modules: the
-// plugin API is vendored at vendor/oxlint-plugins and anti-slop imports it
-// relatively. Run via `mise run lint:ts`.
+// The oxlint binary is pinned in package.json at the vendored @oxlint/plugins
+// version; bump both together. The plugin API is vendored at
+// vendor/oxlint-plugins and anti-slop imports it relatively. Run via
+// `mise run lint:ts`.
 //
 // Plain object export (no `import { defineConfig } from "oxlint"`) so the
 // config has zero resolvable-package requirements.
 
 export default {
-  ignorePatterns: ["tools/oxlint/**"],
+  // Disabled (`_*`) Pi entries, retired copies, and upstream patches are not linted.
+  ignorePatterns: [
+    "tools/oxlint/**",
+    "home/.pi/agent/extensions/_*",
+    "home/.pi/agent/skills/_*",
+    "home/.pi/agent/prompts/_*",
+    "home/.pi/agent/agents/_*",
+    "home/.pi/disabled/**",
+    "home/.pi/patches/**",
+    "home/.pi/tests/.pidewave-extension-*/**",
+  ],
   jsPlugins: [{ name: "anti-slop", specifier: "./anti-slop/index.ts" }],
   rules: {
     "oxc/no-accumulating-spread": "error",
@@ -25,7 +35,8 @@ export default {
     "anti-slop/no-object-parameters": "error",
     "anti-slop/no-reflect-apply": "error",
     "anti-slop/no-reflect-get": "error",
-    "anti-slop/no-runtime-typeof": "error",
+    // Guards (`x is T`) are where boundary parsing lives; matches nicknisi/fleet.
+    "anti-slop/no-runtime-typeof": ["error", { allowInTypeGuards: true }],
     "anti-slop/no-shape-in-symbol-names": "error",
     "anti-slop/no-unknown-parameters": "error",
     "anti-slop/no-unknown-returns": "error",

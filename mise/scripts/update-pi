@@ -12,6 +12,7 @@ Updates pi-managed imperative state:
   - nicknisi/sessions plugin extracted with an isolated home
   - redundant extension deps cleanup
   - mise-managed Pi package upgrade
+  - Pi type pins in the dotfiles package.json
   - pi update
   - pi update --extensions
 EOF
@@ -156,6 +157,25 @@ install_sessions_plugin() {
   say "refreshed sessions plugin -> $HOME/.local/share/sessions/plugin"
 }
 
+# Pi aliases these packages to its own copies at runtime, so the typecheck pins
+# must match the installed Pi version.
+pin_pi_types() {
+  local manifest version typebox
+  manifest="$(mise where npm:@earendil-works/pi-coding-agent)/node_modules/@earendil-works/pi-coding-agent/package.json"
+  version="$(jq -er .version "$manifest")"
+  typebox="$(jq -er .dependencies.typebox "$manifest")"
+  (
+    cd "$dotfiles"
+    bun add --dev --exact \
+      "@earendil-works/pi-agent-core@$version" \
+      "@earendil-works/pi-ai@$version" \
+      "@earendil-works/pi-coding-agent@$version" \
+      "@earendil-works/pi-tui@$version" \
+      "typebox@$typebox"
+  )
+  say "pinned Pi types to $version (typebox $typebox)"
+}
+
 cleanup_extension_deps() {
   trash_path "$agent/extensions/package.json"
   trash_path "$agent/extensions/package-lock.json"
@@ -173,6 +193,7 @@ if [ "$dry_run" = 1 ]; then
   report_cleanup_target "$agent/extensions/package-lock.json"
   report_cleanup_target "$agent/extensions/node_modules"
   say "[would run] mise upgrade npm:@earendil-works/pi-coding-agent --yes --raw"
+  say "[would run] bun add --dev --exact <Pi packages at the installed Pi version> (in $dotfiles)"
   say "[would run] $pi_bin update"
   say "[would run] $pi_bin update --extensions"
   exit 0
@@ -187,6 +208,7 @@ run_step "Clean redundant extension dependencies" cleanup_extension_deps
 
 # Mise's animated renderer clears the screen on resize; raw keeps TTY output.
 run_step "Upgrade mise-managed Pi" mise upgrade npm:@earendil-works/pi-coding-agent --yes --raw
+run_step "Pin Pi types" pin_pi_types
 run_step "Check Pi self-update" "$pi_bin" update
 run_step "Update extension packages" "$pi_bin" update --extensions
 

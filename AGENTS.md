@@ -10,6 +10,12 @@ This repo contains both Nix-managed and mise-managed dotfiles. Host decides whic
 - When moving tests, update imports, fixtures, runner commands, and documentation. Keep production code in its existing location.
 - This repo-specific rule overrides global or agent guidance to place tests next to the files they test.
 
+## TS checks
+
+- Pi extensions, skill scripts, and Bun suites under `home/.pi/` use the repo-root `package.json`/`bun.lock` (pinned Pi packages, `typescript`, `oxlint`, `oxfmt`), `tsconfig.json`, and `.oxfmtrc.json`.
+- Run `mise run check:ts` (lint, format check, typecheck, tests) before finishing TS changes; `mise run fmt:ts` formats. hk runs lint and format on staged files plus a whole-project typecheck, but not the tests. In a fresh clone or worktree, run `mise run deps:ts` first.
+- The Pi package pins must match the installed Pi version; `mise run update:pi` bumps them.
+
 ## Host management guard (read first)
 
 Determine the host once from `$HOSTNAME` when it is set. Use `hostname -s` only as a fallback; do not re-query every turn.

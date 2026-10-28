@@ -1,0 +1,38 @@
+name: TS checks
+
+on:
+  push:
+    branches:
+      - main
+    paths: &ts_paths
+      - "home/.pi/**"
+      - "config/mise/tmpls/elixir/**"
+      - "tools/oxlint/**"
+      - "package.json"
+      - "bun.lock"
+      - "tsconfig.json"
+      - ".oxfmtrc.json"
+      - "mise.toml"
+      - "mise.lock"
+      - ".github/workflows/ts.yml"
+  pull_request:
+    paths: *ts_paths
+
+concurrency:
+  group: ts-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, format, typecheck, test
+    # The Pi extensions and their tests target macOS.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: jdx/mise-action@v5
+        with:
+          install_args: bun node
+      # Only bun and node are needed; skip the repo's other tools (python, bats).
+      - run: mise run check:ts
+        env:
+          MISE_TASK_RUN_AUTO_INSTALL: "false"

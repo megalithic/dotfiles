@@ -7,12 +7,47 @@
 lockfile = true
 
 [tools]
-# Pinned: tools/oxlint/vendor/oxlint-plugins is vendored at the same version;
-# bump both together (see tools/oxlint/anti-slop/UPSTREAM_REV).
-"npm:oxlint" = "1.78.0"
+# TS tooling (oxlint, oxfmt, tsc, Pi types) is pinned in package.json/bun.lock.
+bun = "1.4.2"
+# oxlint/oxfmt/tsc run on node; oxlint loads the .ts config with node's type stripping.
+node = "26"
 "npm:bats" = "latest"
 python = "3.14.8"
 
+[vars]
+ts_files = "'home/.pi/**/*.{ts,mjs,js}' 'config/mise/tmpls/elixir/tests/**/*.ts'"
+
+[tasks."deps:ts"]
+description = "Install pinned TS tooling and Pi types from bun.lock"
+# No sources/outputs caching: a no-op install is ~50ms and a stamp can't see a deleted node_modules.
+run = "bun install --frozen-lockfile"
+
 [tasks."lint:ts"]
 description = "Oxlint + vendored anti-slop over dotfiles-managed TS/JS (pi extensions, skill scripts)"
-run = "oxlint -c tools/oxlint/oxlint.config.ts home/.pi"
+depends = ["deps:ts"]
+run = "node_modules/.bin/oxlint -c tools/oxlint/oxlint.config.ts home/.pi"
+
+[tasks."fmt:ts"]
+description = "Format dotfiles-managed TS/JS with oxfmt"
+depends = ["deps:ts"]
+run = "node_modules/.bin/oxfmt {{vars.ts_files}}"
+
+[tasks."fmt:ts:check"]
+description = "Check oxfmt formatting of dotfiles-managed TS/JS"
+depends = ["deps:ts"]
+run = "node_modules/.bin/oxfmt --check {{vars.ts_files}}"
+
+[tasks."typecheck:ts"]
+description = "Typecheck Pi extensions and Bun suites against the pinned Pi packages"
+depends = ["deps:ts"]
+run = "node_modules/.bin/tsc -p ."
+
+[tasks."test:ts"]
+description = "Run the Bun test suites for Pi extensions and the Elixir template"
+depends = ["deps:ts"]
+# The ./ prefix makes Bun treat these as paths; bare paths under .pi are filtered out.
+run = "bun test ./home/.pi/tests ./config/mise/tmpls/elixir/tests"
+
+[tasks."check:ts"]
+description = "Lint, format check, typecheck, and test dotfiles-managed TS"
+depends = ["lint:ts", "fmt:ts:check", "typecheck:ts", "test:ts"]
