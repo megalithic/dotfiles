@@ -30,21 +30,6 @@
 - Never include time estimations unless specifically asked
 - Avoid corporate buzzwords and AI phrases (see `writing-clearly-and-concisely` skill for substitution list)
 
-## Images with non-vision models
-
-When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-flash, grok-code-fast-1):
-
-- Pasted images appear as file paths; image data is replaced with a placeholder.
-- To analyze an image, run pi with a vision model via bash:
-
-  ```bash
-  pi --no-session -p --model opencode-go/qwen3.7-plus -p @/path/to/image "describe this image in detail"
-  ```
-
-- For code/screenshots: `--model opencode-go/kimi-k2.7-code` gives more structured output.
-- The subagent runs stateless — it only has the `read` tool, can't modify files.
-- pi writes model output to stderr. Use `2>&1` when you need the output (e.g. calling pi from another pi). Only use `2>/dev/null` for fire-and-forget calls.
-
 ## Git
 
 - For non-interactive rebases, always run `GIT_EDITOR=true git rebase --continue`
@@ -77,17 +62,6 @@ When running a model that can't view images (e.g. deepseek-v4-pro, deepseek-v4-f
 ## Local development scripts
 
 - Use .local_scripts/ for temporary, messy, repo-specific scripts that shouldn't be committed
-
-## Task tracking
-
-- Manage tickets with `tk` when you need structured task tracking
-  - `tk` is on PATH (vendored at `~/.dotfiles/bin/tk`)
-  - Example: `tk list`, `tk create "title" -d "desc" --acceptance "1. ..." -t feature`
-  - Ticket files live in `.tickets/` as YAML-frontmatter markdown
-- For repetitive/verifiable tasks (fix all failing tests, migrate across many files, audit a codebase), use ralph-loop:
-  - Write a RALPH.md defining completion criteria (max_iterations, completion_promise, stop_on_error)
-  - Run `/ralph --path ./task` to loop until done
-  - Read the ralph-loop skill for details on guardrails, completion gating, and iteration patterns
 
 ## Research, audit, and exploration docs
 
