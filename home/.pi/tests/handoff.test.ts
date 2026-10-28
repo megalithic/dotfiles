@@ -16,6 +16,9 @@ type ThinkingLevel = ExtensionCommandContext['thinkingLevel'];
 
 type Request = Parameters<ModelRegistry['streamSimple']>;
 
+// SAFETY: This fixture supplies only the command members handoff reads.
+const asCommandContext = <T>(value: T): ExtensionCommandContext => value as ExtensionCommandContext;
+
 function harness(stopReason: AssistantMessage['stopReason'] = 'aborted') {
   const calls: Request[] = [];
   const notifications: string[] = [];
@@ -56,7 +59,7 @@ function harness(stopReason: AssistantMessage['stopReason'] = 'aborted') {
 
   // SAFETY: this command-only context supplies the methods handoff uses before
   // a cancelled/failed generation; newSession fails if generation proceeds.
-  const ctx = {
+  const ctx = asCommandContext({
     hasUI: true,
     mode: 'tui',
     model: { id: 'test-model', provider: 'test-provider' },
@@ -107,7 +110,7 @@ function harness(stopReason: AssistantMessage['stopReason'] = 'aborted') {
     newSession: async () => {
       throw new Error('Must not replace the session after failed generation');
     },
-  } as ExtensionCommandContext;
+  });
 
   return {
     calls,
@@ -130,12 +133,16 @@ describe('handoff thinking level', () => {
       await h.run();
 
       expect(h.calls).toHaveLength(1);
-      const [model, context, options] = h.calls[0];
+      const call = h.calls[0];
 
-      expect(model).toBe(h.ctx.model);
+      expect(call).toBeDefined();
+      // SAFETY: The preceding assertion verifies the recorded call exists.
+      const [model, context, options] = call!;
+
+      expect<unknown>(model).toBe(h.ctx.model);
       expect(options?.reasoning).toBe(level === 'off' ? undefined : level);
       expect(options?.signal).toBeInstanceOf(AbortSignal);
-      expect(context.messages[0].content).toEqual([
+      expect(context.messages[0]!.content).toEqual([
         { type: 'text', text: expect.stringContaining('Existing context') },
       ]);
       expect(h.notifications).toEqual(['Cancelled']);

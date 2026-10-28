@@ -8,23 +8,29 @@ type LifecycleHook = (event: LifecycleEvent, ctx: ExtensionContext) => void | Pr
 
 const hooks = new Map<string, LifecycleHook>();
 
+// SAFETY: Fixtures intentionally implement only the bridge API members they exercise.
+const asExtensionAPI = <T>(value: T): ExtensionAPI => value as ExtensionAPI;
+
+// SAFETY: Fixtures intentionally implement only the bridge context members they exercise.
+const asExtensionContext = <T>(value: T): ExtensionContext => value as ExtensionContext;
+
 // SAFETY: The fixture exercises only bridge startup/shutdown and ping. It has no
 // model, UI, persistence, or message delivery API, so those calls fail the test.
-const pi = {
+const pi = asExtensionAPI({
   on: (name: string, handler: LifecycleHook) => {
     hooks.set(name, handler);
   },
   events: { on: () => () => {} },
-} as ExtensionAPI;
+});
 
 // SAFETY: These are the only context members read by startup and ping.
-const ctx = {
+const ctx = asExtensionContext({
   cwd: process.cwd(),
   hasUI: false,
   isIdle: () => true,
   hasPendingMessages: () => false,
   sessionManager: { getSessionId: () => `child-${process.pid}`, getSessionName: () => 'contention-test' },
-} as ExtensionContext;
+});
 
 bridge(pi);
 

@@ -5,9 +5,38 @@ import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import crypto from 'node:crypto';
 import net from 'node:net';
 import os from 'node:os';
-import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext } from '@earendil-works/pi-coding-agent';
+import type {
+  ExtensionAPI,
+  ExtensionCommandContext,
+  ExtensionContext,
+  ExtensionToolContext,
+  ExtensionUIContext,
+  Theme,
+} from '@earendil-works/pi-coding-agent';
+import type { Component, TUI } from '@earendil-works/pi-tui';
 
 const { Editor, visibleWidth } = await import('@earendil-works/pi-tui');
+
+type PickerComponent = Component & { handleInput(data: string): void; dispose(): void };
+
+const pickerComponent = (value: Component | Promise<Component>): PickerComponent => {
+  if (value instanceof Promise) throw new Error('Unexpected asynchronous picker fixture');
+
+  // SAFETY: picker factories in these tests synchronously return a component with the tested input/dispose methods.
+  return value as PickerComponent;
+};
+
+const testTerminal = (rows: number): TUI['terminal'] => {
+  const terminal = { rows };
+
+  // SAFETY: the picker fixture only reads terminal.rows and does not invoke terminal methods.
+  return terminal as TUI['terminal'];
+};
+
+const testMutableTerminal = (terminal: { rows: number }): TUI['terminal'] => {
+  // SAFETY: the picker fixture only reads terminal.rows and does not invoke terminal methods.
+  return terminal as TUI['terminal'];
+};
 
 const stateDir = await mkdtemp('/tmp/pi-tell-');
 
@@ -35,6 +64,67 @@ afterAll(async () => {
   execFileSync('trash', [stateDir]);
 });
 
+const must = <T>(value: T | null | undefined): T => {
+  if (value === undefined || value === null) throw new Error('Expected test value');
+
+  return value;
+};
+
+type TellExecFile = NonNullable<Parameters<typeof _test.fetchRemoteInventory>[1]>;
+
+type ExecCallback = (error: Error | null, stdout: string, stderr: string) => void;
+
+// tell.ts always calls execFile(file, args, options, callback); fakes see that shape only.
+const mockExecFile = (impl: (file: string, args: string[], callback: ExecCallback) => childProcess.ChildProcess) => {
+  const fake = Object.assign(
+    (
+      file: string,
+      args: readonly string[] | null | undefined,
+      _options: childProcess.ExecFileOptions,
+      callback: ExecCallback,
+    ) => impl(file, [...(args ?? [])], callback),
+    { __promisify__: childProcess.execFile.__promisify__ },
+  );
+
+  // SAFETY: tell.ts only uses the (file, args, options, callback) overload, which this fake implements.
+  return spyOn(childProcess, 'execFile').mockImplementation(fake as typeof childProcess.execFile);
+};
+
+const asExtensionAPI = (value: Record<never, never>): ExtensionAPI => {
+  // SAFETY: test fixtures provide exactly the API methods exercised by each test.
+  return value as ExtensionAPI;
+};
+
+type CommandOptions = Parameters<ExtensionAPI['registerCommand']>[1];
+
+type ToolOptions = Parameters<ExtensionAPI['registerTool']>[0];
+
+type BaseCustomFactory = Parameters<ExtensionUIContext['custom']>[0];
+
+// ui.custom is generic in its result; the fixtures pin it to the value they collect.
+type CustomFactory<T = unknown> = (
+  tui: TUI,
+  theme: Theme,
+  keybindings: Parameters<BaseCustomFactory>[2],
+  done: (result: T) => void,
+) => ReturnType<BaseCustomFactory>;
+
+type CustomOptions = Parameters<ExtensionUIContext['custom']>[1];
+
+type RuntimeIdentity = { version: string; loadedAt: string; sourceHash: string };
+
+const testTUI = (terminal: TUI['terminal'], requestRender: () => void = () => {}): TUI => {
+  const tui = { terminal, requestRender };
+
+  // SAFETY: picker components only read tui.terminal and call requestRender.
+  return tui as TUI;
+};
+
+const asContext = (value: Record<never, never>): ExtensionCommandContext & ExtensionToolContext => {
+  // SAFETY: each context fixture supplies the members its code path reads.
+  return value as ExtensionCommandContext & ExtensionToolContext;
+};
+
 const now = Date.parse('2026-09-01T12:00:00Z');
 
 const candidate = (pane: string, statusUpdatedAt?: string, reachable = true, current = false) =>
@@ -61,14 +151,25 @@ const context = (
   hasUI = true,
 ): ExtensionContext => {
   // SAFETY: selection tests only use hasUI, mode, and ui.select.
-  return { mode: 'rpc', hasUI, ui: { select } } as ExtensionContext;
+  return asContext({ mode: 'rpc', hasUI, ui: { select } });
+};
+
+const fakeThemeHelpers: Pick<Theme, 'fg' | 'bg' | 'bold'> = {
+  fg: (_color, text) => text,
+  bg: (_color, text) => text,
+  bold: (text: string) => text,
 };
 
 // SAFETY: picker rendering only uses these theme helpers.
-const fakeTheme = {
-  fg: (_color: string, text: string) => text,
-  bg: (_color: string, text: string) => text,
-  bold: (text: string) => text,
+const fakeTheme = fakeThemeHelpers as Theme;
+
+type Keybindings = Parameters<BaseCustomFactory>[2];
+
+const testKeybindings = (matches: Keybindings['matches']): Keybindings => {
+  const keybindings: Pick<Keybindings, 'matches'> = { matches };
+
+  // SAFETY: the picker only calls keybindings.matches.
+  return keybindings as Keybindings;
 };
 
 const neverSelect = async () => {
@@ -200,19 +301,21 @@ describe('tell picker display and routing', () => {
       let selected: { candidate: ReturnType<typeof candidate> } | undefined;
 
       // SAFETY: this fixture implements the custom picker APIs used by pickCandidate.
-      const ctx = {
+      const ctx = asContext({
         mode: 'tui',
         sessionManager: { getSessionId: () => 'self-session' },
         hasUI: true,
         ui: {
-          async custom(factory) {
-            const component = factory(
-              { terminal: { rows: 24 }, requestRender() {} },
-              fakeTheme,
-              { matches: (data: string, key: string) => data === '\r' && key === 'tui.select.confirm' },
-              (value: typeof selected) => {
-                selected = value;
-              },
+          async custom(factory: CustomFactory<typeof selected>) {
+            const component = pickerComponent(
+              factory(
+                testTUI(testTerminal(24)),
+                fakeTheme,
+                testKeybindings((data: string, key: string) => data === '\r' && key === 'tui.select.confirm'),
+                (value: typeof selected) => {
+                  selected = value;
+                },
+              ),
             );
 
             component.handleInput(key);
@@ -228,14 +331,14 @@ describe('tell picker display and routing', () => {
             const lines = component.render(120);
             const active = lines.findIndex((line: string) => line.includes('\u276f 2. '));
 
-            expect(lines[active].indexOf('Fix auth')).toBe(lines[active + 1].indexOf('work:0.1'));
+            expect(must(lines[active]).indexOf('Fix auth')).toBe(must(lines[active + 1]).indexOf('work:0.1'));
             expect(lines[active + 1]).toContain('%1 \u00b7 no tell id');
             component.handleInput('\r');
 
             return selected;
           },
         },
-      } as ExtensionContext;
+      });
 
       expect((await _test.pickCandidate(choices, ctx, 'Select Pi instance'))?.candidate).toBe(choices[1]);
     },
@@ -259,6 +362,7 @@ type PreviewRequest = {
 
 const deferred = <T>() => {
   let resolve!: (value: T) => void;
+
   const promise = new Promise<T>((done) => {
     resolve = done;
   });
@@ -325,30 +429,30 @@ const withPicker = async (
   let selected: unknown;
 
   // SAFETY: the fixture implements the APIs used by the custom picker.
-  const ctx = {
+  const ctx = asContext({
     mode: 'tui',
     sessionManager: { getSessionId: () => 'self-session' },
     hasUI: true,
     ui: {
-      async custom(factory) {
+      async custom(factory: CustomFactory<string | undefined>) {
         let renders = 0;
         const terminal = { rows };
+        const terminalView = testMutableTerminal(terminal);
 
-        const component = factory(
-          {
-            terminal,
-            requestRender() {
+        const component = pickerComponent(
+          factory(
+            testTUI(terminalView, () => {
               renders += 1;
+            }),
+            fakeTheme,
+            testKeybindings(
+              (data: string, key: string) =>
+                (data === '\r' && key === 'tui.select.confirm') || (data === '\x1b' && key === 'tui.select.cancel'),
+            ),
+            (value: string | undefined) => {
+              selected = value;
             },
-          },
-          fakeTheme,
-          {
-            matches: (data: string, key: string) =>
-              (data === '\r' && key === 'tui.select.confirm') || (data === '\x1b' && key === 'tui.select.cancel'),
-          },
-          (value: string | undefined) => {
-            selected = value;
-          },
+          ),
         );
 
         try {
@@ -366,7 +470,7 @@ const withPicker = async (
         return selected;
       },
     },
-  } as ExtensionContext;
+  });
 
   return _test.pickCandidate(choices, ctx, 'Select Pi instance', options);
 };
@@ -523,13 +627,14 @@ describe('tell highlighted session preview', () => {
       const request = await received.promise;
       await request.reply(lastMessageResponse(request, 'Visible reply text '.repeat(100)));
 
+      // SAFETY: every resize fixture is a width/height pair.
       for (const [width, height] of [
         [200, 40],
         [80, 24],
         [40, 16],
         [30, 16],
         [20, 13],
-      ]) {
+      ] as Array<[number, number]>) {
         picker.resize(height);
         const lines = picker.render(width);
         expect(lines.length).toBeLessThanOrEqual(height);
@@ -538,7 +643,7 @@ describe('tell highlighted session preview', () => {
         expect(lines.join('\n')).toContain('Current: pi:');
 
         // Line 2 truncates the tell ID once the option column is narrower than the ID.
-        if (width >= 200) expect(lines.join('\n')).toContain(peer.sessionId);
+        if (width >= 200) expect(lines.join('\n')).toContain(must(peer.sessionId));
       }
     });
   });
@@ -553,7 +658,7 @@ describe('tell highlighted session preview', () => {
       const cardTop = lines.findIndex((line) => line.includes('\u250c\u2500'));
       const cardBottom = lines.findIndex((line) => line.includes('\u2514\u2500'));
 
-      expect(lines.join('\n')).toContain(`Current: pi:${choices[0].machine}:self-session`);
+      expect(lines.join('\n')).toContain(`Current: pi:${must(choices[0]).machine}:self-session`);
       expect(lines.filter((line) => /^[\u276f ] +\d+\. /u.test(line))).toHaveLength(10);
       expect(lines.join('\n')).toContain('(1/12)');
       expect(cardTop).toBe(first);
@@ -609,7 +714,7 @@ describe('tell highlighted session preview', () => {
     local.windowIndex = '3';
     remote.machine = 'remote.example';
 
-    const exec = spyOn(childProcess, 'execFile').mockImplementation((file, args, _options, callback) => {
+    const exec = mockExecFile((file, args, callback) => {
       if (file === 'tmux') tmuxCalls.push(args);
       callback(fail ? new Error('exit 1') : null, '', fail ? "can't find session: work" : '');
 
@@ -682,10 +787,10 @@ describe('tell highlighted session preview', () => {
     peer.machine = 'remote-preview.example';
     peer.socket = '/tmp/exact remote.sock';
 
-    const exec = spyOn(childProcess, 'execFile').mockImplementation((_file, args, _options, callback) => {
+    const exec = mockExecFile((_file, args, callback) => {
       expect(_file).toBe('ssh');
-      expect(args).toContain(peer.machine);
-      const command = args.at(-1);
+      expect(args).toContain(must(peer.machine));
+      const command = args.at(-1) ?? '';
       expect(command).toContain(peer.socket);
       const encoded = command.match(/payload_b64=[^\n]*?(ey[A-Za-z0-9+/]+=*)/)?.[1];
       expect(encoded).toBeDefined();
@@ -761,20 +866,22 @@ test('bare /tell selects once and sends only to the chosen same-window pane', as
 
   let handler: ((args: string, ctx: ExtensionCommandContext) => Promise<void>) | undefined;
   // SAFETY: registration only uses these APIs; the test invokes only the tell command.
-  extension({
-    on() {},
-    registerCommand(name, command) {
-      if (name === 'tell') handler = command.handler;
-    },
-    registerTool() {},
-    appendEntry() {},
-  } as ExtensionAPI);
+  extension(
+    asExtensionAPI({
+      on() {},
+      registerCommand(name: string, command: CommandOptions) {
+        if (name === 'tell') handler = command.handler;
+      },
+      registerTool() {},
+      appendEntry() {},
+    }),
+  );
 
   let selections = 0;
   const notifications: string[] = [];
 
   // SAFETY: the bare tell command only reads these UI and session methods.
-  const ctx = {
+  const ctx = asContext({
     mode: 'rpc',
     hasUI: true,
     cwd: '/project',
@@ -792,7 +899,7 @@ test('bare /tell selects once and sends only to the chosen same-window pane', as
         notifications.push(text);
       },
     },
-  } as ExtensionCommandContext;
+  });
 
   expect(handler).toBeDefined();
   await handler!('', ctx);
@@ -862,9 +969,11 @@ const paneRow = (session: string, pane: string, pid: number) => ({
 describe('tell discovery recovery', () => {
   test('correlates legacy manifests by exact PID and chooses their linked tmux owner', async () => {
     const manifest = await discoveryPeer('legacy-pid', 990001);
+
     const panes = ['alias-a', 'alias-b', 'owner', 'alias-c', 'alias-d'].map((session) =>
       paneRow(session, '%legacy', manifest.pid),
     );
+
     const inventory = await _test.discoverCandidates(async () => panes);
     const matches = inventory.filter((item) => item.pid === manifest.pid);
 
@@ -891,7 +1000,7 @@ describe('tell discovery recovery', () => {
       pane: '%moved',
       reachable: true,
     });
-    expect(matches[0].searchText).toContain('new-owner');
+    expect(must(matches[0]).searchText).toContain('new-owner');
   });
 
   test('replaces stale pane metadata with a recovered live socket without duplicate orphan rows', async () => {
@@ -902,6 +1011,7 @@ describe('tell discovery recovery', () => {
       `${stateDir}/manifests/retired.info`,
       JSON.stringify({ socket: staleSocket, session: 'owner', window: 'old', pid: manifest.pid, pane: '%restart' }),
     );
+
     const inventory = await _test.discoverCandidates(async () => [
       paneRow('owner', '%restart', manifest.pid),
       paneRow('alias', '%restart', manifest.pid),
@@ -919,10 +1029,12 @@ describe('tell discovery recovery', () => {
   test('excludes a manifestless self socket after linked-pane PID enrichment', async () => {
     const manifest = await discoveryPeer('alias-renamed-%selfenriched', process.pid);
     execFileSync('trash', [`${stateDir}/manifests/alias-renamed-%selfenriched.info`]);
+
     const inventory = await _test.discoverCandidates(async () => [
       paneRow('primary', '%selfenriched', process.pid),
       paneRow('alias', '%selfenriched', process.pid),
     ]);
+
     const self = inventory.find((item) => item.socket === manifest.socket)!;
 
     expect(self.current).toBe(true);
@@ -996,19 +1108,21 @@ describe('tell discovery recovery', () => {
 
   test('accepts bridge runtime metadata before tell has loaded', async () => {
     const file = `${stateDir}/runtime.info`;
+
     const manifest = {
       socket: '/tmp/runtime.sock',
       startedAt: 123,
       bridge: { version: 'bridge.v2', loadedAt: '2026-09-01T00:00:00Z', sourceHash: null },
       tell: null,
     };
+
     await writeFile(file, JSON.stringify(manifest));
 
     expect(await _test.readManifest(file)).toEqual(manifest);
   });
 
   test('process inventory uses comm and never matches a tool argument mentioning pi', async () => {
-    const run = (file, args, _options, callback) => {
+    const run: TellExecFile = (file, args, _options, callback) => {
       if (file === 'tmux')
         callback(
           null,
@@ -1174,15 +1288,17 @@ describe('tell wire boundaries', () => {
     let calls = 0;
     const request = _test.buildControlRequest('message.last');
 
-    const run = (stdout: string) => (file, args, options, callback) => {
-      calls += 1;
-      expect(file).toBe('ssh');
-      expect(args.slice(-3, -1)).toEqual(['--', 'user@remote.example']);
-      expect(options.maxBuffer).toBe(_test.MAX_RESPONSE_BYTES);
-      callback(null, stdout, '');
+    const run =
+      (stdout: string): TellExecFile =>
+      (file, args, options, callback) => {
+        calls += 1;
+        expect(file).toBe('ssh');
+        expect(args.slice(-3, -1)).toEqual(['--', 'user@remote.example']);
+        expect(options.maxBuffer).toBe(_test.MAX_RESPONSE_BYTES);
+        callback(null, stdout, '');
 
-      return new childProcess.ChildProcess();
-    };
+        return new childProcess.ChildProcess();
+      };
 
     for (const machine of ['-oProxyCommand=touch /tmp/never', ' -V', '']) {
       await expect(_test.fetchRemoteInventory(machine, run('[]'))).rejects.toThrow('Invalid SSH machine');
@@ -1232,7 +1348,7 @@ describe('tell wire boundaries', () => {
 
   test('reports SSH failure and malformed inventory separately from successful emptiness', async () => {
     const run =
-      (stdout: string, error: Error | null = null) =>
+      (stdout: string, error: Error | null = null): TellExecFile =>
       (_file, _args, _options, callback) => {
         callback(error, stdout, error ? 'Permission denied' : '');
 
@@ -1253,7 +1369,7 @@ describe('tell wire boundaries', () => {
   });
 
   test('remote inventory never mistakes the remote PID for the local sender', async () => {
-    const run = (_file, _args, _options, callback) => {
+    const run: TellExecFile = (_file, _args, _options, callback) => {
       callback(
         null,
         JSON.stringify([
@@ -1273,7 +1389,7 @@ describe('tell wire boundaries', () => {
       return new childProcess.ChildProcess();
     };
 
-    const [peer] = await _test.fetchRemoteInventory('remote', run);
+    const peer = must((await _test.fetchRemoteInventory('remote', run))[0]);
 
     expect(peer.current).toBe(false);
     expect(peer.windowName).toBe('Remote title');
@@ -1352,11 +1468,11 @@ test('remote inventory script recovers legacy and linked panes without trusting 
 
   const linkedPanes = env.TEST_PANES;
   env.TEST_PANES = 'owner\t0\told\t%linked\t0\tWork\t100\t/project';
-  const [before] = await decode(await runScript());
+  const before = must((await decode(await runScript()))[0]);
   env.TEST_PANES = linkedPanes;
   const inventoryText = await runScript();
   const inventory = JSON.parse(inventoryText);
-  const [renamed] = await decode(inventoryText);
+  const renamed = must((await decode(inventoryText))[0]);
 
   expect(before.id).toBe(registered.id);
   expect(renamed.id).toBe(before.id);
@@ -1376,7 +1492,7 @@ test('remote inventory script recovers legacy and linked panes without trusting 
   env.TEST_PANES = 'moved\t2\trenamed\t%linked\t0\tWork\t100\t/project';
   const movedText = await runScript();
   const moved = JSON.parse(movedText);
-  const [movedCandidate] = await decode(movedText);
+  const movedCandidate = must((await decode(movedText))[0]);
 
   expect(movedCandidate.id).toBe(before.id);
   expect(movedCandidate.socket).toBe(before.socket);
@@ -1559,17 +1675,19 @@ describe('tell session IDs', () => {
 
     try {
       // SAFETY: this fixture only registers and invokes the tell command.
-      extension({
-        on() {},
-        registerCommand(name, command) {
-          if (name === 'tell') handler = command.handler;
-        },
-        registerTool() {},
-        appendEntry() {},
-      } as ExtensionAPI);
+      extension(
+        asExtensionAPI({
+          on() {},
+          registerCommand(name: string, command: CommandOptions) {
+            if (name === 'tell') handler = command.handler;
+          },
+          registerTool() {},
+          appendEntry() {},
+        }),
+      );
 
       // SAFETY: the /tell id branch only uses the session ID and notification APIs.
-      const ctx = {
+      const ctx = asContext({
         mode: 'rpc',
         hasUI: true,
         sessionManager: { getSessionId: () => sessionId, getSessionName: () => 'sender' },
@@ -1584,7 +1702,7 @@ describe('tell session IDs', () => {
             throw new Error('editor should not open');
           },
         },
-      } as ExtensionCommandContext;
+      });
 
       expect(handler).toBeDefined();
       await handler!('id', ctx);
@@ -1610,19 +1728,21 @@ describe('tell session IDs', () => {
 
     try {
       // SAFETY: this fixture only registers and invokes the tell command.
-      extension({
-        on() {},
-        registerCommand(name, command) {
-          if (name === 'tell') handler = command.handler;
-        },
-        registerTool() {},
-        appendEntry() {},
-      } as ExtensionAPI);
+      extension(
+        asExtensionAPI({
+          on() {},
+          registerCommand(name: string, command: CommandOptions) {
+            if (name === 'tell') handler = command.handler;
+          },
+          registerTool() {},
+          appendEntry() {},
+        }),
+      );
 
       const notifications: string[] = [];
 
       // SAFETY: the test context supplies the APIs used by the /tell id branch.
-      const ctx = {
+      const ctx = asContext({
         mode: 'rpc',
         hasUI: true,
         sessionManager: { getSessionId: () => 'session-id', getSessionName: () => 'sender' },
@@ -1637,7 +1757,7 @@ describe('tell session IDs', () => {
             throw new Error('editor should not open');
           },
         },
-      } as ExtensionCommandContext;
+      });
 
       expect(handler).toBeDefined();
       await handler!('id', ctx);
@@ -1741,6 +1861,7 @@ test('exact IDs dispatch tell_pi, get_pi_last_message, and tell-last over mocked
   process.env.HOSTNAME = 'local-sender';
   const target = _test.sessionTarget('user@remote.example', 'remote/session');
   const remoteSocket = '/remote/pi.sock';
+
   const inventory = [
     {
       socket: remoteSocket,
@@ -1751,9 +1872,10 @@ test('exact IDs dispatch tell_pi, get_pi_last_message, and tell-last over mocked
       reachable: true,
     },
   ];
+
   const requests: string[] = [];
 
-  const exec = spyOn(childProcess, 'execFile').mockImplementation((_file, args, _options, callback) => {
+  const exec = mockExecFile((_file, args, callback) => {
     const command = args.at(-1) || '';
 
     if (_file !== 'ssh') {
@@ -1792,47 +1914,57 @@ test('exact IDs dispatch tell_pi, get_pi_last_message, and tell-last over mocked
   });
 
   try {
-    let tellTool: Parameters<ExtensionAPI['registerTool']>[0] | undefined;
-    let lastTool: Parameters<ExtensionAPI['registerTool']>[0] | undefined;
+    let tellTool: ToolOptions | undefined;
+    let lastTool: ToolOptions | undefined;
     let tellCommand: ((args: string, ctx: ExtensionCommandContext) => Promise<void>) | undefined;
     let lastCommand: ((args: string, ctx: ExtensionCommandContext) => Promise<void>) | undefined;
-    const appended: unknown[] = [];
+    const appended: string[] = [];
     // SAFETY: this fixture registers only the command and tools under test.
-    extension({
-      on() {},
-      registerCommand(name, command) {
-        if (name === 'tell') tellCommand = command.handler;
+    extension(
+      asExtensionAPI({
+        on() {},
+        registerCommand(name: string, command: CommandOptions) {
+          if (name === 'tell') tellCommand = command.handler;
 
-        if (name === 'tell-last') lastCommand = command.handler;
-      },
-      registerTool(tool) {
-        if (tool.name === 'tell_pi') tellTool = tool;
+          if (name === 'tell-last') lastCommand = command.handler;
+        },
+        registerTool(tool: ToolOptions) {
+          if (tool.name === 'tell_pi') tellTool = tool;
 
-        if (tool.name === 'get_pi_last_message') lastTool = tool;
-      },
-      appendEntry(_type, entry) {
-        appended.push(entry);
-      },
-    } as ExtensionAPI);
+          if (tool.name === 'get_pi_last_message') lastTool = tool;
+        },
+        appendEntry(customType: string) {
+          appended.push(customType);
+        },
+      }),
+    );
 
     // SAFETY: the fixture supplies the session and UI methods used by these handlers.
-    const ctx = {
+    const ctx = asContext({
       cwd: '/project',
       mode: 'rpc',
       hasUI: true,
       sessionManager: { getSessionId: () => 'sender', getSessionName: () => 'Sender' },
       ui: { async editor() {}, notify() {} },
-    } as ExtensionCommandContext;
+    });
 
     expect(tellTool).toBeDefined();
     expect(lastTool).toBeDefined();
     expect(tellCommand).toBeDefined();
-    const sent = await tellTool!.execute(null, { target, message: 'Remote guidance' }, null, null, ctx);
+
+    const sent = await tellTool!.execute(
+      'test-call',
+      { target, message: 'Remote guidance' },
+      undefined,
+      undefined,
+      ctx,
+    );
+
     expect(sent).toMatchObject({ content: [{ text: expect.stringContaining('Sent ') }] });
     await tellCommand!(target + ' Command guidance', ctx);
     expect(appended).toHaveLength(2);
 
-    const fetched = await lastTool!.execute(null, { target }, null, null, ctx);
+    const fetched = await lastTool!.execute('test-call', { target }, undefined, undefined, ctx);
     expect(fetched).toMatchObject({ content: [{ text: 'Remote assistant message' }] });
 
     const editorValues: string[] = [];
@@ -1883,9 +2015,9 @@ describe('tell target completion', () => {
     });
   });
 
-  test.each([['\r'], ['\x1b'], ['\x0e', 'c', 'i', '\r', '\r']])(
+  test.each([[['\r']], [['\x1b']], [['\x0e', 'c', 'i', '\r', '\r']]])(
     'real Editor Tab opens an overlay and selects, cancels or adds a note (%s)',
-    async (...keys) => {
+    async (keys) => {
       const key = keys.at(-1);
       const item = candidate('%editor');
       item.sessionId = 'editor-session';
@@ -1893,7 +2025,7 @@ describe('tell target completion', () => {
       const changed = deferred<string>();
 
       // SAFETY: the fake implements only custom UI and notification, used by the picker.
-      const ctx = {
+      const ctx = asContext({
         mode: 'tui',
         hasUI: true,
         sessionManager: { getSessionId: () => 'self-session' },
@@ -1901,21 +2033,23 @@ describe('tell target completion', () => {
           notify(text: string) {
             throw new Error(text);
           },
-          async custom(factory, options) {
+          async custom(factory: CustomFactory<string | undefined>, options?: CustomOptions) {
             expect(options?.overlay).toBe(true);
             let selected: string | undefined;
 
-            const component = factory(
-              { terminal: { rows: 24 }, requestRender() {} },
-              fakeTheme,
-              {
-                matches: (data: string, action: string) =>
-                  (data === '\r' && action === 'tui.select.confirm') ||
-                  (data === '\x1b' && action === 'tui.select.cancel'),
-              },
-              (value: string | undefined) => {
-                selected = value;
-              },
+            const component = pickerComponent(
+              factory(
+                testTUI(testTerminal(24)),
+                fakeTheme,
+                testKeybindings(
+                  (data: string, action: string) =>
+                    (data === '\r' && action === 'tui.select.confirm') ||
+                    (data === '\x1b' && action === 'tui.select.cancel'),
+                ),
+                (value: string | undefined) => {
+                  selected = value;
+                },
+              ),
             );
 
             try {
@@ -1927,7 +2061,7 @@ describe('tell target completion', () => {
             }
           },
         },
-      } as ExtensionContext;
+      });
 
       const current = {
         async getSuggestions() {
@@ -2009,23 +2143,25 @@ describe('tell target completion', () => {
     const draft = '/tell --steer remote.example ';
     const result = await provider.getSuggestions([draft], 0, draft.length, { force: true, signal });
     expect(machines).toEqual(['remote.example']);
-    expect(provider.applyCompletion([draft], 0, draft.length, result!.items[0], result!.prefix).lines).toEqual([
+    expect(provider.applyCompletion([draft], 0, draft.length, must(result!.items[0]), result!.prefix).lines).toEqual([
       `${draft}pi:remote.example:remote-id `,
     ]);
     expect(provider.triggerCharacters).toEqual(['#']);
     expect(provider.shouldTriggerFileCompletion!([draft], 0, draft.length)).toBe(true);
     expect(provider.shouldTriggerFileCompletion!(['hello'], 0, 5)).toBe(false);
     const native = await provider.getSuggestions([draft], 0, draft.length, { force: false, signal });
-    expect(provider.applyCompletion([draft], 0, draft.length, native!.items[0], native!.prefix).lines).toEqual([
+    expect(provider.applyCompletion([draft], 0, draft.length, must(native!.items[0]), native!.prefix).lines).toEqual([
       'native',
     ]);
     const scan = deferred<ReturnType<typeof candidate>[]>();
     const controller = new AbortController();
+
     const cancelled = _test.createTellAutocompleteProvider(
       new NativeProvider(),
       context(neverSelect),
       () => scan.promise,
     );
+
     const pending = cancelled.getSuggestions(['/tell '], 0, 6, { force: true, signal: controller.signal });
     controller.abort();
     scan.resolve([peer]);
@@ -2075,7 +2211,7 @@ describe('tell target completion', () => {
         for (const [width, height] of [
           [20, 13],
           [8, 6],
-        ]) {
+        ] satisfies Array<[number, number]>) {
           picker.resize(height);
           const lines = picker.render(width);
           expect(lines.length).toBeLessThanOrEqual(height);
@@ -2095,7 +2231,7 @@ describe('tell target completion', () => {
 });
 
 const mockPane = (peer: ReturnType<typeof candidate>, foreground: boolean, output: string) =>
-  spyOn(childProcess, 'execFile').mockImplementation((file, args, _options, callback) => {
+  mockExecFile((file, args, callback) => {
     if (file === 'ps') callback(null, `${peer.pid} 100 ${foreground ? 100 : 200} pi\n`, '');
     else if (args[0] === 'display-message') callback(null, '/dev/ttys123\n', '');
     else if (args[0] === 'capture-pane') callback(null, output, '');
@@ -2139,7 +2275,7 @@ describe('tell live pane preview', () => {
         expect(picker.render(80).join('\n')).toContain('Correct Pi message');
         expect(picker.render(80).join('\n')).not.toContain('Unrelated pane');
       });
-      expect(exec.mock.calls.some((call) => call[1][0] === 'capture-pane')).toBe(false);
+      expect(exec.mock.calls.some((call) => call[1]?.[0] === 'capture-pane')).toBe(false);
     } finally {
       exec.mockRestore();
     }
@@ -2151,7 +2287,7 @@ describe('tell live pane preview', () => {
     const controller = new AbortController();
     const child = new childProcess.ChildProcess();
     const killed = spyOn(child, 'kill').mockReturnValue(true);
-    const exec = spyOn(childProcess, 'execFile').mockImplementation(() => child);
+    const exec = mockExecFile(() => child);
 
     try {
       expect(
@@ -2171,23 +2307,25 @@ describe('tell live pane preview', () => {
 
 test('tell runtime identity is captured once and published on session start', async () => {
   let start: (() => void) | undefined;
-  const emitted: Array<{ version: string; loadedAt: string; sourceHash: string }> = [];
+  const emitted: RuntimeIdentity[] = [];
   const source = await readFile(new URL('../agent/extensions/tell.ts', import.meta.url));
 
   // SAFETY: this fixture provides only the registration and event APIs used by the extension.
-  extension({
-    events: {
-      emit(name, value) {
-        expect(name).toBe('tell:runtime');
-        emitted.push(value);
+  extension(
+    asExtensionAPI({
+      events: {
+        emit(name: string, value: RuntimeIdentity) {
+          expect(name).toBe('tell:runtime');
+          emitted.push(value);
+        },
       },
-    },
-    on(name, handler) {
-      if (name === 'session_start') start = () => handler({ type: 'session_start' }, context(neverSelect, false));
-    },
-    registerCommand() {},
-    registerTool() {},
-  } as ExtensionAPI);
+      on(name: string, handler: (event: { type: string }, ctx: ExtensionContext) => void) {
+        if (name === 'session_start') start = () => handler({ type: 'session_start' }, context(neverSelect, false));
+      },
+      registerCommand() {},
+      registerTool() {},
+    }),
+  );
   start!();
   start!();
 
@@ -2197,5 +2335,5 @@ test('tell runtime identity is captured once and published on session start', as
     version: 'tell.v2',
     sourceHash: crypto.createHash('sha256').update(source).digest('hex'),
   });
-  expect(Number.isFinite(Date.parse(emitted[0].loadedAt))).toBe(true);
+  expect(Number.isFinite(Date.parse(must(emitted[0]).loadedAt))).toBe(true);
 });

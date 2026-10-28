@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, spyOn, test } from 'bun:test';
+import { afterAll, afterEach, describe, expect, spyOn, test } from 'bun:test';
 import type { ExtensionAPI, ExtensionContext, McpServerConfig } from '@earendil-works/pi-coding-agent';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -9,11 +9,17 @@ const extensionCopy = path.join(fs.mkdtempSync(path.join(import.meta.dirname, '.
 
 fs.copyFileSync(new URL('../agent/extensions/acp.ts', import.meta.url), extensionCopy);
 
-process.on('exit', () => fs.rmSync(path.dirname(extensionCopy), { recursive: true, force: true }));
+afterAll(() => fs.rmSync(path.dirname(extensionCopy), { recursive: true, force: true }));
 
 const { default: acp } = await import(extensionCopy);
 
 const ENDPOINT = 'pidewave:endpoint:v1';
+
+// SAFETY: Fixtures intentionally implement only the endpoint API members they exercise.
+const asExtensionAPI = <T>(value: T): ExtensionAPI => value as ExtensionAPI;
+
+// SAFETY: Fixtures intentionally implement only the endpoint context members they exercise.
+const asExtensionContext = <T>(value: T): ExtensionContext => value as ExtensionContext;
 
 const PING_INTERVAL_MS = 10_000;
 
@@ -39,7 +45,7 @@ type Probe = { url: string; pings: number; closed: number; ping(): Promise<void>
 
 type EndpointEvent = { version: number; endpoint?: { origin: string; pathname: string } };
 
-type CommandUi = { notify(text: string): void; select?(title: string, options: string[]): Promise<string> };
+type CommandUi = { notify(text: string): void; select?(title: string, options: string[]): Promise<string | undefined> };
 
 type Entry = { event: string; at: string; [key: string]: string | boolean | undefined };
 
@@ -124,7 +130,7 @@ const harness = (
   };
 
   // SAFETY: Exercise only lifecycle hooks, commands, the shared event bus and the MCP registration API.
-  const pi = {
+  const pi = asExtensionAPI({
     on: (name: string, hook: Hook) => hooks.set(name, hook),
     events: { on: bus.on, emit: bus.emit },
     registerCommand: (name: string, command: { handler: CommandHandler }) => {
@@ -141,10 +147,10 @@ const harness = (
     appendEntry: (type: string, data: Entry) => {
       entries.push([type, data]);
     },
-  } as ExtensionAPI;
+  });
 
   // SAFETY: Endpoint and footer hooks only use these context fields.
-  const ctx = {
+  const ctx = asExtensionContext({
     cwd,
     hasUI: options.hasUI ?? false,
     isProjectTrusted: () => options.trusted ?? true,
@@ -153,7 +159,7 @@ const harness = (
       setWidget: () => {},
       setStatus: () => {},
     },
-  } as ExtensionContext;
+  });
 
   acp(pi, connect);
   const fire = (name: string, event: { reason?: string } = {}) => hooks.get(name)?.(event, ctx);
@@ -210,7 +216,8 @@ const harness = (
       for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setImmediate(resolve));
     },
     // SAFETY: The command handler reads only cwd, trust, and the notify/select UI members supplied here.
-    pidewave: (ui: CommandUi = ctx.ui) => commands.get('pidewave')!('', { ...ctx, ui } as ExtensionContext),
+    // SAFETY: The command handler is registered by acp before this helper is called.
+    pidewave: (ui: CommandUi = ctx.ui) => commands.get('pidewave')!('', asExtensionContext({ ...ctx, ui })),
     endpoint: () => bus.publications.at(-1),
   };
 };
@@ -220,7 +227,7 @@ const published = (origin = 'http://localhost:4300') => ({
   endpoint: { origin, pathname: '/tidewave/mcp' },
 });
 
-const registration = (href = url) => ['tidewave', { url: href, exposure: 'direct' }];
+const registration = (href = url): [string, McpServerConfig] => ['tidewave', { url: href, exposure: 'direct' }];
 
 describe('Pidewave native endpoint', () => {
   test('absent configuration and legacy mcpServers never register', () => {
@@ -395,17 +402,17 @@ describe('Pidewave native endpoint', () => {
     await h.tick();
     expect(h.connects).toHaveLength(2);
     expect(h.probes).toHaveLength(1);
-    expect(h.probes[0].pings).toBe(1);
+    expect(h.probes[0]!.pings).toBe(1);
     expect(h.endpoint()).toEqual(published());
 
     await h.tick();
     expect(h.connects).toHaveLength(2); // The session is reused while pings succeed.
-    expect(h.probes[0].pings).toBe(2);
+    expect(h.probes[0]!.pings).toBe(2);
 
     h.setUp(false);
     await h.tick();
     expect(h.endpoint()).toEqual({ version: 1 });
-    expect(h.probes[0].closed).toBe(1);
+    expect(h.probes[0]!.closed).toBe(1);
 
     h.setUp(true);
     await h.tick();
@@ -441,7 +448,7 @@ describe('Pidewave native endpoint', () => {
     expect(h.endpoint()).toEqual({ version: 1 });
     expect(h.unregistrations).toEqual(['tidewave']);
     await stopping;
-    expect(h.probes[0].closed).toBe(1);
+    expect(h.probes[0]!.closed).toBe(1);
 
     const late = harness({ bus: h.bus });
     late.write();
@@ -452,8 +459,8 @@ describe('Pidewave native endpoint', () => {
     release();
     await late.settle();
     expect(late.probes).toHaveLength(1);
-    expect(late.probes[0].closed).toBe(1);
-    expect(late.probes[0].pings).toBe(0);
+    expect(late.probes[0]!.closed).toBe(1);
+    expect(late.probes[0]!.pings).toBe(0);
     expect(late.endpoint()).toEqual({ version: 1 });
 
     process.env.PIDEWAVE_TEST_PORT = '4400';
@@ -470,7 +477,7 @@ describe('Pidewave native endpoint', () => {
     h.fire('session_start');
     await h.settle();
 
-    h.probes[0].close = async () => {
+    h.probes[0]!.close = async () => {
       throw new Error('already closed');
     };
 
@@ -489,7 +496,7 @@ describe('Pidewave native endpoint', () => {
       expect(h.unregistrations).toEqual(['tidewave']);
       expect(h.registrations).toEqual([registration(), registration()]);
       expect(h.probes).toHaveLength(2);
-      expect(h.probes[0].closed).toBe(1);
+      expect(h.probes[0]!.closed).toBe(1);
       expect(h.endpoint()).toEqual(published());
       expect(h.notices).toEqual(['Pidewave: Tidewave connected at http://localhost:4300.']);
     });

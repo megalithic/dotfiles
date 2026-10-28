@@ -7,6 +7,7 @@ const assistant = (
   stopReason: AssistantMessage['stopReason'] = 'stop',
   errorMessage?: string,
 ): AssistantMessage =>
+  // SAFETY: The fixture provides every AssistantMessage field consumed by notify.
   ({
     role: 'assistant',
     content: [{ type: 'text', text }],
@@ -27,12 +28,14 @@ const harness = () => {
 
   const controller = _test.createNotificationController((request) => notifications.push(request), {
     delayMs: 3_000,
+    // SAFETY: The test timer IDs are opaque handles accepted by the injected clearTimer.
     setTimer: ((callback: () => void) => {
       const id = nextTimer++;
       timers.set(id, callback);
 
       return id;
     }) as never,
+    // SAFETY: The test timer IDs are opaque handles accepted by the controller.
     clearTimer: ((id: number) => timers.delete(id)) as never,
   });
 

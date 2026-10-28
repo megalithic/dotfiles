@@ -13,6 +13,12 @@ import { stripVTControlCharacters } from 'node:util';
 
 const stateDir = fs.mkdtempSync('/tmp/pi-pidewave-test-');
 
+// SAFETY: Fixtures intentionally implement only the status API members they exercise.
+const asExtensionAPI = <T>(value: T): ExtensionAPI => value as ExtensionAPI;
+
+// SAFETY: Fixtures intentionally implement only the status context members they exercise.
+const asExtensionContext = <T>(value: T): ExtensionContext => value as ExtensionContext;
+
 const bindingDir = path.join(stateDir, 'tidewave', 'bindings');
 
 const originalEnv = { ...process.env };
@@ -63,14 +69,14 @@ const lifecycle = () => {
   const hooks = new Map<string, Hook>();
 
   // SAFETY: Only lifecycle and command registration, shared events and getThinkingLevel are used.
-  const pi = {
+  const pi = asExtensionAPI({
     events: { emit: () => {}, on: () => () => {} },
     on: (name: string, hook: Hook) => {
       hooks.set(name, hook);
     },
     registerCommand: () => {},
     getThinkingLevel: () => 'off',
-  } as ExtensionAPI;
+  });
 
   return { pi, fire: (name: string, ctx: ExtensionContext) => hooks.get(name)?.({}, ctx) };
 };
@@ -79,15 +85,17 @@ let fixtureId = 0;
 
 const bindingHarness = (hasUI = true) => {
   const cwd = path.join(stateDir, `Work Tree_${++fixtureId}`);
+
   const slug = path
     .basename(cwd)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-');
+
   const statusCalls: [string, string | undefined][] = [];
   const widgetCalls: [string, undefined][] = [];
 
   // SAFETY: Binding lifecycle hooks read only cwd, hasUI, setStatus and setWidget.
-  const ctx = {
+  const ctx = asExtensionContext({
     cwd,
     hasUI,
     ui: {
@@ -98,7 +106,7 @@ const bindingHarness = (hasUI = true) => {
         widgetCalls.push([key, value]);
       },
     },
-  } as ExtensionContext;
+  });
 
   const { pi, fire } = lifecycle();
   const interval = spyOn(globalThis, 'setInterval');
@@ -233,8 +241,9 @@ describe('pidewave binding status', () => {
     process.env.PI_SOCKET = socket;
     h.fire('session_start');
     expect(h.interval.mock.calls).toHaveLength(1);
-    expect(h.interval.mock.calls[0][1]).toBe(1000);
-    const timer = h.interval.mock.results[0].value;
+    expect(h.interval.mock.calls[0]![1]).toBe(1000);
+    // SAFETY: The mocked interval returns the timer handle used by clearInterval.
+    const timer = h.interval.mock.results[0]!.value as ReturnType<typeof setInterval>;
     expect(timer.hasRef()).toBe(false);
     const file = h.write({ socket, appUrl: url });
     h.tick();
@@ -258,10 +267,10 @@ describe('pidewave binding status', () => {
   test('restart clears the previous poll; headless sessions never poll or touch UI', () => {
     const h = bindingHarness();
     h.fire('session_start');
-    const firstTimer = h.interval.mock.results[0].value;
+    const firstTimer = h.interval.mock.results[0]!.value;
     h.fire('session_start');
     expect(h.clear).toHaveBeenCalledWith(firstTimer);
-    const secondTimer = h.interval.mock.results[1].value;
+    const secondTimer = h.interval.mock.results[1]!.value;
     h.ctx.hasUI = false;
     h.statusCalls.length = 0;
     h.widgetCalls.length = 0;
@@ -416,7 +425,7 @@ describe('standalone ACP boundaries', () => {
       );
       expect(await cli.read()).toMatchObject({ id: 2, result: { stopReason: 'end_turn' } });
       expect(requests).toHaveLength(1);
-      expect(JSON.parse(requests[0])).toMatchObject({
+      expect(JSON.parse(requests[0]!)).toMatchObject({
         type: 'control',
         protocol: 'pi.control.v1',
         operation: 'message.send',
@@ -453,7 +462,7 @@ const footerHarness = (statuses: Map<string, string>) => {
   let component: { render(width: number): string[]; dispose(): void };
 
   // SAFETY: Rendering uses only these context fields; UI callbacks receive real footer code.
-  const ctx = {
+  const ctx = asExtensionContext({
     // A missing cwd makes the asynchronous starship spawn fail without executing it.
     cwd: path.join(stateDir, 'missing-footer-cwd'),
     hasUI: true,
@@ -469,7 +478,7 @@ const footerHarness = (statuses: Map<string, string>) => {
         });
       },
     },
-  } as ExtensionContext;
+  });
 
   cleanups.push(() => {
     component?.dispose();
@@ -495,7 +504,7 @@ describe('pidewave footer rendering', () => {
       ]),
     );
 
-    const line = render()[1];
+    const line = render()[1]!;
     const plain = stripVTControlCharacters(line);
     expect(plain).toContain('https://app.test:4443 │ first │ between │ last');
     expect(plain.match(/https:\/\/app\.test:4443/g)).toHaveLength(1);
@@ -510,7 +519,8 @@ describe('pidewave footer rendering', () => {
         ['mcp', 'MCP 0/3'],
         ['pidewave', status(boundHere)],
       ]),
-    )()[1];
+    )()[1]!;
+
     const plain = stripVTControlCharacters(line);
     expect(plain).not.toContain('app.test');
     expect(plain).toContain('0/3');
@@ -522,7 +532,7 @@ describe('pidewave footer rendering', () => {
       const statuses = new Map([['pidewave', status(false, url, true)]]);
 
       if (mcp !== undefined) statuses.set('mcp', mcp);
-      const line = footerHarness(statuses)()[1];
+      const line = footerHarness(statuses)()[1]!;
       expect(line).toContain(theme.fg('success', url));
       expect(stripVTControlCharacters(line)).not.toContain('boundHere');
     },
@@ -568,7 +578,8 @@ describe('pidewave footer rendering', () => {
         ['pidewave', status(true, 'http://LOCALHOST:80/path', true)],
       ]),
     );
-    expect(stripVTControlCharacters(render()[1])).toContain('http://localhost │ ok');
+
+    expect(stripVTControlCharacters(render()[1]!)).toContain('http://localhost │ ok');
 
     for (const width of [1, 2, 3, 8, 16, 30, 40, 60, 80]) {
       const lines = render(width);

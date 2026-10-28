@@ -26,7 +26,8 @@ function run(cwd: string) {
   const contextFiles: ContextFile[] = [{ path: path.join(cwd, 'AGENTS.md'), content: 'repo' }];
 
   expect(handlers).toHaveLength(1);
-  expect(handlers[0]({ systemPromptOptions: { cwd, contextFiles } })).toBeUndefined(); // never forces the prompt
+  // SAFETY: The preceding assertion verifies the sole registered handler exists.
+  expect(handlers[0]!({ systemPromptOptions: { cwd, contextFiles } })).toBeUndefined(); // never forces the prompt
 
   return contextFiles;
 }

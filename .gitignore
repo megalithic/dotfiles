@@ -64,6 +64,8 @@ home/.pi/agent/mcp-cache.json
 home/.pi/agent/mcp-auth.json
 home/.pi/agent/mcp.log*
 home/.pi/agent/mcp-npx-cache.json
+# Temp copies made by pidewave-endpoint.test.ts; afterAll removes them.
+home/.pi/tests/.pidewave-extension-*/
 
 # Deployable SSH sources (home/ tree -> ~/.ssh): only these four. Keys,
 # known_hosts, sockets, authorized_keys and local overrides must never be

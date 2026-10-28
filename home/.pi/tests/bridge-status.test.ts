@@ -12,6 +12,12 @@ import { Type } from 'typebox';
 
 const stateDir = fs.mkdtempSync('/tmp/pi-bridge-test-');
 
+// SAFETY: Fixtures intentionally implement only the bridge API members they exercise.
+const asExtensionAPI = <T>(value: T): ExtensionAPI => value as ExtensionAPI;
+
+// SAFETY: Fixtures intentionally implement only the bridge context members they exercise.
+const asExtensionContext = <T>(value: T): ExtensionContext => value as ExtensionContext;
+
 const originalEnv = { ...process.env };
 
 process.env.PI_STATE_DIR = stateDir;
@@ -126,7 +132,7 @@ const harness = (cwd = process.cwd()) => {
 
   // SAFETY: Tests call only bridge's lifecycle hooks and runtime event bus;
   // messages/UI are deliberately absent so accidental delivery fails the test.
-  const pi = {
+  const pi = asExtensionAPI({
     on: (name: string, handler: LifecycleHook) => {
       hooks.set(name, handler);
     },
@@ -144,16 +150,16 @@ const harness = (cwd = process.cwd()) => {
         };
       },
     },
-  } as ExtensionAPI;
+  });
 
   // SAFETY: Bridge's tested lifecycle/status path uses only these context members.
-  const ctx = {
+  const ctx = asExtensionContext({
     cwd,
     hasUI: false,
     isIdle: () => true,
     hasPendingMessages: () => false,
     sessionManager: { getSessionId: () => 'test-session', getSessionName: () => 'test-name' },
-  } as ExtensionContext;
+  });
 
   bridge(pi);
 
@@ -233,7 +239,7 @@ const request = (payload: string, splitAt?: number): Promise<Type.Static<typeof 
       client.destroy();
 
       try {
-        const response: unknown = JSON.parse(buffer.split('\n')[0]);
+        const response: unknown = JSON.parse(buffer.split('\n')[0]!);
 
         if (!Value.Check(responseSchema, response)) throw new Error('invalid test response');
         resolve(response);
@@ -247,11 +253,13 @@ const staleSocket = (name: string, pid = 2147483647, heartbeatAt = new Date(0).t
   const socket = path.join(stateDir, 'sockets', `${name}.sock`);
   fs.mkdirSync(path.dirname(socket), { recursive: true });
   fs.mkdirSync(path.join(stateDir, 'manifests'), { recursive: true });
+
   const child = Bun.spawnSync([
     process.execPath,
     '-e',
     `require('node:net').createServer().listen(${JSON.stringify(socket)}, () => process.exit(0))`,
   ]);
+
   expect(child.exitCode).toBe(0);
   fs.writeFileSync(_test.manifestForSocket(socket), JSON.stringify({ socket, pid, owner: 'stale-owner', heartbeatAt }));
 
@@ -810,6 +818,7 @@ describe('bridge recovery and wire boundaries', () => {
       const invalidControl = await request(
         '{"type":"control","protocol":"pi.control.v1","id":"bad-text","operation":"message.send","params":{"text":12}}',
       );
+
       expect(invalidControl).toMatchObject({
         ok: false,
         type: 'control_response',
