@@ -79,7 +79,7 @@ wait "$pid" 2>/dev/null || true
 
 jq -e --arg prefix "$test_home/.pi/agent/extensions/" '
   select(.id == "commands" and .success == true)
-  | [.data.commands[] | select(.name == "handoff" or .name == "goal" or .name == "tell" or .name == "om")]
+  | [.data.commands[] | select(.name == "handoff" or .name == "goal" or .name == "tell" or .name == "snippets")]
   | length == 4 and all(.sourceInfo.path | startswith($prefix))
 ' "$out" >/dev/null
 

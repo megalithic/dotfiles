@@ -79,30 +79,6 @@
     "imageWidthCells": 120
   },
   "shellCommandPrefix": "export GIT_MERGE_AUTOEDIT=no\nGIT_EDITOR=true\nexport GIT_SEQUENCE_EDITOR=true\nexport GIT_TERMINAL_PROMPT=0\nexport PI_TMUX_IMAGES=1\nexport PI_BRIDGE_LEGACY_SOCKET=1\nexport PI_TYPESAFE_ENABLED=1\nexport LAT_LLM_BASE_URL=https://api.synthetic.new/openai/v1\nexport LAT_LLM_MODEL=hf:nomic-ai/nomic-embed-text-v1.5\nexport LAT_LLM_DIMENSIONS=768",
-  "observational-memory": {
-    "chunkTokens": 5000,
-    "chunkOverlapTokens": 0,
-    "poolTargetTokens": 10000,
-    "consolidateAtPoolTokens": 20000,
-    "compactAtContextTokens": 100000,
-    "tailTokens": 20000,
-    "journeyTargetTokens": 1000,
-    "observerConcurrency": 4,
-    "models": {
-      "observer": {
-        "provider": "openai-codex",
-        "id": "gpt-5.6-luna",
-        "thinking": "low"
-      },
-      "consolidator": {
-        "provider": "openai-codex",
-        "id": "gpt-5.6-luna",
-        "thinking": "medium"
-      }
-    },
-    "passive": false,
-    "debugLog": false
-  },
   "theme": "dark",
   "lastChangelogVersion": "1.4.0"
 }

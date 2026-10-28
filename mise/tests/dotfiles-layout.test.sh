@@ -168,7 +168,7 @@ EOF
 # config/superfile and config/zsh/.zcompdump are untracked in the real repo;
 # the fixture index may include them, so no assertion either way.
 
-for dir in .config .config/fish .config/mise .config/nvim .config/git .config/1Password/ssh .ssh .pi/agent .pi/agent/extensions .pi/agent/extensions/observational-memory .pi/agent/skills/bro "Library/Application Support/MailMate/Resources/KeyBindings" .claude .local/bin; do
+for dir in .config .config/fish .config/mise .config/nvim .config/git .config/1Password/ssh .ssh .pi/agent .pi/agent/extensions .pi/agent/extensions/heimdall .pi/agent/skills/bro "Library/Application Support/MailMate/Resources/KeyBindings" .claude .local/bin; do
   real_dir "$dir"
 done
 [ "$(/usr/bin/stat -f %Lp "$home/.ssh")" = 700 ] || fail "~/.ssh mode changed to $(/usr/bin/stat -f %Lp "$home/.ssh")"
