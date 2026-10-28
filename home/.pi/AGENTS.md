@@ -51,6 +51,10 @@ home/.pi/
   to the gitignored `<project>/.pi/AGENTS.md`. `extensions/project-guidance.ts`
   adds that file to the project context on every run. Disable it with
   `PI_PROJECT_GUIDANCE_DISABLE=1`.
+- Extensions that add prompt text set a named
+  `event.systemPromptOptions.sections.<name>` (or push to `contextFiles`) in
+  `before_agent_start`. Returning `systemPrompt` forces the whole prompt and
+  drops changes from extensions that load later.
 
 ## Applying
 
