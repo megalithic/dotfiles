@@ -16,7 +16,6 @@ config/espanso/match/packages/
 
 .pi
 !home/.pi/
-/.memory/
 .nvim.lua
 lat.md/.cache/
 result
