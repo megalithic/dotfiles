@@ -312,13 +312,11 @@ const runPreview = async (
   const cmd = buildPreviewCommand(options, content);
 
   // Execute preview-ai
-  const result = await pi.exec(cmd[0], cmd.slice(1), {
-    cwd: ctx.cwd,
-    env: {
-      ...process.env,
-      TMUX_PANE: process.env.TMUX_PANE || '',
-    },
-  });
+  const command = cmd[0];
+
+  if (!command) return;
+
+  const result = await pi.exec(command, cmd.slice(1), { cwd: ctx.cwd });
 
   // Check for errors
   if (result.code !== 0) {

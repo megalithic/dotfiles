@@ -541,10 +541,6 @@ export default function reviewExtension(pi: ExtensionAPI) {
     applyReviewState(ctx);
   });
 
-  pi.on('session_switch', (_event, ctx) => {
-    applyReviewState(ctx);
-  });
-
   pi.on('session_tree', (_event, ctx) => {
     applyReviewState(ctx);
   });
@@ -716,9 +712,6 @@ export default function reviewExtension(pi: ExtensionAPI) {
         noMatch: (text) => theme.fg('warning', text),
       });
 
-      // Enable search
-      selectList.searchable = true;
-
       selectList.onSelect = (item) => done(item.value);
       selectList.onCancel = () => done(null);
 
@@ -775,9 +768,6 @@ export default function reviewExtension(pi: ExtensionAPI) {
         scrollInfo: (text) => theme.fg('dim', text),
         noMatch: (text) => theme.fg('warning', text),
       });
-
-      // Enable search
-      selectList.searchable = true;
 
       selectList.onSelect = (item) => {
         const commit = commits.find((c) => c.sha === item.value);

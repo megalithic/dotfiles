@@ -6,9 +6,9 @@
  * signal_loop_success tool.
  */
 
-import { Type } from '@sinclair/typebox';
-import { complete, type Api, type Model, type UserMessage } from '@earendil-works/pi-ai';
-import type { ExtensionAPI, ExtensionContext, SessionSwitchEvent } from '@earendil-works/pi-coding-agent';
+import { Type } from 'typebox';
+import type { Api, Model, UserMessage } from '@earendil-works/pi-ai';
+import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
 import { compact } from '@earendil-works/pi-coding-agent';
 import { Container, type SelectItem, SelectList, Text } from '@earendil-works/pi-tui';
 import { DynamicBorder } from '@earendil-works/pi-coding-agent';
@@ -89,33 +89,31 @@ function getConditionText(mode: LoopMode, condition?: string): string {
   }
 }
 
-async function selectSummaryModel(ctx: ExtensionContext): Promise<{ model: Model<Api>; apiKey: string } | null> {
+async function selectSummaryModel(ctx: ExtensionContext): Promise<Model<Api> | null> {
   if (!ctx.model) return null;
 
   if (ctx.model.provider === 'anthropic') {
     const haikuModel = ctx.modelRegistry.find('anthropic', HAIKU_MODEL_ID);
 
     if (haikuModel) {
-      const apiKey = await ctx.modelRegistry.getApiKey(haikuModel);
+      const auth = await ctx.modelRegistry.getApiKeyAndHeaders(haikuModel);
 
-      if (apiKey) {
-        return { model: haikuModel, apiKey };
-      }
+      if (auth.ok) return haikuModel;
     }
   }
 
-  const apiKey = await ctx.modelRegistry.getApiKey(ctx.model);
+  const auth = await ctx.modelRegistry.getApiKeyAndHeaders(ctx.model);
 
-  if (!apiKey) return null;
+  if (!auth.ok) return null;
 
-  return { model: ctx.model, apiKey };
+  return ctx.model;
 }
 
 async function summarizeBreakoutCondition(ctx: ExtensionContext, mode: LoopMode, condition?: string): Promise<string> {
   const fallback = summarizeCondition(mode, condition);
-  const selection = await selectSummaryModel(ctx);
+  const summaryModel = await selectSummaryModel(ctx);
 
-  if (!selection) return fallback;
+  if (!summaryModel) return fallback;
 
   const conditionText = getConditionText(mode, condition);
 
@@ -125,11 +123,10 @@ async function summarizeBreakoutCondition(ctx: ExtensionContext, mode: LoopMode,
     timestamp: Date.now(),
   };
 
-  const response = await complete(
-    selection.model,
-    { systemPrompt: SUMMARY_SYSTEM_PROMPT, messages: [userMessage] },
-    { apiKey: selection.apiKey },
-  );
+  const response = await ctx.modelRegistry.complete(summaryModel, {
+    systemPrompt: SUMMARY_SYSTEM_PROMPT,
+    messages: [userMessage],
+  });
 
   if (response.stopReason === 'aborted' || response.stopReason === 'error') {
     return fallback;
@@ -440,16 +437,29 @@ export default function loopExtension(pi: ExtensionAPI): void {
 
   pi.on('session_before_compact', async (event, ctx) => {
     if (!loopState.active || !loopState.mode || !ctx.model) return;
-    const apiKey = await ctx.modelRegistry.getApiKey(ctx.model);
+    const auth = await ctx.modelRegistry.getApiKeyAndHeaders(ctx.model);
 
-    if (!apiKey) return;
+    if (!auth.ok) return;
 
     const instructionParts = [event.customInstructions, getCompactionInstructions(loopState.mode, loopState.condition)]
       .filter(Boolean)
       .join('\n\n');
 
+    // SAFETY: compact forwards headers unchanged into stream options typed as ProviderHeaders (null removes a header); Pi's default compaction passes the same resolved headers.
+    const headers = auth.headers as Record<string, string> | undefined;
+
     try {
-      const compaction = await compact(event.preparation, ctx.model, apiKey, instructionParts, event.signal);
+      const compaction = await compact(
+        event.preparation,
+        ctx.model,
+        auth.apiKey,
+        headers,
+        instructionParts,
+        event.signal,
+        undefined,
+        undefined,
+        auth.env,
+      );
 
       return { compaction };
     } catch (error) {
@@ -481,10 +491,6 @@ export default function loopExtension(pi: ExtensionAPI): void {
   }
 
   pi.on('session_start', async (_event, ctx) => {
-    await restoreLoopState(ctx);
-  });
-
-  pi.on('session_switch', async (_event: SessionSwitchEvent, ctx) => {
     await restoreLoopState(ctx);
   });
 }

@@ -26,6 +26,7 @@
  * must validate the pid (kill -0) to ignore crashed leftovers.
  */
 
+import type { AgentMessage } from '@earendil-works/pi-agent-core';
 import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -43,8 +44,6 @@ type AgentState = 'idle' | 'working' | 'asking' | 'error' | 'done';
 let statusPath: string | null = null;
 
 let session: string | null = null;
-
-let sawError = false;
 
 /** Detect tmux session/window for this pane. Returns null outside tmux. */
 const detectTmux = (): { session: string; window: string } | null => {
@@ -129,6 +128,19 @@ const endsWithQuestion = (messages: unknown): boolean => {
   return false;
 };
 
+/** True when the turn's last assistant message ended with a provider error. */
+const endedWithError = (messages: AgentMessage[] | undefined): boolean => {
+  if (!Array.isArray(messages)) return false;
+
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+
+    if (m?.role === 'assistant') return m.stopReason === 'error';
+  }
+
+  return false;
+};
+
 export default function (pi: ExtensionAPI): void {
   pi.on('session_start', (_event, ctx) => {
     if (!ctx.hasUI) return;
@@ -142,10 +154,7 @@ export default function (pi: ExtensionAPI): void {
 
   pi.on('input', () => writeState('working'));
 
-  pi.on('agent_start', () => {
-    sawError = false;
-    writeState('working');
-  });
+  pi.on('agent_start', () => writeState('working'));
 
   pi.on('tool_call', (event) => {
     if (isAskTool(event?.toolName)) writeState('asking');
@@ -155,12 +164,8 @@ export default function (pi: ExtensionAPI): void {
     if (isAskTool(event?.toolName)) writeState('working');
   });
 
-  pi.on('error', () => {
-    sawError = true;
-  });
-
   pi.on('agent_end', (event) =>
-    writeState(sawError ? 'error' : endsWithQuestion((event as { messages?: unknown })?.messages) ? 'asking' : 'done'),
+    writeState(endedWithError(event?.messages) ? 'error' : endsWithQuestion(event?.messages) ? 'asking' : 'done'),
   );
 
   pi.on('session_shutdown', () => removeStatus());
