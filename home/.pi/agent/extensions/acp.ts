@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * acp.ts — Tidewave → tmux pi ACP forwarder shim (input-only).
  *
@@ -505,9 +504,11 @@ const connectTidewave: Connect = async (url) => {
   if (!manifest) throw new Error('@earendil-works/pi-mcp is not installed next to Pi');
   const pkg: JsonValue = JSON.parse(fs.readFileSync(manifest, 'utf8'));
   const main = isJsonObject(pkg) && isJsonString(pkg.main) ? pkg.main : 'dist/index.js';
+
   const { McpClient, StreamableHttpTransport } = await import(
     pathToFileURL(path.join(path.dirname(manifest), main)).href
   );
+
   const client = new McpClient({ name: 'pidewave', version: '1.0.0', requestTimeoutMs: PING_TIMEOUT_MS });
 
   await client.connect(new StreamableHttpTransport({ url, openGetStream: false }));
@@ -572,7 +573,7 @@ const OWN_FAILURES = [
 const endpointFailureReason = (error: Error): string =>
   OWN_FAILURES.includes(error.message) ? error.message : 'unreadable .pi/mcp.json or endpoint URL';
 
-const asError = (thrown: Error | string | undefined): Error => (thrown instanceof Error ? thrown : new Error());
+const asError = <T>(thrown: T): Error => (thrown instanceof Error ? thrown : new Error());
 
 type PidewaveRecord = { event: string; at: string; [key: string]: string | boolean | undefined };
 

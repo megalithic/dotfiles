@@ -137,8 +137,9 @@ function assistantUsageTokens(messages: unknown[]): number {
   let total = 0;
 
   for (const message of messages) {
-    if (!message || typeof message !== 'object') continue;
+    if (!message) continue;
 
+    // SAFETY: agent_end messages are AgentMessage objects; only optional role/usage fields are read.
     const msg = message as {
       role?: string;
       usage?: { input?: number; output?: number };
@@ -461,6 +462,7 @@ export default function goalExtension(pi: ExtensionAPI) {
 
     for (const entry of ctx.sessionManager.getBranch()) {
       if (entry.type !== 'custom' || entry.customType !== STATE_TYPE) continue;
+      // SAFETY: STATE_TYPE entries are written only by persist() as PersistedGoalState.
       const data = entry.data as Partial<PersistedGoalState> | undefined;
       goal = data?.goal ? cloneGoal(data.goal) : null;
     }
@@ -494,7 +496,7 @@ export default function goalExtension(pi: ExtensionAPI) {
     let changed = false;
 
     if (activeGoalIdAtAgentStart === goal.id) {
-      const tokens = assistantUsageTokens(event.messages as unknown[]);
+      const tokens = assistantUsageTokens(event.messages);
 
       if (tokens > 0) {
         goal.tokensUsed += tokens;
@@ -525,6 +527,7 @@ export default function goalExtension(pi: ExtensionAPI) {
     let lastContinuationIndex = -1;
 
     for (let i = 0; i < event.messages.length; i++) {
+      // SAFETY: AgentMessage objects; only optional customType/details fields are read.
       const msg = event.messages[i] as {
         customType?: string;
         details?: { goalId?: string };
@@ -537,6 +540,7 @@ export default function goalExtension(pi: ExtensionAPI) {
 
     return {
       messages: event.messages.filter((message, index) => {
+        // SAFETY: AgentMessage objects; only optional customType/details fields are read.
         const msg = message as {
           customType?: string;
           details?: { goalId?: string };

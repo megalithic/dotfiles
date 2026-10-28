@@ -130,7 +130,7 @@ async function getWsUrl() {
 
   const attempts = [];
 
-  for (const port of [...new Set(ports.filter(Boolean))]) {
+  for (const port of new Set(ports.filter(Boolean))) {
     const versionUrl = `http://${host}:${port}/json/version`;
 
     try {
@@ -158,7 +158,6 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function resolvePrefix(prefix, candidates, noun = 'target', missingHint = '') {
   const upper = prefix.toUpperCase();
-
   const matches = candidates.filter((candidate) => candidate.toUpperCase().startsWith(upper));
 
   if (matches.length === 0) {
@@ -218,7 +217,8 @@ class CDP {
           if (msg.error) reject(new Error(msg.error.message));
           else resolve(msg.result);
         } else if (msg.method && this.#eventHandlers.has(msg.method)) {
-          for (const handler of [...this.#eventHandlers.get(msg.method)]) {
+          // Snapshot: handlers may unsubscribe while being called.
+          for (const handler of Array.from(this.#eventHandlers.get(msg.method))) {
             handler(msg.params || {}, msg);
           }
         }
@@ -420,7 +420,8 @@ async function evalStr(cdp, sid, expression) {
 
   const val = result.result.value;
 
-  return typeof val === 'object' ? JSON.stringify(val, null, 2) : String(val ?? '');
+  // val comes from JSON.parse (CDP reply), so it is never a function; null still takes the JSON branch.
+  return val === null || Object(val) === val ? JSON.stringify(val, null, 2) : String(val ?? '');
 }
 
 async function shotStr(cdp, sid, filePath, targetId) {
@@ -434,7 +435,6 @@ async function shotStr(cdp, sid, filePath, targetId) {
         ? Math.round((metrics.visualViewport.clientWidth / metrics.cssVisualViewport.clientWidth) * 100) / 100
         : 1
       : 1;
-
     // Simpler: deviceScaleFactor is on the root Page metrics
     const { deviceScaleFactor } = await cdp.send('Emulation.getDeviceMetricsOverride', {}, sid).catch(() => ({}));
 
@@ -452,9 +452,7 @@ async function shotStr(cdp, sid, filePath, targetId) {
   }
 
   const { data } = await cdp.send('Page.captureScreenshot', { format: 'png' }, sid);
-
   const out = filePath || resolve(RUNTIME_DIR, `screenshot-${(targetId || 'unknown').slice(0, 8)}.png`);
-
   writeFileSync(out, Buffer.from(data, 'base64'));
 
   const lines = [out];

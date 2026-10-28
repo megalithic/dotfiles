@@ -358,7 +358,12 @@ const parseSessionTarget = (target: string): { machine: string; sessionId: strin
   if (!match) return undefined;
 
   try {
-    return { machine: match[1], sessionId: decodeURIComponent(match[2]) };
+    const machine = match[1];
+    const encodedSessionId = match[2];
+
+    if (machine === undefined || encodedSessionId === undefined) return undefined;
+
+    return { machine, sessionId: decodeURIComponent(encodedSessionId) };
   } catch {
     return undefined;
   }
@@ -565,8 +570,18 @@ const buildCandidate = (
   return { ...partial, label, searchText };
 };
 
+type TellExecFile = (
+  file: string,
+  args: string[],
+  options: { encoding: 'utf8'; timeout?: number; maxBuffer?: number; env?: NodeJS.ProcessEnv },
+  callback: (error: Error | null, stdout: string, stderr: string) => void,
+) => ReturnType<typeof execFile>;
+
+const defaultTellExecFile: TellExecFile = (file, args, options, callback) =>
+  execFile(file, args, options, (error, stdout, stderr) => callback(error, stdout, stderr));
+
 const listTmuxPanes = (
-  run: typeof execFile = execFile,
+  run: TellExecFile = defaultTellExecFile,
 ): Promise<
   Array<{
     session: string;
@@ -602,13 +617,13 @@ const listTmuxPanes = (
             const [session, windowIndex, windowName, pane, paneIndex, title, pid, cwd] = line.split('\t');
 
             return {
-              session,
-              window: /^[a-zA-Z0-9_-]+$/.test(windowName || '') ? windowName : windowIndex,
-              windowIndex,
-              windowName,
-              pane,
-              paneIndex,
-              title,
+              session: session || '',
+              window: /^[a-zA-Z0-9_-]+$/.test(windowName || '') ? windowName || '' : windowIndex || '',
+              windowIndex: windowIndex || '',
+              windowName: windowName || '',
+              pane: pane || '',
+              paneIndex: paneIndex || '',
+              title: title || '',
               cwd,
               panePid: Number(pid) || undefined,
             };
@@ -627,7 +642,11 @@ const listTmuxPanes = (
             const pid = Number(match[1]),
               ppid = Number(match[2]);
 
-            commands.set(pid, match[3]);
+            const command = match[3];
+
+            if (command === undefined) continue;
+
+            commands.set(pid, command);
             children.set(ppid, [...(children.get(ppid) || []), pid]);
           }
 
@@ -730,6 +749,8 @@ const discoverCandidates = async (listPanes = listTmuxPanes): Promise<Candidate[
     for (let index = candidates.length - 1; index >= 0; index--) {
       const candidate = candidates[index];
 
+      if (!candidate) continue;
+
       if (!candidate.reachable && candidate.manifest?.pane === row.pane && candidate.pid && candidate.pid !== row.pid)
         candidates.splice(index, 1);
     }
@@ -739,9 +760,11 @@ const discoverCandidates = async (listPanes = listTmuxPanes): Promise<Candidate[
         (row.pid && candidate.manifest?.pid === row.pid) ||
         (!candidate.manifest?.pid && candidate.manifest?.pane === row.pane),
     );
+
     const manifestCandidate = owners.sort(
       (a, b) => Number(b.pid === row.pid) - Number(a.pid === row.pid) || compareCandidates(a, b),
     )[0];
+
     const linkedPanes = panes.filter((entry) => entry.pane === row.pane);
     let pane = linkedPanes.find((entry) => entry.session === manifestCandidate?.session) || row;
     let existing = manifestCandidate;
@@ -864,11 +887,13 @@ const pickerItem = (candidate: Candidate, now = Date.now()) => {
           : `${Math.floor(seconds / 86400)}d ago`;
 
   const state = candidate.state === 'input_needed' ? 'needs input' : candidate.state || 'unknown';
+
   // Numeric window names repeat the index already in the address.
   const windowName =
     candidate.windowIndex !== undefined && candidate.windowName !== candidate.windowIndex
       ? candidate.windowName
       : undefined;
+
   const target =
     candidate.sessionId && candidate.machine ? sessionTarget(candidate.machine, candidate.sessionId) : 'no tell id';
 
@@ -948,6 +973,7 @@ const captureCandidatePane = async (candidate: Candidate, signal: AbortSignal): 
     new Promise((resolve) => {
       if (signal.aborted) return resolve(undefined);
       let child: ReturnType<typeof execFile> | undefined;
+
       const abort = () => {
         child?.kill();
         resolve(undefined);
@@ -962,7 +988,10 @@ const captureCandidatePane = async (candidate: Candidate, signal: AbortSignal): 
       if (signal.aborted) abort();
     });
 
-  const tty = (await run('tmux', ['display-message', '-p', '-t', candidate.pane, '#{pane_tty}']))?.trim();
+  const pane = candidate.pane;
+
+  if (!pane) return undefined;
+  const tty = (await run('tmux', ['display-message', '-p', '-t', pane, '#{pane_tty}']))?.trim();
 
   if (!tty?.startsWith('/dev/')) return undefined;
   const processes = await run('ps', ['-t', tty.slice(5), '-o', 'pid=,pgid=,tpgid=,comm=']);
@@ -970,11 +999,20 @@ const captureCandidatePane = async (candidate: Candidate, signal: AbortSignal): 
   const ownsForeground = processes?.split('\n').some((line) => {
     const match = line.trim().match(/^(\d+)\s+(\d+)\s+(\d+)\s+(.*)$/);
 
-    return match && Number(match[1]) === candidate.pid && match[2] === match[3] && path.basename(match[4]) === 'pi';
+    return (
+      match !== null &&
+      match[1] !== undefined &&
+      match[2] !== undefined &&
+      match[3] !== undefined &&
+      match[4] !== undefined &&
+      Number(match[1]) === candidate.pid &&
+      match[2] === match[3] &&
+      path.basename(match[4]) === 'pi'
+    );
   });
 
   if (!ownsForeground) return undefined;
-  const output = await run('tmux', ['capture-pane', '-p', '-t', candidate.pane, '-S', '-120']);
+  const output = await run('tmux', ['capture-pane', '-p', '-t', pane, '-S', '-120']);
 
   if (!output?.trim()) return undefined;
 
@@ -1259,10 +1297,12 @@ const pickCandidate = async (
         },
         render(width: number) {
           const terminalRows = tui.terminal.rows;
+
           // Inline pickers sit in the editor slot, so leave part of the transcript visible.
           const rows = options.overlay
             ? terminalRows
             : Math.min(terminalRows, Math.max(12, Math.floor(terminalRows * 0.7)));
+
           const roomy = rows >= 24;
           const rule = accent('─'.repeat(width));
           const now = Date.now();
@@ -1328,6 +1368,7 @@ const pickCandidate = async (
             const listBudget = Math.max(2, Math.min(optionListHeight(choices.length), bodyRows - gap - 3));
             const list = renderOptionRows(items, selected, width, listBudget, theme);
             const cardRows = Math.min(PICKER_STACKED_PREVIEW_LINES + 2, bodyRows - list.length - gap);
+
             // Height of the unfiltered layout, so filtering does not shrink the picker.
             const height = Math.min(
               bodyRows,
@@ -1354,6 +1395,7 @@ const pickCandidate = async (
 
           if (noteOpen) {
             const newline = keybindings.matches(data, 'tui.input.newLine');
+
             const submit =
               !newline &&
               (keybindings.matches(data, 'tui.select.confirm') || keybindings.matches(data, 'tui.input.submit'));
@@ -1438,12 +1480,13 @@ const tellCompletionContext = (draft: string): TellCompletionContext | undefined
   const trailingSpace = /\s$/.test(draft);
   const tokens = draft.trim().split(/\s+/).slice(1);
 
-  if (['--steer', '--follow-up', '--follow_up'].includes(tokens[0])) {
+  if (['--steer', '--follow-up', '--follow_up'].includes(tokens[0] ?? '')) {
     if (tokens.length === 1 && !trailingSpace) return undefined;
     tokens.shift();
   }
 
   if (tokens[0] === 'id' || tokens[0]?.startsWith('--')) return undefined;
+
   const machine =
     looksLikeMachineTarget(tokens[0]) && (tokens.length > 1 || trailingSpace) ? tokens.shift() : undefined;
 
@@ -1464,7 +1507,9 @@ const createTellAutocompleteProvider = (
   const completed = new WeakSet<object>();
 
   const position = (lines: string[], row: number, col: number) =>
-    lines.length === 1 && row === 0 && col === lines[0].length ? tellCompletionContext(lines[0]) : undefined;
+    lines.length === 1 && row === 0 && lines[0] !== undefined && col === lines[0].length
+      ? tellCompletionContext(lines[0])
+      : undefined;
 
   return {
     triggerCharacters: current.triggerCharacters,
@@ -1497,11 +1542,13 @@ const createTellAutocompleteProvider = (
 
         if (!picked || options.signal.aborted) return null;
         const { sessionId, machine, socket, label } = picked.candidate;
+
         const uniqueSession =
           sessionId &&
           machine &&
           candidates.filter((candidate) => candidate.sessionId === sessionId && candidate.machine === machine)
             .length === 1;
+
         const target = uniqueSession ? sessionTarget(machine, sessionId) : JSON.stringify(socket);
         // The draft is one line and /tell joins message words with spaces anyway.
         const note = picked.note?.replace(/\s+/g, ' ');
@@ -1520,7 +1567,7 @@ const createTellAutocompleteProvider = (
 
       if (completed.has(item) && completion && completion.query === prefix) {
         completed.delete(item);
-        const line = applyTellCompletion(lines[0], completion, item.value);
+        const line = applyTellCompletion(lines[0] || '', completion, item.value);
 
         return { lines: [line], cursorLine: 0, cursorCol: line.length };
       }
@@ -1541,7 +1588,11 @@ const tokenizeHint = (input: string): string[] => {
   const re = /"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|(\S+)/g;
   let match: RegExpExecArray | null;
 
-  while ((match = re.exec(input))) tokens.push((match[1] ?? match[2] ?? match[3]).replace(/\\(["'])/g, '$1'));
+  while ((match = re.exec(input))) {
+    const token = match[1] ?? match[2] ?? match[3];
+
+    if (token !== undefined) tokens.push(token.replace(/\\(["'])/g, '$1'));
+  }
 
   return tokens;
 };
@@ -1646,8 +1697,10 @@ const selectCandidate = async (
         )
       : [];
 
-    if (matches.length === 1 && matches[0].reachable) {
-      return { ok: true, candidate: matches[0] };
+    const match = matches[0];
+
+    if (match && matches.length === 1 && match.reachable) {
+      return { ok: true, candidate: match };
     }
 
     return {
@@ -1956,7 +2009,7 @@ printf '__TELL_SOCKET__ %s\n' "$socket_path"
 PI_TELL_SOCKET="$socket_path" PI_TELL_PAYLOAD_B64="$payload_b64" node -e ${shellQuote(REMOTE_TELL_NODE)}
 `;
 
-const fetchRemoteInventory = (machine: string, run: typeof execFile = execFile): Promise<Candidate[]> =>
+const fetchRemoteInventory = (machine: string, run: TellExecFile = defaultTellExecFile): Promise<Candidate[]> =>
   new Promise((resolve, reject) => {
     if (!machine.trim() || machine.trim().startsWith('-'))
       return reject(new Error(`Invalid SSH machine: ${JSON.stringify(machine)}`));
@@ -2034,7 +2087,7 @@ const sendRemoteJsonLine = (
   machine: string,
   target: string,
   payload: ControlRequest | TellPayload,
-  run: typeof execFile = execFile,
+  run: TellExecFile = defaultTellExecFile,
 ): Promise<RemoteSendResult> =>
   new Promise((resolve) => {
     if (!machine.trim() || machine.trim().startsWith('-'))
@@ -2046,7 +2099,7 @@ const sendRemoteJsonLine = (
     run(
       'ssh',
       ['-o', 'BatchMode=yes', '-o', `ConnectTimeout=${Math.ceil(SSH_TIMEOUT_MS / 1000)}`, '--', machine, command],
-      { encoding: 'utf-8', timeout: SSH_TIMEOUT_MS, maxBuffer: MAX_RESPONSE_BYTES },
+      { encoding: 'utf8', timeout: SSH_TIMEOUT_MS, maxBuffer: MAX_RESPONSE_BYTES },
       (err, stdout, stderr) => {
         const stderrText = stderr.trim();
 
@@ -2535,7 +2588,7 @@ const splitCommandArgs = (args: string): Partial<TellRoute> => {
 
   if (!tokens.length) return { mode };
 
-  if (!/^pi:/i.test(tokens[0]) && looksLikeMachineTarget(tokens[0]) && tokens[1]) {
+  if (!/^pi:/i.test(tokens[0] ?? '') && looksLikeMachineTarget(tokens[0]) && tokens[1]) {
     return {
       machine: tokens[0],
       target: tokens[1],
@@ -2588,6 +2641,8 @@ const restoreRecentTellWidget = (ctx: ExtensionContext): void => {
 
   for (let i = entries.length - 1; i >= 0; i--) {
     const entry = entries[i];
+
+    if (!entry) continue;
 
     if (entry.type !== 'custom' || entry.customType !== 'tell-message') {
       continue;

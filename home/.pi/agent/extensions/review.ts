@@ -28,7 +28,7 @@
 
 import type { ExtensionAPI, ExtensionContext, ExtensionCommandContext } from '@earendil-works/pi-coding-agent';
 import { DynamicBorder, BorderedLoader } from '@earendil-works/pi-coding-agent';
-import { Container, type SelectItem, SelectList, Text, Key } from '@earendil-works/pi-tui';
+import { Container, type SelectItem, SelectList, Text } from '@earendil-works/pi-tui';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
 
@@ -72,6 +72,7 @@ function getReviewState(ctx: ExtensionContext): ReviewSessionState | undefined {
 
   for (const entry of ctx.sessionManager.getBranch()) {
     if (entry.type === 'custom' && entry.customType === REVIEW_STATE_TYPE) {
+      // SAFETY: Review state entries are written by this extension with this shape.
       state = entry.data as ReviewSessionState | undefined;
     }
   }
@@ -288,8 +289,11 @@ async function getRecentCommits(pi: ExtensionAPI, limit: number = 10): Promise<A
     .map((line) => {
       const [sha, ...rest] = line.trim().split(' ');
 
+      if (!sha) return null;
+
       return { sha, title: rest.join(' ') };
-    });
+    })
+    .filter((commit): commit is { sha: string; title: string } => commit !== null);
 }
 
 /**
@@ -340,8 +344,10 @@ function parsePrReference(ref: string): number | null {
   //          github.com/owner/repo/pull/123
   const urlMatch = trimmed.match(/github\.com\/[^/]+\/[^/]+\/pull\/(\d+)/);
 
-  if (urlMatch) {
-    return parseInt(urlMatch[1], 10);
+  const prNumber = urlMatch?.[1];
+
+  if (prNumber) {
+    return parseInt(prNumber, 10);
   }
 
   return null;
@@ -936,7 +942,6 @@ export default function reviewExtension(pi: ExtensionAPI) {
 
       // Find the first user message in the session
       const entries = ctx.sessionManager.getEntries();
-
       const firstUserMessage = entries.find((e) => e.type === 'message' && e.message.role === 'user');
 
       if (!firstUserMessage) {
@@ -1288,7 +1293,6 @@ Preserve exact file paths, function names, and error messages.
           error?: string;
         } | null>((tui, theme, _kb, done) => {
           const loader = new BorderedLoader(tui, theme, 'Summarizing review branch...');
-
           loader.onAbort = () => done(null);
 
           ctx

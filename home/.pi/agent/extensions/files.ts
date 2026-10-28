@@ -25,11 +25,9 @@ import {
   type TUI,
 } from '@earendil-works/pi-tui';
 
-type ContentBlock = {
-  type?: string;
-  text?: string;
-  arguments?: Record<string, unknown>;
-};
+const isString = <T>(value: T): value is T & string => typeof value === 'string';
+
+const isObject = <T>(value: T): value is T & object => typeof value === 'object' && value !== null;
 
 type FileReference = {
   path: string;
@@ -77,7 +75,9 @@ const extractFileReferencesFromText = (text: string): string[] => {
   const refs: string[] = [];
 
   for (const match of text.matchAll(FILE_TAG_REGEX)) {
-    refs.push(match[1]);
+    const reference = match[1];
+
+    if (reference) refs.push(reference);
   }
 
   for (const match of text.matchAll(FILE_URL_REGEX)) {
@@ -85,40 +85,42 @@ const extractFileReferencesFromText = (text: string): string[] => {
   }
 
   for (const match of text.matchAll(PATH_REGEX)) {
-    refs.push(match[1]);
+    const reference = match[1];
+
+    if (reference) refs.push(reference);
   }
 
   return refs;
 };
 
-const extractPathsFromToolArgs = (args: unknown): string[] => {
-  if (!args || typeof args !== 'object') {
-    return [];
-  }
+const extractPathsFromToolArgs = <T>(args: T): string[] => {
+  if (!isObject(args)) return [];
 
   const refs: string[] = [];
-  const record = args as Record<string, unknown>;
 
-  const directKeys = ['path', 'file', 'filePath', 'filepath', 'fileName', 'filename'] as const;
+  const directValues = [
+    'path' in args ? args.path : undefined,
+    'file' in args ? args.file : undefined,
+    'filePath' in args ? args.filePath : undefined,
+    'filepath' in args ? args.filepath : undefined,
+    'fileName' in args ? args.fileName : undefined,
+    'filename' in args ? args.filename : undefined,
+  ];
 
-  const listKeys = ['paths', 'files', 'filePaths'] as const;
+  const listValues = [
+    'paths' in args ? args.paths : undefined,
+    'files' in args ? args.files : undefined,
+    'filePaths' in args ? args.filePaths : undefined,
+  ];
 
-  for (const key of directKeys) {
-    const value = record[key];
-
-    if (typeof value === 'string') {
-      refs.push(value);
-    }
+  for (const value of directValues) {
+    if (isString(value)) refs.push(value);
   }
 
-  for (const key of listKeys) {
-    const value = record[key];
-
+  for (const value of listValues) {
     if (Array.isArray(value)) {
       for (const item of value) {
-        if (typeof item === 'string') {
-          refs.push(item);
-        }
+        if (isString(item)) refs.push(item);
       }
     }
   }
@@ -126,8 +128,8 @@ const extractPathsFromToolArgs = (args: unknown): string[] => {
   return refs;
 };
 
-const extractFileReferencesFromContent = (content: unknown): string[] => {
-  if (typeof content === 'string') {
+const extractFileReferencesFromContent = (content: string | readonly object[] | undefined): string[] => {
+  if (isString(content)) {
     return extractFileReferencesFromText(content);
   }
 
@@ -138,18 +140,14 @@ const extractFileReferencesFromContent = (content: unknown): string[] => {
   const refs: string[] = [];
 
   for (const part of content) {
-    if (!part || typeof part !== 'object') {
-      continue;
+    if (!isObject(part) || !('type' in part)) continue;
+
+    if (part.type === 'text' && 'text' in part && isString(part.text)) {
+      refs.push(...extractFileReferencesFromText(part.text));
     }
 
-    const block = part as ContentBlock;
-
-    if (block.type === 'text' && typeof block.text === 'string') {
-      refs.push(...extractFileReferencesFromText(block.text));
-    }
-
-    if (block.type === 'toolCall') {
-      refs.push(...extractPathsFromToolArgs(block.arguments));
+    if (part.type === 'toolCall' && 'arguments' in part) {
+      refs.push(...extractPathsFromToolArgs(part.arguments));
     }
   }
 
@@ -157,7 +155,7 @@ const extractFileReferencesFromContent = (content: unknown): string[] => {
 };
 
 const extractFileReferencesFromEntry = (entry: SessionEntry): string[] => {
-  if (entry.type === 'message') {
+  if (entry.type === 'message' && isObject(entry.message) && 'content' in entry.message) {
     return extractFileReferencesFromContent(entry.message.content);
   }
 
@@ -181,9 +179,7 @@ const isCommentLikeReference = (value: string): boolean => value.startsWith('//'
 
 const stripLineSuffix = (value: string): string => {
   let result = value.replace(/#L\d+(C\d+)?$/i, '');
-
   const lastSeparator = Math.max(result.lastIndexOf('/'), result.lastIndexOf('\\'));
-
   const segmentStart = lastSeparator >= 0 ? lastSeparator + 1 : 0;
   const segment = result.slice(segmentStart);
   const colonIndex = segment.indexOf(':');
@@ -261,10 +257,16 @@ const collectRecentFileReferences = (entries: SessionEntry[], cwd: string, limit
   const seen = new Set<string>();
 
   for (let i = entries.length - 1; i >= 0 && results.length < limit; i -= 1) {
-    const refs = extractFileReferencesFromEntry(entries[i]);
+    const entry = entries[i];
+
+    if (!entry) continue;
+    const refs = extractFileReferencesFromEntry(entry);
 
     for (let j = refs.length - 1; j >= 0 && results.length < limit; j -= 1) {
-      const normalized = normalizeReferencePath(refs[j], cwd);
+      const reference = refs[j];
+
+      if (!reference) continue;
+      const normalized = normalizeReferencePath(reference, cwd);
 
       if (!normalized || seen.has(normalized)) {
         continue;
@@ -350,16 +352,10 @@ const collectSessionFileChanges = (entries: SessionEntry[], cwd: string): Map<st
 
     if (msg.role === 'assistant' && Array.isArray(msg.content)) {
       for (const block of msg.content) {
-        if (block.type === 'toolCall') {
-          const name = block.name as FileToolName;
+        if (block.type === 'toolCall' && (block.name === 'write' || block.name === 'edit')) {
+          const filePath = block.arguments?.path;
 
-          if (name === 'write' || name === 'edit') {
-            const filePath = block.arguments?.path;
-
-            if (filePath && typeof filePath === 'string') {
-              toolCalls.set(block.id, { path: filePath, name });
-            }
-          }
+          if (isString(filePath) && filePath) toolCalls.set(block.id, { path: filePath, name: block.name });
         }
       }
     }
@@ -377,7 +373,6 @@ const collectSessionFileChanges = (entries: SessionEntry[], cwd: string): Map<st
       if (!toolCall) continue;
 
       const resolvedPath = path.isAbsolute(toolCall.path) ? toolCall.path : path.resolve(cwd, toolCall.path);
-
       const canonical = toCanonicalPath(resolvedPath);
 
       if (!canonical) {
@@ -442,14 +437,16 @@ const getGitStatusMap = async (pi: ExtensionAPI, cwd: string): Promise<Map<strin
     let filePath = entry.slice(3);
 
     if ((status.startsWith('R') || status.startsWith('C')) && entries[i + 1]) {
-      filePath = entries[i + 1];
+      const renamedPath = entries[i + 1];
+
+      if (!renamedPath) continue;
+      filePath = renamedPath;
       i += 1;
     }
 
     if (!filePath) continue;
 
     const resolved = path.isAbsolute(filePath) ? filePath : path.resolve(cwd, filePath);
-
     const canonical = toCanonicalPathMaybeMissing(resolved);
 
     if (!canonical) continue;
@@ -510,7 +507,6 @@ const buildFileEntries = async (
   const entries = ctx.sessionManager.getBranch();
   const sessionChanges = collectSessionFileChanges(entries, ctx.cwd);
   const gitRoot = await getGitRoot(pi, ctx.cwd);
-
   const statusMap = gitRoot ? await getGitStatusMap(pi, gitRoot) : new Map<string, GitStatusEntry>();
 
   let trackedSet = new Set<string>();
@@ -526,7 +522,6 @@ const buildFileEntries = async (
 
   const upsertFile = (data: Partial<FileEntry> & { canonicalPath: string; isDirectory: boolean }) => {
     const existing = fileMap.get(data.canonicalPath);
-
     const displayPath = data.displayPath ?? formatDisplayPath(data.canonicalPath, ctx.cwd);
 
     if (existing) {
@@ -728,6 +723,7 @@ const showActionSelector = async (
         noMatch: (text) => theme.fg('warning', text),
       });
 
+      // SAFETY: Action values are restricted to the SelectItem literals above.
       selectList.onSelect = (item) =>
         done(item.value as 'reveal' | 'quicklook' | 'open' | 'edit' | 'addToPrompt' | 'diff');
       selectList.onCancel = () => done(null);
@@ -764,7 +760,6 @@ const openPath = async (pi: ExtensionAPI, ctx: ExtensionContext, target: FileEnt
 
   if (result.code !== 0) {
     const errorMessage = result.stderr?.trim() || `Failed to open ${target.displayPath}`;
-
     ctx.ui.notify(errorMessage, 'error');
   }
 };
@@ -777,6 +772,8 @@ const openExternalEditor = (tui: TUI, editorCmd: string, content: string): strin
     tui.stop();
 
     const [editor, ...editorArgs] = editorCmd.split(' ');
+
+    if (!editor) return null;
 
     const result = spawnSync(editor, [...editorArgs, tmpFile], {
       stdio: 'inherit',
@@ -838,7 +835,6 @@ const revealPath = async (pi: ExtensionAPI, ctx: ExtensionContext, target: FileE
   }
 
   const isDirectory = target.isDirectory || statSync(target.resolvedPath).isDirectory();
-
   let command = 'open';
   let args: string[] = [];
 
@@ -853,7 +849,6 @@ const revealPath = async (pi: ExtensionAPI, ctx: ExtensionContext, target: FileE
 
   if (result.code !== 0) {
     const errorMessage = result.stderr?.trim() || `Failed to reveal ${target.displayPath}`;
-
     ctx.ui.notify(errorMessage, 'error');
   }
 };
@@ -883,7 +878,6 @@ const quickLookPath = async (pi: ExtensionAPI, ctx: ExtensionContext, target: Fi
 
   if (result.code !== 0) {
     const errorMessage = result.stderr?.trim() || `Failed to Quick Look ${target.displayPath}`;
-
     ctx.ui.notify(errorMessage, 'error');
   }
 };
@@ -901,7 +895,6 @@ const openDiff = async (
   }
 
   const relativePath = path.relative(gitRoot, target.resolvedPath).split(path.sep).join('/');
-
   const tmpDir = mkdtempSync(path.join(os.tmpdir(), 'pi-files-'));
   const tmpFile = path.join(tmpDir, path.basename(target.displayPath));
 
@@ -914,7 +907,6 @@ const openDiff = async (
 
     if (result.code !== 0) {
       const errorMessage = result.stderr?.trim() || `Failed to diff ${target.displayPath}`;
-
       ctx.ui.notify(errorMessage, 'error');
 
       return;
@@ -938,7 +930,6 @@ const openDiff = async (
 
   if (openResult.code !== 0) {
     const errorMessage = openResult.stderr?.trim() || `Failed to open diff for ${target.displayPath}`;
-
     ctx.ui.notify(errorMessage, 'error');
   }
 };
@@ -1015,7 +1006,7 @@ const showFileSelector = async (
         }
       }
 
-      selectList.onSelect = (item) => done(item.value as string);
+      selectList.onSelect = (item) => done(item.value);
       selectList.onCancel = () => done(null);
 
       listContainer.addChild(selectList);
@@ -1044,7 +1035,6 @@ const showFileSelector = async (
 
           if (selected) {
             const file = files.find((entry) => entry.canonicalPath === selected.value);
-
             const canDiff = file?.isTracked && !file.isDirectory && Boolean(gitRoot);
 
             if (!canDiff) {
@@ -1054,7 +1044,7 @@ const showFileSelector = async (
             }
 
             quickAction = 'diff';
-            done(selected.value as string);
+            done(selected.value);
 
             return;
           }
@@ -1119,7 +1109,6 @@ const runFileBrowser = async (pi: ExtensionAPI, ctx: ExtensionContext): Promise<
 
     const canQuickLook = process.platform === 'darwin' && !selected.isDirectory;
     const editCheck = getEditableContent(selected);
-
     const canDiff = selected.isTracked && !selected.isDirectory && Boolean(gitRoot);
 
     if (quickAction === 'diff') {

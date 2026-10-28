@@ -17,6 +17,7 @@
  */
 
 import { appendFileSync } from 'node:fs';
+import type { AgentMessage } from '@earendil-works/pi-agent-core';
 import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
 
 type CacheControl = {
@@ -28,27 +29,37 @@ type TextBlock = {
   type: 'text';
   text: string;
   cache_control?: CacheControl;
-  [key: string]: unknown;
 };
 
 type AnthropicPayload = {
   messages?: Array<{
     role?: string;
     content?: string | unknown[];
-    [key: string]: unknown;
   }>;
   tool_choice?: {
     type?: string;
     name?: string;
-    [key: string]: unknown;
   };
   tools?: Array<{
     type?: string;
     name?: string;
-    [key: string]: unknown;
   }>;
   system?: string | unknown[];
-  [key: string]: unknown;
+};
+
+// Fields this adapter reads from untrusted payload objects. Every read is
+// checked at runtime; other fields ride along through object spreads.
+type PayloadObject = {
+  type?: unknown;
+  name?: unknown;
+  text?: unknown;
+  role?: unknown;
+  content?: unknown;
+};
+
+type RenameResult = {
+  tools: AnthropicPayload['tools'];
+  renamed: Map<string, string>;
 };
 
 type AnthropicTransformOptions = {
@@ -91,12 +102,16 @@ function isToolRenamingDisabled(options?: AnthropicTransformOptions): boolean {
   return options?.disableToolRenaming ?? process.env.PI_CLAUDE_CODE_USE_DISABLE_TOOL_FILTER === '1';
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+function isString<T>(value: T): value is T & string {
+  return typeof value === 'string';
+}
+
+function isRecord<T>(value: T): value is T & PayloadObject {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function isTextBlock(value: unknown): value is TextBlock {
-  return isRecord(value) && value.type === 'text' && typeof value.text === 'string';
+function isTextBlock<T>(value: T): value is T & TextBlock {
+  return isRecord(value) && value.type === 'text' && isString(value.text);
 }
 
 function normalizeToolName(name: string | undefined): string {
@@ -119,7 +134,7 @@ function rewritePiSelfReferences(text: string): string {
 }
 
 function rewriteSystemBlocks(system: AnthropicPayload['system']): AnthropicPayload['system'] {
-  if (typeof system === 'string') {
+  if (isString(system)) {
     return rewritePiSelfReferences(system);
   }
 
@@ -140,12 +155,12 @@ function rewriteSystemBlocks(system: AnthropicPayload['system']): AnthropicPaylo
 
 // True for tools that must NOT be renamed: Anthropic-native typed tools, core
 // Claude Code tools, already-mcp__ tools, or nameless entries.
-function shouldRenameTool(tool: Record<string, unknown>): boolean {
-  if (typeof tool.type === 'string' && tool.type.trim().length > 0) {
+function shouldRenameTool(tool: PayloadObject): boolean {
+  if (isString(tool.type) && tool.type.trim().length > 0) {
     return false;
   }
 
-  const name = typeof tool.name === 'string' ? tool.name : '';
+  const name = isString(tool.name) ? tool.name : '';
 
   if (!name) {
     return false;
@@ -157,10 +172,7 @@ function shouldRenameTool(tool: Record<string, unknown>): boolean {
 // Rename unknown flat tools to `mcp__pi__<name>`; returns surviving tools plus
 // the flat→alias map of exactly what was renamed (so tool_choice and message
 // history stay consistent). Schema and cache_control ride along unchanged.
-function renameFlatTools(tools: AnthropicPayload['tools']): {
-  tools: AnthropicPayload['tools'];
-  renamed: Map<string, string>;
-} {
+function renameFlatTools(tools: AnthropicPayload['tools']): RenameResult {
   const renamed = new Map<string, string>();
 
   if (!Array.isArray(tools)) {
@@ -176,7 +188,7 @@ function renameFlatTools(tools: AnthropicPayload['tools']): {
     }
 
     if (!shouldRenameTool(tool)) {
-      const key = typeof tool.name === 'string' ? normalizeToolName(tool.name) : `__native_${result.length}`;
+      const key = isString(tool.name) ? normalizeToolName(tool.name) : `__native_${result.length}`;
 
       if (emitted.has(key)) {
         continue;
@@ -187,6 +199,7 @@ function renameFlatTools(tools: AnthropicPayload['tools']): {
       continue;
     }
 
+    // SAFETY: shouldRenameTool returned true, which requires tool.name to be a non-empty string.
     const name = tool.name as string;
     const alias = ALIAS_PREFIX + name;
     renamed.set(normalizeToolName(name), alias);
@@ -207,7 +220,7 @@ function rewriteAnthropicToolChoice(
   toolChoice: AnthropicPayload['tool_choice'],
   renamed: Map<string, string>,
 ): AnthropicPayload['tool_choice'] {
-  if (toolChoice?.type !== 'tool' || typeof toolChoice.name !== 'string') {
+  if (toolChoice?.type !== 'tool' || !isString(toolChoice.name)) {
     return toolChoice;
   }
 
@@ -224,7 +237,7 @@ function remapBlockNames(
   let changed = false;
 
   const next = content.map((block) => {
-    if (!isRecord(block) || block.type !== blockType || typeof block.name !== 'string') {
+    if (!isRecord(block) || block.type !== blockType || !isString(block.name)) {
       return block;
     }
 
@@ -275,7 +288,7 @@ function rewriteHistoricalToolUseBlocks(
 // Rewrite mcp__pi__<name> tool calls back to <name> in the finalized assistant
 // message, BEFORE Pi resolves which tool to run. Only touches our own prefix,
 // so foreign mcp__ tools (real MCP servers) are untouched.
-function unaliasToolCalls(message: unknown): unknown {
+function unaliasToolCalls(message: AgentMessage): AgentMessage | undefined {
   if (!isRecord(message) || message.role !== 'assistant') {
     return undefined;
   }
@@ -288,10 +301,12 @@ function unaliasToolCalls(message: unknown): unknown {
     name.startsWith(ALIAS_PREFIX) ? name.slice(ALIAS_PREFIX.length) : undefined,
   );
 
-  return content === message.content ? undefined : { ...message, content };
+  // SAFETY: remapBlockNames only replaces `name` on toolCall blocks, so content keeps the assistant message's block shapes.
+  return content === message.content ? undefined : ({ ...message, content } as AgentMessage);
 }
 
 function clonePayload(payload: AnthropicPayload): AnthropicPayload {
+  // SAFETY: a JSON round-trip of a JSON request payload reproduces the same structure.
   return JSON.parse(JSON.stringify(payload)) as AnthropicPayload;
 }
 
@@ -324,7 +339,7 @@ function transformAnthropicOAuthPayload(
   return nextPayload;
 }
 
-function debugLogPayload(payload: unknown): void {
+function debugLogPayload<T>(payload: T): void {
   if (!debugLogPath) {
     return;
   }
@@ -357,7 +372,7 @@ export default async function piClaudeCodeUse(pi: ExtensionAPI): Promise<void> {
       return undefined;
     }
 
-    return { message: rewritten as typeof event.message };
+    return { message: rewritten };
   });
 
   pi.on('before_provider_request', (event, ctx) => {
@@ -376,9 +391,8 @@ export default async function piClaudeCodeUse(pi: ExtensionAPI): Promise<void> {
       provider: model.provider,
       payload: event.payload,
     });
-
+    // SAFETY: isRecord confirmed a non-array object; every AnthropicPayload field is re-checked at runtime before use.
     const transformedPayload = transformAnthropicOAuthPayload(event.payload as AnthropicPayload);
-
     debugLogPayload({
       stage: 'after',
       provider: model.provider,

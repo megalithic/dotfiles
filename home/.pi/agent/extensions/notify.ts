@@ -184,8 +184,11 @@ const createNotificationController = (
   options: ControllerOptions = {},
 ) => {
   const delayMs = options.delayMs ?? NOTIFY_DELAY_MS;
-  const setTimer = options.setTimer ?? setTimeout;
-  const clearTimer = options.clearTimer ?? clearTimeout;
+
+  const setTimer: NonNullable<ControllerOptions['setTimer']> =
+    options.setTimer ?? ((callback, delay) => setTimeout(callback, delay));
+
+  const clearTimer: NonNullable<ControllerOptions['clearTimer']> = options.clearTimer ?? clearTimeout;
 
   let latestAssistant: AssistantMessage | null = null;
   let telegramRun = false;
@@ -219,8 +222,10 @@ const createNotificationController = (
     capture,
     captureRun(messages: AgentMessage[]): void {
       for (let i = messages.length - 1; i >= 0; i--) {
-        if (isAssistantMessage(messages[i])) {
-          latestAssistant = messages[i];
+        const message = messages[i];
+
+        if (message && isAssistantMessage(message)) {
+          latestAssistant = message;
 
           return;
         }

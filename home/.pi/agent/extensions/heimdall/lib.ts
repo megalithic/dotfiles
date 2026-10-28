@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Shared command-capture glue for Heimdall adapters.
  *
@@ -16,9 +15,20 @@ import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-a
 
 type ToolDetailValue = string | number | boolean;
 
+// Handlers captured from a foreign extension; their results are never inspected here.
+type ForwardedHandler = (...args: never[]) => void;
+
+type ForwardedOn = (eventName: string, handler: ForwardedHandler) => () => void;
+
+const isString = <T>(value: T): value is T & string => typeof value === 'string';
+
+const isFunction = <T>(value: T): value is T & ForwardedHandler => typeof value === 'function';
+
+const isObject = <T>(value: T): value is T & object => typeof value === 'object' && value !== null;
+
 export interface TextToolResult {
   content: { type: 'text'; text: string }[];
-  details?: Record<string, ToolDetailValue>;
+  details: Record<string, ToolDetailValue> | undefined;
 }
 
 export interface CapturedCommand {
@@ -45,14 +55,15 @@ export interface CommandCaptureOptions {
 }
 
 export function textResult(text: string, details?: Record<string, ToolDetailValue>): TextToolResult {
-  const result: TextToolResult = { content: [{ type: 'text', text }] };
+  // SAFETY: details is attached below only when given; Pi reads result.details by plain property access (no `in`/hasOwn checks), so an absent field reads as undefined.
+  const result = { content: [{ type: 'text', text }] } as TextToolResult;
 
   if (details) result.details = details;
 
   return result;
 }
 
-export function errorText(err: unknown): string {
+export function errorText<T>(err: T): string {
   return err instanceof Error ? err.message : String(err);
 }
 
@@ -71,6 +82,7 @@ export async function importPiPackageModule<T>(
   }
 
   try {
+    // SAFETY: import() of a file path is untyped; T is the caller's declared module shape, and callers check exports before use.
     return { module: (await import(abs)) as T };
   } catch (err) {
     return { error: `Failed to load ${relPath}: ${errorText(err)}` };
@@ -114,23 +126,23 @@ export async function captureExtensionCommands(
 
   if (!imported.module) return { error: imported.error };
 
-  if (typeof imported.module.default !== 'function') {
+  if (!isFunction(imported.module.default)) {
     return { error: `${packageEntry} has no default extension factory export.` };
   }
 
   const commands = new Map<string, CapturedCommand>();
-
-  const realEvents = typeof pi.events === 'object' && pi.events !== null ? pi.events : {};
+  const realEvents: Partial<ExtensionAPI['events']> = isObject(pi.events) ? pi.events : {};
 
   const eventFacade = new Proxy(realEvents, {
     get(target, property) {
-      if (typeof property === 'string' && EVENT_LISTENER_METHODS.has(property)) {
+      if (isString(property) && EVENT_LISTENER_METHODS.has(property)) {
         return () => undefined;
       }
 
-      const value = Reflect.get(target, property, target);
+      // SAFETY: plain indexing is the same [[Get]] as Reflect.get(target, property, target) for any string or symbol key; the value only flows back out through the untyped Proxy trap.
+      const value = target[property as keyof typeof target];
 
-      return typeof value === 'function' ? value.bind(target) : value;
+      return isFunction(value) ? value.bind(target) : value;
     },
   });
 
@@ -146,7 +158,7 @@ export async function captureExtensionCommands(
             handler?: CapturedCommand['handler'];
           },
         ) => {
-          if (typeof options?.handler === 'function') {
+          if (isFunction(options?.handler)) {
             commands.set(name, {
               name,
               description: options.description,
@@ -157,12 +169,15 @@ export async function captureExtensionCommands(
       }
 
       if (property === 'on') {
-        return (eventName: string, handler: (...args: unknown[]) => unknown) => {
+        return (eventName: string, handler: ForwardedHandler) => {
           const index = eventRegistrationCounts.get(eventName) ?? 0;
           eventRegistrationCounts.set(eventName, index + 1);
 
           if (options.forwardEvent?.(eventName, index)) {
-            return target.on(eventName, handler);
+            // SAFETY: eventName and handler come from the target extension's own pi.on call, so they match one of ExtensionAPI.on's overloads.
+            const forwardOn = target.on as ForwardedOn;
+
+            return forwardOn.call(target, eventName, handler);
           }
 
           return undefined;
@@ -171,17 +186,18 @@ export async function captureExtensionCommands(
 
       if (property === 'events') return eventFacade;
 
-      if (typeof property === 'string' && IGNORED_REGISTRATIONS.has(property)) {
+      if (isString(property) && IGNORED_REGISTRATIONS.has(property)) {
         return () => undefined;
       }
 
-      const value = Reflect.get(target, property, target);
+      // SAFETY: plain indexing is the same [[Get]] as Reflect.get(target, property, target) for any string or symbol key; the value only flows back out through the untyped Proxy trap.
+      const value = target[property as keyof typeof target];
 
-      return typeof value === 'function' ? value.bind(target) : value;
+      return isFunction(value) ? value.bind(target) : value;
     },
-  }) as ExtensionAPI;
+  });
 
-  let restoreFactoryState: void | (() => void);
+  let restoreFactoryState: void | (() => void) = undefined;
 
   try {
     restoreFactoryState = options.isolateFactory?.();

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Heimdall adapter for @plannotator/pi-extension.
  *
@@ -32,11 +31,19 @@ type CapturedNotification = {
   type: 'info' | 'warning' | 'error';
 };
 
+type ObservedContext = {
+  ctx: ExtensionContext;
+  notifications: CapturedNotification[];
+};
+
+// Any function value is assignable to this; it is only ever bound, never called here.
+type BindableFunction = (...args: never[]) => void;
+
+const isFunction = <T>(value: T): value is T & BindableFunction => typeof value === 'function';
+
 function isolatePlannotatorFactory(): () => void {
-  const global = globalThis as PlannotatorGlobal;
-
+  const global: PlannotatorGlobal = globalThis;
   const hadStore = Object.prototype.hasOwnProperty.call(global, '__plannotatorCurrentPiSession');
-
   const originalStore = global.__plannotatorCurrentPiSession;
   const originalCurrent = originalStore?.current;
 
@@ -85,10 +92,7 @@ function quoteArgument(value: string): ArgumentResult {
   };
 }
 
-function captureNotifications(ctx: ExtensionContext): {
-  ctx: ExtensionContext;
-  notifications: CapturedNotification[];
-} {
+function captureNotifications(ctx: ExtensionContext): ObservedContext {
   const notifications: CapturedNotification[] = [];
 
   const ui = new Proxy(ctx.ui, {
@@ -101,18 +105,20 @@ function captureNotifications(ctx: ExtensionContext): {
         };
       }
 
-      const value = Reflect.get(target, property, target);
+      // SAFETY: plain indexing is the same [[Get]] as Reflect.get(target, property, target) for any string or symbol key; the value only flows back out through the untyped Proxy trap.
+      const value = target[property as keyof typeof target];
 
-      return typeof value === 'function' ? value.bind(target) : value;
+      return isFunction(value) ? value.bind(target) : value;
     },
   });
 
   const commandContext = new Proxy(ctx, {
     get(target, property) {
       if (property === 'ui') return ui;
-      const value = Reflect.get(target, property, target);
+      // SAFETY: plain indexing is the same [[Get]] as Reflect.get(target, property, target) for any string or symbol key; the value only flows back out through the untyped Proxy trap.
+      const value = target[property as keyof typeof target];
 
-      return typeof value === 'function' ? value.bind(target) : value;
+      return isFunction(value) ? value.bind(target) : value;
     },
   });
 
@@ -142,7 +148,6 @@ async function invokeCommand(
   try {
     const observed = captureNotifications(ctx);
     await command.handler(args, observed.ctx);
-
     const startupError = observed.notifications.findLast((notification) => notification.type === 'error');
 
     if (startupError) {
@@ -251,9 +256,9 @@ function registerReviewTool(pi: ExtensionAPI): void {
       ),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-      const built = reviewArgs(params as Parameters<typeof reviewArgs>[0]);
+      const built = reviewArgs(params);
 
-      if (built.error) {
+      if (built.error !== undefined) {
         return textResult(`Error: ${built.error}`);
       }
 
@@ -289,9 +294,9 @@ function registerAnnotateTool(pi: ExtensionAPI): void {
       ),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-      const built = annotateArgs(params as Parameters<typeof annotateArgs>[0]);
+      const built = annotateArgs(params);
 
-      if (built.error) {
+      if (built.error !== undefined) {
         return textResult(`Error: ${built.error}`);
       }
 
@@ -315,7 +320,7 @@ function registerLastTool(pi: ExtensionAPI): void {
       ),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-      const typed = params as { gate?: boolean; rawArgs?: string };
+      const typed = params;
       const args = typed.rawArgs?.trim() || (typed.gate ? '--gate' : '');
 
       return invokeCommand(pi, 'plannotator-last', args, ctx);

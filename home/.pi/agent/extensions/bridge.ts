@@ -579,7 +579,7 @@ const latestAssistantMessage = (ctx: ExtensionContext | null): LastAssistantMess
   for (let i = branch.length - 1; i >= 0; i--) {
     const entry = branch[i];
 
-    if (entry.type !== 'message' || entry.message.role !== 'assistant') continue;
+    if (!entry || entry.type !== 'message' || entry.message.role !== 'assistant') continue;
 
     const content = Array.isArray(entry.message.content)
       ? entry.message.content

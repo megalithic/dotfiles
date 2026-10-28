@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Heimdall bridges Pi agents to extension slash-command behavior.
  *

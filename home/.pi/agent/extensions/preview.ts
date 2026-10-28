@@ -61,7 +61,25 @@ const isInTmux = (): boolean => {
 /**
  * Parse command arguments into options and content
  */
-const parseArgs = (args: string[]): { options: PreviewOptions; content: string[] } => {
+type ParsedPreviewArgs = { options: PreviewOptions; content: string[] };
+
+const tokenizeArgs = (input: string): string[] => {
+  const tokens: string[] = [];
+  const re = /"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|(\S+)/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = re.exec(input))) {
+    const token = match[1] ?? match[2] ?? match[3];
+
+    if (token !== undefined) tokens.push(token.replace(/\\(["'])/g, '$1'));
+  }
+
+  return tokens;
+};
+
+const parseArgs = (args: string): ParsedPreviewArgs => {
+  const argv = tokenizeArgs(args);
+
   const options: PreviewOptions = {
     type: 'auto',
     mode: 'auto',
@@ -70,13 +88,19 @@ const parseArgs = (args: string[]): { options: PreviewOptions; content: string[]
   const content: string[] = [];
   let i = 0;
 
-  while (i < args.length) {
-    const arg = args[i];
+  while (i < argv.length) {
+    const arg = argv[i];
 
-    if ((arg === '--mode' || arg === '-m') && i + 1 < args.length) {
-      const maybeMode = args[i + 1].toLowerCase();
+    if (arg === undefined) {
+      i += 1;
+      continue;
+    }
 
-      if (VALID_MODES.includes(maybeMode)) {
+    if ((arg === '--mode' || arg === '-m') && i + 1 < argv.length) {
+      const maybeMode = argv[i + 1]?.toLowerCase();
+
+      if (maybeMode !== undefined && VALID_MODES.includes(maybeMode)) {
+        // SAFETY: VALID_MODES membership narrows the value to PreviewMode.
         options.mode = maybeMode as PreviewMode;
       }
 
@@ -84,8 +108,15 @@ const parseArgs = (args: string[]): { options: PreviewOptions; content: string[]
       continue;
     }
 
-    if (arg === '--auto-close-after' && i + 1 < args.length) {
-      const seconds = parseInt(args[i + 1], 10);
+    if (arg === '--auto-close-after' && i + 1 < argv.length) {
+      const nextArg = argv[i + 1];
+
+      if (!nextArg) {
+        i += 2;
+        continue;
+      }
+
+      const seconds = parseInt(nextArg, 10);
 
       if (!isNaN(seconds) && seconds > 0) {
         options.autoClose = seconds;
@@ -121,9 +152,11 @@ const parseArgs = (args: string[]): { options: PreviewOptions; content: string[]
       continue;
     }
 
-    if (arg === '--html-browser' && i + 1 < args.length) {
+    if (arg === '--html-browser' && i + 1 < argv.length) {
       options.html = true;
-      options.htmlBrowser = args[i + 1];
+      const browser = argv[i + 1];
+
+      if (browser !== undefined) options.htmlBrowser = browser;
       i += 2;
       continue;
     }
@@ -139,6 +172,7 @@ const parseArgs = (args: string[]): { options: PreviewOptions; content: string[]
       const maybeType = arg.toLowerCase();
 
       if (VALID_TYPES.includes(maybeType)) {
+        // SAFETY: VALID_TYPES membership narrows the value to PreviewType.
         options.type = maybeType as PreviewType;
         i += 1;
         continue;
@@ -172,11 +206,13 @@ const buildPreviewCommand = (options: PreviewOptions, content: string[]): string
 
     if (content.length > 0) {
       const filePath = content[0];
-      const planMatch = filePath.match(/\/([^/]+)_PLAN\.md$/);
+      const planMatch = filePath?.match(/\/([^/]+)_PLAN\.md$/);
 
-      if (planMatch && !meta.type) {
+      const slug = planMatch?.[1];
+
+      if (slug && !meta.type) {
         meta.type = 'plan';
-        meta.slug = planMatch[1];
+        meta.slug = slug;
       }
     }
 
@@ -321,7 +357,6 @@ const runPreview = async (
   // Check for errors
   if (result.code !== 0) {
     const errorMsg = result.stderr?.trim() || result.stdout?.trim() || 'preview-ai failed';
-
     ctx.ui.notify(`Preview error: ${errorMsg}`, 'error');
 
     return;
@@ -330,18 +365,14 @@ const runPreview = async (
   // Success notification
   if (options.html) {
     const path = (result.stdout || '').trim().split('\n').pop() || '';
-
     const label = options.htmlNoOpen ? `Rendered (no-open): ${path}` : `Opened in browser: ${path}`;
-
     ctx.ui.notify(label, 'info');
 
     return;
   }
 
   const typeLabel = options.type && options.type !== 'auto' ? options.type : 'content';
-
   const resolvedMode = options.mode === 'auto' ? detectPreviewMode() : options.mode;
-
   const modeLabel = resolvedMode === 'tmux-float' ? 'popup' : 'pane';
   ctx.ui.notify(`Preview opened: ${typeLabel} (${modeLabel})`, 'info');
 };

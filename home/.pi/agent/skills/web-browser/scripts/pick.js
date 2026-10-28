@@ -1,6 +1,8 @@
 // Interactive element picker — inject via chrome_devtools_evaluate_script.
 // Read this file and pass its contents as the `function` parameter.
 // Returns: single element object, array (multi-select), or null (cancelled).
+// The file is a function expression handed to evaluate_script, not a module.
+// oxlint-disable-next-line no-unused-expressions
 async () => {
   return await new Promise((resolve) => {
     const overlay = document.createElement('div');

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Agent Status Extension
  *
@@ -41,6 +40,17 @@ const STATUS_DIR = path.join(PI_STATE_DIR, 'status');
 
 type AgentState = 'idle' | 'working' | 'asking' | 'error' | 'done';
 
+type TextPart = { type: string; text: string };
+
+const isString = <T>(value: T): value is T & string => typeof value === 'string';
+
+const isTextPart = (c: unknown): c is TextPart => {
+  // SAFETY: only read through optional chaining, so nullish c is tolerated; both fields are checked before narrowing.
+  const part = c as { type?: unknown; text?: unknown } | null | undefined;
+
+  return part?.type === 'text' && isString(part.text);
+};
+
 let statusPath: string | null = null;
 
 let session: string | null = null;
@@ -60,7 +70,6 @@ const detectTmux = (): { session: string; window: string } | null => {
 
     const sess = fmt('#{session_name}');
     const winName = fmt('#{window_name}');
-
     const window = winName && /^[a-zA-Z0-9_-]+$/.test(winName) ? winName : fmt('#{window_index}');
 
     return sess && window ? { session: sess, window } : null;
@@ -90,34 +99,29 @@ const removeStatus = (): void => {
   }
 };
 
-const isAskTool = (toolName: unknown): boolean =>
-  typeof toolName === 'string' && toolName.includes('ask_user_question');
+const isAskTool = (toolName: string | undefined): boolean =>
+  isString(toolName) && toolName.includes('ask_user_question');
 
 /**
  * True when the last assistant message reads as a question to the user:
  * its text ends with "?" after trailing markdown/quote/paren noise is
  * stripped. Coarse by design — a status dot, not NLP.
  */
-const endsWithQuestion = (messages: unknown): boolean => {
+const endsWithQuestion = (messages: AgentMessage[] | undefined): boolean => {
   if (!Array.isArray(messages)) return false;
 
   for (let i = messages.length - 1; i >= 0; i--) {
-    const m = messages[i] as {
-      role?: string;
-      content?: unknown;
-    };
+    const m = messages[i];
 
     if (m?.role !== 'assistant') continue;
     let text = '';
+    const content: unknown = m.content;
 
-    if (typeof m.content === 'string') {
-      text = m.content;
-    } else if (Array.isArray(m.content)) {
-      text = m.content
-        .filter(
-          (c): c is { type: string; text: string } =>
-            (c as { type?: string })?.type === 'text' && typeof (c as { text?: unknown }).text === 'string',
-        )
+    if (isString(content)) {
+      text = content;
+    } else if (Array.isArray(content)) {
+      text = content
+        .filter((c) => isTextPart(c))
         .map((c) => c.text)
         .join('\n');
     }

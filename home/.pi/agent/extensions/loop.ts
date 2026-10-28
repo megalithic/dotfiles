@@ -162,9 +162,7 @@ function updateStatus(ctx: ExtensionContext, state: LoopStateData): void {
   const loopCount = state.loopCount ?? 0;
   const turnText = `(turn ${loopCount})`;
   const summary = state.summary?.trim();
-
   const text = summary ? `Loop active: ${summary} ${turnText}` : `Loop active ${turnText}`;
-
   ctx.ui.setWidget('loop', [ctx.ui.theme.fg('accent', text)]);
 }
 
@@ -172,6 +170,7 @@ async function loadState(ctx: ExtensionContext): Promise<LoopStateData> {
   const entries = ctx.sessionManager.getEntries();
 
   for (let i = entries.length - 1; i >= 0; i--) {
+    // SAFETY: Session entries with type custom have the documented customType/data shape.
     const entry = entries[i] as {
       type: string;
       customType?: string;
@@ -233,10 +232,14 @@ export default function loopExtension(pi: ExtensionAPI): void {
     persistState(loopState);
     updateStatus(ctx, loopState);
 
+    const prompt = loopState.prompt;
+
+    if (!prompt) return;
+
     pi.sendMessage(
       {
         customType: 'loop',
-        content: loopState.prompt,
+        content: prompt,
         display: true,
       },
       {

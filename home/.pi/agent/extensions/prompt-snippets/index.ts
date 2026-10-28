@@ -44,13 +44,20 @@ function parseSnippet(filename: string, raw: string): Snippet | null {
 
   const meta: Record<string, string> = {};
 
-  for (const line of match[1].split(/\r?\n/)) {
+  const frontmatter = match[1] ?? '';
+  const bodyText = match[2] ?? '';
+
+  for (const line of frontmatter.split(/\r?\n/)) {
     const kv = line.match(/^([A-Za-z][\w-]*)\s*:\s*(.*)$/);
 
-    if (kv) meta[kv[1].toLowerCase()] = kv[2].trim().replace(/^["']|["']$/g, '');
+    if (kv) {
+      const [, key, value] = kv;
+
+      if (key && value) meta[key.toLowerCase()] = value.trim().replace(/^["']|["']$/g, '');
+    }
   }
 
-  const body = match[2].trim();
+  const body = bodyText.trim();
 
   if (!body) return null;
 
@@ -199,12 +206,7 @@ export default function (pi: ExtensionAPI) {
        * plus the clamped scroll position. When `focusRow` is given, scrolls
        * so it stays visible.
        */
-      const viewport = (
-        lines: string[],
-        scroll: number,
-        maxView: number,
-        focusRow?: number,
-      ): { out: string[]; scroll: number } => {
+      const viewport = (lines: string[], scroll: number, maxView: number, focusRow?: number) => {
         const clipped = lines.length > maxView;
         const view = clipped ? Math.max(1, maxView - 2) : maxView;
 
@@ -244,18 +246,23 @@ export default function (pi: ExtensionAPI) {
           if (mode === 'list') {
             const rows = buildListRows(width);
             const cursorRow = rows.findIndex((r) => r.itemIndex === cursor);
+
             const v = viewport(
               rows.map((r) => r.text),
               listScroll,
               maxView,
               cursorRow,
             );
+
             content = v.out;
             listScroll = v.scroll;
             title = 'Prompt snippets';
             hints = '↑↓ navigate • Space toggle • Tab preview • Enter apply • Esc cancel';
           } else {
             const snippet = items[cursor];
+
+            if (!snippet) return [];
+
             const rows = buildPreviewRows(snippet, width);
             const v = viewport(rows, previewScroll, maxView);
             content = v.out;
@@ -284,7 +291,11 @@ export default function (pi: ExtensionAPI) {
               cursor = (cursor + 1) % items.length;
               tui.requestRender();
             } else if (matchesKey(data, Key.space)) {
-              const id = items[cursor].id;
+              const item = items[cursor];
+
+              if (!item) return;
+
+              const id = item.id;
 
               if (working.has(id)) working.delete(id);
               else working.add(id);

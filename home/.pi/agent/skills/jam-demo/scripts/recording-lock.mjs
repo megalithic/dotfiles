@@ -36,6 +36,7 @@ function tabRecorder(target, origin) {
       'Runtime.evaluate',
       JSON.stringify({ expression: 'MediaRecorder.prototype' }),
     ]);
+
     const list = cdpJson([
       'evalraw',
       target,
