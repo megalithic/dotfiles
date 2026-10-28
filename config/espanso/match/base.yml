@@ -38,7 +38,18 @@ matches:
         params:
           format: "%X"
 
-  - trigger: ":flip"
+  - trigger: "::devem"
+    replace: "seth+{{epoch}}@rxvortex.com"
+    vars:
+      - name: epoch
+        type: date
+        params:
+          format: "%s"
+
+  - trigger: "::devpw"
+    replace: "Password1234567890!"
+
+  - trigger: "::flip"
     replace: "(ノ°Д°）ノ︵ ┻━┻"
 
   - trigger: "::ip"
@@ -50,89 +61,87 @@ matches:
           cmd: "curl ifconfig.me"
 
   - { trigger: "<3", replace: "🩶" } # use grey haeart instead of red one
-  - { trigger: ":shrug", replace: "🤷🏻‍♂️" }
-  - trigger: ":wave"
+  - { trigger: "::shrug", replace: "🤷🏻‍♂️" }
+  - trigger: "::wave"
     replace: 👋
 
-  - trigger: ":heart"
+  - trigger: "::heart"
     replace: ❤️
 
-  - trigger: ":up"
+  - trigger: "::up"
     replace: 👍
 
-  - trigger: ":thumb"
+  - trigger: "::thumb"
     replace: 👍
 
-  - trigger: ":+1"
+  - trigger: "::+1"
     replace: 👍
 
-  - trigger: ":thumbsup"
+  - trigger: "::thumbsup"
     replace: 👍
 
-  - trigger: ":-1"
+  - trigger: "::-1"
     replace: 👎
 
-  - trigger: ":thumbsdown"
+  - trigger: "::thumbsdown"
     replace: 👎
 
-  - trigger: ":strong"
+  - trigger: "::strong"
     replace: 💪
 
-  - trigger: ":pray"
+  - trigger: "::pray"
     replace: 🙏
 
-  - trigger: ":rock"
+  - trigger: "::rock"
     replace: 🤘
 
-  - trigger: ":rofl"
+  - trigger: "::rofl"
     replace: 🤣
 
-  - trigger: ":lol"
+  - trigger: "::lol"
     replace: 😂
 
-  - trigger: ":poop"
+  - trigger: "::poop"
     replace: 💩
 
-  - trigger: ":100"
+  - trigger: "::100"
     replace: 💯
 
-  - trigger: ":eyes"
+  - trigger: "::eyes"
     replace: 👀
 
-  - trigger: ":facepalm"
+  - trigger: "::facepalm"
     replace: 🤦
 
-  - trigger: ":hands"
+  - trigger: "::hands"
     replace: 🙌🏼
 
-  - trigger: ":smile"
+  - trigger: "::smile"
     replace: "😃"
 
-  - trigger: ":cry"
+  - trigger: "::cry"
     replace: "😢"
 
-  - trigger: ":hmm"
+  - trigger: "::hmm"
     replace: "🤔"
 
-  - trigger: ":think"
+  - trigger: "::think"
     replace: "🤔"
 
-  - trigger: ":yay"
+  - trigger: "::yay"
     replace: "🎉"
 
-  - trigger: "Rene "
-    replace: "René"
-  - trigger: ":rene"
+  - trigger: "::rene"
     replace: "René"
   # - trigger: ":zoom:"
   #   replace: "https://whereby.com/sethmesser"
   # - trigger: ":meet:"
   #   replace: "https://whereby.com/sethmesser"
-  - trigger: ":pop"
+  - trigger: "::pop"
     replace: "https://pop.com/j/953-644-320"
 
-  - trigger: ":meet"
+  - trigger: "::meet"
     replace: "https://meet.google.com/kry-nbrg-rmy"
 
-  - trigger: ":tm"
+  - trigger: "::tm"
     replace: "™"

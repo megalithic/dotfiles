@@ -4,7 +4,7 @@ matches:
   # "…ign" -> "…ing" (but not for words like "sign", "ignore", "align", or "foreign", where it is actually correct)
   - { regex: "(?P<letter>[a-df-km-ru-z])ign ", replace: "{{letter}}ing " }
 
-  - { replace: "René", trigger: "Rene" }
+  - { replace: "René", trigger: "Rene", word: true }
   - { replace: " to ", trigger: " ot " }
   - { replace: "'d ", trigger: "#d " }
   - { replace: "'s ", trigger: "#s " }
