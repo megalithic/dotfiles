@@ -2170,7 +2170,7 @@ const wrapGuidance = async (
 
 	return {
 		from: origin.display,
-		text: `[TELL:${id} from ${origin.display}]\n${message.trim()}\n\nReply asynchronously with /tell ${origin.replyTarget} <message>, or use the tell_pi tool with target ${JSON.stringify(origin.replyTarget)}.`,
+		text: `[TELL:${id} from ${origin.display}]\n${message.trim()}\n\nReply only if this message asks for a reply or updates. To reply, use /tell ${origin.replyTarget} <message>, or the tell_pi tool with target ${JSON.stringify(origin.replyTarget)}.`,
 	};
 };
 
