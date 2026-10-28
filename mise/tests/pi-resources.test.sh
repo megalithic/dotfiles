@@ -28,15 +28,13 @@ while read -r target source; do
 done <<'EOF'
 .pi/agent/settings.json home/.pi/agent/settings.json
 .pi/agent/APPEND_SYSTEM.md home/.pi/agent/APPEND_SYSTEM.md
-.pi/agent/extensions/answer.ts home/.pi/agent/extensions/answer.ts
+.pi/agent/extensions/goal.ts home/.pi/agent/extensions/goal.ts
 .pi/agent/skills/bro/SKILL.md home/.pi/agent/skills/bro/SKILL.md
 .pi/agent/prompts/plan.md home/.pi/agent/prompts/plan.md
 .pi/agent/agents/scout.md home/.pi/agent/agents/scout.md
 .local/bin/pi home/.local/bin/pi
 EOF
 
-[ ! -e "$test_home/.pi/agent/extensions/_sentinel.ts" ]
-[ ! -L "$test_home/.pi/agent/extensions/_sentinel.ts" ]
 [ ! -e "$test_home/.pi/agent/SYSTEM.md" ]
 [ ! -L "$test_home/.pi/agent/SYSTEM.md" ]
 [ ! -e "$test_home/.local/bin/pi-acp" ]
@@ -81,7 +79,7 @@ wait "$pid" 2>/dev/null || true
 
 jq -e --arg prefix "$test_home/.pi/agent/extensions/" '
   select(.id == "commands" and .success == true)
-  | [.data.commands[] | select(.name == "answer" or .name == "goal" or .name == "tell" or .name == "om")]
+  | [.data.commands[] | select(.name == "handoff" or .name == "goal" or .name == "tell" or .name == "om")]
   | length == 4 and all(.sourceInfo.path | startswith($prefix))
 ' "$out" >/dev/null
 

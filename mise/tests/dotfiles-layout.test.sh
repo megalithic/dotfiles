@@ -35,6 +35,10 @@ mkdir -p "$repo"
 printf 'nope\n' >"$repo/home/.ssh/id_probe"
 printf 'nope\n' >"$repo/home/.ssh/known_hosts"
 printf '{}\n' >"$repo/home/.claude/history.jsonl"
+# Underscore-prefixed Pi resources: indexed, but the exclude rules keep them out of the deploy.
+mkdir -p "$repo/home/.pi/agent/skills/_probe"
+printf '// disabled\n' >"$repo/home/.pi/agent/extensions/_probe.ts"
+printf '# disabled\n' >"$repo/home/.pi/agent/skills/_probe/SKILL.md"
 git_fixture() { HK=0 git -C "$repo" -c commit.gpgsign=false -c user.name=fixture -c user.email=fixture@localhost "$@"; }
 git_fixture init -q
 git_fixture add -A
@@ -43,7 +47,7 @@ git_fixture ls-files --error-unmatch home/.ssh/id_probe >/dev/null 2>&1 && fail 
 git_fixture ls-files --error-unmatch home/.claude/history.jsonl >/dev/null 2>&1 && fail "home/.claude/history.jsonl entered the index"
 "$repo/mise/scripts/check-ssh-allowlist" >/dev/null || fail "check-ssh-allowlist rejected the fixture index"
 # Paths the exclude lists must hide have to be in the index for the checks to mean anything.
-for tracked in home/.ssh/allowed_signers home/.zshenv home/.local/bin/pi home/.pi/agent/extensions/_sentinel.ts home/.pi/agent/skills/_handoff/SKILL.md config/git/disabled/gitmessage config/atuin/AGENTS.md bin/tests/ftm.test.py; do
+for tracked in home/.ssh/allowed_signers home/.zshenv home/.local/bin/pi home/.pi/agent/extensions/_probe.ts home/.pi/agent/skills/_probe/SKILL.md config/git/disabled/gitmessage config/atuin/AGENTS.md bin/tests/ftm.test.py; do
   git_fixture ls-files --error-unmatch "$tracked" >/dev/null 2>&1 || fail "$tracked missing from the fixture index"
 done
 
@@ -104,7 +108,7 @@ while IFS='|' read -r target source; do link_to "$target" "$source"; done <<'EOF
 .pi/agent/settings.json|home/.pi/agent/settings.json
 .pi/agent/AGENTS.md|home/.pi/agent/AGENTS.md
 .pi/agent/web-search.json|home/.pi/agent/web-search.json
-.pi/agent/extensions/answer.ts|home/.pi/agent/extensions/answer.ts
+.pi/agent/extensions/goal.ts|home/.pi/agent/extensions/goal.ts
 .pi/agent/skills/bro/SKILL.md|home/.pi/agent/skills/bro/SKILL.md
 .pi/agent/prompts/plan.md|home/.pi/agent/prompts/plan.md
 .pi/agent/agents/scout.md|home/.pi/agent/agents/scout.md
@@ -144,9 +148,8 @@ while read -r path; do absent "$path"; done <<'EOF'
 .pi/tests
 .pi/patches
 .pi/disabled
-.pi/agent/extensions/_sentinel.ts
-.pi/agent/extensions/_lat.ts
-.pi/agent/skills/_handoff
+.pi/agent/extensions/_probe.ts
+.pi/agent/skills/_probe
 .pi/agent/SYSTEM.md
 .config/AGENTS.md
 .config/atuin/AGENTS.md
