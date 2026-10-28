@@ -79,7 +79,7 @@ M.activityTimeoutSeconds = 60 -- No activity for 60s = potentially stuck
 M.pendingHealthCheck = false -- Awaiting health check response
 M.healthCheckResponseTimer = nil -- Timeout for health check response
 
--- Provider/profile tracking (Phase 4)
+-- Provider tracking (Phase 4)
 M.initialProvider = nil -- Provider at startup (e.g., "anthropic")
 M.initialModel = nil -- Model at startup (e.g., "claude-sonnet-4-20250514")
 M.currentProvider = nil -- Current provider (may differ if fallback occurred)
@@ -108,7 +108,6 @@ local function loadConfig()
   cfg = _G.C and _G.C.piGateway or {}
   -- Defaults
   cfg.enabled = cfg.enabled ~= false
-  cfg.defaultProfile = cfg.defaultProfile or "mega"
   cfg.prioritySignal = cfg.prioritySignal or "!!"
   cfg.abortPhrases = cfg.abortPhrases or { "abort!", "stop!", "kill!", "cancel!" }
   cfg.taskTimeoutMinutes = cfg.taskTimeoutMinutes or 15
@@ -293,7 +292,7 @@ local function isTaskStuck()
 end
 
 --------------------------------------------------------------------------------
--- PROVIDER/PROFILE TRACKING (Phase 4)
+-- PROVIDER TRACKING (Phase 4)
 -- Tracks auth fallback and includes indicator in responses
 --------------------------------------------------------------------------------
 
@@ -340,11 +339,10 @@ local function updateProviderState(stateData)
 end
 
 ---Get provider indicator for Telegram messages
----@return string Indicator string (e.g., "[mega→openai]" on fallback, empty if default)
+---@return string Indicator string (e.g., "[→openai]" on fallback, empty if default)
 local function getProviderIndicator()
   if not M.isUsingFallback then return "" end
 
-  local profile = cfg and cfg.defaultProfile or "mega"
   local provider = M.currentProvider or "?"
 
   -- Short provider names for display
@@ -356,7 +354,7 @@ local function getProviderIndicator()
   }
   local short = shortNames[provider] or provider
 
-  return string.format("[%s→%s]", profile, short)
+  return string.format("[→%s]", short)
 end
 
 ---Abort the current task
@@ -1021,7 +1019,7 @@ function M.start()
     return false
   end
 
-  U.log.f("Starting (profile=%s)", cfg.defaultProfile or "mega")
+  U.log.f("Starting")
 
   local ok, result = pcall(function()
     -- Check if already running (safely)
@@ -1045,8 +1043,6 @@ function M.start()
       "pi",
       "--mode",
       "rpc",
-      "--profile",
-      cfg.defaultProfile or "mega",
       "--no-session", -- Don't persist session for orchestrator
     }
 

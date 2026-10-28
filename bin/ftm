@@ -1118,8 +1118,8 @@ function deterministic_build() {
     # pi -c continues the latest session stored for exactly that directory.
     # An explicit Pi session UUID targets a known session instead, and
     # --pi-fresh (a just-created worktree) skips sessions left behind by an
-    # earlier worktree at the same path. The managed wrapper enables bridge
-    # ingress and loads project env via mise.
+    # earlier worktree at the same path. The managed wrapper injects fnox
+    # secrets.
     local pi_args
     if [[ -n $DETERMINISTIC_PI_SESSION ]]; then
       pi_args=" --session $DETERMINISTIC_PI_SESSION"

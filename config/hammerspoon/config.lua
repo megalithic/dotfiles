@@ -482,9 +482,6 @@ M.piGateway = {
   -- Enable/disable the gateway
   enabled = false,
 
-  -- Default pi profile (auth cascade: tries this first, then fallbacks)
-  defaultProfile = "mega",
-
   -- Queue behavior
   prioritySignal = "!!", -- Messages starting with this jump queue + steer if busy
   abortPhrases = { "abort!", "stop!", "kill!", "cancel!" }, -- Emergency abort triggers
