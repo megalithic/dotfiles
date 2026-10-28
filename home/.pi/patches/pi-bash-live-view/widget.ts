@@ -4,7 +4,9 @@ import type { PtyTerminalSession } from "./pty-session.ts";
 import { snapshotToAnsiContentLines } from "./terminal-emulator.ts";
 
 export const WIDGET_PREFIX = "pi-bash-live-view/live/";
+
 const DEFAULT_TITLE = "Live terminal";
+
 const DEFAULT_ACCENT_COLOR = "77;163;255";
 
 export type LiveSession = {
@@ -20,13 +22,16 @@ export type LiveSession = {
 
 export function formatElapsed(ms: number): string {
 	const totalSeconds = Math.max(0, ms / 1000);
+
 	if (totalSeconds < 60) return `${totalSeconds.toFixed(1)}s`;
 	const wholeSeconds = Math.floor(totalSeconds);
 	const hours = Math.floor(wholeSeconds / 3600);
 	const minutes = Math.floor((wholeSeconds % 3600) / 60);
 	const seconds = wholeSeconds % 60;
+
 	if (hours > 0)
 		return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
 	return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
@@ -38,9 +43,11 @@ export function buildTopBorder(
 	const timer = ` ${formatElapsed(elapsedMs)} `;
 	const rawTitle = title ? ` ${title} ` : "";
 	const titleText = rawTitle.slice(0, Math.max(0, innerWidth - timer.length));
+
 	const fill = "─".repeat(
 		Math.max(0, innerWidth - titleText.length - timer.length),
 	);
+
 	return `${titleText}${fill}${timer}`
 		.padEnd(innerWidth, "─")
 		.slice(0, innerWidth);
@@ -78,16 +85,19 @@ export function buildWidgetAnsiLines({
 	const bottom = `${accent}╰${"─".repeat(innerWidth)}╯${reset}`;
 	const bodySource = snapshotToAnsiContentLines(snapshot).slice(-rows);
 	const body = [];
+
 	for (let i = 0; i < rows; i += 1) {
 		const line = fitAnsiLine(bodySource[i] ?? "", innerWidth);
 		body.push(`${accent}│${reset}${line}${accent}│${reset}`);
 	}
+
 	return [top, ...body, bottom];
 }
 
 function makeWidgetFactory(session: LiveSession) {
 	return (tui: any) => {
 		session.requestRender = () => tui.requestRender();
+
 		return {
 			invalidate() {},
 			render(width: number) {

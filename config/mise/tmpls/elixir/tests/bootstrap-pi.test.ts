@@ -1,101 +1,106 @@
-import { describe, expect, test } from "bun:test";
-import fs from "node:fs";
-import path from "node:path";
+import { describe, expect, test } from 'bun:test';
+import fs from 'node:fs';
+import path from 'node:path';
 
-const script = path.join(import.meta.dir, "../scripts/bootstrap-pi.sh");
-const url = "http://localhost:${PHX_PORT}/tidewave/mcp";
-const generated = { type: "streamable-http", url, lifecycle: "keep-alive" };
+const script = path.join(import.meta.dir, '../scripts/bootstrap-pi.sh');
+const url = 'http://localhost:${PHX_PORT}/tidewave/mcp';
+const generated = { type: 'streamable-http', url, lifecycle: 'keep-alive' };
 
 // mise tasks run whichever `bash` is on PATH; macOS /bin/bash is 3.2.
-const shells = [...new Set(["/bin/bash", Bun.which("bash")].filter((s): s is string => !!s && fs.existsSync(s)))];
+const shells = [...new Set(['/bin/bash', Bun.which('bash')].filter((s): s is string => !!s && fs.existsSync(s)))];
 
 for (const bash of shells) {
   // `notes` is the file seeded with project notes; APPEND_SYSTEM.md is the pre-migration path.
-  const fixture = (config?: object, notes = "AGENTS.md") => {
-    const cwd = fs.mkdtempSync("/tmp/pi-bootstrap-test-");
-    expect(Bun.spawnSync(["git", "init", "--quiet", cwd]).exitCode).toBe(0);
-    fs.mkdirSync(path.join(cwd, ".pi"));
-    const mcp = path.join(cwd, ".pi/mcp.json");
-    const guidance = path.join(cwd, ".pi/AGENTS.md");
-    const old = path.join(cwd, ".pi/APPEND_SYSTEM.md");
-    fs.writeFileSync(path.join(cwd, "AGENTS.md"), "Project-owned guidance\n");
-    fs.writeFileSync(path.join(cwd, ".pi", notes), "Keep project notes\n");
+  const fixture = (config?: object, notes = 'AGENTS.md') => {
+    const cwd = fs.mkdtempSync('/tmp/pi-bootstrap-test-');
+    expect(Bun.spawnSync(['git', 'init', '--quiet', cwd]).exitCode).toBe(0);
+    fs.mkdirSync(path.join(cwd, '.pi'));
+    const mcp = path.join(cwd, '.pi/mcp.json');
+    const guidance = path.join(cwd, '.pi/AGENTS.md');
+    const old = path.join(cwd, '.pi/APPEND_SYSTEM.md');
+    fs.writeFileSync(path.join(cwd, 'AGENTS.md'), 'Project-owned guidance\n');
+    fs.writeFileSync(path.join(cwd, '.pi', notes), 'Keep project notes\n');
     if (config) fs.writeFileSync(mcp, JSON.stringify(config));
     return {
-      cwd, mcp, guidance, old,
+      cwd,
+      mcp,
+      guidance,
+      old,
       run: () => Bun.spawnSync([bash, script], { cwd }),
-      read: () => JSON.parse(fs.readFileSync(mcp, "utf8")),
-      files: () => fs.readdirSync(path.join(cwd, ".pi")).sort(),
+      read: () => JSON.parse(fs.readFileSync(mcp, 'utf8')),
+      files: () => fs.readdirSync(path.join(cwd, '.pi')).sort(),
     };
   };
 
   describe(`Pi bootstrap runtime Tidewave migration (${bash})`, () => {
-    test("parses", () => {
-      const result = Bun.spawnSync([bash, "-n", script]);
-      expect(result.stderr.toString()).toBe("");
+    test('parses', () => {
+      const result = Bun.spawnSync([bash, '-n', script]);
+      expect(result.stderr.toString()).toBe('');
       expect(result.exitCode).toBe(0);
     });
 
-    test("creates the opt-in URL without a configured duplicate and is repeatable", () => {
+    test('creates the opt-in URL without a configured duplicate and is repeatable', () => {
       const h = fixture();
       expect(h.run().exitCode).toBe(0);
       expect(h.read()).toEqual({ mcpServers: {}, pidewave: { url } });
-      const guidance = fs.readFileSync(h.guidance, "utf8");
-      expect(guidance).toStartWith("Keep project notes\n\n<!-- mise-tmpl-gen:elixir:begin -->");
-      expect(guidance).toEndWith("<!-- mise-tmpl-gen:elixir:end -->\n");
-      expect(guidance).toContain("pidewave.url");
-      expect(guidance).toContain("mcp__tidewave__project_eval");
-      expect(guidance).toContain("open http://localhost:$PHX_PORT/tidewave/connect");
-      expect(guidance).toContain("Tidewave.BrowserSessions.list_clients() != []");
-      expect(guidance).not.toContain("wait a few seconds");
-      expect(guidance).toContain("never use codemode to decide whether they\n  exist, and never call `/tidewave/mcp` with curl");
-      expect(guidance).toContain("`browser.eval` takes a function, not a string");
-      expect(guidance).toContain("await browser.eval(() => { console.log(location.href); });");
-      expect(guidance).toContain("The Connect tab must stay in the foreground");
-      expect(guidance).toContain("`document.hasFocus()` stays false until the user\n    clicks inside the preview");
-      expect(guidance).toContain("Cmd+Shift+C\n  becomes active only while it answers");
-      expect(fs.readFileSync(path.join(h.cwd, "AGENTS.md"), "utf8")).toBe("Project-owned guidance\n");
+      const guidance = fs.readFileSync(h.guidance, 'utf8');
+      expect(guidance).toStartWith('Keep project notes\n\n<!-- mise-tmpl-gen:elixir:begin -->');
+      expect(guidance).toEndWith('<!-- mise-tmpl-gen:elixir:end -->\n');
+      expect(guidance).toContain('pidewave.url');
+      expect(guidance).toContain('mcp__tidewave__project_eval');
+      expect(guidance).toContain('open http://localhost:$PHX_PORT/tidewave/connect');
+      expect(guidance).toContain('Tidewave.BrowserSessions.list_clients() != []');
+      expect(guidance).not.toContain('wait a few seconds');
+      expect(guidance).toContain(
+        'never use codemode to decide whether they\n  exist, and never call `/tidewave/mcp` with curl',
+      );
+      expect(guidance).toContain('`browser.eval` takes a function, not a string');
+      expect(guidance).toContain('await browser.eval(() => { console.log(location.href); });');
+      expect(guidance).toContain('The Connect tab must stay in the foreground');
+      expect(guidance).toContain('`document.hasFocus()` stays false until the user\n    clicks inside the preview');
+      expect(guidance).toContain('Cmd+Shift+C\n  becomes active only while it answers');
+      expect(fs.readFileSync(path.join(h.cwd, 'AGENTS.md'), 'utf8')).toBe('Project-owned guidance\n');
       expect(h.run().exitCode).toBe(0);
-      expect(fs.readFileSync(h.guidance, "utf8")).toBe(guidance);
-      expect(h.files()).toEqual(["AGENTS.md", "mcp.json"]);
+      expect(fs.readFileSync(h.guidance, 'utf8')).toBe(guidance);
+      expect(h.files()).toEqual(['AGENTS.md', 'mcp.json']);
     });
 
-    test("creates .pi and runs from a subdirectory", () => {
+    test('creates .pi and runs from a subdirectory', () => {
       const h = fixture();
-      fs.rmSync(path.join(h.cwd, ".pi"), { recursive: true });
-      fs.mkdirSync(path.join(h.cwd, "lib/deep"), { recursive: true });
-      expect(Bun.spawnSync([bash, script], { cwd: path.join(h.cwd, "lib/deep") }).exitCode).toBe(0);
+      fs.rmSync(path.join(h.cwd, '.pi'), { recursive: true });
+      fs.mkdirSync(path.join(h.cwd, 'lib/deep'), { recursive: true });
+      expect(Bun.spawnSync([bash, script], { cwd: path.join(h.cwd, 'lib/deep') }).exitCode).toBe(0);
       expect(h.read()).toEqual({ mcpServers: {}, pidewave: { url } });
-      expect(fs.readFileSync(h.guidance, "utf8")).toStartWith("<!-- mise-tmpl-gen:elixir:begin -->");
+      expect(fs.readFileSync(h.guidance, 'utf8')).toStartWith('<!-- mise-tmpl-gen:elixir:begin -->');
     });
 
-    test("migrates only the generated server and preserves unrelated MCP settings", () => {
-      const other = { command: "example-mcp", disabled: true };
+    test('migrates only the generated server and preserves unrelated MCP settings', () => {
+      const other = { command: 'example-mcp', disabled: true };
       const h = fixture({ mcpServers: { tidewave: generated, other }, settings: { directTools: false } });
       expect(h.run().exitCode).toBe(0);
       expect(h.read()).toEqual({ mcpServers: { other }, settings: { directTools: false }, pidewave: { url } });
     });
 
-    test("refuses custom or disabled Tidewave entries before replacing either file", () => {
+    test('refuses custom or disabled Tidewave entries before replacing either file', () => {
       for (const tidewave of [
-        { ...generated, url: "http://localhost:4567/tidewave/mcp" },
+        { ...generated, url: 'http://localhost:4567/tidewave/mcp' },
         { ...generated, disabled: true },
-        { ...generated, headers: { "X-Example": "keep" } },
+        { ...generated, headers: { 'X-Example': 'keep' } },
         null,
       ]) {
         const h = fixture({ mcpServers: { tidewave } });
-        const original = fs.readFileSync(h.mcp, "utf8");
+        const original = fs.readFileSync(h.mcp, 'utf8');
         const result = h.run();
         expect(result.exitCode).not.toBe(0);
-        expect(result.stderr.toString()).toContain("custom tidewave definition");
-        expect(fs.readFileSync(h.mcp, "utf8")).toBe(original);
-        expect(fs.readFileSync(h.guidance, "utf8")).toBe("Keep project notes\n");
-        expect(h.files()).toEqual(["AGENTS.md", "mcp.json"]);
+        expect(result.stderr.toString()).toContain('custom tidewave definition');
+        expect(fs.readFileSync(h.mcp, 'utf8')).toBe(original);
+        expect(fs.readFileSync(h.guidance, 'utf8')).toBe('Keep project notes\n');
+        expect(h.files()).toEqual(['AGENTS.md', 'mcp.json']);
       }
     });
 
-    test("preserves manually migrated URLs across later bootstrap runs", () => {
-      const url = "http://localhost:4567/tidewave/mcp";
+    test('preserves manually migrated URLs across later bootstrap runs', () => {
+      const url = 'http://localhost:4567/tidewave/mcp';
       const h = fixture({ mcpServers: {}, pidewave: { url } });
       expect(h.run().exitCode).toBe(0);
       expect(h.read().pidewave.url).toBe(url);
@@ -103,74 +108,81 @@ for (const bash of shells) {
       expect(h.read().pidewave.url).toBe(url);
     });
 
-    test("rejects malformed opt-in URLs before replacing either file", () => {
-      for (const url of ["", null, false, 4567, {}]) {
+    test('rejects malformed opt-in URLs before replacing either file', () => {
+      for (const url of ['', null, false, 4567, {}]) {
         const h = fixture({ pidewave: { url } });
-        const original = fs.readFileSync(h.mcp, "utf8");
+        const original = fs.readFileSync(h.mcp, 'utf8');
         expect(h.run().exitCode).not.toBe(0);
-        expect(fs.readFileSync(h.mcp, "utf8")).toBe(original);
-        expect(fs.readFileSync(h.guidance, "utf8")).toBe("Keep project notes\n");
+        expect(fs.readFileSync(h.mcp, 'utf8')).toBe(original);
+        expect(fs.readFileSync(h.guidance, 'utf8')).toBe('Keep project notes\n');
       }
     });
 
-    test("renames the old APPEND_SYSTEM.md once and refreshes its block", () => {
-      const h = fixture(undefined, "APPEND_SYSTEM.md");
-      fs.appendFileSync(h.old, "\n<!-- mise-tmpl-gen:elixir:begin -->\nstale\n<!-- mise-tmpl-gen:elixir:end -->\nKeep trailing notes\n");
+    test('renames the old APPEND_SYSTEM.md once and refreshes its block', () => {
+      const h = fixture(undefined, 'APPEND_SYSTEM.md');
+      fs.appendFileSync(
+        h.old,
+        '\n<!-- mise-tmpl-gen:elixir:begin -->\nstale\n<!-- mise-tmpl-gen:elixir:end -->\nKeep trailing notes\n',
+      );
       expect(h.run().exitCode).toBe(0);
-      expect(h.files()).toEqual(["AGENTS.md", "mcp.json"]);
-      const guidance = fs.readFileSync(h.guidance, "utf8");
-      expect(guidance).toStartWith("Keep project notes\n\n<!-- mise-tmpl-gen:elixir:begin -->\n# Elixir project guidance");
-      expect(guidance).toEndWith("<!-- mise-tmpl-gen:elixir:end -->\nKeep trailing notes\n");
-      expect(guidance).not.toContain("stale");
+      expect(h.files()).toEqual(['AGENTS.md', 'mcp.json']);
+      const guidance = fs.readFileSync(h.guidance, 'utf8');
+      expect(guidance).toStartWith(
+        'Keep project notes\n\n<!-- mise-tmpl-gen:elixir:begin -->\n# Elixir project guidance',
+      );
+      expect(guidance).toEndWith('<!-- mise-tmpl-gen:elixir:end -->\nKeep trailing notes\n');
+      expect(guidance).not.toContain('stale');
     });
 
-    test("migrates nothing when mcp.json is invalid", () => {
-      const h = fixture({ mcpServers: { tidewave: null } }, "APPEND_SYSTEM.md");
+    test('migrates nothing when mcp.json is invalid', () => {
+      const h = fixture({ mcpServers: { tidewave: null } }, 'APPEND_SYSTEM.md');
       expect(h.run().exitCode).not.toBe(0);
-      expect(h.files()).toEqual(["APPEND_SYSTEM.md", "mcp.json"]);
-      expect(fs.readFileSync(h.old, "utf8")).toBe("Keep project notes\n");
+      expect(h.files()).toEqual(['APPEND_SYSTEM.md', 'mcp.json']);
+      expect(fs.readFileSync(h.old, 'utf8')).toBe('Keep project notes\n');
     });
 
-    test("warns and keeps both files when old and new guidance exist", () => {
+    test('warns and keeps both files when old and new guidance exist', () => {
       const h = fixture();
-      fs.writeFileSync(h.old, "Old notes\n");
+      fs.writeFileSync(h.old, 'Old notes\n');
       const result = h.run();
       expect(result.exitCode).toBe(0);
-      expect(result.stderr.toString()).toContain("still shadows the global APPEND_SYSTEM.md");
-      expect(fs.readFileSync(h.old, "utf8")).toBe("Old notes\n");
-      expect(fs.readFileSync(h.guidance, "utf8")).toStartWith("Keep project notes\n\n<!-- mise-tmpl-gen:elixir:begin -->");
+      expect(result.stderr.toString()).toContain('still shadows the global APPEND_SYSTEM.md');
+      expect(fs.readFileSync(h.old, 'utf8')).toBe('Old notes\n');
+      expect(fs.readFileSync(h.guidance, 'utf8')).toStartWith(
+        'Keep project notes\n\n<!-- mise-tmpl-gen:elixir:begin -->',
+      );
     });
 
-    test("rejects duplicated generated blocks", () => {
+    test('rejects duplicated generated blocks', () => {
       const h = fixture();
       expect(h.run().exitCode).toBe(0);
-      const once = fs.readFileSync(h.guidance, "utf8");
+      const once = fs.readFileSync(h.guidance, 'utf8');
       fs.writeFileSync(h.guidance, once + once);
       expect(h.run().exitCode).not.toBe(0);
-      expect(fs.readFileSync(h.guidance, "utf8")).toBe(once + once);
+      expect(fs.readFileSync(h.guidance, 'utf8')).toBe(once + once);
     });
 
-    test("retains malformed-file and symlink safeguards", () => {
-      for (const text of ["{", ""]) {
+    test('retains malformed-file and symlink safeguards', () => {
+      for (const text of ['{', '']) {
         const malformed = fixture();
         fs.writeFileSync(malformed.mcp, text);
         expect(malformed.run().exitCode).not.toBe(0);
-        expect(fs.readFileSync(malformed.mcp, "utf8")).toBe(text);
-        expect(fs.readFileSync(malformed.guidance, "utf8")).toBe("Keep project notes\n");
+        expect(fs.readFileSync(malformed.mcp, 'utf8')).toBe(text);
+        expect(fs.readFileSync(malformed.guidance, 'utf8')).toBe('Keep project notes\n');
       }
 
       const linked = fixture();
-      const target = path.join(linked.cwd, "external.json");
-      fs.writeFileSync(target, "{}");
+      const target = path.join(linked.cwd, 'external.json');
+      fs.writeFileSync(target, '{}');
       fs.symlinkSync(target, linked.mcp);
       expect(linked.run().exitCode).not.toBe(0);
-      expect(fs.readFileSync(target, "utf8")).toBe("{}");
-      expect(fs.readFileSync(linked.guidance, "utf8")).toBe("Keep project notes\n");
+      expect(fs.readFileSync(target, 'utf8')).toBe('{}');
+      expect(fs.readFileSync(linked.guidance, 'utf8')).toBe('Keep project notes\n');
 
       const linkedOld = fixture();
       fs.symlinkSync(linkedOld.guidance, linkedOld.old);
       expect(linkedOld.run().exitCode).not.toBe(0);
-      expect(fs.readFileSync(linkedOld.guidance, "utf8")).toBe("Keep project notes\n");
+      expect(fs.readFileSync(linkedOld.guidance, 'utf8')).toBe('Keep project notes\n');
     });
   });
 }

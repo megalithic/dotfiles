@@ -35,240 +35,231 @@
 //
 // <path> is relative to https://app.asana.com/api/1.0, e.g. /tasks/123/subtasks
 
-import { execFileSync, execSync } from "child_process";
-import { createHash } from "crypto";
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "fs";
-import { homedir } from "os";
-import { dirname, join } from "path";
-import readline from "readline/promises";
-import { fileURLToPath } from "url";
+import { execFileSync, execSync } from 'child_process';
+import { createHash } from 'crypto';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'fs';
+import { homedir } from 'os';
+import { dirname, join } from 'path';
+import readline from 'readline/promises';
+import { fileURLToPath } from 'url';
 
-const API_BASE = "https://app.asana.com/api/1.0";
+const API_BASE = 'https://app.asana.com/api/1.0';
 
 // ---------- helpers ----------
 
 function die(msg, code = 1) {
-	process.stderr.write(`error: ${msg}\n`);
-	process.exit(code);
+  process.stderr.write(`error: ${msg}\n`);
+  process.exit(code);
 }
 
 function extractGid(input) {
-	// full URL: .../task/1214940291952619 (possibly with ?focus=... suffix)
-	const m = String(input).match(/task\/(\d+)/);
+  // full URL: .../task/1214940291952619 (possibly with ?focus=... suffix)
+  const m = String(input).match(/task\/(\d+)/);
 
-	if (m) return m[1];
-	// bare gid
-	const g = String(input).match(/^(\d{6,})$/);
+  if (m) return m[1];
+  // bare gid
+  const g = String(input).match(/^(\d{6,})$/);
 
-	if (g) return g[1];
-	// any long number in the string (project URLs etc.)
-	const any = String(input).match(/(\d{10,})/);
+  if (g) return g[1];
+  // any long number in the string (project URLs etc.)
+  const any = String(input).match(/(\d{10,})/);
 
-	if (any) return any[1];
-	die(`cannot extract a task gid from: ${input}`);
+  if (any) return any[1];
+  die(`cannot extract a task gid from: ${input}`);
 }
 
 function parseFlags(args) {
-	const flags = { gids: [] };
-	const rest = [];
+  const flags = { gids: [] };
+  const rest = [];
 
-	for (let i = 0; i < args.length; i++) {
-		if (args[i] === "--fields") flags.fields = args[++i];
-		else if (args[i] === "--all") flags.all = true;
-		else if (args[i] === "--refresh") flags.refresh = true;
-		else if (args[i] === "--push") flags.push = true;
-		else if (args[i] === "--yes") flags.yes = true;
-		else if (args[i] === "--branch") flags.branch = args[++i];
-		else if (args[i] === "--gid") flags.gids.push(args[++i]);
-		else if (args[i] === "--name") flags.name = args[++i];
-		else if (args[i] === "--value-name") flags.valueName = args[++i];
-		else if (args[i] === "--raw") flags.raw = true;
-		else if (args[i] === "--notes") flags.notes = args[++i];
-		else if (args[i] === "--parent") flags.parent = args[++i];
-		else if (args[i] === "--project") flags.project = args[++i];
-		else if (args[i] === "--assignee") flags.assignee = args[++i];
-		else if (args[i] === "--json") flags.json = args[++i];
-		else if (args[i] === "--no-defaults") flags.noDefaults = true;
-		else rest.push(args[i]);
-	}
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--fields') flags.fields = args[++i];
+    else if (args[i] === '--all') flags.all = true;
+    else if (args[i] === '--refresh') flags.refresh = true;
+    else if (args[i] === '--push') flags.push = true;
+    else if (args[i] === '--yes') flags.yes = true;
+    else if (args[i] === '--branch') flags.branch = args[++i];
+    else if (args[i] === '--gid') flags.gids.push(args[++i]);
+    else if (args[i] === '--name') flags.name = args[++i];
+    else if (args[i] === '--value-name') flags.valueName = args[++i];
+    else if (args[i] === '--raw') flags.raw = true;
+    else if (args[i] === '--notes') flags.notes = args[++i];
+    else if (args[i] === '--parent') flags.parent = args[++i];
+    else if (args[i] === '--project') flags.project = args[++i];
+    else if (args[i] === '--assignee') flags.assignee = args[++i];
+    else if (args[i] === '--json') flags.json = args[++i];
+    else if (args[i] === '--no-defaults') flags.noDefaults = true;
+    else rest.push(args[i]);
+  }
 
-	return { flags, rest };
+  return { flags, rest };
 }
 
 function output(obj) {
-	process.stdout.write(JSON.stringify(obj, null, 2) + "\n");
+  process.stdout.write(JSON.stringify(obj, null, 2) + '\n');
 }
 
 // ---------- auth: token ----------
 
 function findToken() {
-	if (process.env.ASANA_ACCESS_TOKEN) return process.env.ASANA_ACCESS_TOKEN;
+  if (process.env.ASANA_ACCESS_TOKEN) return process.env.ASANA_ACCESS_TOKEN;
 
-	const tokenFile =
-		process.env.ASANA_TOKEN_FILE || `${homedir()}/.config/asana/token`;
+  const tokenFile = process.env.ASANA_TOKEN_FILE || `${homedir()}/.config/asana/token`;
 
-	if (existsSync(tokenFile)) {
-		const t = readFileSync(tokenFile, "utf8").trim();
+  if (existsSync(tokenFile)) {
+    const t = readFileSync(tokenFile, 'utf8').trim();
 
-		if (t) return t;
-	}
+    if (t) return t;
+  }
 
-	return null;
+  return null;
 }
 
 async function tokenRequest(token, method, path, body) {
-	const options = { method, headers: { Authorization: `Bearer ${token}` } };
+  const options = { method, headers: { Authorization: `Bearer ${token}` } };
 
-	if (body) {
-		options.headers["Content-Type"] = "application/json";
-		options.body = JSON.stringify(body);
-	}
+  if (body) {
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(body);
+  }
 
-	const res = await fetch(API_BASE + path, options);
+  const res = await fetch(API_BASE + path, options);
 
-	const text = await res.text();
+  const text = await res.text();
 
-	try {
-		return { status: res.status, json: JSON.parse(text) };
-	} catch {
-		return { status: res.status, json: { raw: text.slice(0, 2000) } };
-	}
+  try {
+    return { status: res.status, json: JSON.parse(text) };
+  } catch {
+    return { status: res.status, json: { raw: text.slice(0, 2000) } };
+  }
 }
 
 // ---------- auth: browser CDP proxy ----------
 
 function discoverCdpPorts() {
-	const ports = [];
+  const ports = [];
 
-	if (process.env.ASANA_CDP_PORT)
-		ports.push(Number(process.env.ASANA_CDP_PORT));
+  if (process.env.ASANA_CDP_PORT) ports.push(Number(process.env.ASANA_CDP_PORT));
 
-	// scan running browser processes for --remote-debugging-port=N
-	try {
-		const ps = execSync("ps ax -o command", {
-			encoding: "utf8",
-			maxBuffer: 16e6,
-		});
+  // scan running browser processes for --remote-debugging-port=N
+  try {
+    const ps = execSync('ps ax -o command', {
+      encoding: 'utf8',
+      maxBuffer: 16e6,
+    });
 
-		for (const m of ps.matchAll(/--remote-debugging-port=(\d+)/g)) {
-			const p = Number(m[1]);
+    for (const m of ps.matchAll(/--remote-debugging-port=(\d+)/g)) {
+      const p = Number(m[1]);
 
-			if (!ports.includes(p)) ports.push(p);
-		}
-	} catch {
-		/* ignore */
-	}
+      if (!ports.includes(p)) ports.push(p);
+    }
+  } catch {
+    /* ignore */
+  }
 
-	for (const p of [9222, 9223]) if (!ports.includes(p)) ports.push(p);
+  for (const p of [9222, 9223]) if (!ports.includes(p)) ports.push(p);
 
-	return ports;
+  return ports;
 }
 
 async function findAsanaTab() {
-	for (const port of discoverCdpPorts()) {
-		let list;
+  for (const port of discoverCdpPorts()) {
+    let list;
 
-		try {
-			const res = await fetch(`http://localhost:${port}/json/list`, {
-				signal: AbortSignal.timeout(1500),
-			});
+    try {
+      const res = await fetch(`http://localhost:${port}/json/list`, {
+        signal: AbortSignal.timeout(1500),
+      });
 
-			list = await res.json();
-		} catch {
-			continue; // port not listening
-		}
+      list = await res.json();
+    } catch {
+      continue; // port not listening
+    }
 
-		const tab = list.find(
-			(t) => t.type === "page" && /https:\/\/app\.asana\.com\//.test(t.url),
-		);
+    const tab = list.find((t) => t.type === 'page' && /https:\/\/app\.asana\.com\//.test(t.url));
 
-		if (tab && tab.webSocketDebuggerUrl) return { port, tab };
+    if (tab && tab.webSocketDebuggerUrl) return { port, tab };
 
-		if (list.some((t) => t.type === "page")) {
-			// browser is debuggable but no asana tab open
-			return { port, tab: null };
-		}
-	}
+    if (list.some((t) => t.type === 'page')) {
+      // browser is debuggable but no asana tab open
+      return { port, tab: null };
+    }
+  }
 
-	return null;
+  return null;
 }
 
 function cdpEval(wsUrl, expression) {
-	return new Promise((resolvePromise, reject) => {
-		const ws = new WebSocket(wsUrl);
+  return new Promise((resolvePromise, reject) => {
+    const ws = new WebSocket(wsUrl);
 
-		const timer = setTimeout(() => {
-			ws.close();
-			reject(new Error("CDP evaluate timed out after 30s"));
-		}, 30_000);
+    const timer = setTimeout(() => {
+      ws.close();
+      reject(new Error('CDP evaluate timed out after 30s'));
+    }, 30_000);
 
-		ws.onerror = () => {
-			clearTimeout(timer);
-			reject(new Error(`cannot connect to browser CDP websocket: ${wsUrl}`));
-		};
+    ws.onerror = () => {
+      clearTimeout(timer);
+      reject(new Error(`cannot connect to browser CDP websocket: ${wsUrl}`));
+    };
 
-		ws.onopen = () => {
-			ws.send(
-				JSON.stringify({
-					id: 1,
-					method: "Runtime.evaluate",
-					params: { expression, awaitPromise: true, returnByValue: true },
-				}),
-			);
-		};
+    ws.onopen = () => {
+      ws.send(
+        JSON.stringify({
+          id: 1,
+          method: 'Runtime.evaluate',
+          params: { expression, awaitPromise: true, returnByValue: true },
+        }),
+      );
+    };
 
-		ws.onmessage = (ev) => {
-			const msg = JSON.parse(ev.data);
+    ws.onmessage = (ev) => {
+      const msg = JSON.parse(ev.data);
 
-			if (msg.id !== 1) return;
-			clearTimeout(timer);
-			ws.close();
+      if (msg.id !== 1) return;
+      clearTimeout(timer);
+      ws.close();
 
-			if (msg.error) return reject(new Error(msg.error.message));
-			const r = msg.result;
+      if (msg.error) return reject(new Error(msg.error.message));
+      const r = msg.result;
 
-			if (r.exceptionDetails) {
-				return reject(
-					new Error(
-						r.exceptionDetails.exception?.description ||
-							r.exceptionDetails.text,
-					),
-				);
-			}
+      if (r.exceptionDetails) {
+        return reject(new Error(r.exceptionDetails.exception?.description || r.exceptionDetails.text));
+      }
 
-			resolvePromise(r.result.value);
-		};
-	});
+      resolvePromise(r.result.value);
+    };
+  });
 }
 
 async function browserRequest(tab, method, path, body) {
-	// fetch() runs in the asana tab's origin, so session cookies apply.
-	const expr = `
+  // fetch() runs in the asana tab's origin, so session cookies apply.
+  const expr = `
     (async () => {
       const res = await fetch(${JSON.stringify(API_BASE + path)}, {
         method: ${JSON.stringify(method)},
         credentials: "include",
         headers: ${
-					// X-Allow-Asana-Client: 1 is required for cookie-session writes
-					// (POST/PUT/DELETE return 401 without it).
-					body
-						? '{ "Content-Type": "application/json", "X-Allow-Asana-Client": "1" }'
-						: '{ "X-Allow-Asana-Client": "1" }'
-				},
-        body: ${body ? JSON.stringify(JSON.stringify(body)) : "undefined"},
+          // X-Allow-Asana-Client: 1 is required for cookie-session writes
+          // (POST/PUT/DELETE return 401 without it).
+          body
+            ? '{ "Content-Type": "application/json", "X-Allow-Asana-Client": "1" }'
+            : '{ "X-Allow-Asana-Client": "1" }'
+        },
+        body: ${body ? JSON.stringify(JSON.stringify(body)) : 'undefined'},
       });
       const text = await res.text();
       return JSON.stringify({ status: res.status, text });
     })()`;
 
-	const raw = await cdpEval(tab.webSocketDebuggerUrl, expr);
-	const { status, text } = JSON.parse(raw);
+  const raw = await cdpEval(tab.webSocketDebuggerUrl, expr);
+  const { status, text } = JSON.parse(raw);
 
-	try {
-		return { status, json: JSON.parse(text) };
-	} catch {
-		return { status, json: { raw: text.slice(0, 2000) } };
-	}
+  try {
+    return { status, json: JSON.parse(text) };
+  } catch {
+    return { status, json: { raw: text.slice(0, 2000) } };
+  }
 }
 
 // ---------- unified request with pagination ----------
@@ -276,233 +267,225 @@ async function browserRequest(tab, method, path, body) {
 let transport = null; // lazily resolved: {kind:"token",token} | {kind:"browser",tab}
 
 async function resolveTransport() {
-	if (transport) return transport;
-	const token = findToken();
+  if (transport) return transport;
+  const token = findToken();
 
-	if (token) {
-		transport = { kind: "token", token };
+  if (token) {
+    transport = { kind: 'token', token };
 
-		return transport;
-	}
+    return transport;
+  }
 
-	const found = await findAsanaTab();
+  const found = await findAsanaTab();
 
-	if (found?.tab) {
-		transport = { kind: "browser", tab: found.tab };
+  if (found?.tab) {
+    transport = { kind: 'browser', tab: found.tab };
 
-		return transport;
-	}
+    return transport;
+  }
 
-	if (found) {
-		throw new Error(
-			`no ASANA_ACCESS_TOKEN and no app.asana.com tab open in the debuggable browser (port ${found.port}).\n` +
-				`Open Asana in that browser (logged in), or export ASANA_ACCESS_TOKEN.`,
-		);
-	}
+  if (found) {
+    throw new Error(
+      `no ASANA_ACCESS_TOKEN and no app.asana.com tab open in the debuggable browser (port ${found.port}).\n` +
+        `Open Asana in that browser (logged in), or export ASANA_ACCESS_TOKEN.`,
+    );
+  }
 
-	throw new Error(
-		"no Asana auth available.\n" +
-			"Either: export ASANA_ACCESS_TOKEN (or write it to ~/.config/asana/token),\n" +
-			"or run a Chromium browser with --remote-debugging-port and an app.asana.com tab open\n" +
-			"(Helium: enable via chrome://inspect/#remote-debugging).",
-	);
+  throw new Error(
+    'no Asana auth available.\n' +
+      'Either: export ASANA_ACCESS_TOKEN (or write it to ~/.config/asana/token),\n' +
+      'or run a Chromium browser with --remote-debugging-port and an app.asana.com tab open\n' +
+      '(Helium: enable via chrome://inspect/#remote-debugging).',
+  );
 }
 
 // Low-level request: throws on transport/auth failure, returns { status, json }
 // for any HTTP response so callers can handle per-entry errors (e.g. 404 on a
 // deleted linked task) without terminating the whole run.
 async function apiRequest(method, path, body) {
-	const t = await resolveTransport();
+  const t = await resolveTransport();
 
-	return t.kind === "token"
-		? tokenRequest(t.token, method, path, body)
-		: browserRequest(t.tab, method, path, body);
+  return t.kind === 'token' ? tokenRequest(t.token, method, path, body) : browserRequest(t.tab, method, path, body);
 }
 
 async function request(method, path, body) {
-	const res = await apiRequest(method, path, body);
+  const res = await apiRequest(method, path, body);
 
-	if (res.status >= 400) {
-		throw new Error(
-			`Asana API ${method} ${path} -> HTTP ${res.status}\n` +
-				JSON.stringify(res.json, null, 2),
-		);
-	}
+  if (res.status >= 400) {
+    throw new Error(`Asana API ${method} ${path} -> HTTP ${res.status}\n` + JSON.stringify(res.json, null, 2));
+  }
 
-	return res.json;
+  return res.json;
 }
 
 async function requestAll(path) {
-	// follow next_page for collection endpoints; caps at 20 pages
-	const sep = path.includes("?") ? "&" : "?";
-	let url = `${path}${sep}limit=100`;
-	const items = [];
-	let pages = 0;
-	let truncated = false;
+  // follow next_page for collection endpoints; caps at 20 pages
+  const sep = path.includes('?') ? '&' : '?';
+  let url = `${path}${sep}limit=100`;
+  const items = [];
+  let pages = 0;
+  let truncated = false;
 
-	for (;;) {
-		const res = await request("GET", url);
+  for (;;) {
+    const res = await request('GET', url);
 
-		if (Array.isArray(res.data)) items.push(...res.data);
-		else return res; // not a collection
-		const next = res.next_page?.uri;
+    if (Array.isArray(res.data)) items.push(...res.data);
+    else return res; // not a collection
+    const next = res.next_page?.uri;
 
-		if (!next) break;
+    if (!next) break;
 
-		pages++;
+    pages++;
 
-		if (pages >= 20) {
-			truncated = true;
-			process.stderr.write(
-				`warning: ${path} truncated after 20 pages (${items.length} items); results are incomplete\n`,
-			);
-			break;
-		}
+    if (pages >= 20) {
+      truncated = true;
+      process.stderr.write(
+        `warning: ${path} truncated after 20 pages (${items.length} items); results are incomplete\n`,
+      );
+      break;
+    }
 
-		url = next.replace(API_BASE, "");
-	}
+    url = next.replace(API_BASE, '');
+  }
 
-	if (truncated) return { data: items, truncated };
+  if (truncated) return { data: items, truncated };
 
-	return { data: items };
+  return { data: items };
 }
 
 // ---------- Asana-first ticket workflow: worktree link + cache ----------
 
-const CACHE_DIR = join(homedir(), ".local", "state", "pi", "asana");
+const CACHE_DIR = join(homedir(), '.local', 'state', 'pi', 'asana');
 
 const MINE_MAX_AGE_HOURS = 24;
 
-const MINE_TASK_FIELDS =
-	"name,completed,permalink_url,assignee.name,due_on,modified_at," +
-	"memberships.project.name";
+const MINE_TASK_FIELDS = 'name,completed,permalink_url,assignee.name,due_on,modified_at,' + 'memberships.project.name';
 
 function sh(cmd, args, opts = {}) {
-	try {
-		return execFileSync(cmd, args, {
-			encoding: "utf8",
-			stdio: ["ignore", "pipe", "pipe"],
-			...opts,
-		}).trim();
-	} catch {
-		return null;
-	}
+  try {
+    return execFileSync(cmd, args, {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      ...opts,
+    }).trim();
+  } catch {
+    return null;
+  }
 }
 
 function currentBranch() {
-	return sh("git", ["rev-parse", "--abbrev-ref", "HEAD"]);
+  return sh('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
 }
 
 function findTicketsDir() {
-	let dir = process.cwd();
+  let dir = process.cwd();
 
-	while (dir !== "/") {
-		const candidate = join(dir, ".tickets");
+  while (dir !== '/') {
+    const candidate = join(dir, '.tickets');
 
-		if (existsSync(candidate)) return candidate;
+    if (existsSync(candidate)) return candidate;
 
-		dir = dirname(dir);
-	}
+    dir = dirname(dir);
+  }
 
-	return null;
+  return null;
 }
 
 function ticketsDirOrCreate() {
-	const existing = findTicketsDir();
+  const existing = findTicketsDir();
 
-	if (existing) return existing;
+  if (existing) return existing;
 
-	const root = sh("git", ["rev-parse", "--show-toplevel"]);
+  const root = sh('git', ['rev-parse', '--show-toplevel']);
 
-	if (!root) die("not inside a git repository and no .tickets/ found");
+  if (!root) die('not inside a git repository and no .tickets/ found');
 
-	const dir = join(root, ".tickets");
+  const dir = join(root, '.tickets');
 
-	mkdirSync(dir, { recursive: true });
+  mkdirSync(dir, { recursive: true });
 
-	return dir;
+  return dir;
 }
 
 function linkFilePath(ticketsDir) {
-	return join(ticketsDir, ".asana.json");
+  return join(ticketsDir, '.asana.json');
 }
 
 function loadLinkFile() {
-	const dir = findTicketsDir();
+  const dir = findTicketsDir();
 
-	if (!dir) return null;
+  if (!dir) return null;
 
-	const path = linkFilePath(dir);
+  const path = linkFilePath(dir);
 
-	if (!existsSync(path)) return null;
+  if (!existsSync(path)) return null;
 
-	try {
-		return { dir, path, data: JSON.parse(readFileSync(path, "utf8")) };
-	} catch {
-		die(`malformed link file: ${path} (fix or remove it)`);
-	}
+  try {
+    return { dir, path, data: JSON.parse(readFileSync(path, 'utf8')) };
+  } catch {
+    die(`malformed link file: ${path} (fix or remove it)`);
+  }
 }
 
 // Atomic write (temp + rename) so a crash or concurrent reader never sees a
 // partial JSON file. Last-writer-wins is acceptable; full locking is not.
 function writeFileAtomic(path, contents) {
-	const tmp = `${path}.tmp-${process.pid}`;
+  const tmp = `${path}.tmp-${process.pid}`;
 
-	writeFileSync(tmp, contents);
-	renameSync(tmp, path);
+  writeFileSync(tmp, contents);
+  renameSync(tmp, path);
 }
 
 function saveLinkFile(path, data) {
-	writeFileAtomic(path, JSON.stringify(data, null, 2) + "\n");
+  writeFileAtomic(path, JSON.stringify(data, null, 2) + '\n');
 }
 
 // gids come from Asana or from the user-editable link file; they must be pure
 // decimal ids before they reach any filesystem path or API path.
 function validGid(gid) {
-	return /^\d{6,}$/.test(String(gid));
+  return /^\d{6,}$/.test(String(gid));
 }
 
 // tk ticket ids (e.g. dot-a1b2). Anything else — slashes, dots, absolute
 // paths — is rejected before being joined into a path under .tickets/.
 function validTicketId(id) {
-	return /^[a-z0-9]+-[a-z0-9]+$/.test(String(id));
+  return /^[a-z0-9]+-[a-z0-9]+$/.test(String(id));
 }
 
 function loadCache(name, maxAgeHours) {
-	const path = join(CACHE_DIR, name);
+  const path = join(CACHE_DIR, name);
 
-	if (!existsSync(path)) return null;
+  if (!existsSync(path)) return null;
 
-	try {
-		const data = JSON.parse(readFileSync(path, "utf8"));
+  try {
+    const data = JSON.parse(readFileSync(path, 'utf8'));
 
-		const ageHours =
-			(Date.now() - Date.parse(data.fetched_at || 0)) / 3_600_000;
+    const ageHours = (Date.now() - Date.parse(data.fetched_at || 0)) / 3_600_000;
 
-		if (maxAgeHours != null && ageHours > maxAgeHours) return null;
+    if (maxAgeHours != null && ageHours > maxAgeHours) return null;
 
-		return data;
-	} catch {
-		return null;
-	}
+    return data;
+  } catch {
+    return null;
+  }
 }
 
 function saveCache(name, data) {
-	mkdirSync(join(CACHE_DIR, "tasks"), { recursive: true });
-	writeFileAtomic(join(CACHE_DIR, name), JSON.stringify(data, null, 2) + "\n");
+  mkdirSync(join(CACHE_DIR, 'tasks'), { recursive: true });
+  writeFileAtomic(join(CACHE_DIR, name), JSON.stringify(data, null, 2) + '\n');
 }
 
 function saveTaskCache(gid, task) {
-	if (!validGid(gid)) return;
+  if (!validGid(gid)) return;
 
-	saveCache(join("tasks", `${gid}.json`), {
-		fetched_at: new Date().toISOString(),
-		task,
-	});
+  saveCache(join('tasks', `${gid}.json`), {
+    fetched_at: new Date().toISOString(),
+    task,
+  });
 }
 
 function cacheAgeHours(data) {
-	return (Date.now() - Date.parse(data.fetched_at || 0)) / 3_600_000;
+  return (Date.now() - Date.parse(data.fetched_at || 0)) / 3_600_000;
 }
 
 // ---------- task-creation defaults ----------
@@ -511,70 +494,62 @@ function cacheAgeHours(data) {
 // directory: it is config, unlike the caches under ~/.local/state/pi/asana/.
 // It stores raw gids with optional human-readable name annotations; the
 // script never resolves names to gids.
-const DEFAULTS_PATH = join(
-	dirname(dirname(fileURLToPath(import.meta.url))),
-	"defaults.json",
-);
+const DEFAULTS_PATH = join(dirname(dirname(fileURLToPath(import.meta.url))), 'defaults.json');
 
 function loadDefaults() {
-	if (!existsSync(DEFAULTS_PATH)) return null;
+  if (!existsSync(DEFAULTS_PATH)) return null;
 
-	try {
-		return JSON.parse(readFileSync(DEFAULTS_PATH, "utf8"));
-	} catch {
-		die(`malformed defaults file: ${DEFAULTS_PATH} (fix or remove it)`);
-	}
+  try {
+    return JSON.parse(readFileSync(DEFAULTS_PATH, 'utf8'));
+  } catch {
+    die(`malformed defaults file: ${DEFAULTS_PATH} (fix or remove it)`);
+  }
 }
 
 function saveDefaults(defaults) {
-	writeFileAtomic(DEFAULTS_PATH, JSON.stringify(defaults, null, 2) + "\n");
+  writeFileAtomic(DEFAULTS_PATH, JSON.stringify(defaults, null, 2) + '\n');
 }
 
 // defaults.json is user-editable and every gid in it ends up in an API body;
 // validate shapes on every read.
 function defaultsProblems(defaults) {
-	const problems = [];
-	const create = defaults?.create;
+  const problems = [];
+  const create = defaults?.create;
 
-	if (!create) return problems;
+  if (!create) return problems;
 
-	const checkGid = (label, gid) => {
-		if (!validGid(gid))
-			problems.push(`${label}: invalid gid ${JSON.stringify(gid)}`);
-	};
+  const checkGid = (label, gid) => {
+    if (!validGid(gid)) problems.push(`${label}: invalid gid ${JSON.stringify(gid)}`);
+  };
 
-	if (create.assignee != null && create.assignee !== "me")
-		checkGid("assignee", create.assignee);
+  if (create.assignee != null && create.assignee !== 'me') checkGid('assignee', create.assignee);
 
-	if (create.workspace != null) checkGid("workspace", create.workspace.gid);
+  if (create.workspace != null) checkGid('workspace', create.workspace.gid);
 
-	for (const p of create.projects || [])
-		checkGid(`project ${p.name || "?"}`, p.gid);
+  for (const p of create.projects || []) checkGid(`project ${p.name || '?'}`, p.gid);
 
-	for (const t of create.tags || []) checkGid(`tag ${t.name || "?"}`, t.gid);
+  for (const t of create.tags || []) checkGid(`tag ${t.name || '?'}`, t.gid);
 
-	for (const f of create.custom_fields || []) {
-		const label = `custom field ${f.name || "?"}`;
+  for (const f of create.custom_fields || []) {
+    const label = `custom field ${f.name || '?'}`;
 
-		checkGid(label, f.gid);
+    checkGid(label, f.gid);
 
-		if (f.value_gid != null) checkGid(`${label} value`, f.value_gid);
+    if (f.value_gid != null) checkGid(`${label} value`, f.value_gid);
 
-		if (f.value_gid == null && f.value == null)
-			problems.push(`${label}: needs value_gid or value`);
-	}
+    if (f.value_gid == null && f.value == null) problems.push(`${label}: needs value_gid or value`);
+  }
 
-	return problems;
+  return problems;
 }
 
 function createDefaults() {
-	const defaults = loadDefaults();
-	const problems = defaultsProblems(defaults);
+  const defaults = loadDefaults();
+  const problems = defaultsProblems(defaults);
 
-	if (problems.length)
-		die(`invalid ${DEFAULTS_PATH}:\n  ${problems.join("\n  ")}`);
+  if (problems.length) die(`invalid ${DEFAULTS_PATH}:\n  ${problems.join('\n  ')}`);
 
-	return defaults?.create || null;
+  return defaults?.create || null;
 }
 
 // Control bytes (incl. ANSI escape openers): task names are untrusted and get
@@ -583,199 +558,184 @@ function createDefaults() {
 const CONTROL_BYTES = /[\u0000-\u001f\u007f]/g;
 
 function oneLine(text) {
-	return String(text || "")
-		.replace(CONTROL_BYTES, " ")
-		.replace(/\s+/g, " ")
-		.trim();
+  return String(text || '')
+    .replace(CONTROL_BYTES, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 // tk create parses its first non-option argument as the title; a task name
 // starting with '-' would be swallowed as a flag. Neutralize it.
 function safeTitle(name) {
-	const cleaned = oneLine(name).replace(/^-+\s*/, "");
+  const cleaned = oneLine(name).replace(/^-+\s*/, '');
 
-	return cleaned || "(untitled Asana task)";
+  return cleaned || '(untitled Asana task)';
 }
 
 function taskBrief(t) {
-	return {
-		gid: t.gid,
-		name: oneLine(t.name),
-		completed: Boolean(t.completed),
-		url: t.permalink_url || null,
-		due_on: t.due_on || null,
-		modified_at: t.modified_at || null,
-		projects: (t.memberships || []).flatMap((m) =>
-			m.project?.name ? [m.project.name] : [],
-		),
-	};
+  return {
+    gid: t.gid,
+    name: oneLine(t.name),
+    completed: Boolean(t.completed),
+    url: t.permalink_url || null,
+    due_on: t.due_on || null,
+    modified_at: t.modified_at || null,
+    projects: (t.memberships || []).flatMap((m) => (m.project?.name ? [m.project.name] : [])),
+  };
 }
 
 async function findDeveloperField(wsGid) {
-	try {
-		const res = await requestAll(`/workspaces/${wsGid}/custom_fields?opt_fields=name,resource_subtype`);
-		const field = (res.data || []).find((f) => f.name === "Developer");
+  try {
+    const res = await requestAll(`/workspaces/${wsGid}/custom_fields?opt_fields=name,resource_subtype`);
+    const field = (res.data || []).find((f) => f.name === 'Developer');
 
-		return field ? field.gid : null;
-	} catch {
-		return null;
-	}
+    return field ? field.gid : null;
+  } catch {
+    return null;
+  }
 }
 
 async function fetchMine() {
-	const me = await request("GET", "/users/me?opt_fields=name,email,workspaces.name");
-	const user = me.data;
-	const tasks = new Map();
-	const warnings = [];
+  const me = await request('GET', '/users/me?opt_fields=name,email,workspaces.name');
+  const user = me.data;
+  const tasks = new Map();
+  const warnings = [];
 
-	for (const ws of user.workspaces || []) {
-		const assigned = await requestAll(
-			`/tasks?assignee=me&workspace=${ws.gid}&completed_since=now&opt_fields=${MINE_TASK_FIELDS}`,
-		);
+  for (const ws of user.workspaces || []) {
+    const assigned = await requestAll(
+      `/tasks?assignee=me&workspace=${ws.gid}&completed_since=now&opt_fields=${MINE_TASK_FIELDS}`,
+    );
 
-		for (const t of assigned.data || []) tasks.set(t.gid, taskBrief(t));
+    for (const t of assigned.data || []) tasks.set(t.gid, taskBrief(t));
 
-		const devField = await findDeveloperField(ws.gid);
+    const devField = await findDeveloperField(ws.gid);
 
-		if (!devField) {
-			warnings.push(`workspace ${ws.name}: no "Developer" custom field visible; assignee-only`);
-			continue;
-		}
+    if (!devField) {
+      warnings.push(`workspace ${ws.name}: no "Developer" custom field visible; assignee-only`);
+      continue;
+    }
 
-		try {
-			const searched = await requestAll(
-				`/workspaces/${ws.gid}/tasks/search?completed=false&custom_fields.${devField}.value=${user.gid}&opt_fields=${MINE_TASK_FIELDS}`,
-			);
+    try {
+      const searched = await requestAll(
+        `/workspaces/${ws.gid}/tasks/search?completed=false&custom_fields.${devField}.value=${user.gid}&opt_fields=${MINE_TASK_FIELDS}`,
+      );
 
-			for (const t of searched.data || []) tasks.set(t.gid, taskBrief(t));
-		} catch (e) {
-			warnings.push(`workspace ${ws.name}: Developer-field search failed (${e.message})`);
-		}
-	}
+      for (const t of searched.data || []) tasks.set(t.gid, taskBrief(t));
+    } catch (e) {
+      warnings.push(`workspace ${ws.name}: Developer-field search failed (${e.message})`);
+    }
+  }
 
-	return {
-		fetched_at: new Date().toISOString(),
-		user: { gid: user.gid, name: user.name },
-		warnings,
-		tasks: [...tasks.values()],
-	};
+  return {
+    fetched_at: new Date().toISOString(),
+    user: { gid: user.gid, name: user.name },
+    warnings,
+    tasks: [...tasks.values()],
+  };
 }
 
 async function loadMine(refresh) {
-	if (!refresh) {
-		const cached = loadCache("mine.json", MINE_MAX_AGE_HOURS);
+  if (!refresh) {
+    const cached = loadCache('mine.json', MINE_MAX_AGE_HOURS);
 
-		if (cached) return cached;
-	}
+    if (cached) return cached;
+  }
 
-	try {
-		const fresh = await fetchMine();
+  try {
+    const fresh = await fetchMine();
 
-		saveCache("mine.json", fresh);
+    saveCache('mine.json', fresh);
 
-		return fresh;
-	} catch (e) {
-		// Degrade to any cache, however stale, with a warning — hard-fail only
-		// when there is nothing local to fall back to.
-		const stale = loadCache("mine.json", null);
+    return fresh;
+  } catch (e) {
+    // Degrade to any cache, however stale, with a warning — hard-fail only
+    // when there is nothing local to fall back to.
+    const stale = loadCache('mine.json', null);
 
-		if (!stale) throw e;
+    if (!stale) throw e;
 
-		process.stderr.write(
-			`warning: Asana unreachable (${oneLine(e.message)}); using cache from ${stale.fetched_at}\n`,
-		);
+    process.stderr.write(`warning: Asana unreachable (${oneLine(e.message)}); using cache from ${stale.fetched_at}\n`);
 
-		return stale;
-	}
+    return stale;
+  }
 }
 
 function branchMatchScore(branch, name) {
-	const tokens = oneLine(branch)
-		.toLowerCase()
-		.split(/[^a-z0-9]+/)
-		.filter((tok) => tok.length > 2);
+  const tokens = oneLine(branch)
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((tok) => tok.length > 2);
 
-	const haystack = name.toLowerCase();
-	let score = 0;
+  const haystack = name.toLowerCase();
+  let score = 0;
 
-	for (const tok of tokens) if (haystack.includes(tok)) score++;
+  for (const tok of tokens) if (haystack.includes(tok)) score++;
 
-	return score;
+  return score;
 }
 
 async function promptPick(candidates) {
-	process.stderr.write("Select Asana task(s) to link (e.g. 1 or 1,3):\n");
+  process.stderr.write('Select Asana task(s) to link (e.g. 1 or 1,3):\n');
 
-	candidates.forEach((c, i) => {
-		process.stderr.write(`  ${i + 1}. ${c.name}  [${c.projects.join(", ")}] ${c.url || c.gid}\n`);
-	});
+  candidates.forEach((c, i) => {
+    process.stderr.write(`  ${i + 1}. ${c.name}  [${c.projects.join(', ')}] ${c.url || c.gid}\n`);
+  });
 
-	const rl = readline.createInterface({ input: process.stdin, output: process.stderr });
-	const answer = await rl.question("> ");
+  const rl = readline.createInterface({ input: process.stdin, output: process.stderr });
+  const answer = await rl.question('> ');
 
-	rl.close();
+  rl.close();
 
-	const picks = answer
-		.split(/[,\s]+/)
-		.flatMap((n) => {
-			const idx = Number(n) - 1;
+  const picks = answer.split(/[,\s]+/).flatMap((n) => {
+    const idx = Number(n) - 1;
 
-			return candidates[idx] ? [candidates[idx]] : [];
-		});
+    return candidates[idx] ? [candidates[idx]] : [];
+  });
 
-	if (picks.length === 0) die("nothing selected");
+  if (picks.length === 0) die('nothing selected');
 
-	return picks;
+  return picks;
 }
 
 function createMirrorTicket(dir, task) {
-	const description = `${task.notes || ""}\n\nAsana: ${task.url}`.trim();
+  const description = `${task.notes || ''}\n\nAsana: ${task.url}`.trim();
 
-	const id = sh(
-		"tk",
-		[
-			"create",
-			safeTitle(task.name),
-			"-d",
-			description,
-			"--external-ref",
-			`asana-${task.gid}`,
-			"--tags",
-			"asana",
-		],
-		{ cwd: dirname(dir) },
-	);
+  const id = sh(
+    'tk',
+    ['create', safeTitle(task.name), '-d', description, '--external-ref', `asana-${task.gid}`, '--tags', 'asana'],
+    { cwd: dirname(dir) },
+  );
 
-	if (!id || !validTicketId(id)) die("tk create failed for mirror ticket");
+  if (!id || !validTicketId(id)) die('tk create failed for mirror ticket');
 
-	return id;
+  return id;
 }
 
 function readTicketFrontmatter(dir, id) {
-	if (!validTicketId(id)) return null;
+  if (!validTicketId(id)) return null;
 
-	const path = join(dir, `${id}.md`);
+  const path = join(dir, `${id}.md`);
 
-	if (!existsSync(path)) return null;
+  if (!existsSync(path)) return null;
 
-	const text = readFileSync(path, "utf8");
-	const m = text.match(/^---\n([\s\S]*?)\n---/);
+  const text = readFileSync(path, 'utf8');
+  const m = text.match(/^---\n([\s\S]*?)\n---/);
 
-	if (!m) return null;
+  if (!m) return null;
 
-	const fm = {};
+  const fm = {};
 
-	for (const line of m[1].split("\n")) {
-		const kv = line.match(/^([a-z-]+):\s*(.*)$/);
+  for (const line of m[1].split('\n')) {
+    const kv = line.match(/^([a-z-]+):\s*(.*)$/);
 
-		if (kv) fm[kv[1]] = kv[2];
-	}
+    if (kv) fm[kv[1]] = kv[2];
+  }
 
-	return fm;
+  return fm;
 }
 
 function bodyHash(text) {
-	return createHash("sha256").update(text).digest("hex").slice(0, 16);
+  return createHash('sha256').update(text).digest('hex').slice(0, 16);
 }
 
 // Rewrites the mirror body from Asana content — but never clobbers local
@@ -783,699 +743,648 @@ function bodyHash(text) {
 // (entry.body_hash), the file is left alone and a warning is emitted.
 // Returns the new body hash when written, null when skipped.
 function updateMirrorBody(dir, id, task, lastHash) {
-	if (!validTicketId(id)) return null;
+  if (!validTicketId(id)) return null;
 
-	const path = join(dir, `${id}.md`);
+  const path = join(dir, `${id}.md`);
 
-	if (!existsSync(path)) return null;
+  if (!existsSync(path)) return null;
 
-	const text = readFileSync(path, "utf8");
-	const m = text.match(/^(---\n[\s\S]*?\n---\n)/);
+  const text = readFileSync(path, 'utf8');
+  const m = text.match(/^(---\n[\s\S]*?\n---\n)/);
 
-	if (!m) return null;
+  if (!m) return null;
 
-	const currentBody = text.slice(m[1].length);
-	const body = `# ${oneLine(task.name)}\n\n${(task.notes || "").trim()}\n\nAsana: ${task.url}\n`;
+  const currentBody = text.slice(m[1].length);
+  const body = `# ${oneLine(task.name)}\n\n${(task.notes || '').trim()}\n\nAsana: ${task.url}\n`;
 
-	if (currentBody === body) return bodyHash(body);
+  if (currentBody === body) return bodyHash(body);
 
-	if (lastHash && bodyHash(currentBody) !== lastHash) {
-		process.stderr.write(
-			`warning: mirror ${id} has local edits; body not updated (Asana content changed — reconcile manually)\n`,
-		);
+  if (lastHash && bodyHash(currentBody) !== lastHash) {
+    process.stderr.write(
+      `warning: mirror ${id} has local edits; body not updated (Asana content changed — reconcile manually)\n`,
+    );
 
-		return null;
-	}
+    return null;
+  }
 
-	writeFileAtomic(path, m[1] + body);
+  writeFileAtomic(path, m[1] + body);
 
-	return bodyHash(body);
+  return bodyHash(body);
 }
 
 async function fetchTaskDetail(gid) {
-	if (!validGid(gid)) die(`invalid Asana gid: ${gid}`);
+  if (!validGid(gid)) die(`invalid Asana gid: ${gid}`);
 
-	const res = await apiRequest(
-		"GET",
-		`/tasks/${gid}?opt_fields=name,notes,completed,permalink_url,due_on,modified_at`,
-	);
+  const res = await apiRequest('GET', `/tasks/${gid}?opt_fields=name,notes,completed,permalink_url,due_on,modified_at`);
 
-	if (res.status === 404 || res.status === 410 || res.status === 403) {
-		return { gid, notFound: true, status: res.status };
-	}
+  if (res.status === 404 || res.status === 410 || res.status === 403) {
+    return { gid, notFound: true, status: res.status };
+  }
 
-	if (res.status >= 400) {
-		throw new Error(
-			`Asana API GET /tasks/${gid} -> HTTP ${res.status}\n${JSON.stringify(res.json, null, 2)}`,
-		);
-	}
+  if (res.status >= 400) {
+    throw new Error(`Asana API GET /tasks/${gid} -> HTTP ${res.status}\n${JSON.stringify(res.json, null, 2)}`);
+  }
 
-	const t = res.json.data;
+  const t = res.json.data;
 
-	return {
-		gid: t.gid,
-		name: oneLine(t.name),
-		notes: t.notes || "",
-		completed: Boolean(t.completed),
-		url: t.permalink_url || null,
-		due_on: t.due_on || null,
-		modified_at: t.modified_at || null,
-	};
+  return {
+    gid: t.gid,
+    name: oneLine(t.name),
+    notes: t.notes || '',
+    completed: Boolean(t.completed),
+    url: t.permalink_url || null,
+    due_on: t.due_on || null,
+    modified_at: t.modified_at || null,
+  };
 }
 
 async function confirm(question, autoYes) {
-	if (autoYes) return true;
+  if (autoYes) return true;
 
-	if (!process.stdin.isTTY) {
-		process.stderr.write(`skipped (non-interactive; pass --yes to allow): ${question}\n`);
+  if (!process.stdin.isTTY) {
+    process.stderr.write(`skipped (non-interactive; pass --yes to allow): ${question}\n`);
 
-		return false;
-	}
+    return false;
+  }
 
-	const rl = readline.createInterface({ input: process.stdin, output: process.stderr });
-	const answer = await rl.question(`${question} [y/N] `);
+  const rl = readline.createInterface({ input: process.stdin, output: process.stderr });
+  const answer = await rl.question(`${question} [y/N] `);
 
-	rl.close();
+  rl.close();
 
-	return /^y(es)?$/i.test(answer.trim());
+  return /^y(es)?$/i.test(answer.trim());
 }
 
 async function cmdMine(flags) {
-	const mine = await loadMine(flags.refresh);
+  const mine = await loadMine(flags.refresh);
 
-	output({
-		fetched_at: mine.fetched_at,
-		age_hours: Math.round(cacheAgeHours(mine) * 10) / 10,
-		user: mine.user,
-		warnings: mine.warnings,
-		tasks: mine.tasks.filter((t) => !t.completed),
-	});
+  output({
+    fetched_at: mine.fetched_at,
+    age_hours: Math.round(cacheAgeHours(mine) * 10) / 10,
+    user: mine.user,
+    warnings: mine.warnings,
+    tasks: mine.tasks.filter((t) => !t.completed),
+  });
 }
 
 async function cmdLink(flags) {
-	const dir = ticketsDirOrCreate();
-	const path = linkFilePath(dir);
-	const existing = loadLinkFile();
-	const data = existing?.data || { linked: [] };
-	const branch = flags.branch || currentBranch() || "unknown";
-	let picks;
+  const dir = ticketsDirOrCreate();
+  const path = linkFilePath(dir);
+  const existing = loadLinkFile();
+  const data = existing?.data || { linked: [] };
+  const branch = flags.branch || currentBranch() || 'unknown';
+  let picks;
 
-	if (flags.gids.length > 0) {
-		picks = [];
+  if (flags.gids.length > 0) {
+    picks = [];
 
-		for (const raw of flags.gids) {
-			const gid = extractGid(raw);
+    for (const raw of flags.gids) {
+      const gid = extractGid(raw);
 
-			picks.push(await fetchTaskDetail(gid));
-		}
-	} else {
-		const mine = await loadMine(flags.refresh);
-		const open = mine.tasks.filter((t) => !t.completed);
+      picks.push(await fetchTaskDetail(gid));
+    }
+  } else {
+    const mine = await loadMine(flags.refresh);
+    const open = mine.tasks.filter((t) => !t.completed);
 
-		const scored = open
-			.map((t) => ({ ...t, score: branchMatchScore(branch, t.name) }))
-			.sort(
-				(a, b) =>
-					b.score - a.score ||
-					String(b.modified_at || "").localeCompare(String(a.modified_at || "")) ||
-					a.gid.localeCompare(b.gid),
-			);
+    const scored = open
+      .map((t) => ({ ...t, score: branchMatchScore(branch, t.name) }))
+      .sort(
+        (a, b) =>
+          b.score - a.score ||
+          String(b.modified_at || '').localeCompare(String(a.modified_at || '')) ||
+          a.gid.localeCompare(b.gid),
+      );
 
-		const anyMatch = scored.some((t) => t.score > 0);
-		const candidates = (anyMatch ? scored.filter((t) => t.score > 0) : scored).slice(0, 15);
+    const anyMatch = scored.some((t) => t.score > 0);
+    const candidates = (anyMatch ? scored.filter((t) => t.score > 0) : scored).slice(0, 15);
 
-		if (candidates.length === 0) die("no open Asana tasks found; run: asana.mjs mine --refresh");
+    if (candidates.length === 0) die('no open Asana tasks found; run: asana.mjs mine --refresh');
 
-		if (!anyMatch) {
-			process.stderr.write(
-				`note: no task name matches branch "${branch}" — showing most recently modified tasks instead\n`,
-			);
-		}
+    if (!anyMatch) {
+      process.stderr.write(
+        `note: no task name matches branch "${branch}" — showing most recently modified tasks instead\n`,
+      );
+    }
 
-		if (!process.stdin.isTTY) {
-			output({ branch, candidates });
-			die(
-				"non-interactive: ask the user which task(s) to link, then re-run with --gid <gid> [--gid <gid>...]",
-				2,
-			);
-		}
+    if (!process.stdin.isTTY) {
+      output({ branch, candidates });
+      die('non-interactive: ask the user which task(s) to link, then re-run with --gid <gid> [--gid <gid>...]', 2);
+    }
 
-		picks = await promptPick(candidates);
-	}
+    picks = await promptPick(candidates);
+  }
 
-	for (const pick of picks) {
-		const already = data.linked.find((l) => l.gid === pick.gid);
+  for (const pick of picks) {
+    const already = data.linked.find((l) => l.gid === pick.gid);
 
-		if (already) {
-			process.stderr.write(`already linked: ${pick.name} (${pick.gid})\n`);
-			continue;
-		}
+    if (already) {
+      process.stderr.write(`already linked: ${pick.name} (${pick.gid})\n`);
+      continue;
+    }
 
-		const detail = pick.notes === undefined ? await fetchTaskDetail(pick.gid) : pick;
+    const detail = pick.notes === undefined ? await fetchTaskDetail(pick.gid) : pick;
 
-		if (detail.notFound) {
-			process.stderr.write(`skipped ${pick.gid}: not accessible (HTTP ${detail.status})\n`);
-			continue;
-		}
+    if (detail.notFound) {
+      process.stderr.write(`skipped ${pick.gid}: not accessible (HTTP ${detail.status})\n`);
+      continue;
+    }
 
-		const ticketId = createMirrorTicket(dir, detail);
-		const hash = updateMirrorBody(dir, ticketId, detail, null);
+    const ticketId = createMirrorTicket(dir, detail);
+    const hash = updateMirrorBody(dir, ticketId, detail, null);
 
-		data.linked.push({
-			gid: detail.gid,
-			url: detail.url,
-			name: detail.name,
-			branch,
-			ticket_id: ticketId,
-			linked_at: new Date().toISOString(),
-			synced_at: new Date().toISOString(),
-			completed: detail.completed,
-			body_hash: hash,
-		});
-		// persist after every pick so an interrupted loop never orphans a
-		// created tk ticket outside the link file
-		saveLinkFile(path, data);
-		saveTaskCache(detail.gid, detail);
-		process.stderr.write(`linked: ${detail.name} -> ${ticketId}\n`);
-	}
+    data.linked.push({
+      gid: detail.gid,
+      url: detail.url,
+      name: detail.name,
+      branch,
+      ticket_id: ticketId,
+      linked_at: new Date().toISOString(),
+      synced_at: new Date().toISOString(),
+      completed: detail.completed,
+      body_hash: hash,
+    });
+    // persist after every pick so an interrupted loop never orphans a
+    // created tk ticket outside the link file
+    saveLinkFile(path, data);
+    saveTaskCache(detail.gid, detail);
+    process.stderr.write(`linked: ${detail.name} -> ${ticketId}\n`);
+  }
 
-	saveLinkFile(path, data);
-	output(data);
+  saveLinkFile(path, data);
+  output(data);
 }
 
 async function cmdSync(flags) {
-	const link = loadLinkFile();
+  const link = loadLinkFile();
 
-	if (!link) die("no .tickets/.asana.json here; run: asana.mjs link");
+  if (!link) die('no .tickets/.asana.json here; run: asana.mjs link');
 
-	const { dir, path, data } = link;
+  const { dir, path, data } = link;
 
-	for (const entry of data.linked) {
-		if (!validGid(entry.gid) || !validTicketId(entry.ticket_id)) {
-			process.stderr.write(`warning: skipping malformed link entry: ${JSON.stringify(entry.gid)}\n`);
-			continue;
-		}
+  for (const entry of data.linked) {
+    if (!validGid(entry.gid) || !validTicketId(entry.ticket_id)) {
+      process.stderr.write(`warning: skipping malformed link entry: ${JSON.stringify(entry.gid)}\n`);
+      continue;
+    }
 
-		let task;
+    let task;
 
-		try {
-			task = await fetchTaskDetail(entry.gid);
-		} catch (e) {
-			process.stderr.write(`warning: sync failed for ${entry.gid}: ${oneLine(e.message)}\n`);
-			continue;
-		}
+    try {
+      task = await fetchTaskDetail(entry.gid);
+    } catch (e) {
+      process.stderr.write(`warning: sync failed for ${entry.gid}: ${oneLine(e.message)}\n`);
+      continue;
+    }
 
-		if (task.notFound) {
-			entry.orphaned = true;
-			entry.synced_at = new Date().toISOString();
-			process.stderr.write(
-				`warning: linked task ${entry.gid} is gone in Asana (HTTP ${task.status}); mirror ${entry.ticket_id} marked orphaned\n`,
-			);
-			saveLinkFile(path, data);
-			continue;
-		}
+    if (task.notFound) {
+      entry.orphaned = true;
+      entry.synced_at = new Date().toISOString();
+      process.stderr.write(
+        `warning: linked task ${entry.gid} is gone in Asana (HTTP ${task.status}); mirror ${entry.ticket_id} marked orphaned\n`,
+      );
+      saveLinkFile(path, data);
+      continue;
+    }
 
-		const wasCompleted = entry.completed === true;
+    const wasCompleted = entry.completed === true;
 
-		entry.orphaned = false;
-		entry.name = task.name;
-		entry.url = task.url;
-		entry.completed = task.completed;
-		entry.synced_at = new Date().toISOString();
+    entry.orphaned = false;
+    entry.name = task.name;
+    entry.url = task.url;
+    entry.completed = task.completed;
+    entry.synced_at = new Date().toISOString();
 
-		let fm = readTicketFrontmatter(dir, entry.ticket_id);
+    let fm = readTicketFrontmatter(dir, entry.ticket_id);
 
-		if (!fm) {
-			// mirror file vanished: recreate it from the fetched detail
-			const ticketId = createMirrorTicket(dir, task);
+    if (!fm) {
+      // mirror file vanished: recreate it from the fetched detail
+      const ticketId = createMirrorTicket(dir, task);
 
-			process.stderr.write(
-				`recreated missing mirror ${entry.ticket_id} -> ${ticketId}\n`,
-			);
-			entry.ticket_id = ticketId;
-			entry.body_hash = null;
-			fm = readTicketFrontmatter(dir, ticketId);
-		}
+      process.stderr.write(`recreated missing mirror ${entry.ticket_id} -> ${ticketId}\n`);
+      entry.ticket_id = ticketId;
+      entry.body_hash = null;
+      fm = readTicketFrontmatter(dir, ticketId);
+    }
 
-		const newHash = updateMirrorBody(dir, entry.ticket_id, task, entry.body_hash);
+    const newHash = updateMirrorBody(dir, entry.ticket_id, task, entry.body_hash);
 
-		if (newHash) entry.body_hash = newHash;
+    if (newHash) entry.body_hash = newHash;
 
-		saveTaskCache(entry.gid, task);
+    saveTaskCache(entry.gid, task);
 
-		let reopenedRemotely = false;
+    let reopenedRemotely = false;
 
-		if (task.completed && fm.status !== "closed") {
-			sh("tk", ["close", entry.ticket_id], { cwd: dirname(dir) });
-			process.stderr.write(`closed locally (completed in Asana): ${entry.ticket_id}\n`);
-		}
+    if (task.completed && fm.status !== 'closed') {
+      sh('tk', ['close', entry.ticket_id], { cwd: dirname(dir) });
+      process.stderr.write(`closed locally (completed in Asana): ${entry.ticket_id}\n`);
+    }
 
-		if (!task.completed && fm.status === "closed" && wasCompleted) {
-			// remote reopen after we saw it completed: Asana wins — reopen local
-			sh("tk", ["reopen", entry.ticket_id], { cwd: dirname(dir) });
-			reopenedRemotely = true;
-			process.stderr.write(
-				`reopened locally (reopened in Asana): ${entry.ticket_id}\n`,
-			);
-		}
+    if (!task.completed && fm.status === 'closed' && wasCompleted) {
+      // remote reopen after we saw it completed: Asana wins — reopen local
+      sh('tk', ['reopen', entry.ticket_id], { cwd: dirname(dir) });
+      reopenedRemotely = true;
+      process.stderr.write(`reopened locally (reopened in Asana): ${entry.ticket_id}\n`);
+    }
 
-		if (flags.push && !task.completed && fm.status === "closed" && !reopenedRemotely) {
-			const ok = await confirm(
-				`complete in Asana: "${task.name}" (${entry.gid})?`,
-				flags.yes,
-			);
+    if (flags.push && !task.completed && fm.status === 'closed' && !reopenedRemotely) {
+      const ok = await confirm(`complete in Asana: "${task.name}" (${entry.gid})?`, flags.yes);
 
-			if (ok) {
-				// re-fetch immediately before writing: someone may have changed the
-				// task between our sync read and the user's confirmation
-				const fresh = await fetchTaskDetail(entry.gid);
+      if (ok) {
+        // re-fetch immediately before writing: someone may have changed the
+        // task between our sync read and the user's confirmation
+        const fresh = await fetchTaskDetail(entry.gid);
 
-				if (fresh.notFound || fresh.modified_at !== task.modified_at) {
-					process.stderr.write(
-						`conflict: ${entry.gid} changed in Asana since sync read; not completing — re-run sync\n`,
-					);
-				} else {
-					await request("PUT", `/tasks/${entry.gid}`, { data: { completed: true } });
-					entry.completed = true;
-					process.stderr.write(`completed in Asana: ${entry.gid}\n`);
-				}
-			}
-		}
+        if (fresh.notFound || fresh.modified_at !== task.modified_at) {
+          process.stderr.write(
+            `conflict: ${entry.gid} changed in Asana since sync read; not completing — re-run sync\n`,
+          );
+        } else {
+          await request('PUT', `/tasks/${entry.gid}`, { data: { completed: true } });
+          entry.completed = true;
+          process.stderr.write(`completed in Asana: ${entry.gid}\n`);
+        }
+      }
+    }
 
-		saveLinkFile(path, data);
-	}
+    saveLinkFile(path, data);
+  }
 
-	saveLinkFile(path, data);
-	output(data);
+  saveLinkFile(path, data);
+  output(data);
 }
 
 function cmdUnlink(rest) {
-	const link = loadLinkFile();
+  const link = loadLinkFile();
 
-	if (!link) die("no .tickets/.asana.json here");
+  if (!link) die('no .tickets/.asana.json here');
 
-	const gid = extractGid(rest[0] || die("usage: asana unlink <url|gid>"));
-	const entry = link.data.linked.find((l) => l.gid === gid);
+  const gid = extractGid(rest[0] || die('usage: asana unlink <url|gid>'));
+  const entry = link.data.linked.find((l) => l.gid === gid);
 
-	if (!entry) die(`not linked: ${gid}`);
+  if (!entry) die(`not linked: ${gid}`);
 
-	link.data.linked = link.data.linked.filter((l) => l.gid !== gid);
-	link.data.unlinked = link.data.unlinked || [];
-	link.data.unlinked.push({ ...entry, unlinked_at: new Date().toISOString() });
+  link.data.linked = link.data.linked.filter((l) => l.gid !== gid);
+  link.data.unlinked = link.data.unlinked || [];
+  link.data.unlinked.push({ ...entry, unlinked_at: new Date().toISOString() });
 
-	if (validTicketId(entry.ticket_id)) {
-		sh(
-			"tk",
-			["add-note", entry.ticket_id, `Unlinked from Asana ${entry.gid} (${entry.url || "no url"})`],
-			{ cwd: dirname(link.dir) },
-		);
-	}
+  if (validTicketId(entry.ticket_id)) {
+    sh('tk', ['add-note', entry.ticket_id, `Unlinked from Asana ${entry.gid} (${entry.url || 'no url'})`], {
+      cwd: dirname(link.dir),
+    });
+  }
 
-	saveLinkFile(link.path, link.data);
-	process.stderr.write(`unlinked ${gid}; mirror ticket ${entry.ticket_id} kept\n`);
-	output(link.data);
+  saveLinkFile(link.path, link.data);
+  process.stderr.write(`unlinked ${gid}; mirror ticket ${entry.ticket_id} kept\n`);
+  output(link.data);
 }
 
 function cmdStatus() {
-	const link = loadLinkFile();
-	const mine = loadCache("mine.json", null);
+  const link = loadLinkFile();
+  const mine = loadCache('mine.json', null);
 
-	const summary = {
-		linked: [],
-		mine_cache_age_hours: mine ? Math.round(cacheAgeHours(mine) * 10) / 10 : null,
-	};
+  const summary = {
+    linked: [],
+    mine_cache_age_hours: mine ? Math.round(cacheAgeHours(mine) * 10) / 10 : null,
+  };
 
-	if (link) {
-		for (const entry of link.data.linked) {
-			const fm = validTicketId(entry.ticket_id)
-				? readTicketFrontmatter(link.dir, entry.ticket_id)
-				: null;
+  if (link) {
+    for (const entry of link.data.linked) {
+      const fm = validTicketId(entry.ticket_id) ? readTicketFrontmatter(link.dir, entry.ticket_id) : null;
 
-			summary.linked.push({
-				gid: entry.gid,
-				name: entry.name,
-				branch: entry.branch,
-				ticket_id: entry.ticket_id,
-				local_status: fm ? fm.status : "missing",
-				asana_completed: entry.completed,
-				orphaned: entry.orphaned === true,
-				synced_at: entry.synced_at,
-			});
-		}
+      summary.linked.push({
+        gid: entry.gid,
+        name: entry.name,
+        branch: entry.branch,
+        ticket_id: entry.ticket_id,
+        local_status: fm ? fm.status : 'missing',
+        asana_completed: entry.completed,
+        orphaned: entry.orphaned === true,
+        synced_at: entry.synced_at,
+      });
+    }
 
-		summary.unlinked_count = (link.data.unlinked || []).length;
-	}
+    summary.unlinked_count = (link.data.unlinked || []).length;
+  }
 
-	output(summary);
+  output(summary);
 }
 
 function upsertByGid(list, entry) {
-	return [...(list || []).filter((e) => e.gid !== entry.gid), entry];
+  return [...(list || []).filter((e) => e.gid !== entry.gid), entry];
 }
 
 function namedGidEntry(gid, name) {
-	const entry = { gid };
+  const entry = { gid };
 
-	if (name) entry.name = name;
+  if (name) entry.name = name;
 
-	return entry;
+  return entry;
 }
 
 function setDefault(create, key, args, flags) {
-	switch (key) {
-		case "assignee": {
-			const val = args[0];
+  switch (key) {
+    case 'assignee': {
+      const val = args[0];
 
-			if (val !== "me" && !validGid(val))
-				die("usage: asana defaults set assignee <me|user-gid>");
-			create.assignee = val;
-			break;
-		}
+      if (val !== 'me' && !validGid(val)) die('usage: asana defaults set assignee <me|user-gid>');
+      create.assignee = val;
+      break;
+    }
 
-		case "workspace": {
-			if (!validGid(args[0]))
-				die("usage: asana defaults set workspace <gid> [--name n]");
-			create.workspace = namedGidEntry(args[0], flags.name);
-			break;
-		}
+    case 'workspace': {
+      if (!validGid(args[0])) die('usage: asana defaults set workspace <gid> [--name n]');
+      create.workspace = namedGidEntry(args[0], flags.name);
+      break;
+    }
 
-		case "project": {
-			if (!validGid(args[0]))
-				die("usage: asana defaults set project <gid> [--name n]");
-			create.projects = [namedGidEntry(args[0], flags.name)];
-			break;
-		}
+    case 'project': {
+      if (!validGid(args[0])) die('usage: asana defaults set project <gid> [--name n]');
+      create.projects = [namedGidEntry(args[0], flags.name)];
+      break;
+    }
 
-		case "tag": {
-			if (!validGid(args[0]))
-				die("usage: asana defaults set tag <gid> [--name n]");
-			create.tags = upsertByGid(
-				create.tags,
-				namedGidEntry(args[0], flags.name),
-			);
-			break;
-		}
+    case 'tag': {
+      if (!validGid(args[0])) die('usage: asana defaults set tag <gid> [--name n]');
+      create.tags = upsertByGid(create.tags, namedGidEntry(args[0], flags.name));
+      break;
+    }
 
-		case "custom-field": {
-			const [gid, value] = args;
+    case 'custom-field': {
+      const [gid, value] = args;
 
-			if (!validGid(gid) || value == null)
-				die(
-					"usage: asana defaults set custom-field <field-gid> <value-gid|value> " +
-						"[--name n] [--value-name v] [--raw]",
-				);
+      if (!validGid(gid) || value == null)
+        die(
+          'usage: asana defaults set custom-field <field-gid> <value-gid|value> ' +
+            '[--name n] [--value-name v] [--raw]',
+        );
 
-			const entry = namedGidEntry(gid, flags.name);
+      const entry = namedGidEntry(gid, flags.name);
 
-			// Enum options are gids; --raw forces a literal value for number/text
-			// fields whose value happens to look like a gid.
-			if (!flags.raw && validGid(value)) entry.value_gid = value;
-			else entry.value = value;
+      // Enum options are gids; --raw forces a literal value for number/text
+      // fields whose value happens to look like a gid.
+      if (!flags.raw && validGid(value)) entry.value_gid = value;
+      else entry.value = value;
 
-			if (flags.valueName) entry.value_name = flags.valueName;
-			create.custom_fields = upsertByGid(create.custom_fields, entry);
-			break;
-		}
+      if (flags.valueName) entry.value_name = flags.valueName;
+      create.custom_fields = upsertByGid(create.custom_fields, entry);
+      break;
+    }
 
-		default:
-			die(
-				"usage: asana defaults set <assignee|workspace|project|tag|custom-field> ...",
-			);
-	}
+    default:
+      die('usage: asana defaults set <assignee|workspace|project|tag|custom-field> ...');
+  }
 }
 
 function unsetDefault(create, key, gid) {
-	switch (key) {
-		case "assignee":
-		case "workspace": {
-			delete create[key];
-			break;
-		}
+  switch (key) {
+    case 'assignee':
+    case 'workspace': {
+      delete create[key];
+      break;
+    }
 
-		case "project": {
-			delete create.projects;
-			break;
-		}
+    case 'project': {
+      delete create.projects;
+      break;
+    }
 
-		case "tag":
-		case "custom-field": {
-			if (!validGid(gid)) die(`usage: asana defaults unset ${key} <gid>`);
+    case 'tag':
+    case 'custom-field': {
+      if (!validGid(gid)) die(`usage: asana defaults unset ${key} <gid>`);
 
-			const listKey = key === "tag" ? "tags" : "custom_fields";
+      const listKey = key === 'tag' ? 'tags' : 'custom_fields';
 
-			create[listKey] = (create[listKey] || []).filter((e) => e.gid !== gid);
-			break;
-		}
+      create[listKey] = (create[listKey] || []).filter((e) => e.gid !== gid);
+      break;
+    }
 
-		default:
-			die(
-				"usage: asana defaults unset <assignee|workspace|project|tag|custom-field> [gid]",
-			);
-	}
+    default:
+      die('usage: asana defaults unset <assignee|workspace|project|tag|custom-field> [gid]');
+  }
 }
 
 function cmdDefaults(flags, rest) {
-	const [action, key, ...args] = rest;
+  const [action, key, ...args] = rest;
 
-	if (!action || action === "list") {
-		const defaults = loadDefaults();
+  if (!action || action === 'list') {
+    const defaults = loadDefaults();
 
-		output({
-			path: DEFAULTS_PATH,
-			defaults,
-			problems: defaultsProblems(defaults),
-		});
+    output({
+      path: DEFAULTS_PATH,
+      defaults,
+      problems: defaultsProblems(defaults),
+    });
 
-		return;
-	}
+    return;
+  }
 
-	const defaults = loadDefaults() || {};
+  const defaults = loadDefaults() || {};
 
-	defaults.create = defaults.create || {};
+  defaults.create = defaults.create || {};
 
-	if (action === "set") setDefault(defaults.create, key, args, flags);
-	else if (action === "unset") unsetDefault(defaults.create, key, args[0]);
-	else die("usage: asana defaults [list | set <key> ... | unset <key> [gid]]");
+  if (action === 'set') setDefault(defaults.create, key, args, flags);
+  else if (action === 'unset') unsetDefault(defaults.create, key, args[0]);
+  else die('usage: asana defaults [list | set <key> ... | unset <key> [gid]]');
 
-	const problems = defaultsProblems(defaults);
+  const problems = defaultsProblems(defaults);
 
-	if (problems.length)
-		die(`refusing to save invalid defaults:\n  ${problems.join("\n  ")}`);
+  if (problems.length) die(`refusing to save invalid defaults:\n  ${problems.join('\n  ')}`);
 
-	saveDefaults(defaults);
-	output({ path: DEFAULTS_PATH, defaults });
+  saveDefaults(defaults);
+  output({ path: DEFAULTS_PATH, defaults });
 }
 
 const CREATE_USAGE =
-	"usage: asana create <name> [--notes n] [--parent gid] [--project gid] " +
-	"[--assignee me|gid] [--json extra] [--no-defaults]";
+  'usage: asana create <name> [--notes n] [--parent gid] [--project gid] ' +
+  '[--assignee me|gid] [--json extra] [--no-defaults]';
 
 async function cmdCreate(flags, rest) {
-	const name = rest.join(" ").trim();
+  const name = rest.join(' ').trim();
 
-	if (!name) die(CREATE_USAGE);
+  if (!name) die(CREATE_USAGE);
 
-	const defs = flags.noDefaults ? null : createDefaults();
-	const data = { name };
+  const defs = flags.noDefaults ? null : createDefaults();
+  const data = { name };
 
-	if (defs?.assignee) data.assignee = defs.assignee;
+  if (defs?.assignee) data.assignee = defs.assignee;
 
-	if (defs?.tags?.length) data.tags = defs.tags.map((t) => t.gid);
+  if (defs?.tags?.length) data.tags = defs.tags.map((t) => t.gid);
 
-	if (defs?.custom_fields?.length) {
-		data.custom_fields = {};
+  if (defs?.custom_fields?.length) {
+    data.custom_fields = {};
 
-		for (const f of defs.custom_fields)
-			data.custom_fields[f.gid] = f.value_gid ?? f.value;
-	}
+    for (const f of defs.custom_fields) data.custom_fields[f.gid] = f.value_gid ?? f.value;
+  }
 
-	// A task needs a home: parent (subtask), project, or bare workspace.
-	// Explicit flags win over defaults; a subtask ignores project defaults
-	// because it lives under its parent.
-	if (flags.parent) data.parent = extractGid(flags.parent);
-	else if (flags.project) data.projects = [extractGid(flags.project)];
-	else if (defs?.projects?.length)
-		data.projects = defs.projects.map((p) => p.gid);
-	else if (defs?.workspace) data.workspace = defs.workspace.gid;
-	else
-		die(
-			"create needs --parent, --project, or a project/workspace default " +
-				"(asana defaults set project <gid>)",
-		);
+  // A task needs a home: parent (subtask), project, or bare workspace.
+  // Explicit flags win over defaults; a subtask ignores project defaults
+  // because it lives under its parent.
+  if (flags.parent) data.parent = extractGid(flags.parent);
+  else if (flags.project) data.projects = [extractGid(flags.project)];
+  else if (defs?.projects?.length) data.projects = defs.projects.map((p) => p.gid);
+  else if (defs?.workspace) data.workspace = defs.workspace.gid;
+  else die('create needs --parent, --project, or a project/workspace default ' + '(asana defaults set project <gid>)');
 
-	if (flags.notes) data.notes = flags.notes;
+  if (flags.notes) data.notes = flags.notes;
 
-	if (flags.assignee) {
-		if (flags.assignee !== "me" && !validGid(flags.assignee))
-			die("--assignee must be 'me' or a user gid");
-		data.assignee = flags.assignee;
-	}
+  if (flags.assignee) {
+    if (flags.assignee !== 'me' && !validGid(flags.assignee)) die("--assignee must be 'me' or a user gid");
+    data.assignee = flags.assignee;
+  }
 
-	if (flags.json) {
-		let extra;
+  if (flags.json) {
+    let extra;
 
-		try {
-			extra = JSON.parse(flags.json);
-		} catch {
-			die("--json must be valid JSON");
-		}
+    try {
+      extra = JSON.parse(flags.json);
+    } catch {
+      die('--json must be valid JSON');
+    }
 
-		Object.assign(data, extra);
-	}
+    Object.assign(data, extra);
+  }
 
-	output(await request("POST", "/tasks", { data }));
+  output(await request('POST', '/tasks', { data }));
 }
 
 // ---------- commands ----------
 
 const TASK_FIELDS =
-	"name,notes,completed,assignee.name,due_on,permalink_url,parent.name," +
-	"num_subtasks,memberships.project.name,created_at,modified_at";
+  'name,notes,completed,assignee.name,due_on,permalink_url,parent.name,' +
+  'num_subtasks,memberships.project.name,created_at,modified_at';
 
-const SUBTASK_FIELDS = "name,completed,assignee.name,due_on,permalink_url";
+const SUBTASK_FIELDS = 'name,completed,assignee.name,due_on,permalink_url';
 
 async function main() {
-	const [cmd, ...argv] = process.argv.slice(2);
-	const { flags, rest } = parseFlags(argv);
+  const [cmd, ...argv] = process.argv.slice(2);
+  const { flags, rest } = parseFlags(argv);
 
-	switch (cmd) {
-		case "me": {
-			output(
-				await request("GET", "/users/me?opt_fields=name,email,workspaces.name"),
-			);
-			break;
-		}
+  switch (cmd) {
+    case 'me': {
+      output(await request('GET', '/users/me?opt_fields=name,email,workspaces.name'));
+      break;
+    }
 
-		case "task": {
-			const gid = extractGid(rest[0] || die("usage: asana task <url|gid>"));
-			const fields = flags.fields || TASK_FIELDS;
-			output(await request("GET", `/tasks/${gid}?opt_fields=${fields}`));
-			break;
-		}
+    case 'task': {
+      const gid = extractGid(rest[0] || die('usage: asana task <url|gid>'));
+      const fields = flags.fields || TASK_FIELDS;
+      output(await request('GET', `/tasks/${gid}?opt_fields=${fields}`));
+      break;
+    }
 
-		case "subtasks": {
-			const gid = extractGid(rest[0] || die("usage: asana subtasks <url|gid>"));
-			const fields = flags.fields || SUBTASK_FIELDS;
-			output(await requestAll(`/tasks/${gid}/subtasks?opt_fields=${fields}`));
-			break;
-		}
+    case 'subtasks': {
+      const gid = extractGid(rest[0] || die('usage: asana subtasks <url|gid>'));
+      const fields = flags.fields || SUBTASK_FIELDS;
+      output(await requestAll(`/tasks/${gid}/subtasks?opt_fields=${fields}`));
+      break;
+    }
 
-		case "stories": {
-			const gid = extractGid(rest[0] || die("usage: asana stories <url|gid>"));
+    case 'stories': {
+      const gid = extractGid(rest[0] || die('usage: asana stories <url|gid>'));
 
-			const fields =
-				flags.fields || "type,text,created_by.name,created_at,resource_subtype";
+      const fields = flags.fields || 'type,text,created_by.name,created_at,resource_subtype';
 
-			output(await requestAll(`/tasks/${gid}/stories?opt_fields=${fields}`));
-			break;
-		}
+      output(await requestAll(`/tasks/${gid}/stories?opt_fields=${fields}`));
+      break;
+    }
 
-		case "comment": {
-			const gid = extractGid(
-				rest[0] || die("usage: asana comment <url|gid> <text>"),
-			);
+    case 'comment': {
+      const gid = extractGid(rest[0] || die('usage: asana comment <url|gid> <text>'));
 
-			const text = rest.slice(1).join(" ");
+      const text = rest.slice(1).join(' ');
 
-			if (!text) die("usage: asana comment <url|gid> <text>");
-			output(
-				await request("POST", `/tasks/${gid}/stories`, { data: { text } }),
-			);
-			break;
-		}
+      if (!text) die('usage: asana comment <url|gid> <text>');
+      output(await request('POST', `/tasks/${gid}/stories`, { data: { text } }));
+      break;
+    }
 
-		case "update": {
-			const gid = extractGid(
-				rest[0] || die("usage: asana update <url|gid> <json>"),
-			);
+    case 'update': {
+      const gid = extractGid(rest[0] || die('usage: asana update <url|gid> <json>'));
 
-			let data;
+      let data;
 
-			try {
-				data = JSON.parse(rest[1]);
-			} catch {
-				die("usage: asana update <url|gid> '{\"completed\":true,...}'");
-			}
+      try {
+        data = JSON.parse(rest[1]);
+      } catch {
+        die('usage: asana update <url|gid> \'{"completed":true,...}\'');
+      }
 
-			output(await request("PUT", `/tasks/${gid}`, { data }));
-			break;
-		}
+      output(await request('PUT', `/tasks/${gid}`, { data }));
+      break;
+    }
 
-		case "complete": {
-			const gid = extractGid(
-				rest[0] || die("usage: asana complete <url|gid> [true|false]"),
-			);
+    case 'complete': {
+      const gid = extractGid(rest[0] || die('usage: asana complete <url|gid> [true|false]'));
 
-			const val = rest[1] !== "false";
-			output(
-				await request("PUT", `/tasks/${gid}`, { data: { completed: val } }),
-			);
-			break;
-		}
+      const val = rest[1] !== 'false';
+      output(await request('PUT', `/tasks/${gid}`, { data: { completed: val } }));
+      break;
+    }
 
-		case "api": {
-			const method = (rest[0] || "").toUpperCase();
-			const path = rest[1];
+    case 'api': {
+      const method = (rest[0] || '').toUpperCase();
+      const path = rest[1];
 
-			if (!/^(GET|POST|PUT|DELETE)$/.test(method) || !path?.startsWith("/"))
-				die("usage: asana api <GET|POST|PUT|DELETE> </path> [json-body]");
-			let body;
+      if (!/^(GET|POST|PUT|DELETE)$/.test(method) || !path?.startsWith('/'))
+        die('usage: asana api <GET|POST|PUT|DELETE> </path> [json-body]');
+      let body;
 
-			if (rest[2]) {
-				try {
-					body = JSON.parse(rest[2]);
-				} catch {
-					die("body must be valid JSON");
-				}
-			}
+      if (rest[2]) {
+        try {
+          body = JSON.parse(rest[2]);
+        } catch {
+          die('body must be valid JSON');
+        }
+      }
 
-			if (method === "GET" && flags.all) output(await requestAll(path));
-			else output(await request(method, path, body));
-			break;
-		}
+      if (method === 'GET' && flags.all) output(await requestAll(path));
+      else output(await request(method, path, body));
+      break;
+    }
 
-		case "create": {
-			await cmdCreate(flags, rest);
-			break;
-		}
+    case 'create': {
+      await cmdCreate(flags, rest);
+      break;
+    }
 
-		case "defaults": {
-			cmdDefaults(flags, rest);
-			break;
-		}
+    case 'defaults': {
+      cmdDefaults(flags, rest);
+      break;
+    }
 
-		case "mine": {
-			await cmdMine(flags);
-			break;
-		}
+    case 'mine': {
+      await cmdMine(flags);
+      break;
+    }
 
-		case "link": {
-			await cmdLink(flags);
-			break;
-		}
+    case 'link': {
+      await cmdLink(flags);
+      break;
+    }
 
-		case "sync": {
-			await cmdSync(flags);
-			break;
-		}
+    case 'sync': {
+      await cmdSync(flags);
+      break;
+    }
 
-		case "unlink": {
-			cmdUnlink(rest);
-			break;
-		}
+    case 'unlink': {
+      cmdUnlink(rest);
+      break;
+    }
 
-		case "status": {
-			cmdStatus();
-			break;
-		}
+    case 'status': {
+      cmdStatus();
+      break;
+    }
 
-		default:
-			die(
-				`unknown command: ${cmd || "(none)"}\n` +
-					"commands: me | task | subtasks | stories | comment | update | complete | api | create | defaults\n" +
-					"workflow: mine | link | sync | unlink | status",
-			);
-	}
+    default:
+      die(
+        `unknown command: ${cmd || '(none)'}\n` +
+          'commands: me | task | subtasks | stories | comment | update | complete | api | create | defaults\n' +
+          'workflow: mine | link | sync | unlink | status',
+      );
+  }
 }
 
 main().catch((e) => die(e.message));

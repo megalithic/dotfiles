@@ -26,41 +26,44 @@
  * must validate the pid (kill -0) to ignore crashed leftovers.
  */
 
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { execSync } from "node:child_process";
-import fs from "node:fs";
-import path from "node:path";
+import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
+import { execSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const xdgStateHome =
-  process.env.XDG_STATE_HOME ||
-  (process.env.HOME ? path.join(process.env.HOME, ".local", "state") : "/tmp");
-const PI_STATE_DIR = process.env.PI_STATE_DIR || path.join(xdgStateHome, "pi");
-const STATUS_DIR = path.join(PI_STATE_DIR, "status");
+  process.env.XDG_STATE_HOME || (process.env.HOME ? path.join(process.env.HOME, '.local', 'state') : '/tmp');
 
-type AgentState = "idle" | "working" | "asking" | "error" | "done";
+const PI_STATE_DIR = process.env.PI_STATE_DIR || path.join(xdgStateHome, 'pi');
+
+const STATUS_DIR = path.join(PI_STATE_DIR, 'status');
+
+type AgentState = 'idle' | 'working' | 'asking' | 'error' | 'done';
 
 let statusPath: string | null = null;
+
 let session: string | null = null;
+
 let sawError = false;
 
 /** Detect tmux session/window for this pane. Returns null outside tmux. */
 const detectTmux = (): { session: string; window: string } | null => {
   if (!process.env.TMUX) return null;
+
   try {
-    const target = process.env.TMUX_PANE
-      ? `-t '${process.env.TMUX_PANE}' `
-      : "";
+    const target = process.env.TMUX_PANE ? `-t '${process.env.TMUX_PANE}' ` : '';
+
     const fmt = (f: string): string =>
       execSync(`tmux display-message -p ${target}'${f}'`, {
-        encoding: "utf-8",
+        encoding: 'utf-8',
         timeout: 2000,
       }).trim();
-    const sess = fmt("#{session_name}");
-    const winName = fmt("#{window_name}");
-    const window =
-      winName && /^[a-zA-Z0-9_-]+$/.test(winName)
-        ? winName
-        : fmt("#{window_index}");
+
+    const sess = fmt('#{session_name}');
+    const winName = fmt('#{window_name}');
+
+    const window = winName && /^[a-zA-Z0-9_-]+$/.test(winName) ? winName : fmt('#{window_index}');
+
     return sess && window ? { session: sess, window } : null;
   } catch {
     return null;
@@ -69,6 +72,7 @@ const detectTmux = (): { session: string; window: string } | null => {
 
 const writeState = (state: AgentState): void => {
   if (!statusPath || !session) return;
+
   try {
     fs.mkdirSync(STATUS_DIR, { recursive: true });
     fs.writeFileSync(statusPath, `${state} ${process.pid} ${session}\n`);
@@ -79,6 +83,7 @@ const writeState = (state: AgentState): void => {
 
 const removeStatus = (): void => {
   if (!statusPath) return;
+
   try {
     fs.unlinkSync(statusPath);
   } catch {
@@ -87,7 +92,7 @@ const removeStatus = (): void => {
 };
 
 const isAskTool = (toolName: unknown): boolean =>
-  typeof toolName === "string" && toolName.includes("ask_user_question");
+  typeof toolName === 'string' && toolName.includes('ask_user_question');
 
 /**
  * True when the last assistant message reads as a question to the user:
@@ -96,71 +101,67 @@ const isAskTool = (toolName: unknown): boolean =>
  */
 const endsWithQuestion = (messages: unknown): boolean => {
   if (!Array.isArray(messages)) return false;
+
   for (let i = messages.length - 1; i >= 0; i--) {
     const m = messages[i] as {
       role?: string;
       content?: unknown;
     };
-    if (m?.role !== "assistant") continue;
-    let text = "";
-    if (typeof m.content === "string") {
+
+    if (m?.role !== 'assistant') continue;
+    let text = '';
+
+    if (typeof m.content === 'string') {
       text = m.content;
     } else if (Array.isArray(m.content)) {
       text = m.content
         .filter(
           (c): c is { type: string; text: string } =>
-            (c as { type?: string })?.type === "text" &&
-            typeof (c as { text?: unknown }).text === "string",
+            (c as { type?: string })?.type === 'text' && typeof (c as { text?: unknown }).text === 'string',
         )
         .map((c) => c.text)
-        .join("\n");
+        .join('\n');
     }
+
     return /\?[\s*_`"')\]]*$/.test(text.trimEnd());
   }
+
   return false;
 };
 
 export default function (pi: ExtensionAPI): void {
-  pi.on("session_start", (_event, ctx) => {
+  pi.on('session_start', (_event, ctx) => {
     if (!ctx.hasUI) return;
     const tmux = detectTmux();
+
     if (!tmux) return;
     session = tmux.session;
-    statusPath = path.join(
-      STATUS_DIR,
-      `pi-${tmux.session}-${tmux.window}.status`,
-    );
-    writeState("idle");
+    statusPath = path.join(STATUS_DIR, `pi-${tmux.session}-${tmux.window}.status`);
+    writeState('idle');
   });
 
-  pi.on("input", () => writeState("working"));
+  pi.on('input', () => writeState('working'));
 
-  pi.on("agent_start", () => {
+  pi.on('agent_start', () => {
     sawError = false;
-    writeState("working");
+    writeState('working');
   });
 
-  pi.on("tool_call", (event) => {
-    if (isAskTool(event?.toolName)) writeState("asking");
+  pi.on('tool_call', (event) => {
+    if (isAskTool(event?.toolName)) writeState('asking');
   });
 
-  pi.on("tool_execution_end", (event) => {
-    if (isAskTool(event?.toolName)) writeState("working");
+  pi.on('tool_execution_end', (event) => {
+    if (isAskTool(event?.toolName)) writeState('working');
   });
 
-  pi.on("error", () => {
+  pi.on('error', () => {
     sawError = true;
   });
 
-  pi.on("agent_end", (event) =>
-    writeState(
-      sawError
-        ? "error"
-        : endsWithQuestion((event as { messages?: unknown })?.messages)
-          ? "asking"
-          : "done",
-    ),
+  pi.on('agent_end', (event) =>
+    writeState(sawError ? 'error' : endsWithQuestion((event as { messages?: unknown })?.messages) ? 'asking' : 'done'),
   );
 
-  pi.on("session_shutdown", () => removeStatus());
+  pi.on('session_shutdown', () => removeStatus());
 }

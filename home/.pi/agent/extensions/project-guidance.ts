@@ -10,18 +10,18 @@
  * Disable with PI_PROJECT_GUIDANCE_DISABLE=1.
  */
 
-import fs from "node:fs";
-import path from "node:path";
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import fs from 'node:fs';
+import path from 'node:path';
+import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
 
 export default function (pi: ExtensionAPI) {
-  pi.on("before_agent_start", (event) => {
-    if (process.env.PI_PROJECT_GUIDANCE_DISABLE === "1") return;
-    const file = path.join(event.systemPromptOptions.cwd, ".pi", "AGENTS.md");
+  pi.on('before_agent_start', (event) => {
+    if (process.env.PI_PROJECT_GUIDANCE_DISABLE === '1') return;
+    const file = path.join(event.systemPromptOptions.cwd, '.pi', 'AGENTS.md');
     let content: string;
 
     try {
-      content = fs.readFileSync(file, "utf8");
+      content = fs.readFileSync(file, 'utf8');
     } catch {
       return; // absent or unreadable: nothing to add
     }

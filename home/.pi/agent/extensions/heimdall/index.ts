@@ -14,10 +14,10 @@
  * never crash Heimdall or Pi startup.
  */
 
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { registerPlannotatorTools } from "./plannotator.ts";
+import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
+import { registerPlannotatorTools } from './plannotator.ts';
 
 // @lat: [[pi-coding-agent#Session and routing extensions]]
 export default function (pi: ExtensionAPI) {
- registerPlannotatorTools(pi);
+  registerPlannotatorTools(pi);
 }

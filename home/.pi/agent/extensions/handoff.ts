@@ -14,20 +14,13 @@
  * a draft in pi's editor. The user can open the draft in an external editor.
  */
 
-import { mkdirSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
-import { basename, join } from "node:path";
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { basename, join } from 'node:path';
 
-import type { Message } from "@earendil-works/pi-ai";
-import type {
-	ExtensionAPI,
-	SessionEntry,
-} from "@earendil-works/pi-coding-agent";
-import {
-	BorderedLoader,
-	convertToLlm,
-	serializeConversation,
-} from "@earendil-works/pi-coding-agent";
+import type { Message } from '@earendil-works/pi-ai';
+import type { ExtensionAPI, SessionEntry } from '@earendil-works/pi-coding-agent';
+import { BorderedLoader, convertToLlm, serializeConversation } from '@earendil-works/pi-coding-agent';
 
 const SYSTEM_PROMPT = `You are a context transfer assistant. Given a conversation history and the user's goal for a new thread, generate a focused prompt that:
 
@@ -52,203 +45,186 @@ Files involved:
 [Clear description of what to do next based on user's goal]`;
 
 export default function (pi: ExtensionAPI) {
-	pi.registerCommand("handoff", {
-		description: "Transfer context to a new focused session",
-		handler: async (args, ctx) => {
-			if (!ctx.hasUI) {
-				ctx.ui.notify("handoff requires interactive mode", "error");
+  pi.registerCommand('handoff', {
+    description: 'Transfer context to a new focused session',
+    handler: async (args, ctx) => {
+      if (!ctx.hasUI) {
+        ctx.ui.notify('handoff requires interactive mode', 'error');
 
-				return;
-			}
+        return;
+      }
 
-			if (!ctx.model) {
-				ctx.ui.notify("No model selected", "error");
+      if (!ctx.model) {
+        ctx.ui.notify('No model selected', 'error');
 
-				return;
-			}
+        return;
+      }
 
-			const goal = args.trim();
+      const goal = args.trim();
 
-			if (!goal) {
-				ctx.ui.notify("Usage: /handoff <goal for new thread>", "error");
+      if (!goal) {
+        ctx.ui.notify('Usage: /handoff <goal for new thread>', 'error');
 
-				return;
-			}
+        return;
+      }
 
-			// Gather conversation context from current branch
-			const branch = ctx.sessionManager.getBranch();
+      // Gather conversation context from current branch
+      const branch = ctx.sessionManager.getBranch();
 
-			const messages = branch
-				.filter(
-					(entry): entry is SessionEntry & { type: "message" } =>
-						entry.type === "message",
-				)
-				.map((entry) => entry.message);
+      const messages = branch
+        .filter((entry): entry is SessionEntry & { type: 'message' } => entry.type === 'message')
+        .map((entry) => entry.message);
 
-			if (messages.length === 0) {
-				ctx.ui.notify("No conversation to hand off", "error");
+      if (messages.length === 0) {
+        ctx.ui.notify('No conversation to hand off', 'error');
 
-				return;
-			}
+        return;
+      }
 
-			// Convert to LLM format and serialize
-			const llmMessages = convertToLlm(messages);
-			const conversationText = serializeConversation(llmMessages);
-			const currentSessionFile = ctx.sessionManager.getSessionFile();
+      // Convert to LLM format and serialize
+      const llmMessages = convertToLlm(messages);
+      const conversationText = serializeConversation(llmMessages);
+      const currentSessionFile = ctx.sessionManager.getSessionFile();
 
-			// Build the chain of parent sessions
-			const sessionChain: string[] = currentSessionFile
-				? [currentSessionFile]
-				: [];
+      // Build the chain of parent sessions
+      const sessionChain: string[] = currentSessionFile ? [currentSessionFile] : [];
 
-			const header = ctx.sessionManager.getHeader();
-			let parentSession = header?.parentSession;
+      const header = ctx.sessionManager.getHeader();
+      let parentSession = header?.parentSession;
 
-			while (parentSession) {
-				sessionChain.push(parentSession);
+      while (parentSession) {
+        sessionChain.push(parentSession);
 
-				// Try to read parent's header to find its parent
-				try {
-					const { stdout } = await pi.exec("head", ["-1", parentSession]);
-					const parentHeader = JSON.parse(stdout);
-					parentSession = parentHeader.parentSession;
-				} catch {
-					break;
-				}
-			}
+        // Try to read parent's header to find its parent
+        try {
+          const { stdout } = await pi.exec('head', ['-1', parentSession]);
+          const parentHeader = JSON.parse(stdout);
+          parentSession = parentHeader.parentSession;
+        } catch {
+          break;
+        }
+      }
 
-			// Generate the handoff prompt with loader UI
-			const result = await ctx.ui.custom<{
-				text: string | null;
-				error?: string;
-			}>((tui, theme, _kb, done) => {
-				const loader = new BorderedLoader(
-					tui,
-					theme,
-					`Generating handoff prompt...`,
-				);
+      // Generate the handoff prompt with loader UI
+      const result = await ctx.ui.custom<{
+        text: string | null;
+        error?: string;
+      }>((tui, theme, _kb, done) => {
+        const loader = new BorderedLoader(tui, theme, `Generating handoff prompt...`);
 
-				loader.onAbort = () => done({ text: null });
+        loader.onAbort = () => done({ text: null });
 
-				const doGenerate = async () => {
-					const userMessage: Message = {
-						role: "user",
-						content: [
-							{
-								type: "text",
-								text: `## Conversation History\n\n${conversationText}\n\n## User's Goal for New Thread\n\n${goal}`,
-							},
-						],
-						timestamp: Date.now(),
-					};
+        const doGenerate = async () => {
+          const userMessage: Message = {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: `## Conversation History\n\n${conversationText}\n\n## User's Goal for New Thread\n\n${goal}`,
+              },
+            ],
+            timestamp: Date.now(),
+          };
 
-					const thinkingLevel = ctx.thinkingLevel;
+          const thinkingLevel = ctx.thinkingLevel;
 
-					const response = await ctx.modelRegistry.streamSimple(
-						ctx.model!,
-						{ systemPrompt: SYSTEM_PROMPT, messages: [userMessage] },
-						{
-							reasoning: thinkingLevel === "off" ? undefined : thinkingLevel,
-							signal: loader.signal,
-						},
-					).result();
+          const response = await ctx.modelRegistry
+            .streamSimple(
+              ctx.model!,
+              { systemPrompt: SYSTEM_PROMPT, messages: [userMessage] },
+              {
+                reasoning: thinkingLevel === 'off' ? undefined : thinkingLevel,
+                signal: loader.signal,
+              },
+            )
+            .result();
 
-					if (response.stopReason === "aborted") {
-						return { text: null };
-					}
+          if (response.stopReason === 'aborted') {
+            return { text: null };
+          }
 
-					if (response.stopReason === "error") {
-						return {
-							text: null,
-							error: response.errorMessage || "Unknown error",
-						};
-					}
+          if (response.stopReason === 'error') {
+            return {
+              text: null,
+              error: response.errorMessage || 'Unknown error',
+            };
+          }
 
-					const textContent = response.content
-						.filter((c): c is { type: "text"; text: string } => c.type === "text")
-						.map((c) => c.text)
-						.join("\n");
+          const textContent = response.content
+            .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
+            .map((c) => c.text)
+            .join('\n');
 
-					if (!textContent) {
-						return {
-							text: null,
-							error: `No text in response. Stop reason: ${response.stopReason}, content types: ${response.content.map((c) => c.type).join(", ")}`,
-						};
-					}
+          if (!textContent) {
+            return {
+              text: null,
+              error: `No text in response. Stop reason: ${response.stopReason}, content types: ${response.content.map((c) => c.type).join(', ')}`,
+            };
+          }
 
-					return { text: textContent };
-				};
+          return { text: textContent };
+        };
 
-				doGenerate()
-					.then(done)
-					.catch((err) => {
-						done({ text: null, error: err.message || String(err) });
-					});
+        doGenerate()
+          .then(done)
+          .catch((err) => {
+            done({ text: null, error: err.message || String(err) });
+          });
 
-				return loader;
-			});
+        return loader;
+      });
 
-			if (result.error) {
-				ctx.ui.notify(`Handoff failed: ${result.error}`, "error");
+      if (result.error) {
+        ctx.ui.notify(`Handoff failed: ${result.error}`, 'error');
 
-				return;
-			}
+        return;
+      }
 
-			if (result.text === null) {
-				ctx.ui.notify("Cancelled", "info");
+      if (result.text === null) {
+        ctx.ui.notify('Cancelled', 'info');
 
-				return;
-			}
+        return;
+      }
 
-			// Build session history section
-			const historySection =
-				sessionChain.length > 0
-					? `\n\n## Session History\nPrevious sessions (most recent first):\n${sessionChain.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n\nUse \`pi --session <path>\` to review any session if needed.`
-					: "";
+      // Build session history section
+      const historySection =
+        sessionChain.length > 0
+          ? `\n\n## Session History\nPrevious sessions (most recent first):\n${sessionChain.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\nUse \`pi --session <path>\` to review any session if needed.`
+          : '';
 
-			const promptWithHistory = result.text + historySection;
+      const promptWithHistory = result.text + historySection;
 
-			const handoffDir = join(
-				homedir(),
-				".local",
-				"share",
-				"pi",
-				"handoffs",
-				basename(ctx.cwd),
-			);
+      const handoffDir = join(homedir(), '.local', 'share', 'pi', 'handoffs', basename(ctx.cwd));
 
-			const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-			const handoffFile = join(handoffDir, `${timestamp}.md`);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const handoffFile = join(handoffDir, `${timestamp}.md`);
 
-			try {
-				mkdirSync(handoffDir, { recursive: true });
-				writeFileSync(handoffFile, promptWithHistory, {
-					encoding: "utf-8",
-					flag: "wx",
-				});
-			} catch (error) {
-				const message = error instanceof Error ? error.message : String(error);
-				ctx.ui.notify(`Handoff save failed: ${message}`, "error");
+      try {
+        mkdirSync(handoffDir, { recursive: true });
+        writeFileSync(handoffFile, promptWithHistory, {
+          encoding: 'utf-8',
+          flag: 'wx',
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        ctx.ui.notify(`Handoff save failed: ${message}`, 'error');
 
-				return;
-			}
+        return;
+      }
 
-			// Create new session with parent tracking. After replacement, only use
-			// the fresh ctx passed to withSession; old command ctx is stale.
-			const newSessionResult = await ctx.newSession({
-				parentSession: currentSessionFile,
-				withSession: async (ctx) => {
-					ctx.ui.setEditorText(promptWithHistory);
-					ctx.ui.notify(
-						`Handoff saved to ${handoffFile}. Submit when ready.`,
-						"info",
-					);
-				},
-			});
+      // Create new session with parent tracking. After replacement, only use
+      // the fresh ctx passed to withSession; old command ctx is stale.
+      const newSessionResult = await ctx.newSession({
+        parentSession: currentSessionFile,
+        withSession: async (ctx) => {
+          ctx.ui.setEditorText(promptWithHistory);
+          ctx.ui.notify(`Handoff saved to ${handoffFile}. Submit when ready.`, 'info');
+        },
+      });
 
-			if (newSessionResult.cancelled) {
-				ctx.ui.notify("New session cancelled", "info");
-			}
-		},
-	});
+      if (newSessionResult.cancelled) {
+        ctx.ui.notify('New session cancelled', 'info');
+      }
+    },
+  });
 }

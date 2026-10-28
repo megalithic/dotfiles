@@ -3,12 +3,12 @@
  * and uses starship prompt instead of plain cwd.
  */
 
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
-import { Type } from "typebox";
-import { Value } from "typebox/value";
-import { execFile as execFileCb } from "node:child_process";
-import { promisify } from "node:util";
+import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
+import { truncateToWidth, visibleWidth } from '@earendil-works/pi-tui';
+import { Type } from 'typebox';
+import { Value } from 'typebox/value';
+import { execFile as execFileCb } from 'node:child_process';
+import { promisify } from 'node:util';
 
 const execFile = promisify(execFileCb);
 
@@ -25,22 +25,17 @@ function formatTokens(count: number): string {
 }
 
 function formatCost(cost: number): string {
-  if (cost < 0.01) return "<$0.01";
+  if (cost < 0.01) return '<$0.01';
 
   return `$${cost.toFixed(2)}`;
 }
 
-function rightAlign(
-  left: string,
-  right: string,
-  width: number,
-  minPad = 2,
-): string {
+function rightAlign(left: string, right: string, width: number, minPad = 2): string {
   const leftW = visibleWidth(left);
   const rightW = visibleWidth(right);
 
   if (leftW + minPad + rightW <= width) {
-    return left + " ".repeat(width - leftW - rightW) + right;
+    return left + ' '.repeat(width - leftW - rightW) + right;
   }
 
   const available = width - leftW - minPad;
@@ -49,7 +44,7 @@ function rightAlign(
     const truncRight = truncateToWidth(right, available);
     const truncRightW = visibleWidth(truncRight);
 
-    return left + " ".repeat(width - leftW - truncRightW) + truncRight;
+    return left + ' '.repeat(width - leftW - truncRightW) + truncRight;
   }
 
   return left;
@@ -67,8 +62,8 @@ function getCwdDisplay(cwd: string): string {
 
 function sanitizeStatusText(text: string): string {
   return text
-    .replace(/[\r\n\t]/g, " ")
-    .replace(/ +/g, " ")
+    .replace(/[\r\n\t]/g, ' ')
+    .replace(/ +/g, ' ')
     .trim();
 }
 
@@ -112,30 +107,22 @@ const pinvimStatusSchema = Type.Object({
   label: Type.Optional(Type.String()),
 });
 
-function formatPinvimStatus(
-  text: string,
-  theme: { fg(name: string, text: string): string },
-): string | undefined {
+function formatPinvimStatus(text: string, theme: { fg(name: string, text: string): string }): string | undefined {
   const clean = sanitizeStatusText(text);
 
-  if (!clean.startsWith("pinvim.v1:")) return undefined;
+  if (!clean.startsWith('pinvim.v1:')) return undefined;
 
   try {
-    const parsed = JSON.parse(clean.slice("pinvim.v1:".length));
+    const parsed = JSON.parse(clean.slice('pinvim.v1:'.length));
 
     if (!Value.Check(pinvimStatusSchema, parsed)) return undefined;
-    const label = sanitizeStatusText(parsed.label || "");
+    const label = sanitizeStatusText(parsed.label || '');
 
     if (!label) return undefined;
 
-    const color =
-      parsed.status === "connected"
-        ? "success"
-        : parsed.status === "repaired"
-          ? "warning"
-          : "error";
+    const color = parsed.status === 'connected' ? 'success' : parsed.status === 'repaired' ? 'warning' : 'error';
 
-    return `${theme.fg(color, "")} ${label}`;
+    return `${theme.fg(color, '')} ${label}`;
   } catch {
     return undefined;
   }
@@ -147,10 +134,7 @@ const pidewaveStatusSchema = Type.Object({
   connected: Type.Optional(Type.Boolean()),
 });
 
-function formatPidewaveStatus(
-  text: string,
-  theme: { fg(name: string, text: string): string },
-): string | undefined {
+function formatPidewaveStatus(text: string, theme: { fg(name: string, text: string): string }): string | undefined {
   try {
     const status = JSON.parse(text);
 
@@ -158,12 +142,12 @@ function formatPidewaveStatus(
 
     const url = new URL(status.url);
 
-    if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) return undefined;
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return undefined;
 
     // ACP publishes this status only while Tidewave MCP is live, so it is always green.
     if (!status.connected) return undefined;
 
-    return theme.fg("success", url.origin);
+    return theme.fg('success', url.origin);
   } catch {
     return undefined;
   }
@@ -171,29 +155,28 @@ function formatPidewaveStatus(
 
 async function fetchStarship(cwd: string): Promise<string> {
   try {
-    const { stdout: raw } = await execFile(
-      "starship",
-      ["prompt", "--status=0", "--cmd-duration=0", "--jobs=0"],
-      {
-        cwd,
-        timeout: 500,
-        env: { ...process.env, TERM_PROGRAM: "ghostty" },
-      },
-    );
+    const { stdout: raw } = await execFile('starship', ['prompt', '--status=0', '--cmd-duration=0', '--jobs=0'], {
+      cwd,
+      timeout: 500,
+      env: { ...process.env, TERM_PROGRAM: 'ghostty' },
+    });
 
-    const cleaned = raw.split("\u001b").map((segment, index) => {
-      if (index === 0) return segment;
+    const cleaned = raw
+      .split('\u001b')
+      .map((segment, index) => {
+        if (index === 0) return segment;
 
-      const command = segment.match(/^\[[0-9]*[JKHG]/);
+        const command = segment.match(/^\[[0-9]*[JKHG]/);
 
-      return command ? segment.slice(command[0].length) : `\u001b${segment}`;
-    }).join("");
+        return command ? segment.slice(command[0].length) : `\u001b${segment}`;
+      })
+      .join('');
 
-    const line = cleaned.split("\n").find((l) => visibleWidth(l) > 2) ?? "";
+    const line = cleaned.split('\n').find((l) => visibleWidth(l) > 2) ?? '';
 
-    return line.replace(/^\s+/, "").replace(/\s+$/, "");
+    return line.replace(/^\s+/, '').replace(/\s+$/, '');
   } catch {
-    return "";
+    return '';
   }
 }
 
@@ -203,8 +186,8 @@ interface TokenCache {
 }
 
 export default function (pi: ExtensionAPI) {
-  pi.on("session_start", (_event, ctx) => {
-    let cachedStarship = "";
+  pi.on('session_start', (_event, ctx) => {
+    let cachedStarship = '';
 
     const tokenCache: TokenCache = {
       totalCost: 0,
@@ -223,8 +206,8 @@ export default function (pi: ExtensionAPI) {
         tui.requestRender();
       });
 
-      const vcsTools = new Set(["bash", "edit", "write"]);
-      pi.on("tool_execution_end", async (event) => {
+      const vcsTools = new Set(['bash', 'edit', 'write']);
+      pi.on('tool_execution_end', async (event) => {
         if (vcsTools.has(event.toolName.toLowerCase())) {
           cachedStarship = await fetchStarship(ctx.cwd);
           tui.requestRender();
@@ -236,15 +219,12 @@ export default function (pi: ExtensionAPI) {
         invalidate() {},
         render(width: number): string[] {
           // Line 1: starship prompt (cached) with jj info + session name right-aligned
-          const starship =
-            cachedStarship || theme.fg("dim", getCwdDisplay(ctx.cwd));
+          const starship = cachedStarship || theme.fg('dim', getCwdDisplay(ctx.cwd));
 
           const sessionName = ctx.sessionManager.getSessionName();
-          const rightParts = sessionName ? theme.fg("dim", sessionName) : "";
+          const rightParts = sessionName ? theme.fg('dim', sessionName) : '';
 
-          const line1 = rightParts
-            ? rightAlign(starship, rightParts, width)
-            : truncateToWidth(starship, width);
+          const line1 = rightParts ? rightAlign(starship, rightParts, width) : truncateToWidth(starship, width);
 
           // Token totals (cached, only recompute when entry count changes)
           const entries = ctx.sessionManager.getEntries();
@@ -253,10 +233,7 @@ export default function (pi: ExtensionAPI) {
             let cost = 0;
 
             for (const entry of entries) {
-              if (
-                entry.type === "message" &&
-                entry.message.role === "assistant"
-              ) {
+              if (entry.type === 'message' && entry.message.role === 'assistant') {
                 const m = entry.message;
                 cost += m.usage.cost?.total ?? 0;
               }
@@ -275,75 +252,57 @@ export default function (pi: ExtensionAPI) {
 
           // Display session cost (pre-calculated by pi-ai)
           if (tokenCache.totalCost > 0) {
-            statsParts.push(
-              theme.fg("muted", formatCost(tokenCache.totalCost)),
-            );
+            statsParts.push(theme.fg('muted', formatCost(tokenCache.totalCost)));
           }
 
           // Context: used/total (pct%)
-          const usedTokens =
-            contextUsage?.tokens != null
-              ? formatTokens(contextUsage.tokens)
-              : "?";
+          const usedTokens = contextUsage?.tokens != null ? formatTokens(contextUsage.tokens) : '?';
 
           const contextDisplay = `${usedTokens}/${formatTokens(contextWindow)} (${contextPct.toFixed(1)}%)`;
 
-          const contextColor =
-            contextPct > 75 ? "error" : contextPct > 50 ? "warning" : "success";
+          const contextColor = contextPct > 75 ? 'error' : contextPct > 50 ? 'warning' : 'success';
 
           statsParts.push(theme.fg(contextColor, contextDisplay));
 
-          let statsLeft = statsParts.join(" ");
+          let statsLeft = statsParts.join(' ');
 
           if (visibleWidth(statsLeft) > width) {
-            statsLeft = truncateToWidth(statsLeft, width, "...");
+            statsLeft = truncateToWidth(statsLeft, width, '...');
           }
 
           const extensionStatuses = footerData.getExtensionStatuses();
 
-          const multiPass = parseMultiPassStatus(
-            extensionStatuses.get("multi-pass") || "",
-          );
+          const multiPass = parseMultiPassStatus(extensionStatuses.get('multi-pass') || '');
 
           // Line 2 right: compact multi-pass routing status.
           // @lat: [[pi-coding-agent#Runtime settings]]
           // Shape: ({preset}){provider-or-failover-pool}/{model}/thinking_level
-          const sep = theme.fg("dim", "/");
+          const sep = theme.fg('dim', '/');
 
-          const activeProvider =
-            multiPass.activeProvider || ctx.model?.provider || "";
+          const activeProvider = multiPass.activeProvider || ctx.model?.provider || '';
 
           const currentPool = multiPass.currentPool || activeProvider;
           const startingPool = multiPass.startingPool || currentPool;
-          const activeModel = multiPass.model || ctx.model?.id || "no-model";
+          const activeModel = multiPass.model || ctx.model?.id || 'no-model';
 
-          const poolChanged =
-            currentPool.length > 0 &&
-            startingPool.length > 0 &&
-            currentPool !== startingPool;
+          const poolChanged = currentPool.length > 0 && startingPool.length > 0 && currentPool !== startingPool;
 
           const displayProvider = poolChanged ? currentPool : activeProvider;
 
           const providerPart = displayProvider
             ? poolChanged
-              ? theme.fg("success", theme.bold(displayProvider))
+              ? theme.fg('success', theme.bold(displayProvider))
               : displayProvider
-            : "";
+            : '';
 
-          const modelPart = theme.fg("accent", activeModel);
-          const thinkingLevel = pi.getThinkingLevel() || "off";
+          const modelPart = theme.fg('accent', activeModel);
+          const thinkingLevel = pi.getThinkingLevel() || 'off';
 
-          const thinkingPart = ctx.model?.reasoning
-            ? sep + theme.fg("dim", thinkingLevel)
-            : "";
+          const thinkingPart = ctx.model?.reasoning ? sep + theme.fg('dim', thinkingLevel) : '';
 
-          const presetPart = multiPass.preset
-            ? theme.fg("dim", `(${multiPass.preset}) `)
-            : "";
+          const presetPart = multiPass.preset ? theme.fg('dim', `(${multiPass.preset}) `) : '';
 
-          const poolModelPart = providerPart
-            ? providerPart + sep + modelPart
-            : modelPart;
+          const poolModelPart = providerPart ? providerPart + sep + modelPart : modelPart;
 
           const availableForRight = width - visibleWidth(statsLeft) - 2;
 
@@ -366,43 +325,40 @@ export default function (pi: ExtensionAPI) {
           // Merge remaining extension statuses into stats line.
           // Multi-pass owns the right side. Caveman never belongs in the footer.
           if (extensionStatuses.size > 0) {
-            const excludedKeys = new Set<string>(["multi-pass", "caveman"]);
+            const excludedKeys = new Set<string>(['multi-pass', 'caveman']);
 
             const statusParts = Array.from(extensionStatuses.entries())
               // Pidewave first so width truncation clips less important statuses.
-              .sort(([a], [b]) => Number(b === "pidewave") - Number(a === "pidewave") || a.localeCompare(b))
+              .sort(([a], [b]) => Number(b === 'pidewave') - Number(a === 'pidewave') || a.localeCompare(b))
               .filter(([key]) => !excludedKeys.has(key))
               .map(([key, text]) => {
-                if (key === "pidewave") {
-                  return formatPidewaveStatus(text, theme) || "";
+                if (key === 'pidewave') {
+                  return formatPidewaveStatus(text, theme) || '';
                 }
 
-                if (key === "pinvim") {
-                  return formatPinvimStatus(text, theme) || "";
+                if (key === 'pinvim') {
+                  return formatPinvimStatus(text, theme) || '';
                 }
 
                 const clean = sanitizeStatusText(text);
 
-                if (!clean || /caveman/i.test(clean)) return "";
+                if (!clean || /caveman/i.test(clean)) return '';
 
-                return theme.fg("dim", clean);
+                return theme.fg('dim', clean);
               })
               .filter((text) => text.length > 0);
 
             if (statusParts.length > 0) {
-              const extStatus = statusParts.join(theme.fg("dim", " │ "));
-              statsLeft += theme.fg("dim", " │ ") + extStatus;
+              const extStatus = statusParts.join(theme.fg('dim', ' │ '));
+              statsLeft += theme.fg('dim', ' │ ') + extStatus;
 
               if (visibleWidth(statsLeft) > width) {
-                statsLeft = truncateToWidth(statsLeft, width, "...");
+                statsLeft = truncateToWidth(statsLeft, width, '...');
               }
             }
           }
 
-          return [
-            truncateToWidth(line1, width),
-            rightAlign(statsLeft, rightSide, width),
-          ];
+          return [truncateToWidth(line1, width), rightAlign(statsLeft, rightSide, width)];
         },
       };
     });

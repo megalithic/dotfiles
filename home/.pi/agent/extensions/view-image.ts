@@ -1,9 +1,6 @@
-import {
-  createReadToolDefinition,
-  type ExtensionAPI,
-} from "@earendil-works/pi-coding-agent";
-import { Text } from "@earendil-works/pi-tui";
-import { homedir } from "node:os";
+import { createReadToolDefinition, type ExtensionAPI } from '@earendil-works/pi-coding-agent';
+import { Text } from '@earendil-works/pi-tui';
+import { homedir } from 'node:os';
 
 function shortenPath(path: string): string {
   const home = homedir();
@@ -18,10 +15,10 @@ export default function (pi: ExtensionAPI) {
   const readTool = createReadToolDefinition(process.cwd());
 
   pi.registerTool({
-    name: "view_image",
-    label: "View Image",
+    name: 'view_image',
+    label: 'View Image',
     description:
-      "Read an image file and return it as an image attachment for visual inspection. Intended for image files only; use the read tool for text files. Supports jpg, png, gif, webp, and bmp.",
+      'Read an image file and return it as an image attachment for visual inspection. Intended for image files only; use the read tool for text files. Supports jpg, png, gif, webp, and bmp.',
     parameters: readTool.parameters,
     prepareArguments: readTool.prepareArguments,
     executionMode: readTool.executionMode,
@@ -30,20 +27,15 @@ export default function (pi: ExtensionAPI) {
     renderCall(args, theme, context) {
       // SAFETY: renderCall receives this tool's own previously returned Text
       // component, or nothing on the first render.
-      const text =
-        (context.lastComponent as Text | undefined) ?? new Text("", 0, 0);
+      const text = (context.lastComponent as Text | undefined) ?? new Text('', 0, 0);
 
       // SAFETY: view_image reuses the read tool's parameter schema, whose
       // `path` parameter is a string; it may be absent mid-stream.
-      const path = (args as { path?: string } | undefined)?.path ?? "";
+      const path = (args as { path?: string } | undefined)?.path ?? '';
 
-      const pathDisplay = path
-        ? theme.fg("accent", shortenPath(path))
-        : theme.fg("toolOutput", "...");
+      const pathDisplay = path ? theme.fg('accent', shortenPath(path)) : theme.fg('toolOutput', '...');
 
-      text.setText(
-        `${theme.fg("toolTitle", theme.bold("view_image"))} ${pathDisplay}`,
-      );
+      text.setText(`${theme.fg('toolTitle', theme.bold('view_image'))} ${pathDisplay}`);
 
       return text;
     },

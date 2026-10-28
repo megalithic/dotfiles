@@ -1,82 +1,98 @@
 #!/usr/bin/env node
 // One Tidewave recording at a time across every checkout that shares the Helium window and its localhost cookie.
-import { execFileSync } from "node:child_process";
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
-import { join } from "node:path";
+import { execFileSync } from 'node:child_process';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 
 const stateDir =
-  process.env.JAM_DEMO_STATE_DIR ??
-  join(process.env.XDG_STATE_HOME ?? join(homedir(), ".local/state"), "jam-demo");
+  process.env.JAM_DEMO_STATE_DIR ?? join(process.env.XDG_STATE_HOME ?? join(homedir(), '.local/state'), 'jam-demo');
 
-const lockDir = join(stateDir, "recording.lock");
+const lockDir = join(stateDir, 'recording.lock');
 
-const ownerFile = join(lockDir, "owner.json");
+const ownerFile = join(lockDir, 'owner.json');
 
-const waitersFile = join(lockDir, "waiters");
+const waitersFile = join(lockDir, 'waiters');
 
-const cdp = join(homedir(), ".pi/agent/skills/chrome-cdp/scripts/cdp.mjs");
+const cdp = join(homedir(), '.pi/agent/skills/chrome-cdp/scripts/cdp.mjs');
 
 const STALE_MS = 15 * 60 * 1000;
 
 const print = (value) => console.log(JSON.stringify(value, null, 2));
 
-const cdpText = (args) => execFileSync(cdp, args, { encoding: "utf8", timeout: 30000 });
+const cdpText = (args) => execFileSync(cdp, args, { encoding: 'utf8', timeout: 30000 });
 
 const cdpJson = (args) => {
   const out = cdpText(args);
 
-  return JSON.parse(out.slice(out.indexOf("{")));
+  return JSON.parse(out.slice(out.indexOf('{')));
 };
 
 function tabRecorder(target, origin) {
   try {
-    const proto = cdpJson(["evalraw", target, "Runtime.evaluate", JSON.stringify({ expression: "MediaRecorder.prototype" })]);
-    const list = cdpJson(["evalraw", target, "Runtime.queryObjects", JSON.stringify({ prototypeObjectId: proto.result.objectId })]);
+    const proto = cdpJson([
+      'evalraw',
+      target,
+      'Runtime.evaluate',
+      JSON.stringify({ expression: 'MediaRecorder.prototype' }),
+    ]);
+    const list = cdpJson([
+      'evalraw',
+      target,
+      'Runtime.queryObjects',
+      JSON.stringify({ prototypeObjectId: proto.result.objectId }),
+    ]);
 
     const states = cdpJson([
-      "evalraw",
+      'evalraw',
       target,
-      "Runtime.callFunctionOn",
-      JSON.stringify({ objectId: list.objects.objectId, functionDeclaration: "function () { return this.map((r) => r.state); }", returnByValue: true }),
+      'Runtime.callFunctionOn',
+      JSON.stringify({
+        objectId: list.objects.objectId,
+        functionDeclaration: 'function () { return this.map((r) => r.state); }',
+        returnByValue: true,
+      }),
     ]).result.value;
 
     // Vision mode stays on between takes, so it counts as active and keeps a 15-minute-old lock from going stale.
     const { url, vision } = JSON.parse(
       cdpText([
-        "eval",
+        'eval',
         target,
         'JSON.stringify({ url: [...document.querySelectorAll("input")].map((i) => i.value).find((v) => /^https?:/.test(v)) || "", vision: document.querySelector("[role=switch]")?.getAttribute("aria-checked") === "true" })',
       ])
         .trim()
-        .split("\n")
+        .split('\n')
         .pop(),
     );
 
-    return { target, origin, url, vision, active: states.some((state) => state !== "inactive") || vision };
+    return { target, origin, url, vision, active: states.some((state) => state !== 'inactive') || vision };
   } catch (error) {
-    return { target, origin, url: "", active: false, error: String(error.message).split("\n")[0] };
+    return { target, origin, url: '', active: false, error: String(error.message).split('\n')[0] };
   }
 }
 
 function recorders() {
   if (process.env.JAM_DEMO_RECORDERS) return JSON.parse(process.env.JAM_DEMO_RECORDERS);
 
-  return cdpText(["list"])
-    .split("\n")
-    .filter((line) => line.includes("/tidewave/connect"))
-    .map((line) => tabRecorder(line.trim().split(/\s+/)[0], line.match(/https?:\/\/[^/\s]+/)?.[0] ?? ""));
+  return cdpText(['list'])
+    .split('\n')
+    .filter((line) => line.includes('/tidewave/connect'))
+    .map((line) => tabRecorder(line.trim().split(/\s+/)[0], line.match(/https?:\/\/[^/\s]+/)?.[0] ?? ''));
 }
 
-const readOwner = () => (existsSync(ownerFile) ? JSON.parse(readFileSync(ownerFile, "utf8")) : null);
+const readOwner = () => (existsSync(ownerFile) ? JSON.parse(readFileSync(ownerFile, 'utf8')) : null);
 
 const readWaiters = () =>
-  existsSync(waitersFile) ? [...new Set(readFileSync(waitersFile, "utf8").split("\n").filter(Boolean))] : [];
+  existsSync(waitersFile) ? [...new Set(readFileSync(waitersFile, 'utf8').split('\n').filter(Boolean))] : [];
 
 const writeOwner = (owner, url, title, requestedBy) =>
-  writeFileSync(ownerFile, JSON.stringify({ owner, url, title, requestedBy, startedAt: new Date().toISOString() }, null, 2));
+  writeFileSync(
+    ownerFile,
+    JSON.stringify({ owner, url, title, requestedBy, startedAt: new Date().toISOString() }, null, 2),
+  );
 
-function acquire([owner, url, title, requestedBy = "user"]) {
+function acquire([owner, url, title, requestedBy = 'user']) {
   if (!owner || !url || !title) usage();
   mkdirSync(stateDir, { recursive: true });
   const live = recorders().filter((r) => r.active);
@@ -86,7 +102,7 @@ function acquire([owner, url, title, requestedBy = "user"]) {
   try {
     mkdirSync(lockDir);
   } catch (error) {
-    if (error.code !== "EEXIST") throw error;
+    if (error.code !== 'EEXIST') throw error;
     const holder = readOwner();
 
     if (holder?.owner === owner) return print({ acquired: true, reentered: true, lock: holder });
@@ -124,15 +140,15 @@ function release([owner]) {
   if (!owner) usage();
   const holder = readOwner();
 
-  if (!holder) return print({ released: false, reason: "no lock held", notify: [] });
+  if (!holder) return print({ released: false, reason: 'no lock held', notify: [] });
 
   if (holder.owner !== owner) {
-    print({ released: false, reason: "held by another owner", holder });
+    print({ released: false, reason: 'held by another owner', holder });
     process.exit(4);
   }
 
   const notify = readWaiters().filter((waiter) => waiter !== owner);
-  execFileSync("trash", [lockDir]);
+  execFileSync('trash', [lockDir]);
   print({ released: true, lock: holder, notify });
 }
 

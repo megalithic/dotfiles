@@ -19,18 +19,24 @@ import { join } from "path";
 import { homedir } from "os";
 
 const args = process.argv.slice(2);
+
 function getArg(name) {
   const idx = args.indexOf(name);
+
   return idx >= 0 && idx + 1 < args.length ? args[idx + 1] : undefined;
 }
 
 const settingsPath = getArg("--settings");
+
 const cwd = getArg("--cwd") || process.cwd();
+
 const session = getArg("--session") || "";
+
 const explicitProfile = getArg("--explicit-profile") || "";
 
 function expandHome(value) {
   if (value.startsWith("~/")) return join(homedir(), value.slice(2));
+
   return value;
 }
 
@@ -38,8 +44,10 @@ function globToRegExp(glob) {
   const expanded = expandHome(glob);
   let regex = "";
   let i = 0;
+
   while (i < expanded.length) {
     const ch = expanded[i];
+
     if (ch === "*" && expanded[i + 1] === "*") {
       if (expanded[i + 2] === "/") {
         regex += "(?:.+/)?";
@@ -62,17 +70,21 @@ function globToRegExp(glob) {
       i += 1;
     }
   }
+
   return new RegExp("^" + regex + "$");
 }
 
 function dirProfileMatches(profile, normalizedCwd) {
   if (profile.path) {
     const p = expandHome(profile.path);
+
     return normalizedCwd === p || normalizedCwd.startsWith(p + "/");
   }
+
   if (profile.glob) {
     return globToRegExp(profile.glob).test(normalizedCwd);
   }
+
   return false;
 }
 
@@ -82,16 +94,20 @@ function shellEscape(str) {
 
 // Load settings.json
 let multiSub = null;
+
 let knownPresetNames = new Set();
+
 let enabledModelScopes = {};
 
 if (settingsPath && existsSync(settingsPath)) {
   try {
     const raw = JSON.parse(readFileSync(settingsPath, "utf-8"));
     multiSub = raw?.multiSub || null;
+
     if (multiSub?.presets) {
       for (const p of multiSub.presets) knownPresetNames.add(p.name);
     }
+
     if (raw?.enabledModelScopes) enabledModelScopes = raw.enabledModelScopes;
   } catch {
     /* ignore */
@@ -99,12 +115,15 @@ if (settingsPath && existsSync(settingsPath)) {
 }
 
 const normalizedCwd = expandHome(cwd);
+
 const hasModelScope = (name) =>
   !!(enabledModelScopes[name] || knownPresetNames.has(name));
 
 // Precedence resolution
 let preset = "";
+
 let modelScope = "";
+
 let source = "";
 
 // 1. --profile flag
@@ -140,6 +159,7 @@ else if (multiSub?.directoryProfiles) {
   for (const profile of multiSub.directoryProfiles) {
     if (!dirProfileMatches(profile, normalizedCwd)) continue;
     const name = profile.preset || profile.profile;
+
     if (!name) continue;
     preset = name;
     modelScope = profile.modelScope || name;
@@ -157,6 +177,9 @@ if (!preset) {
 
 // Output shell-safe exports
 console.log(`export PI_PROFILE=${shellEscape(preset)}`);
+
 console.log(`export PI_MULTI_PASS_PRESET=${shellEscape(preset)}`);
+
 console.log(`export PI_MODEL_SCOPE=${shellEscape(modelScope)}`);
+
 console.log(`export PI_PROFILE_SOURCE=${shellEscape(source)}`);

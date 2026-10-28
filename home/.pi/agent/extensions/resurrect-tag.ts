@@ -15,37 +15,37 @@
  * token; a full path like ~/.pi/agent/sessions/... would break it.
  */
 
-import { execFile } from "node:child_process";
-import path from "node:path";
-import type {
-	ExtensionAPI,
-	ExtensionContext,
-} from "@earendil-works/pi-coding-agent";
+import { execFile } from 'node:child_process';
+import path from 'node:path';
+import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
 
 function tagPane(sessionFile: string | null): void {
-	const pane = process.env.TMUX_PANE;
-	if (!process.env.TMUX || !pane) return;
+  const pane = process.env.TMUX_PANE;
 
-	let args: string[];
-	if (sessionFile) {
-		// Session filename: <timestamp>_<uuid>.jsonl
-		const base = path.basename(sessionFile, ".jsonl");
-		const uuid = base.includes("_") ? base.split("_").pop()! : base;
-		args = ["set-option", "-p", "-t", pane, "@pi_session_id", uuid];
-	} else {
-		// Ephemeral session (--no-session): clear any stale tag
-		args = ["set-option", "-p", "-t", pane, "-u", "@pi_session_id"];
-	}
-	execFile("tmux", args, () => {
-		// Best-effort: ignore failures (tmux gone, pane closed, etc.)
-	});
+  if (!process.env.TMUX || !pane) return;
+
+  let args: string[];
+
+  if (sessionFile) {
+    // Session filename: <timestamp>_<uuid>.jsonl
+    const base = path.basename(sessionFile, '.jsonl');
+    const uuid = base.includes('_') ? base.split('_').pop()! : base;
+    args = ['set-option', '-p', '-t', pane, '@pi_session_id', uuid];
+  } else {
+    // Ephemeral session (--no-session): clear any stale tag
+    args = ['set-option', '-p', '-t', pane, '-u', '@pi_session_id'];
+  }
+
+  execFile('tmux', args, () => {
+    // Best-effort: ignore failures (tmux gone, pane closed, etc.)
+  });
 }
 
 export default function (pi: ExtensionAPI) {
-	pi.on("session_start", async (_event, ctx: ExtensionContext) => {
-		tagPane(ctx.sessionManager.getSessionFile() ?? null);
-	});
-	pi.on("session_shutdown", async () => {
-		tagPane(null);
-	});
+  pi.on('session_start', async (_event, ctx: ExtensionContext) => {
+    tagPane(ctx.sessionManager.getSessionFile() ?? null);
+  });
+  pi.on('session_shutdown', async () => {
+    tagPane(null);
+  });
 }
