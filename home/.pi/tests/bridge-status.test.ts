@@ -1021,6 +1021,37 @@ describe('bridge tell delivery', () => {
     expect(_test.admitInbound('busy-sender', 'hi', 404_000)).toBeUndefined();
   });
 
+  test('message.send echoes replyTo in details, the header, and the session entry', async () => {
+    const persisted: Array<{ replyTo?: string }> = [];
+    const { sent, ctx } = recorder(true);
+
+    const response = await withoutNtfy(() =>
+      _test.handleControl(
+        {
+          type: 'control',
+          protocol: 'pi.control.v1',
+          id: 'answer',
+          operation: 'message.send',
+          params: { text: 'done', from: 'nvim', replyTo: 'tell-question' },
+        },
+        asExtensionAPI({
+          appendEntry: (_type: string, data: { replyTo?: string }) => persisted.push(data),
+          sendMessage: (message: Delivery['message'], options: Delivery['options']) => sent.push({ message, options }),
+        }),
+        asExtensionContext({
+          ...ctx,
+          hasUI: false,
+          sessionManager: { getSessionId: () => 's', getSessionName: () => null },
+        }),
+      ),
+    );
+
+    expect(response.ok).toBe(true);
+    expect(persisted[0]?.replyTo).toBe('tell-question');
+    expect(sent[0]?.message.details).toMatchObject({ id: 'answer', replyTo: 'tell-question' });
+    expect(String(sent[0]?.message.content)).toEndWith('[TELL:answer reply to tell-question from nvim]\ndone');
+  });
+
   test('message.send refuses oversized text before persisting', async () => {
     const persisted: string[] = [];
     const { sent, ctx } = recorder(true);

@@ -213,6 +213,7 @@ type TellRoute = {
   target?: string;
   message: string;
   mode?: DeliveryMode;
+  replyTo?: string;
 };
 
 type OriginInfo = {
@@ -224,6 +225,7 @@ type TellPayloadOptions = {
   includeMachineReply: boolean;
   includeFromSocket: boolean;
   mode?: DeliveryMode;
+  replyTo?: string;
 };
 
 type TellPayload = {
@@ -237,6 +239,7 @@ type TellPayload = {
   sessionName?: string;
   timestamp: number;
   mode?: DeliveryMode;
+  replyTo?: string;
 };
 
 type ControlSendParams = Omit<TellPayload, 'type' | 'protocol' | 'id'> & {
@@ -2309,12 +2312,13 @@ const wrapGuidance = async (
   message: string,
   id: string,
   includeMachineReply: boolean,
+  replyTo?: string,
 ): Promise<{ text: string; from: string }> => {
   const origin = await originInfo(ctx, includeMachineReply);
 
   return {
     from: origin.display,
-    text: `[TELL:${id} from ${origin.display}]\n${message.trim()}\n\nReply only if this message asks for a reply or updates. To reply, use /tell ${origin.replyTarget} <message>, or the tell_pi tool with target ${JSON.stringify(origin.replyTarget)}.`,
+    text: `[TELL:${id}${replyTo ? ` reply to ${replyTo}` : ''} from ${origin.display}]\n${message.trim()}\n\nReply only if this message asks for a reply or updates. To reply, use /tell ${origin.replyTarget} <message>, or the tell_pi tool with target ${JSON.stringify(origin.replyTarget)}.`,
   };
 };
 
@@ -2324,7 +2328,7 @@ const buildTellPayload = async (
   id: string,
   options: TellPayloadOptions,
 ): Promise<TellPayload> => {
-  const wrapped = await wrapGuidance(ctx, message, id, options.includeMachineReply);
+  const wrapped = await wrapGuidance(ctx, message, id, options.includeMachineReply, options.replyTo);
 
   const payload: TellPayload = {
     type: 'tell',
@@ -2339,6 +2343,8 @@ const buildTellPayload = async (
 
   if (options.mode) payload.mode = options.mode;
 
+  if (options.replyTo) payload.replyTo = options.replyTo;
+
   if (options.includeFromSocket) payload.fromSocket = await currentSocketPath();
 
   return payload;
@@ -2346,11 +2352,9 @@ const buildTellPayload = async (
 
 const normalizeRoute = (route: TellRoute): TellRoute => {
   if (route.machine && isLocalMachine(route.machine)) {
-    return {
-      target: route.target,
-      message: route.message,
-      mode: route.mode,
-    };
+    const { machine: _machine, ...local } = route;
+
+    return local;
   }
 
   return route;
@@ -2452,6 +2456,7 @@ const sendTell = async (
     includeMachineReply: Boolean(route.machine),
     includeFromSocket: !route.machine,
     mode: route.mode,
+    replyTo: route.replyTo,
   });
 
   const controlRequest = buildControlRequest('message.send', controlSendParams(legacyPayload, route.mode), id);
@@ -2936,6 +2941,12 @@ export default function (pi: ExtensionAPI): void {
         }),
       ),
       message: Type.String({ description: 'Guidance/prompt to send.' }),
+      replyTo: Type.Optional(
+        Type.String({
+          description:
+            'ID of the tell you are answering, from its [TELL:<id> ...] header. The receiver sees it in the header.',
+        }),
+      ),
       mode: Type.Optional(
         StringEnum(['steer', 'follow_up', 'quiet'] as const, {
           description:
@@ -2947,7 +2958,7 @@ export default function (pi: ExtensionAPI): void {
     async execute(_toolCallId, params, signal, _onUpdate, ctx) {
       const result = await sendTell(
         ctx,
-        routeFromTargetHint(params.target, params.message, params.machine, params.mode),
+        { ...routeFromTargetHint(params.target, params.message, params.machine, params.mode), replyTo: params.replyTo },
         undefined,
         signal,
       );
@@ -2967,6 +2978,7 @@ export default function (pi: ExtensionAPI): void {
         socket: result.target?.socket,
         message: withNote(result.note, params.message),
         mode: params.mode || 'follow_up',
+        replyTo: params.replyTo,
         timestamp: Date.now(),
       });
 

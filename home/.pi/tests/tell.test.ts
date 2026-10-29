@@ -1923,6 +1923,7 @@ test('exact IDs dispatch tell_pi, get_pi_last_message, and tell-last over mocked
   ];
 
   const requests: string[] = [];
+  const sendParams: Array<{ text?: string; replyTo?: string }> = [];
 
   const exec = mockExecFile((_file, args, callback) => {
     const command = args.at(-1) || '';
@@ -1944,6 +1945,8 @@ test('exact IDs dispatch tell_pi, get_pi_last_message, and tell-last over mocked
       expect(encoded).toBeDefined();
       const request = JSON.parse(Buffer.from(encoded!, 'base64').toString());
       requests.push(request.operation);
+
+      if (request.operation === 'message.send') sendParams.push(request.params);
       const data = request.operation === 'message.last' ? { message: { content: 'Remote assistant message' } } : {};
       callback(
         null,
@@ -2003,13 +2006,15 @@ test('exact IDs dispatch tell_pi, get_pi_last_message, and tell-last over mocked
 
     const sent = await tellTool!.execute(
       'test-call',
-      { target, message: 'Remote guidance' },
+      { target, message: 'Remote guidance', replyTo: 'tell-earlier' },
       undefined,
       undefined,
       ctx,
     );
 
     expect(sent).toMatchObject({ content: [{ text: expect.stringContaining('Sent ') }] });
+    expect(sendParams[0]?.replyTo).toBe('tell-earlier');
+    expect(sendParams[0]?.text).toMatch(/^\[TELL:tell-\S+ reply to tell-earlier from local-sender /);
     await tellCommand!(target + ' Command guidance', ctx);
     expect(appended).toHaveLength(2);
 
