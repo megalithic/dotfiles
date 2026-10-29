@@ -2866,6 +2866,11 @@ type AskOutcome = { replied: true; id: string; from: string; text: string } | { 
 
 const ASK_TIMEOUT_MS = 120_000;
 
+// bridge.ts publishes why this session's own listener is not bound.
+const LISTENER_EVENT = 'bridge:listener';
+
+const ListenerEventSchema = Type.Object({ error: Type.Union([Type.String(), Type.Null()]) });
+
 const ReceivedTellSchema = Type.Object({
   direction: Type.Literal('received'),
   from: Type.Optional(Type.String()),
@@ -2965,11 +2970,19 @@ export default function (pi: ExtensionAPI): void {
   // ask_pi calls waiting for a reply, keyed by the id of the question they sent.
   const askWaiters = new Map<string, (outcome: AskOutcome) => void>();
   let unsubscribeReplies: (() => void) | undefined;
+  let unsubscribeListener: (() => void) | undefined;
+  let listenerError: string | null = null;
+
+  // Outbound tells still work, but replies and other senders cannot reach this session.
+  const unreachableNote = (): string =>
+    listenerError ? `\n\nThis session is not reachable, so replies cannot arrive: ${listenerError}` : '';
 
   pi.on('session_shutdown', () => {
     watcher.clear();
     unsubscribeReplies?.();
     unsubscribeReplies = undefined;
+    unsubscribeListener?.();
+    unsubscribeListener = undefined;
   });
 
   const waitForReply = (id: string, timeoutMs: number, signal: AbortSignal | undefined): Promise<AskOutcome> =>
@@ -2997,6 +3010,19 @@ export default function (pi: ExtensionAPI): void {
   // Use the editor's supported autocomplete stack so Tab is only handled while
   // the core editor has focus; this also gives us cancellation for stale scans.
   pi.on('session_start', (_event, ctx) => {
+    unsubscribeListener?.();
+    unsubscribeListener = pi.events.on(LISTENER_EVENT, (data) => {
+      if (!Check(ListenerEventSchema, data)) return;
+      listenerError = data.error;
+
+      if (!ctx.hasUI) return;
+      ctx.ui.setWidget(
+        'tell-listener',
+        data.error
+          ? [ctx.ui.theme.fg('warning', `Other Pis cannot reach this session: ${pickerText(data.error)}`)]
+          : undefined,
+      );
+    });
     pi.events.emit('tell:runtime', tellRuntime);
     unsubscribeReplies?.();
     unsubscribeReplies = pi.events.on(TELL_REPLY_EVENT, (data) => {
@@ -3222,7 +3248,7 @@ export default function (pi: ExtensionAPI): void {
         content: [
           {
             type: 'text',
-            text: `Sent ${result.id} to ${result.target?.label}${result.response?.data?.deliveredAs ? ` (${result.response.data.deliveredAs})` : ''}${result.note ? `\nThe user added this note before your message: ${result.note}` : ''}`,
+            text: `Sent ${result.id} to ${result.target?.label}${result.response?.data?.deliveredAs ? ` (${result.response.data.deliveredAs})` : ''}${result.note ? `\nThe user added this note before your message: ${result.note}` : ''}${unreachableNote()}`,
           },
         ],
         details: {
@@ -3303,6 +3329,14 @@ export default function (pi: ExtensionAPI): void {
     }),
     annotations: { destructiveHint: false, openWorldHint: false },
     async execute(_toolCallId, params, signal, _onUpdate, ctx) {
+      if (listenerError) {
+        return {
+          isError: true,
+          content: [{ type: 'text', text: `No question sent.${unreachableNote()} Use tell_pi instead.` }],
+          details: { listenerError },
+        };
+      }
+
       const id = makeMessageId();
       const timeoutMs = (params.timeoutSeconds ?? ASK_TIMEOUT_MS / 1000) * 1000;
 
@@ -3384,7 +3418,7 @@ export default function (pi: ExtensionAPI): void {
       const candidates = await listSessions(params.machine);
 
       return {
-        content: [{ type: 'text', text: formatSessionList(candidates) }],
+        content: [{ type: 'text', text: formatSessionList(candidates) + unreachableNote() }],
         details: { candidates },
       };
     },

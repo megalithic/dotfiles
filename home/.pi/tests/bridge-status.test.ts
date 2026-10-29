@@ -145,6 +145,7 @@ const harness = (cwd = process.cwd()) => {
   const events = new Map<string, BusHandler>();
   const persistedTexts: string[] = [];
   const delivered: Delivery[] = [];
+  const listener: unknown[] = [];
 
   // SAFETY: Tests call only bridge's lifecycle hooks, runtime event bus, and
   // model delivery; UI is deliberately absent so accidental use fails the test.
@@ -162,6 +163,9 @@ const harness = (cwd = process.cwd()) => {
       throw new Error('fixture refuses persistence');
     },
     events: {
+      emit: (name: string, data: { error: string | null }) => {
+        if (name === 'bridge:listener') listener.push(data.error);
+      },
       on: (name: string, handler: BusHandler) => {
         events.set(name, handler);
 
@@ -189,6 +193,7 @@ const harness = (cwd = process.cwd()) => {
     events,
     persistedTexts,
     delivered,
+    listener,
     connectTidewave: (endpoint = tidewaveEndpoint) => {
       events.get('pidewave:endpoint:v1')?.({ version: 1, endpoint });
     },
@@ -633,6 +638,7 @@ describe('bridge recovery and wire boundaries', () => {
           expect(_test.readManifest(_test.manifestForSocket(socketPath))?.tidewaveConnected).toBe(true);
         }
 
+        expect(runtime.listener.at(-1)).toBeNull();
         const identity = { version: 'tell-test', loadedAt: new Date().toISOString(), sourceHash: 'tell-hash' };
         runtime.events.get('tell:runtime')?.(identity);
         const pong = await request('{"type":"ping"}');
@@ -767,6 +773,9 @@ describe('bridge recovery and wire boundaries', () => {
 
     try {
       await runtime.start();
+      expect(runtime.listener.at(-1)).toBe('socket claim held; abandoned claims require manual cleanup');
+      runtime.events.get('tell:runtime')?.({ version: 'tell', loadedAt: 'now', sourceHash: null });
+      expect(runtime.listener.at(-1)).toBe('socket claim held; abandoned claims require manual cleanup');
       expect(fs.statSync(socket).ino).toBe(inode);
       expect(_test.readManifest(_test.manifestForSocket(socket))?.owner).toBe('stale-owner');
       expect(fs.existsSync(`${socket}.claim`)).toBe(true);

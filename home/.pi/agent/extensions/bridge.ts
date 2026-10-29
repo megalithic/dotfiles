@@ -454,6 +454,16 @@ let spoolTimer: ReturnType<typeof setTimeout> | null = null;
 
 let retryDelay = 250;
 
+// Why this session's listener is not bound, shared with tell.ts so tools can say so.
+const LISTENER_EVENT = 'bridge:listener';
+
+let listenerError: string | undefined;
+
+const publishListener = (pi: ExtensionAPI, error: string | undefined): void => {
+  listenerError = error;
+  pi.events.emit(LISTENER_EVENT, { error: error ?? null });
+};
+
 let retryLogs = 0;
 
 // acp.ts publishes the endpoint only while its Tidewave ping succeeds, so one
@@ -1377,7 +1387,11 @@ const handleControl = async (
 // =============================================================================
 
 const scheduleRetry = (pi: ExtensionAPI, ctx: ExtensionContext, reason: string): void => {
-  if (shuttingDown || retryTimer) return;
+  if (shuttingDown) return;
+
+  if (listenerError !== reason) publishListener(pi, reason);
+
+  if (retryTimer) return;
   const delay = retryDelay;
   retryDelay = Math.min(retryDelay * 2, MAX_RETRY_MS);
 
@@ -1705,6 +1719,7 @@ const bindListener = async (pi: ExtensionAPI, ctx: ExtensionContext): Promise<vo
 
       retryDelay = 250;
       retryLogs = 0;
+      publishListener(pi, undefined);
       heartbeatTimer = setInterval(() => {
         if (!ownedSocket() || !infoManifestPath) return;
         const manifest = readManifest(infoManifestPath);
@@ -1770,6 +1785,8 @@ export default function (pi: ExtensionAPI): void {
   const unsubscribeRuntime = pi.events.on('tell:runtime', (data) => {
     if (!Value.Check(runtimeSchema, data)) return;
     tellRuntime = data;
+    // tell.ts subscribes before announcing itself, so this reaches it on every (re)load.
+    publishListener(pi, IS_BRIDGE_ENABLED ? listenerError : 'the bridge socket is disabled');
 
     if (!ownedSocket() || !infoManifestPath) return;
     const manifest = readManifest(infoManifestPath);

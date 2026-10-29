@@ -20,7 +20,7 @@ const pi = asExtensionAPI({
   on: (name: string, handler: LifecycleHook) => {
     hooks.set(name, handler);
   },
-  events: { on: () => () => {} },
+  events: { on: () => () => {}, emit: () => {} },
   registerMessageRenderer: () => {},
 });
 

@@ -1846,6 +1846,70 @@ test('ask_pi waits for the matching replyTo and claims it from bridge delivery',
   }
 });
 
+test('tools say when bridge reports this session is not reachable', async () => {
+  const handlers = new Map<string, (data: { error: string | null }) => void>();
+  const tools = new Map<string, ToolOptions>();
+  const widgets: Array<string[] | undefined> = [];
+  let sessionStart: ((event: Record<never, never>, ctx: ExtensionContext) => void) | undefined;
+
+  const exec = mockExecFile((_file, _args, callback) => {
+    callback(null, '', '');
+
+    return new childProcess.ChildProcess();
+  });
+
+  try {
+    // SAFETY: this fixture registers tools and the listener event bus only.
+    extension(
+      asExtensionAPI({
+        on(name: string, handler: (event: Record<never, never>, ctx: ExtensionContext) => void) {
+          if (name === 'session_start') sessionStart = handler;
+        },
+        events: {
+          emit() {},
+          on(name: string, handler: (data: { error: string | null }) => void) {
+            handlers.set(name, handler);
+
+            return () => handlers.delete(name);
+          },
+        },
+        registerCommand() {},
+        registerTool(tool: ToolOptions) {
+          tools.set(tool.name, tool);
+        },
+        appendEntry() {},
+      }),
+    );
+
+    // SAFETY: session_start reads the session entries and the widget/theme UI members.
+    const ctx = asContext({
+      hasUI: true,
+      mode: 'rpc',
+      sessionManager: { getEntries: () => [] },
+      ui: { theme: fakeTheme, setWidget: (_key: string, lines: string[] | undefined) => widgets.push(lines) },
+    });
+
+    sessionStart?.({}, ctx);
+    handlers.get('bridge:listener')?.({ error: 'socket owned' });
+    expect(widgets.at(-1)).toEqual(['Other Pis cannot reach this session: socket owned']);
+
+    const list = await tools.get('list_pi_sessions')!.execute('list', {}, undefined, undefined, ctx);
+    expect(list.content[0]).toMatchObject({
+      text: expect.stringContaining('not reachable, so replies cannot arrive: socket owned'),
+    });
+
+    const ask = await tools.get('ask_pi')!.execute('ask', { target: 'x', message: 'q' }, undefined, undefined, ctx);
+    expect(ask).toMatchObject({ isError: true });
+
+    handlers.get('bridge:listener')?.({ error: null });
+    expect(widgets.at(-1)).toBeUndefined();
+    const listed = await tools.get('list_pi_sessions')!.execute('list', {}, undefined, undefined, ctx);
+    expect(listed.content[0]).not.toMatchObject({ text: expect.stringContaining('not reachable') });
+  } finally {
+    exec.mockRestore();
+  }
+});
+
 describe('tell received widget', () => {
   test('strips terminal escapes from a restored peer tell', () => {
     const lines: string[] = [];
