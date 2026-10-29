@@ -21,6 +21,7 @@ const pi = asExtensionAPI({
     hooks.set(name, handler);
   },
   events: { on: () => () => {} },
+  registerMessageRenderer: () => {},
 });
 
 // SAFETY: These are the only context members read by startup and ping.

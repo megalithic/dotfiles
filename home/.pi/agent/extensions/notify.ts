@@ -3,10 +3,17 @@ import path from 'node:path';
 import type { AgentMessage } from '@earendil-works/pi-agent-core';
 import type { AssistantMessage, TextContent } from '@earendil-works/pi-ai';
 import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
+import { Type } from 'typebox';
+import { Value } from 'typebox/value';
 
 const NTFY_PATH = path.join(process.env.HOME || '', 'bin', 'ntfy');
 
-const TELEGRAM_PREFIX = '📱 **Telegram message:**';
+// bridge.ts delivers Telegram ingress as this custom message; replies go back over Telegram.
+const telegramDeliverySchema = Type.Object({
+  role: Type.Literal('custom'),
+  customType: Type.Literal('tell:delivery'),
+  details: Type.Object({ source: Type.Literal('telegram') }),
+});
 
 const NOTIFY_DELAY_MS = 3_000;
 
@@ -216,6 +223,7 @@ const createNotificationController = (
 
   const capture = (message: AgentMessage): void => {
     if (isAssistantMessage(message)) latestAssistant = message;
+    else if (Value.Check(telegramDeliverySchema, message)) telegramRun = true;
   };
 
   return {
@@ -231,9 +239,9 @@ const createNotificationController = (
         }
       }
     },
-    input(text: string): void {
+    input(): void {
       cancelPending();
-      telegramRun = text.startsWith(TELEGRAM_PREFIX);
+      telegramRun = false;
     },
     agentStart(): void {
       cancelPending();
@@ -297,7 +305,6 @@ const notify = (request: NotificationRequest): void => {
 
 export const _test = {
   CONNECTION_ERROR,
-  TELEGRAM_PREFIX,
   assistantText,
   asksQuestion,
   cleanMarkdown,
@@ -324,8 +331,8 @@ export default function (pi: ExtensionAPI): void {
         : null;
   });
 
-  pi.on('input', (event) => {
-    controller.input(event.text);
+  pi.on('input', () => {
+    controller.input();
   });
 
   pi.on('agent_start', () => {

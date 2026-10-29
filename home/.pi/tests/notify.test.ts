@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import type { AssistantMessage } from '@earendil-works/pi-ai';
+import type { AgentMessage } from '@earendil-works/pi-agent-core';
 import { _test } from '../agent/extensions/notify.ts';
 
 const assistant = (
@@ -15,6 +16,15 @@ const assistant = (
     errorMessage,
     timestamp: Date.now(),
   }) as AssistantMessage;
+
+const telegramDelivery: AgentMessage = {
+  role: 'custom',
+  customType: 'tell:delivery',
+  content: 'check status',
+  display: true,
+  details: { id: 'telegram-1', from: 'telegram', mode: 'follow_up', source: 'telegram' },
+  timestamp: Date.now(),
+};
 
 const harness = () => {
   const notifications: Array<{
@@ -121,7 +131,7 @@ describe('notify lifecycle', () => {
     h.controller.settled(true);
     expect(h.pending()).toBe(1);
 
-    h.controller.input('next task');
+    h.controller.input();
     expect(h.pending()).toBe(0);
     h.flush();
     expect(h.notifications).toHaveLength(0);
@@ -129,8 +139,8 @@ describe('notify lifecycle', () => {
 
   test('suppresses the complete Telegram run regardless of duration', () => {
     const h = harness();
-    h.controller.input(`${_test.TELEGRAM_PREFIX}\ncheck status`);
     h.controller.agentStart();
+    h.controller.capture(telegramDelivery);
     h.controller.capture(assistant('Status checked.'));
     h.controller.uiPromptStart(true, 'Choose an option');
     h.controller.settled(true);
@@ -138,7 +148,7 @@ describe('notify lifecycle', () => {
     expect(h.pending()).toBe(0);
     expect(h.notifications).toHaveLength(0);
 
-    h.controller.input('local request');
+    h.controller.input();
     h.controller.agentStart();
     h.controller.capture(assistant('Local request finished.'));
     h.controller.settled(true);

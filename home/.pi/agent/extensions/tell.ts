@@ -4,8 +4,9 @@
  * This replaces the shell-script tell skill for Pi instance targeting. It sends
  * line-delimited JSON to the existing Pi/pinvim socket for a selected running Pi
  * instance. New peers use pi.control.v1 and fall back to pi.tell.v1 only when an
- * older peer explicitly rejects the control envelope. The receiver injects the
- * message as a user prompt and can reply with /tell or tell_pi.
+ * older peer explicitly rejects the control envelope. The receiver's bridge injects
+ * the message as a `tell:delivery` custom message with a no-authority preamble, and
+ * the receiver can reply with /tell or tell_pi.
  *
  * Requires tmux. Targets are discovered and addressed by tmux session, window
  * and pane, and the picker's live pane preview and Ctrl+G jump run tmux.
@@ -61,7 +62,7 @@ const KNOWN_MACHINE_ALIASES = new Set(['megabookpro', 'workbookpro']);
 
 const CONTROL_PROTOCOL = 'pi.control.v1';
 
-type DeliveryMode = 'steer' | 'follow_up';
+type DeliveryMode = 'steer' | 'follow_up' | 'quiet';
 
 type ControlOperation = 'sessions.list' | 'message.last' | 'message.send';
 
@@ -148,6 +149,7 @@ const WireResponseSchema = Type.Object({
     Type.Object({
       message: Type.Optional(Type.Union([MessageSchema, Type.Null()])),
       sessions: Type.Optional(Type.Array(ManifestSchema)),
+      deliveredAs: Type.Optional(Type.String()),
     }),
   ),
 });
@@ -1480,7 +1482,7 @@ const tellCompletionContext = (draft: string): TellCompletionContext | undefined
   const trailingSpace = /\s$/.test(draft);
   const tokens = draft.trim().split(/\s+/).slice(1);
 
-  if (['--steer', '--follow-up', '--follow_up'].includes(tokens[0] ?? '')) {
+  if (['--steer', '--follow-up', '--follow_up', '--quiet'].includes(tokens[0] ?? '')) {
     if (tokens.length === 1 && !trailingSpace) return undefined;
     tokens.shift();
   }
@@ -2584,6 +2586,9 @@ const splitCommandArgs = (args: string): Partial<TellRoute> => {
   } else if (tokens[0] === '--follow-up' || tokens[0] === '--follow_up') {
     mode = 'follow_up';
     tokens.shift();
+  } else if (tokens[0] === '--quiet') {
+    mode = 'quiet';
+    tokens.shift();
   }
 
   if (!tokens.length) return { mode };
@@ -2737,7 +2742,7 @@ export default function (pi: ExtensionAPI): void {
 
       if (!message?.trim()) {
         if (!ctx.hasUI) {
-          ctx.ui.notify('Usage: /tell [--steer|--follow-up] [machine] <target> <message>', 'error');
+          ctx.ui.notify('Usage: /tell [--steer|--follow-up|--quiet] [machine] <target> <message>', 'error');
 
           return;
         }
@@ -2873,8 +2878,9 @@ export default function (pi: ExtensionAPI): void {
       ),
       message: Type.String({ description: 'Guidance/prompt to send.' }),
       mode: Type.Optional(
-        StringEnum(['steer', 'follow_up'] as const, {
-          description: 'Delivery mode while the target is busy. Defaults to follow_up.',
+        StringEnum(['steer', 'follow_up', 'quiet'] as const, {
+          description:
+            'steer interrupts a busy target, follow_up (default) waits for its current turn, quiet adds the message to its context without starting a turn.',
         }),
       ),
     }),
@@ -2909,7 +2915,7 @@ export default function (pi: ExtensionAPI): void {
         content: [
           {
             type: 'text',
-            text: `Sent ${result.id} to ${result.target?.label}${result.note ? `\nThe user added this note before your message: ${result.note}` : ''}`,
+            text: `Sent ${result.id} to ${result.target?.label}${result.response?.data?.deliveredAs ? ` (${result.response.data.deliveredAs})` : ''}${result.note ? `\nThe user added this note before your message: ${result.note}` : ''}`,
           },
         ],
         details: {

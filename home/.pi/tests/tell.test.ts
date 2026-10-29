@@ -1992,7 +1992,16 @@ describe('tell target completion', () => {
     },
   );
 
-  test.each(['/tell ', '/tell --steer ', '/tell --follow_up remote.example '])(
+  test('--quiet selects the no-turn delivery mode', () => {
+    expect(_test.splitCommandArgs('--quiet work:1.1 fyi only')).toEqual({
+      target: 'work:1.1',
+      message: 'fyi only',
+      mode: 'quiet',
+    });
+    expect(_test.tellCompletionContext('/tell --quiet ')).toMatchObject({ query: '' });
+  });
+
+  test.each(['/tell ', '/tell --steer ', '/tell --quiet ', '/tell --follow_up remote.example '])(
     'inserts a target with a separating space: %s',
     (draft) => {
       const position = _test.tellCompletionContext(draft)!;

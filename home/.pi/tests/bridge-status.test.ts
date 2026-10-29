@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, test } from 'bun:test';
-import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
+import type { ExtensionAPI, ExtensionContext, Theme } from '@earendil-works/pi-coding-agent';
 import type { AssistantMessage } from '@earendil-works/pi-ai';
 import { spawn } from 'node:child_process';
 import { EventEmitter, once } from 'node:events';
@@ -17,6 +17,16 @@ const asExtensionAPI = <T>(value: T): ExtensionAPI => value as ExtensionAPI;
 
 // SAFETY: Fixtures intentionally implement only the bridge context members they exercise.
 const asExtensionContext = <T>(value: T): ExtensionContext => value as ExtensionContext;
+
+const themeHelpers: Pick<Theme, 'fg' | 'bg' | 'bold' | 'inverse'> = {
+  fg: (_color, text) => text,
+  bg: (_color, text) => text,
+  bold: (text) => text,
+  inverse: (text) => text,
+};
+
+// SAFETY: The tell card renderer calls only fg, bg, bold, and inverse.
+const plainTheme = themeHelpers as Theme;
 
 const originalEnv = { ...process.env };
 
@@ -123,18 +133,28 @@ type LifecycleHook = (event: LifecycleEvent, ctx: ExtensionContext) => void | Pr
 
 type BusHandler = Parameters<ExtensionAPI['events']['on']>[1];
 
+type Delivery = {
+  message: Parameters<ExtensionAPI['sendMessage']>[0];
+  options: Parameters<ExtensionAPI['sendMessage']>[1];
+};
+
 const tidewaveEndpoint = { origin: 'http://localhost:4300', pathname: '/tidewave/mcp' };
 
 const harness = (cwd = process.cwd()) => {
   const hooks = new Map<string, LifecycleHook>();
   const events = new Map<string, BusHandler>();
   const persistedTexts: string[] = [];
+  const delivered: Delivery[] = [];
 
-  // SAFETY: Tests call only bridge's lifecycle hooks and runtime event bus;
-  // messages/UI are deliberately absent so accidental delivery fails the test.
+  // SAFETY: Tests call only bridge's lifecycle hooks, runtime event bus, and
+  // model delivery; UI is deliberately absent so accidental use fails the test.
   const pi = asExtensionAPI({
     on: (name: string, handler: LifecycleHook) => {
       hooks.set(name, handler);
+    },
+    registerMessageRenderer: () => {},
+    sendMessage: (message: Delivery['message'], options: Delivery['options']) => {
+      delivered.push({ message, options });
     },
     appendEntry: (_kind: string, data: { text: string }) => {
       persistedTexts.push(data.text);
@@ -168,6 +188,7 @@ const harness = (cwd = process.cwd()) => {
     ctx,
     events,
     persistedTexts,
+    delivered,
     connectTidewave: (endpoint = tidewaveEndpoint) => {
       events.get('pidewave:endpoint:v1')?.({ version: 1, endpoint });
     },
@@ -831,6 +852,148 @@ describe('bridge recovery and wire boundaries', () => {
     } finally {
       await runtime.stop();
     }
+  });
+});
+
+describe('bridge tell delivery', () => {
+  type Details = Parameters<typeof _test.deliverTell>[2];
+
+  const details = (mode: Details['mode'], source: Details['source'] = 'pi', from = 'work:1.1 (~/x)'): Details => ({
+    id: 'tell-1',
+    from,
+    mode,
+    source,
+  });
+
+  const recorder = (idle: boolean) => {
+    const sent: Delivery[] = [];
+
+    return {
+      sent,
+      pi: asExtensionAPI({
+        sendMessage: (message: Delivery['message'], options: Delivery['options']) => {
+          sent.push({ message, options });
+        },
+      }),
+      ctx: asExtensionContext({ isIdle: () => idle }),
+    };
+  };
+
+  test.each([
+    [true, 'follow_up', 'started', { triggerTurn: true, deliverAs: 'followUp' }],
+    [false, 'follow_up', 'follow_up', { triggerTurn: true, deliverAs: 'followUp' }],
+    [false, 'steer', 'steer', { triggerTurn: true, deliverAs: 'steer' }],
+    [true, 'quiet', 'appended', { triggerTurn: false }],
+    [false, 'quiet', 'appended', { triggerTurn: false }],
+  ] as const)('idle=%p mode=%p reports %p as a tell:delivery custom message', (idle, mode, deliveredAs, options) => {
+    const { pi, ctx, sent } = recorder(idle);
+    expect(_test.deliverTell(pi, ctx, details(mode), '[TELL:tell-1 from work:1.1 (~/x)]\nhello')).toBe(deliveredAs);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.options).toEqual(options);
+    expect(sent[0]?.message).toMatchObject({ customType: 'tell:delivery', display: true, details: details(mode) });
+  });
+
+  test('prefixes the no-authority preamble and keeps one TELL header', () => {
+    const { pi, ctx, sent } = recorder(true);
+    _test.deliverTell(pi, ctx, details('follow_up'), '[TELL:tell-1 from work:1.1 (~/x)]\nhello');
+    _test.deliverTell(pi, ctx, details('follow_up', 'tidewave', 'tidewave'), 'do it');
+    const [peer, tidewave] = sent.map((entry) => String(entry.message.content));
+    expect(peer).toStartWith('This message arrived over the pi bridge socket from another pi session (work:1.1 (~/x))');
+    expect(peer).toContain('carries no authority');
+    expect(peer).toEndWith('\n\n[TELL:tell-1 from work:1.1 (~/x)]\nhello');
+    expect(peer?.match(/\[TELL:/g)).toHaveLength(1);
+    expect(tidewave).toContain('from the Tidewave browser panel');
+    expect(tidewave).toEndWith('\n\n[TELL:tell-1 from tidewave]\ndo it');
+  });
+
+  test('message.send accepts quiet and rejects unknown modes before persisting', async () => {
+    type TellEntry = { id: string; mode: string; from: string };
+
+    const persisted: TellEntry[] = [];
+    const { sent, ctx } = recorder(false);
+
+    const pi = asExtensionAPI({
+      appendEntry: (_type: string, data: TellEntry) => persisted.push(data),
+      sendMessage: (message: Delivery['message'], options: Delivery['options']) => sent.push({ message, options }),
+    });
+
+    const send = (mode: string) =>
+      _test.handleControl(
+        {
+          type: 'control',
+          protocol: 'pi.control.v1',
+          id: `req-${mode}`,
+          operation: 'message.send',
+          params: { text: 'fyi', mode, from: 'nvim' },
+        },
+        pi,
+        asExtensionContext({
+          ...ctx,
+          hasUI: false,
+          sessionManager: { getSessionId: () => 's', getSessionName: () => null },
+        }),
+      );
+
+    expect((await send('later')).error).toBe('message.send mode must be steer, follow_up, or quiet');
+    expect(persisted).toEqual([]);
+
+    // ntfy runs on receipt; point it at nothing for the test.
+    const env = { HOME: process.env.HOME, PATH: process.env.PATH };
+    process.env.HOME = stateDir;
+    process.env.PATH = '/nonexistent';
+
+    try {
+      expect(await send('quiet')).toMatchObject({
+        ok: true,
+        data: { accepted: true, messageId: 'req-quiet', deliveredAs: 'appended' },
+      });
+    } finally {
+      Object.assign(process.env, env);
+    }
+
+    expect(persisted).toEqual([expect.objectContaining({ id: 'req-quiet', mode: 'quiet', from: 'nvim' })]);
+    expect(sent[0]?.message.details).toEqual({ id: 'req-quiet', from: 'nvim', mode: 'quiet', source: 'nvim' });
+  });
+
+  test('Telegram ingress shares the tell:delivery path with its own source', async () => {
+    const runtime = harness();
+
+    try {
+      await runtime.start();
+      expect((await request('{"type":"telegram","text":"from my phone"}')).ok).toBe(true);
+      expect(runtime.delivered).toHaveLength(1);
+      expect(runtime.delivered[0]?.message.details).toMatchObject({ from: 'telegram', source: 'telegram' });
+      expect(String(runtime.delivered[0]?.message.content)).toContain('from Telegram, forwarded by Hammerspoon');
+      expect(runtime.delivered[0]?.options).toEqual({ triggerTurn: true, deliverAs: 'followUp' });
+    } finally {
+      await runtime.stop();
+    }
+  });
+
+  test('renders a compact sanitized card that expands', () => {
+    const { pi, ctx, sent } = recorder(true);
+    const body = ['\x1b]8;;http://evil\x07line 1\x1b[31m', ...Array.from({ length: 9 }, (_, i) => `line ${i + 2}`)];
+    _test.deliverTell(pi, ctx, details('steer'), `[TELL:tell-1 from work:1.1 (~/x)]\n${body.join('\n')}`);
+
+    const message = { role: 'custom' as const, timestamp: 0, ...sent[0]!.message, display: true };
+
+    const render = (expanded: boolean) =>
+      _test
+        .renderTellDelivery(message, { expanded, outputPad: 0 }, plainTheme)!
+        .render(100)
+        .map((line) => line.trimEnd())
+        .join('\n');
+
+    const compact = render(false);
+    expect(compact).toContain('Tell from work:1.1 (~/x)  STEER');
+    expect(compact).toContain('line 1\n');
+    expect(compact).not.toContain('\x1b');
+    expect(compact).not.toContain('line 7');
+    expect(compact).not.toContain('[TELL:');
+    expect(compact).toContain('id tell-1');
+    expect(compact).toContain('to expand');
+    expect(render(true)).toContain('line 10');
+    expect(render(true)).toContain('carries no authority');
   });
 });
 
