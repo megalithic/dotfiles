@@ -2134,6 +2134,54 @@ const sendRemoteJsonLine = (
     );
   });
 
+// Ported from @nicknisi/pi-relay policy.ts: a loop between two agents must end
+// at the transport, whatever either model decides. The receiving bridge applies
+// its own rate, backlog, and size caps for callers that bypass tell.ts.
+const MAX_TELL_CHARS = 32 * 1024;
+
+const DEDUPE_WINDOW_MS = 10_000;
+
+const RATE_LIMIT_MAX = 8;
+
+const RATE_LIMIT_WINDOW_MS = 30_000;
+
+const createOutboundPolicy = (now: () => number = Date.now) => {
+  const sentAt: number[] = [];
+  const recentBodies = new Map<string, number>();
+
+  return {
+    check(body: string, wireText: string, target: string): string | undefined {
+      if (wireText.length > MAX_TELL_CHARS) {
+        return `Message is ${wireText.length} chars with its header; the cap is ${MAX_TELL_CHARS}. Send a summary and a file path instead.`;
+      }
+
+      const last = recentBodies.get(`${body}\u0000${target}`);
+
+      if (last !== undefined && now() - last < DEDUPE_WINDOW_MS) {
+        return `Identical message to the same Pi less than ${DEDUPE_WINDOW_MS / 1000}s ago; dropped to break loops.`;
+      }
+
+      while (sentAt.length > 0 && (sentAt[0] ?? 0) <= now() - RATE_LIMIT_WINDOW_MS) sentAt.shift();
+
+      if (sentAt.length >= RATE_LIMIT_MAX) {
+        return `Rate limited: at most ${RATE_LIMIT_MAX} tells per ${RATE_LIMIT_WINDOW_MS / 1000}s from this session.`;
+      }
+
+      return undefined;
+    },
+    record(body: string, target: string): void {
+      sentAt.push(now());
+      recentBodies.set(`${body}\u0000${target}`, now());
+
+      if (recentBodies.size <= 200) return;
+
+      for (const [key, time] of recentBodies) if (now() - time >= DEDUPE_WINDOW_MS) recentBodies.delete(key);
+    },
+  };
+};
+
+const outboundPolicy = createOutboundPolicy();
+
 const makeMessageId = (): string => `tell-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 const buildControlRequest = (
@@ -2409,6 +2457,10 @@ const sendTell = async (
   const controlRequest = buildControlRequest('message.send', controlSendParams(legacyPayload, route.mode), id);
 
   const target = selection.candidate;
+  const policyTarget = `${route.machine ?? ''}\u0000${target.socket}`;
+  const refused = outboundPolicy.check(route.message, legacyPayload.text, policyTarget);
+
+  if (refused) return { ok: false, target, id, error: refused };
 
   try {
     if (route.machine) {
@@ -2441,6 +2493,8 @@ const sendTell = async (
         };
       }
 
+      outboundPolicy.record(route.message, policyTarget);
+
       return {
         ok: true,
         target: resolvedTarget,
@@ -2469,6 +2523,8 @@ const sendTell = async (
         error: responseError,
       };
     }
+
+    outboundPolicy.record(route.message, policyTarget);
 
     return { ok: true, target, id, note, response };
   } catch (err) {
@@ -2671,7 +2727,9 @@ const restoreRecentTellWidget = (ctx: ExtensionContext): void => {
 };
 
 export const _test = {
+  MAX_TELL_CHARS,
   REMOTE_INVENTORY_SCRIPT,
+  createOutboundPolicy,
   REMOTE_TELL_NODE,
   buildCandidate,
   sessionTarget,

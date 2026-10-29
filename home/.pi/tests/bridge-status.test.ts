@@ -1001,6 +1001,47 @@ describe('bridge tell delivery', () => {
     expect(shown).toContain('clearscreen now');
   });
 
+  test('inbound caps size, per-sender rate, and per-sender backlog', () => {
+    expect(_test.admitInbound('cap-sender', 'x'.repeat(32 * 1024 + 1))).toContain('the cap is 32768');
+
+    for (let i = 0; i < 8; i += 1) expect(_test.admitInbound('rate-sender', 'hi', 1_000)).toBeUndefined();
+    expect(_test.admitInbound('rate-sender', 'hi', 1_000)).toContain('rate limited');
+    expect(_test.admitInbound('other-sender', 'hi', 1_000)).toBeUndefined();
+    expect(_test.admitInbound('rate-sender', 'hi', 31_001)).toBeUndefined();
+
+    for (let i = 0; i < 50; i += 1) {
+      expect(_test.admitInbound('busy-sender', 'hi', i * 4_000)).toBeUndefined();
+      _test.countUnread('busy-sender', i % 2 ? 'follow_up' : 'appended');
+    }
+
+    expect(_test.admitInbound('busy-sender', 'hi', 400_000)).toContain('50 messages from busy-sender');
+    _test.clearUnread();
+    expect(_test.admitInbound('busy-sender', 'hi', 400_000)).toBeUndefined();
+    _test.countUnread('busy-sender', 'started');
+    expect(_test.admitInbound('busy-sender', 'hi', 404_000)).toBeUndefined();
+  });
+
+  test('message.send refuses oversized text before persisting', async () => {
+    const persisted: string[] = [];
+    const { sent, ctx } = recorder(true);
+
+    const response = await _test.handleControl(
+      {
+        type: 'control',
+        protocol: 'pi.control.v1',
+        id: 'huge',
+        operation: 'message.send',
+        params: { text: 'x'.repeat(40_000), from: 'tidewave' },
+      },
+      asExtensionAPI({ appendEntry: (type: string) => persisted.push(type) }),
+      ctx,
+    );
+
+    expect(response.error).toContain('the cap is 32768');
+    expect(persisted).toEqual([]);
+    expect(sent).toEqual([]);
+  });
+
   test('renders a compact sanitized card that expands', () => {
     const { pi, ctx, sent } = recorder(true);
     const body = ['\x1b]8;;http://evil\x07line 1\x1b[31m', ...Array.from({ length: 9 }, (_, i) => `line ${i + 2}`)];

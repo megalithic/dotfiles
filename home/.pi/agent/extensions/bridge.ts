@@ -71,6 +71,16 @@ const MAX_SOCKET_PATH_BYTES = 103;
 
 const MAX_CLIENT_BUFFER_CHARS = 1024 * 1024;
 
+// Inbound flood limits. Lua and nvim callers bypass tell.ts, so the receiver
+// enforces its own caps (values from @nicknisi/pi-relay policy.ts).
+const MAX_TELL_CHARS = 32 * 1024;
+
+const INBOUND_RATE_MAX = 8;
+
+const INBOUND_RATE_WINDOW_MS = 30_000;
+
+const INBOUND_BACKLOG_CAP = 50;
+
 /**
  * Build the socket path for a tmux pane. When the full path would exceed the
  * sun_path limit, the `{session}-{window}-{paneId}` name is truncated and a
@@ -1129,8 +1139,51 @@ const controlResponse = (request: ControlEnvelope, data?: ControlData, error?: s
   ...(error ? { error } : { data }),
 });
 
+// Per-sender receive times and messages not yet worked through by a turn.
+const inbound = new Map<string, { at: number[]; unread: number }>();
+
+const admitInbound = (sender: string, text: string, now = Date.now()): string | undefined => {
+  if (text.length > MAX_TELL_CHARS) {
+    return `message is ${text.length} chars; the cap is ${MAX_TELL_CHARS}. Send a summary and a file path instead.`;
+  }
+
+  const entry = inbound.get(sender) ?? { at: [], unread: 0 };
+  entry.at = entry.at.filter((time) => now - time < INBOUND_RATE_WINDOW_MS);
+  inbound.set(sender, entry);
+
+  if (entry.unread >= INBOUND_BACKLOG_CAP) {
+    return `${entry.unread} messages from ${sender} are still waiting here (cap ${INBOUND_BACKLOG_CAP}); wait for this session to work through them.`;
+  }
+
+  if (entry.at.length >= INBOUND_RATE_MAX) {
+    return `rate limited: at most ${INBOUND_RATE_MAX} messages per ${INBOUND_RATE_WINDOW_MS / 1000}s from ${sender}.`;
+  }
+
+  entry.at.push(now);
+
+  return undefined;
+};
+
+// A message that started its own turn is being worked on; anything queued or appended waits.
+const countUnread = (sender: string, deliveredAs: DeliveredAs): void => {
+  const entry = inbound.get(sender);
+
+  if (entry && deliveredAs !== 'started') entry.unread += 1;
+};
+
+const clearUnread = (): void => {
+  for (const entry of inbound.values()) entry.unread = 0;
+};
+
+const tellSender = (payload: TellPayload): string =>
+  payload.sessionId || payload.fromSocket || payload.from || 'unknown';
+
 // Shared by message.send and the legacy tell payload.
 const receiveTell = (pi: ExtensionAPI, ctx: ExtensionContext | null, payload: TellPayload) => {
+  const sender = tellSender(payload);
+  const refused = admitInbound(sender, payload.text);
+
+  if (refused) return { ok: false as const, error: refused };
   const id = payload.id || `tell-${Date.now().toString(36)}`;
   const from = payload.from || 'unknown';
   persistAndSurfaceTell(pi, ctx, { ...payload, id });
@@ -1142,9 +1195,11 @@ const receiveTell = (pi: ExtensionAPI, ctx: ExtensionContext | null, payload: Te
     payload.text,
   );
 
+  countUnread(sender, deliveredAs);
+
   if (payload.fromSocket && payload.protocol === 'pi.tell.v1') void sendTellAck(payload.fromSocket, from, id);
 
-  return { id, deliveredAs };
+  return { ok: true as const, id, deliveredAs };
 };
 
 const handleControl = async (
@@ -1194,7 +1249,7 @@ const handleControl = async (
     return controlResponse(request, undefined, 'message.send mode must be steer, follow_up, or quiet');
   }
 
-  const { id, deliveredAs } = receiveTell(pi, ctx, {
+  const received = receiveTell(pi, ctx, {
     type: 'tell',
     text: params.text,
     id: params.messageId ?? request.id,
@@ -1207,7 +1262,9 @@ const handleControl = async (
     mode: params.mode,
   });
 
-  return controlResponse(request, { accepted: true, messageId: id, deliveredAs });
+  if (!received.ok) return controlResponse(request, undefined, received.error);
+
+  return controlResponse(request, { accepted: true, messageId: received.id, deliveredAs: received.deliveredAs });
 };
 
 // =============================================================================
@@ -1428,13 +1485,19 @@ const bindListener = async (pi: ExtensionAPI, ctx: ExtensionContext): Promise<vo
           // Handle Telegram messages
           if (isTelegramPayload(payload)) {
             const currentCtx = latestCtx;
+            const refused = admitInbound('telegram', payload.text);
+
+            if (refused) {
+              respondError(socket, refused);
+              continue;
+            }
 
             // Show notification in TUI
             if (currentCtx?.hasUI) {
               currentCtx.ui.notify('Telegram message received', 'info');
             }
 
-            deliverTell(
+            const deliveredAs = deliverTell(
               pi,
               currentCtx,
               {
@@ -1446,6 +1509,7 @@ const bindListener = async (pi: ExtensionAPI, ctx: ExtensionContext): Promise<vo
               payload.text,
             );
 
+            countUnread('telegram', deliveredAs);
             respondOk(socket);
             continue;
           }
@@ -1457,9 +1521,14 @@ const bindListener = async (pi: ExtensionAPI, ctx: ExtensionContext): Promise<vo
               continue;
             }
 
-            const { id, deliveredAs } = receiveTell(pi, latestCtx, payload);
+            const received = receiveTell(pi, latestCtx, payload);
 
-            respondOk(socket, { id, type: 'tell_ack', deliveredAs });
+            if (!received.ok) {
+              respondError(socket, received.error);
+              continue;
+            }
+
+            respondOk(socket, { id: received.id, type: 'tell_ack', deliveredAs: received.deliveredAs });
             continue;
           }
 
@@ -1555,6 +1624,9 @@ const bindListener = async (pi: ExtensionAPI, ctx: ExtensionContext): Promise<vo
 
 export const _test = {
   activityState: () => activityState,
+  admitInbound,
+  clearUnread,
+  countUnread,
   beginPrompt,
   buildSocketPath,
   canReclaim,
@@ -1702,6 +1774,7 @@ export default function (pi: ExtensionAPI): void {
   });
 
   pi.on('agent_settled', (_event, ctx) => {
+    clearUnread();
     activityBeforePrompt = null;
     updateActivityState(settledActivityState(), ctx);
   });

@@ -1665,6 +1665,26 @@ test('remote transport preserves fragmented UTF-8 and drains large replies befor
   expect(_test.controlLastMessage(_test.parseWireResponse(stdout))?.content).toBe(content);
 }, 10_000);
 
+describe('tell outbound policy', () => {
+  test('caps size, dedupes per target, and rate limits per session', () => {
+    let clock = 0;
+    const policy = _test.createOutboundPolicy(() => clock);
+
+    expect(policy.check('x', 'x'.repeat(_test.MAX_TELL_CHARS + 1), 'a')).toContain('the cap is 32768');
+    expect(policy.check('hi', 'hi', 'a')).toBeUndefined();
+    policy.record('hi', 'a');
+    expect(policy.check('hi', 'hi', 'a')).toContain('break loops');
+    expect(policy.check('hi', 'hi', 'b')).toBeUndefined();
+    clock = 10_000;
+    expect(policy.check('hi', 'hi', 'a')).toBeUndefined();
+
+    for (let i = 1; i < 8; i += 1) policy.record(`m${i}`, 'b');
+    expect(policy.check('next', 'next', 'c')).toContain('Rate limited');
+    clock = 30_001;
+    expect(policy.check('next', 'next', 'c')).toBeUndefined();
+  });
+});
+
 describe('tell received widget', () => {
   test('strips terminal escapes from a restored peer tell', () => {
     const lines: string[] = [];
