@@ -1734,6 +1734,35 @@ describe('tell offline spool', () => {
   });
 });
 
+describe('tell presence watch', () => {
+  test('reports manifest state changes once, including asking and offline', async () => {
+    const watched = candidate('%watched');
+    const manifest = `${stateDir}/manifests/pi-work-agent-%watched.info`;
+    const notes: string[] = [];
+    const watcher = _test.createPresenceWatcher((watch, previous) => notes.push(`${previous}->${watch.state}`));
+
+    const write = (state: string, pid = process.pid) =>
+      writeFile(manifest, JSON.stringify({ socket: watched.socket, pid, state }));
+
+    await mkdir(`${stateDir}/manifests`, { recursive: true });
+    await write('working');
+
+    try {
+      expect((await watcher.add(watched)).state).toBe('working');
+      await watcher.tick();
+      await write('input_needed');
+      await watcher.tick();
+      await write('done');
+      await watcher.tick();
+      await write('done', 2147483647);
+      await watcher.tick();
+      expect(notes).toEqual(['working->asking', 'asking->done', 'done->offline']);
+    } finally {
+      watcher.clear();
+    }
+  });
+});
+
 describe('tell received widget', () => {
   test('strips terminal escapes from a restored peer tell', () => {
     const lines: string[] = [];

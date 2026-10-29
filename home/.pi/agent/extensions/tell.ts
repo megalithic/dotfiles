@@ -2776,6 +2776,81 @@ const formatSessionList = (candidates: Candidate[]): string => {
 const controlLastMessage = (response: WireResponse | undefined): Static<typeof MessageSchema> | null =>
   response?.data?.message?.content ? response.data.message : null;
 
+const WATCH_POLL_MS = 5_000;
+
+type Watch = { label: string; socket: string; manifest: string; state: string };
+
+const pidAlive = (pid: number): boolean => {
+  try {
+    process.kill(pid, 0);
+
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// bridge.ts writes input_needed; agent-status and ftm call the same state asking.
+const presenceOf = async (manifestPath: string, socket: string): Promise<string> => {
+  const manifest = await readManifest(manifestPath);
+
+  if (!manifest || manifest.socket !== socket || (manifest.pid !== undefined && !pidAlive(manifest.pid))) {
+    return 'offline';
+  }
+
+  return manifest.state === 'input_needed' ? 'asking' : manifest.state || 'idle';
+};
+
+// Relay-style presence watch: poll local manifests and report state changes.
+const createPresenceWatcher = (
+  notify: (watch: Watch, previous: string) => void,
+  poll: typeof presenceOf = presenceOf,
+) => {
+  const watches = new Map<string, Watch>();
+  let timer: ReturnType<typeof setInterval> | undefined;
+  let polling = false;
+
+  const tick = async (): Promise<void> => {
+    if (polling) return;
+    polling = true;
+
+    try {
+      for (const watch of watches.values()) {
+        const next = await poll(watch.manifest, watch.socket);
+
+        if (next === watch.state) continue;
+        const previous = watch.state;
+        watch.state = next;
+        notify(watch, previous);
+      }
+    } finally {
+      polling = false;
+    }
+  };
+
+  return {
+    async add(candidate: Candidate): Promise<Watch> {
+      const manifest = path.join(MANIFEST_DIR, `${path.basename(candidate.socket).replace(/\.sock$/, '')}.info`);
+      const watch = { label: pickerText(candidate.label), socket: candidate.socket, manifest, state: 'idle' };
+      watch.state = await poll(manifest, candidate.socket);
+      watches.set(candidate.socket, watch);
+
+      if (!timer) {
+        timer = setInterval(() => void tick(), WATCH_POLL_MS);
+        timer.unref?.();
+      }
+
+      return watch;
+    },
+    tick,
+    clear(): void {
+      if (timer) clearInterval(timer);
+      timer = undefined;
+      watches.clear();
+    },
+  };
+};
+
 const ReceivedTellSchema = Type.Object({
   direction: Type.Literal('received'),
   from: Type.Optional(Type.String()),
@@ -2815,6 +2890,7 @@ const restoreRecentTellWidget = (ctx: ExtensionContext): void => {
 
 export const _test = {
   MAX_TELL_CHARS,
+  createPresenceWatcher,
   REMOTE_INVENTORY_SCRIPT,
   createOutboundPolicy,
   REMOTE_TELL_NODE,
@@ -2859,6 +2935,20 @@ export const _test = {
 };
 
 export default function (pi: ExtensionAPI): void {
+  const watcher = createPresenceWatcher((watch, previous) => {
+    pi.sendMessage(
+      {
+        customType: 'tell:presence',
+        content: `watch_pi: ${watch.label} is now ${watch.state} (was ${previous}).`,
+        display: true,
+        details: { socket: watch.socket, state: watch.state, previous },
+      },
+      { triggerTurn: false },
+    );
+  });
+
+  pi.on('session_shutdown', () => watcher.clear());
+
   // Use the editor's supported autocomplete stack so Tab is only handled while
   // the core editor has focus; this also gives us cancellation for stale scans.
   pi.on('session_start', (_event, ctx) => {
@@ -3088,6 +3178,52 @@ export default function (pi: ExtensionAPI): void {
           note: result.note,
           response: result.response,
         },
+      };
+    },
+  });
+
+  pi.registerTool({
+    name: 'watch_pi',
+    label: 'Watch Pi',
+    description:
+      'Watch a Pi session on this machine. Each state change (idle, working, asking, done, error, offline) arrives as a context note that does not start a turn.',
+    promptSnippet: 'Watch another local Pi session for state changes without polling.',
+    promptGuidelines: [
+      'Use watch_pi after handing work to another Pi with tell_pi when you need to know that it finished, failed, or is asking a question; do not poll get_pi_last_message.',
+    ],
+    parameters: Type.Object({
+      target: Type.String({
+        description: 'Exact /tell id value (pi:<machine>:<session-id>), or a fuzzy target using the tell_pi rules.',
+      }),
+    }),
+    annotations: { readOnlyHint: true, openWorldHint: false },
+    async execute(_toolCallId, params, signal, _onUpdate, ctx) {
+      const route = routeFromTargetHint(params.target, '');
+
+      if (route.machine) {
+        return {
+          isError: true,
+          content: [{ type: 'text', text: 'watch_pi only watches Pi sessions on this machine.' }],
+          details: { target: params.target },
+        };
+      }
+
+      const selection = await selectCandidate(route.target, ctx, await discoverCandidates(), { signal });
+
+      if (!selection.ok) {
+        return { isError: true, content: [{ type: 'text', text: selection.error }], details: selection };
+      }
+
+      const watch = await watcher.add(selection.candidate);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Watching ${watch.label}; it is ${watch.state} now. Changes arrive as context notes and do not start a turn.`,
+          },
+        ],
+        details: watch,
       };
     },
   });
