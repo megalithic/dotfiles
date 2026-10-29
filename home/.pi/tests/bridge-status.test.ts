@@ -1035,6 +1035,7 @@ describe('bridge tell delivery', () => {
           params: { text: 'done', from: 'nvim', replyTo: 'tell-question' },
         },
         asExtensionAPI({
+          events: { emit: () => {} },
           appendEntry: (_type: string, data: { replyTo?: string }) => persisted.push(data),
           sendMessage: (message: Delivery['message'], options: Delivery['options']) => sent.push({ message, options }),
         }),
@@ -1094,6 +1095,37 @@ describe('bridge tell delivery', () => {
     ]);
     expect(fs.readdirSync(directory)).toEqual(['notes.txt']);
     expect(withoutNtfy(() => _test.drainSpool(pi, ctx))).toBe(0);
+  });
+
+  test('a reply claimed by a waiting ask_pi is answered, not delivered to the model', () => {
+    const { sent, ctx } = recorder(false);
+    const persisted: string[] = [];
+
+    const pi = asExtensionAPI({
+      events: {
+        emit: (name: string, data: { replyTo: string; claimed: boolean }) => {
+          if (name === 'tell:reply' && data.replyTo === 'tell-question') data.claimed = true;
+        },
+      },
+      appendEntry: (_type: string, data: { id: string }) => persisted.push(data.id),
+      sendMessage: (message: Delivery['message'], options: Delivery['options']) => sent.push({ message, options }),
+    });
+
+    const received = withoutNtfy(() =>
+      _test.receiveTell(
+        pi,
+        asExtensionContext({
+          ...ctx,
+          hasUI: false,
+          sessionManager: { getSessionId: () => 's', getSessionName: () => null },
+        }),
+        { type: 'tell', id: 'tell-answer', text: '42', from: 'peer', sessionId: 'ask-peer', replyTo: 'tell-question' },
+      ),
+    );
+
+    expect(received).toMatchObject({ ok: true, deliveredAs: 'answered' });
+    expect(persisted).toEqual(['tell-answer']);
+    expect(sent).toEqual([]);
   });
 
   test('message.send refuses oversized text before persisting', async () => {

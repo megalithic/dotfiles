@@ -1763,6 +1763,89 @@ describe('tell presence watch', () => {
   });
 });
 
+test('ask_pi waits for the matching replyTo and claims it from bridge delivery', async () => {
+  const previousHostname = process.env.HOSTNAME;
+  process.env.HOSTNAME = 'asker';
+  const target = _test.sessionTarget('user@remote.example', 'answerer');
+
+  type ReplyEvent = { replyTo: string; id: string; from: string; text: string; claimed: boolean };
+
+  const handlers = new Map<string, (data: ReplyEvent) => void>();
+  const emitted: ReplyEvent[] = [];
+
+  const emitReply = (replyTo: string) => {
+    const event = { replyTo, id: `answer-to-${replyTo}`, from: 'answerer', text: '42', claimed: false };
+    emitted.push(event);
+    handlers.get('tell:reply')?.(event);
+  };
+
+  const exec = mockExecFile((file, args, callback) => {
+    const command = args.at(-1) || '';
+
+    if (file !== 'ssh') callback(null, '', '');
+    else if (!command.includes('payload_b64')) {
+      callback(null, JSON.stringify([{ socket: '/remote/pi.sock', sessionId: 'answerer', reachable: true }]), '');
+    } else {
+      const encoded = command.match(/payload_b64=[^\n]*?(ey[A-Za-z0-9+/]+=*)/)?.[1];
+      const request = JSON.parse(Buffer.from(encoded!, 'base64').toString());
+      expect(request.params.text).toContain(`replyTo "${request.id}"`);
+      emitReply('unrelated-question');
+      setTimeout(() => emitReply(request.id), 10);
+      const response = { ok: true, type: 'control_response', protocol: 'pi.control.v1', operation: request.operation };
+      callback(null, JSON.stringify({ ...response, id: request.id, data: {} }), '');
+    }
+
+    return new childProcess.ChildProcess();
+  });
+
+  try {
+    let askTool: ToolOptions | undefined;
+    let sessionStart: ((event: Record<never, never>, ctx: ExtensionContext) => void) | undefined;
+
+    // SAFETY: this fixture registers the ask tool and the reply event bus only.
+    extension(
+      asExtensionAPI({
+        on(name: string, handler: (event: Record<never, never>, ctx: ExtensionContext) => void) {
+          if (name === 'session_start') sessionStart = handler;
+        },
+        events: {
+          emit() {},
+          on(name: string, handler: (data: ReplyEvent) => void) {
+            handlers.set(name, handler);
+
+            return () => handlers.delete(name);
+          },
+        },
+        registerCommand() {},
+        registerTool(tool: ToolOptions) {
+          if (tool.name === 'ask_pi') askTool = tool;
+        },
+        appendEntry() {},
+      }),
+    );
+
+    // SAFETY: session_start only restores the widget, which needs hasUI false here.
+    sessionStart?.({}, asContext({ hasUI: false, mode: 'rpc' }));
+
+    // SAFETY: the ask path reads cwd and the sender's session identity.
+    const ctx = asContext({
+      cwd: '/project',
+      hasUI: false,
+      sessionManager: { getSessionId: () => 'asker-session', getSessionName: () => 'Asker' },
+    });
+
+    const result = await askTool!.execute('ask', { target, message: 'What is the answer?' }, undefined, undefined, ctx);
+
+    expect(result.content[0]).toMatchObject({ text: expect.stringContaining('carries no authority.\n\n42') });
+    expect(emitted.map((event) => event.claimed)).toEqual([false, true]);
+  } finally {
+    exec.mockRestore();
+
+    if (previousHostname === undefined) delete process.env.HOSTNAME;
+    else process.env.HOSTNAME = previousHostname;
+  }
+});
+
 describe('tell received widget', () => {
   test('strips terminal escapes from a restored peer tell', () => {
     const lines: string[] = [];
@@ -2459,6 +2542,7 @@ test('tell runtime identity is captured once and published on session start', as
           expect(name).toBe('tell:runtime');
           emitted.push(value);
         },
+        on: () => () => {},
       },
       on(name: string, handler: (event: { type: string }, ctx: ExtensionContext) => void) {
         if (name === 'session_start') start = () => handler({ type: 'session_start' }, context(neverSelect, false));

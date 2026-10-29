@@ -277,7 +277,11 @@ type PingPayload = Type.Static<typeof pingSchema>;
 type Payload = Type.Static<typeof payloadSchema>;
 
 // A promise about how the runtime queued the message, not proof of delivery.
-type DeliveredAs = 'steer' | 'follow_up' | 'appended' | 'started';
+// answered: a reply that tell.ts handed to a waiting ask_pi call instead.
+type DeliveredAs = 'steer' | 'follow_up' | 'appended' | 'started' | 'answered';
+
+// tell.ts sets claimed synchronously when an ask_pi call is waiting for replyTo.
+const TELL_REPLY_EVENT = 'tell:reply';
 
 const TELL_DELIVERY_TYPE = 'tell:delivery';
 
@@ -1221,8 +1225,14 @@ const acceptTell = (pi: ExtensionAPI, ctx: ExtensionContext | null, payload: Tel
     source: tellSource(payload.from),
   };
 
-  if (payload.replyTo) details.replyTo = payload.replyTo;
-  const deliveredAs = deliverTell(pi, ctx, details, payload.text);
+  const reply = { replyTo: payload.replyTo ?? '', id, from, text: payload.text, claimed: false };
+
+  if (payload.replyTo) {
+    details.replyTo = payload.replyTo;
+    pi.events.emit(TELL_REPLY_EVENT, reply);
+  }
+
+  const deliveredAs = reply.claimed ? 'answered' : deliverTell(pi, ctx, details, payload.text);
 
   countUnread(sender, deliveredAs);
 
@@ -1740,6 +1750,7 @@ export const _test = {
   pingSocket,
   resolveSocket,
   readManifest,
+  receiveTell,
   renderTellDelivery,
   startServer,
   refreshTmuxLocation,
