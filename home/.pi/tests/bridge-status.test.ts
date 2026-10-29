@@ -855,6 +855,19 @@ describe('bridge recovery and wire boundaries', () => {
   });
 });
 
+// ntfy runs on receipt; point it at nothing so tests never push notifications.
+const withoutNtfy = <T>(run: () => T): T => {
+  const env = { HOME: process.env.HOME, PATH: process.env.PATH };
+  process.env.HOME = stateDir;
+  process.env.PATH = '/nonexistent';
+
+  try {
+    return run();
+  } finally {
+    Object.assign(process.env, env);
+  }
+};
+
 describe('bridge tell delivery', () => {
   type Details = Parameters<typeof _test.deliverTell>[2];
 
@@ -937,19 +950,10 @@ describe('bridge tell delivery', () => {
     expect((await send('later')).error).toBe('message.send mode must be steer, follow_up, or quiet');
     expect(persisted).toEqual([]);
 
-    // ntfy runs on receipt; point it at nothing for the test.
-    const env = { HOME: process.env.HOME, PATH: process.env.PATH };
-    process.env.HOME = stateDir;
-    process.env.PATH = '/nonexistent';
-
-    try {
-      expect(await send('quiet')).toMatchObject({
-        ok: true,
-        data: { accepted: true, messageId: 'req-quiet', deliveredAs: 'appended' },
-      });
-    } finally {
-      Object.assign(process.env, env);
-    }
+    expect(await withoutNtfy(() => send('quiet'))).toMatchObject({
+      ok: true,
+      data: { accepted: true, messageId: 'req-quiet', deliveredAs: 'appended' },
+    });
 
     expect(persisted).toEqual([expect.objectContaining({ id: 'req-quiet', mode: 'quiet', from: 'nvim' })]);
     expect(sent[0]?.message.details).toEqual({ id: 'req-quiet', from: 'nvim', mode: 'quiet', source: 'nvim' });
@@ -968,6 +972,33 @@ describe('bridge tell delivery', () => {
     } finally {
       await runtime.stop();
     }
+  });
+
+  test('strips terminal escapes from peer text before notify and the widget', () => {
+    const shown: string[] = [];
+
+    const ctx = asExtensionContext({
+      hasUI: true,
+      sessionManager: { getSessionId: () => 's', getSessionName: () => null },
+      ui: {
+        theme: plainTheme,
+        notify: (text: string) => shown.push(text),
+        setWidget: (_key: string, lines: string[] | undefined) => shown.push(...(lines ?? [])),
+      },
+    });
+
+    withoutNtfy(() =>
+      _test.persistAndSurfaceTell(asExtensionAPI({ appendEntry: () => {} }), ctx, {
+        type: 'tell',
+        id: 'tell-1',
+        from: 'evil\x1b[2J\x1b]0;title\x07 peer',
+        text: '[TELL:tell-1 from evil]\nclear\x1b[2Jscreen\x00 now\x07',
+      }),
+    );
+
+    expect(shown.filter((line) => /\p{Cc}/u.test(line))).toEqual([]);
+    expect(shown).toContain('Tell from evil peer');
+    expect(shown).toContain('clearscreen now');
   });
 
   test('renders a compact sanitized card that expands', () => {

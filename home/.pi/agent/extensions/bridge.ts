@@ -516,7 +516,7 @@ const sanitizeTerminal = (text: string): string =>
   stripVTControlCharacters(text).replace(/\p{Cc}/gu, (char) => (char === '\n' || char === '\t' ? char : ''));
 
 const summarizeTellText = (text: string, maxLength = 160): string => {
-  const cleaned = text
+  const cleaned = sanitizeTerminal(text)
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean)
@@ -575,12 +575,13 @@ const persistAndSurfaceTell = (pi: ExtensionAPI, ctx: ExtensionContext | null, p
     timestamp: payload.timestamp || Math.floor(Date.now() / 1000),
   });
 
-  notifyTellViaNtfy(from, payload.text);
+  const shownFrom = summarizeTellText(from, 80);
+  notifyTellViaNtfy(shownFrom, payload.text);
 
   if (!ctx?.hasUI) return;
-  ctx.ui.notify(`Tell from ${from}`, 'info');
+  ctx.ui.notify(`Tell from ${shownFrom}`, 'info');
   ctx.ui.setWidget('tell', [
-    ctx.ui.theme.fg('accent', `Tell from ${from}`),
+    ctx.ui.theme.fg('accent', `Tell from ${shownFrom}`),
     summarizeTellText(payload.text),
     ctx.ui.theme.fg('muted', 'Persisted in session history'),
   ]);
@@ -1576,6 +1577,7 @@ export const _test = {
   refreshTmuxLocation,
   settledActivityState,
   summarizeTellText,
+  persistAndSurfaceTell,
   updateActivityState,
 };
 

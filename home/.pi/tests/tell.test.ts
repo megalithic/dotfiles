@@ -1665,6 +1665,35 @@ test('remote transport preserves fragmented UTF-8 and drains large replies befor
   expect(_test.controlLastMessage(_test.parseWireResponse(stdout))?.content).toBe(content);
 }, 10_000);
 
+describe('tell received widget', () => {
+  test('strips terminal escapes from a restored peer tell', () => {
+    const lines: string[] = [];
+
+    _test.restoreRecentTellWidget(
+      asContext({
+        hasUI: true,
+        sessionManager: {
+          getEntries: () => [
+            {
+              type: 'custom',
+              customType: 'tell-message',
+              data: {
+                direction: 'received',
+                from: 'peer\x1b]0;owned\x07',
+                text: 'hi\x1b[2J there',
+                timestamp: Math.floor(Date.now() / 1000),
+              },
+            },
+          ],
+        },
+        ui: { theme: fakeTheme, setWidget: (_key: string, value: string[]) => lines.push(...value) },
+      }),
+    );
+
+    expect(lines.slice(0, 2)).toEqual(['Recent tell from peer', 'hi there']);
+  });
+});
+
 describe('tell session IDs', () => {
   test('/tell id reads a fresh session ID on every invocation without opening UI or sending', async () => {
     const previousHostname = process.env.HOSTNAME;

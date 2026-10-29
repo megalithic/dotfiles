@@ -2659,10 +2659,10 @@ const restoreRecentTellWidget = (ctx: ExtensionContext): void => {
     const ageMs = Date.now() - (data.timestamp || 0) * 1000;
 
     if (ageMs > 60 * 60 * 1000) return;
-    const from = data.from || 'unknown';
+    const from = pickerText(data.from || 'unknown');
     ctx.ui.setWidget('tell', [
       ctx.ui.theme.fg('accent', `Recent tell from ${from}`),
-      data.text.replace(/\s+/g, ' ').slice(0, 160),
+      pickerText(data.text).replace(/\s+/g, ' ').slice(0, 160),
       ctx.ui.theme.fg('muted', 'Persisted in session history'),
     ]);
 
@@ -2699,6 +2699,7 @@ export const _test = {
   normalizeTarget,
   parseControlResponse,
   tellResponseError,
+  restoreRecentTellWidget,
   routeFromTargetHint,
   scoreCandidate,
   selectCandidate,
