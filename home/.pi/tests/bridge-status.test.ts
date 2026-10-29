@@ -838,7 +838,6 @@ describe('bridge recovery and wire boundaries', () => {
         'null',
         '[]',
         '{"type":"tell","text":12}',
-        '{"type":"telegram","text":null}',
         '{"type":"control","params":{"text":{}}}',
         '{',
       ]) {
@@ -857,6 +856,7 @@ describe('bridge recovery and wire boundaries', () => {
         operation: 'message.send',
       });
       expect((await request('{"type":"future"}')).error).toBe('unsupported payload type: future');
+      expect((await request('{"type":"telegram","text":"hi"}')).error).toBe('unsupported payload type: telegram');
       expect((await request('{"type":"ping"}')).type).toBe('pong');
     } finally {
       await runtime.stop();
@@ -966,21 +966,6 @@ describe('bridge tell delivery', () => {
 
     expect(persisted).toEqual([expect.objectContaining({ id: 'req-quiet', mode: 'quiet', from: 'nvim' })]);
     expect(sent[0]?.message.details).toEqual({ id: 'req-quiet', from: 'nvim', mode: 'quiet', source: 'nvim' });
-  });
-
-  test('Telegram ingress shares the tell:delivery path with its own source', async () => {
-    const runtime = harness();
-
-    try {
-      await runtime.start();
-      expect((await request('{"type":"telegram","text":"from my phone"}')).ok).toBe(true);
-      expect(runtime.delivered).toHaveLength(1);
-      expect(runtime.delivered[0]?.message.details).toMatchObject({ from: 'telegram', source: 'telegram' });
-      expect(String(runtime.delivered[0]?.message.content)).toContain('from Telegram, forwarded by Hammerspoon');
-      expect(runtime.delivered[0]?.options).toEqual({ triggerTurn: true, deliverAs: 'followUp' });
-    } finally {
-      await runtime.stop();
-    }
   });
 
   test('strips terminal escapes from peer text before notify and the widget', () => {

@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'bun:test';
 import type { AssistantMessage } from '@earendil-works/pi-ai';
-import type { AgentMessage } from '@earendil-works/pi-agent-core';
 import { _test } from '../agent/extensions/notify.ts';
 
 const assistant = (
@@ -16,15 +15,6 @@ const assistant = (
     errorMessage,
     timestamp: Date.now(),
   }) as AssistantMessage;
-
-const telegramDelivery: AgentMessage = {
-  role: 'custom',
-  customType: 'tell:delivery',
-  content: 'check status',
-  display: true,
-  details: { id: 'telegram-1', from: 'telegram', mode: 'follow_up', source: 'telegram' },
-  timestamp: Date.now(),
-};
 
 const harness = () => {
   const notifications: Array<{
@@ -137,25 +127,6 @@ describe('notify lifecycle', () => {
     expect(h.notifications).toHaveLength(0);
   });
 
-  test('suppresses the complete Telegram run regardless of duration', () => {
-    const h = harness();
-    h.controller.agentStart();
-    h.controller.capture(telegramDelivery);
-    h.controller.capture(assistant('Status checked.'));
-    h.controller.uiPromptStart(true, 'Choose an option');
-    h.controller.settled(true);
-
-    expect(h.pending()).toBe(0);
-    expect(h.notifications).toHaveLength(0);
-
-    h.controller.input();
-    h.controller.agentStart();
-    h.controller.capture(assistant('Local request finished.'));
-    h.controller.settled(true);
-    h.flush();
-    expect(h.notifications.at(-1)?.title).toBe('Pi finished');
-  });
-
   test('notifies for a question and avoids a duplicate structured prompt', () => {
     const h = harness();
     h.controller.agentStart();
@@ -166,17 +137,6 @@ describe('notify lifecycle', () => {
     h.controller.settled(true);
     expect(h.pending()).toBe(0);
     expect(h.notifications).toHaveLength(1);
-  });
-});
-
-describe('notification command', () => {
-  test('opts into presence-based Telegram routing', () => {
-    expect(
-      _test.notificationArgs({
-        title: 'Pi finished',
-        message: 'Done.',
-      }),
-    ).toContain('--presence-routing');
   });
 });
 

@@ -2,12 +2,12 @@
  * Pi Bridge Extension
  *
  * Generic non-nvim ingress on a Unix socket.
- * The managed Pi wrapper enables it with PI_BRIDGE_LEGACY_SOCKET=1 so Telegram
- * (via Hammerspoon) and /tell keep working while pinvim is disabled. Bridge has
- * no nvim/pinvim peer polling or frame handling.
+ * The managed Pi wrapper enables it with PI_BRIDGE_LEGACY_SOCKET=1 so /tell
+ * keeps working while pinvim is disabled. Bridge has no nvim/pinvim peer
+ * polling or frame handling.
  *
  * Protocol:
- *   Legacy:   ping, telegram, tell, and tell_ack payloads keep their existing
+ *   Legacy:   ping, tell, and tell_ack payloads keep their existing
  *             top-level { ok: true|false } responses.
  *   Control:  { type: 'control', protocol: 'pi.control.v1', id, operation,
  *               params } supports sessions.list, message.last, and message.send.
@@ -18,7 +18,7 @@
  *             bridge delivers them shortly after session_start.
  *
  * Delivery:
- *   Tells, Telegram, and Tidewave/nvim message.send arrive as custom
+ *   Tells and Tidewave/nvim message.send arrive as custom
  *   `tell:delivery` messages with a no-authority preamble, not as user prompts.
  *   mode steer|follow_up starts or queues a turn; quiet appends without one.
  *   deliveredAs reports steer|follow_up|appended|started: how the runtime
@@ -39,7 +39,6 @@
  *
  * Used by:
  *   - This extension (listens on auto-detected or PI_SOCKET path)
- *   - config/hammerspoon/lib/interop/pi.lua (forwards Telegram messages)
  */
 
 import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
@@ -211,13 +210,6 @@ const tellFields = {
   replyTo: Type.Optional(Type.String()),
 };
 
-const telegramSchema = Type.Object({
-  type: Type.Literal('telegram'),
-  text: Type.String(),
-  source: Type.Optional(Type.String()),
-  timestamp: Type.Optional(Type.Number()),
-});
-
 const tellSchema = Type.Object({
   type: Type.Literal('tell'),
   ...tellFields,
@@ -256,13 +248,11 @@ const tellAckSchema = Type.Object({
 
 const pingSchema = Type.Object({ type: Type.Literal('ping') });
 
-const payloadSchema = Type.Union([telegramSchema, tellSchema, controlSchema, tellAckSchema, pingSchema]);
+const payloadSchema = Type.Union([tellSchema, controlSchema, tellAckSchema, pingSchema]);
 
 const envelopeSchema = Type.Object({ type: Type.Optional(Type.String()) });
 
 const pongSchema = Type.Object({ ok: Type.Literal(true) });
-
-type TelegramPayload = Type.Static<typeof telegramSchema>;
 
 type TellPayload = Type.Static<typeof tellSchema>;
 
@@ -287,7 +277,6 @@ const TELL_DELIVERY_TYPE = 'tell:delivery';
 
 // Non-pi callers identify themselves through `from`; anything else is a pi peer.
 const EXTERNAL_SOURCES = {
-  telegram: 'Telegram, forwarded by Hammerspoon',
   tidewave: 'the Tidewave browser panel',
   nvim: 'a Neovim prompt',
   'pi-control-web': 'the pi-control-web dashboard',
@@ -301,7 +290,6 @@ const tellDeliveryDetailsSchema = Type.Object({
   mode: deliveryModeSchema,
   source: Type.Union([
     Type.Literal('pi'),
-    Type.Literal('telegram'),
     Type.Literal('tidewave'),
     Type.Literal('nvim'),
     Type.Literal('pi-control-web'),
@@ -399,8 +387,6 @@ type BridgeResponse = {
   idle?: boolean;
   pending?: boolean;
 };
-
-const isTelegramPayload = (p: Payload): p is TelegramPayload => 'type' in p && p.type === 'telegram';
 
 const isTellPayload = (p: Payload): p is TellPayload => 'type' in p && p.type === 'tell';
 
@@ -1572,7 +1558,7 @@ const bindListener = async (pi: ExtensionAPI, ctx: ExtensionContext): Promise<vo
             const error =
               Value.Check(envelopeSchema, payload) &&
               payload.type &&
-              !['ping', 'telegram', 'tell', 'tell_ack', 'control'].includes(payload.type)
+              !['ping', 'tell', 'tell_ack', 'control'].includes(payload.type)
                 ? `unsupported payload type: ${payload.type}`
                 : 'invalid bridge payload';
 
@@ -1598,38 +1584,6 @@ const bindListener = async (pi: ExtensionAPI, ctx: ExtensionContext): Promise<vo
               idle: latestCtx?.isIdle() ?? false,
               pending: latestCtx?.hasPendingMessages() ?? false,
             });
-            continue;
-          }
-
-          // Handle Telegram messages
-          if (isTelegramPayload(payload)) {
-            const currentCtx = latestCtx;
-            const refused = admitInbound('telegram', payload.text);
-
-            if (refused) {
-              respondError(socket, refused);
-              continue;
-            }
-
-            // Show notification in TUI
-            if (currentCtx?.hasUI) {
-              currentCtx.ui.notify('Telegram message received', 'info');
-            }
-
-            const deliveredAs = deliverTell(
-              pi,
-              currentCtx,
-              {
-                id: `telegram-${Date.now().toString(36)}`,
-                from: sanitizeTerminal(payload.source || 'telegram'),
-                mode: 'follow_up',
-                source: 'telegram',
-              },
-              payload.text,
-            );
-
-            countUnread('telegram', deliveredAs);
-            respondOk(socket);
             continue;
           }
 

@@ -3,17 +3,8 @@ import path from 'node:path';
 import type { AgentMessage } from '@earendil-works/pi-agent-core';
 import type { AssistantMessage, TextContent } from '@earendil-works/pi-ai';
 import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
-import { Type } from 'typebox';
-import { Value } from 'typebox/value';
 
 const NTFY_PATH = path.join(process.env.HOME || '', 'bin', 'ntfy');
-
-// bridge.ts delivers Telegram ingress as this custom message; replies go back over Telegram.
-const telegramDeliverySchema = Type.Object({
-  role: Type.Literal('custom'),
-  customType: Type.Literal('tell:delivery'),
-  details: Type.Object({ source: Type.Literal('telegram') }),
-});
 
 const NOTIFY_DELAY_MS = 3_000;
 
@@ -198,7 +189,6 @@ const createNotificationController = (
   const clearTimer: NonNullable<ControllerOptions['clearTimer']> = options.clearTimer ?? clearTimeout;
 
   let latestAssistant: AssistantMessage | null = null;
-  let telegramRun = false;
   let pendingTimer: TimerHandle | null = null;
   let pendingPurpose: TimerPurpose | null = null;
   let promptNotificationSent = false;
@@ -223,7 +213,6 @@ const createNotificationController = (
 
   const capture = (message: AgentMessage): void => {
     if (isAssistantMessage(message)) latestAssistant = message;
-    else if (Value.Check(telegramDeliverySchema, message)) telegramRun = true;
   };
 
   return {
@@ -241,7 +230,6 @@ const createNotificationController = (
     },
     input(): void {
       cancelPending();
-      telegramRun = false;
     },
     agentStart(): void {
       cancelPending();
@@ -249,7 +237,7 @@ const createNotificationController = (
       promptNotificationSent = false;
     },
     uiPromptStart(hasUI: boolean, title?: string): void {
-      if (!hasUI || telegramRun) return;
+      if (!hasUI) return;
       cancelPending();
       emit({
         title: 'Input needed',
@@ -262,10 +250,8 @@ const createNotificationController = (
     },
     settled(hasUI: boolean): void {
       cancelPending();
-      const suppress = telegramRun;
-      telegramRun = false;
 
-      if (!hasUI || !latestAssistant || suppress) return;
+      if (!hasUI || !latestAssistant) return;
 
       const request = notificationForAssistant(latestAssistant);
 
@@ -278,13 +264,12 @@ const createNotificationController = (
     shutdown(): void {
       cancelPending();
       latestAssistant = null;
-      telegramRun = false;
     },
   };
 };
 
 const notificationArgs = (request: NotificationRequest): string[] => {
-  const args = ['send', '-t', request.title, '-m', request.message, '-s', getSource(), '--presence-routing'];
+  const args = ['send', '-t', request.title, '-m', request.message, '-s', getSource()];
 
   if (request.urgency) args.push('-u', request.urgency);
 
@@ -310,7 +295,6 @@ export const _test = {
   cleanMarkdown,
   createNotificationController,
   normalizeErrorMessage,
-  notificationArgs,
   notificationExcerpt,
   notificationForAssistant,
 };
