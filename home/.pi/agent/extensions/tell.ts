@@ -20,7 +20,13 @@ import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import type { ExtensionAPI, ExtensionContext, Theme, ThemeColor } from '@earendil-works/pi-coding-agent';
+import {
+  getAgentDir,
+  type ExtensionAPI,
+  type ExtensionContext,
+  type Theme,
+  type ThemeColor,
+} from '@earendil-works/pi-coding-agent';
 import { StringEnum } from '@earendil-works/pi-ai';
 import {
   Editor,
@@ -42,6 +48,9 @@ const PI_STATE_DIR = process.env.PI_STATE_DIR || path.join(xdgStateHome, 'pi');
 const SOCKET_DIR = path.join(PI_STATE_DIR, 'sockets');
 
 const MANIFEST_DIR = path.join(PI_STATE_DIR, 'manifests');
+
+// bridge.ts drains ${SPOOL_DIR}/<encoded sessionId>/<message id>.json on session start.
+const SPOOL_DIR = path.join(PI_STATE_DIR, 'spool');
 
 const SOCKET_PREFIX = 'pi';
 
@@ -198,6 +207,7 @@ type SendResult = {
   note?: string;
   response?: WireResponse;
   error?: string;
+  spooled?: string;
 };
 
 type RemoteSendResult = {
@@ -2407,6 +2417,74 @@ const routeFromTargetHint = (
   return normalizeRoute({ machine, target: trimmedTarget, message, mode });
 };
 
+const sessionFileExists = async (sessionId: string): Promise<boolean> => {
+  const root = path.join(getAgentDir(), 'sessions');
+
+  try {
+    for (const entry of await fsp.readdir(root, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+
+      if ((await fsp.readdir(path.join(root, entry.name))).some((file) => file.endsWith(`_${sessionId}.jsonl`)))
+        return true;
+    }
+  } catch {}
+
+  return false;
+};
+
+// An exact /tell id promises routing to that session, so a tell to a local
+// session that is not running waits on disk until its bridge starts again.
+// Fuzzy and remote targets still fail.
+const spoolTell = async (
+  ctx: ExtensionContext,
+  route: TellRoute,
+  inventory: Candidate[],
+): Promise<SendResult | undefined> => {
+  const identity = route.target ? parseSessionTarget(route.target.trim()) : undefined;
+
+  if (!identity || route.machine) return undefined;
+  const matches = inventory.filter((candidate) => candidate.sessionId === identity.sessionId);
+
+  if (matches.some((candidate) => candidate.reachable)) return undefined;
+
+  if (!matches.length && !(await sessionFileExists(identity.sessionId))) return undefined;
+
+  const id = makeMessageId();
+
+  const payload = await buildTellPayload(ctx, route.message, id, {
+    includeMachineReply: false,
+    includeFromSocket: true,
+    mode: route.mode,
+    replyTo: route.replyTo,
+  });
+
+  const policyTarget = `spool\u0000${identity.sessionId}`;
+  const refused = outboundPolicy.check(route.message, payload.text, policyTarget);
+
+  if (refused) return { ok: false, id, error: refused };
+  const directory = path.join(SPOOL_DIR, encodeURIComponent(identity.sessionId));
+  const file = path.join(directory, `${id}.json`);
+
+  try {
+    await fsp.mkdir(directory, { recursive: true, mode: 0o700 });
+    await fsp.writeFile(`${file}.tmp`, `${JSON.stringify(payload)}\n`, { mode: 0o600 });
+    await fsp.rename(`${file}.tmp`, file);
+  } catch (error) {
+    return {
+      ok: false,
+      id,
+      error: `Could not queue the tell: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+
+  outboundPolicy.record(route.message, policyTarget);
+
+  return { ok: true, id, spooled: file };
+};
+
+const spooledText = (result: SendResult, target: string | undefined): string =>
+  `Queued ${result.id} for ${target}: that Pi session is not running. Its bridge delivers the message when the session starts again.`;
+
 // A picker note goes before the message it accompanies.
 const withNote = (note: string | undefined, message: string): string =>
   [note?.trim(), message.trim()].filter(Boolean).join('\n\n');
@@ -2442,6 +2520,10 @@ const sendTell = async (
   );
 
   if (!selection.ok) {
+    const spooled = selectedSocket ? undefined : await spoolTell(ctx, route, inventory);
+
+    if (spooled) return spooled;
+
     return {
       ok: false,
       candidates: selection.candidates,
@@ -2771,6 +2853,7 @@ export const _test = {
   createTellAutocompleteProvider,
   captureCandidatePane,
   splitCommandArgs,
+  spoolTell,
   withNote,
   tokenizeHint,
 };
@@ -2855,13 +2938,14 @@ export default function (pi: ExtensionAPI): void {
       pi.appendEntry('tell-message', {
         id: result.id,
         direction: 'sent',
-        target: result.target?.label,
+        target: result.target?.label ?? target,
         socket: result.target?.socket,
+        spooled: result.spooled,
         message: withNote(result.note, message),
         mode: mode || 'follow_up',
         timestamp: Date.now(),
       });
-      ctx.ui.notify(`Told ${result.target?.label}`, 'info');
+      ctx.ui.notify(result.spooled ? spooledText(result, target) : `Told ${result.target?.label}`, 'info');
     },
   });
 
@@ -2974,13 +3058,21 @@ export default function (pi: ExtensionAPI): void {
       pi.appendEntry('tell-message', {
         id: result.id,
         direction: 'sent',
-        target: result.target?.label,
+        target: result.target?.label ?? params.target,
         socket: result.target?.socket,
+        spooled: result.spooled,
         message: withNote(result.note, params.message),
         mode: params.mode || 'follow_up',
         replyTo: params.replyTo,
         timestamp: Date.now(),
       });
+
+      if (result.spooled) {
+        return {
+          content: [{ type: 'text', text: spooledText(result, params.target) }],
+          details: { id: result.id, target: params.target, spooled: result.spooled },
+        };
+      }
 
       return {
         content: [

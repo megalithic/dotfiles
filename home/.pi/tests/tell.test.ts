@@ -1685,6 +1685,55 @@ describe('tell outbound policy', () => {
   });
 });
 
+describe('tell offline spool', () => {
+  test('queues exact local ids only when the session exists but is not running', async () => {
+    const previous = { HOSTNAME: process.env.HOSTNAME, PI_CODING_AGENT_DIR: process.env.PI_CODING_AGENT_DIR };
+    const agentDir = await mkdtemp('/tmp/pi-tell-agent-');
+    process.env.HOSTNAME = 'spool-host';
+    process.env.PI_CODING_AGENT_DIR = agentDir;
+    await mkdir(`${agentDir}/sessions/--project--`, { recursive: true });
+    await writeFile(`${agentDir}/sessions/--project--/2026-01-01T00-00-00-000Z_resumable.jsonl`, '');
+
+    const exec = mockExecFile((_file, _args, callback) => {
+      callback(null, '', '');
+
+      return new childProcess.ChildProcess();
+    });
+
+    // SAFETY: spooling reads only cwd and the sender's session identity.
+    const ctx = asContext({
+      cwd: '/project',
+      sessionManager: { getSessionId: () => 'sender', getSessionName: () => 'Sender' },
+    });
+
+    const route = (target: string) => ({ target, message: 'rebase on main' });
+    const offline = { ...candidate('%gone', undefined, false), sessionId: 'off/line' };
+    const exact = _test.sessionTarget('spool-host', 'off/line');
+
+    try {
+      const queued = await _test.spoolTell(ctx, route(exact), [offline]);
+      expect(queued?.ok).toBe(true);
+      expect(queued?.spooled).toBe(`${stateDir}/spool/off%2Fline/${queued?.id}.json`);
+      const payload = JSON.parse(await readFile(queued!.spooled!, 'utf8'));
+      expect(payload).toMatchObject({ type: 'tell', protocol: 'pi.tell.v1', id: queued?.id, sessionId: 'sender' });
+      expect(payload.text).toContain('rebase on main');
+
+      expect((await _test.spoolTell(ctx, route('pi:spool-host:resumable'), []))?.ok).toBe(true);
+      expect(await _test.spoolTell(ctx, route('pi:spool-host:unknown'), [])).toBeUndefined();
+      expect(await _test.spoolTell(ctx, route('off/line'), [offline])).toBeUndefined();
+      expect(await _test.spoolTell(ctx, route(exact), [{ ...offline, reachable: true }])).toBeUndefined();
+      expect(await _test.spoolTell(ctx, { ...route(exact), machine: 'elsewhere' }, [offline])).toBeUndefined();
+    } finally {
+      exec.mockRestore();
+
+      for (const [key, value] of Object.entries(previous)) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+    }
+  });
+});
+
 describe('tell received widget', () => {
   test('strips terminal escapes from a restored peer tell', () => {
     const lines: string[] = [];

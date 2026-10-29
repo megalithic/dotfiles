@@ -1052,6 +1052,50 @@ describe('bridge tell delivery', () => {
     expect(String(sent[0]?.message.content)).toEndWith('[TELL:answer reply to tell-question from nvim]\ndone');
   });
 
+  test('drains spooled tells once, oldest first, skipping known ids and bad files', () => {
+    const directory = path.join(stateDir, 'spool', encodeURIComponent('resumed/session'));
+    fs.mkdirSync(directory, { recursive: true });
+
+    type SpoolFile = { type: 'tell'; id?: string; text?: string; from?: string; sessionId?: string };
+
+    const write = (id: string, value: SpoolFile) =>
+      fs.writeFileSync(path.join(directory, `${id}.json`), JSON.stringify(value));
+
+    write('tell-b', { type: 'tell', id: 'tell-b', text: 'second', from: 'peer', sessionId: 'p' });
+    write('tell-a', { type: 'tell', id: 'tell-a', text: 'first', from: 'peer', sessionId: 'p' });
+    write('tell-seen', { type: 'tell', id: 'tell-seen', text: 'again', from: 'peer' });
+    write('tell-huge', { type: 'tell', id: 'tell-huge', text: 'x'.repeat(40_000) });
+    write('tell-bad', { type: 'tell' });
+    fs.writeFileSync(path.join(directory, 'notes.txt'), 'ignored');
+
+    const persisted: string[] = [];
+    const { sent } = recorder(true);
+
+    const pi = asExtensionAPI({
+      appendEntry: (_type: string, data: { id: string }) => persisted.push(data.id),
+      sendMessage: (message: Delivery['message'], options: Delivery['options']) => sent.push({ message, options }),
+    });
+
+    const ctx = asExtensionContext({
+      hasUI: false,
+      isIdle: () => true,
+      sessionManager: {
+        getSessionId: () => 'resumed/session',
+        getSessionName: () => null,
+        getEntries: () => [{ type: 'custom', customType: 'tell-message', data: { id: 'tell-seen' } }],
+      },
+    });
+
+    expect(withoutNtfy(() => _test.drainSpool(pi, ctx))).toBe(2);
+    expect(persisted).toEqual(['tell-a', 'tell-b']);
+    expect(sent.map((entry) => entry.options)).toEqual([
+      { triggerTurn: true, deliverAs: 'followUp' },
+      { triggerTurn: true, deliverAs: 'followUp' },
+    ]);
+    expect(fs.readdirSync(directory)).toEqual(['notes.txt']);
+    expect(withoutNtfy(() => _test.drainSpool(pi, ctx))).toBe(0);
+  });
+
   test('message.send refuses oversized text before persisting', async () => {
     const persisted: string[] = [];
     const { sent, ctx } = recorder(true);

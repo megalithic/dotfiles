@@ -13,6 +13,10 @@
  *               params } supports sessions.list, message.last, and message.send.
  *             Responses echo id and operation and retain top-level ok.
  *
+ * Spool:    tell.ts queues tells for an exact, not-running session id under
+ *             ${PI_STATE_DIR}/spool/<encoded sessionId>/<id>.json; this
+ *             bridge delivers them shortly after session_start.
+ *
  * Delivery:
  *   Tells, Telegram, and Tidewave/nvim message.send arrive as custom
  *   `tell:delivery` messages with a no-authority preamble, not as user prompts.
@@ -62,6 +66,11 @@ const PI_STATE_DIR = process.env.PI_STATE_DIR || path.join(xdgStateHome, 'pi');
 const SOCKET_DIR = path.join(PI_STATE_DIR, 'sockets');
 
 const INFO_DIR = path.join(PI_STATE_DIR, 'manifests');
+
+// tell.ts queues tells for an exact session id here while that session is not running.
+const SPOOL_DIR = path.join(PI_STATE_DIR, 'spool');
+
+const SPOOL_DRAIN_DELAY_MS = 1_500;
 
 const SOCKET_PREFIX = 'pi';
 
@@ -436,6 +445,8 @@ let shuttingDown = false;
 let startAttempt: Promise<void> | null = null;
 
 let tellWidgetTimer: ReturnType<typeof setTimeout> | null = null;
+
+let spoolTimer: ReturnType<typeof setTimeout> | null = null;
 
 let retryDelay = 250;
 
@@ -1190,10 +1201,15 @@ const tellSender = (payload: TellPayload): string =>
 
 // Shared by message.send and the legacy tell payload.
 const receiveTell = (pi: ExtensionAPI, ctx: ExtensionContext | null, payload: TellPayload) => {
-  const sender = tellSender(payload);
-  const refused = admitInbound(sender, payload.text);
+  const refused = admitInbound(tellSender(payload), payload.text);
 
   if (refused) return { ok: false as const, error: refused };
+
+  return { ok: true as const, ...acceptTell(pi, ctx, payload) };
+};
+
+const acceptTell = (pi: ExtensionAPI, ctx: ExtensionContext | null, payload: TellPayload) => {
+  const sender = tellSender(payload);
   const id = payload.id || `tell-${Date.now().toString(36)}`;
   const from = payload.from || 'unknown';
   persistAndSurfaceTell(pi, ctx, { ...payload, id });
@@ -1212,7 +1228,72 @@ const receiveTell = (pi: ExtensionAPI, ctx: ExtensionContext | null, payload: Te
 
   if (payload.fromSocket && payload.protocol === 'pi.tell.v1') void sendTellAck(payload.fromSocket, from, id);
 
-  return { ok: true as const, id, deliveredAs };
+  return { id, deliveredAs };
+};
+
+const tellEntrySchema = Type.Object({ id: Type.String() });
+
+const receivedTellIds = (ctx: ExtensionContext): Set<string> =>
+  new Set(
+    ctx.sessionManager
+      .getEntries()
+      .flatMap((entry) =>
+        entry.type === 'custom' && entry.customType === 'tell-message' && Value.Check(tellEntrySchema, entry.data)
+          ? [entry.data.id]
+          : [],
+      ),
+  );
+
+// Delivers tells queued while this session was not running, oldest first.
+// Each file is removed before delivery, so two processes on one session never
+// both deliver it and a crash loses that one message instead of repeating it.
+const drainSpool = (pi: ExtensionAPI, ctx: ExtensionContext): number => {
+  const sessionId = ctx.sessionManager.getSessionId();
+  const directory = path.join(SPOOL_DIR, encodeURIComponent(sessionId));
+  let files: string[];
+
+  try {
+    files = fs
+      .readdirSync(directory)
+      .filter((file) => /^tell-[a-z0-9-]+\.json$/.test(file))
+      .sort();
+  } catch {
+    return 0;
+  }
+
+  const seen = receivedTellIds(ctx);
+  let delivered = 0;
+
+  for (const file of files) {
+    const spooled = path.join(directory, file);
+    let payload: unknown;
+
+    try {
+      payload = JSON.parse(fs.readFileSync(spooled, 'utf8'));
+      fs.unlinkSync(spooled);
+    } catch {
+      continue;
+    }
+
+    if (
+      !Value.Check(tellSchema, payload) ||
+      !payload.id ||
+      seen.has(payload.id) ||
+      payload.text.length > MAX_TELL_CHARS
+    )
+      continue;
+    seen.add(payload.id);
+    acceptTell(pi, ctx, payload);
+    delivered += 1;
+  }
+
+  try {
+    fs.rmdirSync(directory);
+  } catch {}
+
+  if (delivered) logBridge(`delivered ${delivered} spooled tell(s) session=${sessionId}`);
+
+  return delivered;
 };
 
 const handleControl = async (
@@ -1649,6 +1730,7 @@ export const _test = {
   controlResponse,
   controlSessions,
   deliverTell,
+  drainSpool,
   endPrompt,
   handleControl,
   latestAssistantMessage,
@@ -1699,6 +1781,15 @@ export default function (pi: ExtensionAPI): void {
     activityBeforePrompt = null;
     activityUpdatedAt = new Date().toISOString();
     latestAssistantResult = null;
+
+    // Let startup and any initial prompt go first; a busy session queues these as follow-ups.
+    if (spoolTimer) clearTimeout(spoolTimer);
+    spoolTimer = setTimeout(() => {
+      spoolTimer = null;
+
+      if (latestCtx && !shuttingDown) drainSpool(pi, latestCtx);
+    }, SPOOL_DRAIN_DELAY_MS);
+    spoolTimer.unref?.();
 
     // Start generic ingress only when explicitly enabled by the Pi wrapper.
     if (IS_BRIDGE_ENABLED) {
@@ -1811,6 +1902,9 @@ export default function (pi: ExtensionAPI): void {
     if (heartbeatTimer) clearInterval(heartbeatTimer);
 
     if (tellWidgetTimer) clearTimeout(tellWidgetTimer);
+
+    if (spoolTimer) clearTimeout(spoolTimer);
+    spoolTimer = null;
     retryTimer = null;
     watchdogTimer = null;
     heartbeatTimer = null;
