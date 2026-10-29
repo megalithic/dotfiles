@@ -5,8 +5,6 @@
 local M = {}
 
 local types = require("lib.notifications.types")
-local telegram = require("lib.interop.telegram")
-local pi = require("lib.interop.pi")
 
 local ATTENTION = types.ATTENTION
 local URGENCY = types.URGENCY
@@ -177,7 +175,7 @@ function M.checkAttention(context, source)
 	end
 
 	-- 3. Screen sharing: never render local HUDs while others can see the
-	-- screen; remote channels (phone/telegram) still apply per their own rules.
+	-- screen; the phone channel still applies per its own rules.
 	local av = package.loaded["watchers.avwatchd"]
 	if av and av.state and av.state.sharing then
 		return { state = "screen_sharing", shouldNotify = "subtle" }
@@ -439,49 +437,7 @@ function M.routeNotification(opts, attention)
 		end
 	end
 
-	-- Telegram: explicit request always wins. Presence-based remote delivery is opt-in.
-	local shouldSendTelegram = opts.telegram or (opts.presenceRouting and shouldNotify == "remote_only")
-	if shouldSendTelegram and telegram.isReady() then
-		-- Track this session so replies can be routed back
-		if opts.context then
-			pi.trackLastActive(opts.context)
-		end
-
-		local ok, _ = M.sendTelegram(opts.title, opts.message, {
-			urgency = opts.urgency,
-			questionId = opts.question and opts.questionId or nil,
-		})
-		if ok then
-			table.insert(channels, "telegram")
-		end
-	end
-
 	return channels
-end
-
----Send via Telegram
----@param title string
----@param message string
----@param opts? { urgency?: string, questionId?: string }
----@return boolean success, string reason
-function M.sendTelegram(title, message, opts)
-	if not telegram.isReady() then
-		return false, "not_configured"
-	end
-
-	return telegram.sendNotification(title, message, opts)
-end
-
----Send a pre-formatted markdown message to Telegram
----Caller is responsible for proper MarkdownV2 escaping
----@param text string Pre-formatted MarkdownV2 text
----@return boolean success, string reason
-function M.sendTelegramFormatted(text)
-	if not telegram.isReady() then
-		return false, "not_configured"
-	end
-
-	return telegram.sendFormatted(text)
 end
 
 --------------------------------------------------------------------------------
@@ -589,8 +545,6 @@ function M.startQuestionRetryTimer()
 						message = q.opts.message,
 						urgency = URGENCY.HIGH,
 						phone = cfg.escalateOnRetry,
-						telegram = q.opts.telegram,
-						presenceRouting = q.opts.presenceRouting,
 						question = false, -- Don't re-track
 					})
 				end

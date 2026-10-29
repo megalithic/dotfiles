@@ -379,7 +379,6 @@ M.launchers = {
   },
   -- { "com.superultra.Homerow", nil, { passThrough = { ";" } } },
   { "com.tinyspeck.slackmacgap", "s", { cycleWindows = true } },
-  { "com.tdesktop.Telegram", "t" },
   { "org.hammerspoon.Hammerspoon", "r" },
   -- { "com.kapeli.dashdoc", { { "shift" }, "d" }, { passThrough = { "d" } } },
   { "com.pais.handy", nil, { passThroughHold = { "g" } } },
@@ -443,8 +442,6 @@ M.hotspot = {
 }
 
 M.notifier = {
-  telegramPollInterval = false, -- Keep outbound delivery without polling for replies.
-
   -- Shared HUD/remote routing used by N.send() and bin/ntfy.
   urgencyDisplay = {
     critical = { position = "center", dim = true, phone = true },
@@ -474,36 +471,6 @@ M.notifier = {
       cacheTTL = 604800,
     },
   },
-}
-
--- Pi Gateway Configuration
--- Manages a dedicated pi agent via RPC for Telegram orchestration
-M.piGateway = {
-  -- Enable/disable the gateway
-  enabled = false,
-
-  -- Queue behavior
-  prioritySignal = "!!", -- Messages starting with this jump queue + steer if busy
-  abortPhrases = { "abort!", "stop!", "kill!", "cancel!" }, -- Emergency abort triggers
-  -- Additional commands (hardcoded, not configurable):
-  --   status? / queue? / q? = Show queue status
-  --   clear! / flush!       = Clear all queued messages
-
-  -- Reliability
-  taskTimeoutMinutes = 15, -- Hard timeout (extends if activity detected)
-  activityTimeoutSeconds = 60, -- No activity for this long = stuck
-  circuitBreakerThreshold = 5, -- Consecutive failures before cooldown
-  circuitBreakerCooldownSeconds = 60, -- Cooldown duration
-  healthCheckIntervalSeconds = 30, -- Health check frequency
-  healthCheckTimeoutSeconds = 10, -- Response timeout for health ping
-
-  -- History (XDG_DATA_HOME)
-  historyRotation = "monthly", -- "daily" | "weekly" | "monthly" | "yearly"
-  historyPath = os.getenv("HOME") .. "/.local/share/pi/telegram/history",
-  archivePath = os.getenv("HOME") .. "/.local/share/pi/telegram/archives",
-
-  -- Logs (XDG_STATE_HOME)
-  logPath = os.getenv("HOME") .. "/.local/state/pi/telegram/orchestrator.log",
 }
 
 local extra_config = {}

@@ -199,9 +199,9 @@ M.log = setmetatable({}, {
 
 ---Create a logger bound to a specific module name
 ---Use when logging from inside pcall or when auto-detection fails
----@param moduleName string The module name to show in logs (e.g., "pi-gateway")
+---@param moduleName string The module name to show in logs (e.g., "pidewave")
 ---@return table A log object with the same API as U.log (i, w, e, f, if, wf, etc.)
----@usage local log = U.logFor("pi-gateway"); log.i("Started"); log.wf("Error: %s", err)
+---@usage local log = U.logFor("pidewave"); log.i("Started"); log.wf("Error: %s", err)
 function M.logFor(moduleName)
   return setmetatable({}, {
     __index = function(_, key)

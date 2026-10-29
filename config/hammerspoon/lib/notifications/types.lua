@@ -93,15 +93,13 @@ M.URGENCY = {
 ---@field urgency? "normal"|"high"|"critical" Default: "normal"
 ---@field bundleID? string Originating app bundle ID (HUD icon + engagement suppression)
 ---@field phone? boolean Send iMessage (default: false, auto-true if critical)
----@field telegram? boolean Send via Telegram bot (default: false)
----@field presenceRouting? boolean Allow remote_only attention state to add Telegram delivery (default: false)
 ---@field question? boolean Track for retry (default: false)
 ---@field context? string Calling context for attention detection (tmux session:window or tty)
 ---@field attentionHint? boolean Caller's hint about user attention: true=focused, false=away, nil=auto-detect
 
 ---@class SendResult
 ---@field sent boolean Whether notification was sent
----@field channels string[] List of channels used (e.g., {"canvas", "macos", "telegram"})
+---@field channels string[] List of channels used (e.g., {"hud", "phone"})
 ---@field reason string Explanation of routing decision
 ---@field questionId? string If question=true, the tracking ID for the question
 

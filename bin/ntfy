@@ -3,7 +3,7 @@
 # Delegates all logic to Hammerspoon's N.send() API
 #
 # Usage:
-#   ntfy send -t "Title" -m "Message" [-u urgency] [--presence-routing] [-p] [-T] [-q]
+#   ntfy send -t "Title" -m "Message" [-u urgency] [-p] [-q]
 #   ntfy answer [-t "Title"] [-m "Message"]
 #   ntfy pending
 #   ntfy help
@@ -11,7 +11,7 @@
 set -euo pipefail
 
 show_help() {
-  cat << 'EOF'
+  cat <<'EOF'
 Usage: ntfy <command> [options]
 
 Commands:
@@ -32,9 +32,7 @@ Send Options:
                            true = user is focused, may suppress notification
                            false = user is away, prefer to notify
                            auto = let Hammerspoon detect
-      --presence-routing   Allow remote-only state to add Telegram delivery
   -p, --phone              Send to phone via iMessage
-  -T, --telegram           Send via Telegram bot
   -q, --question           Track for retry if unanswered
 
 Answer Options:
@@ -112,28 +110,71 @@ lua_escape() {
 # Send notification via N.send()
 cmd_send() {
   local title="" message="" urgency="normal" source="" bundle_id=""
-  local phone="false" telegram="false" question="false"
-  local no_source="false" attention="auto" presence_routing="false"
+  local phone="false" question="false"
+  local no_source="false" attention="auto"
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -t|--title) title="$2"; shift 2 ;;
-      -m|--message) message="$2"; shift 2 ;;
-      -u|--urgency) urgency="$2"; shift 2 ;;
-      -b|--bundle-id) bundle_id="$2"; shift 2 ;;
-      -s|--source) source="$2"; shift 2 ;;
-      -S|--no-source) no_source="true"; shift ;;
-      -a|--attention) attention="$2"; shift 2 ;;
-      --presence-routing) presence_routing="true"; shift ;;
-      -p|--phone) phone="true"; shift ;;
-      -T|--telegram) telegram="true"; shift ;;
-      -q|--question) question="true"; shift ;;
-      --title=*) title="${1#*=}"; shift ;;
-      --message=*) message="${1#*=}"; shift ;;
-      --urgency=*) urgency="${1#*=}"; shift ;;
-      --bundle-id=*) bundle_id="${1#*=}"; shift ;;
-      --source=*) source="${1#*=}"; shift ;;
-      --attention=*) attention="${1#*=}"; shift ;;
+      -t | --title)
+        title="$2"
+        shift 2
+        ;;
+      -m | --message)
+        message="$2"
+        shift 2
+        ;;
+      -u | --urgency)
+        urgency="$2"
+        shift 2
+        ;;
+      -b | --bundle-id)
+        bundle_id="$2"
+        shift 2
+        ;;
+      -s | --source)
+        source="$2"
+        shift 2
+        ;;
+      -S | --no-source)
+        no_source="true"
+        shift
+        ;;
+      -a | --attention)
+        attention="$2"
+        shift 2
+        ;;
+      -p | --phone)
+        phone="true"
+        shift
+        ;;
+      -q | --question)
+        question="true"
+        shift
+        ;;
+      --title=*)
+        title="${1#*=}"
+        shift
+        ;;
+      --message=*)
+        message="${1#*=}"
+        shift
+        ;;
+      --urgency=*)
+        urgency="${1#*=}"
+        shift
+        ;;
+      --bundle-id=*)
+        bundle_id="${1#*=}"
+        shift
+        ;;
+      --source=*)
+        source="${1#*=}"
+        shift
+        ;;
+      --attention=*)
+        attention="${1#*=}"
+        shift
+        ;;
       *) shift ;;
     esac
   done
@@ -144,7 +185,7 @@ cmd_send() {
     return 1
   fi
   case "$urgency" in
-    normal|high|critical) ;;
+    normal | high | critical) ;;
     *)
       echo "Error: urgency must be normal, high, or critical" >&2
       return 1
@@ -181,7 +222,7 @@ cmd_send() {
   case "$attention" in
     true) lua_attention="true" ;;
     false) lua_attention="false" ;;
-    *) lua_attention="nil" ;;  # auto = let Hammerspoon detect
+    *) lua_attention="nil" ;; # auto = let Hammerspoon detect
   esac
 
   # Single Hammerspoon call with all data
@@ -194,11 +235,9 @@ local result = N.send({
   urgency = '${urgency}',
   bundleID = ${lua_bundle},
   phone = ${phone},
-  telegram = ${telegram},
   question = ${question},
   context = [[${lua_context}]],
   attentionHint = ${lua_attention},
-  presenceRouting = ${presence_routing},
 })
 local channels = table.concat(result.channels, ',')
 print(result.sent and 'sent' or 'suppressed', result.reason, channels, result.questionId or '')
@@ -213,12 +252,30 @@ cmd_answer() {
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -t|--title) title="$2"; shift 2 ;;
-      -m|--message) message="$2"; shift 2 ;;
-      -i|--id) id="$2"; shift 2 ;;
-      --title=*) title="${1#*=}"; shift ;;
-      --message=*) message="${1#*=}"; shift ;;
-      --id=*) id="${1#*=}"; shift ;;
+      -t | --title)
+        title="$2"
+        shift 2
+        ;;
+      -m | --message)
+        message="$2"
+        shift 2
+        ;;
+      -i | --id)
+        id="$2"
+        shift 2
+        ;;
+      --title=*)
+        title="${1#*=}"
+        shift
+        ;;
+      --message=*)
+        message="${1#*=}"
+        shift
+        ;;
+      --id=*)
+        id="${1#*=}"
+        shift
+        ;;
       *) shift ;;
     esac
   done
@@ -262,32 +319,20 @@ end
 "
 }
 
-# Send pre-formatted MarkdownV2 to Telegram
-# Usage: ntfy telegram "formatted message"
-# Note: Caller must escape MarkdownV2 special chars: _ * [ ] ( ) ~ ` > # + - = | { } . !
-cmd_telegram() {
-  local message="$1"
-  
-  if [[ -z "$message" ]]; then
-    echo "Error: message required" >&2
-    echo "Usage: ntfy telegram 'formatted *markdown* message'" >&2
-    return 1
-  fi
-
-  # Use heredoc to handle complex markdown without shell escaping issues
-  hs -c "
-local N = require('lib.notifications')
-local ok, err = N.sendTelegramFormatted([==[${message}]==])
-print(ok and 'sent' or ('failed: ' .. (err or 'unknown')))
-"
-}
-
 # Main command dispatcher
 case "${1:-help}" in
-  send) shift; cmd_send "$@" ;;
-  answer) shift; cmd_answer "$@" ;;
+  send)
+    shift
+    cmd_send "$@"
+    ;;
+  answer)
+    shift
+    cmd_answer "$@"
+    ;;
   pending) cmd_pending ;;
-  telegram) shift; cmd_telegram "$@" ;;
-  help|--help|-h) show_help ;;
-  *) echo "Unknown command: $1. Use 'ntfy help'" >&2; exit 1 ;;
+  help | --help | -h) show_help ;;
+  *)
+    echo "Unknown command: $1. Use 'ntfy help'" >&2
+    exit 1
+    ;;
 esac

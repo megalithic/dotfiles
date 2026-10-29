@@ -93,7 +93,7 @@ const INBOUND_BACKLOG_CAP = 50;
  * Build the socket path for a tmux pane. When the full path would exceed the
  * sun_path limit, the `{session}-{window}-{paneId}` name is truncated and a
  * deterministic 8-char sha256 suffix is appended so senders that use the same
- * scheme (tell.ts, hammerspoon interop/pi.lua) resolve the identical path.
+ * scheme (tell.ts) resolve the identical path.
  */
 const utf8Bytes = (value: string): number => new TextEncoder().encode(value).length;
 
