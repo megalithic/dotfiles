@@ -1,0 +1,113 @@
+#!/usr/bin/env bun
+// Turn a tmux-fastcopy "codeblock" match (a fenced block as drawn on screen)
+// into the exact code. In a Pi pane the code comes from the session file, so
+// tabs, wrapped long lines and trailing spaces survive. Otherwise it is rebuilt
+// from the screen text.
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+
+const SCROLLBAR = /\s[│┃█]$|^[│┃█]$/; // pi-tui paints its scrollbar in the last column
+const PI_CODE_INDENT = 2; // pi-tui codeBlockIndent default
+
+const pane = process.env.FASTCOPY_TARGET_PANE_ID || "";
+const lines = (await Bun.stdin.text()).replace(/\n+$/, "").split("\n");
+
+function piSessionId() {
+  if (!pane) return "";
+  const out = Bun.spawnSync(["tmux", "show-options", "-pqv", "-t", pane, "@pi_session_id"]);
+  return out.success ? out.stdout.toString().trim() : "";
+}
+
+function sessionFile(id) {
+  const root = join(process.env.HOME, ".pi/agent/sessions");
+  for (const dir of readdirSync(root)) {
+    try {
+      const file = readdirSync(join(root, dir)).find((name) => name.endsWith(`_${id}.jsonl`));
+      if (file) return join(root, dir, file);
+    } catch {}
+  }
+  return "";
+}
+
+// CommonMark fenced blocks. The fence may sit after a list marker or be
+// indented by a list; that indent is stripped from the content lines.
+// shortcut: ignores blockquoted fences and 4-space indented code; add if needed.
+function fencedBlocks(text) {
+  const blocks = [];
+  let open = null;
+  for (const line of text.split(/\r?\n/)) {
+    if (open) {
+      const close = line.match(/^ *(`{3,}|~{3,}) *$/);
+      if (close && close[1][0] === open.fence[0] && close[1].length >= open.fence.length) {
+        blocks.push(open.lines.join("\n"));
+        open = null;
+      } else {
+        open.lines.push(line.replace(open.strip, ""));
+      }
+      continue;
+    }
+    const start = line.match(/^( *(?:(?:[-*+]|\d{1,9}[.)]) +)?)(`{3,}|~{3,})(.*)$/);
+    if (start && !(start[2][0] === "`" && start[3].includes("`"))) {
+      open = { fence: start[2], strip: new RegExp(`^ {0,${start[1].length}}`), lines: [] };
+    }
+  }
+  if (open) blocks.push(open.lines.join("\n")); // unclosed fence runs to the end
+  return blocks;
+}
+
+function strings(value, out) {
+  if (typeof value === "string") {
+    if (value.includes("```") || value.includes("~~~")) out.push(value);
+  } else if (value && typeof value === "object") {
+    for (const child of Object.values(value)) strings(child, out);
+  }
+  return out;
+}
+
+// Rendering only changes whitespace, so blocks are compared without it.
+const squash = (text) => text.replace(/\s+/g, "");
+
+function fromSession(id, screenCode) {
+  const file = id && sessionFile(id);
+  if (!file) return null;
+  const key = squash(screenCode.join("\n"));
+  let found = null;
+  for (const line of readFileSync(file, "utf8").split("\n")) {
+    if (!line) continue;
+    let entry;
+    try { entry = JSON.parse(line); } catch { continue; }
+    for (const text of strings(entry, [])) {
+      for (const code of fencedBlocks(text)) {
+        if (squash(code) === key) found = code; // last match = most recent message
+      }
+    }
+  }
+  return found;
+}
+
+const id = piSessionId();
+const screen = id ? lines.map((line) => line.trimEnd().replace(SCROLLBAR, "").trimEnd()) : lines;
+const fenceIndent = screen[0].match(/^\s*/)[0].length;
+const body = screen.slice(1, -1).map((line) => line.trimEnd());
+
+let code = fromSession(id, body);
+if (code === null) {
+  if (id) {
+    // Pi screen: every code line starts with fence indent + 2 spaces. Lines
+    // that don't are pi-tui word-wrap continuations; the wrap dropped the
+    // whitespace at the break, assume one space.
+    const prefix = " ".repeat(fenceIndent + PI_CODE_INDENT);
+    const out = [];
+    for (const line of body) {
+      if (line === "" || line.startsWith(prefix)) out.push(line.slice(prefix.length));
+      else if (out.length) out[out.length - 1] += ` ${line.trimStart()}`;
+      else out.push(line.trimStart());
+    }
+    code = out.join("\n");
+  } else {
+    // Raw markdown (shell, editor): strip the fence's own indent, like CommonMark.
+    code = body.map((line) => line.replace(new RegExp(`^ {0,${fenceIndent}}`), "")).join("\n");
+  }
+}
+
+process.stdout.write(code);

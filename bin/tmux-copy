@@ -6,12 +6,18 @@ set -euo pipefail
 selection=""
 IFS= read -r -d '' selection || true
 
+# Code blocks keep their indentation, so skip the trimming below.
+if [[ " ${FASTCOPY_REGEX_NAME:-} " == *" codeblock "* ]]; then
+  printf '%s' "$selection" | "$(dirname "$0")/tmux-copy-codeblock" | /usr/bin/pbcopy
+  exit
+fi
+
 while [[ -n "$selection" && "${selection:0:1}" == [[:space:]] ]]; do
-	selection="${selection:1}"
+  selection="${selection:1}"
 done
 
 while [[ -n "$selection" && "${selection: -1}" == [[:space:]] ]]; do
-	selection="${selection:0:${#selection}-1}"
+  selection="${selection:0:${#selection}-1}"
 done
 
 printf '%s' "$selection" | /usr/bin/pbcopy
