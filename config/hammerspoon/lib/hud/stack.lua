@@ -221,7 +221,7 @@ function M.dismissAll(opts)
         -- Fallback: stop timers manually before cleanup
         if hud.timers then
           for name, timer in pairs(hud.timers) do
-            if timer then pcall(function() timer:stop() end) end
+            animator.stop(timer)
           end
         end
         M.unregister(id)
@@ -256,9 +256,7 @@ function M.cleanup()
     -- Stop all timers first
     if hud.timers then
       for name, timer in pairs(hud.timers) do
-        if timer then
-          pcall(function() timer:stop() end)
-        end
+        animator.stop(timer)
       end
     end
     -- Then delete canvas

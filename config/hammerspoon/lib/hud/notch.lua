@@ -249,9 +249,7 @@ end
 
 function NotchHUD:stopAnimations()
   for _, timer in pairs(self.timers) do
-    if timer then
-      pcall(function() timer:stop() end)
-    end
+    animator.stop(timer)
   end
   self.timers = {}
 end

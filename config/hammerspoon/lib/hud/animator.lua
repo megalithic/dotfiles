@@ -6,7 +6,7 @@
 --   - Convert to seconds internally for hs.timer
 --
 -- All animation functions return timer references for cleanup.
--- Timers self-clear their predicates when complete.
+-- Cancel animations with M.stop() to release their callbacks.
 --
 
 ---@alias EasingFunction fun(t: number): number
@@ -30,6 +30,7 @@
 ---@field stop fun(timer: hs.timer|nil) Safely stop a timer
 
 local M = {}
+local animationCleanup = setmetatable({}, { __mode = "k" })
 
 --------------------------------------------------------------------------------
 -- CONSTANTS
@@ -112,7 +113,7 @@ end
 ---@param durationMs number Duration in milliseconds
 ---@param onFrame function(progress: number) Called each frame with progress 0-1
 ---@param opts? table { easing?, onComplete? }
----@return hs.timer Timer reference (caller should store for cleanup)
+---@return hs.timer Timer reference (cancel with M.stop)
 function M.animate(durationMs, onFrame, opts)
   opts = opts or {}
   local easing = opts.easing or M.easeOutCubic
@@ -122,24 +123,40 @@ function M.animate(durationMs, onFrame, opts)
   local totalFrames = math.max(1, math.floor(durationSec * M.FPS))
   local currentFrame = 0
 
-  -- Store timer reference for self-clearing
   local timerRef = { timer = nil }
 
-  timerRef.timer = hs.timer.doUntil(function()
-    local done = currentFrame >= totalFrames
-    if done then
-      timerRef.timer = nil
-      if onComplete then onComplete() end
+  -- hs.timer.doUntil retains its own timer through the native callback registry.
+  local function release()
+    local timer = timerRef.timer
+    timerRef.timer = nil
+    onFrame, easing, onComplete = nil, nil, nil
+    if timer then
+      animationCleanup[timer] = nil
+      timer:stop()
     end
-    return done
-  end, function()
-    currentFrame = currentFrame + 1
-    local progress = currentFrame / totalFrames
-    local eased = easing(progress)
-    onFrame(eased)
-  end, 1 / M.FPS)
+  end
 
-  return timerRef.timer
+  timerRef.timer = hs.timer.new(1 / M.FPS, function()
+    local ok, err = pcall(function()
+      if currentFrame >= totalFrames then
+        local complete = onComplete
+        release()
+        if complete then complete() end
+      else
+        currentFrame = currentFrame + 1
+        local progress = currentFrame / totalFrames
+        local eased = easing(progress)
+        onFrame(eased)
+      end
+    end)
+    if not ok then
+      release()
+      error(err, 0)
+    end
+  end)
+
+  animationCleanup[timerRef.timer] = release
+  return timerRef.timer:start()
 end
 
 --------------------------------------------------------------------------------
@@ -597,11 +614,14 @@ end
 -- UTILITY
 --------------------------------------------------------------------------------
 
---- Stop a timer safely
+--- Stop a timer and release its animation callbacks
 ---@param timer hs.timer|nil Timer to stop
 function M.stop(timer)
   if timer then
-    pcall(function() timer:stop() end)
+    pcall(function()
+      local release = animationCleanup[timer]
+      if release then release() else timer:stop() end
+    end)
   end
 end
 
