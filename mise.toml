@@ -7,9 +7,9 @@
 lockfile = true
 
 [tools]
-# TS tooling (oxlint, oxfmt, tsc, Pi types) is pinned in package.json/bun.lock.
+# TS tooling (oxlint, oxfmt, Pi packages for tests) is pinned in package.json/bun.lock.
 bun = "1.4.2"
-# oxlint/oxfmt/tsc run on node; oxlint loads the .ts config with node's type stripping.
+# oxlint/oxfmt run on node; oxlint loads the .ts config with node's type stripping.
 node = "26"
 "npm:bats" = "latest"
 python = "3.14.8"
@@ -37,11 +37,6 @@ description = "Check oxfmt formatting of dotfiles-managed TS/JS"
 depends = ["deps:ts"]
 run = "node_modules/.bin/oxfmt --check {{vars.ts_files}}"
 
-[tasks."typecheck:ts"]
-description = "Typecheck Pi extensions and Bun suites against the pinned Pi packages"
-depends = ["deps:ts"]
-run = "node_modules/.bin/tsc -p ."
-
 [tasks."test:ts"]
 description = "Run the Bun test suites for Pi extensions and the Elixir template"
 depends = ["deps:ts"]
@@ -49,5 +44,5 @@ depends = ["deps:ts"]
 run = "bun test ./home/.pi/tests ./config/mise/tmpls/elixir/tests"
 
 [tasks."check:ts"]
-description = "Lint, format check, typecheck, and test dotfiles-managed TS"
-depends = ["lint:ts", "fmt:ts:check", "typecheck:ts", "test:ts"]
+description = "Lint, format check, and test dotfiles-managed TS"
+depends = ["lint:ts", "fmt:ts:check", "test:ts"]

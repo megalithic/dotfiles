@@ -157,7 +157,7 @@ install_sessions_plugin() {
   say "refreshed sessions plugin -> $HOME/.local/share/sessions/plugin"
 }
 
-# Pi aliases these packages to its own copies at runtime, so the typecheck pins
+# Pi aliases these packages to its own copies at runtime, so the test pins
 # must match the installed Pi version.
 pin_pi_types() {
   local manifest version typebox

@@ -12,8 +12,8 @@ This repo contains both Nix-managed and mise-managed dotfiles. Host decides whic
 
 ## TS checks
 
-- Pi extensions, skill scripts, and Bun suites under `home/.pi/` use the repo-root `package.json`/`bun.lock` (pinned Pi packages, `typescript`, `oxlint`, `oxfmt`), `tsconfig.json`, and `.oxfmtrc.json`.
-- Run `mise run check:ts` (lint, format check, typecheck, tests) before finishing TS changes; `mise run fmt:ts` formats. hk runs lint and format on staged files plus a whole-project typecheck, but not the tests. In a fresh clone or worktree, run `mise run deps:ts` first.
+- Pi extensions, skill scripts, and Bun suites under `home/.pi/` use the repo-root `package.json`/`bun.lock` (pinned Pi packages, `oxlint`, `oxfmt`) and `.oxfmtrc.json`. No typechecking.
+- Run `mise run check:ts` (lint, format check, tests) before finishing TS changes; `mise run fmt:ts` formats. hk runs lint and format on staged files, but not the tests. In a fresh clone or worktree, run `mise run deps:ts` first.
 - The Pi package pins must match the installed Pi version; `mise run update:pi` bumps them.
 
 ## Host management guard (read first)

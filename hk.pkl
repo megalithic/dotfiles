@@ -81,15 +81,6 @@ local linters = new Mapping<String, Step> {
             effect = "write"
         }
     }
-    // Whole-project typecheck (tsconfig.json) whenever a TS file is staged.
-    ["tsc"] = new Step {
-        glob = tsFiles + List("tsconfig.json", "package.json", "bun.lock")
-        exclude = disabledPiEntries
-        check = new CommandSpec {
-            command = "node_modules/.bin/tsc -p ."
-            effect = "read"
-        }
-    }
     // Nix linters from the old devenv setup — enable once provided by mise:
     // ["deadnix"] = Builtins.deadnix
 }

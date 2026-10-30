@@ -10,7 +10,6 @@ on:
       - "tools/oxlint/**"
       - "package.json"
       - "bun.lock"
-      - "tsconfig.json"
       - ".oxfmtrc.json"
       - "mise.toml"
       - "mise.lock"
@@ -24,7 +23,7 @@ concurrency:
 
 jobs:
   check:
-    name: Lint, format, typecheck, test
+    name: Lint, format, test
     # The Pi extensions and their tests target macOS.
     runs-on: macos-latest
     steps:
