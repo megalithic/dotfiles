@@ -62,6 +62,8 @@ VISUAL = "nvim -O"
 GIT_EDITOR = "nvim -O"
 JJ_EDITOR = "nvim -O"
 MANPAGER = "nvim +Man!"
+# rex CLI outside Rex terminals: XDG_RUNTIME_DIR=/tmp would point it at /tmp/rex and autostart a second server
+REX_SERVER = "{{ get_env(name='REX_SERVER', default='unix://' ~ env.HOME ~ '/Library/Application Support/rex/server.sock') }}"
 # MANPAGER = "less -X"
 # PLUG_EDITOR = "zed://file/__FILE__:__LINE__"
 # ELIXIR_EDITOR = "zed __FILE__:__LINE__"
@@ -84,6 +86,8 @@ _.path = [
   "$HOME/.fly/bin",
   "$HOME/.cargo/bin",
   "/Applications/Postgres.app/Contents/Versions/latest/bin",
+  # rex CLI: Rex terminals set REX_BIN_DIR to their server's copy; elsewhere use the app-managed current one
+  "{{ get_env(name='REX_BIN_DIR', default=env.HOME ~ '/Library/Application Support/com.superlogical.rex/RexServer/Versions/Current/Rex Server.app/Contents/MacOS') }}",
 ]
 
 [shell_alias]
@@ -630,6 +634,24 @@ ConfigSyncUsesCustomFolder = true
 
 [bootstrap.macos.defaults."org.hammerspoon.Hammerspoon"]
 MJConfigFile = "~/.config/hammerspoon/init.lua"
+
+# Rex Beta settings-window choices; init.lua (config/rex) only holds keybindings.
+# Not a live link: copy later GUI changes back here.
+[bootstrap.macos.defaults."com.superlogical.rex"]
+"Workspace.terminalFontName" = "JetBrainsMono Nerd Font Mono"
+"Workspace.terminalFallbackFontNames" = ["Symbols Nerd Font Mono"]
+"Workspace.terminalFontPointSize" = 13.5
+"Workspace.terminalFontSmoothing" = false
+"Workspace.terminalSmoothScrolling" = true
+"Workspace.terminalUsesDisplayP3" = true
+"Workspace.darkThemeID" = "midnight-tundra"
+"Workspace.lightThemeID" = "merino-light"
+"Workspace.cursorShadersEnabled" = true
+"Workspace.inactivePaneFadeMode" = "both"
+"Workspace.usesStandardInactiveWindowPaneStyles" = true
+"Workspace.tabIconTintMode" = "off"
+"Workspace.appIcon" = "default"
+"rex.developer-mode-enabled" = true
 
 [bootstrap.macos.defaults."com.apple.SoftwareUpdate"]
 AutomaticCheckEnabled = true
