@@ -2,7 +2,7 @@
 -- Tidewave tab for its worktree, then focus Helium and engage inspect mode.
 --
 -- Flow on hotkey:
---   1. Resolve the focused Ghostty title to an exact, active tmux pane, or,
+--   1. Resolve the focused TERMINAL title to an exact, active tmux pane, or,
 --      when Helium is frontmost, the focused app or Tidewave Connect tab whose
 --      origin matches a fresh connected Pi manifest (Cmd+Shift+C passes
 --      through to Helium when no such tab is focused).
@@ -98,7 +98,7 @@ end
 
 local function focusedTerminal()
   local app = hs.application.frontmostApplication()
-  if not app or app:bundleID() ~= "com.mitchellh.ghostty" then return nil end
+  if not app or app:bundleID() ~= TERMINAL then return nil end
   local win = hs.window.focusedWindow()
   local appWindow = app:focusedWindow()
   if not win or not appWindow or win:id() ~= appWindow:id() then return nil end

@@ -33,7 +33,8 @@ local function setup()
     sourceUrl = "http://localhost:4123/tidewave/connect",
   }
   local window = { id = function() return state.windowId end, title = function() return state.title end }
-  state.ghostty = mock.makeApp({ bundleID = "com.mitchellh.ghostty", windows = { window } })
+  TERMINAL = "com.superlogical.rex"
+  state.terminal = mock.makeApp({ bundleID = TERMINAL, windows = { window } })
   state.helium = mock.makeApp({ bundleID = "net.imput.helium", pid = 900 })
   function state.helium:activate()
     state.activated = state.activated + 1
@@ -41,7 +42,7 @@ local function setup()
     mock.frontmost = self
     return true
   end
-  mock.frontmost = state.ghostty
+  mock.frontmost = state.terminal
   state.mock = mock
   hs.window.focusedWindow = function()
     if state.noFocusedWindow then return nil end
@@ -192,7 +193,7 @@ local function rejected(s)
 end
 
 for name, mutate in pairs({
-  ["non-Ghostty frontmost"] = function(s) s.mock.frontmost = s.helium end,
+  ["non-terminal frontmost"] = function(s) s.mock.frontmost = s.helium end,
   ["no frontmost app"] = function(s) s.mock.frontmost = nil end,
   ["unparseable title"] = function(s) s.title = "project shell" end,
   ["no focused window"] = function(s) s.noFocusedWindow = true end,
@@ -536,7 +537,7 @@ test("an app tab wins over a Connect tab unless the Connect tab was saved", func
   s.module.handshake()
   assert(s.binding.targetPrefix == "ABC123")
   s.binding.targetPrefix = "DEF456"
-  s.mock.frontmost = s.ghostty
+  s.mock.frontmost = s.terminal
   s.module.handshake()
   assert(s.inspected == 2 and s.binding.targetPrefix == "DEF456")
 end)

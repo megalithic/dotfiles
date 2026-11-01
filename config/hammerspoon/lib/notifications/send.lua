@@ -71,7 +71,7 @@ end
 ---This avoids PATH/socket issues with querying tmux directly from Hammerspoon
 ---@return string|nil Format: "session:window:pane:pid" or nil if not parseable
 local function getActiveTmuxContext()
-	-- Get the terminal application (Ghostty)
+	-- Get the terminal application (TERMINAL)
 	local terminal = hs.application.get(TERMINAL)
 	if not terminal then
 		return nil

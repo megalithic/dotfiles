@@ -190,10 +190,10 @@ local function ringBell(target)
   )
 end
 
--- Raise Ghostty + switch tmux client to the resolved session.
+-- Raise the terminal + switch tmux client to the resolved session.
 local function focusSession(target)
-  local ghostty = hs.application.get("Ghostty")
-  if ghostty then ghostty:activate() end
+  local term = hs.application.get(TERMINAL)
+  if term then term:activate() end
   if target.session then hs.execute(fmt("%stmux switch-client -t %s", pathPrefix(), target.session)) end
 end
 

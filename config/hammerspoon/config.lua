@@ -8,7 +8,8 @@ BROWSER_LAUNCH = os.getenv("HOME") .. "/bin/helium-launch"
 -- BROWSER = "com.nix.brave-browser-nightly"
 -- BROWSER = "com.brave.Browser.nightly"
 -- TERMINAL = "net.kovidgoyal.kitty"
-TERMINAL = "com.mitchellh.ghostty"
+-- TERMINAL = "com.mitchellh.ghostty"
+TERMINAL = "com.superlogical.rex"
 
 -- Bundle ID aliases: wrapper bundle ID -> actual running app bundle ID
 -- Used by summon.lua to find running apps launched via wrappers
@@ -87,6 +88,13 @@ M.layouts = {
       { "Software Update", 1, M.grid.center.small },
       { "!daily note" }, -- Exclude floating daily note windows
       { "!capture" }, -- Exclude floating capture windows
+      { "", 1, M.grid.full },
+    },
+  },
+  ["com.superlogical.rex"] = {
+    bundleID = "com.superlogical.rex",
+    name = "rex",
+    rules = {
       { "", 1, M.grid.full },
     },
   },
@@ -327,6 +335,7 @@ M.quitters = {
   ["com.apple.SafariTechnologyPreview"] = { mode = "double" },
   ["com.apple.Safari"] = { mode = "double" },
   ["com.mitchellh.ghostty"] = { mode = "double" },
+  ["com.superlogical.rex"] = { mode = "double" },
   ["net.kovidgoyal.kitty"] = { mode = "double" },
   ["com.github.wez.wezterm"] = { mode = "double" },
   ["com.runningwithcrayons.Alfred"] = { mode = "double" },
