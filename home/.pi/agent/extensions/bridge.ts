@@ -191,7 +191,7 @@ const resolveSocket = (
 
 const { socketPath: SOCKET_PATH, session: PI_SESSION, window: PI_WINDOW } = resolveSocket();
 
-const IS_BRIDGE_ENABLED = !!SOCKET_PATH && process.env.PI_BRIDGE_LEGACY_SOCKET === '1';
+const IS_BRIDGE_ENABLED = !!SOCKET_PATH;
 
 // =============================================================================
 // Payload Types
