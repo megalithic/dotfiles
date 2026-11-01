@@ -58,7 +58,9 @@ git rev-parse --verify --quiet "refs/heads/$NAME" >/dev/null ||
 - Default branch: always `git fetch origin "$default"` first, then pass `--base "origin/$default"`. Local `main` can be stale and `wt` never fetches.
 - Current branch: pass `--base @`. If `git status --porcelain` is non-empty, warn that uncommitted changes stay behind.
 
-## Hand work to an agent in a new or existing worktree ("tell the agent in a new worktree X ...")
+## Hand work to an agent in a new or existing worktree
+
+Whenever a request names a worktree (new or existing) and includes any work, always hand the work to the Pi agent in that worktree, even if the user doesn't say "tell the agent". Examples: "new wt X - fix Y", "in wt X, do Y", "tell the agent in a new worktree X to Y". Never do the work yourself from the calling session.
 
 You only orchestrate; the agent in the worktree does the work. Your whole job: resolve or create the worktree, get a live agent there, send it the brief with `tell_pi`, switch the user over, and report.
 
@@ -164,7 +166,7 @@ You only orchestrate; the agent in the worktree does the work. Your whole job: r
    - 3b: `tmux switch-client -t "$session" \; select-window -t "$pane" \; select-pane -t "$pane"`, using the agent's `.session` and `.pane`.
 7. Report the worktree path, branch, base (new worktrees only), tell id, whether the agent was found or started, whether updates were requested, and the services state from `.tmux` when `wt` ran. Then end your turn. If updates were requested, relay each one to the user when it arrives; don't act on the work yourself.
 
-Use `wt ensure NAME --json` with no tell when the user only wants a worktree created. Plain `wt NAME` and `-t w` without `--json` are for when the user asks to open it themselves.
+Use `wt ensure NAME --json` with no tell only when the user asks for a worktree and gives no work. Plain `wt NAME` and `-t w` without `--json` are for when the user asks to open it themselves.
 
 ## Prune and recovery
 
