@@ -652,6 +652,10 @@ MJConfigFile = "~/.config/hammerspoon/init.lua"
 "Workspace.usesStandardInactiveWindowPaneStyles" = true
 "Workspace.tabIconTintMode" = "off"
 "Workspace.appIcon" = "default"
+# Window titles carry tmux's "session:window:pane:pid" title; Hammerspoon (pidewave, notifications) parses it
+"Workspace.prefersGeneratedTitles" = false
+# Start in ~/.dotfiles like Ghostty's working-directory; tabs/splits keep their inherited cwd
+"Workspace.terminalStartupCommand" = "/opt/homebrew/bin/fish -l -C 'test $PWD = $HOME; and cd ~/.dotfiles'"
 "rex.developer-mode-enabled" = true
 "rex.client.remoteControl" = true
 
