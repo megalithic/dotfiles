@@ -70,6 +70,11 @@ Local tooling is managed by mise (`.config/mise.toml`).
   - Never `rg 'def name'` to find a definition; use
     `mcp__tidewave__get_source_location`.
   - Never tail `log/` files for runtime errors; use `mcp__tidewave__get_logs`.
+  - Never run `mix compile` through bash to check an edit. The running
+    server's code reloader recompiles on the next request (such as a
+    `browser.reload`), and its warnings appear in `mcp__tidewave__get_logs`.
+    To compile before a page load, call `recompile()` through
+    `mcp__tidewave__project_eval`.
   - Never drive the dev site with curl or a browser MCP for LiveView checks;
     use `mcp__tidewave__browser_eval`. It takes `action` (`help`, `new-session`,
     `eval`), `sid`, and `action_inputs` (`code` using the `browser` object).
