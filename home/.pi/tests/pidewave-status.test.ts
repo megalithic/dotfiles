@@ -490,11 +490,13 @@ const footerHarness = (statuses: Map<string, string>) => {
   return (width = 240) => component.render(width);
 };
 
+const blue = (text: string) => `\x1b[38;2;81;173;229m${text}\x1b[39m`;
+
 const status = (boundHere = true, appUrl = 'https://app.test:4443/path?query=hidden#fragment', connected?: boolean) =>
   JSON.stringify({ url: appUrl, boundHere, connected });
 
 describe('pidewave footer rendering', () => {
-  test.each([true, false])('URL occurs once, first among extension statuses, boundHere=%p', (boundHere) => {
+  test.each([true, false])('icon and port occur once, first among extension statuses, boundHere=%p', (boundHere) => {
     const render = footerHarness(
       new Map([
         ['pidewave', status(boundHere, undefined, true)],
@@ -506,9 +508,10 @@ describe('pidewave footer rendering', () => {
 
     const line = render()[1]!;
     const plain = stripVTControlCharacters(line);
-    expect(plain).toContain('https://app.test:4443 │ first │ between │ last');
-    expect(plain.match(/https:\/\/app\.test:4443/g)).toHaveLength(1);
-    expect(line).toContain(theme.fg('success', 'https://app.test:4443'));
+    expect(plain).toContain('\u{F1A81} 4443 │ first │ between │ last');
+    expect(plain.match(/4443/g)).toHaveLength(1);
+    expect(line).toContain(boundHere ? blue('\u{F1A81} 4443') : theme.fg('dim', '\u{F1A81} 4443'));
+    expect(plain).not.toContain('app.test');
     expect(plain).not.toContain('query');
     expect(plain).not.toContain('boundHere');
   });
@@ -522,25 +525,27 @@ describe('pidewave footer rendering', () => {
     )()[1]!;
 
     const plain = stripVTControlCharacters(line);
-    expect(plain).not.toContain('app.test');
+    expect(plain).not.toContain('4443');
     expect(plain).toContain('0/3');
   });
 
   test.each([undefined, 'MCP connecting...', 'MCP: 2 servers enabled (1 connected)'])(
-    'shows URL even when canonical MCP is absent or unparsed (%p)',
+    'shows port even when canonical MCP is absent or unparsed (%p)',
     (mcp) => {
       const statuses = new Map([['pidewave', status(false, url, true)]]);
 
       if (mcp !== undefined) statuses.set('mcp', mcp);
       const line = footerHarness(statuses)()[1]!;
-      expect(line).toContain(theme.fg('success', url));
+      expect(line).toContain(theme.fg('dim', '\u{F1A81} 4000'));
       expect(stripVTControlCharacters(line)).not.toContain('boundHere');
     },
   );
 
-  test('connected is green regardless of binding ownership', () => {
-    const line = footerHarness(new Map([['pidewave', status(true, url, true)]]))()[1];
-    expect(line).toContain(theme.fg('success', url));
+  test('connected is blue when bound here and dim otherwise', () => {
+    expect(footerHarness(new Map([['pidewave', status(true, url, true)]]))()[1]).toContain(blue('\u{F1A81} 4000'));
+    expect(footerHarness(new Map([['pidewave', status(false, url, true)]]))()[1]).toContain(
+      theme.fg('dim', '\u{F1A81} 4000'),
+    );
   });
 
   test.each([
@@ -571,7 +576,7 @@ describe('pidewave footer rendering', () => {
     expect(render()).toEqual(standalone);
   });
 
-  test('normalizes HTTP origins and stays within narrow terminal widths', () => {
+  test('falls back to the default port and stays within narrow terminal widths', () => {
     const render = footerHarness(
       new Map([
         ['other', 'ok'],
@@ -579,7 +584,7 @@ describe('pidewave footer rendering', () => {
       ]),
     );
 
-    expect(stripVTControlCharacters(render()[1]!)).toContain('http://localhost │ ok');
+    expect(stripVTControlCharacters(render()[1]!)).toContain('\u{F1A81} 80 │ ok');
 
     for (const width of [1, 2, 3, 8, 16, 30, 40, 60, 80]) {
       const lines = render(width);

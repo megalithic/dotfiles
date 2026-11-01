@@ -128,6 +128,9 @@ function formatPinvimStatus(text: string, theme: { fg(name: string, text: string
   }
 }
 
+// Nerd Font md-tsunami, the closest glyph to the Tidewave logo.
+const TIDEWAVE_ICON = '\u{F1A81}';
+
 const pidewaveStatusSchema = Type.Object({
   url: Type.String(),
   boundHere: Type.Boolean(),
@@ -144,10 +147,12 @@ function formatPidewaveStatus(text: string, theme: { fg(name: string, text: stri
 
     if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return undefined;
 
-    // ACP publishes this status only while Tidewave MCP is live, so it is always green.
+    // Hidden unless Tidewave MCP is live; blue (Tidewave favicon #51ade5) once pidewave is bound to this Pi.
     if (!status.connected) return undefined;
 
-    return theme.fg('success', url.origin);
+    const label = `${TIDEWAVE_ICON} ${url.port || (url.protocol === 'https:' ? '443' : '80')}`;
+
+    return status.boundHere ? `\x1b[38;2;81;173;229m${label}\x1b[39m` : theme.fg('dim', label);
   } catch {
     return undefined;
   }
