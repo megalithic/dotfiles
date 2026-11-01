@@ -1,0 +1,29 @@
+# megaforest: Ghostty-format theme, ported from config/ghostty/config.
+# Rex copies it into its preferences on import, so re-import after edits:
+#   rex do -C workbookpro client.theme.import path=$HOME/.config/rex/themes/megaforest
+background = #272b30
+foreground = #d8caac
+# black
+palette = 0=#505a60
+palette = 8=#5c6370
+# red
+palette = 1=#e67e80
+palette = 9=#E06C75
+# green
+palette = 2=#a7c080
+palette = 10=#A7CF9B
+# yellow
+palette = 3=#d9bb80
+palette = 11=#e5c07b
+# blue
+palette = 4=#7fbbb3
+palette = 12=#7FBBD0
+# purple
+palette = 5=#d39bb6
+palette = 13=#FCC5E9
+# aqua
+palette = 6=#7eb48b
+palette = 14=#78BA91
+# white
+palette = 7=#ffffff
+palette = 15=#ffffff

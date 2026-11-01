@@ -644,14 +644,16 @@ MJConfigFile = "~/.config/hammerspoon/init.lua"
 "Workspace.terminalFontSmoothing" = false
 "Workspace.terminalSmoothScrolling" = true
 "Workspace.terminalUsesDisplayP3" = true
-"Workspace.darkThemeID" = "midnight-tundra"
+# darkThemeID omitted: imported themes get a random ID; the post-defaults hook imports and selects megaforest
 "Workspace.lightThemeID" = "merino-light"
 "Workspace.cursorShadersEnabled" = true
+"Workspace.cursorShader" = "warp"
 "Workspace.inactivePaneFadeMode" = "both"
 "Workspace.usesStandardInactiveWindowPaneStyles" = true
 "Workspace.tabIconTintMode" = "off"
 "Workspace.appIcon" = "default"
 "rex.developer-mode-enabled" = true
+"rex.client.remoteControl" = true
 
 [bootstrap.macos.defaults."com.apple.SoftwareUpdate"]
 AutomaticCheckEnabled = true
@@ -751,6 +753,14 @@ run = """
   if [ "$(uname)" = "Darwin" ]; then
     chflags nohidden ~/Library
     for app in Safari Finder Dock SystemUIServer; do killall "$app" 2>/dev/null || true; done
+
+    # Rex keeps imported themes as binary prefs mise can't declare: import once if missing.
+    # Needs Rex running with Remote Control on (rex.client.remoteControl above).
+    rex="$HOME/Library/Application Support/com.superlogical.rex/RexServer/Versions/Current/Rex Server.app/Contents/MacOS/rex"
+    if [ -x "$rex" ] && ! /usr/libexec/PlistBuddy -c 'Print :Workspace.customThemes' ~/Library/Preferences/com.superlogical.rex.plist 2>/dev/null | grep -q '"name":"megaforest"'; then
+      "$rex" --autostart=false -S "unix://$HOME/Library/Application Support/rex/server.sock" do client.theme.import path="$HOME/.config/rex/themes/megaforest" \
+        || echo "rex: megaforest theme not imported; open Rex with Remote Control on and rerun"
+    fi
   fi
 """
 
