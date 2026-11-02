@@ -2,9 +2,8 @@
 # Separate from the global config at config/mise/config.toml (machine tooling).
 
 [settings]
-# The global config sets lockfile = false; lockfiles apply only inside this
-# repo (mise.lock here and config/mise/mise*.lock for the global tools).
-lockfile = true
+# No mise lockfiles: they drift between machines and break updates.
+lockfile = false
 
 [tools]
 # TS tooling (oxlint, oxfmt, Pi packages for tests) is pinned in package.json/bun.lock.

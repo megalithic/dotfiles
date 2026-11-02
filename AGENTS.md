@@ -131,7 +131,7 @@ When `op`, 1Password CLI integration, or fnox secret resolution fails, follow th
 │   ├── overlays/          # Nixpkgs overlays
 │   └── secrets/           # age-encrypted archive (see just age/deage)
 ├── config/                # Mise-managed app configuration sources
-│   ├── mise/              # Global/host configs, lockfile, templates
+│   ├── mise/              # Global/host configs, templates
 │   └── ghostty/           # Terminal emulator (one of many app configs)
 ├── home/                  # Mise-managed sources linked into ~/
 ├── mise/                  # Bootstrap tasks, hooks, and static fragments

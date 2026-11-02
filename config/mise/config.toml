@@ -18,9 +18,8 @@ task.monorepo_depth = 2
 # mise also hashes this file as a source of every task it defines, so any
 # content edit here reruns all sourced tasks once.
 task.source_freshness_hash_contents = true
-# Never read or write lockfiles by default, so tracked or stray mise.lock files
-# in other repos stay untouched. ~/.dotfiles/mise.toml turns them back on there,
-# which also covers this config's lockfiles; tasks that change tools run there.
+# Never read or write lockfiles, so tracked or stray mise.lock files in other
+# repos stay untouched and machines don't drift on lock state.
 lockfile = false
 github.use_git_credentials = true
 npm.package_manager = "aube"
@@ -136,8 +135,6 @@ up = "cd $HOME/.dotfiles && mise run up"
   # repo docs and parked files, not app config
   "AGENTS.md",
   "git/disabled",
-  # lockfile sidecars: mise resolves them beside the symlinked lockfile's target
-  "mise/.mise",
   # linked as one folder below
   "/espanso",
 ] }

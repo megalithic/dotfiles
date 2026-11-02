@@ -125,7 +125,6 @@ Library/Application Support/MailMate/Resources/KeyBindings/megamate.plist|home/L
 .config/mise/config.toml|config/mise/config.toml
 .config/mise/config.workbookpro.toml|config/mise/config.workbookpro.toml
 .config/mise/config.megabookpro.toml|config/mise/config.megabookpro.toml
-.config/mise/mise.lock|config/mise/mise.lock
 .config/nvim/init.lua|config/nvim/init.lua
 .config/kanata/macbook.kbd|config/kanata/macbook.kbd
 .config/kanata/icons/base.png|config/kanata/icons/base.png

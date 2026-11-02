@@ -12,7 +12,6 @@ on:
       - "bun.lock"
       - ".oxfmtrc.json"
       - "mise.toml"
-      - "mise.lock"
       - ".github/workflows/ts.yml"
   pull_request:
     paths: *ts_paths

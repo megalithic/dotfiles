@@ -50,7 +50,7 @@ Bootstrap has no dry-run mode. It changes machine state: it may install Command
 Line Tools and Homebrew, install or update standalone mise at
 `~/.local/bin/mise`, set the MacOS hostname, clone or update `~/.dotfiles`,
 apply managed links, install tools/packages/apps, run first-install hooks, set
-fish as the login shell, attempt to refresh `mise.lock`, and run final health
+fish as the login shell, and run final health
 checks. If an existing checkout is dirty, the current script stashes its
 changes before pulling.
 
