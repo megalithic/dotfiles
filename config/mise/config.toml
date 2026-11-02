@@ -222,6 +222,7 @@ tmux = "http:tmux"
 
 "go:golang.org/x/tools/gopls" = "latest"
 
+"npm:agent-desktop" = "latest"
 "npm:basedpyright" = "latest"
 "npm:bash-language-server" = "latest"
 "npm:chrome-devtools-mcp" = "latest"
