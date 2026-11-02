@@ -12,6 +12,7 @@ ${custom.nix_shell}\
 ${custom.sudo}\
 ${custom.jobs}\
 $status\
+$hostname\
 $character"""
 
 command_timeout = 500
@@ -38,6 +39,7 @@ format = "[$user]($style)@"
 [hostname]
 style = "yellow"
 format = "[$hostname]($style) "
+ssh_only = true
 
 [cmd_duration]
 format = "[ $duration]($style) "

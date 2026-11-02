@@ -20,7 +20,7 @@
   },
   "doubleEscapeAction": "tree",
   "enableSkillCommands": true,
-  "hideThinkingBlock": true,
+  "hideThinkingBlock": false,
   "steeringMode": "all",
   "followUpMode": "all",
   "treeFilterMode": "no-tools",
