@@ -6,7 +6,6 @@ import { createRequire } from 'node:module';
 import net from 'node:net';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
-import { homedir } from 'node:os';
 import fs from 'node:fs';
 import path from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
@@ -27,7 +26,7 @@ process.env.PI_STATE_DIR = stateDir;
 
 const { default: acp } = await import('../agent/extensions/acp.ts');
 
-const installed = createRequire(path.join(homedir(), '.pi/agent/npm/package.json'));
+const installed = createRequire(import.meta.url);
 
 const { createJiti } = installed('jiti');
 

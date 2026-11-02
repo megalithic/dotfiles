@@ -44,9 +44,14 @@ const previousStateDir = process.env.PI_STATE_DIR;
 
 const previousSocket = process.env.PI_SOCKET;
 
+const originalHostname = process.env.HOSTNAME;
+
 process.env.PI_STATE_DIR = stateDir;
 
 process.env.PI_SOCKET = `${stateDir}/self.sock`;
+
+// Tell IDs embed the machine name; CI runner hostnames are long enough to truncate them in the picker.
+process.env.HOSTNAME = 'testhost';
 
 const { default: extension, _test } = await import('../agent/extensions/tell.ts');
 
@@ -60,6 +65,9 @@ afterAll(async () => {
 
   if (previousSocket === undefined) delete process.env.PI_SOCKET;
   else process.env.PI_SOCKET = previousSocket;
+
+  if (originalHostname === undefined) delete process.env.HOSTNAME;
+  else process.env.HOSTNAME = originalHostname;
 
   execFileSync('trash', [stateDir]);
 });
