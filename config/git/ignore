@@ -154,6 +154,7 @@ deps
 .config/
 **/.config/
 .pi-lens.json
+.mise
 
 # Local (untracked) Claude Code project settings
 **/.claude/settings.local.json

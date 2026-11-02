@@ -9,7 +9,7 @@ brew "felixkratz/formulae/borders", restart_service: :always
 brew "nikitabobko/tap/brew-install-path"
 brew "leandrocp/lumis/lumis"
 brew "felixkratz/formulae/sketchybar", restart_service: :always
-brew "middle-management/tap/tailscreen"
+cask "middle-management/tap/tailscreen"
 
 # Testing:
 # cask "mikker/tap/dinky"

@@ -27,6 +27,8 @@ npm.package_manager = "aube"
 cargo.binstall = true
 status.show_env = true
 status.show_tools = true
+# pulls fresh from github api each time
+use_versions_host = false
 
 [deps.aube]
 auto = true
@@ -436,7 +438,7 @@ adopt = true
 "brew:vim" = "latest"
 "brew:wget" = "latest"
 "brew:wxwidgets" = "latest"
-"brew:ykman" = "latest" # not pipx: pyscard ships no py3.14 macOS wheel
+"brew:ykman" = "latest"        # not pipx: pyscard ships no py3.14 macOS wheel
 "brew:zip" = "latest"
 "brew:p7zip" = "latest"
 "brew:zsh" = "latest"
@@ -450,7 +452,7 @@ adopt = true
 "brew-cask:colorsnapper" = "latest"
 "brew-cask:contexts" = "latest"
 "brew-cask:discord" = "latest"
-"brew-cask:espanso" = "latest" # open once by hand (Gatekeeper); its wizard runs `espanso service register`
+"brew-cask:espanso" = "latest"                            # open once by hand (Gatekeeper); its wizard runs `espanso service register`
 "brew-cask:font-atkinson-hyperlegible" = "latest"
 "brew-cask:font-fantasque-sans-mono-nerd-font" = "latest"
 "brew-cask:font-fira-code" = "latest"
