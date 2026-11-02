@@ -316,7 +316,7 @@ zig = "0.16.0"
 zoxide = "latest"
 
 [tools.aeroplay]
-version = "0.4.1"
+version = "0.5.0"
 os = ["macos"]
 asset_pattern = "aeroplay-{{ version }}-macos26-arm64.zip"
 bin_path = "AeroPlay.app/Contents/MacOS"
@@ -709,7 +709,7 @@ stderr_path = "~/.cache/miccheck-stderr.log"
 
 # AeroPlay: route one app's audio only to a selected AirPlay or CoreAudio output.
 [bootstrap.macos.launchd.agents."io.swifties.aeroplay"]
-program = "~/.local/share/mise/installs/aeroplay/0.4.1/AeroPlay.app/Contents/MacOS/aeroplayd"
+program = "~/.local/share/mise/installs/aeroplay/0.5.0/AeroPlay.app/Contents/MacOS/aeroplayd"
 run_at_load = true
 keep_alive = false
 stdout_path = "~/.cache/aeroplayd-stdout.log"

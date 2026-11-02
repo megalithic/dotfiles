@@ -1,3 +1,5 @@
 {
-  "idle_audio_timeout_seconds": 60
+  "idle_audio_timeout_seconds": 60,
+  "default_volume": 30,
+  "max_restore_volume": 50
 }
