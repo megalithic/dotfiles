@@ -36,6 +36,7 @@ import {
   updateLease,
 } from './lease.ts';
 import { promptRequest, sendControl, tellId } from './shared.ts';
+import { focusTerminal } from './terminal.ts';
 
 export const STATUS_EVENT = 'pidewave:status:v1';
 
@@ -55,6 +56,8 @@ export type PidewaveStatus = {
   tabs: number;
   lastPromptAt: string | null;
 };
+
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 const portOf = (url: URL): number => Number(url.port || (url.protocol === 'https:' ? 443 : 80));
 
@@ -279,6 +282,12 @@ export default function (
   const onPageMessage = (message: PageMessage, tab: Tab): void => {
     if (message.kind === 'prompt') void deliver(message.text, tab);
 
+    if (message.kind === 'focus-pi') {
+      void focusTerminal(terminalFromEnv()).then((error) => {
+        if (error) toast(tab, error, false);
+      });
+    }
+
     if (message.kind === 'inspect') {
       void link?.inspect(tab.targetId, false).then((result) => {
         if (result !== 'active') toast(tab, result, false);
@@ -395,25 +404,69 @@ export default function (
     );
   };
 
+  // Take the port (if needed), then focus the most recently used tab and start Tidewave Inspect.
+  const inspectFromPi = async (ctx: ExtensionContext): Promise<void> => {
+    if (!takeOver(ctx)) return;
+    const fresh = link?.state() !== 'up';
+
+    for (let i = 0; i < 30 && link?.state() !== 'up'; i += 1) await sleep(100);
+
+    // A new link is still attaching its tabs; give it a moment before picking one.
+    if (fresh) await sleep(500);
+    const result = (await link?.inspect(undefined, true)) ?? 'no browser link';
+
+    if (result !== 'active') ctx.ui.notify(`Pidewave: ${result}`, 'warning');
+  };
+
+  const takeOver = (ctx: ExtensionContext): boolean => {
+    const url = endpoint.url();
+
+    if (!url) {
+      ctx.ui.notify('Pidewave: no Tidewave endpoint is registered for this project.', 'warning');
+
+      return false;
+    }
+
+    if (!canHold(ctx)) {
+      ctx.ui.notify('Pidewave: only an interactive Pi can take browser prompts.', 'warning');
+
+      return false;
+    }
+
+    if (role !== 'holder') claim(ctx, url, true);
+    syncLink();
+    publishStatus();
+
+    return role === 'holder';
+  };
+
+  pi.registerShortcut('ctrl+shift+i', {
+    description: 'Pidewave: take browser prompts here and start Tidewave Inspect in the app tab',
+    handler: (ctx) => inspectFromPi(ctx),
+  });
+
   pi.registerCommand('pidewave', {
-    description: 'Tidewave link: no args reconnects; `status` reports; `claim` takes browser prompts for this Pi',
+    description:
+      'Tidewave link: no args reconnects; `status` reports; `claim` takes browser prompts; `inspect` starts Tidewave Inspect',
     getArgumentCompletions: (prefix: string) =>
-      ['status', 'claim'].flatMap((value) => (value.startsWith(prefix) ? [{ value, label: value }] : [])),
+      ['status', 'claim', 'inspect', 'focus'].flatMap((value) =>
+        value.startsWith(prefix) ? [{ value, label: value }] : [],
+      ),
     handler: async (args, ctx) => {
       const sub = args.trim();
 
       if (sub === 'claim') {
-        const url = endpoint.url();
+        if (takeOver(ctx)) ctx.ui.notify(`Pidewave: browser prompts for ${linkOrigin} now come here.`, 'info');
 
-        if (!url) return ctx.ui.notify('Pidewave: no Tidewave endpoint is registered for this project.', 'warning');
+        return;
+      }
 
-        if (!canHold(ctx))
-          return ctx.ui.notify('Pidewave: only an interactive Pi can take browser prompts.', 'warning');
+      if (sub === 'inspect') return inspectFromPi(ctx);
 
-        claim(ctx, url, true);
-        publishStatus();
+      if (sub === 'focus') {
+        const error = await focusTerminal(terminalFromEnv());
 
-        return ctx.ui.notify(`Pidewave: browser prompts for ${url.origin} now come here.`, 'info');
+        return error ? ctx.ui.notify(`Pidewave: ${error}`, 'warning') : undefined;
       }
 
       if (sub === 'status') {

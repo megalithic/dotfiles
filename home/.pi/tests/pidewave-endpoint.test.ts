@@ -149,6 +149,7 @@ const harness = (
     registerCommand: (name: string, command: { handler: CommandHandler }) => {
       commands.set(name, command.handler);
     },
+    registerShortcut: () => {},
     registerMcpServer: (name: string, config: McpServerConfig) => {
       if (options.refuse)
         throw new Error('MCP server "tidewave" is already registered by extension "/secret/do-not-print.ts"');

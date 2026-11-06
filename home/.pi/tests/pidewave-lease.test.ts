@@ -159,6 +159,7 @@ const harness = (
     },
     registerCommand: (name: string, command: { handler: (args: string, ctx: ExtensionContext) => Promise<void> }) =>
       commands.set(name, command.handler),
+    registerShortcut: () => {},
     registerMcpServer: () => {},
     unregisterMcpServer: () => {},
     appendEntry: () => {},
@@ -343,5 +344,40 @@ describe('browser prompts', () => {
 
     h.fire('session_start');
     expect(linked).toBe(false);
+  });
+});
+
+describe('inspect from Pi', () => {
+  test('a follower takes the port, links the browser and runs Inspect with the browser raised', async () => {
+    const port = ++nextPort;
+    claimLease(lease(port, { pid: process.ppid, sessionName: 'first' }));
+    const inspections: [string | undefined, boolean | undefined][] = [];
+
+    const link: typeof createBrowserLink = (linkOrigin, linkEvents, info) => ({
+      ...offlineLink(linkOrigin, linkEvents, info),
+      state: () => 'up',
+      inspect: async (targetId, raise) => {
+        inspections.push([targetId, raise]);
+
+        return 'not-ready:loading';
+      },
+    });
+
+    const h = harness(port, { link });
+    h.fire('session_start');
+    expect(h.status()?.role).toBe('follower');
+    await h.command('inspect');
+    expect(readLease(port)?.pid).toBe(process.pid);
+    expect(inspections).toEqual([[undefined, true]]);
+    expect(h.notices.at(-1)).toBe('Pidewave: not-ready:loading');
+  });
+
+  test('a headless Pi cannot take the port', async () => {
+    const port = ++nextPort;
+    const h = harness(port, { hasUI: false });
+    h.fire('session_start');
+    await h.command('inspect');
+    expect(readLease(port)).toBeNull();
+    expect(h.notices.at(-1)).toBe('Pidewave: only an interactive Pi can take browser prompts.');
   });
 });
