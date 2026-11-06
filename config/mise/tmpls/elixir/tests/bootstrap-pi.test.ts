@@ -59,7 +59,7 @@ for (const bash of shells) {
       expect(guidance).toContain('The Connect tab must stay in the foreground');
       expect(guidance).toContain('Never run `mix compile` through bash to check an edit');
       expect(guidance).toContain('`document.hasFocus()` stays false until the user\n    clicks inside the preview');
-      expect(guidance).toContain('Cmd+Shift+C\n  becomes active only while it answers');
+      expect(guidance).toContain('One interactive Pi per port holds the browser link');
       expect(fs.readFileSync(path.join(h.cwd, 'AGENTS.md'), 'utf8')).toBe('Project-owned guidance\n');
       expect(h.run().exitCode).toBe(0);
       expect(fs.readFileSync(h.guidance, 'utf8')).toBe(guidance);

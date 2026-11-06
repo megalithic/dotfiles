@@ -320,13 +320,6 @@ const bridgeRuntime: RuntimeIdentity = {
 
 let tellRuntime: RuntimeIdentity | null = null;
 
-const localHttpEndpointSchema = Type.Object({
-  origin: Type.String(),
-  pathname: Type.String(),
-});
-
-type LocalHttpEndpoint = Type.Static<typeof localHttpEndpointSchema>;
-
 const manifestSchema = Type.Object({
   socket: Type.String({ minLength: 1 }),
   cwd: Type.Optional(Type.String()),
@@ -342,8 +335,6 @@ const manifestSchema = Type.Object({
   startedAt: Type.Optional(Type.Union([Type.String(), Type.Number()])),
   heartbeatAt: Type.Optional(Type.Union([Type.String(), Type.Number()])),
   ephemeral: Type.Optional(Type.Boolean()),
-  tidewaveConnected: Type.Optional(Type.Boolean()),
-  tidewaveEndpoint: Type.Optional(localHttpEndpointSchema),
   state: Type.Optional(
     Type.Union([
       Type.Literal('idle'),
@@ -362,7 +353,7 @@ type BridgeManifest = Type.Static<typeof manifestSchema>;
 
 type TmuxLocation = Pick<BridgeManifest, 'pane' | 'windowIndex' | 'paneIndex'>;
 
-type ControlSession = Omit<BridgeManifest, 'owner' | 'ephemeral' | 'tidewaveConnected' | 'tidewaveEndpoint'> & {
+type ControlSession = Omit<BridgeManifest, 'owner' | 'ephemeral'> & {
   reachable: boolean;
 };
 
@@ -451,47 +442,6 @@ const publishListener = (pi: ExtensionAPI, error: string | undefined): void => {
 };
 
 let retryLogs = 0;
-
-// acp.ts publishes the endpoint only while its Tidewave ping succeeds, so one
-// event carries identity and liveness. Published even before the first prompt.
-const TIDEWAVE_ENDPOINT_EVENT = 'pidewave:endpoint:v1';
-
-const tidewaveEndpointEventSchema = Type.Object({
-  version: Type.Literal(1),
-  endpoint: Type.Optional(localHttpEndpointSchema),
-});
-
-let tidewaveConnected = false;
-
-let tidewaveEndpoint: LocalHttpEndpoint | undefined;
-
-const safeTidewaveEndpoint = (endpoint: LocalHttpEndpoint | undefined): LocalHttpEndpoint | undefined => {
-  if (!endpoint || endpoint.pathname !== '/tidewave/mcp') return undefined;
-
-  try {
-    const url = new URL(endpoint.origin);
-    const port = Number(url.port || (url.protocol === 'https:' ? 443 : 80));
-
-    if (
-      !['http:', 'https:'].includes(url.protocol) ||
-      !['localhost', '127.0.0.1'].includes(url.hostname) ||
-      url.origin !== endpoint.origin ||
-      url.username ||
-      url.password ||
-      url.search ||
-      url.hash ||
-      !Number.isInteger(port) ||
-      port < 1 ||
-      port > 65535 ||
-      port === 9832
-    )
-      return undefined;
-
-    return { origin: url.origin, pathname: endpoint.pathname };
-  } catch {
-    return undefined;
-  }
-};
 
 const HEARTBEAT_MS = 10_000;
 
@@ -1020,8 +970,6 @@ const writeInfoManifest = (restoreOnly = false): boolean => {
       heartbeatAt: now,
       ephemeral: process.env.PI_EPHEMERAL === '1' || /-eph-[^-]+-[^-]+\.sock$/.test(SOCKET_PATH),
       startedAt: now,
-      tidewaveConnected,
-      tidewaveEndpoint,
       state: activityState,
       statusUpdatedAt: activityUpdatedAt,
       bridge: bridgeRuntime,
@@ -1680,8 +1628,6 @@ const bindListener = async (pi: ExtensionAPI, ctx: ExtensionContext): Promise<vo
 
         if (manifest?.owner !== ownerToken || manifest?.pid !== process.pid) return;
         manifest.heartbeatAt = new Date().toISOString();
-        manifest.tidewaveConnected = tidewaveConnected;
-        manifest.tidewaveEndpoint = tidewaveEndpoint;
         manifest.cwd = latestCtx?.cwd || process.cwd();
         Object.assign(manifest, piSessionIdentity(latestCtx));
         refreshTmuxLocation(manifest, detectTmux());
@@ -1731,8 +1677,6 @@ export const _test = {
 
 export default function (pi: ExtensionAPI): void {
   tellRuntime = null;
-  let reportedTidewaveEndpoint: LocalHttpEndpoint | undefined;
-  let sessionActive = false;
 
   pi.registerMessageRenderer(TELL_DELIVERY_TYPE, renderTellDelivery);
 
@@ -1754,10 +1698,6 @@ export default function (pi: ExtensionAPI): void {
     shuttingDown = false;
     retryDelay = 250;
     retryLogs = 0;
-    // Earlier startup hooks may have already published the endpoint.
-    tidewaveEndpoint = reportedTidewaveEndpoint;
-    tidewaveConnected = !!tidewaveEndpoint;
-    sessionActive = true;
     latestCtx = ctx;
     activityState = 'idle';
     activityBeforePrompt = null;
@@ -1791,32 +1731,9 @@ export default function (pi: ExtensionAPI): void {
     if (manifest?.owner !== ownerToken || manifest?.pid !== process.pid) return;
     Object.assign(manifest, piSessionIdentity(ctx));
     manifest.cwd = ctx.cwd;
-    manifest.tidewaveConnected = tidewaveConnected;
-    manifest.tidewaveEndpoint = tidewaveEndpoint;
     manifest.heartbeatAt = new Date().toISOString();
     writeManifestAtomic(manifest);
   };
-
-  const publishTidewave = (): void => {
-    const endpoint = reportedTidewaveEndpoint;
-
-    if (
-      !sessionActive ||
-      (endpoint?.origin === tidewaveEndpoint?.origin && endpoint?.pathname === tidewaveEndpoint?.pathname)
-    )
-      return;
-    tidewaveEndpoint = endpoint;
-    tidewaveConnected = !!endpoint;
-
-    if (latestCtx) refreshSessionContext(latestCtx);
-  };
-
-  const unsubscribeTidewaveEndpoint = pi.events.on(TIDEWAVE_ENDPOINT_EVENT, (data) => {
-    reportedTidewaveEndpoint = Value.Check(tidewaveEndpointEventSchema, data)
-      ? safeTidewaveEndpoint(data.endpoint)
-      : undefined;
-    publishTidewave();
-  });
 
   pi.on('session_info_changed', (_event, ctx) => {
     refreshSessionContext(ctx);
@@ -1867,15 +1784,9 @@ export default function (pi: ExtensionAPI): void {
   });
 
   pi.on('session_shutdown', async () => {
-    sessionActive = false;
-    reportedTidewaveEndpoint = undefined;
-    tidewaveEndpoint = undefined;
-    tidewaveConnected = false;
-
     if (latestCtx) refreshSessionContext(latestCtx);
     shuttingDown = true;
     unsubscribeRuntime();
-    unsubscribeTidewaveEndpoint();
 
     if (retryTimer) clearTimeout(retryTimer);
 

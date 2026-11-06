@@ -17,7 +17,7 @@ guide=.pi/AGENTS.md
 old=.pi/APPEND_SYSTEM.md
 begin='<!-- mise-tmpl-gen:elixir:begin -->'
 end='<!-- mise-tmpl-gen:elixir:end -->'
-# Stored literally; ACP (acp.ts) resolves it once per Pi session.
+# Stored literally; the pidewave extension resolves it when a Pi session starts.
 # shellcheck disable=SC2016
 url='http://localhost:${PHX_PORT}/tidewave/mcp'
 nl=$'\n'
@@ -55,7 +55,7 @@ Local tooling is managed by mise (`.config/mise.toml`).
 
 ## Development requirements
 
-- Tidewave (MCP server `tidewave`, registered by Pi's `acp.ts` extension) is the
+- Tidewave (MCP server `tidewave`, registered by Pi's `pidewave` extension) is the
   required tool for anything that touches the running Elixir app. Its tools are
   declared directly as `mcp__tidewave__<tool>`. Codemode's `ALL_TOOLS` and
   `searchTools` never list them, so never use codemode to decide whether they
@@ -123,12 +123,15 @@ Local tooling is managed by mise (`.config/mise.toml`).
   `4000 + :erlang.phash2(GIT_WORKTREE, 1000)` (see `config/dev.exs`).
 - `PHX_PORT` is exported by mise via the dotfiles template `phx-port.sh`.
 - Tidewave MCP: `http://localhost:$PHX_PORT/tidewave/mcp` (requires Phoenix in dev);
-  `.pi/mcp.json` stores the literal `${PHX_PORT}` in `pidewave.url`. ACP resolves
-  it once per Pi session. Run `/pidewave` after changing the URL; restart Pi from
-  the updated shell environment after changing an environment variable.
-- ACP pings Tidewave every 10s; the footer URL turns green and Cmd+Shift+C
-  becomes active only while it answers.
-- Do not add Tidewave to `.mcp.json` or `mcpServers`; that shadows the ACP
+  `.pi/mcp.json` stores the literal `${PHX_PORT}` in `pidewave.url`. Pidewave
+  resolves it when the Pi session starts (`phx-port.sh` when `PHX_PORT` is unset).
+  Run `/pidewave` after changing the URL.
+- Pidewave pings Tidewave every 10s; the footer port shows only while it answers.
+- One interactive Pi per port holds the browser link (`/pidewave status`). Its
+  Tidewave toolbar and Connect prompts arrive here as tells from the Tidewave
+  browser panel; they are the user's requests. `/pidewave claim` or Ctrl+Shift+I
+  moves the link to another Pi.
+- Do not add Tidewave to `.mcp.json` or `mcpServers`; that shadows the pidewave
   registration.
 
 ## Tasks
@@ -184,4 +187,4 @@ mv "$guide_tmp" "$guide"
 mv "$mcp_tmp" "$mcp"
 
 # shellcheck disable=SC2016 # literal ${PHX_PORT} is the stored value
-echo 'bootstrapped .pi (pidewave.url -> http://localhost:${PHX_PORT}/tidewave/mcp, registered by acp.ts)'
+echo 'bootstrapped .pi (pidewave.url -> http://localhost:${PHX_PORT}/tidewave/mcp, registered by pidewave)'
