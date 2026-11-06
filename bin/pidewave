@@ -1,0 +1,161 @@
+#!/usr/bin/python3
+"""Ask the Pi that holds a pidewave lease to start Tidewave Inspect, or list leases.
+
+  pidewave inspect --rex-block BLOCK [--pid PID]   (Rex Cmd+Shift+C action)
+  pidewave inspect --port PORT | --cwd PATH
+  pidewave list
+
+Leases live in ${PI_STATE_DIR}/pidewave/ports/<port>.json (written by the
+pidewave Pi extension). --pid is the Rex block's foreground process: when it
+is a tmux client, the lease of that client's active pane is used. Runs on the
+system python so a Rex key action needs no mise PATH.
+"""
+
+import argparse
+import glob
+import json
+import os
+import shutil
+import socket
+import subprocess
+import sys
+import time
+
+TMUX_DIRS = [
+    os.path.expanduser("~/.local/share/mise/installs/tmux/latest/bin"),
+    "/opt/homebrew/bin",
+    "/usr/local/bin",
+]
+
+
+def state_dir():
+    if os.environ.get("PI_STATE_DIR"):
+        return os.environ["PI_STATE_DIR"]
+    base = os.environ.get("XDG_STATE_HOME") or os.path.expanduser("~/.local/state")
+    return os.path.join(base, "pi")
+
+
+def alive(pid):
+    try:
+        os.kill(pid, 0)
+        return True
+    except PermissionError:
+        return True
+    except (OSError, TypeError):
+        return False
+
+
+def leases():
+    found = []
+    for path in sorted(glob.glob(os.path.join(state_dir(), "pidewave", "ports", "*.json"))):
+        try:
+            with open(path) as f:
+                lease = json.load(f)
+        except (OSError, ValueError):
+            continue
+        if isinstance(lease, dict) and isinstance(lease.get("pid"), int):
+            lease["alive"] = alive(lease["pid"])
+            found.append(lease)
+    return found
+
+
+def tmux_pane_for_client(client_pid):
+    tmux = shutil.which("tmux") or next(
+        (os.path.join(d, "tmux") for d in TMUX_DIRS if os.access(os.path.join(d, "tmux"), os.X_OK)), None
+    )
+    if not tmux:
+        return None
+    try:
+        out = subprocess.run(
+            [tmux, "list-clients", "-F", "#{client_pid}\t#{pane_id}"],
+            capture_output=True, text=True, timeout=2, check=True,
+        ).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    for line in out.splitlines():
+        pid, _, pane = line.partition("\t")
+        if pid == str(client_pid):
+            return pane
+    return None
+
+
+def inside(child, parent):
+    rel = os.path.relpath(os.path.realpath(child), os.path.realpath(parent))
+    return rel == "." or not rel.startswith("..")
+
+
+def pick(candidates, args):
+    live = [lease for lease in candidates if lease["alive"]]
+    if args.rex_block:
+        for lease in live:
+            if ((lease.get("terminal") or {}).get("rex") or {}).get("block") == args.rex_block:
+                return lease
+        pane = tmux_pane_for_client(args.pid) if args.pid else None
+        if pane:
+            for lease in live:
+                if ((lease.get("terminal") or {}).get("tmux") or {}).get("pane") == pane:
+                    return lease
+        return None
+    if args.port:
+        return next((lease for lease in live if lease.get("port") == args.port), None)
+    if args.cwd:
+        roots = [lease for lease in live if inside(args.cwd, lease.get("root", "/nonexistent"))]
+        return max(roots, key=lambda lease: len(lease["root"]), default=None)
+    return None
+
+
+def control(sock_path, operation):
+    request = {
+        "type": "control",
+        "protocol": "pi.control.v1",
+        "id": "pidewave-cli-%d" % int(time.time() * 1000),
+        "operation": operation,
+    }
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+        s.settimeout(2)
+        s.connect(sock_path)
+        s.sendall((json.dumps(request) + "\n").encode())
+        data = b""
+        while b"\n" not in data:
+            chunk = s.recv(4096)
+            if not chunk:
+                break
+            data += chunk
+    return json.loads(data.split(b"\n", 1)[0] or b"null")
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(prog="pidewave")
+    sub = parser.add_subparsers(dest="command", required=True)
+    sub.add_parser("list")
+    inspect = sub.add_parser("inspect")
+    inspect.add_argument("--rex-block")
+    inspect.add_argument("--pid", type=int)
+    inspect.add_argument("--port", type=int)
+    inspect.add_argument("--cwd")
+    args = parser.parse_args(argv)
+
+    if args.command == "list":
+        print(json.dumps(leases(), indent=2))
+        return 0
+
+    lease = pick(leases(), args)
+    if not lease:
+        print("pidewave: no live Pi holds a Tidewave link for that target", file=sys.stderr)
+        return 3
+    if not lease.get("socket"):
+        print("pidewave: that Pi has no bridge socket", file=sys.stderr)
+        return 4
+    try:
+        response = control(lease["socket"], "pidewave.inspect")
+    except (OSError, ValueError) as error:
+        print("pidewave: %s" % error, file=sys.stderr)
+        return 1
+    if not isinstance(response, dict) or response.get("ok") is not True:
+        print("pidewave: %s" % ((response or {}).get("error") or "the Pi refused"), file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

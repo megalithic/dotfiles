@@ -40,6 +40,8 @@ import { focusTerminal } from './terminal.ts';
 
 export const STATUS_EVENT = 'pidewave:status:v1';
 
+const INSPECT_EVENT = 'pidewave:inspect';
+
 // Lease changes by other Pis are noticed within this interval (fs.watch teardown is slow and flaky on macOS).
 const RECONCILE_MS = 5_000;
 
@@ -440,6 +442,11 @@ export default function (
     return role === 'holder';
   };
 
+  // bridge.ts turns a `pidewave.inspect` control request (bin/pidewave, the Rex Cmd+Shift+C action) into this event.
+  const unsubscribeInspect = pi.events.on(INSPECT_EVENT, () => {
+    if (ctxRef) void inspectFromPi(ctxRef);
+  });
+
   pi.registerShortcut('ctrl+shift+i', {
     description: 'Pidewave: take browser prompts here and start Tidewave Inspect in the app tab',
     handler: (ctx) => inspectFromPi(ctx),
@@ -506,6 +513,7 @@ export default function (
 
   pi.on('session_shutdown', async (event, ctx) => {
     stopWatching();
+    unsubscribeInspect();
     link?.stop();
     link = undefined;
     linkOrigin = undefined;

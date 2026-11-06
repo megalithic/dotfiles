@@ -163,6 +163,7 @@ const harness = (cwd = process.cwd()) => {
     events: {
       emit: (name: string, data: { error: string | null }) => {
         if (name === 'bridge:listener') listener.push(data.error);
+        else events.get(name)?.(data);
       },
       on: (name: string, handler: BusHandler) => {
         events.set(name, handler);
@@ -595,6 +596,17 @@ describe('bridge recovery and wire boundaries', () => {
         id: 'bad-text',
         operation: 'message.send',
       });
+      let inspects = 0;
+      runtime.events.set('pidewave:inspect', () => {
+        inspects += 1;
+      });
+
+      const inspect = await request(
+        '{"type":"control","protocol":"pi.control.v1","id":"i1","operation":"pidewave.inspect"}',
+      );
+
+      expect(inspect).toMatchObject({ ok: true, id: 'i1', operation: 'pidewave.inspect' });
+      expect(inspects).toBe(1);
       expect((await request('{"type":"future"}')).error).toBe('unsupported payload type: future');
       expect((await request('{"type":"telegram","text":"hi"}')).error).toBe('unsupported payload type: telegram');
       expect((await request('{"type":"ping"}')).type).toBe('pong');

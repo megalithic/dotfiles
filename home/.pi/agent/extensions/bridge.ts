@@ -10,7 +10,8 @@
  *   Legacy:   ping, tell, and tell_ack payloads keep their existing
  *             top-level { ok: true|false } responses.
  *   Control:  { type: 'control', protocol: 'pi.control.v1', id, operation,
- *               params } supports sessions.list, message.last, and message.send.
+ *               params } supports sessions.list, message.last, message.send,
+ *             and pidewave.inspect (emitted as a `pidewave:inspect` event).
  *             Responses echo id and operation and retain top-level ok.
  *
  * Spool:    tell.ts queues tells for an exact, not-running session id under
@@ -274,6 +275,8 @@ type DeliveredAs = 'steer' | 'follow_up' | 'appended' | 'started' | 'answered';
 const TELL_REPLY_EVENT = 'tell:reply';
 
 const TELL_DELIVERY_TYPE = 'tell:delivery';
+
+const PIDEWAVE_INSPECT_EVENT = 'pidewave:inspect';
 
 // Non-pi callers identify themselves through `from`; anything else is a pi peer.
 const EXTERNAL_SOURCES = {
@@ -1263,7 +1266,7 @@ const handleControl = async (
     return controlResponse(request, undefined, 'control request id is required');
   }
 
-  const operations = ['sessions.list', 'message.last', 'message.send'];
+  const operations = ['sessions.list', 'message.last', 'message.send', 'pidewave.inspect'];
 
   if (!operations.includes(request.operation || '')) {
     return controlResponse(
@@ -1279,6 +1282,13 @@ const handleControl = async (
 
   if (!ctx) {
     return controlResponse(request, undefined, 'session not ready');
+  }
+
+  // The pidewave extension owns Inspect; the Rex Cmd+Shift+C action reaches it through here.
+  if (request.operation === 'pidewave.inspect') {
+    pi.events.emit(PIDEWAVE_INSPECT_EVENT, {});
+
+    return controlResponse(request, { accepted: true });
   }
 
   if (request.operation === 'message.last') {
