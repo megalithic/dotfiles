@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, spyOn, test } from 'bun:test';
+import { afterEach, describe, expect, test } from 'bun:test';
 import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
@@ -18,13 +18,7 @@ const asExtensionAPI = <T>(value: T): ExtensionAPI => value as ExtensionAPI;
 // SAFETY: Fixtures intentionally implement only the status context members they exercise.
 const asExtensionContext = <T>(value: T): ExtensionContext => value as ExtensionContext;
 
-const bindingDir = path.join(stateDir, 'tidewave', 'bindings');
-
 const originalEnv = { ...process.env };
-
-process.env.PI_STATE_DIR = stateDir;
-
-const { default: acp } = await import('../agent/extensions/acp.ts');
 
 const installed = createRequire(import.meta.url);
 
@@ -43,8 +37,6 @@ const { visibleWidth } = await jiti.import('@earendil-works/pi-tui');
 
 const { default: customFooter } = await jiti.import('../agent/extensions/custom-footer.ts');
 
-process.env = { ...originalEnv };
-
 const cleanups: (() => void | Promise<void>)[] = [];
 
 afterEach(async () => {
@@ -53,16 +45,7 @@ afterEach(async () => {
   // Preserve temporary fixtures for failure inspection.
 });
 
-type LifecycleEvent = { reason?: 'startup' | 'reload' };
-
-type Hook = (event: LifecycleEvent, ctx: ExtensionContext) => void;
-
-type BindingFixture = {
-  cwd?: string;
-  socket?: string | number | boolean | null | string[] | { toString: string };
-  appUrl?: string | number | boolean | null;
-  port?: string | number | null;
-};
+type Hook = (event: { reason?: 'startup' | 'reload' }, ctx: ExtensionContext) => void;
 
 const lifecycle = () => {
   const hooks = new Map<string, Hook>();
@@ -82,211 +65,34 @@ const lifecycle = () => {
 
 let fixtureId = 0;
 
-const bindingHarness = (hasUI = true) => {
-  const cwd = path.join(stateDir, `Work Tree_${++fixtureId}`);
-
-  const slug = path
-    .basename(cwd)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-');
-
-  const statusCalls: [string, string | undefined][] = [];
-  const widgetCalls: [string, undefined][] = [];
-
-  // SAFETY: Binding lifecycle hooks read only cwd, hasUI, setStatus and setWidget.
-  const ctx = asExtensionContext({
-    cwd,
-    hasUI,
-    ui: {
-      setStatus: (key: string, value: string | undefined) => {
-        statusCalls.push([key, value]);
-      },
-      setWidget: (key: string, value: undefined) => {
-        widgetCalls.push([key, value]);
-      },
-    },
-  });
-
-  const { pi, fire } = lifecycle();
-  const interval = spyOn(globalThis, 'setInterval');
-  const clear = spyOn(globalThis, 'clearInterval');
-  acp(pi);
-  cleanups.push(() => {
-    fire('session_shutdown', ctx);
-    interval.mockRestore();
-    clear.mockRestore();
-  });
-
-  return {
-    cwd,
-    ctx,
-    statusCalls,
-    widgetCalls,
-    interval,
-    clear,
-    fire: (name: string) => fire(name, ctx),
-    status: () => {
-      const raw = statusCalls.at(-1)?.[1];
-
-      return raw === undefined ? undefined : JSON.parse(raw);
-    },
-    write: (binding: BindingFixture, filename = `${slug}.json`) => {
-      fs.mkdirSync(bindingDir, { recursive: true });
-      const file = path.join(bindingDir, filename);
-      fs.writeFileSync(file, JSON.stringify(binding));
-
-      return file;
-    },
-    tick: () => {
-      expect(interval.mock.calls.length).toBeGreaterThan(0);
-      interval.mock.calls.at(-1)![0]();
-    },
-  };
-};
-
-const socket = path.join(stateDir, 'pi.sock');
-
 const url = 'http://localhost:4000';
 
-describe('pidewave binding status', () => {
-  test('absent bindings clear the legacy widget and status without repeated updates', () => {
-    const h = bindingHarness();
-    h.fire('session_start');
-    expect(h.widgetCalls).toEqual([['pidewave', undefined]]);
-    expect(h.statusCalls).toEqual([['pidewave', undefined]]);
-    h.tick();
-    h.fire('before_agent_start');
-    expect(h.statusCalls).toHaveLength(1);
-  });
-
-  test('exact normalized cwd wins over a conflicting slug filename', () => {
-    const h = bindingHarness();
-    process.env.PI_SOCKET = socket;
-    h.write({ cwd: '/another/worktree', socket: 'other.sock', appUrl: 'http://wrong.test' });
-    h.write({ cwd: `${h.cwd}/../${path.basename(h.cwd)}`, socket, appUrl: url }, `exact-${fixtureId}.json`);
-    fs.writeFileSync(path.join(bindingDir, '00-malformed.json'), '{');
-    h.fire('session_start');
-    expect(h.status()).toEqual({ url, boundHere: true, connected: false });
-  });
-
-  test('a malformed exact-cwd binding cannot fall through to a different slug binding', () => {
-    const h = bindingHarness();
-    h.write({ socket: 'other.sock', appUrl: 'http://wrong.test' });
-    h.write({ cwd: h.cwd, socket: 123, appUrl: url }, `invalid-exact-${fixtureId}.json`);
-    h.fire('session_start');
-    expect(h.status()).toBeUndefined();
-  });
-
-  test('slug fallback works with no exact cwd match and a valid port', () => {
-    const h = bindingHarness();
-    process.env.PI_SOCKET = socket;
-    h.write({ cwd: '/old/location', socket, port: 4321 });
-    h.fire('session_start');
-    expect(h.status()).toEqual({ url: 'http://localhost:4321', boundHere: true, connected: false });
-  });
-
-  test.each([0, -1, 65536, 4.5, '4000', null])('rejects invalid fallback port %p', (port) => {
-    const h = bindingHarness();
-    h.write({ socket, port });
-    h.fire('session_start');
-    expect(h.status()).toBeUndefined();
-  });
-
-  test.each([socket, 'other.sock', undefined])(
-    'ownership follows PI_SOCKET=%p, not socket existence',
-    (currentSocket) => {
-      const h = bindingHarness();
-
-      if (currentSocket === undefined) delete process.env.PI_SOCKET;
-      else process.env.PI_SOCKET = currentSocket;
-      h.write({ socket, appUrl: url, port: 9999 });
-      h.fire('session_start');
-      expect(h.status()).toEqual({ url, boundHere: currentSocket === socket, connected: false });
-    },
+const writeLease = (root: string, socket: string | null, port = 4000 + fixtureId) => {
+  const dir = path.join(stateDir, 'pidewave', 'ports');
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, `${port}.json`),
+    JSON.stringify({
+      v: 1,
+      port,
+      origin: `http://localhost:${port}`,
+      root,
+      cwd: root,
+      pid: process.pid,
+      sessionId: 'session-1',
+      sessionName: 'holder',
+      tellId: 'pi:test:session-1',
+      socket,
+      terminal: { kind: 'plain' },
+      claimedAt: new Date().toISOString(),
+      browser: { cdp: 'off', tabs: [] },
+      lastPromptAt: null,
+    }),
   );
-
-  test.each(
-    [undefined, '', 123, null, true, ['pi.sock'], { toString: 'pi.sock' }].map((bindingSocket) => ({ bindingSocket })),
-  )('requires a nonempty binding socket (%p)', ({ bindingSocket }) => {
-    const h = bindingHarness();
-    h.write({ socket: bindingSocket, appUrl: url });
-    h.fire('session_start');
-    expect(h.status()).toBeUndefined();
-  });
-
-  test.each([1, 65535])('accepts fallback port boundary %p', (port) => {
-    const h = bindingHarness();
-    h.write({ socket, port });
-    h.fire('session_start');
-    expect(h.status()?.url).toBe(`http://localhost:${port}`);
-  });
-
-  test.each(['', 123, true, null])('invalid appUrl %p cannot activate a port fallback', (appUrl) => {
-    const h = bindingHarness();
-    h.write({ socket, appUrl, port: 4000 });
-    h.fire('session_start');
-    expect(h.status()).toBeUndefined();
-  });
-
-  test.each(['null', '[]', '"socket"', '123', 'true'])('rejects non-object binding %s', (raw) => {
-    const h = bindingHarness();
-    fs.writeFileSync(h.write({}), raw);
-    h.fire('session_start');
-    expect(h.status()).toBeUndefined();
-  });
-
-  test('idle polling notices creation, rebind and deletion; shutdown clears its unref timer', () => {
-    const h = bindingHarness();
-    process.env.PI_SOCKET = socket;
-    h.fire('session_start');
-    expect(h.interval.mock.calls).toHaveLength(1);
-    expect(h.interval.mock.calls[0]![1]).toBe(1000);
-    // SAFETY: The mocked interval returns the timer handle used by clearInterval.
-    const timer = h.interval.mock.results[0]!.value as ReturnType<typeof setInterval>;
-    expect(timer.hasRef()).toBe(false);
-    const file = h.write({ socket, appUrl: url });
-    h.tick();
-    expect(h.status()).toEqual({ url, boundHere: true, connected: false });
-    h.tick();
-    expect(h.statusCalls).toHaveLength(2);
-    h.write({ socket: 'other.sock', appUrl: 'https://app.test:4443/path' });
-    h.tick();
-    expect(h.status()).toEqual({ url: 'https://app.test:4443/path', boundHere: false, connected: false });
-    // Remove it from the binding namespace, retaining the fixture for inspection.
-    fs.renameSync(file, `${file}.deleted`);
-    h.tick();
-    expect(h.status()).toBeUndefined();
-    expect(h.statusCalls).toHaveLength(4);
-    h.fire('session_shutdown');
-    expect(h.clear).toHaveBeenCalledWith(timer);
-    expect(h.statusCalls.at(-1)).toEqual(['pidewave', undefined]);
-    expect(h.statusCalls).toHaveLength(5);
-  });
-
-  test('restart clears the previous poll; headless sessions never poll or touch UI', () => {
-    const h = bindingHarness();
-    h.fire('session_start');
-    const firstTimer = h.interval.mock.results[0]!.value;
-    h.fire('session_start');
-    expect(h.clear).toHaveBeenCalledWith(firstTimer);
-    const secondTimer = h.interval.mock.results[1]!.value;
-    h.ctx.hasUI = false;
-    h.statusCalls.length = 0;
-    h.widgetCalls.length = 0;
-    h.interval.mockClear();
-    h.fire('session_start');
-    expect(h.clear).toHaveBeenCalledWith(secondTimer);
-    h.fire('before_agent_start');
-    h.fire('session_shutdown');
-    expect(h.interval).not.toHaveBeenCalled();
-    expect(h.statusCalls).toEqual([]);
-    expect(h.widgetCalls).toEqual([]);
-  });
-});
+};
 
 const acpHarness = () => {
-  const entry = path.join(stateDir, 'acp.ts');
-  fs.copyFileSync(fileURLToPath(new URL('../agent/extensions/acp.ts', import.meta.url)), entry);
+  const entry = fileURLToPath(new URL('../agent/extensions/pidewave/acp.ts', import.meta.url));
 
   const child = spawn(process.execPath, [entry], {
     cwd: stateDir,
@@ -361,7 +167,7 @@ describe('standalone ACP boundaries', () => {
   test.each(['{"ok":true}', '{"ok":false,"error":"denied"}', '{"ok":"true"}', 'null', '{'])(
     'forwards decoded content and handles bridge response %s',
     async (response) => {
-      const h = bindingHarness();
+      const cwd = path.join(stateDir, `Work Tree_${++fixtureId}`);
       const socketPath = path.join(stateDir, `bridge-${fixtureId}.sock`);
       const requests: string[] = [];
 
@@ -385,9 +191,9 @@ describe('standalone ACP boundaries', () => {
             server.close(() => resolve());
           }),
       );
-      h.write({ socket: socketPath, cwd: h.cwd, appUrl: url });
+      writeLease(cwd, socketPath);
       const cli = acpHarness();
-      cli.send(JSON.stringify({ id: 1, method: 'session/new', params: { cwd: h.cwd } }));
+      cli.send(JSON.stringify({ id: 1, method: 'session/new', params: { cwd: path.join(cwd, 'lib') } }));
       const session = await cli.read();
       const sessionId = session.result.sessionId;
       expect(sessionId).toStartWith('pidewave-');

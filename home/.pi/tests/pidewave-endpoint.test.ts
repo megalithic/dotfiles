@@ -1,17 +1,14 @@
-import { afterAll, afterEach, describe, expect, spyOn, test } from 'bun:test';
+import { afterAll, afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test';
 import type { ExtensionAPI, ExtensionContext, McpServerConfig } from '@earendil-works/pi-coding-agent';
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Isolate ACP's module-time binding directory from the footer suite's environment.
-// Kept under tests/ so the copy still resolves @earendil-works/pi-coding-agent.
-const extensionCopy = path.join(fs.mkdtempSync(path.join(import.meta.dirname, '.pidewave-extension-')), 'acp.ts');
+import pidewave from '../agent/extensions/pidewave/index.ts';
 
-fs.copyFileSync(new URL('../agent/extensions/acp.ts', import.meta.url), extensionCopy);
+// Leases claimed by interactive harnesses land here, never in the real state directory.
+const stateDir = fs.mkdtempSync('/tmp/pidewave-endpoint-state-');
 
-afterAll(() => fs.rmSync(path.dirname(extensionCopy), { recursive: true, force: true }));
-
-const { default: acp } = await import(extensionCopy);
+afterAll(() => fs.rmSync(stateDir, { recursive: true, force: true }));
 
 const ENDPOINT = 'pidewave:endpoint:v1';
 
@@ -31,6 +28,10 @@ const cleanups: (() => void | Promise<void>)[] = [];
 
 // Real intervals still run; every harness clears its own on shutdown.
 const intervals = spyOn(globalThis, 'setInterval');
+
+beforeEach(() => {
+  process.env.PI_STATE_DIR = stateDir;
+});
 
 afterEach(async () => {
   for (const cleanup of cleanups.splice(0).reverse()) await cleanup();
@@ -86,6 +87,8 @@ const harness = (
     up?: boolean;
     // Make registerMcpServer throw, as Pi does for invalid or foreign names.
     refuse?: boolean;
+    // phx-port.sh stand-in.
+    port?: () => string | undefined;
   } = {},
 ) => {
   const cwd = options.cwd ?? fs.mkdtempSync('/tmp/pidewave-endpoint-');
@@ -161,7 +164,7 @@ const harness = (
     },
   });
 
-  acp(pi, connect);
+  pidewave(pi, connect, (cwd: string) => options.port?.(cwd));
   const fire = (name: string, event: { reason?: string } = {}) => hooks.get(name)?.(event, ctx);
   cleanups.push(async () => {
     await fire('session_shutdown');
@@ -216,8 +219,9 @@ const harness = (
       for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setImmediate(resolve));
     },
     // SAFETY: The command handler reads only cwd, trust, and the notify/select UI members supplied here.
-    // SAFETY: The command handler is registered by acp before this helper is called.
-    pidewave: (ui: CommandUi = ctx.ui) => commands.get('pidewave')!('', asExtensionContext({ ...ctx, ui })),
+    // SAFETY: The command handler is registered by pidewave before this helper is called.
+    pidewave: (ui: CommandUi = ctx.ui, args = '') =>
+      commands.get('pidewave')!(args, asExtensionContext({ ...ctx, ui })),
     endpoint: () => bus.publications.at(-1),
   };
 };
@@ -421,6 +425,7 @@ describe('Pidewave native endpoint', () => {
     expect(h.entries.map(([, data]) => [data.event, data.status, data.url])).toEqual([
       ['registered', undefined, 'http://localhost:4300'],
       ['status', 'connected', 'http://localhost:4300'],
+      ['reregistered', undefined, 'http://localhost:4300'],
       ['status', 'unreachable', 'http://localhost:4300'],
       ['status', 'connected', 'http://localhost:4300'],
     ]);
@@ -591,6 +596,71 @@ describe('Pidewave native endpoint', () => {
     });
   });
 
+  describe('PHX_PORT', () => {
+    const template = { pidewave: { url: 'http://localhost:${PHX_PORT}/tidewave/mcp' } };
+
+    test('falls back to phx-port.sh when the environment has none', async () => {
+      delete process.env.PHX_PORT;
+      const h = harness({ port: () => '4567' });
+      h.write(template);
+      h.fire('session_start');
+      expect(h.registrations).toEqual([registration('http://localhost:4567/tidewave/mcp')]);
+    });
+
+    test('the environment wins over phx-port.sh', () => {
+      process.env.PHX_PORT = '4300';
+      const h = harness({ port: () => '4567' });
+      h.write(template);
+      h.fire('session_start');
+      expect(h.registrations).toEqual([registration()]);
+    });
+
+    test('neither source fails closed', () => {
+      delete process.env.PHX_PORT;
+      const h = harness({ hasUI: true, port: () => undefined });
+      h.write(template);
+      h.fire('session_start');
+      expect(h.registrations).toEqual([]);
+      expect(h.notices).toEqual(['Pidewave endpoint unavailable: Missing Pidewave environment variable.']);
+    });
+
+    test('a port that moved while Tidewave was down is registered again', async () => {
+      process.env.PHX_PORT = '4300';
+      let moved = '4300';
+      const h = harness({ port: () => moved });
+      h.write(template);
+      h.fire('session_start');
+      await h.settle();
+      h.setUp(false);
+      await h.tick();
+      moved = '4400';
+      await h.tick();
+      expect(h.registrations).toHaveLength(1);
+      await h.tick(); // Third failed tick checks phx-port.sh.
+      await h.settle();
+      expect(h.unregistrations).toEqual(['tidewave']);
+      expect(h.registrations.at(-1)).toEqual(registration('http://localhost:4400/tidewave/mcp'));
+    });
+  });
+
+  test('registers again only on the first answer after a failed start', async () => {
+    const h = harness({ up: false });
+    h.write();
+    h.fire('session_start');
+    await h.settle();
+    h.setUp(true);
+    await h.tick();
+    expect(h.unregistrations).toEqual(['tidewave']);
+    expect(h.registrations).toEqual([registration(), registration()]);
+
+    // A later Phoenix restart is left to Pi's lazy reconnect.
+    h.setUp(false);
+    await h.tick();
+    h.setUp(true);
+    await h.tick();
+    expect(h.registrations).toHaveLength(2);
+  });
+
   test('footer status shows the registered origin only while Tidewave answers', async () => {
     const h = harness({ hasUI: true, up: false });
     const statuses: (string | undefined)[] = [];
@@ -606,7 +676,15 @@ describe('Pidewave native endpoint', () => {
     expect(statuses.at(-1)).toBeUndefined();
     h.setUp(true);
     await h.tick();
-    expect(JSON.parse(statuses.at(-1)!)).toEqual({ url: 'http://localhost:4300', boundHere: false, connected: true });
+    expect(JSON.parse(statuses.at(-1)!)).toEqual({
+      url: 'http://localhost:4300',
+      boundHere: true,
+      connected: true,
+      port: 4300,
+      role: 'holder',
+      cdp: 'off',
+      tabs: 0,
+    });
     h.setUp(false);
     await h.tick();
     expect(statuses.at(-1)).toBeUndefined();
