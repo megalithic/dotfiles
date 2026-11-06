@@ -24,6 +24,16 @@ const url = 'http://localhost:4300/tidewave/mcp';
 
 const originalEnv = { ...process.env };
 
+// Never let a test reach the real browser on CDP 9223.
+const offlineLink = () => ({
+  start: () => {},
+  stop: () => {},
+  state: () => 'down' as const,
+  tabs: () => [],
+  evaluate: async () => undefined,
+  inspect: async () => 'active',
+});
+
 const cleanups: (() => void | Promise<void>)[] = [];
 
 // Real intervals still run; every harness clears its own on shutdown.
@@ -164,7 +174,7 @@ const harness = (
     },
   });
 
-  pidewave(pi, connect, (cwd: string) => options.port?.(cwd));
+  pidewave(pi, connect, (cwd: string) => options.port?.(cwd), offlineLink);
   const fire = (name: string, event: { reason?: string } = {}) => hooks.get(name)?.(event, ctx);
   cleanups.push(async () => {
     await fire('session_shutdown');
@@ -682,7 +692,7 @@ describe('Pidewave native endpoint', () => {
       connected: true,
       port: 4300,
       role: 'holder',
-      cdp: 'off',
+      cdp: 'down',
       tabs: 0,
     });
     h.setUp(false);

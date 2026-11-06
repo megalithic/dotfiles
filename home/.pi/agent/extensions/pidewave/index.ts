@@ -13,6 +13,7 @@
 import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
+import { type BrowserLink, createBrowserLink, type PageMessage } from './browser.ts';
 import {
   asError,
   type Connect,
@@ -24,8 +25,17 @@ import {
   record,
   type ResolvePort,
 } from './endpoint.ts';
-import { claimLease, holderAlive, type Lease, readLease, releaseLease, terminalFromEnv, updateLease } from './lease.ts';
-import { tellId } from './shared.ts';
+import {
+  claimLease,
+  holderAlive,
+  type Lease,
+  readLease,
+  releaseLease,
+  type Tab,
+  terminalFromEnv,
+  updateLease,
+} from './lease.ts';
+import { promptRequest, sendControl, tellId } from './shared.ts';
 
 export const STATUS_EVENT = 'pidewave:status:v1';
 
@@ -69,6 +79,7 @@ export default function (
   pi: ExtensionAPI,
   connect: Connect = connectTidewave,
   resolvePort: ResolvePort = portFromScript,
+  createLink: typeof createBrowserLink = createBrowserLink,
 ): void {
   let ctxRef: ExtensionContext | undefined;
   let role: Role = 'none';
@@ -77,6 +88,8 @@ export default function (
   let root: string | undefined;
   let lastStatus: string | undefined;
   let reconcileTimer: ReturnType<typeof setInterval> | undefined;
+  let link: BrowserLink | undefined;
+  let linkOrigin: string | undefined;
 
   const status = (): PidewaveStatus => {
     const url = endpoint.url();
@@ -89,8 +102,8 @@ export default function (
       connected: endpoint.live(),
       role,
       holder: holder ? { tellId: holder.tellId, sessionName: holder.sessionName, pid: holder.pid } : undefined,
-      cdp: mine?.browser.cdp ?? 'off',
-      tabs: mine?.browser.tabs.length ?? 0,
+      cdp: link?.state() ?? 'off',
+      tabs: link?.tabs().length ?? 0,
       lastPromptAt: mine?.lastPromptAt ?? null,
     };
   };
@@ -139,7 +152,7 @@ export default function (
       socket: process.env.PI_SOCKET || null,
       terminal: terminalFromEnv(),
       claimedAt: mine?.claimedAt ?? new Date().toISOString(),
-      browser: mine?.browser ?? { cdp: 'off', tabs: [] },
+      browser: link ? { cdp: link.state(), tabs: link.tabs() } : { cdp: 'off', tabs: [] },
       lastPromptAt: mine?.lastPromptAt ?? null,
     };
   };
@@ -217,7 +230,82 @@ export default function (
       if (role === 'none') role = 'follower';
     }
 
+    syncLink();
     publishStatus();
+  };
+
+  // Tab and CDP changes only touch the lease and the status, never the claim.
+  const linkChanged = (): void => {
+    const ctx = ctxRef;
+    const url = endpoint.url();
+
+    if (ctx && url && role === 'holder' && mine) {
+      const next = buildLease(ctx, url);
+
+      if (updateLease(next)) mine = next;
+    }
+
+    publishStatus();
+  };
+
+  const toast = (tab: Tab, text: string, ok: boolean): void => {
+    const call = `window.__pidewaveToast && window.__pidewaveToast(${JSON.stringify(text)}, ${ok})`;
+    void link?.evaluate(tab.targetId, call).catch(() => {});
+  };
+
+  // Same path as every other external prompt: bridge.ts delivers it as a Tidewave tell.
+  const deliver = async (text: string, tab: Tab): Promise<void> => {
+    const socket = process.env.PI_SOCKET;
+    const response = socket ? await sendControl(socket, promptRequest(text)) : null;
+    let ok = response?.ok === true;
+
+    if (!socket) {
+      try {
+        pi.sendUserMessage(text, { deliverAs: 'followUp' });
+        ok = true;
+      } catch {}
+    }
+
+    record(pi, 'prompt', { ok, url: tab.url });
+
+    if (ok && mine) mine = { ...mine, lastPromptAt: new Date().toISOString() };
+    linkChanged();
+    const name = mine?.sessionName ?? 'Pi';
+    toast(tab, ok ? `Sent to ${name}` : `${name} did not accept the prompt: ${response?.error ?? 'no answer'}`, ok);
+
+    if (!ok && ctxRef?.hasUI) ctxRef.ui.notify('Pidewave: a browser prompt could not be delivered.', 'error');
+  };
+
+  const onPageMessage = (message: PageMessage, tab: Tab): void => {
+    if (message.kind === 'prompt') void deliver(message.text, tab);
+
+    if (message.kind === 'inspect') {
+      void link?.inspect(tab.targetId, false).then((result) => {
+        if (result !== 'active') toast(tab, result, false);
+      });
+    }
+  };
+
+  // Only the holder keeps a browser link, on its current origin.
+  const syncLink = (): void => {
+    const url = endpoint.url();
+    const want = role === 'holder' && url ? url.origin : undefined;
+
+    if (link && linkOrigin !== want) {
+      link.stop();
+      link = undefined;
+      linkOrigin = undefined;
+    }
+
+    if (link || !want) return;
+    linkOrigin = want;
+
+    link = createLink(want, { message: onPageMessage, change: linkChanged }, () => ({
+      sessionName: mine?.sessionName ?? null,
+      tellId: mine?.tellId ?? null,
+    }));
+
+    link.start();
   };
 
   const endpoint = createEndpoint(pi, connect, resolvePort, reconcile);
@@ -365,6 +453,9 @@ export default function (
 
   pi.on('session_shutdown', async (event, ctx) => {
     stopWatching();
+    link?.stop();
+    link = undefined;
+    linkOrigin = undefined;
     const quitting = event.reason === undefined || event.reason === 'quit';
 
     // Reload, new, resume and fork keep this process, so they keep the lease.

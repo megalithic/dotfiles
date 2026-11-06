@@ -1,8 +1,11 @@
 import { afterAll, afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
 import { spawnSync } from 'node:child_process';
+import { once } from 'node:events';
+import net from 'node:net';
 import fs from 'node:fs';
 import path from 'node:path';
+import type { createBrowserLink, LinkEvents } from '../agent/extensions/pidewave/browser.ts';
 import pidewave, { type PidewaveStatus, STATUS_EVENT } from '../agent/extensions/pidewave/index.ts';
 import {
   claimLease,
@@ -18,6 +21,16 @@ import {
 const stateDir = fs.mkdtempSync('/tmp/pidewave-lease-');
 
 const originalEnv = { ...process.env };
+
+// Never let a test reach the real browser on CDP 9223.
+const offlineLink: typeof createBrowserLink = () => ({
+  start: () => {},
+  stop: () => {},
+  state: () => 'down' as const,
+  tabs: () => [],
+  evaluate: async () => undefined,
+  inspect: async () => 'active',
+});
 
 const cleanups: (() => void | Promise<void>)[] = [];
 
@@ -120,7 +133,10 @@ describe('lease file', () => {
 
 type Hook = (event: { reason?: string }, ctx: ExtensionContext) => void | Promise<void>;
 
-const harness = (port: number, options: { hasUI?: boolean; sessionId?: string } = {}) => {
+const harness = (
+  port: number,
+  options: { hasUI?: boolean; sessionId?: string; link?: typeof createBrowserLink } = {},
+) => {
   const cwd = fs.mkdtempSync('/tmp/pidewave-lease-wt-');
   fs.mkdirSync(path.join(cwd, '.pi'));
   fs.writeFileSync(
@@ -160,7 +176,7 @@ const harness = (port: number, options: { hasUI?: boolean; sessionId?: string } 
     throw new Error('down');
   };
 
-  pidewave(pi, never);
+  pidewave(pi, never, () => undefined, options.link ?? offlineLink);
   const fire = (name: string, event: { reason?: string } = {}) => hooks.get(name)?.(event, ctx);
   cleanups.push(async () => {
     await fire('session_shutdown', { reason: 'quit' });
@@ -254,5 +270,78 @@ describe('lease lifecycle', () => {
     h.fire('session_start');
     await h.command('status');
     expect(h.notices.at(-1)).toContain('browser prompts go to first');
+  });
+});
+
+describe('browser prompts', () => {
+  test('the holder links its origin and delivers prompts over its own bridge socket', async () => {
+    const port = ++nextPort;
+    const socketPath = path.join(process.env.PI_STATE_DIR!, 'bridge.sock');
+    const requests: { operation: string; params: { text: string; from: string; mode: string } }[] = [];
+
+    const server = net.createServer((peer) =>
+      peer.on('data', (chunk) => {
+        requests.push(JSON.parse(chunk.toString()));
+        peer.end('{"ok":true}\n');
+      }),
+    );
+
+    server.listen(socketPath);
+    await once(server, 'listening');
+    cleanups.push(() => new Promise<void>((resolve) => server.close(() => resolve())));
+    process.env.PI_SOCKET = socketPath;
+
+    const evaluations: string[] = [];
+    let events: LinkEvents | undefined;
+    let origin: string | undefined;
+
+    const link: typeof createBrowserLink = (linkOrigin, linkEvents, info) => {
+      origin = linkOrigin;
+      events = linkEvents;
+
+      return {
+        ...offlineLink(linkOrigin, linkEvents, info),
+        state: () => 'up' as const,
+        evaluate: async (_target: string, expression: string) => {
+          evaluations.push(expression);
+
+          return undefined;
+        },
+      };
+    };
+
+    const h = harness(port, { link });
+    h.fire('session_start');
+    expect(origin).toBe(`http://localhost:${port}`);
+
+    const tab = { targetId: 't1', url: `${origin}/x`, title: 'x', kind: 'app' as const };
+    events!.message({ kind: 'prompt', text: '<user_prompt>hi</user_prompt>' }, tab);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(requests).toEqual([
+      expect.objectContaining({
+        operation: 'message.send',
+        params: { text: '<user_prompt>hi</user_prompt>', mode: 'follow_up', from: 'tidewave' },
+      }),
+    ]);
+    expect(evaluations.at(-1)).toContain('Sent to worker');
+    expect(readLease(port)?.lastPromptAt).toBeString();
+  });
+
+  test('a follower never links the browser', () => {
+    const port = ++nextPort;
+    claimLease(lease(port, { pid: process.ppid }));
+    let linked = false;
+
+    const h = harness(port, {
+      link: (...args) => {
+        linked = true;
+
+        return offlineLink(...args);
+      },
+    });
+
+    h.fire('session_start');
+    expect(linked).toBe(false);
   });
 });
