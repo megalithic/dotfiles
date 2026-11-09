@@ -1,5 +1,4 @@
-// Git hooks via hk (https://hk.jdx.dev). Replaces the removed
-// devenv/git-hooks.nix setup and replicates its hook set.
+// Git hooks via hk (https://hk.jdx.dev).
 //
 // Installed globally by `mise run setup:hk`; repos without hk.pkl are no-ops.
 // Bypass once enabled: HK=0 git commit ...
@@ -43,9 +42,12 @@ local linters = new Mapping<String, Step> {
         glob = List("home/.ssh/**")
         check = sshAllowlistCheck
     }
-    // Match the old devenv setup and only scan staged changes.
-    ["gitleaks"] = (Builtins.gitleaks) {
-        scan = "staged"
+    // Only scan staged changes.
+    ["betterleaks"] = new Step {
+        check = new CommandSpec {
+            command = "betterleaks git --pre-commit --staged --redact --verbose --no-banner"
+            effect = "read"
+        }
     }
     ["shellcheck"] = (Builtins.shellcheck) {
         exclude = disabledPiEntries
@@ -81,8 +83,6 @@ local linters = new Mapping<String, Step> {
             effect = "write"
         }
     }
-    // Nix linters from the old devenv setup — enable once provided by mise:
-    // ["deadnix"] = Builtins.deadnix
 }
 
 hooks {
@@ -101,9 +101,9 @@ hooks {
             ["ssh-allowlist"] {
                 check = sshAllowlistCheck
             }
-            ["gitleaks-history"] {
+            ["betterleaks-history"] {
                 check = new CommandSpec {
-                    command = "gitleaks git --redact --no-banner ."
+                    command = "betterleaks git --redact --no-banner ."
                     effect = "read"
                 }
             }
