@@ -48,6 +48,8 @@ class PidewaveCli(unittest.TestCase):
         self.tmp = tempfile.mkdtemp(prefix="pw-", dir="/tmp")
         self.ports = Path(self.tmp, "state", "pidewave", "ports")
         self.ports.mkdir(parents=True)
+        self.pis = Path(self.tmp, "state", "pidewave", "pis")
+        self.pis.mkdir(parents=True)
         self.bin = Path(self.tmp, "bin")
         self.bin.mkdir()
         self.bridge = Bridge(os.path.join(self.tmp, "b.sock"))
@@ -68,6 +70,12 @@ class PidewaveCli(unittest.TestCase):
         }
         lease.update(extra)
         (self.ports / ("%d.json" % port)).write_text(json.dumps(lease))
+        (self.pis / ("%d-%d.json" % (lease["pid"], port))).write_text(json.dumps(lease))
+
+    def seat(self, pid, **extra):
+        seat = {"pid": pid, "port": 4100, "socket": self.bridge.path, "terminal": {"kind": "plain"}}
+        seat.update(extra)
+        (self.pis / ("%d.json" % pid)).write_text(json.dumps(seat))
 
     def run_cli(self, *args):
         env = dict(os.environ, PI_STATE_DIR=str(Path(self.tmp, "state")), PATH="%s:/usr/bin:/bin" % self.bin)
@@ -85,6 +93,12 @@ class PidewaveCli(unittest.TestCase):
         tmux.write_text("#!/bin/sh\nprintf '111\\t%%1\\n222\\t%%9\\n'\n")
         tmux.chmod(0o755)
         result = self.run_cli("inspect", "--rex-block", "block:other", "--pid", "222")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(self.bridge.requests), 1)
+
+    def test_a_follower_in_the_block_is_asked_even_without_the_lease(self):
+        self.seat(os.getpid(), terminal={"kind": "rex", "rex": {"session": "s", "block": "block:f"}})
+        result = self.run_cli("inspect", "--rex-block", "block:f")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(len(self.bridge.requests), 1)
 

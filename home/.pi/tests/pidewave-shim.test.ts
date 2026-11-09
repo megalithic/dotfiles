@@ -34,6 +34,7 @@ const page = (pathname = '/orders', top = true) => {
     addEventListener: typeof on;
     top?: FakeWindow | { other: true };
     __pidewaveToast?: (text: string, ok: boolean) => void;
+    __pidewaveOff?: boolean;
   };
 
   const window: FakeWindow = {
@@ -151,6 +152,21 @@ describe('pidewave page script', () => {
     );
     expect(p.sent).toHaveLength(1);
     expect(p.sent[0]!.text).toStartWith('I have a page open');
+  });
+
+  test('a selection copied by hand on the Connect page is not a prompt', () => {
+    const p = page('/tidewave/connect');
+    p.fire('copy', { clipboardData: { getData: () => 'some text the user selected' } });
+    expect(p.sent).toEqual([]);
+  });
+
+  test('switched off by Pi before it detaches: nothing forwarded, no chord swallowed', async () => {
+    const p = page();
+    p.window.__pidewaveOff = true;
+    await p.writeText('<user_prompt>late</user_prompt>');
+    const chord = p.fire('keydown', { metaKey: true, ctrlKey: false, shiftKey: true, altKey: false, code: 'KeyC' });
+    expect(p.sent).toEqual([]);
+    expect(chord.prevented).toBeUndefined();
   });
 
   test('chords: Cmd+Shift+C inspects, Ctrl+Shift+P focuses Pi, others pass through', () => {

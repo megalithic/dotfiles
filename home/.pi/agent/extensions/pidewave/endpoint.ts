@@ -8,13 +8,11 @@
  */
 
 import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
-import { execFileSync } from 'node:child_process';
+import { execFile, execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { isJsonObject, isJsonString, type JsonValue } from './shared.ts';
-
-export const ENDPOINT_EVENT = 'pidewave:endpoint:v1';
 
 export const SERVER_NAME = 'tidewave';
 
@@ -78,6 +76,14 @@ export const portFromScript: ResolvePort = (cwd) => {
     return undefined;
   }
 };
+
+const portFromScriptAsync = (cwd: string): Promise<string | undefined> =>
+  new Promise((resolve) =>
+    execFile('bash', [PHX_PORT_SCRIPT], { cwd, encoding: 'utf8', timeout: 3_000 }, (error, stdout) => {
+      const out = stdout.trim();
+      resolve(!error && /^\d+$/.test(out) ? out : undefined);
+    }),
+  );
 
 /** The raw `pidewave.url` template, or undefined when the project has none. Throws only own messages. */
 const readTemplate = (ctx: ExtensionContext): string | undefined => {
@@ -194,17 +200,9 @@ export const createEndpoint = (
   let probe: Probe | undefined;
   let checking: Promise<void> | undefined;
   let live = false;
-  let everLive = false;
+  // Bumped by an external stop, so a port-drift restart never outlives session_shutdown.
+  let generation = 0;
   let failedTicks = 0;
-
-  const publish = (): void => {
-    pi.events.emit(
-      ENDPOINT_EVENT,
-      live && registeredUrl
-        ? { version: 1, endpoint: { origin: registeredUrl.origin, pathname: registeredUrl.pathname } }
-        : { version: 1 },
-    );
-  };
 
   const register = (url: URL): void => {
     try {
@@ -219,8 +217,9 @@ export const createEndpoint = (
     live = next;
     record(pi, 'status', { status: next ? 'connected' : 'unreachable', url: registeredUrl?.origin });
 
-    // Pi's own connection failed at start, so it has no tools; make it connect again.
-    if (next && !everLive && failedTicks > 0 && registeredUrl) {
+    // After any outage, register again: Pi's own connection may have failed while ours
+    // still answered (a server that failed its first connect never lists tools).
+    if (next && failedTicks > 0 && registeredUrl) {
       try {
         pi.unregisterMcpServer(SERVER_NAME);
         register(registeredUrl);
@@ -228,12 +227,8 @@ export const createEndpoint = (
       } catch {}
     }
 
-    if (next) {
-      everLive = true;
-      failedTicks = 0;
-    }
+    if (next) failedTicks = 0;
 
-    publish();
     onChange();
   };
 
@@ -278,14 +273,13 @@ export const createEndpoint = (
     return checking;
   };
 
-  const stop = async (): Promise<void> => {
+  const halt = async (): Promise<void> => {
     clearInterval(monitor);
     monitor = undefined;
     const url = registeredUrl;
     registeredUrl = undefined;
     const dead = probe;
     probe = undefined;
-    everLive = false;
     failedTicks = 0;
     setLive(false);
 
@@ -298,10 +292,17 @@ export const createEndpoint = (
     await dead?.close().catch(() => {});
   };
 
+  const stop = (): Promise<void> => {
+    generation += 1;
+
+    return halt();
+  };
+
   // Phoenix may come back on another port (a PORT override); phx-port.sh reports the live one.
-  const checkDrift = (): void => {
+  const checkDrift = async (): Promise<void> => {
     const ctx = ctxRef;
     const url = registeredUrl;
+    const token = generation;
 
     if (live || !ctx || !url || failedTicks === 0 || failedTicks % DRIFT_CHECK_TICKS !== 0) return;
 
@@ -309,11 +310,14 @@ export const createEndpoint = (
       const template = readTemplate(ctx);
 
       if (!template || !usesPhxPort(template)) return;
-      const port = resolvePort(ctx.cwd);
+      // phx-port.sh runs pgrep, ps and lsof: off the TUI thread when it is the real one.
+      const port = resolvePort === portFromScript ? await portFromScriptAsync(ctx.cwd) : resolvePort(ctx.cwd);
 
-      if (!port || port === url.port) return;
+      if (!port || port === url.port || token !== generation || registeredUrl !== url) return;
       record(pi, 'port-moved', { from: url.port, to: port });
-      void stop().then(() => start(ctx, port));
+      await halt();
+
+      if (token === generation) start(ctx, port);
     } catch {}
   };
 
@@ -321,7 +325,6 @@ export const createEndpoint = (
     ctxRef = ctx;
 
     if (registeredUrl) return;
-    publish(); // Revoked until the first successful ping.
 
     try {
       const url = readEndpoint(ctx, resolvePort, override);

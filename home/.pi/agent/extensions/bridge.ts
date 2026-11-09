@@ -363,7 +363,8 @@ type ControlSession = Omit<BridgeManifest, 'owner' | 'ephemeral'> & {
 type ControlData =
   | { sessions: ControlSession[] }
   | { message: LastAssistantMessage | null }
-  | { accepted: true; messageId?: string; deliveredAs: DeliveredAs };
+  | { accepted: true; messageId?: string; deliveredAs: DeliveredAs }
+  | { accepted: true };
 
 type BridgeResponse = {
   ok: boolean;

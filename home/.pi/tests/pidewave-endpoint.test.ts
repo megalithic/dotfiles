@@ -3,14 +3,12 @@ import type { ExtensionAPI, ExtensionContext, McpServerConfig } from '@earendil-
 import fs from 'node:fs';
 import path from 'node:path';
 
-import pidewave from '../agent/extensions/pidewave/index.ts';
+import pidewave, { type PidewaveStatus, STATUS_EVENT } from '../agent/extensions/pidewave/index.ts';
 
 // Leases claimed by interactive harnesses land here, never in the real state directory.
 const stateDir = fs.mkdtempSync('/tmp/pidewave-endpoint-state-');
 
 afterAll(() => fs.rmSync(stateDir, { recursive: true, force: true }));
-
-const ENDPOINT = 'pidewave:endpoint:v1';
 
 // SAFETY: Fixtures intentionally implement only the endpoint API members they exercise.
 const asExtensionAPI = <T>(value: T): ExtensionAPI => value as ExtensionAPI;
@@ -41,6 +39,8 @@ const intervals = spyOn(globalThis, 'setInterval');
 
 beforeEach(() => {
   process.env.PI_STATE_DIR = stateDir;
+  delete process.env.PI_SOCKET;
+  delete process.env.PI_SOCKET_OWNER_PID;
 });
 
 afterEach(async () => {
@@ -56,6 +56,12 @@ type Probe = { url: string; pings: number; closed: number; ping(): Promise<void>
 
 type EndpointEvent = { version: number; endpoint?: { origin: string; pathname: string } };
 
+// The live endpoint as the status event reports it: an origin only while Tidewave answers.
+const endpointOf = (status: PidewaveStatus): EndpointEvent =>
+  status.connected && status.url
+    ? { version: 1, endpoint: { origin: status.url, pathname: '/tidewave/mcp' } }
+    : { version: 1 };
+
 type CommandUi = { notify(text: string): void; select?(title: string, options: string[]): Promise<string | undefined> };
 
 type Entry = { event: string; at: string; [key: string]: string | boolean | undefined };
@@ -66,16 +72,16 @@ type ConfigFixture = null | {
 };
 
 const eventBus = () => {
-  const listeners = new Map<string, Set<(data: EndpointEvent) => void>>();
+  const listeners = new Map<string, Set<(data: PidewaveStatus) => void>>();
   const publications: EndpointEvent[] = [];
 
-  const emit = (name: string, data: EndpointEvent) => {
-    if (name === ENDPOINT) publications.push(data);
+  const emit = (name: string, data: PidewaveStatus) => {
+    if (name === STATUS_EVENT) publications.push(endpointOf(data));
 
     for (const listener of listeners.get(name) ?? []) listener(data);
   };
 
-  const on = (name: string, listener: (data: EndpointEvent) => void) => {
+  const on = (name: string, listener: (data: PidewaveStatus) => void) => {
     if (!listeners.has(name)) listeners.set(name, new Set());
     listeners.get(name)!.add(listener);
 
@@ -439,6 +445,7 @@ describe('Pidewave native endpoint', () => {
       ['reregistered', undefined, 'http://localhost:4300'],
       ['status', 'unreachable', 'http://localhost:4300'],
       ['status', 'connected', 'http://localhost:4300'],
+      ['reregistered', undefined, 'http://localhost:4300'],
     ]);
     expect(JSON.stringify(h.entries)).not.toContain('do-not-print');
   });
@@ -654,7 +661,32 @@ describe('Pidewave native endpoint', () => {
     });
   });
 
-  test('registers again only on the first answer after a failed start', async () => {
+  test('a port move found while the session shuts down never registers again', async () => {
+    process.env.PHX_PORT = '4300';
+    let resolving = () => '4300';
+    const h = harness({ port: () => resolving() });
+    h.write({ pidewave: { url: 'http://localhost:${PHX_PORT}/tidewave/mcp' } });
+    h.fire('session_start');
+    await h.settle();
+    h.setUp(false);
+    await h.tick();
+    await h.tick();
+
+    // Shutdown lands while the drift check is resolving the new port.
+    resolving = () => {
+      void h.fire('session_shutdown');
+
+      return '4400';
+    };
+
+    await h.tick();
+    await h.settle();
+    expect(h.registrations.map(([, config]) => ('url' in config ? config.url : ''))).not.toContain(
+      'http://localhost:4400/tidewave/mcp',
+    );
+  });
+
+  test('registers again on the first answer after any outage, never while it stays up', async () => {
     const h = harness({ up: false });
     h.write();
     h.fire('session_start');
@@ -664,12 +696,15 @@ describe('Pidewave native endpoint', () => {
     expect(h.unregistrations).toEqual(['tidewave']);
     expect(h.registrations).toEqual([registration(), registration()]);
 
-    // A later Phoenix restart is left to Pi's lazy reconnect.
+    await h.tick();
+    expect(h.registrations).toHaveLength(2);
+
+    // A Phoenix restart gets a fresh registration too.
     h.setUp(false);
     await h.tick();
     h.setUp(true);
     await h.tick();
-    expect(h.registrations).toHaveLength(2);
+    expect(h.registrations).toHaveLength(3);
   });
 
   test('footer status shows the registered origin only while Tidewave answers', async () => {

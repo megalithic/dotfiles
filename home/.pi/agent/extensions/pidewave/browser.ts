@@ -87,15 +87,28 @@ export const pickTab = (tabs: Tab[]): Tab | undefined =>
 
 type Pending = { resolve(value: { [key: string]: JsonValue }): void; reject(error: Error): void };
 
-type Linked = Tab & { sessionId?: string };
+type Linked = Tab & { sessionId?: string; contexts?: Map<number, string> };
+
+const plain = ({ sessionId: _session, contexts: _contexts, ...tab }: Linked): Tab => tab;
+
+/** The origin and its loopback alias: a localhost endpoint also serves 127.0.0.1 tabs, and back. */
+export const originAliases = (origin: string): string[] => {
+  const url = new URL(origin);
+  const other = url.hostname === 'localhost' ? '127.0.0.1' : url.hostname === '127.0.0.1' ? 'localhost' : undefined;
+
+  if (!other) return [url.origin];
+  const alias = new URL(url.origin);
+  alias.hostname = other;
+
+  return [url.origin, alias.origin];
+};
 
 export const createBrowserLink = (
   origin: string,
   events: LinkEvents,
-  info: () => { [key: string]: JsonValue },
   endpoint = `http://127.0.0.1:${process.env.PIDEWAVE_CDP_PORT || '9223'}`,
 ): BrowserLink => {
-  const origins = [origin, origin.replace('//localhost', '//127.0.0.1')];
+  const origins = originAliases(origin);
   const tabs = new Map<string, Linked>();
   const pending = new Map<number, Pending>();
   let socket: WebSocket | undefined;
@@ -130,20 +143,44 @@ export const createBrowserLink = (
       ws.send(JSON.stringify(sessionId ? { id, method, params, sessionId } : { id, method, params }));
     });
 
-  const attach = async (tab: Linked): Promise<void> => {
-    try {
-      const { sessionId } = await send('Target.attachToTarget', { targetId: tab.targetId, flatten: true });
+  // The shim stays in the page after detaching; switch it off first so its chords stop being swallowed.
+  const detach = (sessionId: string): void => {
+    void send('Runtime.evaluate', { expression: 'window.__pidewaveOff = true' }, sessionId).catch(() => {});
+    void send('Target.detachFromTarget', { sessionId }).catch(() => {});
+  };
 
-      if (!isJsonString(sessionId)) return;
+  // A tab can leave the origin, close, or the link can stop while this awaits; then undo it.
+  const attach = async (tab: Linked): Promise<void> => {
+    let sessionId: JsonValue | undefined;
+    const current = () => tabs.get(tab.targetId) === tab;
+
+    try {
+      ({ sessionId } = await send('Target.attachToTarget', { targetId: tab.targetId, flatten: true }));
+
+      if (!isJsonString(sessionId)) throw new Error('no session');
       tab.sessionId = sessionId;
-      const source = `window.__pidewaveInfo = ${JSON.stringify(info())};\n${SHIM}`;
-      await send('Runtime.enable', {}, sessionId);
-      await send('Runtime.addBinding', { name: BINDING }, sessionId);
-      await send('Page.enable', {}, sessionId);
-      await send('Page.addScriptToEvaluateOnNewDocument', { source, runImmediately: true }, sessionId);
+      tab.contexts = new Map();
+
+      if (!current()) throw new Error('tab left');
+
+      for (const [method, params] of [
+        ['Runtime.enable', {}],
+        ['Runtime.addBinding', { name: BINDING }],
+        ['Page.enable', {}],
+        ['Page.addScriptToEvaluateOnNewDocument', { source: SHIM, runImmediately: true }],
+        // A shim left by an earlier holder is still installed; switch it back on.
+        ['Runtime.evaluate', { expression: 'window.__pidewaveOff = false' }],
+      ] as const) {
+        await send(method, params, sessionId);
+
+        if (!current()) throw new Error('tab left');
+      }
+
       events.change();
     } catch {
-      tabs.delete(tab.targetId);
+      if (isJsonString(sessionId)) detach(sessionId);
+
+      if (current()) forget(tab.targetId);
     }
   };
 
@@ -157,7 +194,7 @@ export const createBrowserLink = (
     const known = tabs.get(target.targetId);
 
     if (!kind) {
-      if (known?.sessionId) void send('Target.detachFromTarget', { sessionId: known.sessionId }).catch(() => {});
+      if (known?.sessionId) detach(known.sessionId);
 
       return forget(target.targetId);
     }
@@ -177,12 +214,27 @@ export const createBrowserLink = (
     void attach(tab);
   };
 
-  const onBinding = (params: { [key: string]: JsonValue }, sessionId: JsonValue | undefined): void => {
-    if (params.name !== BINDING || !isJsonString(params.payload)) return;
-    const tab = [...tabs.values()].find((candidate) => candidate.sessionId === sessionId);
+  const bySession = (sessionId: JsonValue | undefined): Linked | undefined =>
+    [...tabs.values()].find((candidate) => candidate.sessionId === sessionId);
 
-    // The caller is identified by its CDP session, and its URL must still be on our origin.
-    if (!tab || !tabKind(tab.url, origins)) return;
+  // Main-world contexts of each linked tab, by id, with the origin CDP reports for them.
+  const onContext = (params: { [key: string]: JsonValue }, sessionId: JsonValue | undefined): void => {
+    const contexts = bySession(sessionId)?.contexts;
+    const context = params.context;
+
+    if (!contexts || !isJsonObject(context) || !isJsonNumber(context.id) || !isJsonString(context.origin)) return;
+
+    if (isJsonObject(context.auxData) && context.auxData.isDefault === true) contexts.set(context.id, context.origin);
+  };
+
+  const onBinding = (params: { [key: string]: JsonValue }, sessionId: JsonValue | undefined): void => {
+    if (params.name !== BINDING || !isJsonString(params.payload) || !isJsonNumber(params.executionContextId)) return;
+    const tab = bySession(sessionId);
+    const callerOrigin = tab?.contexts?.get(params.executionContextId);
+
+    // CDP names the calling frame's context; an iframe from another origin (another
+    // localhost port) or an extension's isolated world shares the session but not the origin.
+    if (!tab || !tabKind(tab.url, origins) || !callerOrigin || !origins.includes(callerOrigin)) return;
     const message = parsePageMessage(params.payload);
 
     if (!message) return;
@@ -192,8 +244,7 @@ export const createBrowserLink = (
       events.change();
     }
 
-    const { sessionId: _session, ...plain } = tab;
-    events.message(message, plain);
+    events.message(message, plain(tab));
   };
 
   const onMessage = (raw: string): void => {
@@ -227,13 +278,21 @@ export const createBrowserLink = (
       case 'Target.targetDestroyed':
         return isJsonString(params.targetId) ? forget(params.targetId) : undefined;
       case 'Target.detachedFromTarget': {
-        const tab = [...tabs.values()].find((candidate) => candidate.sessionId === params.sessionId);
+        const tab = bySession(params.sessionId);
 
         return tab ? forget(tab.targetId) : undefined;
       }
 
       case 'Runtime.bindingCalled':
         return onBinding(params, message.sessionId);
+      case 'Runtime.executionContextCreated':
+        return onContext(params, message.sessionId);
+      case 'Runtime.executionContextDestroyed':
+        return isJsonNumber(params.executionContextId)
+          ? void bySession(message.sessionId)?.contexts?.delete(params.executionContextId)
+          : undefined;
+      case 'Runtime.executionContextsCleared':
+        return bySession(message.sessionId)?.contexts?.clear();
     }
   };
 
@@ -313,30 +372,36 @@ export const createBrowserLink = (
     return false;
   };
 
+  // Never rejects: Helium can close or the tab can vanish at any step.
   const inspect = async (targetId?: string, raise = true): Promise<string> => {
     if (!up) return 'Helium has no CDP on port 9223; start it with helium-launch.';
-    let tab = targetId ? tabs.get(targetId) : pickTab([...tabs.values()]);
 
-    if (!tab) {
-      const created = await send('Target.createTarget', { url: `${origin}/` });
+    try {
+      let tab = targetId ? tabs.get(targetId) : pickTab([...tabs.values()]);
 
-      if (!isJsonString(created.targetId) || !(await waitForTab(created.targetId))) {
-        return `Could not open ${origin} in Helium.`;
+      if (!tab) {
+        const created = await send('Target.createTarget', { url: `${origin}/` });
+
+        if (!isJsonString(created.targetId) || !(await waitForTab(created.targetId))) {
+          return `Could not open ${origin} in Helium.`;
+        }
+
+        tab = tabs.get(created.targetId);
       }
 
-      tab = tabs.get(created.targetId);
+      if (!tab) return `No tab on ${origin}.`;
+
+      if (raise) {
+        await send('Target.activateTarget', { targetId: tab.targetId });
+        await raiseBrowser();
+      }
+
+      const result = await evaluate(tab.targetId, inspectExpression(new URL(tab.url).origin));
+
+      return result === 'active' ? 'active' : `Tidewave Inspect did not start (${String(result)}).`;
+    } catch (error) {
+      return `Tidewave Inspect failed: ${error instanceof Error ? error.message : 'unknown error'}.`;
     }
-
-    if (!tab) return `No tab on ${origin}.`;
-
-    if (raise) {
-      await send('Target.activateTarget', { targetId: tab.targetId });
-      await raiseBrowser();
-    }
-
-    const result = await evaluate(tab.targetId, inspectExpression(origin)).catch((error: Error) => error.message);
-
-    return result === 'active' ? 'active' : `Tidewave Inspect did not start (${String(result)}).`;
   };
 
   return {
@@ -352,7 +417,7 @@ export const createBrowserLink = (
 
       // Detach so the binding and script stop reaching a Pi that no longer holds the port.
       for (const tab of tabs.values()) {
-        if (tab.sessionId) void send('Target.detachFromTarget', { sessionId: tab.sessionId }).catch(() => {});
+        if (tab.sessionId) detach(tab.sessionId);
       }
 
       socket = undefined;
@@ -361,7 +426,7 @@ export const createBrowserLink = (
       setUp(false);
     },
     state: () => (up ? 'up' : 'down'),
-    tabs: () => [...tabs.values()].map(({ sessionId: _session, ...tab }) => tab),
+    tabs: () => [...tabs.values()].map(plain),
     evaluate,
     inspect,
   };

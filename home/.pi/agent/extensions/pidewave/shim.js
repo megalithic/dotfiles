@@ -7,6 +7,15 @@
   if (window.__pidewaveShim) return;
   window.__pidewaveShim = true;
 
+  // Pi sets this on the top window before it detaches; then nothing is forwarded or swallowed.
+  const off = () => {
+    try {
+      return window.__pidewaveOff === true || window.top.__pidewaveOff === true;
+    } catch {
+      return window.__pidewaveOff === true;
+    }
+  };
+
   const send = (message) => {
     const binding = window.__pidewave;
 
@@ -18,17 +27,18 @@
   };
 
   // Toolbar prompts carry <user_prompt>. On the Connect page every copy button
-  // copies agent instructions (sentences), except "Copy MCP server URL" (no spaces).
+  // copies agent instructions (sentences) through writeText, except "Copy MCP
+  // server URL" (no spaces); a selection copied by hand there is not a prompt.
   const connect = location.pathname === '/tidewave/connect';
 
-  const relevant = (text) =>
-    typeof text === 'string' && (text.includes('<user_prompt>') || (connect && /\s/.test(text.trim())));
+  const relevant = (text, button) =>
+    typeof text === 'string' && (text.includes('<user_prompt>') || (connect && button && /\s/.test(text.trim())));
 
   let last = '';
   let lastAt = 0;
 
-  const forward = (text) => {
-    if (!relevant(text)) return;
+  const forward = (text, button) => {
+    if (off() || !relevant(text, button)) return;
     const now = Date.now();
 
     // writeText and the execCommand fallback's copy event can both see one copy.
@@ -44,7 +54,7 @@
     const original = clipboard.writeText.bind(clipboard);
 
     clipboard.writeText = (text) => {
-      forward(text);
+      forward(text, true);
 
       return original(text);
     };
@@ -60,7 +70,7 @@
         ? field.value.slice(field.selectionStart, field.selectionEnd)
         : String(document.getSelection() || '');
 
-    forward(data || selected);
+    forward(data || selected, false);
   });
 
   let activeAt = 0;
@@ -88,7 +98,7 @@
 
       const kind = chord(true, false, 'KeyC') ? 'inspect' : chord(false, true, 'KeyP') ? 'focus-pi' : undefined;
 
-      if (!kind) return;
+      if (!kind || off()) return;
       event.preventDefault();
       event.stopPropagation();
       send({ kind });

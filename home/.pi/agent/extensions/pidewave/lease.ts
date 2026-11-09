@@ -92,6 +92,9 @@ export const holderAlive = (lease: Lease, now = Date.now(), uptimeSeconds = os.u
 
   if (!Number.isFinite(claimed) || claimed < now - uptimeSeconds * 1000) return false;
 
+  // A reused pid has no bridge socket at the recorded path.
+  if (lease.socket && !fs.existsSync(lease.socket)) return false;
+
   try {
     process.kill(lease.pid, 0);
 
@@ -101,64 +104,106 @@ export const holderAlive = (lease: Lease, now = Date.now(), uptimeSeconds = os.u
   }
 };
 
-const writeTemp = (lease: Lease, file: string): string => {
-  fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
-  const tmp = `${file}.${process.pid}.${Date.now()}.tmp`;
-  fs.writeFileSync(tmp, `${JSON.stringify(lease, null, 2)}\n`, { mode: 0o600 });
-
-  return tmp;
-};
-
 export type ClaimResult = { held: true } | { held: false; holder: Lease };
 
+const LOCK_STALE_MS = 2_000;
+
+const LOCK_WAIT_MS = 300;
+
+const pause = (ms: number): void => {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+};
+
 /**
- * Claim the port. `link` creates the file only when absent; a dead or forced
- * takeover renames over it. Two followers racing for a dead holder both rename,
- * so the result is read back: the loser sees the winner as holder.
+ * Run one read-check-write on a port's lease under `<port>.json.lock` (mkdir is
+ * atomic). A lock older than LOCK_STALE_MS belongs to a process that died
+ * mid-update. The critical sections are a few small file operations.
  */
-export const claimLease = (lease: Lease, force = false, dir = leaseDir()): ClaimResult => {
-  const file = leaseFile(lease.port, dir);
-  const tmp = writeTemp(lease, file);
+const withLock = <T>(file: string, run: () => T): T => {
+  const lock = `${file}.lock`;
+  fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
 
-  try {
-    fs.linkSync(tmp, file);
-    fs.unlinkSync(tmp);
+  for (const deadline = Date.now() + LOCK_WAIT_MS; ; pause(10)) {
+    try {
+      fs.mkdirSync(lock);
+      break;
+    } catch (error) {
+      if (!(error instanceof Error && 'code' in error && error.code === 'EEXIST')) throw error;
 
-    return { held: true };
-  } catch (error) {
-    if (!(error instanceof Error && 'code' in error && error.code === 'EEXIST')) {
-      fs.rmSync(tmp, { force: true });
-      throw error;
+      try {
+        if (Date.now() - fs.statSync(lock).mtimeMs > LOCK_STALE_MS) fs.rmdirSync(lock);
+      } catch {}
+
+      if (Date.now() > deadline) throw new Error('pidewave lease is busy');
     }
   }
 
-  const current = readLease(lease.port, dir);
-
-  if (current && current.pid !== lease.pid && !force && holderAlive(current)) {
-    fs.rmSync(tmp, { force: true });
-
-    return { held: false, holder: current };
+  try {
+    return run();
+  } finally {
+    fs.rmSync(lock, { recursive: true, force: true });
   }
+};
 
+const write = (lease: Lease, file: string): void => {
+  const tmp = `${file}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, `${JSON.stringify(lease, null, 2)}\n`, { mode: 0o600 });
   fs.renameSync(tmp, file);
-  const after = readLease(lease.port, dir);
+};
 
-  return after && after.pid !== lease.pid ? { held: false, holder: after } : { held: true };
+/** Claim the port when it is free, its holder is dead, or `force` is set. */
+export const claimLease = (lease: Lease, force = false, dir = leaseDir()): ClaimResult => {
+  const file = leaseFile(lease.port, dir);
+
+  return withLock(file, () => {
+    const current = readLease(lease.port, dir);
+
+    if (current && current.pid !== lease.pid && !force && holderAlive(current)) return { held: false, holder: current };
+    write(lease, file);
+
+    return { held: true };
+  });
 };
 
 /** Rewrite the lease while this pid still holds it. Returns whether it does. */
 export const updateLease = (lease: Lease, dir = leaseDir()): boolean => {
   const file = leaseFile(lease.port, dir);
 
-  if (readLease(lease.port, dir)?.pid !== lease.pid) return false;
-  fs.renameSync(writeTemp(lease, file), file);
+  return withLock(file, () => {
+    if (readLease(lease.port, dir)?.pid !== lease.pid) return false;
+    write(lease, file);
 
-  return true;
+    return true;
+  });
 };
 
 export const releaseLease = (port: number, pid: number, dir = leaseDir()): void => {
-  if (readLease(port, dir)?.pid === pid) fs.rmSync(leaseFile(port, dir), { force: true });
+  const file = leaseFile(port, dir);
+
+  withLock(file, () => {
+    if (readLease(port, dir)?.pid === pid) fs.rmSync(file, { force: true });
+  });
 };
+
+/**
+ * Every interactive Pi with a Tidewave endpoint, holder or not, at
+ * `${PI_STATE_DIR}/pidewave/pis/<pid>.json`, so bin/pidewave can find the Pi in a
+ * focused Rex block or tmux pane and ask it to take the port.
+ */
+export type Seat = Pick<Lease, 'pid' | 'port' | 'socket' | 'terminal' | 'sessionName' | 'tellId'>;
+
+const seatFile = (pid: number, env: NodeJS.ProcessEnv = process.env): string =>
+  path.join(piStateDir(env), 'pidewave', 'pis', `${pid}.json`);
+
+export const writeSeat = (seat: Seat): void => {
+  const file = seatFile(seat.pid);
+  fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+  const tmp = `${file}.tmp`;
+  fs.writeFileSync(tmp, `${JSON.stringify(seat)}\n`, { mode: 0o600 });
+  fs.renameSync(tmp, file);
+};
+
+export const removeSeat = (pid: number): void => fs.rmSync(seatFile(pid), { force: true });
 
 /**
  * Where this Pi runs. Inside tmux, REX_* variables are whatever the tmux server

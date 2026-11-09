@@ -29,11 +29,14 @@ import {
   claimLease,
   holderAlive,
   type Lease,
+  listLeases,
+  removeSeat,
   readLease,
   releaseLease,
   type Tab,
   terminalFromEnv,
   updateLease,
+  writeSeat,
 } from './lease.ts';
 import { promptRequest, sendControl, tellId } from './shared.ts';
 import { focusTerminal } from './terminal.ts';
@@ -58,6 +61,12 @@ export type PidewaveStatus = {
   tabs: number;
   lastPromptAt: string | null;
 };
+
+// bridge.ts exports PI_SOCKET with its owner pid; a child Pi must not use its parent's socket.
+const ownSocket = (): string | undefined =>
+  process.env.PI_SOCKET && (!process.env.PI_SOCKET_OWNER_PID || process.env.PI_SOCKET_OWNER_PID === String(process.pid))
+    ? process.env.PI_SOCKET
+    : undefined;
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -154,7 +163,7 @@ export default function (
       sessionId,
       sessionName: ctx.sessionManager?.getSessionName?.() || null,
       tellId: sessionId ? tellId(sessionId) : null,
-      socket: process.env.PI_SOCKET || null,
+      socket: ownSocket() ?? null,
       terminal: terminalFromEnv(),
       claimedAt: mine?.claimedAt ?? new Date().toISOString(),
       browser: link ? { cdp: link.state(), tabs: link.tabs() } : { cdp: 'off', tabs: [] },
@@ -196,13 +205,27 @@ export default function (
     return false;
   };
 
+  // Timers, CDP events and the bridge call into here; a throw there would end the Pi process.
+  const safely = (where: string, run: () => void): void => {
+    try {
+      run();
+    } catch {
+      record(pi, 'error', { where });
+    }
+  };
+
   // Keep the lease true to this process, and take it over when its holder is gone.
-  const reconcile = (): void => {
+  const reconcile = (): void => safely('reconcile', reconcileNow);
+
+  const reconcileNow = (): void => {
     const ctx = ctxRef;
     const url = endpoint.url();
 
     if (!ctx || !url || !canHold(ctx)) return publishStatus();
     const port = portOf(url);
+
+    // The endpoint can appear after session start (bootstrap, then /pidewave).
+    startWatching();
 
     // The endpoint moved (port drift or /pidewave with a new URL).
     if (mine && mine.port !== port) {
@@ -236,11 +259,38 @@ export default function (
     }
 
     syncLink();
+    updateSeat(ctx, port);
     publishStatus();
   };
 
+  let lastSeat: string | undefined;
+
+  const updateSeat = (ctx: ExtensionContext, port: number): void => {
+    const lease = mine ?? buildLease(ctx, endpoint.url()!);
+
+    const seat = {
+      pid: process.pid,
+      port,
+      socket: lease.socket,
+      terminal: lease.terminal,
+      sessionName: lease.sessionName,
+      tellId: lease.tellId,
+    };
+
+    const text = JSON.stringify(seat);
+
+    if (text === lastSeat) return;
+
+    try {
+      writeSeat(seat);
+      lastSeat = text;
+    } catch {}
+  };
+
   // Tab and CDP changes only touch the lease and the status, never the claim.
-  const linkChanged = (): void => {
+  const linkChanged = (): void => safely('link', linkChangedNow);
+
+  const linkChangedNow = (): void => {
     const ctx = ctxRef;
     const url = endpoint.url();
 
@@ -260,28 +310,41 @@ export default function (
 
   // Same path as every other external prompt: bridge.ts delivers it as a Tidewave tell.
   const deliver = async (text: string, tab: Tab): Promise<void> => {
-    const socket = process.env.PI_SOCKET;
+    const socket = ownSocket();
     const response = socket ? await sendControl(socket, promptRequest(text)) : null;
-    let ok = response?.ok === true;
-
-    if (!socket) {
-      try {
-        pi.sendUserMessage(text, { deliverAs: 'followUp' });
-        ok = true;
-      } catch {}
-    }
-
+    const ok = response?.ok === true;
     record(pi, 'prompt', { ok, url: tab.url });
 
     if (ok && mine) mine = { ...mine, lastPromptAt: new Date().toISOString() };
     linkChanged();
     const name = mine?.sessionName ?? 'Pi';
-    toast(tab, ok ? `Sent to ${name}` : `${name} did not accept the prompt: ${response?.error ?? 'no answer'}`, ok);
+    const reason = socket ? (response?.error ?? 'no answer') : 'its bridge socket is not running';
+    toast(tab, ok ? `Sent to ${name}` : `${name} did not accept the prompt: ${reason}`, ok);
 
-    if (!ok && ctxRef?.hasUI) ctxRef.ui.notify('Pidewave: a browser prompt could not be delivered.', 'error');
+    if (!ok && ctxRef?.hasUI) {
+      const ui = ctxRef.ui;
+      safely('notify', () => ui.notify('Pidewave: a browser prompt could not be delivered.', 'error'));
+    }
   };
 
+  // A takeover is noticed within RECONCILE_MS; until then, check before acting on a tab.
+  const stillHolder = (): boolean => role === 'holder' && !!mine && readLease(mine.port)?.pid === process.pid;
+
   const onPageMessage = (message: PageMessage, tab: Tab): void => {
+    if (message.kind === 'active') return;
+
+    if (!stillHolder()) {
+      const holder = mine ? readLease(mine.port) : null;
+      toast(
+        tab,
+        `Browser prompts moved to ${holder?.sessionName ?? holder?.tellId ?? 'another Pi'}; send again.`,
+        false,
+      );
+      reconcile();
+
+      return;
+    }
+
     if (message.kind === 'prompt') void deliver(message.text, tab);
 
     if (message.kind === 'focus-pi') {
@@ -311,10 +374,7 @@ export default function (
     if (link || !want) return;
     linkOrigin = want;
 
-    link = createLink(want, { message: onPageMessage, change: linkChanged }, () => ({
-      sessionName: mine?.sessionName ?? null,
-      tellId: mine?.tellId ?? null,
-    }));
+    link = createLink(want, { message: onPageMessage, change: linkChanged });
 
     link.start();
   };
@@ -322,6 +382,7 @@ export default function (
   const endpoint = createEndpoint(pi, connect, resolvePort, reconcile);
 
   const startWatching = (): void => {
+    if (reconcileTimer) return;
     reconcileTimer = setInterval(reconcile, RECONCILE_MS);
     reconcileTimer.unref();
   };
@@ -407,17 +468,22 @@ export default function (
   };
 
   // Take the port (if needed), then focus the most recently used tab and start Tidewave Inspect.
+  // Never rejects: it runs from the bridge event and a shortcut, and the session can change while it waits.
   const inspectFromPi = async (ctx: ExtensionContext): Promise<void> => {
-    if (!takeOver(ctx)) return;
-    const fresh = link?.state() !== 'up';
+    try {
+      if (!takeOver(ctx)) return;
+      const fresh = link?.state() !== 'up';
 
-    for (let i = 0; i < 30 && link?.state() !== 'up'; i += 1) await sleep(100);
+      for (let i = 0; i < 30 && link?.state() !== 'up'; i += 1) await sleep(100);
 
-    // A new link is still attaching its tabs; give it a moment before picking one.
-    if (fresh) await sleep(500);
-    const result = (await link?.inspect(undefined, true)) ?? 'no browser link';
+      // A new link is still attaching its tabs; give it a moment before picking one.
+      if (fresh) await sleep(500);
+      const result = (await link?.inspect(undefined, true)) ?? 'no browser link';
 
-    if (result !== 'active') ctx.ui.notify(`Pidewave: ${result}`, 'warning');
+      if (result !== 'active') ctx.ui.notify(`Pidewave: ${result}`, 'warning');
+    } catch {
+      record(pi, 'error', { where: 'inspect' });
+    }
   };
 
   const takeOver = (ctx: ExtensionContext): boolean => {
@@ -505,8 +571,14 @@ export default function (
     }
 
     endpoint.start(ctx);
+    const url = endpoint.url();
 
-    if (canHold(ctx) && endpoint.url()) startWatching();
+    // A reload runs a fresh copy that knows nothing of leases this process took on another port.
+    for (const held of listLeases()) {
+      if (held.pid === process.pid && (!url || held.port !== portOf(url))) {
+        safely('release', () => releaseLease(held.port, process.pid));
+      }
+    }
   });
 
   pi.on('before_agent_start', () => reconcile());
@@ -521,10 +593,13 @@ export default function (
 
     // Reload, new, resume and fork keep this process, so they keep the lease.
     if (mine && quitting) {
-      releaseLease(mine.port, process.pid);
+      const port = mine.port;
+      safely('release', () => releaseLease(port, process.pid));
       mine = undefined;
       role = 'none';
     }
+
+    if (quitting) safely('seat', () => removeSeat(process.pid));
 
     ctxRef = undefined;
     lastStatus = undefined;

@@ -37,7 +37,7 @@ const targets = [
 ];
 
 // A fake Chrome: /json/version plus a browser WebSocket that answers CDP commands.
-const fakeBrowser = () => {
+const fakeBrowser = (flaky = false) => {
   const sent: Sent[] = [];
   let peer: { send(text: string): void } | undefined;
 
@@ -67,9 +67,40 @@ const fakeBrowser = () => {
 
         ws.send(JSON.stringify({ id: message.id, result }));
 
+        // Like Chrome after Runtime.enable: the page's main world, a cross-origin iframe, and an isolated world.
+        if (message.method === 'Runtime.enable' && message.sessionId) {
+          const url = targets.find((target) => `s-${target.targetId}` === message.sessionId)!.url;
+
+          for (const context of [
+            { id: 1, origin: new URL(url).origin, auxData: { isDefault: true } },
+            { id: 2, origin: 'http://localhost:4999', auxData: { isDefault: true } },
+            { id: 3, origin: new URL(url).origin, auxData: { isDefault: false } },
+          ]) {
+            ws.send(
+              JSON.stringify({
+                method: 'Runtime.executionContextCreated',
+                params: { context },
+                sessionId: message.sessionId,
+              }),
+            );
+          }
+        }
+
         if (message.method === 'Target.setDiscoverTargets') {
           for (const targetInfo of targets)
             ws.send(JSON.stringify({ method: 'Target.targetCreated', params: { targetInfo } }));
+
+          // A tab that leaves the origin before its attach answer arrives.
+          if (flaky) {
+            const targetInfo = { targetId: 'flaky', type: 'page', url: `${origin}/x`, title: '' };
+            ws.send(JSON.stringify({ method: 'Target.targetCreated', params: { targetInfo } }));
+            ws.send(
+              JSON.stringify({
+                method: 'Target.targetInfoChanged',
+                params: { targetInfo: { ...targetInfo, url: 'https://example.com/' } },
+              }),
+            );
+          }
         }
       },
     },
@@ -80,8 +111,11 @@ const fakeBrowser = () => {
   return {
     endpoint: `http://127.0.0.1:${server.port}`,
     sent,
-    emit: (method: string, params: { [key: string]: string | { [key: string]: string } }, sessionId?: string) =>
-      peer?.send(JSON.stringify(sessionId ? { method, params, sessionId } : { method, params })),
+    emit: (
+      method: string,
+      params: { [key: string]: string | number | { [key: string]: string } },
+      sessionId?: string,
+    ) => peer?.send(JSON.stringify(sessionId ? { method, params, sessionId } : { method, params })),
     commands: (method: string) => sent.filter((message) => message.method === method),
   };
 };
@@ -98,7 +132,6 @@ const linked = (endpoint: string) => {
         changes += 1;
       },
     },
-    () => ({ sessionName: 'worker' }),
     endpoint,
   );
 
@@ -112,7 +145,7 @@ describe('browser link', () => {
     const browser = fakeBrowser();
     const { link } = linked(browser.endpoint);
     link.start();
-    await until(() => browser.commands('Page.addScriptToEvaluateOnNewDocument').length === 3, 'scripts');
+    await until(() => browser.commands('Runtime.evaluate').length === 3, 'scripts switched on');
 
     expect(link.state()).toBe('up');
     expect(browser.commands('Target.attachToTarget').map((message) => message.params.targetId)).toEqual([
@@ -136,12 +169,12 @@ describe('browser link', () => {
         'Runtime.addBinding',
         'Page.enable',
         'Page.addScriptToEvaluateOnNewDocument',
+        'Runtime.evaluate',
       ]);
     }
 
     const script = browser.commands('Page.addScriptToEvaluateOnNewDocument')[0]!.params;
     expect(script.runImmediately).toBe(true);
-    expect(String(script.source)).toStartWith('window.__pidewaveInfo = {"sessionName":"worker"};');
     expect(String(script.source)).toContain('window.__pidewaveShim');
   });
 
@@ -152,11 +185,25 @@ describe('browser link', () => {
     await until(() => link.tabs().length === 3, 'tabs');
 
     const prompt = JSON.stringify({ kind: 'prompt', text: '<user_prompt>hi</user_prompt>', href: 'http://evil/' });
-    browser.emit('Runtime.bindingCalled', { name: '__pidewave', payload: prompt }, 's-app');
-    browser.emit('Runtime.bindingCalled', { name: '__pidewave', payload: prompt }, 's-unknown');
-    browser.emit('Runtime.bindingCalled', { name: 'other', payload: prompt }, 's-app');
-    browser.emit('Runtime.bindingCalled', { name: '__pidewave', payload: '{"kind":"exec"}' }, 's-app');
-    browser.emit('Runtime.bindingCalled', { name: '__pidewave', payload: '{"kind":"active"}' }, 's-connect');
+    browser.emit('Runtime.bindingCalled', { name: '__pidewave', payload: prompt, executionContextId: 1 }, 's-app');
+    browser.emit('Runtime.bindingCalled', { name: '__pidewave', payload: prompt, executionContextId: 1 }, 's-unknown');
+    browser.emit('Runtime.bindingCalled', { name: 'other', payload: prompt, executionContextId: 1 }, 's-app');
+
+    // Same tab, but a cross-origin iframe, an isolated world, and an unknown context.
+    for (const executionContextId of [2, 3, 99]) {
+      browser.emit('Runtime.bindingCalled', { name: '__pidewave', payload: prompt, executionContextId }, 's-app');
+    }
+
+    browser.emit(
+      'Runtime.bindingCalled',
+      { name: '__pidewave', payload: '{"kind":"exec"}', executionContextId: 1 },
+      's-app',
+    );
+    browser.emit(
+      'Runtime.bindingCalled',
+      { name: '__pidewave', payload: '{"kind":"active"}', executionContextId: 1 },
+      's-connect',
+    );
     await until(() => messages.length === 2, 'messages');
 
     expect(messages[0]).toEqual([
@@ -184,18 +231,37 @@ describe('browser link', () => {
     await until(() => link.tabs().length === 1, 'destroyed');
   });
 
+  test('a tab that leaves while attaching is detached and never linked', async () => {
+    const browser = fakeBrowser(true);
+    const { link } = linked(browser.endpoint);
+    link.start();
+    await until(() => browser.commands('Target.detachFromTarget').length === 1, 'detach');
+    expect(browser.commands('Target.detachFromTarget')[0]!.params).toEqual({ sessionId: 's-flaky' });
+    await until(() => link.tabs().length === 3, 'tabs');
+    expect(link.tabs().map((tab) => tab.targetId)).not.toContain('flaky');
+    // Only the switch-off before detaching; the shim was never installed.
+    expect(browser.sent.filter((message) => message.sessionId === 's-flaky').map((message) => message.method)).toEqual([
+      'Runtime.evaluate',
+    ]);
+  });
+
   test('inspect runs in the most recently active tab', async () => {
     const browser = fakeBrowser();
     const { link } = linked(browser.endpoint);
     link.start();
     await until(() => link.tabs().length === 3, 'tabs');
-    browser.emit('Runtime.bindingCalled', { name: '__pidewave', payload: '{"kind":"active"}' }, 's-loopback');
+    browser.emit(
+      'Runtime.bindingCalled',
+      { name: '__pidewave', payload: '{"kind":"active"}', executionContextId: 1 },
+      's-loopback',
+    );
     await until(() => link.tabs().some((tab) => tab.lastActiveAt), 'active');
 
     expect(await link.inspect(undefined, false)).toBe('active');
     const evaluate = browser.commands('Runtime.evaluate').at(-1)!;
     expect(evaluate.sessionId).toBe('s-loopback');
-    expect(String(evaluate.params.expression)).toContain(JSON.stringify(origin));
+    // Inspect checks the tab's own origin, so a 127.0.0.1 tab of a localhost endpoint works.
+    expect(String(evaluate.params.expression)).toContain(JSON.stringify('http://127.0.0.1:4123'));
   });
 
   test('stop detaches every tab; no browser means down', async () => {
@@ -206,6 +272,15 @@ describe('browser link', () => {
     link.stop();
     expect(link.state()).toBe('down');
     await until(() => browser.commands('Target.detachFromTarget').length === 3, 'detach all');
+
+    // Each tab's shim is switched off just before its session detaches.
+    const order = browser.sent.filter((message) => message.sessionId === 's-app').map((message) => message.method);
+    expect(order.slice(-1)).toEqual(['Runtime.evaluate']);
+    expect(
+      browser
+        .commands('Runtime.evaluate')
+        .filter((message) => message.params.expression === 'window.__pidewaveOff = true'),
+    ).toHaveLength(3);
 
     const offline = linked('http://127.0.0.1:9');
     offline.link.start();

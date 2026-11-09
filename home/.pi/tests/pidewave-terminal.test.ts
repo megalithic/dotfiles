@@ -58,7 +58,7 @@ describe('focus', () => {
   test('tmux inside Rex: switch the pane, then focus the Rex block that runs the latest tmux client', async () => {
     const { calls, exec } = recorder({
       'tmux display-message': 'work\t3\n',
-      'tmux list-clients': '100 70\n200 60\n',
+      'tmux list-clients': '100\t70\t/dev/ttys001\n200\t60\t/dev/ttys002\n',
       ps: table,
       'rex ls': JSON.stringify({ sessions: [{ session_id: 'session:a' }] }),
       'rex session inspect': JSON.stringify({
@@ -69,7 +69,9 @@ describe('focus', () => {
     });
 
     expect(await focusTerminal({ kind: 'tmux', tmux: { pane: '%7' } }, exec)).toBeUndefined();
-    expect(calls).toContain('tmux switch-client -t =work ; select-window -t =work:3 ; select-pane -t %7');
+    expect(calls).toContain(
+      'tmux switch-client -c /dev/ttys002 -t =work ; select-window -t =work:3 ; select-pane -t %7',
+    );
     expect(calls.slice(-3)).toEqual([
       'rex do session.select session_id=session:a',
       'rex focus -s session:a block:y',

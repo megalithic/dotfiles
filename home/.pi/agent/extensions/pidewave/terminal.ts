@@ -135,8 +135,19 @@ export const focusTerminal = async (
 
     if (!session || !window) return `tmux pane ${pane} is gone.`;
 
+    // Switch the most recently active client, then raise the terminal window that shows it.
+    const clients = await exec('tmux', ['list-clients', '-F', '#{client_activity}\t#{client_pid}\t#{client_tty}']);
+
+    const [, latestPid, tty] =
+      (clients ?? '')
+        .trim()
+        .split('\n')
+        .map((line) => line.split('\t'))
+        .toSorted((a, b) => Number(b[0] ?? 0) - Number(a[0] ?? 0))[0] ?? [];
+
     const switched = await exec('tmux', [
       'switch-client',
+      ...(tty ? ['-c', tty] : []),
       '-t',
       `=${session}`,
       ';',
@@ -149,16 +160,7 @@ export const focusTerminal = async (
       pane,
     ]);
 
-    // The most recently active client is the terminal window to raise.
-    const clients = await exec('tmux', ['list-clients', '-F', '#{client_activity} #{client_pid}']);
-
-    const latest = (clients ?? '')
-      .trim()
-      .split('\n')
-      .map((line) => line.split(' ').map(Number))
-      .toSorted((a, b) => (b[0] ?? 0) - (a[0] ?? 0))[0]?.[1];
-
-    if (latest) await activate(latest, exec);
+    if (latestPid) await activate(Number(latestPid), exec);
 
     return switched === undefined ? `tmux could not switch to ${session}.` : undefined;
   }

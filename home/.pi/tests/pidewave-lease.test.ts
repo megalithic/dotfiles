@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { afterAll, afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test';
 import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
 import { spawnSync } from 'node:child_process';
 import { once } from 'node:events';
@@ -47,8 +47,20 @@ let nextPort = 4100;
 
 beforeEach(() => {
   process.env = { ...originalEnv, PI_STATE_DIR: fs.mkdtempSync(path.join(stateDir, 'run-')), HOSTNAME: 'testhost' };
-  delete process.env.PI_SUBAGENT_NAME;
-  delete process.env.PI_EPHEMERAL;
+
+  // Never inherit this terminal or reach the live Pi that runs the tests.
+  for (const name of [
+    'PI_SUBAGENT_NAME',
+    'PI_EPHEMERAL',
+    'PI_SOCKET',
+    'PI_SOCKET_OWNER_PID',
+    'TMUX',
+    'TMUX_PANE',
+    'REX_SESSION',
+    'REX_BLOCK',
+  ]) {
+    delete process.env[name];
+  }
 });
 
 afterEach(async () => {
@@ -99,6 +111,8 @@ describe('lease file', () => {
 
     expect(holderAlive(lease(port, { pid: process.ppid, claimedAt: new Date(0).toISOString() }))).toBe(false);
     expect(holderAlive(lease(port, { pid: process.ppid }))).toBe(true);
+    // A live pid without the recorded bridge socket is a reused pid.
+    expect(holderAlive(lease(port, { pid: process.ppid, socket: '/tmp/pidewave-no-such.sock' }))).toBe(false);
   });
 
   test('update and release act only for the holding pid', () => {
@@ -109,6 +123,30 @@ describe('lease file', () => {
     expect(readLease(port)?.pid).toBe(process.ppid);
     releaseLease(port, process.ppid);
     expect(readLease(port)).toBeNull();
+  });
+
+  test('racing processes: exactly one claims a free port', async () => {
+    const port = ++nextPort;
+    const module = new URL('../agent/extensions/pidewave/lease.ts', import.meta.url).pathname;
+    const start = Date.now() + 400;
+
+    const script = `
+      const { claimLease } = await import(${JSON.stringify(module)});
+      while (Date.now() < ${start}) {}
+      const lease = { v: 1, port: ${port}, origin: 'http://localhost:${port}', root: '/tmp', cwd: '/tmp', pid: process.pid,
+        sessionId: null, sessionName: null, tellId: null, socket: null, terminal: { kind: 'plain' },
+        claimedAt: new Date().toISOString(), browser: { cdp: 'off', tabs: [] }, lastPromptAt: null };
+      console.log(JSON.stringify(claimLease(lease).held));
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    `;
+
+    const runs = Array.from({ length: 6 }, () =>
+      Bun.spawn([process.execPath, '-e', script], { env: process.env, stdout: 'pipe' }),
+    );
+
+    const held = await Promise.all(runs.map(async (run) => (await new Response(run.stdout).text()).trim()));
+    expect(held.filter((value) => value === 'true')).toHaveLength(1);
+    expect(held.filter((value) => value === 'false')).toHaveLength(5);
   });
 
   test('malformed files read as absent', () => {
@@ -135,14 +173,18 @@ type Hook = (event: { reason?: string }, ctx: ExtensionContext) => void | Promis
 
 const harness = (
   port: number,
-  options: { hasUI?: boolean; sessionId?: string; link?: typeof createBrowserLink } = {},
+  options: { hasUI?: boolean; sessionId?: string; link?: typeof createBrowserLink; bootstrapped?: boolean } = {},
 ) => {
   const cwd = fs.mkdtempSync('/tmp/pidewave-lease-wt-');
   fs.mkdirSync(path.join(cwd, '.pi'));
-  fs.writeFileSync(
-    path.join(cwd, '.pi', 'mcp.json'),
-    JSON.stringify({ pidewave: { url: `http://localhost:${port}/tidewave/mcp` } }),
-  );
+
+  const bootstrap = () =>
+    fs.writeFileSync(
+      path.join(cwd, '.pi', 'mcp.json'),
+      JSON.stringify({ pidewave: { url: `http://localhost:${port}/tidewave/mcp` } }),
+    );
+
+  if (options.bootstrapped !== false) bootstrap();
 
   const hooks = new Map<string, Hook>();
   const commands = new Map<string, (args: string, ctx: ExtensionContext) => Promise<void>>();
@@ -184,6 +226,7 @@ const harness = (
   });
 
   return {
+    bootstrap,
     notices,
     fire,
     status: () => statuses.at(-1),
@@ -296,12 +339,12 @@ describe('browser prompts', () => {
     let events: LinkEvents | undefined;
     let origin: string | undefined;
 
-    const link: typeof createBrowserLink = (linkOrigin, linkEvents, info) => {
+    const link: typeof createBrowserLink = (linkOrigin, linkEvents) => {
       origin = linkOrigin;
       events = linkEvents;
 
       return {
-        ...offlineLink(linkOrigin, linkEvents, info),
+        ...offlineLink(linkOrigin, linkEvents),
         state: () => 'up' as const,
         evaluate: async (_target: string, expression: string) => {
           evaluations.push(expression);
@@ -329,6 +372,42 @@ describe('browser prompts', () => {
     expect(readLease(port)?.lastPromptAt).toBeString();
   });
 
+  test("another process's PI_SOCKET is never used", async () => {
+    const port = ++nextPort;
+    process.env.PI_SOCKET = '/tmp/parent-pi.sock';
+    process.env.PI_SOCKET_OWNER_PID = String(process.ppid);
+    const evaluations: string[] = [];
+    let events: LinkEvents | undefined;
+
+    const link: typeof createBrowserLink = (linkOrigin, linkEvents) => {
+      events = linkEvents;
+
+      return {
+        ...offlineLink(linkOrigin, linkEvents),
+        evaluate: async (_target: string, expression: string) => {
+          evaluations.push(expression);
+
+          return undefined;
+        },
+      };
+    };
+
+    const h = harness(port, { link });
+    h.fire('session_start');
+    expect(readLease(port)?.socket).toBeNull();
+    events!.message(
+      { kind: 'prompt', text: '<user_prompt>x</user_prompt>' },
+      {
+        targetId: 't',
+        url: `http://localhost:${port}/`,
+        title: '',
+        kind: 'app',
+      },
+    );
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(evaluations.at(-1)).toContain('its bridge socket is not running');
+  });
+
   test('a follower never links the browser', () => {
     const port = ++nextPort;
     claimLease(lease(port, { pid: process.ppid }));
@@ -353,8 +432,8 @@ describe('inspect from Pi', () => {
     claimLease(lease(port, { pid: process.ppid, sessionName: 'first' }));
     const inspections: [string | undefined, boolean | undefined][] = [];
 
-    const link: typeof createBrowserLink = (linkOrigin, linkEvents, info) => ({
-      ...offlineLink(linkOrigin, linkEvents, info),
+    const link: typeof createBrowserLink = (linkOrigin, linkEvents) => ({
+      ...offlineLink(linkOrigin, linkEvents),
       state: () => 'up',
       inspect: async (targetId, raise) => {
         inspections.push([targetId, raise]);
@@ -379,5 +458,79 @@ describe('inspect from Pi', () => {
     await h.command('inspect');
     expect(readLease(port)).toBeNull();
     expect(h.notices.at(-1)).toBe('Pidewave: only an interactive Pi can take browser prompts.');
+  });
+});
+
+describe('review fixes', () => {
+  test('a holder that lost the port refuses tab actions at once, before the next reconcile', async () => {
+    const port = ++nextPort;
+    const evaluations: string[] = [];
+    let events: LinkEvents | undefined;
+
+    const link: typeof createBrowserLink = (linkOrigin, linkEvents) => {
+      events = linkEvents;
+
+      return {
+        ...offlineLink(linkOrigin, linkEvents),
+        evaluate: async (_target: string, expression: string) => {
+          evaluations.push(expression);
+
+          return undefined;
+        },
+      };
+    };
+
+    const h = harness(port, { link });
+    h.fire('session_start');
+    claimLease(lease(port, { pid: process.ppid, sessionName: 'thief' }), true);
+    const tab = { targetId: 't', url: `http://localhost:${port}/`, title: '', kind: 'app' as const };
+    events!.message({ kind: 'prompt', text: '<user_prompt>x</user_prompt>' }, tab);
+    expect(evaluations.at(-1)).toContain('Browser prompts moved to thief');
+    expect(h.status()?.role).toBe('follower');
+  });
+
+  test('a reload onto another port releases the old lease', async () => {
+    const first = ++nextPort;
+    const a = harness(first);
+    a.fire('session_start');
+    await a.fire('session_shutdown', { reason: 'reload' });
+    expect(readLease(first)?.pid).toBe(process.pid);
+
+    const b = harness(++nextPort);
+    b.fire('session_start', { reason: 'reload' });
+    expect(readLease(first)).toBeNull();
+    expect(b.status()?.role).toBe('holder');
+  });
+
+  test('an endpoint that appears after start still gets lease polling', async () => {
+    const port = ++nextPort;
+    const intervals = spyOn(globalThis, 'setInterval');
+
+    try {
+      const h = harness(port, { bootstrapped: false });
+      h.fire('session_start');
+      expect(intervals.mock.calls.filter(([, delay]) => delay === 5_000)).toHaveLength(0);
+      h.bootstrap();
+      await h.command('');
+      expect(readLease(port)?.pid).toBe(process.pid);
+      expect(intervals.mock.calls.filter(([, delay]) => delay === 5_000)).toHaveLength(1);
+    } finally {
+      intervals.mockRestore();
+    }
+  });
+
+  test('followers record a seat for bin/pidewave; quitting removes it', async () => {
+    const port = ++nextPort;
+    claimLease(lease(port, { pid: process.ppid }));
+    const h = harness(port);
+    h.fire('session_start');
+    const seat = path.join(process.env.PI_STATE_DIR!, 'pidewave', 'pis', `${process.pid}.json`);
+    expect(JSON.parse(fs.readFileSync(seat, 'utf8'))).toMatchObject({
+      pid: process.pid,
+      port,
+      terminal: { kind: 'plain' },
+    });
+    await h.fire('session_shutdown', { reason: 'quit' });
+    expect(fs.existsSync(seat)).toBe(false);
   });
 });

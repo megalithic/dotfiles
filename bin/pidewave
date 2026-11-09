@@ -5,9 +5,12 @@
   pidewave inspect --port PORT | --cwd PATH
   pidewave list
 
-Leases live in ${PI_STATE_DIR}/pidewave/ports/<port>.json (written by the
-pidewave Pi extension). --pid is the Rex block's foreground process: when it
-is a tmux client, the lease of that client's active pane is used. Runs on the
+The pidewave Pi extension writes leases to ${PI_STATE_DIR}/pidewave/ports/<port>.json
+(the Pi that gets browser prompts) and one record per interactive Pi to
+pidewave/pis/<pid>.json. --rex-block finds the Pi in that block, or in the tmux
+pane shown there when --pid (the block's foreground process) is a tmux client;
+it may be a follower, and Inspect makes it take the port. --port and --cwd ask
+the current holder. Runs on the
 system python so a Rex key action needs no mise PATH.
 """
 
@@ -45,9 +48,10 @@ def alive(pid):
         return False
 
 
-def leases():
+def records(kind):
+    """Lease files ("ports") or every eligible Pi ("pis"), each marked alive or not."""
     found = []
-    for path in sorted(glob.glob(os.path.join(state_dir(), "pidewave", "ports", "*.json"))):
+    for path in sorted(glob.glob(os.path.join(state_dir(), "pidewave", kind, "*.json"))):
         try:
             with open(path) as f:
                 lease = json.load(f)
@@ -84,9 +88,11 @@ def inside(child, parent):
     return rel == "." or not rel.startswith("..")
 
 
-def pick(candidates, args):
-    live = [lease for lease in candidates if lease["alive"]]
+def pick(args):
+    live = [lease for lease in records("ports") if lease["alive"]]
     if args.rex_block:
+        # Any Pi in the focused block, holder or follower: Inspect makes it take the port.
+        live = [seat for seat in records("pis") if seat["alive"]]
         for lease in live:
             if ((lease.get("terminal") or {}).get("rex") or {}).get("block") == args.rex_block:
                 return lease
@@ -136,10 +142,10 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     if args.command == "list":
-        print(json.dumps(leases(), indent=2))
+        print(json.dumps(records("ports"), indent=2))
         return 0
 
-    lease = pick(leases(), args)
+    lease = pick(args)
     if not lease:
         print("pidewave: no live Pi holds a Tidewave link for that target", file=sys.stderr)
         return 3
