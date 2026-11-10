@@ -1,3 +1,4 @@
+require("rexd") -- Plugins from rexd. Keep this first, so your own key bindings win.
 -- Rex Beta config, linked to ~/.config/rex/init.lua by mise [dotfiles].
 -- Apply edits with `rex config reload`; Rex does not watch this file.
 -- Docs: https://www.superlogical.com/rex/docs/customize/config.md
