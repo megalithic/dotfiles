@@ -1,0 +1,536 @@
+#!/usr/bin/env bash
+# rwt - git worktree <-> Rex session lifecycle (trial, runs beside wt/ftm/tmux).
+#
+# One worktree = one Rex session, labeled with the worktree id. Rex owns the
+# terminals; git owns the worktree; the project's mise tasks own setup and
+# services (dev:setup, dev:services). Nothing here writes tracked files.
+#
+#   rwt new NAME [--base REF]   create worktree + session (idempotent, = open)
+#   rwt open [NAME|PATH]        ensure worktree + session exist, repair services
+#   rwt status [NAME|PATH]      worktree, session, services, port, Tidewave
+#   rwt restart [NAME|PATH]     restart services in a fresh terminal
+#   rwt logs [NAME|PATH] [-n N] services output, read from Rex scrollback
+#   rwt wait-ready [NAME|PATH] [--timeout S]
+#   rwt prune NAME              remove a clean, merged worktree + session + branch
+#   rwt ls                      worktrees of this repo and their sessions
+#
+# Common flags: --json (one JSON object on stdout, progress on stderr),
+# --session SID (act on that session instead of the recorded one),
+# --no-services, --no-agent, --show (switch the Rex app to the session).
+# Exit codes: 0 ok, 2 usage, 3 not found, 4 setup failed, 6 refused, 7 other.
+set -uo pipefail
+
+# Rex actions run this with the server's environment; give it the usual tools.
+PATH="$HOME/.dotfiles/bin:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+# shortcut: fixed macOS app path for rex outside Rex terminals, upgrade when rex is a mise tool.
+REX="${REX_BIN_DIR:-$HOME/Library/Application Support/com.superlogical.rex/RexServer/Versions/Current/Rex Server.app/Contents/MacOS}/rex"
+export REX_SERVER="${REX_SERVER:-unix://$HOME/Library/Application Support/rex/server.sock}"
+SELF="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+DOTFILES="$(dirname "$(dirname "$SELF")")"
+
+JSON=0 SHOW=0 SERVICES=1 AGENT=1 BASE='' SESSION_OVERRIDE='' LINES=200 TIMEOUT=180
+TARGET=
+
+rex() { "$REX" "$@"; }
+log() { printf 'rwt: %s\n' "$*" >&2; }
+die() { # rc message
+  local rc="$1"
+  shift
+  if [ "$JSON" = 1 ]; then
+    jq -cn --arg e "$*" --argjson rc "$rc" '{ok:false, code:$rc, error:$e}'
+  else
+    printf 'rwt: %s\n' "$*" >&2
+  fi
+  exit "$rc"
+}
+
+# OSC 7501 program status: Rex shows it on tabs and in the session picker,
+# and agents read it back with `rex block call ... program_status`.
+status() { # state message
+  printf '\033]7501;state=%s:app=rwt:msg=%s\033\\' "$1" "$(printf '%s' "$2" | base64 | tr -d '\n')" >/dev/tty 2>/dev/null || true
+}
+
+# ---- repository and worktree identity ---------------------------------------
+
+main_root() { git -C "$1" worktree list --porcelain 2>/dev/null | awk '/^worktree /{print substr($0, 10); exit}'; }
+
+default_branch() { # main_root
+  local b
+  b="$(git -C "$1" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)" && {
+    echo "${b#origin/}"
+    return
+  }
+  for b in main master; do git -C "$1" show-ref --verify --quiet "refs/heads/$b" && {
+    echo "$b"
+    return
+  }; done
+  echo main
+}
+
+# Sets MAIN WT BRANCH WID LABEL STATE for TARGET (name, path, or empty for cwd).
+resolve() {
+  local here top
+  here="$PWD"
+  if [ -n "$TARGET" ] && [ -d "$TARGET" ]; then here="$TARGET"; fi
+  MAIN="$(main_root "$here")"
+  [ -n "$MAIN" ] || die 3 "not inside a git repository: $here"
+  if [ -z "$TARGET" ] || [ -d "$TARGET" ]; then
+    top="$(git -C "$here" rev-parse --show-toplevel 2>/dev/null)" || die 3 "not a git checkout: $here"
+    WT="$(cd "$top" && pwd -P)"
+    BRANCH="$(git -C "$WT" branch --show-current)"
+  else
+    BRANCH="$TARGET"
+    # Same path template as Worktrunk (.worktrees/<branch with / as ->), so
+    # worktrees made by the old wt open here unchanged.
+    WT="$MAIN/.worktrees/${TARGET//\//-}"
+  fi
+  if [ "$WT" = "$MAIN" ]; then
+    WID=
+    LABEL="$(basename "$MAIN" | tr -c 'A-Za-z0-9_' '-' | sed 's/-*$//')-main"
+  else
+    # Single source of truth for the id stays in bin/wt. Drop an inherited
+    # GIT_WORKTREE: wt echoes it verbatim, which would name the wrong worktree.
+    WID="$(cd "$MAIN" && env -u GIT_WORKTREE "$HOME/.dotfiles/bin/wt" id "$WT" 2>/dev/null)"
+    [ -n "$WID" ] || WID="$(basename "$MAIN")-${BRANCH//\//-}"
+    LABEL="$WID"
+  fi
+  STATE="$WT/.local/state/rwt-session"
+}
+
+is_worktree_of_main() { # path
+  local a b
+  a="$(git -C "$1" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" || return 1
+  b="$(git -C "$MAIN" rev-parse --path-format=absolute --git-common-dir)"
+  [ "$(cd "$a" && pwd -P)" = "$(cd "$b" && pwd -P)" ]
+}
+
+# Clone ignored-but-needed files (deps/, _build/, .config/, .env ...) listed in
+# the main checkout's .worktreeinclude. APFS clonefile makes this near-instant
+# and copy-on-write, so the worktree starts with warm Mix caches.
+# shortcut: plain paths only (no globs/negation), upgrade if .worktreeinclude grows patterns.
+seed_copy() {
+  local list="$MAIN/.worktreeinclude" p src dst n=0
+  [ -f "$list" ] || return 0
+  while IFS= read -r p || [ -n "$p" ]; do
+    p="${p%%#*}"
+    p="$(printf '%s' "$p" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s:/*$::')"
+    [ -n "$p" ] || continue
+    case "$p" in /* | *..*)
+      log "skip unsafe include: $p"
+      continue
+      ;;
+    esac
+    src="$MAIN/$p" dst="$WT/$p"
+    [ -e "$src" ] && [ ! -e "$dst" ] || continue
+    mkdir -p "$(dirname "$dst")"
+    if [ "$(uname)" = Darwin ]; then
+      /bin/cp -cR "$src" "$dst" 2>/dev/null || /bin/cp -R "$src" "$dst"
+    else
+      cp --reflink=auto -R "$src" "$dst"
+    fi || die 7 "copy failed: $p"
+    n=$((n + 1))
+  done <"$list"
+  log "seeded $n path(s) from $MAIN"
+}
+
+ensure_worktree() { # sets CREATED_WT
+  CREATED_WT=false
+  if [ -d "$WT" ]; then
+    is_worktree_of_main "$WT" || die 6 "$WT exists but is not a worktree of $MAIN"
+    return
+  fi
+  local base
+  base="${BASE:-$(default_branch "$MAIN")}"
+  if git -C "$MAIN" show-ref --verify --quiet "refs/heads/$BRANCH"; then
+    git -C "$MAIN" worktree add --quiet "$WT" "$BRANCH" >&2
+  elif git -C "$MAIN" show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
+    git -C "$MAIN" worktree add --quiet --track -b "$BRANCH" "$WT" "origin/$BRANCH" >&2
+  else
+    git -C "$MAIN" worktree add --quiet -b "$BRANCH" "$WT" "$base" >&2
+  fi || die 7 "git worktree add failed for $BRANCH"
+  CREATED_WT=true
+  log "created worktree $WT ($BRANCH)"
+  seed_copy
+}
+
+# ---- Rex session and blocks ----------------------------------------------------
+
+session_alive() { [ -n "$1" ] && rex session inspect "$1" --json >/dev/null 2>&1; }
+
+# The state file is the primary link; the label is a fallback because agents
+# following the Rex skill may rename sessions.
+find_session() {
+  local sid=
+  if [ -n "$SESSION_OVERRIDE" ]; then
+    echo "$SESSION_OVERRIDE"
+    return
+  fi
+  [ -f "$STATE" ] && sid="$(cat "$STATE")"
+  session_alive "$sid" && {
+    echo "$sid"
+    return
+  }
+  sid="$(rex ls --json 2>/dev/null | jq -r --arg l "$LABEL" '[.sessions[] | select(.label == $l)] | if length == 1 then .[0].session_id else empty end')"
+  [ -n "$sid" ] || return 1
+  mkdir -p "$(dirname "$STATE")" && echo "$sid" >"$STATE"
+  echo "$sid"
+}
+
+block_by_label() { # sid label
+  rex block ls -s "$1" --json 2>/dev/null | jq -r --arg l "$2" '[.blocks[] | select(.label == $l)] | if length == 1 then .[0].block_id else empty end'
+}
+
+port_for() { # path; PHX_PORT (or PORT) from the project's mise env
+  mise --cd "$1" env --json 2>/dev/null | jq -r '.PHX_PORT // .PORT // empty'
+}
+
+beam_pid() { [ -n "$1" ] && pgrep -g "$1" -x beam.smp | head -n 1; }
+
+http_code() { curl -s -o /dev/null -w '%{http_code}' --max-time 2 "$1" 2>/dev/null; }
+
+has_task() { (cd "$1" && mise tasks info "$2" >/dev/null 2>&1); }
+
+layout_script() {
+  if [ -f "$WT/.config/rex/layout.lua" ]; then echo "$WT/.config/rex/layout.lua"; else echo "$DOTFILES/config/rex/rwt-layout.lua"; fi
+}
+
+build_layout() { # sid pi_args -> layout JSON on stdout
+  local args agent_input=""
+  [ "$AGENT" = 1 ] && agent_input="'$SELF' wait-ready --timeout 180; \$HOME/.local/bin/pi $2"$'\n'
+  args="$(jq -cn --arg cwd "$WT" --arg rwt "$SELF" --arg agent "$agent_input" --argjson services "$([ "$SERVICES" = 1 ] && echo true || echo false)" \
+    '{cwd:$cwd, rwt:$rwt, agent_input:$agent, services:$services, services_cmd:[$rwt, "_services", $cwd]}')"
+  rex 'do' -s "$1" "$(layout_script)" --args "$args"
+}
+
+new_services_window() { # sid
+  rex window new -s "$1" services -c "$WT" --keep-open --focus=false --json -- "$SELF" _services "$WT" |
+    jq -r '.block_ids[0]'
+}
+
+# ---- commands -------------------------------------------------------------------
+
+cmd_open() {
+  resolve
+  local sid created_session=false setup_state=skipped blocks='{}' out block rc t0
+  ensure_worktree
+  mkdir -p "$WT/.local/state"
+  # One opener per worktree at a time; a second caller waits, then reuses.
+  LOCK="$WT/.local/state/rwt.lock"
+  local got=0 holder
+  for _ in $(seq 1 600); do
+    mkdir "$LOCK" 2>/dev/null && {
+      got=1
+      break
+    }
+    # A holder that died (kill -9, crash) must not block forever.
+    holder="$(cat "$LOCK/pid" 2>/dev/null)"
+    [ -n "$holder" ] && ! kill -0 "$holder" 2>/dev/null && rm -rf "$LOCK" && continue
+    sleep 1
+  done
+  [ "$got" = 1 ] || die 7 "lock busy: $LOCK"
+  echo $$ >"$LOCK/pid"
+  trap 'rm -rf "$LOCK"' EXIT
+
+  if sid="$(find_session)"; then
+    log "reusing session $sid ($LABEL)"
+    if [ "$SERVICES" = 1 ] && [ -z "$(block_by_label "$sid" services)" ]; then
+      block="$(new_services_window "$sid")"
+      blocks="$(jq -cn --arg b "$block" '{services:$b}')"
+      log "services block was missing, started $block"
+    fi
+  else
+    # Setup runs in a visible Rex tab; we wait for its exit code so both the
+    # human (tab) and the caller (exit status + tail) see failures.
+    t0="$(date +%s)"
+    out="$(rex new "$LABEL" -c "$WT" --window setup --keep-open --json -- "$SELF" _setup "$WT")" || die 7 "rex new failed"
+    sid="$(jq -r .session_id <<<"$out")"
+    block="$(jq -r '.initial_windows[0].block_ids[0]' <<<"$out")"
+    echo "$sid" >"$STATE"
+    created_session=true
+    log "session $sid ($LABEL): running setup"
+    rex wait -s "$sid" "$block" --for 30m >/dev/null 2>&1
+    rc=$?
+    if [ "$rc" -ne 0 ]; then
+      log "setup failed ($rc); last output:"
+      rex capture -s "$sid" -b "$block" --trim --unwrap 2>/dev/null | tail -n 40 >&2
+      [ "$SHOW" = 1 ] && rex 'do' session.select session_id="$sid" >/dev/null 2>&1
+      die 4 "setup failed with exit $rc; the setup tab in session $LABEL keeps the full output"
+    fi
+    setup_state="ok ($(($(date +%s) - t0))s)"
+    local pi_args=-c
+    [ "$CREATED_WT" = true ] && pi_args=
+    blocks="$(build_layout "$sid" "$pi_args")" || die 7 "layout script $(layout_script) failed (see stderr)"
+    rex window close -s "$sid" "$(jq -r '.initial_windows[0].window_id' <<<"$out")" >/dev/null 2>&1
+  fi
+  [ "$SHOW" = 1 ] && rex 'do' session.select session_id="$sid" >/dev/null 2>&1
+
+  if [ "$JSON" = 1 ]; then
+    jq -cn --arg path "$WT" --arg branch "$BRANCH" --arg id "$WID" --argjson cwt "$CREATED_WT" \
+      --arg sid "$sid" --arg label "$LABEL" --argjson cs "$created_session" --arg setup "$setup_state" \
+      --arg port "$(port_for "$WT")" --argjson blocks "$blocks" \
+      '{ok:true, worktree:{path:$path, branch:$branch, id:$id, created:$cwt},
+        session:{id:$sid, label:$label, created:$cs}, setup:$setup, port:$port, layout:$blocks}'
+  else
+    log "ready: $LABEL -> $WT (session $sid)"
+  fi
+}
+
+cmd_status() {
+  resolve
+  local sid='' block='' proc='{}' ps='[]' port code=000 tw=000 dirty=false beam='' lease='null'
+  sid="$(find_session)" || sid=
+  [ -n "$sid" ] && block="$(block_by_label "$sid" services)"
+  if [ -n "$block" ]; then
+    proc="$(rex block call -s "$sid" -b "$block" process 2>/dev/null || echo '{}')"
+    ps="$(rex block call -s "$sid" -b "$block" program_status 2>/dev/null || echo '[]')"
+    beam="$(beam_pid "$(jq -r '.child.pid // empty' <<<"$proc")")"
+  fi
+  port="$(port_for "$WT")"
+  if [ -n "$port" ]; then
+    code="$(http_code "http://127.0.0.1:$port/")"
+    tw="$(http_code "http://127.0.0.1:$port/tidewave/mcp")"
+    # The Pi holding this port's pidewave lease gets the browser prompts.
+    local lf="${PI_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/pi}/pidewave/ports/$port.json"
+    if [ -f "$lf" ] && lease="$(jq -c . "$lf" 2>/dev/null)"; then
+      kill -0 "$(jq -r .pid <<<"$lease")" 2>/dev/null || lease="$(jq -c '. + {dead: true}' <<<"$lease")"
+    else
+      lease='null'
+    fi
+  fi
+  [ -n "$(git -C "$WT" status --porcelain 2>/dev/null | head -n 1)" ] && dirty=true
+  jq -cn --arg path "$WT" --arg branch "$BRANCH" --arg id "$WID" --argjson dirty "$dirty" \
+    --arg sid "$sid" --arg label "$LABEL" --arg block "$block" --argjson proc "$proc" --argjson ps "$ps" \
+    --arg port "$port" --arg code "$code" --arg tw "$tw" --arg beam "$beam" --argjson lease "$lease" '
+    {ok:true, worktree:{path:$path, branch:$branch, id:$id, dirty:$dirty},
+     session:(if $sid == "" then null else {id:$sid, label:$label} end),
+     services:(if $block == "" then null else
+       {block:$block, running:($proc.child != null), beam_pid:(if $beam == "" then null else ($beam|tonumber) end),
+        last_exit:($proc.last_exit // null), program_status:$ps} end),
+     port:(if $port == "" then null else ($port|tonumber) end),
+     http:{app:($code|tonumber), tidewave:($tw|tonumber),
+           tidewave_url:(if $port == "" then null else "http://localhost:\($port)/tidewave/mcp" end)},
+     pidewave:(if $lease == null then null else
+       {holder:{tell_id:$lease.tellId, session_id:$lease.sessionId, name:$lease.sessionName, pid:$lease.pid,
+                alive:($lease.dead != true), terminal:$lease.terminal},
+        cdp:$lease.browser.cdp, tabs:($lease.browser.tabs | length), last_prompt_at:$lease.lastPromptAt} end)}'
+}
+
+cmd_restart() {
+  resolve
+  local sid old new pid
+  sid="$(find_session)" || die 3 "no Rex session for $WT (run: rwt open)"
+  old="$(block_by_label "$sid" services)"
+  if [ -z "$old" ]; then
+    new="$(new_services_window "$sid")"
+  else
+    # The block's program leads one process group (rwt, mise, bash, BEAM).
+    # SIGTERM it so the BEAM stops cleanly (init:stop) and releases Ecto
+    # connections and the port; closing the block then kills any leftover.
+    pid="$(rex block call -s "$sid" -b "$old" process 2>/dev/null | jq -r '.child.pid // empty')"
+    if [ -n "$pid" ]; then
+      kill -TERM -- "-$pid" 2>/dev/null
+      for _ in $(seq 1 20); do
+        pgrep -g "$pid" >/dev/null || break
+        sleep 0.25
+      done
+    fi
+    # Split then close: the new block takes the old one's place in the
+    # layout, and it is a fresh pty, so no terminal modes a dead BEAM left
+    # behind (kitty keyboard, bracketed paste, raw termios) survive.
+    new="$(rex split -s "$sid" -b "$old" --split=right --label services --focus=false --keep-open -c "$WT" --json -- "$SELF" _services "$WT" | jq -r '.block_ids[0]')"
+    [ -n "$new" ] || die 7 "could not start the new services block"
+    rex block close -s "$sid" "$old" >/dev/null 2>&1
+  fi
+  if [ "$JSON" = 1 ]; then
+    jq -cn --arg sid "$sid" --arg old "$old" --arg new "$new" '{ok:true, session:$sid, old_block:(if $old == "" then null else $old end), block:$new}'
+  else
+    log "services restarted in $new"
+  fi
+}
+
+cmd_logs() {
+  resolve
+  local sid block
+  sid="$(find_session)" || die 3 "no Rex session for $WT"
+  block="$(block_by_label "$sid" services)"
+  [ -n "$block" ] || die 3 "no services block in session $sid"
+  rex capture -s "$sid" -b "$block" --trim --unwrap | tail -n "$LINES"
+}
+
+cmd_wait_ready() {
+  resolve
+  local port i
+  port="$(port_for "$WT")"
+  [ -n "$port" ] || {
+    log "no PHX_PORT/PORT for $WT; nothing to wait for"
+    return 0
+  }
+  log "waiting for http://127.0.0.1:$port (up to ${TIMEOUT}s)"
+  for i in $(seq 1 "$TIMEOUT"); do
+    [ "$(http_code "http://127.0.0.1:$port/")" != 000 ] && {
+      log "up on :$port after ${i}s"
+      return 0
+    }
+    sleep 1
+  done
+  die 7 "nothing listening on :$port after ${TIMEOUT}s (see: rwt logs)"
+}
+
+merged() { # branch default -> 0 when integrated
+  git -C "$MAIN" merge-base --is-ancestor "$1" "$2" 2>/dev/null && return 0
+  git -C "$MAIN" show-ref --verify --quiet "refs/remotes/origin/$2" &&
+    git -C "$MAIN" merge-base --is-ancestor "$1" "origin/$2" 2>/dev/null && return 0
+  # Squash merges leave no ancestry; trust a merged PR for this head branch.
+  command -v gh >/dev/null 2>&1 &&
+    [ -n "$(cd "$MAIN" && gh pr list --head "$1" --state merged --json number --jq '.[0].number' 2>/dev/null)" ]
+}
+
+cmd_prune() {
+  [ -n "$TARGET" ] || die 2 "prune needs a worktree name"
+  resolve
+  local sid def
+  [ "$WT" != "$MAIN" ] || die 6 "refusing to prune the main checkout"
+  [ -d "$WT" ] || die 3 "no worktree at $WT"
+  case "$(pwd -P)/" in "$WT"/*) die 6 "refusing to prune the worktree you are standing in" ;; esac
+  [ -z "$(git -C "$WT" status --porcelain)" ] || die 6 "$BRANCH has uncommitted or untracked changes"
+  def="$(default_branch "$MAIN")"
+  merged "$BRANCH" "$def" || die 6 "$BRANCH is not merged into $def (no merged PR either)"
+  if sid="$(find_session)"; then rex kill "$sid" >/dev/null 2>&1 && log "killed session $sid"; fi
+  git -C "$MAIN" worktree remove "$WT" >&2 || die 7 "git worktree remove failed"
+  # -D is safe here: merged() already proved the branch is integrated.
+  git -C "$MAIN" branch -D "$BRANCH" >/dev/null 2>&1 || die 7 "could not delete branch $BRANCH"
+  if [ "$JSON" = 1 ]; then
+    jq -cn --arg p "$WT" --arg b "$BRANCH" '{ok:true, removed:{path:$p, branch:$b}}'
+  else
+    log "pruned $BRANCH ($WT)"
+  fi
+}
+
+cmd_ls() {
+  resolve
+  local sessions
+  sessions="$(rex ls --json 2>/dev/null || echo '{"sessions":[]}')"
+  git -C "$MAIN" worktree list --porcelain | awk '
+    /^worktree /{p=substr($0,10)} /^branch /{b=substr($0,19)} /^$/{if(p)print p "\t" b; p=""; b=""}
+    END{if(p)print p "\t" b}' |
+    while IFS=$'\t' read -r path branch; do
+      sid=
+      [ -f "$path/.local/state/rwt-session" ] && sid="$(cat "$path/.local/state/rwt-session")"
+      jq -cn --arg p "$path" --arg b "$branch" --arg s "$sid" --argjson all "$sessions" \
+        '{path:$p, branch:$b, session:(if ($all.sessions | map(.session_id) | index($s)) then $s else null end)}'
+    done | jq -cs '{ok:true, worktrees:.}'
+}
+
+# ---- block programs (run inside Rex terminals) ------------------------------------
+
+cmd_setup_block() { # path
+  cd "$1" || exit 3
+  status working "setup"
+  printf '[rwt] setup %s\n' "$1"
+  mise trust --all >/dev/null 2>&1
+  local rc=0
+  if has_task . dev:setup; then
+    mise run dev:setup
+    rc=$?
+  else
+    echo "[rwt] no dev:setup task; nothing to do"
+  fi
+  if [ "$rc" -eq 0 ]; then status 'done' "setup ok"; else status error "setup failed ($rc)"; fi
+  exit "$rc"
+}
+
+cmd_services_block() { # path
+  cd "$1" || exit 3
+  local port rc watcher=
+  # A handler (not an ignore) so Ctrl+C still reaches the server but this
+  # script survives to report the exit.
+  trap ':' INT
+  has_task . dev:services || {
+    echo "[rwt] no dev:services task in $1"
+    exit 0
+  }
+  port="$(port_for .)"
+  if [ -n "$port" ]; then
+    for _ in $(seq 1 60); do
+      [ "$(http_code "http://127.0.0.1:$port/")" = 000 ] && break
+      sleep 0.25
+    done
+    [ "$(http_code "http://127.0.0.1:$port/")" = 000 ] || {
+      echo "[rwt] port $port is still in use; refusing to start a second server"
+      status error "port $port busy"
+      exit 75
+    }
+    status working "starting on :$port"
+    (
+      for _ in $(seq 1 600); do
+        [ "$(http_code "http://127.0.0.1:$port/")" != 000 ] && {
+          status idle "listening on :$port"
+          exit 0
+        }
+        sleep 1
+      done
+      status error "not listening on :$port after 600s"
+    ) &
+    watcher=$!
+  fi
+  mise run dev:services
+  rc=$?
+  [ -n "$watcher" ] && kill "$watcher" 2>/dev/null
+  # Belt and braces for the case where the user Ctrl+C'd: undo the BEAM's
+  # kitty keyboard / modifyOtherKeys / bracketed paste and raw termios.
+  printf '\033[<u\033[>4;0m\033[?2004l'
+  stty sane 2>/dev/null
+  case "$rc" in 0 | 130 | 143) status idle "services stopped ($rc)" ;; *) status error "services exited $rc" ;; esac
+  printf '\n[rwt] services exited with %s. Restart: rwt restart (or Cmd+Shift+R)\n' "$rc"
+  exit "$rc"
+}
+
+# ---- argument parsing ---------------------------------------------------------------
+
+cmd="${1:-}"
+[ $# -gt 0 ] && shift
+case "$cmd" in
+  _setup) cmd_setup_block "$1" ;;
+  _services) cmd_services_block "$1" ;;
+esac
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --json) JSON=1 ;;
+    --show) SHOW=1 ;;
+    --no-services) SERVICES=0 ;;
+    --no-agent) AGENT=0 ;;
+    --base)
+      BASE="${2:?--base needs a ref}"
+      shift
+      ;;
+    --session)
+      SESSION_OVERRIDE="${2:?--session needs an id}"
+      shift
+      ;;
+    -n)
+      LINES="${2:?-n needs a number}"
+      shift
+      ;;
+    --timeout)
+      TIMEOUT="${2:?--timeout needs seconds}"
+      shift
+      ;;
+    -*) die 2 "unknown flag: $1" ;;
+    *)
+      [ -z "$TARGET" ] || die 2 "one target only"
+      TARGET="$1"
+      ;;
+  esac
+  shift
+done
+case "$cmd" in
+  new | open) cmd_open ;;
+  status) cmd_status ;;
+  restart) cmd_restart ;;
+  logs) cmd_logs ;;
+  wait-ready) cmd_wait_ready ;;
+  prune) cmd_prune ;;
+  ls) cmd_ls ;;
+  '' | -h | --help | help) sed -n '2,21p' "$SELF" | sed 's/^# \{0,1\}//' ;;
+  *) die 2 "unknown command: $cmd" ;;
+esac
