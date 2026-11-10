@@ -3,8 +3,8 @@
 set -g fish_prompt_pwd_dir_length 20
 
 # Host-specific mise config: mise merges ~/.config/mise/config.$MISE_ENV.toml
-# on top of the global config. Must be set before conf.d/mise.fish activates
-# (conf.d loads alphabetically: env.fish < mise.fish).
+# on top of the global config. Must be set before conf.d/02-mise.fish activates
+# (conf.d loads alphabetically: 01-env.fish < 02-mise.fish).
 set -gx MISE_ENV (hostname -s)
 
 # PLUG_EDITOR for clickable stacktraces (Phoenix dev / browser devtools).
