@@ -19,11 +19,43 @@
       "actions": ["dismiss", "ntfy"]
     },
     {
-      "name": "urgent-messages",
+      "name": "message-reactions",
+      "_comment": "Tapbacks quote the original message, so a reaction to a question would otherwise match urgent-messages.",
+      "match": {
+        "bundle_id": ["com.apple.mobilesms", "com.apple.ichat"],
+        "body": ["^.+? (liked|loved|disliked|laughed at|emphasized|questioned|reacted .+? to|removed an? .+? from) (“|an? \\w+( \\w+)?$)"]
+      },
+      "urgency": "normal",
+      "actions": ["dismiss", "ntfy"]
+    },
+    {
+      "name": "urgent-keywords",
       "match": {
         "bundle_id": ["com.apple.mobilesms", "com.apple.ichat"],
         "title": ["Abby Messer"],
-        "body": ["\\?"]
+        "body": ["\\b(urgent|asap|emergency|911|call me)\\b"]
+      },
+      "urgency": "critical",
+      "actions": ["dismiss", "ntfy"]
+    },
+    {
+      "name": "group-messages",
+      "_comment": "Group chats carry a subtitle (chat name or recipients); 1:1 chats have none. Keeps group questions out of urgent-messages.",
+      "match": {
+        "bundle_id": ["com.apple.mobilesms", "com.apple.ichat"],
+        "title": ["Abby Messer"],
+        "subtitle": [".+"]
+      },
+      "urgency": "normal",
+      "actions": ["dismiss", "ntfy"]
+    },
+    {
+      "name": "urgent-messages",
+      "_comment": "Sentence-ending '?': not followed by URL/word characters, so '?q=1' links don't match.",
+      "match": {
+        "bundle_id": ["com.apple.mobilesms", "com.apple.ichat"],
+        "title": ["Abby Messer"],
+        "body": ["\\?(?![\\w/=&%#.-])"]
       },
       "urgency": "critical",
       "actions": ["dismiss", "ntfy"]
