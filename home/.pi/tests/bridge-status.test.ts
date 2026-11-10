@@ -109,6 +109,28 @@ describe('bridge socket selection', () => {
     expect(() => _test.buildSocketPath('code', '0', '%1', '/' + 'x'.repeat(100))).toThrow('Unix socket path limit');
   });
 
+  test('names a Pi in a Rex terminal after its Rex session and tab', () => {
+    const inspect = {
+      label: 'provider_portal-sm-x',
+      windows: [
+        { label: 'code', layers: [{ blocks: [{ block_id: 'block:a' }] }] },
+        { label: 'agent', layers: [{ blocks: [{ block_id: 'block:b' }] }] },
+        { label: 'two words', layers: [{ blocks: [{ block_id: 'block:c' }] }] },
+      ],
+    };
+
+    expect(_test.rexLabels(inspect, 'block:b')).toEqual({ session: 'provider_portal-sm-x', window: 'agent' });
+    expect(_test.rexLabels(inspect, 'block:c')).toEqual({ session: 'provider_portal-sm-x', window: '3' });
+    expect(_test.rexLabels(inspect, 'block:z')).toBeNull();
+    expect(_test.rexLabels({ ...inspect, label: 'has space' }, 'block:b')).toBeNull();
+
+    const rex = { session: 'provider_portal-sm-x', window: 'agent' };
+    const id = _test.resolveSocket({}, null, 101, rex);
+    expect(id).toMatchObject({ session: 'provider_portal-sm-x', window: 'agent' });
+    expect(id.socketPath).toEndWith('pi-process-101.sock');
+    expect(_test.resolveSocket({}, null, 101)).toMatchObject({ session: 'default', window: '0' });
+  });
+
   test('headless defaults are process-specific', () => {
     expect(_test.resolveSocket({}, null, 101).socketPath).not.toBe(_test.resolveSocket({}, null, 102).socketPath);
   });

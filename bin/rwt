@@ -5,12 +5,16 @@
 # terminals; git owns the worktree; the project's mise tasks own setup and
 # services (dev:setup, dev:services). Nothing here writes tracked files.
 #
-#   rwt new NAME [--base REF]   create worktree + session (idempotent, = open)
+#   rwt new NAME [--base REF] [--prompt TEXT]
+#                               create worktree + session (idempotent, = open);
+#                               the agent tab's Pi gets TEXT as its first message
 #   rwt open [NAME|PATH]        ensure worktree + session exist, repair services
 #   rwt status [NAME|PATH]      worktree, session, services, port, Tidewave
 #   rwt restart [NAME|PATH]     restart services in a fresh terminal
 #   rwt logs [NAME|PATH] [-n N] services output, read from Rex scrollback
 #   rwt wait-ready [NAME|PATH] [--timeout S]
+#                               block until the server answers; works from any
+#                               shell, so callers need no poll loop of their own
 #   rwt prune NAME              remove a clean, merged worktree + session + branch
 #   rwt ls                      worktrees of this repo and their sessions
 #
@@ -28,7 +32,7 @@ export REX_SERVER="${REX_SERVER:-unix://$HOME/Library/Application Support/rex/se
 SELF="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
 DOTFILES="$(dirname "$(dirname "$SELF")")"
 
-JSON=0 SHOW=0 SERVICES=1 AGENT=1 BASE='' SESSION_OVERRIDE='' LINES=200 TIMEOUT=180
+JSON=0 SHOW=0 SERVICES=1 AGENT=1 BASE='' SESSION_OVERRIDE='' LINES=200 TIMEOUT=180 PROMPT=''
 TARGET=
 
 rex() { "$REX" "$@"; }
@@ -194,9 +198,11 @@ layout_script() {
   if [ -f "$WT/.config/rex/layout.lua" ]; then echo "$WT/.config/rex/layout.lua"; else echo "$DOTFILES/config/rex/rwt-layout.lua"; fi
 }
 
-build_layout() { # sid pi_args -> layout JSON on stdout
+build_layout() { # sid continue(0|1) -> layout JSON on stdout
   local args agent_input=""
-  [ "$AGENT" = 1 ] && agent_input="'$SELF' wait-ready --timeout 180; \$HOME/.local/bin/pi $2"$'\n'
+  # Typed into the user's login shell (fish or bash), so keep it to quoted
+  # paths; rwt _agent passes the prompt to Pi without any shell quoting.
+  [ "$AGENT" = 1 ] && agent_input="'$SELF' _agent '$WT' $2"$'\n'
   args="$(jq -cn --arg cwd "$WT" --arg rwt "$SELF" --arg agent "$agent_input" --argjson services "$([ "$SERVICES" = 1 ] && echo true || echo false)" \
     '{cwd:$cwd, rwt:$rwt, agent_input:$agent, services:$services, services_cmd:[$rwt, "_services", $cwd]}')"
   rex 'do' -s "$1" "$(layout_script)" --args "$args"
@@ -232,6 +238,8 @@ cmd_open() {
   trap 'rm -rf "$LOCK"' EXIT
 
   if sid="$(find_session)"; then
+    # The agent tab already runs; a dropped prompt must not look delivered.
+    [ -z "$PROMPT" ] || die 6 "session $LABEL already exists, so --prompt can't reach its Pi; use tell_pi"
     log "reusing session $sid ($LABEL)"
     if [ "$SERVICES" = 1 ] && [ -z "$(block_by_label "$sid" services)" ]; then
       block="$(new_services_window "$sid")"
@@ -257,9 +265,10 @@ cmd_open() {
       die 4 "setup failed with exit $rc; the setup tab in session $LABEL keeps the full output"
     fi
     setup_state="ok ($(($(date +%s) - t0))s)"
-    local pi_args=-c
-    [ "$CREATED_WT" = true ] && pi_args=
-    blocks="$(build_layout "$sid" "$pi_args")" || die 7 "layout script $(layout_script) failed (see stderr)"
+    local cont=1
+    [ "$CREATED_WT" = true ] && cont=0
+    [ -z "$PROMPT" ] || printf '%s' "$PROMPT" >"$WT/.local/state/rwt-prompt"
+    blocks="$(build_layout "$sid" "$cont")" || die 7 "layout script $(layout_script) failed (see stderr)"
     rex window close -s "$sid" "$(jq -r '.initial_windows[0].window_id' <<<"$out")" >/dev/null 2>&1
   fi
   [ "$SHOW" = 1 ] && rex 'do' session.select session_id="$sid" >/dev/null 2>&1
@@ -485,6 +494,19 @@ cmd_services_block() { # path
   exit "$rc"
 }
 
+cmd_agent_block() { # path continue(0|1)
+  cd "$1" || exit 3
+  "$SELF" wait-ready "$1" --timeout 180
+  local f="$1/.local/state/rwt-prompt" args=()
+  [ "$2" = 1 ] && args+=(-c)
+  # One-shot: read and remove, so a later Pi in this tab doesn't repeat it.
+  if [ -f "$f" ]; then
+    args+=(-- "$(cat "$f")")
+    rm -f "$f"
+  fi
+  exec "$HOME/.local/bin/pi" ${args[@]+"${args[@]}"}
+}
+
 # ---- argument parsing ---------------------------------------------------------------
 
 cmd="${1:-}"
@@ -492,6 +514,7 @@ cmd="${1:-}"
 case "$cmd" in
   _setup) cmd_setup_block "$1" ;;
   _services) cmd_services_block "$1" ;;
+  _agent) cmd_agent_block "$1" "$2" ;;
 esac
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -515,6 +538,10 @@ while [ $# -gt 0 ]; do
       TIMEOUT="${2:?--timeout needs seconds}"
       shift
       ;;
+    --prompt)
+      PROMPT="${2:?--prompt needs text}"
+      shift
+      ;;
     -*) die 2 "unknown flag: $1" ;;
     *)
       [ -z "$TARGET" ] || die 2 "one target only"
@@ -523,6 +550,7 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
+[ -z "$PROMPT" ] || [ "$AGENT" = 1 ] || die 2 "--prompt needs the agent tab; drop --no-agent"
 case "$cmd" in
   new | open) cmd_open ;;
   status) cmd_status ;;
@@ -531,6 +559,6 @@ case "$cmd" in
   wait-ready) cmd_wait_ready ;;
   prune) cmd_prune ;;
   ls) cmd_ls ;;
-  '' | -h | --help | help) sed -n '2,21p' "$SELF" | sed 's/^# \{0,1\}//' ;;
+  '' | -h | --help | help) awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$SELF" ;;
   *) die 2 "unknown command: $cmd" ;;
 esac

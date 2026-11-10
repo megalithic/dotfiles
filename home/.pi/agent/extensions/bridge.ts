@@ -47,7 +47,7 @@ import type { AssistantMessage } from '@earendil-works/pi-ai';
 import { Box, getKeybindings, Text } from '@earendil-works/pi-tui';
 import { Type } from 'typebox';
 import { Value } from 'typebox/value';
-import { execFile, execSync } from 'node:child_process';
+import { execFile, execFileSync, execSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import net from 'node:net';
@@ -154,6 +154,47 @@ const detectTmux = (): {
   }
 };
 
+type RexInspect = {
+  label?: string;
+  windows?: { label?: string; layers?: { blocks?: { block_id?: string }[] }[] }[];
+};
+
+const SAFE_LABEL = /^[a-zA-Z0-9_.-]+$/;
+
+/** Rex session label and tab label (or 1-based tab number) for one block. */
+const rexLabels = (inspect: RexInspect, block: string): { session: string; window: string } | null => {
+  const windows = inspect.windows || [];
+  const index = windows.findIndex((w) => w.layers?.some((l) => l.blocks?.some((b) => b.block_id === block)));
+
+  if (index === -1 || !inspect.label || !SAFE_LABEL.test(inspect.label)) return null;
+  const tab = windows[index]?.label;
+
+  return { session: inspect.label, window: tab && SAFE_LABEL.test(tab) ? tab : String(index + 1) };
+};
+
+/**
+ * Name a Pi in a Rex terminal after its Rex session and tab, as tmux Pis are
+ * named after theirs, so tell_pi can find it by label instead of "default:0".
+ * shortcut: read once at startup, so a later session or tab rename goes stale; refresh on heartbeat if that bites.
+ */
+const detectRex = (env: NodeJS.ProcessEnv = process.env): { session: string; window: string } | null => {
+  if (!env.REX_SESSION || !env.REX_BLOCK) return null;
+
+  try {
+    const rex = env.REX_BIN_DIR ? path.join(env.REX_BIN_DIR, 'rex') : 'rex';
+
+    const raw = execFileSync(rex, ['session', 'inspect', env.REX_SESSION, '--json'], {
+      encoding: 'utf-8',
+      timeout: 2000,
+    });
+
+    // SAFETY: rexLabels treats every field as optional, and a wrong shape throws into the catch below.
+    return rexLabels(JSON.parse(raw) as RexInspect, env.REX_BLOCK);
+  } catch {
+    return null;
+  }
+};
+
 type SocketIdentity = {
   socketPath: string;
   session: string;
@@ -165,12 +206,13 @@ const resolveSocket = (
   env: NodeJS.ProcessEnv = process.env,
   tmux = detectTmux(),
   pid = process.pid,
+  rex = tmux ? null : detectRex(env),
 ): SocketIdentity => {
   if (env.PI_SOCKET && (!env.PI_SOCKET_OWNER_PID || env.PI_SOCKET_OWNER_PID === String(pid))) {
     return {
       socketPath: env.PI_SOCKET,
-      session: env.PI_SESSION || tmux?.session || 'default',
-      window: env.PI_WINDOW || tmux?.window || '0',
+      session: env.PI_SESSION || tmux?.session || rex?.session || 'default',
+      window: env.PI_WINDOW || tmux?.window || rex?.window || '0',
     };
   }
 
@@ -182,11 +224,11 @@ const resolveSocket = (
     };
   }
 
-  // Fallback outside tmux
+  // Fallback outside tmux; the socket stays process-specific, only the labels come from Rex.
   return {
     socketPath: buildSocketPath('process', String(pid)),
-    session: 'default',
-    window: '0',
+    session: rex?.session || 'default',
+    window: rex?.window || '0',
   };
 };
 
@@ -1676,6 +1718,7 @@ export const _test = {
   pingSocket,
   resolveSocket,
   readManifest,
+  rexLabels,
   receiveTell,
   renderTellDelivery,
   startServer,

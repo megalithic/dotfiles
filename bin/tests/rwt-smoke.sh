@@ -125,6 +125,12 @@ o="$("$RWT" open "$wt" --json)"
 jq -e '.ok and (.session.created | not) and .layout.services' <<<"$o" >/dev/null || fail "open repair: $o"
 "$RWT" wait-ready "$wt" --timeout 60 2>/dev/null || fail "repaired server not up"
 ok "open reused the session and re-created the services pane"
+set +e
+"$RWT" open "$wt" --prompt hi --json >/dev/null 2>&1
+rc=$?
+set -e
+[ "$rc" -eq 6 ] || fail "--prompt on an existing session: rc=$rc"
+ok "--prompt refuses an existing session instead of dropping the prompt"
 
 # ---- failing setup surfaces the error ------------------------------------------
 set +e
