@@ -23,7 +23,7 @@ port = $PGPORT
 unix_socket_directories = '$PG_ROOT'
 # One instance shared by main repo + all .worktrees checkouts:
 # 3 repos x pool_size 10 per checkout, plus test runs. Stock 100 is too tight.
-max_connections = 300
+max_connections = 500
 EOF
 fi
 echo "cluster ready: $PGDATA"
