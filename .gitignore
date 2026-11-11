@@ -1,5 +1,3 @@
-local.nix
-
 # Plans and scripts (local only)
 _plans/
 .local_scripts/

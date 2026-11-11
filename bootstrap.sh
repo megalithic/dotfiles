@@ -88,10 +88,9 @@ normalize_hostname() {
 use_standalone_mise() {
   PATH="$HOME/.local/bin:$PATH"
   export PATH
-  # Override nix-managed gitconfig that rewrites https://github.com/ → ssh://
-  # (nix/home/common/programs/git/gitconfig). mise uses libgit2 which reads
-  # ~/.gitconfig — the rewrite forces plugin fetches onto SSH, which fails
-  # in non-interactive contexts without an agent. /dev/null skips the global
+  # mise uses libgit2, which reads the global gitconfig. URL rewrites there
+  # can force plugin fetches onto SSH, which fails in non-interactive
+  # contexts without an agent. /dev/null skips the global
   # config entirely; plugin fetches are read-only public clones that don't
   # need user.name, gpg, or other global settings.
   export GIT_CONFIG_GLOBAL=/dev/null
@@ -119,61 +118,6 @@ ensure_mise_standalone() {
   use_standalone_mise
   [ "$(command -v mise 2>/dev/null)" = "$MISE_INSTALL_PATH" ] || die "Expected standalone mise at $MISE_INSTALL_PATH in PATH"
   ok "$(mise --version)"
-}
-
-# nix-homebrew pins Homebrew taps as symlinks into /nix/store. After nix is
-# uninstalled (or while it's read-only) those links break `brew update` and
-# `brew tap` with 'Permission denied'. Unlink them; the pre-packages hook
-# (`mise run brew`) re-taps the ones the Brewfile declares.
-repair_nix_pinned_taps() {
-  brew_repo=$(brew --repository 2>/dev/null) || return 0
-  [ -n "$brew_repo" ] || return 0
-  taps_dir="$brew_repo/Library/Taps"
-  for tap_path in "$taps_dir" "$taps_dir"/* "$taps_dir"/*/*; do
-    [ -L "$tap_path" ] || continue
-    case "$(readlink "$tap_path")" in
-      /nix/store/*)
-        warn "Removing nix-pinned Homebrew tap link: $tap_path"
-        rm -f "$tap_path"
-        ;;
-    esac
-  done
-  [ -d "$taps_dir" ] || mkdir -p "$taps_dir"
-}
-
-# Unlink a symlink that points into the read-only /nix/store; its parent dir
-# is writable even though the target is not.
-remove_store_link() {
-  [ -L "$1" ] || return 0
-  case "$(readlink "$1")" in
-    /nix/store/*)
-      info "Removing nix-managed symlink: $1"
-      rm -f "$1"
-      ;;
-  esac
-}
-
-# Home Manager leaves symlinks into /nix/store at paths mise manages;
-# `mise dotfiles apply --force` tries to rm *through* dir symlinks and dies
-# with EACCES in the store. Unlink store symlinks at managed targets (and one
-# level inside real dirs, for symlink-each entries) before applying.
-clean_nix_managed_targets() {
-  sed -n '/^\[dotfiles\]/,/^\[/s/^"\(~\/[^"]*\)".*/\1/p' "$BOOTSTRAP_MISE_CONFIG" |
-    while IFS= read -r target; do
-      path="$HOME${target#\~}"
-      remove_store_link "$path"
-      # A dangling symlink at a managed target (e.g. ~/bin -> /nix/store/...
-      # after /nix is uninstalled) blocks apply; clear it so apply can relink.
-      if [ -L "$path" ] && [ ! -e "$path" ]; then
-        info "Removing dangling symlink at managed target: $path"
-        rm -f "$path"
-      fi
-      if [ -d /nix/store ] && [ -d "$path" ] && [ ! -L "$path" ]; then
-        for entry in "$path"/* "$path"/.[!.]*; do
-          remove_store_link "$entry"
-        done
-      fi
-    done
 }
 
 dotfiles_default_branch() {
@@ -387,9 +331,6 @@ elif [ -x /usr/local/bin/brew ]; then
   eval "$(/usr/local/bin/brew shellenv)"
 fi
 
-# heal nix-homebrew leftovers before anything uses brew (cheap, idempotent)
-repair_nix_pinned_taps
-
 ensure_mise_standalone
 
 HOST=""
@@ -471,8 +412,6 @@ info "Trusting mise global config..."
 mise trust "$BOOTSTRAP_MISE_CONFIG"
 [ -f "$MISE_CONFIG_DIR/config.$HOST.toml" ] && mise trust "$MISE_CONFIG_DIR/config.$HOST.toml"
 
-clean_nix_managed_targets
-
 info "Applying dotfiles..."
 # shellcheck disable=SC2086 # intentional word-splitting of flag strings
 if ! mise dotfiles apply --yes $MISE_DOTFILES_FLAGS; then
@@ -518,7 +457,7 @@ sudo_rescue_app_rename() {
 
 # mise's brew backend refuses to link a formula when target files already
 # exist but weren't created by mise or brew (left over from a previous
-# nix-homebrew or manual brew install). Remove the conflicting files and
+# manual brew install). Remove the conflicting files and
 # let mise reinstall; brew will recreate them on the retry.
 rescue_stale_brew_files() {
   can_link=$(sed -n 's/.*cannot link \([^:]*\):.*/\1/p' "$MISE_BOOTSTRAP_LOG" | head -1)
