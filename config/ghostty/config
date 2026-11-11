@@ -268,7 +268,7 @@ keybind = cmd+shift+m=text:\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1006l
 
 # DO NOT DELETE THIS:
 # this stops me from hitting this mapping thinking i'm using a browser's inspect and end up with passing `C` to nvim and changing to end of line 🤦
-# In Helium, Cmd+Shift+C on a Phoenix app tab starts Tidewave Inspect (pidewave).
+# In Helium, Cmd+Ctrl+Shift+C on a Phoenix app tab starts Tidewave Inspect (pidewave).
 keybind = cmd+shift+c=ignore
 
 # vim: ft=conf

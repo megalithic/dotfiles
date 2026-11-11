@@ -89,14 +89,15 @@
     if (document.visibilityState === 'visible') active();
   });
 
-  // Cmd+Shift+C: Tidewave Inspect in this tab. Ctrl+Shift+P: bring the Pi's terminal forward.
+  // Cmd+Ctrl+Shift+C: Tidewave Inspect in this tab (Helium keeps Cmd+Shift+C for Copy URL).
+  // Ctrl+Shift+P: bring the Pi's terminal forward.
   window.addEventListener(
     'keydown',
     (event) => {
       const chord = (meta, ctrl, code) =>
         event.metaKey === meta && event.ctrlKey === ctrl && event.shiftKey && !event.altKey && event.code === code;
 
-      const kind = chord(true, false, 'KeyC') ? 'inspect' : chord(false, true, 'KeyP') ? 'focus-pi' : undefined;
+      const kind = chord(true, true, 'KeyC') ? 'inspect' : chord(false, true, 'KeyP') ? 'focus-pi' : undefined;
 
       if (!kind || off()) return;
       event.preventDefault();

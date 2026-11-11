@@ -164,18 +164,24 @@ describe('pidewave page script', () => {
     const p = page();
     p.window.__pidewaveOff = true;
     await p.writeText('<user_prompt>late</user_prompt>');
-    const chord = p.fire('keydown', { metaKey: true, ctrlKey: false, shiftKey: true, altKey: false, code: 'KeyC' });
+    const chord = p.fire('keydown', { metaKey: true, ctrlKey: true, shiftKey: true, altKey: false, code: 'KeyC' });
     expect(p.sent).toEqual([]);
     expect(chord.prevented).toBeUndefined();
   });
 
-  test('chords: Cmd+Shift+C inspects, Ctrl+Shift+P focuses Pi, others pass through', () => {
+  test('chords: Cmd+Ctrl+Shift+C inspects, Ctrl+Shift+P focuses Pi, others pass through', () => {
     const p = page();
-    const inspect = p.fire('keydown', { metaKey: true, ctrlKey: false, shiftKey: true, altKey: false, code: 'KeyC' });
+    const inspect = p.fire('keydown', { metaKey: true, ctrlKey: true, shiftKey: true, altKey: false, code: 'KeyC' });
+    const helium = p.fire('keydown', { metaKey: true, ctrlKey: false, shiftKey: true, altKey: false, code: 'KeyC' });
     const focus = p.fire('keydown', { metaKey: false, ctrlKey: true, shiftKey: true, altKey: false, code: 'KeyP' });
     const copy = p.fire('keydown', { metaKey: true, ctrlKey: false, shiftKey: false, altKey: false, code: 'KeyC' });
     expect(p.sent.map((message) => message.kind)).toEqual(['inspect', 'focus-pi']);
-    expect([inspect.prevented, focus.prevented, copy.prevented]).toEqual([true, true, undefined]);
+    expect([inspect.prevented, focus.prevented, copy.prevented, helium.prevented]).toEqual([
+      true,
+      true,
+      undefined,
+      undefined,
+    ]);
   });
 
   test('activity is throttled; a second injection is a no-op; toasts only in the top frame', () => {
