@@ -1,36 +1,41 @@
 {
-	"attribution": {
-		"commit": "",
-		"pr": "",
-		"sessionUrl": false
-	},
-	"model": "opus[1m]",
-	"enabledPlugins": {
-		"vercel@claude-plugins-official": true,
-		"lua-lsp@claude-plugins-official": true
-	},
-	"extraKnownMarketplaces": {
-		"claude-plugins-official": {
-			"source": {
-				"source": "github",
-				"repo": "anthropics/claude-plugins-official"
-			}
-		}
-	},
-	"effortLevel": "high",
-	"skipDangerousModePermissionPrompt": true,
-	"theme": "auto",
-	"hooks": {
-		"SessionStart": [
-			{
-				"hooks": [
-					{
-						"type": "command",
-						"command": "/bin/sh -c 'rex __internal session-start --agent claude 2>/dev/null || true'",
-						"timeout": 5
-					}
-				]
-			}
-		]
-	}
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  },
+  "model": "opus[1m]",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh -c 'rex __internal session-start --agent claude 2>/dev/null || true'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "vercel@claude-plugins-official": true,
+    "lua-lsp@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    }
+  },
+  "effortLevel": "high",
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "high"
+    }
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "auto"
 }
