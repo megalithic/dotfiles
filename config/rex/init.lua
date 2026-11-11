@@ -49,9 +49,9 @@ rex.bind("cmd+t", "tmux_or_tab_new")
 -- through with extended-keys-format csi-u.
 send("shift+enter", "\27[13;2u")
 
--- Pidewave: Cmd+Shift+C asks the Pi in this block, or in the tmux pane shown
--- in it, to take its Phoenix port's browser link and start Tidewave Inspect.
--- Blocks without such a Pi ignore the chord (like Ghostty's cmd+shift+c=ignore).
+-- Pidewave: Cmd+Ctrl+Shift+C (same chord as in Helium) asks the Pi in this block,
+-- or in the tmux pane shown in it, to take its Phoenix port's browser link and
+-- start Tidewave Inspect. Blocks without such a Pi ignore the chord.
 rex.action{
   name = "pidewave_inspect",
   title = "Pidewave: Tidewave Inspect",
@@ -65,7 +65,7 @@ rex.action{
     rex.exec(argv, { timeout = 5 })
   end,
 }
-rex.bind("shift+cmd+c", "pidewave_inspect")
+rex.bind("ctrl+shift+cmd+c", "pidewave_inspect")
 
 -- Worktree sessions from bin/rwt: Cmd+Shift+R restarts the services pane.
 require("rwt")

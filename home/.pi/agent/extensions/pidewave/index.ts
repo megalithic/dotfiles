@@ -508,7 +508,7 @@ export default function (
     return role === 'holder';
   };
 
-  // bridge.ts turns a `pidewave.inspect` control request (bin/pidewave, the Rex Cmd+Shift+C action) into this event.
+  // bridge.ts turns a `pidewave.inspect` control request (bin/pidewave, the Rex Cmd+Ctrl+Shift+C action) into this event.
   const unsubscribeInspect = pi.events.on(INSPECT_EVENT, () => {
     if (ctxRef) void inspectFromPi(ctxRef);
   });

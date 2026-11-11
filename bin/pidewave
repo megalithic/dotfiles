@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """Ask the Pi that holds a pidewave lease to start Tidewave Inspect, or list leases.
 
-  pidewave inspect --rex-block BLOCK [--pid PID]   (Rex Cmd+Shift+C action)
+  pidewave inspect --rex-block BLOCK [--pid PID]   (Rex Cmd+Ctrl+Shift+C action)
   pidewave inspect --port PORT | --cwd PATH
   pidewave list
 

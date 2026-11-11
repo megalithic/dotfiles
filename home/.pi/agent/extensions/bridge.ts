@@ -1327,7 +1327,7 @@ const handleControl = async (
     return controlResponse(request, undefined, 'session not ready');
   }
 
-  // The pidewave extension owns Inspect; the Rex Cmd+Shift+C action reaches it through here.
+  // The pidewave extension owns Inspect; the Rex Cmd+Ctrl+Shift+C action reaches it through here.
   if (request.operation === 'pidewave.inspect') {
     pi.events.emit(PIDEWAVE_INSPECT_EVENT, {});
 
