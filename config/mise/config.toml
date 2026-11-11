@@ -329,7 +329,7 @@ asset_pattern = "miccheckd-{{ version }}-macos26-arm64.zip"
 bin_path = "MicCheck.app/Contents/MacOS"
 
 [tools.notiwatchd]
-version = "0.4.1"
+version = "0.6.0"
 os = ["macos"]
 asset_pattern = "notiwatchd-{{ version }}-macos26-arm64.zip"
 postinstall = '''

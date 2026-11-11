@@ -1,5 +1,5 @@
 {
-  "_comment": "notiwatchd rules. First match wins. match fields: bundle_id (exact, string or array), title/subtitle/body (case-insensitive regex, string or array). Absent field = wildcard. actions: log | ignore | dismiss (AX close of on-screen banner; needs Accessibility grant) | ntfy | ntfy:phone | exec:<cmd> | webhook:<url>. urgency: normal | high | critical (passed to ntfy -u).",
+  "_comment": "notiwatchd rules. First match wins. match fields: bundle_id (exact, string or array), title/subtitle/body (case-insensitive regex, string or array). Absent field = wildcard. actions: log | ignore | dismiss (AX close of on-screen banner; needs Accessibility grant) | ntfy | ntfy:phone | exec:<cmd> | webhook:<url>. urgency: normal | high | critical (passed to ntfy -u). quiet_in_focus: Focus mode names (string or array); while one is on, only log/ignore/dismiss run.",
   "poll_fallback_seconds": 30,
   "ntfy_path": "~/.dotfiles/bin/ntfy",
   "default_actions": ["log"],
@@ -26,6 +26,7 @@
         "body": ["^.+? (liked|loved|disliked|laughed at|emphasized|questioned|reacted .+? to|removed an? .+? from) (“|an? \\w+( \\w+)?$)"]
       },
       "urgency": "normal",
+      "quiet_in_focus": ["Do Not Disturb"],
       "actions": ["dismiss", "ntfy"]
     },
     {
@@ -47,6 +48,7 @@
         "subtitle": [".+"]
       },
       "urgency": "normal",
+      "quiet_in_focus": ["Do Not Disturb"],
       "actions": ["dismiss", "ntfy"]
     },
     {
@@ -64,6 +66,7 @@
       "name": "messages",
       "match": { "bundle_id": ["com.apple.mobilesms", "com.apple.ichat"] },
       "urgency": "normal",
+      "quiet_in_focus": ["Do Not Disturb"],
       "actions": ["dismiss", "ntfy"]
     }
   ]
