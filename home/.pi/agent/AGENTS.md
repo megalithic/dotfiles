@@ -27,6 +27,7 @@
 
 - For non-interactive rebases, always run `GIT_EDITOR=true git rebase --continue`
 - Worktree conventions in `git-worktrees` skill
+- After creating or pushing to a PR, watch its CI with `gh` until every check is green (approvals don't count). Load the `github` skill for the procedure
 
 ## Coding specific guidelines
 
