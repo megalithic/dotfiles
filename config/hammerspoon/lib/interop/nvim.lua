@@ -479,7 +479,7 @@ function M.isStandaloneServerRunning(socketPath, callback)
   end
 
   -- Try to evaluate a simple expression on the server
-  -- Use shell with PATH to find nix nvim
+  -- Use shell with PATH to find nvim
   local pathPrefix = PATH and ("PATH='" .. PATH .. "' ") or ""
   local cmd = fmt("%snvim --server '%s' --remote-expr '1' 2>/dev/null", pathPrefix, socketPath)
   local task = hs.task.new("/bin/sh", function(exitCode, _, _)
@@ -501,7 +501,7 @@ function M.isStandaloneServerRunningSync(socketPath)
     return false
   end
 
-  -- Quick sync check (prepend PATH for nix nvim)
+  -- Quick sync check (prepend PATH for nvim)
   local pathPrefix = PATH and ("PATH='" .. PATH .. "' ") or ""
   local _, status = hs.execute(
     fmt("%snvim --server '%s' --remote-expr '1' 2>/dev/null", pathPrefix, socketPath)
@@ -514,7 +514,7 @@ end
 ---@param filePath string Path to the file to open
 ---@param callback? fun(success: boolean) Optional callback
 function M.openFileAsync(socketPath, filePath, callback)
-  -- Use shell with PATH to find nix nvim
+  -- Use shell with PATH to find nvim
   local pathPrefix = PATH and ("PATH='" .. PATH .. "' ") or ""
   local escaped = filePath:gsub("'", "'\\''")
   local cmd = fmt("%snvim --server '%s' --remote '%s' 2>/dev/null", pathPrefix, socketPath, escaped)

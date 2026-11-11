@@ -1,4 +1,4 @@
-# Standalone fish config — non-nix port of nix/home/common/programs/fish.
+# Standalone fish config.
 # No external plugins; everything lives in this directory.
 
 if status is-interactive

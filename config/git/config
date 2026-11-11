@@ -1,7 +1,5 @@
 # vim:foldenable:foldmethod=marker:ft=gitconfig
-# XDG-native global git config (mise-managed twin of the Home Manager setup).
-# Signing block below was merged from the HM programs.git output that used to
-# live in this file's nix-generated predecessor.
+# XDG-native global git config (mise-managed).
 
 [user]
   name = Seth Messer
@@ -355,7 +353,7 @@
 
 [credential "https://github.com"]
   # empty helper resets helpers inherited from earlier scopes
-  # (nix git ships a system gitconfig with credential.helper=osxkeychain,
+  # (system gitconfigs, e.g. Apple's, set credential.helper=osxkeychain,
   # which otherwise fires first and prompts for the login keychain)
   helper =
   helper = !gh auth git-credential

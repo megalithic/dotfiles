@@ -56,10 +56,9 @@ Understand the title, description, acceptance criteria, and any file hints.
 
 Check these files in order to find how to build, test, and lint:
 
-1. `devenv.nix` — look for `scripts`, `tasks`, `processes`, `git-hooks`, test commands
+1. `mise.toml` — look for `[tasks]`
 2. `package.json` — look for `scripts.test`, `scripts.lint`, `scripts.build`
 3. `Makefile` — look for `test`, `lint`, `check`, `build` targets
-4. `flake.nix` — look for `checks`
 
 Remember what you find. You will need these after every change.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Get Mac App Store app info formatted for packages-mas.nix
+# Get Mac App Store app info formatted for [bootstrap.packages] in config/mise/config.toml
 # Usage: mas-info <app-name-or-id>
 
 set -euo pipefail
@@ -40,7 +40,5 @@ else
   APP_NAME=$(echo "$SEARCH_RESULT" | sed -E 's/^[0-9]+[[:space:]]+//' | sed -E 's/[[:space:]]+\([^)]+\)$//' | xargs)
 fi
 
-# Output formatted for packages-mas.nix
-echo "    \"$APP_NAME\" = $APP_ID;"
-echo ""
-echo "# To add to packages-mas.nix, copy the line above into the masApps attrset"
+# Output formatted for [bootstrap.packages] in config/mise/config.toml
+echo "\"mas:$APP_ID\" = \"latest\" # $APP_NAME"

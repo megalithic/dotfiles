@@ -184,7 +184,7 @@ return {
   {
     "saghen/blink.pairs",
     enabled = false,
-    build = "nix run .#build-plugin",
+    build = "cargo build --release",
     event = { "InsertEnter", "CmdlineEnter" },
     --- @module 'blink.pairs'
     --- @type blink.pairs.Config
@@ -204,12 +204,6 @@ return {
           ["["] = "]",
           ["{"] = "}",
           ["'"] = {
-            { -- new
-              "''",
-              "''",
-              when = function(ctx) return ctx:text_before_cursor(1) == "'" end,
-              languages = { "nix" },
-            },
             {
               "'''",
               when = function(ctx) return ctx:text_before_cursor(2) == "''" end,

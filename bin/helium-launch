@@ -4,7 +4,7 @@
 # (config.lua `launchCommand` opt on the hyper+j binding).
 #
 # Targets /Applications/Helium.app: the signed megalithic/helium-macos-releases
-# build (Widevine baked in, Sparkle disabled via nix-darwin defaults).
+# build (Widevine baked in, Sparkle disabled via macOS defaults).
 # Detaches the browser (nohup + background) and exits immediately so callers
 # like hs.task don't tie the browser's lifetime to theirs.
 set -euo pipefail

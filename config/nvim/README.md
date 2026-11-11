@@ -48,7 +48,7 @@ return {
 }
 ```
 
-**Supported:** Elixir, Lua, TypeScript, Nix, Bash, JSON, YAML, HTML, CSS, Liquid, Markdown, Docker
+**Supported:** Elixir, Lua, TypeScript, Bash, JSON, YAML, HTML, CSS, Liquid, Markdown, Docker
 
 ## Key Bindings
 

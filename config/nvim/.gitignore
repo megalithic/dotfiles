@@ -1,19 +1,10 @@
 Untitled
-local.nix
 
 # Plans (local only)
 _plans/
 
 # Auto-generated documentation
 _docs/
-
-# Devenv
-.devenv*
-devenv.local.nix
-
-# Devenv
-.devenv*
-devenv.local.nix
 
 # direnv
 .direnv

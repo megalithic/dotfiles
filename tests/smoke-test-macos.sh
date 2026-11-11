@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# smoke-test-macos.sh — post-switch health check for megabookpro's
-# nix+mise hybrid setup. Run anytime; read-only. Exits non-zero on failures.
-# Born from the 2026-08 nix→mise migration verification set.
+# smoke-test-macos.sh — health check for the mise-managed macOS setup.
+# Run anytime; read-only. Exits non-zero on failures.
 #
 # Flags:
 #   --fast   skip the mise bootstrap converge check (slowest section)
@@ -74,35 +73,32 @@ hdr "macOS defaults"
 hdr "Shell"
 [[ "$(dscl . -read "/Users/$USER" UserShell 2>/dev/null)" == *"/opt/homebrew/bin/fish" ]] && ok "login shell = brew fish" || bad "login shell is not /opt/homebrew/bin/fish"
 grep -q '^/opt/homebrew/bin/fish$' /etc/shells && ok "/etc/shells has brew fish" || bad "/etc/shells missing brew fish"
-grep -q '/nix/store' /etc/shells && bad "/etc/shells still has nix entries" || ok "/etc/shells has no nix entries"
 
 hdr "sudo_local (Touch ID)"
 if [[ -f /etc/pam.d/sudo_local && ! -L /etc/pam.d/sudo_local ]]; then
-  ok "sudo_local is a real file (not nix symlink)"
-  grep -q '/opt/homebrew/lib/pam/pam_reattach.so' /etc/pam.d/sudo_local && ok "pam_reattach = brew copy" || bad "pam_reattach not brew (nix leftover?)"
+  ok "sudo_local is a real file (not a symlink)"
+  grep -q '/opt/homebrew/lib/pam/pam_reattach.so' /etc/pam.d/sudo_local && ok "pam_reattach = brew copy" || bad "pam_reattach not brew"
   grep -q 'pam_tid.so' /etc/pam.d/sudo_local && ok "pam_tid present" || bad "pam_tid missing"
 else
   bad "sudo_local missing or still a symlink"
 fi
 
-hdr "CLI ownership (mise/brew wins PATH, no nix-profile dupes)"
+hdr "CLI ownership (mise/brew wins PATH)"
 for tool in gh jq just node direnv; do
   p="$(command -v "$tool" 2>/dev/null || true)"
   case "$p" in
     *mise* | /opt/homebrew/*) ok "$tool → $p" ;;
-    *.nix-profile*) bad "$tool still resolves to nix profile: $p" ;;
     "") bad "$tool not found" ;;
     *) wrn "$tool → $p (unexpected owner)" ;;
   esac
 done
 p="$(command -v op 2>/dev/null || true)"
 [[ "$p" == /opt/homebrew/* ]] && ok "op → $p" || bad "op not brew-owned: ${p:-missing}"
-[[ -e /usr/local/bin/op ]] && bad "/usr/local/bin/op (nix copy) still exists" || ok "no nix op at /usr/local/bin"
 
 hdr "1Password"
 if [[ -d /Applications/1Password.app ]]; then
   owner="$(/usr/bin/stat -f '%Su' /Applications/1Password.app)"
-  [[ "$owner" == "$USER" ]] && ok "1Password.app cask-owned (owner $owner)" || bad "1Password.app owner is $owner (nix copy?)"
+  [[ "$owner" == "$USER" ]] && ok "1Password.app cask-owned (owner $owner)" || bad "1Password.app owner is $owner"
 else
   bad "/Applications/1Password.app missing"
 fi
@@ -111,12 +107,10 @@ fnox get APPLE_TEAM_ID >/dev/null 2>&1 && ok "fnox secret resolution" || bad "fn
 sp="$(git config --get gpg.ssh.program 2>/dev/null)"
 [[ -x "$sp" ]] && ok "git signer exists: $sp" || bad "git gpg.ssh.program missing/not executable"
 
-hdr "GUI apps (cask owns, HM Apps empty)"
+hdr "GUI apps (cask owns)"
 for app in "Brave Browser Nightly" Ghostty Contexts Discord MeetingBar Obsidian "Proton Drive" ProtonVPN ColorSnapper2 "Yubico Authenticator" IINA Inkscape OBS Slack "Tidewave IDE" zoom.us "Okta Verify"; do
   [[ -d "/Applications/$app.app" ]] && ok "/Applications/$app.app" || bad "/Applications/$app.app missing"
 done
-hm_apps="$(ls "$HOME/Applications/Home Manager Apps/" 2>/dev/null | sort | tr '\n' ' ')"
-[[ -z "$hm_apps" ]] && ok "HM Apps empty (all GUI apps cask-owned)" || wrn "HM Apps drifted: $hm_apps"
 
 hdr "Key config symlinks (mise [dotfiles])"
 for link in ghostty/config fish/config.fish tmux/tmux.conf; do
@@ -126,7 +120,6 @@ done
 
 hdr "Fonts"
 ls "$HOME/Library/Fonts/" 2>/dev/null | grep -q 'FiraCodeNerdFont' && ok "nerd fonts in ~/Library/Fonts (mise)" || bad "mise nerd fonts missing"
-ls "/Library/Fonts/Nix Fonts/" 2>/dev/null | grep -qi 'nerd-fonts' && bad "Nix Fonts still ships nerd-fonts" || ok "Nix Fonts free of nerd-fonts"
 
 hdr "Swifties release programs"
 swifties_installs="$HOME/.local/share/mise/installs"

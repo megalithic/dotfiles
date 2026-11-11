@@ -84,7 +84,7 @@ find_hf() {
     if [[ $DRY_RUN -eq 1 ]]; then
       hf="hf"
     else
-      echo "error: hf CLI not found (install huggingface_hub in your devenv/PATH)" >&2
+      echo "error: hf CLI not found (install huggingface_hub on your PATH)" >&2
       exit 127
     fi
   fi

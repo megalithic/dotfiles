@@ -288,7 +288,7 @@ end
 
 local function resolve_root()
 	local buf = vim.api.nvim_get_current_buf()
-	local root = vim.fs.root(buf, { ".jj", ".git", "flake.nix" })
+	local root = vim.fs.root(buf, { ".jj", ".git" })
 	return root or vim.uv.cwd()
 end
 
@@ -585,8 +585,8 @@ refresh_tmux_context_async = function(callback)
 		}
 	end
 
-	-- pcall: tmux can vanish from PATH transiently (e.g. home-manager switch
-	-- swaps ~/.nix-profile) and vim.system raises ENOENT on spawn failure.
+	-- pcall: tmux can vanish from PATH transiently and vim.system raises
+	-- ENOENT on spawn failure.
 	-- Degrade to the cached/last-known context instead of a visible error.
 	local ok = pcall(vim.system, cmd, { text = true }, function(result)
 		local context = result.code == 0 and parse_tmux_context(vim.trim(result.stdout or "")) or {}

@@ -54,7 +54,6 @@ common_subcommands = [
   "just",
   "kubectl",
   "mise",
-  "nix",
   "npm",
   "pnpm",
   "tmux",

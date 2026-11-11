@@ -201,11 +201,11 @@ require("overrides")
 --------------------------------------------------------------------------------
 -- SHADE BINARY SELECTION
 -- Controls which shade binary Hammerspoon launches.
--- Values: "nix" | "debug" | "release" | "install" | "/custom/path/to/shade"
+-- Values: "debug" | "release" | "install" | "/custom/path/to/shade"
 -- Change at runtime: _G.SHADE_VER = "debug" (takes effect immediately)
 -- Or via CLI: hs -c '_G.SHADE_VER = "debug"'
 --------------------------------------------------------------------------------
-_G.SHADE_VER = "nix"
+_G.SHADE_VER = "install"
 
 --------------------------------------------------------------------------------
 -- DEBUG HELPERS

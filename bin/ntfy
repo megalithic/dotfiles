@@ -79,7 +79,7 @@ detect_source() {
     comm=$(ps -o comm= -p "$pid" 2>/dev/null | tr -d ' ')
     [[ -z "$comm" ]] && break
 
-    # Extract just the binary name (handles /nix/store/.../bin/node -> node)
+    # Extract just the binary name (handles /path/to/bin/node -> node)
     local name="${comm##*/}"
     # Strip leading dash (login shell indicator like -fish)
     name="${name#-}"

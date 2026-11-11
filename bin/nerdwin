@@ -105,9 +105,6 @@ get_icon() {
     elixir)
       echo ""
       ;;
-    nix)
-      echo "󱄅"
-      ;;
     lua)
       echo ""
       ;;

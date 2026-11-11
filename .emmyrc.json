@@ -41,7 +41,6 @@
     "ignoreDir": [
       "**/.config/nvim/undo/",
       ".direnv",
-      ".devenv",
       ".local_scripts"
     ]
   },

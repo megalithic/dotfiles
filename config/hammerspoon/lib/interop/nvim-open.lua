@@ -24,7 +24,7 @@ M.name = "interop.nvim-open"
 -- Internal helpers
 --------------------------------------------------------------------------------
 
--- PATH prefix for shell commands (Hammerspoon doesn't inherit nix PATH)
+-- PATH prefix for shell commands (Hammerspoon doesn't inherit shell PATH)
 local function pathPrefix() return PATH and ("PATH='" .. PATH .. "' ") or "" end
 
 -- Decode percent-encoded URL string (and `+` -> space).

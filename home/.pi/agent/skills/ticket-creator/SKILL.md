@@ -182,7 +182,7 @@ Write `plans/.ticket-context.md` with three sections:
 
 Fill in each section from what you discovered during exploration:
 
-- **Verification commands**: look in `devenv.nix` (scripts, tasks, git-hooks), `package.json` (scripts.test, scripts.lint, scripts.build), `Makefile` (test, lint, check, build targets), `flake.nix` (checks)
+- **Verification commands**: look in `mise.toml` (tasks), `package.json` (scripts.test, scripts.lint, scripts.build), `Makefile` (test, lint, check, build targets)
 - **Key directories**: list directories relevant to the batch of tickets being created
 - **Conventions**: notable patterns found during exploration (error handling style, file structure, naming)
 

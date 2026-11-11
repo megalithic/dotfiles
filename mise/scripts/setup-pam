@@ -3,7 +3,6 @@ set -euo pipefail
 
 # Idempotent Touch ID for sudo via /etc/pam.d/sudo_local (Apple's sanctioned
 # mechanism — survives macOS updates, unlike editing /etc/pam.d/sudo).
-# Replaces nix-darwin's security.pam.enableSudoTouchIdAuth.
 #
 # Includes pam_reattach (brew:pam-reattach in [bootstrap.packages]) so Touch ID
 # prompts also work inside tmux sessions. The reattach line is only written

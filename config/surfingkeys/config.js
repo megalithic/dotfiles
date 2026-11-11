@@ -495,39 +495,9 @@ addSearchAlias(
 );
 
 addSearchAlias(
-  "!ghnix",
-  "github .nix code search",
-  "https://github.com/search?type=Code&utf8=%E2%9C%93&q=language:nix ",
-);
-
-addSearchAlias(
   "!ghlua",
   "github .lua code search",
   "https://github.com/search?type=Code&utf8=%E2%9C%93&q=language:lua ",
-);
-
-addSearchAlias(
-  "!nix",
-  "nix package and options search",
-  "https://mynixos.com/search?q=",
-);
-
-addSearchAlias(
-  "!hm",
-  "nix home-manager options search",
-  "https://home-manager-options.extranix.com/?release=master&query=",
-);
-
-addSearchAlias(
-  "!flakes",
-  "nix community flakes search",
-  "https://community.flake.parts/",
-);
-
-addSearchAlias(
-  "!casks",
-  "nix casks search",
-  "https://nix-casks.yorganci.dev/search?q=",
 );
 
 addSearchAlias(

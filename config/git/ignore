@@ -31,7 +31,6 @@ _build
 **/.lexical
 .elixir-tools
 **/.elixir-tools
-**/.nix-hex
 **/priv/etc/**/*.sql
 credo_extra
 elm-stuff
@@ -139,7 +138,6 @@ obsidian/.obsidian
 **/*.bak
 .claude/settings.local.json
 .vscode/
-.nix-mix
 deps
 # vim:ft=gitignore:tw=0
 

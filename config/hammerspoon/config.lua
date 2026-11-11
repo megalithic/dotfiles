@@ -5,7 +5,6 @@ BROWSER = "net.imput.helium"
 -- Cold starts of BROWSER must go through this script (CDP 9223 + avwatchweb);
 -- LaunchServices forwards no flags. Used by the hyper+j launcher and watchers/url.
 BROWSER_LAUNCH = os.getenv("HOME") .. "/bin/helium-launch"
--- BROWSER = "com.nix.brave-browser-nightly"
 -- BROWSER = "com.brave.Browser.nightly"
 -- TERMINAL = "net.kovidgoyal.kitty"
 -- TERMINAL = "com.mitchellh.ghostty"
@@ -13,9 +12,7 @@ TERMINAL = "com.superlogical.rex"
 
 -- Bundle ID aliases: wrapper bundle ID -> actual running app bundle ID
 -- Used by summon.lua to find running apps launched via wrappers
-M.bundleIdAliases = {
-  ["com.nix.brave-browser-nightly"] = "com.brave.Browser.nightly",
-}
+M.bundleIdAliases = {}
 
 M.displays = {
   internal = "Built-in Retina Display",
@@ -426,10 +423,8 @@ M.dock = {
     connected = "macbook-disabled.kbd", -- Disable internal when Leeloo connected
     disconnected = "macbook.kbd", -- Normal config when Leeloo disconnected
     configPath = os.getenv("HOME") .. "/.config/kanata",
-    -- INTENTIONAL divergence from the old nix twin (now removed from the
-    -- repo): mise prefixes bootstrap launchd labels with `dev.mise.` (see
-    -- mise/scripts/setup-kanata); nix-darwin's label was bare
-    -- `org.kanata.daemon`. Keep the prefixed label.
+    -- mise prefixes bootstrap launchd labels with `dev.mise.` (see
+    -- mise/scripts/setup-kanata).
     daemonLabel = "dev.mise.org.kanata.daemon",
   },
   docked = {

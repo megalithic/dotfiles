@@ -415,7 +415,7 @@ end
 
 function obj.uploadToSpaces(imagePath, imageName)
   -- Uses /usr/bin/env to leverage PATH injection from overrides.lua
-  -- This finds capper via the Nix/Homebrew/dotfiles PATH
+  -- This finds capper via the Homebrew/dotfiles PATH
   obj.updateCheatsheetStatus("uploading")
 
   local task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
@@ -465,7 +465,7 @@ function obj.extractOcrText(callback)
   local imagePath = obj.activeCapture.imagePath
 
   -- Uses /usr/bin/env to leverage PATH injection from overrides.lua
-  -- Try Vision OCR first (finds vision-ocr via Nix/Homebrew/dotfiles PATH)
+  -- Try Vision OCR first (finds vision-ocr via Homebrew/dotfiles PATH)
   local task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
     if exitCode == 0 and stdOut and #stdOut > 0 then
       obj.activeCapture.ocrText = stdOut:gsub("^%s*(.-)%s*$", "%1") -- Trim
@@ -484,7 +484,7 @@ function obj.extractOcrWithTesseract(imagePath, callback)
   local outputPath = "/tmp/clipper_ocr"
 
   -- Uses /usr/bin/env to leverage PATH injection from overrides.lua
-  -- This finds tesseract via the Nix/Homebrew PATH
+  -- This finds tesseract via the Homebrew PATH
   local task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
     if exitCode == 0 then
       local file = io.open(outputPath .. ".txt", "r")

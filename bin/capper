@@ -5,8 +5,8 @@ set -euo pipefail
 # https://www.digitalocean.com/community/tutorials/how-to-use-certbot-standalone-mode-to-retrieve-let-s-encrypt-ssl-certificates-on-ubuntu-1804
 
 # GUI apps like Hammerspoon do not inherit shell PATH. Include mise shims and
-# local dotfile bins before Homebrew/Nix fallback locations.
-export PATH="$HOME/.local/bin:${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:$HOME/.dotfiles/bin:$HOME/bin:/opt/homebrew/bin:$HOME/.nix-profile/bin:/run/current-system/sw/bin:$PATH"
+# local dotfile bins before Homebrew fallback locations.
+export PATH="$HOME/.local/bin:${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims:$HOME/.dotfiles/bin:$HOME/bin:/opt/homebrew/bin:$PATH"
 
 usage() {
   echo "Usage: $0 [file]" >&2

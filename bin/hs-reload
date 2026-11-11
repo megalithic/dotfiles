@@ -11,12 +11,6 @@ find_hs() {
     return 0
   fi
 
-  local home_manager_hs="$HOME/Applications/Home Manager Apps/Hammerspoon.app/Contents/Frameworks/hs/hs"
-  if [[ -x "$home_manager_hs" ]]; then
-    printf '%s\n' "$home_manager_hs"
-    return 0
-  fi
-
   local app_hs="/Applications/Hammerspoon.app/Contents/Frameworks/hs/hs"
   if [[ -x "$app_hs" ]]; then
     printf '%s\n' "$app_hs"

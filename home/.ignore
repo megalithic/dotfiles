@@ -50,8 +50,6 @@ package-lock.json
 *~
 app/assets/builds
 erl_crash.dump
-.nix-mix
-.nix-hex
 **/*.zwc
 **/ios
 **/android
@@ -64,8 +62,6 @@ erl_crash.dump
 .obsidian
 .jj
 .direnv
-.devenv
-**/.devenv
 **/.jj
 **/.direnv
 **/deps

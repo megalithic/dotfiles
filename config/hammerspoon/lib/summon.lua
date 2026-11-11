@@ -10,7 +10,6 @@ local function isBundleID(str)
 end
 
 -- Get the aliased bundle ID (for wrapper apps that launch apps with different bundle IDs)
--- e.g., com.nix.brave-browser-nightly -> com.brave.Browser.nightly
 local function getAliasedBundleID(bundleID)
   if C and C.bundleIdAliases and C.bundleIdAliases[bundleID] then
     return C.bundleIdAliases[bundleID]

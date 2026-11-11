@@ -7,7 +7,6 @@ max_depth="${SPOTLIGHT_MAX_DEPTH:-6}"
 
 patterns=(
   node_modules
-  .devenv
   .direnv
   _build
   deps
@@ -27,7 +26,7 @@ if [[ -f "$ignore_file" ]]; then
     line="${line%/}"
     [[ -z "$line" || "$line" == *\** || "$line" == \[* ]] && continue
     patterns+=("$line")
-  done < "$ignore_file"
+  done <"$ignore_file"
 fi
 
 if [[ "${1:-apply}" == "status" ]]; then
@@ -51,8 +50,8 @@ find_args=()
 for pattern in "${patterns[@]}"; do
   [[ -n "${seen[$pattern]:-}" ]] && continue
   seen[$pattern]=1
-  [[ ${#find_args[@]} -gt 0 ]] && find_args+=( -o )
-  find_args+=( -name "$pattern" )
+  [[ ${#find_args[@]} -gt 0 ]] && find_args+=(-o)
+  find_args+=(-name "$pattern")
 done
 
 [[ ${#find_args[@]} -gt 0 ]] || {

@@ -168,8 +168,8 @@ PY
 }
 
 codesign_identity_hash() {
-  /usr/bin/security find-identity -v -p codesigning "$KANATA_CODESIGN_KEYCHAIN" 2>/dev/null \
-    | /usr/bin/awk -v name="$KANATA_CODESIGN_COMMON_NAME" '$0 ~ "\\\"" name "\\\"" { print $2; exit }'
+  /usr/bin/security find-identity -v -p codesigning "$KANATA_CODESIGN_KEYCHAIN" 2>/dev/null |
+    /usr/bin/awk -v name="$KANATA_CODESIGN_COMMON_NAME" '$0 ~ "\\\"" name "\\\"" { print $2; exit }'
 }
 
 ensure_kanata_codesign_identity() {
@@ -334,65 +334,6 @@ TOML
   say "kanata-bar config installed at ${KANATA_BAR_CONFIG}"
 }
 
-move_stale_nixos_plist_if_broken() {
-  local label="$1"
-  local plist="/Library/LaunchDaemons/${label}.plist"
-  [[ -f "$plist" ]] || return 0
-
-  local command_text missing=""
-  command_text="$(/usr/bin/plutil -extract ProgramArguments.2 raw -o - "$plist" 2>/dev/null || true)"
-  missing="$(printf '%s\n' "$command_text" | /usr/bin/sed -n 's/.*exec \([^ ]*\/nix\/store[^ ]*\).*/\1/p')"
-  [[ -n "$missing" ]] || missing="$(printf '%s\n' "$command_text" | /usr/bin/sed -n 's/.*exec \(\/nix\/store[^ ]*\).*/\1/p')"
-
-  if [[ -n "$missing" && ! -e "$missing" ]]; then
-    local disabled_dir="/Library/LaunchDaemons.disabled"
-    local backup
-    backup="${disabled_dir}/${label}.plist.disabled.$(/bin/date +%Y%m%d%H%M%S)"
-    say "moving stale broken ${plist} aside (missing ${missing})"
-    sudo /bin/launchctl bootout "system/${label}" >/dev/null 2>&1 || true
-    sudo /bin/mkdir -p "$disabled_dir"
-    sudo /bin/mv "$plist" "$backup"
-  fi
-}
-
-cleanup_stale_nix_helpers() {
-  move_stale_nixos_plist_if_broken "org.nixos.start_karabiner_daemons"
-  move_stale_nixos_plist_if_broken "org.nixos.setsuid_karabiner_session_monitor"
-}
-
-unload_nix_agents() {
-  # Parallel nix/mise setup: nix-darwin owns org.kanata.daemon and
-  # com.kanata-bar.ui until the mise world takes over. Running both stacks
-  # would start two kanata processes fighting over the keyboard.
-  # Boot them out and remove the plists so mise can own kanata.
-  local labels=("org.kanata.daemon" "com.kanata-bar.ui")
-  for label in "${labels[@]}"; do
-    # User agents (gui domain)
-    if /bin/launchctl print "gui/${USER_ID}/${label}" >/dev/null 2>&1; then
-      say "unloading nix-managed ${label} (user agent)"
-      /bin/launchctl bootout "gui/${USER_ID}/${label}" >/dev/null 2>&1 || true
-    fi
-    # System daemons (if nix installed them as system daemons)
-    if /bin/launchctl print "system/${label}" >/dev/null 2>&1; then
-      say "unloading nix-managed ${label} (system daemon)"
-      sudo /bin/launchctl bootout "system/${label}" >/dev/null 2>&1 || true
-    fi
-    # Remove stale nix plist files
-    for plist in "/Library/LaunchDaemons/${label}.plist" "${HOME}/Library/LaunchAgents/${label}.plist"; do
-      if [[ -f "$plist" ]]; then
-        # Only remove if it references /nix/store (nix-managed)
-        if /usr/bin/grep -q '/nix/store' "$plist" 2>/dev/null; then
-          say "removing nix-managed plist: $plist"
-          case "$plist" in
-            /Library/*) sudo /bin/rm -f "$plist" ;;
-            *) /bin/rm -f "$plist" ;;
-          esac
-        fi
-      fi
-    done
-  done
-}
-
 apply_mise_launchd() {
   # Bootstrap skips 'mise bootstrap launchd' (launchd apply fails on clean
   # Tahoe VMs). Write and load the kanata plists directly here.
@@ -525,8 +466,6 @@ main() {
   ensure_kanata_config
   validate_kanata_bar_tool
   write_kanata_bar_config
-  cleanup_stale_nix_helpers
-  unload_nix_agents
   apply_mise_launchd
   verify_kanata_running
   print_manual_notes

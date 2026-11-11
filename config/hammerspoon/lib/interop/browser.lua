@@ -7,7 +7,6 @@ obj.__index = obj
 obj.name = "browser"
 
 -- App names for browsers that support JavaScript automation
--- The nix-wrapped version has the same app name as the original
 -- @lat: [[lat.md#Helium browser launch path]]
 local supportedBrowsers = {
   "Helium",
@@ -20,7 +19,6 @@ local supportedBrowsers = {
 }
 
 -- Bundle IDs to try when BROWSER global doesn't match a running app
--- Nix wrappers launch the real app, so we need original bundle IDs
 local browserBundleIDs = {
   "net.imput.helium",
   "com.brave.Browser.nightly",

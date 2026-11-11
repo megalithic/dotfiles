@@ -52,7 +52,6 @@ local parsers = {
 
   -- Other langs
   "devicetree",
-  "nix",
   "python",
   "rust",
   "go",
@@ -379,8 +378,6 @@ return {
         strategy = {
           [""] = rd.strategy.global,
           vim = rd.strategy["local"],
-          -- Disable for filetypes without rainbow-delimiters queries
-          -- nix = rd.strategy.noop,
         },
         query = {
           [""] = "rainbow-delimiters",

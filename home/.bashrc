@@ -1,5 +1,4 @@
 # Standalone bash config for mise-managed dotfiles.
-# Non-nix twin of nix/home/common/programs/bash/default.nix plus portable shell hooks.
 
 __git_worktree_names() {
   local git_common_dir

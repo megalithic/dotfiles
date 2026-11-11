@@ -1,9 +1,6 @@
 #:schema https://jj-vcs.github.io/jj/latest/config-schema.json
-# XDG-native global jj config (mise-managed twin of the Home Manager setup).
-# Merged from the HM-rendered ~/.config/jj/config.toml (aliases.nix + default.nix)
-# plus the formerly-unmanaged ~/.jjconfig.toml survivors (revset-aliases,
-# revsets, template-aliases, templates.log/log_node, ui.graph, should-sign-off
-# -- the content of the unwired nix templates.nix).
+# XDG-native global jj config (mise-managed). The only user config layer;
+# ~/.jjconfig.toml is retired.
 
 [aliases]
 b = ["bookmark"]

@@ -64,8 +64,7 @@ notify() {
 check_openvpn() {
   if ! command -v openvpn &>/dev/null; then
     log_error "OpenVPN is not installed or not in PATH"
-    log_info "Add to nix/home/packages.nix: pkgs.openvpn"
-    log_info "Then run: sudo darwin-rebuild switch --flake ./"
+    log_info "Install via: brew install openvpn"
     exit 1
   fi
 }
@@ -214,19 +213,19 @@ main() {
   shift
 
   case "$command" in
-    connect|c|start|s)
+    connect | c | start | s)
       cmd_connect "$@"
       ;;
-    disconnect|d|stop)
+    disconnect | d | stop)
       cmd_disconnect "$@"
       ;;
-    status|st)
+    status | st)
       cmd_status "$@"
       ;;
-    logs|l)
+    logs | l)
       cmd_logs "$@"
       ;;
-    help|h|-h|--help)
+    help | h | -h | --help)
       usage
       exit 0
       ;;

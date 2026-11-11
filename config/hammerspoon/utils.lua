@@ -489,7 +489,7 @@ function M.slack(status)
       TERM = "xterm-256color",
       HOMEBREW_PREFIX = "/opt/homebrew",
       HOME = os.getenv("HOME"),
-      PATH = PATH, -- Use global PATH from preflight.lua (includes Nix/Homebrew)
+      PATH = PATH, -- Use global PATH from preflight.lua (includes Homebrew)
     })
     slck:start()
   end
@@ -516,7 +516,7 @@ function M.vidconvert(path, opts)
       :send()
 
     -- Uses /usr/bin/env to leverage PATH injection from overrides.lua
-    -- This finds vidconvert via the Nix/Homebrew/dotfiles PATH
+    -- This finds vidconvert via the Homebrew/dotfiles PATH
     local task = hs.task.new("/usr/bin/env", function(exitCode, stdOut, stdErr)
       -- dbg(fmt("sync func: \r\n %s \r\n %s \r\n %s", stdOut, stdErr, exitCode))
 

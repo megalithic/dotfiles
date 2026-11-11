@@ -16,11 +16,11 @@ SHOW_DETAILS=false
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --limit|-l)
+    --limit | -l)
       LIMIT="$2"
       shift 2
       ;;
-    --details|-d)
+    --details | -d)
       SHOW_DETAILS=true
       shift
       ;;
@@ -101,7 +101,7 @@ echo "$IDS" | while read -r ID; do
         echo "    Version: $VERSION" >&2
 
         # Compute hash
-        HASH=$(nix hash file --type sha256 "$TEMP_FILE" 2>/dev/null || echo "")
+        HASH=$(shasum -a 256 "$TEMP_FILE" 2>/dev/null | awk '{print $1}')
         if [ -n "$HASH" ]; then
           echo "    SHA256: $HASH" >&2
         fi

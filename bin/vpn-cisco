@@ -27,7 +27,7 @@ else
   VPN_APP=""
 fi
 
-# OpenConnect CLI (available via nix)
+# OpenConnect CLI
 OPENCONNECT=$(command -v openconnect || echo "")
 
 # OpenConnect-SSO (installed via uv tool)
@@ -533,7 +533,7 @@ connect_openconnect() {
   local vpn_url="$1"
 
   if [[ -z "$OPENCONNECT" ]]; then
-    log_error "OpenConnect not found. Install via: nix-env -iA nixpkgs.openconnect"
+    log_error "OpenConnect not found. Install via: brew install openconnect"
     return 1
   fi
 
@@ -658,52 +658,52 @@ main() {
   # Parse arguments
   while [[ $# -gt 0 ]]; do
     case "$1" in
-    -m | --method)
-      method="$2"
-      shift 2
-      ;;
-    --method=*)
-      method="${1#*=}"
-      shift
-      ;;
-    -u | --url)
-      vpn_url="$2"
-      shift 2
-      ;;
-    --url=*)
-      vpn_url="${1#*=}"
-      shift
-      ;;
-    -n | --notify)
-      ENABLE_NOTIFICATIONS=true
-      shift
-      ;;
-    -r | --auto-reconnect)
-      AUTO_RECONNECT=true
-      shift
-      ;;
-    -b | --background)
-      BACKGROUND_MODE=true
-      shift
-      ;;
-    -s | --status)
-      action="status"
-      shift
-      ;;
-    -d | --disconnect)
-      action="disconnect"
-      shift
-      ;;
-    -h | --help)
-      show_usage
-      exit 0
-      ;;
-    *)
-      log_error "Unknown option: $1"
-      echo ""
-      show_usage
-      exit 1
-      ;;
+      -m | --method)
+        method="$2"
+        shift 2
+        ;;
+      --method=*)
+        method="${1#*=}"
+        shift
+        ;;
+      -u | --url)
+        vpn_url="$2"
+        shift 2
+        ;;
+      --url=*)
+        vpn_url="${1#*=}"
+        shift
+        ;;
+      -n | --notify)
+        ENABLE_NOTIFICATIONS=true
+        shift
+        ;;
+      -r | --auto-reconnect)
+        AUTO_RECONNECT=true
+        shift
+        ;;
+      -b | --background)
+        BACKGROUND_MODE=true
+        shift
+        ;;
+      -s | --status)
+        action="status"
+        shift
+        ;;
+      -d | --disconnect)
+        action="disconnect"
+        shift
+        ;;
+      -h | --help)
+        show_usage
+        exit 0
+        ;;
+      *)
+        log_error "Unknown option: $1"
+        echo ""
+        show_usage
+        exit 1
+        ;;
     esac
   done
 
@@ -732,56 +732,56 @@ main() {
 
   # Execute action
   case "$action" in
-  status)
-    check_status
-    # Also check openconnect status if available
-    if [[ -n "$OPENCONNECT" ]]; then
-      if is_openconnect_running; then
-        log_info "OpenConnect is running (PID file: $OPENCONNECT_PID_FILE)"
-      else
-        log_info "OpenConnect is not running"
+    status)
+      check_status
+      # Also check openconnect status if available
+      if [[ -n "$OPENCONNECT" ]]; then
+        if is_openconnect_running; then
+          log_info "OpenConnect is running (PID file: $OPENCONNECT_PID_FILE)"
+        else
+          log_info "OpenConnect is not running"
+        fi
       fi
-    fi
-    ;;
-  disconnect)
-    # Disconnect based on what's running
-    local disconnected=false
-    if get_vpn_status; then
-      disconnect_vpn
-      disconnected=true
-    fi
-    if is_openconnect_running; then
-      disconnect_openconnect
-      disconnected=true
-    fi
-    if [[ "$disconnected" == false ]]; then
-      log_info "No VPN connections detected"
-    fi
-    ;;
-  connect)
-    case "$method" in
-    gui)
-      connect_gui "$vpn_url"
       ;;
-    cisco-cli)
-      connect_cli "$vpn_url"
+    disconnect)
+      # Disconnect based on what's running
+      local disconnected=false
+      if get_vpn_status; then
+        disconnect_vpn
+        disconnected=true
+      fi
+      if is_openconnect_running; then
+        disconnect_openconnect
+        disconnected=true
+      fi
+      if [[ "$disconnected" == false ]]; then
+        log_info "No VPN connections detected"
+      fi
       ;;
-    openconnect)
-      connect_openconnect "$vpn_url"
-      ;;
-    openconnect-sso)
-      connect_openconnect_sso "$vpn_url"
+    connect)
+      case "$method" in
+        gui)
+          connect_gui "$vpn_url"
+          ;;
+        cisco-cli)
+          connect_cli "$vpn_url"
+          ;;
+        openconnect)
+          connect_openconnect "$vpn_url"
+          ;;
+        openconnect-sso)
+          connect_openconnect_sso "$vpn_url"
+          ;;
+        *)
+          log_error "Unknown method: $method"
+          exit 1
+          ;;
+      esac
       ;;
     *)
-      log_error "Unknown method: $method"
+      log_error "Unknown action: $action"
       exit 1
       ;;
-    esac
-    ;;
-  *)
-    log_error "Unknown action: $action"
-    exit 1
-    ;;
   esac
 }
 

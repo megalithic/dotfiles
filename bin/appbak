@@ -21,13 +21,10 @@ fi
 # is hardcoded further down in the script.
 # ---------------------------------------------------------------------------
 
-# App resolution roots. NOTE: "$HOME/Applications/Home Manager Apps" is a
-# transient location from the ongoing mise migration — remove this one
-# array element once that migration is complete.
+# App resolution roots.
 APPBAK_APP_DIRS=(
   "/Applications"
   "$HOME/Applications"
-  "$HOME/Applications/Home Manager Apps"
 )
 
 # ~/Library categories: config/data/auth vs cache-ish.
@@ -139,25 +136,74 @@ require_flag_value() {
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -d|--discover) discover_force=1; shift ;;
-    --dest) require_flag_value "$1" "$#"; dest="$2"; shift 2 ;;
-    -n|--non-interactive) non_interactive=1; shift ;;
-    --force) force=1; shift ;;
-    --dry-run) dry_run=1; shift ;;
-    --list) list_mode=1; shift ;;
-    --logs) logs_mode=1; shift ;;
-    --keychain-export) require_flag_value "$1" "$#"; keychain_export="$2"; shift 2 ;;
-    --age-recipient) require_flag_value "$1" "$#"; age_recipient="$2"; shift 2 ;;
-    -h|--help) usage; exit 0 ;;
-    --) shift; while [[ $# -gt 0 ]]; do app_args+=("$1"); shift; done ;;
-    -*) echo "appbak: unknown option: $1" >&2; usage >&2; exit 2 ;;
-    *) app_args+=("$1"); shift ;;
+    -d | --discover)
+      discover_force=1
+      shift
+      ;;
+    --dest)
+      require_flag_value "$1" "$#"
+      dest="$2"
+      shift 2
+      ;;
+    -n | --non-interactive)
+      non_interactive=1
+      shift
+      ;;
+    --force)
+      force=1
+      shift
+      ;;
+    --dry-run)
+      dry_run=1
+      shift
+      ;;
+    --list)
+      list_mode=1
+      shift
+      ;;
+    --logs)
+      logs_mode=1
+      shift
+      ;;
+    --keychain-export)
+      require_flag_value "$1" "$#"
+      keychain_export="$2"
+      shift 2
+      ;;
+    --age-recipient)
+      require_flag_value "$1" "$#"
+      age_recipient="$2"
+      shift 2
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      while [[ $# -gt 0 ]]; do
+        app_args+=("$1")
+        shift
+      done
+      ;;
+    -*)
+      echo "appbak: unknown option: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+    *)
+      app_args+=("$1")
+      shift
+      ;;
   esac
 done
 
 case "$keychain_export" in
-  off|age) ;;
-  *) echo "appbak: invalid --keychain-export mode: $keychain_export (expected off|age)" >&2; exit 2 ;;
+  off | age) ;;
+  *)
+    echo "appbak: invalid --keychain-export mode: $keychain_export (expected off|age)" >&2
+    exit 2
+    ;;
 esac
 
 # ---------------------------------------------------------------------------
@@ -185,7 +231,7 @@ if [[ "$logs_mode" -eq 1 ]]; then
     echo "appbak: no log yet at $log_file" >&2
     exit 0
   fi
-  if [[ -t 1 ]]; then gum pager < "$log_file"; else cat "$log_file"; fi
+  if [[ -t 1 ]]; then gum pager <"$log_file"; else cat "$log_file"; fi
   exit 0
 fi
 
@@ -194,7 +240,7 @@ fi
 if [[ "$dry_run" -ne 1 && "$list_mode" -ne 1 ]]; then
   mkdir -p "$(dirname "$manifest_path")"
   if [[ ! -f "$manifest_path" ]]; then
-    echo '{"version":1,"apps":{}}' > "$manifest_path"
+    echo '{"version":1,"apps":{}}' >"$manifest_path"
   fi
 fi
 
@@ -219,10 +265,13 @@ fi
 # and never fails a run.
 log_to_file() {
   [[ -n "$log_file" ]] || return 0
-  printf '%s %s\n' "$(/bin/date '+%Y-%m-%dT%H:%M:%S')" "$*" >> "$log_file" 2>/dev/null || true
+  printf '%s %s\n' "$(/bin/date '+%Y-%m-%dT%H:%M:%S')" "$*" >>"$log_file" 2>/dev/null || true
 }
 
-log() { echo "appbak: $*" >&2; log_to_file "$*"; }
+log() {
+  echo "appbak: $*" >&2
+  log_to_file "$*"
+}
 
 # Stage/progress UI: gum-styled on an interactive terminal, plain `log`
 # lines otherwise (cron / --non-interactive / redirected stderr).
@@ -278,19 +327,19 @@ manifest_write() {
   if [[ "$dry_run" -eq 1 ]]; then
     return 0
   fi
-  if [[ -z "$new_json" ]] || ! jq -e . >/dev/null 2>&1 <<< "$new_json"; then
+  if [[ -z "$new_json" ]] || ! jq -e . >/dev/null 2>&1 <<<"$new_json"; then
     log "refusing to write invalid/empty manifest JSON — manifest left untouched"
     return 1
   fi
   local tmp
   tmp="$(mktemp "${manifest_path}.tmp.XXXXXX")"
-  printf '%s' "$new_json" > "$tmp"
+  printf '%s' "$new_json" >"$tmp"
   mv "$tmp" "$manifest_path"
 }
 
 app_key() {
   # lowercase display name -> manifest key
-  tr '[:upper:]' '[:lower:]' <<< "$1"
+  tr '[:upper:]' '[:lower:]' <<<"$1"
 }
 
 # ---------------------------------------------------------------------------
@@ -301,7 +350,7 @@ app_key() {
 # path. Prints candidate(s) newline-separated; caller decides on 0/1/many.
 resolve_app_candidates() {
   local requested="$1" requested_lower
-  requested_lower="$(tr '[:upper:]' '[:lower:]' <<< "$requested")"
+  requested_lower="$(tr '[:upper:]' '[:lower:]' <<<"$requested")"
   local -A seen=()
   local hit
 
@@ -315,7 +364,7 @@ resolve_app_candidates() {
     local base="${app_path##*/}"
     base="${base%.app}"
     local base_lower
-    base_lower="$(tr '[:upper:]' '[:lower:]' <<< "$base")"
+    base_lower="$(tr '[:upper:]' '[:lower:]' <<<"$base")"
     if [[ "$base_lower" == "$requested_lower" ]]; then
       printf '%s\n' "$app_path"
     fi
@@ -329,7 +378,7 @@ resolve_app_candidates() {
       [[ -e "$entry" ]] || continue
       base="${entry##*/}"
       base="${base%.app}"
-      base_lower="$(tr '[:upper:]' '[:lower:]' <<< "$base")"
+      base_lower="$(tr '[:upper:]' '[:lower:]' <<<"$base")"
       if [[ "$base_lower" == "$requested_lower" ]]; then
         if [[ -z "${seen[$entry]:-}" ]]; then
           seen[$entry]=1
@@ -402,7 +451,7 @@ resolve_app() {
 
   local -a raw_arr=()
   local c
-  while IFS= read -r c; do [[ -n "$c" ]] && raw_arr+=("$c"); done <<< "$candidates_raw"
+  while IFS= read -r c; do [[ -n "$c" ]] && raw_arr+=("$c"); done <<<"$candidates_raw"
 
   local candidates
   candidates="$(filter_and_rank_candidates "${raw_arr[@]}")"
@@ -411,16 +460,16 @@ resolve_app() {
   fi
 
   local count
-  count="$(wc -l <<< "$candidates" | tr -d ' ')"
+  count="$(wc -l <<<"$candidates" | tr -d ' ')"
 
   local chosen
   if [[ "$count" -gt 1 ]]; then
     if [[ "$non_interactive" -eq 1 ]]; then
       log "multiple matches for '$requested', cannot disambiguate non-interactively:"
-      while IFS= read -r c; do log "  $c"; done <<< "$candidates"
+      while IFS= read -r c; do log "  $c"; done <<<"$candidates"
       return 2
     fi
-    chosen="$(gum choose --header "Multiple apps match '$requested' — pick one" <<< "$candidates")"
+    chosen="$(gum choose --header "Multiple apps match '$requested' — pick one" <<<"$candidates")"
     [[ -z "$chosen" ]] && return 2
   else
     chosen="$candidates"
@@ -443,28 +492,28 @@ resolve_app() {
 build_tokens() {
   local -a tokens=()
   local name="$RESOLVED_APP_NAME"
-  tokens+=("$(tr '[:upper:]' '[:lower:]' <<< "$name")")
-  tokens+=("$(tr '[:upper:]' '[:lower:]' <<< "${name// /}")")
+  tokens+=("$(tr '[:upper:]' '[:lower:]' <<<"$name")")
+  tokens+=("$(tr '[:upper:]' '[:lower:]' <<<"${name// /}")")
 
   if [[ -n "$RESOLVED_BUNDLE_ID" ]]; then
-    tokens+=("$(tr '[:upper:]' '[:lower:]' <<< "$RESOLVED_BUNDLE_ID")")
+    tokens+=("$(tr '[:upper:]' '[:lower:]' <<<"$RESOLVED_BUNDLE_ID")")
 
     # Meaningful, non-generic segments only (e.g. "canarymail" from
     # "io.canarymail.mac") — the raw tail segment ("mac", "desktop", ...) is
     # usually a platform qualifier, not app identity, and substring-matches
     # far too much of ~/Library when used as a search token.
     local bundle_lower segment
-    bundle_lower="$(tr '[:upper:]' '[:lower:]' <<< "$RESOLVED_BUNDLE_ID")"
+    bundle_lower="$(tr '[:upper:]' '[:lower:]' <<<"$RESOLVED_BUNDLE_ID")"
     while IFS= read -r segment; do
       [[ -z "$segment" ]] && continue
       [[ ${#segment} -lt "$APPBAK_TOKEN_MIN_LEN" ]] && continue
       is_stoplisted_token "$segment" && continue
       tokens+=("$segment")
-    done < <(tr '.' '\n' <<< "$bundle_lower")
+    done < <(tr '.' '\n' <<<"$bundle_lower")
   fi
 
   if [[ -n "$RESOLVED_TEAM_ID" ]]; then
-    tokens+=("$(tr '[:upper:]' '[:lower:]' <<< "$RESOLVED_TEAM_ID").")
+    tokens+=("$(tr '[:upper:]' '[:lower:]' <<<"$RESOLVED_TEAM_ID").")
   fi
 
   printf '%s\n' "${tokens[@]}" | sort -u
@@ -484,7 +533,7 @@ is_stoplisted_token() {
 
 # Emits TAB-joined: size_human<TAB>size_bytes<TAB>mtime_iso for one filesystem
 # entry. Uses /usr/bin/stat and /bin/date explicitly — a GNU coreutils
-# stat/date earlier on $PATH (nix/homebrew coreutils, common on this host)
+# stat/date earlier on $PATH (homebrew coreutils, common on this host)
 # does not understand the BSD `-f '%m'` / `-r <epoch>` flag forms and would
 # silently degrade every mtime to epoch 0. NOTE: /usr/bin/date does not exist
 # on macOS (BSD date lives at /bin/date only) — verified via `ls -la`.
@@ -512,14 +561,16 @@ refresh_zero_byte_rows() {
     [[ -z "$path" ]] && continue
     changed=0
     if [[ "$zero_byte" == "true" && -e "$path" ]]; then
-      IFS=$'\t' read -r new_size new_bytes new_mtime <<< "$(entry_stats "$path")"
+      IFS=$'\t' read -r new_size new_bytes new_mtime <<<"$(entry_stats "$path")"
       if [[ "$new_bytes" != "$size_bytes" || "$new_mtime" != "$mtime" ]]; then
-        size="$new_size"; size_bytes="$new_bytes"; mtime="$new_mtime"
+        size="$new_size"
+        size_bytes="$new_bytes"
+        mtime="$new_mtime"
         changed=1
       fi
     fi
     printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$path" "$category" "$size" "$size_bytes" "$mtime" "$changed"
-  done < <(jq -r '.discovered[]? | [.path, .category, .size, (.size_bytes|tostring), .mtime, (.zero_byte|tostring)] | @tsv' <<< "$app_entry")
+  done < <(jq -r '.discovered[]? | [.path, .category, .size, (.size_bytes|tostring), .mtime, (.zero_byte|tostring)] | @tsv' <<<"$app_entry")
 }
 
 # Emits TSV rows: path<TAB>category<TAB>size_human<TAB>size_bytes<TAB>mtime_iso
@@ -533,7 +584,7 @@ scan_category_dir() {
   for entry in "$scan_dir"/*; do
     [[ -e "$entry" ]] || continue
     base="${entry##*/}"
-    base_lower="$(tr '[:upper:]' '[:lower:]' <<< "$base")"
+    base_lower="$(tr '[:upper:]' '[:lower:]' <<<"$base")"
     matched=0
     while IFS= read -r token; do
       [[ -z "$token" ]] && continue
@@ -541,7 +592,7 @@ scan_category_dir() {
         matched=1
         break
       fi
-    done <<< "$tokens_str"
+    done <<<"$tokens_str"
     [[ "$matched" -eq 1 ]] || continue
 
     if [[ ! -r "$entry" ]]; then
@@ -549,7 +600,7 @@ scan_category_dir() {
       continue
     fi
 
-    IFS=$'\t' read -r size_human size_bytes mtime_iso <<< "$(entry_stats "$entry")"
+    IFS=$'\t' read -r size_human size_bytes mtime_iso <<<"$(entry_stats "$entry")"
 
     printf '%s\t%s\t%s\t%s\t%s\n' "$entry" "$category" "$size_human" "$size_bytes" "$mtime_iso"
   done
@@ -608,7 +659,7 @@ run_selection() {
   local -A label_to_path=()
   local row path category size mtime label is_prior is_config p
   for row in "${DISCOVERED_ROWS[@]}"; do
-    IFS=$'\t' read -r path category size _ mtime <<< "$row"
+    IFS=$'\t' read -r path category size _ mtime <<<"$row"
     label="[$category] $path ($size @ $mtime)"
     is_prior=0
     for p in "${backed_up_prior[@]}"; do
@@ -631,13 +682,16 @@ run_selection() {
 
   local chosen
   chosen="$(gum choose --no-limit --header "Select items to back up for $RESOLVED_APP_NAME" \
-    --selected="$(IFS=,; echo "${selected_labels[*]:-}")" \
-    <<< "$(printf '%s\n' "${labels[@]}")")" || true
+    --selected="$(
+      IFS=,
+      echo "${selected_labels[*]:-}"
+    )" \
+    <<<"$(printf '%s\n' "${labels[@]}")")" || true
 
   while IFS= read -r label; do
     [[ -z "$label" ]] && continue
     SELECTED_PATHS+=("${label_to_path[$label]}")
-  done <<< "$chosen"
+  done <<<"$chosen"
 }
 
 # ---------------------------------------------------------------------------
@@ -760,18 +814,18 @@ scan_keychain_items() {
 
   local -A seen=()
   while IFS= read -r line; do
-    svc="$(grep -oE '"svce"<blob>="[^"]*"' <<< "$line" 2>/dev/null | sed -E 's/.*="(.*)"/\1/' || true)"
+    svc="$(grep -oE '"svce"<blob>="[^"]*"' <<<"$line" 2>/dev/null | sed -E 's/.*="(.*)"/\1/' || true)"
     [[ -z "$svc" ]] && continue
     local svc_lower
-    svc_lower="$(tr '[:upper:]' '[:lower:]' <<< "$svc")"
+    svc_lower="$(tr '[:upper:]' '[:lower:]' <<<"$svc")"
     while IFS= read -r token; do
       [[ -z "$token" ]] && continue
       if [[ "$svc_lower" == *"$token"* ]] && [[ -z "${seen[$svc]:-}" ]]; then
         seen[$svc]=1
         printf '%s\n' "$svc"
       fi
-    done <<< "$tokens"
-  done <<< "$dump"
+    done <<<"$tokens"
+  done <<<"$dump"
 }
 
 # Writes keychain-items.txt (always) and optionally exports secrets.
@@ -790,9 +844,9 @@ write_keychain_artifacts() {
   fi
 
   if [[ ${#items[@]} -gt 0 ]]; then
-    printf '%s\n' "${items[@]}" > "$backup_dir/keychain-items.txt"
+    printf '%s\n' "${items[@]}" >"$backup_dir/keychain-items.txt"
   else
-    : > "$backup_dir/keychain-items.txt"
+    : >"$backup_dir/keychain-items.txt"
   fi
 
   case "$keychain_export" in
@@ -804,7 +858,10 @@ write_keychain_artifacts() {
 }
 
 derive_age_recipient() {
-  [[ -n "$age_recipient" ]] && { printf '%s\n' "$age_recipient"; return 0; }
+  [[ -n "$age_recipient" ]] && {
+    printf '%s\n' "$age_recipient"
+    return 0
+  }
   [[ -f "$APPBAK_YUBIKEY_IDENTITY_FILE" ]] || return 1
   grep -oE 'age1yubikey1[a-zA-Z0-9]+' "$APPBAK_YUBIKEY_IDENTITY_FILE" | head -1
 }
@@ -831,7 +888,7 @@ export_keychain_age() {
   local item value
   for item in "${item_names[@]}"; do
     value="$(security find-generic-password -s "$item" -w 2>/dev/null || true)"
-    [[ -n "$value" ]] && printf '%s: %s\n' "$item" "$value" >> "$plain"
+    [[ -n "$value" ]] && printf '%s: %s\n' "$item" "$value" >>"$plain"
   done
 
   if ! age -r "$recipient" -o "$backup_dir/keychain-secrets.txt.age" "$plain"; then
@@ -844,7 +901,7 @@ export_keychain_age() {
   rm -f "$plain"
   trap - INT TERM EXIT
 
-  cat >> "$backup_dir/README.md" <<EOF
+  cat >>"$backup_dir/README.md" <<EOF
 
 ## Keychain secrets
 
@@ -928,7 +985,10 @@ backup_app() {
     return 0
   fi
 
-  resolve_dest_root || { log "cannot resolve destination for $app_name"; return 1; }
+  resolve_dest_root || {
+    log "cannot resolve destination for $app_name"
+    return 1
+  }
   local root="$dest"
 
   app_dest_root="$root/$host_short/$app_name"
@@ -964,7 +1024,11 @@ backup_app() {
   local expected_apparent_count=0 expected_apparent_bytes=0
   step "$app_name: copying ${#paths[@]} item(s) → $app_dest"
   for src in "${paths[@]}"; do
-    [[ -e "$src" ]] || { log "source vanished, skipping: $src"; vanished_count=$((vanished_count + 1)); continue; }
+    [[ -e "$src" ]] || {
+      log "source vanished, skipping: $src"
+      vanished_count=$((vanished_count + 1))
+      continue
+    }
     rel="${src#/}"
     target_dir="$app_dest/$(dirname "$rel")"
     if ! mkdir -p "$target_dir"; then
@@ -998,8 +1062,8 @@ backup_app() {
         continue
       fi
     fi
-    IFS=$'\t' read -r _ item_size_bytes _ <<< "$(entry_stats "$src")"
-    IFS=$'\t' read -r ap_count ap_bytes <<< "$(apparent_stats "$src")"
+    IFS=$'\t' read -r _ item_size_bytes _ <<<"$(entry_stats "$src")"
+    IFS=$'\t' read -r ap_count ap_bytes <<<"$(apparent_stats "$src")"
     copied+=("$src")
     copied_rows+=("$(printf '%s\t%s' "$src" "$item_size_bytes")")
     expected_count=$((expected_count + 1))
@@ -1037,7 +1101,7 @@ backup_app() {
         copy_failed=1
         continue
       fi
-      IFS=$'\t' read -r ap_count ap_bytes <<< "$(apparent_stats "$app_dest/$rel")"
+      IFS=$'\t' read -r ap_count ap_bytes <<<"$(apparent_stats "$app_dest/$rel")"
       actual_apparent_count=$((actual_apparent_count + ap_count))
       actual_apparent_bytes=$((actual_apparent_bytes + ap_bytes))
     done
@@ -1071,12 +1135,12 @@ backup_app() {
   step "$app_name: scanning keychain for matching item names"
   tokens="$(build_tokens)"
   keychain_items_file="$(mktemp)"
-  write_keychain_artifacts "$app_dest" "$tokens" > "$keychain_items_file" || true
+  write_keychain_artifacts "$app_dest" "$tokens" >"$keychain_items_file" || true
   local -a keychain_items=()
   local item
   while IFS= read -r item; do
     [[ -n "$item" ]] && keychain_items+=("$item")
-  done < "$keychain_items_file"
+  done <"$keychain_items_file"
   rm -f "$keychain_items_file"
 
   status="complete"
@@ -1106,8 +1170,7 @@ backup_app() {
     ')" \
     --argjson keychain "$(printf '%s\n' "${keychain_items[@]}" | jq -R . | jq -s 'map(select(length > 0))')" \
     '{app: $app, host: $host, timestamp: $ts, status: $status, app_was_running: $was_running, copied: $copied, keychain_items: $keychain}' \
-    > "$backup_manifest"
-  then
+    >"$backup_manifest"; then
     log "$app_name: cannot write backup-manifest.json: $backup_manifest"
     copy_failed=1
     status="failed"
@@ -1166,18 +1229,24 @@ prune_retention() {
   local sorted
   sorted="$(printf '%s\n' "${dirs[@]}" | sort)"
   local to_remove
-  to_remove="$(head -n "$((count - APPBAK_RETENTION_KEEP))" <<< "$sorted")"
+  to_remove="$(head -n "$((count - APPBAK_RETENTION_KEEP))" <<<"$sorted")"
   local rm_dir rm_base
   while IFS= read -r rm_dir; do
     [[ -z "$rm_dir" ]] && continue
     # Belt-and-suspenders: re-verify the exact same invariants right before
     # the destructive call, in case dirs/sorted was tampered with upstream.
     rm_base="$(basename "$rm_dir")"
-    [[ "$rm_base" =~ ^[0-9]{14}$ ]] || { log "refusing to prune non-timestamp path: $rm_dir"; continue; }
-    [[ "$(dirname "$rm_dir")" == "$app_dest_root" ]] || { log "refusing to prune path outside app_dest_root: $rm_dir"; continue; }
+    [[ "$rm_base" =~ ^[0-9]{14}$ ]] || {
+      log "refusing to prune non-timestamp path: $rm_dir"
+      continue
+    }
+    [[ "$(dirname "$rm_dir")" == "$app_dest_root" ]] || {
+      log "refusing to prune path outside app_dest_root: $rm_dir"
+      continue
+    }
     log "pruning old backup: $rm_dir"
     rm -rf "$rm_dir"
-  done <<< "$to_remove"
+  done <<<"$to_remove"
 }
 
 # ---------------------------------------------------------------------------
@@ -1246,7 +1315,7 @@ update_manifest_for_app() {
       last_backup: (if $backup_performed then $last_backup else ($prior.last_backup // null) end),
       last_backup_status: (if $backup_performed then $status else ($prior.last_backup_status // null) end),
       app_was_running: (if $backup_performed then ($was_running == 1) else ($prior.app_was_running // false) end)
-    }' <<< "$current")"
+    }' <<<"$current")"
 
   manifest_write "$current"
 }
@@ -1263,7 +1332,7 @@ process_app() {
     return 1
   fi
   key="$(app_key "$requested")"
-  app_entry="$(jq -c --arg k "$key" '.apps[$k] // empty' <<< "$manifest_json")"
+  app_entry="$(jq -c --arg k "$key" '.apps[$k] // empty' <<<"$manifest_json")"
 
   if [[ -n "$app_entry" && "$discover_force" -eq 0 ]]; then
     process_known_app "$requested" "$app_entry"
@@ -1276,19 +1345,19 @@ process_app() {
 process_known_app() {
   local requested="$1" app_entry="$2"
   local app_name bundle_id team_id
-  app_name="$(jq -r '.display_name' <<< "$app_entry")"
-  bundle_id="$(jq -r '.bundle_id' <<< "$app_entry")"
-  team_id="$(jq -r '.team_id' <<< "$app_entry")"
+  app_name="$(jq -r '.display_name' <<<"$app_entry")"
+  bundle_id="$(jq -r '.bundle_id' <<<"$app_entry")"
+  team_id="$(jq -r '.team_id' <<<"$app_entry")"
 
   local -a paths=()
   local p
   while IFS= read -r p; do
     [[ -n "$p" ]] && paths+=("$p")
-  done < <(jq -r '.selected[]?' <<< "$app_entry")
+  done < <(jq -r '.selected[]?' <<<"$app_entry")
 
   local prior_status was_running_before
-  prior_status="$(jq -r '.last_backup_status // ""' <<< "$app_entry")"
-  was_running_before="$(jq -r '.app_was_running // false' <<< "$app_entry")"
+  prior_status="$(jq -r '.last_backup_status // ""' <<<"$app_entry")"
+  was_running_before="$(jq -r '.app_was_running // false' <<<"$app_entry")"
 
   if [[ "$prior_status" == "possibly_incomplete" || "$was_running_before" == "true" ]]; then
     if [[ "$non_interactive" -eq 1 ]]; then
@@ -1298,7 +1367,10 @@ process_known_app() {
       choice="$(gum choose --header "$app_name: previous backup was possibly incomplete. What now?" \
         "Back up anyway" "Skip for now" "Quit app and continue")"
       case "$choice" in
-        "Skip for now") log "$app_name: skipped"; return 0 ;;
+        "Skip for now")
+          log "$app_name: skipped"
+          return 0
+          ;;
         "Quit app and continue")
           osascript -e "tell application \"$app_name\" to quit" 2>/dev/null || true
           wait_for_app_quit "$app_name"
@@ -1357,7 +1429,7 @@ process_new_or_rediscover_app() {
   if [[ -n "$app_entry" ]]; then
     while IFS= read -r p; do
       [[ -n "$p" ]] && prior_backed_up+=("$p")
-    done < <(jq -r '.backed_up[]?' <<< "$app_entry")
+    done < <(jq -r '.backed_up[]?' <<<"$app_entry")
   fi
 
   run_discovery
@@ -1365,7 +1437,7 @@ process_new_or_rediscover_app() {
   local -a nonzero_rows=()
   local row size_bytes
   for row in "${DISCOVERED_ROWS[@]}"; do
-    size_bytes="$(cut -f4 <<< "$row")"
+    size_bytes="$(cut -f4 <<<"$row")"
     if [[ "$size_bytes" != "0" ]]; then
       nonzero_rows+=("$row")
     fi
@@ -1440,7 +1512,7 @@ print_list() {
   jq -r '
     .apps | to_entries[] |
     "\(.value.display_name): \(.value.selected | length) selected, last backup \(.value.last_backup // "never") (\(.value.last_backup_status // "n/a"))"
-  ' <<< "$manifest_json"
+  ' <<<"$manifest_json"
 }
 
 # ---------------------------------------------------------------------------
@@ -1461,7 +1533,7 @@ main() {
     fi
     while IFS= read -r k; do
       [[ -n "$k" ]] && targets+=("$k")
-    done < <(jq -r '.apps | to_entries[] | .value.display_name' <<< "$manifest_json")
+    done < <(jq -r '.apps | to_entries[] | .value.display_name' <<<"$manifest_json")
     if [[ ${#targets[@]} -eq 0 ]]; then
       log "no apps in manifest and none specified; nothing to do"
       usage
@@ -1471,7 +1543,7 @@ main() {
     local arg name
     local -a split=()
     for arg in "${app_args[@]}"; do
-      IFS=',' read -ra split <<< "$arg"
+      IFS=',' read -ra split <<<"$arg"
       for name in "${split[@]}"; do
         [[ -n "$name" ]] && targets+=("$name")
       done

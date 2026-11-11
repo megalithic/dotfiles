@@ -11,7 +11,7 @@ local M = {}
 -- hs.task.new: Automatic PATH injection
 --------------------------------------------------------------------------------
 -- GUI apps like Hammerspoon don't inherit shell PATH. This patches hs.task.new
--- to automatically inject the Nix/Homebrew PATH (built in preflight.lua) into
+-- to automatically inject the Homebrew PATH (built in preflight.lua) into
 -- all spawned processes.
 --
 -- REF: https://www.hammerspoon.org/docs/hs.task.html
