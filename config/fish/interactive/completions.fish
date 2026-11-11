@@ -1,5 +1,3 @@
-status is-interactive; or return
-
 # jj bookmark completion helper
 function __fish_jj_bookmarks
     jj bookmark list --template 'if(!remote, name ++ "\n")' 2>/dev/null

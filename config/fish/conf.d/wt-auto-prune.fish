@@ -10,11 +10,11 @@ status is-interactive; or return
 set -g __wt_auto_prune_note_file (test -n "$XDG_STATE_HOME"; and echo $XDG_STATE_HOME; or echo ~/.local/state)/wt/auto-prune-note
 set -g __wt_auto_prune_seen ''
 test -f $__wt_auto_prune_note_file
-and set -g __wt_auto_prune_seen (command cat $__wt_auto_prune_note_file 2>/dev/null | string collect)
+and set -g __wt_auto_prune_seen (string collect <$__wt_auto_prune_note_file)
 
 function __wt_auto_prune_notify --on-event fish_prompt
     test -f $__wt_auto_prune_note_file; or return
-    set -l note (command cat $__wt_auto_prune_note_file 2>/dev/null | string collect)
+    set -l note (string collect <$__wt_auto_prune_note_file)
     test -n "$note"; or return
     test "$__wt_auto_prune_seen" != "$note"; or return
     set -g __wt_auto_prune_seen $note

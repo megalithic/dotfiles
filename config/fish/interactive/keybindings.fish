@@ -6,16 +6,13 @@ set fish_cursor_visual underscore blink
 
 # Line navigation.
 bind -M insert ctrl-a beginning-of-line
-bind -M normal ctrl-a beginning-of-line
 bind -M default ctrl-a beginning-of-line
 
 bind -M insert ctrl-e end-of-line
-bind -M normal ctrl-e end-of-line
 bind -M default ctrl-e end-of-line
 
 # Accept autosuggestion.
 bind -M insert ctrl-y accept-autosuggestion
-bind -M normal ctrl-y accept-autosuggestion
 bind -M default ctrl-y accept-autosuggestion
 
 # Edit command in $EDITOR.
@@ -36,11 +33,9 @@ bind -M insert alt-delete kill-word
 
 # FZF widgets.
 bind -M insert ctrl-d fzf-dir-widget
-bind -M normal ctrl-d fzf-dir-widget
 bind -M default ctrl-d fzf-dir-widget
 
 bind -M insert ctrl-b fzf-jj-bookmarks
-bind -M normal ctrl-b fzf-jj-bookmarks
 bind -M default ctrl-b fzf-jj-bookmarks
 
 # Tab-completion via fzf (functions/_fzf_tab.fish defines __fzf_complete).

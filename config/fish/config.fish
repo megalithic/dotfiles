@@ -29,7 +29,7 @@ if status is-interactive
         "$fish_config_dir/interactive/keybindings.fish" \
         "$fish_config_dir/interactive/theme.fish"
 
-        test -f "$file"; and source "$file"
+        source $file
     end
 
     _prompt_move_to_bottom

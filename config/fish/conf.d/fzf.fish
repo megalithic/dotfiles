@@ -9,9 +9,7 @@
 
 command -sq fzf; or return
 
-set -l config_home "$XDG_CONFIG_HOME"
-test -z "$config_home"; and set config_home "$HOME/.config"
-test -f "$config_home/fzf/fzfrc"; and set -gx FZF_DEFAULT_OPTS_FILE "$config_home/fzf/fzfrc"
+set -gx FZF_DEFAULT_OPTS_FILE ~/.config/fzf/fzfrc
 
 set -gx FZF_DEFAULT_COMMAND "fd --type f --hidden --no-ignore-vcs --follow --exclude .git --exclude .jj --exclude .direnv --exclude node_modules --strip-cwd-prefix"
 
