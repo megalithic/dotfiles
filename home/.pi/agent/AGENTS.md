@@ -3,20 +3,13 @@
 - Always use `trash` instead of `rm` for file deletion
 - Always use `rg` instead of `grep` for searching for text in files/folders
 - Always use `fd` instead of `find` for finding files/folders
-- Always set the pi tool `timeout` parameter for Bash tool call for commands that may run long or hang; especially `mise <command>`, `nix <command>`, `just <command>`, backgrounded executions, and command shapes sentinel flags as risky.
-- Always use `devenv` for developer environments
-  - If a repo has a `justfile` and `devenv` is enabled, check the `just` recipes to see if there are equivalents available
-  - When `devenv.nix` exists: `devenv shell -- <cmd>`, `devenv up`, `devenv tasks run <task>`
-  - When `devenv.nix` doesn't exist and a tool is missing: `devenv --option languages.<lang>.enable:bool true shell`
-  - When setup gets complex, create `devenv.nix`
-  - Don't bypass devenv with global installs
-  - `devenv search <query>` to find packages and options
-- Otherwise, if `mise.toml`, `.config/mise.local.toml`, or similar root file markers are available, and no devenv.nix exists, use `mise` related tasks and toolchain commands.
+- Always set the pi tool `timeout` parameter for Bash tool call for commands that may run long or hang; especially `mise <command>`, `just <command>`, backgrounded executions, and command shapes sentinel flags as risky.
+- If `mise.toml`, `.config/mise.local.toml`, or similar root file markers are available, use `mise` related tasks and toolchain commands.
 - When working with external libraries, use MCP tools (`context7`, `githits`) to look up docs and examples instead of guessing APIs
 
 ### Command Execution
 
-- For long-running or progress-heavy commands (`mise <command>`, `nix build`, `just home`/`just darwin`/`just rebuild`/`just validate`, package installs, tests), run the command directly with PTY/live output when available (pass `usePTY: true` parameter for the Bash tool call).
+- For long-running or progress-heavy commands (`mise <command>`, package installs, tests), run the command directly with PTY/live output when available (pass `usePTY: true` parameter for the Bash tool call).
 - Do not pipe long-running commands through `tail`, `grep`, `head`, or `sed` while they run; those filters can buffer or hide output from `pi-bash-live-view`.
 - If output needs filtering, run the command first and inspect logs or captured output afterward.
 - Short, finite inspection commands may still use pipes when live progress is not useful.

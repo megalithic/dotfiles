@@ -1,27 +1,18 @@
 # Git — mise-managed configuration
 
-**Sole owner** of global git config on both hosts since the megabookpro
-wave-1 flip (the Home Manager git module is removed; no mirroring needed).
-Applied through the `config/mise/config.toml` `[dotfiles]` table.
-
-## Layout — XDG-native (deliberately different from the nix tree)
-
-The HM module split git config across `~/.config/git/config` (generated
-signing block + include) and `~/.gitconfig` (main config) — a Home Manager
-artifact, since `programs.git` only writes the XDG path. This tree collapses
-that into a single XDG-native layout; **no `~/.gitconfig` or `~/.gitignore`
-exist in the mise world**.
+Global git config for both hosts, applied through the `config/mise/config.toml`
+`[dotfiles]` table. Layout is XDG-native: there is no `~/.gitconfig` or
+`~/.gitignore`.
 
 ```
 git/
-├── config        # → ~/.config/git/config — single merged global config:
-│                 #   signing (1Password op-ssh-sign, ssh key, gpgSign) folded
-│                 #   into the former ~/.gitconfig content; no core.excludesfile
-│                 #   (XDG ignore is git's built-in default); includes an
-│                 #   untracked `config.local` for machine-local overrides
-├── ignore        # → ~/.config/git/ignore — global excludes (former
-│                 #   ~/.gitignore content + adopted local additions)
-└── disabled/     # parked files, unwired in nix too (kept for parity):
+├── config        # → ~/.config/git/config — single global config: signing
+│                 #   (1Password op-ssh-sign, ssh key, gpgSign); no
+│                 #   core.excludesfile (XDG ignore is git's built-in default);
+│                 #   includes an untracked `config.local` for machine-local
+│                 #   overrides
+├── ignore        # → ~/.config/git/ignore — global excludes
+└── disabled/     # parked files, not deployed:
     ├── gitconfig_macos   # osxkeychain/gh credential helpers, commit template
     ├── gitconfig_linux   # linuxbrew gh credential helper
     └── gitmessage        # conventional-commit template (needs commit.template)
@@ -31,6 +22,7 @@ git/
 
 - Machine-local/untracked settings go in `~/.config/git/config.local` (already
   included from `config`); never edit the symlinked files in place.
+- A stray `~/.gitconfig` wins per key over `~/.config/git/config`; delete it.
 - Signing needs 1Password installed in `/Applications` (op-ssh-sign lives in
   the app bundle; `brew-cask:1password` in `[bootstrap.packages]`) and
   `~/.ssh/allowed_signers` for verification (`git log --show-signature`;
@@ -39,17 +31,12 @@ git/
   (`config/1Password/ssh/agent.toml`).
 - Runtime deps referenced by `config`: delta (pager), git-lfs (filter), nvim
   (editor + codediff diff/merge tool), fzf (`cof` alias), worktrunk (`wt`
-  alias), brew git contrib (`jump` alias). All but worktrunk are in
+  alias), brew git contrib (`jump` alias). All are in
   `config/mise/config.toml` (`[tools]` / `[bootstrap.packages]`).
 
 ## Applying
 
 ```sh
-mise bootstrap dotfiles apply   # links config, ignore (rg/fd ignore: home/.ignore)
+mise run update:dotfiles        # links config, ignore (rg/fd ignore: home/.ignore)
 git config --list --show-origin # verify origins point at ~/.config/git/config
 ```
-
-Cutover complete (wave 1): the HM git module and its `~/.gitconfig` /
-`~/.gitignore` symlinks are gone; `~/.config/git/config` is the only global
-config git reads. If a stray `~/.gitconfig` ever reappears, it wins per key —
-delete it.

@@ -1,11 +1,9 @@
 # Zsh — mise-managed configuration
 
-Standalone zsh config for the mise migration. There was no dedicated nix zsh
-module in this repo; the Worktrunk nix module only enabled upstream zsh shell
-integration. These files provide that portable layer:
+Portable zsh config. Fish is the login shell; zsh is a secondary shell.
 
-- `~/.zprofile` → `config/zsh/zprofile`
-- `~/.zshrc` → `config/zsh/zshrc`
+- `home/.zshenv` → `~/.zshenv` (sets `ZDOTDIR=~/.config/zsh`)
+- `config/zsh/zshrc` → `~/.config/zsh/zshrc`
 
 ## What lives here
 
@@ -16,7 +14,6 @@ integration. These files provide that portable layer:
 
 ## Keep in sync
 
-- Cross-shell aliases live in Home Manager's mise `globalConfig` and
-  `config/mise/config.toml` `[shell_alias]`, not here.
+- Cross-shell aliases live in `config/mise/config.toml` `[shell_alias]`, not here.
 - Fish owns a custom `wt` function; zsh uses upstream Worktrunk integration.
-- Avoid nix store paths; resolve tools from PATH after `mise activate zsh`.
+- Resolve tools from PATH after `mise activate zsh`; don't hardcode install paths.

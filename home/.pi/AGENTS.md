@@ -1,12 +1,7 @@
 # Pi coding agent - mise-managed configuration
 
-Sole owner of pi configuration (the former Home Manager twin at
-`home/common/programs/pi-coding-agent/` was removed when megabookpro moved
-onto the mise-managed setup).
-
-Nothing here applies automatically. Application happens through
-`config/mise/config.toml` (`[dotfiles]`,
-`[bootstrap.macos.launchd.agents]`, `update:pi` task) once that config is active.
+Pi configuration for both hosts, applied through `config/mise/config.toml`
+(`[dotfiles]`, `[bootstrap.macos.launchd.agents]`, `update:pi` task).
 
 ## Directory layout
 
@@ -24,12 +19,11 @@ home/.pi/
 │   ├── skills/          # Skill directories (symlink-each)
 │   ├── prompts/         # Prompt templates (symlink-each)
 │   └── agents/          # Custom agent .md definitions (symlink-each)
-├── bin/                 # Wrappers linked into ~/.local/bin: pi, p, work-tickets
-├── scripts/             # Helper installers and setup scripts
-├── patches/             # Reference patches kept for upstream regressions
-└── disabled/            # Turned-off wrappers, scripts, and archival files that
-                         # are not deployed through agent/* symlink-each mappings
+├── scripts/             # Helper installers and setup scripts (not deployed)
+└── tests/               # Bun test suites (not deployed)
 ```
+
+The `pi` and `work-tickets` wrappers live in `home/.local/bin/`.
 
 ## Conventions
 
@@ -59,9 +53,7 @@ home/.pi/
 ## Applying
 
 ```sh
-mise bootstrap dotfiles apply          # symlinks (agent files, bin wrappers)
+mise run update:dotfiles               # symlinks (agent files, bin wrappers)
 mise run update:pi                     # tools and runtime updates
-mise bootstrap launchd apply           # user agents (currently skipped on
-                                       # megabookpro; other com.megadots agents
-                                       # would duplicate nix-run services)
+mise bootstrap launchd apply           # user agents
 ```
