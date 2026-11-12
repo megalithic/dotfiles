@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Launchd entrypoint: golden-ratio pane sizing for every Rex session
+# (config/rex/golden.lua). Exits when the Rex server is down or restarts;
+# launchd's KeepAlive starts it again.
+set -euo pipefail
+
+rex="$HOME/Library/Application Support/com.superlogical.rex/RexServer/Versions/Current/Rex Server.app/Contents/MacOS/rex"
+if [[ ! -x "$rex" ]]; then
+  echo "rex-golden-launchd: Rex CLI not found at $rex" >&2
+  exit 1
+fi
+
+exec "$rex" --autostart=false -S "unix://$HOME/Library/Application Support/rex/server.sock" \
+  do --all "$HOME/.config/rex/golden-watch.lua"
