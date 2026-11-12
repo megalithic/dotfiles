@@ -52,6 +52,7 @@ test('live Pi registrations require a live pid and an existing socket; dead entr
     sessionId: 'session/one',
     sessionName: 'one',
     state: 'idle',
+    statusUpdatedAt: '2026-01-01T00:00:00Z',
   };
 
   write(path.join(state, 'manifests/live.info'), {
@@ -74,10 +75,38 @@ test('live Pi registrations require a live pid and an existing socket; dead entr
       ...manifest,
       id: 'pi:testhost:session%2Fone',
       alive: true,
+      ephemeral: false,
       tmux: { session: 'dev', window: 'code', pane: '%1', windowIndex: '0', paneIndex: '1' },
     },
   ]);
   expect(readRegistry({ includeDead: true }).pis.map((pi) => pi.alive)).toEqual([false, true, false]);
+});
+
+test('ephemeral registrations stay hidden without hiding a replacement in the same pane', () => {
+  const socket = path.join(home, 'replacement.sock');
+  fs.writeFileSync(socket, '');
+
+  const replacement = {
+    pid: process.pid,
+    socket,
+    sessionId: 'replacement',
+    session: 'dev',
+    window: 'code',
+    pane: '%reused',
+  };
+
+  write(path.join(state, 'manifests/stale.info'), {
+    ...replacement,
+    pid: deadPid,
+    socket: `${socket}.gone`,
+    ephemeral: true,
+  });
+  write(path.join(state, 'manifests/replacement.info'), replacement);
+  expect(readRegistry().pis.map((pi) => pi.sessionId)).toEqual(['replacement']);
+  write(path.join(state, 'manifests/replacement.info'), { ...replacement, ephemeral: true });
+  expect(readRegistry().pis).toEqual([]);
+  expect(readRegistry({ includeDead: true }).pis).toEqual([]);
+  expect(readRegistry({ includeEphemeral: true }).pis[0]).toMatchObject({ sessionId: 'replacement', ephemeral: true });
 });
 
 test('app leases expose tabs, live followers, and Rex seat metadata', () => {

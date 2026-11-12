@@ -3,24 +3,30 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import { Type } from 'typebox';
 import { Check } from 'typebox/value';
-import { socketRequest } from './messaging.ts';
-import { readRegistry, type Registry } from './registry.ts';
+import { socketRequest, type RequestOptions } from './messaging.ts';
+import { readRegistry } from './registry.ts';
 import { registryTargets, resolveTargets, type Target } from './tell-targets.ts';
 
 const exec = promisify(execFile);
 
 const quote = (text: string): string => `'${text.replace(/'/g, `'\\''`)}'`;
 
-export const ssh = (host: string, command: string, input?: string, timeout = 5000): Promise<string> =>
+export const ssh = (
+  host: string,
+  command: string,
+  input?: string,
+  timeout = 5000,
+  signal?: AbortSignal,
+): Promise<string> =>
   new Promise((resolve, reject) => {
     if (!host.trim() || host.startsWith('-') || /\s/.test(host)) return reject(new Error('Invalid SSH host'));
 
     const child = execFile(
       'ssh',
       ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=5', '--', host, command],
-      { encoding: 'utf8', timeout, maxBuffer: 1024 * 1024 },
+      { encoding: 'utf8', timeout, signal, maxBuffer: 1024 * 1024 },
       (error, stdout, stderr) => {
-        if (error) reject(new Error(stderr.trim() || error.message));
+        if (error) reject(new Error(`SSH ${host}: ${stderr.trim() || error.message}`));
         else resolve(stdout);
       },
     );
@@ -31,16 +37,72 @@ export const ssh = (host: string, command: string, input?: string, timeout = 500
     child.stdin?.end(input === undefined ? undefined : `${input}\n`);
   });
 
-export const listTargets = async (host?: string): Promise<Target[]> => {
-  const local = readRegistry();
+const registrySchema = Type.Object({
+  machine: Type.String(),
+  pis: Type.Array(
+    Type.Object({
+      id: Type.String(),
+      pid: Type.Integer(),
+      socket: Type.String(),
+      cwd: Type.String(),
+      alive: Type.Boolean(),
+      sessionId: Type.Optional(Type.String()),
+      sessionName: Type.Optional(Type.String()),
+      state: Type.Optional(Type.String()),
+      statusUpdatedAt: Type.Optional(Type.String()),
+      ephemeral: Type.Optional(Type.Boolean()),
+      tmux: Type.Optional(
+        Type.Object({
+          session: Type.String(),
+          window: Type.String(),
+          pane: Type.Optional(Type.String()),
+          windowIndex: Type.Optional(Type.String()),
+          paneIndex: Type.Optional(Type.String()),
+        }),
+      ),
+      rex: Type.Optional(Type.Object({ session: Type.Optional(Type.String()), block: Type.Optional(Type.String()) })),
+    }),
+  ),
+  ultimates: Type.Array(
+    Type.Object({
+      pid: Type.Integer(),
+      port: Type.Integer(),
+      url: Type.String(),
+      project: Type.String(),
+      hub: Type.Optional(Type.Union([Type.Literal('primary'), Type.Literal('secondary')])),
+      alive: Type.Optional(Type.Literal(false)),
+    }),
+  ),
+});
 
-  if (!host || ['localhost', '127.0.0.1', local.machine].includes(host)) return registryTargets(local);
-  const value: Registry = JSON.parse(await ssh(host, '~/.dotfiles/bin/agents --json'));
+export const listTargets = async (host?: string, signal?: AbortSignal): Promise<Target[]> => {
+  // Keep stale local registrations for exact-id spooling, never for the live picker.
+  let registry = readRegistry({ includeDead: true });
+  let remote: string | undefined;
 
-  if (!value.machine || !Array.isArray(value.pis) || !Array.isArray(value.ultimates))
-    throw new Error('Invalid remote registry');
+  if (host && !['localhost', '127.0.0.1', registry.machine].includes(host)) {
+    remote = host;
+    const text = await ssh(host, '~/.dotfiles/bin/agents --json', undefined, 5000, signal);
+    let value: unknown;
 
-  return registryTargets(value, host);
+    try {
+      value = JSON.parse(text);
+    } catch {
+      throw new Error(`Invalid remote registry from ${host}: expected JSON`);
+    }
+
+    if (!Check(registrySchema, value)) throw new Error(`Invalid remote registry from ${host}`);
+    registry = { ...registry, ...value };
+  }
+
+  registry.pis = registry.pis.filter((pi) => !pi.ephemeral);
+  registry.ultimates = registry.ultimates.filter((ultimate) => ultimate.alive !== false);
+
+  const targets = await Promise.all(registryTargets(registry, remote).map((target) => probeTarget(target, signal)));
+
+  signal?.throwIfAborted();
+
+  return targets;
 };
 
 const responseSchema = Type.Object({
@@ -79,22 +141,51 @@ export const control = async (
   operation: string,
   params: SendParams = {},
   id: string = crypto.randomUUID(),
+  options: RequestOptions = {},
 ): Promise<ControlResponse> => {
   if (target.ultimate) throw new Error(`${operation} requires a Pi target`);
   const request = { type: 'control', protocol: 'pi.control.v1', id, operation, params };
 
   const text = target.host
-    ? await ssh(target.host, `~/.dotfiles/bin/agents send --socket ${quote(target.socket)}`, JSON.stringify(request))
-    : await socketRequest(target.socket, JSON.stringify(request));
+    ? await ssh(
+        target.host,
+        `~/.dotfiles/bin/agents send --socket ${quote(target.socket)}`,
+        JSON.stringify(request),
+        options.timeout,
+        options.signal,
+      )
+    : await socketRequest(target.socket, JSON.stringify(request), options);
 
-  const response: unknown = JSON.parse(text);
+  let response: unknown;
+  const source = `${target.host ? `${target.host}:` : ''}${target.socket}`;
+
+  try {
+    response = JSON.parse(text);
+  } catch {
+    throw new Error(`Invalid Pi control response from ${source}: expected JSON`);
+  }
 
   if (!Check(responseSchema, response) || response.id !== id || response.operation !== operation)
-    throw new Error('Invalid Pi control response');
+    throw new Error(`Invalid Pi control response from ${source}`);
 
-  if (!response.ok) throw new Error(response.error || `${operation} failed`);
+  if (!response.ok) throw new Error(`Pi ${operation} on ${source} failed: ${response.error || 'request rejected'}`);
 
   return response;
+};
+
+// message.last is a read-only control ping, supported by existing bridges; no legacy ping or new operation.
+const probeTarget = async (target: Target, signal?: AbortSignal): Promise<Target> => {
+  if (!target.pi) return { ...target, reachable: true };
+
+  if (!target.pi.alive) return { ...target, reachable: false, unreachableReason: 'Registration is no longer alive' };
+
+  try {
+    await control(target, 'message.last', {}, undefined, { timeout: 800, signal });
+
+    return { ...target, reachable: true };
+  } catch (error) {
+    return { ...target, reachable: false, unreachableReason: error instanceof Error ? error.message : String(error) };
+  }
 };
 
 export type Origin = { label: string; sessionId: string; socket: string; cwd: string; machine: string };
@@ -147,16 +238,11 @@ const inspectRex: InspectRex = async (session, host) => {
   return JSON.parse((await exec(rex, ['session', 'inspect', session, '--json'], { timeout: 2000 })).stdout);
 };
 
-/** Enrich labels only for Rex targeting. Injection leaves resolution tests subprocess-free. */
-export const resolveTargetHint = async (
-  inventory: Target[],
-  hint: string,
-  inspect: InspectRex = inspectRex,
-): Promise<Target[]> => {
-  if (!/(?:^|\/)rex:/.test(hint)) return resolveTargets(inventory, hint);
+/** Resolve labels on demand for both exact Rex routing and partial picker search. */
+export const enrichRexTargets = async (inventory: Target[], inspect: InspectRex = inspectRex): Promise<Target[]> => {
   const sessions = new Map<string, Promise<RexInspect>>();
 
-  const enriched = await Promise.all(
+  return Promise.all(
     inventory.map(async (target) => {
       const session = target.pi?.rex?.session;
 
@@ -182,6 +268,11 @@ export const resolveTargetHint = async (
       };
     }),
   );
-
-  return resolveTargets(enriched, hint);
 };
+
+export const resolveTargetHint = async (
+  inventory: Target[],
+  hint: string,
+  inspect: InspectRex = inspectRex,
+): Promise<Target[]> =>
+  resolveTargets(/(?:^|\/)rex:/.test(hint) ? await enrichRexTargets(inventory, inspect) : inventory, hint);

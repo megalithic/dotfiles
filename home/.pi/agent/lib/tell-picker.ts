@@ -2,21 +2,22 @@ import { execFile } from 'node:child_process';
 import { stripVTControlCharacters } from 'node:util';
 import type { ExtensionContext } from '@earendil-works/pi-coding-agent';
 import { Editor, Input, matchesKey, truncateToWidth, visibleWidth, wrapTextWithAnsi } from '@earendil-works/pi-tui';
-import type { Target } from './tell-targets.ts';
+import { matchesTargetQuery, type Target } from './tell-targets.ts';
 
 export const pickerText = (text: string): string => stripVTControlCharacters(text).replace(/\p{Cc}/gu, ' ');
 
 export type Pick = { candidate: Target; note?: string };
 
 // Keep the live tmux preview only while this Pi owns the tty's foreground job.
-export const captureTargetPane = async (target: Target): Promise<string | undefined> => {
+export const captureTargetPane = async (target: Target, signal: AbortSignal): Promise<string | undefined> => {
   const pane = target.pi?.tmux?.pane;
 
-  if (!pane || target.host || !target.pi) return undefined;
+  if (!pane || target.host || !target.pi || signal.aborted) return undefined;
 
   const run = (file: string, args: string[]): Promise<string | undefined> =>
     new Promise((resolve) => {
-      execFile(file, args, { encoding: 'utf8', timeout: 800, maxBuffer: 128 * 1024 }, (error, stdout) =>
+      if (signal.aborted) return resolve(undefined);
+      execFile(file, args, { encoding: 'utf8', timeout: 800, maxBuffer: 128 * 1024, signal }, (error, stdout) =>
         resolve(error ? undefined : stdout),
       );
     });
@@ -41,18 +42,25 @@ const kinds = ['pi', 'tmux', 'rex', 'ultimate'] as const;
 
 const headings = { pi: 'Pis', tmux: 'tmux', rex: 'Rex', ultimate: 'Ultimate' };
 
+const activityTime = (target: Target): number => Date.parse(target.pi?.statusUpdatedAt || '') || 0;
+
 export const groupedTargets = (targets: Target[]): Target[] =>
-  [...targets].sort((a, b) => kinds.indexOf(a.kind) - kinds.indexOf(b.kind) || a.label.localeCompare(b.label));
+  [...targets].sort(
+    (a, b) =>
+      kinds.indexOf(a.kind) - kinds.indexOf(b.kind) ||
+      activityTime(b) - activityTime(a) ||
+      a.label.localeCompare(b.label),
+  );
 
 /** The Input/Editor picker: grouped two-line options, preview card, note editor. */
 export const pickTarget = async (
   choices: Target[],
   ctx: ExtensionContext,
-  previewTarget: (target: Target) => Promise<string>,
+  previewTarget: (target: Target, signal: AbortSignal) => Promise<string>,
   options: { signal?: AbortSignal; query?: string; overlay?: boolean; allowNote?: boolean } = {},
 ): Promise<Pick | undefined> => {
   if (options.signal?.aborted) return undefined;
-  choices = groupedTargets(choices);
+  choices = groupedTargets(choices.filter((target) => target.reachable !== false));
 
   if (ctx.mode !== 'tui') {
     const labels = choices.map((target) => `[${headings[target.kind]}] ${target.label} · ${target.id}`);
@@ -93,12 +101,14 @@ export const pickTarget = async (
       let preview = 'Loading…';
       let previewId: string | undefined | null = null;
       let generation = 0;
+      let previewAbort = new AbortController();
       let timer: ReturnType<typeof setTimeout> | undefined;
       let notice = '';
 
       const dispose = () => {
         closed = true;
         clearTimeout(timer);
+        previewAbort.abort();
         options.signal?.removeEventListener('abort', abort);
       };
 
@@ -117,22 +127,20 @@ export const pickTarget = async (
 
       const filter = () => {
         const query = input.getValue().toLowerCase();
-        visible = choices.filter((target) =>
-          `${target.kind} ${target.label} ${target.id} ${target.cwd}`.toLowerCase().includes(query),
-        );
+        visible = choices.filter((target) => matchesTargetQuery(target, query));
         selected = 0;
       };
 
-      const loadPreview = async (candidate: Target, version: number) => {
-        const text = await previewTarget(candidate).catch(() => 'Preview unavailable.');
+      const loadPreview = async (candidate: Target, version: number, signal: AbortSignal) => {
+        const text = await previewTarget(candidate, signal).catch(() => 'Preview unavailable.');
 
-        if (closed || generation !== version) return;
+        if (closed || signal.aborted || generation !== version) return;
         preview = stripVTControlCharacters(text)
           .replace(/\r\n?/g, '\n')
           .replace(/[\p{Cc}\p{Cf}]/gu, (c) => (c === '\n' ? c : ' '))
           .slice(0, 4000);
         tui.requestRender();
-        timer = setTimeout(() => void loadPreview(candidate, version), 1000);
+        timer = setTimeout(() => void loadPreview(candidate, version, signal), 1000);
       };
 
       const updatePreview = () => {
@@ -141,10 +149,12 @@ export const pickTarget = async (
         if (candidate?.id === previewId) return;
         previewId = candidate?.id;
         clearTimeout(timer);
+        previewAbort.abort();
+        previewAbort = new AbortController();
         generation += 1;
         preview = candidate ? 'Loading…' : 'No matching agents.';
 
-        if (candidate) void loadPreview(candidate, generation);
+        if (candidate) void loadPreview(candidate, generation, previewAbort.signal);
       };
 
       const card = (candidate: Target | undefined, width: number, rows: number): string[] => {

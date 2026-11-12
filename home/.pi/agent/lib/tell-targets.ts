@@ -10,6 +10,8 @@ export type Target = {
   socket: string;
   cwd: string;
   state?: string;
+  reachable?: boolean;
+  unreachableReason?: string;
   current: boolean;
   rex?: { session?: string; tab?: string; block?: string };
   pi?: Registry['pis'][number];
@@ -41,7 +43,9 @@ export const targetRoute = (target: string) => {
 };
 
 /** A Pi is listed once, under its most specific terminal kind. All aliases still resolve. */
-export const registryTargets = (registry: Registry, host?: string): Target[] => [
+type MessagingRegistry = Pick<Registry, 'machine' | 'pis' | 'ultimates'>;
+
+export const registryTargets = (registry: MessagingRegistry, host?: string): Target[] => [
   ...registry.pis.map((pi): Target => {
     const kind = pi.tmux ? 'tmux' : pi.rex ? 'rex' : 'pi';
 
@@ -71,6 +75,60 @@ export const registryTargets = (registry: Registry, host?: string): Target[] => 
     ultimate,
   })),
 ];
+
+/** Shared by exact legacy routing and the picker's partial-address filter. */
+export const targetAliases = (target: Target): string[] => {
+  const aliases = [target.id, target.socket, target.pi?.sessionId, target.pi?.sessionName].flatMap((value) =>
+    value ? [value] : [],
+  );
+
+  const tmux = target.pi?.tmux;
+
+  if (tmux) {
+    aliases.push(tmux.session, `tmux:${tmux.session}`);
+    const windows = new Set([tmux.window, tmux.windowIndex].flatMap((value) => (value ? [value] : [])));
+    const panes = new Set([tmux.pane, tmux.paneIndex].flatMap((value) => (value ? [value] : [])));
+    aliases.push(...panes);
+
+    for (const window of windows) {
+      const address = `${tmux.session}:${window}`;
+      aliases.push(window, address, `tmux:${address}`);
+
+      if (tmux.pane) aliases.push(`${address} ${tmux.pane}`);
+
+      for (const pane of panes) aliases.push(`${address}.${pane}`, `tmux:${address}.${pane}`);
+    }
+  }
+
+  const rex = target.rex;
+
+  for (const session of new Set([rex?.session, target.pi?.rex?.session].flatMap((value) => (value ? [value] : [])))) {
+    const address = `rex:${session}`;
+    aliases.push(address);
+
+    if (rex?.tab) aliases.push(`${address}/${rex.tab}`);
+
+    if (rex?.block) {
+      aliases.push(`${address}#${rex.block}`);
+
+      if (rex.tab) aliases.push(`${address}/${rex.tab}#${rex.block}`);
+    }
+  }
+
+  if (target.ultimate) {
+    aliases.push(`ultimate:${path.basename(target.ultimate.project)}`);
+
+    if (target.ultimate.hub === 'primary') aliases.push('ultimate:hub');
+  }
+
+  return aliases;
+};
+
+export const matchesTargetQuery = (target: Target, query: string): boolean =>
+  [target.kind, target.label, target.cwd, ...targetAliases(target)]
+    .join(' ')
+    .toLowerCase()
+    .includes(query.toLowerCase());
 
 /** Pure resolution: explicit kind addresses never fall back to fuzzy matching. */
 export const resolveTargets = (inventory: Target[], raw: string): Target[] => {
@@ -129,12 +187,10 @@ export const resolveTargets = (inventory: Target[], raw: string): Target[] => {
     );
   }
 
-  const exact = targets.filter((target) =>
-    [target.id, target.socket, target.pi?.sessionName, target.pi?.sessionId].includes(hint),
-  );
+  const exact = targets.filter((target) => targetAliases(target).includes(hint));
 
   if (exact.length) return exact;
   const query = hint.toLowerCase();
 
-  return targets.filter((target) => !target.current && `${target.label} ${target.cwd}`.toLowerCase().includes(query));
+  return targets.filter((target) => !target.current && matchesTargetQuery(target, query));
 };

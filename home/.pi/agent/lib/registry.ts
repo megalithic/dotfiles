@@ -13,6 +13,8 @@ export type Registry = {
     cwd: string;
     socket: string;
     state?: string;
+    statusUpdatedAt?: string;
+    ephemeral?: boolean;
     alive: boolean;
     tmux?: { session: string; window: string; pane?: string; windowIndex?: string; paneIndex?: string };
     rex?: { session?: string; block?: string };
@@ -36,7 +38,7 @@ export type Registry = {
   }[];
 };
 
-export type RegistryOptions = { includeDead?: boolean };
+export type RegistryOptions = { includeDead?: boolean; includeEphemeral?: boolean };
 
 type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 
@@ -112,8 +114,9 @@ export const readRegistry = (opts: RegistryOptions = {}): Registry => {
   for (const manifest of records(path.join(state, 'manifests'), '.info')) {
     if (!isPid(manifest.pid) || !isString(manifest.socket) || !manifest.socket) continue;
     const alive = registrationAlive(manifest);
+    const ephemeral = manifest.ephemeral === true;
 
-    if (!alive && !opts.includeDead) continue;
+    if ((!alive && !opts.includeDead) || (ephemeral && !opts.includeEphemeral)) continue;
     const sessionId = text(manifest.sessionId);
 
     const pi: Registry['pis'][number] = {
@@ -125,6 +128,8 @@ export const readRegistry = (opts: RegistryOptions = {}): Registry => {
       cwd: text(manifest.cwd) || '',
       socket: manifest.socket,
       state: text(manifest.state),
+      statusUpdatedAt: text(manifest.statusUpdatedAt),
+      ephemeral,
       alive,
     };
 

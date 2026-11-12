@@ -15,7 +15,14 @@ import { instructionPreamble } from '../lib/messaging.ts';
 import { readRegistry } from '../lib/registry.ts';
 import { captureTargetPane, pickTarget, pickerText, type Pick } from '../lib/tell-picker.ts';
 import { parseSessionTarget, sessionTarget, targetRoute, type Target } from '../lib/tell-targets.ts';
-import { control, listTargets, resolveTargetHint, tellUltimate, type Origin } from '../lib/tell-transport.ts';
+import {
+  control,
+  enrichRexTargets,
+  listTargets,
+  resolveTargetHint,
+  tellUltimate,
+  type Origin,
+} from '../lib/tell-transport.ts';
 
 type Mode = 'steer' | 'follow_up' | 'quiet';
 
@@ -116,12 +123,14 @@ const createOutboundPolicy = (now: () => number = Date.now) => {
 
 const policy = createOutboundPolicy();
 
-const previewTarget = async (target: Target): Promise<string> => {
+const previewTarget = async (target: Target, signal: AbortSignal): Promise<string> => {
   if (target.ultimate) return `${target.label}\n${target.socket}`;
+  const pane = await captureTargetPane(target, signal);
+  signal.throwIfAborted();
 
   return (
-    (await captureTargetPane(target))?.trim().slice(-4000) ||
-    (await control(target, 'message.last')).data?.message?.content ||
+    pane?.trim().slice(-4000) ||
+    (await control(target, 'message.last', {}, undefined, { signal })).data?.message?.content ||
     'No assistant message yet.'
   );
 };
@@ -133,7 +142,14 @@ const selectTarget = async (
   signal?: AbortSignal,
 ): Promise<Pick | undefined> => {
   if (signal?.aborted) return undefined;
-  const choices = target ? await resolveTargetHint(inventory, target) : inventory.filter((entry) => !entry.current);
+  const matches = target ? await resolveTargetHint(inventory, target) : inventory.filter((entry) => !entry.current);
+
+  if (target && parseSessionTarget(target) && matches.length > 1)
+    throw new Error('Pi session is open in multiple instances. Use an exact socket.');
+  const choices = matches.filter((entry) => entry.reachable !== false);
+
+  if (target && matches.length === 1 && !choices.length)
+    throw new Error(`Target ${target} is unavailable: ${matches[0]!.unreachableReason || 'socket did not answer'}`);
 
   if (choices.length === 1 && target) return { candidate: choices[0]! };
 
@@ -167,14 +183,13 @@ const guidanceText = (from: Origin, message: string, id: string, replyTo?: strin
 const spoolTell = async (route: Route, id: string, from: Origin, inventory: Target[]): Promise<Result | undefined> => {
   const identity = route.target && parseSessionTarget(route.target);
 
-  if (
-    !identity ||
-    ![from.machine, 'localhost', '127.0.0.1'].includes(identity.machine) ||
-    inventory.some((target) => target.pi?.sessionId === identity.sessionId)
-  )
-    return undefined;
+  if (!identity || ![from.machine, 'localhost', '127.0.0.1'].includes(identity.machine)) return undefined;
+  const matches = inventory.filter((target) => !target.host && target.pi?.sessionId === identity.sessionId);
 
-  if (!(await sessionFileExists(identity.sessionId))) return undefined;
+  // Duplicate exact IDs are always rejected, never selected or silently spooled.
+  if (matches.length > 1 || matches.some((target) => target.reachable !== false)) return undefined;
+
+  if (!matches.length && !(await sessionFileExists(identity.sessionId))) return undefined;
   const text = guidanceText(from, route.message, id, route.replyTo);
   const refused = policy.check(route.message, text, route.target!);
 
@@ -212,7 +227,7 @@ const sendTell = async (
   selected?: Pick,
 ): Promise<Result> => {
   try {
-    const inventory = await listTargets(route.machine);
+    const inventory = await listTargets(route.machine, signal);
     const from = originInfo(ctx);
     const queued = signal?.aborted ? undefined : await spoolTell(route, id, from, inventory);
 
@@ -220,7 +235,12 @@ const sendTell = async (
 
     const fresh =
       selected &&
-      inventory.find((target) => target.id === selected.candidate.id && target.socket === selected.candidate.socket);
+      inventory.find(
+        (target) =>
+          target.reachable !== false &&
+          target.id === selected.candidate.id &&
+          target.socket === selected.candidate.socket,
+      );
 
     if (selected && !fresh) return { ok: false, error: 'Selected agent is no longer registered.' };
 
@@ -333,25 +353,35 @@ const createTellAutocompleteProvider = (current: AutocompleteProvider, ctx: Exte
 
       if (options.signal.aborted) return null;
 
-      const pick = await pickTarget(
-        (await listTargets(pos.machine)).filter((target) => !target.current),
-        ctx,
-        previewTarget,
-        { signal: options.signal, query: pos.query, overlay: true, allowNote: true },
-      );
+      try {
+        let choices = (await listTargets(pos.machine, options.signal)).filter((target) => !target.current);
 
-      if (!pick || options.signal.aborted) return null;
-      const target = pick.candidate;
-      const address = target.host ? `${target.host}/${target.id}` : target.id;
+        if (pos.query.startsWith('rex:')) choices = await enrichRexTargets(choices);
 
-      const item = {
-        value: `${JSON.stringify(address)}${pick.note ? ` ${pickerText(pick.note)}` : ''}`,
-        label: target.label,
-      };
+        const pick = await pickTarget(choices, ctx, previewTarget, {
+          signal: options.signal,
+          query: pos.query,
+          overlay: true,
+          allowNote: true,
+        });
 
-      completed.add(item);
+        if (!pick || options.signal.aborted) return null;
+        const target = pick.candidate;
+        const address = target.host ? `${target.host}/${target.id}` : target.id;
 
-      return { items: [item], prefix: pos.prefix };
+        const item = {
+          value: `${JSON.stringify(address)}${pick.note ? ` ${pickerText(pick.note)}` : ''}`,
+          label: target.label,
+        };
+
+        completed.add(item);
+
+        return { items: [item], prefix: pos.prefix };
+      } catch (error) {
+        if (!options.signal.aborted) ctx.ui.notify(error instanceof Error ? error.message : String(error), 'error');
+
+        return null;
+      }
     },
     applyCompletion(lines, row, col, item, prefix) {
       const pos = position(lines, row, col);
@@ -379,7 +409,11 @@ const createPresenceWatcher = (notify: (watch: Watch, previous: string) => void,
   const presence = async (target: Target) => {
     const found = (await inventory(target.host)).find((entry) => entry.id === target.id);
 
-    return !found ? 'offline' : found.state === 'input_needed' ? 'asking' : found.state || 'idle';
+    return !found || found.reachable === false
+      ? 'offline'
+      : found.state === 'input_needed'
+        ? 'asking'
+        : found.state || 'idle';
   };
 
   const tick = async () => {
@@ -482,6 +516,8 @@ const sentText = (result: Result) =>
 
 export const _test = {
   sendTell,
+  selectTarget,
+  createTellAutocompleteProvider,
   splitCommandArgs,
   routeFromTargetHint,
   createOutboundPolicy,
