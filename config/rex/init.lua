@@ -139,6 +139,12 @@ rex.action({
 rex.bind("prefix/ctrl+-", "golden_toggle")
 rex.bind("prefix/=", "golden_toggle")
 
+-- Copy mode over the focused pane, in a Neovim overlay (snap.lua).
+-- ctrl+s starts it with a flash jump.
+require("snap").setup()
+rex.bind("prefix/ctrl+b", "snap_copy")
+rex.bind("prefix/ctrl+s", "snap_jump")
+
 -- New tmux window inside tmux, new Rex tab elsewhere. An action, because only
 -- actions can queue client actions.
 rex.action({
