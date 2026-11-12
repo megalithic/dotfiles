@@ -13,8 +13,7 @@ const configSchema = Type.Object({
       Type.Object({
         id: Type.String(),
         pattern: Type.String(),
-        severity: Type.Literal('confirm'),
-        action: Type.Literal('dialog'),
+        severity: Type.String(),
         caseSensitive: Type.Optional(Type.Boolean()),
       }),
       { minItems: 1 },
@@ -40,8 +39,9 @@ export default function (pi: ExtensionAPI) {
         return { block: true, reason: `prod-guard: invalid production rules in ${configPath}.` };
       }
 
-      const matches = config.action.commandRules.filter((rule) =>
-        new RegExp(rule.pattern, rule.caseSensitive ? '' : 'i').test(command),
+      // Warden enforces its other severities on bash; this guard only asks.
+      const matches = config.action.commandRules.filter(
+        (rule) => rule.severity === 'confirm' && new RegExp(rule.pattern, rule.caseSensitive ? '' : 'i').test(command),
       );
 
       if (matches.length === 0) return;
