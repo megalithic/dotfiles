@@ -9,8 +9,8 @@ type State = { state: 'blocked' | 'working' | 'idle'; msg?: string }
 // Only public host capabilities; user extensions cannot import clone-local modules.
 type Host = {
   invoke(name: string, action: string, args: unknown, signal: AbortSignal): Promise<unknown>
-  onOpen(callback: () => void): void
-  onClose(callback: () => void): void
+  onOpen(callback: () => Promise<void>): void
+  onClose(callback: () => Promise<void>): void
 }
 
 export function derive(status: Status): State {
@@ -57,12 +57,12 @@ export default function rexStatus(host: Host) {
         polling = false
       }
     }
-    host.onOpen(() => {
+    host.onOpen(async () => {
       if (timer) return
       timer = setInterval(() => void poll(), 3000)
       timer.unref()
     })
-    host.onClose(() => {
+    host.onClose(async () => {
       controller.abort()
       clearInterval(timer)
       // Reset even if the last successful update was already idle.
