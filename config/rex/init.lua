@@ -28,11 +28,49 @@ local function in_tmux(ctx)
 end
 
 -- tmux: prefix is ctrl+space (NUL), see config/tmux/tmux.conf
-for i = 0, 9 do
-  rex.bind("ctrl+" .. i, function(ctx) -- go to tmux window i
-    return in_tmux(ctx) and write(ctx, "\0" .. i)
-  end)
+
+-- ctrl+1..9: tmux window i inside tmux, Rex tab i elsewhere. An action, because
+-- only actions can queue client actions.
+rex.action{
+  name = "tmux_or_tab_goto",
+  title = "Go to tmux Window or Tab",
+  args = { index = "integer" },
+  run = function(ctx, args)
+    if in_tmux(ctx) then
+      write(ctx, "\0" .. args.index)
+    else
+      rex.client.queue("client.tab.goto", { index = args.index })
+    end
+  end,
+}
+for i = 1, 9 do
+  rex.bind("ctrl+" .. i, "tmux_or_tab_goto", { index = i })
 end
+rex.bind("ctrl+0", function(ctx) -- tmux window 0; Rex tabs count from 1
+  return in_tmux(ctx) and write(ctx, "\0" .. 0)
+end)
+
+-- ctrl+space is the prefix, as in tmux: inside tmux it goes to tmux, elsewhere
+-- it enters the one-shot `prefix` mode. The mode is exclusive, so a key it
+-- doesn't bind does nothing; Escape leaves it.
+rex.action{
+  name = "tmux_or_rex_prefix",
+  title = "tmux Prefix or Rex Prefix Mode",
+  run = function(ctx)
+    if in_tmux(ctx) then
+      write(ctx, "\0")
+    else
+      rex.client.queue("client.mode.enter", { name = "prefix", once = true })
+    end
+  end,
+}
+rex.bind("ctrl+space", "tmux_or_rex_prefix")
+rex.mode("prefix", { exclusive = true })
+-- Launcher/switcher: Rex's session switcher until our own launcher lands.
+rex.bind("prefix/space", "session.switch")
+rex.bind("prefix/ctrl+space", "session.switch")
+rex.bind("prefix/ctrl+t", "client.tab.new")
+rex.bind("prefix/ctrl+k", "session.close")
 
 -- New tmux window inside tmux, new Rex tab elsewhere. An action, because only
 -- actions can queue client actions.
