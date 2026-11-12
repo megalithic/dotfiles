@@ -72,7 +72,7 @@ describe('pi-bridge', () => {
           operation: 'message.send',
           params: {
             text: 'Build passed.',
-            from: '@ultimate (/work/app)',
+            from: '@ultimate (app)',
             mode: 'follow_up',
             replyTo: key,
             messageId: `tell-${key}`,

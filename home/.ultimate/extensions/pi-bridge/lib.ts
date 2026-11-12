@@ -1,6 +1,6 @@
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import { createConnection } from 'node:net';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 export type Sender = {
   label: string;
@@ -33,7 +33,7 @@ export function replyPayload(key: string, text: string, project: string) {
     type: 'tell' as const,
     id: `tell-${key}`,
     text,
-    from: `@ultimate (${project})`,
+    from: `@ultimate (${basename(project)})`,
     mode: 'follow_up' as const,
     replyTo: key,
   };

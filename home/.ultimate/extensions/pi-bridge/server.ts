@@ -2,8 +2,6 @@ import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import type { JsonValue } from '@earendil-works/chord';
-import { Type } from 'typebox';
-import { Value } from 'typebox/value';
 import { defineDoc, defineExtension, defineTool, ROOT_CONVERSATION_ID } from '@earendil-works/pi-durable';
 import type { ConversationId, Harness } from '@earendil-works/pi-durable';
 import { obj, str } from '@earendil-works/pi-schema';
@@ -34,25 +32,37 @@ export const docs = [Routes];
 
 export const userActions = ['tell'];
 
-const TellSchema = Type.Object({
-  text: Type.String(),
-  reply: Type.Boolean(),
-  from: Type.Object({
-    label: Type.String(),
-    sessionId: Type.Optional(Type.String()),
-    socket: Type.Optional(Type.String()),
-    cwd: Type.Optional(Type.String()),
-    machine: Type.Optional(Type.String()),
-  }),
-});
+type TellInput = {
+  text: string;
+  reply: boolean;
+  from: { label: string } & Partial<Record<'sessionId' | 'socket' | 'cwd' | 'machine', unknown>>;
+};
+
+// Only packages the Ultimate clone installs resolve here (no typebox), so the shape is checked by hand.
+function isTellInput(input: JsonValue): input is JsonValue & TellInput {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return false;
+  const { text, reply, from } = input as Record<string, unknown>;
+
+  return (
+    typeof text === 'string' &&
+    typeof reply === 'boolean' &&
+    !!from &&
+    typeof from === 'object' &&
+    typeof (from as Record<string, unknown>).label === 'string'
+  );
+}
 
 function parseTell(input: JsonValue): Tell {
-  if (!Value.Check(TellSchema, input))
+  if (!isTellInput(input))
     throw new Error('Expected { text, reply: boolean, from: { label, sessionId?, socket?, cwd?, machine? } }');
   const from: Sender = { label: field(input.from.label, 'from.label') };
 
   for (const key of ['sessionId', 'socket', 'cwd', 'machine'] as const) {
-    if (input.from[key] !== undefined) from[key] = field(input.from[key], `from.${key}`);
+    const value = input.from[key];
+
+    if (value === undefined) continue;
+    if (typeof value !== 'string') throw new Error(`from.${key} must be a string`);
+    from[key] = field(value, `from.${key}`);
   }
 
   if (/[\r\n]/.test(from.label) || /[\r\n]/.test(from.cwd ?? '')) {
@@ -70,7 +80,7 @@ async function ultimate(host: Host, signal = new AbortController().signal): Prom
   // Public action resolves the standing index, not a mutable title or guessed conversation id.
   const id = await host.invoke('subagents', 'standing', { name: 'ultimate' }, signal);
 
-  if (!Value.Check(Type.Integer({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER }), id)) {
+  if (!Number.isSafeInteger(id) || (id as number) < 1) {
     throw new Error('subagents/standing did not return a conversation id');
   }
 
