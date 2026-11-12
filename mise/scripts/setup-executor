@@ -55,17 +55,19 @@ if ! resolve; then
   resolve || die "fnox can't resolve EXECUTOR_API_KEY and EXECUTOR_ENCRYPTION_KEY"
 fi
 
+# Validate both keys before installing either, so a bad value never leaves a
+# half-updated pair behind.
+api_key="$(fnox get EXECUTOR_API_KEY --no-daemon | tr -d '\r\n')"
+encryption_key="$(fnox get EXECUTOR_ENCRYPTION_KEY --no-daemon | tr -d '\r\n')"
+[[ ${#api_key} -ge 32 ]] || die "EXECUTOR_API_KEY must be at least 32 characters"
+[[ "$encryption_key" =~ ^[0-9a-fA-F]{64}$ ]] || die "EXECUTOR_ENCRYPTION_KEY must be 64 hex characters"
+
 mkdir -p "$key_dir" "$HOME/Library/Logs/executor"
 changed=0
-for pair in api_key:EXECUTOR_API_KEY encryption_key:EXECUTOR_ENCRYPTION_KEY; do
-  file="$key_dir/${pair%%:*}" name="${pair#*:}"
+install_key() {
+  local file="$key_dir/$1"
   temp="$(mktemp "$file.XXXXXX")"
-  fnox get "$name" --no-daemon | tr -d '\r\n' >"$temp"
-  value="$(<"$temp")"
-  case "$name" in
-    EXECUTOR_API_KEY) [[ ${#value} -ge 32 ]] || die "$name must be at least 32 characters" ;;
-    EXECUTOR_ENCRYPTION_KEY) [[ "$value" =~ ^[0-9a-fA-F]{64}$ ]] || die "$name must be 64 hex characters" ;;
-  esac
+  printf '%s' "$2" >"$temp"
   if [[ -f "$file" ]] && cmp -s "$temp" "$file"; then
     cleanup
   else
@@ -74,7 +76,9 @@ for pair in api_key:EXECUTOR_API_KEY encryption_key:EXECUTOR_ENCRYPTION_KEY; do
   fi
   temp=""
   chmod 600 "$file"
-done
+}
+install_key api_key "$api_key"
+install_key encryption_key "$encryption_key"
 echo "setup-executor: keys in $key_dir are current"
 
 if /bin/launchctl print "gui/$(id -u)/$label" >/dev/null 2>&1; then

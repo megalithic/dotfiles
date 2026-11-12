@@ -66,12 +66,12 @@ run
 [ "$status" -eq 0 ] || fail "first start"
 expected="serve key=api-key-0123456789abcdef0123456789abcdef enc=$(printf '%064d' 7) dnt=1"
 [ "$(cat "$test_root/calls")" = "$expected" ] || fail "serve env: $(cat "$test_root/calls")"
-[ ! -e "$data" ] || fail "created the data directory itself"
-
-mkdir -p "$data" && echo state >"$data/db"
-run
-[ "$status" -eq 0 ] || fail "second start"
+# The first start records its version, so the very first upgrade backs up.
 [ "$(cat "$data/.megadots-version")" = 2.0.0-beta.1 ] || fail "version marker"
+echo "state 1" >"$data/db"
+
+run
+[ "$status" -eq 0 ] || fail "restart"
 [ ! -d "$backups" ] || fail "backed up without a version change"
 
 # Each version writes its own state; the next upgrade backs that state up.

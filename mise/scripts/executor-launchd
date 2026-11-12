@@ -41,9 +41,9 @@ if [[ -f "$marker" ]] && [[ "$(<"$marker")" != "$version" ]]; then
     done
   fi
 fi
-if [[ -d "$data_dir" ]]; then
-  printf '%s\n' "$version" >"$marker"
-fi
+# Record the version before the first start too, so the first upgrade backs up.
+mkdir -p -m 700 "$data_dir"
+printf '%s\n' "$version" >"$marker"
 
 EXECUTOR_API_KEY="$(tr -d '\r\n' <"$key_dir/api_key")"
 EXECUTOR_ENCRYPTION_KEY="$(tr -d '\r\n' <"$key_dir/encryption_key")"
