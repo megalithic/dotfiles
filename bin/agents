@@ -19,4 +19,5 @@ if [[ -z "$node" ]]; then
   echo 'agents: node unavailable; install the mise-managed node toolchain' >&2
   exit 1
 fi
-exec "$node" "$dotfiles/home/.pi/agent/lib/agents.ts" "$@"
+# The repo has no package.json "type", so Node warns on every run; callers (pidewaved) log stderr.
+exec "$node" --disable-warning=MODULE_TYPELESS_PACKAGE_JSON "$dotfiles/home/.pi/agent/lib/agents.ts" "$@"
