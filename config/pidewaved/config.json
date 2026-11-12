@@ -1,0 +1,7 @@
+{
+  "hotkeys": { "inspect": "cmd+ctrl+shift+c" },
+  "agents_command": ["~/.dotfiles/bin/agents", "--json"],
+  "pidewave_command": "~/.dotfiles/bin/pidewave",
+  "browsers": ["net.imput.helium"],
+  "passthrough": ["com.superlogical.rex*"]
+}

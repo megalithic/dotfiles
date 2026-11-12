@@ -184,6 +184,7 @@ up = "cd $HOME/.dotfiles && mise run up"
 aeroplay = "github:megalithic/swifties"
 miccheckd = "github:megalithic/swifties"
 notiwatchd = "github:megalithic/swifties"
+pidewaved = "github:megalithic/swifties"
 avwatchd = "github:megalithic/swifties"
 executor = "github:UsefulSoftwareCo/executor"
 tmux = "http:tmux"
@@ -338,6 +339,17 @@ set -eu
 mkdir -p "$HOME/.local/bin"
 cp "$MISE_TOOL_INSTALL_PATH/notiwatchd" "$HOME/.local/bin/.notiwatchd.tmp"
 mv -f "$HOME/.local/bin/.notiwatchd.tmp" "$HOME/.local/bin/notiwatchd"
+'''
+
+[tools.pidewaved]
+version = "0.7.1"
+os = ["macos"]
+asset_pattern = "pidewaved-{{ version }}-macos26-arm64.zip"
+postinstall = '''
+set -eu
+mkdir -p "$HOME/.local/bin"
+cp "$MISE_TOOL_INSTALL_PATH/pidewaved" "$HOME/.local/bin/.pidewaved.tmp"
+mv -f "$HOME/.local/bin/.pidewaved.tmp" "$HOME/.local/bin/pidewaved"
 '''
 
 [tools.avwatchd]
@@ -730,6 +742,18 @@ run_at_load = true
 keep_alive = true
 stdout_path = "~/.cache/notiwatchd-stdout.log"
 stderr_path = "~/.cache/notiwatchd-stderr.log"
+
+# pidewaved: global Cmd+Ctrl+Shift+C hotkey for Tidewave Inspect. It reads
+# ~/.config/pidewaved/config.json at startup and runs bin/agents and
+# bin/pidewave, which need tmux and node from the mise shims. Helium asks for
+# a one-time Automation grant.
+[bootstrap.macos.launchd.agents."io.swifties.pidewave"]
+program = "~/.local/bin/pidewaved"
+environment = { PATH = "{{ env.HOME }}/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" }
+run_at_load = true
+keep_alive = true
+stdout_path = "~/.cache/pidewaved-stdout.log"
+stderr_path = "~/.cache/pidewaved-stderr.log"
 
 # miccheck: compiled menubar push-to-talk/push-to-mute app.
 [bootstrap.macos.launchd.agents."io.swifties.miccheck"]
