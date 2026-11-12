@@ -4,6 +4,7 @@
 -- The soft-wrap join follows xeind/rex-fingers (MIT).
 local M = {}
 local root = debug.getinfo(1, "S").source:gsub("^@", ""):match("^(.*/)")
+local common = dofile(root .. "common.lua")
 local ALPHABET = "asdfghjklwertyuiopzxcvbnm" -- no q, it closes
 local ns = vim.api.nvim_create_namespace("snap_hints")
 
@@ -349,15 +350,19 @@ local function position(line, offset)
   end
 end
 
+-- Draws the sources this Neovim shows (those with a buf); in window scope the
+-- other panes' followers draw theirs.
 local function render(sources, lines, matches, typed)
   for _, src in ipairs(sources) do
-    vim.api.nvim_buf_clear_namespace(src.buf, ns, 0, -1)
-    local last = vim.api.nvim_buf_get_lines(src.buf, src.last, src.last + 1, false)[1]
-    vim.api.nvim_buf_set_extmark(src.buf, ns, src.first, 0,
-      { end_row = src.last, end_col = #last, hl_group = "SnapHintsDim", priority = 100 })
+    if src.buf then
+      vim.api.nvim_buf_clear_namespace(src.buf, ns, 0, -1)
+      local last = vim.api.nvim_buf_get_lines(src.buf, src.last, src.last + 1, false)[1]
+      vim.api.nvim_buf_set_extmark(src.buf, ns, src.first, 0,
+        { end_row = src.last, end_col = #last, hl_group = "SnapHintsDim", priority = 100 })
+    end
   end
   for _, m in ipairs(matches) do
-    if vim.startswith(m.label, typed) then
+    if m.src.buf and vim.startswith(m.label, typed) then
       local line = lines[m.line]
       local buf = line.src.buf
       for _, seg in ipairs(line.segs) do
@@ -407,12 +412,24 @@ function M.start(buf, meta)
   vim.api.nvim_set_hl(0, "SnapHintsCursor", { blend = 100, nocombine = true })
   vim.o.guicursor = "a:SnapHintsCursor"
 
-  local file = assert(io.open(vim.g.rex_snap_dir .. "/unwrap.txt", "rb"))
-  local sources = { {
-    buf = buf, rows = meta.screen, first = 1, last = meta.rows, cols = meta.cols, cwd = meta.cwd,
-    block = meta.source_block, alt = meta.alt, unwrapped = file:read("*a"),
-  } }
-  file:close()
+  -- Every pane of the scope, in the same order in every Neovim, so they all
+  -- give the same labels. This one shows its own pane.
+  local dir, me = vim.g.rex_snap_dir, vim.g.rex_snap_pane or 1
+  local function read(name)
+    local file = assert(io.open(dir .. "/" .. name, "rb"))
+    local data = file:read("*a")
+    file:close()
+    return data
+  end
+  local sources = {}
+  for i = 1, meta.panes or 1 do
+    local m = i == me and meta or vim.json.decode(read("meta." .. i .. ".json"))
+    sources[i] = {
+      buf = i == me and buf or nil, first = 1, last = m.rows, cols = m.cols, cwd = m.cwd, alt = m.alt,
+      block = m.source_block, unwrapped = read("unwrap." .. i .. ".txt"),
+      rows = common.screen(common.sanitize_vt(read("capture." .. i .. ".vt")), m.rows),
+    }
+  end
 
   local lines = {}
   for _, src in ipairs(sources) do logical_lines(src, lines) end
@@ -421,9 +438,33 @@ function M.start(buf, meta)
   for _, m in ipairs(matches) do m.src = lines[m.line].src end
   local targets = assign_labels(matches)
 
+  -- A follower redraws with the lead's typed label prefix, and closes once
+  -- the lead has closed and removed the dir.
+  if meta.lead == false then
+    local shown
+    vim.uv.new_timer():start(0, 30, vim.schedule_wrap(function()
+      if not vim.uv.fs_stat(dir) then return vim.cmd("qa!") end
+      local ok, typed = pcall(read, "typed")
+      typed = ok and typed or ""
+      if typed ~= shown then
+        shown = typed
+        render(sources, lines, matches, typed)
+      end
+    end))
+    return
+  end
+  local function share(typed)
+    local file = io.open(dir .. "/typed", "wb")
+    if file then
+      file:write(typed)
+      file:close()
+    end
+  end
+
   local typed, open = "", false
   while true do
     render(sources, lines, matches, typed)
+    share(typed)
     vim.cmd.redraw()
     local ok, key = pcall(vim.fn.getcharstr)
     if not ok or key == "\27" or key == "q" then break end

@@ -49,6 +49,13 @@ function M.sanitize_vt(text)
   return (table.concat(output):gsub("\r\n", "\n"):gsub("\r", "\n"))
 end
 
+-- The visible screen of a sanitized capture: its last rows lines.
+function M.screen(snapshot, rows)
+  local lines = {}
+  for line in (snapshot .. "\n"):gmatch("(.-)\n") do lines[#lines + 1] = line end
+  return { unpack(lines, math.max(1, #lines - rows + 1)) }
+end
+
 function M.find_rect(node, block_id)
   if not node then return nil end
   if node.block_id == block_id then return node.rect end

@@ -145,6 +145,7 @@ require("snap").setup()
 rex.bind("prefix/ctrl+b", "snap_copy")
 rex.bind("prefix/ctrl+s", "snap_jump")
 rex.bind("prefix/ctrl+f", "snap_hints")
+rex.bind("prefix/f", "snap_hints_window")
 
 -- New tmux window inside tmux, new Rex tab elsewhere. An action, because only
 -- actions can queue client actions.

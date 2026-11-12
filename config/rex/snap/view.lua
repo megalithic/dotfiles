@@ -4,6 +4,7 @@
 local root = debug.getinfo(1, "S").source:gsub("^@", ""):match("^(.*/)")
 local common = dofile(root .. "common.lua")
 local dir = vim.g.rex_snap_dir
+local pane = vim.g.rex_snap_pane or 1
 local stat = vim.uv.fs_lstat(dir)
 assert(dir:match("/rex%-snap%-%w+$") and stat and stat.type == "directory" and stat.uid == vim.uv.getuid(),
   "not an owned rex-snap temp dir")
@@ -68,14 +69,11 @@ end
 
 local function start()
   assert(meta.mode, "cannot read meta.json")
-  local snapshot = common.sanitize_vt(read(dir .. "/capture.vt"))
+  local snapshot = common.sanitize_vt(read(dir .. "/capture." .. pane .. ".vt"))
   if meta.mode == "hints" then
     -- Keep the screen only, as buffer lines 2 to rows + 1. Autowrap off below
     -- loses a row's last cell, so hints read the captured rows instead.
-    local lines = vim.split(snapshot, "\n", { plain = true })
-    lines = vim.list_slice(lines, math.max(1, #lines - meta.rows + 1))
-    meta.screen = lines
-    snapshot = table.concat(lines, "\n")
+    snapshot = table.concat(common.screen(snapshot, meta.rows), "\n")
   end
   -- Rows exactly as the pane has them. Autowrap off: a float at the window's
   -- right edge is a column narrower than the pane, and a wrapped row would
@@ -120,7 +118,7 @@ end
 -- starts at 80x24 and gets the float's size later, so feed the capture once
 -- the UI is in and at least as wide as the pane minus the float's one column.
 -- Give up waiting after a second, for a float narrower than that.
-pcall(function() meta = vim.json.decode(read(dir .. "/meta.json")) end)
+pcall(function() meta = vim.json.decode(read(dir .. "/meta." .. pane .. ".json")) end)
 local want = (meta.cols or 1) - 1
 local started = false
 local function launch()
