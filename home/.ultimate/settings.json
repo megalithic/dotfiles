@@ -1,3 +1,9 @@
 {
-  "extensions": { "enable": ["tailscale"] }
+  "extensions": { "enable": ["tailscale"] },
+  "mcpServers": {
+    "web": {
+      "command": "node",
+      "args": ["/Users/seth/.pi/agent/npm/node_modules/pi-web-access/dist/mcp-cli.js"]
+    }
+  }
 }

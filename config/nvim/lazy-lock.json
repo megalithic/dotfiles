@@ -1,4 +1,5 @@
 {
+  "backend-tmux": { "branch": "master", "commit": "9e9e6aa9b3eb7a8d3896a993611622ac97abff52" },
   "baleia.nvim": { "branch": "main", "commit": "14c279cc7241d97585f8000dfd7dcdbca9fb4458" },
   "better-escape.nvim": { "branch": "master", "commit": "3f4bc0b326606264ff75967f59091b5ddada0554" },
   "blink-ripgrep.nvim": { "branch": "main", "commit": "34765e8fa7aad6f6683e147c6cb20ef8ace2e4c2" },
@@ -61,6 +62,7 @@
   "refer.nvim": { "branch": "main", "commit": "d12dd85202bcf7e275881b220cb40a81d7a4c2da" },
   "render-markdown.nvim": { "branch": "main", "commit": "8e8795368391036643b622875a6da6a51bcd33f4" },
   "schemastore.nvim": { "branch": "main", "commit": "cc6302a0957806dfc0f2687f1f35ee9652686101" },
+  "smart-splits-backend-rex": { "branch": "master", "commit": "68f54325975ad47b03a968a3f201081bfadc0ff5" },
   "smart-splits.nvim": { "branch": "master", "commit": "6a03b298635205802ee1d390826f02414a13290d" },
   "snacks.nvim": { "branch": "main", "commit": "882c996cf28183f4d63640de0b4c02ec886d01f2" },
   "tiny-code-action.nvim": { "branch": "main", "commit": "91a9c32228e9a7761d241023d9ebb9d11d8fb10d" },
