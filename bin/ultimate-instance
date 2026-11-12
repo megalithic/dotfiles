@@ -14,7 +14,8 @@ fi
 
 live_instances() {
   local lock entry pid
-  for lock in "${ULTIMATE_HOME:-$HOME/.ultimate}"/projects/*/ultimate.lock; do
+  # Not ULTIMATE_HOME: Ultimate sets that to an instance's own home in its agents' shells.
+  for lock in "${ULTIMATE_USER_HOME:-$HOME/.ultimate}"/projects/*/ultimate.lock; do
     # A partially written or stale lock is not a running instance.
     entry="$(jq -ce 'select(
       (.pid | type == "number" and . > 0 and . == floor) and

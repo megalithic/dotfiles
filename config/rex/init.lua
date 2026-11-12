@@ -107,3 +107,6 @@ rex.bind("ctrl+shift+cmd+c", "pidewave_inspect")
 
 -- Worktree sessions from bin/rwt: Cmd+Shift+R restarts the services pane.
 require("rwt")
+
+-- Open @ultimate: jump to the Ultimate running for this session's folder.
+require("ultimate")

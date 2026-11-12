@@ -5,8 +5,8 @@ INSTANCE="$(cd "$(dirname "$0")/.." && pwd)/ultimate-instance"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 tmp="$(realpath "$tmp")"
-export ULTIMATE_HOME="$tmp/ultimate"
-mkdir -p "$ULTIMATE_HOME/projects/"{.project,nested,dead} "$tmp/proj/sub/dead" "$tmp/unrelated"
+export ULTIMATE_USER_HOME="$tmp/ultimate"
+mkdir -p "$ULTIMATE_USER_HOME/projects/"{.project,nested,dead} "$tmp/proj/sub/dead" "$tmp/unrelated"
 pass=0
 ok() {
   pass=$((pass + 1))
@@ -18,13 +18,13 @@ fail() {
 }
 
 jq -cn --argjson pid "$$" --arg project "$tmp/proj" \
-  '{pid:$pid, port:4701, project:$project}' >"$ULTIMATE_HOME/projects/.project/ultimate.lock"
+  '{pid:$pid, port:4701, project:$project}' >"$ULTIMATE_USER_HOME/projects/.project/ultimate.lock"
 jq -cn --argjson pid "$$" --arg project "$tmp/proj/sub" \
-  '{pid:$pid, port:4702, project:$project}' >"$ULTIMATE_HOME/projects/nested/ultimate.lock"
+  '{pid:$pid, port:4702, project:$project}' >"$ULTIMATE_USER_HOME/projects/nested/ultimate.lock"
 dead=2147483647
 if kill -0 "$dead" 2>/dev/null; then fail "fixture dead pid is alive"; fi
 jq -cn --argjson pid "$dead" --arg project "$tmp/proj/sub/dead" \
-  '{pid:$pid, port:4703, project:$project}' >"$ULTIMATE_HOME/projects/dead/ultimate.lock"
+  '{pid:$pid, port:4703, project:$project}' >"$ULTIMATE_USER_HOME/projects/dead/ultimate.lock"
 
 out="$("$INSTANCE" "$tmp/proj/sub")"
 jq -e --arg project "$tmp/proj/sub" --argjson pid "$$" \
