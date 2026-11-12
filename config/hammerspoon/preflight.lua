@@ -169,6 +169,14 @@ hs.alert.defaultStyle["textFont"] = DefaultFont.name
 
 if not hs.ipc.cliStatus() then hs.ipc.cliInstall() end
 require("hs.ipc")
+-- hs.ipc stores console = "none" (truthy), so every print is mirrored to every CLI client;
+-- a client that died unregistered then triggers a print -> "already recursing" warning storm.
+setmetatable(hs.ipc.__registeredCLIInstances, {
+  __newindex = function(t, k, v)
+    if v._cli and v._cli.console == "none" then v._cli.console = false end
+    rawset(t, k, v)
+  end,
+})
 
 --------------------------------------------------------------------------------
 -- PATH AND TASK ENVIRONMENT (GUI app context lacks the shell's setup)

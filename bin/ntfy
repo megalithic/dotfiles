@@ -107,6 +107,12 @@ lua_escape() {
   printf '%s' "$str"
 }
 
+# One hs client at a time: concurrent hs.ipc calls re-enter Hammerspoon's IPC
+# callback ("hs.ipc callback is being called recursively").
+hs_locked() {
+  lockf -k -s -t 10 "/tmp/ntfy-hs-$(id -u).lock" hs "$@"
+}
+
 # Send notification via N.send()
 cmd_send() {
   local title="" message="" urgency="normal" source="" bundle_id=""
@@ -227,7 +233,7 @@ cmd_send() {
 
   # Single Hammerspoon call with all data
   local result
-  result=$(hs -c "
+  result=$(hs_locked -c "
 local N = require('lib.notifications')
 local result = N.send({
   title = [[${lua_title}]],
@@ -295,7 +301,7 @@ cmd_answer() {
   [[ -z "$message" ]] && lua_message=""
 
   local result
-  result=$(hs -c "
+  result=$(hs_locked -c "
 local N = require('lib.notifications')
 local success = N.answerQuestion(${lua_id}, [[${lua_title}]] ~= '' and [[${lua_title}]] or nil, [[${lua_message}]] ~= '' and [[${lua_message}]] or nil)
 print(success and 'answered' or 'not_found')
@@ -306,7 +312,7 @@ print(success and 'answered' or 'not_found')
 
 # List pending questions
 cmd_pending() {
-  hs -c "
+  hs_locked -c "
 local N = require('lib.notifications')
 local pending = N.getPendingQuestions()
 if #pending == 0 then
