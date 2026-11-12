@@ -1,4 +1,6 @@
 import { spawnSync } from 'node:child_process';
+import { createInterface } from 'node:readline';
+import { socketRequest } from './messaging.ts';
 import { readRegistry, type Registry } from './registry.ts';
 
 const pretty = (registry: Registry): void => {
@@ -28,10 +30,28 @@ const pretty = (registry: Registry): void => {
   for (const row of rows) console.log(row.map((cell, column) => cell.padEnd(widths[column] || 0)).join('  '));
 };
 
-const main = (): void => {
+const main = async (): Promise<void> => {
   let human = false;
   let remote: string | undefined;
   const args = process.argv.slice(2);
+
+  if (args[0] === 'send') {
+    if (args.length !== 3 || args[1] !== '--socket' || !args[2]) throw new Error('Usage: agents send --socket <path>');
+    const input = createInterface({ input: process.stdin });
+
+    try {
+      for await (const line of input) {
+        JSON.parse(line);
+        console.log(await socketRequest(args[2], line));
+
+        return;
+      }
+
+      throw new Error('Expected one JSON line on stdin');
+    } finally {
+      input.close();
+    }
+  }
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -73,7 +93,7 @@ const main = (): void => {
 };
 
 try {
-  main();
+  await main();
 } catch (error) {
   console.error(`agents: ${error instanceof Error ? error.message : String(error)}`);
   process.exitCode = 1;

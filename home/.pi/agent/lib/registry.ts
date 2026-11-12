@@ -14,7 +14,7 @@ export type Registry = {
     socket: string;
     state?: string;
     alive: boolean;
-    tmux?: { session: string; window: string; pane?: string };
+    tmux?: { session: string; window: string; pane?: string; windowIndex?: string; paneIndex?: string };
     rex?: { session?: string; block?: string };
   }[];
   apps: {
@@ -134,6 +134,12 @@ export const readRegistry = (opts: RegistryOptions = {}): Registry => {
     // Session/window labels alone may describe Rex, not tmux. A pane identifies tmux.
     if (isString(manifest.pane) && isString(manifest.session) && isString(manifest.window)) {
       pi.tmux = { session: manifest.session, window: manifest.window, pane: manifest.pane };
+
+      if (isString(manifest.windowIndex)) pi.tmux.windowIndex = manifest.windowIndex;
+
+      if (isString(manifest.paneIndex)) pi.tmux.paneIndex = manifest.paneIndex;
+    } else if (isString(manifest.rexSession) || isString(manifest.rexBlock)) {
+      pi.rex = { session: text(manifest.rexSession), block: text(manifest.rexBlock) };
     } else if (terminal?.kind === 'rex' && isObject(terminal.rex)) {
       pi.rex = { session: text(terminal.rex.session), block: text(terminal.rex.block) };
     }

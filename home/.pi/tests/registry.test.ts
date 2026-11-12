@@ -54,7 +54,14 @@ test('live Pi registrations require a live pid and an existing socket; dead entr
     state: 'idle',
   };
 
-  write(path.join(state, 'manifests/live.info'), { ...manifest, session: 'dev', window: 'code', pane: '%1' });
+  write(path.join(state, 'manifests/live.info'), {
+    ...manifest,
+    session: 'dev',
+    window: 'code',
+    pane: '%1',
+    windowIndex: '0',
+    paneIndex: '1',
+  });
   write(path.join(state, 'manifests/dead.info'), { ...manifest, pid: deadPid, sessionId: 'dead' });
   write(path.join(state, 'manifests/missing-socket.info'), { ...manifest, socket: path.join(home, 'missing.sock') });
 
@@ -63,7 +70,12 @@ test('live Pi registrations require a live pid and an existing socket; dead entr
   expect(registry.machine).toBe('testhost');
   expect(Number.isFinite(Date.parse(registry.at))).toBe(true);
   expect(registry.pis).toEqual([
-    { ...manifest, id: 'pi:testhost:session%2Fone', alive: true, tmux: { session: 'dev', window: 'code', pane: '%1' } },
+    {
+      ...manifest,
+      id: 'pi:testhost:session%2Fone',
+      alive: true,
+      tmux: { session: 'dev', window: 'code', pane: '%1', windowIndex: '0', paneIndex: '1' },
+    },
   ]);
   expect(readRegistry({ includeDead: true }).pis.map((pi) => pi.alive)).toEqual([false, true, false]);
 });
@@ -110,6 +122,18 @@ test('app leases expose tabs, live followers, and Rex seat metadata', () => {
   expect(readRegistry().pis[0]?.rex).toEqual(terminal.rex);
   expect(readRegistry().pis[0]?.tmux).toBeUndefined();
   expect(readRegistry({ includeDead: true }).apps[1]?.alive).toBe(false);
+});
+
+test('Rex manifest identity wins over stale seat metadata without an app lease', () => {
+  const socket = path.join(home, 'rex.sock');
+  fs.writeFileSync(socket, '');
+  const manifest = { pid: process.pid, socket, rexSession: 'live-session', rexBlock: 'live-block' };
+  write(path.join(state, 'manifests/rex.info'), manifest);
+  write(path.join(state, 'pidewave/pis/stale.json'), {
+    ...manifest,
+    terminal: { kind: 'rex', rex: { session: 'old', block: 'old' } },
+  });
+  expect(readRegistry().pis[0]?.rex).toEqual({ session: 'live-session', block: 'live-block' });
 });
 
 test('Ultimate locks include hidden folders, mark primary and containing hubs, and ignore stale or invalid locks', () => {
