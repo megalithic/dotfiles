@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Find the live Ultimate with the deepest project root containing a directory.
+set -euo pipefail
+# Rex actions inherit the server's PATH, not an interactive shell's.
+PATH="$HOME/.dotfiles/bin:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+shopt -s nullglob dotglob
+
+all=0
+if [ "${1:-}" = --all ]; then
+  all=1
+else
+  dir="$(realpath "${1:-$PWD}")" || exit 1
+fi
+
+live_instances() {
+  local lock entry pid
+  for lock in "${ULTIMATE_HOME:-$HOME/.ultimate}"/projects/*/ultimate.lock; do
+    # A partially written or stale lock is not a running instance.
+    entry="$(jq -ce 'select(
+      (.pid | type == "number" and . > 0 and . == floor) and
+      (.port | type == "number") and (.project | type == "string")
+    ) | {pid, port, url: ("http://127.0.0.1:" + (.port | tostring)), project}' "$lock" 2>/dev/null)" || continue
+    pid="$(jq -r '.pid' <<<"$entry")"
+    kill -0 "$pid" 2>/dev/null || continue
+    printf '%s\n' "$entry"
+  done
+}
+
+if [ "$all" = 1 ]; then
+  live_instances | jq -cs '.'
+else
+  live_instances | jq -ces --arg dir "$dir" '
+    map(select(.project as $root | $dir == $root or ($dir | startswith(($root | rtrimstr("/")) + "/"))))
+    | sort_by(.project | length) | last // empty
+  ' || exit 1
+fi
