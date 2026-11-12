@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Resolve the checkout even when invoked through ~/bin or another symlink.
+dotfiles="$(dirname "$(dirname "$(realpath "$0")")")"
+mise="$(command -v mise || true)"
+if [[ -z "$mise" && -x "$HOME/.local/bin/mise" ]]; then
+  mise="$HOME/.local/bin/mise"
+fi
+node=""
+if [[ -n "$mise" ]]; then
+  node="$("$mise" which node 2>/dev/null || true)"
+fi
+if [[ -z "$node" ]]; then
+  export PATH="$HOME/.local/share/mise/shims:$PATH"
+  node="$(command -v node || true)"
+fi
+if [[ -z "$node" ]]; then
+  echo 'agents: node unavailable; install the mise-managed node toolchain' >&2
+  exit 1
+fi
+exec "$node" "$dotfiles/home/.pi/agent/lib/agents.ts" "$@"
