@@ -1,4 +1,4 @@
--- Copy mode over a pane. Captures the pane and
+-- Copy and hints modes over a pane. Captures the pane and
 -- opens Neovim (snap/view.lua) in a floating layer exactly over it.
 -- Capture and layer code adapted from CJNE/rex-copy-mode (MIT, see snap/LICENSE).
 local common = require("snap.common")
@@ -25,9 +25,12 @@ local function block_call(ctx, method, args)
   }))
 end
 
--- Write the pane's screen and scrollback as VT to path, reading it in chunks.
-local function write_capture(ctx, path)
-  local part = block_call(ctx, "format", { format = "vt", trim = true, unwrap = true, max_bytes = CHUNK })
+-- Write the pane's screen and scrollback to path, reading it in chunks. With
+-- tail, skip to the last tail bytes after the first chunk; the viewer keeps
+-- only the last lines, so the seam is never shown.
+local function write_capture(ctx, path, args, tail)
+  args.max_bytes = CHUNK
+  local part = block_call(ctx, "format", args)
   local file = assert(io.open(path, "wb"))
   local ok, err = pcall(function()
     local offset, content = 0, part.content
@@ -36,6 +39,7 @@ local function write_capture(ctx, path)
       offset = offset + #content
       if offset > 128 * 1024 * 1024 then error("capture exceeds 128 MiB", 0) end
       if not part.id or part.eof == true or (part.total and offset >= part.total) then break end
+      if tail and part.total then offset = math.max(offset, part.total - tail) end
       part = block_call(ctx, "blob_read", { id = part.id, offset = offset, max_bytes = CHUNK })
       content = part.data
       if #content == 0 then error("incomplete capture", 0) end
@@ -63,6 +67,7 @@ local function which(name)
 end
 
 local function open(ctx, mode, jump)
+  local hints = mode == "hints"
   if not ctx.session_id or not ctx.block_id then error("snap needs a focused pane", 0) end
   -- Resolved on first use, not at config load, so a missing binary can only
   -- break this action, never the whole config. The layer's launcher has a
@@ -86,16 +91,26 @@ local function open(ctx, mode, jump)
   local dir = exec({ "mktemp", "-d", tmp .. "/rex-snap-XXXXXXXX" }):gsub("%s+$", "")
   local opened = false
   local ok, err = pcall(function()
-    write_capture(ctx, dir .. "/capture.vt")
+    -- Hints work on the visible screen only: the last rows lines, unwrapped
+    -- as text too to find soft-wrapped rows. 64 bytes per cell covers SGR.
+    local tail = hints and (size.rows + 1) * (size.columns + 1) * 64 or nil
+    write_capture(ctx, dir .. "/capture.vt", { format = "vt", trim = true }, tail)
+    local cwd
+    if hints then
+      write_capture(ctx, dir .. "/unwrap.txt", { format = "text", trim = true, unwrap = true }, tail)
+      local process = block_call(ctx, "process")
+      cwd = process.foreground and process.foreground.cwd
+    end
     local meta = checked(rex.json.encode({
       mode = mode, jump = jump, rex = M.rex,
       session = ctx.session_id, source_block = ctx.block_id, source_window = window_id,
-      source_zoomed = zoomed,
+      source_zoomed = zoomed, lifted = y < bounds[2],
+      rows = size.rows, cols = size.columns, cwd = cwd,
     }))
     local file = assert(io.open(dir .. "/meta.json", "wb"))
     assert(file:write(meta))
     file:close()
-    exec({ "chmod", "600", dir .. "/capture.vt", dir .. "/meta.json" })
+    exec({ "chmod", "600", dir .. "/capture.vt", dir .. "/meta.json", hints and dir .. "/unwrap.txt" or nil })
     checked(rex.session.new_layer{
       session_id = ctx.session_id, window_id = window_id, bounds = bounds, focus = true,
       layout = rex.layout.block{
@@ -116,6 +131,7 @@ local function open(ctx, mode, jump)
   end)
   if not opened then
     os.remove(dir .. "/capture.vt")
+    os.remove(dir .. "/unwrap.txt")
     os.remove(dir .. "/meta.json")
     pcall(rex.exec, { "rmdir", dir }, { timeout = 2 })
   end
@@ -138,6 +154,14 @@ function M.setup()
     category = "Pane",
     keywords = "copy mode flash jump",
     run = function(ctx) open(ctx, "copy", true) end,
+  }
+  rex.action{
+    name = "snap_hints",
+    title = "Hints",
+    description = "Label URLs, paths, SHAs, code and IDs on screen; type a label to copy, Shift to open",
+    category = "Pane",
+    keywords = "hints fingers thumbs copy open url path",
+    run = function(ctx) open(ctx, "hints") end,
   }
 end
 

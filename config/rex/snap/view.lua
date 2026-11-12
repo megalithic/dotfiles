@@ -48,6 +48,8 @@ end
 local function options()
   local o = vim.opt
   o.termguicolors = true
+  -- Default colors, so the pane's own background shows through.
+  vim.api.nvim_set_hl(0, "Normal", {})
   o.clipboard = "unnamedplus"
   o.laststatus, o.cmdheight, o.showtabline = 0, 0, 0
   o.showmode, o.showcmd, o.ruler = false, false, false
@@ -56,9 +58,32 @@ local function options()
   o.swapfile, o.shadafile = false, "NONE"
 end
 
+-- The overlay closes at once, so leave the reason in ~/.local/state/rex-snap.
+local function fail(err)
+  vim.fn.mkdir(vim.fn.stdpath("state"), "p")
+  local file = io.open(vim.fn.stdpath("state") .. "/error.log", "a")
+  if file then file:write(os.date("%H:%M:%S ") .. tostring(err) .. "\n") file:close() end
+  vim.cmd("cquit 1")
+end
+
 local function start()
-  meta = vim.json.decode(read(dir .. "/meta.json"))
+  assert(meta.mode, "cannot read meta.json")
   local snapshot = common.sanitize_vt(read(dir .. "/capture.vt"))
+  if meta.mode == "hints" then
+    -- Keep the screen only, as buffer lines 2 to rows + 1. Autowrap off below
+    -- loses a row's last cell, so hints match on the plain text.
+    local lines = vim.split(snapshot, "\n", { plain = true })
+    lines = vim.list_slice(lines, math.max(1, #lines - meta.rows + 1))
+    meta.screen = vim.tbl_map(function(row) return (row:gsub("\27%[[0-9;:]*m", "")) end, lines)
+    snapshot = table.concat(lines, "\n")
+  end
+  -- Rows exactly as the pane has them. Autowrap off: a float at the window's
+  -- right edge is a column narrower than the pane, and a wrapped row would
+  -- shift every row below it. The blank first line fills the float's title
+  -- bar row when there is no scrollback above the screen.
+  snapshot = "\27[?7l\n" .. snapshot
+  local last = 1 -- buffer line of the screen's last row
+  for _ in snapshot:gmatch("\n") do last = last + 1 end
   options()
 
   local buf = vim.api.nvim_get_current_buf()
@@ -75,27 +100,39 @@ local function start()
   vim.defer_fn(function()
     if not vim.api.nvim_buf_is_valid(buf) then return end
     vim.cmd.stopinsert()
-    vim.api.nvim_win_set_cursor(0, { math.max(1, vim.fn.prevnonblank("$")), 0 })
+    -- A float that couldn't be lifted over the title bar (top or zoomed pane)
+    -- ends a row above the pane, so its last row is the pane's next to last.
+    local bottom = meta.lifted and last or last - 1
+    vim.api.nvim_win_set_cursor(0, { bottom, 0 })
     vim.cmd("normal! zb")
-    mode.start(buf, meta)
+    vim.api.nvim_win_set_cursor(0, { math.max(1, vim.fn.prevnonblank(bottom)), 0 })
+    local ok, err = pcall(mode.start, buf, meta)
+    if not ok then fail(err) end
   end, 50)
 end
 
 local function run()
   local ok, err = pcall(start)
-  if not ok then
-    -- The overlay closes at once, so leave the reason in ~/.local/state/rex-snap.
-    vim.fn.mkdir(vim.fn.stdpath("state"), "p")
-    local file = io.open(vim.fn.stdpath("state") .. "/error.log", "a")
-    if file then file:write(os.date("%H:%M:%S ") .. tostring(err) .. "\n") file:close() end
-    vim.cmd("cquit 1")
-  end
+  if not ok then fail(err) end
 end
 
--- The terminal buffer takes the window's width when it opens, and -c runs
--- before the TUI reports its size. Feed the capture once the UI is in.
-if #vim.api.nvim_list_uis() > 0 then
-  run()
-else
-  vim.api.nvim_create_autocmd("UIEnter", { once = true, callback = function() vim.schedule(run) end })
+-- The terminal buffer takes the window's width when it opens. The layer's pty
+-- starts at 80x24 and gets the float's size later, so feed the capture once
+-- the UI is in and at least as wide as the pane minus the float's one column.
+-- Give up waiting after a second, for a float narrower than that.
+pcall(function() meta = vim.json.decode(read(dir .. "/meta.json")) end)
+local want = (meta.cols or 1) - 1
+local started = false
+local function launch()
+  if started then return true end
+  started = true
+  vim.schedule(run)
+  return true
+end
+local function sized()
+  if #vim.api.nvim_list_uis() > 0 and vim.o.columns >= want then return launch() end
+end
+if not sized() then
+  vim.api.nvim_create_autocmd({ "UIEnter", "VimResized" }, { callback = sized })
+  vim.defer_fn(launch, 1000)
 end

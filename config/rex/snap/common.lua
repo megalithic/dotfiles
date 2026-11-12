@@ -24,8 +24,12 @@ function M.sanitize_vt(text)
       if kind == "[" then
         local final = text:find("[@-~]", i)
         if not final then break end
-        if text:sub(final, final) == "m" and text:sub(i, final - 1):match("^[0-9;:]*$") then
+        local params, cmd = text:sub(i, final - 1), text:sub(final, final)
+        if cmd == "m" and params:match("^[0-9;:]*$") then
           output[#output + 1] = text:sub(start, final)
+        elseif cmd == "C" and params:match("^%d*$") then
+          -- Cursor forward (e.g. a right prompt) as spaces keeps columns.
+          output[#output + 1] = string.rep(" ", math.min(math.max(tonumber(params) or 1, 1), 1000))
         end
         i = final + 1
       elseif kind ~= "" and ("]PX^_"):find(kind, 1, true) then
