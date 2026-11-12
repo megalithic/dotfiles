@@ -53,7 +53,11 @@
       "args": ["--mcp"]
     },
     "executor": {
-      "url": "https://mcp.executor.sh/mcp"
+      "url": "http://127.0.0.1:4312/mcp?elicitation_mode=browser"
+    },
+    "executor-cloud": {
+      "url": "https://mcp.executor.sh/mcp",
+      "enabled": false
     }
   }
 }

@@ -185,6 +185,7 @@ aeroplay = "github:megalithic/swifties"
 miccheckd = "github:megalithic/swifties"
 notiwatchd = "github:megalithic/swifties"
 avwatchd = "github:megalithic/swifties"
+executor = "github:UsefulSoftwareCo/executor"
 tmux = "http:tmux"
 
 [tools]
@@ -355,6 +356,16 @@ if [ -e "$web" ]; then mv "$web" "$web.old"; fi
 mv "$web.tmp" "$web"
 rm -rf "$web.old"
 '''
+
+# Executor v2 (executor.sh) local MCP gateway, run by the com.megadots.executor
+# LaunchAgent. v2 ships only as GitHub prereleases ("latest" release is still
+# v1), so follow the newest beta; executor-launchd backs up its data on each
+# version change.
+[tools.executor]
+version = "latest"
+prerelease = true
+os = ["macos"]
+asset_pattern = "executor-{{ version }}-darwin-arm64.tgz"
 
 [tools.tmux]
 version = "3.8"
@@ -681,6 +692,17 @@ keep_alive = true
 stdout_path = "/dev/null"
 stderr_path = "~/Library/Logs/rex-golden.log"
 
+# Executor v2 on http://127.0.0.1:4312/mcp (loopback only). Keys come from
+# 1Password: run `mise run setup:executor` once per machine before loading it.
+# Clients connect with ?elicitation_mode=browser, so approvals are answered in
+# the browser, never by the agent.
+[bootstrap.macos.launchd.agents."com.megadots.executor"]
+program = "~/.dotfiles/mise/scripts/executor-launchd"
+run_at_load = true
+keep_alive = true
+stdout_path = "~/Library/Logs/executor/stdout.log"
+stderr_path = "~/Library/Logs/executor/stderr.log"
+
 # Swifties agents. avwatchd and notiwatchd run the stable ~/.local/bin copies
 # their [tools.<alias>] postinstall writes: a pin bump needs only a restart.
 # MicCheck and AeroPlay run their app bundles in place: a pin bump means
@@ -976,6 +998,12 @@ sources = [
   "/Applications/Helium.app/Contents/Info.plist",
 ]
 outputs = { auto = true }
+
+[tasks."setup:executor"]
+description = "Install Executor v2's 1Password key pair for its LaunchAgent (creates the item on first run)"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-executor"
+# raw: 1Password sign-in and fnox prompts on the terminal
+raw = true
 
 [tasks."setup:touchid-sudo"]
 description = "Install /etc/pam.d/sudo_local with pam_tid (+ pam_reattach for tmux)"
