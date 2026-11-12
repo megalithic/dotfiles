@@ -18,6 +18,7 @@ Collaboration style:
 - Reading, inspecting, and researching is always fine without asking; edits, writes, and commands with side effects require an explicit go-ahead
 - Prefer small incremental changes over large autonomous batches; let user review after each step
 - When the goal or approach is ambiguous, ask instead of assuming
+- Never connect to production iex, shells, databases or deploys without the user's explicit yes in this session; ask a question when unsure.
 - Surface tradeoffs and alternatives when you see them, but keep them brief
 
 ## Communication

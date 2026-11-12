@@ -1,0 +1,63 @@
+{
+  "typesafe": true,
+  "action": {
+    "commandRules": [
+      {
+        "id": "production-ssh-host",
+        "pattern": "\\bssh\\s+[^\\n;&|]*\\b[\\w.-]+-prod-[\\w.-]+",
+        "severity": "confirm",
+        "action": "dialog",
+        "message": "Allow SSH access to production?"
+      },
+      {
+        "id": "production-ssh-config",
+        "pattern": "\\bssh\\s+[^\\n;&|]*-F\\s*['\"]?[^\\s'\";&|]*/prod/[^\\s'\";&|]*ssh\\.cfg(?:['\"]|\\s|$)",
+        "severity": "confirm",
+        "action": "dialog",
+        "message": "Allow SSH using a production config?"
+      },
+      {
+        "id": "production-rxv-hub",
+        "pattern": "\\brxv_hub\\s+(?:iex|shell|deploy)\\b[^\\n;&|]*\\b[\\w.-]+-prod-[\\w.-]+",
+        "severity": "confirm",
+        "action": "dialog",
+        "message": "Allow production iex, shell or deploy through rxv_hub?"
+      },
+      {
+        "id": "production-just",
+        "pattern": "(?=[\\s\\S]*/environments/prod(?:[/\\s'\";&|]|$))[\\s\\S]*\\bjust\\s+(?:iex|shell|deploy)\\b",
+        "severity": "confirm",
+        "action": "dialog",
+        "message": "Allow iex, shell or deploy in a production environment?"
+      },
+      {
+        "id": "production-database-host",
+        "pattern": "\\b(?:psql|mysql|mariadb)\\b[^\\n;&|]*(?:\\s(?:-h\\s*|--host(?:=|\\s+))|\\bhost\\s*=\\s*)['\"]?(?!(?:localhost|127\\.0\\.0\\.1)(?=[:\\s'\";&|/]|$)|/)[^\\s'\"/;&|][^\\s'\";&|]*",
+        "severity": "confirm",
+        "action": "dialog",
+        "message": "Allow a database connection to a non-local host?"
+      },
+      {
+        "id": "production-database-url",
+        "pattern": "\\b(?:psql|mysql|mariadb)\\b[^\\n;&|]*\\b(?:postgres(?:ql)?|mysql|mariadb)://(?:[^\\s/@]+@)?(?!(?:localhost|127\\.0\\.0\\.1)(?=[:/\\s'\"]|$)|/)(?:[\\w$][\\w.$-]*|\\[[0-9a-f:]+\\])(?=[:/\\s'\"]|$)",
+        "severity": "confirm",
+        "action": "dialog",
+        "message": "Allow a database URL targeting a non-local host?"
+      },
+      {
+        "id": "production-database-env",
+        "pattern": "\\bPGHOST=['\"]?(?!(?:localhost|127\\.0\\.0\\.1)(?=[\\s'\"]|$)|/)[\\w$][^\\s'\";&|]*['\"]?\\s+[^\\n;&|]*\\bpsql\\b",
+        "severity": "confirm",
+        "action": "dialog",
+        "message": "Allow psql with a non-local PGHOST?"
+      },
+      {
+        "id": "production-fly-console",
+        "pattern": "\\b(?:fly|flyctl)\\s+(?:ssh|console)\\b",
+        "severity": "confirm",
+        "action": "dialog",
+        "message": "Allow a Fly remote shell or console?"
+      }
+    ]
+  }
+}
