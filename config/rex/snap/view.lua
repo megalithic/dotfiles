@@ -71,10 +71,10 @@ local function start()
   local snapshot = common.sanitize_vt(read(dir .. "/capture.vt"))
   if meta.mode == "hints" then
     -- Keep the screen only, as buffer lines 2 to rows + 1. Autowrap off below
-    -- loses a row's last cell, so hints match on the plain text.
+    -- loses a row's last cell, so hints read the captured rows instead.
     local lines = vim.split(snapshot, "\n", { plain = true })
     lines = vim.list_slice(lines, math.max(1, #lines - meta.rows + 1))
-    meta.screen = vim.tbl_map(function(row) return (row:gsub("\27%[[0-9;:]*m", "")) end, lines)
+    meta.screen = lines
     snapshot = table.concat(lines, "\n")
   end
   -- Rows exactly as the pane has them. Autowrap off: a float at the window's

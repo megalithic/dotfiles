@@ -95,17 +95,18 @@ local function open(ctx, mode, jump)
     -- as text too to find soft-wrapped rows. 64 bytes per cell covers SGR.
     local tail = hints and (size.rows + 1) * (size.columns + 1) * 64 or nil
     write_capture(ctx, dir .. "/capture.vt", { format = "vt", trim = true }, tail)
-    local cwd
+    local cwd, alt
     if hints then
       write_capture(ctx, dir .. "/unwrap.txt", { format = "text", trim = true, unwrap = true }, tail)
       local process = block_call(ctx, "process")
       cwd = process.foreground and process.foreground.cwd
+      alt = block_call(ctx, "modes").screen == "alternate"
     end
     local meta = checked(rex.json.encode({
       mode = mode, jump = jump, rex = M.rex,
       session = ctx.session_id, source_block = ctx.block_id, source_window = window_id,
       source_zoomed = zoomed, lifted = y < bounds[2],
-      rows = size.rows, cols = size.columns, cwd = cwd,
+      rows = size.rows, cols = size.columns, cwd = cwd, alt = alt,
     }))
     local file = assert(io.open(dir .. "/meta.json", "wb"))
     assert(file:write(meta))

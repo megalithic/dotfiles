@@ -68,74 +68,217 @@ local BUILTIN = {
   { name = "phone", pattern = [[\v%(\+?<1[ .-]?)?%(\(\d{3}\) ?|<\d{3}[.-])\d{3}[.-]\d{4}>]], open = false },
 }
 
-local function patterns()
-  return vim.list_extend(dofile(root .. "config.lua").patterns or {}, BUILTIN)
+-- Foreground after an SGR sequence: "#rrggbb" for true colour, "@n" for a
+-- palette colour, nil for the default.
+local function sgr_fg(fg, params)
+  local p = vim.split(params, ";", { plain = true })
+  local i = 1
+  while i <= #p do
+    local n = tonumber(p[i]) or 0
+    if n == 0 or n == 39 then
+      fg = nil
+    elseif n == 38 or n == 48 then
+      local color
+      if p[i + 1] == "2" then
+        color = ("#%02x%02x%02x"):format(tonumber(p[i + 2]) or 0, tonumber(p[i + 3]) or 0, tonumber(p[i + 4]) or 0)
+        i = i + 4
+      elseif p[i + 1] == "5" then
+        color = "@" .. (p[i + 2] or "0")
+        i = i + 2
+      end
+      if n == 38 then fg = color end
+    elseif n >= 30 and n <= 37 then
+      fg = "@" .. (n - 30)
+    elseif n >= 90 and n <= 97 then
+      fg = "@" .. (n - 82)
+    end
+    i = i + 1
+  end
+  return fg
 end
 
--- One logical line per line the program wrote: a row exactly cols wide joins
--- the next when the unwrapped capture holds both together. segs map byte
--- offsets back to buffer rows. Box drawing (U+2500-U+257F) becomes spaces of
--- the same byte length, so gutters never join or break a match.
+local BOX = "\226[\148\149][\128-\191]" -- U+2500-U+257F
+
+-- A captured row as plain text, as text with box drawing (U+2500-U+257F)
+-- masked to spaces of the same byte length so gutters never join or break a
+-- match, and as foreground runs over byte ranges.
+local function parse_row(raw)
+  local parts, runs, fg, pos, i = {}, {}, nil, 0, 1
+  while true do
+    local s, e, params = raw:find("\27%[([0-9;:]*)m", i)
+    local chunk = raw:sub(i, (s or 0) - 1)
+    if chunk ~= "" then
+      local last = runs[#runs]
+      if last and last.fg == fg and last.e == pos then
+        last.e = pos + #chunk
+      else
+        runs[#runs + 1] = { s = pos, e = pos + #chunk, fg = fg }
+      end
+      parts[#parts + 1] = chunk
+      pos = pos + #chunk
+    end
+    if not s then break end
+    fg = sgr_fg(fg, params)
+    i = e + 1
+  end
+  local plain = table.concat(parts)
+  return plain, (plain:gsub(BOX, "   ")), runs
+end
+
+-- Agent TUIs (Pi, Claude Code) wrap long URLs and paths themselves: the row
+-- runs to the right edge on a token with a slash, and the next row goes on
+-- at the same indent. Returns that indent.
+local function hard_wrap(prev, text, cols)
+  local body = prev.text:gsub("%s+$", "")
+  local indent = #body:match("^%s*")
+  -- Width from the unmasked row: a masked box character is three spaces.
+  local width = vim.fn.strdisplaywidth((prev.plain:gsub(BOX, " "):gsub("%s+$", "")))
+  if width >= cols - 4 and body:find("%S*/%S*$")
+    and not text:sub(1, indent):find("%S") and text:sub(indent + 1, indent + 1):find("%S") then
+    return indent
+  end
+end
+
+-- One logical line per line the program wrote. A row exactly cols wide joins
+-- the next when the unwrapped capture holds both together, as rex-fingers
+-- does; in agent TUIs a hard-wrapped row joins too. segs map byte offsets
+-- back to buffer rows: seg.from is the offset in the line, seg.col the
+-- row's first byte used.
 local function logical_lines(src, out)
   local prev
-  for i, row in ipairs(src.rows) do
-    local r = src.first + i - 1
-    local line = out[#out]
-    if prev and row ~= "" and vim.fn.strdisplaywidth(prev) >= src.cols
-      and src.unwrapped:find(prev .. row, 1, true) then
-      line.segs[#line.segs + 1] = { row = r, from = #line.text, len = #row }
-      line.text = line.text .. row
-    else
-      out[#out + 1] = { src = src, text = row, segs = { { row = r, from = 0, len = #row } } }
+  for i, raw in ipairs(src.rows) do
+    local plain, text, runs = parse_row(raw)
+    local line, indent = out[#out], nil
+    if prev and plain ~= "" and vim.fn.strdisplaywidth(prev.plain) >= src.cols
+      and src.unwrapped:find(prev.plain .. plain, 1, true) then
+      indent = 0
+    elseif prev and src.alt then
+      indent = hard_wrap(prev, text, src.cols)
+      if indent then -- drop the right padding or gutter before the join
+        local trimmed = line.text:gsub("%s+$", "")
+        prev.len = prev.len - (#line.text - #trimmed)
+        line.text = trimmed
+      end
     end
-    prev = row
+    local seg = { row = src.first + i - 1, col = indent or 0, len = #text - (indent or 0), text = text, plain = plain, runs = runs }
+    if indent then
+      seg.from = #line.text
+      line.segs[#line.segs + 1] = seg
+      line.text = line.text .. text:sub(indent + 1)
+    else
+      seg.from = 0
+      out[#out + 1] = { src = src, text = text, segs = { seg } }
+    end
+    prev = seg
   end
 end
 
--- Fenced code blocks: the fence line copies the body without the fences or
--- the common indent, each body line copies itself. A fence with a language
+-- Lines first to last as a code block: at, a { line, s, e } spot, copies the
+-- body without its common indent, and each body line copies itself.
+local CODE = { name = "code", open = false }
+local function code_block(lines, first, last, at, found, skip)
+  local body, indent = {}, math.huge
+  for i = first, last do
+    local text = lines[i].text
+    skip[i] = true
+    local s, e = #text:match("^%s*"), #text:gsub("%s+$", "")
+    if e > s then
+      indent = math.min(indent, s)
+      found[#found + 1] = { line = i, s = s, e = e, text = text:sub(s + 1, e), def = CODE }
+    end
+    body[#body + 1] = text
+  end
+  if at and indent < math.huge then
+    for i, text in ipairs(body) do body[i] = text:sub(indent + 1):gsub("%s+$", "") end
+    skip[at.line] = true
+    found[#found + 1] = { line = at.line, s = at.s, e = at.e, text = table.concat(body, "\n"), def = CODE }
+  end
+end
+
+-- Fenced code blocks, labelled on the opening fence. A fence with a language
 -- always opens, so a closing fence whose block began above the screen is
 -- dropped once the next block opens.
-local CODE = { name = "code", open = false }
 local function fences(lines, found, skip)
   local open
-  local function close(stop)
-    local body, indent = {}, math.huge
-    for i = open.line + 1, stop - 1 do
-      local text = lines[i].text
-      skip[i] = true
-      local s, e = #text:match("^%s*"), #text:gsub("%s+$", "")
-      if e > s then
-        indent = math.min(indent, s)
-        found[#found + 1] = { line = i, s = s, e = e, text = text:sub(s + 1, e), def = CODE }
-      end
-      body[#body + 1] = text
-    end
-    for i, text in ipairs(body) do body[i] = text:sub(indent + 1):gsub("%s+$", "") end
-    skip[open.line] = true
-    if indent < math.huge then
-      found[#found + 1] = { line = open.line, s = open.s, e = open.e, text = table.concat(body, "\n"), def = CODE }
-    end
-    open = nil
-  end
   for i, line in ipairs(lines) do
     local indent, lang = line.text:match("^(%s*)```(%S*)%s*$")
     if indent then
       if open and lang == "" then
-        close(i)
-        skip[i] = true
+        code_block(lines, open.line + 1, i - 1, open, found, skip)
+        skip[i], open = true, nil
       else
         open = { line = i, s = #indent, e = #line.text:gsub("%s+$", ""), lang = lang }
       end
     end
   end
-  if open and open.lang ~= "" then close(#lines + 1) end
+  if open and open.lang ~= "" then code_block(lines, open.line + 1, #lines, open, found, skip) end
+end
+
+-- Claude Code draws code without fences but syntax-highlights it in palette
+-- colours, where prose uses default or true colours. An indented paragraph
+-- with palette coloured text is a code block, labelled on the blank line
+-- above it; the indent rules out status lines such as a prompt. Only
+-- in the alternate screen, where agent TUIs run, so colourful shell output
+-- isn't taken for code.
+local function painted(line)
+  for _, seg in ipairs(line.segs) do
+    for _, run in ipairs(seg.runs) do
+      if run.fg and run.fg:sub(1, 1) == "@" and seg.text:sub(run.s + 1, run.e):find("%S") then return true end
+    end
+  end
+end
+
+local function paragraphs(lines, found, skip)
+  local first
+  for i = 1, #lines + 1 do
+    local blank = not lines[i] or skip[i] or not lines[i].src.alt or not lines[i].text:find("%S")
+    if blank and first then
+      local any, indented = false, true
+      for j = first, i - 1 do
+        any = any or painted(lines[j])
+        indented = indented and lines[j].text:find("^%s") ~= nil
+      end
+      if any and indented then
+        local above = lines[first - 1]
+        above = above and above.src == lines[first].src and not above.text:find("%S")
+        code_block(lines, first, i - 1, above and { line = first - 1, s = 0, e = 0 } or nil, found, skip)
+      end
+      first = nil
+    elseif not blank and not first then
+      first = i
+    end
+  end
+end
+
+-- Inline code without backticks: runs in one of the inline_code colours, on
+-- a row that also has default-colour text, so status bars don't count. Loses
+-- ties to the patterns, so a path in code colour still opens.
+local function inline_code(lines, colors, found, skip)
+  for i, line in ipairs(lines) do
+    for _, seg in ipairs(skip[i] and {} or line.segs) do
+      local prose = false
+      for _, run in ipairs(seg.runs) do
+        if not run.fg and seg.text:sub(run.s + 1, run.e):find("%S") then prose = true end
+      end
+      for _, run in ipairs(prose and seg.runs or {}) do
+        local lead, body = seg.text:sub(run.s + 1, run.e):match("^(%s*)(.-)%s*$")
+        if colors[run.fg] and run.s >= seg.col and body:find("%w") then
+          local s = seg.from + run.s - seg.col + #lead
+          found[#found + 1] = { line = i, s = s, e = s + #body, text = body, def = CODE, prio = math.huge }
+        end
+      end
+    end
+  end
 end
 
 -- Leftmost-longest across all patterns, per logical line.
-local function find_matches(lines, defs)
-  local found, skip = {}, {}
+local function find_matches(lines, config)
+  local found, skip, colors = {}, {}, {}
+  for _, color in ipairs(config.inline_code or {}) do colors[color:lower()] = true end
   fences(lines, found, skip)
+  paragraphs(lines, found, skip)
+  inline_code(lines, colors, found, skip)
+  local defs = vim.list_extend(config.patterns or {}, BUILTIN)
   local scratch = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_lines(scratch, 0, -1, false, vim.tbl_map(function(line) return line.text end, lines))
   for prio, def in ipairs(defs) do
@@ -202,7 +345,7 @@ end
 
 local function position(line, offset)
   for i, seg in ipairs(line.segs) do
-    if offset < seg.from + seg.len or i == #line.segs then return seg.row, offset - seg.from end
+    if offset < seg.from + seg.len or i == #line.segs then return seg.row, offset - seg.from + seg.col end
   end
 end
 
@@ -220,8 +363,8 @@ local function render(sources, lines, matches, typed)
       for _, seg in ipairs(line.segs) do
         local s, e = math.max(m.s, seg.from), math.min(m.e, seg.from + seg.len)
         if s < e then
-          vim.api.nvim_buf_set_extmark(buf, ns, seg.row, s - seg.from,
-            { end_col = e - seg.from, hl_group = "SnapHintsMatch", priority = 200, strict = false })
+          vim.api.nvim_buf_set_extmark(buf, ns, seg.row, s - seg.from + seg.col,
+            { end_col = e - seg.from + seg.col, hl_group = "SnapHintsMatch", priority = 200, strict = false })
         end
       end
       local row, col = position(line, m.s)
@@ -267,13 +410,13 @@ function M.start(buf, meta)
   local file = assert(io.open(vim.g.rex_snap_dir .. "/unwrap.txt", "rb"))
   local sources = { {
     buf = buf, rows = meta.screen, first = 1, last = meta.rows, cols = meta.cols, cwd = meta.cwd,
-    block = meta.source_block, unwrapped = file:read("*a"),
+    block = meta.source_block, alt = meta.alt, unwrapped = file:read("*a"),
   } }
   file:close()
 
   local lines = {}
   for _, src in ipairs(sources) do logical_lines(src, lines) end
-  local matches = find_matches(lines, patterns())
+  local matches = find_matches(lines, dofile(root .. "config.lua"))
   if #matches == 0 then return vim.cmd("qa!") end
   for _, m in ipairs(matches) do m.src = lines[m.line].src end
   local targets = assign_labels(matches)

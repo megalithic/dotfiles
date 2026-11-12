@@ -24,4 +24,8 @@ return {
       open = false,
     },
   },
+  -- Foreground colours agent TUIs give inline code, which they draw without
+  -- backticks: Pi's theme, Claude Code. Find one with
+  -- `rex capture --format=html` and look at the span's color.
+  inline_code = { "#a798d7", "#b1b9f9" },
 }
