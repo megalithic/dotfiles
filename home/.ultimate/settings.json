@@ -1,6 +1,10 @@
 {
   "extensions": { "enable": ["tailscale"] },
   "mcpServers": {
+    "executor": {
+      "url": "http://127.0.0.1:4312/mcp?elicitation_mode=browser",
+      "headers": { "Authorization": "Bearer ${EXECUTOR_API_KEY}" }
+    },
     "web": {
       "command": "node",
       "args": ["/Users/seth/.pi/agent/npm/node_modules/pi-web-access/dist/mcp-cli.js"]

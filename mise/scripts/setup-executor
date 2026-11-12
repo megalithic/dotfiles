@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# Install Executor v2's key pair for the LaunchAgent (mise/scripts/executor-launchd).
+#
+# Usage:
+#   mise run setup:executor
+#
+# The keys live in 1Password (op://Crypt/executor-local), shared by both hosts,
+# and reach this machine through fnox (env = false, so shells never see them).
+# On the first run anywhere the item doesn't exist yet: this creates it with
+# fresh keys and refreshes fnox. The keys are written to 0600 files and the
+# LaunchAgent is restarted when they changed. api_key may be rotated (then
+# update Ultimate's EXECUTOR_API_KEY secret); never change encryption_key:
+# Executor still starts, but can no longer decrypt the stored credentials.
+set -euo pipefail
+
+umask 077
+label="dev.mise.com.megadots.executor" # mise prefixes the config's agent name
+item="executor-local"
+account="my.1password.com"
+key_dir="${XDG_CONFIG_HOME:-$HOME/.config}/executor"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+temp=""
+
+die() {
+  echo "setup-executor: $1" >&2
+  exit 1
+}
+cleanup() {
+  if [[ -n "$temp" && -f "$temp" ]]; then
+    : >"$temp"
+    trash "$temp" >/dev/null 2>&1 || true
+  fi
+}
+trap cleanup EXIT HUP INT TERM
+
+for cmd in fnox trash; do
+  command -v "$cmd" >/dev/null 2>&1 || die "$cmd is required; run mise install"
+done
+
+resolve() {
+  fnox get EXECUTOR_API_KEY --no-daemon >/dev/null 2>&1 &&
+    fnox get EXECUTOR_ENCRYPTION_KEY --no-daemon >/dev/null 2>&1
+}
+
+if ! resolve; then
+  command -v op >/dev/null 2>&1 || die "op is required to create the 1Password item"
+  if ! op item get "$item" --vault Crypt --account "$account" >/dev/null 2>&1; then
+    echo "setup-executor: creating 1Password item Crypt/$item with new keys"
+    op item create --vault Crypt --account "$account" --category password \
+      --title "$item" \
+      "api_key[password]=$(openssl rand -hex 32)" \
+      "encryption_key[password]=$(openssl rand -hex 32)" >/dev/null
+  fi
+  "$script_dir/update-fnox"
+  resolve || die "fnox can't resolve EXECUTOR_API_KEY and EXECUTOR_ENCRYPTION_KEY"
+fi
+
+# Validate both keys before installing either, so a bad value never leaves a
+# half-updated pair behind.
+api_key="$(fnox get EXECUTOR_API_KEY --no-daemon | tr -d '\r\n')"
+encryption_key="$(fnox get EXECUTOR_ENCRYPTION_KEY --no-daemon | tr -d '\r\n')"
+[[ ${#api_key} -ge 32 ]] || die "EXECUTOR_API_KEY must be at least 32 characters"
+[[ "$encryption_key" =~ ^[0-9a-fA-F]{64}$ ]] || die "EXECUTOR_ENCRYPTION_KEY must be 64 hex characters"
+
+mkdir -p "$key_dir" "$HOME/Library/Logs/executor"
+changed=0
+install_key() {
+  local file="$key_dir/$1"
+  temp="$(mktemp "$file.XXXXXX")"
+  printf '%s' "$2" >"$temp"
+  if [[ -f "$file" ]] && cmp -s "$temp" "$file"; then
+    cleanup
+  else
+    mv -f "$temp" "$file"
+    changed=1
+  fi
+  temp=""
+  chmod 600 "$file"
+}
+install_key api_key "$api_key"
+install_key encryption_key "$encryption_key"
+echo "setup-executor: keys in $key_dir are current"
+
+if /bin/launchctl print "gui/$(id -u)/$label" >/dev/null 2>&1; then
+  if [[ "$changed" -eq 1 ]]; then
+    /bin/launchctl kickstart -k "gui/$(id -u)/$label"
+    echo "setup-executor: restarted $label"
+  fi
+else
+  echo "setup-executor: $label isn't loaded; run mise run update:system"
+fi

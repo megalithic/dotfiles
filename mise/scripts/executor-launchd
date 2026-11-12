@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Launchd entrypoint: run the mise-installed Executor v2 in the foreground on
+# 127.0.0.1:4312. Keys come from 1Password via `mise run setup:executor`, which
+# writes them to 0600 files; stored credentials need the same encryption key
+# on every start.
+# mise follows the newest beta, so each version change first copies the data
+# directory (stopped, consistent) to a backup, keeping the newest two.
+set -euo pipefail
+
+key_dir="${XDG_CONFIG_HOME:-$HOME/.config}/executor"
+data_dir="${EXECUTOR_DATA_DIR:-$HOME/.executor/v2/cli}"
+backup_root="$HOME/.executor/v2/backups"
+mise="$(command -v mise || echo "$HOME/.local/bin/mise")"
+
+die() {
+  echo "executor-launchd: $1" >&2
+  exit 1
+}
+
+for key in api_key encryption_key; do
+  [[ -s "$key_dir/$key" ]] || die "missing $key_dir/$key; run mise run setup:executor"
+done
+
+executor="$(cd "$HOME" && "$mise" which executor 2>/dev/null)" ||
+  die "executor is not installed; run mise install"
+version="$(basename "$(dirname "$executor")")"
+
+marker="$data_dir/.megadots-version"
+if [[ -f "$marker" ]] && [[ "$(<"$marker")" != "$version" ]]; then
+  previous="$(<"$marker")"
+  mkdir -p "$backup_root"
+  backup="$backup_root/mise-$(date +%Y%m%dT%H%M%S)-$previous"
+  echo "executor-launchd: $previous -> $version, backing up data to $backup" >&2
+  cp -Rp "$data_dir" "$backup"
+  # Keep the newest two mise backups (names sort by time); Executor's own
+  # backups in the same folder are left alone.
+  backups=("$backup_root"/mise-*)
+  if ((${#backups[@]} > 2)); then
+    for old in "${backups[@]:0:${#backups[@]}-2}"; do
+      rm -rf -- "$old"
+    done
+  fi
+fi
+# Record the version before the first start too, so the first upgrade backs up.
+mkdir -p -m 700 "$data_dir"
+printf '%s\n' "$version" >"$marker"
+
+EXECUTOR_API_KEY="$(tr -d '\r\n' <"$key_dir/api_key")"
+EXECUTOR_ENCRYPTION_KEY="$(tr -d '\r\n' <"$key_dir/encryption_key")"
+export EXECUTOR_API_KEY EXECUTOR_ENCRYPTION_KEY
+export EXECUTOR_NO_UPDATE_CHECK=1 DO_NOT_TRACK=1
+
+exec "$executor" serve

@@ -87,6 +87,10 @@ TYPESAFE_API_KEY = { provider = "onepass", value = "op://Crypt/typesafe/api_key"
 # On-demand single values: `fnox get APPLE_TEAM_ID`. env = false so shell
 # activation doesn't hit 1Password on every new shell for rarely-used secrets.
 PI_CONTROL_WEB_TOKEN = { provider = "onepass", value = "op://Crypt/pi-control-web/token", env = false }
+# Executor v2 Local key pair (mise run setup:executor). Admin credentials: never
+# export them to shells, where any agent could read them.
+EXECUTOR_API_KEY = { provider = "onepass", value = "op://Crypt/executor-local/api_key", env = false }
+EXECUTOR_ENCRYPTION_KEY = { provider = "onepass", value = "op://Crypt/executor-local/encryption_key", env = false }
 
 APPLE_ID_EMAIL = { provider = "onepass", value = "op://Crypt/apple-developer/username", env = false }
 APPLE_TEAM_ID = { provider = "onepass", value = "op://Crypt/apple-developer/Section_6qgogrdycnlqc4x7ngqwchlyvi/team id", env = false }
