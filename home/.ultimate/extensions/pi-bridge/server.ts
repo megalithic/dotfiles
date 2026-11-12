@@ -35,6 +35,7 @@ export const userActions = ['tell'];
 type TellInput = {
   text: string;
   reply: boolean;
+  id?: unknown;
   from: { label: string } & Partial<Record<'sessionId' | 'socket' | 'cwd' | 'machine', unknown>>;
 };
 
@@ -52,9 +53,19 @@ function isTellInput(input: JsonValue): input is JsonValue & TellInput {
   );
 }
 
-function parseTell(input: JsonValue): Tell {
+/** The sender's own message id, when it waits for a reply (ask_pi): the reply carries it back as replyTo. */
+function parseId(input: TellInput): string | undefined {
+  if (input.id === undefined) return undefined;
+  if (typeof input.id !== 'string' || !/^[\w:.-]{1,100}$/.test(input.id)) {
+    throw new Error('id must be 1-100 characters of letters, digits, _ : . -');
+  }
+
+  return input.id;
+}
+
+function parseTell(input: JsonValue): Tell & { id?: string } {
   if (!isTellInput(input))
-    throw new Error('Expected { text, reply: boolean, from: { label, sessionId?, socket?, cwd?, machine? } }');
+    throw new Error('Expected { text, reply: boolean, id?, from: { label, sessionId?, socket?, cwd?, machine? } }');
   const from: Sender = { label: field(input.from.label, 'from.label') };
 
   for (const key of ['sessionId', 'socket', 'cwd', 'machine'] as const) {
@@ -73,7 +84,7 @@ function parseTell(input: JsonValue): Tell {
     throw new Error('Replies require from.socket or from.sessionId');
   }
 
-  return { text: field(input.text, 'text'), reply: input.reply, from };
+  return { text: field(input.text, 'text'), reply: input.reply, from, id: parseId(input) };
 }
 
 async function ultimate(host: Host, signal = new AbortController().signal): Promise<ConversationId> {
@@ -91,7 +102,7 @@ async function ultimate(host: Host, signal = new AbortController().signal): Prom
 export const actions = {
   async tell(args: JsonValue, { host, signal }: { host: Host; signal: AbortSignal }) {
     const input = parseTell(args);
-    const key = randomUUID();
+    const key = input.id ?? randomUUID();
     const harness = host.harness();
     const conversation = await harness.conversation(await ultimate(host, signal), BACKGROUND_CONTEXT);
 
@@ -103,7 +114,12 @@ export const actions = {
         whenBusy: 'followUp',
       });
 
-      if (input.reply) (await tx.doc(Routes, ROOT_CONVERSATION_ID)).senders[key] = input.from;
+      if (input.reply) {
+        const { senders } = await tx.doc(Routes, ROOT_CONVERSATION_ID);
+
+        if (Object.hasOwn(senders, key)) throw new Error(`A reply for ${key} is already pending`);
+        senders[key] = input.from;
+      }
     }, BACKGROUND_CONTEXT);
 
     return { key, delivered: true };
