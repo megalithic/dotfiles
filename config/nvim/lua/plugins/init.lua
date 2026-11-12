@@ -37,8 +37,20 @@ return {
   {
     "mrjones2014/smart-splits.nvim",
     cond = function() return not vim.g.started_by_firenvim end,
-    lazy = true,
-    opts = { ignored_buftypes = { "nofile" }, cursor_follows_swapped_bufs = true, at_edge = "stop" },
+    -- not lazy: the tmux backend only tells tmux a pane runs Neovim once it loads
+    lazy = false,
+    dependencies = {
+      { "smart-splits-nvim/backend-tmux", main = "smart-splits-backend-tmux" },
+      { "rawnly/smart-splits-backend-rex", main = "smart-splits-backend-rex" },
+    },
+    opts = {
+      ignored_buftypes = { "nofile" },
+      move = { at_edge = "stop" },
+      swap = { move_cursor = true },
+      -- tmux first: inside tmux in Rex, REX_SESSION is set too, and the inner
+      -- multiplexer must win
+      mux = { backend = { "smart-splits-backend-tmux", "smart-splits-backend-rex" } },
+    },
     keys = {
       { "<A-h>", function() require("smart-splits").resize_left() end, mode = { "n", "i", "v" }, desc = "Resize left" },
       {
