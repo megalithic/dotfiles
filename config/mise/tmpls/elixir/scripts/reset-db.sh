@@ -4,11 +4,11 @@
 set -euo pipefail
 
 case "${MIX_ENV:-dev}" in
-dev | test) ;;
-*)
-  echo "error: refusing database reset with MIX_ENV=${MIX_ENV}" >&2
-  exit 2
-  ;;
+  dev | test) ;;
+  *)
+    echo "error: refusing database reset with MIX_ENV=${MIX_ENV}" >&2
+    exit 2
+    ;;
 esac
 
 # A reset must target this project's shared local cluster, never an inherited
@@ -44,12 +44,13 @@ expected_port="$(bash "$(dirname "$0")/pg-port.sh")"
 printf 'This will drop and recreate the dev and test databases. Continue? [y/N] '
 read -r answer
 case "$answer" in
-y | Y | yes | YES) ;;
-*)
-  echo 'db reset cancelled'
-  exit 0
-  ;;
+  y | Y | yes | YES) ;;
+  *)
+    echo 'db reset cancelled'
+    exit 0
+    ;;
 esac
 
 mix ecto.reset
-env MIX_ENV=test mix ecto.reset
+# Not ecto.reset: its ecto.setup seeds, and tests expect an empty database.
+env MIX_ENV=test mix 'do' ecto.drop + ecto.create + ecto.migrate

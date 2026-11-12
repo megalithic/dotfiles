@@ -32,8 +32,8 @@ window("code", term("code"), { "code" })
 
 if a.services then
   -- The server is the block's own program, never typed into a shell, so a
-  -- restart replaces the whole terminal. exit.on_completion=false keeps the
-  -- last output on screen after a crash or Ctrl+C.
+  -- restart replaces the whole terminal. After a crash or Ctrl+C, rwt execs
+  -- your $SHELL in the block, so the last output stays above a prompt.
   window("services", term("services", {
     command = a.services_cmd,
     exit = { on_completion = false },

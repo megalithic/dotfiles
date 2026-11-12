@@ -96,6 +96,8 @@ jq -e '.services.running and .http.app == 200 and .port != null' <<<"$st" >/dev/
 pid1="$(jq -r .services.beam_pid <<<"$st")"
 block1="$(jq -r .services.block <<<"$st")"
 ok "services up on :$(jq -r .port <<<"$st") (pid $pid1)"
+"$REX" window ls -s "$sid" --json | jq -e --arg l "services-$(jq -r .port <<<"$st")" '[.windows[].label] | index($l)' >/dev/null || fail "services tab not titled with the port"
+ok "services tab titled with the port"
 sleep 2
 ps="$("$RWT" status "$wt" | jq -c .services.program_status)"
 printf '# program_status: %s\n' "$ps"
@@ -120,7 +122,14 @@ sleep 2
 st="$("$RWT" status "$wt")"
 jq -e '.services.running == false and .services.last_exit != null' <<<"$st" >/dev/null || fail "crash not reported: $st"
 ok "crash reported (last_exit $(jq -c .services.last_exit <<<"$st"))"
-"$REX" block close -s "$sid" "$block2" >/dev/null
+"$REX" block call -s "$sid" -b "$block2" process | jq -e '.child != null' >/dev/null || fail "no shell after services exit"
+ok "a shell takes over the services block after exit"
+r="$("$RWT" restart "$wt" --json)" || fail "restart from shell: $r"
+block3="$(jq -r .block <<<"$r")"
+"$RWT" wait-ready "$wt" --timeout 60 2>/dev/null || fail "server not back after restart from shell"
+"$RWT" status "$wt" | jq -e '.services.running and .services.last_exit == null' >/dev/null || fail "stale exit after restart"
+ok "restart from the shell clears the exit state"
+"$REX" block close -s "$sid" "$block3" >/dev/null
 o="$("$RWT" open "$wt" --json)"
 jq -e '.ok and (.session.created | not) and .layout.services' <<<"$o" >/dev/null || fail "open repair: $o"
 "$RWT" wait-ready "$wt" --timeout 60 2>/dev/null || fail "repaired server not up"

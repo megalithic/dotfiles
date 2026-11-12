@@ -99,6 +99,13 @@ resolve() {
     LABEL="$WID"
   fi
   STATE="$WT/.local/state/rwt-session"
+  # Rex actions pass the session they run in; a pane cd'd into another checkout
+  # must not make rwt act on that checkout with this session.
+  if [ -n "$SESSION_OVERRIDE" ]; then
+    local recorded
+    recorded="$(cat "$STATE" 2>/dev/null)"
+    [ "${recorded#session:}" = "${SESSION_OVERRIDE#session:}" ] || die 6 "session $SESSION_OVERRIDE is not the session recorded for $WT"
+  fi
 }
 
 is_worktree_of_main() { # path
@@ -237,6 +244,15 @@ cmd_open() {
   echo $$ >"$LOCK/pid"
   trap 'rm -rf "$LOCK"' EXIT
 
+  # A failed setup leaves its setup tab open (we hold the lock, so no setup is
+  # running); rebuild that session so setup runs again.
+  if sid="$(find_session)" && rex window ls -s "$sid" --json 2>/dev/null | jq -e '.windows[] | select(.label == "setup")' >/dev/null; then
+    log "session $sid still has the tab of a failed setup; recreating it"
+    rex kill "$sid" >/dev/null 2>&1
+    rm -f "$STATE"
+    SESSION_OVERRIDE=
+  fi
+
   if sid="$(find_session)"; then
     # The agent tab already runs; a dropped prompt must not look delivered.
     [ -z "$PROMPT" ] || die 6 "session $LABEL already exists, so --prompt can't reach its Pi; use tell_pi"
@@ -286,13 +302,14 @@ cmd_open() {
 
 cmd_status() {
   resolve
-  local sid='' block='' proc='{}' ps='[]' port code=000 tw=000 dirty=false beam='' lease='null'
+  local sid='' block='' proc='{}' ps='[]' port code=000 tw=000 dirty=false beam='' lease='null' exited=''
   sid="$(find_session)" || sid=
   [ -n "$sid" ] && block="$(block_by_label "$sid" services)"
   if [ -n "$block" ]; then
     proc="$(rex block call -s "$sid" -b "$block" process 2>/dev/null || echo '{}')"
     ps="$(rex block call -s "$sid" -b "$block" program_status 2>/dev/null || echo '[]')"
     beam="$(beam_pid "$(jq -r '.child.pid // empty' <<<"$proc")")"
+    exited="$(cat "$WT/.local/state/rwt-services-exit" 2>/dev/null)"
   fi
   port="$(port_for "$WT")"
   if [ -n "$port" ]; then
@@ -309,12 +326,14 @@ cmd_status() {
   [ -n "$(git -C "$WT" status --porcelain 2>/dev/null | head -n 1)" ] && dirty=true
   jq -cn --arg path "$WT" --arg branch "$BRANCH" --arg id "$WID" --argjson dirty "$dirty" \
     --arg sid "$sid" --arg label "$LABEL" --arg block "$block" --argjson proc "$proc" --argjson ps "$ps" \
-    --arg port "$port" --arg code "$code" --arg tw "$tw" --arg beam "$beam" --argjson lease "$lease" '
+    --arg port "$port" --arg code "$code" --arg tw "$tw" --arg beam "$beam" --argjson lease "$lease" --arg exited "$exited" '
     {ok:true, worktree:{path:$path, branch:$branch, id:$id, dirty:$dirty},
      session:(if $sid == "" then null else {id:$sid, label:$label} end),
      services:(if $block == "" then null else
-       {block:$block, running:($proc.child != null), beam_pid:(if $beam == "" then null else ($beam|tonumber) end),
-        last_exit:($proc.last_exit // null), program_status:$ps} end),
+       {block:$block, running:($proc.child != null and $exited == ""),
+        beam_pid:(if $beam == "" then null else ($beam|tonumber) end),
+        last_exit:(if $exited == "" then ($proc.last_exit // null) else {exit_code:($exited|tonumber)} end),
+        program_status:$ps} end),
      port:(if $port == "" then null else ($port|tonumber) end),
      http:{app:($code|tonumber), tidewave:($tw|tonumber),
            tidewave_url:(if $port == "" then null else "http://localhost:\($port)/tidewave/mcp" end)},
@@ -389,9 +408,13 @@ merged() { # branch default -> 0 when integrated
   git -C "$MAIN" merge-base --is-ancestor "$1" "$2" 2>/dev/null && return 0
   git -C "$MAIN" show-ref --verify --quiet "refs/remotes/origin/$2" &&
     git -C "$MAIN" merge-base --is-ancestor "$1" "origin/$2" 2>/dev/null && return 0
-  # Squash merges leave no ancestry; trust a merged PR for this head branch.
+  # Squash merges leave no ancestry; trust a merged PR only if it merged the
+  # branch's current commit, so commits added after the merge stay protected.
+  local head
+  head="$(git -C "$MAIN" rev-parse --verify --quiet "refs/heads/$1")" || return 1
   command -v gh >/dev/null 2>&1 &&
-    [ -n "$(cd "$MAIN" && gh pr list --head "$1" --state merged --json number --jq '.[0].number' 2>/dev/null)" ]
+    [ -n "$(cd "$MAIN" && gh pr list --head "$1" --state merged --json number,headRefOid \
+      --jq ".[] | select(.headRefOid == \"$head\") | .number" 2>/dev/null)" ]
 }
 
 cmd_prune() {
@@ -448,15 +471,24 @@ cmd_setup_block() { # path
   exit "$rc"
 }
 
+# Hand the block to a login shell instead of exiting, so the tab keeps a
+# prompt; status reads the exit code from the file.
+services_done() { # rc
+  local exit_file=.local/state/rwt-services-exit
+  mkdir -p "$(dirname "$exit_file")" && echo "$1" >"$exit_file"
+  exec "${SHELL:-/bin/bash}" -l
+}
+
 cmd_services_block() { # path
   cd "$1" || exit 3
-  local port rc watcher=
+  local port rc watcher='' exit_file=.local/state/rwt-services-exit
+  rm -f "$exit_file"
   # A handler (not an ignore) so Ctrl+C still reaches the server but this
   # script survives to report the exit.
   trap ':' INT
   has_task . dev:services || {
     echo "[rwt] no dev:services task in $1"
-    exit 0
+    services_done 0
   }
   port="$(port_for .)"
   if [ -n "$port" ]; then
@@ -467,9 +499,10 @@ cmd_services_block() { # path
     [ "$(http_code "http://127.0.0.1:$port/")" = 000 ] || {
       echo "[rwt] port $port is still in use; refusing to start a second server"
       status error "port $port busy"
-      exit 75
+      services_done 75
     }
     status working "starting on :$port"
+    rex window rename "services-$port" >/dev/null 2>&1 || true
     (
       for _ in $(seq 1 600); do
         [ "$(http_code "http://127.0.0.1:$port/")" != 000 ] && {
@@ -491,7 +524,7 @@ cmd_services_block() { # path
   stty sane 2>/dev/null
   case "$rc" in 0 | 130 | 143) status idle "services stopped ($rc)" ;; *) status error "services exited $rc" ;; esac
   printf '\n[rwt] services exited with %s. Restart: rwt restart (or Cmd+Shift+R)\n' "$rc"
-  exit "$rc"
+  services_done "$rc"
 }
 
 cmd_agent_block() { # path continue(0|1)

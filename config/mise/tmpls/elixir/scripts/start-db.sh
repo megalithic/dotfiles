@@ -15,7 +15,13 @@ if pg_ctl -D "$PGDATA" status >/dev/null 2>&1; then
   fi
 else
   # pg_ctl start daemonizes; -l appends server log; waits (-w) by default
-  # until the server accepts connections.
-  pg_ctl -D "$PGDATA" -l "$PG_LOG" start
+  # until the server accepts connections. A parallel start (two worktrees at
+  # once) loses the race with exit 1 while the winner brings the server up,
+  # so wait for it; the pg_isready below decides the exit code.
+  pg_ctl -D "$PGDATA" -l "$PG_LOG" start ||
+    for _ in $(seq 30); do
+      pg_isready -q -h "$PGHOST" -p "$PGPORT" && break
+      sleep 1
+    done
 fi
 pg_isready -h "$PGHOST" -p "$PGPORT"
