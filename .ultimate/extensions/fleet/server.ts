@@ -51,6 +51,13 @@ async function call(url: string, extension: string, action: string, args: unknow
   return body.result
 }
 
+/** The first error code down an error's causes. */
+function code(error: unknown): string | undefined {
+  if (!error || typeof error !== 'object') return undefined
+  const { code: own, cause, errors } = error as { code?: unknown; cause?: unknown; errors?: unknown[] }
+  return typeof own === 'string' ? own : (code(cause) ?? code(errors?.[0]))
+}
+
 async function probe(host: Host, target: Target, since: number, outer?: AbortSignal) {
   const signal = AbortSignal.any([AbortSignal.timeout(TIMEOUT), ...(outer ? [outer] : [])])
   try {
@@ -62,12 +69,20 @@ async function probe(host: Host, target: Target, since: number, outer?: AbortSig
         ])
     return row(target, status as Status, Array.isArray(conversations) ? (conversations as Conversation[]) : [])
   } catch (error) {
+    // fetch says only "fetch failed"; its cause names the reason (ECONNREFUSED: not running there).
+    const cause = code(error)
     const reason =
       error instanceof Error && error.name === 'TimeoutError'
         ? `no answer in ${TIMEOUT / 1000} s`
-        : error instanceof Error
-          ? error.message
-          : String(error)
+        : cause === 'ECONNREFUSED'
+          ? 'not running'
+          : cause
+            ? `unreachable (${cause})`
+            : error instanceof Error
+              ? error.cause instanceof Error
+                ? error.cause.message
+                : error.message
+              : String(error)
     return unreachable(target, reason)
   }
 }

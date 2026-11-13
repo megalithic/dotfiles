@@ -28,7 +28,14 @@ Links to a local instance keep the page's host and use the instance's port, so t
 shares the settings between machines. Each is asked for `status/status` and `codemode/read {op: 'conversations'}`
 with its own `Origin`, in parallel.
 
+## Keeping the hub running
+
+On workbookpro the LaunchAgent `com.megadots.ultimate-hub` (`config/mise/config.workbookpro.toml`, applied with
+`mise run update:system`) runs `mise/scripts/ultimate-hub-launchd`: `ultimate ~/.dotfiles --no-open --port 4749` in
+mise's environment. While a hub started by hand runs, it waits and takes over once that one stops. Logs go to
+`~/Library/Logs/ultimate-hub.log`. A launchd hub has no tty, so its Rex tab status is not shown.
+
 ## Tests
 
 `.ultimate/tests/fleet.test.ts` (`mise run test:ts`) checks hub roles against the registry and states against
-`rex-status`.
+`rex-status`; `mise/tests/ultimate-hub-launchd.test.sh` checks the LaunchAgent's wait and start.

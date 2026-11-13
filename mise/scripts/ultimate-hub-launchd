@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Launchd entrypoint: keep the Ultimate hub (this checkout, ~/.dotfiles) running on
+# 127.0.0.1:4749 without opening a window. Its agents' shells inherit this
+# environment, so it loads mise's, the same PATH a terminal has.
+# While another live process already serves the hub (one started in a Rex tab),
+# it waits instead of exiting, so KeepAlive never loops; it takes over once that
+# one stops. Launchd's hub has no tty, so it reports no Rex tab status.
+set -euo pipefail
+
+dotfiles="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../.." && pwd)"
+port="${ULTIMATE_HUB_PORT:-4749}"
+wait="${ULTIMATE_HUB_WAIT:-30}"
+mise="$(command -v mise || echo "$HOME/.local/bin/mise")"
+
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+export MISE_ENV="${MISE_ENV:-$(hostname -s)}"
+eval "$(cd "$HOME" && "$mise" env -s bash)"
+
+owner() {
+  "$dotfiles/bin/ultimate-instance" --all | jq -r --arg root "$dotfiles" '.[] | select(.project == $root) | .pid'
+}
+
+announced=""
+while pid="$(owner)" && [[ -n "$pid" ]]; do
+  if [[ "$announced" != "$pid" ]]; then
+    echo "ultimate-hub-launchd: the hub already runs as pid $pid; waiting for it to stop" >&2
+    announced="$pid"
+  fi
+  sleep "$wait"
+done
+
+exec ultimate "$dotfiles" --no-open --port "$port"
