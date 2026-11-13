@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# llm-bench — tokens/s and memory of the local llama.cpp router's models.
+#
+# For each model: load it, send one coding prompt with a --context-token
+# context (source files pasted in, like an agent's first turn), and report
+# llama-server's own timings (prefill and decode tok/s, MTP draft acceptance)
+# and the wired memory the loaded model added.
+#
+# Usage: llm-bench [--url URL] [--max-tokens N] [--context N] [model...]
+#   default models: every directory model the router lists (not embeddings)
+set -euo pipefail
+
+URL="http://127.0.0.1:18080"
+MAX_TOKENS=512
+CONTEXT=8000
+MODELS=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --url) URL="$2" && shift 2 ;;
+    --max-tokens) MAX_TOKENS="$2" && shift 2 ;;
+    --context) CONTEXT="$2" && shift 2 ;;
+    -h | --help) sed -n '2,10p' "$0" && exit 0 ;;
+    *) MODELS+=("$1") && shift ;;
+  esac
+done
+
+models_json="$(curl -fsS "$URL/v1/models")"
+if [[ ${#MODELS[@]} -eq 0 ]]; then
+  # shellcheck disable=SC2207 # model IDs have no spaces
+  MODELS=($(jq -r '.data[] | select(.status.args | index("--model")) |
+    select(.status.args | index("--embeddings") | not) | .id' <<<"$models_json"))
+fi
+
+# ~4 characters per token: fill the context with this repo's shell scripts.
+dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
+context="$(cat "$dotfiles"/mise/scripts/* "$dotfiles"/bin/rwt 2>/dev/null || true)"
+context="${context:0:$((CONTEXT * 4))}"
+prompt="Here is some code from my dotfiles:
+
+$context
+
+Write a bash function that parses a TOML [section] header and returns the section name. Code only."
+
+post() { curl -sS --fail-with-body --max-time 900 -H 'Content-Type: application/json' --data-binary @- "$URL$1"; }
+
+unload_all() {
+  jq -r '.data[] | select(.status.value != "unloaded") | .id' <<<"$(curl -fsS "$URL/v1/models")" |
+    while read -r m; do jq -nc --arg m "$m" '{model:$m}' | post /models/unload >/dev/null || true; done
+}
+
+# Metal wires the weights, KV cache and buffers, so the change in wired
+# memory is what a loaded model costs the rest of the machine.
+wired_gb() { vm_stat | awk '/wired down/ { gsub(/\./, "", $4); print $4 * 16384 / 2^30 }'; }
+
+printf '%-14s %8s %10s %9s %8s %9s %8s\n' MODEL LOAD_S PREFILL/s DECODE/s DRAFT% MEM_GB OUT_TOK
+for model in "${MODELS[@]}"; do
+  unload_all
+  sleep 3
+  wired0="$(wired_gb)"
+  t0=$(date +%s)
+  jq -nc --arg m "$model" '{model:$m, max_tokens:1, messages:[{role:"user",content:"hi"}]}' |
+    post /v1/chat/completions >/dev/null
+  load_s=$(($(date +%s) - t0))
+  resp="$(jq -nc --arg m "$model" --arg p "$prompt" --argjson n "$MAX_TOKENS" \
+    '{model:$m, max_tokens:$n, messages:[{role:"user",content:$p}]}' | post /v1/chat/completions)"
+  mem="$(awk -v a="$wired0" -v b="$(wired_gb)" 'BEGIN { printf "%.1f", b - a }')"
+  jq -r --arg model "$model" --arg load "$load_s" --arg mem "$mem" '.timings as $t |
+    [$model, $load, ($t.prompt_per_second | floor), ($t.predicted_per_second * 10 | floor / 10),
+     (if ($t.draft_n // 0) > 0 then ($t.draft_n_accepted / $t.draft_n * 100 | floor) else "-" end),
+     $mem, $t.predicted_n] | @tsv' <<<"$resp" |
+    awk -F'\t' '{ printf "%-14s %8s %10s %9s %8s %9s %8s\n", $1, $2, $3, $4, $5, $6, $7 }'
+done

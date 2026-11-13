@@ -1,185 +1,74 @@
 #!/usr/bin/env bash
-# llm-pull — download GGUF models for llama.cpp.
+# llm-pull — download the GGUF models the llama.cpp router serves.
 #
-# Default backend: llamacpp. Legacy ollama/omlx backends are obsolete after the
-# local inference migration and intentionally fail with migration guidance.
+# Each model gets its own directory under the router's --models-dir, named
+# after its Pi model ID (the weights plus an mmproj for image input). MTP draft
+# files go under ../drafts/<id>/, outside the scanned directory, because the
+# router treats every directory there as one model; tools/llama-cpp/models.ini
+# points each preset's model-draft at them. Re-running skips finished files.
 set -euo pipefail
-
-BACKEND="llamacpp"
-DRY_RUN=0
-ARGS=()
 
 usage() {
   cat <<'EOF'
-Usage: llm-pull [-b llamacpp] [--dry-run] <alias|repo/file.gguf> [extra hf flags...]
+Usage: llm-pull [--dry-run] <id>... | all
 
-Backends:
-  llamacpp (default)  Uses `hf download` for GGUF files under XDG_DATA_HOME/llama.cpp/models
-  ollama              Obsolete after llama.cpp migration
-  omlx                Obsolete after llama.cpp migration
+Models (IDs match tools/llama-cpp/models.ini and ~/.pi/agent/models.json):
+  qwen3.8-27b   unsloth/Qwen3.8-27B-GGUF          UD-Q5_K_XL + mmproj + MTP draft  (~23 GB)
+  gemma4-26b    unsloth/gemma-4-26B-A4B-it-GGUF   UD-Q4_K_XL + mmproj + MTP draft  (~17 GB)
+  flint-40b     unsloth/flint-GGUF                UD-Q4_K_XL                       (~23 GB)
+  nomic-embed   nomic-ai/nomic-embed-text-v1.5-GGUF  Q8_0 embeddings               (~0.1 GB)
 
-llama.cpp aliases:
-  qwen3.6       unsloth/Qwen3.6-27B-GGUF                     Qwen3.6-27B-Q4_K_M.gguf
-  deepseek14b   bartowski/DeepSeek-R1-Distill-Qwen-14B-GGUF  DeepSeek-R1-Distill-Qwen-14B-Q4_K_M.gguf
-  gemma4        unsloth/gemma-4-E4B-it-GGUF                  gemma-4-E4B-it-Q4_K_M.gguf
-  gemma4:e2b    unsloth/gemma-4-E2B-it-GGUF                  gemma-4-E2B-it-Q4_K_M.gguf
-  gemma26b      unsloth/gemma-4-26B-A4B-it-GGUF              gemma-4-26B-A4B-it-UD-Q4_K_M.gguf
-  rx-gemma26b   alias for gemma26b
-  qwen35b       unsloth/Qwen3.5-35B-A3B-GGUF                 Qwen3.5-35B-A3B-Q4_K_M.gguf
-  rx-qwen35b    alias for qwen35b
-  nomic-embed   nomic-ai/nomic-embed-text-v1.5-GGUF          nomic-embed-text-v1.5.Q8_0.gguf
-
-Examples:
-  llm-pull qwen3.6
-  llm-pull -b llamacpp --dry-run qwen3.6
-  llm-pull --dry-run gemma4:e2b
-  llm-pull rx-gemma26b --resume-download
-
-Downloads keep the upstream filename and create/refresh <alias>.gguf symlinks
-so llama-server --models-dir exposes Pi model IDs such as qwen3.6 and gemma4.
+Restart the router after pulling a new model:
+  launchctl kickstart -k gui/$(id -u)/dev.mise.com.megadots.llama-cpp
 EOF
 }
 
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    -h | --help)
-      usage
-      exit 0
-      ;;
-    --dry-run)
-      DRY_RUN=1
-      shift
-      ;;
-    -b | --backend)
-      if [[ $# -lt 2 ]]; then
-        echo "error: $1 requires a backend" >&2
-        exit 2
-      fi
-      BACKEND="$2"
-      shift 2
-      ;;
-    *)
-      ARGS+=("$1")
-      shift
-      ;;
+# id | repo | model files (space-separated) | MTP draft file ("" = none)
+MODELS=(
+  "qwen3.8-27b|unsloth/Qwen3.8-27B-GGUF|Qwen3.8-27B-UD-Q5_K_XL.gguf mmproj-F16.gguf|MTP/mtp-Qwen3.8-27B-Q4_0.gguf"
+  "gemma4-26b|unsloth/gemma-4-26B-A4B-it-GGUF|gemma-4-26B-A4B-it-UD-Q4_K_XL.gguf mmproj-F16.gguf|mtp-gemma-4-26B-A4B-it.gguf"
+  "flint-40b|unsloth/flint-GGUF|flint-UD-Q4_K_XL.gguf|"
+  "nomic-embed|nomic-ai/nomic-embed-text-v1.5-GGUF|nomic-embed-text-v1.5.Q8_0.gguf|"
+)
+
+DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/llama.cpp"
+DRY_RUN=0
+IDS=()
+for arg in "$@"; do
+  case "$arg" in
+    -h | --help) usage && exit 0 ;;
+    --dry-run) DRY_RUN=1 ;;
+    all) for m in "${MODELS[@]}"; do IDS+=("${m%%|*}"); done ;;
+    *) IDS+=("$arg") ;;
   esac
 done
-
-if [[ ${#ARGS[@]} -eq 0 ]]; then
+[[ ${#IDS[@]} -gt 0 ]] || {
   usage >&2
   exit 1
-fi
-
-ALIAS="${ARGS[0]}"
-EXTRA=("${ARGS[@]:1}")
-MODEL_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/llama.cpp/models"
-
-find_hf() {
-  local hf
-  hf="$(command -v hf || true)"
-  if [[ -z "$hf" ]]; then
-    hf="$(command -v huggingface-cli || true)"
-  fi
-  if [[ -z "$hf" ]]; then
-    if [[ $DRY_RUN -eq 1 ]]; then
-      hf="hf"
-    else
-      echo "error: hf CLI not found (install huggingface_hub on your PATH)" >&2
-      exit 127
-    fi
-  fi
-  printf '%s\n' "$hf"
 }
 
-resolve_llamacpp() {
-  local alias="$1"
-  case "$alias" in
-    qwen3.6)
-      printf '%s\t%s\t%s\n' "qwen3.6" "unsloth/Qwen3.6-27B-GGUF" "Qwen3.6-27B-Q4_K_M.gguf"
-      ;;
-    deepseek14b)
-      printf '%s\t%s\t%s\n' "deepseek14b" "bartowski/DeepSeek-R1-Distill-Qwen-14B-GGUF" "DeepSeek-R1-Distill-Qwen-14B-Q4_K_M.gguf"
-      ;;
-    gemma4)
-      printf '%s\t%s\t%s\n' "gemma4" "unsloth/gemma-4-E4B-it-GGUF" "gemma-4-E4B-it-Q4_K_M.gguf"
-      ;;
-    gemma4:e2b)
-      printf '%s\t%s\t%s\n' "gemma4-e2b" "unsloth/gemma-4-E2B-it-GGUF" "gemma-4-E2B-it-Q4_K_M.gguf"
-      ;;
-    gemma26b | rx-gemma26b)
-      printf '%s\t%s\t%s\n' "gemma26b" "unsloth/gemma-4-26B-A4B-it-GGUF" "gemma-4-26B-A4B-it-UD-Q4_K_M.gguf"
-      ;;
-    qwen35b | rx-qwen35b)
-      printf '%s\t%s\t%s\n' "qwen35b" "unsloth/Qwen3.5-35B-A3B-GGUF" "Qwen3.5-35B-A3B-Q4_K_M.gguf"
-      ;;
-    nomic-embed)
-      printf '%s\t%s\t%s\n' "nomic-embed" "nomic-ai/nomic-embed-text-v1.5-GGUF" "nomic-embed-text-v1.5.Q8_0.gguf"
-      ;;
-    */*.gguf)
-      local repo="${alias%/*}"
-      local file="${alias##*/}"
-      local model_alias="${file%.gguf}"
-      printf '%s\t%s\t%s\n' "$model_alias" "$repo" "$file"
-      ;;
-    *)
-      echo "error: unknown llama.cpp alias '$alias'" >&2
-      echo "Run 'llm-pull --help' for supported aliases, or pass repo/file.gguf." >&2
-      exit 2
-      ;;
-  esac
-}
-
-print_cmd() {
+run() {
   printf '%q ' "$@"
   printf '\n'
+  [[ $DRY_RUN -eq 1 ]] || "$@"
 }
 
-pull_llamacpp() {
-  local resolved model_alias repo file quant hf target_file alias_file
-  resolved="$(resolve_llamacpp "$ALIAS")"
-  IFS=$'\t' read -r model_alias repo file <<<"$resolved"
-
-  hf="$(find_hf)"
-  target_file="$MODEL_DIR/$file"
-  alias_file="$MODEL_DIR/$model_alias.gguf"
-
-  quant="${file%.gguf}"
-  quant="${quant##*[.-]}"
-
-  if [[ $DRY_RUN -eq 1 ]]; then
-    echo ":: backend=llamacpp"
-    echo ":: repo=$repo"
-    echo ":: quant=$quant"
-    echo ":: target=$target_file"
-    echo ":: alias=$alias_file"
-    print_cmd "$hf" download "$repo" --include "$file" --local-dir "$MODEL_DIR" "${EXTRA[@]}"
-    print_cmd ln -sfn "$file" "$alias_file"
-    exit 0
-  fi
-
-  mkdir -p "$MODEL_DIR"
-  echo ":: pulling $repo/$file -> $target_file"
-  "$hf" download "$repo" --include "$file" --local-dir "$MODEL_DIR" "${EXTRA[@]}"
-  ln -sfn "$file" "$alias_file"
-  echo ":: linked $alias_file -> $file"
+pull() {
+  local id="$1" entry repo files draft
+  for entry in "${MODELS[@]}"; do
+    [[ "${entry%%|*}" == "$id" ]] || continue
+    IFS='|' read -r _ repo files draft <<<"$entry"
+    # shellcheck disable=SC2086 # files is a space-separated list
+    run hf download "$repo" $files --local-dir "$DATA_DIR/models/$id"
+    [[ -z "$draft" ]] || run hf download "$repo" "$draft" --local-dir "$DATA_DIR/drafts/$id"
+    return 0
+  done
+  echo "error: unknown model '$id' (see llm-pull --help)" >&2
+  return 2
 }
 
-obsolete_backend() {
-  local backend="$1"
-  echo "error: backend '$backend' is obsolete after migration to llama.cpp" >&2
-  echo "Use: llm-pull -b llamacpp <alias>" >&2
-  exit 2
+command -v hf >/dev/null || [[ $DRY_RUN -eq 1 ]] || {
+  echo "error: hf CLI not found (mise tool pipx:huggingface-hub)" >&2
+  exit 127
 }
-
-case "$BACKEND" in
-  llamacpp | llama.cpp | llama-cpp)
-    pull_llamacpp
-    ;;
-  ollama | omlx)
-    obsolete_backend "$BACKEND"
-    ;;
-  *)
-    echo "error: unknown backend '$BACKEND' (use llamacpp)" >&2
-    exit 2
-    ;;
-esac
+for id in "${IDS[@]}"; do pull "$id"; done
