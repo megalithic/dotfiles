@@ -228,7 +228,10 @@ tmux = "http:tmux"
 "npm:bash-language-server" = "latest"
 "npm:chrome-devtools-mcp" = "latest"
 "npm:hunkdiff" = "latest"
-"npm:lat.md" = "latest"
+# @vercel/detect-agent moved to OIDC trusted publishing at 1.2.4 and dropped provenance; 1.2.7 reviewed against vercel/vercel main
+"npm:lat.md" = { version = "latest", trust_policy_excludes = [
+  "@vercel/detect-agent@1.2.7",
+] }
 # "npm:httpyac" = "latest"
 "npm:@earendil-works/pi-coding-agent" = "latest"
 "npm:pyright" = "latest"
@@ -501,6 +504,7 @@ adopt = true
 "brew-cask:protonvpn" = "latest"
 "brew-cask:kitty" = "latest"
 "brew-cask:tableplus" = "latest"
+"brew-cask:terminal-browser" = "latest"                    # rexlauncher's Ultimate previews in Rex
 "brew-cask:tailscale-app" = "latest"
 "brew-cask:tuna" = "latest"
 "brew-cask:slack" = "latest"
@@ -905,7 +909,7 @@ run = '''
 set -eu
 export MISE_ENV="${MISE_ENV:-$(hostname -s)}"
 export MISE_CONFIG_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}/config/mise"
-mise --verbose bootstrap dotfiles apply --yes
+mise bootstrap dotfiles apply --yes
 '''
 
 [tasks."update:system"]
@@ -921,7 +925,7 @@ mise bootstrap --only macos-defaults --yes
 description = "Update Neovim plugins and treesitter parsers"
 run = [
   '''nvim --headless "+Lazy! sync" +qa''',
-  '''nvim --headless "+TSUpdateSync" +qa''',
+  '''nvim --headless "+lua require('nvim-treesitter').update():wait(300000)" +qa''',
 ]
 
 [tasks."update:fnox"]
