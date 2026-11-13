@@ -4,7 +4,7 @@ import { hostname } from 'node:os'
 import { join } from 'node:path'
 import { defineExtension } from '@earendil-works/pi-durable'
 import { arrange, expandHome, row, unreachable } from './lib.ts'
-import type { Conversation, Status, Target } from './lib.ts'
+import type { Conversation, Target } from './lib.ts'
 
 // Only public host capabilities: a project extension cannot import the clone's modules.
 type Host = {
@@ -25,7 +25,14 @@ const object = (value: unknown) =>
 /** `fleet.primary` and `remotes` from user settings, where registry.ts reads them too. */
 async function settings(userHome: string) {
   const text = await readFile(join(userHome, '.ultimate/settings.json'), 'utf8').catch(() => '{}')
-  const parsed = object(JSON.parse(text))
+  // Ultimate's settings loader reports invalid JSON; here it reads as unset.
+  const parsed = object((() => {
+    try {
+      return JSON.parse(text) as unknown
+    } catch {
+      return {}
+    }
+  })())
   const primary = object(parsed.fleet).primary
   return {
     primary: typeof primary === 'string' ? expandHome(primary, userHome) : undefined,
@@ -58,16 +65,32 @@ function code(error: unknown): string | undefined {
   return typeof own === 'string' ? own : (code(cause) ?? code(errors?.[0]))
 }
 
+/** `work`, or a TimeoutError once `ms` pass: an aborted signal alone does not stop every action. */
+async function deadline<T>(work: Promise<T>, ms: number) {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const late = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(Object.assign(new Error('timeout'), { name: 'TimeoutError' })), ms)
+  })
+  try {
+    return await Promise.race([work, late])
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 async function probe(host: Host, target: Target, since: number, outer?: AbortSignal) {
   const signal = AbortSignal.any([AbortSignal.timeout(TIMEOUT), ...(outer ? [outer] : [])])
   try {
-    const [status, conversations] = target.current
-      ? [await host.invoke('status', 'status', { since }, signal), host.conversations()]
-      : await Promise.all([
-          call(target.url, 'status', 'status', { since }, signal),
-          call(target.url, 'codemode', 'read', { op: 'conversations', args: [] }, signal),
-        ])
-    return row(target, status as Status, Array.isArray(conversations) ? (conversations as Conversation[]) : [])
+    const [status, conversations] = await deadline(
+      target.current
+        ? Promise.all([host.invoke('status', 'status', { since }, signal), host.conversations()])
+        : Promise.all([
+            call(target.url, 'status', 'status', { since }, signal),
+            call(target.url, 'codemode', 'read', { op: 'conversations', args: [] }, signal),
+          ]),
+      TIMEOUT,
+    )
+    return row(target, status, conversations)
   } catch (error) {
     // fetch says only "fetch failed"; its cause names the reason (ECONNREFUSED: not running there).
     const cause = code(error)

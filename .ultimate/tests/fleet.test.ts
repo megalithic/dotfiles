@@ -37,7 +37,9 @@ describe('fleet', () => {
           JSON.stringify({ pid: process.pid, port: 4747 + index, project: root }),
         );
       }
-      await writeFile(join(home, 'settings.json'), JSON.stringify({ fleet: { primary: '/home/dotfiles' } }));
+      // Unnormalized on purpose: both resolve it before comparing.
+      const primary = '/home/./dotfiles/';
+      await writeFile(join(home, 'settings.json'), JSON.stringify({ fleet: { primary } }));
       const previous = { user: process.env.ULTIMATE_USER_HOME, state: process.env.PI_STATE_DIR };
       process.env.ULTIMATE_USER_HOME = home;
       process.env.PI_STATE_DIR = join(home, 'pi');
@@ -48,7 +50,7 @@ describe('fleet', () => {
       const rows = arrange(
         roots.map((root) => row(target(root), quiet, [])),
         'here',
-        '/home/dotfiles',
+        primary,
       );
       const fleetRoles = Object.fromEntries(rows.flatMap((item) => (item.role ? [[item.root, item.role]] : [])));
       const registryRoles = Object.fromEntries(
@@ -112,6 +114,24 @@ describe('fleet', () => {
       providers: ['openai-codex'],
       behind: 3,
     });
+  });
+
+  test('malformed answers from another instance never reach the UI', () => {
+    expect(() => row(target('/x'), { busy: '2', questions: {} }, [])).toThrow('answered without a status');
+    const result = row(
+      target('/x'),
+      {
+        busy: 1,
+        questions: { count: 1, first: { text: { bad: 'object' }, conversation: 4 } },
+        failures: [{ conversation: 'x', error: 'e' }, { conversation: 2, error: ['e'] }, 'junk'],
+        providers: [{ provider: 7, state: 'failing' }],
+        head: { behind: -1 },
+      },
+      [{ id: 1, title: { bad: 'object' }, busy: true }, { id: '2', title: 't', busy: true }, null],
+    );
+    expect(result).toMatchObject({ state: 'blocked', working: [], failures: { count: 0 }, providers: [] });
+    expect(result.question).toBeUndefined();
+    expect(result.behind).toBeUndefined();
   });
 
   test('remote rows get no hub, and an unreachable local instance still makes its parent a hub', () => {
