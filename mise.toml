@@ -37,10 +37,10 @@ depends = ["deps:ts"]
 run = "node_modules/.bin/oxfmt --check {{vars.ts_files}}"
 
 [tasks."test:ts"]
-description = "Run the Bun test suites for Pi extensions and the Elixir template"
+description = "Run the Bun test suites for Pi extensions, Ultimate extensions and the Elixir template"
 depends = ["deps:ts"]
 # The ./ prefix makes Bun treat these as paths; bare paths under .pi are filtered out.
-run = "bun test ./home/.pi/tests ./config/mise/tmpls/elixir/tests"
+run = "bun test ./home/.pi/tests ./.ultimate/tests ./config/mise/tmpls/elixir/tests"
 
 [tasks."check:ts"]
 description = "Lint, format check, and test dotfiles-managed TS"

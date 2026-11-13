@@ -1,5 +1,6 @@
 {
   "extensions": { "enable": ["tailscale"] },
+  "fleet": { "primary": "~/.dotfiles" },
   "mcpServers": {
     "executor": {
       "url": "http://127.0.0.1:4312/mcp?elicitation_mode=browser",
