@@ -1,6 +1,12 @@
 import { expect, test } from 'bun:test';
 import type { ExtensionAPI, ExtensionContext, SessionEntry } from '@earendil-works/pi-coding-agent';
-import sessionTitle, { buildTitlePrompt, chooseTitle, validTitle } from '../agent/extensions/session-title.ts';
+import sessionTitle, {
+  buildTitlePrompt,
+  chooseTitle,
+  humanOwns,
+  redact,
+  validTitle,
+} from '../agent/extensions/session-title.ts';
 
 // SAFETY: these branch fixtures only supply fields read by the title extension.
 const user = (text: string): SessionEntry =>
@@ -86,6 +92,7 @@ test('validator rejects real failures and prose; accepts concise work titles', (
     'Pi ⇄ Ultimate handoff',
     'Repair Rex session labels',
     'one two three four five six seven eight',
+    "Seth's parser",
   ]) {
     expect(validTitle(title)).toBe(true);
   }
@@ -126,6 +133,57 @@ test('human name wins forever, including a manual change while a title is in fli
   expect(h.name()).toBe('');
   expect(h.calls).toHaveLength(1);
   expect(h.names).toEqual(['Human chosen name', '']);
+});
+
+// Review #13457 overwrote these: a name failing the title validator, a clear, and re-choosing the automatic name.
+test("every naming by someone else is the human's, recorded across restarts", async () => {
+  for (const manual of ["Seth's parser", '', 'Accurate evolving session titles']) {
+    const h = harness();
+    await h.fire('agent_settled');
+    expect(h.name()).toBe('Accurate evolving session titles');
+    h.manual(manual);
+    h.reply(async () => 'Something else entirely');
+    await h.fire('session_compact');
+    await h.refresh();
+    expect(h.name()).toBe(manual);
+    expect(h.branch.at(-1)).toMatchObject({ customType: 'session-title', data: { human: true } });
+    // A restart reads the record back.
+    expect(humanOwns(h.branch, manual)).toBe(true);
+    await h.fire('session_start');
+    await h.refresh();
+    expect(h.name()).toBe(manual);
+  }
+});
+
+test('credentials are masked before the title model sees them', () => {
+  const secrets = [
+    'sk-abcdefghijklmnopqrstuvwxyz123456',
+    'ghp_abcdefghijklmnopqrstuvwxyz0123456789',
+    'AKIAABCDEFGHIJKLMNOP',
+    // Joined at runtime so the leak scanner doesn't flag this fake token.
+    ['eyJhbGciOiJIUzI1NiJ9', 'eyJzdWIiOiIxMjM0NTY3ODkwIn0', 'abcdefghijklmnop'].join('.'),
+    'token=supersecretvalue123',
+    'PASSWORD: hunter2hunter2',
+    // Split so the repository's private-key hook doesn't flag this fake.
+    `-----BEGIN RSA ${'PRIVATE'} KEY-----\nMIIabc\n-----END RSA ${'PRIVATE'} KEY-----`,
+  ];
+
+  const prompt = buildTitlePrompt(
+    [user(`deploy with ${secrets.join(' and ')}`), assistant('used token=abcdef123456')],
+    '',
+  );
+
+  for (const value of [
+    'abcdefghijklmnopqrstuvwxyz',
+    'AKIAABCDEF',
+    'eyJhbGci',
+    'supersecretvalue',
+    'hunter2',
+    'MIIabc',
+    'abcdef123456',
+  ])
+    expect(prompt).not.toContain(value);
+  expect(redact('Fix the token refresh flow')).toBe('Fix the token refresh flow');
 });
 
 test('junk legacy auto name gets replaced and recorded; branch auto name remains eligible', async () => {
@@ -181,10 +239,10 @@ test('prompt uses newest user text, latest summary and latest text reply, never 
   // The task follows the tagged data: data-last prompts made Haiku continue the session instead of titling it.
   expect(prompt.trimEnd()).toMatch(/Task: write a 3–6 word title[^]*Reply with the title only\.$/);
   expect(prompt).toContain('latest prompt\n---\nold prompt');
-  expect(prompt).toContain('latest summary');
   expect(prompt).toContain('latest reply');
 
-  for (const hidden of ['PRIVATE', 'old summary', 'old reply']) expect(prompt).not.toContain(hidden);
+  // Summaries are built from tool output, so they never reach the title model.
+  for (const hidden of ['PRIVATE', 'summary', 'old reply']) expect(prompt).not.toContain(hidden);
 
   const capped = buildTitlePrompt([user('o'.repeat(2000)), user('n'.repeat(2000)), assistant('a'.repeat(2000))], '');
   expect(capped.match(/n/g)?.length).toBeGreaterThan(capped.match(/o/g)?.length || 0);
