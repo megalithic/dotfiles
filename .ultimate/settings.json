@@ -1,3 +1,6 @@
 {
-  "defaultSurface": "fleet"
+  "defaultSurface": "fleet",
+  "isolates": {
+    "worktree": { "path": "/Users/seth/.dotfiles/.worktrees/{name}" }
+  }
 }

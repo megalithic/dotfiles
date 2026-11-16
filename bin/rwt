@@ -7,7 +7,8 @@
 #
 #   rwt new NAME [--base REF] [--prompt TEXT]
 #                               create worktree + session (idempotent, = open);
-#                               the agent tab's Pi gets TEXT as its first message
+#                               the agent tab's Pi gets TEXT as its first message;
+#                               in ~/code/work/strive repos NAME is sm-<short-kebab-name>
 #   rwt open [NAME|PATH]        ensure worktree + session exist, repair services
 #   rwt status [NAME|PATH]      worktree, session, services, port, Tidewave
 #   rwt restart [NAME|PATH]     restart services in a fresh terminal
@@ -77,6 +78,24 @@ default_branch() { # main_root
 
 # Only [A-Za-z0-9_] survive; everything else becomes one dash, ends trimmed.
 slug() { printf '%s' "$1" | tr -c 'A-Za-z0-9_' '-' | sed -e 's/--*/-/g' -e 's/^-//' -e 's/-*$//'; }
+
+# Strive repos name new worktrees and branches sm-<short-kebab-name>: add a
+# missing sm-, refuse anything else. Tests point RWT_STRIVE_ROOT elsewhere.
+strive_name() {
+  local root main name
+  [ -n "$TARGET" ] && [ ! -d "$TARGET" ] || return 0
+  root="$(cd "${RWT_STRIVE_ROOT:-$HOME/code/work/strive}" 2>/dev/null && pwd -P)" || return 0
+  main="$(main_root "$PWD")"
+  [ -n "$main" ] && main="$(cd "$main" && pwd -P)" || return 0
+  case "$main/" in "$root"/*) ;; *) return 0 ;; esac
+  # An existing worktree just opens, whatever its name.
+  [ -e "$main/.worktrees/${TARGET//\//-}" ] && return 0
+  name="${TARGET#sm-}"
+  [[ "$name" =~ ^[a-z0-9]+(-[a-z0-9]+){0,4}$ ]] && [ "${#name}" -le 40 ] ||
+    die 2 "strive worktrees are named sm-<short-kebab-name> (lowercase letters, digits and hyphens, at most 5 words and 40 characters): $TARGET"
+  [ "$TARGET" = "sm-$name" ] || log "strive naming: $TARGET -> sm-$name"
+  TARGET="sm-$name"
+}
 
 # Sets MAIN WT BRANCH WID LABEL STATE for TARGET (name, path, or empty for cwd).
 resolve() {
@@ -652,6 +671,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 [ -z "$PROMPT" ] || [ "$AGENT" = 1 ] || die 2 "--prompt needs the agent tab; drop --no-agent"
+[ "$cmd" != new ] || strive_name
 case "$cmd" in
   new | open) cmd_open ;;
   status) cmd_status ;;

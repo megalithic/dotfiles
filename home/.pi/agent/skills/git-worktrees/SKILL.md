@@ -19,6 +19,10 @@ Never:
 
 If `rwt` fails to run, stop and report the error. There is no fallback workflow.
 
+## Naming
+
+In repos under `~/code/work/strive/` (provider_portal, rx, devops, ...), name every new worktree `sm-<short name of the work>`: lowercase kebab-case chosen from the task, at most 5 words and 40 characters after `sm-`, e.g. `sm-expand-onboarding-reporting`. Never generic (`sm-fix`, `sm-wip`). `rwt new` adds a missing `sm-` (and prints the final name) and refuses anything else with exit 2; reopening an existing worktree by its name still works.
+
 ## Commands
 
 | Command | Effect |
