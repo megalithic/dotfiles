@@ -4,11 +4,12 @@ import { basename, join } from 'node:path';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import type { Context } from '@earendil-works/chord/context';
 import type { JsonValue } from '@earendil-works/chord/json';
-import { defineExtension, defineTool, hook, ToolTask } from '@earendil-works/pi-durable';
-import type { ConversationDocToken, ConversationId, Harness } from '@earendil-works/pi-durable';
+import { configure, defineExtension, defineTool, hook, ToolTask } from '@earendil-works/pi-durable';
+import type { ConversationDocToken, ConversationId, Harness, Tx } from '@earendil-works/pi-durable';
 import { bool, obj, opt, str } from '@earendil-works/pi-schema';
 import { deliver } from '../pi-bridge/lib.ts';
 import {
+  branchOfUltimate,
   buildSession,
   sessionSections,
   chooseSession,
@@ -34,9 +35,20 @@ import {
 } from './lib.ts';
 import type { Baton, Exec, Pi, Worktree } from './lib.ts';
 
+/** The parts of Ultimate's core lineage and messages services pickup uses (`extensions/{lineage,messages}/api.ts`). */
+type Lineage = {
+  branch(
+    input: { from: ConversationId; prompt: string; title?: string; isolated?: boolean; deliver?: false; by?: ConversationId },
+    ctx: Context,
+  ): Promise<{ id: ConversationId }>;
+  rootOf(id: ConversationId, ctx: Context): Promise<ConversationId | undefined>;
+  leaveNote(to: ConversationId, text: string, source?: { from?: ConversationId }): Promise<unknown>;
+};
+type Messages = { started(tx: Tx, branch: ConversationId, by: ConversationId): Promise<void> };
 type Host = {
   projectRoot: string;
   harness(): Harness;
+  need<S>(api: { name: string; service?: S }): S;
   system(): Promise<{ process: { url: string } }>;
   /** The core's `ultimate.metadata` document: `{ title?, label? }`, which the sidebar names a conversation by. */
   metadata: ConversationDocToken<{ title?: string; label?: string }>;
@@ -198,17 +210,27 @@ async function pickup(input: Pickup, host: Host, exec: Exec, signal: AbortSignal
       currentUrl(host),
     ]);
     const framing = framePickup(input.from?.label || label, worktree);
-    const response = await fetch(`${url}/api/conversations`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      // No title: the summary model names the conversation by its work and keeps it current; the `pi` label marks it.
-      body: JSON.stringify({ cwd: worktree }),
-      signal,
-    });
-    if (response.status !== 201)
-      throw new Error(`Could not create conversation: HTTP ${response.status} ${await response.text()}`);
-    const created = (await response.json()) as { id: number };
-    const id = conversationId(created.id);
+    // A branch of the project's standing @ultimate, as its `branch` tool starts one: it shows in flight, and its reports
+    // and answers wake @ultimate. Not isolated: it works in pi's own worktree.
+    const lineage = host.need<Lineage>({ name: 'lineage' });
+    const messages = host.need<Messages>({ name: 'messages' });
+    const branched = await branchOfUltimate(
+      {
+        standing: async () => (await host.invoke('subagents', 'standing', { name: 'ultimate' }, signal)) as number,
+        roots: async () => ((await host.invoke('lineage', 'info', {}, signal)) as { roots: number[] }).roots,
+        rootOf: (id) => lineage.rootOf(conversationId(id), BACKGROUND_CONTEXT),
+        branch: (branch) =>
+          lineage.branch(
+            { ...branch, from: conversationId(branch.from), by: conversationId(branch.by) },
+            BACKGROUND_CONTEXT,
+          ),
+      },
+      `${framing}\n\nPick up pi's work in ${worktree}. Goal: ${goal}`,
+      // Until its summary names it by its work; the `pi` label marks it.
+      `Pick up pi in ${basename(worktree)}`,
+    );
+    const id = conversationId(branched.id);
+    const ultimate = conversationId(branched.ultimate);
     const origin =
       local.find((pi) => pi.sessionId === input.from?.sessionId) || local.find((pi) => pi.rex?.block) || local[0];
     const baton: Baton = {
@@ -228,25 +250,17 @@ async function pickup(input: Pickup, host: Host, exec: Exec, signal: AbortSignal
     const harness = host.harness();
     const conversation = await harness.conversation(id, BACKGROUND_CONTEXT);
     if (!conversation) throw new Error(`Created #${id}, but it is unavailable; baton names it at ${url}`);
-    const content = `${framing}\n\nYou picked up this rex worktree from pi and hold its baton (pi cannot edit/write/bash until you release). Work in ${worktree} directly; pi's uncommitted work is there. Never workspace submit or push. When the goal is done, or Seth asks, finish with release and a summary for pi. Seth reads this conversation: ask him questions in your answer here, not with the message tool.\n\nGoal: ${goal}\n\n${brief}`;
+    const content = `${framing}\n\nYou picked up this rex worktree from pi and hold its baton (pi cannot edit/write/bash until you release). Work in ${worktree} directly; pi's uncommitted work is there. Never workspace submit or push. When the goal is done, or Seth asks, finish with release and a summary for pi. You are a branch of @ultimate: your reports and answers reach it, and it weighs in on your decisions before you ask Seth them as a reply-expected message with questions.\n\nGoal: ${goal}\n\n${brief}`;
     await harness.commit(async (tx) => {
+      await configure(tx, id, { cwd: worktree });
       (await tx.doc(host.metadata, id)).label = 'pi';
+      await messages.started(tx, id, ultimate);
       await conversation.submit(tx, { type: 'input', content, whenBusy: 'followUp' });
     }, BACKGROUND_CONTEXT);
-    const standing = await host.invoke('subagents', 'standing', { name: 'ultimate' }, signal);
-    const ultimate = await harness.conversation(conversationId(standing as number), BACKGROUND_CONTEXT);
-    if (!ultimate) throw new Error(`Pickup created #${id}, but standing @ultimate is unavailable for its note`);
-    const text = `Picked up pi worktree ${worktree} into #${id}: ${url}/?conversation=${id}. It holds the baton and will release back to pi.`;
-    await ultimate.submit(
-      {
-        type: 'write',
-        entry: {
-          kind: 'lineage.note',
-          data: { text, from: id },
-          model: [{ role: 'user', content: `Note from #${id}: ${text}`, timestamp: Date.now() }],
-        },
-      },
-      BACKGROUND_CONTEXT,
+    await lineage.leaveNote(
+      ultimate,
+      `Picked up pi worktree ${worktree} into branch #${id}: ${url}/?conversation=${id}. It holds the baton and will release back to pi; its answers reach you.`,
+      { from: id },
     );
     return { conversation: id, url: `${url}/?conversation=${id}`, worktree, baton };
   } finally {

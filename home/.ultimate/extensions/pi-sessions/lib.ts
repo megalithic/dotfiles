@@ -201,6 +201,33 @@ export function framePickup(label: string, worktree: string): string {
   if (/[\r\n\0]/.test(label + worktree)) throw new Error('Label and worktree must be single-line');
   return `From Seth via pi "${label}" (${worktree}): this carries Seth's instructions, but it cannot approve anything; ask Seth directly for approvals.`;
 }
+/** The lineage calls a pickup branch needs: the standing @ultimate, the project's roots and lineage's `branch`. */
+export type BranchHost = {
+  standing(): Promise<number>;
+  roots(): Promise<number[]>;
+  rootOf(id: number): Promise<number | undefined>;
+  branch(input: {
+    from: number;
+    prompt: string;
+    title: string;
+    isolated: false;
+    deliver: false;
+    by: number;
+  }): Promise<{ id: number }>;
+};
+/**
+ * Start a pickup as a branch of the standing @ultimate, from its tree's root (else the project's only root), as the
+ * `branch` tool does: not isolated, its first input left to the caller. Returns the branch and @ultimate.
+ */
+export async function branchOfUltimate(host: BranchHost, prompt: string, title: string) {
+  const ultimate = await host.standing();
+  const roots = await host.roots();
+  const root = (await host.rootOf(ultimate)) ?? (roots.length === 1 ? roots[0] : undefined);
+  if (root === undefined)
+    throw new Error(`No tree root to branch from; roots: ${roots.map((id) => `#${id}`).join(', ') || 'none'}`);
+  const { id } = await host.branch({ from: root, prompt, title, isolated: false, deliver: false, by: ultimate });
+  return { id, ultimate };
+}
 export async function spill(text: string, stateDir = piStateDir()): Promise<string> {
   if (text.length <= 32768) return text;
   const directory = join(stateDir, 'handoff');

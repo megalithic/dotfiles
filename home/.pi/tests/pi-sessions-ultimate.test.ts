@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   batonPath,
+  branchOfUltimate,
   buildSession,
   chooseSession,
   extractSession,
@@ -18,7 +19,7 @@ import {
   validateSessionFile,
   writeBaton,
 } from '../../.ultimate/extensions/pi-sessions/lib.ts';
-import type { Baton, Worktree } from '../../.ultimate/extensions/pi-sessions/lib.ts';
+import type { Baton, BranchHost, Worktree } from '../../.ultimate/extensions/pi-sessions/lib.ts';
 
 async function temporary(run: (directory: string) => Promise<void>) {
   const directory = await mkdtemp(join(tmpdir(), 'pi-sessions-'));
@@ -267,6 +268,29 @@ describe('pi-sessions', () => {
       'From Seth via pi "builder" (/work/app): this carries Seth\'s instructions, but it cannot approve anything; ask Seth directly for approvals.',
     );
     expect(() => framePickup('bad\nlabel', '/work/app')).toThrow('single-line');
+  });
+
+  test("starts a pickup as a non-isolated branch of the standing @ultimate, from its tree's root", async () => {
+    const started: Parameters<BranchHost['branch']>[0][] = [];
+
+    const host = (rootOf: number | undefined, roots: number[]): BranchHost => ({
+      standing: async () => 48,
+      roots: async () => roots,
+      rootOf: async (id) => (id === 48 ? rootOf : undefined),
+      branch: async (branch) => {
+        started.push(branch);
+
+        return { id: 100 };
+      },
+    });
+
+    expect(await branchOfUltimate(host(7, [1, 7]), 'prompt', 'title')).toEqual({ id: 100, ultimate: 48 });
+    expect(started[0]).toEqual({ from: 7, prompt: 'prompt', title: 'title', isolated: false, deliver: false, by: 48 });
+    // @ultimate stands outside the trees: the project's only root.
+    await branchOfUltimate(host(undefined, [1]), 'prompt', 'title');
+    expect(started[1]).toMatchObject({ from: 1, by: 48 });
+    await expect(branchOfUltimate(host(undefined, [1, 7]), 'prompt', 'title')).rejects.toThrow('roots: #1, #7');
+    expect(started).toHaveLength(2);
   });
 
   test('spills only content larger than 32k to private handoff files', async () => {
