@@ -39,7 +39,16 @@ export function replyPayload(key: string, text: string, project: string) {
   };
 }
 
-export function controlRequest(payload: ReturnType<typeof replyPayload>) {
+export type DeliveryPayload = {
+  type: 'tell';
+  id: string;
+  text: string;
+  from: string;
+  mode: 'follow_up';
+  replyTo?: string;
+};
+
+export function controlRequest(payload: DeliveryPayload) {
   const { type: _type, id, ...params } = payload;
 
   return {
@@ -51,7 +60,7 @@ export function controlRequest(payload: ReturnType<typeof replyPayload>) {
   };
 }
 
-async function sendSocket(socket: string, payload: ReturnType<typeof replyPayload>): Promise<boolean> {
+async function sendSocket(socket: string, payload: DeliveryPayload): Promise<boolean> {
   const request = controlRequest(payload);
 
   return new Promise((resolve, reject) => {
@@ -107,8 +116,10 @@ async function sendSocket(socket: string, payload: ReturnType<typeof replyPayloa
 }
 
 export async function sendReply(from: Sender, key: string, text: string, project: string, stateDir: string) {
-  const payload = replyPayload(key, text, project);
+  return deliver(from, replyPayload(key, text, project), stateDir);
+}
 
+export async function deliver(from: Sender, payload: DeliveryPayload, stateDir: string) {
   if (from.socket && (await sendSocket(from.socket, payload))) return { delivered: 'socket' as const };
 
   if (!from.sessionId) throw new Error('Pi socket is gone and no sessionId is available for spooling');

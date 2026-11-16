@@ -12,6 +12,8 @@
 #   rwt open [NAME|PATH]        ensure worktree + session exist, repair services
 #   rwt status [NAME|PATH]      worktree, session, services, port, Tidewave
 #   rwt restart [NAME|PATH]     restart services in a fresh terminal
+#   rwt agent [NAME|PATH] [--prompt TEXT] [--json] [--session SID]
+#                               restart only Pi in the agent tab, continuing its session
 #   rwt logs [NAME|PATH] [-n N] services output, read from Rex scrollback
 #   rwt wait-ready [NAME|PATH] [--timeout S]
 #                               block until the server answers; works from any
@@ -407,6 +409,47 @@ cmd_restart() {
   fi
 }
 
+cmd_agent() {
+  resolve
+  local sid block proc pid input
+  # Typed into fish or bash like build_layout's agent_input: plain single-quoted paths only.
+  # Checked before stopping Pi, so a refusal leaves it running.
+  case "$SELF$WT" in *\'*) die 6 "paths with a single quote can't be typed into the agent shell: $WT" ;; esac
+  sid="$(find_session)" || die 3 "no Rex session for $WT (run: rwt open)"
+  block="$(block_by_label "$sid" agent)"
+  if [ -n "$block" ]; then
+    proc="$(rex block call -s "$sid" -b "$block" process)" || die 7 "could not read agent process"
+    # Pi is a Node process, but sets argv0 to pi; never terminate the shell.
+    pid="$(jq -r '[.foreground, .child] | map(select(. != null and (.argv0 == "pi" or .name == "pi"))) | .[0].pid // empty' <<<"$proc")"
+    if [ -n "$pid" ]; then
+      kill -TERM "$pid" 2>/dev/null || die 7 "could not stop Pi ($pid)"
+      for _ in $(seq 1 20); do
+        kill -0 "$pid" 2>/dev/null || break
+        sleep 0.25
+      done
+      kill -0 "$pid" 2>/dev/null && die 7 "Pi ($pid) did not stop within 5 seconds"
+    else
+      # Typing a shell command into another foreground program is unsafe.
+      jq -e '(.foreground // .child).name | . == "fish" or . == "bash" or . == "zsh" or . == "sh"' <<<"$proc" >/dev/null ||
+        die 7 "agent block is not running Pi or a shell"
+    fi
+  else
+    block="$(rex window new -s "$sid" agent -c "$WT" --focus=false --json | jq -er '.block_ids[0]')" || die 7 "could not create agent block"
+    rex block rename -s "$sid" "$block" agent >/dev/null || die 7 "could not label agent block"
+  fi
+  if [ -n "$PROMPT" ]; then
+    mkdir -p "$WT/.local/state" || die 7 "could not create agent state directory"
+    printf '%s' "$PROMPT" >"$WT/.local/state/rwt-prompt" || die 7 "could not write agent prompt"
+  fi
+  input="'$SELF' _agent '$WT' 1"$'\n'
+  rex block send -s "$sid" -b "$block" "$input" >/dev/null || die 7 "could not start Pi in $block"
+  if [ "$JSON" = 1 ]; then
+    jq -cn --arg sid "$sid" --arg block "$block" --argjson prompt "$([ -n "$PROMPT" ] && echo true || echo false)" '{ok:true, session:$sid, block:$block, prompt:$prompt}'
+  else
+    log "agent continuing in $block (session $sid)"
+  fi
+}
+
 cmd_logs() {
   resolve
   local sid block
@@ -604,6 +647,14 @@ case "$cmd" in
   _setup) cmd_setup_block "$1" ;;
   _services) cmd_services_block "$1" ;;
   _agent) cmd_agent_block "$1" "$2" ;;
+  agent)
+    case "${1:-}" in
+      -h | --help)
+        awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$SELF"
+        exit 0
+        ;;
+    esac
+    ;;
 esac
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -645,6 +696,7 @@ case "$cmd" in
   new | open) cmd_open ;;
   status) cmd_status ;;
   restart) cmd_restart ;;
+  agent) cmd_agent ;;
   logs) cmd_logs ;;
   wait-ready) cmd_wait_ready ;;
   prune) cmd_prune ;;

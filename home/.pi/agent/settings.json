@@ -12,9 +12,18 @@
     "reserveTokens": 16384,
     "keepRecentTokens": 30000,
     "modelOverrides": {
-      "llamacpp/qwen3.8-27b": { "reserveTokens": 32768, "keepRecentTokens": 16384 },
-      "llamacpp/flint-40b": { "reserveTokens": 32768, "keepRecentTokens": 20000 },
-      "llamacpp/gemma4-26b": { "reserveTokens": 32768, "keepRecentTokens": 20000 }
+      "llamacpp/qwen3.8-27b": {
+        "reserveTokens": 32768,
+        "keepRecentTokens": 16384
+      },
+      "llamacpp/flint-40b": {
+        "reserveTokens": 32768,
+        "keepRecentTokens": 20000
+      },
+      "llamacpp/gemma4-26b": {
+        "reserveTokens": 32768,
+        "keepRecentTokens": 20000
+      }
     }
   },
   "defaultProvider": "anthropic",
@@ -56,7 +65,7 @@
     "npm:pi-warden",
     "npm:pi-web-access",
     "git:github.com/aliou/nvim-pi",
-    "git:github.com/amosblomqvist/pi-interactive-subagents",
+    "git:github.com/megalithic/pi-interactive-subagents",
     "git:github.com/DietrichGebert/ponytail",
     "git:github.com/christomitov/pi-elixir@fix/host-packages-peer-deps",
     "git:github.com/cloudflare/security-audit-skill"

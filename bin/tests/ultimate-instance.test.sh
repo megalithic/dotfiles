@@ -27,9 +27,15 @@ jq -cn --argjson pid "$dead" --arg project "$tmp/proj/sub/dead" \
   '{pid:$pid, port:4703, project:$project}' >"$ULTIMATE_USER_HOME/projects/dead/ultimate.lock"
 
 out="$("$INSTANCE" "$tmp/proj/sub")"
-jq -e --arg project "$tmp/proj/sub" --argjson pid "$$" \
-  '. == {pid:$pid, port:4702, url:"http://127.0.0.1:4702", project:$project}' <<<"$out" >/dev/null || fail "deepest root: $out"
+jq -e --arg project "$tmp/proj/sub" --arg home "$ULTIMATE_USER_HOME/projects/nested" --argjson pid "$$" \
+  '. == {pid:$pid, port:4702, url:"http://127.0.0.1:4702", project:$project, home:$home}' <<<"$out" >/dev/null || fail "deepest root: $out"
 ok "nested directory picks the deepest live root"
+
+# An instance's own conversation worktrees live under its home, outside its project.
+mkdir -p "$ULTIMATE_USER_HOME/projects/.project/worktrees/42/src"
+out="$("$INSTANCE" "$ULTIMATE_USER_HOME/projects/.project/worktrees/42/src")"
+jq -e '.port == 4701' <<<"$out" >/dev/null || fail "own worktree: $out"
+ok "a conversation worktree under an instance's home picks that instance"
 
 if out="$("$INSTANCE" "$tmp/unrelated")"; then
   fail "unrelated directory matched: $out"
