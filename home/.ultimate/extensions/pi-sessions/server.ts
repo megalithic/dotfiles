@@ -223,7 +223,7 @@ async function pickup(input: Pickup, host: Host, exec: Exec, signal: AbortSignal
     const harness = host.harness();
     const conversation = await harness.conversation(id, BACKGROUND_CONTEXT);
     if (!conversation) throw new Error(`Created #${id}, but it is unavailable; baton names it at ${url}`);
-    const content = `${framing}\n\nYou picked up this rex worktree from pi and hold its baton (pi cannot edit/write/bash until you release). Work in ${worktree} directly; pi's uncommitted work is there. Never workspace submit or push. When the goal is done, or Seth asks, finish with release and a summary for pi.\n\nGoal: ${goal}\n\n${brief}`;
+    const content = `${framing}\n\nYou picked up this rex worktree from pi and hold its baton (pi cannot edit/write/bash until you release). Work in ${worktree} directly; pi's uncommitted work is there. Never workspace submit or push. When the goal is done, or Seth asks, finish with release and a summary for pi. Seth reads this conversation: ask him questions in your answer here, not with the message tool.\n\nGoal: ${goal}\n\n${brief}`;
     await harness.commit(async (tx) => {
       await conversation.submit(tx, { type: 'input', content, whenBusy: 'followUp' });
     }, BACKGROUND_CONTEXT);
