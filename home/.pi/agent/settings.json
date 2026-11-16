@@ -56,7 +56,7 @@
     "npm:pi-warden",
     "npm:pi-web-access",
     "git:github.com/aliou/nvim-pi",
-    "git:github.com/amosblomqvist/pi-interactive-subagents",
+    "git:github.com/megalithic/pi-interactive-subagents",
     "git:github.com/DietrichGebert/ponytail",
     "git:github.com/christomitov/pi-elixir@fix/host-packages-peer-deps",
     "git:github.com/cloudflare/security-audit-skill"
