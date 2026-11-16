@@ -71,7 +71,6 @@ type Pickup = {
   from?: { label?: string; sessionId?: string; socket?: string; pid?: number };
 };
 const pickups = new Set<string>();
-const cwdCache = new Map<number, string>();
 
 function record(args: JsonValue): Record<string, JsonValue | undefined> {
   if (args === null) return {};
@@ -91,11 +90,10 @@ function conversationId(value: number): ConversationId {
 }
 async function cwdFor(host: Host, id: number | undefined, ctx: Context = BACKGROUND_CONTEXT): Promise<string> {
   if (id === undefined) throw new Error('worktree is required outside a conversation');
-  const cached = cwdCache.get(id);
-  if (cached) return cached;
+  // Read every time, never cached: a pickup branch starts at the project root and moves to pi's worktree a commit
+  // later, and a cached first read would point the guard and release at the wrong baton.
   const agent = await (await host.harness().conversation(conversationId(id), ctx))?.agent(ctx);
   if (!agent?.cwd) throw new Error(`No cwd for conversation #${id}`);
-  cwdCache.set(id, agent.cwd);
   return agent.cwd;
 }
 async function sessionRow(
