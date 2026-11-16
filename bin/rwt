@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# rwt - git worktree <-> Rex session lifecycle (trial, runs beside wt/ftm/tmux).
+# rwt - git worktree <-> Rex session lifecycle: create, run, hand off and prune worktrees.
 #
 # One worktree = one Rex session, labeled with the worktree id. Rex owns the
 # terminals; git owns the worktree; the project's mise tasks own setup and
@@ -19,6 +19,8 @@
 #                               shell, so callers need no poll loop of their own
 #   rwt prune NAME              remove a clean, merged worktree + session + branch
 #   rwt ls                      worktrees of this repo and their sessions
+#   rwt id [NAME|PATH]          GIT_WORKTREE id ({repo}-{branch slug}); empty
+#                               in the main checkout
 #
 # Common flags: --json (one JSON object on stdout, progress on stderr),
 # --session SID (act on that session instead of the recorded one),
@@ -73,6 +75,9 @@ default_branch() { # main_root
   echo main
 }
 
+# Only [A-Za-z0-9_] survive; everything else becomes one dash, ends trimmed.
+slug() { printf '%s' "$1" | tr -c 'A-Za-z0-9_' '-' | sed -e 's/--*/-/g' -e 's/^-//' -e 's/-*$//'; }
+
 # Sets MAIN WT BRANCH WID LABEL STATE for TARGET (name, path, or empty for cwd).
 resolve() {
   local here top
@@ -89,15 +94,17 @@ resolve() {
     # Same path template as Worktrunk (.worktrees/<branch with / as ->), so
     # worktrees made by the old wt open here unchanged.
     WT="$MAIN/.worktrees/${TARGET//\//-}"
+    # An existing checkout reports its own branch (empty when detached).
+    [ -e "$WT/.git" ] && BRANCH="$(git -C "$WT" branch --show-current 2>/dev/null)"
   fi
   if [ "$WT" = "$MAIN" ]; then
     WID=
     LABEL="$(basename "$MAIN" | tr -c 'A-Za-z0-9_' '-' | sed 's/-*$//')-main"
   else
-    # Single source of truth for the id stays in bin/wt. Drop an inherited
-    # GIT_WORKTREE: wt echoes it verbatim, which would name the wrong worktree.
-    WID="$(cd "$MAIN" && env -u GIT_WORKTREE "$HOME/.dotfiles/bin/wt" id "$WT" 2>/dev/null)"
-    [ -n "$WID" ] || WID="$(basename "$MAIN")-${BRANCH//\//-}"
+    # The GIT_WORKTREE id, {repo}-{branch slug} (a detached checkout uses its
+    # directory name). Project configs read it with `rwt id`, and per-worktree
+    # database names and ports derive from it, so never change the rule.
+    WID="$(slug "$(basename "$MAIN")")-$(slug "${BRANCH:-$(basename "$WT")}")"
     LABEL="$WID"
   fi
   STATE="$WT/.local/state/rwt-session"
@@ -299,7 +306,7 @@ cmd_open() {
     jq -cn --arg path "$WT" --arg branch "$BRANCH" --arg id "$WID" --argjson cwt "$CREATED_WT" \
       --arg sid "$sid" --arg label "$LABEL" --argjson cs "$created_session" --arg setup "$setup_state" \
       --arg port "$(port_for "$WT")" --argjson blocks "$blocks" \
-      '{ok:true, worktree:{path:$path, branch:$branch, id:$id, created:$cwt},
+      '{ok:true, worktree:{path:$path, branch:(if $branch == "" then null else $branch end), id:$id, created:$cwt},
         session:{id:$sid, label:$label, created:$cs}, setup:$setup, port:$port, layout:$blocks}'
   else
     log "ready: $LABEL -> $WT (session $sid)"
@@ -333,7 +340,7 @@ cmd_status() {
   jq -cn --arg path "$WT" --arg branch "$BRANCH" --arg id "$WID" --argjson dirty "$dirty" \
     --arg sid "$sid" --arg label "$LABEL" --arg block "$block" --argjson proc "$proc" --argjson ps "$ps" \
     --arg port "$port" --arg code "$code" --arg tw "$tw" --arg beam "$beam" --argjson lease "$lease" --arg exited "$exited" '
-    {ok:true, worktree:{path:$path, branch:$branch, id:$id, dirty:$dirty},
+    {ok:true, worktree:{path:$path, branch:(if $branch == "" then null else $branch end), id:$id, dirty:$dirty},
      session:(if $sid == "" then null else {id:$sid, label:$label} end),
      services:(if $block == "" then null else
        {block:$block, running:($proc.child != null and $exited == ""),
@@ -470,6 +477,7 @@ cmd_prune() {
   local sid def
   [ "$WT" != "$MAIN" ] || die 6 "refusing to prune the main checkout"
   [ -d "$WT" ] || die 3 "no worktree at $WT"
+  [ -n "$BRANCH" ] || die 6 "$WT is detached; prune only removes branch worktrees"
   case "$(pwd -P)/" in "$WT"/*) die 6 "refusing to prune the worktree you are standing in" ;; esac
   [ -z "$(git -C "$WT" status --porcelain)" ] || die 6 "$BRANCH has uncommitted or untracked changes"
   def="$(default_branch "$MAIN")"
@@ -485,6 +493,11 @@ cmd_prune() {
   fi
 }
 
+cmd_id() {
+  resolve
+  printf '%s' "$WID"
+}
+
 cmd_ls() {
   resolve
   local sessions
@@ -496,7 +509,7 @@ cmd_ls() {
       sid=
       [ -f "$path/.local/state/rwt-session" ] && sid="$(cat "$path/.local/state/rwt-session")"
       jq -cn --arg p "$path" --arg b "$branch" --arg s "$sid" --argjson all "$sessions" \
-        '{path:$p, branch:$b, session:(if ($all.sessions | map(.session_id) | index($s)) then $s else null end)}'
+        '{path:$p, branch:(if $b == "" then null else $b end), session:(if ($all.sessions | map(.session_id) | index($s)) then $s else null end)}'
     done | jq -cs '{ok:true, worktrees:.}'
 }
 
@@ -648,6 +661,7 @@ case "$cmd" in
   wait-ready) cmd_wait_ready ;;
   prune) cmd_prune ;;
   ls) cmd_ls ;;
+  id) cmd_id ;;
   '' | -h | --help | help) awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$SELF" ;;
   *) die 2 "unknown command: $cmd" ;;
 esac

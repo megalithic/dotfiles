@@ -30,8 +30,8 @@ git/
   comes from `~/.config/1Password/ssh/agent.toml`
   (`config/1Password/ssh/agent.toml`).
 - Runtime deps referenced by `config`: delta (pager), git-lfs (filter), nvim
-  (editor + codediff diff/merge tool), fzf (`cof` alias), worktrunk (`wt`
-  alias), brew git contrib (`jump` alias). All are in
+  (editor + codediff diff/merge tool), fzf (`cof` alias), brew git contrib
+  (`jump` alias). All are in
   `config/mise/config.toml` (`[tools]` / `[bootstrap.packages]`).
 
 ## Applying

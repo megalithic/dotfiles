@@ -231,7 +231,6 @@
     git-prunable;\
     }; f"
 
-  wt = !wt
   ; rb = rebase
   ; rb = rebase -i
 

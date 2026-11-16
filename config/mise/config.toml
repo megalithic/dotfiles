@@ -317,7 +317,6 @@ tree-sitter = "latest"
 typos = "latest"
 usage = "latest"
 uv = "latest"
-worktrunk = "0.76.0"
 yamlfmt = "latest"
 zig = "0.16.0"
 zoxide = "latest"
@@ -1072,7 +1071,7 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/bin/helium-1password-trust"
 # copied: the stub includes the template's tasks.toml and scripts execute
 # from the dotfiles template's scripts/ dir, so template edits apply to
 # every consuming repo immediately. Generation also syncs the project's
-# .worktreeinclude copy-ignored allowlist for the wt v2 flow. Run from a
+# .worktreeinclude copy-ignored allowlist that `rwt new` seeds from. Run from a
 # project root: `mise run gen:shopify`, `mise run gen:elixir -- /path`.
 # Template helper lives in repo bin/ (linked onto PATH).
 [tasks."gen:elixir"]

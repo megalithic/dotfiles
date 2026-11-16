@@ -148,7 +148,7 @@ deps
 .local/
 .build/
 
-# Project-local config dirs (Worktrunk .config/wt.toml, mise .config/mise.local.toml, etc.)
+# Project-local config dirs (mise .config/mise.local.toml, Rex .config/rex/layout.lua, etc.)
 .config/
 **/.config/
 .pi-lens.json

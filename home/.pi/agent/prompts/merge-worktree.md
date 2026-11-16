@@ -50,7 +50,7 @@ Only remove branch `$1` and its worktree. Never touch other branches or worktree
 
 ```bash
 cd "$repo_root"
-wt prune "$1"
+rwt prune "$1"
 ```
 
-`wt prune` verifies the worktree is clean and integrated, removes its tmux session, then removes the worktree and branch. If it refuses or reports `partial`, present the reason and wait for my direction — never fall back to `git worktree remove --force` or `git branch -D` without approval.
+`rwt prune` verifies the worktree is clean and merged, kills its Rex session, then removes the worktree and branch. If it refuses (exit 6), present the reason and wait for my direction — never fall back to `git worktree remove --force` or `git branch -D` without approval.

@@ -1,5 +1,5 @@
 # shellcheck shell=bash
-# wt-lock-lib — shared mkdir(2)-based mutation locks for wt and ftm
+# wt-lock-lib — mkdir(2)-based mutation locks for ftm (formerly shared with wt)
 # (worktree-retaining design §1 "Backend result validation and
 # concurrency"). Sourced, never executed.
 #
@@ -14,8 +14,8 @@
 # a crash between mkdir and the metadata write). Everything else reports
 # busy — fail-closed.
 #
-# A lease token names one held repository+worktree pair. wt acquires the
-# locks, passes the token to ftm (--lease), and ftm validates the token
+# A lease token names one held repository+worktree pair. A caller that
+# acquires the locks passes the token to ftm (--lease), and ftm validates it
 # against the same metadata instead of re-acquiring.
 #
 # Reclaim renames the lock dir aside before deleting it, so two waiters that
