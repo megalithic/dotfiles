@@ -51,8 +51,8 @@ done
 #    Self-derives GIT_WORKTREE ({repo}-{branch-slug}) when unset, so the
 #    port is correct even before mise env exports it (fresh worktrees).
 wt="${GIT_WORKTREE:-}"
-if [ -z "$wt" ] && [ -x "$HOME/.dotfiles/bin/wt" ]; then
-  wt="$("$HOME/.dotfiles/bin/wt" id "$root" 2>/dev/null || true)"
+if [ -z "$wt" ] && [ -x "$HOME/.dotfiles/bin/rwt" ]; then
+  wt="$("$HOME/.dotfiles/bin/rwt" id "$root" 2>/dev/null || true)"
 fi
 # slashes in branch-name worktrees would create subdirs — flatten for filename
 wt_file="$(printf "%s" "${wt:-main}" | tr -c "A-Za-z0-9_." "-")"

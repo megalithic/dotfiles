@@ -24,13 +24,13 @@ _.source = "{{env.HOME}}/.dotfiles/config/mise/tmpls/elixir/env.sh"
 # these resolve against the right checkout. `_.source` cannot do this — mise
 # runs it with cwd = config root, which would freeze the ancestor's values.
 
-# Respects a pre-set GIT_WORKTREE, otherwise asks the local `wt` wrapper for
-# the canonical "{repo-name}-{branch-slug}" id. Main repo checkout → empty
-# (config/dev.exs treats nil/"" as no worktree). Absolute path: in sh/mise
-# context plain `wt` resolves to the Worktrunk binary, not the wrapper.
+# Respects a pre-set GIT_WORKTREE, otherwise asks `rwt id` for the canonical
+# "{repo-name}-{branch-slug}" id. Main repo checkout → empty
+# (config/dev.exs treats nil/"" as no worktree). Absolute path: mise's exec
+# shell may not have ~/bin on PATH.
 GIT_WORKTREE = { default = """{{ exec(command='
 cd "' ~ cwd ~ '" 2>/dev/null || true
-w="$HOME/.dotfiles/bin/wt"; [ -x "$w" ] && "$w" id . 2>/dev/null || true
+w="$HOME/.dotfiles/bin/rwt"; [ -x "$w" ] && "$w" id . 2>/dev/null || true
 ') }}""" }
 
 # Phoenix port via dotfiles phx-port.sh: $PORT override, else a running beam

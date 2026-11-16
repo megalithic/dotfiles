@@ -31,7 +31,7 @@ mise run doctor              # health check
 - Host-only tools/packages go in `config.<host>.toml`.
 - Missing tool: `MISE_AUTO_INSTALL=false mise exec <tool>@<version> -- <cmd>`. No global installs. Change tool config only when asked.
 - Pi config lives in `home/.pi/` (see `home/.pi/AGENTS.md`). Prefix with `_` to disable an extension, skill, prompt, or agent.
-- `config/{git,jj,zsh,atuin,worktrunk}/` have their own AGENTS.md; read it before editing there.
+- `config/{git,jj,zsh,atuin}/` have their own AGENTS.md; read it before editing there.
 - Hammerspoon: reload only with `bin/hs-reload`. Anything else crashes it.
 
 ## Tests and checks

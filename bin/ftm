@@ -3,6 +3,8 @@
 #
 # ftm — fuzzy tmux session/layout switcher
 #
+# Deprecated: kept for tmux by hand. Worktrees and agents use rwt and Rex.
+#
 # ftm [options] [SESSION_NAME | FUZZY_PATTERN]
 #
 # Running `ftm` with no argument opens a fuzzy-finder over recent sessions,
@@ -495,7 +497,7 @@ function preview_entry() {
 
 # -- ctrl-y: copy the tell id when the session runs exactly one Pi with a
 #    known session id; otherwise one labeled line with the session and its
-#    worktree (branch, else dir basename: the same rule as wt's worktree id).
+#    worktree (branch, else dir basename: the same rule as `rwt id`).
 #    Rows that are not running sessions copy nothing.
 function copy_entry() {
   local name="$1" sid wt branch pane pi_sid count=0 tell="" text
@@ -695,18 +697,11 @@ function to_session() {
   tmux "$change" -t "$sid" ';' refresh-client
 }
 
-# -- Git directories use wt's full lifecycle, including primary checkouts.
-#    Keep explicit primary-checkout layouts; linked worktrees always use wt.
-#    Alt-enter bypasses both paths and builds a fresh generic session.
+# -- A saved snapshot, then a named layout, then the default session.
+#    Alt-enter bypasses both and builds a fresh generic session. Worktree
+#    lifecycles (setup, services, agent) live in rwt and Rex, not here.
 function new_session() {
-  local session="$1" cwd="$2" source="${3:-default}" gd
-
-  if [[ $source != fresh ]] && gd="$(git -C "$cwd" rev-parse --git-dir 2>/dev/null)"; then
-    if [[ $gd == */worktrees/* || -z $layouts_dir || ! -f "$layouts_dir/$session.sh" ]]; then
-      (cd "$cwd" && env -u GIT_WORKTREE "$script_dir/wt" open .)
-      return $?
-    fi
-  fi
+  local session="$1" cwd="$2" source="${3:-default}"
 
   if [[ $source != fresh && -f "$(snapshot_file "$session")" ]] && restore_snapshot "$session"; then
     to_session "$session"

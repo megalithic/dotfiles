@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# rwt beside detached worktrees (such as Ultimate's lander checkout, which made
-# the old `wt list` fail with backend_parse_failed). A stub rex stands in for
-# the Rex server, so no running Rex is needed: bash bin/tests/rwt-detached.test.sh
+# Offline rwt checks: worktree ids, and detached worktrees (such as Ultimate's
+# lander checkout, which made the old `wt list` fail with backend_parse_failed).
+# A stub rex stands in for the Rex server: bash bin/tests/rwt.test.sh
 set -euo pipefail
 RWT="$(cd "$(dirname "$0")/.." && pwd)/rwt"
 tmp="$(mktemp -d)"
@@ -67,5 +67,11 @@ set -e
 [ "$rc" -eq 6 ] && jq -e '.error | test("detached")' <<<"$p" >/dev/null || fail "prune detached: rc=$rc $p"
 [ -d .worktrees/loose ] || fail "prune removed the detached worktree"
 ok "prune refuses a detached worktree"
+
+# Project configs derive each worktree's database and port from this id.
+[ "$("$RWT" id "$repo")" = "" ] && [ "$("$RWT" id .worktrees/feat-y)" = repo-feat-y ] &&
+  [ "$("$RWT" id "$tmp/lander")" = repo-lander ] && [ "$("$RWT" id feat/y)" = repo-feat-y ] ||
+  fail "id: main=$("$RWT" id "$repo") feat=$("$RWT" id .worktrees/feat-y) lander=$("$RWT" id "$tmp/lander")"
+ok "id: empty in main, {repo}-{branch slug}, directory name when detached"
 
 echo "all $pass checks passed"

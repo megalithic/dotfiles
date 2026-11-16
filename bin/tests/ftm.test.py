@@ -399,33 +399,20 @@ class FtmTest(unittest.TestCase):
         self.env["ZOXIDE_PATH"] = str(cwd)
         return cwd
 
-    def assert_wt_open(self, cwd):
-        self.assertEqual(self.calls("wt"), [{"command": "wt", "args": ["open", "."],
-                                           "cwd": str(cwd), "git_worktree": None}])
-        self.assertFalse(any(c["args"][0] == "new-session" for c in self.calls("tmux")))
-        self.assertEqual(self.calls("mise"), [])
+    def assert_plain_session(self):
+        self.assertEqual(self.calls("wt"), [])
+        creates = [c["args"] for c in self.calls("tmux") if c["args"][0] == "new-session"]
+        self.assertEqual(len(creates), 1)
 
-    def test_primary_git_directory_routes_through_wt_with_clean_environment(self):
-        cwd = self.git_cwd()
+    def test_primary_git_directory_opens_a_plain_session(self):
+        self.git_cwd()
         self.run_ftm("project")
-        self.assert_wt_open(cwd)
+        self.assert_plain_session()
 
-    def test_linked_git_directory_routes_through_wt_with_clean_environment(self):
-        cwd = self.git_cwd(linked=True)
+    def test_linked_git_directory_opens_a_plain_session(self):
+        self.git_cwd(linked=True)
         self.run_ftm("project")
-        self.assert_wt_open(cwd)
-
-    def test_wt_failure_is_propagated_without_generic_fallback(self):
-        cwd = self.git_cwd()
-        self.env["WT_EXIT"] = "42"
-        self.run_ftm("project", expected=42)
-        self.assert_wt_open(cwd)
-
-    def test_linked_wt_failure_is_propagated_without_generic_fallback(self):
-        cwd = self.git_cwd(linked=True)
-        self.env["WT_EXIT"] = "42"
-        self.run_ftm("project", expected=42)
-        self.assert_wt_open(cwd)
+        self.assert_plain_session()
 
     def add_layout(self):
         (self.layouts / "project.sh").write_text(
@@ -439,12 +426,12 @@ class FtmTest(unittest.TestCase):
         self.assertEqual((self.root / "layout-ran").read_text(), "layout")
         self.assertEqual(self.calls("wt"), [])
 
-    def test_linked_git_directory_routes_through_wt_even_with_named_layout(self):
-        cwd = self.git_cwd(linked=True)
+    def test_linked_git_directory_keeps_named_layout(self):
+        self.git_cwd(linked=True)
         self.add_layout()
         self.run_ftm("project")
-        self.assert_wt_open(cwd)
-        self.assertFalse((self.root / "layout-ran").exists())
+        self.assertEqual((self.root / "layout-ran").read_text(), "layout")
+        self.assertEqual(self.calls("wt"), [])
 
     def test_fresh_bypasses_wt_snapshot_and_named_layout(self):
         cwd = self.git_cwd(linked=True)

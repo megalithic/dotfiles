@@ -17,6 +17,8 @@
 #                               shell, so callers need no poll loop of their own
 #   rwt prune NAME              remove a clean, merged worktree + session + branch
 #   rwt ls                      worktrees of this repo and their sessions
+#   rwt id [NAME|PATH]          GIT_WORKTREE id ({repo}-{branch slug}); empty
+#                               in the main checkout
 #
 # Common flags: --json (one JSON object on stdout, progress on stderr),
 # --session SID (act on that session instead of the recorded one),
@@ -71,6 +73,9 @@ default_branch() { # main_root
   echo main
 }
 
+# Only [A-Za-z0-9_] survive; everything else becomes one dash, ends trimmed.
+slug() { printf '%s' "$1" | tr -c 'A-Za-z0-9_' '-' | sed -e 's/--*/-/g' -e 's/^-//' -e 's/-*$//'; }
+
 # Sets MAIN WT BRANCH WID LABEL STATE for TARGET (name, path, or empty for cwd).
 resolve() {
   local here top
@@ -94,10 +99,10 @@ resolve() {
     WID=
     LABEL="$(basename "$MAIN" | tr -c 'A-Za-z0-9_' '-' | sed 's/-*$//')-main"
   else
-    # Single source of truth for the id stays in bin/wt. Drop an inherited
-    # GIT_WORKTREE: wt echoes it verbatim, which would name the wrong worktree.
-    WID="$(cd "$MAIN" && env -u GIT_WORKTREE "$HOME/.dotfiles/bin/wt" id "$WT" 2>/dev/null)"
-    [ -n "$WID" ] || WID="$(basename "$MAIN")-${BRANCH//\//-}"
+    # The GIT_WORKTREE id, {repo}-{branch slug} (a detached checkout uses its
+    # directory name). Project configs read it with `rwt id`, and per-worktree
+    # database names and ports derive from it, so never change the rule.
+    WID="$(slug "$(basename "$MAIN")")-$(slug "${BRANCH:-$(basename "$WT")}")"
     LABEL="$WID"
   fi
   STATE="$WT/.local/state/rwt-session"
@@ -445,6 +450,11 @@ cmd_prune() {
   fi
 }
 
+cmd_id() {
+  resolve
+  printf '%s' "$WID"
+}
+
 cmd_ls() {
   resolve
   local sessions
@@ -599,6 +609,7 @@ case "$cmd" in
   wait-ready) cmd_wait_ready ;;
   prune) cmd_prune ;;
   ls) cmd_ls ;;
+  id) cmd_id ;;
   '' | -h | --help | help) awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$SELF" ;;
   *) die 2 "unknown command: $cmd" ;;
 esac

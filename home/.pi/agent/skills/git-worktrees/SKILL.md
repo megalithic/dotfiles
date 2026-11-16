@@ -14,8 +14,8 @@ Never:
 
 - run raw `git worktree add/remove` or `git branch -D` on a worktree branch;
 - build Rex sessions, tabs or blocks yourself, or start `dev:services` yourself (use `rwt restart`);
-- use `wt`, `ftm`, or tmux sessions/windows for worktrees: they are the old workflow;
-- compute `GIT_WORKTREE` (read `.worktree.id` from `rwt status`).
+- use `ftm` or tmux sessions/windows for worktrees (`wt` is gone; `ftm` stays only for tmux by hand);
+- compute `GIT_WORKTREE` yourself (use `rwt id [NAME|PATH]`).
 
 If `rwt` fails to run, stop and report the error. There is no fallback workflow.
 
@@ -31,6 +31,7 @@ If `rwt` fails to run, stop and report the error. There is no fallback workflow.
 | `rwt logs [NAME\|PATH] [-n N]` | Last N lines (default 200) of the services tab. |
 | `rwt restart [NAME\|PATH]` | Stop the server and start `dev:services` in a fresh terminal in the same place. |
 | `rwt prune NAME` | Remove a clean, merged worktree, its session, and its branch. |
+| `rwt id [NAME\|PATH]` | The `GIT_WORKTREE` id (`{repo}-{branch slug}`) that names the worktree's database and port; empty in the main checkout. |
 
 No target means the checkout you're in. Flags:
 

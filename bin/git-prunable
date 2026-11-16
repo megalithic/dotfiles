@@ -74,15 +74,11 @@ if [ "${#wt_paths[@]}" -gt 0 ]; then
     echo "    ${wt_paths[$i]}  [${wt_branches[$i]}]$note"
     i=$((i + 1))
   done
-  if command -v wt >/dev/null 2>&1; then
-    echo "  → wt step prune"
-  else
-    i=0
-    while [ "$i" -lt "${#wt_paths[@]}" ]; do
-      echo "  → git worktree remove ${wt_paths[$i]} && git branch -d ${wt_branches[$i]}"
-      i=$((i + 1))
-    done
-  fi
+  i=0
+  while [ "$i" -lt "${#wt_paths[@]}" ]; do
+    echo "  → rwt prune ${wt_branches[$i]}"
+    i=$((i + 1))
+  done
 fi
 
 # ---- merged local branches without a worktree ---------------------------------
