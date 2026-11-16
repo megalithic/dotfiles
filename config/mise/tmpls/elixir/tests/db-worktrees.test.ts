@@ -39,6 +39,10 @@ git(main, 'worktree', 'add', '-q', '--detach', path.join(tmp, '7'));
 fs.writeFileSync(path.join(tmp, '7/.env'), 'PORT=20070\nGIT_WORKTREE=ult_7 # pinned id\n');
 git(main, 'worktree', 'add', '-q', '--detach', path.join(tmp, '8'));
 fs.writeFileSync(path.join(tmp, '8/.env'), "  export GIT_WORKTREE='ult_8'\n");
+// A second checkout without worktrees, so no live name protects anything.
+const bare = path.join(tmp, 'bare');
+fs.mkdirSync(path.join(bare, 'tmp/pg/data'), { recursive: true });
+git(tmp, 'init', '-q', '-b', 'main', bare);
 afterAll(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
 const gone = 'provider_portal-sm-gone-with-a-rather-long-name';
@@ -65,17 +69,18 @@ const databases = [
 const shells = [...new Set(['/bin/bash', Bun.which('bash')].filter((s): s is string => !!s && fs.existsSync(s)))];
 
 for (const bash of shells) {
-  const run = (args: string[], opts: { up?: boolean; datadir?: string } = {}) => {
+  const run = (args: string[], opts: { up?: boolean; datadir?: string; cwd?: string } = {}) => {
+    const cwd = opts.cwd ?? main;
     const log = path.join(tmp, 'psql.log');
     fs.rmSync(log, { force: true });
     const r = Bun.spawnSync([bash, script, ...args], {
-      cwd: main,
+      cwd,
       env: {
         PATH: `${tmp}/bin:/usr/bin:/bin:${path.dirname(Bun.which('git') ?? '/usr/bin/git')}`,
         HOME: tmp,
         PGPORT: '5999',
         PG_UP: opts.up === false ? '1' : '0',
-        PG_DATADIR: opts.datadir ?? path.join(main, 'tmp/pg/data'),
+        PG_DATADIR: opts.datadir ?? path.join(cwd, 'tmp/pg/data'),
         PSQL_LOG: log,
         DBS: databases.map((d, i) => `${d}\t${(i + 1) * 1024 * 1024}`).join('\n'),
       },
@@ -111,7 +116,7 @@ for (const bash of shells) {
       }
       expect(run(['drop', '']).code).toBe(2);
       // Every id truncates to the long main database's own name.
-      const r = run(['drop', 'ult_9']);
+      const r = run(['drop', 'ult_9'], { cwd: bare });
       expect(r.dropped).toEqual(['rx_test_ult_9']);
       expect(r.out).toContain(`kept ${longBase}`);
     });
