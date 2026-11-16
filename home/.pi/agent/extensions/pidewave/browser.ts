@@ -64,12 +64,12 @@ export const parsePageMessage = (payload: string): PageMessage | undefined => {
   } catch {}
 };
 
-/** Tabs on these origins that pidewave links: app pages and the Connect page, not other Tidewave pages. */
-export const tabKind = (url: string, origins: string[]): Tab['kind'] | undefined => {
+/** Tabs of this app that pidewave links: app pages and the Connect page, not other Tidewave pages. */
+export const tabKind = (url: string, ofApp: (origin: string) => boolean): Tab['kind'] | undefined => {
   try {
     const parsed = new URL(url);
 
-    if (!origins.includes(parsed.origin)) return;
+    if (!ofApp(parsed.origin)) return;
 
     if (parsed.pathname === '/tidewave/connect') return 'connect';
 
@@ -91,16 +91,28 @@ type Linked = Tab & { sessionId?: string; contexts?: Map<number, string> };
 
 const plain = ({ sessionId: _session, contexts: _contexts, ...tab }: Linked): Tab => tab;
 
-/** The origin and its loopback alias: a localhost endpoint also serves 127.0.0.1 tabs, and back. */
-export const originAliases = (origin: string): string[] => {
-  const url = new URL(origin);
-  const other = url.hostname === 'localhost' ? '127.0.0.1' : url.hostname === '127.0.0.1' ? 'localhost' : undefined;
+const LOOPBACK = /^(?:localhost|(?:[a-z0-9-]+\.)+localhost|127\.0\.0\.1|\[::1\])$/;
 
-  if (!other) return [url.origin];
-  const alias = new URL(url.origin);
-  alias.hostname = other;
+/**
+ * Whether an origin belongs to this app: the same scheme and port on any loopback
+ * name (localhost, *.localhost such as admin.localhost, 127.0.0.1, [::1]) serves the same Phoenix app.
+ */
+export const appOrigins = (origin: string): ((candidate: string) => boolean) => {
+  const app = new URL(origin);
+  const loopback = LOOPBACK.test(app.hostname);
 
-  return [url.origin, alias.origin];
+  return (candidate) => {
+    try {
+      const url = new URL(candidate);
+
+      return (
+        url.origin === app.origin ||
+        (loopback && url.protocol === app.protocol && url.port === app.port && LOOPBACK.test(url.hostname))
+      );
+    } catch {
+      return false;
+    }
+  };
 };
 
 export const createBrowserLink = (
@@ -108,7 +120,7 @@ export const createBrowserLink = (
   events: LinkEvents,
   endpoint = `http://127.0.0.1:${process.env.PIDEWAVE_CDP_PORT || '9223'}`,
 ): BrowserLink => {
-  const origins = originAliases(origin);
+  const ofApp = appOrigins(origin);
   const tabs = new Map<string, Linked>();
   const pending = new Map<number, Pending>();
   let socket: WebSocket | undefined;
@@ -190,7 +202,7 @@ export const createBrowserLink = (
 
   const onTarget = (target: JsonValue | undefined): void => {
     if (!isJsonObject(target) || !isJsonString(target.targetId) || !isJsonString(target.url)) return;
-    const kind = target.type === 'page' ? tabKind(target.url, origins) : undefined;
+    const kind = target.type === 'page' ? tabKind(target.url, ofApp) : undefined;
     const known = tabs.get(target.targetId);
 
     if (!kind) {
@@ -234,7 +246,7 @@ export const createBrowserLink = (
 
     // CDP names the calling frame's context; an iframe from another origin (another
     // localhost port) or an extension's isolated world shares the session but not the origin.
-    if (!tab || !tabKind(tab.url, origins) || !callerOrigin || !origins.includes(callerOrigin)) return;
+    if (!tab || !tabKind(tab.url, ofApp) || !callerOrigin || !ofApp(callerOrigin)) return;
     const message = parsePageMessage(params.payload);
 
     if (!message) return;

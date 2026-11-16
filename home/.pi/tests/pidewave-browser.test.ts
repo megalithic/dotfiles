@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import {
+  appOrigins,
   createBrowserLink,
   type PageMessage,
   parsePageMessage,
@@ -31,7 +32,7 @@ const targets = [
   { targetId: 'app', type: 'page', url: `${origin}/orders`, title: 'Orders' },
   { targetId: 'connect', type: 'page', url: `${origin}/tidewave/connect`, title: 'Connect' },
   { targetId: 'ide', type: 'page', url: `${origin}/tidewave`, title: 'IDE' },
-  { targetId: 'loopback', type: 'page', url: 'http://127.0.0.1:4123/', title: 'Loopback' },
+  { targetId: 'loopback', type: 'page', url: 'http://admin.localhost:4123/', title: 'Admin' },
   { targetId: 'foreign', type: 'page', url: 'http://localhost:4999/', title: 'Other app' },
   { targetId: 'worker', type: 'service_worker', url: `${origin}/sw.js`, title: '' },
 ];
@@ -260,8 +261,8 @@ describe('browser link', () => {
     expect(await link.inspect(undefined, false)).toBe('active');
     const evaluate = browser.commands('Runtime.evaluate').at(-1)!;
     expect(evaluate.sessionId).toBe('s-loopback');
-    // Inspect checks the tab's own origin, so a 127.0.0.1 tab of a localhost endpoint works.
-    expect(String(evaluate.params.expression)).toContain(JSON.stringify('http://127.0.0.1:4123'));
+    // Inspect checks the tab's own origin, so an admin.localhost tab of a localhost endpoint works.
+    expect(String(evaluate.params.expression)).toContain(JSON.stringify('http://admin.localhost:4123'));
   });
 
   test('stop detaches every tab; no browser means down', async () => {
@@ -298,12 +299,44 @@ describe('browser helpers', () => {
     expect(parsePageMessage('[]')).toBeUndefined();
   });
 
+  test('the app is its port on any loopback name', () => {
+    const ofApp = appOrigins(origin);
+
+    for (const same of [
+      'http://127.0.0.1:4123',
+      'http://admin.localhost:4123',
+      'http://a.b.localhost:4123',
+      'http://[::1]:4123',
+    ]) {
+      expect(ofApp(same)).toBe(true);
+      expect(appOrigins(same)(origin)).toBe(true);
+    }
+
+    for (const other of [
+      'http://localhost:4999',
+      'https://localhost:4123',
+      'http://localhost.evil:4123',
+      'http://evillocalhost:4123',
+      'http://127.0.0.2:4123',
+      'http://example.com:4123',
+      'null',
+      '',
+    ]) {
+      expect(ofApp(other)).toBe(false);
+    }
+
+    // A non-loopback origin only matches itself.
+    expect(appOrigins('http://example.com:4123')('http://example.com:4123')).toBe(true);
+    expect(appOrigins('http://example.com:4123')(origin)).toBe(false);
+  });
+
   test('tab kinds and picking', () => {
-    const origins = [origin];
-    expect(tabKind(`${origin}/x?y#z`, origins)).toBe('app');
-    expect(tabKind(`${origin}/tidewave/connect`, origins)).toBe('connect');
-    expect(tabKind(`${origin}/tidewave/anything`, origins)).toBeUndefined();
-    expect(tabKind('not a url', origins)).toBeUndefined();
+    const ofApp = appOrigins(origin);
+    expect(tabKind(`${origin}/x?y#z`, ofApp)).toBe('app');
+    expect(tabKind('http://admin.localhost:4123/tidewave/connect', ofApp)).toBe('connect');
+    expect(tabKind(`${origin}/tidewave/anything`, ofApp)).toBeUndefined();
+    expect(tabKind('http://localhost:4999/', ofApp)).toBeUndefined();
+    expect(tabKind('not a url', ofApp)).toBeUndefined();
 
     const connect: Tab = { targetId: 'c', url: '', title: '', kind: 'connect' };
     const app: Tab = { targetId: 'a', url: '', title: '', kind: 'app' };
