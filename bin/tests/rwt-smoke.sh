@@ -42,8 +42,7 @@ printf '# copied into new worktrees\n.config/\ndeps/\n' >.worktreeinclude
 cat >.config/port.sh <<'EOF'
 # Deterministic per-checkout port, like phx-port.sh: 7400 + cksum(root) % 400.
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
-PHX_PORT=$((7400 + $(printf %s "$root" | cksum | cut -d' ' -f1) % 400))
-export PHX_PORT
+echo $((7400 + $(printf %s "$root" | cksum | cut -d' ' -f1) % 400))
 EOF
 cat >.config/server.exs <<'EOF'
 port = String.to_integer(System.fetch_env!("PHX_PORT"))
@@ -61,9 +60,11 @@ spawn(fn ->
   serve.(serve, l)
 end)
 EOF
+# Like the elixir template: PHX_PORT is a default, so a Rex terminal that
+# starts with it already set gets nothing back from `mise env`.
 cat >.config/mise.toml <<'EOF'
 [env]
-_.source = "{{config_root}}/.config/port.sh"
+PHX_PORT = { default = "{{ exec(command='cd \"' ~ cwd ~ '\" && bash .config/port.sh') }}" }
 
 [tasks."dev:setup"]
 run = '''
@@ -96,7 +97,7 @@ jq -e '.services.running and .http.app == 200 and .port != null' <<<"$st" >/dev/
 pid1="$(jq -r .services.beam_pid <<<"$st")"
 block1="$(jq -r .services.block <<<"$st")"
 ok "services up on :$(jq -r .port <<<"$st") (pid $pid1)"
-"$REX" window ls -s "$sid" --json | jq -e --arg l "services-$(jq -r .port <<<"$st")" '[.windows[].label] | index($l)' >/dev/null || fail "services tab not titled with the port"
+"$REX" window ls -s "$sid" --json | jq -e --arg l "services:$(jq -r .port <<<"$st")" '[.windows[].label] | index($l)' >/dev/null || fail "services tab not titled with the port"
 ok "services tab titled with the port"
 sleep 2
 ps="$("$RWT" status "$wt" | jq -c .services.program_status)"

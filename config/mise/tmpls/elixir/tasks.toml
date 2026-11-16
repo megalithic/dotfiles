@@ -40,12 +40,15 @@ mise install
 mise run bootstrap
 marker=.local/state/setup-complete
 mkdir -p "$(dirname "$marker")"
+mise run start:db
 if [ -f "$marker" ]; then
-  echo "dev setup already complete ($(cat "$marker"))"
+  # The toolchain setup ran once; the databases are ensured on every run, so
+  # a session rebuilt after a failed setup, a dropped database or new
+  # migrations still end up created, migrated and seeded.
+  echo "dev setup already complete ($(cat "$marker")); ensuring databases"
+  mix deps.get
+  bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/db-ensure.sh"
 else
-  # setup.sh creates databases without dropping them, so start the shared
-  # per-repository cluster only for the first full worktree setup.
-  mise run start:db
   bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/setup.sh"
   date '+%F %T' >"$marker.tmp.$$"
   mv "$marker.tmp.$$" "$marker"
