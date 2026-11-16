@@ -20,6 +20,39 @@ local function session_cwd(ctx)
 end
 
 rex.action{
+  name = "ultimate_handoff",
+  title = "Hand off to Ultimate",
+  category = "Ultimate",
+  run = function(ctx)
+    local cwd = session_cwd(ctx)
+    if not cwd then error("no pane in this session reports a working directory", 0) end
+    local result, err = rex.exec({ INSTANCE, cwd }, { timeout = 5 })
+    if not result then error(err, 0) end
+    if not result.ok then error("no Ultimate instance runs for " .. cwd, 0) end
+    local instance, decode_err = rex.json.decode(result.stdout)
+    if not instance then error(decode_err, 0) end
+    local body, encode_err = rex.json.encode({ args = { cwd = cwd, from = { label = "rex" } } })
+    if not body then error(encode_err, 0) end
+    local response, request_err = rex.exec({
+      "/usr/bin/curl", "--fail-with-body", "-sS", "--max-time", "60",
+      "-H", "Origin: " .. instance.url, "-H", "Content-Type: application/json",
+      "--data-binary", body, instance.url .. "/api/extensions/pi-sessions/actions/pickup",
+    }, { timeout = 65 })
+    if not response then error(request_err, 0) end
+    local pickup, pickup_err = rex.json.decode(response.stdout)
+    if not response.ok then
+      error(pickup and pickup.error or (response.stdout ~= "" and response.stdout or response.stderr), 0)
+    end
+    if not pickup then error(pickup_err, 0) end
+    if pickup.error then error(pickup.error, 0) end
+    if not pickup.result or not pickup.result.url then error("pickup returned no conversation URL", 0) end
+    local opened, open_err = rex.exec({ "/usr/bin/open", pickup.result.url }, { timeout = 5 })
+    if not opened then error(open_err, 0) end
+    if not opened.ok then error("could not open Ultimate: " .. opened.stderr, 0) end
+  end,
+}
+
+rex.action{
   name = "ultimate_open",
   title = "Open @ultimate",
   category = "Ultimate",
