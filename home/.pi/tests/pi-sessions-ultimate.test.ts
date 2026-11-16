@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, mock, test } from 'bun:test';
 import { mkdtemp, mkdir, readFile, readdir, realpath, rm, stat, symlink, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -309,6 +309,45 @@ describe('pi-sessions', () => {
 
     expect(baton).toBeNull();
     expect(calls).toEqual([]);
+  });
+
+  test('reads a conversation’s cwd afresh: a pickup branch moves from the project root to pi’s worktree', async () => {
+    // The server facet's Ultimate imports, which only the host provides.
+    mock.module('@earendil-works/pi-durable', () => ({
+      configure: async () => undefined,
+      defineExtension: <Extension>(extension: Extension) => extension,
+      defineTool: <Tool>(tool: Tool) => tool,
+      hook: () => ({}),
+      ToolTask: {},
+    }));
+    mock.module('@earendil-works/chord/context', () => ({ BACKGROUND_CONTEXT: {} }));
+    const { actions } = await import('../../.ultimate/extensions/pi-sessions/server.ts');
+
+    await temporary(async (directory) => {
+      const project = await realpath(directory);
+      const worktree = join(project, '.worktrees', 'topic');
+      await mkdir(join(project, '.git'), { recursive: true });
+      await mkdir(worktree, { recursive: true });
+      await writeBaton({ v: 1, holder: 'pi', worktree, at: '2026-01-01T00:00:00Z', by: 'release' });
+      let cwd = project;
+
+      // SAFETY: the baton action reads only host.projectRoot, the conversation's agent cwd and exec.
+      const context = {
+        host: {
+          projectRoot: project,
+          harness: () => ({ conversation: async () => ({ agent: async () => ({ cwd }) }) }),
+        },
+        conversationId: 61,
+        exec: async (_command: string, args: string[]) => ({
+          stdout: args.includes('--show-toplevel') ? args[1] : join(project, '.git'),
+          stderr: '',
+        }),
+      } as Parameters<typeof actions.baton>[1];
+
+      expect(await actions.baton(null, context)).toBeNull();
+      cwd = worktree;
+      expect((await actions.baton(null, context))?.worktree).toBe(worktree);
+    });
   });
 
   test('spills only content larger than 32k to private handoff files', async () => {
