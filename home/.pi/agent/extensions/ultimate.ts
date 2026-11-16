@@ -121,12 +121,13 @@ export const historyTarget = (
   batonProject?: string,
   project?: string,
 ): Target | undefined =>
-  // An explicit project wins: on another machine this cwd may match an unrelated instance.
-  (project ? resolveTargets(inventory, `ultimate:${project}`)[0] : undefined) ||
-  inventory.find(
-    (target) => target.ultimate && target.ultimate.project === batonProject && target.ultimate.alive !== false,
-  ) ||
-  containingUltimate(inventory, cwd);
+  // An explicit project decides alone: on another machine this cwd may match an unrelated instance, whose
+  // conversation ids name other conversations.
+  project
+    ? resolveTargets(inventory, `ultimate:${project}`)[0]
+    : inventory.find(
+        (target) => target.ultimate && target.ultimate.project === batonProject && target.ultimate.alive !== false,
+      ) || containingUltimate(inventory, cwd);
 
 const resultText = (text: string) => ({ content: [{ type: 'text' as const, text }], details: {} });
 
@@ -291,7 +292,10 @@ export default function (pi: ExtensionAPI) {
         const inventory = params.machine ? await listTargets(params.machine) : registryTargets(readRegistry());
         const target = historyTarget(inventory, ctx.cwd, baton?.ultimate?.project, params.project);
 
-        if (!target) throw new Error(`no Ultimate runs for ${ctx.cwd}`);
+        if (!target)
+          throw new Error(
+            params.project ? `no Ultimate runs project ${params.project}` : `no Ultimate runs for ${ctx.cwd}`,
+          );
 
         const history = await ultimateRequest(
           target,

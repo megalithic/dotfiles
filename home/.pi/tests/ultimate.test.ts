@@ -125,6 +125,8 @@ test('instance selection uses the deepest live containing project with directory
   expect(historyTarget(inventory, '/work/app')?.socket).toBe('http://child:2');
   expect(historyTarget(inventory, '/outside', undefined, 'app')?.socket).toBe('http://child:2');
   expect(historyTarget(inventory, '/outside', undefined, 'hub')?.socket).toBe('http://hub:4');
+  // An explicit project that resolves to nothing never falls back to the baton's or cwd's instance.
+  expect(historyTarget(inventory, '/work/app', '/hub', 'missing')).toBeUndefined();
 });
 
 // SAFETY: pickup uses only cwd and these session manager methods, not a running Pi.

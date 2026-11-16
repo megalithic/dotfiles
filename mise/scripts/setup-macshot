@@ -86,9 +86,27 @@ if [[ "${MACSHOT_RESTART:-1}" != 0 ]] && pgrep -xq macshot; then
   pgrep -xq macshot && die "macshot did not quit; quit it and run again"
 fi
 
-for ((i = 0; i < ${#settings[@]}; i += 3)); do
-  defaults write "$domain" "${settings[i]}" "-${settings[i + 1]}" "${settings[i + 2]}"
-done
+xml() {
+  local s="${1//&/&amp;}"
+  s="${s//</&lt;}"
+  printf '%s' "${s//>/&gt;}"
+}
+# `defaults import` merges these keys from stdin, so no value (the secret
+# included) ever appears on a command line, where other accounts' ps sees it.
+{
+  printf '<?xml version="1.0" encoding="UTF-8"?>\n<plist version="1.0"><dict>\n'
+  for ((i = 0; i < ${#settings[@]}; i += 3)); do
+    printf '<key>%s</key>' "${settings[i]}"
+    if [[ "${settings[i + 1]}" == bool ]]; then
+      printf '<%s/>\n' "${settings[i + 2]}"
+    else
+      printf '<string>'
+      xml "${settings[i + 2]}"
+      printf '</string>\n'
+    fi
+  done
+  printf '</dict></plist>\n'
+} | defaults import "$domain" -
 echo "setup-macshot: wrote ${changed[*]}"
 
 if [[ "$running" -eq 1 ]]; then

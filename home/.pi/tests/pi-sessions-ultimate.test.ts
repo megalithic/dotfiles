@@ -206,7 +206,8 @@ describe('pi-sessions', () => {
       for (const tool of ['edit', 'write', 'bash', 'codemode', 'instance', 'screenshot', 'subagent'])
         expect(guardDecision(tool, found)?.block).toContain(`pi holds the baton for ${worktree}`);
 
-      for (const tool of ['read', 'pickup', 'release']) expect(guardDecision(tool, found)).toBeUndefined();
+      // reply_pi answers a pi's ask_pi, which may come from the pi holding this baton.
+      for (const tool of ['read', 'reply_pi', 'pickup', 'release']) expect(guardDecision(tool, found)).toBeUndefined();
       expect(guardDecision('bash', baton)).toBeUndefined();
       expect(guardDecision('bash', null)).toBeUndefined();
     });

@@ -179,6 +179,7 @@ export const ALLOWED_TOOLS = [
   'pi_sessions',
   'pi_session',
   'pi_tell',
+  'reply_pi',
   'pickup',
   'release',
 ];
