@@ -34,10 +34,10 @@ If `rwt` fails to run, stop and report the error. There is no fallback workflow.
 
 No target means the checkout you're in. Flags:
 
-- `--json`: one JSON object on stdout (`{ok:false, code, error}` on failure), progress on stderr. `status` and `ls` print JSON anyway.
-- `--show`: switch the Rex app to the worktree's session.
-- `--prompt TEXT`: the first message for the agent tab's Pi. It only works when `rwt` creates the session; with a live session it refuses (exit 6), so use `tell_pi` instead.
-- `--no-services`, `--no-agent`: leave out that tab. Use only when the user asks, or for a read-only checkout.
+- `--json` (`new`, `open`, `restart`, `prune`): one JSON object on stdout, progress on stderr. Any failure under `--json` prints `{ok:false, code, error}`. `status` and `ls` always print JSON; `logs` prints the raw scrollback and `wait-ready` prints nothing on stdout (check its exit code).
+- `--show` (`new`, `open`): switch the Rex app to the worktree's session.
+- `--prompt TEXT` (`new`, `open`): the first message for the agent tab's Pi. It only works when `rwt` creates the session; with a live session it refuses (exit 6), so use `tell_pi` instead.
+- `--no-services`, `--no-agent` (`new`, `open`): leave that tab out of a session `rwt` creates; they don't remove tabs from a live session. Use only when the user asks, or for a read-only checkout.
 
 Exit codes: 0 ok, 2 usage, 3 not found, 4 setup failed (the `setup` tab keeps the full output; rerun `rwt open` after fixing it), 6 refused, 7 other.
 
