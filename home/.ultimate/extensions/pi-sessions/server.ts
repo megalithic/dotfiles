@@ -225,7 +225,7 @@ async function pickup(input: Pickup, host: Host, exec: Exec, signal: AbortSignal
     const branched = await branchOfUltimate(
       {
         standing: async () => (await host.invoke('subagents', 'standing', { name: 'ultimate' }, signal)) as number,
-        roots: async () => ((await host.invoke('lineage', 'info', {}, signal)) as { roots: number[] }).roots,
+        roots: async () => ((await host.invoke('lineage', 'info', null, signal)) as { roots: number[] }).roots,
         rootOf: (id) => lineage.rootOf(conversationId(id), BACKGROUND_CONTEXT),
         branch: (branch) =>
           lineage.branch(
