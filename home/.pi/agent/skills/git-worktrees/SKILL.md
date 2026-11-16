@@ -1,51 +1,56 @@
 ---
 name: git-worktrees
 description: >-
-  All Git worktree work through our custom `wt` (~/.dotfiles/bin/wt, v2): create, open, list, repair, prune, and hand work off to a Pi agent in a new or existing worktree. Use when the user mentions a worktree, `wt`, branching work into a new checkout, or says things like "tell the agent in a new worktree X to take over this work" (optionally "in a window").
+  All Git worktree work through `rwt` (~/.dotfiles/bin/rwt): create, open, check, restart services, prune, and hand work off to the Pi agent in a new or existing worktree's Rex session. Use when the user mentions a worktree, `rwt` (or the old `wt`), branching work into a new checkout, or says things like "tell the agent in a new worktree X to take over this work".
 ---
 
 # Worktrees
 
-`wt` is `~/.dotfiles/bin/wt`, the v2 lifecycle wrapper over a pinned Worktrunk backend. One `wt` call creates or reuses the worktree under `<repo>/.worktrees/<branch>`, copies ignored files, runs blocking `mise run dev:setup`, exports `GIT_WORKTREE`, and builds the tmux presentation through `ftm`. Do not repeat any of that by hand.
+`rwt` is `~/.dotfiles/bin/rwt`. One worktree is one Rex session, labeled with the worktree id. One `rwt new` call creates or reuses the worktree under `<repo>/.worktrees/<branch, / as ->`, clones the ignored paths listed in the main checkout's `.worktreeinclude`, runs the project's `mise run dev:setup` in a visible `setup` tab, and builds the session: `code` (shell), `services:<port>` (`dev:services`), and `agent` (Pi). Don't repeat any of that by hand.
 
-It works from any checkout of the repo: the primary checkout or any linked worktree. New worktrees always land under the primary repo's `.worktrees/`.
+It works from any checkout of the repo; new worktrees always land under the main checkout's `.worktrees/`.
 
 Never:
 
-- run raw `git worktree`, `git branch -D`, or `wt remove --force*`;
-- build tmux windows or sessions yourself, or start `dev:services` yourself;
-- compute `GIT_WORKTREE` (use `wt id [path]`);
-- use `wt switch` (raw upstream passthrough: no setup, no tmux).
+- run raw `git worktree add/remove` or `git branch -D` on a worktree branch;
+- build Rex sessions, tabs or blocks yourself, or start `dev:services` yourself (use `rwt restart`);
+- use `wt`, `ftm`, or tmux sessions/windows for worktrees: they are the old workflow;
+- compute `GIT_WORKTREE` (read `.worktree.id` from `rwt status`).
 
-If `wt --version` fails, stop and report the error. There is no fallback workflow.
+If `rwt` fails to run, stop and report the error. There is no fallback workflow.
 
 ## Commands
 
 | Command | Effect |
 | --- | --- |
-| `wt NAME` | Ensure worktree + setup, build the canonical session (`code`, `agent` running Pi, `services` running `dev:services`), switch the client to it. Pi starts fresh in a just-created worktree and as `pi -c` otherwise. |
-| `wt -t w NAME` | Same lifecycle; one `wt:<id>` window in the current session. Left pane (60%) is a shell, right pane (40%) runs `dev:services`. Outside tmux falls back to cd. |
-| `wt -t cd NAME` | Same lifecycle; only cd the interactive shell. No tmux. |
-| `wt ensure NAME --json` | Same lifecycle; builds the canonical session detached. Never cds, selects, or attaches. |
-| `wt new NAME [--base B]` | Like `ensure`, but refuses if the branch exists locally or on a remote. |
-| `... --no-services` | Full lifecycle, but the services pane/window stays a plain shell. Use only when the user asks for no services. |
-| `... --base B` | Base for a new branch only (error if the branch exists). Shortcuts: `@` current HEAD, `^` default branch, `-` previous branch. |
-| `wt repair [NAME] [--restart-services]` | Rerun setup and rebuild the session. Never attaches. |
-| `wt path NAME` / `wt path .` | Print the validated worktree path. |
-| `wt list --json` | `.repo.default_branch`, `.items[].branch`, `.items[].worktree.path`. |
-| `wt prune NAME` | Safe removal of a clean, integrated, non-current worktree plus its session and branch. |
-| `wt id [path]` | `GIT_WORKTREE` id (`{repo}-{branch-slug}`); empty in the primary checkout. |
+| `rwt new NAME [--base REF] [--prompt TEXT]` | Ensure the worktree and its session. A new branch starts at `REF` (default: the local default branch); an existing local branch is checked out; an `origin/NAME`-only branch is tracked. Blocks while setup runs. Same as `rwt open`. |
+| `rwt open [NAME\|PATH]` | Ensure worktree and session; reuse a live session and restart a missing services tab. Rebuilds a session whose setup failed. |
+| `rwt status [NAME\|PATH]` | Always JSON: `.worktree{path,branch,id,dirty}`, `.session{id,label}` or null, `.services{running,last_exit,...}` or null, `.port`, `.http{app,tidewave,tidewave_url}`, `.pidewave`. |
+| `rwt ls` | Always JSON: `.worktrees[]{path,branch,session}` for every worktree of the repo. Detached ones (such as Ultimate's lander checkout) have `branch: null`; skip them. |
+| `rwt wait-ready [NAME\|PATH] [--timeout S]` | Block until the app answers on its port (default 180 s). Use it instead of a poll loop. |
+| `rwt logs [NAME\|PATH] [-n N]` | Last N lines (default 200) of the services tab. |
+| `rwt restart [NAME\|PATH]` | Stop the server and start `dev:services` in a fresh terminal in the same place. |
+| `rwt prune NAME` | Remove a clean, merged worktree, its session, and its branch. |
 
-All `--json` results are one `schema_version: 1` document. `.status` is `ok`, `refused`, `partial`, or `error`; `.error.code` names the failure; `.completed_phases` shows progress. `busy` means another `wt`/`ftm` holds the lock: wait and retry.
+No target means the checkout you're in. Flags:
 
-Agent bash calls can't change the parent shell's cwd. Run follow-up commands with `cd "$(wt path NAME)" && ...`.
+- `--json`: one JSON object on stdout (`{ok:false, code, error}` on failure), progress on stderr. `status` and `ls` print JSON anyway.
+- `--show`: switch the Rex app to the worktree's session.
+- `--prompt TEXT`: the first message for the agent tab's Pi. It only works when `rwt` creates the session; with a live session it refuses (exit 6), so use `tell_pi` instead.
+- `--no-services`, `--no-agent`: leave out that tab. Use only when the user asks, or for a read-only checkout.
+
+Exit codes: 0 ok, 2 usage, 3 not found, 4 setup failed (the `setup` tab keeps the full output; rerun `rwt open` after fixing it), 6 refused, 7 other.
+
+`rwt new`/`open` wait for setup, up to 30 minutes: give the bash call a long timeout (1800 s). Pi in the `agent` tab starts once the app answers (or after 180 s): fresh in a just-created worktree, `pi -c` otherwise.
+
+Agent bash calls can't change the parent shell's cwd. Run follow-up commands with `cd "$(rwt status NAME | jq -r .worktree.path)" && ...`.
 
 ## Choosing the base for a new branch
 
-Only when `NAME` doesn't exist yet (no local branch, no `origin/NAME`). An existing branch gets no `--base`.
+Only when `NAME` doesn't exist yet (no local branch, no `origin/NAME`). An existing branch ignores `--base`.
 
 ```bash
-default="$(wt list --json | jq -r '.repo.default_branch // "main"')"
+default="$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null)"; default="${default#origin/}"; default="${default:-main}"
 current="$(git branch --show-current)"
 git rev-parse --verify --quiet "refs/heads/$NAME" >/dev/null ||
   git rev-parse --verify --quiet "refs/remotes/origin/$NAME" >/dev/null || echo new
@@ -55,21 +60,20 @@ git rev-parse --verify --quiet "refs/heads/$NAME" >/dev/null ||
 - Otherwise ask with `ask_user_question` (header "Base branch"):
   - `<default> (latest origin)` (Recommended)
   - `<current> (local HEAD)`
-- Default branch: always `git fetch origin "$default"` first, then pass `--base "origin/$default"`. Local `main` can be stale and `wt` never fetches.
-- Current branch: pass `--base @`. If `git status --porcelain` is non-empty, warn that uncommitted changes stay behind.
+- Default branch: always `git fetch origin "$default"` first, then pass `--base "origin/$default"`. Local `main` can be stale and `rwt` never fetches.
+- Current branch: pass `--base "$current"`. If `git status --porcelain` is non-empty, warn that uncommitted changes stay behind.
 
 ## Hand work to an agent in a new or existing worktree
 
-Whenever a request names a worktree (new or existing) and includes any work, always hand the work to the Pi agent in that worktree, even if the user doesn't say "tell the agent". Examples: "new wt X - fix Y", "in wt X, do Y", "tell the agent in a new worktree X to Y". Never do the work yourself from the calling session.
+Whenever a request names a worktree (new or existing) and includes any work, always hand the work to the Pi agent in that worktree's Rex session, even if the user doesn't say "tell the agent". Examples: "new wt X - fix Y", "in wt X, do Y", "tell the agent in a new worktree X to Y". Never do the work yourself from the calling session.
 
-You only orchestrate; the agent in the worktree does the work. Your whole job: resolve or create the worktree, get a live agent there, send it the brief with `tell_pi`, switch the user over, and report.
+You only orchestrate; the agent in the worktree does the work. Your whole job: resolve or create the worktree, get the brief to its agent, switch the user over, and report.
 
 - Never do any of the task yourself: no edits, commands, tests, or commits in the target worktree, before or after the handoff, and no continuing it in your own checkout.
-- If a step fails (`wt` error, no registration, `tell_pi` error), stop and report it. Never fall back to doing the work yourself.
-- A new worktree gets its own tmux session (`wt ensure`). Use a window in the current session only when the user says "in a window".
+- If a step fails (`rwt` error, `tell_pi` error), stop and report it. Never fall back to doing the work yourself.
 - Communication is one-way by default. You send one brief; don't wait for, poll for, or expect a reply, and don't send follow-up tells. Updates flow back only when the user's initial request asks for them ("keep me posted", "report back", "let me know when it's done").
 
-1. Resolve the target: `path="$(wt path NAME)"`. Exit 3 (`target_not_found`) means no worktree exists yet: use 3a. Otherwise use 3b. If the user names the worktree loosely, match it against the `wt list --json` items that have a non-null `.worktree.path`, and ask when more than one fits.
+1. Resolve the target: `st="$(rwt status NAME)"`. The worktree exists when `[ -d "$(jq -r .worktree.path <<<"$st")" ]`; a live session shows as a non-null `.session`. If the user names the worktree loosely, match it against the `rwt ls` items with a non-null `.branch`, pass the matching path instead of NAME, and ask when more than one fits.
 2. Write the handoff brief before creating or starting anything. Every brief, for a new or existing worktree, must stand alone and always include:
    - Explicit instructions: what the agent should do, as a direct task, not just background.
    - Goal, context and decisions from this conversation, relevant files, what's done, next steps, how to verify.
@@ -80,102 +84,35 @@ You only orchestrate; the agent in the worktree does the work. Your whole job: r
      Only when the user's initial request asks for updates, end with this instead. Fill in the reply target from `echo "pi:$(hostname -s):$PI_SESSION_ID"`:
 
      > Report meaningful updates to the calling agent with `tell_pi` (target `<reply target>`, mode `follow_up`): when you start, at each milestone, when you are blocked or need a decision, and when done, with verification results. Skip step-by-step chatter. Keep working with the user directly in this session.
-3. Get a live agent in the worktree.
 
-   Each bash call is a fresh shell, so define these helpers in every call that uses them. `find_agents PATH` lists live Pi agents whose cwd is exactly `PATH`. It skips stale manifests (no heartbeat for 60s; Pi beats every 10s), headless `pi -p` runs (no tmux pane), and you. `agent_pane PATH` prints `<pane_id> <command>` for the `agent` window of the ftm session tagged with that worktree.
-
-   ```bash
-   find_agents() {
-     jq -s -c --arg cwd "$1" --arg self "${PI_SESSION_ID:-}" --argjson now "$(date +%s)" '
-       [.[] | select(.cwd == $cwd and .pane != null and .sessionId != null and .sessionId != $self
-                     and ($now - (.heartbeatAt | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601)) < 60)
-        | {sessionId, session, window, pane, state, sessionName}]' \
-       "${PI_STATE_DIR:-$HOME/.local/state/pi}"/manifests/*.info 2>/dev/null
-   }
-   agent_pane() {
-     tmux list-panes -a -F '#{@ftm_worktree}|#{window_name}|#{pane_id} #{pane_current_command}' |
-       awk -F'|' -v p="$1" '$1 == p && $2 == "agent" { print $3; exit }'
-   }
-   ```
-
-   **3a. New worktree.** Pick the base (section above), then create the worktree and start Pi.
-
-   In a window (user said "in a window"):
+   Put the brief in a shell variable with a quoted heredoc so no quoting breaks it:
 
    ```bash
-   out="$(wt -t w NAME --base BASE --json)"; echo "$out"
-   path="$(jq -r .worktree.path <<<"$out")"
-   pane="$(jq -r .tmux.left_pane <<<"$out")"
-   win="$(jq -r .tmux.window_id <<<"$out")"
-   tmux send-keys -t "$pane" '"$HOME/.local/bin/pi"' Enter
+   brief="$(cat <<'BRIEF'
+   ...
+   BRIEF
+   )"
    ```
-
-   Default (own session; `ftm` starts a fresh `pi` in its `agent` window, never resuming sessions left by an earlier worktree at the same path):
-
-   ```bash
-   out="$(wt ensure NAME --base BASE --json)"; echo "$out"
-   path="$(jq -r .worktree.path <<<"$out")"
-   id="$(jq -r .worktree.id <<<"$out")"
-   pane="$(agent_pane "$path" | cut -d' ' -f1)"
-   ```
-
-   Stop and report if `.status != "ok"`. Then wait for registration (step 4).
-
-   **3b. Existing worktree.** Don't run `wt` first; look for a live agent:
-
-   ```bash
-   find_agents "$path"; agent_pane "$path"
-   ```
-
-   - One agent: use its `sessionId` and skip step 4.
-   - Several: use the one whose `.pane` matches the `agent_pane` id. If none matches, ask with `ask_user_question`, one option per agent showing `session:window`, `state`, and `sessionName`. Don't guess.
-   - None: start Pi in the worktree's `agent` window, then wait for registration (step 4). `pi -c` resumes that directory's latest session, so the agent keeps its earlier context.
+3. Deliver it.
+   - **New worktree, or an existing worktree with no session** (`.session == null`): the brief becomes Pi's first message.
 
      ```bash
-     read -r pane cmd <<<"$(agent_pane "$path")"
-     if [ -z "$pane" ]; then
-       out="$(wt ensure NAME --json)"; echo "$out"
-       read -r pane cmd <<<"$(agent_pane "$path")"
-     else
-       case "$cmd" in
-         fish|zsh|bash|sh) tmux send-keys -t "$pane" '"$HOME/.local/bin/pi" -c' Enter ;;
-         *) echo "agent pane runs $cmd, not a shell" ;;
-       esac
-     fi
+     rwt new NAME --base BASE --prompt "$brief" --json --show   # new: pick BASE first (section above)
+     rwt open NAME --prompt "$brief" --json --show              # existing worktree, no session
      ```
 
-     With no `agent` window, `wt ensure` rebuilds the session (rerunning setup) and starts `pi -c` itself; stop and report if `.status != "ok"`. If the pane runs anything other than a shell, stop and report it. Never type into it.
+     Stop and report on a non-zero exit. In an existing worktree Pi starts with `pi -c`, so it keeps the directory's earlier context.
+   - **Live session** (`.session != null`): run `rwt open NAME --json --show` (repairs services, switches the user over), then send the brief with `tell_pi`, target `rex:<.session.id>/agent` (for example `rex:session:01a1…/agent`). Keep the default `follow_up` mode so a busy agent gets it after its current turn; use `steer` only when the user wants to interrupt it. Never type the brief into the terminal. The brief is the only message you send.
 
-4. Wait for a newly started Pi to register, then build its tell id:
+     If `tell_pi` finds no target there, Pi isn't running in the `agent` tab. Stop and ask the user to start it in that tab (`pi -c`), then send the brief once they confirm. Don't guess another Pi.
+4. Report the worktree path, branch, base (new worktrees only), Rex session label, how the brief went (first prompt, or the `tell_pi` target), whether updates were requested, and the port and services state from `rwt status`. Then end your turn. If updates were requested, relay each one to the user when it arrives; don't act on the work yourself.
 
-   ```bash
-   for _ in $(seq 60); do
-     sid="$(find_agents "$path" | jq -r --arg pane "$pane" \
-       '[.[] | select($pane == "" or .pane == $pane)][0].sessionId // empty')"
-     [ -n "$sid" ] && break; sleep 1
-   done
-   echo "pi:$(hostname -s):$sid"
-   ```
+Use `rwt new NAME --json` with no prompt only when the user asks for a worktree and gives no work. Add `--show` when they want to look at it.
 
-   On timeout, run `list_pi_sessions` and match the worktree path and pane. Ignore entries marked `busy/unreachable`; they are stale. Don't guess.
+## Prune
 
-5. Send the brief with `tell_pi` (target = `pi:$(hostname -s):<sessionId>`, message = brief). Keep the default `follow_up` mode so a busy agent gets the brief after its current turn. Use `steer` only when the user wants to interrupt it. Never type the brief into the pane. The brief is the only message you send.
-6. Switch the user over:
-   - 3a window: `tmux select-window -t "$win"`.
-   - 3a session: `ftm "$id"`.
-   - 3b: `tmux switch-client -t "$session" \; select-window -t "$pane" \; select-pane -t "$pane"`, using the agent's `.session` and `.pane`.
-7. Report the worktree path, branch, base (new worktrees only), tell id, whether the agent was found or started, whether updates were requested, and the services state from `.tmux` when `wt` ran. Then end your turn. If updates were requested, relay each one to the user when it arrives; don't act on the work yourself.
+`rwt prune NAME` refuses (exit 6) for: the main checkout, the worktree you are in, uncommitted or untracked changes, and a branch that is neither merged into the default branch (local or `origin/`) nor the head of a merged PR. Report the refusal; don't work around it. There is no force flag, and destructive escapes need explicit user approval.
 
-Use `wt ensure NAME --json` with no tell only when the user asks for a worktree and gives no work. Plain `wt NAME` and `-t w` without `--json` are for when the user asks to open it themselves.
+## Project setup
 
-## Prune and recovery
-
-`wt prune NAME` refuses (exit 3/6, `.status == "refused"`) for: dirty worktrees, branches not integrated or empty, the main worktree, the worktree you are in, remote-only targets, and ambiguous tmux sessions. Report the refusal; don't work around it.
-
-On `.status == "partial"`, nothing retries with force. Run `wt repair NAME`, fix the reported cause, then rerun `wt prune NAME`. Destructive escapes need explicit user approval.
-
-A background auto-prune (`wt step prune`, daily per repo) removes merged worktrees, so an integrated worktree disappearing is normal.
-
-## Project templates
-
-Setup and services come from `<repo>/.config/wt.toml` plus the project's `dev:setup` / `dev:services` mise tasks. If a task is missing, `wt` reports it `missing` rather than failing. Generate config only when it's missing and the stack is known (`mise run gen:elixir && mise run gen:wt-elixir`, `mise run gen:shopify && mise run gen:wt-shopify`). Never overwrite existing config.
+Setup and services come from the project's `dev:setup` and `dev:services` mise tasks; a missing task is skipped. `rwt` clones the plain paths listed in the main checkout's `.worktreeinclude` (no globs) into each new worktree. `<repo>/.config/rex/layout.lua` replaces the default layout (`~/.dotfiles/config/rex/rwt-layout.lua`); keep its `services` block label. Generate missing config only when the stack is known (`mise run gen:elixir`, `mise run gen:shopify`, which also sync `.worktreeinclude`). Never overwrite existing config.

@@ -26,7 +26,7 @@ Model ids drift: run `pi --list-models` once and, if an agent's model is missing
 
 ## 2. Checkout + review dir
 
-- PR/branch targets need the head checked out so reviewers can read callers, callees and tests. Use `wt ensure <head-branch> --json` (timeout 900). `worktree_exists: true` is enough; a failed `setup` phase (DB, deps) does not matter for a read-only review — note it and continue. Never run raw `git worktree`. `checkout=$(wt path <head-branch>)`; confirm `git -C $checkout rev-parse HEAD` equals head.
+- PR/branch targets need the head checked out so reviewers can read callers, callees and tests. Use `rwt new <head-branch> --no-services --no-agent --json` (timeout 1800). An existing worktree directory is enough; a failed setup (exit 4: DB, deps) does not matter for a read-only review — note it and continue. Never run raw `git worktree`. `checkout=$(rwt status <head-branch> | jq -r .worktree.path)`; confirm `git -C $checkout rev-parse HEAD` equals head.
 - `REVIEW_DIR=~/.local/share/pi/docs/$(basename "$(git rev-parse --show-toplevel)")/<slug>-review`. Write there:
   - `diff.patch` — `git diff <base>...<head>` (for `uncommitted`: `git diff HEAD` plus untracked files)
   - `description.md` — PR title + body, or `git log <base>..<head>` for branches/commits
@@ -89,4 +89,4 @@ Jev (`typesafe_evaluate`, operator opt-in already on; 20 attempts per session, n
   1. Artifact URL and one line: arbiter verdict + counts per severity.
   2. **The engineer summary, verbatim, inside a fenced markdown block** so it can be copied straight into Slack or a GitHub PR comment. This is required on every run: a concise summary of the required / recommended / beneficial changes, followed by the rest of the review's suggestions, written for the PR author. Never paraphrase it in prose instead of pasting it.
   3. Model substitutions and what was not checked (e.g. "no DB in the review worktree", missing reports, unverifiable external contracts).
-  Leave the worktree in place unless asked; mention `wt prune <branch>` as the cleanup. Do not post the summary to GitHub or Slack yourself; the user decides where it goes.
+  Leave the worktree in place unless asked; mention `rwt prune <branch>` as the cleanup. Do not post the summary to GitHub or Slack yourself; the user decides where it goes.
