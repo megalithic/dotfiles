@@ -31,6 +31,7 @@ import {
   sessionsTable,
   spill,
   validateSessionFile,
+  worktreeBaton,
   writeBaton,
 } from './lib.ts';
 import type { Baton, Exec, Pi, Worktree } from './lib.ts';
@@ -38,7 +39,14 @@ import type { Baton, Exec, Pi, Worktree } from './lib.ts';
 /** The parts of Ultimate's core lineage and messages services pickup uses (`extensions/{lineage,messages}/api.ts`). */
 type Lineage = {
   branch(
-    input: { from: ConversationId; prompt: string; title?: string; isolated?: boolean; deliver?: false; by?: ConversationId },
+    input: {
+      from: ConversationId;
+      prompt: string;
+      title?: string;
+      isolated?: boolean;
+      deliver?: false;
+      by?: ConversationId;
+    },
     ctx: Context,
   ): Promise<{ id: ConversationId }>;
   rootOf(id: ConversationId, ctx: Context): Promise<ConversationId | undefined>;
@@ -332,12 +340,7 @@ export const actions = {
     const input = record(args);
     const id = input.conversation;
     if (id !== undefined && typeof id !== 'number') throw new Error('conversation must be a number');
-    const worktree = await resolveWorktree(
-      host.projectRoot,
-      stringArg(input, 'worktree') || (await cwdFor(host, id ?? caller)),
-      exec,
-    );
-    return readBaton(worktree);
+    return worktreeBaton(host.projectRoot, stringArg(input, 'worktree') || (await cwdFor(host, id ?? caller)), exec);
   },
 };
 

@@ -383,6 +383,14 @@ export async function resolveWorktree(projectRoot: string, cwd: string, exec: Ex
     throw new Error('Worktree does not belong to this project repository');
   return realpath(top.stdout.trim());
 }
+/**
+ * The baton of `cwd`'s worktree, for the header badge. Null once that directory is gone (a landed Ultimate isolate):
+ * the badge polls every conversation it shows, and git cannot start there (`spawn git ENOENT` every poll).
+ */
+export async function worktreeBaton(projectRoot: string, cwd: string, exec: Exec = run): Promise<Baton | null> {
+  if (!existsSync(cwd)) return null;
+  return readBaton(await resolveWorktree(projectRoot, cwd, exec));
+}
 export function selectPi(pis: Pi[], target: string): Pi {
   const matches = pis.filter(
     (pi) => pi.sessionId === target || pi.socket === target || (isAbsolute(target) && inside(target, pi.cwd)),

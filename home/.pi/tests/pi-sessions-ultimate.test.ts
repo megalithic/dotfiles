@@ -17,6 +17,7 @@ import {
   sessionFiles,
   spill,
   validateSessionFile,
+  worktreeBaton,
   writeBaton,
 } from '../../.ultimate/extensions/pi-sessions/lib.ts';
 import type { Baton, BranchHost, Worktree } from '../../.ultimate/extensions/pi-sessions/lib.ts';
@@ -291,6 +292,23 @@ describe('pi-sessions', () => {
     expect(started[1]).toMatchObject({ from: 1, by: 48 });
     await expect(branchOfUltimate(host(undefined, [1, 7]), 'prompt', 'title')).rejects.toThrow('roots: #1, #7');
     expect(started).toHaveLength(2);
+  });
+
+  test('reads no baton for a conversation whose worktree is gone, without running git', async () => {
+    const calls: string[][] = [];
+
+    const baton = await worktreeBaton(
+      '/work/app',
+      '/work/app/.worktrees/landed-and-removed',
+      async (_command, args) => {
+        calls.push(args);
+
+        return { stdout: '', stderr: '' };
+      },
+    );
+
+    expect(baton).toBeNull();
+    expect(calls).toEqual([]);
   });
 
   test('spills only content larger than 32k to private handoff files', async () => {
