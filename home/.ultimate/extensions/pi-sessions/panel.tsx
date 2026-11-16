@@ -298,12 +298,14 @@ function Session({
         </div>
       </div>
       <div className="px-3 py-3">
+        {/* A failed refresh shows above the last good read, so stale data never passes for current. */}
+        {brief.error && (
+          <p className="mb-3 font-mono text-[11.5px] break-words text-error">{brief.error.message}</p>
+        )}
         {brief.data !== undefined ? (
-          <Brief markdown={brief.data} />
-        ) : brief.error ? (
-          <p className="font-mono text-[11.5px] break-words text-error">{brief.error.message}</p>
+          <Brief sections={brief.data.sections} />
         ) : (
-          <p className="font-mono text-[11.5px] text-muted-foreground">reading pi's session…</p>
+          !brief.error && <p className="font-mono text-[11.5px] text-muted-foreground">reading pi's session…</p>
         )}
       </div>
     </div>
@@ -334,6 +336,11 @@ export function PiPanel() {
           <RotateCwIcon className={cn(sessions.loading && 'animate-spin')} />
         </Act>
       </div>
+      {rows && sessions.error && (
+        <p className="border-b border-border/60 px-3 py-2 font-mono text-[11.5px] break-words text-error">
+          refresh failed, showing the last list: {sessions.error.message}
+        </p>
+      )}
       {!rows ? (
         <p className="px-3 py-3 font-mono text-[11.5px] break-words text-muted-foreground">
           {sessions.error ? (

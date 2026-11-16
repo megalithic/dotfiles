@@ -10,11 +10,12 @@ import { bool, obj, opt, str } from '@earendil-works/pi-schema';
 import { deliver } from '../pi-bridge/lib.ts';
 import {
   buildSession,
+  sessionSections,
   chooseSession,
   dotfilesRoot,
   extractSession,
   framePickup,
-  GUARDED_TOOLS,
+  ALLOWED_TOOLS,
   guardDecision,
   inside,
   listWorktrees,
@@ -301,7 +302,7 @@ export const actions = {
     return listWorktrees(host.projectRoot, exec);
   },
   async session(args: JsonValue, { host, exec, conversationId: caller }: ActionContext) {
-    return buildSession(await sessionRow(record(args), host, exec, caller), exec);
+    return { sections: await sessionSections(await sessionRow(record(args), host, exec, caller), exec) };
   },
   async pickup(args: JsonValue, { host, exec, signal }: ActionContext) {
     return pickup(parsePickup(args), host, exec, signal, 'web UI');
@@ -331,7 +332,7 @@ export default function piSessions(host: Host) {
     hooks: [
       hook(ToolTask, {
         beforeTool: async (call, api, ctx) => {
-          if (!GUARDED_TOOLS.includes(call.name)) return undefined;
+          if (ALLOWED_TOOLS.includes(call.name)) return undefined;
           return guardDecision(call.name, await nearestBaton(await cwdFor(host, api.conversationId, ctx)));
         },
       }),

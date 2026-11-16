@@ -201,8 +201,9 @@ describe('pi-sessions', () => {
       expect(await readdir(join(worktree, '.local', 'state'))).toEqual(['agent-baton.json']);
       const found = await nearestBaton(nested);
 
-      // codemode is guarded whole: its nested write/edit/bash calls skip beforeTool (reproduced on a preview).
-      for (const tool of ['edit', 'write', 'bash', 'codemode'])
+      // An allowlist: codemode's nested calls skip beforeTool (reproduced on a preview), and instance, screenshot and
+      // subagent can write too.
+      for (const tool of ['edit', 'write', 'bash', 'codemode', 'instance', 'screenshot', 'subagent'])
         expect(guardDecision(tool, found)?.block).toContain(`pi holds the baton for ${worktree}`);
 
       for (const tool of ['read', 'pickup', 'release']) expect(guardDecision(tool, found)).toBeUndefined();

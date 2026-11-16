@@ -1,6 +1,6 @@
 /**
- * The `session` action's Markdown, which is written for an agent, reshaped for reading on a phone: what pi wants and
- * said first, git next, the long brief and compaction folded. Live is dropped (the header shows it); empty sections too.
+ * The `session` action's sections reshaped for reading on a phone: what pi wants and said first, git next, the long
+ * brief and compaction folded. Live is dropped (the header shows it); empty sections too.
  */
 import { ChevronRightIcon } from 'lucide-react'
 import { MessageResponse } from '@/components/ai/message'
@@ -19,17 +19,6 @@ const layout: { title: string; label: string; fold?: boolean; code?: boolean }[]
   { title: 'Last compaction summary', label: 'Compaction summary', fold: true },
 ]
 
-export function sections(markdown: string): Section[] {
-  const parts = markdown.split(/^## /m).slice(1)
-  return parts.map((part) => {
-    const newline = part.indexOf('\n')
-    return {
-      title: (newline < 0 ? part : part.slice(0, newline)).trim(),
-      body: newline < 0 ? '' : part.slice(newline + 1).trim(),
-    }
-  })
-}
-
 /** The brief nests its own `#`/`##` headings; push them below the section label. */
 const demote = (body: string) => body.replace(/^(#{1,3}) /gm, (_, hashes: string) => `${'#'.repeat(hashes.length + 3)} `)
 
@@ -45,8 +34,9 @@ function Body({ body, code }: { body: string; code?: boolean }) {
   return <MessageResponse className="text-[13px]">{demote(body)}</MessageResponse>
 }
 
-export function Brief({ markdown }: { markdown: string }) {
-  const found = new Map(sections(markdown).map((section) => [section.title, section.body]))
+export function Brief({ sections }: { sections: Section[] }) {
+  // Structured by the server, so headings inside a body stay in it.
+  const found = new Map(sections.map((section) => [section.title, section.body.trim()]))
   const shown = layout.flatMap((item) => {
     const body = found.get(item.title)
     return body === undefined || empty(body) ? [] : [{ ...item, body }]

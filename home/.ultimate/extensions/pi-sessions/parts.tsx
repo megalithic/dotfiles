@@ -9,8 +9,11 @@ export type { Baton, Pi, Worktree }
 
 /** Every worktree of this project with a pi, a saved session or a baton. */
 export const SessionsAction = actionRef<null, Worktree[]>('pi-sessions', 'sessions')
-/** A worktree's pi session as Markdown: live state, brief, todos, goal, last answer, git status. */
-export const SessionAction = actionRef<{ worktree: string }, string>('pi-sessions', 'session')
+/** A worktree's pi session as titled sections: live state, brief, todos, goal, last answer, git status. */
+export const SessionAction = actionRef<{ worktree: string }, { sections: { title: string; body: string }[] }>(
+  'pi-sessions',
+  'session',
+)
 /** Pick a worktree up into a new conversation that holds its baton. */
 export const PickupAction = actionRef<
   { cwd: string; goal?: string },
@@ -116,7 +119,13 @@ export function HolderLink({
         {children}
       </button>
     )
-  const port = new URL(holder.url).port
+  // The baton is a file on disk: a malformed URL shows the text without a link instead of breaking the panel.
+  let port: string
+  try {
+    port = new URL(holder.url).port
+  } catch {
+    return <span className={className}>{children}</span>
+  }
   const href = `${window.location.protocol}//${window.location.hostname}${port ? `:${port}` : ''}/?conversation=${holder.conversation}`
   return (
     <a className={cn('hover:underline', className)} href={href} rel="noreferrer" target="_blank">

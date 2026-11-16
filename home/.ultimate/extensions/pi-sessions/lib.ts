@@ -165,12 +165,27 @@ export async function nearestBaton(cwd: string): Promise<Baton | null> {
     path = dirname(path);
   }
 }
-/** Tools that can change a checkout. codemode is blocked whole: its nested write/edit/bash calls skip `beforeTool`. */
-export const GUARDED_TOOLS = ['edit', 'write', 'bash', 'codemode'];
+/**
+ * The only tools a conversation in a pi-held worktree may call: reading, talking, and taking the baton back. An
+ * allowlist, because many tools can change a checkout (codemode's nested calls skip `beforeTool`; instance, screenshot
+ * and subagent land write files or move branches).
+ */
+export const ALLOWED_TOOLS = [
+  'read',
+  'message',
+  'note',
+  'notify',
+  'memory',
+  'pi_sessions',
+  'pi_session',
+  'pi_tell',
+  'pickup',
+  'release',
+];
 export function guardDecision(tool: string, baton: Baton | null): { block: string } | undefined {
-  if (GUARDED_TOOLS.includes(tool) && baton?.holder === 'pi')
+  if (!ALLOWED_TOOLS.includes(tool) && baton?.holder === 'pi')
     return {
-      block: `pi holds the baton for ${baton.worktree} since ${baton.at}; ask Seth, or pick it up again with pickup (force) / have pi run /ultimate.`,
+      block: `pi holds the baton for ${baton.worktree} since ${baton.at}; only ${ALLOWED_TOOLS.join(', ')} work here until then. Ask Seth, or pick it up again with pickup (force) / have pi run /ultimate.`,
     };
   return undefined;
 }
@@ -284,7 +299,9 @@ export function sessionsCommand(): string {
 }
 const cap = (text: string, length: number) =>
   !text.trim() ? 'None' : text.length > length ? `${text.slice(0, length)}\n[truncated]` : text;
-export async function buildSession(row: Worktree, exec: Exec = run, root = sessionsRoot()): Promise<string> {
+export type Section = { title: string; body: string };
+/** The session as titled sections: the web view lays them out itself instead of parsing Markdown headings. */
+export async function sessionSections(row: Worktree, exec: Exec = run, root = sessionsRoot()): Promise<Section[]> {
   const file = row.sessionFile ? await validateSessionFile(row.sessionFile, root) : null;
   const data = extractSession(file ? await readFile(file, 'utf8') : '');
   const [brief, status, diff] = await Promise.all([
@@ -300,7 +317,26 @@ export async function buildSession(row: Worktree, exec: Exec = run, root = sessi
         (pi) => `${pi.label}: ${pi.state}, pid ${pi.pid}, rex ${pi.rex?.session ?? 'none'}/${pi.rex?.block ?? 'none'}`,
       )
       .join('\n') || 'No live pi.';
-  return `## Live\n${live}\nBaton: ${row.baton ? `${row.baton.holder} since ${row.baton.at}` : 'none'}\n\n## Brief\n${cap(brief, 12000)}\n\n## Open todos\n${data.todos.map((todo) => `- [${todo.status}] ${todo.subject}${todo.description ? `: ${todo.description}` : ''}`).join('\n') || 'None'}\n\n## Goal\n${data.goal ? `${data.goal.objective} (${data.goal.status})` : 'None'}\n\n## Last compaction summary\n${cap(data.compaction, 8000)}\n\n## Last assistant message\n${cap(data.assistant, 16000)}\n\n## git status --short\n${cap(status.stdout, 4000)}\n\n## git diff --stat\n${cap(diff.stdout, 4000)}`;
+  return [
+    { title: 'Live', body: `${live}\nBaton: ${row.baton ? `${row.baton.holder} since ${row.baton.at}` : 'none'}` },
+    { title: 'Brief', body: cap(brief, 12000) },
+    {
+      title: 'Open todos',
+      body:
+        data.todos
+          .map((todo) => `- [${todo.status}] ${todo.subject}${todo.description ? `: ${todo.description}` : ''}`)
+          .join('\n') || 'None',
+    },
+    { title: 'Goal', body: data.goal ? `${data.goal.objective} (${data.goal.status})` : 'None' },
+    { title: 'Last compaction summary', body: cap(data.compaction, 8000) },
+    { title: 'Last assistant message', body: cap(data.assistant, 16000) },
+    { title: 'git status --short', body: cap(status.stdout, 4000) },
+    { title: 'git diff --stat', body: cap(diff.stdout, 4000) },
+  ];
+}
+/** The same sections as Markdown, for agents (`pi_session`). */
+export async function buildSession(row: Worktree, exec: Exec = run, root = sessionsRoot()): Promise<string> {
+  return (await sessionSections(row, exec, root)).map(({ title, body }) => `## ${title}\n${body}`).join('\n\n');
 }
 export async function resolveWorktree(projectRoot: string, cwd: string, exec: Exec = run): Promise<string> {
   const [top, common, projectCommon] = await Promise.all([
