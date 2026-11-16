@@ -9,10 +9,10 @@ Lets agents use Tidewave MCP (logs, docs, Elixir eval, SQL, browser) of the Phoe
 There is no port or host argument. Each call finds the app by process (`lib.ts`):
 
 1. The conversation's worktree: the git toplevel of its cwd.
-2. The `beam.smp` processes whose cwd is that worktree (`lsof -c beam.smp -d cwd`), and their listening TCP ports, lowest first.
-3. The first port that answers MCP at `http://127.0.0.1:<port>/tidewave/mcp`; others (Erlang distribution, debuggers) are skipped.
+2. The `beam.smp` processes whose cwd is that worktree (`lsof -c beam.smp -d cwd`), and the TCP ports only they listen on, lowest first. A port any other process also listens on is skipped, whatever the addresses: a more specific bind or an IPv4 listener beside a beam on `::1` would take the connection.
+3. The first port that answers MCP at `http://127.0.0.1:<port>/tidewave/mcp` within 3 s; others (Erlang distribution, debuggers) are skipped. Redirects are refused, so a call never moves to another app or host.
 
-So a conversation reaches only the app its own worktree runs, always on loopback: never another worktree's app, a remote host or production. With no app running it says so and names the worktree. Each call connects, calls and closes; a call times out after 10 minutes without progress.
+So a conversation reaches only the app its own worktree runs, always on loopback: never another worktree's app, a remote host or production. lsof sees only this user's processes. With no app running it says so and names the worktree. Each call connects, calls and closes; a call times out after 10 minutes without progress.
 
 ## Baton
 

@@ -38,15 +38,25 @@ const tidewave = Bun.serve({
 // A listener of the same beam that is not Tidewave (Erlang distribution, a debugger).
 const other = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: () => new Response('no', { status: 404 }) });
 
+// A listener that sends MCP calls elsewhere: a redirect must never be followed.
+const redirect = Bun.serve({
+  hostname: '127.0.0.1',
+  port: 0,
+  fetch: () => Response.redirect(`http://127.0.0.1:${tidewave.port}/tidewave/mcp`, 307),
+});
+
 afterAll(() => {
   tidewave.stop(true);
   other.stop(true);
+  redirect.stop(true);
   rmSync(root, { recursive: true, force: true });
 });
 
+type Listener = [pid: number, address: string, port: number];
+
 /** lsof as macOS prints it: beam 10 runs from `root`, beam 20 from another worktree, beam 30 from a sibling path. */
 const fakeRun =
-  (ports: number[], calls: string[][] = []): Run =>
+  (listening: Listener[], calls: string[][] = []): Run =>
   async (command, args) => {
     calls.push([command, ...args]);
 
@@ -54,25 +64,45 @@ const fakeRun =
 
     if (args.includes('cwd')) return `p10\nfcwd\nn${root}\np20\nfcwd\nn/elsewhere/app\np30\nfcwd\nn${root}-copy\n`;
 
-    return ports.map((port, index) => `p10\nf${50 + index}\nn${index ? '127.0.0.1' : '*'}:${port}`).join('\n');
+    return listening.map(([pid, address, port], fd) => `p${pid}\nf${50 + fd}\nn${address}:${port}`).join('\n');
   };
 
+const own = (...ports: number[]): Listener[] => ports.map((port) => [10, '*', port]);
+
 describe('tidewave app resolution', () => {
-  test("only the worktree's own beams, their listening ports lowest first", async () => {
-    const calls: string[][] = [];
-    expect(await appPorts(root, fakeRun([53891, 4044, 53882], calls))).toEqual([4044, 53882, 53891]);
-    expect(calls[1]).toContain('10');
-    expect(calls[1]!.join(' ')).not.toMatch(/20|30/);
+  test("only ports the worktree's own beams listen on, lowest first", async () => {
+    const listening: Listener[] = [
+      [10, '*', 53891],
+      [20, '*', 4002],
+      [10, '127.0.0.1', 4044],
+      [30, '*', 4003],
+      [10, '*', 53882],
+    ];
+
+    expect(await appPorts(root, fakeRun(listening))).toEqual([4044, 53882, 53891]);
+  });
+
+  test('a port another process also listens on is never used', async () => {
+    // The beam on ::1 or a wildcard; another worktree's app on 127.0.0.1 would take the connection.
+    const listening: Listener[] = [
+      [10, '[::1]', 4044],
+      [20, '127.0.0.1', 4044],
+      [10, '*', 4045],
+      [30, '127.0.0.1', 4045],
+      [10, '*', 4046],
+    ];
+
+    expect(await appPorts(root, fakeRun(listening))).toEqual([4046]);
   });
 
   test('no beam in the worktree means no ports and no second lsof', async () => {
     const calls: string[][] = [];
-    expect(await appPorts('/nowhere', fakeRun([4044], calls))).toEqual([]);
+    expect(await appPorts('/nowhere', fakeRun(own(4044), calls))).toEqual([]);
     expect(calls).toHaveLength(1);
   });
 
   test('connects to the first port that answers Tidewave MCP, lists and calls', async () => {
-    const app = await openApp(root, fakeRun([other.port, tidewave.port].toSorted((a, b) => a - b)));
+    const app = await openApp(root, fakeRun(own(...[other.port, tidewave.port].toSorted((a, b) => a - b))));
 
     try {
       expect(app.port).toBe(tidewave.port);
@@ -86,8 +116,8 @@ describe('tidewave app resolution', () => {
     }
   });
 
-  test('no app answering names the worktree', async () => {
-    await expect(openApp(root, fakeRun([other.port]))).rejects.toThrow(
+  test('no app answering names the worktree; a redirect is refused, not followed', async () => {
+    await expect(openApp(root, fakeRun(own(other.port, redirect.port)))).rejects.toThrow(
       `No Phoenix app with Tidewave runs from ${root}`,
     );
   });
