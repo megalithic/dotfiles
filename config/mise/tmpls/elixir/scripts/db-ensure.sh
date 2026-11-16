@@ -11,15 +11,13 @@ case "${MIX_ENV:-dev}" in
     exit 2
     ;;
 esac
+# Every dev step (create, migrate, seed, drop) runs as dev, so an inherited
+# MIX_ENV=test never seeds or drops the test databases.
+export MIX_ENV=dev
 
-create_db() {
-  local env_prefix="${1:-}"
+create_db() { # mix env
   local output rc
-  if [ -n "$env_prefix" ]; then
-    output="$(env "$env_prefix" mix ecto.create 2>&1)" || rc=$?
-  else
-    output="$(mix ecto.create 2>&1)" || rc=$?
-  fi
+  output="$(env MIX_ENV="$1" mix ecto.create 2>&1)" || rc=$?
   rc="${rc:-0}"
   printf '%s\n' "$output"
   CREATE_OUTPUT="$output"
@@ -42,7 +40,7 @@ seed_dev() {
 # not leave the databases existing and unseeded forever.
 pending=.local/state/seed-pending
 
-create_db
+create_db dev
 if grep -q 'already been created' <<<"$CREATE_OUTPUT"; then
   if grep -q 'has been created' <<<"$CREATE_OUTPUT"; then
     echo 'warning: some dev databases already existed; skipped seeding. Run: mise run db:reset' >&2
@@ -51,7 +49,7 @@ elif grep -q 'has been created' <<<"$CREATE_OUTPUT"; then
   mkdir -p "$(dirname "$pending")"
   : >"$pending"
 fi
-create_db MIX_ENV=test
+create_db test
 
 mix ecto.migrate
 env MIX_ENV=test mix ecto.migrate

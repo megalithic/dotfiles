@@ -194,8 +194,9 @@ block_by_label() { # sid label
 port_for() { # path; PHX_PORT (or PORT) from the project's mise env
   # Rex terminals start with the checkout's env already applied, and mise
   # leaves out (and `default` values never override) variables that are
-  # already set, so ask with the per-checkout ones unset.
-  env -u PHX_PORT -u PORT -u GIT_WORKTREE mise --cd "$1" env --json 2>/dev/null | jq -r '.PHX_PORT // .PORT // empty'
+  # already set, so ask with the per-checkout ones unset. PORT stays: it is
+  # the explicit override phx-port.sh honours.
+  env -u PHX_PORT -u GIT_WORKTREE mise --cd "$1" env --json 2>/dev/null | jq -r '.PHX_PORT // .PORT // empty'
 }
 
 beam_pid() { [ -n "$1" ] && pgrep -g "$1" -x beam.smp | head -n 1; }

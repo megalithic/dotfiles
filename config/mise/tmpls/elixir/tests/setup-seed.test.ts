@@ -96,6 +96,15 @@ for (const bash of shells) {
       expect(fs.existsSync(path.join(first.cwd, '.local/state/seed-pending'))).toBe(false);
     });
 
+    test('an inherited MIX_ENV=test still creates, seeds and drops only dev databases', () => {
+      const r = run(fresh, { mixEnv: 'test', seedRc: 1 });
+      expect(r.code).toBe(1);
+      expect(r.calls).toContain('dev ecto.seed');
+      expect(r.calls).toContain('dev ecto.drop');
+      expect(r.calls).not.toContain('test ecto.seed');
+      expect(r.calls).not.toContain('test ecto.drop');
+    });
+
     test('refuses a non-dev MIX_ENV before touching any database', () => {
       const r = run(fresh, { mixEnv: 'prod' });
       expect(r.code).toBe(2);
