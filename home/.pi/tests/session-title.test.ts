@@ -91,11 +91,14 @@ test('validator rejects real failures and prose; accepts concise work titles', (
   }
 });
 
-test('invalid answers keep valid current names or fall back to the latest first nonempty prompt line', () => {
+test('invalid answers keep the current name, or fall back to the latest first nonempty prompt line', () => {
   expect(chooseTitle('Sure, I can help', 'Repair title generation', 'new task')).toBe('Repair title generation');
-  expect(chooseTitle('Here is a title', 'The message cuts off', `\n\n${'x'.repeat(80)}\nsecond line`)).toBe(
-    'x'.repeat(60),
+  // A junk name stays until a valid answer arrives: a random prompt line ("it literally is running here: http…",
+  // seen on the demo) is no better.
+  expect(chooseTitle('Here is a title', 'The message cuts off', 'it literally is running here')).toBe(
+    'The message cuts off',
   );
+  expect(chooseTitle('Here is a title', '', `\n\n${'x'.repeat(80)}\nsecond line`)).toBe('x'.repeat(60));
   expect(chooseTitle('  Refresh session titles  ', '', 'ignored')).toBe('Refresh session titles');
 });
 
@@ -175,6 +178,8 @@ test('prompt uses newest user text, latest summary and latest text reply, never 
 
   const prompt = buildTitlePrompt(branch, 'Current work title');
   expect(prompt).toContain('Current work title');
+  // The task follows the tagged data: data-last prompts made Haiku continue the session instead of titling it.
+  expect(prompt.trimEnd()).toMatch(/Task: write a 3–6 word title[^]*Reply with the title only\.$/);
   expect(prompt).toContain('latest prompt\n---\nold prompt');
   expect(prompt).toContain('latest summary');
   expect(prompt).toContain('latest reply');
