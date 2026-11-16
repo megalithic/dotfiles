@@ -20,9 +20,9 @@
 #
 # Generation also ensures <target>/.worktreeinclude lists the template's
 # copy-ignored allowlist so `rwt new` seeds each new worktree. Entries come
-# from <lang>/worktreeinclude when the template provides one (comments/blank lines ignored), otherwise the default
-# .config/ + .env + .envrc trio. Additive: existing entries are never
-# removed.
+# from <lang>/worktreeinclude when the template provides one (comments/blank
+# lines ignored), otherwise the default .config/ + .env + .envrc trio.
+# Additive: existing entries are never removed.
 #
 # A .config/.metadata_never_index marker is maintained so Spotlight skips the
 # generated directory.
