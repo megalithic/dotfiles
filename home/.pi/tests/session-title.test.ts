@@ -183,7 +183,11 @@ test('credentials are masked before the title model sees them', () => {
     'abcdef123456',
   ])
     expect(prompt).not.toContain(value);
-  expect(redact('Fix the token refresh flow')).toBe('Fix the token refresh flow');
+  expect(redact(`Authorization: Bearer ${'abcdefghijklmnopqrstuvwxyz0123'}`)).toBe('Authorization: Bearer [redacted]');
+
+  // Review #13822: ordinary text with these words stays readable.
+  for (const plain of ['Fix the token refresh flow', 'Token: refresh failures', 'token: string', 'password = hashed'])
+    expect(redact(plain)).toBe(plain);
 });
 
 test('junk legacy auto name gets replaced and recorded; branch auto name remains eligible', async () => {

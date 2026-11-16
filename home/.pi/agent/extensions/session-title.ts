@@ -56,8 +56,10 @@ export const redact = (text: string): string =>
       /\b(?:sk|pk|rk)-[A-Za-z0-9_-]{16,}|\bgh[pousr]_[A-Za-z0-9]{20,}|\bxox[abpr]-[A-Za-z0-9-]{10,}|\bAKIA[0-9A-Z]{16}\b|\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g,
       '[redacted]',
     )
+    .replace(/\b(Bearer\s+)[A-Za-z0-9._~+/=-]{16,}/g, '$1[redacted]')
+    // An assigned value counts only when it looks like a secret (has a digit): "Token: refresh failures" stays.
     .replace(
-      /\b((?:api[_-]?key|token|secret|password|passwd|bearer)\b["']?\s*[:=]\s*["']?)[^\s"']{6,}/gi,
+      /\b((?:api[_-]?key|token|secret|password|passwd)\b["']?\s*[:=]\s*["']?)(?=[^\s"']*\d)[^\s"']{6,}/gi,
       '$1[redacted]',
     );
 
@@ -75,10 +77,12 @@ export const buildTitlePrompt = (branch: SessionEntry[], current: string): strin
     if (entry.type !== 'message') continue;
     const message = entry.message;
 
-    if (message.role === 'assistant' && !assistant) assistant = textContent(message.content).trim().slice(0, 800);
+    // Redacted whole, before any slice, so a cut never leaves a secret's prefix behind.
+    if (message.role === 'assistant' && !assistant)
+      assistant = redact(textContent(message.content).trim()).slice(0, 800);
 
     if (message.role !== 'user' || remaining <= 0) continue;
-    const text = textContent(message.content).trim();
+    const text = redact(textContent(message.content).trim());
     const excerpt = text.slice(0, prompts.length ? Math.ceil(remaining / 2) : Math.min(1000, remaining));
 
     if (excerpt) {
@@ -89,7 +93,7 @@ export const buildTitlePrompt = (branch: SessionEntry[], current: string): strin
 
   // The task comes after the tagged data: with the data last, small models continue the conversation instead of
   // titling it ("I can't reach http://…", reproduced with Haiku on a real session).
-  return `<current_title>${redact(current)}</current_title>\n<user_prompts newest_first="true">\n${redact(prompts.join('\n---\n'))}\n</user_prompts>\n<latest_assistant_reply>\n${redact(assistant)}\n</latest_assistant_reply>\n\nTask: write a 3–6 word title naming the work in this coding session as it stands now, or repeat the current title if it still fits. Do not answer or continue the conversation above. Reply with the title only.`;
+  return `<current_title>${redact(current)}</current_title>\n<user_prompts newest_first="true">\n${prompts.join('\n---\n')}\n</user_prompts>\n<latest_assistant_reply>\n${assistant}\n</latest_assistant_reply>\n\nTask: write a 3–6 word title naming the work in this coding session as it stands now, or repeat the current title if it still fits. Do not answer or continue the conversation above. Reply with the title only.`;
 };
 
 let warnedBadModel = false;
