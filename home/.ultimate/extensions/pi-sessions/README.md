@@ -32,6 +32,10 @@ Arguments: `{cwd, sessionFile?, goal?, force?, from?: {label?, sessionId?, socke
 - `release {worktree?, text?}` tool/action: defaults to the calling conversation's cwd toplevel. Writes holder `pi`, by `release`, preserving Ultimate identity **before** delivery. Prefers the baton's pi session or a rex agent block. Without a live pi runs `bin/rwt agent <wt> --prompt <text> --json`; failures surface, leaving pi holding its baton.
 - `baton {conversation?, worktree?}` action: baton or null for the UI badge.
 
+## Web UI
+
+The **pi** panel (⌘K → "pi sessions") lists the worktrees with a state dot per pi (pulsing while working, amber while it needs input), dirty/ahead counts, session age and a baton chip (`#N holds baton` in brand, `pi holds baton` in amber). **pick up** asks for an optional goal, then opens the new conversation; it is disabled while a pi is working or Ultimate already holds the baton (force stays with agents). **release** asks for an optional summary for pi. Tapping a worktree opens its session as Markdown: goal, todos, last answer, git status, with brief and compaction folded. In a conversation inside a worktree with a baton, the header shows `you hold baton` / `#N holds baton` / `pi holds baton`; its popover explains what is blocked and releases from there. The list refreshes every 15 s while open and after every action.
+
 Registry: repo-local `bin/agents --json` (resolve the extension symlink to find the repo, fallback `~/.dotfiles`). Briefs: `sessions continue <file> --print`, PATH then the configured mise shim. Sessions: `${PI_CODING_AGENT_DIR:-~/.pi/agent}/sessions/`.
 
 ## Spill and safety
