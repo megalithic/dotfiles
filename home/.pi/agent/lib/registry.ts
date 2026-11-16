@@ -33,6 +33,8 @@ export type Registry = {
     port: number;
     url: string;
     project: string;
+    /** The instance's home (`~/.ultimate/projects/<slug>`); its conversation worktrees live under `worktrees/`. */
+    home?: string;
     hub?: 'primary' | 'secondary';
     alive?: false;
   }[];
@@ -205,6 +207,7 @@ export const readRegistry = (opts: RegistryOptions = {}): Registry => {
       port: lock.port,
       url: `http://127.0.0.1:${lock.port}`,
       project: lock.project,
+      home: path.join(projects, name),
     };
 
     if (alive) liveProjects.add(expandHome(lock.project, home));

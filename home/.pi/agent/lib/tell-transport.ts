@@ -70,6 +70,7 @@ const registrySchema = Type.Object({
       port: Type.Integer(),
       url: Type.String(),
       project: Type.String(),
+      home: Type.Optional(Type.String()),
       hub: Type.Optional(Type.Union([Type.Literal('primary'), Type.Literal('secondary')])),
       alive: Type.Optional(Type.Literal(false)),
     }),

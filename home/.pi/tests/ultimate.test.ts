@@ -99,7 +99,7 @@ test('guard blocks only the four writing tools while Ultimate holds the baton', 
 
   for (const tool of ['read', 'ultimate_read', 'tell_pi']) expect(guardDecision(tool, baton)).toBeUndefined();
   expect(batonStatus(baton)).toBe('Ultimate #48 holds this worktree');
-  expect(batonStatus({ ...baton, holder: 'pi' })).toBeUndefined();
+  expect(batonStatus({ ...baton, holder: 'pi' })).toBe('pi holds this worktree');
   expect(batonStatus(undefined)).toBeUndefined();
 });
 
@@ -110,7 +110,7 @@ const inventory = registryTargets({
     { pid: 1, port: 1, url: 'http://parent:1', project: '/work' },
     { pid: 2, port: 2, url: 'http://child:2', project: '/work/app' },
     { pid: 3, port: 3, url: 'http://dead:3', project: '/work/app/nested', alive: false },
-    { pid: 4, port: 4, url: 'http://hub:4', project: '/hub', hub: 'primary' },
+    { pid: 4, port: 4, url: 'http://hub:4', project: '/hub', hub: 'primary', home: '/u/.ultimate/projects/hub-1' },
   ],
 });
 
@@ -118,6 +118,9 @@ test('instance selection uses the deepest live containing project with directory
   expect(containingUltimate(inventory, '/work/app/nested')?.socket).toBe('http://child:2');
   expect(containingUltimate(inventory, '/work/apple')?.socket).toBe('http://parent:1');
   expect(containingUltimate(inventory, '/outside')).toBeUndefined();
+  // A pi in one of an instance's own conversation worktrees (outside its project) reaches that instance.
+  expect(containingUltimate(inventory, '/u/.ultimate/projects/hub-1/worktrees/9095/src')?.socket).toBe('http://hub:4');
+  expect(containingUltimate(inventory, '/u/.ultimate/projects/hub-1/state')).toBeUndefined();
   expect(historyTarget(inventory, '/work/app', '/hub')?.socket).toBe('http://hub:4');
   expect(historyTarget(inventory, '/work/app')?.socket).toBe('http://child:2');
   expect(historyTarget(inventory, '/outside', undefined, 'app')?.socket).toBe('http://child:2');

@@ -5,7 +5,7 @@ import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import type { Context } from '@earendil-works/chord/context';
 import type { JsonValue } from '@earendil-works/chord/json';
 import { defineExtension, defineTool, hook, ToolTask } from '@earendil-works/pi-durable';
-import type { ConversationId, Harness } from '@earendil-works/pi-durable';
+import type { ConversationDocToken, ConversationId, Harness } from '@earendil-works/pi-durable';
 import { bool, obj, opt, str } from '@earendil-works/pi-schema';
 import { deliver } from '../pi-bridge/lib.ts';
 import {
@@ -38,6 +38,8 @@ type Host = {
   projectRoot: string;
   harness(): Harness;
   system(): Promise<{ process: { url: string } }>;
+  /** The core's `ultimate.metadata` document: `{ title?, label? }`, which the sidebar names a conversation by. */
+  metadata: ConversationDocToken<{ title?: string; label?: string }>;
   invoke(name: string, action: string, args: JsonValue, signal: AbortSignal): Promise<JsonValue>;
 };
 type ActionContext = { host: Host; signal: AbortSignal; conversationId?: number; exec: Exec };
@@ -199,7 +201,8 @@ async function pickup(input: Pickup, host: Host, exec: Exec, signal: AbortSignal
     const response = await fetch(`${url}/api/conversations`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cwd: worktree, title: `pi → ${basename(worktree)}` }),
+      // No title: the summary model names the conversation by its work and keeps it current; the `pi` label marks it.
+      body: JSON.stringify({ cwd: worktree }),
       signal,
     });
     if (response.status !== 201)
@@ -227,6 +230,7 @@ async function pickup(input: Pickup, host: Host, exec: Exec, signal: AbortSignal
     if (!conversation) throw new Error(`Created #${id}, but it is unavailable; baton names it at ${url}`);
     const content = `${framing}\n\nYou picked up this rex worktree from pi and hold its baton (pi cannot edit/write/bash until you release). Work in ${worktree} directly; pi's uncommitted work is there. Never workspace submit or push. When the goal is done, or Seth asks, finish with release and a summary for pi. Seth reads this conversation: ask him questions in your answer here, not with the message tool.\n\nGoal: ${goal}\n\n${brief}`;
     await harness.commit(async (tx) => {
+      (await tx.doc(host.metadata, id)).label = 'pi';
       await conversation.submit(tx, { type: 'input', content, whenBusy: 'followUp' });
     }, BACKGROUND_CONTEXT);
     const standing = await host.invoke('subagents', 'standing', { name: 'ultimate' }, signal);

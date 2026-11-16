@@ -63,8 +63,13 @@ export const writeBaton = (baton: Baton): void => {
   }
 };
 
+/** Who holds this worktree's baton, for pi's status line; nothing while nobody does. */
 export const batonStatus = (baton: Baton | undefined): string | undefined =>
-  baton?.holder === 'ultimate' ? `Ultimate #${baton.ultimate?.conversation ?? '?'} holds this worktree` : undefined;
+  !baton
+    ? undefined
+    : baton.holder === 'ultimate'
+      ? `Ultimate #${baton.ultimate?.conversation ?? '?'} holds this worktree`
+      : 'pi holds this worktree';
 
 export const guardDecision = (tool: string, baton: Baton | undefined): { block: true; reason: string } | undefined => {
   if (!['edit', 'write', 'bash', 'interactive_shell'].includes(tool) || baton?.holder !== 'ultimate') return undefined;
