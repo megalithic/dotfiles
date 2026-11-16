@@ -165,8 +165,10 @@ export async function nearestBaton(cwd: string): Promise<Baton | null> {
     path = dirname(path);
   }
 }
+/** Tools that can change a checkout. codemode is blocked whole: its nested write/edit/bash calls skip `beforeTool`. */
+export const GUARDED_TOOLS = ['edit', 'write', 'bash', 'codemode'];
 export function guardDecision(tool: string, baton: Baton | null): { block: string } | undefined {
-  if (['edit', 'write', 'bash'].includes(tool) && baton?.holder === 'pi')
+  if (GUARDED_TOOLS.includes(tool) && baton?.holder === 'pi')
     return {
       block: `pi holds the baton for ${baton.worktree} since ${baton.at}; ask Seth, or pick it up again with pickup (force) / have pi run /ultimate.`,
     };

@@ -385,6 +385,9 @@ cmd_restart() {
 cmd_agent() {
   resolve
   local sid block proc pid input
+  # Typed into fish or bash like build_layout's agent_input: plain single-quoted paths only.
+  # Checked before stopping Pi, so a refusal leaves it running.
+  case "$SELF$WT" in *\'*) die 6 "paths with a single quote can't be typed into the agent shell: $WT" ;; esac
   sid="$(find_session)" || die 3 "no Rex session for $WT (run: rwt open)"
   block="$(block_by_label "$sid" agent)"
   if [ -n "$block" ]; then
@@ -411,7 +414,7 @@ cmd_agent() {
     mkdir -p "$WT/.local/state" || die 7 "could not create agent state directory"
     printf '%s' "$PROMPT" >"$WT/.local/state/rwt-prompt" || die 7 "could not write agent prompt"
   fi
-  input="'${SELF//\'/\'\\\'\'}' _agent '${WT//\'/\'\\\'\'}' 1"$'\n'
+  input="'$SELF' _agent '$WT' 1"$'\n'
   rex block send -s "$sid" -b "$block" "$input" >/dev/null || die 7 "could not start Pi in $block"
   if [ "$JSON" = 1 ]; then
     jq -cn --arg sid "$sid" --arg block "$block" --argjson prompt "$([ -n "$PROMPT" ] && echo true || echo false)" '{ok:true, session:$sid, block:$block, prompt:$prompt}'
