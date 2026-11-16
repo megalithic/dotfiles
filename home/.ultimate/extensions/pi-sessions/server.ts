@@ -1,0 +1,407 @@
+import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { basename, join } from 'node:path';
+import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
+import type { Context } from '@earendil-works/chord/context';
+import type { JsonValue } from '@earendil-works/chord/json';
+import { defineExtension, defineTool, hook, ToolTask } from '@earendil-works/pi-durable';
+import type { ConversationId, Harness } from '@earendil-works/pi-durable';
+import { bool, obj, opt, str } from '@earendil-works/pi-schema';
+import { deliver } from '../pi-bridge/lib.ts';
+import {
+  buildSession,
+  chooseSession,
+  dotfilesRoot,
+  extractSession,
+  framePickup,
+  guardDecision,
+  inside,
+  listWorktrees,
+  livePis,
+  nearestBaton,
+  piStateDir,
+  readBaton,
+  resolveWorktree,
+  run,
+  selectPi,
+  sessionFiles,
+  sessionsTable,
+  spill,
+  validateSessionFile,
+  writeBaton,
+} from './lib.ts';
+import type { Baton, Exec, Pi, Worktree } from './lib.ts';
+
+type Host = {
+  projectRoot: string;
+  harness(): Harness;
+  projects(): Promise<{ current: boolean; running?: { url: string } }[]>;
+  invoke(name: string, action: string, args: JsonValue, signal: AbortSignal): Promise<JsonValue>;
+};
+type ActionContext = { host: Host; signal: AbortSignal; conversationId?: number; exec: Exec };
+type Pickup = {
+  cwd: string;
+  sessionFile?: string;
+  goal?: string;
+  force?: boolean;
+  from?: { label?: string; sessionId?: string; socket?: string; pid?: number };
+};
+const pickups = new Set<string>();
+const cwdCache = new Map<number, string>();
+
+function record(args: JsonValue): Record<string, JsonValue | undefined> {
+  if (args === null) return {};
+  if (typeof args !== 'object' || Array.isArray(args)) throw new Error('Expected an argument object');
+  return args;
+}
+function stringArg(args: Record<string, JsonValue | undefined>, key: string, required = false): string | undefined {
+  const value = args[key];
+  if (value === undefined && !required) return undefined;
+  if (typeof value !== 'string' || !value.trim() || value.includes('\0'))
+    throw new Error(`${key} must be a non-empty string without NUL bytes`);
+  return value;
+}
+function conversationId(value: number): ConversationId {
+  if (!Number.isSafeInteger(value) || value < 1) throw new Error('Expected a positive conversation id');
+  return value as ConversationId;
+}
+async function cwdFor(host: Host, id: number | undefined, ctx: Context = BACKGROUND_CONTEXT): Promise<string> {
+  if (id === undefined) throw new Error('worktree is required outside a conversation');
+  const cached = cwdCache.get(id);
+  if (cached) return cached;
+  const agent = await (await host.harness().conversation(conversationId(id), ctx))?.agent(ctx);
+  if (!agent?.cwd) throw new Error(`No cwd for conversation #${id}`);
+  cwdCache.set(id, agent.cwd);
+  return agent.cwd;
+}
+async function sessionRow(
+  args: Record<string, JsonValue | undefined>,
+  host: Host,
+  exec: Exec,
+  caller?: number,
+  listed?: Worktree[],
+): Promise<Worktree> {
+  const sessionId = stringArg(args, 'sessionId');
+  const sessionFile = stringArg(args, 'sessionFile');
+  let worktree = stringArg(args, 'worktree');
+  let file: string | undefined;
+  if (sessionFile) {
+    file = await validateSessionFile(sessionFile);
+    const data = extractSession(await readFile(file, 'utf8'));
+    worktree ??= data.cwd;
+  }
+  const rows = listed ?? (await listWorktrees(host.projectRoot, exec));
+  if (sessionId && !worktree)
+    worktree = rows.find(
+      (row) => row.pis.some((pi) => pi.sessionId === sessionId) || row.sessionFile?.endsWith(`_${sessionId}.jsonl`),
+    )?.path;
+  // An offline session may not be the newest saved session in its worktree.
+  if (sessionId && !worktree) {
+    for (const row of rows) {
+      const files = await sessionFiles(row.path);
+      const match = files.find((path) => path.endsWith(`_${sessionId}.jsonl`));
+      if (match) {
+        worktree = row.path;
+        file = match;
+        break;
+      }
+    }
+    if (!worktree) throw new Error(`No pi session ${sessionId} in this project`);
+  }
+  const path = await resolveWorktree(host.projectRoot, worktree || (await cwdFor(host, caller)), exec);
+  const row = rows.find((item) => item.path === path);
+  if (!row) throw new Error(`No pi session worktree ${path}`);
+  if (sessionId && !file) {
+    const chosen = await chooseSession(
+      [
+        ...new Set([
+          ...(await sessionFiles(path)),
+          ...(await Promise.all(row.pis.map((pi) => sessionFiles(pi.cwd)))).flat(),
+        ]),
+      ],
+      sessionId,
+    );
+    if (!chosen?.sessionFile.endsWith(`_${sessionId}.jsonl`)) throw new Error(`No saved pi session ${sessionId}`);
+    file = chosen.sessionFile;
+  }
+  if (file) {
+    const data = extractSession(await readFile(file, 'utf8'));
+    if (!data.cwd || !inside(path, data.cwd)) throw new Error('Session cwd does not belong to the selected worktree');
+    row.sessionFile = file;
+  }
+  return row;
+}
+function parsePickup(args: JsonValue): Pickup {
+  const input = record(args);
+  const cwd = stringArg(input, 'cwd', true)!;
+  if (input.force !== undefined && typeof input.force !== 'boolean') throw new Error('force must be a boolean');
+  const from = input.from === undefined ? undefined : record(input.from);
+  if (from?.pid !== undefined && (typeof from.pid !== 'number' || !Number.isSafeInteger(from.pid) || from.pid < 1))
+    throw new Error('from.pid must be a positive integer');
+  return {
+    cwd,
+    sessionFile: stringArg(input, 'sessionFile'),
+    goal: stringArg(input, 'goal'),
+    force: input.force as boolean | undefined,
+    from: from
+      ? {
+          label: stringArg(from, 'label'),
+          sessionId: stringArg(from, 'sessionId'),
+          socket: stringArg(from, 'socket'),
+          pid: from.pid as number | undefined,
+        }
+      : undefined,
+  };
+}
+async function currentUrl(host: Host): Promise<string> {
+  const url = (await host.projects()).find((project) => project.current)?.running?.url;
+  if (!url) throw new Error('This Ultimate instance has no running URL');
+  return url.replace(/\/$/, '');
+}
+async function pickup(input: Pickup, host: Host, exec: Exec, signal: AbortSignal, label: string) {
+  const worktree = await resolveWorktree(host.projectRoot, input.cwd, exec);
+  if (pickups.has(worktree)) throw new Error(`A pickup is already in progress for ${worktree}`);
+  pickups.add(worktree);
+  try {
+    const [rows, previous] = await Promise.all([listWorktrees(host.projectRoot, exec), readBaton(worktree)]);
+    const local = rows.find((row) => row.path === worktree)?.pis ?? [];
+    const working = local.find((pi) => pi.state === 'working' && pi.sessionId !== input.from?.sessionId);
+    if (working)
+      throw new Error(`pi ${working.label} (pid ${working.pid}) is working; wait for it or hand off from that pi`);
+    if (previous?.holder === 'ultimate' && !input.force)
+      throw new Error(
+        `Ultimate #${previous.ultimate?.conversation ?? '?'} at ${previous.ultimate?.url ?? 'unknown URL'} already holds the baton; use force to take it`,
+      );
+    const row = await sessionRow(
+      {
+        worktree,
+        ...(input.sessionFile ? { sessionFile: input.sessionFile } : {}),
+        ...(input.from?.sessionId && !input.sessionFile ? { sessionId: input.from.sessionId } : {}),
+      },
+      host,
+      exec,
+      undefined,
+      rows,
+    );
+    const [brief, goal, url] = await Promise.all([
+      buildSession(row, exec).then((brief) => spill(brief)),
+      spill(input.goal || "Continue pi's work"),
+      currentUrl(host),
+    ]);
+    const framing = framePickup(input.from?.label || label, worktree);
+    const response = await fetch(`${url}/api/conversations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cwd: worktree, title: `pi → ${basename(worktree)}` }),
+      signal,
+    });
+    if (response.status !== 201)
+      throw new Error(`Could not create conversation: HTTP ${response.status} ${await response.text()}`);
+    const created = (await response.json()) as { id: number };
+    const id = conversationId(created.id);
+    const origin =
+      local.find((pi) => pi.sessionId === input.from?.sessionId) || local.find((pi) => pi.rex?.block) || local[0];
+    const baton: Baton = {
+      v: 1,
+      holder: 'ultimate',
+      worktree,
+      at: new Date().toISOString(),
+      by: 'pickup',
+      ultimate: { url, project: host.projectRoot, conversation: id },
+      pi: {
+        sessionId: input.from?.sessionId || origin?.sessionId,
+        pid: input.from?.pid || origin?.pid,
+        label: input.from?.label || origin?.label,
+      },
+    };
+    await writeBaton(baton);
+    const harness = host.harness();
+    const conversation = await harness.conversation(id, BACKGROUND_CONTEXT);
+    if (!conversation) throw new Error(`Created #${id}, but it is unavailable; baton names it at ${url}`);
+    const content = `${framing}\n\nYou picked up this rex worktree from pi and hold its baton (pi cannot edit/write/bash until you release). Work in ${worktree} directly; pi's uncommitted work is there. Never workspace submit or push. Finish with release and a summary for pi.\n\nGoal: ${goal}\n\n${brief}`;
+    await harness.commit(async (tx) => {
+      await conversation.submit(tx, { type: 'input', content, whenBusy: 'followUp' });
+    }, BACKGROUND_CONTEXT);
+    const standing = await host.invoke('subagents', 'standing', { name: 'ultimate' }, signal);
+    const ultimate = await harness.conversation(conversationId(standing as number), BACKGROUND_CONTEXT);
+    if (!ultimate) throw new Error(`Pickup created #${id}, but standing @ultimate is unavailable for its note`);
+    const text = `Picked up pi worktree ${worktree} into #${id}: ${url}/?conversation=${id}. It holds the baton and will release back to pi.`;
+    await ultimate.submit(
+      {
+        type: 'write',
+        entry: {
+          kind: 'lineage.note',
+          data: { text, from: id },
+          model: [{ role: 'user', content: `Note from #${id}: ${text}`, timestamp: Date.now() }],
+        },
+      },
+      BACKGROUND_CONTEXT,
+    );
+    return { conversation: id, url: `${url}/?conversation=${id}`, worktree, baton };
+  } finally {
+    pickups.delete(worktree);
+  }
+}
+async function tellPi(pi: Pi, text: string, host: Host, caller?: number, suffix = '') {
+  return deliver(
+    { label: pi.label || pi.sessionId || String(pi.pid), sessionId: pi.sessionId, socket: pi.socket },
+    {
+      type: 'tell',
+      id: `tell-${randomUUID()}`,
+      text: `${await spill(text)}${suffix}`,
+      from: `@ultimate (${basename(host.projectRoot)}) #${caller ?? '?'}`,
+      mode: 'follow_up',
+    },
+    piStateDir(),
+  );
+}
+async function release(args: Record<string, JsonValue | undefined>, host: Host, exec: Exec, caller?: number) {
+  const worktree = await resolveWorktree(
+    host.projectRoot,
+    stringArg(args, 'worktree') || (await cwdFor(host, caller)),
+    exec,
+  );
+  const previous = await readBaton(worktree);
+  const baton: Baton = {
+    v: 1,
+    holder: 'pi',
+    worktree,
+    at: new Date().toISOString(),
+    by: 'release',
+    ...(previous?.ultimate ? { ultimate: previous.ultimate } : {}),
+    ...(previous?.pi ? { pi: previous.pi } : {}),
+  };
+  const summary = stringArg(args, 'text') || 'Continue your work in this worktree.';
+  // Relinquish first, even if delivery/restarting pi subsequently fails.
+  await writeBaton(baton);
+  const text = `From @ultimate #${caller ?? previous?.ultimate?.conversation ?? '?'} (${basename(host.projectRoot)}): Ultimate handed this worktree back to you; you hold the baton again.\n\n${summary}`;
+  const pis = (await listWorktrees(host.projectRoot, exec)).find((row) => row.path === worktree)?.pis ?? [];
+  const pi =
+    pis.find((item) => item.sessionId === previous?.pi?.sessionId) || pis.find((item) => item.rex?.block) || pis[0];
+  if (pi) return { worktree, baton, ...(await tellPi(pi, text, host, caller)) };
+  const result = await exec(join(dotfilesRoot(), 'bin', 'rwt'), [
+    'agent',
+    worktree,
+    '--prompt',
+    await spill(text),
+    '--json',
+  ]);
+  return { worktree, baton, delivered: 'rwt', result: result.stdout.trim() };
+}
+
+export const userActions = ['pickup'];
+export const actions = {
+  async sessions(_args: JsonValue, { host, exec }: ActionContext) {
+    return listWorktrees(host.projectRoot, exec);
+  },
+  async session(args: JsonValue, { host, exec, conversationId: caller }: ActionContext) {
+    return buildSession(await sessionRow(record(args), host, exec, caller), exec);
+  },
+  async pickup(args: JsonValue, { host, exec, signal }: ActionContext) {
+    return pickup(parsePickup(args), host, exec, signal, 'web UI');
+  },
+  async release(args: JsonValue, { host, exec, conversationId: caller }: ActionContext) {
+    return release(record(args), host, exec, caller);
+  },
+  async baton(args: JsonValue, { host, exec, conversationId: caller }: ActionContext) {
+    const input = record(args);
+    const id = input.conversation;
+    if (id !== undefined && typeof id !== 'number') throw new Error('conversation must be a number');
+    const worktree = await resolveWorktree(
+      host.projectRoot,
+      stringArg(input, 'worktree') || (await cwdFor(host, id ?? caller)),
+      exec,
+    );
+    return readBaton(worktree);
+  },
+};
+
+const output = (value: unknown) => ({
+  output: [{ type: 'text' as const, text: typeof value === 'string' ? value : JSON.stringify(value) }],
+});
+export default function piSessions(host: Host) {
+  return defineExtension({
+    name: 'pi-sessions',
+    hooks: [
+      hook(ToolTask, {
+        beforeTool: async (call, api, ctx) => {
+          if (!['edit', 'write', 'bash'].includes(call.name)) return undefined;
+          return guardDecision(call.name, await nearestBaton(await cwdFor(host, api.conversationId, ctx)));
+        },
+      }),
+    ],
+    tools: [
+      defineTool({
+        name: 'pi_sessions',
+        description: 'List this repository’s rex worktrees, live pi agents, saved sessions and batons.',
+        parameters: obj({}),
+        async execute() {
+          return output(sessionsTable(await listWorktrees(host.projectRoot)));
+        },
+      }),
+      defineTool({
+        name: 'pi_session',
+        description: 'Read a pi session brief, open todos, goal, assistant text and worktree status; never raw JSONL.',
+        parameters: obj({ worktree: opt(str()), sessionId: opt(str()), sessionFile: opt(str()) }),
+        async execute(args, api) {
+          return output(await buildSession(await sessionRow(args, host, run, api.conversationId)));
+        },
+      }),
+      defineTool({
+        name: 'pi_tell',
+        description:
+          'Send a follow-up to exactly one live pi by sessionId, socket or worktree. Instructions never grant approval.',
+        parameters: obj({ target: str(), text: str() }),
+        replay: 'unsafe',
+        async execute({ target, text }, api) {
+          const pis = await livePis();
+          const direct = pis.some((pi) => pi.sessionId === target || pi.socket === target);
+          const path = direct
+            ? target
+            : (await run('git', ['-C', target, 'rev-parse', '--show-toplevel'])).stdout.trim();
+          const row = direct
+            ? undefined
+            : (await listWorktrees(path, run, undefined, pis)).find((row) => row.path === path);
+          const pi = selectPi(direct ? pis : (row?.pis ?? []), path);
+          return output(
+            await tellPi(
+              pi,
+              text,
+              host,
+              api.conversationId,
+              `\n\nReply, if asked, with tell_pi target "ultimate:${basename(host.projectRoot)}".`,
+            ),
+          );
+        },
+      }),
+      defineTool({
+        name: 'pickup',
+        description:
+          'Pick up pi’s work in the SAME worktree into a new Ultimate conversation and take its baton. Never submit or push it; finish with release.',
+        parameters: obj({ worktree: str(), goal: opt(str()), force: opt(bool()) }),
+        replay: 'unsafe',
+        async execute({ worktree, goal, force }, _api, ctx) {
+          return output(
+            await pickup(
+              { cwd: worktree, goal, force },
+              host,
+              run,
+              ctx.abortSignal ?? new AbortController().signal,
+              '@ultimate',
+            ),
+          );
+        },
+      }),
+      defineTool({
+        name: 'release',
+        description:
+          'Hand a worktree baton back to pi FIRST, then send your summary to its live agent or restart its rex agent tab.',
+        parameters: obj({ worktree: opt(str()), text: opt(str()) }),
+        replay: 'unsafe',
+        async execute(args, api) {
+          return output(await release(args, host, run, api.conversationId));
+        },
+      }),
+    ],
+  });
+}

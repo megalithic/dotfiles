@@ -9,6 +9,10 @@
     "web": {
       "command": "node",
       "args": ["/Users/seth/.pi/agent/npm/node_modules/pi-web-access/dist/mcp-cli.js"]
+    },
+    "sessions": {
+      "command": "/Users/seth/.local/share/mise/shims/sessions",
+      "args": ["--mcp"]
     }
   }
 }
