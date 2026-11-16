@@ -280,7 +280,8 @@ export function sessionsCommand(): string {
   }
   return '/Users/seth/.local/share/mise/shims/sessions';
 }
-const cap = (text: string, length: number) => (text.length > length ? `${text.slice(0, length)}\n[truncated]` : text);
+const cap = (text: string, length: number) =>
+  !text.trim() ? 'None' : text.length > length ? `${text.slice(0, length)}\n[truncated]` : text;
 export async function buildSession(row: Worktree, exec: Exec = run, root = sessionsRoot()): Promise<string> {
   const file = row.sessionFile ? await validateSessionFile(row.sessionFile, root) : null;
   const data = extractSession(file ? await readFile(file, 'utf8') : '');

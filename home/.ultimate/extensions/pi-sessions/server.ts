@@ -35,7 +35,7 @@ import type { Baton, Exec, Pi, Worktree } from './lib.ts';
 type Host = {
   projectRoot: string;
   harness(): Harness;
-  projects(): Promise<{ current: boolean; running?: { url: string } }[]>;
+  system(): Promise<{ process: { url: string } }>;
   invoke(name: string, action: string, args: JsonValue, signal: AbortSignal): Promise<JsonValue>;
 };
 type ActionContext = { host: Host; signal: AbortSignal; conversationId?: number; exec: Exec };
@@ -154,8 +154,9 @@ function parsePickup(args: JsonValue): Pickup {
   };
 }
 async function currentUrl(host: Host): Promise<string> {
-  const url = (await host.projects()).find((project) => project.current)?.running?.url;
-  if (!url) throw new Error('This Ultimate instance has no running URL');
+  // This process's own URL: a supervised host and an unsupervised preview both report it here.
+  const url = (await host.system()).process.url;
+  if (!url) throw new Error('This Ultimate instance has no URL');
   return url.replace(/\/$/, '');
 }
 async function pickup(input: Pickup, host: Host, exec: Exec, signal: AbortSignal, label: string) {
@@ -185,7 +186,11 @@ async function pickup(input: Pickup, host: Host, exec: Exec, signal: AbortSignal
     );
     const [brief, goal, url] = await Promise.all([
       buildSession(row, exec).then((brief) => spill(brief)),
-      spill(input.goal || "Continue pi's work"),
+      // Without a goal, Seth drives the conversation: it must wait for him instead of releasing at once.
+      spill(
+        input.goal ||
+          'None given. Summarize where pi stopped and ask Seth what to do next; release only when he asks or the work is done.',
+      ),
       currentUrl(host),
     ]);
     const framing = framePickup(input.from?.label || label, worktree);
@@ -218,7 +223,7 @@ async function pickup(input: Pickup, host: Host, exec: Exec, signal: AbortSignal
     const harness = host.harness();
     const conversation = await harness.conversation(id, BACKGROUND_CONTEXT);
     if (!conversation) throw new Error(`Created #${id}, but it is unavailable; baton names it at ${url}`);
-    const content = `${framing}\n\nYou picked up this rex worktree from pi and hold its baton (pi cannot edit/write/bash until you release). Work in ${worktree} directly; pi's uncommitted work is there. Never workspace submit or push. Finish with release and a summary for pi.\n\nGoal: ${goal}\n\n${brief}`;
+    const content = `${framing}\n\nYou picked up this rex worktree from pi and hold its baton (pi cannot edit/write/bash until you release). Work in ${worktree} directly; pi's uncommitted work is there. Never workspace submit or push. When the goal is done, or Seth asks, finish with release and a summary for pi.\n\nGoal: ${goal}\n\n${brief}`;
     await harness.commit(async (tx) => {
       await conversation.submit(tx, { type: 'input', content, whenBusy: 'followUp' });
     }, BACKGROUND_CONTEXT);
