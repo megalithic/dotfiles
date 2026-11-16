@@ -35,7 +35,7 @@ fail() {
   exit 1
 }
 
-out="$("$script" 2>&1)"
+out="$("$script" 2>&1)" || fail "first run failed: $out"
 [[ "$out" != *test-secret-value* ]] || fail "secret printed"
 [[ "$out" == *"wrote uploadProvider"* ]] || fail "first run wrote nothing: $out"
 

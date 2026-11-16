@@ -86,6 +86,8 @@ if [[ "${MACSHOT_RESTART:-1}" != 0 ]] && pgrep -xq macshot; then
   pgrep -xq macshot && die "macshot did not quit; quit it and run again"
 fi
 
+# Bash 5.2+ would read `&` in a replacement as the match; 3.2 has no option.
+shopt -u patsub_replacement 2>/dev/null || true
 xml() {
   local s="${1//&/&amp;}"
   s="${s//</&lt;}"
