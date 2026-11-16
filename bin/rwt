@@ -459,15 +459,27 @@ cmd_prune() {
   [ -z "$(git -C "$WT" status --porcelain)" ] || die 6 "$BRANCH has uncommitted or untracked changes"
   def="$(default_branch "$MAIN")"
   merged "$BRANCH" "$def" || die 6 "$BRANCH is not merged into $def (no merged PR either)"
+  # The ids its databases may carry, read before the checkout is gone: the rwt
+  # id, the directory name (older setups) and the GIT_WORKTREE its env pins.
+  local db_ids=() id
+  if has_task "$MAIN" db:drop-worktree; then
+    while IFS= read -r id; do [ -z "$id" ] || db_ids+=("$id"); done < <(
+      {
+        echo "$WID"
+        basename "$WT"
+        env -u GIT_WORKTREE mise --cd "$WT" env --json 2>/dev/null | jq -r '.GIT_WORKTREE // empty'
+      } | awk '!seen[$0]++'
+    )
+  fi
   if sid="$(find_session)"; then rex kill "$sid" >/dev/null 2>&1 && log "killed session $sid"; fi
   git -C "$MAIN" worktree remove "$WT" >&2 || die 7 "git worktree remove failed"
   # -D is safe here: merged() already proved the branch is integrated.
   git -C "$MAIN" branch -D "$BRANCH" >/dev/null 2>&1 || die 7 "could not delete branch $BRANCH"
-  # The project drops what it created for the id (the Elixir template: its
+  # The project drops what it created for those ids (the Elixir template: its
   # <db>_<id> databases). Unset the shared-postgres vars so the main
   # checkout's mise env resolves them, not whatever this shell carries.
-  if has_task "$MAIN" db:drop-worktree; then
-    (cd "$MAIN" && env -u PGPORT -u PGHOST -u PGDATA -u PG_ROOT -u GIT_WORKTREE mise run --quiet db:drop-worktree "$WID") >&2 ||
+  if [ "${#db_ids[@]}" -gt 0 ]; then
+    (cd "$MAIN" && env -u PGPORT -u PGHOST -u PGDATA -u PG_ROOT -u GIT_WORKTREE mise run --quiet db:drop-worktree "${db_ids[@]}") >&2 ||
       log "could not drop the databases of $WID; list leftovers with: mise run db:orphans"
   fi
   if [ "$JSON" = 1 ]; then

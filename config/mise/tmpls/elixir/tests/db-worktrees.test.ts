@@ -20,9 +20,9 @@ const git = (cwd: string, ...args: string[]) => {
   if (r.exitCode !== 0) throw new Error(r.stderr.toString());
 };
 
-// A provider_portal checkout with two live worktrees: one with a long name
-// whose database names get truncated, one Ultimate-style worktree whose .env
-// pins GIT_WORKTREE=ult_7.
+// A provider_portal checkout with three live worktrees: one with a long name
+// whose database names get truncated, two Ultimate-style ones whose .env pins
+// GIT_WORKTREE (with a comment, and exported and quoted).
 const tmp = fs.realpathSync(fs.mkdtempSync('/tmp/db-worktrees-test-'));
 const main = path.join(tmp, 'provider_portal');
 fs.mkdirSync(path.join(main, 'tmp/pg/data'), { recursive: true });
@@ -36,13 +36,18 @@ git(main, 'commit', '-qm', 'init');
 const long = 'sm-onboarding-provider-npi-concerns-post-149';
 git(main, 'worktree', 'add', '-q', '-b', long, `.worktrees/${long}`);
 git(main, 'worktree', 'add', '-q', '--detach', path.join(tmp, '7'));
-fs.writeFileSync(path.join(tmp, '7/.env'), 'PORT=20070\nGIT_WORKTREE=ult_7\n');
+fs.writeFileSync(path.join(tmp, '7/.env'), 'PORT=20070\nGIT_WORKTREE=ult_7 # pinned id\n');
+git(main, 'worktree', 'add', '-q', '--detach', path.join(tmp, '8'));
+fs.writeFileSync(path.join(tmp, '8/.env'), "  export GIT_WORKTREE='ult_8'\n");
 afterAll(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
 const gone = 'provider_portal-sm-gone-with-a-rather-long-name';
 const t63 = (s: string) => s.slice(0, 63);
+// A main database long enough that <base>_<id> truncates back to it.
+const longBase = `${'a'.repeat(59)}_dev`;
 const databases = [
   'postgres',
+  longBase,
   'rx_dev',
   'rx_test',
   'rx_catalog_test',
@@ -53,6 +58,7 @@ const databases = [
   t63(`rx_dev_provider_portal-${long}`),
   t63(`rx_catalog_test_provider_portal-${long}`),
   'rx_dev_ult_7',
+  'rx_dev_ult_8',
   'rx_test_ult_9',
 ];
 
@@ -96,12 +102,24 @@ for (const bash of shells) {
       expect(r.out).toContain(`kept ${t63(`rx_dev_provider_portal-${long}`)}`);
     });
 
-    test('drop refuses a live worktree and the main checkout', () => {
-      for (const id of [`provider_portal-${long}`, 'ult_7', '']) {
+    test("drop never touches a live worktree's or the main checkout's databases", () => {
+      for (const id of [`provider_portal-${long}`, 'ult_7', 'ult_8']) {
         const r = run(['drop', id]);
-        expect(r.code).toBe(2);
+        expect(r.code).toBe(0);
+        expect(r.out).toContain(`kept the databases of ${id}`);
         expect(r.dropped).toEqual([]);
       }
+      expect(run(['drop', '']).code).toBe(2);
+      // Every id truncates to the long main database's own name.
+      const r = run(['drop', 'ult_9']);
+      expect(r.dropped).toEqual(['rx_test_ult_9']);
+      expect(r.out).toContain(`kept ${longBase}`);
+    });
+
+    test('drop takes several ids', () => {
+      expect(run(['drop', gone, 'ult_9']).dropped.sort()).toEqual(
+        [t63(`rx_catalog_test_${gone}`), `rx_dev_${gone}`, `rx_test_${gone}`, 'rx_test_ult_9'].sort(),
+      );
     });
 
     test('leaves the databases when the server is down', () => {
@@ -133,7 +151,7 @@ for (const bash of shells) {
         .filter((l) => /^ *[\d.]+ [KMG]?B  /.test(l))
         .map((l) => l.trim().split(/\s+/)[2]);
       expect(listed.sort()).toEqual(orphans.sort());
-      expect(dry.out).toContain('5 orphaned database(s), 38.0 MB');
+      expect(dry.out).toContain('5 orphaned database(s), 44.0 MB');
       expect(run(['orphans', '--drop']).dropped.sort()).toEqual(orphans.sort());
     });
   });

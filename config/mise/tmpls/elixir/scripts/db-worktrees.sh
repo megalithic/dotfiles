@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Drop per-worktree databases from this repo's shared local postgres.
 #
-#   db-worktrees.sh drop ID          drop the databases of worktree ID (rwt prune
-#                                    runs this after removing the worktree)
+#   db-worktrees.sh drop ID...       drop the databases of a removed worktree's ids
+#                                    (rwt prune runs this after removing it)
 #   db-worktrees.sh orphans [--drop] list databases no worktree uses, with sizes;
 #                                    drops them only with --drop
 #
@@ -27,8 +27,10 @@ die() {
 mode="${1:-}"
 case "$mode" in
   drop)
-    target="${2:-}"
-    [ -n "$target" ] || die "drop needs a worktree id"
+    shift
+    [ $# -gt 0 ] || die "drop needs a worktree id"
+    targets=("$@")
+    for t in "${targets[@]}"; do [ -n "$t" ] || die "empty worktree id"; done
     ;;
   orphans)
     apply=0
@@ -38,7 +40,7 @@ case "$mode" in
       *) die "unknown flag: $2" ;;
     esac
     ;;
-  *) die "usage: db-worktrees.sh drop ID | orphans [--drop]" ;;
+  *) die "usage: db-worktrees.sh drop ID... | orphans [--drop]" ;;
 esac
 case "${MIX_ENV:-dev}" in
   dev | test) ;;
@@ -85,17 +87,35 @@ live_ids() {
     [ "$wt" != "$main" ] || continue
     "$rwt" id "$wt" 2>/dev/null && echo
     basename "$wt"
-    cat "$wt/.env" "$wt/.env.local" 2>/dev/null | sed -nE 's/^(export )?GIT_WORKTREE=//p' | tr -d "\"'" || true
+    # dotenv value: optional export, spaces, quotes and a trailing # comment.
+    cat "$wt/.env" "$wt/.env.local" 2>/dev/null | awk -v q="'" '
+      /^[ \t]*(export[ \t]+)?GIT_WORKTREE[ \t]*=/ {
+        sub(/^[^=]*=[ \t]*/, "")
+        c = substr($0, 1, 1)
+        if ((c == "\"" || c == q) && (e = index(substr($0, 2), c))) { print substr($0, 2, e - 1); next }
+        sub(/[ \t]+#.*$/, ""); sub(/[ \t]+$/, ""); print
+      }' || true
   done | { grep -v '^$' || true; } | sort -u
 }
-live="$(live_ids | while IFS= read -r id; do names_for "$id"; done | sort -u)"
+live_list="$(live_ids)"
+live="$(printf '%s\n' "$live_list" | while IFS= read -r id; do [ -z "$id" ] || names_for "$id"; done | sort -u)"
 
 if [ "$mode" = drop ]; then
-  ! grep -Fxq "$target" < <(live_ids) || die "worktree $target still exists; prune it first"
-  wanted="$(names_for "$target" | sort -u)"
-  shared="$(comm -12 <(printf '%s\n' "$wanted") <(printf '%s\n' "$live"))"
-  [ -z "$shared" ] || printf 'kept %s: a live worktree uses that name too\n' "$shared"
-  candidates="$(comm -23 <(printf '%s\n' "$wanted") <(printf '%s\n' "$live"))"
+  wanted=""
+  for t in "${targets[@]}"; do
+    if grep -Fxq -- "$t" <<<"$live_list"; then
+      echo "kept the databases of $t: a live worktree uses that id"
+      continue
+    fi
+    wanted="$wanted$(names_for "$t")"$'\n'
+  done
+  # Existing names only; never a base (main's database) or a live worktree's.
+  wanted="$(comm -12 <(printf '%s' "$wanted" | sort -u) <(cut -f1 <<<"$dbs" | sort -u))"
+  protected="$(printf '%s\n%s\n' "$live" "$bases" | sort -u)"
+  comm -12 <(printf '%s\n' "$wanted") <(printf '%s\n' "$protected") | while IFS= read -r n; do
+    [ -z "$n" ] || echo "kept $n: the main checkout or a live worktree uses that name too"
+  done
+  candidates="$(comm -23 <(printf '%s\n' "$wanted") <(printf '%s\n' "$protected"))"
 else
   # <base>_<suffix> names no live worktree uses.
   candidates="$(awk -F'\t' '
@@ -111,7 +131,7 @@ found="$(awk -F'\t' 'NR == FNR { if ($0 != "") want[$0] = 1; next } ($1 in want)
 human() { awk -v b="$1" 'BEGIN { split("B KB MB GB TB", u); i = 1; while (b >= 1024 && i < 5) { b /= 1024; i++ } f = i == 1 ? "%d %s" : "%.1f %s"; printf f, b, u[i] }'; }
 
 if [ -z "$found" ]; then
-  if [ "$mode" = drop ]; then echo "no databases of $target on $repo's server"; else echo "no orphaned worktree databases on $repo's server"; fi
+  if [ "$mode" = drop ]; then echo "no databases of ${targets[*]} to drop on $repo's server"; else echo "no orphaned worktree databases on $repo's server"; fi
   exit 0
 fi
 
