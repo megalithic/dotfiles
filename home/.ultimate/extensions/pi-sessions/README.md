@@ -8,7 +8,7 @@ Read pi sessions across rex worktrees, pick one up in place with a write baton, 
 {"v":1,"holder":"ultimate","worktree":"/absolute/worktree","at":"<ISO timestamp>","by":"pickup","ultimate":{"url":"http://localhost:4749","project":"/absolute/project","conversation":123},"pi":{"sessionId":"…","pid":1234,"label":"builder"}}
 ```
 
-`holder` is `ultimate` or `pi`; `by` is `pickup`, `release` or `take`. `ultimate` and `pi` are optional. Absent = nobody holds it. Ultimate allows only `read`, `message`, `note`, `notify`, `memory`, `reply_pi` and the pi-sessions tools (an allowlist: codemode's nested calls skip the hook, and instance, screenshot and subagent can write too) in any conversation inside the nearest matching pi-held worktree; pi enforces the converse. A baton is coordination, not an OS sandbox. It persists after crashes; explicit pickup `force` or pi `/baton take` recovers it. Force does not override another working pi.
+`holder` is `ultimate` or `pi`; `by` is `pickup`, `release` or `take`. `ultimate` and `pi` are optional. Absent = nobody holds it. Ultimate allows only `read`, `message`, `note`, `notify`, `memory`, `reply_pi`, the pi-sessions tools and read-only `tidewave` calls (listing, `get_logs`, `get_docs`, `get_source_location`) (an allowlist: codemode's nested calls skip the hook, and instance, screenshot and subagent can write too) in any conversation inside the nearest matching pi-held worktree; pi enforces the converse. A baton is coordination, not an OS sandbox. It persists after crashes; explicit pickup `force` or pi `/baton take` recovers it. Force does not override another working pi.
 
 ## Pickup HTTP
 

@@ -15,7 +15,7 @@ import {
   dotfilesRoot,
   extractSession,
   framePickup,
-  ALLOWED_TOOLS,
+  allowedUnderBaton,
   guardDecision,
   inside,
   listWorktrees,
@@ -336,8 +336,12 @@ export default function piSessions(host: Host) {
     hooks: [
       hook(ToolTask, {
         beforeTool: async (call, api, ctx) => {
-          if (ALLOWED_TOOLS.includes(call.name)) return undefined;
-          return guardDecision(call.name, await nearestBaton(await cwdFor(host, api.conversationId, ctx)));
+          if (allowedUnderBaton(call.name, call.arguments)) return undefined;
+          return guardDecision(
+            call.name,
+            await nearestBaton(await cwdFor(host, api.conversationId, ctx)),
+            call.arguments,
+          );
         },
       }),
     ],

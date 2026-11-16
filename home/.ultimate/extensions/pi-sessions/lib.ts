@@ -183,10 +183,17 @@ export const ALLOWED_TOOLS = [
   'pickup',
   'release',
 ];
-export function guardDecision(tool: string, baton: Baton | null): { block: string } | undefined {
-  if (!ALLOWED_TOOLS.includes(tool) && baton?.holder === 'pi')
+/** Tidewave calls that only read the app: listing its tools (no `tool`), logs, docs and source locations. */
+const READ_ONLY_TIDEWAVE = [undefined, 'get_logs', 'get_docs', 'get_source_location'];
+export function allowedUnderBaton(tool: string, args?: unknown): boolean {
+  if (ALLOWED_TOOLS.includes(tool)) return true;
+  const called = args && typeof args === 'object' ? (args as { tool?: unknown }).tool : undefined;
+  return tool === 'tidewave' && READ_ONLY_TIDEWAVE.includes(called as string | undefined);
+}
+export function guardDecision(tool: string, baton: Baton | null, args?: unknown): { block: string } | undefined {
+  if (!allowedUnderBaton(tool, args) && baton?.holder === 'pi')
     return {
-      block: `pi holds the baton for ${baton.worktree} since ${baton.at}; only ${ALLOWED_TOOLS.join(', ')} work here until then. Ask Seth, or pick it up again with pickup (force) / have pi run /ultimate.`,
+      block: `pi holds the baton for ${baton.worktree} since ${baton.at}; only ${ALLOWED_TOOLS.join(', ')} and read-only tidewave calls (${READ_ONLY_TIDEWAVE.filter(Boolean).join(', ')}) work here until then. Ask Seth, or pick it up again with pickup (force) / have pi run /ultimate.`,
     };
   return undefined;
 }

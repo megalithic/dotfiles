@@ -208,6 +208,24 @@ describe('pi-sessions', () => {
 
       // reply_pi answers a pi's ask_pi, which may come from the pi holding this baton.
       for (const tool of ['read', 'reply_pi', 'pickup', 'release']) expect(guardDecision(tool, found)).toBeUndefined();
+
+      // Tidewave: listing and the read-only tools pass; eval, SQL and the browser do not.
+      for (const args of [
+        {},
+        { tool: 'get_logs', args: { tail: 5 } },
+        { tool: 'get_docs' },
+        { tool: 'get_source_location' },
+      ])
+        expect(guardDecision('tidewave', found, args)).toBeUndefined();
+
+      for (const args of [
+        { tool: 'project_eval' },
+        { tool: 'execute_sql_query' },
+        { tool: 'browser_eval' },
+        { tool: 42 },
+      ])
+        expect(guardDecision('tidewave', found, args)?.block).toContain('pi holds the baton');
+      expect(guardDecision('mcp', found, { tool: 'get_logs' })?.block).toContain('pi holds the baton');
       expect(guardDecision('bash', baton)).toBeUndefined();
       expect(guardDecision('bash', null)).toBeUndefined();
     });
