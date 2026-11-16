@@ -76,7 +76,7 @@ if [ "${#wt_paths[@]}" -gt 0 ]; then
   done
   i=0
   while [ "$i" -lt "${#wt_paths[@]}" ]; do
-    echo "  → rwt prune ${wt_branches[$i]}"
+    printf '  → rwt prune %q\n' "${wt_paths[$i]}"
     i=$((i + 1))
   done
 fi

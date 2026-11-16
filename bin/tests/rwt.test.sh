@@ -73,5 +73,11 @@ ok "prune refuses a detached worktree"
   [ "$("$RWT" id "$tmp/lander")" = repo-lander ] && [ "$("$RWT" id feat/y)" = repo-feat-y ] ||
   fail "id: main=$("$RWT" id "$repo") feat=$("$RWT" id .worktrees/feat-y) lander=$("$RWT" id "$tmp/lander")"
 ok "id: empty in main, {repo}-{branch slug}, directory name when detached"
+# mise asks with `id .` from wherever the shell is; the old wt named every
+# detached checkout "{repo}-" that way, so they shared one database and port.
+mkdir -p "$tmp/lander/sub"
+[ "$(cd "$tmp/lander/sub" && "$RWT" id .)" = repo-lander ] && [ "$(cd .worktrees/feat-y && "$RWT" id .)" = repo-feat-y ] ||
+  fail "id . from a subdirectory: $(cd "$tmp/lander/sub" && "$RWT" id .)"
+ok "id . names the checkout, not the current directory"
 
 echo "all $pass checks passed"

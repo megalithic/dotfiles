@@ -30,7 +30,7 @@ If `rwt` fails to run, stop and report the error. There is no fallback workflow.
 | `rwt wait-ready [NAME\|PATH] [--timeout S]` | Block until the app answers on its port (default 180 s). Use it instead of a poll loop. |
 | `rwt logs [NAME\|PATH] [-n N]` | Last N lines (default 200) of the services tab. |
 | `rwt restart [NAME\|PATH]` | Stop the server and start `dev:services` in a fresh terminal in the same place. |
-| `rwt prune NAME` | Remove a clean, merged worktree, its session, and its branch. |
+| `rwt prune NAME\|PATH` | Remove a clean, merged worktree, its session, and its branch. |
 | `rwt id [NAME\|PATH]` | The `GIT_WORKTREE` id (`{repo}-{branch slug}`) that names the worktree's database and port; empty in the main checkout. |
 
 No target means the checkout you're in. Flags:
@@ -112,7 +112,7 @@ Use `rwt new NAME --json` with no prompt only when the user asks for a worktree 
 
 ## Prune
 
-`rwt prune NAME` refuses (exit 6) for: the main checkout, the worktree you are in, uncommitted or untracked changes, and a branch that is neither merged into the default branch (local or `origin/`) nor the head of a merged PR. Report the refusal; don't work around it. There is no force flag, and destructive escapes need explicit user approval.
+`rwt prune NAME|PATH` refuses (exit 6) for: the main checkout, the worktree you are in, a detached checkout, uncommitted or untracked changes, and a branch that is neither merged into the default branch (local or `origin/`) nor the head of a merged PR. Report the refusal; don't work around it. There is no force flag, and destructive escapes need explicit user approval.
 
 ## Project setup
 
