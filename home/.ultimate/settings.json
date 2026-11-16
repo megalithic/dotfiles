@@ -1,5 +1,5 @@
 {
-  "extensions": { "enable": ["tailscale"] },
+  "extensions": { "enable": ["tailscale"], "disable": ["splash"] },
   "fleet": { "primary": "~/.dotfiles" },
   "mcpServers": {
     "executor": {
