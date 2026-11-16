@@ -16,7 +16,8 @@
 #   rwt wait-ready [NAME|PATH] [--timeout S]
 #                               block until the server answers; works from any
 #                               shell, so callers need no poll loop of their own
-#   rwt prune NAME              remove a clean, merged worktree + session + branch
+#   rwt prune NAME              remove a clean, merged worktree + session + branch,
+#                               then its databases (the project's db:drop-worktree)
 #   rwt ls                      worktrees of this repo and their sessions
 #   rwt id [NAME|PATH]          GIT_WORKTREE id ({repo}-{branch slug}); empty
 #                               in the main checkout
@@ -462,6 +463,13 @@ cmd_prune() {
   git -C "$MAIN" worktree remove "$WT" >&2 || die 7 "git worktree remove failed"
   # -D is safe here: merged() already proved the branch is integrated.
   git -C "$MAIN" branch -D "$BRANCH" >/dev/null 2>&1 || die 7 "could not delete branch $BRANCH"
+  # The project drops what it created for the id (the Elixir template: its
+  # <db>_<id> databases). Unset the shared-postgres vars so the main
+  # checkout's mise env resolves them, not whatever this shell carries.
+  if has_task "$MAIN" db:drop-worktree; then
+    (cd "$MAIN" && env -u PGPORT -u PGHOST -u PGDATA -u PG_ROOT -u GIT_WORKTREE mise run --quiet db:drop-worktree "$WID") >&2 ||
+      log "could not drop the databases of $WID; list leftovers with: mise run db:orphans"
+  fi
   if [ "$JSON" = 1 ]; then
     jq -cn --arg p "$WT" --arg b "$BRANCH" '{ok:true, removed:{path:$p, branch:$b}}'
   else

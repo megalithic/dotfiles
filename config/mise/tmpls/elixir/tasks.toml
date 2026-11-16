@@ -64,6 +64,14 @@ description = "Explicitly reset dev and test databases (destructive)"
 depends = ["start:db"]
 run = 'bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/reset-db.sh"'
 
+["db:drop-worktree"]
+description = "Drop one worktree's databases from the shared postgres (rwt prune runs it): mise run db:drop-worktree <id>"
+run = 'bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/db-worktrees.sh" drop'
+
+["db:orphans"]
+description = "List databases of worktrees that no longer exist, with sizes; --drop drops them"
+run = 'bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/db-worktrees.sh" orphans'
+
 ["start:db"]
 description = "Start shared postgres in background (log: ./tmp/pg/postgres.log)"
 depends = ["setup:db"]
