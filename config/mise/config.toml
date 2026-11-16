@@ -345,7 +345,7 @@ mv -f "$HOME/.local/bin/.notiwatchd.tmp" "$HOME/.local/bin/notiwatchd"
 '''
 
 [tools.pidewaved]
-version = "0.7.1"
+version = "0.8.1"
 os = ["macos"]
 asset_pattern = "pidewaved-{{ version }}-macos26-arm64.zip"
 postinstall = '''
