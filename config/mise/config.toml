@@ -187,6 +187,7 @@ notiwatchd = "github:megalithic/swifties"
 pidewaved = "github:megalithic/swifties"
 avwatchd = "github:megalithic/swifties"
 executor = "github:UsefulSoftwareCo/executor"
+atlas = "github:InsaneArts/atlas"
 tmux = "http:tmux"
 
 [tools]
@@ -381,6 +382,21 @@ version = "latest"
 prerelease = true
 os = ["macos"]
 asset_pattern = "executor-{{ version }}-darwin-arm64.tgz"
+
+# Atlas (atlas.insanearts.io): hidden helper desktop for agents. Not in the
+# mise registry (`atlas` there is ariga's) or brew casks. The vendor installer
+# owns /Applications/Atlas.app (the helper account runs it), signature checks
+# and `atlas update` for a set-up helper; mise pins the version. System PATH
+# because the installer's `ln -sfh` breaks under GNU coreutils' ln.
+[tools.atlas]
+version = "0.1.3"
+os = ["macos"]
+asset_pattern = "Atlas-{{ version }}-macos.zip"
+postinstall = '''
+set -eu
+curl -fsSL https://atlas.insanearts.io/install.sh |
+  env PATH=/usr/bin:/bin:/usr/sbin:/sbin ATLAS_VERSION="${MISE_TOOL_INSTALL_PATH##*/}" ATLAS_NO_OPEN=1 sh
+'''
 
 [tools.tmux]
 version = "3.8"
