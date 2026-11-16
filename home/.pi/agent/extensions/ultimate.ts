@@ -121,11 +121,12 @@ export const historyTarget = (
   batonProject?: string,
   project?: string,
 ): Target | undefined =>
+  // An explicit project wins: on another machine this cwd may match an unrelated instance.
+  (project ? resolveTargets(inventory, `ultimate:${project}`)[0] : undefined) ||
   inventory.find(
     (target) => target.ultimate && target.ultimate.project === batonProject && target.ultimate.alive !== false,
   ) ||
-  containingUltimate(inventory, cwd) ||
-  (project ? resolveTargets(inventory, `ultimate:${project}`)[0] : undefined);
+  containingUltimate(inventory, cwd);
 
 const resultText = (text: string) => ({ content: [{ type: 'text' as const, text }], details: {} });
 
