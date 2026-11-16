@@ -33,6 +33,7 @@ esac
 EOF
 chmod +x "$tmp/rexbin/rex"
 export REX_BIN_DIR="$tmp/rexbin"
+export RWT_STRIVE_ROOT="$tmp/strive"
 
 repo="$tmp/repo"
 mkdir -p "$repo"
@@ -79,5 +80,30 @@ mkdir -p "$tmp/lander/sub"
 [ "$(cd "$tmp/lander/sub" && "$RWT" id .)" = repo-lander ] && [ "$(cd .worktrees/feat-y && "$RWT" id .)" = repo-feat-y ] ||
   fail "id . from a subdirectory: $(cd "$tmp/lander/sub" && "$RWT" id .)"
 ok "id . names the checkout, not the current directory"
+
+# Strive repos name worktrees sm-<short-kebab-name>; feat/y above kept its name.
+strive="$tmp/strive/acme"
+mkdir -p "$strive"
+git -C "$strive" init -q -b main
+cp .gitignore "$strive/"
+git -C "$strive" add . && git -C "$strive" -c user.email=t@t -c user.name=t commit -qm init
+cd "$strive"
+out="$("$RWT" new expand-reporting --json --no-services --no-agent 2>"$tmp/err")" || fail "strive new: $out"
+jq -e --arg p "$strive/.worktrees/sm-expand-reporting" '.worktree.path == $p and .worktree.branch == "sm-expand-reporting" and
+  .worktree.id == "acme-sm-expand-reporting"' <<<"$out" >/dev/null || fail "strive new: $out"
+grep -q 'expand-reporting -> sm-expand-reporting' "$tmp/err" || fail "strive new did not print the final name: $(cat "$tmp/err")"
+"$RWT" new sm-expand-reporting --json --no-services --no-agent 2>/dev/null | jq -e '.worktree.created == false' >/dev/null ||
+  fail "strive new sm- name did not reuse the worktree"
+ok "strive: new prefixes sm- and the id derives from the final name"
+
+for bad in Fix_Thing feat/y one-two-three-four-five-six sm-; do
+  set +e
+  e="$("$RWT" new "$bad" --json --no-services --no-agent 2>/dev/null)"
+  rc=$?
+  set -e
+  [ "$rc" -eq 2 ] && jq -e '.error | test("sm-<short-kebab-name>")' <<<"$e" >/dev/null || fail "strive bad name $bad: rc=$rc $e"
+done
+[ "$(git -C "$strive" worktree list | wc -l)" -eq 2 ] || fail "a rejected name created a worktree"
+ok "strive: new rejects names that aren't short lowercase kebab-case"
 
 echo "all $pass checks passed"

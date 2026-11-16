@@ -27,6 +27,7 @@
 
 - For non-interactive rebases, always run `GIT_EDITOR=true git rebase --continue`
 - Worktrees go through `rwt` (one Rex session each), never `wt`, `ftm` or tmux; conventions in `git-worktrees` skill
+- Worktrees in `~/code/work/strive/` repos are named `sm-<short name of the work>`, chosen from the task (`sm-expand-onboarding-reporting`), never generic (`sm-fix`, `sm-wip`)
 - After creating or pushing to a PR, watch its CI with `gh` until every check is green (approvals don't count). Load the `github` skill for the procedure
 
 ## Coding specific guidelines
