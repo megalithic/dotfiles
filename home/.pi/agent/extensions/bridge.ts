@@ -552,7 +552,12 @@ const summarizeTellText = (text: string, maxLength = 160): string => {
 };
 
 const notifyTellViaNtfy = (from: string, text: string): void => {
-  const home = process.env.HOME || '';
+  // Tests set PI_TELL_NTFY=0 so fixture tells never become desktop notifications.
+  if (process.env.PI_TELL_NTFY === '0') return;
+
+  // Both attempts resolve against the env of this call, not whatever the fallback sees later.
+  const env = { ...process.env };
+  const home = env.HOME || '';
 
   const commands = [home && path.join(home, 'bin', 'ntfy'), 'ntfy'].filter(Boolean);
 
@@ -570,7 +575,7 @@ const notifyTellViaNtfy = (from: string, text: string): void => {
     const command = commands[index];
 
     if (!command) return;
-    execFile(command, args, { timeout: 2000 }, (error) => {
+    execFile(command, args, { env, timeout: 2000 }, (error) => {
       if (error) tryNext(index + 1);
     });
   };
