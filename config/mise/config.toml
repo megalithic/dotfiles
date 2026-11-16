@@ -701,6 +701,23 @@ MJConfigFile = "~/.config/hammerspoon/init.lua"
 "rex.developer-mode-enabled" = true
 "rex.client.remoteControl" = true
 
+# macshot settings-window choices; S3 upload settings come from `mise run
+# setup:macshot` (1Password). Not a live link: copy later GUI changes back here.
+# launchAtLogin is left out: the key alone does not register the login item
+# (SMAppService), so tick it once in Settings > General.
+[bootstrap.macos.defaults."com.sw33tlie.macshot.macshot"]
+# ctrl+shift+cmd+4 captures, shift+cmd+4 records (Carbon key code and modifiers)
+hotkeyKeyCode = 21
+hotkeyModifiers = 4864
+hotkeyRecordKeyCode = 21
+hotkeyRecordModifiers = 768
+filenameTemplate = "Screenshot {date} at {time}"
+hideCaptureInstructions = true
+betaUpdatesEnabled = true
+recordMicAudio = true
+recordSystemAudio = false
+recordWebcam = false
+
 [bootstrap.macos.defaults."com.apple.SoftwareUpdate"]
 AutomaticCheckEnabled = true
 AutomaticDownload = 1
@@ -1050,6 +1067,10 @@ raw = true
 
 # Local models for the llama.cpp router (com.megadots.llama-cpp, port 18080):
 # presets in tools/llama-cpp/models.ini, Pi entries in home/.pi/agent/models.json.
+[tasks."setup:macshot"]
+description = "Point macshot's S3 uploads at the DO Spaces caps bucket (1Password via fnox)"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-macshot"
+
 [tasks."setup:llm"]
 description = "Download the local llama.cpp models (~66 GB) and restart the router"
 run = '''

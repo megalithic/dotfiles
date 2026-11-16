@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# Point macshot's S3-compatible uploader at the DigitalOcean "caps" Space, the
+# same bucket and screenshots/ prefix bin/capper uses. macshot reads its upload
+# settings only from its preferences (no config file or env vars), so this
+# writes them with `defaults`. The values come from fnox (1Password); the
+# non-secret macshot preferences live in [bootstrap.macos.defaults] instead.
+#
+# macshot limitation: the secret access key ends up in plain text in
+# ~/Library/Preferences/com.sw33tlie.macshot.macshot.plist.
+#
+# DO Spaces takes path-style requests (https://<region>.digitaloceanspaces.com
+# /<space>/<key>, which is how macshot builds them) signed with the Space's
+# region. Objects are private by default and the CDN answers 403 for them, so
+# uploads are sent public-read.
+#
+# Idempotent: when every value already matches it leaves macshot alone.
+# Otherwise it quits a running macshot first (the app caches its preferences
+# and would write the old ones back), writes, and reopens it.
+#
+# Env:
+#   MACSHOT_DOMAIN   preferences domain or plist path (default the app's)
+#   MACSHOT_RESTART  0 skips quitting and reopening the app (tests)
+set -euo pipefail
+
+domain="${MACSHOT_DOMAIN:-com.sw33tlie.macshot.macshot}"
+app="/Applications/macshot.app"
+
+die() {
+  echo "setup-macshot: $*" >&2
+  exit 1
+}
+
+command -v fnox >/dev/null || die "fnox not found. Run 'mise install' first."
+
+fnox_get() {
+  local value
+  value="$(fnox get "$1" 2>/dev/null)" ||
+    die "fnox could not read $1. Check 'op whoami' and the 1Password notes in ~/.dotfiles/AGENTS.md."
+  [[ -n "$value" ]] || die "fnox returned an empty $1"
+  printf '%s' "$value"
+}
+
+key="$(fnox_get DO_SPACES_CAPS_KEY)"
+secret="$(fnox_get DO_SPACES_CAPS_SECRET)"
+space="$(fnox_get DO_SPACES_CAPS_SPACE)"
+region="$(fnox_get DO_SPACES_CAPS_REGION)"
+cdn_url="$(fnox_get DO_SPACES_CAPS_CDN_URL)"
+
+# name, defaults type, value
+settings=(
+  uploadProvider string s3
+  s3Endpoint string "https://$region.digitaloceanspaces.com"
+  s3Region string "$region"
+  s3Bucket string "$space"
+  s3AccessKeyID string "$key"
+  s3SecretAccessKey string "$secret"
+  s3PublicURLBase string "${cdn_url%/}"
+  s3PathPrefix string screenshots/
+  s3PublicRead bool true
+)
+
+current() {
+  defaults read "$domain" "$1" 2>/dev/null || true
+}
+
+changed=()
+for ((i = 0; i < ${#settings[@]}; i += 3)); do
+  name="${settings[i]}" type="${settings[i + 1]}" value="${settings[i + 2]}"
+  [[ "$type" == bool ]] && value=1
+  [[ "$(current "$name")" == "$value" ]] || changed+=("$name")
+done
+
+if [[ "${#changed[@]}" -eq 0 ]]; then
+  echo "setup-macshot: unchanged"
+  exit 0
+fi
+
+running=0
+if [[ "${MACSHOT_RESTART:-1}" != 0 ]] && pgrep -xq macshot; then
+  running=1
+  osascript -e 'quit app id "com.sw33tlie.macshot.macshot"' >/dev/null
+  for _ in {1..50}; do
+    pgrep -xq macshot || break
+    sleep 0.2
+  done
+  pgrep -xq macshot && die "macshot did not quit; quit it and run again"
+fi
+
+for ((i = 0; i < ${#settings[@]}; i += 3)); do
+  defaults write "$domain" "${settings[i]}" "-${settings[i + 1]}" "${settings[i + 2]}"
+done
+echo "setup-macshot: wrote ${changed[*]}"
+
+if [[ "$running" -eq 1 ]]; then
+  open -g "$app"
+  echo "setup-macshot: reopened macshot"
+fi
