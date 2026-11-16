@@ -168,6 +168,7 @@ export default function (pi: ExtensionAPI) {
 
   const handoff = async (ctx: ExtensionContext, goal?: string) => {
     const result = await pickup(ctx, goal);
+    pi.events.emit('session-title:refresh', {});
     refresh(ctx);
 
     return result;
