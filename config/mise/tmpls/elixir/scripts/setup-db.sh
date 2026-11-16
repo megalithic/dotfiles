@@ -4,6 +4,7 @@
 set -euo pipefail
 mkdir -p "$PG_ROOT"
 if [ ! -s "$PGDATA/PG_VERSION" ]; then
+  bash "$(dirname "$0")/pg-guard.sh"
   # -U postgres: superuser named "postgres", default local trust auth.
   # dev.exs sends password "postgres" but trust auth never checks it.
   initdb -D "$PGDATA" -U postgres --encoding=UTF8 --locale=C

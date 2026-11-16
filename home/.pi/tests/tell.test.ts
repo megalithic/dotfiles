@@ -74,6 +74,15 @@ test.each([
   expect(resolveTargets(targets, hint).map((target) => target.socket)).toEqual([socket]);
 });
 
+test('bare Ultimate targets resolve only to the live instance containing cwd', () => {
+  for (const hint of ['ultimate', 'ultimate:']) {
+    expect(resolveTargets(targets, hint, { cwd: '/work/app/src' }).map((target) => target.socket)).toEqual([
+      'http://127.0.0.1:4749',
+    ]);
+    expect(resolveTargets(targets, hint, { cwd: '/outside' })).toEqual([]);
+  }
+});
+
 test('Rex tab labels resolve on demand through an injected inspect, without subprocesses', async () => {
   let calls = 0;
 
@@ -346,6 +355,7 @@ test('outbound exact-id spool decision distinguishes reachable, unreachable and 
     expect(sent).toMatchObject({ ok: true });
     expect(sent.spooled).toBeUndefined();
     expect(peer.sends).toHaveLength(1);
+    expect(peer.sends[0]?.params.text).toContain('Reply only if asked, using tell_pi target');
     await peer.close();
     fs.writeFileSync(peer.socket, 'stale socket pathname');
     // A stale registration is sufficient: no session-history file is needed.
@@ -402,6 +412,10 @@ test('ask_pi ignores unrelated replies and accepts a delayed matching answer', a
       );
 
     expect(result.content).toEqual([{ type: 'text', text: `${instructionPreamble('receiver')}\n\n42` }]);
+    expect(peer.sends[0]?.params.text).toContain('Reply only if asked, using tell_pi target');
+    expect(peer.sends[0]?.params.text).toContain(
+      'The sender is waiting for your answer. Reply with tell_pi and replyTo',
+    );
   } finally {
     await peer.close();
   }
@@ -537,6 +551,8 @@ test('Ultimate POST carries Origin, from, reply and the exact ask correlation id
       expect(request.headers.origin).toBe(`http://127.0.0.1:${port}`);
       expect(body.args.reply).toBe(true);
       expect(body.args.text).toContain(`[TELL:${body.args.id} from`);
+      expect(body.args.text).not.toContain('Reply only if asked');
+      expect(body.args.text).not.toContain('Reply with tell_pi');
       expect(body.args.from).toMatchObject({ sessionId: 'sender', cwd: ctx.cwd, machine: 'testhost' });
       response.setHeader('Content-Type', 'application/json');
       response.end(JSON.stringify({ result: { key: body.args.id, delivered: true } }));

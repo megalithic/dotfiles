@@ -130,8 +130,26 @@ export const matchesTargetQuery = (target: Target, query: string): boolean =>
     .toLowerCase()
     .includes(query.toLowerCase());
 
+const within = (dir: string, root: string) =>
+  path.resolve(dir) === path.resolve(root) || path.resolve(dir).startsWith(`${path.resolve(root)}${path.sep}`);
+
+/**
+ * The live instance with the deepest root containing cwd: its project, or its own conversation worktrees
+ * (`<home>/worktrees/`), which live outside the project.
+ */
+export const containingUltimate = (inventory: Target[], cwd: string): Target | undefined =>
+  inventory
+    .flatMap((target) => {
+      if (!target.ultimate || target.ultimate.alive === false || target.reachable === false) return [];
+      const roots = [target.cwd, ...(target.ultimate.home ? [path.join(target.ultimate.home, 'worktrees')] : [])];
+      const root = roots.filter((dir) => within(cwd, dir)).sort((a, b) => b.length - a.length)[0];
+
+      return root ? [{ target, depth: path.resolve(root).length }] : [];
+    })
+    .sort((a, b) => b.depth - a.depth)[0]?.target;
+
 /** Pure resolution: explicit kind addresses never fall back to fuzzy matching. */
-export const resolveTargets = (inventory: Target[], raw: string): Target[] => {
+export const resolveTargets = (inventory: Target[], raw: string, options: { cwd?: string } = {}): Target[] => {
   const route = targetRoute(raw.trim());
 
   const onMachine = (target: Target, machine: string) =>
@@ -173,6 +191,12 @@ export const resolveTargets = (inventory: Target[], raw: string): Target[] => {
         (!match[2] || rex?.tab === match[2]) &&
         (!match[3] || rex?.block === match[3]),
     );
+  }
+
+  if (hint === 'ultimate' || hint === 'ultimate:') {
+    const target = options.cwd && containingUltimate(targets, options.cwd);
+
+    return target ? [target] : [];
   }
 
   if (hint.startsWith('ultimate:')) {

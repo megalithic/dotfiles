@@ -20,7 +20,8 @@ live_instances() {
     entry="$(jq -ce 'select(
       (.pid | type == "number" and . > 0 and . == floor) and
       (.port | type == "number") and (.project | type == "string")
-    ) | {pid, port, url: ("http://127.0.0.1:" + (.port | tostring)), project}' "$lock" 2>/dev/null)" || continue
+    ) | {pid, port, url: ("http://127.0.0.1:" + (.port | tostring)), project, home: $home}' \
+      --arg home "$(dirname "$lock")" "$lock" 2>/dev/null)" || continue
     pid="$(jq -r '.pid' <<<"$entry")"
     kill -0 "$pid" 2>/dev/null || continue
     printf '%s\n' "$entry"
@@ -31,7 +32,10 @@ if [ "$all" = 1 ]; then
   live_instances | jq -cs '.'
 else
   live_instances | jq -ces --arg dir "$dir" '
-    map(select(.project as $root | $dir == $root or ($dir | startswith(($root | rtrimstr("/")) + "/"))))
-    | sort_by(.project | length) | last // empty
+    # An instance contains its project and its own conversation worktrees (<home>/worktrees), which live outside it.
+    def within($root): $dir == $root or ($dir | startswith(($root | rtrimstr("/")) + "/"));
+    map(. as $i | [$i.project, ($i.home + "/worktrees")] | map(select(within(.)) | length) | max
+        | if . == null then empty else {depth: ., instance: $i} end)
+    | sort_by(.depth) | last.instance // empty
   ' || exit 1
 fi

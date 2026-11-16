@@ -19,6 +19,7 @@ import {
   control,
   enrichRexTargets,
   listTargets,
+  originInfo,
   resolveTargetHint,
   tellUltimate,
   type Origin,
@@ -63,34 +64,6 @@ const routeFromTargetHint = (target: string | undefined, message: string, machin
   if (machine && parsed.machine && machine !== parsed.machine) throw new Error('Conflicting machine and target prefix');
 
   return { target: parsed.target || undefined, machine: machine || parsed.machine, message, mode };
-};
-
-const originInfo = (ctx: ExtensionContext): Origin => {
-  const registry = readRegistry();
-  const current = registry.pis.find((pi) => pi.pid === process.pid);
-
-  const socket =
-    current?.socket ||
-    (process.env.PI_SOCKET_OWNER_PID && process.env.PI_SOCKET_OWNER_PID !== String(process.pid)
-      ? ''
-      : process.env.PI_SOCKET) ||
-    '';
-
-  const terminal = current?.tmux
-    ? `tmux:${current.tmux.session}:${current.tmux.window}${current.tmux.pane ? `.${current.tmux.pane}` : ''}`
-    : current?.rex
-      ? `rex:${current.rex.session || ''}#${current.rex.block || ''}`
-      : '';
-
-  return {
-    label: [current?.sessionName || sessionTarget(registry.machine, ctx.sessionManager.getSessionId()), terminal]
-      .filter(Boolean)
-      .join(' · '),
-    socket,
-    machine: registry.machine,
-    cwd: ctx.cwd,
-    sessionId: ctx.sessionManager.getSessionId(),
-  };
 };
 
 const createOutboundPolicy = (now: () => number = Date.now) => {
@@ -142,7 +115,10 @@ const selectTarget = async (
   signal?: AbortSignal,
 ): Promise<Pick | undefined> => {
   if (signal?.aborted) return undefined;
-  const matches = target ? await resolveTargetHint(inventory, target) : inventory.filter((entry) => !entry.current);
+
+  const matches = target
+    ? await resolveTargetHint(inventory, target, undefined, { cwd: ctx.cwd })
+    : inventory.filter((entry) => !entry.current);
 
   if (target && parseSessionTarget(target) && matches.length > 1)
     throw new Error('Pi session is open in multiple instances. Use an exact socket.');
@@ -177,8 +153,8 @@ const sessionFileExists = async (sessionId: string): Promise<boolean> => {
   return false;
 };
 
-const guidanceText = (from: Origin, message: string, id: string, replyTo?: string): string =>
-  `[TELL:${id}${replyTo ? ` reply to ${replyTo}` : ''} from ${from.label}]\n${message.trim()}\n\nReply only if asked, using tell_pi target ${JSON.stringify(sessionTarget(from.machine, from.sessionId))} and replyTo ${JSON.stringify(id)}.`;
+const guidanceText = (from: Origin, message: string, id: string, replyTo?: string, ultimate = false): string =>
+  `[TELL:${id}${replyTo ? ` reply to ${replyTo}` : ''} from ${from.label}]\n${message.trim()}${ultimate ? '' : `\n\nReply only if asked, using tell_pi target ${JSON.stringify(sessionTarget(from.machine, from.sessionId))} and replyTo ${JSON.stringify(id)}.`}`;
 
 const spoolTell = async (route: Route, id: string, from: Origin, inventory: Target[]): Promise<Result | undefined> => {
   const identity = route.target && parseSessionTarget(route.target);
@@ -229,7 +205,14 @@ const sendTell = async (
   try {
     const inventory = await listTargets(route.machine, signal);
     const from = originInfo(ctx);
-    const queued = signal?.aborted ? undefined : await spoolTell(route, id, from, inventory);
+
+    const questionReply = reply
+      ? `\n\nThe sender is waiting for your answer. Reply with tell_pi and replyTo ${JSON.stringify(id)}.`
+      : '';
+
+    const queued = signal?.aborted
+      ? undefined
+      : await spoolTell({ ...route, message: route.message + questionReply }, id, from, inventory);
 
     if (queued) return queued;
 
@@ -250,8 +233,9 @@ const sendTell = async (
 
     if (!pick || signal?.aborted) return { ok: false, error: 'Cancelled' };
     const { candidate: target, note } = pick;
-    const body = withNote(note, route.message);
-    const text = guidanceText(from, body, id, route.replyTo);
+
+    const body = withNote(note, route.message) + (target.ultimate ? '' : questionReply);
+    const text = guidanceText(from, body, id, route.replyTo, !!target.ultimate);
     const refused = policy.check(body, text, `${target.host || ''}\u0000${target.socket}`);
 
     if (refused) return { ok: false, error: refused };
@@ -704,11 +688,7 @@ export default function (pi: ExtensionAPI): void {
       const id = makeMessageId();
       const answer = waitForReply(id, (params.timeoutSeconds || 120) * 1000, signal);
 
-      const route = routeFromTargetHint(
-        params.target,
-        `${params.message.trim()}\n\nThe sender is waiting for your answer. Reply with tell_pi and replyTo ${JSON.stringify(id)}.`,
-        params.machine,
-      );
+      const route = routeFromTargetHint(params.target, params.message, params.machine);
 
       const result = await sendTell(ctx, route, signal, id, true);
 

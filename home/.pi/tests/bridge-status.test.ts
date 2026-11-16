@@ -28,6 +28,9 @@ const themeHelpers: Pick<Theme, 'fg' | 'bg' | 'bold' | 'inverse'> = {
 // SAFETY: The tell card renderer calls only fg, bg, bold, and inverse.
 const plainTheme = themeHelpers as Theme;
 
+// Fixture tells must never reach the real ntfy; set before originalEnv so every env reset keeps it.
+process.env.PI_TELL_NTFY = '0';
+
 const originalEnv = { ...process.env };
 
 process.env.PI_STATE_DIR = stateDir;
@@ -635,19 +638,6 @@ describe('bridge recovery and wire boundaries', () => {
   });
 });
 
-// ntfy runs on receipt; point it at nothing so tests never push notifications.
-const withoutNtfy = <T>(run: () => T): T => {
-  const env = { HOME: process.env.HOME, PATH: process.env.PATH };
-  process.env.HOME = stateDir;
-  process.env.PATH = '/nonexistent';
-
-  try {
-    return run();
-  } finally {
-    Object.assign(process.env, env);
-  }
-};
-
 describe('bridge tell delivery', () => {
   type Details = Parameters<typeof _test.deliverTell>[2];
 
@@ -731,7 +721,7 @@ describe('bridge tell delivery', () => {
     expect((await send('later')).error).toBe('message.send mode must be steer, follow_up, or quiet');
     expect(persisted).toEqual([]);
 
-    expect(await withoutNtfy(() => send('quiet'))).toMatchObject({
+    expect(await send('quiet')).toMatchObject({
       ok: true,
       data: { accepted: true, messageId: 'req-quiet', deliveredAs: 'appended' },
     });
@@ -753,14 +743,12 @@ describe('bridge tell delivery', () => {
       },
     });
 
-    withoutNtfy(() =>
-      _test.persistAndSurfaceTell(asExtensionAPI({ appendEntry: () => {} }), ctx, {
-        type: 'tell',
-        id: 'tell-1',
-        from: 'evil\x1b[2J\x1b]0;title\x07 peer',
-        text: '[TELL:tell-1 from evil]\nclear\x1b[2Jscreen\x00 now\x07',
-      }),
-    );
+    _test.persistAndSurfaceTell(asExtensionAPI({ appendEntry: () => {} }), ctx, {
+      type: 'tell',
+      id: 'tell-1',
+      from: 'evil\x1b[2J\x1b]0;title\x07 peer',
+      text: '[TELL:tell-1 from evil]\nclear\x1b[2Jscreen\x00 now\x07',
+    });
 
     expect(shown.filter((line) => /\p{Cc}/u.test(line))).toEqual([]);
     expect(shown).toContain('Tell from evil peer');
@@ -791,26 +779,24 @@ describe('bridge tell delivery', () => {
     const persisted: Array<{ replyTo?: string }> = [];
     const { sent, ctx } = recorder(true);
 
-    const response = await withoutNtfy(() =>
-      _test.handleControl(
-        {
-          type: 'control',
-          protocol: 'pi.control.v1',
-          id: 'answer',
-          operation: 'message.send',
-          params: { text: 'done', from: 'nvim', replyTo: 'tell-question' },
-        },
-        asExtensionAPI({
-          events: { emit: () => {} },
-          appendEntry: (_type: string, data: { replyTo?: string }) => persisted.push(data),
-          sendMessage: (message: Delivery['message'], options: Delivery['options']) => sent.push({ message, options }),
-        }),
-        asExtensionContext({
-          ...ctx,
-          hasUI: false,
-          sessionManager: { getSessionId: () => 's', getSessionName: () => null },
-        }),
-      ),
+    const response = await _test.handleControl(
+      {
+        type: 'control',
+        protocol: 'pi.control.v1',
+        id: 'answer',
+        operation: 'message.send',
+        params: { text: 'done', from: 'nvim', replyTo: 'tell-question' },
+      },
+      asExtensionAPI({
+        events: { emit: () => {} },
+        appendEntry: (_type: string, data: { replyTo?: string }) => persisted.push(data),
+        sendMessage: (message: Delivery['message'], options: Delivery['options']) => sent.push({ message, options }),
+      }),
+      asExtensionContext({
+        ...ctx,
+        hasUI: false,
+        sessionManager: { getSessionId: () => 's', getSessionName: () => null },
+      }),
     );
 
     expect(response.ok).toBe(true);
@@ -859,14 +845,14 @@ describe('bridge tell delivery', () => {
       originalSend(message, options);
     };
 
-    expect(withoutNtfy(() => _test.drainSpool(pi, ctx))).toBe(2);
+    expect(_test.drainSpool(pi, ctx)).toBe(2);
     expect(persisted).toEqual(['tell-a', 'tell-b']);
     expect(sent.map((entry) => entry.options)).toEqual([
       { triggerTurn: true, deliverAs: 'followUp' },
       { triggerTurn: true, deliverAs: 'followUp' },
     ]);
     expect(fs.readdirSync(directory)).toEqual(['notes.txt']);
-    expect(withoutNtfy(() => _test.drainSpool(pi, ctx))).toBe(0);
+    expect(_test.drainSpool(pi, ctx)).toBe(0);
   });
 
   test('keeps a spooled tell retryable when delivery throws before persistence', () => {
@@ -896,7 +882,7 @@ describe('bridge tell delivery', () => {
       expect(fs.existsSync(file)).toBe(true);
     };
 
-    expect(withoutNtfy(() => _test.drainSpool(pi, ctx))).toBe(1);
+    expect(_test.drainSpool(pi, ctx)).toBe(1);
     expect(fs.existsSync(file)).toBe(false);
     expect(persisted).toEqual(['tell-retry']);
   });
@@ -915,16 +901,14 @@ describe('bridge tell delivery', () => {
       sendMessage: (message: Delivery['message'], options: Delivery['options']) => sent.push({ message, options }),
     });
 
-    const received = withoutNtfy(() =>
-      _test.receiveTell(
-        pi,
-        asExtensionContext({
-          ...ctx,
-          hasUI: false,
-          sessionManager: { getSessionId: () => 's', getSessionName: () => null },
-        }),
-        { type: 'tell', id: 'tell-answer', text: '42', from: 'peer', sessionId: 'ask-peer', replyTo: 'tell-question' },
-      ),
+    const received = _test.receiveTell(
+      pi,
+      asExtensionContext({
+        ...ctx,
+        hasUI: false,
+        sessionManager: { getSessionId: () => 's', getSessionName: () => null },
+      }),
+      { type: 'tell', id: 'tell-answer', text: '42', from: 'peer', sessionId: 'ask-peer', replyTo: 'tell-question' },
     );
 
     expect(received).toMatchObject({ ok: true, deliveredAs: 'answered' });

@@ -34,12 +34,13 @@ In repos under `~/code/work/strive/` (provider_portal, rx, devops, ...), name ev
 | `rwt wait-ready [NAME\|PATH] [--timeout S]` | Block until the app answers on its port (default 180 s). Use it instead of a poll loop. |
 | `rwt logs [NAME\|PATH] [-n N]` | Last N lines (default 200) of the services tab. |
 | `rwt restart [NAME\|PATH]` | Stop the server and start `dev:services` in a fresh terminal in the same place. |
+| `rwt agent [NAME\|PATH] [--prompt TEXT]` | Restart only the `agent` tab's Pi, continuing its session (`pi -c`), with `TEXT` as its next message; creates the tab when missing. Stops the Pi running there first, so prefer `tell_pi` to a live Pi; use this when none runs. Refuses (exit 6) paths containing `'`. |
 | `rwt prune NAME\|PATH` | Remove a clean, merged worktree, its session, and its branch. |
 | `rwt id [NAME\|PATH]` | The `GIT_WORKTREE` id (`{repo}-{branch slug}`) that names the worktree's database and port; empty in the main checkout. |
 
 No target means the checkout you're in. Flags:
 
-- `--json` (`new`, `open`, `restart`, `prune`): one JSON object on stdout, progress on stderr. Any failure under `--json` prints `{ok:false, code, error}`. `status` and `ls` always print JSON; `logs` prints the raw scrollback and `wait-ready` prints nothing on stdout (check its exit code).
+- `--json` (`new`, `open`, `restart`, `agent`, `prune`): one JSON object on stdout, progress on stderr. Any failure under `--json` prints `{ok:false, code, error}`. `status` and `ls` always print JSON; `logs` prints the raw scrollback and `wait-ready` prints nothing on stdout (check its exit code).
 - `--show` (`new`, `open`): switch the Rex app to the worktree's session.
 - `--prompt TEXT` (`new`, `open`): the first message for the agent tab's Pi. It only works when `rwt` creates the session; with a live session it refuses (exit 6), so use `tell_pi` instead.
 - `--no-services`, `--no-agent` (`new`, `open`): leave that tab out of a session `rwt` creates; they don't remove tabs from a live session. Use only when the user asks, or for a read-only checkout.

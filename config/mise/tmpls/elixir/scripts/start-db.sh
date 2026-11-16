@@ -11,9 +11,11 @@ if pg_ctl -D "$PGDATA" status >/dev/null 2>&1; then
     echo "postgres already running"
   else
     echo "postgres running on stale port - restarting on $PGPORT"
+    bash "$(dirname "$0")/pg-guard.sh"
     pg_ctl -D "$PGDATA" -l "$PG_LOG" restart
   fi
 else
+  bash "$(dirname "$0")/pg-guard.sh"
   # pg_ctl start daemonizes; -l appends server log; waits (-w) by default
   # until the server accepts connections. A parallel start (two worktrees at
   # once) loses the race with exit 1 while the winner brings the server up,
