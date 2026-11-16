@@ -52,7 +52,7 @@ function BatonBadge() {
       <PopoverContent align="end" className="w-80 max-w-[calc(100vw-1rem)] p-3 text-[12.5px]">
         <p className="leading-snug text-foreground">
           {pi
-            ? 'pi holds this worktree. Edit, write and bash are blocked here until pi hands it over.'
+            ? 'pi holds this worktree. This conversation can only read and talk until pi hands it over.'
             : mine
               ? 'This conversation holds this worktree. pi cannot edit until you hand it back.'
               : `Conversation #${data.ultimate?.conversation ?? '?'} holds this worktree; pi cannot edit until it hands it back.`}
