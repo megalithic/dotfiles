@@ -130,8 +130,21 @@ export const matchesTargetQuery = (target: Target, query: string): boolean =>
     .toLowerCase()
     .includes(query.toLowerCase());
 
+/** The live instance with the deepest project containing cwd. */
+export const containingUltimate = (inventory: Target[], cwd: string): Target | undefined =>
+  inventory
+    .filter(
+      (target) =>
+        target.ultimate &&
+        target.ultimate.alive !== false &&
+        target.reachable !== false &&
+        (path.resolve(cwd) === path.resolve(target.cwd) ||
+          path.resolve(cwd).startsWith(`${path.resolve(target.cwd)}${path.sep}`)),
+    )
+    .sort((a, b) => path.resolve(b.cwd).length - path.resolve(a.cwd).length)[0];
+
 /** Pure resolution: explicit kind addresses never fall back to fuzzy matching. */
-export const resolveTargets = (inventory: Target[], raw: string): Target[] => {
+export const resolveTargets = (inventory: Target[], raw: string, options: { cwd?: string } = {}): Target[] => {
   const route = targetRoute(raw.trim());
 
   const onMachine = (target: Target, machine: string) =>
@@ -173,6 +186,12 @@ export const resolveTargets = (inventory: Target[], raw: string): Target[] => {
         (!match[2] || rex?.tab === match[2]) &&
         (!match[3] || rex?.block === match[3]),
     );
+  }
+
+  if (hint === 'ultimate' || hint === 'ultimate:') {
+    const target = options.cwd && containingUltimate(targets, options.cwd);
+
+    return target ? [target] : [];
   }
 
   if (hint.startsWith('ultimate:')) {

@@ -1,11 +1,12 @@
 import { execFile } from 'node:child_process';
 import path from 'node:path';
 import { promisify } from 'node:util';
-import { Type } from 'typebox';
+import type { ExtensionContext } from '@earendil-works/pi-coding-agent';
+import { Type, type TSchema, type Static } from 'typebox';
 import { Check } from 'typebox/value';
 import { socketRequest, type RequestOptions } from './messaging.ts';
 import { readRegistry } from './registry.ts';
-import { registryTargets, resolveTargets, type Target } from './tell-targets.ts';
+import { registryTargets, resolveTargets, sessionTarget, type Target } from './tell-targets.ts';
 
 const exec = promisify(execFile);
 
@@ -190,6 +191,79 @@ const probeTarget = async (target: Target, signal?: AbortSignal): Promise<Target
 
 export type Origin = { label: string; sessionId: string; socket: string; cwd: string; machine: string };
 
+export const originInfo = (ctx: ExtensionContext): Origin => {
+  const registry = readRegistry();
+  const current = registry.pis.find((pi) => pi.pid === process.pid);
+
+  const socket =
+    current?.socket ||
+    (process.env.PI_SOCKET_OWNER_PID && process.env.PI_SOCKET_OWNER_PID !== String(process.pid)
+      ? ''
+      : process.env.PI_SOCKET) ||
+    '';
+
+  const terminal = current?.tmux
+    ? `tmux:${current.tmux.session}:${current.tmux.window}${current.tmux.pane ? `.${current.tmux.pane}` : ''}`
+    : current?.rex
+      ? `rex:${current.rex.session || ''}#${current.rex.block || ''}`
+      : '';
+
+  return {
+    label: [current?.sessionName || sessionTarget(registry.machine, ctx.sessionManager.getSessionId()), terminal]
+      .filter(Boolean)
+      .join(' · '),
+    socket,
+    machine: registry.machine,
+    cwd: ctx.cwd,
+    sessionId: ctx.sessionManager.getSessionId(),
+  };
+};
+
+/** Registry URLs are local to their machine; remote requests run curl there over SSH. */
+export const ultimateRequest = async <Schema extends TSchema>(
+  target: Pick<Target, 'socket' | 'host'>,
+  route: string,
+  schema: Schema,
+  body?: { args: object },
+): Promise<Static<Schema>> => {
+  const origin = new URL(target.socket).origin;
+  const url = `${origin}${route}`;
+  let result: unknown;
+
+  if (target.host) {
+    const post =
+      body === undefined
+        ? ''
+        : ` -H ${quote(`Origin: ${origin}`)} -H 'Content-Type: application/json' --data-binary @-`;
+
+    result = JSON.parse(
+      await ssh(
+        target.host,
+        `curl --fail-with-body --silent --show-error --max-time 5${post} ${quote(url)}`,
+        body === undefined ? undefined : JSON.stringify(body),
+      ),
+    );
+  } else {
+    const response = await fetch(url, {
+      method: body === undefined ? 'GET' : 'POST',
+      headers: body === undefined ? undefined : { Origin: origin, 'Content-Type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal: AbortSignal.timeout(5000),
+    });
+
+    result = await response.json();
+
+    if (!response.ok) {
+      const error = Check(Type.Object({ error: Type.String() }), result) ? `: ${result.error}` : '';
+      throw new Error(`Ultimate rejected request: HTTP ${response.status}${error}`);
+    }
+  }
+
+  if (!Check(schema, result)) throw new Error(`Invalid Ultimate response for ${route}`);
+
+  return result;
+};
+
 export const tellUltimate = async (
   target: Target,
   text: string,
@@ -197,32 +271,13 @@ export const tellUltimate = async (
   from: Origin,
   id: string,
 ): Promise<string> => {
-  const origin = new URL(target.socket).origin;
-  const url = `${origin}/api/extensions/pi-bridge/actions/tell`;
-  const body = { args: { text, reply, id, from } };
-  let result: { result?: { key?: string; delivered?: boolean } };
+  const schema = Type.Object({
+    result: Type.Object({ key: Type.String({ minLength: 1 }), delivered: Type.Literal(true) }),
+  });
 
-  if (target.host) {
-    result = JSON.parse(
-      await ssh(
-        target.host,
-        `curl --fail --silent --show-error --max-time 5 -H ${quote(`Origin: ${origin}`)} -H 'Content-Type: application/json' --data-binary @- ${quote(url)}`,
-        JSON.stringify(body),
-      ),
-    );
-  } else {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { Origin: origin, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(5000),
-    });
-
-    if (!response.ok) throw new Error(`Ultimate rejected tell: HTTP ${response.status}`);
-    result = await response.json();
-  }
-
-  if (result.result?.delivered !== true || !result.result.key) throw new Error('Invalid Ultimate delivery response');
+  const result = await ultimateRequest(target, '/api/extensions/pi-bridge/actions/tell', schema, {
+    args: { text, reply, id, from },
+  });
 
   return result.result.key;
 };
@@ -274,5 +329,6 @@ export const resolveTargetHint = async (
   inventory: Target[],
   hint: string,
   inspect: InspectRex = inspectRex,
+  options: { cwd?: string } = {},
 ): Promise<Target[]> =>
-  resolveTargets(/(?:^|\/)rex:/.test(hint) ? await enrichRexTargets(inventory, inspect) : inventory, hint);
+  resolveTargets(/(?:^|\/)rex:/.test(hint) ? await enrichRexTargets(inventory, inspect) : inventory, hint, options);
