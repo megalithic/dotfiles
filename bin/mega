@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# mega - start and stop Ultimate instances in the background, without a terminal tab.
+#
+#   mega start [PATH]   start Ultimate for PATH (default: .), detached, no window;
+#                       output goes to ~/Library/Logs/ultimate-<basename>.log
+#   mega stop [NAME|PATH]
+#                       stop a running instance cleanly (SIGTERM, which Ultimate
+#                       handles like ctrl+c); with no argument, pick one with fzf
+#   mega ls             running instances: name<TAB>:port path (pid)
+#
+# The hub (~/.dotfiles) runs under the com.megadots.ultimate-hub LaunchAgent:
+# stopping it restarts it within about 30 seconds.
+set -euo pipefail
+
+bin="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+logs="$HOME/Library/Logs"
+
+die() {
+  echo "mega: $*" >&2
+  exit 1
+}
+
+usage() {
+  sed -n '3,12p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+}
+
+# Running instances as JSON lines: {pid, port, url, project}.
+instances() {
+  "$bin/ultimate-instance" --all | jq -c '.[]'
+}
+
+# The running instance whose project is exactly $1, if any.
+running_at() {
+  instances | jq -c --arg root "$1" 'select(.project == $root)'
+}
+
+list() {
+  instances | jq -r '"\(.project | split("/") | last)\t:\(.port) \(.project) (pid \(.pid))"'
+}
+
+start() {
+  local dir name log pid owner
+  dir="$(realpath "${1:-.}")" || die "no such directory: ${1:-.}"
+  [[ -d "$dir" ]] || die "not a directory: $dir"
+  name="$(basename "$dir")"
+  owner="$(running_at "$dir")"
+  if [[ -n "$owner" ]]; then
+    echo "$name already runs on $(jq -r .url <<<"$owner") (pid $(jq -r .pid <<<"$owner"))"
+    return
+  fi
+  log="$logs/ultimate-$name.log"
+  mkdir -p "$logs"
+  # An agent's shell carries its own instance's ULTIMATE_HOME and friends, which
+  # would point the new instance at that home: start it without any of them.
+  local clear=()
+  while IFS= read -r var; do clear+=(-u "$var"); done < <(compgen -e | grep '^ULTIMATE_' || true)
+  # Ultimate handles SIGINT and SIGTERM only, so nohup's ignored SIGHUP keeps it
+  # alive after this terminal closes.
+  nohup env "${clear[@]}" ultimate "$dir" --no-open >>"$log" 2>&1 &
+  pid=$!
+  disown
+  # Report where it listens once it holds its lock, or why it stopped.
+  for _ in $(seq 1 50); do
+    owner="$(running_at "$dir")"
+    if [[ -n "$owner" ]]; then
+      echo "$name: $(jq -r .url <<<"$owner") (pid $(jq -r .pid <<<"$owner"), log $log)"
+      return
+    fi
+    kill -0 "$pid" 2>/dev/null || {
+      tail -n 5 "$log" >&2
+      die "$name stopped while starting; see $log"
+    }
+    sleep 0.2
+  done
+  echo "$name is still starting (pid $pid); see $log"
+}
+
+stop() {
+  local target="${1:-}" matches count pid name
+  if [[ -z "$target" ]]; then
+    target="$(list | fzf --delimiter '\t' --prompt 'stop> ' --height 40% --reverse | cut -f1)" || exit 0
+    [[ -n "$target" ]] || exit 0
+  fi
+  # A path names one project; a name matches by basename.
+  if [[ -d "$target" ]]; then
+    matches="$(running_at "$(realpath "$target")")"
+  else
+    matches="$(instances | jq -c --arg name "$target" 'select((.project | split("/") | last) == $name)')"
+  fi
+  count="$(grep -c . <<<"$matches" || true)"
+  ((count > 0)) || die "no running Ultimate named $target; running: $(list | cut -f1 | paste -sd ' ' -)"
+  ((count == 1)) || die "$target names $count instances; give its path: $(jq -r .project <<<"$matches" | paste -sd ' ' -)"
+  pid="$(jq -r .pid <<<"$matches")"
+  name="$(jq -r '.project | split("/") | last' <<<"$matches")"
+  # Not SIGINT: a background job started from a script ignores it from birth.
+  kill -TERM "$pid"
+  # A real instance takes about 15 s to close its harness.
+  for _ in $(seq 1 200); do
+    if ! kill -0 "$pid" 2>/dev/null; then
+      echo "stopped $name (pid $pid)"
+      [[ "$(jq -r .project <<<"$matches")" != "$HOME/.dotfiles" ]] ||
+        echo "the hub's LaunchAgent starts it again within about 30 seconds"
+      return
+    fi
+    sleep 0.2
+  done
+  die "$name (pid $pid) is still stopping; check again with mega ls"
+}
+
+case "${1:-}" in
+  start) start "${2:-}" ;;
+  stop) stop "${2:-}" ;;
+  ls | list) list ;;
+  -h | --help | help | "") usage ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac
