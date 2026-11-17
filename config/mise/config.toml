@@ -921,7 +921,28 @@ run = [
   "mise plugins update --yes",
   "mise install --yes",
   "mise upgrade --yes",
+  { task = "update:rtm" },
 ]
+
+# A branch install never updates itself: rebuild rtm when github's main has
+# moved past the commit cargo recorded at install.
+[tasks."update:rtm"]
+description = "Rebuild rtm (Rex launcher) when its main branch has new commits"
+run = '''
+set -eu
+tool="cargo:https://github.com/megalithic/rtm"
+record="$(mise where "$tool" 2>/dev/null)/.crates.toml"
+installed="$(sed -n 's/.*#\([0-9a-f]\{40\}\).*/\1/p' "$record" 2>/dev/null | head -1)"
+latest="$(git ls-remote https://github.com/megalithic/rtm refs/heads/main | cut -f1)"
+if [ -z "$latest" ]; then
+  echo "rtm: could not read github's main; skipped" >&2
+elif [ "$installed" = "$latest" ]; then
+  echo "rtm: up to date (${latest%"${latest#???????}"})"
+else
+  echo "rtm: ${installed:-none} -> $latest"
+  mise install --force "$tool"
+fi
+'''
 
 [tasks."update:packages"]
 description = "Apply and upgrade declared system packages"
