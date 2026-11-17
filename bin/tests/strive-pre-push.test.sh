@@ -65,3 +65,18 @@ if git -C "$app" push -q origin main 2>/dev/null; then fail "a trailer commit wa
 git -C "$app" commit -q --amend --allow-empty -m "fix: clean"
 git -C "$app" push -q origin main 2>"$tmp/err" || fail "the reworded commit was refused: $(cat "$tmp/err")"
 ok "a trailer is refused, and the reworded commit pushes"
+
+# History the remote already has never blocks a push: old commits with the trailer stay published.
+git -C "$app" commit -q --allow-empty -m "feat: old" -m "Ultimate-Conversation: 7"
+git -C "$app" push -q --no-verify origin main
+git -C "$app" switch -q -c topic
+git -C "$app" commit -q --allow-empty -m "feat: topic"
+git -C "$app" push -q origin topic 2>"$tmp/err" || fail "a new branch on published history: $(cat "$tmp/err")"
+git -C "$app" commit -q --allow-empty -m "feat: by url"
+git -C "$app" push -q "$tmp/remote.git" topic 2>"$tmp/err" || fail "a push to a URL: $(cat "$tmp/err")"
+git -C "$app" update-ref -d refs/remotes/origin/main
+git -C "$app" update-ref -d refs/remotes/origin/topic
+git -C "$app" switch -q -c later
+git -C "$app" commit -q --allow-empty -m "feat: later"
+git -C "$app" push -q origin later 2>"$tmp/err" || fail "missing tracking refs: $(cat "$tmp/err")"
+ok "published history passes: new branches, URL pushes and missing tracking refs"

@@ -2,14 +2,22 @@
 # Pre-push hook for repos under ~/code/work/strive/ (config/git/config.strive): refuses to push
 # commits whose message names the agent harness, "ultimate" as a word (an Ultimate-Conversation
 # trailer included). Git passes the remote name as $1 and `<local ref> <local oid> <remote ref>
-# <remote oid>` lines on stdin; only commits the remote doesn't have yet are checked.
+# <remote oid>` lines on stdin (the remote may be a URL); only commits the remote doesn't have yet
+# are checked, so history already published (old trailers included) never blocks a push.
 set -euo pipefail
 
 remote="${1:-origin}"
+# What the remote has: every remote-tracking ref, plus the remote's current tips that exist here,
+# in case the tracking refs are stale or the push goes to a URL.
+published=(--remotes)
+while read -r oid; do published+=("$oid"); done < <(
+  git ls-remote "$remote" 2>/dev/null | cut -f1 | sort -u |
+    git cat-file --batch-check='%(objecttype) %(objectname)' | awk '$1 == "commit" { print $2 }'
+)
 found=0
 while read -r _ local_oid _ remote_oid; do
   [[ "$local_oid" =~ ^0+$ ]] && continue # a deletion
-  exclude=(--not "--remotes=$remote")
+  exclude=(--not "${published[@]}")
   if [[ ! "$remote_oid" =~ ^0+$ ]] && git cat-file -e "$remote_oid^{commit}" 2>/dev/null; then
     exclude+=("$remote_oid")
   fi
