@@ -487,7 +487,7 @@ down_sweep_reason() {
 cmd_down() {
   local sid blocks block proc cwd top override pid member members groups=() pids=()
   local stopped='' swept='[]' skipped='' rc=0 instances protected=" $$ " parent="$$"
-  local ultimate_projects="$HOME/.ultimate/projects" candidates='' name recorded line host
+  local ultimate_projects="$HOME/.ultimate/projects" candidates='' name recorded line host snapshot roots group_ids
   WT='' MAIN='' STATE=''
   if [ -z "$TARGET" ] && [ -n "$SESSION_OVERRIDE" ]; then
     sid="$(find_session)"
@@ -521,18 +521,40 @@ cmd_down() {
   [ -z "$MAIN" ] || MAIN="$(cd "$MAIN" && pwd -P)"
   instances="$(ultimate-instance --all 2>/dev/null)"
   jq -e 'type == "array"' <<<"$instances" >/dev/null 2>&1 || instances=
+  # Interactive shells put jobs in separate groups. Include both Rex roots and
+  # every descendant, using one snapshot for ancestry and group membership.
+  snapshot="$(ps -axo pid=,ppid=,pgid=)" || die 7 "could not read the process tree"
+  roots="$(jq -r '[.[] | .child.pid, .foreground.pid | select(type == "number" and . > 1)] | unique | map(tostring) | join(" ")' <<<"$processes")" || die 7 "could not read block process roots"
+  group_ids="$(awk -v roots="$roots" '
+    BEGIN {
+      split(roots, ids)
+      for (i in ids) selected[ids[i]] = 1
+    }
+    { parents[$1] = $2; groups[$1] = $3 }
+    END {
+      do {
+        changed = 0
+        for (pid in parents) {
+          if (!selected[pid] && selected[parents[pid]]) {
+            selected[pid] = 1
+            changed = 1
+          }
+        }
+      } while (changed)
+      for (pid in parents) if (selected[pid] && groups[pid] > 1) print groups[pid]
+    }' <<<"$snapshot" | sort -un)" || die 7 "could not read the process groups"
   # Protect ourselves, the invoking shell/agent, and every Ultimate host, even
   # if a terminal happens to share their process group or cwd.
   while [ "$parent" -gt 1 ] 2>/dev/null; do
     protected="$protected$parent "
-    parent="$(ps -p "$parent" -o ppid= | tr -d ' ')"
+    parent="$(awk -v pid="$parent" '$1 == pid {print $2; exit}' <<<"$snapshot")"
   done
   if [ -n "$instances" ]; then
     while IFS= read -r pid; do protected="$protected$pid "; done < <(jq -r '.[].pid' <<<"$instances")
   fi
   while IFS= read -r pid; do
     [[ "$pid" =~ ^[0-9]+$ ]] && [ "$pid" -gt 1 ] || continue
-    members="$(pgrep -g "$pid")"
+    members="$(awk -v group="$pid" '$3 == group {print $1}' <<<"$snapshot")"
     [ -n "$members" ] || continue
     local safe=1
     for member in $members; do
@@ -548,8 +570,8 @@ cmd_down() {
     [ "$safe" = 1 ] || continue
     groups+=("$pid")
     stopped="$stopped $members"
-  done < <(jq -r '[.[] | .child.pid // empty] | unique[]' <<<"$processes")
-  # Every block group has been checked for hosts before sending any signals.
+  done <<<"$group_ids"
+  # Every block and descendant group has been checked before any signals.
   for pid in ${groups[@]+"${groups[@]}"}; do log "stopping process group $pid"; done
   down_stop group ${groups[@]+"${groups[@]}"}
 

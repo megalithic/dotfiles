@@ -5,8 +5,8 @@
 set -euo pipefail
 RWT="$(cd "$(dirname "$0")/.." && pwd)/rwt"
 tmp="$(mktemp -d)"
-child='' other_child=''
-trap 'for pid in "$child" "$other_child"; do [ -z "$pid" ] || kill "$pid" 2>/dev/null || true; done; rm -rf "$tmp"' EXIT
+child='' other_child='' job=''
+trap 'for pid in "$child" "$other_child" "$job"; do [ -z "$pid" ] || kill "$pid" 2>/dev/null || true; done; rm -rf "$tmp"' EXIT
 tmp="$(cd "$tmp" && pwd -P)"
 pass=0
 ok() {
@@ -221,36 +221,74 @@ wait "$other_child" 2>/dev/null || true
 other_child=''
 ok "session-only down closes A without sweeping or changing B's worktree session"
 
-# Even another, ordinary block must survive when any group hosts Ultimate.
+# A shell's job is a descendant, but leads a different process group. Omit
+# foreground from this first response so only the descendant walk can find it.
+cat >"$tmp/job-shell" <<'EOF'
+#!/usr/bin/env bash
+set -m
+sleep 1000 &
+printf '%s\n' "$!" >"$1"
+wait
+EOF
+start_job_shell() {
+  rm -f "$tmp/job.pid"
+  bash "$tmp/job-shell" "$tmp/job.pid" &
+  other_child=$!
+  for _ in $(seq 1 100); do
+    [ -s "$tmp/job.pid" ] && break
+    sleep 0.01
+  done
+  [ -s "$tmp/job.pid" ] || fail "job-controlled fixture did not start"
+  job="$(cat "$tmp/job.pid")"
+  [ "$(ps -p "$job" -o pgid=)" != "$(ps -p "$other_child" -o pgid=)" ] || fail "job did not get a separate process group"
+}
 rm -f "$RWT_TEST_KILLED"
 unset RWT_TEST_LSOF
 echo session:stub >"$repo/.worktrees/fresh/.local/state/rwt-session"
 set -m
+start_job_shell
+set +m
+RWT_TEST_PROCESS="$(jq -cn --argjson p "$other_child" '{child:{pid:$p}}')"
+out="$("$RWT" down fresh --json)" || fail "down job-controlled descendant: $out"
+kill -0 "$other_child" 2>/dev/null && fail "down left the block shell alive"
+kill -0 "$job" 2>/dev/null && fail "down left the shell's separate job group alive"
+wait "$other_child" 2>/dev/null || true
+jq -e --argjson shell "$other_child" --argjson job "$job" \
+  '.ok and (.stopped | index($shell) != null and index($job) != null) and .swept == []' <<<"$out" >/dev/null || fail "down job-controlled descendant: $out"
+[ -f "$RWT_TEST_KILLED" ] || fail "down did not close the job-controlled session"
+other_child='' job=''
+ok "down stops a block shell and its job-controlled descendant in a separate group"
+
+# Even another, ordinary block must survive when Ultimate is a foreground job
+# in its own process group, rather than in the block shell's group.
+rm -f "$RWT_TEST_KILLED"
+echo session:stub >"$repo/.worktrees/fresh/.local/state/rwt-session"
+set -m
 sleep 1000 &
 child=$!
-sleep 1000 &
-other_child=$!
+start_job_shell
 set +m
 export RWT_TEST_BLOCKS='{"blocks":[{"block_id":"block:terminal"},{"block_id":"block:host"}]}'
 export RWT_TEST_OTHER_PROCESS
 RWT_TEST_PROCESS="$(jq -cn --argjson p "$child" '{child:{pid:$p}}')"
-RWT_TEST_OTHER_PROCESS="$(jq -cn --argjson p "$other_child" '{child:{pid:$p}}')"
-RWT_TEST_INSTANCES="$(jq -cn --argjson p "$other_child" '[{pid:$p,url:"http://ultimate.test",port:1,project:"test-project"}]')"
+RWT_TEST_OTHER_PROCESS="$(jq -cn --argjson p "$other_child" --argjson job "$job" '{child:{pid:$p},foreground:{pid:$job}}')"
+RWT_TEST_INSTANCES="$(jq -cn --argjson p "$job" '[{pid:$p,url:"http://ultimate.test",port:1,project:"test-project"}]')"
 set +e
 out="$("$RWT" down fresh --json)"
 rc=$?
 set -e
 [ "$rc" -eq 6 ] || fail "down host session: rc=$rc $out"
-jq -e --arg error "session runs the Ultimate host for test-project (pid $other_child); stop it there" \
+jq -e --arg error "session runs the Ultimate host for test-project (pid $job); stop it there" \
   '.ok == false and .code == 6 and .error == $error' <<<"$out" >/dev/null || fail "down host session: $out"
 kill -0 "$child" 2>/dev/null || fail "down signalled an ordinary block before refusing the host"
-kill -0 "$other_child" 2>/dev/null || fail "down signalled the Ultimate host"
+kill -0 "$other_child" 2>/dev/null || fail "down signalled the host's block shell"
+kill -0 "$job" 2>/dev/null || fail "down signalled the Ultimate host's separate process group"
 [ ! -e "$RWT_TEST_KILLED" ] || fail "down killed the host's Rex session"
 [ "$(cat "$repo/.worktrees/fresh/.local/state/rwt-session")" = session:stub ] || fail "down removed the host's session record"
-kill "$child" "$other_child"
+kill "$child" "$other_child" "$job"
 wait "$child" 2>/dev/null || true
 wait "$other_child" 2>/dev/null || true
-child='' other_child=''
-ok "down refuses an Ultimate host session before signalling any group or killing Rex"
+child='' other_child='' job=''
+ok "down refuses a host in a separate foreground group before signalling any group or killing Rex"
 
 echo "all $pass checks passed"
