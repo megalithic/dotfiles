@@ -1,4 +1,5 @@
 import type { ConversationId } from '@earendil-works/pi-durable';
+import { CheckIcon, CopyIcon, ExternalLinkIcon, FolderOpenIcon } from 'lucide-react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { MessageResponse } from '@/components/ai/message';
@@ -38,15 +39,22 @@ function Pane({ item }: { item: Item }) {
     }
   }
   return (
+    // The Inbox's reading-pane prose: 15/24, as a question's text reads there.
     <div className="flex min-w-0 flex-col gap-4">
-      <MessageResponse isAnimating={false}>{item.text}</MessageResponse>
+      <MessageResponse className="text-[15px] leading-6" isAnimating={false}>
+        {item.text}
+      </MessageResponse>
       {item.kind === 'link' && item.url && (
-        <div className="flex flex-wrap items-center gap-2">
-          <Button asChild size="sm" variant="outline">
-            <a href={item.url} rel="noreferrer" target="_blank">
-              Open link
-            </a>
-          </Button>
+        <div className="flex min-w-0 flex-col gap-2">
+          <p className="font-mono text-xs break-all text-muted-foreground">{item.url}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild size="sm" variant="outline">
+              <a href={item.url} rel="noreferrer" target="_blank">
+                <ExternalLinkIcon className="size-3.5" />
+                Open link
+              </a>
+            </Button>
+          </div>
         </div>
       )}
       {item.kind === 'artifact' && item.path && (
@@ -59,6 +67,7 @@ function Pane({ item }: { item: Item }) {
               size="sm"
               variant="outline"
             >
+              <ExternalLinkIcon className="size-3.5" />
               Open
             </Button>
             <Button
@@ -67,6 +76,7 @@ function Pane({ item }: { item: Item }) {
               size="sm"
               variant="outline"
             >
+              <FolderOpenIcon className="size-3.5" />
               Reveal in Finder
             </Button>
             <Button
@@ -80,6 +90,7 @@ function Pane({ item }: { item: Item }) {
               size="sm"
               variant="outline"
             >
+              {copied ? <CheckIcon className="size-3.5" /> : <CopyIcon className="size-3.5" />}
               {copied ? 'Copied' : 'Copy path'}
             </Button>
           </div>
@@ -96,6 +107,7 @@ function Pane({ item }: { item: Item }) {
         onClick={() => act(() => api.action(Done, { id: item.id }))}
         size="sm"
       >
+        <CheckIcon className="size-3.5" />
         Done
       </Button>
     </div>
