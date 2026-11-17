@@ -59,8 +59,10 @@ end)
 -- Rex has no "last session" action (session.previous cycles in list order) and
 -- doesn't report which session the app shows, so remember the sessions the
 -- prefix key is pressed in.
+local rtm = require("rtm")
 local cur_session, last_session
 local function note_session(ctx)
+  rtm.seen(ctx.session_id)
   if ctx.session_id and ctx.session_id ~= cur_session then
     last_session, cur_session = cur_session, ctx.session_id
   end
@@ -83,26 +85,11 @@ rex.action({
 })
 rex.bind("ctrl+space", "tmux_or_rex_prefix")
 rex.mode("prefix", { exclusive = true })
--- Launcher/switcher: Rex's session switcher until our own launcher lands.
--- rex.bind("prefix/space", "rexlauncher")
-local has_launcher = rexd and rexd.plugins["tornikegomareli.rexlauncher"]
--- Leave the prefix mode (and its key hints) first, or the exclusive mode keeps
--- eating keys meant for the picker, then focus the picker's pane.
-rex.action({
-  name = "launcher_toggle",
-  title = "Toggle Rex Launcher",
-  run = function(ctx)
-    rex.client.queue("client.mode.exit_all")
-    local created = rex.invoke("rexlauncher")
-    local block_id = created and created.block_ids and created.block_ids[1]
-    if block_id then
-      rex.session.focus_block({ session_id = ctx.session_id, block_id = block_id })
-    end
-  end,
-})
-rex.bind("prefix/ctrl+space", has_launcher and "launcher_toggle" or "session.switch")
+-- Launcher (rtm.lua): sessions, agents and Ultimate conversations.
+rex.bind("prefix/ctrl+space", "rtm")
 rex.bind("prefix/ctrl+t", "client.tab.new")
-rex.bind("prefix/ctrl+k", "session.close")
+-- Asks `kill <session>?`; y stops its processes (rwt down) and keeps the worktree.
+rex.bind("prefix/ctrl+k", "rtm_kill")
 
 -- Toggle between this session and the one the prefix was last pressed in.
 rex.action({
@@ -170,7 +157,7 @@ send("shift+enter", "\27[13;2u")
 -- moves focus and alt+hjkl resizes, unless the pane runs a program that uses
 -- those keys itself. Neovim hands off to Rex at its edge through
 -- smart-splits-backend-rex, and tmux handles them with its own bindings.
-local NAV_PROGRAMS = { fzf = true, lazygit = true }
+local NAV_PROGRAMS = { fzf = true, lazygit = true, rtm = true }
 local function owns_nav_keys(ctx)
   local p = ctx.block_id and rex.block.call(TERMINAL, "process", { block_id = ctx.block_id })
   local fg = p and p.foreground

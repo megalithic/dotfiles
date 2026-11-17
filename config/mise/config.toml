@@ -221,6 +221,8 @@ tmux = "http:tmux"
 "cargo:emmylua_check" = "latest"
 "cargo:emmylua_ls" = "latest"
 "cargo:plannotator-tui" = "latest"
+# Rex launcher (config/rex/rtm.lua); built from main
+"cargo:https://github.com/megalithic/rtm" = "branch:main"
 
 "go:golang.org/x/tools/gopls" = "latest"
 
