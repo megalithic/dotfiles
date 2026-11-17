@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Offline rwt checks: worktree ids, and detached worktrees (such as Ultimate's
-# lander checkout, which made the old `wt list` fail with backend_parse_failed).
+# Offline rwt checks: worktree identity, fresh origin bases and safe shutdown.
+# Detached worktrees include Ultimate's lander checkout.
 # A stub rex stands in for the Rex server: bash bin/tests/rwt.test.sh
 set -euo pipefail
 RWT="$(cd "$(dirname "$0")/.." && pwd)/rwt"
 tmp="$(mktemp -d)"
-trap 'rm -rf "$tmp"' EXIT
+child='' other_child='' job=''
+trap 'for pid in "$child" "$other_child" "$job"; do [ -z "$pid" ] || kill "$pid" 2>/dev/null || true; done; rm -rf "$tmp"' EXIT
 tmp="$(cd "$tmp" && pwd -P)"
 pass=0
 ok() {
@@ -25,6 +26,14 @@ cat >"$tmp/rexbin/rex" <<'EOF'
 case "$1 ${2:-}" in
   "ls --json") echo '{"sessions":[]}' ;;
   "window ls") echo '{"windows":[]}' ;;
+  "session inspect") [ ! -f "${RWT_TEST_KILLED:-/nonexistent}" ] ;;
+  "block ls")
+    if [ -n "${RWT_TEST_BLOCKS:-}" ]; then echo "$RWT_TEST_BLOCKS"; else echo '{"blocks":[{"block_id":"block:terminal"}]}'; fi
+    ;;
+  "block call")
+    if [ "$6" = block:host ]; then echo "${RWT_TEST_OTHER_PROCESS:-null}"; else echo "${RWT_TEST_PROCESS:-null}"; fi
+    ;;
+  kill*) [ -z "${RWT_TEST_KILLED:-}" ] || touch "$RWT_TEST_KILLED" ;;
   new*) echo '{"session_id":"session:stub","initial_windows":[{"window_id":"window:setup","block_ids":["block:setup"]}]}' ;;
   wait* | "window close") ;;
   do*) echo '{"code":"block:code"}' ;;
@@ -105,5 +114,181 @@ for bad in Fix_Thing feat/y one-two-three-four-five-six sm-; do
 done
 [ "$(git -C "$strive" worktree list | wc -l)" -eq 2 ] || fail "a rejected name created a worktree"
 ok "strive: new rejects names that aren't short lowercase kebab-case"
+
+# Origin advances without advancing the local default or remote-tracking ref.
+cd "$repo"
+git init -q --bare -b main "$tmp/origin.git"
+git remote add origin "$tmp/origin.git"
+git push -q -u origin main
+git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
+git clone -q "$tmp/origin.git" "$tmp/upstream"
+git -C "$tmp/upstream" -c user.email=t@t -c user.name=t commit -qm newer --allow-empty
+git -C "$tmp/upstream" push -q origin main
+newer="$(git -C "$tmp/upstream" rev-parse HEAD)"
+[ "$(git rev-parse main)" != "$newer" ] || fail "origin fixture did not advance"
+out="$("$RWT" new fresh --json --no-services --no-agent)" || fail "new fresh: $out"
+[ "$(git rev-parse fresh)" = "$newer" ] || fail "new did not fetch origin/main"
+[ -z "$(git for-each-ref --format='%(upstream)' refs/heads/fresh)" ] || fail "new branch tracks origin/main"
+ok "new fetches origin/main and creates a branch without an upstream"
+
+# Give down isolated discovery tools, ahead of system tools in rwt's PATH.
+# No real Ultimate API or cwd process inventory is used by these offline tests.
+export HOME="$tmp/home"
+mkdir -p "$HOME/.dotfiles/bin" "$HOME/.local/bin"
+cat >"$HOME/.dotfiles/bin/ultimate-instance" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "${RWT_TEST_INSTANCES:-[]}"
+EOF
+cat >"$HOME/.local/bin/curl" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "${RWT_TEST_CONVERSATIONS:-null}"
+EOF
+cat >"$HOME/.local/bin/lsof" <<'EOF'
+#!/usr/bin/env bash
+[ -z "${RWT_TEST_LSOF:-}" ] || cat "$RWT_TEST_LSOF"
+EOF
+chmod +x "$HOME/.dotfiles/bin/ultimate-instance" "$HOME/.local/bin/"{curl,lsof}
+export RWT_TEST_KILLED="$tmp/killed"
+
+# Job control puts this real child in its own group, just like a Rex terminal.
+set -m
+sleep 1000 &
+child=$!
+set +m
+export RWT_TEST_PROCESS
+RWT_TEST_PROCESS="$(jq -cn --argjson p "$child" --arg cwd "$repo/.worktrees/fresh" '{child:{pid:$p,cwd:$cwd}}')"
+out="$("$RWT" down fresh --json)" || fail "down: $out"
+kill -0 "$child" 2>/dev/null && fail "down left the terminal process alive"
+wait "$child" 2>/dev/null || true
+jq -e --argjson p "$child" '.ok and (.stopped | index($p) != null) and .skipped_sweep == null' <<<"$out" >/dev/null || fail "down: $out"
+child=''
+[ -d "$repo/.worktrees/fresh" ] || fail "down removed the worktree"
+git show-ref --verify --quiet refs/heads/fresh || fail "down removed the branch"
+[ -f "$RWT_TEST_KILLED" ] && [ ! -e "$repo/.worktrees/fresh/.local/state/rwt-session" ] || fail "down did not kill session and clear its record"
+ok "down TERMs a real terminal process group and keeps the worktree and branch"
+
+rm -f "$RWT_TEST_KILLED"
+unset RWT_TEST_PROCESS
+mkdir -p "$repo/.local/state"
+echo session:stub >"$repo/.local/state/rwt-session"
+out="$("$RWT" down "$repo" --json)" || fail "down main: $out"
+jq -e '.ok and (.skipped_sweep | test("main checkout")) and .swept == []' <<<"$out" >/dev/null || fail "down main: $out"
+[ -f "$RWT_TEST_KILLED" ] && [ -d "$repo" ] || fail "down main did not close Rex and keep checkout"
+ok "down skips the main-checkout sweep but closes its Rex session successfully"
+
+rm -f "$RWT_TEST_KILLED"
+echo session:stub >"$repo/.worktrees/fresh/.local/state/rwt-session"
+export RWT_TEST_INSTANCES='[{"pid":99999999,"url":"http://ultimate.test","port":1,"project":"unused"}]'
+export RWT_TEST_CONVERSATIONS
+RWT_TEST_CONVERSATIONS="$(jq -cn --arg cwd "$repo/.worktrees/fresh" '{result:[{id:42,cwd:$cwd,busy:false,concluded:false}]}')"
+export RWT_TEST_PROCESS
+set -m
+sleep 1000 &
+child=$!
+set +m
+RWT_TEST_PROCESS="$(jq -cn --argjson p "$child" '{child:{pid:$p}}')"
+out="$("$RWT" down fresh --json)" || fail "down Ultimate: $out"
+kill -0 "$child" 2>/dev/null && fail "Ultimate sweep guard left the session process alive"
+wait "$child" 2>/dev/null || true
+child=''
+jq -e '.ok and (.skipped_sweep | test("http://ultimate.test conversation #42")) and .swept == []' <<<"$out" >/dev/null || fail "down Ultimate: $out"
+[ -f "$RWT_TEST_KILLED" ] || fail "Ultimate guard prevented session shutdown"
+ok "down stops session processes but skips a sweep owned by an unconcluded Ultimate conversation"
+
+# Session A has a pane cd'd into B's worktree; B's orphan is not A's to sweep.
+rm -f "$RWT_TEST_KILLED"
+export RWT_TEST_INSTANCES='[]' RWT_TEST_LSOF="$tmp/cwds"
+echo session:other >"$repo/.worktrees/fresh/.local/state/rwt-session"
+set -m
+sleep 1000 &
+child=$!
+(cd "$repo/.worktrees/fresh" && exec sleep 1000) &
+other_child=$!
+set +m
+RWT_TEST_PROCESS="$(jq -cn --argjson p "$child" --arg cwd "$repo/.worktrees/fresh" '{child:{pid:$p,cwd:$cwd}}')"
+printf 'p%s\nn%s\n' "$other_child" "$repo/.worktrees/fresh" >"$RWT_TEST_LSOF"
+out="$(cd "$tmp" && "$RWT" down --session session:stub --json)" || fail "down cross-session: $out"
+kill -0 "$child" 2>/dev/null && fail "down did not stop session A's process group"
+wait "$child" 2>/dev/null || true
+child=''
+kill -0 "$other_child" 2>/dev/null || fail "down swept session B's process"
+jq -e --arg reason "worktree $repo/.worktrees/fresh belongs to another session" \
+  '.ok and .skipped_sweep == $reason and .swept == []' <<<"$out" >/dev/null || fail "down cross-session: $out"
+[ -f "$RWT_TEST_KILLED" ] || fail "down did not kill session A"
+[ "$(cat "$repo/.worktrees/fresh/.local/state/rwt-session")" = session:other ] || fail "down removed session B's record"
+kill "$other_child"
+wait "$other_child" 2>/dev/null || true
+other_child=''
+ok "session-only down closes A without sweeping or changing B's worktree session"
+
+# A shell's job is a descendant, but leads a different process group. Omit
+# foreground from this first response so only the descendant walk can find it.
+cat >"$tmp/job-shell" <<'EOF'
+#!/usr/bin/env bash
+set -m
+sleep 1000 &
+printf '%s\n' "$!" >"$1"
+wait
+EOF
+start_job_shell() {
+  rm -f "$tmp/job.pid"
+  bash "$tmp/job-shell" "$tmp/job.pid" &
+  other_child=$!
+  for _ in $(seq 1 100); do
+    [ -s "$tmp/job.pid" ] && break
+    sleep 0.01
+  done
+  [ -s "$tmp/job.pid" ] || fail "job-controlled fixture did not start"
+  job="$(cat "$tmp/job.pid")"
+  [ "$(ps -p "$job" -o pgid=)" != "$(ps -p "$other_child" -o pgid=)" ] || fail "job did not get a separate process group"
+}
+rm -f "$RWT_TEST_KILLED"
+unset RWT_TEST_LSOF
+echo session:stub >"$repo/.worktrees/fresh/.local/state/rwt-session"
+set -m
+start_job_shell
+set +m
+RWT_TEST_PROCESS="$(jq -cn --argjson p "$other_child" '{child:{pid:$p}}')"
+out="$("$RWT" down fresh --json)" || fail "down job-controlled descendant: $out"
+kill -0 "$other_child" 2>/dev/null && fail "down left the block shell alive"
+kill -0 "$job" 2>/dev/null && fail "down left the shell's separate job group alive"
+wait "$other_child" 2>/dev/null || true
+jq -e --argjson shell "$other_child" --argjson job "$job" \
+  '.ok and (.stopped | index($shell) != null and index($job) != null) and .swept == []' <<<"$out" >/dev/null || fail "down job-controlled descendant: $out"
+[ -f "$RWT_TEST_KILLED" ] || fail "down did not close the job-controlled session"
+other_child='' job=''
+ok "down stops a block shell and its job-controlled descendant in a separate group"
+
+# Even another, ordinary block must survive when Ultimate is a foreground job
+# in its own process group, rather than in the block shell's group.
+rm -f "$RWT_TEST_KILLED"
+echo session:stub >"$repo/.worktrees/fresh/.local/state/rwt-session"
+set -m
+sleep 1000 &
+child=$!
+start_job_shell
+set +m
+export RWT_TEST_BLOCKS='{"blocks":[{"block_id":"block:terminal"},{"block_id":"block:host"}]}'
+export RWT_TEST_OTHER_PROCESS
+RWT_TEST_PROCESS="$(jq -cn --argjson p "$child" '{child:{pid:$p}}')"
+RWT_TEST_OTHER_PROCESS="$(jq -cn --argjson p "$other_child" --argjson job "$job" '{child:{pid:$p},foreground:{pid:$job}}')"
+RWT_TEST_INSTANCES="$(jq -cn --argjson p "$job" '[{pid:$p,url:"http://ultimate.test",port:1,project:"test-project"}]')"
+set +e
+out="$("$RWT" down fresh --json)"
+rc=$?
+set -e
+[ "$rc" -eq 6 ] || fail "down host session: rc=$rc $out"
+jq -e --arg error "session runs the Ultimate host for test-project (pid $job); stop it there" \
+  '.ok == false and .code == 6 and .error == $error' <<<"$out" >/dev/null || fail "down host session: $out"
+kill -0 "$child" 2>/dev/null || fail "down signalled an ordinary block before refusing the host"
+kill -0 "$other_child" 2>/dev/null || fail "down signalled the host's block shell"
+kill -0 "$job" 2>/dev/null || fail "down signalled the Ultimate host's separate process group"
+[ ! -e "$RWT_TEST_KILLED" ] || fail "down killed the host's Rex session"
+[ "$(cat "$repo/.worktrees/fresh/.local/state/rwt-session")" = session:stub ] || fail "down removed the host's session record"
+kill "$child" "$other_child" "$job"
+wait "$child" 2>/dev/null || true
+wait "$other_child" 2>/dev/null || true
+child='' other_child='' job=''
+ok "down refuses a host in a separate foreground group before signalling any group or killing Rex"
 
 echo "all $pass checks passed"

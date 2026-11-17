@@ -12,6 +12,14 @@
 #   rwt open [NAME|PATH]        ensure worktree + session exist, repair services
 #   rwt status [NAME|PATH]      worktree, session, services, port, Tidewave
 #   rwt restart [NAME|PATH]     restart services in a fresh terminal
+#   rwt down [NAME|PATH] [--session SID] [--json]
+#                               stop session processes and cwd orphans, then close
+#                               Rex; keep the worktree, branch and databases.
+#                               With only --session, discover its worktree from blocks.
+#                               The session's own processes always stop; the safety
+#                               rules limit only the sweep beyond it. A skipped sweep
+#                               still closes Rex (exit 0). Sessions hosting an Ultimate
+#                               host are refused entirely (exit 6).
 #   rwt agent [NAME|PATH] [--prompt TEXT] [--json] [--session SID]
 #                               restart only Pi in the agent tab, continuing its session
 #   rwt logs [NAME|PATH] [-n N] services output, read from Rex scrollback
@@ -57,7 +65,7 @@ die() { # rc message
 # OSC 7501 program status: Rex shows it on tabs and in the session picker,
 # and agents read it back with `rex block call ... program_status`.
 status() { # state message
-  printf '\033]7501;state=%s:app=rwt:msg=%s\033\\' "$1" "$(printf '%s' "$2" | base64 | tr -d '\n')" >/dev/tty 2>/dev/null || true
+  printf '\033]7501;state=%s:app=rwt:msg=%s\033\134' "$1" "$(printf '%s' "$2" | base64 | tr -d '\n')" >/dev/tty 2>/dev/null || true
 }
 
 # ---- repository and worktree identity ---------------------------------------
@@ -180,13 +188,18 @@ ensure_worktree() { # sets CREATED_WT
     return
   fi
   local base
-  base="${BASE:-$(default_branch "$MAIN")}"
+  base="$BASE"
   if git -C "$MAIN" show-ref --verify --quiet "refs/heads/$BRANCH"; then
     git -C "$MAIN" worktree add --quiet "$WT" "$BRANCH" >&2
   elif git -C "$MAIN" show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
     git -C "$MAIN" worktree add --quiet --track -b "$BRANCH" "$WT" "origin/$BRANCH" >&2
   else
-    git -C "$MAIN" worktree add --quiet -b "$BRANCH" "$WT" "$base" >&2
+    if [ -z "$base" ]; then
+      base="$(default_branch "$MAIN")"
+      git -C "$MAIN" fetch --quiet origin "$base" >&2 || log "warning: fetch origin $base failed; using the existing ref"
+      if git -C "$MAIN" show-ref --verify --quiet "refs/remotes/origin/$base"; then base="origin/$base"; fi
+    fi
+    git -C "$MAIN" worktree add --quiet --no-track -b "$BRANCH" "$WT" "$base" >&2
   fi || die 7 "git worktree add failed for $BRANCH"
   CREATED_WT=true
   log "created worktree $WT ($BRANCH)"
@@ -407,6 +420,219 @@ cmd_restart() {
   else
     log "services restarted in $new"
   fi
+}
+
+# Stop all targets together: the grace period is five seconds per phase, not
+# per block/pid. Group mode also catches children after their leader has exited.
+down_stop() { # group|pid ids...
+  local kind="$1" id alive i
+  shift
+  for id in "$@"; do
+    if [ "$kind" = group ]; then kill -TERM -- "-$id" 2>/dev/null; else kill -TERM "$id" 2>/dev/null; fi
+  done
+  for i in $(seq 1 20); do
+    alive=0
+    for id in "$@"; do
+      if [ "$kind" = group ]; then pgrep -g "$id" >/dev/null; else kill -0 "$id" 2>/dev/null; fi && alive=1
+    done
+    [ "$alive" = 1 ] || return 0
+    sleep 0.25
+  done
+  for id in "$@"; do
+    if [ "$kind" = group ]; then kill -KILL -- "-$id" 2>/dev/null; else kill -KILL "$id" 2>/dev/null; fi
+  done
+  return 0
+}
+
+# Print a refusal reason, or nothing when a cwd sweep is safe. An unreachable
+# host is not evidence that its conversations are finished: fail closed.
+down_sweep_reason() {
+  local instance url response conversation cwd id
+  [ "$WT" != "$MAIN" ] || {
+    echo 'main checkout; never sweep'
+    return
+  }
+  case "$WT/" in "$ultimate_projects"/*)
+    echo 'worktree is under ~/.ultimate/projects/'
+    return
+    ;;
+  esac
+  [ -n "$instances" ] || {
+    echo 'could not discover Ultimate hosts'
+    return
+  }
+  while IFS= read -r instance; do
+    url="$(jq -r .url <<<"$instance")"
+    response="$(curl -fsS --max-time 1 -X POST "$url/api/extensions/codemode/actions/read" \
+      -H "Origin: $url" -H 'Content-Type: application/json' \
+      --data '{"args":{"op":"conversations","args":[]}}' 2>/dev/null)"
+    jq -e '.result | type == "array"' <<<"$response" >/dev/null 2>&1 || {
+      echo "could not check Ultimate conversations at $url"
+      return
+    }
+    while IFS= read -r conversation; do
+      cwd="$(jq -r '.cwd // empty' <<<"$conversation")"
+      [ -n "$cwd" ] || continue
+      if [ -d "$cwd" ]; then cwd="$(cd "$cwd" && pwd -P)"; fi
+      case "$cwd/" in "$WT"/*)
+        id="$(jq -r .id <<<"$conversation")"
+        echo "Ultimate $url conversation #$id owns $cwd"
+        return
+        ;;
+      esac
+    done < <(jq -c '.result[] | select(.concluded != true)' <<<"$response")
+  done < <(jq -c '.[]' <<<"$instances")
+}
+
+cmd_down() {
+  local sid blocks block proc cwd top override pid member members groups=() pids=()
+  local stopped='' swept='[]' skipped='' rc=0 instances protected=" $$ " parent="$$"
+  local ultimate_projects="$HOME/.ultimate/projects" candidates='' name recorded line host snapshot roots group_ids
+  WT='' MAIN='' STATE=''
+  if [ -z "$TARGET" ] && [ -n "$SESSION_OVERRIDE" ]; then
+    sid="$(find_session)"
+  else
+    resolve
+    [ -d "$WT" ] || die 3 "no worktree at $WT"
+    sid="$(find_session)" || die 3 "no Rex session for $WT"
+  fi
+  session_alive "$sid" || die 3 "no Rex session $sid"
+  blocks="$(rex block ls -s "$sid" --json)" || die 7 "could not list blocks in $sid"
+  # process is a terminal-only method. Non-terminal blocks have no child pid.
+  local processes='[]'
+  while IFS= read -r block; do
+    proc="$(rex block call -s "$sid" -b "$block" process 2>/dev/null)" || continue
+    processes="$(jq -c --argjson p "$proc" '. + [$p]' <<<"$processes")" || die 7 "invalid process response from $block"
+  done < <(jq -r '.blocks[].block_id' <<<"$blocks")
+  if [ -z "$WT" ]; then
+    while IFS= read -r cwd; do
+      top="$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null)" || continue
+      TARGET="$top" override="$SESSION_OVERRIDE" SESSION_OVERRIDE=''
+      resolve
+      SESSION_OVERRIDE="$override"
+      recorded="$(cat "$STATE" 2>/dev/null)"
+      if [ "${recorded#session:}" != "${sid#session:}" ]; then
+        skipped="worktree $WT belongs to another session"
+      fi
+      break
+    done < <(jq -r '.[] | .foreground.cwd, .child.cwd | select(. != null and . != "")' <<<"$processes")
+  fi
+
+  [ -z "$MAIN" ] || MAIN="$(cd "$MAIN" && pwd -P)"
+  instances="$(ultimate-instance --all 2>/dev/null)"
+  jq -e 'type == "array"' <<<"$instances" >/dev/null 2>&1 || instances=
+  # Interactive shells put jobs in separate groups. Include both Rex roots and
+  # every descendant, using one snapshot for ancestry and group membership.
+  snapshot="$(ps -axo pid=,ppid=,pgid=)" || die 7 "could not read the process tree"
+  roots="$(jq -r '[.[] | .child.pid, .foreground.pid | select(type == "number" and . > 1)] | unique | map(tostring) | join(" ")' <<<"$processes")" || die 7 "could not read block process roots"
+  group_ids="$(awk -v roots="$roots" '
+    BEGIN {
+      split(roots, ids)
+      for (i in ids) selected[ids[i]] = 1
+    }
+    { parents[$1] = $2; groups[$1] = $3 }
+    END {
+      do {
+        changed = 0
+        for (pid in parents) {
+          if (!selected[pid] && selected[parents[pid]]) {
+            selected[pid] = 1
+            changed = 1
+          }
+        }
+      } while (changed)
+      for (pid in parents) if (selected[pid] && groups[pid] > 1) print groups[pid]
+    }' <<<"$snapshot" | sort -un)" || die 7 "could not read the process groups"
+  # Protect ourselves, the invoking shell/agent, and every Ultimate host, even
+  # if a terminal happens to share their process group or cwd.
+  while [ "$parent" -gt 1 ] 2>/dev/null; do
+    protected="$protected$parent "
+    parent="$(awk -v pid="$parent" '$1 == pid {print $2; exit}' <<<"$snapshot")"
+  done
+  if [ -n "$instances" ]; then
+    while IFS= read -r pid; do protected="$protected$pid "; done < <(jq -r '.[].pid' <<<"$instances")
+  fi
+  while IFS= read -r pid; do
+    [[ "$pid" =~ ^[0-9]+$ ]] && [ "$pid" -gt 1 ] || continue
+    members="$(awk -v group="$pid" '$3 == group {print $1}' <<<"$snapshot")"
+    [ -n "$members" ] || continue
+    local safe=1
+    for member in $members; do
+      case "$protected" in *" $member "*)
+        host="$(jq -r --argjson pid "$member" '.[] | select(.pid == $pid) | .project' <<<"${instances:-[]}")"
+        [ -z "$host" ] || die 6 "session runs the Ultimate host for $host (pid $member); stop it there"
+        log "skip group $pid: protected pid $member"
+        safe=0
+        rc=6
+        ;;
+      esac
+    done
+    [ "$safe" = 1 ] || continue
+    groups+=("$pid")
+    stopped="$stopped $members"
+  done <<<"$group_ids"
+  # Every block and descendant group has been checked before any signals.
+  for pid in ${groups[@]+"${groups[@]}"}; do log "stopping process group $pid"; done
+  down_stop group ${groups[@]+"${groups[@]}"}
+
+  if [ -n "$WT" ]; then
+    if [ -d "$ultimate_projects" ]; then ultimate_projects="$(cd "$ultimate_projects" && pwd -P)"; fi
+    [ -n "$skipped" ] || skipped="$(down_sweep_reason)"
+    if [ -z "$skipped" ]; then
+      # -a intersects cwd and uid selectors (lsof otherwise ORs them).
+      candidates="$(lsof -nP -a -d cwd -Fpn -u "$(id -u)" 2>/dev/null)" || skipped='could not list process cwds with lsof'
+      pid=
+      while IFS= read -r line; do
+        case "$line" in
+          p*) pid="${line#p}" ;;
+          n*)
+            cwd="${line#n}"
+            [ -d "$cwd" ] || continue
+            cwd="$(cd "$cwd" && pwd -P)"
+            case "$cwd/" in "$WT"/*) ;; *) continue ;; esac
+            case "$cwd/" in "$ultimate_projects"/*)
+              skipped='candidate cwd is under ~/.ultimate/projects/'
+              break
+              ;;
+            esac
+            [[ "$pid" =~ ^[0-9]+$ ]] && [ "$pid" -gt 1 ] || continue
+            case "$protected" in *" $pid "*)
+              log "skip protected pid $pid ($cwd)"
+              continue
+              ;;
+            esac
+            name="$(ps -p "$pid" -o comm=)"
+            [ -n "$name" ] || continue
+            pids+=("$pid")
+            swept="$(jq -c --argjson pid "$pid" --arg name "$name" '. + [{pid:$pid,name:$name}]' <<<"$swept")"
+            ;;
+        esac
+      done <<<"$candidates"
+      if [ -z "$skipped" ]; then
+        while IFS= read -r line; do log "sweeping pid $line"; done < <(jq -r '.[] | "\(.pid) (\(.name))"' <<<"$swept")
+        down_stop pid ${pids[@]+"${pids[@]}"}
+      else
+        swept='[]'
+      fi
+    fi
+  else
+    skipped='session has no git worktree'
+  fi
+  [ -z "$skipped" ] || log "skipped sweep: $skipped"
+  rex kill "$sid" >/dev/null 2>&1 || die 7 "could not kill session $sid"
+  if [ -n "$STATE" ]; then
+    recorded="$(cat "$STATE" 2>/dev/null)"
+    [ "${recorded#session:}" != "${sid#session:}" ] || rm -f "$STATE"
+  fi
+  log "closed session $sid; stopped ${#groups[@]} group(s), swept $(jq length <<<"$swept") pid(s); worktree kept: ${WT:-none}"
+  if [ "$JSON" = 1 ]; then
+    jq -cn --argjson ok "$([ "$rc" = 0 ] && echo true || echo false)" --arg sid "$sid" --arg wt "$WT" \
+      --arg stopped "$stopped" --argjson swept "$swept" --arg skipped "$skipped" \
+      '{ok:$ok, session:$sid, worktree:(if $wt == "" then null else $wt end),
+        stopped:($stopped | [scan("[0-9]+") | tonumber] | unique), swept:$swept,
+        skipped_sweep:(if $skipped == "" then null else $skipped end)}'
+  fi
+  return "$rc"
 }
 
 cmd_agent() {
@@ -696,6 +922,7 @@ case "$cmd" in
   new | open) cmd_open ;;
   status) cmd_status ;;
   restart) cmd_restart ;;
+  down) cmd_down ;;
   agent) cmd_agent ;;
   logs) cmd_logs ;;
   wait-ready) cmd_wait_ready ;;

@@ -1,7 +1,7 @@
 ---
 name: git-worktrees
 description: >-
-  All Git worktree work through `rwt` (~/.dotfiles/bin/rwt): create, open, check, restart services, prune, and hand work off to the Pi agent in a new or existing worktree's Rex session. Use when the user mentions a worktree, `rwt` (or the old `wt`), branching work into a new checkout, or says things like "tell the agent in a new worktree X to take over this work".
+  All Git worktree work through `rwt` (~/.dotfiles/bin/rwt): create, open, check, restart services, stop sessions, prune, and hand work off to the Pi agent in a new or existing worktree's Rex session. Use when the user mentions a worktree, `rwt` (or the old `wt`), branching work into a new checkout, or says things like "tell the agent in a new worktree X to take over this work".
 ---
 
 # Worktrees
@@ -27,20 +27,23 @@ In repos under `~/code/work/strive/` (provider_portal, rx, devops, ...), name ev
 
 | Command | Effect |
 | --- | --- |
-| `rwt new NAME [--base REF] [--prompt TEXT]` | Ensure the worktree and its session. A new branch starts at `REF` (default: the local default branch); an existing local branch is checked out; an `origin/NAME`-only branch is tracked. Blocks while setup runs. Same as `rwt open`. |
+| `rwt new NAME [--base REF] [--prompt TEXT]` | Ensure the worktree and its session. A new branch starts at `REF`, or fetches and uses `origin/<default>` when `--base` is omitted (cached origin ref on fetch failure, local default if no origin ref exists). New branches have no upstream; an existing local branch is checked out; an `origin/NAME`-only branch is tracked. Blocks while setup runs. Same as `rwt open`. |
 | `rwt open [NAME\|PATH]` | Ensure worktree and session; reuse a live session and restart a missing services tab. Rebuilds a session whose setup failed. |
 | `rwt status [NAME\|PATH]` | Always JSON: `.worktree{path,branch,id,dirty}`, `.session{id,label}` or null, `.services{running,last_exit,...}` or null, `.port`, `.http{app,tidewave,tidewave_url}`, `.pidewave`. |
 | `rwt ls` | Always JSON: `.worktrees[]{path,branch,session}` for every worktree of the repo. Detached ones (such as Ultimate's lander checkout) have `branch: null`; skip them. |
 | `rwt wait-ready [NAME\|PATH] [--timeout S]` | Block until the app answers on its port (default 180 s). Use it instead of a poll loop. |
 | `rwt logs [NAME\|PATH] [-n N]` | Last N lines (default 200) of the services tab. |
 | `rwt restart [NAME\|PATH]` | Stop the server and start `dev:services` in a fresh terminal in the same place. |
+| `rwt down [NAME\|PATH] [--session SID] [--json]` | Stop the session's process groups, sweep worktree cwd orphans when safe, then close Rex. Keep the worktree, branch, databases and shared Postgres. A skipped sweep succeeds; a session hosting an Ultimate host is refused entirely (exit 6). |
 | `rwt agent [NAME\|PATH] [--prompt TEXT]` | Restart only the `agent` tab's Pi, continuing its session (`pi -c`), with `TEXT` as its next message; creates the tab when missing. Stops the Pi running there first, so prefer `tell_pi` to a live Pi; use this when none runs. Refuses (exit 6) paths containing `'`. |
 | `rwt prune NAME\|PATH` | Remove a clean, merged worktree, its session, and its branch. |
 | `rwt id [NAME\|PATH]` | The `GIT_WORKTREE` id (`{repo}-{branch slug}`) that names the worktree's database and port; empty in the main checkout. |
 
-No target means the checkout you're in. Flags:
+No target means the checkout you're in, except `down --session SID`: it discovers the worktree from the session's blocks, from any cwd. It sweeps only if that worktree records SID; otherwise it stops the session without sweeping. The session's own processes stop even when Ultimate ownership or `~/.ultimate/projects/` prevents the sweep; sessions hosting an Ultimate host are refused entirely.
 
-- `--json` (`new`, `open`, `restart`, `agent`, `prune`): one JSON object on stdout, progress on stderr. Any failure under `--json` prints `{ok:false, code, error}`. `status` and `ls` always print JSON; `logs` prints the raw scrollback and `wait-ready` prints nothing on stdout (check its exit code).
+Flags:
+
+- `--json` (`new`, `open`, `restart`, `down`, `agent`, `prune`): one JSON object on stdout, progress on stderr. Any failure under `--json` prints `{ok:false, code, error}`. `status` and `ls` always print JSON; `logs` prints the raw scrollback and `wait-ready` prints nothing on stdout (check its exit code).
 - `--show` (`new`, `open`): switch the Rex app to the worktree's session.
 - `--prompt TEXT` (`new`, `open`): the first message for the agent tab's Pi. It only works when `rwt` creates the session; with a live session it refuses (exit 6), so use `tell_pi` instead.
 - `--no-services`, `--no-agent` (`new`, `open`): leave that tab out of a session `rwt` creates; they don't remove tabs from a live session. Use only when the user asks, or for a read-only checkout.
@@ -66,7 +69,7 @@ git rev-parse --verify --quiet "refs/heads/$NAME" >/dev/null ||
 - Otherwise ask with `ask_user_question` (header "Base branch"):
   - `<default> (latest origin)` (Recommended)
   - `<current> (local HEAD)`
-- Default branch: always `git fetch origin "$default"` first, then pass `--base "origin/$default"`. Local `main` can be stale and `rwt` never fetches.
+- Default branch: omit `--base`. `rwt` fetches `origin "$default"` and uses `origin/<default>` without upstream tracking. If fetch fails, it warns and uses the cached origin ref, or the local default when no origin ref exists. An explicit `--base REF` never fetches.
 - Current branch: pass `--base "$current"`. If `git status --porcelain` is non-empty, warn that uncommitted changes stay behind.
 
 ## Hand work to an agent in a new or existing worktree
@@ -103,7 +106,7 @@ You only orchestrate; the agent in the worktree does the work. Your whole job: r
    - **New worktree, or an existing worktree with no session** (`.session == null`): the brief becomes Pi's first message.
 
      ```bash
-     rwt new NAME --base BASE --prompt "$brief" --json --show   # new: pick BASE first (section above)
+     rwt new NAME --prompt "$brief" --json --show              # default origin base; add --base REF only for another base
      rwt open NAME --prompt "$brief" --json --show              # existing worktree, no session
      ```
 
