@@ -16,7 +16,10 @@
 #                               stop session processes and cwd orphans, then close
 #                               Rex; keep the worktree, branch and databases.
 #                               With only --session, discover its worktree from blocks.
-#                               A skipped safety sweep still closes Rex (exit 0).
+#                               The session's own processes always stop; the safety
+#                               rules limit only the sweep beyond it. A skipped sweep
+#                               still closes Rex (exit 0). Sessions hosting an Ultimate
+#                               host are refused entirely (exit 6).
 #   rwt agent [NAME|PATH] [--prompt TEXT] [--json] [--session SID]
 #                               restart only Pi in the agent tab, continuing its session
 #   rwt logs [NAME|PATH] [-n N] services output, read from Rex scrollback
@@ -484,7 +487,7 @@ down_sweep_reason() {
 cmd_down() {
   local sid blocks block proc cwd top override pid member members groups=() pids=()
   local stopped='' swept='[]' skipped='' rc=0 instances protected=" $$ " parent="$$"
-  local ultimate_projects="$HOME/.ultimate/projects" candidates='' name recorded line
+  local ultimate_projects="$HOME/.ultimate/projects" candidates='' name recorded line host
   WT='' MAIN='' STATE=''
   if [ -z "$TARGET" ] && [ -n "$SESSION_OVERRIDE" ]; then
     sid="$(find_session)"
@@ -507,6 +510,10 @@ cmd_down() {
       TARGET="$top" override="$SESSION_OVERRIDE" SESSION_OVERRIDE=''
       resolve
       SESSION_OVERRIDE="$override"
+      recorded="$(cat "$STATE" 2>/dev/null)"
+      if [ "${recorded#session:}" != "${sid#session:}" ]; then
+        skipped="worktree $WT belongs to another session"
+      fi
       break
     done < <(jq -r '.[] | .foreground.cwd, .child.cwd | select(. != null and . != "")' <<<"$processes")
   fi
@@ -530,6 +537,8 @@ cmd_down() {
     local safe=1
     for member in $members; do
       case "$protected" in *" $member "*)
+        host="$(jq -r --argjson pid "$member" '.[] | select(.pid == $pid) | .project' <<<"${instances:-[]}")"
+        [ -z "$host" ] || die 6 "session runs the Ultimate host for $host (pid $member); stop it there"
         log "skip group $pid: protected pid $member"
         safe=0
         rc=6
@@ -539,13 +548,14 @@ cmd_down() {
     [ "$safe" = 1 ] || continue
     groups+=("$pid")
     stopped="$stopped $members"
-    log "stopping process group $pid (pids: $(tr '\n' ' ' <<<"$members"))"
   done < <(jq -r '[.[] | .child.pid // empty] | unique[]' <<<"$processes")
+  # Every block group has been checked for hosts before sending any signals.
+  for pid in ${groups[@]+"${groups[@]}"}; do log "stopping process group $pid"; done
   down_stop group ${groups[@]+"${groups[@]}"}
 
   if [ -n "$WT" ]; then
     if [ -d "$ultimate_projects" ]; then ultimate_projects="$(cd "$ultimate_projects" && pwd -P)"; fi
-    skipped="$(down_sweep_reason)"
+    [ -n "$skipped" ] || skipped="$(down_sweep_reason)"
     if [ -z "$skipped" ]; then
       # -a intersects cwd and uid selectors (lsof otherwise ORs them).
       candidates="$(lsof -nP -a -d cwd -Fpn -u "$(id -u)" 2>/dev/null)" || skipped='could not list process cwds with lsof'

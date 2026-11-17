@@ -5,8 +5,8 @@
 set -euo pipefail
 RWT="$(cd "$(dirname "$0")/.." && pwd)/rwt"
 tmp="$(mktemp -d)"
-child=''
-trap '[ -z "$child" ] || kill "$child" 2>/dev/null || true; rm -rf "$tmp"' EXIT
+child='' other_child=''
+trap 'for pid in "$child" "$other_child"; do [ -z "$pid" ] || kill "$pid" 2>/dev/null || true; done; rm -rf "$tmp"' EXIT
 tmp="$(cd "$tmp" && pwd -P)"
 pass=0
 ok() {
@@ -27,8 +27,12 @@ case "$1 ${2:-}" in
   "ls --json") echo '{"sessions":[]}' ;;
   "window ls") echo '{"windows":[]}' ;;
   "session inspect") [ ! -f "${RWT_TEST_KILLED:-/nonexistent}" ] ;;
-  "block ls") echo '{"blocks":[{"block_id":"block:terminal"}]}' ;;
-  "block call") echo "${RWT_TEST_PROCESS:-null}" ;;
+  "block ls")
+    if [ -n "${RWT_TEST_BLOCKS:-}" ]; then echo "$RWT_TEST_BLOCKS"; else echo '{"blocks":[{"block_id":"block:terminal"}]}'; fi
+    ;;
+  "block call")
+    if [ "$6" = block:host ]; then echo "${RWT_TEST_OTHER_PROCESS:-null}"; else echo "${RWT_TEST_PROCESS:-null}"; fi
+    ;;
   kill*) [ -z "${RWT_TEST_KILLED:-}" ] || touch "$RWT_TEST_KILLED" ;;
   new*) echo '{"session_id":"session:stub","initial_windows":[{"window_id":"window:setup","block_ids":["block:setup"]}]}' ;;
   wait* | "window close") ;;
@@ -154,8 +158,8 @@ set +m
 export RWT_TEST_PROCESS
 RWT_TEST_PROCESS="$(jq -cn --argjson p "$child" --arg cwd "$repo/.worktrees/fresh" '{child:{pid:$p,cwd:$cwd}}')"
 out="$("$RWT" down fresh --json)" || fail "down: $out"
-wait "$child" 2>/dev/null || true
 kill -0 "$child" 2>/dev/null && fail "down left the terminal process alive"
+wait "$child" 2>/dev/null || true
 jq -e --argjson p "$child" '.ok and (.stopped | index($p) != null) and .skipped_sweep == null' <<<"$out" >/dev/null || fail "down: $out"
 child=''
 [ -d "$repo/.worktrees/fresh" ] || fail "down removed the worktree"
@@ -177,9 +181,76 @@ echo session:stub >"$repo/.worktrees/fresh/.local/state/rwt-session"
 export RWT_TEST_INSTANCES='[{"pid":99999999,"url":"http://ultimate.test","port":1,"project":"unused"}]'
 export RWT_TEST_CONVERSATIONS
 RWT_TEST_CONVERSATIONS="$(jq -cn --arg cwd "$repo/.worktrees/fresh" '{result:[{id:42,cwd:$cwd,busy:false,concluded:false}]}')"
+export RWT_TEST_PROCESS
+set -m
+sleep 1000 &
+child=$!
+set +m
+RWT_TEST_PROCESS="$(jq -cn --argjson p "$child" '{child:{pid:$p}}')"
 out="$("$RWT" down fresh --json)" || fail "down Ultimate: $out"
+kill -0 "$child" 2>/dev/null && fail "Ultimate sweep guard left the session process alive"
+wait "$child" 2>/dev/null || true
+child=''
 jq -e '.ok and (.skipped_sweep | test("http://ultimate.test conversation #42")) and .swept == []' <<<"$out" >/dev/null || fail "down Ultimate: $out"
 [ -f "$RWT_TEST_KILLED" ] || fail "Ultimate guard prevented session shutdown"
-ok "down skips a sweep owned by an unconcluded Ultimate conversation, even idle"
+ok "down stops session processes but skips a sweep owned by an unconcluded Ultimate conversation"
+
+# Session A has a pane cd'd into B's worktree; B's orphan is not A's to sweep.
+rm -f "$RWT_TEST_KILLED"
+export RWT_TEST_INSTANCES='[]' RWT_TEST_LSOF="$tmp/cwds"
+echo session:other >"$repo/.worktrees/fresh/.local/state/rwt-session"
+set -m
+sleep 1000 &
+child=$!
+(cd "$repo/.worktrees/fresh" && exec sleep 1000) &
+other_child=$!
+set +m
+RWT_TEST_PROCESS="$(jq -cn --argjson p "$child" --arg cwd "$repo/.worktrees/fresh" '{child:{pid:$p,cwd:$cwd}}')"
+printf 'p%s\nn%s\n' "$other_child" "$repo/.worktrees/fresh" >"$RWT_TEST_LSOF"
+out="$(cd "$tmp" && "$RWT" down --session session:stub --json)" || fail "down cross-session: $out"
+kill -0 "$child" 2>/dev/null && fail "down did not stop session A's process group"
+wait "$child" 2>/dev/null || true
+child=''
+kill -0 "$other_child" 2>/dev/null || fail "down swept session B's process"
+jq -e --arg reason "worktree $repo/.worktrees/fresh belongs to another session" \
+  '.ok and .skipped_sweep == $reason and .swept == []' <<<"$out" >/dev/null || fail "down cross-session: $out"
+[ -f "$RWT_TEST_KILLED" ] || fail "down did not kill session A"
+[ "$(cat "$repo/.worktrees/fresh/.local/state/rwt-session")" = session:other ] || fail "down removed session B's record"
+kill "$other_child"
+wait "$other_child" 2>/dev/null || true
+other_child=''
+ok "session-only down closes A without sweeping or changing B's worktree session"
+
+# Even another, ordinary block must survive when any group hosts Ultimate.
+rm -f "$RWT_TEST_KILLED"
+unset RWT_TEST_LSOF
+echo session:stub >"$repo/.worktrees/fresh/.local/state/rwt-session"
+set -m
+sleep 1000 &
+child=$!
+sleep 1000 &
+other_child=$!
+set +m
+export RWT_TEST_BLOCKS='{"blocks":[{"block_id":"block:terminal"},{"block_id":"block:host"}]}'
+export RWT_TEST_OTHER_PROCESS
+RWT_TEST_PROCESS="$(jq -cn --argjson p "$child" '{child:{pid:$p}}')"
+RWT_TEST_OTHER_PROCESS="$(jq -cn --argjson p "$other_child" '{child:{pid:$p}}')"
+RWT_TEST_INSTANCES="$(jq -cn --argjson p "$other_child" '[{pid:$p,url:"http://ultimate.test",port:1,project:"test-project"}]')"
+set +e
+out="$("$RWT" down fresh --json)"
+rc=$?
+set -e
+[ "$rc" -eq 6 ] || fail "down host session: rc=$rc $out"
+jq -e --arg error "session runs the Ultimate host for test-project (pid $other_child); stop it there" \
+  '.ok == false and .code == 6 and .error == $error' <<<"$out" >/dev/null || fail "down host session: $out"
+kill -0 "$child" 2>/dev/null || fail "down signalled an ordinary block before refusing the host"
+kill -0 "$other_child" 2>/dev/null || fail "down signalled the Ultimate host"
+[ ! -e "$RWT_TEST_KILLED" ] || fail "down killed the host's Rex session"
+[ "$(cat "$repo/.worktrees/fresh/.local/state/rwt-session")" = session:stub ] || fail "down removed the host's session record"
+kill "$child" "$other_child"
+wait "$child" 2>/dev/null || true
+wait "$other_child" 2>/dev/null || true
+child='' other_child=''
+ok "down refuses an Ultimate host session before signalling any group or killing Rex"
 
 echo "all $pass checks passed"
