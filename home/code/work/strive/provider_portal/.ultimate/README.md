@@ -1,0 +1,5 @@
+# Ultimate setup for the provider portal
+
+- **Worktree location:** Ultimate's checkouts live next to rwt's in the repo's own `.worktrees/`, named `ult-<hash>-<conversation id>` (the lander's is `ult-lander-<hash>`), via `isolates.worktree.path`.
+- **Worktree setup** (`worktree-setup.sh`): each Ultimate worktree copies `deps`, `_build` and `assets/node_modules` from your checkout (APFS copy-on-write) and copies `.env`. It then gives the worktree its own `GIT_WORKTREE=ult_<id>`, so it gets separate `rx_*_ult_<id>` databases, and its own ports: `PORT=20000 + id%1000*10`, with `LIVE_DEBUGGER_PORT` and `RX_METRICS_PORT` on the next two. Finally it runs `mix deps.get` and compiles dev and test. Test databases are created by `mix test`; dev databases only when a branch runs `mix ecto.setup`.
+- **Agents** (`agents/`): additions to the built-in coordinator, worker and designer. They run `mix` through `mise exec --`, so the worktree's `.env` loads. Coordinators ship through GitHub pull requests on `sm-<topic>` branches against `main`, never by merging into local `main`.
