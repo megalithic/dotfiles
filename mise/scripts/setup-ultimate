@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Install Ultimate on this Mac the way the hub runs it: a clone of Seth's fork at
+# seth/local in ~/code/oss/ultimate (local `main`, which tracks HazAT's main so
+# Ultimate's own Update keeps working; pushes go to the fork), its packages, and
+# the global `ultimate` command linked from the clone with aube.
+# Idempotent: an existing clone is left as it is; Ultimate's Update maintains it.
+set -euo pipefail
+
+clone="${ULTIMATE_CLONE:-$HOME/code/oss/ultimate}"
+fork="https://github.com/megalithic/ultimate.git"
+upstream="https://github.com/HazAT/ultimate.git"
+push="ssh://git@github.com/megalithic/ultimate.git"
+
+if [[ ! -d "$clone/.git" ]]; then
+  echo "setup-ultimate: cloning $fork (seth/local) into $clone"
+  mkdir -p "$(dirname "$clone")"
+  git clone --branch seth/local "$fork" "$clone"
+  git -C "$clone" remote set-url origin "$upstream"
+  git -C "$clone" remote set-url --push origin "$push"
+  git -C "$clone" fetch --prune origin
+  git -C "$clone" checkout -B main
+  git -C "$clone" branch --set-upstream-to=origin/main main
+  git -C "$clone" config branch.main.rebase true
+  git -C "$clone" branch -D seth/local
+fi
+
+if [[ ! -d "$clone/node_modules" ]]; then
+  echo "setup-ultimate: installing packages"
+  (cd "$clone" && pnpm install --frozen-lockfile)
+fi
+
+if [[ ! -e "$HOME/.local/share/aube/bin/ultimate" ]]; then
+  echo "setup-ultimate: linking the ultimate command"
+  aube add -g "link:$clone"
+fi
+
+echo "setup-ultimate: $(git -C "$clone" log --oneline -1) at $clone; ultimate -> $(readlink "$HOME/.local/share/aube/bin/ultimate")"

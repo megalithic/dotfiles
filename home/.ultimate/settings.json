@@ -1,6 +1,11 @@
 {
   "extensions": { "enable": ["tailscale"], "disable": ["splash"] },
   "fleet": { "primary": "~/.dotfiles" },
+  "onboarding": false,
+  "remotes": {
+    "megabookpro": { ".dotfiles": "https://megabookpro.TAILNET.ts.net:4749" },
+    "workbookpro": { ".dotfiles": "https://workbookpro.TAILNET.ts.net:4749" }
+  },
   "mcpServers": {
     "executor": {
       "url": "http://127.0.0.1:4312/mcp?elicitation_mode=browser",

@@ -12,7 +12,7 @@ import tomllib
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG = ROOT / "config/mise/config.toml"
 PHASES = [
-    "update:tools", "update:packages", "update:dotfiles", "update:system",
+    "update:tools", "update:packages", "update:dotfiles", "setup:ultimate", "update:system",
     "update:nvim", "update:fnox", "update:pi", "reload:hammerspoon",
 ]
 
