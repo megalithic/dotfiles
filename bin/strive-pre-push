@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Pre-push hook for repos under ~/code/work/strive/ (config/git/config.strive): refuses to push
+# commits whose message names the agent harness, "ultimate" as a word (an Ultimate-Conversation
+# trailer included). Git passes the remote name as $1 and `<local ref> <local oid> <remote ref>
+# <remote oid>` lines on stdin; only commits the remote doesn't have yet are checked.
+set -euo pipefail
+
+remote="${1:-origin}"
+found=0
+while read -r _ local_oid _ remote_oid; do
+  [[ "$local_oid" =~ ^0+$ ]] && continue # a deletion
+  exclude=(--not "--remotes=$remote")
+  if [[ ! "$remote_oid" =~ ^0+$ ]] && git cat-file -e "$remote_oid^{commit}" 2>/dev/null; then
+    exclude+=("$remote_oid")
+  fi
+  while read -r commit; do
+    if lines="$(git log -1 --format=%B "$commit" | grep -inw ultimate)"; then
+      found=1
+      printf '%s %s\n' "$(git rev-parse --short "$commit")" "$(git log -1 --format=%s "$commit")" >&2
+      sed 's/^/  line /' <<<"$lines" >&2
+    fi
+  done < <(git rev-list "$local_oid" "${exclude[@]}")
+done
+
+if ((found)); then
+  echo 'strive-pre-push: commit messages in strive repos must not mention the agent harness; reword the commits above and push again.' >&2
+  exit 1
+fi

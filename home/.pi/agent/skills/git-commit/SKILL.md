@@ -41,5 +41,5 @@ test: add integration tests for payment flow
 - Use imperative mood ("add" not "added", "fix" not "fixed")
 - Keep title under 72 characters
 - No period at end of title
-- No AI attribution (no co-author, no "Generated with Claude")
+- No AI attribution (no co-author, no "Generated with Claude"), and no agent, harness or session names (Pi, Ultimate, conversation numbers)
 - Scope is optional but helpful for clarity

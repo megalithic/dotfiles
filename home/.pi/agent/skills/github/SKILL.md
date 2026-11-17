@@ -33,6 +33,15 @@ View logs for failed steps only:
 gh run view <run-id> --repo owner/repo --log-failed
 ```
 
+## Images in PRs, issues and comments
+
+Attach screenshots with `--attach` (gh 2.99+, on `gh pr create|edit|comment` and `gh issue create|edit|comment`); never commit them or upload them elsewhere. Reference the local file in the body and attach the same file: gh uploads it and rewrites the path. In private repos only people with repo access can see it.
+
+```bash
+# body.md: ![Login error state](./login.png)
+gh pr create --body-file body.md --attach ./login.png
+```
+
 ## After creating or pushing to a PR
 
 Watch CI until every check passes. Approvals and review state don't count; only checks, workflows and builds do.

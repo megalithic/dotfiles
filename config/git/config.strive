@@ -1,0 +1,9 @@
+# Loaded for repos under ~/code/work/strive/ (includeIf in config). Commits there never name
+# the agent harness: Ultimate's bash tool adds an `Ultimate-Conversation: <id>` trailer through a
+# process-local prepare-commit-msg hook of this name, switched off here (git 2.54+ honours
+# `enabled` across config scopes), and the pre-push check refuses any commit that still does.
+[hook "ultimate-prepare-commit-msg"]
+	enabled = false
+[hook "strive-pre-push"]
+	command = ~/bin/strive-pre-push
+	event = pre-push

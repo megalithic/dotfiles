@@ -11,6 +11,9 @@ git/
 │                 #   core.excludesfile (XDG ignore is git's built-in default);
 │                 #   includes an untracked `config.local` for machine-local
 │                 #   overrides
+├── config.strive # → included for repos under ~/code/work/strive/: turns off
+│                 #   Ultimate's commit trailer hook and adds the
+│                 #   bin/strive-pre-push check (no harness names in commits)
 ├── ignore        # → ~/.config/git/ignore — global excludes
 └── disabled/     # parked files, not deployed:
     ├── gitconfig_macos   # osxkeychain/gh credential helpers, commit template
