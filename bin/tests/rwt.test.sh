@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Offline rwt checks: worktree ids, and detached worktrees (such as Ultimate's
-# lander checkout, which made the old `wt list` fail with backend_parse_failed).
+# Offline rwt checks: worktree identity, fresh origin bases and safe shutdown.
+# Detached worktrees include Ultimate's lander checkout.
 # A stub rex stands in for the Rex server: bash bin/tests/rwt.test.sh
 set -euo pipefail
 RWT="$(cd "$(dirname "$0")/.." && pwd)/rwt"
 tmp="$(mktemp -d)"
-trap 'rm -rf "$tmp"' EXIT
+child=''
+trap '[ -z "$child" ] || kill "$child" 2>/dev/null || true; rm -rf "$tmp"' EXIT
 tmp="$(cd "$tmp" && pwd -P)"
 pass=0
 ok() {
@@ -25,6 +26,10 @@ cat >"$tmp/rexbin/rex" <<'EOF'
 case "$1 ${2:-}" in
   "ls --json") echo '{"sessions":[]}' ;;
   "window ls") echo '{"windows":[]}' ;;
+  "session inspect") [ ! -f "${RWT_TEST_KILLED:-/nonexistent}" ] ;;
+  "block ls") echo '{"blocks":[{"block_id":"block:terminal"}]}' ;;
+  "block call") echo "${RWT_TEST_PROCESS:-null}" ;;
+  kill*) [ -z "${RWT_TEST_KILLED:-}" ] || touch "$RWT_TEST_KILLED" ;;
   new*) echo '{"session_id":"session:stub","initial_windows":[{"window_id":"window:setup","block_ids":["block:setup"]}]}' ;;
   wait* | "window close") ;;
   do*) echo '{"code":"block:code"}' ;;
@@ -105,5 +110,76 @@ for bad in Fix_Thing feat/y one-two-three-four-five-six sm-; do
 done
 [ "$(git -C "$strive" worktree list | wc -l)" -eq 2 ] || fail "a rejected name created a worktree"
 ok "strive: new rejects names that aren't short lowercase kebab-case"
+
+# Origin advances without advancing the local default or remote-tracking ref.
+cd "$repo"
+git init -q --bare -b main "$tmp/origin.git"
+git remote add origin "$tmp/origin.git"
+git push -q -u origin main
+git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
+git clone -q "$tmp/origin.git" "$tmp/upstream"
+git -C "$tmp/upstream" -c user.email=t@t -c user.name=t commit -qm newer --allow-empty
+git -C "$tmp/upstream" push -q origin main
+newer="$(git -C "$tmp/upstream" rev-parse HEAD)"
+[ "$(git rev-parse main)" != "$newer" ] || fail "origin fixture did not advance"
+out="$("$RWT" new fresh --json --no-services --no-agent)" || fail "new fresh: $out"
+[ "$(git rev-parse fresh)" = "$newer" ] || fail "new did not fetch origin/main"
+[ -z "$(git for-each-ref --format='%(upstream)' refs/heads/fresh)" ] || fail "new branch tracks origin/main"
+ok "new fetches origin/main and creates a branch without an upstream"
+
+# Give down isolated discovery tools, ahead of system tools in rwt's PATH.
+# No real Ultimate API or cwd process inventory is used by these offline tests.
+export HOME="$tmp/home"
+mkdir -p "$HOME/.dotfiles/bin" "$HOME/.local/bin"
+cat >"$HOME/.dotfiles/bin/ultimate-instance" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "${RWT_TEST_INSTANCES:-[]}"
+EOF
+cat >"$HOME/.local/bin/curl" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "${RWT_TEST_CONVERSATIONS:-null}"
+EOF
+cat >"$HOME/.local/bin/lsof" <<'EOF'
+#!/usr/bin/env bash
+[ -z "${RWT_TEST_LSOF:-}" ] || cat "$RWT_TEST_LSOF"
+EOF
+chmod +x "$HOME/.dotfiles/bin/ultimate-instance" "$HOME/.local/bin/"{curl,lsof}
+export RWT_TEST_KILLED="$tmp/killed"
+
+# Job control puts this real child in its own group, just like a Rex terminal.
+set -m
+sleep 1000 &
+child=$!
+set +m
+export RWT_TEST_PROCESS
+RWT_TEST_PROCESS="$(jq -cn --argjson p "$child" --arg cwd "$repo/.worktrees/fresh" '{child:{pid:$p,cwd:$cwd}}')"
+out="$("$RWT" down fresh --json)" || fail "down: $out"
+wait "$child" 2>/dev/null || true
+kill -0 "$child" 2>/dev/null && fail "down left the terminal process alive"
+jq -e --argjson p "$child" '.ok and (.stopped | index($p) != null) and .skipped_sweep == null' <<<"$out" >/dev/null || fail "down: $out"
+child=''
+[ -d "$repo/.worktrees/fresh" ] || fail "down removed the worktree"
+git show-ref --verify --quiet refs/heads/fresh || fail "down removed the branch"
+[ -f "$RWT_TEST_KILLED" ] && [ ! -e "$repo/.worktrees/fresh/.local/state/rwt-session" ] || fail "down did not kill session and clear its record"
+ok "down TERMs a real terminal process group and keeps the worktree and branch"
+
+rm -f "$RWT_TEST_KILLED"
+unset RWT_TEST_PROCESS
+mkdir -p "$repo/.local/state"
+echo session:stub >"$repo/.local/state/rwt-session"
+out="$("$RWT" down "$repo" --json)" || fail "down main: $out"
+jq -e '.ok and (.skipped_sweep | test("main checkout")) and .swept == []' <<<"$out" >/dev/null || fail "down main: $out"
+[ -f "$RWT_TEST_KILLED" ] && [ -d "$repo" ] || fail "down main did not close Rex and keep checkout"
+ok "down skips the main-checkout sweep but closes its Rex session successfully"
+
+rm -f "$RWT_TEST_KILLED"
+echo session:stub >"$repo/.worktrees/fresh/.local/state/rwt-session"
+export RWT_TEST_INSTANCES='[{"pid":99999999,"url":"http://ultimate.test","port":1,"project":"unused"}]'
+export RWT_TEST_CONVERSATIONS
+RWT_TEST_CONVERSATIONS="$(jq -cn --arg cwd "$repo/.worktrees/fresh" '{result:[{id:42,cwd:$cwd,busy:false,concluded:false}]}')"
+out="$("$RWT" down fresh --json)" || fail "down Ultimate: $out"
+jq -e '.ok and (.skipped_sweep | test("http://ultimate.test conversation #42")) and .swept == []' <<<"$out" >/dev/null || fail "down Ultimate: $out"
+[ -f "$RWT_TEST_KILLED" ] || fail "Ultimate guard prevented session shutdown"
+ok "down skips a sweep owned by an unconcluded Ultimate conversation, even idle"
 
 echo "all $pass checks passed"
