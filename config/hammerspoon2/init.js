@@ -7,16 +7,18 @@ const { createHud } = require('./lib/hud.js');
 
 const { createSeams } = require('./lib/seams.js');
 
-// Shade's layer: hold hyper, press a key, Shade toggles that verb.
+// Shade's layer: hold hyper, press a key, Shade toggles that verb. Shade 0.9.0
+// answers "unknown verb" to tell and capture until its Phases 2 and 3 ship;
+// they are bound now so the layer and its hint don't change then.
 const SHADE = [
-  { key: 'n', action: 'write', label: 'Write' },
+  { key: 'n', action: 'write', label: 'Note' },
   { key: 't', action: 'tell', label: 'Tell' },
   { key: 'c', action: 'capture', label: 'Capture' },
 ];
 
 const seams = createSeams(hs);
 
-const hud = createHud(hs, { rows: SHADE.map(({ key, label }) => ({ key, label })) });
+const hud = createHud(hs, { rows: SHADE.map(({ key, label }) => ({ key, label })), seams });
 
 // Kept on globalThis so the tap and HUD are never garbage-collected.
 globalThis.hyper = startLayer(hs, {

@@ -1,0 +1,6 @@
+{
+  "vault": "~/notes",
+  "vimrc": ["~/notes/.obsidian.vimrc", "~/.config/shade/vimrc"],
+  "captures_dir": "captures",
+  "daily_dir": "daily"
+}

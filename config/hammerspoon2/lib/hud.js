@@ -1,6 +1,8 @@
-// Temporary key-hint HUD for the hyper layer, until sup ships its own
-// (`sup show hint … --hold`). Shown after hyper is held for `delay` seconds,
-// so quick v1 hyper chords never flash it; hidden on release.
+// Key-hint HUD for the hyper layer. Shown after hyper is held for `delay`
+// seconds, so quick v1 hyper chords never flash it; hidden on release.
+//
+// sup draws it (`sup show hint … --hold`, through `seams`). When sup can't
+// (its daemon isn't running), this falls back to its own canvas.
 
 const ROW = 30;
 
@@ -8,7 +10,7 @@ const PAD = 18;
 
 const WIDTH = 240;
 
-// rows: [{ key: "n", label: "Write" }]
+// rows: [{ key: "n", label: "Note" }]
 function hudElements(rows) {
   const elements = [
     {
@@ -44,12 +46,12 @@ function hudElements(rows) {
   return elements;
 }
 
-function createHud(hs, { rows, delay = 0.25 }) {
-  let canvas = null;
+function createHud(hs, { rows, seams, delay = 0.25 }) {
   let timer = null;
+  let sup = null;
+  let canvas = null;
 
-  function show() {
-    timer = null;
+  function showCanvas() {
     const h = PAD * 2 + rows.length * ROW;
     // Centred on the main screen; centring makes AppKit's bottom-up window
     // origin and the screen's top-down frame agree.
@@ -63,18 +65,37 @@ function createHud(hs, { rows, delay = 0.25 }) {
       .show(0.1);
   }
 
+  function show() {
+    timer = null;
+
+    const task = seams.supHint(rows, (code) => {
+      // Only sup ending on its own counts: dismiss() clears `sup` first.
+      if (sup !== task) return;
+      sup = null;
+
+      if (code !== 0 && !canvas) showCanvas();
+    });
+
+    sup = task;
+  }
+
   return {
     arm() {
-      if (!timer && !canvas) timer = hs.timer.doAfter(delay, show);
+      if (!timer && !sup && !canvas) timer = hs.timer.doAfter(delay, show);
     },
     dismiss() {
       if (timer) timer.stop();
       timer = null;
 
+      const task = sup;
+      sup = null;
+
+      if (task) task.terminate();
+
       if (canvas) canvas.destroy(0.1);
       canvas = null;
     },
-    isShowing: () => canvas !== null,
+    isShowing: () => sup !== null || canvas !== null,
   };
 }
 

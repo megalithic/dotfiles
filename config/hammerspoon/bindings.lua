@@ -109,85 +109,18 @@ function M.loadUtils()
     end)
 end
 
+-- Shade (swifties, run by the io.swifties.shade LaunchAgent). hyper+return
+-- toggles its write panel through the control socket; Hammerspoon 2 owns
+-- hyper+n/t/c. Nothing happens when Shade isn't running.
 function M.loadShade()
-  local shade = require("lib.interop.shade")
+  local socket = os.getenv("HOME") .. "/.local/state/shade/control.sock"
+  local request = hs.json.encode({ method = "toggle", params = { verb = "write" } })
 
-  -- Configure Shade for quick capture workflow
-  -- Use nvim with a socket for RPC commands (context injection, file opening)
-  -- Socket path: ~/.local/state/shade/nvim.sock (XDG compliant)
-  local socketPath = shade.getSocketPath()
-  local capturesDir = shade.getCapturesDir()
-
-  -- Command needs shell wrapper for:
-  -- 1. Socket cleanup (stale socket from crash/kill)
-  -- 2. Multiple commands (rm + nvim)
-  -- 3. SHADE=1 env var for nvim to detect it's running in Shade
-  -- Opens nvim in captures dir - user creates/opens capture notes there
-  local nvimCmd = string.format("/bin/sh -c 'rm -f %s; SHADE=1 exec nvim --listen %s'", socketPath, socketPath)
-
-  shade.configure({
-    width = 0.4,
-    height = 0.4,
-    command = nvimCmd,
-    workingDirectory = capturesDir,
-    startHidden = false, -- Launch visible so nvim actually starts
-  })
-
-  local shadeModality = require("hypemode").new("shade", {
-    showIndicator = false,
-    showAlert = false,
-  })
-  shadeModality
-    :start()
-    -- toggle Shade visibility (focus, hide, show)
-    :bind({}, "n", nil, function() shade.smartToggle() end)
-    -- daily note: open in Shade floating panel
-    :bind({}, "o", nil, function() shade.openDailyNote() end)
-    :bind({}, "d", nil, function() shade.openDailyNote() end)
-    -- text capture: gather context from frontmost app and create capture note
-    :bind(
-      {},
-      "c",
-      nil,
-      function() shade.captureWithContext() end
-    )
-    -- sidebar capture: capture note in sidebar mode (side-by-side with main app)
-    -- TODO: similar ergonomics as our window tiling?
-    :bind(
-      {},
-      "v",
-      nil,
-      function() shade.captureWithContextSidebar() end
-    )
-    -- recall sidebar: re-enter sidebar mode with last companion window
-    :bind(
-      {},
-      "r",
-      nil,
-      function() shade.recallSidebar() end
-    )
-    -- mode toggles (vim-style: h=left/sidebar, l=right/float)
-    :bind(
-      {},
-      "h",
-      nil,
-      function() shade.toSidebarLeft() end
-    )
-    :bind({}, "l", nil, function() shade.toFloating() end)
-
-  -- Direct shade bindings (no modal required)
-  req("hyper", { id = "shade" })
-    :start()
-    -- hyper+return: toggle Shade visibility (quick access)
-    :bind({}, "return", function() shade.smartToggle() end)
-    -- hyper+shift+return: quick capture with context (floating)
-    :bind(
-      { "shift" },
-      "return",
-      function() shade.captureWithContext() end
-    )
-  -- hyper+shift+n / hyper+ctrl+n are owned by shade-next quick capture.
-  -- Keep legacy shade modal available from bindings above, not a direct chord.
+  req("hyper", { id = "shade" }):start():bind({}, "return", function()
+    hs.task
+      .new("/bin/sh", nil, { "-c", 'printf "%s\\n" "$1" | /usr/bin/nc -U -w 1 "$2"', "sh", request, socket })
+      :start()
+  end)
 end
 
 function M.loadNotifications()

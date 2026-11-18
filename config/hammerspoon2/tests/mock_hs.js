@@ -10,6 +10,7 @@ export function mockHs() {
     timers: [],
     canvases: [],
     keycodes: { map: { n: 45, t: 17, c: 8, j: 38 } },
+    fs: { homeDirectory: () => '/Users/test' },
     eventtap: {
       eventTypes: TYPES,
       emit: true,
@@ -40,11 +41,20 @@ export function mockHs() {
           args,
           onTermination,
           started: false,
+          terminated: false,
           inputClosed: false,
           start() {
             this.started = true;
 
             return this;
+          },
+          // SIGTERM: like HS2, the termination callback still runs.
+          terminate() {
+            this.terminated = true;
+            this.exit(15, 'uncaughtSignal');
+          },
+          exit(code, reason = 'exit') {
+            this.onTermination?.(code, reason);
           },
           closeInput() {
             this.inputClosed = true;

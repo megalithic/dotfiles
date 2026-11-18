@@ -1,0 +1,5 @@
+#!/bin/sh
+# Stub sup CLI for the Atlas end-to-end test: logs its arguments and reports
+# no daemon (exit 1, as sup does), so the HUD shows its own canvas.
+printf 'sup %s\n' "$*" >>"$HOME/hs2-e2e.log"
+exit 1

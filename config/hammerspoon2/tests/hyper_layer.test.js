@@ -81,29 +81,56 @@ describe('wired to hs', () => {
     expect(hs.press('keyDown', N)).toBe(false);
     expect(hs.press('keyUp', N)).toBe(false);
     expect(hs.press('keyUp', F19)).toBe(true);
-    expect(hs.tasks.map((t) => [t.path, ...t.args])).toEqual([['/usr/bin/env', 'shade', 'toggle', 'write']]);
+    // The mise shim by absolute path: ~/.local/bin/shade was the old Shade.
+    expect(hs.tasks.map((t) => [t.path, ...t.args])).toEqual([
+      ['/Users/test/.local/share/mise/shims/shade', 'toggle', 'write'],
+    ]);
     expect(hs.tasks[0].started).toBe(true);
     // stdin stays open for the child: sup --hold relies on EOF only when HS2 dies.
     expect(hs.tasks[0].inputClosed).toBe(false);
   });
 
-  test('HUD appears only after the hold delay and goes away on release', () => {
+  test('sup shows the hint after the hold delay and release terminates it', () => {
     const hs = mockHs();
-    const hud = createHud(hs, { rows: [{ key: 'n', label: 'Write' }] });
+    const hud = createHud(hs, { rows: [{ key: 'n', label: 'Note' }], seams: createSeams(hs) });
     hud.arm();
     expect(hud.isShowing()).toBe(false);
     expect(hs.timers[0].seconds).toBe(0.25);
     hud.dismiss();
     expect(hs.timers[0].stopped).toBe(true);
-    expect(hs.canvases.length).toBe(0);
+    expect(hs.tasks.length).toBe(0);
 
     hud.arm();
     hs.timers[1].fire();
     expect(hud.isShowing()).toBe(true);
+    const [sup] = hs.tasks;
+    expect([sup.path, ...sup.args]).toEqual([
+      '/Users/test/.local/share/mise/shims/sup',
+      'show',
+      'hint',
+      '--key',
+      'n=Note',
+      '--hold',
+    ]);
+    // --hold also ends on stdin EOF, so stdin must stay open while it's up.
+    expect(sup.inputClosed).toBe(false);
+    hud.dismiss();
+    expect(sup.terminated).toBe(true);
+    expect(hud.isShowing()).toBe(false);
+    expect(hs.canvases.length).toBe(0);
+  });
+
+  test('HUD falls back to its own canvas when sup has no daemon', () => {
+    const hs = mockHs();
+    const hud = createHud(hs, { rows: [{ key: 'n', label: 'Note' }], seams: createSeams(hs) });
+    hud.arm();
+    hs.timers[0].fire();
+    hs.tasks[0].exit(1);
+    expect(hud.isShowing()).toBe(true);
     const canvas = hs.canvases[0];
     expect(canvas.shown).toBe(true);
     expect(canvas.levelName).toBe('overlay');
-    expect(canvas.elements.filter((e) => e.type === 'text').map((e) => e.text)).toEqual(['n', 'Write']);
+    expect(canvas.elements.filter((e) => e.type === 'text').map((e) => e.text)).toEqual(['n', 'Note']);
     hud.dismiss();
     expect(canvas.destroyed).toBe(true);
     expect(hud.isShowing()).toBe(false);

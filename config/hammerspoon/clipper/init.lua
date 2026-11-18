@@ -16,12 +16,9 @@
 --   - h: Paste HTML tag
 --   - p: OCR to clipboard (shows processing status)
 --   - e: Edit in Preview
---   - n: Quick capture to notes
---   - N: Full capture with editor
 --   - Esc: Dismiss
 
 local fmt = string.format
-local shade = require("lib.interop.shade")
 local pasteboard = require("watchers.pasteboard")
 
 --------------------------------------------------------------------------------
@@ -111,8 +108,6 @@ M.config = {
     { key = "h", mods = {}, action = "pasteHtml", desc = "HTML tag", requiresUrl = true },
     { key = "p", mods = {}, action = "ocrToClipboard", desc = "OCR to clipboard" },
     { key = "e", mods = {}, action = "editInPreview", desc = "Edit in Preview" },
-    { key = "n", mods = {}, action = "captureQuick", desc = "Quick capture" },
-    { key = "n", mods = { "shift" }, action = "captureFull", desc = "Full capture" },
     { key = "escape", mods = {}, action = "exit", desc = "Dismiss" },
   },
 
@@ -153,24 +148,6 @@ local function cancelCaptureTasks()
   for _, name in ipairs({ "save", "upload", "resize", "ocr", "screenshot" }) do
     cancelTask(name)
   end
-end
-
-local function stopTimer(name)
-  local timer = M.timers[name]
-  if not timer then return end
-  M.timers[name] = nil
-  timer:stop()
-end
-
-local function schedule(name, delay, callback)
-  stopTimer(name)
-  local timer
-  timer = hs.timer.doAfter(delay, function()
-    if M.timers[name] ~= timer then return end
-    M.timers[name] = nil
-    callback()
-  end)
-  M.timers[name] = timer
 end
 
 --------------------------------------------------------------------------------
@@ -981,92 +958,6 @@ function M.captureFullScreen()
 end
 
 --------------------------------------------------------------------------------
--- NOTE CAPTURE (SHADE INTEGRATION)
---------------------------------------------------------------------------------
-
----Quick capture to notes (fire-and-forget)
----@return boolean success
-function M.captureQuick()
-  if not M.capture or not M.capture.imagePath then
-    HUD.alert("No screenshot available", { iconType = "warning" })
-    return false
-  end
-
-  -- Check if file exists (async save might not be complete)
-  if not hs.fs.attributes(M.capture.imagePath) then
-    HUD.alert("Still processing...", { iconType = "info" })
-    return false
-  end
-
-  local ctx = {
-    tempImagePath = M.capture.imagePath,
-    appType = "screenshot",
-    appName = "Screenshot",
-  }
-
-  if not shade.writeContext(ctx) then
-    HUD.alert("Capture failed", { iconType = "error" })
-    return false
-  end
-
-  local function trigger()
-    hs.distributednotifications.post("io.shade.note.capture.image", nil, nil)
-    HUD.alert("Quick capture saved", { iconType = "checkmark" })
-    U.log.i("quick capture sent to Shade")
-  end
-
-  if shade.isRunning() then
-    trigger()
-  else
-    shade.launch()
-    schedule("shadeCapture", 1.5, trigger)
-  end
-
-  return true
-end
-
----Full capture with editor panel
----@return boolean success
-function M.captureFull()
-  if not M.capture or not M.capture.imagePath then
-    HUD.alert("No screenshot available", { iconType = "warning" })
-    return false
-  end
-
-  -- Check if file exists (async save might not be complete)
-  if not hs.fs.attributes(M.capture.imagePath) then
-    HUD.alert("Still processing...", { iconType = "info" })
-    return false
-  end
-
-  local ctx = {
-    tempImagePath = M.capture.imagePath,
-    appType = "screenshot",
-    appName = "Screenshot",
-  }
-
-  if not shade.writeContext(ctx) then
-    HUD.alert("Capture failed", { iconType = "error" })
-    return false
-  end
-
-  local function trigger()
-    hs.distributednotifications.post("io.shade.note.capture.image", nil, nil)
-    schedule("shadeShow", 0.1, function() shade.show() end)
-    U.log.i("full capture sent to Shade")
-  end
-
-  if shade.isRunning() then
-    trigger()
-  else
-    shade.launch()
-    schedule("shadeCapture", 1.5, trigger)
-  end
-
-  return true
-end
-
---------------------------------------------------------------------------------
 -- MODAL
 --------------------------------------------------------------------------------
 
@@ -1231,8 +1122,6 @@ M.actions = {
   pasteHtml = function() M.modalAction(M.pasteHtml) end,
   ocrToClipboard = function() M.ocrToClipboard() end, -- Don't exit modal (async)
   editInPreview = function() M.modalAction(M.editInPreview) end,
-  captureQuick = function() M.modalAction(M.captureQuick) end,
-  captureFull = function() M.modalAction(M.captureFull) end,
   exit = function() M.dismissPanel() end,
 }
 

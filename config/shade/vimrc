@@ -1,0 +1,8 @@
+" Shade's vim keys, in Obsidian vimrc-plugin syntax (not read by nvim).
+" Shade reads ~/notes/.obsidian.vimrc first when it exists, else this file.
+unmap <Space>
+imap jk <Esc>
+nmap j gj
+nmap k gk
+exmap wn write
+nmap <Space>w :wn<CR>
