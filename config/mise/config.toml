@@ -471,6 +471,7 @@ adopt = true
 "brew:renameutils" = "latest"
 "brew:ripgrep" = "latest"
 "brew:sox" = "latest"          # rec audio capture for pi-dictate
+"brew:syncthing" = "latest"    # notes vault sync daemon (com.megadots.syncthing, setup:notes-sync)
 "brew:trash" = "latest"
 "brew:tree" = "latest"
 "brew:utf8proc" = "latest"
@@ -757,6 +758,16 @@ stderr_path = "~/Library/Logs/executor/stderr.log"
 # (home/.ultimate/settings.json). `mise run setup:ultimate` installs Ultimate.
 # While a hub started in a Rex tab runs, the wrapper waits and takes over once
 # it stops; the launchd hub reports no Rex tab status (no tty).
+# Syncthing for the notes vault (~/notes), with wolfhall as the always-on peer.
+# Folder and devices: `mise run setup:notes-sync`. GUI/API on 127.0.0.1:8384.
+[bootstrap.macos.launchd.agents."com.megadots.syncthing"]
+program = "/opt/homebrew/opt/syncthing/bin/syncthing"
+args = ["serve", "--no-browser", "--no-restart"]
+run_at_load = true
+keep_alive = true
+stdout_path = "~/Library/Logs/syncthing.log"
+stderr_path = "~/Library/Logs/syncthing.log"
+
 [bootstrap.macos.launchd.agents."com.megadots.ultimate-hub"]
 program = "~/.dotfiles/mise/scripts/ultimate-hub-launchd"
 run_at_load = true
@@ -1102,6 +1113,11 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-executor"
 raw = true
 
 # Before update:system loads the hub's LaunchAgent, which runs `ultimate`.
+# Touches wolfhall over ssh; run on each Mac once its ~/notes is the vault or empty.
+[tasks."setup:notes-sync"]
+description = "Configure Syncthing's notes folder on this Mac and wolfhall (status: mise run setup:notes-sync status)"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-notes-sync"
+
 [tasks."setup:ultimate"]
 description = "Install Ultimate from the megalithic/ultimate fork and link the ultimate command (skips what exists)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-ultimate"

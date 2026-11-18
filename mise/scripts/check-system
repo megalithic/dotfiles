@@ -25,6 +25,9 @@ check "~/.config/fish/config.fish linked" test -L "$HOME/.config/fish/config.fis
 check "~/.config/git/config linked" test -L "$HOME/.config/git/config"
 check "~/.local/bin/pi linked" test -e "$HOME/.local/bin/pi"
 check "~/.ssh mode 700" sh -c 'test "$(/usr/bin/stat -f %Lp "$HOME/.ssh")" = 700'
+if [ -d "$HOME/notes/.stfolder" ]; then
+  check "no sync conflicts in ~/notes (setup:notes-sync status)" sh -c '! find "$HOME/notes" -path "$HOME/notes/.stversions" -prune -o -name "*.sync-conflict-*" -print | grep -q .'
+fi
 if [ "${BOOTSTRAP_SKIP_TOOL_CHECK:-0}" != 1 ]; then
   check "no missing mise tools" sh -c 'test -z "$(mise ls --missing 2>/dev/null)"'
 fi

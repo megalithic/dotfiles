@@ -8,11 +8,9 @@
 local M = {}
 local fmt = string.format
 
--- Paths (using environment variables with iCloud fallback)
--- Hammerspoon doesn't inherit shell env vars, so we check common locations
-M.notesHome = os.getenv("NOTES_HOME")
-  or (os.getenv("HOME") .. "/iclouddrive/Documents/_notes")  -- iCloud path
-  or (os.getenv("HOME") .. "/notes")  -- fallback
+-- Paths: the vault is ~/notes on both Macs, synced by Syncthing
+-- (mise/scripts/setup-notes-sync). Hammerspoon doesn't inherit shell env vars.
+M.notesHome = os.getenv("NOTES_HOME") or (os.getenv("HOME") .. "/notes")
 M.capturesDir = M.notesHome .. "/captures"
 M.dailyBaseDir = M.notesHome .. "/daily"
 

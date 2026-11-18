@@ -1,0 +1,29 @@
+# Syncthing hub for the notes vault (~/notes on both Macs): always on, so either
+# Mac syncs while the other sleeps, and it keeps staggered versions of every file.
+#
+# Deployed over ssh, not the UGOS Docker UI (scp/sftp can't reach /volume1):
+#   ssh wolfhall mkdir -p /volume1/docker/syncthing/config /volume2/Backups/sync/notes
+#   ssh wolfhall 'cat > /volume1/docker/syncthing/docker-compose.yaml' < config/nas/syncthing/compose.yaml
+#   ssh wolfhall 'cd /volume1/docker/syncthing && docker compose up -d'
+# Folder, devices and ignores: `mise run setup:notes-sync` (mise/scripts/setup-notes-sync).
+services:
+  syncthing:
+    # Same release as the Macs' brew formula. Bump deliberately.
+    image: syncthing/syncthing:2.1.2
+    container_name: syncthing
+    hostname: wolfhall
+    # Host mode: local discovery broadcasts and the 22000 TCP/QUIC listener on
+    # both the LAN and tailscale0, without a ports: mapping.
+    network_mode: host
+    environment:
+      # seth:admin, the owner of /volume2/Backups.
+      - PUID=1000
+      - PGID=10
+      # GUI and REST API only on the NAS itself; reach them with
+      # `ssh wolfhall docker exec syncthing syncthing cli ...` or an ssh tunnel.
+      - STGUIADDRESS=127.0.0.1:8384
+    volumes:
+      # Config, keys (the device identity) and database.
+      - ./config:/var/syncthing/config
+      - /volume2/Backups/sync/notes:/var/syncthing/notes
+    restart: unless-stopped
