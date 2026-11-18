@@ -285,11 +285,11 @@ function Host() {
   if (!hostname) return null
   return (
     <span
-      className="flex h-7 shrink-0 items-center gap-1.5 px-2 font-mono text-[11.5px] text-muted-foreground"
+      className="flex h-7 min-w-0 items-center gap-1.5 px-2 font-mono text-[11.5px] text-muted-foreground"
       title={`This Ultimate runs on ${hostname}`}
     >
-      <LaptopIcon className="size-3.5 opacity-60" />
-      {hostname}
+      <LaptopIcon className="size-3.5 shrink-0 opacity-60" />
+      <span className="truncate">{hostname}</span>
     </span>
   )
 }
