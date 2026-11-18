@@ -15,7 +15,8 @@ One row per instance, grouped by machine:
   `~/.ultimate/settings.json` is the primary hub; an instance whose folder holds another running instance is a
   secondary hub (e.g. `~/code/work/strive` over `provider_portal`). Members show under their deepest hub.
 
-The status line shows the same counts on other surfaces. Coordination goes through the docked @ultimate
+The title bar names the machine the hub runs on beside the project chip, since both Macs run a `.dotfiles` hub. The
+status line shows the same counts on other surfaces. Coordination goes through the docked @ultimate
 (`ultimate.tell`).
 
 Links to a local instance keep the page's host and use the instance's port, so they work from `127.0.0.1`,

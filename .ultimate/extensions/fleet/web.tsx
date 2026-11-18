@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import type { ReactNode } from 'react'
-import { ArrowUpRightIcon, NetworkIcon } from 'lucide-react'
+import { ArrowUpRightIcon, LaptopIcon, NetworkIcon } from 'lucide-react'
 import {
   Conversation,
   Dock,
@@ -279,6 +279,21 @@ function FleetStatus() {
   )
 }
 
+/** The machine this hub runs on, beside the project chip: both Macs run a `.dotfiles` hub that otherwise looks the same. */
+function Host() {
+  const hostname = useSystem()?.machine.hostname.split('.')[0]
+  if (!hostname) return null
+  return (
+    <span
+      className="flex h-7 shrink-0 items-center gap-1.5 px-2 font-mono text-[11.5px] text-muted-foreground"
+      title={`This Ultimate runs on ${hostname}`}
+    >
+      <LaptopIcon className="size-3.5 opacity-60" />
+      {hostname}
+    </span>
+  )
+}
+
 export default defineWebExtension({
   surfaces: [
     {
@@ -289,5 +304,5 @@ export default defineWebExtension({
       component: FleetSurface,
     },
   ],
-  slots: { 'statusline.right': [FleetStatus] },
+  slots: { 'titlebar.left': [{ component: Host, order: -10 }], 'statusline.right': [FleetStatus] },
 })
