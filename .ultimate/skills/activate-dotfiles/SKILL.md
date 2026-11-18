@@ -42,6 +42,18 @@ Restart when step 2 shows the change did not load (a new extension folder, `exte
 Ultimate clone landed changes to `server/`, `shared/`, `patches/` or `pnpm-lock.yaml`. Use the `restart` tool, never
 `POST /api/restart`. Afterwards repeat step 2: the extension listed without error, its tool present.
 
+## 3b. Health check (always, after every landing or restart)
+
+The host must load cleanly, whatever changed:
+
+- `ultimate.agents().errors` is empty, and `projectSetup` is `trusted`.
+- No `ultimate.extensions()` entry has a load or server error.
+- `ultimate.action('mcp', 'status')`: every server `connected`, except a known missing secret already in the Inbox.
+
+Any failure: find the cause before reporting. Code newer than the running host means restart and re-check; a missing
+secret or login goes to the user's Inbox; anything else is a bug for a branch. Never report a landing active over a
+load error.
+
 ## 4. Other hubs
 
 Only when the landing touched user-level `~/.ultimate` files:
