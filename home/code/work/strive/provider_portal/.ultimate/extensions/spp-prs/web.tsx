@@ -48,7 +48,7 @@ function Act({ children, primary, className, ...props }: React.ComponentProps<'b
 const ci: Record<Row['ci'], [string, string]> = {
   pass: ['ci pass', 'text-success'],
   fail: ['ci fail', 'text-error'],
-  pending: ['ci running', 'text-warning'],
+  pending: ['ci pending', 'text-warning'],
   none: ['no ci', 'text-muted-foreground/60'],
 };
 const review: Record<Row['review'], [string, string] | undefined> = {

@@ -5,7 +5,7 @@ Seth's open provider_portal pull requests in merge order, with draft, CI and rev
 **My PRs** (right panel, or ⌘K → "My PRs") asks GitHub when it opens and when you press Refresh; it never polls.
 
 - **Order:** a pull request whose base branch is another one's head is stacked on it: it follows its parent, indented. Pull requests on `main` start stacks, oldest number first. Nothing is read from PR bodies.
-- **Per row:** number (opens GitHub), title, `draft`, CI rolled up from every check (`fail` wins, then `running`; opens the checks tab), the review decision (empty on stacked branches, which have no review rule until retargeted), `conflicts` or `behind base`, and the conversation working on that branch (a worktree on the branch or at its head commit; the topmost, most recently active one).
+- **Per row:** number (opens GitHub), title, `draft`, CI rolled up from every check (`fail` wins; `pass` only when every check succeeded, was neutral or skipped; anything else, such as running or stale, is `pending`; opens the checks tab), the review decision (empty on stacked branches, which have no review rule until retargeted), `conflicts` or `behind base`, and the conversation working on that branch (a worktree on the branch or at its head commit; the topmost, most recently active one).
 - **Gates:** what GitHub cannot know, such as "after #12: run the migration" on #13. A gate shows on the pull request it holds back as `unknown` until Seth presses **confirm**; it disappears once that pull request is no longer open.
 
 The panel gives no "ready to merge" verdict: CI, review and gates stay separate.

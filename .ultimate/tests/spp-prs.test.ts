@@ -67,6 +67,19 @@ describe('spp-prs', () => {
       ]),
     ).toBe('pending');
     expect(rollup([{ status: 'IN_PROGRESS' }, { status: 'COMPLETED', conclusion: 'FAILURE' }])).toBe('fail');
+    // A stale check needs a rerun: never shown as passing.
+    expect(
+      rollup([
+        { status: 'COMPLETED', conclusion: 'SUCCESS' },
+        { status: 'COMPLETED', conclusion: 'STALE' },
+      ]),
+    ).toBe('pending');
+    expect(
+      rollup([
+        { status: 'COMPLETED', conclusion: 'SKIPPED' },
+        { status: 'COMPLETED', conclusion: 'NEUTRAL' },
+      ]),
+    ).toBe('pass');
   });
 
   test('gates start unknown, dedupe, and keep the first confirmation', () => {

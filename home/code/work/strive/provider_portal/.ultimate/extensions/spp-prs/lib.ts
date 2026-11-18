@@ -43,13 +43,15 @@ export type Worktree = { path: string; head: string; branch?: string };
 
 const failed = new Set(['FAILURE', 'ERROR', 'TIMED_OUT', 'CANCELLED', 'ACTION_REQUIRED', 'STARTUP_FAILURE']);
 
-/** One state for all checks: any failure wins, then anything still running. */
+const passed = new Set(['SUCCESS', 'NEUTRAL', 'SKIPPED']);
+
+/** One state for all checks: any failure wins; anything not plainly passed (running, stale, queued) is pending. */
 export function rollup(checks: GhPull['statusCheckRollup']): Ci {
   if (!checks?.length) return 'none';
   if (checks.some((check) => failed.has(check.conclusion ?? check.state ?? ''))) return 'fail';
-  if (checks.some((check) => (check.status ? check.status !== 'COMPLETED' : check.state !== 'SUCCESS')))
-    return 'pending';
-  return 'pass';
+  const ok = (check: NonNullable<GhPull['statusCheckRollup']>[number]) =>
+    check.status ? check.status === 'COMPLETED' && passed.has(check.conclusion ?? '') : check.state === 'SUCCESS';
+  return checks.every(ok) ? 'pass' : 'pending';
 }
 
 const reviews: Record<string, Review> = {
