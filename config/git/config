@@ -439,8 +439,8 @@
 [init]
 	defaultBranch = main
 
-# Strive work repos: no harness trailer, pre-push check (see config.strive).
-[includeIf "gitdir:~/code/work/strive/"]
+# Work repos (everything under ~/code/work/): no harness trailer, pre-push check (see config.strive).
+[includeIf "gitdir:~/code/work/"]
   path = config.strive
 
 # Machine-local, untracked overrides (created manually when needed).

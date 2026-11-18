@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# config/git/config.strive switches Ultimate's trailer hook off under ~/code/work/strive/, and
+# config/git/config.strive switches Ultimate's trailer hook off under ~/code/work/, and
 # bin/strive-pre-push refuses commits that name the harness. Runs against a throwaway HOME.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -15,18 +15,18 @@ fail() {
   exit 1
 }
 
-include="$(git config -f "$ROOT/config/git/config" --get 'includeIf.gitdir:~/code/work/strive/.path')" ||
-  fail "config has no includeIf for ~/code/work/strive/"
+include="$(git config -f "$ROOT/config/git/config" --get 'includeIf.gitdir:~/code/work/.path')" ||
+  fail "config has no includeIf for ~/code/work/"
 [[ "$include" == config.strive ]] || fail "includeIf path: $include"
-ok "the global config includes config.strive for strive repos"
+ok "the global config includes config.strive for every work repo"
 
 # A HOME with only this include, and the same process-local trailer hook Ultimate's bash tool sets.
 export HOME="$tmp" GIT_CONFIG_NOSYSTEM=1 XDG_CONFIG_HOME="$tmp/.config"
 for var in $(env | sed -n 's/^\(GIT_CONFIG_\(KEY\|VALUE\)_[0-9]*\)=.*/\1/p'); do unset "$var"; done
-mkdir -p "$tmp/.config/git" "$tmp/code/work/strive" "$tmp/elsewhere"
+mkdir -p "$tmp/.config/git" "$tmp/code/work/strive" "$tmp/code/work/other" "$tmp/elsewhere"
 ln -s "$ROOT/config/git/config.strive" "$tmp/.config/git/config.strive"
 ln -s "$ROOT/bin" "$tmp/bin"
-printf '[includeIf "gitdir:~/code/work/strive/"]\n  path = config.strive\n[user]\n  name = Test\n  email = test@example.com\n' >"$tmp/.config/git/config"
+printf '[includeIf "gitdir:~/code/work/"]\n  path = config.strive\n[user]\n  name = Test\n  email = test@example.com\n' >"$tmp/.config/git/config"
 export GIT_CONFIG_COUNT=2 \
   GIT_CONFIG_KEY_0=hook.ultimate-prepare-commit-msg.event GIT_CONFIG_VALUE_0=prepare-commit-msg \
   GIT_CONFIG_KEY_1=hook.ultimate-prepare-commit-msg.command \
@@ -38,7 +38,13 @@ repo() {
 }
 repo "$tmp/elsewhere/app"
 git -C "$tmp/elsewhere/app" log -1 --format=%B | grep -q 'Ultimate-Conversation: 42' || fail "control: no trailer outside strive"
-ok "outside strive the trailer hook still runs"
+ok "outside work the trailer hook still runs"
+repo "$tmp/.dotfiles"
+git -C "$tmp/.dotfiles" log -1 --format=%B | grep -q 'Ultimate-Conversation: 42' || fail "no trailer in ~/.dotfiles"
+ok "a .dotfiles repo in HOME keeps the trailer"
+repo "$tmp/code/work/other"
+! git -C "$tmp/code/work/other" log -1 --format=%B | grep -q Ultimate-Conversation || fail "trailer added in ~/code/work/other"
+ok "the trailer hook is off in a repo directly under another ~/code/work/ folder"
 
 app="$tmp/code/work/strive/app"
 repo "$app"

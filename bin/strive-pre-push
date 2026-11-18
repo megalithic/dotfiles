@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pre-push hook for repos under ~/code/work/strive/ (config/git/config.strive): refuses to push
+# Pre-push hook for every repo under ~/code/work/ (config/git/config.strive): refuses to push
 # commits whose message names the agent harness, "ultimate" as a word (an Ultimate-Conversation
 # trailer included). Git passes the remote name as $1 and `<local ref> <local oid> <remote ref>
 # <remote oid>` lines on stdin (the remote may be a URL); only commits the remote doesn't have yet
@@ -31,6 +31,6 @@ while read -r _ local_oid _ remote_oid; do
 done
 
 if ((found)); then
-  echo 'strive-pre-push: commit messages in strive repos must not mention the agent harness; reword the commits above and push again.' >&2
+  echo 'strive-pre-push: commit messages in work repos (~/code/work/) must not mention the agent harness; reword the commits above and push again.' >&2
   exit 1
 fi

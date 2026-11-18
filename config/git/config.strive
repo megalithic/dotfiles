@@ -1,4 +1,5 @@
-# Loaded for repos under ~/code/work/strive/ (includeIf in config). Commits there never name
+# Loaded for every repo under ~/code/work/ (includeIf in config), strive and any other work
+# folder; ~/.dotfiles and personal repos keep the trailer. Commits there never name
 # the agent harness: Ultimate's bash tool adds an `Ultimate-Conversation: <id>` trailer through a
 # process-local prepare-commit-msg hook of this name, switched off here (git 2.54+ honours
 # `enabled` across config scopes), and the pre-push check refuses any commit that still does.
