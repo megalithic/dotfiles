@@ -787,6 +787,8 @@ stderr_path = "~/Library/Logs/executor/stderr.log"
 # (home/.ultimate/settings.json). `mise run setup:ultimate` installs Ultimate.
 # While a hub started in a Rex tab runs, the wrapper waits and takes over once
 # it stops; the launchd hub reports no Rex tab status (no tty).
+# It runs through ~/Applications/Ultimate.app (`mise run setup:ultimate-app`) so
+# macOS privacy prompts from the hub and its agents' commands name "Ultimate", not "node".
 # Syncthing for the notes vault (~/notes), with wolfhall as the always-on peer.
 # Folder and devices: `mise run setup:notes-sync`. GUI/API on 127.0.0.1:8384.
 [bootstrap.macos.launchd.agents."com.megadots.syncthing"]
@@ -798,7 +800,7 @@ stdout_path = "~/Library/Logs/syncthing.log"
 stderr_path = "~/Library/Logs/syncthing.log"
 
 [bootstrap.macos.launchd.agents."com.megadots.ultimate-hub"]
-program = "~/.dotfiles/mise/scripts/ultimate-hub-launchd"
+program = "~/Applications/Ultimate.app/Contents/MacOS/Ultimate"
 run_at_load = true
 keep_alive = true
 # Directly in ~/Library/Logs: launchd creates the file but not a missing folder.
@@ -972,6 +974,7 @@ run = [
   { task = "update:packages" },
   { task = "update:dotfiles" },
   { task = "setup:ultimate" },
+  { task = "setup:ultimate-app" },
   { task = "update:system" },
   { task = "update:nvim" },
   { task = "update:fnox" },
@@ -1170,6 +1173,10 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-notes-sync"
 [tasks."setup:ultimate"]
 description = "Install Ultimate from the megalithic/ultimate fork and link the ultimate command (skips what exists)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-ultimate"
+
+[tasks."setup:ultimate-app"]
+description = "Build and sign ~/Applications/Ultimate.app, the hub LaunchAgent's program (skips when current)"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-ultimate-app"
 
 # Local models for the llama.cpp router (com.megadots.llama-cpp, port 18080):
 # presets in tools/llama-cpp/models.ini, Pi entries in home/.pi/agent/models.json.

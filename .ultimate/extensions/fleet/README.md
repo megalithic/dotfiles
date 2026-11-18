@@ -34,7 +34,9 @@ with its own `Origin`, in parallel.
 On workbookpro the LaunchAgent `com.megadots.ultimate-hub` (`config/mise/config.workbookpro.toml`, applied with
 `mise run update:system`) runs `mise/scripts/ultimate-hub-launchd`: `ultimate ~/.dotfiles --no-open --port 4749` in
 mise's environment. While a hub started by hand runs, it waits and takes over once that one stops. Logs go to
-`~/Library/Logs/ultimate-hub.log`. A launchd hub has no tty, so its Rex tab status is not shown.
+`~/Library/Logs/ultimate-hub.log`. A launchd hub has no tty, so its Rex tab status is not shown. The LaunchAgent starts
+it through `~/Applications/Ultimate.app` (`tools/ultimate-app/`, `mise run setup:ultimate-app`), signed with Seth's
+Developer ID, so macOS privacy prompts name "Ultimate" instead of "node".
 
 ## Tests
 

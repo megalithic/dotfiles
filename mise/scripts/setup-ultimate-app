@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Build ~/Applications/Ultimate.app, the hub LaunchAgent's program, so macOS privacy
+# prompts name "Ultimate" instead of "node" (tools/ultimate-app/main.c says why).
+# TCC ties a grant to the code signature, so it is signed with Seth's Developer ID
+# (its designated requirement is bundle id + team, stable across rebuilds) and rebuilt
+# only when its source changes.
+set -euo pipefail
+
+dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
+src="$dotfiles/tools/ultimate-app"
+app="${ULTIMATE_APP:-$HOME/Applications/Ultimate.app}"
+identity="Developer ID Application: Seth Messer (TEAMID)"
+
+stamp="$(cat "$src/main.c" "$src/Info.plist" | shasum -a 256 | cut -d' ' -f1)"
+installed="$app/Contents/Resources/source.sha256"
+if [[ -f "$installed" && "$(cat "$installed")" == "$stamp" ]] && codesign --verify --strict "$app" 2>/dev/null; then
+  echo "setup-ultimate-app: $app is current"
+  exit 0
+fi
+
+if ! security find-identity -v -p codesigning | grep -qF "\"$identity\""; then
+  echo "setup-ultimate-app: signing identity \"$identity\" is not in the keychain" >&2
+  exit 1
+fi
+
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+bundle="$work/Ultimate.app"
+mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources"
+cp "$src/Info.plist" "$bundle/Contents/Info.plist"
+clang -O2 -Wall -Werror -o "$bundle/Contents/MacOS/Ultimate" "$src/main.c"
+printf '%s\n' "$stamp" >"$bundle/Contents/Resources/source.sha256"
+codesign --force --options runtime --timestamp=none --sign "$identity" "$bundle"
+codesign --verify --strict "$bundle"
+
+mkdir -p "$(dirname "$app")"
+rm -rf "$app"
+mv "$bundle" "$app"
+echo "setup-ultimate-app: built and signed $app"

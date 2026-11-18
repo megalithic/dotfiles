@@ -3,6 +3,12 @@
   "action": {
     "commandRules": [
       {
+        "id": "search-with-fd-rg",
+        "pattern": "(?:^|[;&|({`]|\\$\\(|\\b(?:xargs|exec|sudo|time|env|nice|command)\\s)\\s*(?:/usr/bin/|/bin/)?(?:find|grep|egrep|fgrep)(?=\\s|$)",
+        "severity": "warn",
+        "message": "Use fd to find files, rg to search text, ast-grep to match code; not find or grep. Never scan / or ~: walking protected folders (Music, Documents, Downloads, /Volumes) raises macOS privacy prompts."
+      },
+      {
         "id": "production-ssh-host",
         "pattern": "\\bssh\\s+[^\\n;&|]*\\b[\\w.-]+-prod-[\\w.-]+",
         "severity": "confirm",
