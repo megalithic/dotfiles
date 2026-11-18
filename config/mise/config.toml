@@ -422,6 +422,16 @@ os = ["macos"]
 asset_pattern = "helium_{{version}}_arm64-macos.dmg"
 postinstall = "$DOTFILES_DIR/mise/scripts/install-app && $DOTFILES_DIR/mise/scripts/setup-helium"
 
+# Rex Beta from Superlogical's public preview appcast (the app's SUFeedURL). The
+# pin only bootstraps a Mac: Sparkle updates the app itself, so install-app keeps
+# an installed copy. setup-rex then gets its rex CLI and connects rexd.
+[tools."http:rex-beta"]
+version = "0.1.0-1996"
+checksum = "sha256:74790729dce59a3e48e14b9589b68dca6b3da7604af4c3b252895677a7e9e143"
+os = ["macos"]
+platforms.macos-arm64.url = "https://blob.superlogical.com/public/rex-app/preview-arm64/Rex-{{version}}.dmg"
+postinstall = "INSTALL_APP_IF_MISSING=1 $DOTFILES_DIR/mise/scripts/install-app && $DOTFILES_DIR/mise/scripts/setup-rex"
+
 [tools."http:kanata-bar"]
 version = "1.1.10"
 checksum = "sha256:ba07e3caeb41d1b2a667e2c246cc3b0ef632a2d812ceeac0ce2eed9441d63b35"
@@ -880,6 +890,8 @@ run = """
     if [ -x "$rex" ] && ! /usr/libexec/PlistBuddy -c 'Print :Workspace.customThemes' ~/Library/Preferences/com.superlogical.rex.plist 2>/dev/null | grep -q '"name":"megaforest"'; then
       "$rex" --autostart=false -S "unix://$HOME/Library/Application Support/rex/server.sock" do client.theme.import path="$HOME/.config/rex/themes/megaforest" \
         || echo "rex: megaforest theme not imported; open Rex with Remote Control on and rerun"
+    elif [ ! -x "$rex" ]; then
+      echo "rex: CLI not installed; megaforest theme import skipped (mise run setup:rex, then rerun)"
     fi
   fi
 """
@@ -1097,6 +1109,12 @@ raw = true
 # prodversion, NSUserKeyEquivalents, Sparkle kill switch, en-US dictionary).
 # Also chained from the helium tool's postinstall, so it reruns on upgrades.
 # sources/outputs skip it until the setup script or Helium version changes.
+# Rex Beta's CLI and rexd daemon; chained from the rex-beta tool's postinstall
+# and rexd's Brewfile postinstall.
+[tasks."setup:rex"]
+description = "Install Rex Beta's rex CLI (first launch) and run rexd setup"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-rex"
+
 [tasks."setup:helium"]
 description = "Seed Helium extensions, preferences, and dictionary"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-helium"

@@ -8,6 +8,9 @@
 #
 # Env (set by mise): MISE_TOOL_INSTALL_PATH, MISE_TOOL_NAME
 # Env (optional):    INSTALL_APP_DIR (default /Applications)
+#                    INSTALL_APP_IF_MISSING=1 keeps an installed app: for
+#                    apps that update themselves (Sparkle), so a pinned
+#                    version only bootstraps and never replaces a newer one
 set -eu
 
 [ "$(uname -s)" = Darwin ] || exit 0
@@ -42,6 +45,10 @@ SRC_APP=$(find "$MOUNTPOINT" -maxdepth 1 -name '*.app' | head -1)
   exit 1
 }
 APP="$INSTALL_DIR/$(basename "$SRC_APP")"
+if [ -n "${INSTALL_APP_IF_MISSING:-}" ] && [ -d "$APP" ]; then
+  echo "install-app: $APP already installed; it updates itself"
+  exit 0
+fi
 
 # Stage a copy outside the mount, detach, then swap into place — replacing
 # the target in one move instead of copying file-by-file over a running app.

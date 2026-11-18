@@ -1,0 +1,44 @@
+#!/bin/sh
+# Finish a Rex Beta install mise can't declare: the rex CLI and rexd's daemon.
+#
+# Rex Beta.app installs Rex Server, which carries the rex CLI, into
+# ~/Library/Application Support on its first launch, so launch it once when
+# the CLI is missing. Then `rexd setup` connects rexd (Brewfile) to Rex; it is
+# safe to repeat and restarts the daemon, as each rexd upgrade needs.
+#
+# Runs from the http:rex-beta tool's postinstall, from rexd's Brewfile
+# postinstall (whichever lands second finds the other), and by hand via
+# `mise run setup:rex`. A missing app, CLI or rexd is a skip with a message;
+# only a failing `rexd setup` fails.
+set -eu
+
+[ "$(uname -s)" = Darwin ] || exit 0
+
+APP="${REX_APP:-/Applications/Rex Beta.app}"
+REX="$HOME/Library/Application Support/com.superlogical.rex/RexServer/Versions/Current/Rex Server.app/Contents/MacOS/rex"
+
+[ -d "$APP" ] || {
+  echo "setup-rex: $APP not installed (mise install http:rex-beta); skipping"
+  exit 0
+}
+
+if [ ! -x "$REX" ]; then
+  echo "setup-rex: launching $APP once to install its rex CLI..."
+  open -g -a "$APP"
+  tries=0
+  while [ ! -x "$REX" ] && [ "$tries" -lt 30 ]; do
+    sleep 2
+    tries=$((tries + 1))
+  done
+  [ -x "$REX" ] || {
+    echo "setup-rex: rex CLI still missing after 60s; open Rex Beta, then run: mise run setup:rex"
+    exit 0
+  }
+fi
+
+REXD="$(command -v rexd || echo "${HOMEBREW_PREFIX:-/opt/homebrew}/bin/rexd")"
+[ -x "$REXD" ] || {
+  echo "setup-rex: rexd not installed yet (Brewfile); skipping rexd setup"
+  exit 0
+}
+REXD_REX="$REX" "$REXD" setup

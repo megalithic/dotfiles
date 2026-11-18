@@ -10,9 +10,9 @@ brew "nikitabobko/tap/brew-install-path"
 brew "leandrocp/lumis/lumis"
 brew "felixkratz/formulae/sketchybar", restart_service: :always
 # Rex plugin manager. postinstall runs after bundle installs or upgrades it, not
-# after a plain `brew upgrade`: run `rexd setup` by hand then. Bundle's PATH
-# lacks the Homebrew bin dir, so name the binary through HOMEBREW_PREFIX.
-brew "tornikegomareli/tap/rexd", postinstall: "\"$HOMEBREW_PREFIX/bin/rexd\" setup"
+# after a plain `brew upgrade`: run `mise run setup:rex` by hand then. setup-rex
+# skips while Rex Beta (mise tool http:rex-beta) is missing, so bundle doesn't fail.
+brew "tornikegomareli/tap/rexd", postinstall: "\"${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-rex\""
 
 # Testing:
 # cask "mikker/tap/dinky"
