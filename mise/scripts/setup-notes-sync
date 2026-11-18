@@ -7,6 +7,7 @@
 #   setup-notes-sync [apply]  configure this Mac and wolfhall (idempotent: adds
 #                             what is missing, never removes or overwrites)
 #   setup-notes-sync nas      configure wolfhall only
+#   setup-notes-sync mac      configure this Mac only (wolfhall already knows it)
 #   setup-notes-sync status   peers, folder state, sync conflicts on this Mac
 #
 # `syncthing cli` talks to each node's own GUI/REST API with that node's own key,
@@ -38,7 +39,7 @@ die() {
   exit 1
 }
 
-mac() { syncthing cli "$@"; }
+mac() { syncthing cli "$@" </dev/null; }
 # STGUIADDRESS is set in the container; the cli then demands an API key too.
 nas() { ssh -n "$nas" docker exec -u 1000:10 syncthing env -u STGUIADDRESS syncthing cli "$@"; }
 
@@ -90,14 +91,12 @@ apply_nas() {
   configure nas "$(self_id "$nas")" /var/syncthing/notes yes
 }
 
-apply() {
+apply_mac() {
   local host my_id
   host=$(hostname -s)
   my_id=$(self_id "$host")
   mac show system >/dev/null 2>&1 || die "syncthing is not running here (LaunchAgent com.megadots.syncthing)"
   [[ $(syncthing device-id) == "$my_id" ]] || die "$host's syncthing identity is not $my_id"
-  apply_nas
-
   echo "$host:"
   mkdir -p "$local_path"
   printf '%s\n' "$ignores" >"$local_path/.stignore"
@@ -130,8 +129,9 @@ status() {
 }
 
 case "${1:-apply}" in
-  apply) apply ;;
+  apply) apply_nas && apply_mac ;;
   nas) apply_nas ;;
+  mac) apply_mac ;;
   status) status ;;
-  *) die "usage: setup-notes-sync [apply|nas|status]" ;;
+  *) die "usage: setup-notes-sync [apply|nas|mac|status]" ;;
 esac
