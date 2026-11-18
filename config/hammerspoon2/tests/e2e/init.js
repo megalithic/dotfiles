@@ -1,17 +1,16 @@
 // End-to-end config for the Atlas helper (see tests/e2e/atlas.sh): the real
 // layer, HUD and seams, with `shade` resolving to a stub that logs its args.
-// `open hammerspoon2://e2e` posts a hyper sequence at the HID level, so it
-// passes through every session tap and Carbon hotkey as kanata's F19 does.
-// It only posts while TextEdit is frontmost, the window atlas.sh opened.
+//
+// It never posts key events. A post at the HID level reaches the console
+// session (the person's desktop), not the helper. Atlas can't hold F19, so
+// held hyper is checked on the real keyboard; here hammerspoon2:// links
+// drive the HUD and the Shade seam, and Atlas's own key presses check the tap.
 
 const { startLayer } = require('./lib/hyper_layer.js');
-
 const { createHud } = require('./lib/hud.js');
-
 const { createSeams } = require('./lib/seams.js');
 
 const HOME = '/Users/atlas';
-
 const LOG = `${HOME}/hs2-e2e.log`;
 
 const SHADE = [
@@ -25,70 +24,44 @@ function log(line) {
 }
 
 const seams = createSeams(hs, { log, path: `${HOME}/.local/bin:/usr/bin:/bin` });
-
 const hud = createHud(hs, { rows: SHADE.map(({ key, label }) => ({ key, label })) });
+
+function onAction(verb) {
+  hud.dismiss();
+  seams.shadeToggle(verb);
+}
 
 globalThis.hyper = startLayer(hs, {
   bindings: SHADE,
-  onAction: (verb) => {
-    hud.dismiss();
-    seams.shadeToggle(verb);
-  },
+  onAction,
   onHold: () => hud.arm(),
   onRelease: () => hud.dismiss(),
 });
-
 globalThis.hud = hud;
 
-// [delay in seconds, key, down?, note]
-const STEPS = [
-  [2.0, 'f19', true], // time for atlas.sh to bring TextEdit back to the front
-  [3.0, 'hud'], // HUD should be up; atlas.sh screenshots it meanwhile
-  [0.1, 'n', true],
-  [0.1, 'n', false],
-  [0.3, 't', true],
-  [0.1, 't', false],
-  [0.3, 'c', true],
-  [0.1, 'c', false],
-  [0.3, 'j', true], // not a layer key: passes on (to TextEdit, or v1's hyper+j)
-  [0.1, 'j', false],
-  [0.3, 'f19', false],
-  [0.3, 'x', true], // plain typing after release
-  [0.1, 'x', false],
-  [0.5, 'done'],
-];
+// Logs every key event a second, listen-only tap sees.
+globalThis.e2eWatch = hs.eventtap.addWatcher(
+  [hs.eventtap.eventTypes.keyDown, hs.eventtap.eventTypes.keyUp],
+  (event) => {
+    log(`tap saw type ${event.type} key ${event.keyCode}`);
 
-function post(key, down) {
-  hs.eventtap.makeKeyEventWithCode(hs.keycodes.map[key], down).post();
-}
+    return hs.eventtap.emit;
+  },
+  true,
+);
+globalThis.e2eWatch.start();
 
-function run() {
-  let at = 0;
-
-  globalThis.e2eTimers = STEPS.map(([delay, key, down]) => {
-    at += delay;
-
-    return hs.timer.doAfter(at, () => {
-      const front = hs.application.frontmost();
-
-      if (!front || front.bundleID !== 'com.apple.TextEdit') {
-        log(`abort: frontmost is ${front && front.bundleID}`);
-        globalThis.e2eTimers.forEach((t) => t.stop());
-
-        return;
-      }
-
-      if (key === 'hud') return log(`hud showing: ${hud.isShowing()}`);
-
-      if (key === 'done') return log(`done; hyper held: ${globalThis.hyper.layer.isHeld()}`);
-
-      post(key, down);
-    });
-  });
-}
-
-hs.urlevent.bind('e2e', run);
-
+hs.urlevent.bind('hud', () => {
+  hud.arm();
+  hs.timer.doAfter(0.5, () => log(`hud showing: ${hud.isShowing()}`));
+});
+hs.urlevent.bind('hud-off', () => {
+  hud.dismiss();
+  log(`hud showing: ${hud.isShowing()}`);
+});
+hs.urlevent.bind('action', (_name, params) => onAction(params.verb));
 hs.urlevent.bind('reload', () => hs.reload());
 
-log('hammerspoon2 e2e loaded');
+log(
+  `loaded; accessibility: ${hs.permissions.checkAccessibility()}, input monitoring: ${hs.permissions.checkInputMonitoring()}`,
+);

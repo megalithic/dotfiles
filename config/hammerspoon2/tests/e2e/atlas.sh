@@ -1,31 +1,39 @@
 #!/usr/bin/env bash
-# End-to-end check of the hyper layer in Atlas's helper desktop, beside a
-# minimal v1 (v1-init.lua). Atlas can't press F19 or hold keys, so the e2e
-# config posts the sequence itself; this script sets the stage and reads back.
+# End-to-end check of Hammerspoon 2 in Atlas's helper desktop. Nothing here
+# posts synthetic keys (they would reach the person's desktop): links drive the
+# HUD and the Shade seam, and Atlas's own key presses check the tap. Held F19
+# is checked on the real keyboard (AGENTS.md).
 #
 # One-time setup (see config/hammerspoon2/AGENTS.md): copy the files with
-# `atlas environment`, install both apps with `atlas install-app`, and have
-# Seth grant Hammerspoon 2 Accessibility inside the helper.
-#
-# Prints both logs and TextEdit's text; the screenshot shows the HUD.
+# `atlas environment`, `atlas install-app` the app, and have Seth grant
+# Hammerspoon 2 Accessibility.
 set -euo pipefail
 export ATLAS_SESSION="${ATLAS_SESSION:-hs2-e2e}"
 
 helper() { atlas run -- /bin/sh -c "$1"; }
 
-helper 'rm -f "$HOME/hs2-e2e.log" "$HOME/hs1-e2e.log"'
+helper 'rm -f "$HOME/hs2-e2e.log"'
+atlas open --app "Hammerspoon 2" >/dev/null
 atlas open hammerspoon2://reload >/dev/null
-atlas open --app Hammerspoon >/dev/null
+sleep 2
+
+# Without hyper, layer keys and others pass through to TextEdit.
 atlas open --app TextEdit >/dev/null
 atlas key --app TextEdit cmd+n >/dev/null
 atlas wait --app TextEdit >/dev/null
-sleep 2
-atlas open hammerspoon2://e2e >/dev/null
-# Opening the URL may bring Hammerspoon 2 forward; the sequence waits 2 s.
-atlas open --app TextEdit >/dev/null
-# F19 is held from 2 s to about 7.5 s; the HUD shows from 2.25 s.
-sleep 3
+atlas type --app TextEdit "ntcj" >/dev/null
+
+# HUD on, screenshot, off.
+atlas open hammerspoon2://hud >/dev/null
+sleep 1
 atlas screenshot --new-file
-sleep 6
-helper 'cat "$HOME/hs2-e2e.log"; echo ---; cat "$HOME/hs1-e2e.log"'
-atlas elements --app TextEdit --role AXTextArea
+atlas open hammerspoon2://hud-off >/dev/null
+
+# Each Shade verb through the seam.
+for verb in write tell capture; do
+  atlas open "hammerspoon2://action?verb=$verb" >/dev/null
+done
+sleep 1
+
+helper 'cat "$HOME/hs2-e2e.log"'
+atlas elements --app TextEdit --role AXTextArea --full

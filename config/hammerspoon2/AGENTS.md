@@ -27,10 +27,21 @@ deleting its v1 binding in the same change.
 ## Tests
 
 - `mise run test:ts` runs `tests/*.test.js` with a mock `hs` (`tests/mock_hs.js`).
-- `tests/e2e/atlas.sh` runs the real app in Atlas's helper desktop beside a
-  minimal v1 (`tests/e2e/v1-init.lua`), posting the hyper sequence from
-  `tests/e2e/init.js` and reading back both logs, TextEdit's text and a HUD
-  screenshot. One-time setup: copy `tests/e2e/init.js`, `lib/*.js`,
-  `tests/e2e/shade` (to `.local/bin`) and `tests/e2e/v1-init.lua` with
-  `atlas environment`, `atlas install-app` both apps, and Seth grants
-  Hammerspoon 2 Accessibility inside the helper.
+- `tests/e2e/atlas.sh` runs the real app in Atlas's helper desktop: Atlas's
+  key presses check the tap and pass-through, `hammerspoon2://` links drive
+  the HUD (screenshot) and the Shade seam (a stub `shade` logs its args).
+  One-time setup: copy `tests/e2e/init.js` (as `init.js`), `lib/*.js` and
+  `tests/e2e/shade` (to `.local/bin`, executable) with `atlas environment`,
+  then `atlas install-app` the app. Accessibility is one Mac-wide list, so
+  Seth's grant on his desktop covers the helper too.
+- Never post synthetic key events from the helper (`hs.eventtap` `post()`,
+  osascript, cliclick): HID-level posts reach the console session, Seth's
+  desktop, not the helper. Atlas can't hold F19, so held hyper is checked on
+  the real keyboard:
+  1. Hold hyper: after a moment the n/t/c HUD shows; release hides it.
+  2. Hold hyper, press t, then c: Shade toggles tell and capture; nothing is
+     typed into the front app.
+  3. Hold hyper, press n: Shade toggles write. Until v1's hyper+n binding
+     (shade_next.lua) is removed, note whether v1's shade-next modal also
+     opens: that is the double-fire this layer must not cause.
+  4. hyper+j and other v1 chords still work.
