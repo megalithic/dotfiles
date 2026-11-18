@@ -194,8 +194,8 @@ PATH = table.concat({
   os.getenv("PATH"),
 }, ":")
 TASK_ENV = {
-  NOTES_HOME = home .. "/iclouddrive/Documents/_notes",
-  OBSIDIAN_HOME = home .. "/iclouddrive/Documents/_notes",
+  NOTES_HOME = home .. "/notes",
+  OBSIDIAN_HOME = home .. "/notes",
   NVIM_DB_HOME = home .. "/protondrive/configs/sql",
   DOTS = home .. "/.dotfiles",
   XDG_CONFIG_HOME = home .. "/.config",

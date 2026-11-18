@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+# Syncthing for the notes vault: one send-receive folder `notes` at ~/notes on
+# both Macs and /volume2/Backups/sync/notes on wolfhall (config/nas/syncthing),
+# all three devices connected directly over Tailscale, staggered versions
+# (365 days) on wolfhall only.
+#
+#   setup-notes-sync [apply]  configure this Mac and wolfhall (idempotent: adds
+#                             what is missing, never removes or overwrites)
+#   setup-notes-sync nas      configure wolfhall only
+#   setup-notes-sync status   peers, folder state, sync conflicts on this Mac
+#
+# `syncthing cli` talks to each node's own GUI/REST API with that node's own key,
+# so no API key leaves its machine. Device IDs are public identifiers.
+# Before apply on a Mac: its ~/notes must be either the full vault or empty, and
+# com.megadots.syncthing must be running.
+set -euo pipefail
+
+folder=notes
+local_path="$HOME/notes"
+nas_path=/volume2/Backups/sync/notes # host path of the container's /var/syncthing/notes
+nas=wolfhall
+
+# name device-id tailscale-ip
+devices=(
+  "wolfhall SYNCTHING-DEVICE-ID TAILSCALE-IP"
+  "megabookpro SYNCTHING-DEVICE-ID TAILSCALE-IP"
+  "workbookpro SYNCTHING-DEVICE-ID TAILSCALE-IP"
+)
+
+# Not synced; each device keeps its own. Deletions are covered by wolfhall's versions.
+ignores='// Managed by mise/scripts/setup-notes-sync in ~/.dotfiles.
+(?d).DS_Store
+/.obsidian/workspace*.json
+/.trash'
+
+die() {
+  echo "setup-notes-sync: $*" >&2
+  exit 1
+}
+
+mac() { syncthing cli "$@"; }
+# STGUIADDRESS is set in the container; the cli then demands an API key too.
+nas() { ssh -n "$nas" docker exec -u 1000:10 syncthing env -u STGUIADDRESS syncthing cli "$@"; }
+
+# configure RUNNER SELF_ID PATH VERSIONED
+configure() {
+  local run=$1 self=$2 path=$3 versioned=$4 name id ip
+  local known shared
+  known=$($run config devices list)
+  for entry in "${devices[@]}"; do
+    read -r name id ip <<<"$entry"
+    [[ $id == "$self" ]] && continue
+    grep -qx "$id" <<<"$known" && continue
+    echo "  add device $name"
+    $run config devices add --device-id "$id" --name "$name" \
+      --addresses "tcp://$ip:22000" --addresses "quic://$ip:22000" --addresses dynamic
+  done
+  if ! $run config folders list | grep -qx "$folder"; then
+    echo "  add folder $folder at $path"
+    $run config folders add --id "$folder" --label "$folder" --path "$path" --type sendreceive
+    if [[ $versioned == yes ]]; then
+      $run config folders "$folder" versioning type set staggered
+      $run config folders "$folder" versioning params set maxAge 31536000
+    fi
+  fi
+  shared=$($run config folders "$folder" devices list)
+  for entry in "${devices[@]}"; do
+    read -r name id ip <<<"$entry"
+    [[ $id == "$self" ]] && continue
+    grep -qx "$id" <<<"$shared" && continue
+    echo "  share $folder with $name"
+    $run config folders "$folder" devices add --device-id "$id"
+  done
+}
+
+self_id() {
+  local want=$1 name id ip
+  for entry in "${devices[@]}"; do
+    read -r name id ip <<<"$entry"
+    [[ $name == "$want" ]] && echo "$id" && return
+  done
+  die "unknown device: $want"
+}
+
+apply_nas() {
+  nas show system >/dev/null || die "syncthing is not running on $nas (/volume1/docker/syncthing)"
+  echo "$nas:"
+  # shellcheck disable=SC2029 # nas_path is meant to expand here
+  ssh "$nas" "cat > $nas_path/.stignore" <<<"$ignores"
+  configure nas "$(self_id "$nas")" /var/syncthing/notes yes
+}
+
+apply() {
+  local host my_id
+  host=$(hostname -s)
+  my_id=$(self_id "$host")
+  mac show system >/dev/null 2>&1 || die "syncthing is not running here (LaunchAgent com.megadots.syncthing)"
+  [[ $(syncthing device-id) == "$my_id" ]] || die "$host's syncthing identity is not $my_id"
+  apply_nas
+
+  echo "$host:"
+  mkdir -p "$local_path"
+  printf '%s\n' "$ignores" >"$local_path/.stignore"
+  configure mac "$my_id" "$local_path" no
+}
+
+status() {
+  local key self name id ip
+  key=$(mac config gui apikey get) || die "syncthing is not running here"
+  self=$(syncthing device-id)
+  api() { curl -fsS -H "X-API-Key: $key" "http://127.0.0.1:8384/rest/$1"; }
+  api "db/status?folder=$folder" | jq -r '"folder \(.state): \(.globalFiles) files, \(.needFiles) to pull, \(.errors) errors"'
+  local connections
+  connections=$(api system/connections)
+  for entry in "${devices[@]}"; do
+    read -r name id ip <<<"$entry"
+    [[ $id == "$self" ]] && continue
+    printf '%s: %s, %s%% in sync\n' "$name" \
+      "$(jq -r --arg id "$id" 'if .connections[$id].connected then "connected" else "offline" end' <<<"$connections")" \
+      "$(api "db/completion?folder=$folder&device=$id" | jq -r '.completion | floor')"
+  done
+  local conflicts
+  conflicts=$(find "$local_path" -path "$local_path/.stversions" -prune -o -name '*.sync-conflict-*' -print)
+  if [[ -n $conflicts ]]; then
+    echo "conflicts (keep one copy, delete the other):"
+    echo "${conflicts//"$local_path/"/  }"
+    return 1
+  fi
+  echo "no conflicts"
+}
+
+case "${1:-apply}" in
+  apply) apply ;;
+  nas) apply_nas ;;
+  status) status ;;
+  *) die "usage: setup-notes-sync [apply|nas|status]" ;;
+esac

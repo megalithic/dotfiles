@@ -4,8 +4,8 @@ bundle_id = "io.shade.next"
 url_scheme = "shade-next://"
 
 [paths]
-notes_home = "/Users/seth/iclouddrive/Documents/_notes"
-captures_dir = "/Users/seth/iclouddrive/Documents/_notes/captures"
+notes_home = "/Users/seth/notes"
+captures_dir = "/Users/seth/notes/captures"
 data_home = "/Users/seth/.local/share/shade-next"
 state_home = "/Users/seth/.local/state/shade-next"
 repo = "/Users/seth/code/shade-next"
