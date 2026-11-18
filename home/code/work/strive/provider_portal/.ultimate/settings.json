@@ -1,7 +1,7 @@
 {
   "modelFamilies": {
     "families": {
-      "lead": { "model": "anthropic/claude-opus-5-5", "thinking": "high", "color": "orange" },
+      "lead": { "model": "claude-code/claude-opus-5-5", "thinking": "high", "color": "orange" },
       "review": { "model": "openai-codex/gpt-6-astra", "thinking": "high" },
       "fast": { "model": "openai-codex/gpt-6.1-sol" }
     }
