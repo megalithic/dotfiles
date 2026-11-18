@@ -97,6 +97,29 @@ describe('hyper layer', () => {
     expect(calls).toEqual(['trigger', 'release']);
   });
 
+  test('a key held down before arming keeps passing, repeats and release included', () => {
+    const { l, calls, arms } = layer();
+    l.handle('keyDown', F19);
+    l.handle('keyDown', RETURN);
+    expect(l.handle('keyDown', N)).toBe(true);
+    arms[0](); // Shade's reply arrives while n is still down
+    expect(l.handle('keyDown', N)).toBe(true); // repeat
+    expect(l.handle('keyUp', N)).toBe(true);
+    expect(l.handle('keyDown', N)).toBe(false); // a new press is the layer's
+    expect(calls).toEqual(['trigger', 'arm', 'write']);
+  });
+
+  test("a consumed Return's repeats stay consumed after hyper is released", () => {
+    const { l, calls } = layer();
+    l.handle('keyDown', F19);
+    expect(l.handle('keyDown', RETURN)).toBe(false);
+    l.handle('keyUp', F19);
+    expect(l.handle('keyDown', RETURN)).toBe(false); // repeat
+    expect(l.handle('keyUp', RETURN)).toBe(false);
+    expect(l.handle('keyDown', RETURN)).toBe(true);
+    expect(calls).toEqual(['trigger', 'release']);
+  });
+
   test("a consumed key's release is consumed even after hyper is released first", () => {
     const { l, arms } = layer();
     l.handle('keyDown', F19);

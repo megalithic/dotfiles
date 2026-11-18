@@ -27,9 +27,11 @@ function createLayer({
   let armed = false;
   // Counts hyper holds, so a late arm() from an earlier hold does nothing.
   let hold = 0;
-  // Keys whose key down was consumed: their key up is consumed too, even when
-  // hyper is released first.
-  const down = new Set();
+  // Each physical press keeps its first key down's decision until its key up:
+  // repeats and the release of a consumed press are consumed (even after
+  // hyper's release), those of a passed press pass (even after arming).
+  const consumed = new Set();
+  const passed = new Set();
 
   function armFor(thisHold) {
     return () => {
@@ -55,28 +57,32 @@ function createLayer({
     }
 
     if (type === 'keyUp') {
-      if (!down.has(keyCode)) return true;
+      passed.delete(keyCode);
 
-      down.delete(keyCode);
-
-      return false;
+      return !consumed.delete(keyCode);
     }
 
     if (type !== 'keyDown') return true;
 
+    if (consumed.has(keyCode)) return false;
+
+    if (passed.has(keyCode)) return true;
+
     if (keyCode === trigger && held) {
-      if (!down.has(keyCode)) onTrigger(armFor(hold));
-      down.add(keyCode);
+      consumed.add(keyCode);
+      onTrigger(armFor(hold));
 
       return false;
     }
 
     if (keyCode in keys && armed) {
-      if (!down.has(keyCode)) onAction(keys[keyCode]);
-      down.add(keyCode);
+      consumed.add(keyCode);
+      onAction(keys[keyCode]);
 
       return false;
     }
+
+    passed.add(keyCode);
 
     return true;
   }
