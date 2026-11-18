@@ -40,23 +40,8 @@ local function findAppWithAlias(appHint)
   return nil
 end
 
--- Launch or focus app using appropriate method based on identifier type.
--- opts.launchCommand (string or argv table) overrides the cold-start method:
--- LaunchServices forwards no command-line flags, so launchers that need them
--- (e.g. Helium's --remote-debugging-port=9223 via bin/helium-launch) spawn a
--- detaching launcher script instead. Callers only pass opts when the app is
--- not running; focus/cycle of a live app never respawns.
-local function launchOrFocusApp(appHint, opts)
-  local launchCommand = opts and opts.launchCommand
-  if launchCommand then
-    if type(launchCommand) == "string" then
-      launchCommand = { launchCommand }
-    end
-    local args = { table.unpack(launchCommand, 2) }
-    hs.task.new(launchCommand[1], nil, args):start()
-    return
-  end
-
+-- Launch or focus app using appropriate method based on identifier type
+local function launchOrFocusApp(appHint)
   if isBundleID(appHint) then
     hs.application.launchOrFocusByBundleID(appHint)
   else
@@ -157,10 +142,10 @@ local function usableWindows(app)
   return result
 end
 
-function obj.cycleWindows(appIdentifier, opts)
+function obj.cycleWindows(appIdentifier)
   local app = findAppWithAlias(appIdentifier)
   if not app then
-    launchOrFocusApp(appIdentifier, opts)
+    launchOrFocusApp(appIdentifier)
     hs.timer.doAfter(0.3, function()
       local launchedApp = findAppWithAlias(appIdentifier)
       if launchedApp then
@@ -172,7 +157,7 @@ function obj.cycleWindows(appIdentifier, opts)
 
   local wins = usableWindows(app)
   if #wins == 0 then
-    obj.toggle(appIdentifier, nil, opts)
+    obj.toggle(appIdentifier)
     return
   end
 
@@ -246,12 +231,12 @@ end
 -- +--- possibly more robust app toggler
 -- appHint can be a bundle ID (e.g., "com.apple.Safari") or app name (e.g., "Safari")
 -- Supports bundle ID aliases for wrapper apps (see C.bundleIdAliases)
-function obj.toggle(appHint, shouldHide, opts)
+function obj.toggle(appHint, shouldHide)
   local app = findAppWithAlias(appHint)
 
   if not app then
     if appHint ~= nil then
-      launchOrFocusApp(appHint, opts)
+      launchOrFocusApp(appHint)
       -- Show indicator after app launches
       hs.timer.doAfter(0.3, function()
         local launchedApp = findAppWithAlias(appHint)

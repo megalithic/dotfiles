@@ -35,11 +35,11 @@ function M.loadApps()
       else
         hyper:bind(mods, key, function()
           if opts.cycleWindows then
-            summon.cycleWindows(bundleID, opts)
+            summon.cycleWindows(bundleID)
           elseif opts.focusOnly then
             summon.focus(bundleID)
           else
-            summon.toggle(bundleID, nil, opts)
+            summon.toggle(bundleID)
           end
         end)
       end

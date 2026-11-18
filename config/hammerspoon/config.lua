@@ -2,9 +2,6 @@ local M = {}
 
 HYPER = "F19"
 BROWSER = "net.imput.helium"
--- Cold starts of BROWSER must go through this script (CDP 9223 + avwatchweb);
--- LaunchServices forwards no flags. Used by the hyper+j launcher and watchers/url.
-BROWSER_LAUNCH = os.getenv("HOME") .. "/bin/helium-launch"
 -- BROWSER = "com.brave.Browser.nightly"
 -- TERMINAL = "net.kovidgoyal.kitty"
 -- TERMINAL = "com.mitchellh.ghostty"
@@ -356,9 +353,7 @@ M.lollygaggers = {
 }
 
 M.launchers = {
-  -- launchCommand: cold-start only. It loads avwatchweb and keeps CDP 9223
-  -- for chrome-devtools-attach. Running app keeps normal cycle/focus behavior.
-  { BROWSER, "j", { cycleWindows = true, launchCommand = BROWSER_LAUNCH } },
+  { BROWSER, "j", { cycleWindows = true } },
   { TERMINAL, "k", { passThrough = { "`" } } },
   -- { "net.kovidgoyal.kitty", "k" },
   { "com.apple.MobileSMS", "m" }, -- NOOP for now.. TODO: implement a binding feature that let's us require n-presses before we execute

@@ -33,8 +33,8 @@ curl -s --max-time 2 http://localhost:9223/json/version
   `~/.pi/agent/mcp.json`, disable `chrome-devtools`, reload). Work in a new
   tab of the existing window.
 - Not reachable → do NOT fall back to launching a browser. Ask the user to
-  start their Helium with the debug port:
-  `helium --remote-debugging-port=9223`
+  open Helium: every launch opens port 9223 from its `ExtraCommandLineSwitches`
+  defaults (written by `mise run setup:helium`).
 
 ## Quick reference
 
@@ -98,8 +98,8 @@ mcp chrome-devtools evaluate_script {"function": "<contents of pick.js>"}
 Attach to the user's live Helium via debug port 9223 using the
 `chrome-devtools-attach` MCP server. This shares the live session — all
 cookies, tabs, and extensions. Open a new tab; never spawn a second Helium
-instance. If port 9223 is down, ask the user to relaunch with
-`helium --remote-debugging-port=9223` instead of launching anything yourself.
+instance. If port 9223 is down, ask the user to open Helium instead of
+launching anything yourself.
 
 ### Isolated (fallback, only on explicit user request)
 

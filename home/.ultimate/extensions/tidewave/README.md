@@ -16,7 +16,7 @@ So a conversation reaches only the app its own worktree runs, always on loopback
 
 ## Browser
 
-An HTTP 200 from the app's `/tidewave` or `/tidewave/mcp` means it serves Tidewave, not that a browser is attached. `browser_eval` runs in a browser tab connected to the control page, `http://127.0.0.1:<PORT>/tidewave`; with none, it answers "No browser is connected to the Tidewave control page". Before calling it, open that page in Helium, the browser pidewave links over CDP (`bin/pidewave`, `home/.pi/agent/extensions/pidewave/`): `helium-launch http://127.0.0.1:<PORT>/tidewave`, wait for the tab to load, then call `browser_eval` with `{"action": "help"}`. A plain `open` hands the URL to Hammerspoon, which may pick another browser.
+An HTTP 200 from the app's `/tidewave` or `/tidewave/mcp` means it serves Tidewave, not that a browser is attached. `browser_eval` runs in a browser tab connected to the control page, `http://127.0.0.1:<PORT>/tidewave`; with none, it answers "No browser is connected to the Tidewave control page". Before calling it, open that page in Helium, the browser pidewave links over CDP (`bin/pidewave`, `home/.pi/agent/extensions/pidewave/`): `open -a Helium http://127.0.0.1:<PORT>/tidewave`, wait for the tab to load, then call `browser_eval` with `{"action": "help"}`. A plain `open` without `-a Helium` hands the URL to Hammerspoon, which may pick another browser.
 
 ## Baton
 

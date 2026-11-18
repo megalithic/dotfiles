@@ -3,6 +3,7 @@
 #   - External Extensions JSONs with the Chromium prodversion baked into the
 #     CWS update URL
 #   - NSUserKeyEquivalents (ctrl-based tab shortcuts)
+#   - ExtraCommandLineSwitches (launch flags, read by Helium itself)
 #   - Sparkle auto-update kill switch defaults
 #   - en-US spellcheck dictionary (bdic)
 #
@@ -79,6 +80,18 @@ defaults write "$BUNDLE_ID" NSUserKeyEquivalents -dict \
   "Zoom In" '^=' \
   "Zoom Out" '^-'
 
+# Launch flags. Our Helium build (patches/megalithic/extra-command-line-
+# switches.patch) appends this array to the browser's command line on every
+# launch, so Dock, Spotlight, `open` and link clicks get them with no launcher
+# script. CDP 9223 is for chrome-devtools-attach and pidewave; avwatchweb is a
+# command-line extension (location 8), so it loads only with --load-extension.
+defaults write "$BUNDLE_ID" ExtraCommandLineSwitches -array \
+  "--remote-debugging-port=9223" \
+  "--load-extension=$HOME/.local/share/avwatchd/avwatchweb" \
+  "--ignore-gpu-blocklist" \
+  "--hide-crashed-bubble" \
+  "--disable-breakpad"
+
 # Sparkle auto-update kill switch. Also declared in
 # [bootstrap.macos.defaults."net.imput.helium"] for fresh-machine bootstrap;
 # repeated here because package post-install also calls this setup before the
@@ -88,7 +101,7 @@ defaults write "$BUNDLE_ID" SUEnableAutomaticChecks -bool false
 defaults write "$BUNDLE_ID" SUScheduledCheckInterval -int 0
 defaults write "$BUNDLE_ID" SUHasLaunchedBefore -bool true
 defaults write "$BUNDLE_ID" SUSendProfileInfo -bool false
-echo "setup-helium: wrote NSUserKeyEquivalents + Sparkle defaults for $BUNDLE_ID"
+echo "setup-helium: wrote NSUserKeyEquivalents, launch flags and Sparkle defaults for $BUNDLE_ID"
 
 # --- Spellcheck dictionary (non-fatal) ------------------------------------------
 # Source: chromium's hunspell_dictionaries repo

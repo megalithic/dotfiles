@@ -386,7 +386,8 @@ export const createBrowserLink = (
 
   // Never rejects: Helium can close or the tab can vanish at any step.
   const inspect = async (targetId?: string, raise = true): Promise<string> => {
-    if (!up) return 'Helium has no CDP on port 9223; start it with helium-launch.';
+    if (!up)
+      return 'Helium has no CDP on port 9223; open Helium (it reads the port from its ExtraCommandLineSwitches defaults).';
 
     try {
       let tab = targetId ? tabs.get(targetId) : pickTab([...tabs.values()]);
