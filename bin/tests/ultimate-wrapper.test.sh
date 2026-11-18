@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # home/.local/bin/ultimate runs the aube-linked Ultimate with mise's shims last on
-# PATH, so its agents' shells find gh even when the caller's PATH lacks it.
+# PATH, so its agents' shells find gh even when the caller's PATH lacks it, and
+# without the Anthropic auth/backend overrides that block Claude Code subscription.
 set -euo pipefail
 WRAPPER="$(cd "$(dirname "$0")/../.." && pwd)/home/.local/bin/ultimate"
 tmp="$(mktemp -d)"
@@ -21,5 +22,14 @@ out="$(PATH=/usr/bin:/bin "$WRAPPER" ~/code/app --no-open)"
 
 out="$(PATH="$shims:/usr/bin:/bin" "$WRAPPER")"
 [[ "$(sed -n 1p <<<"$out")" == "$shims:/usr/bin:/bin" ]] || fail "shims added twice: $out"
+
+conflicts=(ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_BASE_URL ANTHROPIC_FOUNDRY_API_KEY
+  CLAUDE_CODE_USE_BEDROCK CLAUDE_CODE_USE_VERTEX CLAUDE_CODE_USE_FOUNDRY)
+printf '%s\n' '#!/bin/sh' 'env | cut -d= -f1' >"$HOME/.local/share/aube/bin/ultimate"
+out="$(env "${conflicts[@]/%/=1}" KEEP_ME=1 PATH=/usr/bin:/bin "$WRAPPER")"
+for name in "${conflicts[@]}"; do
+  ! grep -qx "$name" <<<"$out" || fail "$name reached the child"
+done
+grep -qx KEEP_ME <<<"$out" || fail "other variables dropped"
 
 echo "ultimate-wrapper: ok"

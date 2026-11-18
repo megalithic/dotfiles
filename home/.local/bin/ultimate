@@ -8,5 +8,11 @@ set -euo pipefail
 shims="$HOME/.local/share/mise/shims"
 [[ ":$PATH:" == *":$shims:"* ]] || PATH="$PATH:$shims"
 
+# Ultimate reaches Claude through the Claude Code subscription only. A caller's
+# API key or backend override (a project .env that mise loads, for one) makes
+# pi-claude-code refuse to start, so drop every variable it treats as a conflict.
+unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_BASE_URL ANTHROPIC_FOUNDRY_API_KEY \
+  CLAUDE_CODE_USE_BEDROCK CLAUDE_CODE_USE_VERTEX CLAUDE_CODE_USE_FOUNDRY
+
 # This wrapper shadows ultimate on PATH, so run the aube-linked one by absolute path.
 exec "$HOME/.local/share/aube/bin/ultimate" "$@"
