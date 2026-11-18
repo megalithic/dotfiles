@@ -1,47 +1,79 @@
-// Hyper layer: while the hyper key (F19, from kanata) is held, the layer's
-// keys are consumed and run their action. Hyper itself always passes through,
-// so v1 Hammerspoon keeps its own F19 hotkey and hyper modal.
+// Hyper layer: while the hyper key (F19, from kanata) is held, the trigger key
+// (Return) is consumed and runs onTrigger. onTrigger gets an `arm` callback;
+// calling it while the same hyper hold is still down arms the layer, and only
+// an armed layer consumes its keys and runs their action. Releasing hyper
+// disarms it. Hyper itself always passes through, so v1 Hammerspoon keeps its
+// own F19 hotkey and hyper modal, and an unarmed layer passes every key to v1.
 //
 // No Carbon hotkey on F19 here: two apps registering the same hotkey is the
 // one thing that could break v1's hyper. A session event tap only watches.
 
 const F19 = 80; // kVK_F19
 
-// keys: { [keyCode]: action }. onAction(action) runs on key down; onHold() and
-// onRelease() fire when hyper goes down and up (auto-repeat ignored).
+// keys: { [keyCode]: action }. onTrigger(arm) runs on the trigger's key down,
+// onAction(action) on an armed key's down, onArm() when the layer arms and
+// onRelease() when hyper goes up (auto-repeat ignored).
 // Returns handle(type, keyCode) -> true to pass the event on, false to consume.
-function createLayer({ keys, onAction, onHold = () => {}, onRelease = () => {}, hyperKeyCode = F19 }) {
+function createLayer({
+  trigger,
+  keys,
+  onTrigger,
+  onAction,
+  onArm = () => {},
+  onRelease = () => {},
+  hyperKeyCode = F19,
+}) {
   let held = false;
-  // Layer keys pressed while hyper was held: their key up is consumed too,
-  // even when hyper is released first.
+  let armed = false;
+  // Counts hyper holds, so a late arm() from an earlier hold does nothing.
+  let hold = 0;
+  // Keys whose key down was consumed: their key up is consumed too, even when
+  // hyper is released first.
   const down = new Set();
+
+  function armFor(thisHold) {
+    return () => {
+      if (!held || hold !== thisHold || armed) return;
+
+      armed = true;
+      onArm();
+    };
+  }
 
   function handle(type, keyCode) {
     if (keyCode === hyperKeyCode) {
       if (type === 'keyDown' && !held) {
         held = true;
-        onHold();
+        hold += 1;
       } else if (type === 'keyUp' && held) {
         held = false;
+        armed = false;
         onRelease();
       }
 
       return true;
     }
 
-    if (!(keyCode in keys)) return true;
+    if (type === 'keyUp') {
+      if (!down.has(keyCode)) return true;
 
-    if (type === 'keyDown') {
-      if (!held) return true;
+      down.delete(keyCode);
 
-      if (!down.has(keyCode)) onAction(keys[keyCode]);
+      return false;
+    }
+
+    if (type !== 'keyDown') return true;
+
+    if (keyCode === trigger && held) {
+      if (!down.has(keyCode)) onTrigger(armFor(hold));
       down.add(keyCode);
 
       return false;
     }
 
-    if (type === 'keyUp' && down.has(keyCode)) {
-      down.delete(keyCode);
+    if (keyCode in keys && armed) {
+      if (!down.has(keyCode)) onAction(keys[keyCode]);
+      down.add(keyCode);
 
       return false;
     }
@@ -49,16 +81,18 @@ function createLayer({ keys, onAction, onHold = () => {}, onRelease = () => {}, 
     return true;
   }
 
-  return { handle, isHeld: () => held };
+  return { handle, isHeld: () => held, isArmed: () => armed };
 }
 
-// Wires a layer to a session event tap. bindings: [{ key: "n", action }].
-// Key names resolve through hs.keycodes.map, which follows the current layout.
-function startLayer(hs, { bindings, onAction, onHold, onRelease }) {
+// Wires a layer to a session event tap. trigger: a key name ("return");
+// bindings: [{ key: "n", action }]. Key names resolve through
+// hs.keycodes.map, which follows the current layout.
+function startLayer(hs, { trigger, bindings, onTrigger, onAction, onArm, onRelease }) {
   const keys = {};
 
   for (const { key, action } of bindings) keys[hs.keycodes.map[key]] = action;
-  const layer = createLayer({ keys, onAction, onHold, onRelease });
+
+  const layer = createLayer({ trigger: hs.keycodes.map[trigger], keys, onTrigger, onAction, onArm, onRelease });
   const { keyDown, keyUp } = hs.eventtap.eventTypes;
   const typeName = { [keyDown]: 'keyDown', [keyUp]: 'keyUp' };
 

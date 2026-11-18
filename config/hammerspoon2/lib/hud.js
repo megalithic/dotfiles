@@ -1,5 +1,5 @@
-// Key-hint HUD for the hyper layer. Shown after hyper is held for `delay`
-// seconds, so quick v1 hyper chords never flash it; hidden on release.
+// Key-hint HUD for the hyper layer: shown when the layer arms (Shade just
+// opened with hyper still held), hidden on a layer key or hyper's release.
 //
 // sup draws it (`sup show hint … --hold`, through `seams`). When sup can't
 // (its daemon isn't running), this falls back to its own canvas.
@@ -46,8 +46,7 @@ function hudElements(rows) {
   return elements;
 }
 
-function createHud(hs, { rows, seams, delay = 0.25 }) {
-  let timer = null;
+function createHud(hs, { rows, seams }) {
   let sup = null;
   let canvas = null;
 
@@ -66,8 +65,6 @@ function createHud(hs, { rows, seams, delay = 0.25 }) {
   }
 
   function show() {
-    timer = null;
-
     const task = seams.supHint(rows, (code) => {
       // Only sup ending on its own counts: dismiss() clears `sup` first.
       if (sup !== task) return;
@@ -80,13 +77,10 @@ function createHud(hs, { rows, seams, delay = 0.25 }) {
   }
 
   return {
-    arm() {
-      if (!timer && !sup && !canvas) timer = hs.timer.doAfter(delay, show);
+    show() {
+      if (!sup && !canvas) show();
     },
     dismiss() {
-      if (timer) timer.stop();
-      timer = null;
-
       const task = sup;
       sup = null;
 

@@ -7,9 +7,13 @@ const { createHud } = require('./lib/hud.js');
 
 const { createSeams } = require('./lib/seams.js');
 
-// Shade's layer: hold hyper, press a key, Shade toggles that verb. Shade 0.9.0
-// answers "unknown verb" to tell and capture until its Phases 2 and 3 ship;
-// they are bound now so the layer and its hint don't change then.
+// hyper+Return toggles Shade on this verb.
+const SHADE_DEFAULT_VERB = 'write';
+
+// Shade's layer: when hyper+Return opens Shade, the layer arms for the rest of
+// that hyper hold: its hint shows and a key switches Shade to that verb.
+// Shade 0.9.0 answers "unknown verb" to tell and capture until its Phases 2
+// and 3 ship; they are bound now so the layer and its hint don't change then.
 const SHADE = [
   { key: 'n', action: 'write', label: 'Note' },
   { key: 't', action: 'tell', label: 'Tell' },
@@ -22,12 +26,17 @@ const hud = createHud(hs, { rows: SHADE.map(({ key, label }) => ({ key, label })
 
 // Kept on globalThis so the tap and HUD are never garbage-collected.
 globalThis.hyper = startLayer(hs, {
+  trigger: 'return',
   bindings: SHADE,
+  onTrigger: (arm) =>
+    seams.shadeToggle(SHADE_DEFAULT_VERB, (visible) => {
+      if (visible) arm();
+    }),
+  onArm: () => hud.show(),
   onAction: (verb) => {
     hud.dismiss();
-    seams.shadeToggle(verb);
+    seams.shadeShow(verb);
   },
-  onHold: () => hud.arm(),
   onRelease: () => hud.dismiss(),
 });
 

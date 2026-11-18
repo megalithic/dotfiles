@@ -10,7 +10,7 @@
 // therefore sees EOF exactly when HS2 goes away.
 
 // bin: the folder holding the CLIs (the Atlas end-to-end test points it at a
-// stub). log: where non-zero exits are reported.
+// stub). log: where failures are reported.
 function createSeams(
   hs,
   { bin = `${hs.fs.homeDirectory()}/.local/share/mise/shims`, log = (msg) => console.log(msg) } = {},
@@ -28,9 +28,20 @@ function createSeams(
     return task;
   }
 
+  // Runs a Shade command and passes its reply's result to onResult. Exit 1 is
+  // an error reply ("unknown verb"), 69 Shade not running.
+  function shade(args, onResult = () => {}) {
+    hs.task
+      .runAsync(`${bin}/shade`, args, {})
+      .then(({ stdout }) => onResult(JSON.parse(stdout).result ?? {}))
+      .catch((error) => log(`seams: shade ${args.join(' ')} failed: ${error?.exitCode ?? error}`));
+  }
+
   return {
-    // Shade's toggle verbs: write, tell, capture. Exit 69: Shade isn't running.
-    shadeToggle: (verb) => run('shade', ['toggle', verb]),
+    // onShown(visible): whether the panel shows after the toggle.
+    shadeToggle: (verb, onShown = () => {}) => shade(['toggle', verb], ({ visible }) => onShown(visible === 'true')),
+    // Show the panel on a verb; never hides it.
+    shadeShow: (verb) => shade(['show', verb]),
     // sup's key hint, up until the returned task is terminated (or HS2 dies).
     // rows: [{ key: "n", label: "Note" }].
     supHint: (rows, onExit) =>

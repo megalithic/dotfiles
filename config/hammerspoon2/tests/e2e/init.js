@@ -31,15 +31,28 @@ const seams = createSeams(hs, { log, bin: `${HOME}/.local/bin` });
 
 const hud = createHud(hs, { rows: SHADE.map(({ key, label }) => ({ key, label })), seams });
 
+// The same callbacks as init.js. Atlas can't hold F19, so links below run the
+// trigger and action paths directly; arming is then just showing the hint.
+const onTrigger = (arm) =>
+  seams.shadeToggle('write', (visible) => {
+    log(`shade visible: ${visible}`);
+
+    if (visible) arm();
+  });
+
+const onArm = () => hud.show();
+
 function onAction(verb) {
   hud.dismiss();
-  seams.shadeToggle(verb);
+  seams.shadeShow(verb);
 }
 
 globalThis.hyper = startLayer(hs, {
+  trigger: 'return',
   bindings: SHADE,
+  onTrigger,
+  onArm,
   onAction,
-  onHold: () => hud.arm(),
   onRelease: () => hud.dismiss(),
 });
 
@@ -58,9 +71,11 @@ globalThis.e2eWatch = hs.eventtap.addWatcher(
 
 globalThis.e2eWatch.start();
 
-hs.urlevent.bind('hud', () => {
-  hud.arm();
-  hs.timer.doAfter(0.5, () => log(`hud showing: ${hud.isShowing()}`));
+hs.urlevent.bind('trigger', () => {
+  onTrigger(() => {
+    onArm();
+    hs.timer.doAfter(0.5, () => log(`hud showing: ${hud.isShowing()}`));
+  });
 });
 
 hs.urlevent.bind('hud-off', () => {

@@ -109,20 +109,6 @@ function M.loadUtils()
     end)
 end
 
--- Shade (swifties, run by the io.swifties.shade LaunchAgent). hyper+return
--- toggles its write panel through the control socket; Hammerspoon 2 owns
--- hyper+n/t/c. Nothing happens when Shade isn't running.
-function M.loadShade()
-  local socket = os.getenv("HOME") .. "/.local/state/shade/control.sock"
-  local request = hs.json.encode({ method = "toggle", params = { verb = "write" } })
-
-  req("hyper", { id = "shade" }):start():bind({}, "return", function()
-    hs.task
-      .new("/bin/sh", nil, { "-c", 'printf "%s\\n" "$1" | /usr/bin/nc -U -w 1 "$2"', "sh", request, socket })
-      :start()
-  end)
-end
-
 function M.loadNotifications()
   -- Dismiss active HUD notification with F19+escape
   local dismissBindings = C.notifier.dismissBindings
@@ -508,7 +494,7 @@ function M:init()
   M.loadNativeTiling() -- Optional native Tahoe tiling on hyper+w
   M.loadNotifications()
   M.loadForceQuit()
-  M.loadShade()
+  -- Shade (hyper+return and its n/t/c layer) lives in Hammerspoon 2.
 
   U.log.i("initialized")
 end

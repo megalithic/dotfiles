@@ -23,8 +23,9 @@ atlas key --app TextEdit cmd+n >/dev/null
 atlas wait --app TextEdit >/dev/null
 atlas type --app TextEdit "ntcj" >/dev/null
 
-# HUD on, screenshot, off.
-atlas open hammerspoon2://hud >/dev/null
+# hyper+Return's path: the stub Shade answers visible, so the HUD shows.
+# Screenshot, then off.
+atlas open hammerspoon2://trigger >/dev/null
 sleep 1
 atlas screenshot --new-file
 atlas open hammerspoon2://hud-off >/dev/null

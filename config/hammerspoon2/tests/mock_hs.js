@@ -7,9 +7,8 @@ export function mockHs() {
   const hs = {
     tap: null,
     tasks: [],
-    timers: [],
     canvases: [],
-    keycodes: { map: { n: 45, t: 17, c: 8, j: 38 } },
+    keycodes: { map: { n: 45, t: 17, c: 8, j: 38, return: 36 } },
     fs: { homeDirectory: () => '/Users/test' },
     eventtap: {
       eventTypes: TYPES,
@@ -34,7 +33,12 @@ export function mockHs() {
     press(type, keyCode) {
       return hs.tap.callback({ type: TYPES[type], keyCode });
     },
+    // runAsync calls; settle each with its resolve or reject.
+    runs: [],
     task: {
+      runAsync(path, args) {
+        return new Promise((resolve, reject) => hs.runs.push({ path, args, resolve, reject }));
+      },
       create(path, args, onTermination) {
         const task = {
           path,
@@ -64,28 +68,6 @@ export function mockHs() {
         hs.tasks.push(task);
 
         return task;
-      },
-    },
-    timer: {
-      doAfter(seconds, callback) {
-        const timer = {
-          seconds,
-          stopped: false,
-          stop() {
-            this.stopped = true;
-
-            return this;
-          },
-          fire() {
-            callback();
-
-            return this;
-          },
-        };
-
-        hs.timers.push(timer);
-
-        return timer;
       },
     },
     screen: { main: () => ({ fullFrame: { x: 0, y: 0, w: 1600, h: 1000 } }) },
