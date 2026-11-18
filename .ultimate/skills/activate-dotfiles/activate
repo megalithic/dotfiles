@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# Activate landed dotfiles on this Mac, or on another one with: ssh <host> bash -s -- [args] < activate
+# Usage: activate [--pull] [base]   base: the revision before the landing (default main@{1})
+set -uo pipefail
+export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:/opt/homebrew/bin:$PATH"
+
+# One function, parsed whole before it runs: under ssh bash -s, stdin is this script.
+main() {
+  pull=0
+  [[ ${1:-} == --pull ]] && {
+    pull=1
+    shift
+  }
+  dot="${DOTFILES:-$HOME/.dotfiles}"
+  host="$(hostname -s)"
+  fail=0
+  say() { printf '%-9s %-6s %s\n' "$1" "$2" "$3"; }
+  cd "$dot" || {
+    say revision fail "no checkout at $dot"
+    return 1
+  }
+
+  # 1. Landed revision
+  branch="$(git branch --show-current)"
+  [[ $branch == main ]] || {
+    say revision fail "$host: on '$branch', not main"
+    return 1
+  }
+  if ((pull)); then
+    git pull --ff-only --no-rebase -q || {
+      say revision fail "$host: git pull --ff-only failed"
+      return 1
+    }
+  fi
+  base="${1:-$(git rev-parse -q --verify 'main@{1}' || git rev-parse HEAD~1)}"
+  say revision ok "$host: $(git log -1 --format='%h %s')"
+  dirty="$(git status --porcelain)"
+  [[ -z $dirty ]] || say revision warn "dirty: $(echo "$dirty" | awk '{print $2}' | paste -sd' ' -)"
+  git fetch -q origin main 2>/dev/null
+  if git merge-base --is-ancestor HEAD origin/main 2>/dev/null; then
+    say pushed ok "origin/main $(git rev-parse --short origin/main) contains HEAD"
+  else
+    say pushed no "HEAD is $(git rev-list --count origin/main..HEAD) commits ahead of origin/main $(git rev-parse --short origin/main)"
+  fi
+
+  # What the landing deployed
+  changed="$(git diff --name-only "$base" HEAD -- home config bin)"
+  say changed info "$(git rev-parse --short "$base")..HEAD: $(echo "$changed" | grep -c . || true) deployed files"
+  ult="$(echo "$changed" | grep '^home/\.ultimate/' || true)"
+  [[ -n $ult ]] && echo "$ult" | sed 's/^/          ~\/.ultimate: /'
+
+  # 2. Links
+  out="$(mise run update:dotfiles 2>&1)"
+  bad="$(echo "$out" | grep -v '^DEBUG' | grep -iE 'refus|conflict|error' || true)"
+  [[ -z $bad ]] || {
+    say links fail "update:dotfiles: $(echo "$bad" | head -3)"
+    fail=1
+  }
+  diff="$(mise dotfiles diff 2>&1 | tail -3)"
+  if [[ $diff == *"all files are applied"* ]]; then say links ok "all files are applied"; else
+    say links fail "mise dotfiles diff: $diff"
+    fail=1
+  fi
+
+  # 3. Ultimate settings link (watchers miss edits to the link target)
+  link="$HOME/.ultimate/settings.json"
+  if [[ -L $link ]]; then
+    target="$(readlink "$link")"
+    rm "$link" && ln -s "$target" "$link" && say settings ok "re-linked -> $target"
+  elif [[ -e $link ]]; then
+    say settings fail "$link is a real file, not a link"
+    fail=1
+  fi
+
+  # 4. Restart hints for the agent to verify
+  echo "$ult" | grep -qE '^home/\.ultimate/(settings\.json|extensions/|agents/|skills/)' &&
+    say restart check "user-level Ultimate files changed: verify they loaded on $host, restart if not; tell other hubs"
+  return "$fail"
+}
+main "$@" </dev/null
