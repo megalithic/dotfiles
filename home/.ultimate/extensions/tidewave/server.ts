@@ -27,7 +27,7 @@ export default function tidewave(host: Host) {
       defineTool({
         name: 'tidewave',
         description:
-          "Use Tidewave MCP of the Phoenix app your own worktree runs (found by its process, on 127.0.0.1; no other app is reachable): tidewave {} lists its tools with input schemas, tidewave {tool, args} calls one. project_eval and execute_sql_query run code and SQL in that dev app. While pi holds the worktree's baton, only listing, get_logs, get_docs and get_source_location work.",
+          "Use Tidewave MCP of the Phoenix app your own worktree runs (found by its process, on 127.0.0.1; no other app is reachable): tidewave {} lists its tools with input schemas, tidewave {tool, args} calls one. project_eval and execute_sql_query run code and SQL in that dev app. browser_eval needs a browser on the app's control page, which an HTTP 200 from the app doesn't show: open it in Helium first (helium-launch http://127.0.0.1:<PORT>/tidewave). While pi holds the worktree's baton, only listing, get_logs, get_docs and get_source_location work.",
         parameters: obj({
           tool: opt(str({ description: 'The Tidewave tool to call; omit to list the tools' })),
           args: opt(map(unknown(), { description: "The tool's arguments, matching its input schema" })),

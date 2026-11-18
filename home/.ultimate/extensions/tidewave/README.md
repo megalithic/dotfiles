@@ -14,6 +14,10 @@ There is no port or host argument. Each call finds the app by process (`lib.ts`)
 
 So a conversation reaches only the app its own worktree runs, always on loopback: never another worktree's app, a remote host or production. lsof sees only this user's processes. With no app running it says so and names the worktree. Each call connects, calls and closes; a call times out after 10 minutes without progress.
 
+## Browser
+
+An HTTP 200 from the app's `/tidewave` or `/tidewave/mcp` means it serves Tidewave, not that a browser is attached. `browser_eval` runs in a browser tab connected to the control page, `http://127.0.0.1:<PORT>/tidewave`; with none, it answers "No browser is connected to the Tidewave control page". Before calling it, open that page in Helium, the browser pidewave links over CDP (`bin/pidewave`, `home/.pi/agent/extensions/pidewave/`): `helium-launch http://127.0.0.1:<PORT>/tidewave`, wait for the tab to load, then call `browser_eval` with `{"action": "help"}`. A plain `open` hands the URL to Hammerspoon, which may pick another browser.
+
 ## Baton
 
 While pi holds the worktree's baton (`pi-sessions`), only read-only calls pass the guard: listing, `get_logs`, `get_docs` and `get_source_location`. `project_eval`, `execute_sql_query` and the browser tools are blocked like any other writing tool.

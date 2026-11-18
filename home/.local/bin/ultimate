@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Agents' shells, and git's gh credential helper in them, inherit this PATH.
+# An activated mise strips its shims from PATH and its tool paths can lack one,
+# so append the shims: every mise tool (gh) still resolves, after everything the
+# caller already has, without shadowing wrappers such as ~/.local/bin/pi.
+shims="$HOME/.local/share/mise/shims"
+[[ ":$PATH:" == *":$shims:"* ]] || PATH="$PATH:$shims"
+
+# This wrapper shadows ultimate on PATH, so run the aube-linked one by absolute path.
+exec "$HOME/.local/share/aube/bin/ultimate" "$@"
