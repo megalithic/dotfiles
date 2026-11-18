@@ -383,8 +383,9 @@ version = "0.9.0"
 os = ["macos"]
 asset_pattern = "shade-{{ version }}-macos26-arm64.zip"
 bin_path = "Shade.app/Contents/MacOS"
-# launchd opens the agent's log but won't create its folder.
-postinstall = 'mkdir -p "$HOME/.local/state/shade"'
+# launchd opens the agent's log but won't create its folder; the folder holds
+# Shade's socket and log, so only Seth reads it.
+postinstall = 'mkdir -p "$HOME/.local/state/shade" && chmod 700 "$HOME/.local/state/shade"'
 
 # Sup: key-hint panel daemon (io.swifties.sup); HS2's hyper layer drives it.
 [tools.sup]

@@ -123,8 +123,10 @@ ls "$HOME/Library/Fonts/" 2>/dev/null | grep -q 'FiraCodeNerdFont' && ok "nerd f
 
 hdr "Swifties release programs"
 swifties_installs="$HOME/.local/share/mise/installs"
-swifties_version="0.4.1"
+swifties_version="0.9.0"
 miccheck_binary="$swifties_installs/miccheckd/$swifties_version/MicCheck.app/Contents/MacOS/miccheckd"
+shade_binary="$swifties_installs/shade/$swifties_version/Shade.app/Contents/MacOS/shade"
+sup_binary="$swifties_installs/sup/$swifties_version/Sup.app/Contents/MacOS/sup"
 check_swift_binary() {
   local binary="$1"
   local identifier="$2"
@@ -151,6 +153,8 @@ check_swift_binary() {
 check_swift_binary "$miccheck_binary" io.swifties.miccheck
 check_swift_binary "$HOME/.local/bin/notiwatchd" io.swifties.notiwatch
 check_swift_binary "$HOME/.local/bin/avwatchd" io.swifties.avwatch
+check_swift_binary "$shade_binary" io.swifties.shade
+check_swift_binary "$sup_binary" io.swifties.sup
 
 aeroplay_app="$swifties_installs/aeroplay/$swifties_version/AeroPlay.app"
 aeroplay_binary="$aeroplay_app/Contents/MacOS/aeroplayd"
@@ -193,7 +197,7 @@ else
 fi
 
 hdr "launchd (mise agents up, no strays)"
-for agent in dev.mise.com.megadots.llama-cpp dev.mise.io.swifties.avwatch dev.mise.io.swifties.notiwatch dev.mise.io.swifties.miccheck dev.mise.io.swifties.aeroplay; do
+for agent in dev.mise.com.megadots.llama-cpp dev.mise.io.swifties.avwatch dev.mise.io.swifties.notiwatch dev.mise.io.swifties.miccheck dev.mise.io.swifties.aeroplay dev.mise.io.swifties.shade dev.mise.io.swifties.sup; do
   if launchctl list "$agent" >/dev/null 2>&1; then ok "$agent loaded"; else bad "$agent not loaded"; fi
 done
 for old_agent in dev.mise.com.megadots.avwatchd dev.mise.com.megadots.notiwatchd dev.mise.com.megadots.miccheck dev.mise.com.megadots.aeroplayd; do
@@ -208,6 +212,8 @@ check_agent_program io.swifties.avwatch "$HOME/.local/bin/avwatchd"
 check_agent_program io.swifties.notiwatch "$HOME/.local/bin/notiwatchd"
 check_agent_program io.swifties.miccheck "$miccheck_binary"
 check_agent_program io.swifties.aeroplay "$aeroplay_binary"
+check_agent_program io.swifties.shade "$shade_binary"
+check_agent_program io.swifties.sup "$sup_binary"
 notiwatchd_path="$(/usr/libexec/PlistBuddy -c 'Print :EnvironmentVariables:PATH' "$HOME/Library/LaunchAgents/dev.mise.io.swifties.notiwatch.plist" 2>/dev/null || true)"
 if [[ "$notiwatchd_path" == "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" ]]; then
   ok "notiwatchd agent PATH is portable"
