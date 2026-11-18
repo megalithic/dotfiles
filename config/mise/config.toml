@@ -138,6 +138,8 @@ up = "cd $HOME/.dotfiles && mise run up"
   "git/disabled",
   # linked as one folder below
   "/espanso",
+  # bun tests, not app config
+  "/hammerspoon2/tests",
 ] }
 
 "~" = { source = "~/.dotfiles/home", mode = "symlink-each", manifest = "git", exclude = [
@@ -439,6 +441,17 @@ os = ["macos"]
 strip_components = 0
 platforms.macos-arm64.url = "https://github.com/not-in-stock/kanata-bar/releases/download/v{{version}}/kanata-bar.app.zip"
 
+# Hammerspoon 2 (cmsj/Hammerspoon2, JavaScript, experimental), beside v1.
+# 0.0.15 is the last build for macOS 26 (0.0.16+ need macOS 27). Runs in place
+# from the install dir via the com.megadots.hammerspoon2 agent; Sparkle checks
+# are off so this pin owns the version. A bump also updates the agent path.
+[tools."http:hammerspoon2"]
+version = "0.0.15"
+checksum = "sha256:b55447ea332c51abf40689ff65b7c3d65df8d2c4872dfcc291f8e0793c7dbc70"
+os = ["macos"]
+strip_components = 0
+platforms.macos-arm64.url = "https://github.com/cmsj/Hammerspoon2/releases/download/{{version}}/Hammerspoon-2-{{version}}.zip"
+
 [bootstrap.brew]
 adopt = true
 
@@ -689,6 +702,12 @@ ConfigSyncUsesCustomFolder = true
 [bootstrap.macos.defaults."org.hammerspoon.Hammerspoon"]
 MJConfigFile = "~/.config/hammerspoon/init.lua"
 
+# Hammerspoon 2 reads ~/.config/Hammerspoon2/init.js by default (config/hammerspoon2
+# on this case-insensitive disk). Skip its onboarding; the mise pin owns updates.
+[bootstrap.macos.defaults."net.tenshu.Hammerspoon-2"]
+hasCompletedOnboarding = true
+SUEnableAutomaticChecks = false
+
 # Rex Beta settings-window choices; init.lua (config/rex) only holds keybindings.
 # Not a live link: copy later GUI changes back here.
 [bootstrap.macos.defaults."com.superlogical.rex"]
@@ -841,6 +860,18 @@ run_at_load = true
 keep_alive = false
 stdout_path = "~/.cache/aeroplayd-stdout.log"
 stderr_path = "~/.cache/aeroplayd-stderr.log"
+
+# Hammerspoon 2, beside v1 (config/hammerspoon2). Restarted only after a crash,
+# so quitting it from its menu keeps it quit. Its CLIs (shade, sup) resolve
+# through PATH: ~/.local/bin (swifties' stable copies), then the mise shims.
+# Needs a one-time Accessibility grant.
+[bootstrap.macos.launchd.agents."com.megadots.hammerspoon2"]
+program = "~/.local/share/mise/installs/http-hammerspoon2/0.0.15/Hammerspoon 2.app/Contents/MacOS/Hammerspoon 2"
+environment = { PATH = "{{ env.HOME }}/.local/bin:{{ env.HOME }}/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" }
+run_at_load = true
+keep_alive_on_failure = true
+stdout_path = "~/.cache/hammerspoon2-stdout.log"
+stderr_path = "~/.cache/hammerspoon2-stderr.log"
 
 # kanata daemon (dev.mise.org.kanata.daemon) and kanata-bar agents are
 # written and loaded by mise/scripts/setup-kanata (post-tools hook), because

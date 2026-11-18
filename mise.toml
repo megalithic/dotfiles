@@ -14,7 +14,7 @@ node = "26"
 python = "3.14.8"
 
 [vars]
-ts_files = "'home/.pi/**/*.{ts,mjs,js}' 'config/mise/tmpls/elixir/tests/**/*.ts'"
+ts_files = "'home/.pi/**/*.{ts,mjs,js}' 'config/mise/tmpls/elixir/tests/**/*.ts' 'config/hammerspoon2/**/*.js'"
 
 [tasks."deps:ts"]
 description = "Install pinned TS tooling and Pi types from bun.lock"
@@ -24,7 +24,7 @@ run = "bun install --frozen-lockfile"
 [tasks."lint:ts"]
 description = "Oxlint + vendored anti-slop over dotfiles-managed TS/JS (pi extensions, skill scripts)"
 depends = ["deps:ts"]
-run = "node_modules/.bin/oxlint -c tools/oxlint/oxlint.config.ts home/.pi"
+run = "node_modules/.bin/oxlint -c tools/oxlint/oxlint.config.ts home/.pi config/hammerspoon2"
 
 [tasks."fmt:ts"]
 description = "Format dotfiles-managed TS/JS with oxfmt"
@@ -37,10 +37,10 @@ depends = ["deps:ts"]
 run = "node_modules/.bin/oxfmt --check {{vars.ts_files}}"
 
 [tasks."test:ts"]
-description = "Run the Bun test suites for Pi extensions, Ultimate extensions and the Elixir template"
+description = "Run the Bun test suites for Pi extensions, Ultimate extensions, the Elixir template and Hammerspoon 2"
 depends = ["deps:ts"]
 # The ./ prefix makes Bun treat these as paths; bare paths under .pi are filtered out.
-run = "bun test ./home/.pi/tests ./.ultimate/tests ./config/mise/tmpls/elixir/tests"
+run = "bun test ./home/.pi/tests ./.ultimate/tests ./config/mise/tmpls/elixir/tests ./config/hammerspoon2/tests"
 
 [tasks."check:ts"]
 description = "Lint, format check, and test dotfiles-managed TS"
