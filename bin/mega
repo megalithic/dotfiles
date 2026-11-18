@@ -56,7 +56,8 @@ start() {
   while IFS= read -r var; do clear+=(-u "$var"); done < <(compgen -e | grep '^ULTIMATE_' || true)
   # Ultimate handles SIGINT and SIGTERM only, so nohup's ignored SIGHUP keeps it
   # alive after this terminal closes.
-  nohup env "${clear[@]}" ultimate "$dir" --no-open >>"$log" 2>&1 &
+  # bash 3.2 (macOS /bin/bash) calls an empty array unbound under set -u.
+  nohup env ${clear[@]+"${clear[@]}"} ultimate "$dir" --no-open >>"$log" 2>&1 &
   pid=$!
   disown
   # Report where it listens once it holds its lock, or why it stopped.
@@ -67,6 +68,8 @@ start() {
       return
     fi
     kill -0 "$pid" 2>/dev/null || {
+      # No log means it failed before ultimate ran, and its error is above.
+      [[ -f "$log" ]] || die "$name failed to start"
       tail -n 5 "$log" >&2
       die "$name stopped while starting; see $log"
     }

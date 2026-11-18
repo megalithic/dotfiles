@@ -53,4 +53,11 @@ if out="$("$MEGA" stop app 2>&1)"; then fail "stopping a stopped instance succee
 [[ "$out" == *"no running Ultimate named app"* ]] || fail "stop missing: $out"
 ok "stop names what is not running"
 
+# A plain login shell carries no ULTIMATE_* variable, and macOS /bin/bash is 3.2.
+out="$(env -i HOME="$HOME" PATH="$PATH" STUB_LOCKS="$STUB_LOCKS" /bin/bash "$MEGA" start "$tmp/code/app" 2>&1)" ||
+  fail "start under /bin/bash without ULTIMATE_*: $out"
+[[ "$out" == "app: http://127.0.0.1:4799 (pid "*")" ]] || fail "start under /bin/bash: $out"
+"$MEGA" stop app >/dev/null
+ok "start works under /bin/bash with no ULTIMATE_* variables"
+
 echo "1..$pass"
