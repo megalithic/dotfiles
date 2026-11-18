@@ -6,7 +6,7 @@
 // therefore sees EOF exactly when HS2 goes away. CLIs started here must not
 // read stdin unless they mean to.
 
-// The CLIs resolve through PATH (the LaunchAgent puts mise shims on it), so
+// The CLIs resolve through PATH (the LaunchAgent puts ~/.local/bin and the mise shims on it), so
 // launch them through /usr/bin/env: hs.task needs an absolute path. `path`
 // replaces PATH for the children (the Atlas end-to-end test uses it).
 const ENV = '/usr/bin/env';

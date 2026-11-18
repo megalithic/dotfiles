@@ -853,10 +853,11 @@ stderr_path = "~/.cache/aeroplayd-stderr.log"
 
 # Hammerspoon 2, beside v1 (config/hammerspoon2). Restarted only after a crash,
 # so quitting it from its menu keeps it quit. Its CLIs (shade, sup) resolve
-# through the mise shims on PATH. Needs a one-time Accessibility grant.
+# through PATH: ~/.local/bin (swifties' stable copies), then the mise shims.
+# Needs a one-time Accessibility grant.
 [bootstrap.macos.launchd.agents."com.megadots.hammerspoon2"]
 program = "~/.local/share/mise/installs/http-hammerspoon2/0.0.15/Hammerspoon 2.app/Contents/MacOS/Hammerspoon 2"
-environment = { PATH = "{{ env.HOME }}/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" }
+environment = { PATH = "{{ env.HOME }}/.local/bin:{{ env.HOME }}/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" }
 run_at_load = true
 keep_alive_on_failure = true
 stdout_path = "~/.cache/hammerspoon2-stdout.log"
