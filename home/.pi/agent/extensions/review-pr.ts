@@ -95,13 +95,63 @@ export const actionsFor = (verdict: Review['verdict']): Action[] =>
  * While any review draft is pending, pi's own gh posting commands are blocked whatever their flags, order or
  * target (an implicit PR, a URL, another repo): only /review-pr post posts. A guard against slips, not a sandbox.
  */
-const POSTING = [
-  /\bgh\b[^\n;&|]*\bpr\b[^\n;&|]*\b(?:review|comment)\b/,
-  /\bgh\b[^\n;&|]*\bapi\b[^\n;&|]*(?:\/reviews\b|\/comments\b|addPullRequestReview|addComment|submitPullRequestReview)/,
-];
+/** Shell words per simple command: quotes group, unquoted `;`, `&`, `|`, newlines and `$(`/backticks split. */
+export const shellCommands = (command: string): string[][] => {
+  const commands: string[][] = [[]];
+  let word: string | undefined;
+  let quote: string | undefined;
+
+  const end = () => {
+    if (word !== undefined) commands.at(-1)?.push(word);
+    word = undefined;
+  };
+
+  for (let index = 0; index < command.length; index += 1) {
+    const char = command.charAt(index);
+
+    if (quote) {
+      if (char === quote) quote = undefined;
+      else if (char === '\\' && quote === '"') word += command.charAt((index += 1));
+      else word += char;
+    } else if (char === "'" || char === '"') {
+      quote = char;
+      word ??= '';
+    } else if (char === '\\') {
+      word = (word ?? '') + command.charAt((index += 1));
+    } else if (/[;&|\n`()]/.test(char)) {
+      end();
+      commands.push([]);
+    } else if (/\s/.test(char)) {
+      end();
+    } else {
+      word = (word ?? '') + char;
+    }
+  }
+
+  end();
+
+  return commands.filter((words) => words.length);
+};
+
+const GH_VALUE_FLAGS = new Set(['-R', '--repo', '--hostname']);
+
+const API_POSTING = /\/(?:reviews|comments)\b|addPullRequestReview|addComment|submitPullRequestReview/;
+
+/** True for a `gh pr review|comment` or a `gh api` call to a review or comment endpoint, whatever its flags. */
+export const ghPosts = (words: string[]): boolean => {
+  const start = words.findIndex((word) => !/^\w+=/.test(word) && !['env', 'command', 'exec'].includes(word));
+
+  if (start < 0 || !/(?:^|\/)gh$/.test(words[start] ?? '')) return false;
+  const rest = words.slice(start + 1);
+  const subcommands = rest.filter((word, index) => !word.startsWith('-') && !GH_VALUE_FLAGS.has(rest[index - 1] ?? ''));
+
+  if (subcommands[0] === 'pr') return ['review', 'comment'].includes(subcommands[1] ?? '');
+
+  return subcommands[0] === 'api' && rest.some((word) => API_POSTING.test(word));
+};
 
 export const blockedPost = (command: string, reviews: Review[]): boolean =>
-  reviews.length > 0 && POSTING.some((pattern) => pattern.test(command));
+  reviews.length > 0 && shellCommands(command).some(ghPosts);
 
 /** `owner/repo` of a pull request URL. */
 export const urlRepo = (url: string) => /github\.com\/([^/]+\/[^/]+)\/pull\/\d+/.exec(url)?.[1];
