@@ -18,6 +18,7 @@ config/hammerspoon2/package.json
 
 .pi
 !home/.pi/
+!/home/code/work/strive/provider_portal/.pi/
 .nvim.lua
 lat.md/.cache/
 result
