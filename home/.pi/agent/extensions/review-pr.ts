@@ -153,35 +153,39 @@ export const ghPosts = (words: string[]): boolean => {
 /** Bodies of `$(…)` and backtick substitutions outside single quotes: they run even inside double quotes. */
 export const substitutions = (command: string): string[] => {
   const bodies: string[] = [];
-  let quote: string | undefined;
 
-  for (let index = 0; index < command.length; index += 1) {
-    const char = command.charAt(index);
+  /** Scans from `start` until an unquoted `)` closes a `$(` (when `nested`); returns that index. */
+  const scan = (start: number, nested: boolean): number => {
+    let quote: string | undefined;
+    let depth = 0;
 
-    if (quote === "'") {
-      if (char === "'") quote = undefined;
-    } else if (char === '\\') index += 1;
-    else if (char === '"') quote = quote ? undefined : '"';
-    else if (char === "'" && !quote) quote = "'";
-    else if (char === '`') {
-      const close = command.indexOf('`', index + 1);
-      const stop = close < 0 ? command.length : close;
+    for (let index = start; index < command.length; index += 1) {
+      const char = command.charAt(index);
 
-      bodies.push(command.slice(index + 1, stop));
-      index = stop;
-    } else if (char === '$' && command.charAt(index + 1) === '(') {
-      let depth = 0;
-      let stop = index + 1;
+      if (quote === "'") {
+        if (char === "'") quote = undefined;
+      } else if (char === '\\') index += 1;
+      else if (char === '"') quote = quote ? undefined : '"';
+      else if (char === "'" && !quote) quote = "'";
+      else if (char === '`') {
+        const close = command.indexOf('`', index + 1);
+        const stop = close < 0 ? command.length : close;
 
-      for (; stop < command.length; stop += 1) {
-        if (command.charAt(stop) === '(') depth += 1;
-        else if (command.charAt(stop) === ')' && (depth -= 1) === 0) break;
-      }
+        bodies.push(command.slice(index + 1, stop));
+        index = stop;
+      } else if (char === '$' && command.charAt(index + 1) === '(') {
+        const stop = scan(index + 2, true);
 
-      bodies.push(command.slice(index + 2, stop));
-      index = stop;
+        bodies.push(command.slice(index + 2, stop));
+        index = stop;
+      } else if (nested && !quote && char === '(') depth += 1;
+      else if (nested && !quote && char === ')' && (depth -= 1) < 0) return index;
     }
-  }
+
+    return command.length;
+  };
+
+  scan(0, false);
 
   return bodies;
 };
