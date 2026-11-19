@@ -15,6 +15,11 @@ mise="$(command -v mise || echo "$HOME/.local/bin/mise")"
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 export MISE_ENV="${MISE_ENV:-$(hostname -s)}"
 eval "$(cd "$HOME" && "$mise" env -s bash)"
+# The hub outlives pin bumps, and `mise env` names each pinned tool's versioned
+# install folder: drop swifties' and resolve them through the shims, last on
+# PATH (a shim costs ~70 ms, so nothing else goes through them).
+PATH="$(tr ':' '\n' <<<"$PATH" | grep -Ev '/mise/installs/(aeroplay|avwatchd|miccheckd|notiwatchd|pidewaved|shade|sup)/' | paste -sd: -)"
+export PATH="$PATH:$HOME/.local/share/mise/shims"
 
 owner() {
   "$dotfiles/bin/ultimate-instance" --all | jq -r --arg root "$dotfiles" '.[] | select(.project == $root) | .pid'
