@@ -8,7 +8,7 @@ export function mockHs() {
     tap: null,
     tasks: [],
     canvases: [],
-    keycodes: { map: { n: 45, t: 17, c: 8, j: 38, return: 36 } },
+    keycodes: { map: { n: 45, t: 17, c: 8, j: 38, return: 36, escape: 53 } },
     fs: { homeDirectory: () => '/Users/test' },
     eventtap: {
       eventTypes: TYPES,

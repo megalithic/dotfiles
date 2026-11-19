@@ -21,16 +21,28 @@ glue goes here, not into v1.
 v1 owns F19 (kanata's hyper) as a bare Carbon hotkey and its hyper modal.
 `lib/hyper_layer.js` only watches F19 with a session event tap and never
 blocks it: never bind F19 with `hs.hotkey` here, or both apps fight over it.
-While F19 is held, the layer consumes its trigger (Return) and, only once
-armed, its keys (n/t/c/e for Shade); everything else goes through to v1. A key
-moves from v1 to this layer by deleting its v1 binding in the same change.
+While F19 is held, the layer consumes its trigger (Return), its chords
+(Escape) and, only once armed, its keys (n/t/c/e for Shade); everything else
+goes through to v1. A key moves from v1 to this layer by deleting its v1
+binding in the same change (hyper+Escape left v1's `dismissBindings`).
+
+`lib/hyper.js` wires it to sup and Shade:
+
+- hyper down runs `sup show actions --hold`: sup rings its target toast (the
+  newest visible critical, else urgent, else newest) and hints esc Dismiss
+  and ⏎ Open. It exits 3 at once when nothing is actionable. Hyper up, Return
+  or Escape end it.
+- hyper+Return runs `sup open`, which opens the target toast's source (a
+  Messages thread, a Rex block, a tab) and dismisses it. Exit 3 (nothing to
+  open) falls back to Shade, below.
+- hyper+Escape runs `sup dismiss --target`.
 
 Shade's layer works by modality: it is active only while Shade is.
 
-- hyper+Return runs `shade toggle <SHADE_DEFAULT_VERB>` (`init.js`, "write").
-  When Shade's reply says the panel is now visible, the layer arms for the
-  rest of that hyper hold; when it hid the panel, or Shade isn't running
-  (exit 69; a command never launches it), nothing arms.
+- With nothing to open, hyper+Return runs `shade toggle <SHADE_DEFAULT_VERB>`
+  (`init.js`, "write"). When Shade's reply says the panel is now visible, the
+  layer arms for the rest of that hyper hold; when it hid the panel, or Shade
+  isn't running (exit 69; a command never launches it), nothing arms.
 - Armed, sup's hint (`sup show hint --key n=Note ... --hold`) shows at once,
   and n, t, c, e run `shade show write|tell|capture|edit` (`show`, so the
   current verb never hides the panel) and close the hint. Tell and edit need
@@ -93,3 +105,6 @@ call it `C`.
      panel stays on write. Press t, c or e instead: Shade switches to that
      verb and nothing is typed into Shade.
   5. hyper+j and other v1 chords still work.
+  6. With a toast up (`notiwatchd post --title T --body B --urgency high`),
+     hold hyper: the toast gets a ring and the esc/⏎ hint. Return opens its
+     source; Escape dismisses it. No toast: hyper+Return opens Shade as above.

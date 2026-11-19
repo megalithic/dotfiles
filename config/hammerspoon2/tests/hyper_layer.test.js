@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { F19, createLayer, startLayer } from '../lib/hyper_layer.js';
+import { startHyper } from '../lib/hyper.js';
+import { F19, createLayer } from '../lib/hyper_layer.js';
 import { createHud } from '../lib/hud.js';
 import { createSeams } from '../lib/seams.js';
 import { mockHs } from './mock_hs.js';
@@ -133,69 +134,97 @@ describe('hyper layer', () => {
   });
 });
 
+const ESC = 53;
+
 // Wires the layer the way init.js does.
 function wired() {
   const hs = mockHs();
   const seams = createSeams(hs, { log: () => {} });
   const hud = createHud(hs, { rows: [{ key: 'n', label: 'Note' }], seams });
+  const { tap } = startHyper(hs, { seams, hud, bindings: [{ key: 'n', action: 'write' }], verb: 'write' });
+  const sup = (...args) => hs.tasks.filter((task) => task.args.join(' ') === args.join(' '));
 
-  const { tap } = startLayer(hs, {
-    trigger: 'return',
-    bindings: [{ key: 'n', action: 'write' }],
-    onTrigger: (arm) => seams.shadeToggle('write', (visible) => visible && arm()),
-    onArm: () => hud.show(),
-    onAction: (verb) => {
-      hud.dismiss();
-      seams.shadeShow(verb);
-    },
-    onRelease: () => hud.dismiss(),
-  });
-
-  return { hs, hud, tap };
+  return { hs, hud, tap, sup };
 }
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
+// Holds hyper (sup has no target: the actions hint exits 3) and presses
+// Return; sup has nothing to open (exit 3), so Shade's toggle runs.
+function hyperReturnToShade(hs, sup) {
+  hs.press('keyDown', F19);
+  sup('show', 'actions', '--hold')[0].exit(3);
+  expect(hs.press('keyDown', RETURN)).toBe(false);
+  sup('open')[0].exit(3);
+}
+
 describe('wired to hs', () => {
-  test('hyper+Return opens Shade, arms, shows the hint; n switches the verb', async () => {
-    const { hs, hud, tap } = wired();
+  test("hyper down holds sup's actions hint until hyper goes up", () => {
+    const { hs, tap, sup } = wired();
     expect(tap.started).toBe(true);
     expect(hs.tap.types).toEqual([10, 11]);
+    expect(hs.press('keyDown', F19)).toBe(true);
+    const [actions] = sup('show', 'actions', '--hold');
+    expect(actions.path).toBe(`${SHIMS}/sup`);
+    expect(actions.inputClosed).toBe(false);
+    hs.press('keyUp', F19);
+    expect(actions.terminated).toBe(true);
+  });
+
+  test("hyper+Return opens sup's target, and Shade stays shut", () => {
+    const { hs, sup } = wired();
     hs.press('keyDown', F19);
+    const [actions] = sup('show', 'actions', '--hold');
     expect(hs.press('keyDown', RETURN)).toBe(false);
+    expect(actions.terminated).toBe(true);
+    sup('open')[0].exit(0);
+    expect(hs.runs.length).toBe(0);
+  });
+
+  test("hyper+Escape dismisses sup's target; Escape alone passes", () => {
+    const { hs, sup } = wired();
+    expect(hs.press('keyDown', ESC)).toBe(true);
+    expect(hs.press('keyUp', ESC)).toBe(true);
+    hs.press('keyDown', F19);
+    expect(hs.press('keyDown', ESC)).toBe(false);
+    expect(hs.press('keyUp', ESC)).toBe(false);
+    expect(sup('dismiss', '--target').length).toBe(1);
+    expect(sup('show', 'actions', '--hold')[0].terminated).toBe(true);
+  });
+
+  test('nothing to open: hyper+Return toggles Shade, arms, shows the hint; n switches the verb', async () => {
+    const { hs, hud, sup } = wired();
+    hyperReturnToShade(hs, sup);
     // The mise shim by absolute path: ~/.local/bin/shade was the old Shade.
     expect([hs.runs[0].path, ...hs.runs[0].args]).toEqual([`${SHIMS}/shade`, 'toggle', 'write']);
     hs.runs[0].resolve({ exitCode: 0, stdout: '{"ok":true,"result":{"visible":"true"}}\n' });
     await settle();
 
     expect(hud.isShowing()).toBe(true);
-    const [sup] = hs.tasks;
-    expect([sup.path, ...sup.args]).toEqual([`${SHIMS}/sup`, 'show', 'hint', '--key', 'n=Note', '--hold']);
+    const [hint] = sup('show', 'hint', '--key', 'n=Note', '--hold');
     // --hold also ends on stdin EOF, so stdin must stay open while it's up.
-    expect(sup.inputClosed).toBe(false);
+    expect(hint.inputClosed).toBe(false);
 
     expect(hs.press('keyDown', N)).toBe(false);
-    expect(sup.terminated).toBe(true);
+    expect(hint.terminated).toBe(true);
     expect([hs.runs[1].path, ...hs.runs[1].args]).toEqual([`${SHIMS}/shade`, 'show', 'write']);
     hs.press('keyUp', F19);
     expect(hud.isShowing()).toBe(false);
   });
 
   test('when the toggle hid Shade nothing arms, and n passes through', async () => {
-    const { hs, hud } = wired();
-    hs.press('keyDown', F19);
-    hs.press('keyDown', RETURN);
+    const { hs, hud, sup } = wired();
+    hyperReturnToShade(hs, sup);
     hs.runs[0].resolve({ exitCode: 0, stdout: '{"ok":true,"result":{"visible":"false"}}\n' });
     await settle();
     expect(hud.isShowing()).toBe(false);
-    expect(hs.tasks.length).toBe(0);
+    expect(sup('show', 'hint', '--key', 'n=Note', '--hold').length).toBe(0);
     expect(hs.press('keyDown', N)).toBe(true);
   });
 
   test('Shade not running (exit 69): nothing arms', async () => {
-    const { hs, hud } = wired();
-    hs.press('keyDown', F19);
-    hs.press('keyDown', RETURN);
+    const { hs, hud, sup } = wired();
+    hyperReturnToShade(hs, sup);
     hs.runs[0].reject({ exitCode: 69, stdout: '' });
     await settle();
     expect(hud.isShowing()).toBe(false);
@@ -203,13 +232,12 @@ describe('wired to hs', () => {
   });
 
   test('releasing hyper ends the hint', async () => {
-    const { hs, hud } = wired();
-    hs.press('keyDown', F19);
-    hs.press('keyDown', RETURN);
+    const { hs, hud, sup } = wired();
+    hyperReturnToShade(hs, sup);
     hs.runs[0].resolve({ exitCode: 0, stdout: '{"ok":true,"result":{"visible":"true"}}' });
     await settle();
     hs.press('keyUp', F19);
-    expect(hs.tasks[0].terminated).toBe(true);
+    expect(sup('show', 'hint', '--key', 'n=Note', '--hold')[0].terminated).toBe(true);
     expect(hud.isShowing()).toBe(false);
   });
 

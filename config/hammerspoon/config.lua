@@ -448,8 +448,8 @@ M.notifier = {
     normal = { position = "corner", dim = false, phone = false },
   },
 
-  -- Dismiss active HUD notifications with F19+escape.
-  dismissBindings = { {}, "escape" },
+  -- hyper+escape belongs to Hammerspoon 2 (sup dismiss --target); set
+  -- dismissBindings = { {}, "escape" } here only if HS2 stops binding it.
 
   agent = {
     durations = {

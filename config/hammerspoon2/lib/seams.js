@@ -37,7 +37,23 @@ function createSeams(
       .catch((error) => log(`seams: shade ${args.join(' ')} failed: ${error?.exitCode ?? error}`));
   }
 
+  // sup exits 3 when there is nothing to act on, open or dismiss: not a failure.
+  const NOTHING = 3;
+
+  function supRun(args, onNothing = () => {}) {
+    return run('sup', args, (code) => {
+      if (code === NOTHING) onNothing();
+      else if (code !== 0) log(`seams: sup ${args.join(' ')} exited ${code}`);
+    });
+  }
+
   return {
+    // sup's actions hint over its target toast (esc Dismiss, ⏎ Open), up until
+    // the returned task is terminated; it exits 3 at once without a target.
+    supActions: () => supRun(['show', 'actions', '--hold']),
+    // Opens the target toast's source; onNothing() when there is none.
+    supOpen: (onNothing) => supRun(['open'], onNothing),
+    supDismissTarget: () => supRun(['dismiss', '--target']),
     // onShown(visible): whether the panel shows after the toggle.
     shadeToggle: (verb, onShown = () => {}) => shade(['toggle', verb], ({ visible }) => onShown(visible === 'true')),
     // Show the panel on a verb; never hides it.

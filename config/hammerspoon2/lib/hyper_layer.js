@@ -11,15 +11,20 @@
 const F19 = 80; // kVK_F19
 
 // keys: { [keyCode]: action }. onTrigger(arm) runs on the trigger's key down,
-// onAction(action) on an armed key's down, onArm() when the layer arms and
-// onRelease() when hyper goes up (auto-repeat ignored).
+// onAction(action) on an armed key's down, onArm() when the layer arms,
+// onHyper() when hyper goes down and onRelease() when it goes up (auto-repeat
+// ignored). chords: { [keyCode]: chord }, consumed like the trigger whenever
+// hyper is held, run onChord(chord).
 // Returns handle(type, keyCode) -> true to pass the event on, false to consume.
 function createLayer({
   trigger,
   keys,
   onTrigger,
   onAction,
+  chords = {},
+  onChord = () => {},
   onArm = () => {},
+  onHyper = () => {},
   onRelease = () => {},
   hyperKeyCode = F19,
 }) {
@@ -47,6 +52,7 @@ function createLayer({
       if (type === 'keyDown' && !held) {
         held = true;
         hold += 1;
+        onHyper();
       } else if (type === 'keyUp' && held) {
         held = false;
         armed = false;
@@ -75,6 +81,13 @@ function createLayer({
       return false;
     }
 
+    if (keyCode in chords && held) {
+      consumed.add(keyCode);
+      onChord(chords[keyCode]);
+
+      return false;
+    }
+
     if (keyCode in keys && armed) {
       consumed.add(keyCode);
       onAction(keys[keyCode]);
@@ -91,14 +104,18 @@ function createLayer({
 }
 
 // Wires a layer to a session event tap. trigger: a key name ("return");
-// bindings: [{ key: "n", action }]. Key names resolve through
-// hs.keycodes.map, which follows the current layout.
-function startLayer(hs, { trigger, bindings, onTrigger, onAction, onArm, onRelease }) {
+// bindings: [{ key: "n", action }]; chords: key names ("escape"), passed to
+// onChord by name. Key names resolve through hs.keycodes.map, which follows
+// the current layout.
+function startLayer(hs, { trigger, bindings, chords: chordNames = [], ...callbacks }) {
   const keys = {};
+  const chords = {};
 
   for (const { key, action } of bindings) keys[hs.keycodes.map[key]] = action;
 
-  const layer = createLayer({ trigger: hs.keycodes.map[trigger], keys, onTrigger, onAction, onArm, onRelease });
+  for (const key of chordNames) chords[hs.keycodes.map[key]] = key;
+
+  const layer = createLayer({ trigger: hs.keycodes.map[trigger], keys, chords, ...callbacks });
   const { keyDown, keyUp } = hs.eventtap.eventTypes;
   const typeName = { [keyDown]: 'keyDown', [keyUp]: 'keyUp' };
 
