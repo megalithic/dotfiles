@@ -21,6 +21,7 @@ const SHADE = [
   { key: 'n', action: 'write', label: 'Note' },
   { key: 't', action: 'tell', label: 'Tell' },
   { key: 'c', action: 'capture', label: 'Capture' },
+  { key: 'e', action: 'edit', label: 'Edit' },
 ];
 
 function log(line) {

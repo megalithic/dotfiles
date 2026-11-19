@@ -326,19 +326,19 @@ zig = "0.16.0"
 zoxide = "latest"
 
 [tools.aeroplay]
-version = "0.10.0"
+version = "0.11.0"
 os = ["macos"]
 asset_pattern = "aeroplay-{{ version }}-macos26-arm64.zip"
 bin_path = "AeroPlay.app/Contents/MacOS"
 
 [tools.miccheckd]
-version = "0.10.0"
+version = "0.11.0"
 os = ["macos"]
 asset_pattern = "miccheckd-{{ version }}-macos26-arm64.zip"
 bin_path = "MicCheck.app/Contents/MacOS"
 
 [tools.notiwatchd]
-version = "0.10.0"
+version = "0.11.0"
 os = ["macos"]
 asset_pattern = "notiwatchd-{{ version }}-macos26-arm64.zip"
 postinstall = '''
@@ -349,7 +349,7 @@ mv -f "$HOME/.local/bin/.notiwatchd.tmp" "$HOME/.local/bin/notiwatchd"
 '''
 
 [tools.pidewaved]
-version = "0.10.0"
+version = "0.11.0"
 os = ["macos"]
 asset_pattern = "pidewaved-{{ version }}-macos26-arm64.zip"
 postinstall = '''
@@ -360,7 +360,7 @@ mv -f "$HOME/.local/bin/.pidewaved.tmp" "$HOME/.local/bin/pidewaved"
 '''
 
 [tools.avwatchd]
-version = "0.10.0"
+version = "0.11.0"
 os = ["macos"]
 asset_pattern = "avwatchd-{{ version }}-macos26-arm64.zip"
 postinstall = '''
@@ -379,7 +379,7 @@ rm -rf "$web.old"
 # Shade: notes panel (io.swifties.shade). Its CLI resolves through the mise shim;
 # never install a copy into ~/.local/bin, which held the retired old shade.
 [tools.shade]
-version = "0.10.0"
+version = "0.11.0"
 os = ["macos"]
 asset_pattern = "shade-{{ version }}-macos26-arm64.zip"
 bin_path = "Shade.app/Contents/MacOS"
@@ -389,7 +389,7 @@ postinstall = 'mkdir -p "$HOME/.local/state/shade" && chmod 700 "$HOME/.local/st
 
 # Sup: key-hint panel daemon (io.swifties.sup); HS2's hyper layer drives it.
 [tools.sup]
-version = "0.10.0"
+version = "0.11.0"
 os = ["macos"]
 asset_pattern = "sup-{{ version }}-macos26-arm64.zip"
 bin_path = "Sup.app/Contents/MacOS"
@@ -871,7 +871,7 @@ stderr_path = "~/.cache/pidewaved-stderr.log"
 
 # miccheck: compiled menubar push-to-talk/push-to-mute app.
 [bootstrap.macos.launchd.agents."io.swifties.miccheck"]
-program = "~/.local/share/mise/installs/miccheckd/0.10.0/MicCheck.app/Contents/MacOS/miccheckd"
+program = "~/.local/share/mise/installs/miccheckd/0.11.0/MicCheck.app/Contents/MacOS/miccheckd"
 run_at_load = true
 keep_alive = true
 stdout_path = "~/.cache/miccheck-stdout.log"
@@ -879,7 +879,7 @@ stderr_path = "~/.cache/miccheck-stderr.log"
 
 # AeroPlay: route one app's audio only to a selected AirPlay or CoreAudio output.
 [bootstrap.macos.launchd.agents."io.swifties.aeroplay"]
-program = "~/.local/share/mise/installs/aeroplay/0.10.0/AeroPlay.app/Contents/MacOS/aeroplayd"
+program = "~/.local/share/mise/installs/aeroplay/0.11.0/AeroPlay.app/Contents/MacOS/aeroplayd"
 run_at_load = true
 keep_alive = false
 stdout_path = "~/.cache/aeroplayd-stdout.log"
@@ -889,7 +889,7 @@ stderr_path = "~/.cache/aeroplayd-stderr.log"
 # (so only a failure restarts it) and 78 on a bad ~/.config/shade/config.json
 # (the throttle keeps that from spinning). Logs `shade: vimrc <path>` at start.
 [bootstrap.macos.launchd.agents."io.swifties.shade"]
-program = "~/.local/share/mise/installs/shade/0.10.0/Shade.app/Contents/MacOS/shade"
+program = "~/.local/share/mise/installs/shade/0.11.0/Shade.app/Contents/MacOS/shade"
 run_at_load = true
 keep_alive_on_failure = true
 throttle_interval = 10
@@ -898,7 +898,7 @@ stderr_path = "~/.local/state/shade/shade.log"
 
 # Sup daemon: socket ~/.local/state/sup/sock; a second daemon exits 1.
 [bootstrap.macos.launchd.agents."io.swifties.sup"]
-program = "~/.local/share/mise/installs/sup/0.10.0/Sup.app/Contents/MacOS/sup"
+program = "~/.local/share/mise/installs/sup/0.11.0/Sup.app/Contents/MacOS/sup"
 args = ["daemon"]
 run_at_load = true
 keep_alive = true

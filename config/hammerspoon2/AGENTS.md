@@ -22,7 +22,7 @@ v1 owns F19 (kanata's hyper) as a bare Carbon hotkey and its hyper modal.
 `lib/hyper_layer.js` only watches F19 with a session event tap and never
 blocks it: never bind F19 with `hs.hotkey` here, or both apps fight over it.
 While F19 is held, the layer consumes its trigger (Return) and, only once
-armed, its keys (n/t/c for Shade); everything else goes through to v1. A key
+armed, its keys (n/t/c/e for Shade); everything else goes through to v1. A key
 moves from v1 to this layer by deleting its v1 binding in the same change.
 
 Shade's layer works by modality: it is active only while Shade is.
@@ -32,9 +32,9 @@ Shade's layer works by modality: it is active only while Shade is.
   rest of that hyper hold; when it hid the panel, or Shade isn't running
   (exit 69; a command never launches it), nothing arms.
 - Armed, sup's hint (`sup show hint --key n=Note ... --hold`) shows at once,
-  and n, t, c run `shade show write|tell|capture` (`show`, so the current verb
-  never hides the panel) and close the hint. Shade 0.9.0 answers "unknown
-  verb" to tell and capture until its Phases 2 and 3 ship.
+  and n, t, c, e run `shade show write|tell|capture|edit` (`show`, so the
+  current verb never hides the panel) and close the hint. Tell and edit need
+  Shade's Accessibility grant (io.swifties.shade).
 - Releasing hyper disarms the layer and ends the hint; focus stays in Shade.
   A plain hyper hold never arms and never shows a hint.
 - `--hold` also ends on stdin EOF, so `seams.js` never closes the task's
@@ -44,7 +44,9 @@ Shade's layer works by modality: it is active only while Shade is.
 
 Both run from their mise installs under LaunchAgents (`io.swifties.shade`,
 `io.swifties.sup` in `config/mise/config.toml`). Shade reads
-`~/.config/shade/config.json` (`config/shade/`) and logs to
+`~/.config/shade/config.json` (`config/shade/`); sup reads
+`~/.config/sup/config.json` (`config/sup/`; a change needs a sup restart,
+and an invalid file makes it exit 78) and logs to
 `~/.local/state/shade/shade.log`, including `shade: vimrc <path>` at start.
 
 ### Rollback to shade-next (by hand only)
@@ -84,10 +86,10 @@ call it `C`.
   1. Hold hyper alone: no hint. hyper+n, hyper+t and hyper+c do what v1
      does with them, or nothing.
   2. Hold hyper, press Return: Shade's write panel opens and, while hyper is
-     still held, sup's n/t/c hint shows. Release: the hint goes, focus stays
+     still held, sup's n/t/c/e hint shows. Release: the hint goes, focus stays
      in Shade.
   3. Hyper+Return again: Shade hides, and no hint shows.
   4. Hyper+Return to open it, keep holding, press n: the hint closes and the
-     panel stays on write. Press t or c instead: nothing is typed into Shade
-     (0.9.0 answers "unknown verb"; HS2's console logs it).
+     panel stays on write. Press t, c or e instead: Shade switches to that
+     verb and nothing is typed into Shade.
   5. hyper+j and other v1 chords still work.

@@ -12,12 +12,11 @@ const SHADE_DEFAULT_VERB = 'write';
 
 // Shade's layer: when hyper+Return opens Shade, the layer arms for the rest of
 // that hyper hold: its hint shows and a key switches Shade to that verb.
-// Shade 0.9.0 answers "unknown verb" to tell and capture until its Phases 2
-// and 3 ship; they are bound now so the layer and its hint don't change then.
 const SHADE = [
   { key: 'n', action: 'write', label: 'Note' },
   { key: 't', action: 'tell', label: 'Tell' },
   { key: 'c', action: 'capture', label: 'Capture' },
+  { key: 'e', action: 'edit', label: 'Edit' },
 ];
 
 const seams = createSeams(hs);

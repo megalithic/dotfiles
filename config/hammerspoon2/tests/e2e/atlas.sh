@@ -31,7 +31,7 @@ atlas screenshot --new-file
 atlas open hammerspoon2://hud-off >/dev/null
 
 # Each Shade verb through the seam.
-for verb in write tell capture; do
+for verb in write tell capture edit; do
   atlas open "hammerspoon2://action?verb=$verb" >/dev/null
 done
 sleep 1

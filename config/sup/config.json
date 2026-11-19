@@ -1,0 +1,29 @@
+{
+  "screen": "focused",
+  "material": "glass",
+  "animation": {
+    "duration": 0.22
+  },
+  "hint": {
+    "position": "bottom-center",
+    "offset": 72
+  },
+  "alert": {
+    "position": "bottom-center",
+    "offset": 72,
+    "ttl": 2
+  },
+  "toast": {
+    "position": "bottom-left",
+    "offset": 24,
+    "width": 360,
+    "spacing": 8,
+    "max_visible": 4,
+    "ttl": {
+      "info": 5,
+      "warn": 8,
+      "urgent": 0
+    },
+    "group_count": true
+  }
+}
