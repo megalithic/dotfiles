@@ -37,10 +37,9 @@ args=(post --title "$title" --body "$message" --urgency "$urgency")
 
 "$HOME/.local/bin/notiwatchd" "${args[@]}" >/dev/null
 status=$?
-case $status in
-  0) exit 0 ;;
-  2) exit 2 ;; # Usage error: say so instead of hiding it behind ntfy.
-esac
+# Only "nothing was shown" (1) earns ntfy's last try; a usage error (2) or
+# anything unexpected is reported as is, not hidden behind ntfy.
+[[ $status -eq 1 ]] || exit "$status"
 
 fallback=(send -t "$title" -m "$message" -u "$urgency")
 if [[ -n "$source" ]]; then fallback+=(-s "$source"); else fallback+=(-S); fi

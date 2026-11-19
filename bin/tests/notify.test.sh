@@ -47,7 +47,13 @@ rm -f "$CALLS"
 if POST_EXIT=2 "$NOTIFY" -t T -m B 2>/dev/null; then fail "usage error passed"; fi
 [[ "$(wc -l <"$CALLS")" -eq 1 ]] || fail "usage error reached ntfy"
 if "$NOTIFY" -t T -x y 2>/dev/null; then fail "unknown flag passed"; fi
-ok "a usage error exits 2 and never reaches ntfy"
+rm -f "$CALLS"
+set +e
+POST_EXIT=9 "$NOTIFY" -t T -m B
+status=$?
+set -e
+[[ $status -eq 9 && "$(wc -l <"$CALLS")" -eq 1 ]] || fail "unexpected status: $status"
+ok "a usage error (2) or any other status is passed on and never reaches ntfy"
 
 # The real ntfy against a stub hs that records its code and arguments apart.
 mkdir -p "$tmp/stubs"

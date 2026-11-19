@@ -989,3 +989,16 @@ describe('bridge activity status', () => {
     expect(_test.activityState()).toBe('done');
   });
 });
+
+describe('bridge tell notification place', () => {
+  test('a Rex Pi passes its block and Rex; a tmux Pi its pane; elsewhere nothing', () => {
+    expect(_test.tellPlaceArgs({ REX_BLOCK: 'block:abc' }, { session: 's', windowIndex: '1', paneIndex: '0' })).toEqual(
+      ['-c', 'rex:block:abc', '-a', 'com.superlogical.rex'],
+    );
+    expect(_test.tellPlaceArgs({}, { session: 'dots', windowIndex: '2', paneIndex: '1' })).toEqual([
+      '-c',
+      'tmux:dots:2:1',
+    ]);
+    expect(_test.tellPlaceArgs({}, null)).toEqual([]);
+  });
+});

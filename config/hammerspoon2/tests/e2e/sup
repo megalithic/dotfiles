@@ -1,5 +1,11 @@
 #!/bin/sh
-# Stub sup CLI for the Atlas end-to-end test: logs its arguments and reports
-# no daemon (exit 1, as sup does), so the HUD shows its own canvas.
+# Stub sup CLI for the Atlas end-to-end test: logs its arguments. `actions`
+# and `open` find nothing to act on (exit 3, as sup does), so hyper+Return
+# falls back to Shade; a hint reports no daemon (exit 1), so the HUD shows its
+# own canvas; `dismiss --target` succeeds.
 printf 'sup %s\n' "$*" >>"$HOME/hs2-e2e.log"
-exit 1
+case "$1 $2" in
+  "show actions" | "open ") exit 3 ;;
+  "dismiss --target") exit 0 ;;
+  *) exit 1 ;;
+esac

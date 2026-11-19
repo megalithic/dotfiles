@@ -1,13 +1,14 @@
 // End-to-end config for the Atlas helper (see tests/e2e/atlas.sh): the real
-// layer, HUD and seams, with `shade` and `sup` resolving to stubs that log
-// their args (sup's stub exits 69, so the HUD falls back to its canvas).
+// layer (lib/hyper.js, as init.js wires it), HUD and seams, with `shade` and
+// `sup` resolving to stubs that log their args (sup's stub has nothing to act
+// on or open, and no daemon for hints, so the HUD falls back to its canvas).
 //
 // It never posts key events. A post at the HID level reaches the console
 // session (the person's desktop), not the helper. Atlas can't hold F19, so
 // held hyper is checked on the real keyboard; here hammerspoon2:// links
 // drive the HUD and the Shade seam, and Atlas's own key presses check the tap.
 
-const { startLayer } = require('./lib/hyper_layer.js');
+const { startHyper } = require('./lib/hyper.js');
 
 const { createHud } = require('./lib/hud.js');
 
@@ -32,30 +33,29 @@ const seams = createSeams(hs, { log, bin: `${HOME}/.local/bin` });
 
 const hud = createHud(hs, { rows: SHADE.map(({ key, label }) => ({ key, label })), seams });
 
-// The same callbacks as init.js. Atlas can't hold F19, so links below run the
-// trigger and action paths directly; arming is then just showing the hint.
-const onTrigger = (arm) =>
-  seams.shadeToggle('write', (visible) => {
-    log(`shade visible: ${visible}`);
+// The same wiring as init.js, its seams logging Shade's answer.
+const logged = {
+  ...seams,
+  shadeToggle: (verb, onShown) =>
+    seams.shadeToggle(verb, (visible) => {
+      log(`shade visible: ${visible}`);
+      onShown(visible);
+    }),
+};
 
-    if (visible) arm();
-  });
+globalThis.hyper = startHyper(hs, { seams: logged, hud, bindings: SHADE, verb: 'write' });
 
-const onArm = () => hud.show();
+// Atlas can't hold F19, so the links below drive the layer's handler with the
+// key codes a hold would send: F19 down, then Return or Escape, then F19 up.
+const { layer } = globalThis.hyper;
 
-function onAction(verb) {
-  hud.dismiss();
-  seams.shadeShow(verb);
+const F19 = 80;
+
+function chord(key) {
+  layer.handle('keyDown', F19);
+  layer.handle('keyDown', hs.keycodes.map[key]);
+  layer.handle('keyUp', hs.keycodes.map[key]);
 }
-
-globalThis.hyper = startLayer(hs, {
-  trigger: 'return',
-  bindings: SHADE,
-  onTrigger,
-  onArm,
-  onAction,
-  onRelease: () => hud.dismiss(),
-});
 
 globalThis.hud = hud;
 
@@ -72,19 +72,27 @@ globalThis.e2eWatch = hs.eventtap.addWatcher(
 
 globalThis.e2eWatch.start();
 
+// hyper+Return: sup has nothing to open, so Shade toggles and the layer arms.
 hs.urlevent.bind('trigger', () => {
-  onTrigger(() => {
-    onArm();
-    hs.timer.doAfter(0.5, () => log(`hud showing: ${hud.isShowing()}`));
-  });
+  chord('return');
+  hs.timer.doAfter(0.5, () => log(`hud showing: ${hud.isShowing()}`));
 });
 
+hs.urlevent.bind('dismiss', () => chord('escape'));
+
 hs.urlevent.bind('hud-off', () => {
-  hud.dismiss();
+  layer.handle('keyUp', F19);
   log(`hud showing: ${hud.isShowing()}`);
 });
 
-hs.urlevent.bind('action', (_name, params) => onAction(params.verb));
+// An armed layer key, as hyper+n/t/c/e would send.
+hs.urlevent.bind('action', (_name, params) => {
+  chord('return');
+  hs.timer.doAfter(0.5, () => {
+    layer.handle('keyDown', hs.keycodes.map[SHADE.find(({ action }) => action === params.verb).key]);
+    layer.handle('keyUp', F19);
+  });
+});
 
 hs.urlevent.bind('reload', () => hs.reload());
 

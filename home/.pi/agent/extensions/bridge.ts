@@ -551,6 +551,19 @@ const summarizeTellText = (text: string, maxLength = 160): string => {
   return `${cleaned.slice(0, Math.max(0, maxLength - 3))}...`;
 };
 
+// Where this receiving Pi runs, so notiwatchd stays quiet while Seth is in it
+// and sup's Open goes to its Rex block (same contract as notify.ts).
+const tellPlaceArgs = (
+  env: NodeJS.ProcessEnv,
+  tmux: { session: string; windowIndex?: string; paneIndex?: string } | null,
+): string[] => {
+  if (env.REX_BLOCK) return ['-c', `rex:${env.REX_BLOCK}`, '-a', 'com.superlogical.rex'];
+
+  if (tmux?.windowIndex && tmux.paneIndex) return ['-c', `tmux:${tmux.session}:${tmux.windowIndex}:${tmux.paneIndex}`];
+
+  return [];
+};
+
 const notifyTell = (from: string, text: string): void => {
   // Tests set PI_TELL_NOTIFY=0 so fixture tells never become desktop notifications.
   if (process.env.PI_TELL_NOTIFY === '0') return;
@@ -559,6 +572,7 @@ const notifyTell = (from: string, text: string): void => {
   const command = path.join(process.env.HOME || '', 'bin', 'notify');
 
   const args = [
+    ...tellPlaceArgs(process.env, detectTmux()),
     '-s',
     'pi tell',
     '-g',
@@ -1729,6 +1743,7 @@ export const _test = {
   refreshTmuxLocation,
   settledActivityState,
   summarizeTellText,
+  tellPlaceArgs,
   persistAndSurfaceTell,
   updateActivityState,
 };

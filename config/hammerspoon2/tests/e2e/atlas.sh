@@ -23,14 +23,18 @@ atlas key --app TextEdit cmd+n >/dev/null
 atlas wait --app TextEdit >/dev/null
 atlas type --app TextEdit "ntcj" >/dev/null
 
-# hyper+Return's path: the stub Shade answers visible, so the HUD shows.
-# Screenshot, then off.
+# hyper+Return's path: the stub sup has nothing to open (exit 3), the stub
+# Shade answers visible, so the HUD shows. Screenshot, then off.
+# The log should show `sup show actions --hold`, `sup open`, then `shade toggle write`.
 atlas open hammerspoon2://trigger >/dev/null
 sleep 1
 atlas screenshot --new-file
 atlas open hammerspoon2://hud-off >/dev/null
 
-# Each Shade verb through the seam.
+# hyper+Escape: `sup dismiss --target`.
+atlas open hammerspoon2://dismiss >/dev/null
+
+# Each Shade verb through the armed layer.
 for verb in write tell capture edit; do
   atlas open "hammerspoon2://action?verb=$verb" >/dev/null
 done
