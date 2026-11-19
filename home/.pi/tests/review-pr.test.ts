@@ -45,6 +45,7 @@ const harness = (selected: string | undefined, confirmed = true) => {
   const on = new Map<string, Handler>();
   const events = new Map<string, (data: Reply) => void>();
   const execs: string[][] = [];
+  const bodies: string[] = [];
   const notes: string[] = [];
   let command: (args: string, ctx: ExtensionContext) => Promise<void> = async () => {};
 
@@ -53,7 +54,12 @@ const harness = (selected: string | undefined, confirmed = true) => {
       on: (name: string, handler: Handler) => on.set(name, handler),
       events: { on: (name: string, handler: (data: Reply) => void) => events.set(name, handler), emit: () => {} },
       registerCommand: (_name: string, options: { handler: typeof command }) => (command = options.handler),
-      exec: async (cmd: string, args: string[]) => (execs.push([cmd, ...args]), { code: 0, stdout: '', stderr: '' }),
+      exec: async (cmd: string, args: string[]) => {
+        execs.push([cmd, ...args]);
+        bodies.push(fs.readFileSync(args.at(-1) ?? '', 'utf8'));
+
+        return { code: 0, stdout: '', stderr: '' };
+      },
     }),
   );
 
@@ -68,7 +74,7 @@ const harness = (selected: string | undefined, confirmed = true) => {
     },
   });
 
-  return { on, events, execs, notes, ctx, run: (args: string) => command(args, ctx) };
+  return { on, events, execs, bodies, notes, ctx, run: (args: string) => command(args, ctx) };
 };
 
 const seed = () => fs.writeFileSync(path.join(state, 'review-pr.json'), JSON.stringify([review]));
@@ -83,6 +89,11 @@ test('a reply saves the draft and verdict; only the picked action posts, and App
   expect(fs.readFileSync(draft, 'utf8')).toBe('Nothing blocks merge.\n\n**Good to have**\n- `lib/a.ex:3` rename x.\n');
   expect(readReviews()[0]?.verdict).toBe('APPROVED');
 
+  // A redelivered reply never overwrites the draft Seth edited.
+  fs.writeFileSync(draft, 'Edited by Seth.\n');
+  pi.events.get('tell:reply')?.({ replyTo: review.key, text: 'Verdict: APPROVED\n\nDRAFT:\nold' });
+  expect(fs.readFileSync(draft, 'utf8')).toBe('Edited by Seth.\n');
+
   const blocked = pi.on.get('tool_call')?.(
     { toolName: 'bash', input: { command: 'gh pr review 228 --approve' } },
     pi.ctx,
@@ -91,7 +102,10 @@ test('a reply saves the draft and verdict; only the picked action posts, and App
   expect(blocked).toMatchObject({ block: true });
 
   await pi.run('post 228');
-  expect(pi.execs).toEqual([['gh', ...reviewArgs('approve', review)]]);
+  const [call] = pi.execs;
+
+  expect(call?.slice(0, -1)).toEqual(['gh', ...reviewArgs('approve', review, '').slice(0, -1)]);
+  expect(pi.bodies).toEqual(['Edited by Seth.\n']);
   expect(readReviews()).toEqual([]);
 });
 
@@ -120,6 +134,15 @@ test('pure helpers', () => {
     '#51923',
   ]);
   expect(parseReply('no marker').draft).toBeUndefined();
-  expect(blockedPost('gh api repos/acme/app/pulls/228/reviews -f event=APPROVE', [review])).toBe(review);
-  expect(blockedPost('gh pr view 228', [review])).toBeUndefined();
+
+  for (const command of [
+    'gh pr review --approve 228 --body ok',
+    'gh -R acme/app pr review --approve',
+    'gh pr comment https://github.com/x/y/pull/9 -b hi',
+    'gh api repos/acme/app/pulls/228/reviews -f event=APPROVE',
+    'gh api graphql -f query="mutation { addPullRequestReview(input: {}) { clientMutationId } }"',
+  ])
+    expect(blockedPost(command, [review])).toBe(true);
+  expect(blockedPost('gh pr view 228 --comments', [review])).toBe(false);
+  expect(blockedPost('gh pr review 228 --approve', [])).toBe(false);
 });

@@ -75,7 +75,7 @@ export const requestText = (review: Pick<Review, 'repo' | 'number' | 'title' | '
     'When the branch finishes, answer with reply_pi: a line `Verdict: APPROVED` or `Verdict: NEEDS CHANGES`, the merged team report, then a line containing only `DRAFT:`, then the draft and nothing after it.',
   ].join('\n\n');
 
-export const reviewArgs = (action: Action, review: Pick<Review, 'repo' | 'number' | 'draft'>) => [
+export const reviewArgs = (action: Action, review: Pick<Review, 'repo' | 'number'>, file: string) => [
   'pr',
   'review',
   String(review.number),
@@ -83,7 +83,7 @@ export const reviewArgs = (action: Action, review: Pick<Review, 'repo' | 'number
   review.repo,
   { comment: '--comment', 'request changes': '--request-changes', approve: '--approve' }[action],
   '--body-file',
-  review.draft,
+  file,
 ];
 
 type Action = 'comment' | 'request changes' | 'approve';
@@ -91,16 +91,20 @@ type Action = 'comment' | 'request changes' | 'approve';
 export const actionsFor = (verdict: Review['verdict']): Action[] =>
   verdict === 'APPROVED' ? ['comment', 'request changes', 'approve'] : ['comment', 'request changes'];
 
-/** Pi's own `gh pr review|comment` on a PR whose review draft is pending: only /review-pr post may post it. */
-export const blockedPost = (command: string, reviews: Review[]): Review | undefined => {
-  const match =
-    /\bgh\s+pr\s+(?:review|comment)\s+(?:\S*\/pull\/)?(\d+)/.exec(command) ??
-    /\bgh\s+api\b.*\/(?:pulls|issues)\/(\d+)\/(?:reviews|comments)/.exec(command);
+/**
+ * While any review draft is pending, pi's own gh posting commands are blocked whatever their flags, order or
+ * target (an implicit PR, a URL, another repo): only /review-pr post posts. A guard against slips, not a sandbox.
+ */
+const POSTING = [
+  /\bgh\b[^\n;&|]*\bpr\b[^\n;&|]*\b(?:review|comment)\b/,
+  /\bgh\b[^\n;&|]*\bapi\b[^\n;&|]*(?:\/reviews\b|\/comments\b|addPullRequestReview|addComment|submitPullRequestReview)/,
+];
 
-  const byNumber = match ? reviews.find((review) => review.number === Number(match[1])) : undefined;
+export const blockedPost = (command: string, reviews: Review[]): boolean =>
+  reviews.length > 0 && POSTING.some((pattern) => pattern.test(command));
 
-  return byNumber ?? reviews.find((review) => command.includes(review.draft));
-};
+/** `owner/repo` of a pull request URL. */
+export const urlRepo = (url: string) => /github\.com\/([^/]+\/[^/]+)\/pull\/\d+/.exec(url)?.[1];
 
 const prSchema = Type.Object({
   number: Type.Integer(),
@@ -131,11 +135,19 @@ export default function (pi: ExtensionAPI) {
   const pick = async (ctx: ExtensionContext, arg: string): Promise<Review | undefined> => {
     const reviews = readReviews().filter((review) => review.verdict);
     const number = Number(arg.replace(/.*\/pull\//, ''));
-    const found = arg ? reviews.find((review) => review.number === number) : reviews.at(-1);
+    const found = arg ? reviews.filter((review) => review.number === number) : reviews;
 
-    if (!found) ctx.ui.notify(arg ? `No review draft for #${arg}.` : 'No review draft yet.', 'error');
+    if (!found.length) {
+      ctx.ui.notify(arg ? `No review draft for #${arg}.` : 'No review draft yet.', 'error');
 
-    return found;
+      return undefined;
+    }
+
+    if (found.length === 1) return found[0];
+    const label = (review: Review) => `${review.repo}#${review.number} ${review.title}`;
+    const choice = await ctx.ui.select('Which review?', found.map(label));
+
+    return found.find((review) => label(review) === choice);
   };
 
   const request = async (ctx: ExtensionContext, arg: string) => {
@@ -145,9 +157,13 @@ export default function (pi: ExtensionAPI) {
     const pr = JSON.parse(await gh(['pr', 'view', arg, '--json', 'number,title,headRefOid,url'], ctx.cwd));
 
     if (!Check(prSchema, pr)) throw new Error('gh pr view returned an unexpected shape');
-    const repo = (await gh(['repo', 'view', '--json', 'nameWithOwner', '-q', '.nameWithOwner'], ctx.cwd)).trim();
+    const repo = urlRepo(pr.url);
+    const local = (await gh(['repo', 'view', '--json', 'nameWithOwner', '-q', '.nameWithOwner'], ctx.cwd)).trim();
+
+    if (!repo || repo.toLowerCase() !== local.toLowerCase())
+      throw new Error(`${pr.url} is not a pull request of ${local}, the repo this Ultimate reviews.`);
     const key = `review-pr-${pr.number}-${pr.headRefOid.slice(0, 12)}-${Date.now().toString(36)}`;
-    const draft = path.join(docsDir(ctx.cwd), `pr-${pr.number}-review.md`);
+    const draft = path.join(docsDir(ctx.cwd), `${repo.replace('/', '-')}-pr-${pr.number}-review.md`);
 
     const review: Review = {
       key,
@@ -160,7 +176,10 @@ export default function (pi: ExtensionAPI) {
     };
 
     await tellUltimate(target, requestText(review, ctx.cwd), true, originInfo(ctx), key);
-    writeReviews([...readReviews().filter((item) => item.number !== review.number), review]);
+    writeReviews([
+      ...readReviews().filter((item) => !(item.repo === review.repo && item.number === review.number)),
+      review,
+    ]);
     showStatus(ctx);
     ctx.ui.notify(`Ultimate is reviewing #${pr.number}; the result arrives here when it is done.`, 'info');
   };
@@ -185,7 +204,18 @@ export default function (pi: ExtensionAPI) {
       !(await ctx.ui.confirm(`Approve PR #${review.number} as yourself?`, `${review.title}\n${review.url}`))
     )
       return ctx.ui.notify('Not posted.', 'info');
-    await gh(reviewArgs(action, review), ctx.cwd);
+
+    // Post exactly the text that was checked and shown, never the draft file, which may change meanwhile.
+    const snapshot = fs.mkdtempSync(path.join(os.tmpdir(), 'review-pr-'));
+    const body = path.join(snapshot, 'body.md');
+
+    try {
+      fs.writeFileSync(body, `${text}\n`, { mode: 0o600 });
+      await gh(reviewArgs(action, review, body), ctx.cwd);
+    } finally {
+      fs.rmSync(snapshot, { recursive: true, force: true });
+    }
+
     writeReviews(readReviews().filter((item) => item.key !== review.key));
     showStatus(ctx);
     ctx.ui.notify(`Posted: ${action} on #${review.number}.`, 'info');
@@ -204,7 +234,8 @@ export default function (pi: ExtensionAPI) {
     const reviews = readReviews();
     const review = reviews.find((item) => item.key === data.replyTo);
 
-    if (!review) return;
+    // A redelivered reply never overwrites a draft Seth may already have edited.
+    if (!review || review.verdict) return;
     const { verdict, draft } = parseReply(data.text);
     fs.mkdirSync(path.dirname(review.draft), { recursive: true });
     fs.writeFileSync(review.draft, `${draft ?? data.text.trim()}\n`);
@@ -221,19 +252,19 @@ export default function (pi: ExtensionAPI) {
     if (!ready.length) return;
     event.systemPromptOptions.contextFiles.push({
       path: 'review-pr',
-      content: `Pull request review drafts: ${ready.map((review) => `#${review.number} in ${review.draft}`).join('; ')}. Revise a draft by editing that file when Seth asks. Never post it yourself: Seth posts with /review-pr post; gh pr review/comment on these PRs is blocked.`,
+      content: `Pull request review drafts: ${ready.map((review) => `#${review.number} in ${review.draft}`).join('; ')}. Revise a draft by editing that file when Seth asks. Never post it yourself: Seth posts with /review-pr post; gh pr review/comment and gh api review or comment calls are blocked while drafts are pending.`,
     });
   });
 
   pi.on('tool_call', (event) => {
     if (!['bash', 'interactive_shell'].includes(event.toolName)) return;
     const command = Check(Type.Object({ command: Type.String() }), event.input) ? event.input.command : '';
-    const review = blockedPost(command, readReviews());
+    const reviews = readReviews();
 
-    if (review)
+    if (blockedPost(command, reviews))
       return {
         block: true,
-        reason: `#${review.number} has a review draft: only Seth posts it, with /review-pr post. Edit ${review.draft} instead.`,
+        reason: `Review drafts are pending (${reviews.map((review) => `${review.repo}#${review.number}`).join(', ')}): only Seth posts to GitHub, with /review-pr post. Edit the draft file instead.`,
       };
   });
 
