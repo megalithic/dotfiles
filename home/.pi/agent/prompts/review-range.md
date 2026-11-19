@@ -13,7 +13,7 @@ Review the commit range `$1` with the light reviewer team, read-only. Acceptance
 
 ## 2. Start the reviewers, then end the turn
 
-The team is `reviewer-correctness`, `reviewer-security`, and every other `reviewer-*` agent the project defines in `.pi/agents/` (`ls .pi/agents/reviewer-*.md` in the main checkout). One codemode call: `Promise.allSettled` one `subagent` call per reviewer, with the same task and the current working directory:
+The team is `reviewer-correctness`, `reviewer-security`, and every other `reviewer-*` agent the project defines in `.pi/agents/` of the current working directory (`ls .pi/agents/reviewer-*.md`; pi loads project agents only from there, so from a worktree without `.pi/agents/` only the two global reviewers run: say so in the report). One codemode call: `Promise.allSettled` one `subagent` call per reviewer, with the same task and the current working directory:
 
 ```
 Review the immutable range <base-sha>..<head-sha> in <cwd>.
