@@ -1,5 +1,5 @@
 ---
-description: Light review of a commit range — reviewer-correctness + reviewer-security in parallel, findings merged
+description: Light review of a commit range — reviewer-correctness, reviewer-security and the project's reviewer-* in parallel, findings merged
 argument-hint: "<base>..<head> [acceptance criteria or focus…]"
 ---
 
@@ -8,12 +8,12 @@ Review the commit range `$1` with the light reviewer team, read-only. Acceptance
 ## 1. Pin the range (one bash call)
 
 - Empty `$1`, or no `..` in it → ask for `<base>..<head>`, then stop.
-- Resolve both ends to full SHAs: `git rev-parse --verify <base>^{commit} <head>^{commit}`. Either fails → say which and stop. Never substitute another range.
+- Resolve both ends to full SHAs: `git rev-parse --verify <base>^{commit}` and `git rev-parse --verify <head>^{commit}`, one call each. Either fails → say which and stop. Never substitute another range.
 - `git log --oneline <base>..<head>` empty → say there is nothing to review and stop.
 
-## 2. Start both reviewers, then end the turn
+## 2. Start the reviewers, then end the turn
 
-One codemode call: `Promise.allSettled` two `subagent` calls, `agent: "reviewer-correctness"` and `agent: "reviewer-security"`, with the same task and the current working directory:
+The team is `reviewer-correctness`, `reviewer-security`, and every other `reviewer-*` agent the project defines in `.pi/agents/` (`ls .pi/agents/reviewer-*.md` in the main checkout). One codemode call: `Promise.allSettled` one `subagent` call per reviewer, with the same task and the current working directory:
 
 ```
 Review the immutable range <base-sha>..<head-sha> in <cwd>.
@@ -26,14 +26,13 @@ Never give one reviewer's report to the other. Then end the turn with a one-line
 
 ## 3. Merge, when both have answered
 
-A reviewer that failed or ended without a report is `missing`; say so, never fill its part yourself. Report each issue once, naming every reviewer that raised it. Add none and drop none; where they disagree, show both positions. The verdict is APPROVED only when both approved.
+A reviewer that failed or ended without a report is `missing`; say so, never fill its part yourself. Report each issue once, naming every reviewer that raised it. Add none and drop none; where they disagree, show both positions. The verdict is APPROVED only when every blocking reviewer approved (a reviewer that describes itself as advisory never blocks).
 
 ```text
 Verdict: APPROVED | NEEDS CHANGES
 Reviewed range: <base>..<head>
 Reviewers:
-- reviewer-correctness — APPROVED | NEEDS CHANGES | missing
-- reviewer-security — APPROVED | NEEDS CHANGES | missing
+- reviewer-<name> — APPROVED | NEEDS CHANGES | missing (one line each)
 Blocking:
 - [P0|P1|P2] Title — path:line; impact, evidence, suggested fix. (reviewer-…)
 - None
