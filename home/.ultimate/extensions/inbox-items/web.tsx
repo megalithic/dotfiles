@@ -15,6 +15,7 @@ type InboxItem = {
   tag: string;
   title: string;
   gist?: string;
+  text?: string;
   pane: ReactNode;
 };
 const InboxItems = definePoint<null, InboxItem[]>('inbox.items');
@@ -127,6 +128,7 @@ export default defineWebExtension({
           tag: item.kind,
           title: item.title,
           gist: item.text.split(/\r?\n/, 1)[0],
+          text: item.text,
           pane: <Pane key={item.id} item={item} />,
         }));
     }),

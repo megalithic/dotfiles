@@ -23,4 +23,4 @@ All three are user-only actions. The pane renders Markdown with `MessageResponse
 
 `inbox-items.items` is exported on the root conversation (`ROOT_CONVERSATION_ID`), with `{next, items}`. Each item stores `{id, kind, title, text, url?, path?, conversation, key?, at, done?}`; timestamps are epoch milliseconds. It uses `history: 'latest'`, `fork: 'initial'`, and retains all open items plus the 50 newest completions.
 
-The browser reads that root document and provides open items to `inbox.items` with keys `inbox-items:<id>`, the kind as tag and the first text line as gist. The Inbox supplies the title and Open in branch link; completing an item removes it from the provided list.
+The browser reads that root document and provides open items to `inbox.items` with keys `inbox-items:<id>`, the kind as tag, the first text line as gist and the whole text as `text`, which the Inbox's follow-up side chat (side-chat's "Ask #id about this…") is told about. The Inbox supplies the title and Open in branch link; completing an item removes it from the provided list.
