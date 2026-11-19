@@ -332,10 +332,19 @@ RWT_TEST_GH='[]' "$RWT" pr feat/y --refresh | jq -e '.pr == null' >/dev/null || 
 [ "$("$RWT" pr "$repo" | jq -c .pr)" = null ] || fail "pr on the default branch"
 ok "pr: cached 60 s, stale when gh fails, null without a PR or on main"
 
-# Another checkout with the same branch name never reads this one's cache.
-git -C "$strive" worktree add -q -b feat/y "$strive/.worktrees/feat-y"
-RWT_TEST_GH_FAIL=1 "$RWT" pr "$strive/.worktrees/feat-y" | jq -e '.pr == null' >/dev/null ||
-  fail "pr read another checkout's cache"
+# a/b and a-b slug alike; neither reads the other's PR, fresh or stale.
+for r in a/b a-b; do
+  git init -q -b main "$tmp/$r"
+  HK=0 git -C "$tmp/$r" -c user.email=t@t -c user.name=t commit -q --allow-empty -m init
+  git -C "$tmp/$r" worktree add -q -b feat/y "$tmp/$r/.worktrees/feat-y"
+done
+RWT_TEST_GH="$(pr "[$ok_run]" APPROVED CLEAN false)" "$RWT" pr "$tmp/a/b/.worktrees/feat-y" --refresh |
+  jq -e '.pr.number == 7' >/dev/null || fail "pr a/b"
+RWT_TEST_GH='[]' "$RWT" pr "$tmp/a-b/.worktrees/feat-y" | jq -e '.pr == null' >/dev/null || fail "pr a-b read a/b's fresh cache"
+rm -f "$tmp"/cache/rwt/pr/*
+RWT_TEST_GH="$(pr "[$ok_run]" APPROVED CLEAN false)" "$RWT" pr "$tmp/a/b/.worktrees/feat-y" --refresh >/dev/null
+RWT_TEST_GH_FAIL=1 "$RWT" pr "$tmp/a-b/.worktrees/feat-y" --refresh | jq -e '.pr == null' >/dev/null ||
+  fail "pr a-b read a/b's stale cache"
 ok "pr: the cache belongs to one checkout"
 
 # A squash merge leaves no ancestry; prune trusts only a merged PR of the head.
