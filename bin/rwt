@@ -130,7 +130,8 @@ resolve() {
   fi
   if [ "$WT" = "$MAIN" ]; then
     WID=
-    LABEL="$(basename "$MAIN" | tr -c 'A-Za-z0-9_' '-' | sed 's/-*$//')-main"
+    # Ends trimmed: a leading dash (.dotfiles) would make `rex new` read the label as a flag.
+    LABEL="$(basename "$MAIN" | tr -c 'A-Za-z0-9_' '-' | sed -e 's/^-*//' -e 's/-*$//')-main"
   else
     # The GIT_WORKTREE id, {repo}-{branch slug} (a detached checkout uses its
     # directory name). Project configs read it with `rwt id`, and per-worktree
