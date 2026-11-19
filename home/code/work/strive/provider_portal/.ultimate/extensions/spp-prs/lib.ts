@@ -1,9 +1,19 @@
 /** Pure parts of My PRs: GitHub's answer shaped into merge order, and the gates ledger. */
 
 export const DOCUMENT = 'spp-prs.gates';
+export const JUDGED = 'spp-prs.judged';
 
 export type Ci = 'pass' | 'fail' | 'pending' | 'none';
-export type Review = 'approved' | 'changes' | 'required' | 'none';
+export type Review = 'approved' | 'changes' | 'commented' | 'required' | 'none';
+
+/** What a review comment asks of Seth: a change, an answer, or nothing. */
+export type Kind = 'act' | 'question' | 'none';
+
+/** One review thread, review body or PR comment still waiting on Seth. `by` says who judged it. */
+export type Item = { kind: Kind; by: 'rule' | 'model'; author: string; text: string; url: string };
+
+/** Review comments on one pull request: totals, and the items that need Seth (act or question). */
+export type Feedback = { threads: number; unresolved: number; items: Item[] };
 
 /** One open pull request as the panel shows it; `depth` > 0 means it is stacked on the row above its parent. */
 export type Row = {
@@ -20,6 +30,8 @@ export type Row = {
   depth: number;
   /** Worktrees of the project checked out on this branch or at its head commit. */
   worktrees: string[];
+  /** Absent when GitHub's review threads could not be read. */
+  feedback?: Feedback;
 };
 
 /** The `list` action's answer: rows, or why GitHub could not be asked. */
@@ -59,6 +71,9 @@ const reviews: Record<string, Review> = {
   CHANGES_REQUESTED: 'changes',
   REVIEW_REQUIRED: 'required',
 };
+
+/** Judgments by comment id and `updatedAt`, so each comment version goes to the model once. */
+export type Judged = { kinds: Record<string, Kind> };
 
 /**
  * Pull requests in merge order. A pull request whose base branch is another one's head is stacked on it and follows
@@ -101,6 +116,142 @@ export function order(pulls: GhPull[], worktrees: Worktree[] = []): Row[] {
   return rows;
 }
 const byNumber = (pulls: GhPull[]) => pulls.toSorted((a, b) => a.number - b.number);
+
+type Author = { login: string; __typename: string } | null;
+type GqlComment = { id: string; url: string; body: string; createdAt: string; updatedAt: string; author: Author };
+
+/** One pull request from the review-feedback GraphQL query (`server.ts`). */
+export type GqlPull = {
+  number: number;
+  latestReviews: { nodes: (GqlComment & { state: string })[] };
+  reviewThreads: {
+    totalCount: number;
+    nodes: { isResolved: boolean; isOutdated: boolean; comments: { nodes: GqlComment[] } }[];
+  };
+  comments: { nodes: GqlComment[] };
+};
+
+const isBot = (author: Author) => !author || author.__typename === 'Bot' || author.login.endsWith('[bot]');
+
+/** Prose only: quoted replies and code (other than a suggestion) say nothing about what is asked. */
+const prose = (body: string) =>
+  body
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`]*`/g, 'code')
+    .split('\n')
+    .filter((line) => !line.trimStart().startsWith('>'))
+    .join('\n')
+    .trim();
+
+const chatter =
+  /^(thanks?( you)?|thx|ty|lgtm|looks (good|great)( to me)?|nice( work| one)?|great( work)?|awesome|cool|ok(ay)?|done|sounds good|ship it|\+1|agreed|makes sense|fair enough)\b/i;
+const request = /\b(can|could|would|will) you\b|\bwhy not\b|\bmind (changing|adding|removing)\b/i;
+const nit = /(^|\n)\s*\W*(nit|nitpick|suggestion|todo)\b/i;
+// Only a comment's opening sentence: long write-ups ("Looks good. … the missing rate limit is recorded…") use these
+// words while asking nothing.
+const imperative =
+  /\b(please|should(n'?t)?|must|need(s)? to|let'?s|consider|instead of|rename|remove|move|extract|don'?t|avoid|typo)\b/i;
+const opening = (text: string) => text.split(/(?<=[.!?])\s|\n/)[0] ?? '';
+
+/**
+ * What a comment asks of Seth, decided in code: `act` (a change), `question` (an answer) or `none` (bots, thanks,
+ * LGTM, emoji). `undefined` when the wording does not say; the caller asks a model or assumes a question.
+ */
+export function rule(body: string, author: Author): Kind | undefined {
+  if (isBot(author)) return 'none';
+  if (/```suggestion\b/.test(body)) return 'act';
+  const text = prose(body);
+  // Priority-tagged findings from AI review: "[P2] Preserve completion callbacks…".
+  if (/^\s*\[P[0-3]\]/.test(text)) return 'act';
+  const words = text.replace(/[^\p{L}\p{N}?+]+/gu, ' ').trim();
+  if (!words) return 'none';
+  if (words.length <= 40 && !text.includes('?') && chatter.test(words)) return 'none';
+  const asks = /\?(\s|$)/.test(text);
+  if (asks && request.test(text)) return 'act';
+  if (asks) return 'question';
+  if (nit.test(text) || imperative.test(opening(text))) return 'act';
+  return undefined;
+}
+
+/** A comment still waiting on Seth, with the cache key its judgment is kept under. */
+export type Open = { key: string; author: string; body: string; url: string; kind?: Kind };
+
+/** An approval's write-up needs nothing unless a rule finds a request or a question in it. */
+const open = (comment: GqlComment & { state?: string }): Open => ({
+  key: `${comment.id}@${comment.updatedAt}`,
+  author: comment.author?.login ?? 'ghost',
+  body: comment.body,
+  url: comment.url,
+  kind: rule(comment.body, comment.author) ?? (comment.state === 'APPROVED' ? 'none' : undefined),
+});
+
+/**
+ * The comments on a pull request still waiting on `me`: the last comment of each unresolved, current thread unless it
+ * is Seth's (then it is answered), and review bodies and conversation comments by others since Seth last commented.
+ * Outdated threads are on code that has changed since: they need nothing.
+ */
+export function pending(pull: GqlPull, me: string): Open[] {
+  const mine = (comment: GqlComment) => comment.author?.login === me;
+  const threads = pull.reviewThreads.nodes
+    .filter((thread) => !thread.isResolved && !thread.isOutdated)
+    .map((thread) => thread.comments.nodes.at(-1))
+    .filter((last): last is GqlComment => !!last && !mine(last));
+  const spoke = Math.max(0, ...pull.comments.nodes.filter(mine).map((comment) => Date.parse(comment.createdAt)));
+  const since = [...pull.latestReviews.nodes, ...pull.comments.nodes].filter(
+    (comment) => comment.body.trim() && !mine(comment) && Date.parse(comment.createdAt) > spoke,
+  );
+  return [...threads, ...since].map(open);
+}
+
+/** Totals, and the open items judged `act` or `question`; one no rule or model decided counts as a question. */
+export function feedback(pull: GqlPull, items: Open[], judged: Record<string, Kind>): Feedback {
+  return {
+    threads: pull.reviewThreads.totalCount,
+    unresolved: pull.reviewThreads.nodes.filter((thread) => !thread.isResolved).length,
+    items: items.flatMap((item): Item[] => {
+      const kind = item.kind ?? judged[item.key] ?? 'question';
+      if (kind === 'none') return [];
+      const text = prose(item.body).split('\n')[0]?.slice(0, 140) || item.body.slice(0, 140);
+      return [{ kind, by: item.kind ? 'rule' : 'model', author: item.author, text, url: item.url }];
+    }),
+  };
+}
+
+/** On a stacked branch GitHub gives no review decision: the latest reviews by others still say what they think. */
+export function reviewOf(decision: Review, pull: GqlPull | undefined, me: string): Review {
+  if (decision !== 'none' && decision !== 'required') return decision;
+  const states = new Set(
+    pull?.latestReviews.nodes.filter((review) => review.author?.login !== me).map((review) => review.state),
+  );
+  if (states.has('CHANGES_REQUESTED')) return 'changes';
+  if (states.has('APPROVED')) return 'approved';
+  if (states.has('COMMENTED')) return 'commented';
+  return decision;
+}
+
+/** The cheap model's prompt for comments no rule decided, and its answer read back; anything unreadable is skipped. */
+export const JUDGE_SYSTEM =
+  'You triage GitHub pull request review comments for the PR author. For each comment answer "act" when it asks for a code change, "question" when it asks the author something that needs a reply, or "none" when it needs neither (thanks, praise, FYI, agreement). Answer with one JSON object mapping each id to its label, nothing else.';
+
+export const judgeInput = (items: Open[]) =>
+  JSON.stringify(items.map((item, index) => ({ id: String(index), comment: prose(item.body).slice(0, 800) })));
+
+export function readJudgment(items: Open[], answer: string): Record<string, Kind> {
+  const json = answer.slice(answer.indexOf('{'), answer.lastIndexOf('}') + 1);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch {
+    return {};
+  }
+  const labels = parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : {};
+  return Object.fromEntries(
+    items.flatMap((item, index) => {
+      const label = labels[String(index)];
+      return label === 'act' || label === 'question' || label === 'none' ? [[item.key, label]] : [];
+    }),
+  );
+}
 
 /** `git worktree list --porcelain` as path, head commit and branch. */
 export function parseWorktrees(porcelain: string): Worktree[] {

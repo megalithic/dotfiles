@@ -54,6 +54,7 @@ const ci: Record<Row['ci'], [string, string]> = {
 const review: Record<Row['review'], [string, string] | undefined> = {
   approved: ['approved', 'text-success'],
   changes: ['changes requested', 'text-error'],
+  commented: ['commented', 'text-muted-foreground'],
   required: ['review required', 'text-muted-foreground'],
   // Stacked branches have no review rule until they are retargeted to main.
   none: undefined,
@@ -94,6 +95,41 @@ function ConversationLink({ worktrees }: { worktrees: string[] }) {
 
 function Tag({ value }: { value?: [string, string] }) {
   return value ? <span className={cn('shrink-0', value[1])}>{value[0]}</span> : null;
+}
+
+/** How many review comments need a change or an answer from Seth; hovering lists them. */
+function FeedbackTags({ row }: { row: Row }) {
+  const feedback = row.feedback;
+  if (!feedback) return null;
+  const act = feedback.items.filter((item) => item.kind === 'act').length;
+  const ask = feedback.items.length - act;
+  const list = feedback.items
+    .map((item) => `${item.kind === 'act' ? 'act' : 'answer'}${item.by === 'model' ? '*' : ''} · ${item.author}: ${item.text}`)
+    .join('\n');
+  const title = [
+    `review threads: ${feedback.threads}, unresolved: ${feedback.unresolved}`,
+    list,
+    feedback.items.some((item) => item.by === 'model') ? '* judged by the tiny model' : '',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+  return (
+    <a
+      className="flex shrink-0 gap-2 hover:underline"
+      href={feedback.items[0]?.url ?? `${row.url}/files`}
+      rel="noreferrer"
+      target="_blank"
+      title={title}
+    >
+      {act > 0 && <span className="text-error">{act} to act</span>}
+      {ask > 0 && <span className="text-warning">{ask} to answer</span>}
+      {feedback.unresolved > 0 && (
+        <span className="text-muted-foreground/60">
+          {feedback.unresolved}/{feedback.threads} open
+        </span>
+      )}
+    </a>
+  );
 }
 
 function GateLine({ gate, now }: { gate: Gate; now: number }) {
@@ -169,6 +205,7 @@ function PullRow({ row, gates, now }: { row: Row; gates: Gate[]; now: number }) 
             {ci[row.ci][0]}
           </a>
           <Tag value={review[row.review]} />
+          <FeedbackTags row={row} />
           <Tag value={merge[row.merge]} />
           <span className="ml-auto flex min-w-0 justify-end">
             <ConversationLink worktrees={row.worktrees} />

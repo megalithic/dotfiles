@@ -6,13 +6,14 @@ Seth's open provider_portal pull requests in merge order, with draft, CI and rev
 
 - **Order:** a pull request whose base branch is another one's head is stacked on it: it follows its parent, indented. Pull requests on `main` start stacks, oldest number first. Nothing is read from PR bodies.
 - **Per row:** number (opens GitHub), title, `draft`, CI rolled up from every check (`fail` wins; `pass` only when every check succeeded, was neutral or skipped; anything else, such as running or stale, is `pending`; opens the checks tab), the review decision (empty on stacked branches, which have no review rule until retargeted), `conflicts` or `behind base`, and the conversation working on that branch (a worktree on the branch or at its head commit; the topmost, most recently active one).
+- **Review comments:** `N to act` (asks for a change) and `N to answer` (asks a question), then `unresolved/total` threads; hovering lists each item, and the tags open the first one. Waiting on Seth: the last comment of each unresolved thread that is not outdated and not his own, plus review bodies and PR comments by others since he last commented. Rules decide first (`rule` in `lib.ts`): bots, thanks, LGTM and emoji need nothing; a suggestion block, `[P1]`-style finding, `nit:`, or a request in the opening sentence (please, should, can you…) is a change; a sentence ending in `?` is a question; an approval's write-up needs nothing. What no rule decides goes to the `tiny` family's model (marked `*`) once per comment version, cached by comment id + `updatedAt` in the `spp-prs.judged` document; with no model it counts as a question. On stacked branches with no review decision, others' latest reviews give `changes requested`, `approved` or `commented`.
 - **Gates:** what GitHub cannot know, such as "after #12: run the migration" on #13. A gate shows on the pull request it holds back as `unknown` until Seth presses **confirm**; it disappears once that pull request is no longer open.
 
 The panel gives no "ready to merge" verdict: CI, review and gates stay separate.
 
 ## Actions
 
-- `list` → `{status: 'ok', at, rows}` or `{status: 'setup', reason}` when `gh` is missing or signed out. Read-only: one `gh pr list --author @me` and one `git worktree list` in the project root.
+- `list` → `{status: 'ok', at, rows}` or `{status: 'setup', reason}` when `gh` is missing or signed out. Read-only: one `gh pr list --author @me`, one `gh api graphql` query for review threads, reviews and comments (rows lose `feedback` if it fails), and one `git worktree list` in the project root. Nothing is posted to GitHub.
 - `addGate {blocks, after?, text}` → the gate, added as `unknown` (text 1–200 characters). Agents may call it: `await ultimate.action('spp-prs', 'addGate', {blocks: 13, after: 12, text: 'run the migration'})`. The same `blocks`, `after` and text returns the existing gate.
 - `confirmGate {id}` and `removeGate {id}` are user-only (`userActions`): codemode calls are rejected, so only Seth's click confirms.
 
