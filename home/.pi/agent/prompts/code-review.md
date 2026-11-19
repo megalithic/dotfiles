@@ -87,6 +87,6 @@ Jev (`typesafe_evaluate`, operator opt-in already on; 20 attempts per session, n
 - `artifact` action=create, kind=html, `path` = that file, title `<slug> consensus review`. If the user must choose what to fix, attach one `decisions` entry per blocker/should-fix item instead of asking in the terminal.
 - Final reply, in this order:
   1. Artifact URL and one line: arbiter verdict + counts per severity.
-  2. **The engineer summary, verbatim, inside a fenced markdown block** so it can be copied straight into Slack or a GitHub PR comment. This is required on every run: a concise summary of the required / recommended / beneficial changes, followed by the rest of the review's suggestions, written for the PR author. Never paraphrase it in prose instead of pasting it.
+  2. **The engineer summary, verbatim, inside a fenced markdown block** so it can be copied straight into Slack or a GitHub PR comment. This is required on every run: written for the PR author, it opens with what blocks merge (no greeting, thanks or praise), then what is good to have, then cleanup and the rest of the review's suggestions. Never paraphrase it in prose instead of pasting it.
   3. Model substitutions and what was not checked (e.g. "no DB in the review worktree", missing reports, unverifiable external contracts).
   Leave the worktree in place unless asked; mention `rwt prune <branch>` as the cleanup. Do not post the summary to GitHub or Slack yourself; the user decides where it goes.

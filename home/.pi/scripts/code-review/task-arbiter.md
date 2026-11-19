@@ -37,8 +37,8 @@ A short markdown summary (verdict: ship / fix N items first; counts per severity
 A second section headed exactly `## Engineer summary`. This is what gets pasted to the author on Slack or as a GitHub PR comment, so write it for them, not for us:
 
 - Plain GitHub-flavoured markdown that also reads fine in Slack. No `C` ids, no reviewer letters, no mention of arbiters, models or Jev.
-- One opening line: verdict and what blocks merge, if anything.
-- Four groups, skip empty ones, in this order: `**Required**` (must change before merge), `**Recommended**` (fix before or right after merge), `**Beneficial**` (cleanup worth doing now), `**Other suggestions**` (everything else the reviewers raised that survived, including decisions the author needs to escalate).
+- No greeting, thanks, praise or recap of what the PR does. The first line is the verdict and what blocks merge, if anything.
+- Four groups, skip empty ones, in this order: `**Blocks merge**` (must change before merge), `**Good to have**` (fix before or right after merge), `**Cleanup**` (worth doing now), `**Other suggestions**` (everything else the reviewers raised that survived, including decisions the author needs to escalate).
 - One bullet per item: `path:line` in backticks, then one sentence saying what to change and why. ≤ 25 words after the path. Name the smallest fix, not the problem's history.
 - ≤ 20 bullets total, ≤ 250 words. Short sentences, everyday words, no hedging.
 - Close with one line listing what the review could not check.

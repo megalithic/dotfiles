@@ -161,7 +161,7 @@ Flag issues that:
 5. Explicitly state scenarios/environments where the issue arises.
 6. Use a matter-of-fact tone - helpful AI assistant, not accusatory.
 7. Write for quick comprehension without close reading.
-8. Avoid excessive flattery or unhelpful phrases like "Great job...".
+8. No greeting, thanks, praise or recap of the change ("Great job..."): open with what blocks merge.
 
 ## Review priorities
 
@@ -184,7 +184,7 @@ Tag each finding with a priority level in the title:
 ## Output format
 
 Provide your findings in a clear, structured format:
-1. List each finding with its priority tag, file location, and explanation.
+1. List each finding with its priority tag, file location, and explanation, most severe first: what blocks merge, then what is good to have, then the rest.
 2. Keep line references as short as possible (avoid ranges over 5-10 lines).
 3. At the end, provide an overall verdict: "correct" (no blocking issues) or "needs attention" (has blocking issues).
 4. Ignore trivial style issues unless they obscure meaning or violate documented standards.
