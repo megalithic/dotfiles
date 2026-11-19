@@ -772,17 +772,18 @@ pr_lookup() { # force(0|1) -> JSON on stdout
     echo null
     return
   }
-  cache="${XDG_CACHE_HOME:-$HOME/.cache}/rwt/pr/$(slug "$WT").json"
+  # Keyed by a hash of the checkout path; each read also checks path and branch.
+  cache="${XDG_CACHE_HOME:-$HOME/.cache}/rwt/pr/$(printf '%s' "$WT" | shasum -a 256 | cut -c1-16).json"
   now="$(date +%s)"
   head="$(git -C "$MAIN" rev-parse --verify --quiet "refs/heads/$BRANCH")"
   if [ "${1:-0}" = 0 ] && [ -f "$cache" ] &&
-    out="$(jq -ce --arg b "$BRANCH" --argjson now "$now" 'select(.branch == $b and $now - .fetched < 60)' "$cache" 2>/dev/null)"; then
+    out="$(jq -ce --arg w "$WT" --arg b "$BRANCH" --argjson now "$now" 'select(.worktree == $w and .branch == $b and $now - .fetched < 60)' "$cache" 2>/dev/null)"; then
     :
   elif out="$(cd "$MAIN" && GH_PROMPT_DISABLED=1 "${RWT_GH:-gh}" pr list --head "$BRANCH" --state all --limit 1 \
     --json number,url,state,isDraft,headRefOid,reviewDecision,mergeable,mergeStateStatus,statusCheckRollup 2>/dev/null)" &&
-    out="$(jq -c --arg b "$BRANCH" --argjson now "$now" '{branch:$b, fetched:$now, pr:.[0]}' <<<"$out" 2>/dev/null)"; then
+    out="$(jq -c --arg w "$WT" --arg b "$BRANCH" --argjson now "$now" '{worktree:$w, branch:$b, fetched:$now, pr:.[0]}' <<<"$out" 2>/dev/null)"; then
     mkdir -p "$(dirname "$cache")" && printf '%s\n' "$out" >"$cache.$$" && mv "$cache.$$" "$cache"
-  elif out="$(jq -ce --arg b "$BRANCH" 'select(.branch == $b) | .stale = true' "$cache" 2>/dev/null)"; then
+  elif out="$(jq -ce --arg w "$WT" --arg b "$BRANCH" 'select(.worktree == $w and .branch == $b) | .stale = true' "$cache" 2>/dev/null)"; then
     :
   else
     echo null

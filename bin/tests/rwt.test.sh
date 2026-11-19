@@ -332,6 +332,12 @@ RWT_TEST_GH='[]' "$RWT" pr feat/y --refresh | jq -e '.pr == null' >/dev/null || 
 [ "$("$RWT" pr "$repo" | jq -c .pr)" = null ] || fail "pr on the default branch"
 ok "pr: cached 60 s, stale when gh fails, null without a PR or on main"
 
+# Another checkout with the same branch name never reads this one's cache.
+git -C "$strive" worktree add -q -b feat/y "$strive/.worktrees/feat-y"
+RWT_TEST_GH_FAIL=1 "$RWT" pr "$strive/.worktrees/feat-y" | jq -e '.pr == null' >/dev/null ||
+  fail "pr read another checkout's cache"
+ok "pr: the cache belongs to one checkout"
+
 # A squash merge leaves no ancestry; prune trusts only a merged PR of the head.
 HK=0 git -C .worktrees/feat-y -c user.email=t@t -c user.name=t commit -q --allow-empty -m work
 head="$(git rev-parse feat/y)"

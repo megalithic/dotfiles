@@ -8,6 +8,7 @@ import { truncateToWidth, visibleWidth } from '@earendil-works/pi-tui';
 import { Type } from 'typebox';
 import { Value } from 'typebox/value';
 import { execFile as execFileCb } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { promisify } from 'node:util';
 
 const execFile = promisify(execFileCb);
@@ -215,6 +216,9 @@ const rwtPrSchema = Type.Object({
 });
 
 async function fetchPr(cwd: string, refresh = false): Promise<string> {
+  // rwt reads a missing path as a branch name; a footer cwd that is gone has no PR.
+  if (!existsSync(cwd)) return '';
+
   try {
     const { stdout } = await execFile(`${process.env.HOME}/bin/rwt`, ['pr', cwd, ...(refresh ? ['--refresh'] : [])], {
       timeout: 5000,
@@ -277,12 +281,15 @@ export default function (pi: ExtensionAPI) {
       const unsub = () => {
         clearInterval(prTimer);
         unsubBranch();
+        offStart?.();
+        offEnd?.();
       };
 
       const vcsTools = new Set(['bash', 'edit', 'write']);
       // A push or a gh pr command may have opened or changed the PR.
       const prCalls = new Set<string>();
-      pi.on('tool_execution_start', (event) => {
+
+      const offStart = pi.on('tool_execution_start', (event) => {
         const command = String(event.args?.command ?? '');
 
         if (event.toolName.toLowerCase() === 'bash' && /\bgit\s+push\b|\bgh\s+pr\b/.test(command)) {
@@ -290,7 +297,7 @@ export default function (pi: ExtensionAPI) {
         }
       });
 
-      pi.on('tool_execution_end', async (event) => {
+      const offEnd = pi.on('tool_execution_end', async (event) => {
         if (prCalls.delete(event.toolCallId)) void refreshPr(true);
 
         if (vcsTools.has(event.toolName.toLowerCase())) {
