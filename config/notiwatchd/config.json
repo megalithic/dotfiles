@@ -1,9 +1,25 @@
 {
-  "_comment": "notiwatchd rules. First match wins. match fields: bundle_id (exact, string or array), title/subtitle/body (case-insensitive regex, string or array). Absent field = wildcard. actions: log | ignore | dismiss (AX close of on-screen banner; needs Accessibility grant) | ntfy | ntfy:phone | exec:<cmd> | webhook:<url>. urgency: normal | high | critical (passed to ntfy -u). quiet_in_focus: Focus mode names (string or array); while one is on, only log/ignore/dismiss run.",
+  "_comment": "notiwatchd rules for Notification Center events and `notiwatchd post` (bin/notify). First match wins. match fields: bundle_id and source (exact, string or array), title/subtitle/body (case-insensitive regex, string or array). Absent field = wildcard. actions: log | ignore | dismiss (AX close of on-screen banner; needs Accessibility grant) | sup (a toast; skipped while screen sharing or while Seth is in the sender's pane/chat/app) | ntfy | exec:<cmd> | webhook:<url>. urgency: normal | high | critical (sup info | warn | critical). quiet_in_focus: Focus mode names (string or array); while one is on, only log/ignore/dismiss run. Unmatched posts run post_actions, unmatched NC events default_actions.",
   "poll_fallback_seconds": 30,
   "ntfy_path": "~/.dotfiles/bin/ntfy",
   "default_actions": ["log"],
+  "post_actions": ["log", "sup"],
   "rules": [
+    {
+      "name": "pi",
+      "match": { "source": ["pi", "pi tell"] },
+      "actions": ["log", "sup"]
+    },
+    {
+      "name": "vpn",
+      "match": { "source": "vpn" },
+      "actions": ["log", "sup"]
+    },
+    {
+      "name": "slck",
+      "match": { "source": "slck" },
+      "actions": ["log", "sup"]
+    },
     {
       "name": "background-activity-noise",
       "match": { "bundle_id": "com.apple.BTMNotificationAgent" },
@@ -16,7 +32,7 @@
         "body": ["@seth", "\\burgent\\b"]
       },
       "urgency": "high",
-      "actions": ["dismiss", "ntfy"]
+      "actions": ["dismiss", "sup"]
     },
     {
       "name": "message-reactions",
@@ -27,7 +43,7 @@
       },
       "urgency": "normal",
       "quiet_in_focus": ["Do Not Disturb"],
-      "actions": ["dismiss", "ntfy"]
+      "actions": ["dismiss", "sup"]
     },
     {
       "name": "urgent-keywords",
@@ -37,7 +53,7 @@
         "body": ["\\b(urgent|asap|emergency|911|call me)\\b"]
       },
       "urgency": "critical",
-      "actions": ["dismiss", "ntfy"]
+      "actions": ["dismiss", "sup"]
     },
     {
       "name": "group-messages",
@@ -49,7 +65,7 @@
       },
       "urgency": "normal",
       "quiet_in_focus": ["Do Not Disturb"],
-      "actions": ["dismiss", "ntfy"]
+      "actions": ["dismiss", "sup"]
     },
     {
       "name": "urgent-messages",
@@ -60,14 +76,14 @@
         "body": ["\\?(?![\\w/=&%#.-])"]
       },
       "urgency": "critical",
-      "actions": ["dismiss", "ntfy"]
+      "actions": ["dismiss", "sup"]
     },
     {
       "name": "messages",
       "match": { "bundle_id": ["com.apple.mobilesms", "com.apple.ichat"] },
       "urgency": "normal",
       "quiet_in_focus": ["Do Not Disturb"],
-      "actions": ["dismiss", "ntfy"]
+      "actions": ["dismiss", "sup"]
     }
   ]
 }

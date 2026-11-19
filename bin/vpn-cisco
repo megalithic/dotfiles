@@ -5,9 +5,9 @@
 
 set -euo pipefail
 
-# Get script directory for finding ntfy
+# Get script directory for finding notify
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-NTFY_CMD="$SCRIPT_DIR/ntfy"
+NOTIFY_CMD="$SCRIPT_DIR/notify"
 
 # Default configuration
 # VPN URL must be provided through the fnox-managed CISCO_VPN_URL variable.
@@ -288,7 +288,7 @@ disconnect_vpn() {
     $VPNCLI disconnect
     log_success "Disconnected from VPN"
     if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
-      $NTFY_CMD send -t "VPN Disconnected" -m "Successfully disconnected from VPN" -u normal
+      "$NOTIFY_CMD" -s vpn -t "VPN Disconnected" -m "Successfully disconnected from VPN" -u normal
     fi
   else
     log_error "VPN CLI not found, cannot disconnect"
@@ -401,13 +401,13 @@ EOF
       if get_vpn_status; then
         log_success "VPN is now connected"
         if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
-          $NTFY_CMD send -t "VPN Connected" -m "Successfully connected to $vpn_url" -u normal
+          "$NOTIFY_CMD" -s vpn -t "VPN Connected" -m "Successfully connected to $vpn_url" -u normal
         fi
       else
         log_info "VPN handshake in progress or authentication required"
         log_info "Please complete authentication in the GUI if prompted"
         if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
-          $NTFY_CMD send -t "VPN Connection" -m "Connection to $vpn_url initiated. Complete authentication if prompted." -u normal
+          "$NOTIFY_CMD" -s vpn -t "VPN Connection" -m "Connection to $vpn_url initiated. Complete authentication if prompted." -u normal
         fi
       fi
     else
@@ -419,12 +419,12 @@ EOF
       if get_vpn_status; then
         log_success "VPN is connected despite automation warnings"
         if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
-          $NTFY_CMD send -t "VPN Connected" -m "Connected to $vpn_url" -u normal
+          "$NOTIFY_CMD" -s vpn -t "VPN Connected" -m "Connected to $vpn_url" -u normal
         fi
       else
         log_error "Failed to initiate VPN connection. Please connect manually and try again."
         if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
-          $NTFY_CMD send -t "VPN Connection Failed" -m "Could not automate connection. Please connect manually." -u high
+          "$NOTIFY_CMD" -s vpn -t "VPN Connection Failed" -m "Could not automate connection. Please connect manually." -u high
         fi
         return 1
       fi
@@ -465,13 +465,13 @@ connect_cli() {
     $VPNCLI state
 
     if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
-      $NTFY_CMD send -t "VPN Connected" -m "Successfully connected to $vpn_url" -u normal
+      "$NOTIFY_CMD" -s vpn -t "VPN Connected" -m "Successfully connected to $vpn_url" -u normal
     fi
     return 0
   else
     log_error "Failed to connect to VPN"
     if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
-      $NTFY_CMD send -t "VPN Connection Failed" -m "Could not connect to $vpn_url" -u high
+      "$NOTIFY_CMD" -s vpn -t "VPN Connection Failed" -m "Could not connect to $vpn_url" -u high
     fi
     return 1
   fi
@@ -524,7 +524,7 @@ disconnect_openconnect() {
 
   log_success "Disconnected from VPN"
   if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
-    $NTFY_CMD send -t "VPN Disconnected" -m "OpenConnect disconnected successfully" -u normal
+    "$NOTIFY_CMD" -s vpn -t "VPN Disconnected" -m "OpenConnect disconnected successfully" -u normal
   fi
 }
 
@@ -571,12 +571,12 @@ connect_openconnect() {
       if eval "$openconnect_cmd"; then
         log_success "Successfully connected to VPN"
         if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
-          $NTFY_CMD send -t "VPN Connected" -m "OpenConnect connected to $vpn_url" -u normal
+          "$NOTIFY_CMD" -s vpn -t "VPN Connected" -m "OpenConnect connected to $vpn_url" -u normal
         fi
       else
         log_error "Connection failed"
         if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
-          $NTFY_CMD send -t "VPN Connection Failed" -m "OpenConnect failed to connect to $vpn_url" -u high
+          "$NOTIFY_CMD" -s vpn -t "VPN Connection Failed" -m "OpenConnect failed to connect to $vpn_url" -u high
         fi
       fi
 
@@ -587,13 +587,13 @@ connect_openconnect() {
     if eval "$openconnect_cmd"; then
       log_success "Successfully connected to VPN"
       if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
-        $NTFY_CMD send -t "VPN Connected" -m "OpenConnect connected to $vpn_url" -u normal
+        "$NOTIFY_CMD" -s vpn -t "VPN Connected" -m "OpenConnect connected to $vpn_url" -u normal
       fi
       return 0
     else
       log_error "Failed to connect to VPN"
       if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
-        $NTFY_CMD send -t "VPN Connection Failed" -m "OpenConnect failed to connect to $vpn_url" -u high
+        "$NOTIFY_CMD" -s vpn -t "VPN Connection Failed" -m "OpenConnect failed to connect to $vpn_url" -u high
       fi
       return 1
     fi
@@ -636,14 +636,14 @@ connect_openconnect_sso() {
   if $sso_cmd; then
     log_success "Successfully connected to VPN"
     if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
-      $NTFY_CMD send -t "VPN Connected" -m "OpenConnect-SSO connected to $vpn_url" -u normal
+      "$NOTIFY_CMD" -s vpn -t "VPN Connected" -m "OpenConnect-SSO connected to $vpn_url" -u normal
     fi
     return 0
   else
     log_error "Failed to connect to VPN"
     log_error "Check if you completed authentication in the browser"
     if [[ "$ENABLE_NOTIFICATIONS" == true ]]; then
-      $NTFY_CMD send -t "VPN Connection Failed" -m "OpenConnect-SSO failed to connect to $vpn_url" -u high
+      "$NOTIFY_CMD" -s vpn -t "VPN Connection Failed" -m "OpenConnect-SSO failed to connect to $vpn_url" -u high
     fi
     return 1
   fi

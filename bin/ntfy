@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# ntfy - Slim AI agent notification wrapper
-# Delegates all logic to Hammerspoon's N.send() API
+# ntfy - Hammerspoon notification path, kept as the last resort: callers use
+# bin/notify (notiwatchd and sup), which runs this only when nothing was shown.
+# Delegates all logic to Hammerspoon's N.send() API. Values reach Lua as
+# `hs -c CODE -- ARGS` (_cli.args), never interpolated into the code.
 #
 # Usage:
 #   ntfy send -t "Title" -m "Message" [-u urgency] [-p] [-q]
@@ -98,19 +100,13 @@ detect_source() {
   echo ""
 }
 
-# Escape string for Lua (handle special characters)
-lua_escape() {
-  local str="$1"
-  # Use [[ ]] Lua string literals which handle most escaping
-  # But we need to escape ]] sequences
-  str="${str//]]/] ]}"
-  printf '%s' "$str"
-}
-
 # One hs client at a time: concurrent hs.ipc calls re-enter Hammerspoon's IPC
 # callback ("hs.ipc callback is being called recursively").
+# Usage: hs_locked CODE [ARGS...]; the code reads ARGS as _cli.args[2..].
 hs_locked() {
-  lockf -k -s -t 10 "/tmp/ntfy-hs-$(id -u).lock" hs "$@"
+  local code="$1"
+  shift
+  lockf -k -s -t 10 "/tmp/ntfy-hs-$(id -u).lock" hs -c "$code" -- "$@"
 }
 
 # Send notification via N.send()
@@ -211,43 +207,18 @@ cmd_send() {
   local context
   context=$(get_context)
 
-  # Escape for Lua
-  local lua_title lua_message lua_context
-  lua_title=$(lua_escape "$title")
-  lua_message=$(lua_escape "$message")
-  lua_context=$(lua_escape "$context")
-
-  # Bundle ID as Lua value (nil when not provided)
-  local lua_bundle="nil"
-  if [[ -n "$bundle_id" ]]; then
-    lua_bundle="[[$(lua_escape "$bundle_id")]]"
-  fi
-
-  # Convert attention hint to Lua value
-  local lua_attention
-  case "$attention" in
-    true) lua_attention="true" ;;
-    false) lua_attention="false" ;;
-    *) lua_attention="nil" ;; # auto = let Hammerspoon detect
-  esac
-
-  # Single Hammerspoon call with all data
+  # Single Hammerspoon call; attention auto (anything else) lets Hammerspoon detect
   local result
-  result=$(hs_locked -c "
-local N = require('lib.notifications')
-local result = N.send({
-  title = [[${lua_title}]],
-  message = [[${lua_message}]],
-  urgency = '${urgency}',
-  bundleID = ${lua_bundle},
-  phone = ${phone},
-  question = ${question},
-  context = [[${lua_context}]],
-  attentionHint = ${lua_attention},
+  result=$(hs_locked "
+local a = _cli.args
+local function opt(v) return v ~= '' and v or nil end
+local result = require('lib.notifications').send({
+  title = a[2], message = a[3], urgency = a[4], bundleID = opt(a[5]),
+  phone = a[6] == 'true', question = a[7] == 'true', context = a[8],
+  attentionHint = ({ ['true'] = true, ['false'] = false })[a[9]],
 })
-local channels = table.concat(result.channels, ',')
-print(result.sent and 'sent' or 'suppressed', result.reason, channels, result.questionId or '')
-" 2>&1)
+print(result.sent and 'sent' or 'suppressed', result.reason, table.concat(result.channels, ','), result.questionId or '')
+" "$title" "$message" "$urgency" "$bundle_id" "$phone" "$question" "$context" "$attention" 2>&1)
 
   echo "$result"
 }
@@ -291,28 +262,20 @@ cmd_answer() {
     return 1
   fi
 
-  local lua_id="${id:-nil}"
-  local lua_title lua_message
-  lua_title=$(lua_escape "$title")
-  lua_message=$(lua_escape "$message")
-
-  [[ -n "$id" ]] && lua_id="'$id'"
-  [[ -z "$title" ]] && lua_title=""
-  [[ -z "$message" ]] && lua_message=""
-
   local result
-  result=$(hs_locked -c "
-local N = require('lib.notifications')
-local success = N.answerQuestion(${lua_id}, [[${lua_title}]] ~= '' and [[${lua_title}]] or nil, [[${lua_message}]] ~= '' and [[${lua_message}]] or nil)
+  result=$(hs_locked "
+local a = _cli.args
+local function opt(v) return v ~= '' and v or nil end
+local success = require('lib.notifications').answerQuestion(opt(a[2]), opt(a[3]), opt(a[4]))
 print(success and 'answered' or 'not_found')
-" 2>&1)
+" "$id" "$title" "$message" 2>&1)
 
   echo "$result"
 }
 
 # List pending questions
 cmd_pending() {
-  hs_locked -c "
+  hs_locked "
 local N = require('lib.notifications')
 local pending = N.getPendingQuestions()
 if #pending == 0 then

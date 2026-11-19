@@ -28,8 +28,8 @@ const themeHelpers: Pick<Theme, 'fg' | 'bg' | 'bold' | 'inverse'> = {
 // SAFETY: The tell card renderer calls only fg, bg, bold, and inverse.
 const plainTheme = themeHelpers as Theme;
 
-// Fixture tells must never reach the real ntfy; set before originalEnv so every env reset keeps it.
-process.env.PI_TELL_NTFY = '0';
+// Fixture tells must never reach the real notify; set before originalEnv so every env reset keeps it.
+process.env.PI_TELL_NOTIFY = '0';
 
 const originalEnv = { ...process.env };
 

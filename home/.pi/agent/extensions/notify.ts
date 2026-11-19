@@ -4,7 +4,8 @@ import type { AgentMessage } from '@earendil-works/pi-agent-core';
 import type { AssistantMessage, TextContent } from '@earendil-works/pi-ai';
 import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
 
-const NTFY_PATH = path.join(process.env.HOME || '', 'bin', 'ntfy');
+// Posts to notiwatchd, falling back to bin/ntfy only when nothing was shown.
+const NOTIFY_PATH = path.join(process.env.HOME || '', 'bin', 'notify');
 
 const NOTIFY_DELAY_MS = 3_000;
 
@@ -12,13 +13,14 @@ const CONNECTION_ERROR = 'Connection error.';
 
 const EMPTY_RESPONSE = 'Pi is waiting for your next instruction.';
 
-let tmuxSessionName: string | null = null;
+// This pi's tmux pane as session:window:pane, looked up once.
+let tmuxPane: string | null = null;
 
-const getTmuxSessionName = (): string | null => {
-  if (tmuxSessionName !== null) return tmuxSessionName || null;
+const getTmuxPane = (): string | null => {
+  if (tmuxPane !== null) return tmuxPane || null;
 
   if (!process.env.TMUX) {
-    tmuxSessionName = '';
+    tmuxPane = '';
 
     return null;
   }
@@ -27,23 +29,35 @@ const getTmuxSessionName = (): string | null => {
     const args = ['display-message', '-p'];
 
     if (process.env.TMUX_PANE) args.push('-t', process.env.TMUX_PANE);
-    args.push('#{session_name}');
-    tmuxSessionName = execFileSync('tmux', args, {
+    args.push('#{session_name}:#{window_index}:#{pane_index}');
+    tmuxPane = execFileSync('tmux', args, {
       encoding: 'utf-8',
       timeout: 1_000,
       stdio: ['ignore', 'pipe', 'ignore'],
     }).trim();
   } catch {
-    tmuxSessionName = '';
+    tmuxPane = '';
   }
 
-  return tmuxSessionName || null;
+  return tmuxPane || null;
 };
 
-const getSource = (): string => {
-  const session = getTmuxSessionName();
+type Place = { label: string; group: string; context?: string; app?: string };
 
-  return session ? `${session} pi` : 'pi';
+// Where this pi runs: its title label, its toasts' group (one per block or
+// pane, so a repeat counts up in place), and the context notiwatchd checks to
+// stay quiet while Seth is looking at this pi.
+const getPlace = (env: NodeJS.ProcessEnv = process.env, pane = getTmuxPane()): Place => {
+  if (env.REX_BLOCK) {
+    return { label: 'pi', group: `pi:${env.REX_BLOCK}`, context: `rex:${env.REX_BLOCK}`, app: 'com.superlogical.rex' };
+  }
+
+  if (!pane) return { label: 'pi', group: 'pi' };
+
+  // Session names may hold colons; window and pane never do.
+  const session = pane.split(':').slice(0, -2).join(':');
+
+  return { label: `${session} pi`, group: `pi:${pane}`, context: `tmux:${pane}` };
 };
 
 const isAssistantMessage = (message: AgentMessage): message is AssistantMessage =>
@@ -268,10 +282,14 @@ const createNotificationController = (
   };
 };
 
-const notificationArgs = (request: NotificationRequest): string[] => {
-  const args = ['send', '-t', request.title, '-m', request.message, '-s', getSource()];
+const notificationArgs = (request: NotificationRequest, place = getPlace()): string[] => {
+  const args = ['-s', 'pi', '-t', `[${place.label}] ${request.title}`, '-m', request.message, '-g', place.group];
 
   if (request.urgency) args.push('-u', request.urgency);
+
+  if (place.context) args.push('-c', place.context);
+
+  if (place.app) args.push('-a', place.app);
 
   return args;
 };
@@ -280,7 +298,7 @@ const notify = (request: NotificationRequest): void => {
   const args = notificationArgs(request);
 
   try {
-    const child = spawn(NTFY_PATH, args, { stdio: 'ignore', detached: true });
+    const child = spawn(NOTIFY_PATH, args, { stdio: 'ignore', detached: true });
     child.once('error', () => undefined);
     child.unref();
   } catch {
@@ -294,7 +312,9 @@ export const _test = {
   asksQuestion,
   cleanMarkdown,
   createNotificationController,
+  getPlace,
   normalizeErrorMessage,
+  notificationArgs,
   notificationExcerpt,
   notificationForAssistant,
 };

@@ -167,3 +167,51 @@ describe('notification excerpts', () => {
     expect(excerpt.endsWith('...')).toBe(true);
   });
 });
+
+describe('notify arguments', () => {
+  test('in Rex: the block is the context and group, Rex the app', () => {
+    const place = _test.getPlace({ REX_BLOCK: 'block:abc' }, 'work:1:0');
+    const args = _test.notificationArgs({ title: 'Input needed', message: 'Continue?', urgency: 'high' }, place);
+
+    expect(args).toEqual([
+      '-s',
+      'pi',
+      '-t',
+      '[pi] Input needed',
+      '-m',
+      'Continue?',
+      '-g',
+      'pi:block:abc',
+      '-u',
+      'high',
+      '-c',
+      'rex:block:abc',
+      '-a',
+      'com.superlogical.rex',
+    ]);
+  });
+
+  test('in tmux: the pane is the context and group, its session the label', () => {
+    const place = _test.getPlace({}, 'dots:main:2:1');
+    const args = _test.notificationArgs({ title: 'Pi finished', message: 'Done' }, place);
+
+    expect(args).toEqual([
+      '-s',
+      'pi',
+      '-t',
+      '[dots:main pi] Pi finished',
+      '-m',
+      'Done',
+      '-g',
+      'pi:dots:main:2:1',
+      '-c',
+      'tmux:dots:main:2:1',
+    ]);
+  });
+
+  test('elsewhere: no context, one pi group', () => {
+    const args = _test.notificationArgs({ title: 'Pi finished', message: 'Done' }, _test.getPlace({}, null));
+
+    expect(args).toEqual(['-s', 'pi', '-t', '[pi] Pi finished', '-m', 'Done', '-g', 'pi']);
+  });
+});

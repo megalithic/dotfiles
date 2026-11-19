@@ -847,7 +847,8 @@ stderr_path = "~/Library/Logs/avwatchd.log"
 # notiwatchd: compiled Notification Center watcher daemon. It reads rules from
 # ~/.config/notiwatchd/config.json, records to
 # ~/.local/share/notiwatchd/notifications.db, broadcasts NDJSON on
-# ~/.local/state/notiwatchd/sock, and routes to bin/ntfy/exec/webhook sinks.
+# ~/.local/state/notiwatchd/sock, and shows them through sup. bin/notify posts
+# to it (`notiwatchd post`); bin/ntfy is only the last resort.
 # The binary needs one-time Full Disk Access and Accessibility grants.
 [bootstrap.macos.launchd.agents."io.swifties.notiwatch"]
 program = "~/.local/bin/notiwatchd"

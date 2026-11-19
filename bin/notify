@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# notify - post a notification to notiwatchd, which applies its rules and quiet
+# checks and shows it through sup (falling back to sup itself when the daemon
+# is down). Only when nothing was shown (exit 1) does bin/ntfy, the old
+# Hammerspoon path, get a last try. Values are passed as arguments, never code.
+#
+# Usage: notify -t TITLE -m MESSAGE [-u normal|high|critical] [-s SOURCE]
+#               [-g GROUP] [-c CONTEXT] [-a BUNDLE]
+set -uo pipefail
+
+title="" message="" urgency="normal" source="" group="" context="" app=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -t | --title) title="${2-}" ;;
+    -m | --message) message="${2-}" ;;
+    -u | --urgency) urgency="${2-}" ;;
+    -s | --source) source="${2-}" ;;
+    -g | --group) group="${2-}" ;;
+    -c | --context) context="${2-}" ;;
+    -a | --app) app="${2-}" ;;
+    *)
+      echo "notify: unknown option $1" >&2
+      exit 2
+      ;;
+  esac
+  shift 2 || {
+    echo "notify: $1 needs a value" >&2
+    exit 2
+  }
+done
+
+args=(post --title "$title" --body "$message" --urgency "$urgency")
+[[ -n "$source" ]] && args+=(--source "$source")
+[[ -n "$group" ]] && args+=(--group "$group")
+[[ -n "$context" ]] && args+=(--context "$context")
+[[ -n "$app" ]] && args+=(--app "$app")
+
+"$HOME/.local/bin/notiwatchd" "${args[@]}" >/dev/null
+status=$?
+case $status in
+  0) exit 0 ;;
+  2) exit 2 ;; # Usage error: say so instead of hiding it behind ntfy.
+esac
+
+fallback=(send -t "$title" -m "$message" -u "$urgency")
+if [[ -n "$source" ]]; then fallback+=(-s "$source"); else fallback+=(-S); fi
+exec "$HOME/bin/ntfy" "${fallback[@]}"

@@ -56,9 +56,7 @@ notify() {
   local message="$2"
   local urgency="${3:-normal}"
 
-  if command -v ntfy &>/dev/null; then
-    ntfy send -t "$title" -m "$message" -u "$urgency" 2>/dev/null || true
-  fi
+  "$HOME/bin/notify" -s vpn -t "$title" -m "$message" -u "$urgency" 2>/dev/null || true
 }
 
 check_openvpn() {

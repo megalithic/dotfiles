@@ -551,36 +551,25 @@ const summarizeTellText = (text: string, maxLength = 160): string => {
   return `${cleaned.slice(0, Math.max(0, maxLength - 3))}...`;
 };
 
-const notifyTellViaNtfy = (from: string, text: string): void => {
-  // Tests set PI_TELL_NTFY=0 so fixture tells never become desktop notifications.
-  if (process.env.PI_TELL_NTFY === '0') return;
+const notifyTell = (from: string, text: string): void => {
+  // Tests set PI_TELL_NOTIFY=0 so fixture tells never become desktop notifications.
+  if (process.env.PI_TELL_NOTIFY === '0') return;
 
-  // Both attempts resolve against the env of this call, not whatever the fallback sees later.
-  const env = { ...process.env };
-  const home = env.HOME || '';
-
-  const commands = [home && path.join(home, 'bin', 'ntfy'), 'ntfy'].filter(Boolean);
+  // bin/notify posts to notiwatchd and falls back to bin/ntfy itself.
+  const command = path.join(process.env.HOME || '', 'bin', 'notify');
 
   const args = [
-    'send',
+    '-s',
+    'pi tell',
+    '-g',
+    `pi tell:${from}`,
     '-t',
     `Pi tell from ${from}`,
     '-m',
     summarizeTellText(text, 220) || 'New Pi tell message',
-    '-s',
-    'pi tell',
   ];
 
-  const tryNext = (index: number): void => {
-    const command = commands[index];
-
-    if (!command) return;
-    execFile(command, args, { env, timeout: 2000 }, (error) => {
-      if (error) tryNext(index + 1);
-    });
-  };
-
-  tryNext(0);
+  execFile(command, args, { timeout: 20_000 }, () => undefined);
 };
 
 const persistAndSurfaceTell = (pi: ExtensionAPI, ctx: ExtensionContext | null, payload: TellPayload): void => {
@@ -603,7 +592,7 @@ const persistAndSurfaceTell = (pi: ExtensionAPI, ctx: ExtensionContext | null, p
   });
 
   const shownFrom = summarizeTellText(from, 80);
-  notifyTellViaNtfy(shownFrom, payload.text);
+  notifyTell(shownFrom, payload.text);
 
   if (!ctx?.hasUI) return;
   ctx.ui.notify(`Tell from ${shownFrom}`, 'info');
