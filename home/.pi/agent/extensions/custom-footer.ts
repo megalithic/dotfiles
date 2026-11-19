@@ -185,6 +185,54 @@ async function fetchStarship(cwd: string): Promise<string> {
   }
 }
 
+// The worktree's PR from `rwt pr` (one lookup shared with rwt status and
+// Ultimate): #nnn in its state colour, nothing when the branch has none.
+const PR_COLOURS = {
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  green: '\x1b[32m',
+  red: '\x1b[31m',
+  merged: '\x1b[35m',
+  closed: '\x1b[2m',
+};
+
+const rwtPrSchema = Type.Object({
+  pr: Type.Union([
+    Type.Null(),
+    Type.Object({
+      number: Type.Number(),
+      colour: Type.Union([
+        Type.Literal('yellow'),
+        Type.Literal('blue'),
+        Type.Literal('green'),
+        Type.Literal('red'),
+        Type.Literal('merged'),
+        Type.Literal('closed'),
+      ]),
+      stale: Type.Boolean(),
+    }),
+  ]),
+});
+
+async function fetchPr(cwd: string, refresh = false): Promise<string> {
+  try {
+    const { stdout } = await execFile(`${process.env.HOME}/bin/rwt`, ['pr', cwd, ...(refresh ? ['--refresh'] : [])], {
+      timeout: 5000,
+    });
+
+    const parsed: unknown = JSON.parse(stdout);
+
+    if (!Value.Check(rwtPrSchema, parsed) || !parsed.pr) return '';
+
+    const { pr } = parsed;
+    const label = `${PR_COLOURS[pr.colour]}#${pr.number}\x1b[0m`;
+
+    return pr.stale ? `\x1b[2m${label}` : label;
+  } catch {
+    return '';
+  }
+}
+
 interface TokenCache {
   totalCost: number;
   entryCount: number;
@@ -193,6 +241,7 @@ interface TokenCache {
 export default function (pi: ExtensionAPI) {
   pi.on('session_start', (_event, ctx) => {
     let cachedStarship = '';
+    let cachedPr = '';
 
     const tokenCache: TokenCache = {
       totalCost: 0,
@@ -206,13 +255,44 @@ export default function (pi: ExtensionAPI) {
         tui.requestRender();
       });
 
-      const unsub = footerData.onBranchChange(async () => {
+      const refreshPr = async (refresh = false) => {
+        const pr = await fetchPr(ctx.cwd, refresh);
+
+        if (pr === cachedPr) return;
+
+        cachedPr = pr;
+        tui.requestRender();
+      };
+
+      void refreshPr();
+
+      const prTimer = setInterval(() => void refreshPr(), 120_000);
+
+      const unsubBranch = footerData.onBranchChange(async () => {
         cachedStarship = await fetchStarship(ctx.cwd);
         tui.requestRender();
+        void refreshPr(true);
       });
 
+      const unsub = () => {
+        clearInterval(prTimer);
+        unsubBranch();
+      };
+
       const vcsTools = new Set(['bash', 'edit', 'write']);
+      // A push or a gh pr command may have opened or changed the PR.
+      const prCalls = new Set<string>();
+      pi.on('tool_execution_start', (event) => {
+        const command = String(event.args?.command ?? '');
+
+        if (event.toolName.toLowerCase() === 'bash' && /\bgit\s+push\b|\bgh\s+pr\b/.test(command)) {
+          prCalls.add(event.toolCallId);
+        }
+      });
+
       pi.on('tool_execution_end', async (event) => {
+        if (prCalls.delete(event.toolCallId)) void refreshPr(true);
+
         if (vcsTools.has(event.toolName.toLowerCase())) {
           cachedStarship = await fetchStarship(ctx.cwd);
           tui.requestRender();
@@ -227,7 +307,7 @@ export default function (pi: ExtensionAPI) {
           const starship = cachedStarship || theme.fg('dim', getCwdDisplay(ctx.cwd));
 
           const sessionName = ctx.sessionManager.getSessionName();
-          const rightParts = sessionName ? theme.fg('dim', sessionName) : '';
+          const rightParts = [cachedPr, sessionName ? theme.fg('dim', sessionName) : ''].filter(Boolean).join(' ');
 
           const line1 = rightParts ? rightAlign(starship, rightParts, width) : truncateToWidth(starship, width);
 
