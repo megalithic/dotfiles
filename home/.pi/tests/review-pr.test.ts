@@ -144,11 +144,16 @@ test('pure helpers', () => {
     "gh api -f body='Fix A; retain B' repos/acme/app/issues/228/comments",
     'cd x && GH_TOKEN=1 gh pr comment 228 -b "a | b"',
     'echo $(gh pr review 228 --approve)',
+    'result="$(gh pr review 228 --approve)"',
+    'echo "$(gh pr review 228 --approve)"',
+    'echo "`gh pr comment 228 -b hi`"',
+    'echo "it\'s $(echo $(gh api repos/a/b/issues/1/comments -f body=x))"',
   ])
     expect(blockedPost(command, [review])).toBe(true);
   expect(blockedPost('gh pr view 228 --comments', [review])).toBe(false);
   expect(blockedPost('gh pr view 228 --comments --repo acme/code-review', [review])).toBe(false);
   expect(blockedPost('gh api repos/acme/app/pulls/228/comments --jq .[].body', [review])).toBe(true);
   expect(blockedPost("git commit -m 'gh pr review 228'", [review])).toBe(false);
+  expect(blockedPost("echo '$(gh pr review 228 --approve)'", [review])).toBe(false);
   expect(blockedPost('gh pr review 228 --approve', [])).toBe(false);
 });

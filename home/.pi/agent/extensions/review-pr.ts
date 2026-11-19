@@ -150,8 +150,45 @@ export const ghPosts = (words: string[]): boolean => {
   return subcommands[0] === 'api' && rest.some((word) => API_POSTING.test(word));
 };
 
-export const blockedPost = (command: string, reviews: Review[]): boolean =>
-  reviews.length > 0 && shellCommands(command).some(ghPosts);
+/** Bodies of `$(…)` and backtick substitutions outside single quotes: they run even inside double quotes. */
+export const substitutions = (command: string): string[] => {
+  const bodies: string[] = [];
+  let quote: string | undefined;
+
+  for (let index = 0; index < command.length; index += 1) {
+    const char = command.charAt(index);
+
+    if (quote === "'") {
+      if (char === "'") quote = undefined;
+    } else if (char === '\\') index += 1;
+    else if (char === '"') quote = quote ? undefined : '"';
+    else if (char === "'" && !quote) quote = "'";
+    else if (char === '`') {
+      const close = command.indexOf('`', index + 1);
+      const stop = close < 0 ? command.length : close;
+
+      bodies.push(command.slice(index + 1, stop));
+      index = stop;
+    } else if (char === '$' && command.charAt(index + 1) === '(') {
+      let depth = 0;
+      let stop = index + 1;
+
+      for (; stop < command.length; stop += 1) {
+        if (command.charAt(stop) === '(') depth += 1;
+        else if (command.charAt(stop) === ')' && (depth -= 1) === 0) break;
+      }
+
+      bodies.push(command.slice(index + 2, stop));
+      index = stop;
+    }
+  }
+
+  return bodies;
+};
+
+const posts = (command: string): boolean => shellCommands(command).some(ghPosts) || substitutions(command).some(posts);
+
+export const blockedPost = (command: string, reviews: Review[]): boolean => reviews.length > 0 && posts(command);
 
 /** `owner/repo` of a pull request URL. */
 export const urlRepo = (url: string) => /github\.com\/([^/]+\/[^/]+)\/pull\/\d+/.exec(url)?.[1];
