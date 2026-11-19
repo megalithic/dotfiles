@@ -58,8 +58,7 @@
 - When user says "investigate", "check", "inspect", or "audit", only investigate and report findings. Don't implement changes unless explicitly told to.
 - Delegate complex tasks through pi-interactive-subagents: scout → plan → implement → review → fix
 - Use natural language delegation: "use scout to understand X", "have worker implement Y", "run parallel reviewers"
-- Run parallel reviewers after every non-trivial implementation
-- Ask oracle for a second opinion before risky decisions
+- Run parallel reviewers after every non-trivial implementation: `/review-range <base>..<head>` for a commit range, `/code-review` for a PR
 
 ## Local development scripts
 

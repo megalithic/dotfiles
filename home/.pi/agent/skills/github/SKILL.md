@@ -33,6 +33,14 @@ View logs for failed steps only:
 gh run view <run-id> --repo owner/repo --log-failed
 ```
 
+## Writing PR bodies, reviews and comments
+
+Get to the point: no greeting, thanks, praise or friendly intro.
+
+- **Review comments and summaries:** open with the verdict and what blocks merge, then what is good to have, then cleanup and the rest. One item per bullet with `path:line`.
+- **PR bodies:** open with what changed and why, then how it was verified, then anything the reviewer must decide or know before merging.
+- Show the final text to the user and post only after their explicit OK on it. Post with `--body-file`, so the posted text is exactly what they approved.
+
 ## Images in PRs, issues and comments
 
 Attach screenshots with `--attach` (gh 2.99+, on `gh pr create|edit|comment` and `gh issue create|edit|comment`); never commit them or upload them elsewhere. Reference the local file in the body and attach the same file: gh uploads it and rewrites the path. In private repos only people with repo access can see it.

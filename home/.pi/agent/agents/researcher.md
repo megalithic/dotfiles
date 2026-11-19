@@ -2,7 +2,7 @@
 name: researcher
 description: Web researcher — searches the web and synthesizes findings
 tools: web_search, web_fetch, safe_bash
-model: openai-codex/gpt-5.6-sol
+model: openai-codex/gpt-6.1-sol
 thinking: high
 system-prompt: append
 auto-exit: true

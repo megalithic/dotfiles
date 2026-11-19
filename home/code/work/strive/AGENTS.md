@@ -8,6 +8,10 @@ These rules apply to every repo under `~/code/work/strive/` (provider_portal and
 - Git already switches off Ultimate's `Ultimate-Conversation` trailer in these repos, and a pre-push check refuses any commit whose message contains the word "ultimate" (`~/.config/git/config.strive`). When it refuses, reword those commits and push again; never bypass it with `--no-verify`.
 - Before `gh pr create` or `gh pr edit`, read the title and body once more for harness mentions.
 
+## PR text gets to the point
+
+No greeting, thanks, praise or friendly intro in PR bodies, reviews or comments. A PR body opens with what changed and why, then how it was verified. A review or review comment opens with the verdict and what blocks merge, then what is good to have, then the rest.
+
 ## Screenshots go inline in the PR description
 
 Show visual changes with screenshots in the PR description, attached with GitHub CLI's `--attach` (gh 2.99+). Never commit images to the repo or the PR branch, and never upload them to a public host (gists, buckets, image hosts).
