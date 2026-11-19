@@ -89,7 +89,9 @@ hs.urlevent.bind('hud-off', () => {
 hs.urlevent.bind('action', (_name, params) => {
   chord('return');
   hs.timer.doAfter(0.5, () => {
-    layer.handle('keyDown', hs.keycodes.map[SHADE.find(({ action }) => action === params.verb).key]);
+    const key = hs.keycodes.map[SHADE.find(({ action }) => action === params.verb).key];
+    layer.handle('keyDown', key);
+    layer.handle('keyUp', key);
     layer.handle('keyUp', F19);
   });
 });

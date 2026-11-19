@@ -35,10 +35,11 @@ atlas open hammerspoon2://hud-off >/dev/null
 atlas open hammerspoon2://dismiss >/dev/null
 
 # Each Shade verb through the armed layer.
+# One hold at a time: each link arms after 0.5s and releases hyper after it.
 for verb in write tell capture edit; do
   atlas open "hammerspoon2://action?verb=$verb" >/dev/null
+  sleep 1
 done
-sleep 1
 
 helper 'cat "$HOME/hs2-e2e.log"'
 atlas elements --app TextEdit --role AXTextArea --full
