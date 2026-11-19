@@ -10,7 +10,10 @@
 #                               the agent tab's Pi gets TEXT as its first message;
 #                               in ~/code/work/strive repos NAME is sm-<short-kebab-name>
 #   rwt open [NAME|PATH]        ensure worktree + session exist, repair services
-#   rwt status [NAME|PATH]      worktree, session, services, port, Tidewave
+#   rwt status [NAME|PATH]      worktree, session, services, port, Tidewave, PR
+#   rwt pr [NAME|PATH] [--refresh]
+#                               the branch's pull request and its colour (JSON),
+#                               cached 60 s; the pi footer and Ultimate read it
 #   rwt restart [NAME|PATH]     restart services in a fresh terminal
 #   rwt down [NAME|PATH] [--session SID] [--json]
 #                               stop session processes and cwd orphans, then close
@@ -46,7 +49,7 @@ export REX_SERVER="${REX_SERVER:-unix://$HOME/Library/Application Support/rex/se
 SELF="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
 DOTFILES="$(dirname "$(dirname "$SELF")")"
 
-JSON=0 SHOW=0 SERVICES=1 AGENT=1 BASE='' SESSION_OVERRIDE='' LINES=200 TIMEOUT=180 PROMPT=''
+JSON=0 SHOW=0 SERVICES=1 AGENT=1 BASE='' SESSION_OVERRIDE='' LINES=200 TIMEOUT=180 PROMPT='' REFRESH=0
 TARGET=
 
 rex() { "$REX" "$@"; }
@@ -370,7 +373,7 @@ cmd_status() {
     fi
   fi
   [ -n "$(git -C "$WT" status --porcelain 2>/dev/null | head -n 1)" ] && dirty=true
-  jq -cn --arg path "$WT" --arg branch "$BRANCH" --arg id "$WID" --argjson dirty "$dirty" \
+  jq -cn --arg path "$WT" --arg branch "$BRANCH" --arg id "$WID" --argjson dirty "$dirty" --argjson pr "$(pr_lookup "$REFRESH")" \
     --arg sid "$sid" --arg label "$LABEL" --arg block "$block" --argjson proc "$proc" --argjson ps "$ps" \
     --arg port "$port" --arg code "$code" --arg tw "$tw" --arg beam "$beam" --argjson lease "$lease" --arg exited "$exited" '
     {ok:true, worktree:{path:$path, branch:(if $branch == "" then null else $branch end), id:$id, dirty:$dirty},
@@ -380,6 +383,7 @@ cmd_status() {
         beam_pid:(if $beam == "" then null else ($beam|tonumber) end),
         last_exit:(if $exited == "" then ($proc.last_exit // null) else {exit_code:($exited|tonumber)} end),
         program_status:$ps} end),
+     pr:$pr,
      port:(if $port == "" then null else ($port|tonumber) end),
      http:{app:($code|tonumber), tidewave:($tw|tonumber),
            tidewave_url:(if $port == "" then null else "http://localhost:\($port)/tidewave/mcp" end)},
@@ -710,11 +714,8 @@ merged() { # branch default -> 0 when integrated
     git -C "$MAIN" merge-base --is-ancestor "$1" "origin/$2" 2>/dev/null && return 0
   # Squash merges leave no ancestry; trust a merged PR only if it merged the
   # branch's current commit, so commits added after the merge stay protected.
-  local head
-  head="$(git -C "$MAIN" rev-parse --verify --quiet "refs/heads/$1")" || return 1
-  command -v gh >/dev/null 2>&1 &&
-    [ -n "$(cd "$MAIN" && gh pr list --head "$1" --state merged --json number,headRefOid \
-      --jq ".[] | select(.headRefOid == \"$head\") | .number" 2>/dev/null)" ]
+  # A stale (cached, gh unreachable) answer never counts.
+  pr_lookup 1 | jq -e '.state == "MERGED" and .head_matches and (.stale | not)' >/dev/null 2>&1
 }
 
 cmd_prune() {
@@ -756,6 +757,59 @@ cmd_prune() {
   else
     log "pruned $BRANCH ($WT)"
   fi
+}
+
+# ---- pull request -------------------------------------------------------------
+
+# The newest PR whose head is BRANCH, as JSON (null when there is none), with a
+# colour for status lines: red (conflicts or a failed check), yellow (checks
+# running), green (ready to merge: clean, not a draft, no review outstanding),
+# blue (anything else open: draft, waiting on review), merged, closed. Cached
+# 60 s per worktree; when gh fails the last answer comes back with stale:true.
+pr_lookup() { # force(0|1) -> JSON on stdout
+  local cache now head out
+  [ -n "$BRANCH" ] && [ "$BRANCH" != "$(default_branch "$MAIN")" ] || {
+    echo null
+    return
+  }
+  # Keyed by a hash of the checkout path; each read also checks path and branch.
+  cache="${XDG_CACHE_HOME:-$HOME/.cache}/rwt/pr/$(printf '%s' "$WT" | shasum -a 256 | cut -c1-16).json"
+  now="$(date +%s)"
+  head="$(git -C "$MAIN" rev-parse --verify --quiet "refs/heads/$BRANCH")"
+  if [ "${1:-0}" = 0 ] && [ -f "$cache" ] &&
+    out="$(jq -ce --arg w "$WT" --arg b "$BRANCH" --argjson now "$now" 'select(.worktree == $w and .branch == $b and $now - .fetched < 60)' "$cache" 2>/dev/null)"; then
+    :
+  elif out="$(cd "$MAIN" && GH_PROMPT_DISABLED=1 "${RWT_GH:-gh}" pr list --head "$BRANCH" --state all --limit 1 \
+    --json number,url,state,isDraft,headRefOid,reviewDecision,mergeable,mergeStateStatus,statusCheckRollup 2>/dev/null)" &&
+    out="$(jq -c --arg w "$WT" --arg b "$BRANCH" --argjson now "$now" '{worktree:$w, branch:$b, fetched:$now, pr:.[0]}' <<<"$out" 2>/dev/null)"; then
+    mkdir -p "$(dirname "$cache")" && printf '%s\n' "$out" >"$cache.$$" && mv "$cache.$$" "$cache"
+  elif out="$(jq -ce --arg w "$WT" --arg b "$BRANCH" 'select(.worktree == $w and .branch == $b) | .stale = true' "$cache" 2>/dev/null)"; then
+    :
+  else
+    echo null
+    return
+  fi
+  jq -c --arg head "$head" '
+    def failed: (.conclusion // .state // "") | IN("FAILURE", "ERROR", "CANCELLED", "TIMED_OUT", "ACTION_REQUIRED", "STARTUP_FAILURE");
+    def pending: if .__typename == "StatusContext" then .state | IN("PENDING", "EXPECTED") else .status != "COMPLETED" end;
+    (.stale // false) as $stale | .fetched as $at | .pr | if . == null then null else
+      (.statusCheckRollup // []) as $c
+      | {fail: ([$c[] | select(failed)] | length), pending: ([$c[] | select(failed | not) | select(pending)] | length)} as $n
+      | {number, url, state, draft: .isDraft, head_matches: (.headRefOid == $head),
+         review: (if (.reviewDecision // "") == "" then null else .reviewDecision end),
+         checks: {pass: (($c | length) - $n.fail - $n.pending), fail: $n.fail, pending: $n.pending},
+         colour: (if .state == "MERGED" then "merged" elif .state == "CLOSED" then "closed"
+           elif .mergeable == "CONFLICTING" or .mergeStateStatus == "DIRTY" or $n.fail > 0 then "red"
+           elif $n.pending > 0 then "yellow"
+           elif (.isDraft | not) and (.mergeStateStatus | IN("CLEAN", "HAS_HOOKS"))
+             and ((.reviewDecision // "") | IN("APPROVED", "")) then "green"
+           else "blue" end),
+         stale: $stale, fetched_at: ($at | todate)} end' <<<"$out"
+}
+
+cmd_pr() {
+  resolve
+  jq -cn --argjson pr "$(pr_lookup "$REFRESH")" '{ok:true, pr:$pr}'
 }
 
 cmd_id() {
@@ -888,6 +942,7 @@ while [ $# -gt 0 ]; do
     --show) SHOW=1 ;;
     --no-services) SERVICES=0 ;;
     --no-agent) AGENT=0 ;;
+    --refresh) REFRESH=1 ;;
     --base)
       BASE="${2:?--base needs a ref}"
       shift
@@ -921,6 +976,7 @@ done
 case "$cmd" in
   new | open) cmd_open ;;
   status) cmd_status ;;
+  pr) cmd_pr ;;
   restart) cmd_restart ;;
   down) cmd_down ;;
   agent) cmd_agent ;;

@@ -291,4 +291,75 @@ wait "$other_child" 2>/dev/null || true
 child='' other_child='' job=''
 ok "down refuses a host in a separate foreground group before signalling any group or killing Rex"
 
+# rwt pr: one gh lookup per worktree, coloured for status lines, cached, and
+# the source prune's squash-merge check trusts.
+cd "$repo"
+cat >"$tmp/gh" <<'EOF'
+#!/usr/bin/env bash
+echo x >>"$RWT_TEST_GH_CALLS"
+[ -z "${RWT_TEST_GH_FAIL:-}" ] || exit 1
+printf '%s\n' "$RWT_TEST_GH"
+EOF
+chmod +x "$tmp/gh"
+export RWT_GH="$tmp/gh" XDG_CACHE_HOME="$tmp/cache" RWT_TEST_GH_CALLS="$tmp/gh-calls"
+head="$(git rev-parse feat/y)"
+pr() { # rollup review merge-state draft -> gh JSON for feat/y
+  jq -cn --arg h "$head" --argjson c "$1" --arg r "$2" --arg m "$3" --argjson d "$4" \
+    '[{number:7, url:"https://x/7", state:"OPEN", isDraft:$d, headRefOid:$h, reviewDecision:$r,
+       mergeable:"MERGEABLE", mergeStateStatus:$m, statusCheckRollup:$c}]'
+}
+ok_run='{"__typename":"CheckRun","status":"COMPLETED","conclusion":"SUCCESS"}'
+for case in "yellow|[$ok_run,{\"__typename\":\"CheckRun\",\"status\":\"IN_PROGRESS\",\"conclusion\":\"\"}]|REVIEW_REQUIRED|BLOCKED|false" \
+  "red|[$ok_run,{\"__typename\":\"StatusContext\",\"state\":\"FAILURE\"}]|APPROVED|UNSTABLE|false" \
+  "green|[$ok_run]|APPROVED|CLEAN|false" \
+  "blue|[$ok_run]|REVIEW_REQUIRED|BLOCKED|false" \
+  "blue|[$ok_run]||CLEAN|true"; do
+  IFS='|' read -r want c r m d <<<"$case"
+  RWT_TEST_GH="$(pr "$c" "$r" "$m" "$d")"
+  out="$(RWT_TEST_GH="$RWT_TEST_GH" "$RWT" pr feat/y --refresh)" || fail "pr: $out"
+  jq -e --arg w "$want" '.pr.number == 7 and .pr.colour == $w and .pr.head_matches and (.pr.stale | not)' <<<"$out" >/dev/null ||
+    fail "pr $want ($r $m draft=$d): $out"
+done
+ok "pr colours: yellow running, red failed, green approved and clean, blue waiting or draft"
+
+: >"$RWT_TEST_GH_CALLS"
+RWT_TEST_GH_FAIL=1 "$RWT" pr feat/y | jq -e '.pr.colour == "blue" and (.pr.stale | not)' >/dev/null || fail "pr cache"
+[ ! -s "$RWT_TEST_GH_CALLS" ] || fail "pr called gh within the cache window"
+RWT_TEST_GH_FAIL=1 "$RWT" status feat/y --refresh | jq -e '.pr.stale and .pr.number == 7' >/dev/null ||
+  fail "status --refresh offline: $(RWT_TEST_GH_FAIL=1 "$RWT" status feat/y --refresh)"
+RWT_TEST_GH_FAIL=1 "$RWT" pr feat/y --refresh | jq -e '.pr.stale and .pr.number == 7' >/dev/null || fail "pr offline not stale"
+RWT_TEST_GH='[]' "$RWT" pr feat/y --refresh | jq -e '.pr == null' >/dev/null || fail "pr none"
+[ "$("$RWT" pr "$repo" | jq -c .pr)" = null ] || fail "pr on the default branch"
+ok "pr: cached 60 s, stale when gh fails, null without a PR or on main"
+
+# a/b and a-b slug alike; neither reads the other's PR, fresh or stale.
+for r in a/b a-b; do
+  git init -q -b main "$tmp/$r"
+  HK=0 git -C "$tmp/$r" -c user.email=t@t -c user.name=t commit -q --allow-empty -m init
+  git -C "$tmp/$r" worktree add -q -b feat/y "$tmp/$r/.worktrees/feat-y"
+done
+RWT_TEST_GH="$(pr "[$ok_run]" APPROVED CLEAN false)" "$RWT" pr "$tmp/a/b/.worktrees/feat-y" --refresh |
+  jq -e '.pr.number == 7' >/dev/null || fail "pr a/b"
+RWT_TEST_GH='[]' "$RWT" pr "$tmp/a-b/.worktrees/feat-y" | jq -e '.pr == null' >/dev/null || fail "pr a-b read a/b's fresh cache"
+rm -f "$tmp"/cache/rwt/pr/*
+RWT_TEST_GH="$(pr "[$ok_run]" APPROVED CLEAN false)" "$RWT" pr "$tmp/a/b/.worktrees/feat-y" --refresh >/dev/null
+RWT_TEST_GH_FAIL=1 "$RWT" pr "$tmp/a-b/.worktrees/feat-y" --refresh | jq -e '.pr == null' >/dev/null ||
+  fail "pr a-b read a/b's stale cache"
+ok "pr: the cache belongs to one checkout"
+
+# A squash merge leaves no ancestry; prune trusts only a merged PR of the head.
+HK=0 git -C .worktrees/feat-y -c user.email=t@t -c user.name=t commit -q --allow-empty -m work
+head="$(git rev-parse feat/y)"
+merged_pr() { jq -cn --arg h "$1" '[{number:7, url:"u", state:"MERGED", isDraft:false, headRefOid:$h, statusCheckRollup:[]}]'; }
+set +e
+p="$(RWT_TEST_GH="$(merged_pr old)" "$RWT" prune feat/y --json 2>/dev/null)"
+rc=$?
+p2="$(RWT_TEST_GH_FAIL=1 "$RWT" prune feat/y --json 2>/dev/null)"
+rc2=$?
+set -e
+[ "$rc" -eq 6 ] && [ "$rc2" -eq 6 ] && [ -d .worktrees/feat-y ] || fail "prune trusted a stale or other-head PR: $p / $p2"
+RWT_TEST_GH="$(merged_pr "$head")" "$RWT" prune feat/y --json 2>/dev/null | jq -e '.ok' >/dev/null || fail "prune merged PR"
+[ ! -d .worktrees/feat-y ] || fail "prune left the worktree"
+ok "prune: a merged PR of the current head counts; another head or a stale cache does not"
+
 echo "all $pass checks passed"
