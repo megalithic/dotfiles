@@ -13,7 +13,7 @@ export type Kind = 'act' | 'question' | 'none';
 export type Item = { kind: Kind; by: 'rule' | 'model'; author: string; text: string; url: string };
 
 /** Review comments on one pull request: totals, and the items that need Seth (act or question). */
-export type Feedback = { threads: number; unresolved: number; items: Item[] };
+export type Feedback = { threads: number; unresolved: number; items: Item[]; truncated?: true };
 
 /** One open pull request as the panel shows it; `depth` > 0 means it is stacked on the row above its parent. */
 export type Row = {
@@ -143,8 +143,9 @@ const prose = (body: string) =>
     .join('\n')
     .trim();
 
+// The whole message, not its start: "Thanks, please rename this" still asks for a change.
 const chatter =
-  /^(thanks?( you)?|thx|ty|lgtm|looks (good|great)( to me)?|nice( work| one)?|great( work)?|awesome|cool|ok(ay)?|done|sounds good|ship it|\+1|agreed|makes sense|fair enough)\b/i;
+  /^((thanks?( you)?( so much)?|thx|ty|lgtm|looks (good|great)( to me)?|nice( work| one)?|great( work)?|awesome|cool|ok(ay)?|done|sounds good|ship it|\+1|agreed|makes sense|fair enough)\s*)+$/i;
 const request = /\b(can|could|would|will) you\b|\bwhy not\b|\bmind (changing|adding|removing)\b/i;
 const nit = /(^|\n)\s*\W*(nit|nitpick|suggestion|todo)\b/i;
 // Only a comment's opening sentence: long write-ups ("Looks good. … the missing rate limit is recorded…") use these
@@ -165,11 +166,11 @@ export function rule(body: string, author: Author): Kind | undefined {
   if (/^\s*\[P[0-3]\]/.test(text)) return 'act';
   const words = text.replace(/[^\p{L}\p{N}?+]+/gu, ' ').trim();
   if (!words) return 'none';
-  if (words.length <= 40 && !text.includes('?') && chatter.test(words)) return 'none';
+  if (chatter.test(words)) return 'none';
+  if (nit.test(text) || imperative.test(opening(text))) return 'act';
   const asks = /\?(\s|$)/.test(text);
   if (asks && request.test(text)) return 'act';
   if (asks) return 'question';
-  if (nit.test(text) || imperative.test(opening(text))) return 'act';
   return undefined;
 }
 
@@ -208,6 +209,8 @@ export function feedback(pull: GqlPull, items: Open[], judged: Record<string, Ki
   return {
     threads: pull.reviewThreads.totalCount,
     unresolved: pull.reviewThreads.nodes.filter((thread) => !thread.isResolved).length,
+    // Only the first 50 threads are read: counts and items are a lower bound.
+    ...(pull.reviewThreads.totalCount > pull.reviewThreads.nodes.length ? { truncated: true as const } : {}),
     items: items.flatMap((item): Item[] => {
       const kind = item.kind ?? judged[item.key] ?? 'question';
       if (kind === 'none') return [];

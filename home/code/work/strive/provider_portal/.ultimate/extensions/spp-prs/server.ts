@@ -114,10 +114,16 @@ async function judge(host: ActionContext['host'], items: Open[], signal?: AbortS
     { maxTokens: Math.min(2048, model.maxTokens || 2048), reasoning: 'low', ...(signal ? { signal } : {}) },
   );
   if (answer.stopReason !== 'stop') return {};
-  return readJudgment(items, answer.content.map((part) => part.text ?? '').join(''));
+  const kinds = readJudgment(items, answer.content.map((part) => part.text ?? '').join(''));
+  // The model answered but skipped or garbled some: keep those as questions so they are not asked again.
+  for (const item of items) kinds[item.key] ??= 'question';
+  return kinds;
 }
 
-/** Cached judgments, plus the model's for comments not seen before; a failed model call leaves them questions. */
+/**
+ * Cached judgments, plus the model's for comments not seen before. A failed or aborted call caches nothing (an outage
+ * must not pin labels): those count as questions until the next refresh asks again.
+ */
 async function judged(host: ActionContext['host'], items: Open[], signal?: AbortSignal) {
   const cached = (await host.harness().snapshot(JudgedDoc, ROOT_CONVERSATION_ID, context))?.kinds ?? {};
   const fresh = items.filter((item) => !item.kind && !Object.hasOwn(cached, item.key)).slice(0, 40);

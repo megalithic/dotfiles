@@ -103,6 +103,9 @@ describe('spp-prs', () => {
     expect(rule('Please rename this', { login: 'coderabbitai[bot]', __typename: 'User' })).toBe('none');
     for (const chat of ['LGTM', 'Thanks!', '👍', 'Looks good to me 🚀', 'nice work', '+1'])
       expect(rule(chat, user)).toBe('none');
+    // Courtesy around a request does not hide it; a nit with a "?" is still a change.
+    expect(rule('Thanks, please rename this', user)).toBe('act');
+    expect(rule('nit: rename this?', user)).toBe('act');
     expect(rule('```suggestion\nconst x = 1\n```', user)).toBe('act');
     expect(rule('[P2] Keep the fallback when the header is missing', user)).toBe('act');
     expect(rule('nit: trailing comma', user)).toBe('act');

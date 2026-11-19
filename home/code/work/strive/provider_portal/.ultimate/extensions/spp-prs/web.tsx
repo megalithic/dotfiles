@@ -100,14 +100,15 @@ function Tag({ value }: { value?: [string, string] }) {
 /** How many review comments need a change or an answer from Seth; hovering lists them. */
 function FeedbackTags({ row }: { row: Row }) {
   const feedback = row.feedback;
-  if (!feedback) return null;
+  // A PR nobody has commented on stays quiet; once there is review, zero counts say "nothing waiting".
+  if (!feedback || (!feedback.threads && !feedback.items.length)) return null;
   const act = feedback.items.filter((item) => item.kind === 'act').length;
   const ask = feedback.items.length - act;
   const list = feedback.items
     .map((item) => `${item.kind === 'act' ? 'act' : 'answer'}${item.by === 'model' ? '*' : ''} · ${item.author}: ${item.text}`)
     .join('\n');
   const title = [
-    `review threads: ${feedback.threads}, unresolved: ${feedback.unresolved}`,
+    `review threads: ${feedback.threads}, unresolved: ${feedback.unresolved}${feedback.truncated ? ' (first 50 threads read)' : ''}`,
     list,
     feedback.items.some((item) => item.by === 'model') ? '* judged by the tiny model' : '',
   ]
@@ -121,13 +122,12 @@ function FeedbackTags({ row }: { row: Row }) {
       target="_blank"
       title={title}
     >
-      {act > 0 && <span className="text-error">{act} to act</span>}
-      {ask > 0 && <span className="text-warning">{ask} to answer</span>}
-      {feedback.unresolved > 0 && (
-        <span className="text-muted-foreground/60">
-          {feedback.unresolved}/{feedback.threads} open
-        </span>
-      )}
+      <span className={act ? 'text-error' : 'text-muted-foreground/60'}>{act} to act</span>
+      <span className={ask ? 'text-warning' : 'text-muted-foreground/60'}>{ask} to answer</span>
+      <span className="text-muted-foreground/60">
+        {feedback.unresolved}
+        {feedback.truncated && '+'}/{feedback.threads} open
+      </span>
     </a>
   );
 }
