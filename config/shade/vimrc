@@ -1,8 +1,56 @@
 " Shade's vim keys, in Obsidian vimrc-plugin syntax (not read by nvim).
 " Shade reads ~/notes/.obsidian.vimrc first when it exists, else this file.
+" Translated from config/nvim/lua/keymaps.lua (leader ",", localleader Space).
+
+" Space is the localleader; ,w and Space w both write.
 unmap <Space>
+unmap ,
 imap jk <Esc>
-nmap j gj
-nmap k gk
 exmap wn write
 nmap <Space>w :wn<CR>
+nmap ,w :wn<CR>
+nmap ,q :q<CR>
+
+" Colours: circadia-forest dark, Warm Parchment light, following macOS.
+colorscheme circadia-forest
+
+" Moves over wrapped rows; H/L/0 to line ends.
+nmap j gj
+nmap k gk
+nnoremap H ^
+nnoremap L $
+vnoremap H ^
+vnoremap L $
+nnoremap 0 ^
+
+" Searches and page moves keep the cursor centred.
+nnoremap n nzz
+nnoremap N Nzz
+nnoremap <C-d> <C-d>zz
+nnoremap <C-u> <C-u>zz
+
+" Deletes and changes don't clobber the unnamed register.
+nnoremap x "_x
+nnoremap X "_X
+nnoremap D "_D
+nnoremap C "_C
+nnoremap cc "_cc
+vnoremap x "_x
+vnoremap c "_c
+" Pasting over a selection keeps what you yanked.
+vnoremap p "_dP
+
+" Tab jumps between matching pairs.
+nmap <Tab> %
+
+" Blank line below or above, staying in normal mode.
+nmap <Space>o o<Esc>
+nmap <Space>O O<Esc>
+
+" Select the whole buffer.
+nnoremap gV ggVG
+nnoremap ,v ggVG
+
+" Ctrl-n hides Shade, as it toggles Shade from nvim.
+nmap <C-n> :q<CR>
+imap <C-n> <Esc>:q<CR>

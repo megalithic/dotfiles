@@ -11,6 +11,10 @@ config/mise/config.local.toml
 config/mise/conf.d/
 # `espanso package install` writes here through the ~/.config/espanso folder link
 config/espanso/match/packages/
+# Hammerspoon 2 writes its npm-bundler scaffold beside the resolved init.js
+# whenever it's missing (copies of the app's Resources/DefaultConfig)
+config/hammerspoon2/bundle.js
+config/hammerspoon2/package.json
 
 .pi
 !home/.pi/

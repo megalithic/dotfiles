@@ -123,7 +123,7 @@ ls "$HOME/Library/Fonts/" 2>/dev/null | grep -q 'FiraCodeNerdFont' && ok "nerd f
 
 hdr "Swifties release programs"
 swifties_installs="$HOME/.local/share/mise/installs"
-swifties_version="0.9.0"
+swifties_version="0.10.0"
 miccheck_binary="$swifties_installs/miccheckd/$swifties_version/MicCheck.app/Contents/MacOS/miccheckd"
 shade_binary="$swifties_installs/shade/$swifties_version/Shade.app/Contents/MacOS/shade"
 sup_binary="$swifties_installs/sup/$swifties_version/Sup.app/Contents/MacOS/sup"
