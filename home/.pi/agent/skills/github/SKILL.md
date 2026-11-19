@@ -39,6 +39,7 @@ Get to the point: no greeting, thanks, praise or friendly intro.
 
 - **Review comments and summaries:** open with the verdict and what blocks merge, then what is good to have, then cleanup and the rest. One item per bullet with `path:line`.
 - **PR bodies:** open with what changed and why, then how it was verified, then anything the reviewer must decide or know before merging.
+- Reviewing someone else's PR: `/review-pr <n>` has the repo's Ultimate run its reviewer team and returns a draft; revise it on request (or `/review-pr edit`), and only Seth posts it with `/review-pr post`. `gh pr review|comment` on that PR is blocked meanwhile.
 - Show the final text to the user and post only after their explicit OK on it. Post with `--body-file`, so the posted text is exactly what they approved.
 
 ## Images in PRs, issues and comments
