@@ -31,6 +31,9 @@
 #                               shell, so callers need no poll loop of their own
 #   rwt prune NAME              remove a clean, merged worktree + session + branch,
 #                               then its databases (the project's db:drop-worktree)
+#   rwt prune --all             prune every branch worktree that passes those checks;
+#                               skip the rest, and any an unconcluded Ultimate
+#                               conversation works in
 #   rwt ls                      worktrees of this repo and their sessions
 #   rwt id [NAME|PATH]          GIT_WORKTREE id ({repo}-{branch slug}); empty
 #                               in the main checkout
@@ -49,7 +52,7 @@ export REX_SERVER="${REX_SERVER:-unix://$HOME/Library/Application Support/rex/se
 SELF="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
 DOTFILES="$(dirname "$(dirname "$SELF")")"
 
-JSON=0 SHOW=0 SERVICES=1 AGENT=1 BASE='' SESSION_OVERRIDE='' LINES=200 TIMEOUT=180 PROMPT='' REFRESH=0
+JSON=0 ALL=0 SHOW=0 SERVICES=1 AGENT=1 BASE='' SESSION_OVERRIDE='' LINES=200 TIMEOUT=180 PROMPT='' REFRESH=0
 TARGET=
 
 rex() { "$REX" "$@"; }
@@ -719,8 +722,51 @@ merged() { # branch default -> 0 when integrated
   pr_lookup 1 | jq -e '.state == "MERGED" and .head_matches and (.stale | not)' >/dev/null 2>&1
 }
 
+# Every branch worktree of this repo through `prune` one at a time, so each gets
+# the same checks; those it refuses are skipped, not errors. Worktrees an
+# unconcluded Ultimate conversation works in are skipped too.
+cmd_prune_all() {
+  [ -z "$TARGET" ] || die 2 "prune --all takes no worktree name"
+  resolve
+  local instances ultimate_projects="$HOME/.ultimate/projects" path branch out rc reason results='[]' failed=0
+  instances="$(ultimate-instance --all 2>/dev/null)"
+  jq -e 'type == "array"' <<<"$instances" >/dev/null 2>&1 || instances=
+  if [ -d "$ultimate_projects" ]; then ultimate_projects="$(cd "$ultimate_projects" && pwd -P)"; fi
+  while IFS=$'\t' read -r path branch; do
+    [ -n "$branch" ] && [ "$path" != "$MAIN" ] || continue
+    WT="$(cd "$path" 2>/dev/null && pwd -P)" || WT="$path"
+    reason="$(down_sweep_reason)"
+    if [ -n "$reason" ]; then
+      out="$(jq -cn --arg e "$reason" '{ok:false, code:6, error:$e}')" rc=6
+    else
+      out="$("$SELF" prune "$path" --json 2>/dev/null)" && rc=0 || rc=$?
+      jq -e 'type == "object"' <<<"$out" >/dev/null 2>&1 || out="$(jq -cn --argjson rc "$rc" '{ok:false, code:$rc, error:"no answer"}')"
+    fi
+    [ "$rc" = 0 ] || [ "$rc" = 6 ] || failed=1
+    [ "$JSON" = 1 ] || case "$rc" in
+      0) log "pruned $branch ($path)" ;;
+      6) log "skipped $branch: $(jq -r .error <<<"$out")" ;;
+      *) log "failed $branch: $(jq -r .error <<<"$out")" ;;
+    esac
+    results="$(jq -c --arg p "$path" --arg b "$branch" --argjson r "$out" --argjson rc "$rc" \
+      '. + [{path:$p, branch:$b} + (if $rc == 0 then {pruned:true} else {pruned:false, refused:($rc == 6), reason:$r.error} end)]' <<<"$results")"
+  done < <(git -C "$MAIN" worktree list --porcelain | awk '
+    /^worktree /{p=substr($0,10)} /^branch /{b=substr($0,19)} /^$/{if(p)print p "\t" b; p=""; b=""}
+    END{if(p)print p "\t" b}')
+  if [ "$JSON" = 1 ]; then
+    jq -c --argjson f "$failed" '{ok:($f == 0), pruned:[.[] | select(.pruned) | {path, branch}], skipped:[.[] | select(.pruned | not) | {path, branch, reason, refused}]}' <<<"$results"
+  else
+    log "$(jq -r '"\([.[] | select(.pruned)] | length) pruned, \([.[] | select(.pruned | not)] | length) skipped"' <<<"$results")"
+  fi
+  [ "$failed" = 0 ] || exit 7
+}
+
 cmd_prune() {
-  [ -n "$TARGET" ] || die 2 "prune needs a worktree name"
+  [ "$ALL" = 0 ] || {
+    cmd_prune_all
+    return
+  }
+  [ -n "$TARGET" ] || die 2 "prune needs a worktree name (or --all)"
   resolve
   local sid def
   [ "$WT" != "$MAIN" ] || die 6 "refusing to prune the main checkout"
@@ -940,6 +986,7 @@ esac
 while [ $# -gt 0 ]; do
   case "$1" in
     --json) JSON=1 ;;
+    --all) ALL=1 ;;
     --show) SHOW=1 ;;
     --no-services) SERVICES=0 ;;
     --no-agent) AGENT=0 ;;
@@ -972,6 +1019,7 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
+[ "$ALL" = 0 ] || [ "$cmd" = prune ] || die 2 "--all is only for prune"
 [ -z "$PROMPT" ] || [ "$AGENT" = 1 ] || die 2 "--prompt needs the agent tab; drop --no-agent"
 [ "$cmd" != new ] || strive_name
 case "$cmd" in

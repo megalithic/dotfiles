@@ -362,4 +362,27 @@ RWT_TEST_GH="$(merged_pr "$head")" "$RWT" prune feat/y --json 2>/dev/null | jq -
 [ ! -d .worktrees/feat-y ] || fail "prune left the worktree"
 ok "prune: a merged PR of the current head counts; another head or a stale cache does not"
 
+# prune --all: every merged, clean branch worktree goes; dirty, unmerged,
+# detached and Ultimate-owned ones stay.
+for b in gone dirty wip owned; do git worktree add -q -b "$b" ".worktrees/$b" main; done
+touch .worktrees/dirty/new-file
+HK=0 git -C .worktrees/wip -c user.email=t@t -c user.name=t commit -q --allow-empty -m wip
+export RWT_TEST_INSTANCES='[{"pid":99999999,"url":"http://ultimate.test","port":1,"project":"unused"}]'
+RWT_TEST_CONVERSATIONS="$(jq -cn --arg cwd "$repo/.worktrees/owned" '{result:[{id:42,cwd:$cwd,concluded:false}]}')"
+out="$(RWT_TEST_GH='[]' "$RWT" prune --all --json 2>/dev/null)" || fail "prune --all: $out"
+jq -e '.ok and ([.pruned[].branch] | index("gone") != null)
+  and ([.skipped[].branch] | sort == ["dirty", "owned", "wip"])
+  and (.skipped[] | select(.branch == "owned") | .reason | test("conversation #42"))' <<<"$out" >/dev/null ||
+  fail "prune --all: $out"
+[ ! -d .worktrees/gone ] && [ -d .worktrees/dirty ] && [ -d .worktrees/wip ] && [ -d .worktrees/owned ] &&
+  [ -d .worktrees/loose ] && [ -d "$tmp/lander" ] || fail "prune --all removed the wrong worktrees"
+set +e
+"$RWT" prune gone --all >/dev/null 2>&1
+rc=$?
+"$RWT" ls --all >/dev/null 2>&1
+rc2=$?
+set -e
+[ "$rc" -eq 2 ] && [ "$rc2" -eq 2 ] || fail "--all with a name or outside prune: rc=$rc/$rc2"
+ok "prune --all prunes merged clean branches and skips dirty, unmerged, detached and Ultimate-owned ones"
+
 echo "all $pass checks passed"
