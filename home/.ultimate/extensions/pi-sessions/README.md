@@ -62,3 +62,7 @@ mise run check:ts
 The stock `check-extension.ts` currently numbers its temporary symlinks (`0-pi-sessions`, `1-pi-bridge`), so the required `../pi-bridge/lib.ts` import fails with TS2307 even when both folders are passed. To type-check the server meanwhile, use a temporary tsconfig with the clone's `tsconfig.web.json` compiler options (`composite: false`, `emitDeclarationOnly: false`, `noEmit: true`, Node types), a symlink to the clone's `node_modules`, and sibling symlinks named exactly `pi-sessions` and `pi-bridge`; include `pi-sessions/server.ts`. Run the clone's `node_modules/.bin/tsc -p <temporary directory> --pretty false`. This checks the actual sibling import without suppressing errors or changing production imports.
 
 Tests use temporary synthetic sessions and worktrees, never contact live pi agents or change real batons. Load the server facet in an Ultimate preview for integration verification; do not copy into a running host to test.
+
+## Reload
+
+After a change lands, compare this extension's `server.loadedAt` in `ultimate.extensions()` with the commit time; restart the host only if it did not reload.

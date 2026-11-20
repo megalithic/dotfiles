@@ -25,6 +25,10 @@ export type Row = {
   head: string;
   ci: Ci;
   review: Review;
+  /** The pull request's author: never the one to approve it. */
+  author: string;
+  /** Who approves next (`approvals`). */
+  next: Next;
   /** GitHub's `mergeStateStatus`, lowercased: `clean`, `blocked`, `dirty` (conflicts), `behind`, `unstable`… */
   merge: string;
   depth: number;
@@ -47,6 +51,9 @@ export type GhPull = {
   headRefName: string;
   headRefOid: string;
   reviewDecision: string | null;
+  author: { login: string } | null;
+  /** Users carry `login`, teams `slug` or `name`. */
+  reviewRequests: { __typename?: string; login?: string; slug?: string; name?: string }[] | null;
   mergeStateStatus: string | null;
   statusCheckRollup: { status?: string; conclusion?: string | null; state?: string }[] | null;
 };
@@ -71,6 +78,26 @@ const reviews: Record<string, Review> = {
   CHANGES_REQUESTED: 'changes',
   REVIEW_REQUIRED: 'required',
 };
+
+/**
+ * Who approves next: `awaiting` an approval by anyone but the author (`requested` names the users and teams GitHub
+ * asked, author left out; empty means any non-author reviewer), `approved` when GitHub says no approval is missing,
+ * `unknown` when GitHub gives no review decision (a stacked branch, or no review rule).
+ */
+export type Next = { state: 'awaiting' | 'approved' | 'unknown'; requested: string[] };
+
+export function approvals(pull: Pick<GhPull, 'author' | 'reviewDecision' | 'reviewRequests'>): Next {
+  const author = pull.author?.login;
+  const requested = (pull.reviewRequests ?? [])
+    .map((request) =>
+      request.__typename === 'Team' ? `team ${request.slug ?? request.name ?? '?'}` : (request.login ?? ''),
+    )
+    .filter((name) => name && name !== author);
+  if (pull.reviewDecision === 'APPROVED') return { state: 'approved', requested };
+  if (pull.reviewDecision === 'REVIEW_REQUIRED' || pull.reviewDecision === 'CHANGES_REQUESTED')
+    return { state: 'awaiting', requested };
+  return { state: 'unknown', requested };
+}
 
 /** Judgments by comment id and `updatedAt`, so each comment version goes to the model once. */
 export type Judged = { kinds: Record<string, Kind> };
@@ -102,6 +129,8 @@ export function order(pulls: GhPull[], worktrees: Worktree[] = []): Row[] {
       head: pull.headRefName,
       ci: rollup(pull.statusCheckRollup),
       review: reviews[pull.reviewDecision ?? ''] ?? 'none',
+      author: pull.author?.login ?? 'ghost',
+      next: approvals(pull),
       merge: (pull.mergeStateStatus ?? 'unknown').toLowerCase(),
       depth,
       worktrees: worktrees

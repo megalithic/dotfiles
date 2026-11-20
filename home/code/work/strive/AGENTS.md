@@ -2,7 +2,9 @@
 
 These rules apply to every repo under `~/code/work/strive/` (provider_portal and the other work repos), for every agent.
 
-## Commits and pull requests never name the agent harness
+## Seth's commits and pull requests never name the agent harness
+
+This covers only work authored for Seth: his commits, branches, PRs, reviews and PR comments. How teammates attribute their own work is theirs: never flag tool or harness attribution in a review of someone else's PR.
 
 - Commit messages, branch names, PR titles, PR descriptions and PR comments never mention Ultimate, Pi, Claude or any other agent or harness, agent or conversation numbers (`#18082`), or where the work was discussed ("screenshots in the Ultimate thread"). Write them as the engineer who did the work.
 - Git already switches off Ultimate's `Ultimate-Conversation` trailer in these repos, and a pre-push check refuses any commit whose message contains the word "ultimate" (`~/.config/git/config.strive`). When it refuses, reword those commits and push again; never bypass it with `--no-verify`.

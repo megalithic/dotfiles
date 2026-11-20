@@ -23,6 +23,10 @@ Toolbar prompts Seth copies in your app's tabs (pidewave's Inspect picker attach
 
 Every report, assessment and question to @ultimate or Seth opens with the verdict and any blocker in plain words, then the next action. Then the evidence, split into **Observed** (what you ran or read, with the command, file:line, sha or timestamp), **Inferred** (what you conclude from it) and **Unverified** (what you have not checked). Never present an inference as a fact; Seth asks for proof.
 
+### Waiting on something outside your branch
+
+When your work waits on something you don't control (a review, a merge, CI, a deploy), watch it with a script or event automation that fires only when its state changes, never a scheduled model run that reports "no change". Keep any cadence Seth asked for, but post to him only when something actually changed.
+
 ### Shipping: GitHub pull requests, never `workspace submit`
 
 This team merges to `main` only through GitHub pull requests, so never call `workspace submit`. When the work is verified and reviewed:

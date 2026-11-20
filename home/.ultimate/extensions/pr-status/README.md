@@ -9,3 +9,7 @@ It refreshes when the conversation starts or finishes a run, on window focus and
 ## Action
 
 `pr-status/pr` (no arguments): the `rwt pr` object, or null.
+
+## Reload
+
+After a change lands, compare this extension's `server.loadedAt` in `ultimate.extensions()` with the commit time; restart the host only if it did not reload.

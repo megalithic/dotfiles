@@ -97,6 +97,25 @@ function Tag({ value }: { value?: [string, string] }) {
   return value ? <span className={cn('shrink-0', value[1])}>{value[0]}</span> : null;
 }
 
+/** Who approves next, never the author: the requested reviewers, or any non-author when none are named. */
+function NextApprover({ row }: { row: Row }) {
+  const { state, requested } = row.next;
+  if (state === 'approved') return null;
+  const who = requested.length ? requested.join(', ') : 'any non-author reviewer';
+  const title = [
+    `author: ${row.author} (cannot approve)`,
+    state === 'awaiting'
+      ? `awaiting an approval from ${who}`
+      : 'GitHub gives no review decision here (stacked branch or no review rule): who approves is unknown',
+    requested.length ? `requested: ${requested.join(', ')}` : 'no reviewers requested',
+  ].join('\n');
+  return (
+    <span className="min-w-0 shrink truncate text-muted-foreground" title={title}>
+      {state === 'awaiting' ? `next: ${requested.length ? requested.join(', ') : 'non-author'}` : 'next: unknown'}
+    </span>
+  );
+}
+
 /** How many review comments need a change or an answer from Seth; hovering lists them. */
 function FeedbackTags({ row }: { row: Row }) {
   const feedback = row.feedback;
@@ -205,6 +224,7 @@ function PullRow({ row, gates, now }: { row: Row; gates: Gate[]; now: number }) 
             {ci[row.ci][0]}
           </a>
           <Tag value={review[row.review]} />
+          <NextApprover row={row} />
           <FeedbackTags row={row} />
           <Tag value={merge[row.merge]} />
           <span className="ml-auto flex min-w-0 justify-end">
