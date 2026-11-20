@@ -64,8 +64,16 @@ export default function tidewave(host: Host) {
     }, BACKGROUND_CONTEXT);
   };
   const open = async (id: number): Promise<LinkedApp> => {
-    const app = await conversationApp(host.home, id, await cwdOf(host, id, BACKGROUND_CONTEXT));
     const previous = remembered.get(id);
+    let app;
+    try {
+      app = await conversationApp(host.home, id, await cwdOf(host, id, BACKGROUND_CONTEXT));
+    } catch (error) {
+      // The conversation no longer owns an app (or a pi holds it): drop the old link with it.
+      previous?.link?.stop();
+      if (remembered.get(id) === previous) remembered.delete(id);
+      throw error;
+    }
     if (previous?.link && previous.port === app.port && previous.origin === app.origin) return previous as LinkedApp;
     previous?.link?.stop();
     const { link, ready } = linkConversation(

@@ -81,6 +81,8 @@ const attachedApp: Registry['apps'][number] = {
 const linkedBrowser = async (url = 'http://admin.localhost:4123/x') => {
   let peer: { send(text: string): void } | undefined;
   let current = attachedApp;
+  let gate: Promise<void> | undefined;
+  let lease: Registry['apps'][number] | undefined;
   let forgotten = false;
   const submitted: [number, string][] = [];
   const toasted = Promise.withResolvers<string>();
@@ -147,11 +149,16 @@ const linkedBrowser = async (url = 'http://admin.localhost:4123/x') => {
     async (id, content) => {
       submitted.push([id, content]);
     },
-    async () => current,
+    async () => {
+      await gate;
+
+      return current;
+    },
     () => {
       forgotten = true;
     },
     `http://127.0.0.1:${browser.port}`,
+    () => lease,
   );
 
   await ready;
@@ -165,6 +172,12 @@ const linkedBrowser = async (url = 'http://admin.localhost:4123/x') => {
     forgotten: () => forgotten,
     ownership: (app: Registry['apps'][number]) => {
       current = app;
+    },
+    hold: (until: Promise<void>) => {
+      gate = until;
+    },
+    leased: (app: Registry['apps'][number]) => {
+      lease = app;
     },
     send: (message: { kind: 'prompt'; text: string } | { kind: 'inspect' }) => {
       peer!.send(
@@ -232,6 +245,38 @@ for (const kind of ['prompt', 'inspect'] as const) {
     }
   });
 }
+
+test('a prompt still resolving ownership is dropped when the link stops', async () => {
+  const browser = await linkedBrowser();
+  const release = Promise.withResolvers<void>();
+
+  try {
+    browser.hold(release.promise);
+    browser.send({ kind: 'prompt', text: '<user_prompt>Explain</user_prompt>' });
+    await Bun.sleep(50);
+    browser.link.stop();
+    release.resolve();
+    await Bun.sleep(50);
+    expect(browser.submitted).toEqual([]);
+  } finally {
+    browser.stop();
+  }
+});
+
+test('a pi lease taken while ownership resolves wins over the prompt', async () => {
+  const browser = await linkedBrowser();
+
+  try {
+    browser.leased({ ...attachedApp, owner: { kind: 'pi', pid: 12, sessionId: 'builder' } });
+    browser.send({ kind: 'prompt', text: '<user_prompt>Explain</user_prompt>' });
+    expect(await browser.toasted).toContain('pi builder now holds port 4123');
+    await browser.closed;
+    expect(browser.submitted).toEqual([]);
+    expect(browser.forgotten()).toBe(true);
+  } finally {
+    browser.stop();
+  }
+});
 
 describe('tidewave app resolution', () => {
   test("only ports the worktree's own beams listen on, lowest first", async () => {

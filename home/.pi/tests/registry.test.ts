@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { readRegistry, withUltimateApps } from '../agent/lib/registry.ts';
+import { probeApp, readRegistry, withUltimateApps } from '../agent/lib/registry.ts';
 
 const fixtures = fs.mkdtempSync('/tmp/registry-');
 
@@ -258,7 +258,12 @@ test.each(['application/json', 'text/event-stream'])(
             body: await request.json(),
           });
           const status = statuses.get(server.port!)!;
-          const reply = JSON.stringify({ jsonrpc: '2.0', id: 1, result: { capabilities: {} } });
+
+          const reply = JSON.stringify({
+            jsonrpc: '2.0',
+            id: 1,
+            result: { protocolVersion: '2025-06-18', capabilities: {} },
+          });
 
           return new Response(contentType === 'application/json' ? reply : `data: ${reply}\n\n`, {
             status,
@@ -305,6 +310,20 @@ test.each(['application/json', 'text/event-stream'])(
     }
   },
 );
+
+test.each([
+  ['a null result', { jsonrpc: '2.0', id: 1, result: null }],
+  ['method not found', { jsonrpc: '2.0', id: 1, error: { code: -32601, message: 'Method not found' } }],
+  ['a result without protocolVersion', { jsonrpc: '2.0', id: 1, result: { capabilities: {} } }],
+])('Ultimate probe rejects %s', async (_name, body) => {
+  const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: () => Response.json(body) });
+
+  try {
+    expect(await probeApp(server.port!)).toBe(false);
+  } finally {
+    server.stop(true);
+  }
+});
 
 test('Rex manifest identity wins over stale seat metadata without an app lease', () => {
   const socket = path.join(home, 'rex.sock');

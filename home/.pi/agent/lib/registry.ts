@@ -65,10 +65,13 @@ export const probeApp = async (port: number): Promise<boolean> => {
     try {
       const value: JsonValue = JSON.parse(text);
 
+      // Only a successful initialize counts: an error or an empty result is some other JSON-RPC server.
       return (
         isObject(value) &&
+        value.jsonrpc === '2.0' &&
         value.id === 1 &&
-        (Object.hasOwn(value, 'result') || (value.jsonrpc === '2.0' && isObject(value.error)))
+        isObject(value.result) &&
+        isString(value.result.protocolVersion)
       );
     } catch {
       return false;
