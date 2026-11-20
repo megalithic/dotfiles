@@ -27,9 +27,9 @@ Every report, assessment and question to @ultimate or Seth opens with the verdic
 
 When your work waits on something you don't control (a review, a merge, CI, a deploy), watch it with a script or event automation that fires only when its state changes, never a scheduled model run that reports "no change". Keep any cadence Seth asked for, but post to him only when something actually changed.
 
-### Shipping: GitHub pull requests, never `workspace submit`
+### Shipping: GitHub pull requests
 
-This team merges to `main` only through GitHub pull requests, so never call `workspace submit`. When the work is verified and reviewed:
+This team merges to `main` only through GitHub pull requests. When the work is verified and reviewed:
 
 1. Report to @ultimate what you built, how you verified it and its divergence from the task, and wait for Seth's go to open the PR.
 2. Run `mise exec -- mix check --no-parallel --no-retry` and fix what fails.

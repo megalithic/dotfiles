@@ -11,5 +11,6 @@
       "path": "/Users/seth/code/work/strive/provider_portal/.worktrees/{name}",
       "setup": ["sh -e /Users/seth/code/work/strive/provider_portal/.ultimate/worktree-setup.sh"]
     }
-  }
+  },
+  "lander": { "mode": "pr" }
 }
