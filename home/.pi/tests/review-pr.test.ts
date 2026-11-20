@@ -159,6 +159,10 @@ test('pure helpers', () => {
     'gh api graphql -f id=PR_1',
     'GH_PROMPT_DISABLED=1 mise exec -- gh pr review 123 --approve',
     'env mise exec -- GH_HOST=x gh pr comment 1 -b hi',
+    'command -- gh pr review 123 --approve',
+    '/usr/bin/env -i PATH=/x /opt/homebrew/bin/gh pr review 1 --approve',
+    'nice -n 5 timeout 30 gh pr comment 1 -b hi',
+    'echo 1 | xargs -I{} gh pr review {} --approve',
   ])
     expect(blockedPost(command, [review])).toBe(true);
   expect(blockedPost('gh pr view 228 --comments', [review])).toBe(false);
