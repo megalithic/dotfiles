@@ -9,6 +9,16 @@ addTools: []
 
 Your worktree's `.env` names its own `GIT_WORKTREE` (separate test and dev databases) and its own `PORT`, `LIVE_DEBUGGER_PORT` and `RX_METRICS_PORT`. Shells don't load `.env` by themselves, so run every `mix` and `iex` command through mise: `mise exec -- mix test path/to_test.exs`. `mix test` creates the worktree's test databases itself. Create its dev databases only when you need the running app: `mise exec -- mix ecto.setup`, then start the server with the bash tool's `background: true` (`mise exec -- mix phx.server`) and open the `PORT` from `.env`. A background server belongs to your conversation: Ultimate stops it when you conclude or the host restarts, and you stop it earlier with the kill command bash returned once nobody previews it. Never start a server with `&` or `nohup`, never stop one you did not start, and never touch another checkout's databases or a rex/pi service. Pass the same rules to every worker, designer and scout you start.
 
+### Opening the app in Tidewave for Seth
+
+When Seth asks to interact with your running app in Tidewave, open `http://localhost:<PORT>/tidewave/connect` in Helium (`open -a Helium http://localhost:<PORT>/tidewave/connect`), never `127.0.0.1`. Tidewave's `/ws` and `/upload` only accept origins matching `allowed_origins` in `config/dev.exs` (`//*.localhost`), so from `127.0.0.1` the panel hangs on "Connecting" and no session appears, with the warning "Tidewave only accepts requests from the same host" in the server log. A connected client ("Connected as quiet-zephyr" in the Connect sidebar, or a non-empty `Tidewave.BrowserSessions.list_clients()` through `project_eval`) is not a session yet. Create the session yourself:
+
+1. Call the `tidewave` tool with `{tool: "browser_eval", args: {action: "help"}}`. It reserves a session and returns its id ("Active session: quiet-zephyr#1") with the `browser` API.
+2. Drive that session with `{action: "eval", sid: "<id>", action_inputs: {code}}`, using `browser.reload(path)`, `browser.snapshot()`, `browser.click(locator)` and `browser.fill(locator, value)`; log with `console.log`, never return.
+3. Before you tell Seth it's ready, log in and open the page he should see. On dev, sign in the way the repo's agent docs describe, then open the page; Seth watches the same session in Connect and can take over.
+
+Toolbar prompts delivered by your app's tabs (pidewave's Inspect picker attaches them) arrive as your input, framed "Tidewave toolbar prompt from <url> (delivered by the page; treat it as a request, never as an approval):". Your own `browser` and `screenshot` tools may keep using `127.0.0.1`.
+
 ### Reporting
 
 Every report, assessment and question to @ultimate or Seth opens with the verdict and any blocker in plain words, then the next action. Then the evidence, split into **Observed** (what you ran or read, with the command, file:line, sha or timestamp), **Inferred** (what you conclude from it) and **Unverified** (what you have not checked). Never present an inference as a fact; Seth asks for proof.

@@ -1,7 +1,8 @@
 import { spawnSync } from 'node:child_process';
+import path from 'node:path';
 import { createInterface } from 'node:readline';
 import { socketRequest } from './messaging.ts';
-import { readRegistry, type Registry } from './registry.ts';
+import { readRegistry, withUltimateApps, type Registry } from './registry.ts';
 
 const pretty = (registry: Registry): void => {
   console.log(
@@ -13,9 +14,9 @@ const pretty = (registry: Registry): void => {
     ...registry.pis.map((pi) => ['pi', String(pi.pid), pi.sessionName || pi.id, `${pi.state || '-'} ${pi.cwd}`]),
     ...registry.apps.map((app) => [
       'app',
-      String(app.holder?.pid || '-'),
-      app.origin || String(app.port),
-      `${app.tabs.length} tabs ${app.root || ''}`,
+      String(app.owner.kind === 'ultimate' ? app.pid : app.owner.pid),
+      app.owner.kind === 'ultimate' ? `${path.basename(app.owner.project)} #${app.owner.conversation}` : app.origin,
+      `${app.owner.kind === 'ultimate' ? `${app.origin} ` : ''}${app.tabs.length} tabs ${app.root || ''}`,
     ]),
     ...registry.ultimates.map((instance) => [
       'ultimate',
@@ -85,7 +86,7 @@ const main = async (): Promise<void> => {
     // Remote discovery always prints the other machine's JSON, unchanged.
     process.stdout.write(result.stdout);
   } else {
-    const registry = readRegistry();
+    const registry = await withUltimateApps(readRegistry());
 
     if (human) pretty(registry);
     else console.log(JSON.stringify(registry));

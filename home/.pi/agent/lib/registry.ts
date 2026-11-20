@@ -1,6 +1,8 @@
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { beamCwds, listeners, ownedPorts, run, type Run } from './beam.ts';
 
 export type Registry = {
   machine: string;
@@ -21,8 +23,12 @@ export type Registry = {
   }[];
   apps: {
     port: number;
-    origin?: string;
+    origin: string;
     root?: string;
+    pid?: number;
+    owner:
+      | { kind: 'pi'; pid: number; sessionId?: string; socket?: string }
+      | { kind: 'ultimate'; project: string; home: string; conversation: number; url: string };
     holder?: { pid: number; sessionId?: string; socket?: string };
     tabs: { id?: string; url: string; lastActiveAt?: number }[];
     followers: number[];
@@ -41,6 +47,204 @@ export type Registry = {
 };
 
 export type RegistryOptions = { includeDead?: boolean; includeEphemeral?: boolean };
+
+export type UltimateAppDeps = {
+  run?: Run;
+  probe?: (port: number) => Promise<boolean>;
+  env?: (pid: number) => Promise<string>;
+  fs?: {
+    realpath: (file: string) => Promise<string>;
+    readFile: (file: string) => Promise<string>;
+  };
+};
+
+export const probeApp = async (port: number): Promise<boolean> => {
+  let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+
+  const reply = (text: string): boolean => {
+    try {
+      const value: JsonValue = JSON.parse(text);
+
+      // Only a successful initialize counts: an error or an empty result is some other JSON-RPC server.
+      return (
+        isObject(value) &&
+        value.jsonrpc === '2.0' &&
+        value.id === 1 &&
+        isObject(value.result) &&
+        isString(value.result.protocolVersion)
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  try {
+    const response = await fetch(`http://127.0.0.1:${port}/tidewave/mcp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2025-06-18',
+          capabilities: {},
+          clientInfo: { name: 'pidewave-probe', version: '1.0.0' },
+        },
+      }),
+      redirect: 'error',
+      signal: AbortSignal.timeout(800),
+    });
+
+    reader = response.body?.getReader();
+
+    if (!response.ok || !reader) return false;
+
+    const type = response.headers.get('content-type')?.split(';')[0]?.trim();
+
+    if (type === 'application/json') {
+      let text = '';
+      const decoder = new TextDecoder();
+
+      for (;;) {
+        const { done, value } = await reader.read();
+        text += decoder.decode(value, { stream: !done });
+
+        if (done) return reply(text);
+      }
+    }
+
+    if (type !== 'text/event-stream') return false;
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    for (;;) {
+      const { done, value } = await reader.read();
+      buffer += decoder.decode(value, { stream: !done });
+      const events = buffer.split(/\r?\n\r?\n/);
+      buffer = events.pop()!;
+
+      for (const event of events) {
+        const data = event
+          .split(/\r?\n/)
+          .filter((line) => line.startsWith('data:'))
+          .map((line) => line.slice(5).trimStart())
+          .join('\n');
+
+        if (reply(data)) return true;
+      }
+
+      if (done) return false;
+    }
+  } catch {
+    return false;
+  } finally {
+    await reader?.cancel().catch(() => {});
+  }
+};
+
+const envPorts = (env: string, fromFile = false): Map<string, number> => {
+  const ports = new Map<string, number>();
+
+  const pattern = fromFile
+    ? /^(PHX_PORT|PORT)=["']?(\d+)["']?(?=\s|$)/gm
+    : /(?:^|\s)(PHX_PORT|PORT)=["']?(\d+)["']?(?=\s|$)/g;
+
+  for (const match of env.matchAll(pattern)) ports.set(match[1]!, Number(match[2]));
+
+  return ports;
+};
+
+/** Opt-in process discovery for the CLI; readRegistry itself stays synchronous and subprocess-free. */
+export const withUltimateApps = async (registry: Registry, deps: UltimateAppDeps = {}): Promise<Registry> => {
+  const exec = deps.run ?? run;
+  const probe = deps.probe ?? probeApp;
+
+  const files = deps.fs ?? {
+    realpath: (file: string) => fs.promises.realpath(file),
+    readFile: (file: string) => fs.promises.readFile(file, 'utf8'),
+  };
+
+  const readEnv = deps.env ?? ((pid: number) => exec('ps', ['-E', '-ww', '-o', 'command=', '-p', String(pid)]));
+
+  const owners = registry.ultimates.flatMap((instance) =>
+    instance.alive !== false && instance.home
+      ? [
+          {
+            ...instance,
+            home: instance.home,
+            hash: createHash('sha256').update(instance.home).digest('hex').slice(0, 6),
+          },
+        ]
+      : [],
+  );
+
+  if (!owners.length) return registry;
+
+  const beams = await Promise.all(
+    beamCwds(await exec('lsof', ['-a', '-c', 'beam.smp', '-d', 'cwd', '-Fpn'])).map(async (beam) => {
+      const root = await files.realpath(beam.cwd).catch(() => undefined);
+      const match = root && /^ult-([a-f0-9]{6})-([1-9]\d*)$/.exec(path.basename(root));
+      const owner = match && owners.find(({ hash }) => hash === match[1]);
+      const conversation = match ? Number(match[2]) : 0;
+
+      return root && owner && Number.isSafeInteger(conversation) && conversation > 0
+        ? { pid: beam.pid, root, owner, conversation }
+        : undefined;
+    }),
+  );
+
+  const matched = beams.filter((beam) => beam !== undefined);
+
+  if (!matched.length) return registry;
+
+  const all = listeners(await exec('lsof', ['-iTCP', '-sTCP:LISTEN', '-P', '-n', '-Fpn']));
+
+  const discovered = await Promise.all(
+    matched.map(async ({ pid, root, owner, conversation }): Promise<Registry['apps'][number] | undefined> => {
+      const ports = ownedPorts(all, new Set([pid]));
+
+      if (!ports.length) return undefined;
+
+      const [processEnv, fileEnv] = await Promise.all([
+        readEnv(Number(pid)),
+        files.readFile(path.join(root, '.env')).catch(() => ''),
+      ]);
+
+      const preferred = new Map([...envPorts(fileEnv, true), ...envPorts(processEnv)]);
+
+      let port = [preferred.get('PHX_PORT'), preferred.get('PORT')].find(
+        (value) => value !== undefined && ports.includes(value),
+      );
+
+      if (port === undefined) {
+        const answers = await Promise.all(ports.map((candidate) => probe(candidate)));
+        port = ports.find((_candidate, index) => answers[index]);
+      }
+
+      if (port === undefined) return undefined;
+
+      return {
+        port,
+        origin: `http://localhost:${port}`,
+        root,
+        pid: Number(pid),
+        owner: { kind: 'ultimate', project: owner.project, home: owner.home, conversation, url: owner.url },
+        tabs: [],
+        followers: [],
+      };
+    }),
+  );
+
+  const apps = [...registry.apps];
+
+  for (const app of discovered) {
+    if (app && !apps.some(({ port }) => port === app.port)) apps.push(app);
+  }
+
+  return { ...registry, apps };
+};
 
 type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 
@@ -176,8 +380,9 @@ export const readRegistry = (opts: RegistryOptions = {}): Registry => {
 
     const app: Registry['apps'][number] = {
       port: lease.port,
-      origin: text(lease.origin),
+      origin: `http://localhost:${lease.port}`,
       root: text(lease.root),
+      owner: { kind: 'pi', pid: lease.pid, sessionId: text(lease.sessionId), socket: text(lease.socket) },
       holder: { pid: lease.pid, sessionId: text(lease.sessionId), socket: text(lease.socket) },
       tabs,
       followers: seats.flatMap((seat) =>
