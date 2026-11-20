@@ -4,13 +4,12 @@
  * answers MCP on 127.0.0.1, with redirects refused. So another worktree's app, or anything off this machine, is
  * never reached.
  */
-import { execFile } from 'node:child_process';
 import { realpath } from 'node:fs/promises';
 import { McpClient, StreamableHttpTransport } from '@earendil-works/pi-mcp';
 import type { McpFetch, Tool } from '@earendil-works/pi-mcp';
+import { beamCwds, listeners, ownedPorts, run, type Run } from '../../../.pi/agent/lib/beam.ts';
 
-/** Runs a command and resolves its stdout, whatever its exit code (lsof exits 1 when it finds nothing). */
-export type Run = (command: string, args: string[]) => Promise<string>;
+export { run, type Run };
 
 export type Connect = (port: number) => Promise<McpClient>;
 
@@ -18,28 +17,11 @@ export type App = { root: string; port: number; client: McpClient };
 
 const CONNECT_TIMEOUT = 3_000;
 
-export const run: Run = (command, args) =>
-  new Promise((resolve) => {
-    execFile(command, args, { timeout: 5_000 }, (_error, stdout) => resolve(String(stdout ?? '')));
-  });
-
 /** The git toplevel of `cwd` (or `cwd` itself), with symlinks resolved as lsof reports a process's cwd. */
 export async function worktreeRoot(cwd: string, exec: Run = run): Promise<string> {
   const top = (await exec('git', ['-C', cwd, 'rev-parse', '--show-toplevel'])).trim();
   return realpath(top || cwd);
 }
-
-/** `[pid, port]` of each TCP listener in lsof's `-Fpn` output. */
-const listeners = (out: string): [string, number][] => {
-  const found: [string, number][] = [];
-  let pid = '';
-  for (const line of out.split('\n')) {
-    if (line.startsWith('p')) pid = line.slice(1);
-    const port = /^n.*:(\d+)$/.exec(line)?.[1];
-    if (port && pid) found.push([pid, Number(port)]);
-  }
-  return found;
-};
 
 /**
  * TCP ports that only the beam.smp processes whose cwd is `root` listen on, lowest first. A port another process
@@ -48,17 +30,10 @@ const listeners = (out: string): [string, number][] => {
  * user's processes.
  */
 export async function appPorts(root: string, exec: Run = run): Promise<number[]> {
-  const own = new Set<string>();
-  let pid = '';
-  for (const line of (await exec('lsof', ['-a', '-c', 'beam.smp', '-d', 'cwd', '-Fpn'])).split('\n')) {
-    if (line.startsWith('p')) pid = line.slice(1);
-    else if (line === `n${root}` && /^\d+$/.test(pid)) own.add(pid);
-  }
+  const beams = beamCwds(await exec('lsof', ['-a', '-c', 'beam.smp', '-d', 'cwd', '-Fpn']));
+  const own = new Set(beams.filter(({ cwd }) => cwd === root).map(({ pid }) => pid));
   if (!own.size) return [];
-  const all = listeners(await exec('lsof', ['-iTCP', '-sTCP:LISTEN', '-P', '-n', '-Fpn']));
-  const ports = new Set(all.filter(([listener]) => own.has(listener)).map(([, port]) => port));
-  for (const [listener, port] of all) if (!own.has(listener)) ports.delete(port);
-  return [...ports].toSorted((a, b) => a - b);
+  return ownedPorts(listeners(await exec('lsof', ['-iTCP', '-sTCP:LISTEN', '-P', '-n', '-Fpn'])), own);
 }
 
 /** A redirect could send a call (code, SQL) to another app or host: refuse every one. */

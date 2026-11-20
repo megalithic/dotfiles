@@ -1,8 +1,9 @@
 import { afterAll, afterEach, beforeEach, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { readRegistry } from '../agent/lib/registry.ts';
+import { readRegistry, withUltimateApps } from '../agent/lib/registry.ts';
 
 const fixtures = fs.mkdtempSync('/tmp/registry-');
 
@@ -117,7 +118,7 @@ test('app leases expose tabs, live followers, and Rex seat metadata', () => {
   const lease = {
     v: 1,
     port: 4000,
-    origin: 'http://localhost:4000',
+    origin: 'http://127.0.0.1:4000',
     root: '/work',
     cwd: '/work',
     pid: process.pid,
@@ -141,8 +142,9 @@ test('app leases expose tabs, live followers, and Rex seat metadata', () => {
   expect(readRegistry().apps).toEqual([
     {
       port: 4000,
-      origin: lease.origin,
+      origin: 'http://localhost:4000',
       root: '/work',
+      owner: { kind: 'pi', pid: process.pid, sessionId: 'one', socket },
       holder: { pid: process.pid, sessionId: 'one', socket },
       tabs: [{ id: 'tab1', url: 'http://localhost:4000/page', lastActiveAt: Date.parse('2026-01-01T00:00:00Z') }],
       followers: [process.ppid],
@@ -151,6 +153,91 @@ test('app leases expose tabs, live followers, and Rex seat metadata', () => {
   expect(readRegistry().pis[0]?.rex).toEqual(terminal.rex);
   expect(readRegistry().pis[0]?.tmux).toBeUndefined();
   expect(readRegistry({ includeDead: true }).apps[1]?.alive).toBe(false);
+});
+
+test('Ultimate apps match real worktree ownership, prefer a listened PORT over stray PHX_PORT, and keep pi leases', async () => {
+  const instanceHome = path.join(ultimateHome, 'projects/app');
+  const project = '/work/app';
+  write(path.join(instanceHome, 'ultimate.lock'), { pid: process.pid, port: 4749, project });
+  write(path.join(state, 'pidewave/ports/4000.json'), {
+    v: 1,
+    port: 4000,
+    pid: process.pid,
+    claimedAt: new Date().toISOString(),
+  });
+  const hash = createHash('sha256').update(instanceHome).digest('hex').slice(0, 6);
+  const root = `/work/app/.worktrees/ult-${hash}-38382`;
+  const calls: string[][] = [];
+
+  const registry = await withUltimateApps(readRegistry(), {
+    run: async (command, args) => {
+      calls.push([command, ...args]);
+
+      if (args.includes('cwd')) return `p10\nn/work/link\np11\nn/work/ult-${hash}-38383\np12\nn/work/non-ult`;
+
+      if (command === 'ps') return args.at(-1) === '10' ? 'beam.smp PHX_PORT=4266 PORT=23820' : 'beam.smp PORT=4000';
+
+      return 'p10\nn*:23820\nn127.0.0.1:58462\np11\nn*:4000\np12\nn*:4002';
+    },
+    fs: {
+      realpath: async (file) => (file === '/work/link' ? root : file),
+      readFile: async () => '',
+    },
+    probe: async () => {
+      throw new Error('A listened environment port needs no probe');
+    },
+  });
+
+  expect(registry.apps).toEqual([
+    {
+      port: 4000,
+      origin: 'http://localhost:4000',
+      root: undefined,
+      owner: { kind: 'pi', pid: process.pid, sessionId: undefined, socket: undefined },
+      holder: { pid: process.pid, sessionId: undefined, socket: undefined },
+      tabs: [],
+      followers: [],
+    },
+    {
+      port: 23820,
+      origin: 'http://localhost:23820',
+      root,
+      pid: 10,
+      owner: { kind: 'ultimate', project, home: instanceHome, conversation: 38382, url: 'http://127.0.0.1:4749' },
+      tabs: [],
+      followers: [],
+    },
+  ]);
+  expect(calls.filter(([command]) => command === 'lsof')).toHaveLength(2);
+  expect(calls).toContainEqual(['ps', '-E', '-ww', '-o', 'command=', '-p', '10']);
+});
+
+test('Ultimate probe fallback chooses the lowest answering owned port and excludes another pid sharing a port', async () => {
+  const instanceHome = path.join(ultimateHome, 'projects/app');
+  write(path.join(instanceHome, 'ultimate.lock'), { pid: process.pid, port: 4749, project: '/work/app' });
+  const hash = createHash('sha256').update(instanceHome).digest('hex').slice(0, 6);
+  const root = `/work/ult-${hash}-38382`;
+  const probed: number[] = [];
+
+  const registry = await withUltimateApps(readRegistry(), {
+    run: async (command, args) => {
+      if (args.includes('cwd')) return `p10\nn${root}`;
+
+      if (command === 'ps') return 'beam.smp PHX_PORT=4266';
+
+      return 'p10\nn*:4300\nn127.0.0.1:4200\nn*:4100\nn*:4000\np99\nn127.0.0.1:4000';
+    },
+    fs: { realpath: async (file) => file, readFile: async () => '' },
+    probe: async (port) => {
+      probed.push(port);
+
+      return port !== 4100;
+    },
+  });
+
+  expect(probed).toEqual([4100, 4200, 4300]);
+  expect(registry.apps).toHaveLength(1);
+  expect(registry.apps[0]?.port).toBe(4200);
 });
 
 test('Rex manifest identity wins over stale seat metadata without an app lease', () => {
