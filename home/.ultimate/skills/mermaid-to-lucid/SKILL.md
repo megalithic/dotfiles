@@ -20,7 +20,7 @@ Executor-local (the `executor` MCP server) has a `lucid` app: Lucid's official M
    ```
    For sequence diagrams and ERDs, Lucid offers `lucid_create_sequence_diagram` (PlantUML) and `lucid_create_erd` instead. Still send Mermaid to `lucid_create_diagram_from_mermaid` unless the person asks for those.
 4. The call returns `approval-required` with an `approvalUrl`. Give Seth that link and stop. After he approves, call `resume {requestId}`. Never repeat the call.
-5. Reply with the document's title and link from the result. To check the rendering, export it with `lucid_export_document_as_PNG {document_id}`, which is read-only.
+5. Reply with the document's title and `editUrl` from the result, and ask Seth to open it once. Lucid creates a native Mermaid block that stays empty ("Mermaid Diagram Zero State") until the document is first opened in the editor; only then does it become shapes. A PNG export (`lucid_export_document_as_PNG {document_id}`, read-only) before that is blank, so check it only after he has opened it.
 
 ## When it fails
 
