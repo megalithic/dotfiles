@@ -2,7 +2,7 @@ import { afterAll, describe, expect, test } from 'bun:test';
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { appPorts, listing, openApp, type Run } from '../../.ultimate/extensions/tidewave/lib.ts';
+import { appPorts, linkConversation, listing, openApp, type Run } from '../../.ultimate/extensions/tidewave/lib.ts';
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), 'tidewave-')));
 
@@ -68,6 +68,98 @@ const fakeRun =
   };
 
 const own = (...ports: number[]): Listener[] => ports.map((port) => [10, '*', port]);
+
+test('a toolbar prompt on admin.localhost reaches the attached Ultimate conversation', async () => {
+  const url = 'http://admin.localhost:4123/x';
+  let peer: { send(text: string): void } | undefined;
+  const submitted = Promise.withResolvers<[number, string]>();
+  const toasted = Promise.withResolvers<string>();
+
+  const browser = Bun.serve({
+    port: 0,
+    fetch(request, server) {
+      if (new URL(request.url).pathname === '/json/version') {
+        return Response.json({ webSocketDebuggerUrl: `ws://127.0.0.1:${server.port}/browser` });
+      }
+
+      return server.upgrade(request) ? undefined : new Response('no', { status: 400 });
+    },
+    websocket: {
+      open(ws) {
+        peer = ws;
+      },
+      message(ws, raw) {
+        const command = JSON.parse(String(raw));
+        ws.send(
+          JSON.stringify({
+            id: command.id,
+            result: command.method === 'Target.attachToTarget' ? { sessionId: 's-app' } : {},
+          }),
+        );
+
+        if (command.method === 'Target.setDiscoverTargets') {
+          ws.send(
+            JSON.stringify({
+              method: 'Target.targetCreated',
+              params: {
+                targetInfo: { targetId: 'app', type: 'page', url, title: 'Admin' },
+              },
+            }),
+          );
+        }
+
+        if (command.method === 'Runtime.enable') {
+          ws.send(
+            JSON.stringify({
+              method: 'Runtime.executionContextCreated',
+              sessionId: 's-app',
+              params: {
+                context: { id: 1, origin: new URL(url).origin, auxData: { isDefault: true } },
+              },
+            }),
+          );
+        }
+
+        if (command.method === 'Runtime.evaluate' && command.params.expression.includes('__pidewaveToast')) {
+          toasted.resolve(command.params.expression);
+        }
+      },
+    },
+  });
+
+  const { link, ready } = linkConversation(
+    'http://localhost:4123',
+    38382,
+    async (id, content) => {
+      submitted.resolve([id, content]);
+    },
+    `http://127.0.0.1:${browser.port}`,
+  );
+
+  try {
+    await ready;
+    expect(link.tabs().map((tab) => tab.url)).toEqual([url]);
+    peer!.send(
+      JSON.stringify({
+        method: 'Runtime.bindingCalled',
+        sessionId: 's-app',
+        params: {
+          name: '__pidewave',
+          executionContextId: 1,
+          payload: JSON.stringify({ kind: 'prompt', text: 'Explain this field' }),
+        },
+      }),
+    );
+    expect(await submitted.promise).toEqual([
+      38382,
+      `From Seth via the Tidewave toolbar on ${url}:\n\nExplain this field`,
+    ]);
+    expect(await toasted.promise).toContain('__pidewaveToast("Sent to #38382", true)');
+  } finally {
+    link.stop();
+    browser.stop(true);
+  }
+});
 
 describe('tidewave app resolution', () => {
   test("only ports the worktree's own beams listen on, lowest first", async () => {

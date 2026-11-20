@@ -16,7 +16,31 @@ So a conversation reaches only the app its own worktree runs, always on loopback
 
 ## Browser
 
-An HTTP 200 from the app's `/tidewave` or `/tidewave/mcp` means it serves Tidewave, not that a browser is attached. `browser_eval` runs in a browser tab connected to the control page, `http://127.0.0.1:<PORT>/tidewave`; with none, it answers "No browser is connected to the Tidewave control page". Before calling it, open that page in Helium, the browser pidewave links over CDP (`bin/pidewave`, `home/.pi/agent/extensions/pidewave/`): `open -a Helium http://127.0.0.1:<PORT>/tidewave`, wait for the tab to load, then call `browser_eval` with `{"action": "help"}`. A plain `open` without `-a Helium` hands the URL to Hammerspoon, which may pick another browser.
+Open `http://localhost:<PORT>/tidewave/connect` in Helium:
+
+```sh
+open -a Helium http://localhost:<PORT>/tidewave/connect
+```
+
+Never use `127.0.0.1` for that page: the app's `allowed_origins` (`//*.localhost`) rejects it on `/ws`. App tabs on `*.localhost` also work. A plain `open` without `-a Helium` hands the URL to Hammerspoon, which may pick another browser. An HTTP 200 from the app isn't proof a browser is connected.
+
+A connected browser isn't a session. Call `browser_eval` with `{"action":"help"}` to reserve one; it returns e.g. `Active session: quiet-zephyr#1`. Drive that session with `{"action":"eval","sid":"quiet-zephyr#1","action_inputs":{"code":"document.title"}}`.
+
+### Toolbar routing and Inspect
+
+The user-only `attach {conversation:number}` action links all Helium tabs of the conversation's app over CDP on port 9223. A Tidewave toolbar prompt copied in any linked app tab (including `admin.localhost`) becomes input to **that owning conversation**, queued as a follow-up if busy. It is framed `From Seth via the Tidewave toolbar on <tab url>:` and the page toasts `Sent to #<id>` or the delivery error. The toolbar's focus-pi action explains that Ultimate owns the app instead.
+
+The user-only `inspect {conversation:number}` action attaches if needed, raises Helium and starts Inspect, returning `active` on success or an explanation. Both actions discover the app through the shared `bin/agents --json` registry; neither takes a port. A live pi lease takes precedence and is named in the error. Links detach on facet close/reload and are recreated for remembered conversations on open. A process restart forgets attachments.
+
+Call either action through the owning Ultimate instance (replace the URL and conversation):
+
+```sh
+curl --fail-with-body http://127.0.0.1:4749/api/extensions/tidewave/actions/attach \
+  -H 'Origin: http://127.0.0.1:4749' -H 'Content-Type: application/json' \
+  --data '{"args":{"conversation":123}}'
+```
+
+Replace `attach` with `inspect` to start Inspect. The Origin must match the Ultimate server's loopback URL and port. `bin/pidewave inspect --port <PORT>` or `--cwd <PATH>` falls back to this action when no live pi lease matches, keeping one CDP owner per app. `--rex-block <BLOCK>` first tries pi's seat, then obtains the foreground process's cwd via `rex block call -b <BLOCK> process`; `--cwd` can also be supplied explicitly. `PIDEWAVE_AGENTS` overrides the sibling `agents` executable for offline CLI tests.
 
 ## Baton
 

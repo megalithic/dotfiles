@@ -1,5 +1,6 @@
 """Offline checks for bin/pidewave: python3 -B bin/tests/pidewave.test.py."""
 
+from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import os
 from pathlib import Path
@@ -52,6 +53,10 @@ class PidewaveCli(unittest.TestCase):
         self.pis.mkdir(parents=True)
         self.bin = Path(self.tmp, "bin")
         self.bin.mkdir()
+        self.apps = []
+        rex = self.bin / "rex"
+        rex.write_text('#!/bin/sh\nprintf \'{"foreground":{"cwd":"/tmp/unknown"}}\\n\'\n')
+        rex.chmod(0o755)
         self.bridge = Bridge(os.path.join(self.tmp, "b.sock"))
 
     def tearDown(self):
@@ -78,7 +83,11 @@ class PidewaveCli(unittest.TestCase):
         (self.pis / ("%d.json" % pid)).write_text(json.dumps(seat))
 
     def run_cli(self, *args):
-        env = dict(os.environ, PI_STATE_DIR=str(Path(self.tmp, "state")), PATH="%s:/usr/bin:/bin" % self.bin)
+        agents = self.bin / "agents"
+        agents.write_text("#!/bin/sh\nprintf '%s\\n' '" + json.dumps({"apps": self.apps}) + "'\n")
+        agents.chmod(0o755)
+        env = dict(os.environ, PI_STATE_DIR=str(Path(self.tmp, "state")), PATH="%s:/usr/bin:/bin" % self.bin,
+                   PIDEWAVE_AGENTS=str(agents))
         return subprocess.run([sys.executable, str(SCRIPT), *args], env=env, capture_output=True, text=True)
 
     def test_inspect_by_rex_block(self):
@@ -116,6 +125,38 @@ class PidewaveCli(unittest.TestCase):
         self.assertEqual(result.returncode, 3)
         self.assertEqual(self.run_cli("inspect", "--rex-block", "block:none").returncode, 3)
         self.assertEqual(self.bridge.requests, [])
+
+    def test_inspect_without_a_pi_posts_to_ultimate(self):
+        requests = []
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_POST(self):
+                requests.append((self.path, self.headers["Origin"],
+                                 json.loads(self.rfile.read(int(self.headers["Content-Length"])))))
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b'{"result":"active"}')
+
+            def log_message(self, *args):
+                pass
+
+        server = HTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        url = "http://127.0.0.1:%d" % server.server_port
+        self.apps = [{"port": 4100, "root": "/tmp/app", "owner": {
+            "kind": "ultimate", "url": url, "conversation": 38382,
+        }}]
+        try:
+            result = self.run_cli("inspect", "--port", "4100")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(requests, [("/api/extensions/tidewave/actions/inspect", url,
+                                         {"args": {"conversation": 38382}})])
+            self.assertEqual(self.bridge.requests, [])
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join()
 
     def test_list_marks_liveness(self):
         self.lease(4005)

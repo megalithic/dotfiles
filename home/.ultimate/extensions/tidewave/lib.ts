@@ -8,8 +8,92 @@ import { realpath } from 'node:fs/promises';
 import { McpClient, StreamableHttpTransport } from '@earendil-works/pi-mcp';
 import type { McpFetch, Tool } from '@earendil-works/pi-mcp';
 import { beamCwds, listeners, ownedPorts, run, type Run } from '../../../.pi/agent/lib/beam.ts';
+import { createBrowserLink, type BrowserLink } from '../../../.pi/agent/extensions/pidewave/browser.ts';
+import { readRegistry, withUltimateApps, type Registry } from '../../../.pi/agent/lib/registry.ts';
 
 export { run, type Run };
+
+export type LinkedApp = { port: number; origin: string; link: BrowserLink };
+export type Submit = (conversation: number, content: string) => Promise<void>;
+
+/** The shared registry gives pi precedence, so check the worktree too when its Ultimate entry is hidden. */
+export async function conversationApp(
+  home: string,
+  conversation: number,
+  cwd: string,
+): Promise<Registry['apps'][number]> {
+  const registry = await withUltimateApps(readRegistry());
+  const canonicalHome = await realpath(home);
+  let app: Registry['apps'][number] | undefined;
+  for (const candidate of registry.apps) {
+    const owner = candidate.owner;
+    if (
+      owner.kind === 'ultimate' &&
+      owner.conversation === conversation &&
+      (await realpath(owner.home)) === canonicalHome
+    ) {
+      app = candidate;
+      break;
+    }
+  }
+  const root = app ? undefined : await worktreeRoot(cwd);
+  const pi = registry.apps.find(
+    (candidate) => candidate.owner.kind === 'pi' && (app ? candidate.port === app.port : candidate.root === root),
+  );
+  if (pi?.owner.kind === 'pi')
+    throw new Error(
+      `Port ${pi.port} is held by pi ${pi.owner.sessionId ?? pi.owner.pid}; detach its Tidewave link first.`,
+    );
+  if (!app)
+    throw new Error(
+      `No Phoenix app found for Ultimate #${conversation}. Start its server in that conversation's worktree.`,
+    );
+  return app;
+}
+
+/** One CDP owner; delivery is injected so tests and reloads need no retained harness. */
+export function linkConversation(origin: string, conversation: number, submit: Submit, endpoint?: string) {
+  let link: BrowserLink;
+  let connected: () => void;
+  const ready = new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      if (link.state() === 'up') resolve();
+      else reject(new Error('Helium has no CDP on port 9223; open Helium first.'));
+    }, 3_000);
+    connected = () => {
+      if (link.state() === 'up' && link.tabs().length) {
+        clearTimeout(timer);
+        resolve();
+      }
+    };
+  });
+  const toast = (target: string, text: string, ok: boolean) =>
+    link
+      .evaluate(target, `window.__pidewaveToast && window.__pidewaveToast(${JSON.stringify(text)}, ${ok})`)
+      .catch(() => {});
+  link = createBrowserLink(
+    origin,
+    {
+      change: () => connected(),
+      message: (message, tab) => {
+        if (message.kind === 'prompt') {
+          void submit(conversation, `From Seth via the Tidewave toolbar on ${tab.url}:\n\n${message.text}`)
+            .then(() => toast(tab.targetId, `Sent to #${conversation}`, true))
+            .catch((error) => toast(tab.targetId, error instanceof Error ? error.message : String(error), false));
+        } else if (message.kind === 'inspect') {
+          void link.inspect(tab.targetId, false).then((result) => {
+            if (result !== 'active') void toast(tab.targetId, result, false);
+          });
+        } else if (message.kind === 'focus-pi') {
+          void toast(tab.targetId, `This app belongs to Ultimate #${conversation}`, true);
+        }
+      },
+    },
+    endpoint,
+  );
+  link.start();
+  return { link, ready };
+}
 
 export type Connect = (port: number) => Promise<McpClient>;
 

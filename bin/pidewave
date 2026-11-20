@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Ask the Pi that holds a pidewave lease to start Tidewave Inspect, or list leases.
+"""Ask the owning Pi or Ultimate to start Tidewave Inspect, or list Pi leases.
 
   pidewave inspect --rex-block BLOCK [--pid PID]   (Rex Cmd+Ctrl+Shift+C action)
   pidewave inspect --port PORT | --cwd PATH
@@ -10,8 +10,10 @@ The pidewave Pi extension writes leases to ${PI_STATE_DIR}/pidewave/ports/<port>
 pidewave/pis/<pid>.json. --rex-block finds the Pi in that block, or in the tmux
 pane shown there when --pid (the block's foreground process) is a tmux client;
 it may be a follower, and Inspect makes it take the port. --port and --cwd ask
-the current holder. Runs on the
-system python so a Rex key action needs no mise PATH.
+the current holder. Without a live Pi target, Inspect discovers the owning
+Ultimate through the sibling agents command and calls its Tidewave action.
+For Rex, the block's foreground cwd is used; --cwd can override it.
+Runs on the system python so a Rex key action needs no mise PATH.
 """
 
 import argparse
@@ -23,6 +25,8 @@ import socket
 import subprocess
 import sys
 import time
+import urllib.error
+import urllib.request
 
 TMUX_DIRS = [
     os.path.expanduser("~/.local/share/mise/installs/tmux/latest/bin"),
@@ -110,6 +114,52 @@ def pick(args):
     return None
 
 
+def rex_cwd(block):
+    """Rex exposes the foreground process's actual cwd, then its nearest ancestors."""
+    out = subprocess.run(
+        ["rex", "block", "call", "-b", block, "process"],
+        capture_output=True, text=True, timeout=3, check=True,
+    ).stdout
+    process = json.loads(out)
+    for entry in [process.get("foreground"), *(process.get("ancestors") or []), process.get("child")]:
+        if isinstance(entry, dict) and entry.get("cwd"):
+            return entry["cwd"]
+    raise ValueError("Rex has no cwd for that block; pass --cwd alongside --rex-block")
+
+
+def ultimate_inspect(args):
+    cwd = args.cwd or (rex_cwd(args.rex_block) if args.rex_block and not args.port else None)
+    # Resolve the deployed script's symlink before finding its sibling; the override is for offline tests.
+    agents = os.environ.get("PIDEWAVE_AGENTS") or os.path.join(os.path.dirname(os.path.realpath(__file__)), "agents")
+    registry = json.loads(subprocess.run(
+        [agents, "--json"], capture_output=True, text=True, timeout=10, check=True,
+    ).stdout)
+    apps = [app for app in registry["apps"] if app.get("owner", {}).get("kind") == "ultimate"]
+    if args.port:
+        app = next((app for app in apps if app.get("port") == args.port), None)
+    else:
+        roots = [app for app in apps if cwd and app.get("root") and inside(cwd, app["root"])]
+        app = max(roots, key=lambda app: len(os.path.realpath(app["root"])), default=None)
+    if not app:
+        print("pidewave: no live Pi or Ultimate owns a Tidewave app for that target", file=sys.stderr)
+        return 3
+    owner = app["owner"]
+    url = owner["url"].rstrip("/")
+    request = urllib.request.Request(
+        url + "/api/extensions/tidewave/actions/inspect",
+        data=json.dumps({"args": {"conversation": owner["conversation"]}}).encode(),
+        headers={"Origin": url, "Content-Type": "application/json"}, method="POST",
+    )
+    with urllib.request.urlopen(request, timeout=15) as response:
+        result = json.load(response)
+    if isinstance(result, dict) and (result.get("error") or result.get("isError") or result.get("ok") is False):
+        raise ValueError(str(result.get("error") or result))
+    outcome = result.get("result") if isinstance(result, dict) else None
+    if outcome != "active":
+        raise ValueError(str(outcome if outcome is not None else result))
+    return 0
+
+
 def control(sock_path, operation):
     request = {
         "type": "control",
@@ -147,8 +197,11 @@ def main(argv=None):
 
     lease = pick(args)
     if not lease:
-        print("pidewave: no live Pi holds a Tidewave link for that target", file=sys.stderr)
-        return 3
+        try:
+            return ultimate_inspect(args)
+        except (OSError, ValueError, KeyError, subprocess.SubprocessError, urllib.error.URLError) as error:
+            print("pidewave: %s" % error, file=sys.stderr)
+            return 1
     if not lease.get("socket"):
         print("pidewave: that Pi has no bridge socket", file=sys.stderr)
         return 4
