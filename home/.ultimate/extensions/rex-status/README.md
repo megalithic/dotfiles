@@ -8,3 +8,7 @@ busy conversations are `working`, and everything else is `idle`.
 Changes emit OSC 7501 for `app=ultimate` to `/dev/tty`, with base64 messages.
 Terminal write errors are harmless. Facet-scoped lifecycle callbacks stop the
 timer and reset to `idle` on reload, disable, unload, or shutdown.
+
+## Reload
+
+After a change lands, compare this extension's `server.loadedAt` in `ultimate.extensions()` with the commit time; restart the host only if it did not reload.

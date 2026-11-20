@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
   addGate,
+  approvals,
   confirmGate,
   feedback,
   initial,
@@ -34,6 +35,8 @@ const pull = (number: number, head: string, base = 'main', extra: Partial<GhPull
   headRefName: head,
   headRefOid: `sha${number}`,
   reviewDecision: null,
+  author: { login: 'megalithic' },
+  reviewRequests: [],
   mergeStateStatus: 'CLEAN',
   statusCheckRollup: [],
   ...extra,
@@ -71,6 +74,25 @@ describe('spp-prs', () => {
       '34:0',
     ]);
     expect(rows.find((row) => row.number === 21)?.worktrees).toEqual(['/p/.worktrees/x']);
+  });
+
+  test('next approver is never the author; unknown without a review decision', () => {
+    const requests = [
+      { __typename: 'User', login: 'megalithic' },
+      { __typename: 'User', login: 'teammate' },
+      { __typename: 'Team', slug: 'backend' },
+    ];
+    // #23: Seth requested on his own PR must never be named as its next approver.
+    const row = order([pull(23, 's3', 'main', { reviewDecision: 'REVIEW_REQUIRED', reviewRequests: requests })])[0];
+    expect(row.author).toBe('megalithic');
+    expect(row.next).toEqual({ state: 'awaiting', requested: ['teammate', 'team backend'] });
+    expect(approvals({ author: { login: 'me' }, reviewDecision: 'CHANGES_REQUESTED', reviewRequests: [] })).toEqual({
+      state: 'awaiting',
+      requested: [],
+    });
+    expect(approvals({ author: null, reviewDecision: 'APPROVED', reviewRequests: null }).state).toBe('approved');
+    // Stacked branches have no review decision: who approves is unknown, not guessed.
+    expect(approvals({ author: { login: 'me' }, reviewDecision: null, reviewRequests: requests }).state).toBe('unknown');
   });
 
   test('rolls up checks: a failure wins, then anything unfinished', () => {

@@ -71,6 +71,8 @@ const fields = [
   'headRefName',
   'headRefOid',
   'reviewDecision',
+  'author',
+  'reviewRequests',
   'mergeStateStatus',
   'statusCheckRollup',
 ].join(',');

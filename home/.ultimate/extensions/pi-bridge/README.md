@@ -42,3 +42,7 @@ curl --fail-with-body -sS "http://127.0.0.1:$PORT/api/extensions/pi-bridge/actio
 ```
 
 Core Bun tests are in `home/.pi/tests/pi-bridge-ultimate.test.ts`, covered by `mise run test:ts` and `mise run check:ts`. Run just these with `bun test ./home/.pi/tests/pi-bridge-ultimate.test.ts`. They import the dependency-free `lib.ts`; loading `server.ts` requires Ultimate's runtime packages. No tooling configuration is changed here.
+
+## Reload
+
+After a change lands, compare this extension's `server.loadedAt` in `ultimate.extensions()` with the commit time; restart the host only if it did not reload.

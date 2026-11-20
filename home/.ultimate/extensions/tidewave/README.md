@@ -25,3 +25,7 @@ While pi holds the worktree's baton (`pi-sessions`), only read-only calls pass t
 ## Tests
 
 `home/.pi/tests/tidewave-ultimate.test.ts` (resolution, a fake Tidewave MCP server) and `pi-sessions-ultimate.test.ts` (the baton guard), run by `mise run check:ts`.
+
+## Reload
+
+After a change lands, compare this extension's `server.loadedAt` in `ultimate.extensions()` with the commit time; restart the host only if it did not reload.
