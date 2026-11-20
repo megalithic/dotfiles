@@ -109,13 +109,19 @@ export const shellCommands = (command: string): string[][] => {
   for (let index = 0; index < command.length; index += 1) {
     const char = command.charAt(index);
 
-    if (quote) {
+    if (char === '\\' && command.charAt(index + 1) === '\n' && quote !== "'") {
+      index += 1; // a line continuation joins the lines: no character, no word break
+    } else if (quote) {
       if (char === quote) quote = undefined;
       else if (char === '\\' && quote === '"') word += command.charAt((index += 1));
       else word += char;
     } else if (char === "'" || char === '"') {
       quote = char;
       word ??= '';
+    } else if (char === '$' && command.charAt(index + 1) === "'") {
+      quote = "'"; // $'…' (escapes inside are not decoded; enough to see plain words)
+      word ??= '';
+      index += 1;
     } else if (char === '\\') {
       word = (word ?? '') + command.charAt((index += 1));
     } else if (/[;&|\n`()]/.test(char)) {
@@ -212,7 +218,21 @@ export const substitutions = (command: string): string[] => {
   return bodies;
 };
 
-const posts = (command: string): boolean => shellCommands(command).some(ghPosts) || substitutions(command).some(posts);
+/** Strings a shell runs as code: `eval …` and the argument after `-c` of a shell (`bash -c`, `sh -lc`, `zsh -c`). */
+const SHELL = /(?:^|\/)(?:ba|z|da|k|fi)?sh$/;
+
+const nestedScripts = (words: string[]): string[] =>
+  words.flatMap((word, index) => {
+    if (word === 'eval') return [words.slice(index + 1).join(' ')];
+
+    return /^-\w*c\w*$/.test(word) && words.slice(0, index).some((w) => SHELL.test(w))
+      ? words.slice(index + 1, index + 2)
+      : [];
+  });
+
+const posts = (command: string): boolean =>
+  shellCommands(command).some((words) => ghPosts(words) || nestedScripts(words).some(posts)) ||
+  substitutions(command).some(posts);
 
 export const blockedPost = (command: string, reviews: Review[]): boolean => reviews.length > 0 && posts(command);
 

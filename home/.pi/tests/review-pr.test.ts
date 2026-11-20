@@ -163,11 +163,20 @@ test('pure helpers', () => {
     '/usr/bin/env -i PATH=/x /opt/homebrew/bin/gh pr review 1 --approve',
     'nice -n 5 timeout 30 gh pr comment 1 -b hi',
     'echo 1 | xargs -I{} gh pr review {} --approve',
+    'gh pr \\\n  review 123 --approve',
+    'gh \\\napi graphql --input p.json',
+    "gh pr $'review' 1 --approve",
+    'eval "gh pr review 1 --approve"',
+    "bash -c 'gh pr review 1 --approve'",
+    "/bin/zsh -lc 'cd x && gh pr comment 1 -b hi'",
+    'sh -c "echo; gh api repos/a/b/issues/1/comments -f body=x"',
   ])
     expect(blockedPost(command, [review])).toBe(true);
   expect(blockedPost('gh pr view 228 --comments', [review])).toBe(false);
   expect(blockedPost('gh api graphql -f query="{ viewer { login } }"', [review])).toBe(false);
   expect(blockedPost('mise exec -- gh pr view 228', [review])).toBe(false);
+  expect(blockedPost("bash -c 'gh pr view 1'", [review])).toBe(false);
+  expect(blockedPost('gh pr \\\n  view 1', [review])).toBe(false);
   expect(blockedPost('gh api graphql --field=query="query { viewer { login } }"', [review])).toBe(false);
   expect(blockedPost('gh pr view 228 --comments --repo acme/code-review', [review])).toBe(false);
   expect(blockedPost('gh api repos/acme/app/pulls/228/comments --jq .[].body', [review])).toBe(true);
