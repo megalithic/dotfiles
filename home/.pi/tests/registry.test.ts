@@ -240,6 +240,72 @@ test('Ultimate probe fallback chooses the lowest answering owned port and exclud
   expect(registry.apps[0]?.port).toBe(4200);
 });
 
+test.each(['application/json', 'text/event-stream'])(
+  'Ultimate probe rejects lower 404 and 500 ports in favor of an MCP reply (%s)',
+  async (contentType) => {
+    const statuses = new Map<number, number>();
+    const requests: { method: string; type: string | null; accept: string | null; body: unknown }[] = [];
+
+    const servers = Array.from({ length: 3 }, () =>
+      Bun.serve({
+        hostname: '127.0.0.1',
+        port: 0,
+        async fetch(request, server) {
+          requests.push({
+            method: request.method,
+            type: request.headers.get('content-type'),
+            accept: request.headers.get('accept'),
+            body: await request.json(),
+          });
+          const status = statuses.get(server.port!)!;
+          const reply = JSON.stringify({ jsonrpc: '2.0', id: 1, result: { capabilities: {} } });
+
+          return new Response(contentType === 'application/json' ? reply : `data: ${reply}\n\n`, {
+            status,
+            headers: { 'Content-Type': contentType },
+          });
+        },
+      }),
+    );
+
+    const ports = servers.map((server) => server.port!).toSorted((a, b) => a - b);
+    ports.forEach((port, index) => statuses.set(port, [404, 500, 200][index]!));
+    const instanceHome = path.join(ultimateHome, 'projects/app');
+    write(path.join(instanceHome, 'ultimate.lock'), { pid: process.pid, port: 4749, project: '/work/app' });
+    const hash = createHash('sha256').update(instanceHome).digest('hex').slice(0, 6);
+    const root = `/work/ult-${hash}-38382`;
+
+    try {
+      const registry = await withUltimateApps(readRegistry(), {
+        run: async (command, args) => {
+          if (args.includes('cwd')) return `p10\nn${root}`;
+
+          if (command === 'ps') return 'beam.smp';
+
+          return `p10\n${ports.map((port) => `n*:${port}`).join('\n')}`;
+        },
+        fs: { realpath: async (file) => file, readFile: async () => '' },
+      });
+
+      expect(registry.apps.map((app) => app.port)).toEqual([ports[2]!]);
+      expect(requests).toHaveLength(3);
+
+      for (const request of requests) {
+        expect(request.method).toBe('POST');
+        expect(request.type).toBe('application/json');
+        expect(request.accept).toBe('application/json, text/event-stream');
+        expect(request.body).toMatchObject({
+          jsonrpc: '2.0',
+          method: 'initialize',
+          params: { protocolVersion: '2025-06-18' },
+        });
+      }
+    } finally {
+      servers.forEach((server) => server.stop(true));
+    }
+  },
+);
+
 test('Rex manifest identity wins over stale seat metadata without an app lease', () => {
   const socket = path.join(home, 'rex.sock');
   fs.writeFileSync(socket, '');

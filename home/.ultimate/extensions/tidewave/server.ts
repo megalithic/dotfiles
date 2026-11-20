@@ -68,7 +68,15 @@ export default function tidewave(host: Host) {
     const previous = remembered.get(id);
     if (previous?.link && previous.port === app.port && previous.origin === app.origin) return previous as LinkedApp;
     previous?.link?.stop();
-    const { link, ready } = linkConversation(app.origin, id, submit);
+    const { link, ready } = linkConversation(
+      app,
+      id,
+      submit,
+      async () => conversationApp(host.home, id, await cwdOf(host, id, BACKGROUND_CONTEXT)),
+      () => {
+        if (remembered.get(id) === entry) remembered.delete(id);
+      },
+    );
     const entry = { port: app.port, origin: app.origin, link };
     remembered.set(id, entry);
     try {
@@ -76,7 +84,7 @@ export default function tidewave(host: Host) {
       return entry;
     } catch (error) {
       link.stop();
-      remembered.set(id, { port: app.port, origin: app.origin });
+      if (remembered.get(id) === entry) remembered.set(id, { port: app.port, origin: app.origin });
       throw error;
     }
   };

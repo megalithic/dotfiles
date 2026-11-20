@@ -58,18 +58,86 @@ export type UltimateAppDeps = {
   };
 };
 
-const probeApp = async (port: number): Promise<boolean> => {
+export const probeApp = async (port: number): Promise<boolean> => {
+  let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+
+  const reply = (text: string): boolean => {
+    try {
+      const value: JsonValue = JSON.parse(text);
+
+      return (
+        isObject(value) &&
+        value.id === 1 &&
+        (Object.hasOwn(value, 'result') || (value.jsonrpc === '2.0' && isObject(value.error)))
+      );
+    } catch {
+      return false;
+    }
+  };
+
   try {
     const response = await fetch(`http://127.0.0.1:${port}/tidewave/mcp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2025-06-18',
+          capabilities: {},
+          clientInfo: { name: 'pidewave-probe', version: '1.0.0' },
+        },
+      }),
       redirect: 'error',
       signal: AbortSignal.timeout(800),
     });
 
-    await response.body?.cancel();
+    reader = response.body?.getReader();
 
-    return true;
+    if (!response.ok || !reader) return false;
+
+    const type = response.headers.get('content-type')?.split(';')[0]?.trim();
+
+    if (type === 'application/json') {
+      let text = '';
+      const decoder = new TextDecoder();
+
+      for (;;) {
+        const { done, value } = await reader.read();
+        text += decoder.decode(value, { stream: !done });
+
+        if (done) return reply(text);
+      }
+    }
+
+    if (type !== 'text/event-stream') return false;
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    for (;;) {
+      const { done, value } = await reader.read();
+      buffer += decoder.decode(value, { stream: !done });
+      const events = buffer.split(/\r?\n\r?\n/);
+      buffer = events.pop()!;
+
+      for (const event of events) {
+        const data = event
+          .split(/\r?\n/)
+          .filter((line) => line.startsWith('data:'))
+          .map((line) => line.slice(5).trimStart())
+          .join('\n');
+
+        if (reply(data)) return true;
+      }
+
+      if (done) return false;
+    }
   } catch {
     return false;
+  } finally {
+    await reader?.cancel().catch(() => {});
   }
 };
 
