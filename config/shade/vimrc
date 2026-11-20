@@ -2,6 +2,9 @@
 " Shade reads ~/notes/.obsidian.vimrc first when it exists, else this file.
 " Translated from config/nvim/lua/keymaps.lua (leader ",", localleader Space).
 
+" Yank, delete and put share the macOS clipboard, like nvim's clipboard=unnamedplus.
+set clipboard=unnamedplus
+
 " Space is the localleader; ,w and Space w both write.
 unmap <Space>
 unmap ,
