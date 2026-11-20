@@ -63,6 +63,8 @@ VISUAL = "nvim -O"
 GIT_EDITOR = "nvim -O"
 JJ_EDITOR = "nvim -O"
 MANPAGER = "nvim +Man!"
+# The user's terminal; scripts and swifties daemons follow it (launchd agents set it too)
+TERMINAL = "rex"
 # rex CLI outside Rex terminals: XDG_RUNTIME_DIR=/tmp would point it at /tmp/rex and autostart a second server
 REX_SERVER = "{{ get_env(name='REX_SERVER', default='unix://' ~ env.HOME ~ '/Library/Application Support/rex/server.sock') }}"
 # MANPAGER = "less -X"
@@ -852,7 +854,7 @@ stderr_path = "~/Library/Logs/avwatchd.log"
 # The binary needs one-time Full Disk Access and Accessibility grants.
 [bootstrap.macos.launchd.agents."io.swifties.notiwatch"]
 program = "~/.local/bin/notiwatchd"
-environment = { PATH = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" }
+environment = { PATH = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin", TERMINAL = "rex" }
 run_at_load = true
 keep_alive = true
 stdout_path = "~/.cache/notiwatchd-stdout.log"
@@ -864,7 +866,7 @@ stderr_path = "~/.cache/notiwatchd-stderr.log"
 # a one-time Automation grant.
 [bootstrap.macos.launchd.agents."io.swifties.pidewave"]
 program = "~/.local/bin/pidewaved"
-environment = { PATH = "{{ env.HOME }}/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" }
+environment = { PATH = "{{ env.HOME }}/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin", TERMINAL = "rex" }
 run_at_load = true
 keep_alive = true
 stdout_path = "~/.cache/pidewaved-stdout.log"

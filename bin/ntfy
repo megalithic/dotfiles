@@ -59,7 +59,7 @@ EOF
 get_context() {
   if [[ -n "${TMUX:-}" ]]; then
     # Use #S:#I:#P:#{pane_pid} for pane-level detection with PID
-    # Hammerspoon parses Ghostty window title to compare against this context
+    # Hammerspoon parses the terminal's window title to compare against this context
     tmux display-message -p '#S:#I:#P:#{pane_pid}' 2>/dev/null || echo ""
   else
     tty 2>/dev/null | sed 's|/dev/||' || echo ""

@@ -4,15 +4,18 @@
 #
 # Flags:
 #   --fast   skip the mise bootstrap converge check (slowest section)
-#   --aqua   relaunch in a fresh Ghostty window via LaunchServices. Use from
+#   --aqua   relaunch in a fresh $TERMINAL window (default rex). Use from
 #            tmux/agent contexts: tmux panes are sandboxed (defaults domains
 #            unreadable, /etc writes denied, partial PATH) and produce false
 #            failures. Blocks on a fifo until the window finishes, then prints
 #            the log and exits with the real result. No tmux involved.
 set -uo pipefail
 
-# Pin canonical PATH (mise shims first, like interactive shells) — Ghostty
-# --command runs with no shell init and inherits the launcher's env, so an
+# rex lives in its app bundle, outside the pinned PATH below.
+REX_BIN="$(command -v rex || echo "$HOME/Library/Application Support/com.superlogical.rex/RexServer/Versions/Current/Rex Server.app/Contents/MacOS/rex")"
+
+# Pin canonical PATH (mise shims first, like interactive shells) — the
+# terminal runs this with no shell init and inherits the launcher's env, so an
 # inherited partial PATH would produce false ownership failures.
 export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
@@ -37,11 +40,18 @@ done
 FIFO=/tmp/smoke-aqua.fifo
 if [[ "$aqua" -eq 1 ]]; then
   self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
-  args="--aqua-run"
-  [[ "$run_bootstrap" -eq 0 ]] && args="$args --fast"
+  args=(--aqua-run)
+  [[ "$run_bootstrap" -eq 0 ]] && args+=(--fast)
   rm -f "$LOG" "$FIFO"
   mkfifo "$FIFO"
-  open -na Ghostty --args --command="$self $args"
+  case "${TERMINAL:-rex}" in
+    rex) "$REX_BIN" new --shell=none -- "$self" "${args[@]}" >/dev/null || exit 1 ;;
+    ghostty) open -na Ghostty --args --command="$self ${args[*]}" ;;
+    *)
+      echo "--aqua: unsupported TERMINAL=$TERMINAL (rex or ghostty)" >&2
+      exit 2
+      ;;
+  esac
   rc="$(cat "$FIFO")" # blocks until the aqua run writes its exit code
   rm -f "$FIFO"
   cat "$LOG"
