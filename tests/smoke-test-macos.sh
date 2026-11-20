@@ -133,7 +133,9 @@ ls "$HOME/Library/Fonts/" 2>/dev/null | grep -q 'FiraCodeNerdFont' && ok "nerd f
 
 hdr "Swifties release programs"
 swifties_installs="$HOME/.local/share/mise/installs"
-swifties_version="0.10.0"
+# All swifties tools share one release; read sup's mise pin so this never goes stale.
+swifties_version="$(cd "$HOME" && mise tool sup --requested 2>/dev/null)"
+[[ -n "$swifties_version" ]] || bad "sup has no mise pin (mise tool sup --requested)"
 miccheck_binary="$swifties_installs/miccheckd/$swifties_version/MicCheck.app/Contents/MacOS/miccheckd"
 shade_binary="$swifties_installs/shade/$swifties_version/Shade.app/Contents/MacOS/shade"
 sup_binary="$swifties_installs/sup/$swifties_version/Sup.app/Contents/MacOS/sup"

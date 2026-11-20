@@ -53,7 +53,8 @@ function createSeams(
     supActions: () => supRun(['show', 'actions', '--hold']),
     // Opens the target toast's source; onNothing() when there is none.
     supOpen: (onNothing) => supRun(['open'], onNothing),
-    supDismissTarget: () => supRun(['dismiss', '--target']),
+    // Dismisses what sup's config names (`actions.dismiss`: here every toast).
+    supDismissAction: () => supRun(['dismiss', '--action']),
     // onShown(visible): whether the panel shows after the toggle.
     shadeToggle: (verb, onShown = () => {}) => shade(['toggle', verb], ({ visible }) => onShown(visible === 'true')),
     // Show the panel on a verb; never hides it.

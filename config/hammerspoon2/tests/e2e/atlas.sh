@@ -31,7 +31,7 @@ sleep 1
 atlas screenshot --new-file
 atlas open hammerspoon2://hud-off >/dev/null
 
-# hyper+Escape: `sup dismiss --target`.
+# hyper+Escape: `sup dismiss --action`.
 atlas open hammerspoon2://dismiss >/dev/null
 
 # Each Shade verb through the armed layer.

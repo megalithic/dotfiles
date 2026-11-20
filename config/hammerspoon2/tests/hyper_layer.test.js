@@ -181,14 +181,14 @@ describe('wired to hs', () => {
     expect(hs.runs.length).toBe(0);
   });
 
-  test("hyper+Escape dismisses sup's target; Escape alone passes", () => {
+  test("hyper+Escape runs sup's dismiss action; Escape alone passes", () => {
     const { hs, sup } = wired();
     expect(hs.press('keyDown', ESC)).toBe(true);
     expect(hs.press('keyUp', ESC)).toBe(true);
     hs.press('keyDown', F19);
     expect(hs.press('keyDown', ESC)).toBe(false);
     expect(hs.press('keyUp', ESC)).toBe(false);
-    expect(sup('dismiss', '--target').length).toBe(1);
+    expect(sup('dismiss', '--action').length).toBe(1);
     expect(sup('show', 'actions', '--hold')[0].terminated).toBe(true);
   });
 

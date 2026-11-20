@@ -35,7 +35,10 @@ binding in the same change (hyper+Escape left v1's `dismissBindings`).
 - hyper+Return runs `sup open`, which opens the target toast's source (a
   Messages thread, a Rex block, a tab) and dismisses it. Exit 3 (nothing to
   open) falls back to Shade, below.
-- hyper+Escape runs `sup dismiss --target`.
+- hyper+Escape runs `sup dismiss --action`: it removes what sup's config
+  `actions.dismiss` names (`config/sup/config.json`: every toast; hints and
+  alerts stay). Exit 3 (nothing dismissed) is normal. There is no
+  `open --action`, so hyper+Return keeps `sup open`.
 
 Shade's layer works by modality: it is active only while Shade is.
 
