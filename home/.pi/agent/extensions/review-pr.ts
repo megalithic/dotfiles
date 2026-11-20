@@ -137,20 +137,38 @@ const GH_VALUE_FLAGS = new Set(['-R', '--repo', '--hostname']);
 
 const API_POSTING = /\/(?:reviews|comments)\b|addPullRequestReview|addComment|submitPullRequestReview/;
 
+/** Words from the command itself on: drops `VAR=value`, `env`, `command`, `exec` and `mise exec|x … --`, in any order. */
+const unwrap = (words: string[]): string[] => {
+  let index = 0;
+
+  while (index < words.length) {
+    const word = words[index] ?? '';
+
+    if (/^\w+=/.test(word) || ['env', 'command', 'exec'].includes(word)) index += 1;
+    else if (/(?:^|\/)mise$/.test(word) && ['exec', 'x'].includes(words[index + 1] ?? '')) {
+      const end = words.indexOf('--', index);
+
+      if (end < 0) return [];
+      index = end + 1;
+    } else break;
+  }
+
+  return words.slice(index);
+};
+
+/** An inline read-only GraphQL query (`-f query='{ … }'` or `query Name { … }`), never a file, stdin or mutation. */
+const READ_ONLY_QUERY = /^(?:-[fF]|--(?:raw-)?field=)?query=\s*(?:\{|query\b)/;
+
 /**
- * True for a `gh pr review|comment` or a `gh api` call to a review or comment endpoint, whatever its flags, also
- * behind `env`, `command`, `exec` or `mise exec|x … --`. A `gh api graphql` call whose query is not inline (`--input`,
- * `query=@file`) or that is a mutation counts too: its body can post without naming an endpoint.
+ * True for a `gh pr review|comment` or a `gh api` call to a review or comment endpoint, whatever its flags or wrappers
+ * (`VAR=1`, `env`, `command`, `exec`, `mise exec|x … --`). A `gh api graphql` call counts too unless its query is an
+ * inline read-only one: a file, stdin or mutation body can post without naming an endpoint, so it fails closed.
  */
 export const ghPosts = (words: string[]): boolean => {
-  const miseEnd =
-    /(?:^|\/)mise$/.test(words[0] ?? '') && ['exec', 'x'].includes(words[1] ?? '') ? words.indexOf('--') : -1;
+  const after = unwrap(words);
 
-  const after = miseEnd < 0 ? words : words.slice(miseEnd + 1);
-  const start = after.findIndex((word) => !/^\w+=/.test(word) && !['env', 'command', 'exec'].includes(word));
-
-  if (start < 0 || !/(?:^|\/)gh$/.test(after[start] ?? '')) return false;
-  const rest = after.slice(start + 1);
+  if (!/(?:^|\/)gh$/.test(after[0] ?? '')) return false;
+  const rest = after.slice(1);
   const subcommands = rest.filter((word, index) => !word.startsWith('-') && !GH_VALUE_FLAGS.has(rest[index - 1] ?? ''));
 
   if (subcommands[0] === 'pr') return ['review', 'comment'].includes(subcommands[1] ?? '');
@@ -159,9 +177,11 @@ export const ghPosts = (words: string[]): boolean => {
 
   if (rest.some((word) => API_POSTING.test(word))) return true;
 
+  if (!subcommands.includes('graphql')) return false;
+
   return (
-    subcommands.includes('graphql') &&
-    rest.some((word) => word === '--input' || word.startsWith('--input=') || /^query=@|\bmutation\b/.test(word))
+    rest.some((word) => word === '--input' || word.startsWith('--input=') || /=@|\bmutation\b/.test(word)) ||
+    !rest.some((word) => READ_ONLY_QUERY.test(word))
   );
 };
 

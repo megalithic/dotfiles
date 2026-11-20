@@ -154,11 +154,17 @@ test('pure helpers', () => {
     'gh api graphql -F query=@/tmp/q.graphql',
     'mise exec -- gh pr review 228 --approve',
     'mise x gh@2 -- gh api graphql --input p.json',
+    'gh api graphql --field=query=@q.graphql',
+    'gh api graphql -F query=@-',
+    'gh api graphql -f id=PR_1',
+    'GH_PROMPT_DISABLED=1 mise exec -- gh pr review 123 --approve',
+    'env mise exec -- GH_HOST=x gh pr comment 1 -b hi',
   ])
     expect(blockedPost(command, [review])).toBe(true);
   expect(blockedPost('gh pr view 228 --comments', [review])).toBe(false);
   expect(blockedPost('gh api graphql -f query="{ viewer { login } }"', [review])).toBe(false);
   expect(blockedPost('mise exec -- gh pr view 228', [review])).toBe(false);
+  expect(blockedPost('gh api graphql --field=query="query { viewer { login } }"', [review])).toBe(false);
   expect(blockedPost('gh pr view 228 --comments --repo acme/code-review', [review])).toBe(false);
   expect(blockedPost('gh api repos/acme/app/pulls/228/comments --jq .[].body', [review])).toBe(true);
   expect(blockedPost("git commit -m 'gh pr review 228'", [review])).toBe(false);
