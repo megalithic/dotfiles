@@ -149,9 +149,16 @@ test('pure helpers', () => {
     'echo "$(gh pr review 228 --approve)"',
     'echo "`gh pr comment 228 -b hi`"',
     'echo "it\'s $(echo $(gh api repos/a/b/issues/1/comments -f body=x))"',
+    'gh api graphql --input /tmp/payload.json',
+    'gh api graphql --input=/tmp/payload.json',
+    'gh api graphql -F query=@/tmp/q.graphql',
+    'mise exec -- gh pr review 228 --approve',
+    'mise x gh@2 -- gh api graphql --input p.json',
   ])
     expect(blockedPost(command, [review])).toBe(true);
   expect(blockedPost('gh pr view 228 --comments', [review])).toBe(false);
+  expect(blockedPost('gh api graphql -f query="{ viewer { login } }"', [review])).toBe(false);
+  expect(blockedPost('mise exec -- gh pr view 228', [review])).toBe(false);
   expect(blockedPost('gh pr view 228 --comments --repo acme/code-review', [review])).toBe(false);
   expect(blockedPost('gh api repos/acme/app/pulls/228/comments --jq .[].body', [review])).toBe(true);
   expect(blockedPost("git commit -m 'gh pr review 228'", [review])).toBe(false);

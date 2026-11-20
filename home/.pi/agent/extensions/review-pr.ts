@@ -137,17 +137,32 @@ const GH_VALUE_FLAGS = new Set(['-R', '--repo', '--hostname']);
 
 const API_POSTING = /\/(?:reviews|comments)\b|addPullRequestReview|addComment|submitPullRequestReview/;
 
-/** True for a `gh pr review|comment` or a `gh api` call to a review or comment endpoint, whatever its flags. */
+/**
+ * True for a `gh pr review|comment` or a `gh api` call to a review or comment endpoint, whatever its flags, also
+ * behind `env`, `command`, `exec` or `mise exec|x … --`. A `gh api graphql` call whose query is not inline (`--input`,
+ * `query=@file`) or that is a mutation counts too: its body can post without naming an endpoint.
+ */
 export const ghPosts = (words: string[]): boolean => {
-  const start = words.findIndex((word) => !/^\w+=/.test(word) && !['env', 'command', 'exec'].includes(word));
+  const miseEnd =
+    /(?:^|\/)mise$/.test(words[0] ?? '') && ['exec', 'x'].includes(words[1] ?? '') ? words.indexOf('--') : -1;
 
-  if (start < 0 || !/(?:^|\/)gh$/.test(words[start] ?? '')) return false;
-  const rest = words.slice(start + 1);
+  const after = miseEnd < 0 ? words : words.slice(miseEnd + 1);
+  const start = after.findIndex((word) => !/^\w+=/.test(word) && !['env', 'command', 'exec'].includes(word));
+
+  if (start < 0 || !/(?:^|\/)gh$/.test(after[start] ?? '')) return false;
+  const rest = after.slice(start + 1);
   const subcommands = rest.filter((word, index) => !word.startsWith('-') && !GH_VALUE_FLAGS.has(rest[index - 1] ?? ''));
 
   if (subcommands[0] === 'pr') return ['review', 'comment'].includes(subcommands[1] ?? '');
 
-  return subcommands[0] === 'api' && rest.some((word) => API_POSTING.test(word));
+  if (subcommands[0] !== 'api') return false;
+
+  if (rest.some((word) => API_POSTING.test(word))) return true;
+
+  return (
+    subcommands.includes('graphql') &&
+    rest.some((word) => word === '--input' || word.startsWith('--input=') || /^query=@|\bmutation\b/.test(word))
+  );
 };
 
 /** Bodies of `$(…)` and backtick substitutions outside single quotes: they run even inside double quotes. */
