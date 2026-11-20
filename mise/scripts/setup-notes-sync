@@ -11,7 +11,10 @@
 #   setup-notes-sync status   peers, folder state, sync conflicts on this Mac
 #
 # `syncthing cli` talks to each node's own GUI/REST API with that node's own key,
-# so no API key leaves its machine. Device IDs are public identifiers.
+# so no API key leaves its machine. Device IDs are pinned in 1Password (fnox
+# SYNCTHING_ID_<HOST>, item Crypt/syncthing-notes) so only those devices are
+# trusted; addresses come from Tailscale (`tailscale ip -4 <host>`). Neither is
+# kept in this public repo.
 # Before apply on a Mac: its ~/notes must be either the full vault or empty, and
 # com.megadots.syncthing must be running.
 set -euo pipefail
@@ -21,12 +24,7 @@ local_path="$HOME/notes"
 nas_path=/volume2/Backups/sync/notes # host path of the container's /var/syncthing/notes
 nas=wolfhall
 
-# name device-id tailscale-ip
-devices=(
-  "wolfhall SYNCTHING-DEVICE-ID TAILSCALE-IP"
-  "megabookpro SYNCTHING-DEVICE-ID TAILSCALE-IP"
-  "workbookpro SYNCTHING-DEVICE-ID TAILSCALE-IP"
-)
+hosts=(wolfhall megabookpro workbookpro)
 
 # Not synced; each device keeps its own. Deletions are covered by wolfhall's versions.
 ignores='// Managed by mise/scripts/setup-notes-sync in ~/.dotfiles.
@@ -37,6 +35,18 @@ ignores='// Managed by mise/scripts/setup-notes-sync in ~/.dotfiles.
 die() {
   echo "setup-notes-sync: $*" >&2
   exit 1
+}
+
+# "name device-id tailscale-ip" per host, resolved once; any missing value stops here.
+devices=()
+load_devices() {
+  local host id ip
+  for host in "${hosts[@]}"; do
+    id=$(fnox get "SYNCTHING_ID_${host^^}" 2>/dev/null) || die "fnox get SYNCTHING_ID_${host^^} failed (1Password item Crypt/syncthing-notes, field $host)"
+    [[ $id =~ ^[A-Z0-9]{7}(-[A-Z0-9]{7}){7}$ ]] || die "SYNCTHING_ID_${host^^} is not a Syncthing device ID"
+    ip=$(tailscale ip -4 "$host" 2>/dev/null) || die "tailscale ip -4 $host failed"
+    devices+=("$host $id $ip")
+  done
 }
 
 mac() { syncthing cli "$@" </dev/null; }
@@ -128,6 +138,7 @@ status() {
   echo "no conflicts"
 }
 
+load_devices
 case "${1:-apply}" in
   apply) apply_nas && apply_mac ;;
   nas) apply_nas ;;

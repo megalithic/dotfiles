@@ -19,10 +19,10 @@
   "onboarding": false,
   "remotes": {
     "megabookpro": {
-      ".dotfiles": "https://megabookpro.TAILNET.ts.net:4749"
+      ".dotfiles": "https://megabookpro.{{TAILNET}}:4749"
     },
     "workbookpro": {
-      ".dotfiles": "https://workbookpro.TAILNET.ts.net:4749"
+      ".dotfiles": "https://workbookpro.{{TAILNET}}:4749"
     }
   },
   "mcpServers": {

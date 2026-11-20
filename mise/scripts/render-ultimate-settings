@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Render ~/.ultimate/settings.json from mise/templates/ultimate/settings.json.
+# The template keeps the tailnet's private DNS suffix out of the public repo as
+# {{TAILNET}}; this fills it from the running Tailscale (MagicDNSSuffix). Fails,
+# and leaves the current file alone, when Tailscale is missing, logged out or
+# the result is not valid JSON, so `remotes` is never written empty.
+# Ultimate writes nothing back here worth keeping: edit the template instead.
+set -euo pipefail
+
+die() {
+  echo "render-ultimate-settings: $*" >&2
+  exit 1
+}
+
+template="${DOTFILES_DIR:-$HOME/.dotfiles}/mise/templates/ultimate/settings.json"
+target="$HOME/.ultimate/settings.json"
+[[ -f $template ]] || die "template not found: $template"
+command -v tailscale >/dev/null || die "tailscale not found"
+
+suffix="$(tailscale status --json 2>/dev/null | jq -r '.MagicDNSSuffix // empty')"
+[[ $suffix =~ ^[a-z0-9-]+\.ts\.net$ ]] || die "no tailnet DNS suffix from 'tailscale status' (logged out or not running?)"
+
+mkdir -p "$(dirname "$target")"
+tmp="$(mktemp "$target.XXXXXX")"
+trap 'rm -f "$tmp"' EXIT
+sed "s/{{TAILNET}}/$suffix/g" "$template" >"$tmp"
+jq -e '.remotes | length > 0' "$tmp" >/dev/null || die "rendered settings have no remotes"
+! grep -q '{{' "$tmp" || die "unresolved placeholder in $template"
+
+if [[ -f $target && ! -L $target ]] && cmp -s "$tmp" "$target"; then
+  echo "render-ultimate-settings: unchanged $target"
+  exit 0
+fi
+mv -f "$tmp" "$target"
+echo "render-ultimate-settings: rendered $target"

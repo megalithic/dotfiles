@@ -25,10 +25,9 @@ usually reload live, but not always: an instance gets restarted only when it sho
 - **links:** `mise run update:dotfiles` (never `--force`), then `mise dotfiles diff` must say "all files are
   applied". On a refusal over an existing real file, compare it with the source, resolve it by hand, re-run, and
   report what you did.
-- **settings:** when the repo has `mise/scripts/render-ultimate-settings`, it renders `~/.ultimate/settings.json`
-  from `mise/templates/ultimate/settings.json` (fails, leaving the file as it was, when Tailscale is missing or logged
-  out; edit the template, never the rendered file). Without it, `~/.ultimate/settings.json` must equal
-  `home/.ultimate/settings.json`.
+- **settings:** renders `~/.ultimate/settings.json` from `mise/templates/ultimate/settings.json` with the tailnet's
+  DNS suffix from `tailscale status` (`mise/scripts/render-ultimate-settings`). It fails, leaving the file as it was,
+  when Tailscale is missing or logged out. Edit the template, never the rendered file.
 - **observe:** printed when `~/.ultimate` files changed: step 2 is due. Exit status is 1 when any step failed.
 
 ## 2. Observe what each instance loaded
@@ -96,8 +95,7 @@ his Inbox as a step with what he should see.
 
 ## 6. Other machines
 
-Other Macs in `remotes` (of `mise/templates/ultimate/settings.json`, or `home/.ultimate/settings.json` before the
-template exists): only when the user wants that Mac updated. Run the script there with a pull, then ask its
+Other Macs in `remotes` (of `mise/templates/ultimate/settings.json`): only when the user wants that Mac updated. Run the script there with a pull, then ask its
 @ultimate (`ultimate.tell({project: '.dotfiles', machine, reply: true})`) to do steps 2 to 5 for its instances and
 report:
 

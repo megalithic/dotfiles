@@ -66,17 +66,9 @@ main() {
     fail=1
   fi
 
-  # 3. Ultimate settings: rendered from a template when the repo has one, else the linked source
-  settings="$HOME/.ultimate/settings.json"
-  if [[ -x mise/scripts/render-ultimate-settings ]]; then
-    if out="$(mise/scripts/render-ultimate-settings 2>&1)"; then say settings ok "${out#render-ultimate-settings: }"; else
-      say settings fail "${out#render-ultimate-settings: }"
-      fail=1
-    fi
-  elif cmp -s "$settings" home/.ultimate/settings.json; then
-    say settings ok "$settings matches home/.ultimate/settings.json"
-  else
-    say settings fail "$settings differs from home/.ultimate/settings.json"
+  # 3. Ultimate settings: rendered from mise/templates/ultimate/settings.json (a real file, so watchers see it)
+  if out="$(mise/scripts/render-ultimate-settings 2>&1)"; then say settings ok "${out#render-ultimate-settings: }"; else
+    say settings fail "${out#render-ultimate-settings: }"
     fail=1
   fi
 

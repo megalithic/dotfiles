@@ -808,7 +808,8 @@ stderr_path = "~/Library/Logs/executor/stderr.log"
 
 # The Ultimate hub (~/.dotfiles, Fleet surface) on 127.0.0.1:4749, always on, on
 # both Macs; each serves it over Tailscale and lists the other in `remotes`
-# (home/.ultimate/settings.json). `mise run setup:ultimate` installs Ultimate.
+# (~/.ultimate/settings.json, rendered by `mise run setup:ultimate-settings`).
+# `mise run setup:ultimate` installs Ultimate.
 # While a hub started in a Rex tab runs, the wrapper waits and takes over once
 # it stops; the launchd hub reports no Rex tab status (no tty).
 # It runs through ~/Applications/Ultimate.app (`mise run setup:ultimate-app`) so
@@ -1021,6 +1022,7 @@ run = [
   { task = "update:packages" },
   { task = "update:dotfiles" },
   { task = "setup:ultimate" },
+  { task = "setup:ultimate-settings" },
   { task = "setup:ultimate-app" },
   { task = "update:system" },
   { task = "update:nvim" },
@@ -1220,6 +1222,10 @@ run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-notes-sync"
 [tasks."setup:ultimate"]
 description = "Install Ultimate from the megalithic/ultimate fork and link the ultimate command (skips what exists)"
 run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-ultimate"
+
+[tasks."setup:ultimate-settings"]
+description = "Render ~/.ultimate/settings.json from mise/templates/ultimate with this tailnet's DNS suffix"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/render-ultimate-settings"
 
 [tasks."setup:ultimate-app"]
 description = "Build and sign ~/Applications/Ultimate.app, the hub LaunchAgent's program (skips when current)"

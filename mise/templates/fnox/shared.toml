@@ -96,6 +96,11 @@ APPLE_ID_EMAIL = { provider = "onepass", value = "op://Crypt/apple-developer/use
 APPLE_TEAM_ID = { provider = "onepass", value = "op://Crypt/apple-developer/Section_6qgogrdycnlqc4x7ngqwchlyvi/team id", env = false }
 APPLE_NOTARYTOOL_PASSWORD = { provider = "onepass", value = "op://Crypt/apple-developer/Section_6qgogrdycnlqc4x7ngqwchlyvi/notarytool app password", env = false }
 
+# Syncthing device IDs of the notes vault peers (mise/scripts/setup-notes-sync).
+SYNCTHING_ID_WOLFHALL = { provider = "onepass", value = "op://Crypt/syncthing-notes/wolfhall", env = false }
+SYNCTHING_ID_MEGABOOKPRO = { provider = "onepass", value = "op://Crypt/syncthing-notes/megabookpro", env = false }
+SYNCTHING_ID_WORKBOOKPRO = { provider = "onepass", value = "op://Crypt/syncthing-notes/workbookpro", env = false }
+
 COZI_USERNAME = { provider = "onepass", value = "op://Crypt/tsfx5wfd3kzuauzl5h4m3dct5i/COZI_USERNAME", env = false }
 COZI_PASSWORD = { provider = "onepass", value = "op://Crypt/tsfx5wfd3kzuauzl5h4m3dct5i/COZI_PASSWORD", env = false }
 
