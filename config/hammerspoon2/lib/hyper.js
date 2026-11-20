@@ -6,7 +6,8 @@
 // - hyper+Return: `sup open` opens the target toast's source; with none (exit
 //   3) it toggles Shade on `verb`, and when Shade shows, the layer arms its
 //   bindings (Shade's verbs) for the rest of the hold.
-// - hyper+Escape: `sup dismiss --target`.
+// - hyper+Escape: `sup dismiss --action`, which removes what sup's config
+//   `actions.dismiss` names (every toast); exit 3 (nothing to dismiss) is normal.
 
 const { startLayer } = require('./hyper_layer.js');
 
@@ -36,7 +37,7 @@ function startHyper(hs, { seams, hud, bindings, verb }) {
     },
     onChord: () => {
       endActions();
-      seams.supDismissTarget();
+      seams.supDismissAction();
     },
     onArm: () => hud.show(),
     onAction: (action) => {

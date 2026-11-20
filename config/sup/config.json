@@ -1,4 +1,5 @@
 {
+  "$schema": "/Users/seth/.local/share/mise/installs/sup/latest/Sup.app/Contents/Resources/config.schema.json",
   "screen": "focused",
   "material": "glass",
   "animation": {
@@ -14,6 +15,7 @@
     "ttl": 2
   },
   "toast": {
+    "screen": "primary",
     "position": "bottom-left",
     "offset": 24,
     "width": 360,
@@ -26,5 +28,8 @@
       "critical": 0
     },
     "group_count": true
+  },
+  "actions": {
+    "dismiss": "toasts"
   }
 }

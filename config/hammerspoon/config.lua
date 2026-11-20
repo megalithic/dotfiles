@@ -448,7 +448,7 @@ M.notifier = {
     normal = { position = "corner", dim = false, phone = false },
   },
 
-  -- hyper+escape belongs to Hammerspoon 2 (sup dismiss --target); set
+  -- hyper+escape belongs to Hammerspoon 2 (sup dismiss --action); set
   -- dismissBindings = { {}, "escape" } here only if HS2 stops binding it.
 
   agent = {
