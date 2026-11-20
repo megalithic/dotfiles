@@ -1,5 +1,5 @@
 {
-  "_comment": "notiwatchd rules for Notification Center events and `notiwatchd post` (bin/notify). First match wins. match fields: bundle_id and source (exact, string or array), title/subtitle/body (case-insensitive regex, string or array). Absent field = wildcard. actions: log | ignore | dismiss (AX close of on-screen banner; needs Accessibility grant) | sup (a toast; skipped while screen sharing or while Seth is in the sender's pane/chat/app) | ntfy | exec:<cmd> | webhook:<url>. urgency: normal | high | critical (sup info | warn | critical). quiet_in_focus: Focus mode names (string or array); while one is on, only log/ignore/dismiss run. Unmatched posts run post_actions, unmatched NC events default_actions.",
+  "_comment": "notiwatchd rules for Notification Center events and `notiwatchd post` (bin/notify). First match wins. match fields: bundle_id and source (exact, string or array), title/subtitle/body (case-insensitive regex, string or array). Absent field = wildcard. actions: log | ignore | dismiss (AX close of on-screen banner; needs Accessibility grant) | sup (a toast; skipped while screen sharing or while Seth is in the sender's pane/chat/app) | ntfy | exec:<cmd> | webhook:<url>. urgency: normal | high | critical (sup info | warn | critical). ttl: toast seconds >= 0, 0 = until dismissed or clicked (anything else fails the load). quiet_in_focus: Focus mode names (string or array); while one is on, only log/ignore/dismiss run. Unmatched posts run post_actions, unmatched NC events default_actions.",
   "poll_fallback_seconds": 30,
   "ntfy_path": "~/.dotfiles/bin/ntfy",
   "default_actions": ["log"],
@@ -12,9 +12,10 @@
     },
     {
       "name": "ultimate-time-sensitive",
-      "_comment": "Agents post with -s ultimate only when handing Seth something with a deadline. Critical toasts stay until dismissed (sup toast.ttl.critical = 0).",
+      "_comment": "Agents post with -s ultimate only when handing Seth something with a deadline. ttl 0 keeps the toast until it is dismissed or clicked.",
       "match": { "source": "ultimate" },
       "urgency": "critical",
+      "ttl": 0,
       "actions": ["log", "sup"]
     },
     {

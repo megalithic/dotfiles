@@ -29,19 +29,20 @@ fail() {
 }
 
 body='lunch? $(touch pwned) ]] "q"'
-"$NOTIFY" -s pi -t '[dots pi] Input needed' -m "$body" -u critical -g pi:dots:1:0 -c tmux:dots:1:0 -a com.example
-[[ "$(cat "$CALLS")" == "notiwatchd <post> <--title> <[dots pi] Input needed> <--body> <$body> <--urgency> <critical> <--source> <pi> <--group> <pi:dots:1:0> <--context> <tmux:dots:1:0> <--app> <com.example>" ]] ||
+tab='http://127.0.0.1:4749/?conversation=1'
+"$NOTIFY" -s pi -t '[dots pi] Input needed' -m "$body" -u critical -g pi:dots:1:0 -c tmux:dots:1:0 -a com.example -o "$tab"
+[[ "$(cat "$CALLS")" == "notiwatchd <post> <--title> <[dots pi] Input needed> <--body> <$body> <--urgency> <critical> <--source> <pi> <--group> <pi:dots:1:0> <--context> <tmux:dots:1:0> <--app> <com.example> <--open-tab> <$tab>" ]] ||
   fail "post arguments"
 [[ ! -e pwned && ! -e "$tmp/pwned" ]] || fail "body ran as shell"
 ok "every flag reaches notiwatchd post as one argument; shown means no ntfy"
 
 rm -f "$CALLS"
-POST_EXIT=1 "$NOTIFY" -s vpn -t T -m B -u high
+POST_EXIT=1 "$NOTIFY" -s vpn -t T -m B -u high -o "$tab"
 [[ "$(sed -n 2p "$CALLS")" == "ntfy <send> <-t> <T> <-m> <B> <-u> <high> <-s> <vpn>" ]] || fail "fallback"
 rm -f "$CALLS"
 POST_EXIT=1 "$NOTIFY" -t T -m B
 [[ "$(sed -n 2p "$CALLS")" == "ntfy <send> <-t> <T> <-m> <B> <-u> <normal> <-S>" ]] || fail "fallback without source"
-ok "nothing shown (exit 1) falls back to ntfy"
+ok "nothing shown (exit 1) falls back to ntfy, without --open-tab"
 
 rm -f "$CALLS"
 if POST_EXIT=2 "$NOTIFY" -t T -m B 2>/dev/null; then fail "usage error passed"; fi

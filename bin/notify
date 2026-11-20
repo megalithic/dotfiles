@@ -5,10 +5,12 @@
 # Hammerspoon path, get a last try. Values are passed as arguments, never code.
 #
 # Usage: notify -t TITLE -m MESSAGE [-u normal|high|critical] [-s SOURCE]
-#               [-g GROUP] [-c CONTEXT] [-a BUNDLE]
+#               [-g GROUP] [-c CONTEXT] [-a BUNDLE] [-o URL]
+# -o: a local http(s) page; clicking the toast focuses that Helium tab or opens
+# it (notiwatchd post --open-tab). ntfy has no such option, so it is dropped.
 set -uo pipefail
 
-title="" message="" urgency="normal" source="" group="" context="" app=""
+title="" message="" urgency="normal" source="" group="" context="" app="" open_tab=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -t | --title) title="${2-}" ;;
@@ -18,6 +20,7 @@ while [[ $# -gt 0 ]]; do
     -g | --group) group="${2-}" ;;
     -c | --context) context="${2-}" ;;
     -a | --app) app="${2-}" ;;
+    -o | --open-tab) open_tab="${2-}" ;;
     *)
       echo "notify: unknown option $1" >&2
       exit 2
@@ -34,6 +37,7 @@ args=(post --title "$title" --body "$message" --urgency "$urgency")
 [[ -n "$group" ]] && args+=(--group "$group")
 [[ -n "$context" ]] && args+=(--context "$context")
 [[ -n "$app" ]] && args+=(--app "$app")
+[[ -n "$open_tab" ]] && args+=(--open-tab "$open_tab")
 
 "$HOME/.local/bin/notiwatchd" "${args[@]}" >/dev/null
 status=$?
