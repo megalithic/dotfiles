@@ -11,6 +11,13 @@
       "actions": ["log", "sup"]
     },
     {
+      "name": "ultimate-time-sensitive",
+      "_comment": "Agents post with -s ultimate only when handing Seth something with a deadline. Critical toasts stay until dismissed (sup toast.ttl.critical = 0).",
+      "match": { "source": "ultimate" },
+      "urgency": "critical",
+      "actions": ["log", "sup"]
+    },
+    {
       "name": "vpn",
       "match": { "source": "vpn" },
       "actions": ["log", "sup"]

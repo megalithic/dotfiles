@@ -5,6 +5,11 @@
 - Tools come from mise (`~/.dotfiles/config/mise/config.toml`); no global installs.
 - Browser: Helium (`net.imput.helium`). Hammerspoon is the default URL handler and routes links to it.
 
+## Time-sensitive handoffs
+
+- When you hand Seth something with a deadline (an expiring approval link, a login code, a time-limited decision), also run `~/bin/notify -u critical -s ultimate -g <topic> -t <title> -m <where to find it>`; it shows a critical toast that stays until dismissed.
+- Never put the link, code or secret itself in the toast, only where to find it, e.g. `-m "Approval waiting in #59372"`.
+
 ## Tools
 
 - Always use `trash` instead of `rm` for file deletion

@@ -22,7 +22,8 @@
     "ttl": {
       "info": 5,
       "warn": 8,
-      "urgent": 0
+      "urgent": 0,
+      "critical": 0
     },
     "group_count": true
   }
