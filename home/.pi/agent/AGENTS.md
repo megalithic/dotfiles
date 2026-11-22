@@ -4,6 +4,8 @@
 - macOS on both Macs (`workbookpro`, `megabookpro`). Versions differ per host and change with updates: check `sw_vers` and `fish --version` before stating one.
 - Tools come from mise (`~/.dotfiles/config/mise/config.toml`); no global installs.
 - Browser: Helium (`net.imput.helium`). Hammerspoon is the default URL handler and routes links to it.
+- GNU sed comes first on PATH via mise (`config/mise/config.toml` `_.path`), so BSD `sed -i ''` fails. Change files with your edit tools; in scripts, use GNU sed syntax.
+- `rg` reads `~/.config/ripgrep/rc` (`RIPGREP_CONFIG_PATH`), which adds line:col prefixes, `--hidden` and `--follow`. Use `rg --no-config` when a script or pipeline parses its output.
 
 ## Time-sensitive handoffs
 
