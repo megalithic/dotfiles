@@ -12,10 +12,10 @@ one line each; run it before you report anything installed or running:
 ~/.dotfiles/.ultimate/skills/swifties-cutover/check [version]   # default: mise's current sup
 ```
 
-Lines: `pins`, `sums` (release `SHA256SUMS`), `copies` (`~/.local/bin` daemons equal the release), `appledbl` (no
+Lines: `pins` (installed at the version; `warn` while the deployed pins still name the old one), `sums` (release `SHA256SUMS`), `copies` (`~/.local/bin` daemons equal the release), `appledbl` (no
 `._*` files), `codesign`, one `launchd` per agent (running, on this version's path, started after its binary was
-installed, `TERMINAL => rex` on notiwatch and pidewave), `sup` (`sup config --json`), `notiwatch` (last
-`config loaded: N rule(s)` equals the config's rule count), `idle`. Exit status 1 when any line fails.
+installed, `TERMINAL => rex` on notiwatch and pidewave), `sup` (`sup config --json`), `notiwatch` (the newest config
+line is `config loaded: N rule(s)` with the config's rule count, not `config parse failed, keeping previous`), `idle`. Exit status 1 when any line fails.
 
 ## 1. Branch: pins and paths
 
@@ -31,7 +31,9 @@ In a hub branch, in `config/mise/config.toml`:
 
 From the branch worktree: `mise install -f <tool>@<version> …` for all seven (`-f` replaces a cached asset from a
 re-cut release). The postinstalls copy notiwatchd, pidewaved and avwatchd into `~/.local/bin`. Then run `check
-<version>`: `pins`, `sums`, `copies`, `appledbl` and `codesign` must be `ok` before anything restarts.
+<version>`: `sums`, `copies`, `appledbl` and `codesign` must be `ok` before anything restarts. Until landing, `pins`
+is `warn` (the deployed config still pins the old version) and the app agents' `launchd` lines fail on their old
+paths; both must be `ok` after step 3.
 
 ## 3. Restart, in this order
 

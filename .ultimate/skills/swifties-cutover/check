@@ -37,13 +37,18 @@ ver="${1:-$(mise current sup 2>/dev/null)}"
   exit 1
 }
 
-# 1. Pins: mise resolves every tool to the version
-off=""
+# 1. Installed, and pinned: before landing the deployed pins still name the old version (warn, not fail)
+missing="" old=""
 for t in "${tools[@]}"; do
+  [[ -d $installs/$t/$ver ]] || missing+=" $t"
   cur="$(mise current "$t" 2>/dev/null)"
-  [[ $cur == "$ver" && -d $installs/$t/$ver ]] || off+=" $t=${cur:-none}"
+  [[ $cur == "$ver" ]] || old+=" $t=${cur:-none}"
 done
-if [[ -z $off ]]; then say pins ok "all ${#tools[@]} tools at $ver, installed"; else say pins fail "not at $ver:$off"; fi
+if [[ -n $missing ]]; then
+  say pins fail "not installed at $ver:$missing"
+elif [[ -n $old ]]; then
+  say pins warn "installed at $ver; deployed pins still$old (expected before landing)"
+else say pins ok "all ${#tools[@]} tools pinned and installed at $ver"; fi
 
 # 2. Release checksums: download the release and check SHA256SUMS
 tmp="$(mktemp -d)"
@@ -109,7 +114,8 @@ else
   say sup fail "sup config --json did not answer with JSON"
 fi
 want="$(jq '.rules | length' "$HOME/.config/notiwatchd/config.json" 2>/dev/null)"
-last="$(grep -hE 'config loaded: [0-9]+ rule|config (load )?error' "$HOME/.cache/notiwatchd-stdout.log" "$HOME/.cache/notiwatchd-stderr.log" 2>/dev/null | sort | tail -n 1)"
+# The newest config line wins: a parse failure after a success means it kept the old rules
+last="$(grep -hE 'config loaded: [0-9]+ rule|config parse failed' "$HOME/.cache/notiwatchd-stdout.log" "$HOME/.cache/notiwatchd-stderr.log" 2>/dev/null | sort | tail -n 1)"
 if [[ $last == *"config loaded: $want rule"* ]]; then say notiwatch ok "$last (config has $want)"; else say notiwatch fail "${last:-no config line in the log}; config has ${want:-?} rules"; fi
 
 # 7. Whether a visible test toast is allowed now (Seth idle at least 5 minutes)
