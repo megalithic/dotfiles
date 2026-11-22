@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# Read-only checks of an installed swifties release on this Mac, one line each.
+# Usage: check [version]   version: what every pin should be (default: mise's current sup)
+# Exit status 1 when any check fails. Changes nothing except a temp download dir.
+set -uo pipefail
+export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:/opt/homebrew/bin:/usr/bin:/bin:$PATH"
+
+tools=(aeroplay miccheckd notiwatchd pidewaved avwatchd shade sup)
+copies=(notiwatchd pidewaved avwatchd) # run from ~/.local/bin copies their postinstall writes
+apps=(aeroplay:AeroPlay miccheckd:MicCheck shade:Shade sup:Sup)
+# launchd label suffix:tool, and whether its environment must carry TERMINAL=rex
+agents=(avwatch:avwatchd notiwatch:notiwatchd:rex pidewave:pidewaved:rex miccheck:miccheckd aeroplay:aeroplay shade:shade sup:sup)
+
+installs="$HOME/.local/share/mise/installs"
+fail=0
+say() {
+  printf '%-10s %-5s %s\n' "$1" "$2" "$3"
+  [[ $2 == fail ]] && fail=1
+  return 0
+}
+# ps etime ([[dd-]hh:]mm:ss) to seconds
+secs() {
+  local t=$1 d=0 h=0 m s
+  [[ $t == *-* ]] && {
+    d=${t%%-*}
+    t=${t#*-}
+  }
+  IFS=: read -r -a p <<<"$t"
+  if ((${#p[@]} == 3)); then h=${p[0]} m=${p[1]} s=${p[2]}; else m=${p[0]} s=${p[1]}; fi
+  echo $((10#$d * 86400 + 10#$h * 3600 + 10#$m * 60 + 10#$s))
+}
+
+cd "$HOME" || exit 1
+ver="${1:-$(mise current sup 2>/dev/null)}"
+[[ -n $ver ]] || {
+  say pins fail "no version given and mise has no current sup"
+  exit 1
+}
+
+# 1. Pins: mise resolves every tool to the version
+off=""
+for t in "${tools[@]}"; do
+  cur="$(mise current "$t" 2>/dev/null)"
+  [[ $cur == "$ver" && -d $installs/$t/$ver ]] || off+=" $t=${cur:-none}"
+done
+if [[ -z $off ]]; then say pins ok "all ${#tools[@]} tools at $ver, installed"; else say pins fail "not at $ver:$off"; fi
+
+# 2. Release checksums: download the release and check SHA256SUMS
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+if gh release download "v$ver" -R megalithic/swifties -D "$tmp" -p '*.zip' -p SHA256SUMS >/dev/null 2>&1; then
+  bad="$(cd "$tmp" && shasum -a 256 -c SHA256SUMS 2>&1 | grep -v ': OK$')"
+  if [[ -z $bad ]]; then say sums ok "v$ver: $(wc -l <"$tmp/SHA256SUMS" | tr -d ' ') assets match SHA256SUMS"; else say sums fail "$bad"; fi
+  # Stable copies equal the release binaries
+  off=""
+  for t in "${copies[@]}"; do
+    unzip -p "$tmp/$t-$ver-macos26-arm64.zip" "$t" | cmp -s - "$HOME/.local/bin/$t" || off+=" $t"
+  done
+  # shellcheck disable=SC2088 # a label, not a path
+  if [[ -z $off ]]; then say copies ok "~/.local/bin/{${copies[*]}} equal the v$ver release"; else say copies fail "~/.local/bin differs from v$ver:$off"; fi
+else
+  say sums fail "gh release download v$ver failed (gh auth or network)"
+fi
+
+# 3. No AppleDouble files inside the installs
+dots="$(for t in "${tools[@]}"; do fd -H -u -g '._*' "$installs/$t/$ver" 2>/dev/null; done)"
+if [[ -z $dots ]]; then say appledbl ok "no ._* files under the $ver installs"; else say appledbl fail "$(echo "$dots" | head -3 | paste -sd' ' -)"; fi
+
+# 4. Code signatures
+off=""
+for a in "${apps[@]}"; do
+  codesign --verify --deep --strict "$installs/${a%%:*}/$ver/${a#*:}.app" 2>/dev/null || off+=" ${a#*:}.app"
+done
+for t in "${copies[@]}"; do
+  codesign --verify --strict "$HOME/.local/bin/$t" 2>/dev/null || off+=" ~/.local/bin/$t"
+done
+if [[ -z $off ]]; then say codesign ok "${#apps[@]} app bundles (--deep --strict) and ${#copies[@]} daemons verify"; else say codesign fail "does not verify:$off"; fi
+
+# 5. launchd: running, on this version's path, started after the install, TERMINAL where callers need it
+for a in "${agents[@]}"; do
+  IFS=: read -r name tool term <<<"$a"
+  out="$(launchctl print "gui/$(id -u)/dev.mise.io.swifties.$name" 2>/dev/null)"
+  [[ -n $out ]] || {
+    say launchd fail "$name: not loaded"
+    continue
+  }
+  prog="$(awk '/^\tprogram = /{print $3; exit}' <<<"$out")"
+  pid="$(awk '/^\tpid = /{print $3; exit}' <<<"$out")"
+  note=""
+  [[ $prog == "$installs/$tool/$ver/"* || $prog == "$HOME/.local/bin/$tool" ]] || note+=" program $prog is not $ver;"
+  [[ -n $term ]] && ! grep -q 'TERMINAL => rex' <<<"$out" && note+=" no TERMINAL => rex;"
+  if [[ -z $pid ]]; then
+    # aeroplay is not kept alive; only a daemon that should run counts as down
+    [[ $name == aeroplay ]] || note+=" not running;"
+  else
+    # The running image must be newer than the binary it runs
+    bin="$prog"
+    age="$(secs "$(ps -o etime= -p "$pid" | tr -d ' ')")"
+    built=$(($(date +%s) - $(/usr/bin/stat -f %m "$bin")))
+    ((age <= built)) || note+=" pid $pid started before $bin was installed: restart it;"
+  fi
+  if [[ -z $note ]]; then say launchd ok "$name: pid ${pid:--} $prog${term:+, TERMINAL => rex}"; else say launchd fail "$name:${note%;}"; fi
+done
+
+# 6. Live config: sup answers with its config, notiwatchd loaded every rule
+if cfg="$(sup config --json 2>/dev/null)" && jq -e . >/dev/null 2>&1 <<<"$cfg"; then
+  say sup ok "config --json: toast.ttl.critical=$(jq -c '.toast.ttl.critical' <<<"$cfg") actions.dismiss=$(jq -c '.actions.dismiss' <<<"$cfg")"
+else
+  say sup fail "sup config --json did not answer with JSON"
+fi
+want="$(jq '.rules | length' "$HOME/.config/notiwatchd/config.json" 2>/dev/null)"
+last="$(grep -hE 'config loaded: [0-9]+ rule|config (load )?error' "$HOME/.cache/notiwatchd-stdout.log" "$HOME/.cache/notiwatchd-stderr.log" 2>/dev/null | sort | tail -n 1)"
+if [[ $last == *"config loaded: $want rule"* ]]; then say notiwatch ok "$last (config has $want)"; else say notiwatch fail "${last:-no config line in the log}; config has ${want:-?} rules"; fi
+
+# 7. Whether a visible test toast is allowed now (Seth idle at least 5 minutes)
+idle=$(($(ioreg -c IOHIDSystem | awk '/HIDIdleTime/ {print $NF; exit}') / 1000000000))
+if ((idle >= 300)); then say idle ok "Seth idle ${idle}s: a test toast is fine"; else say idle wait "Seth active (${idle}s idle): no test toast; put it in his Inbox"; fi
+
+exit "$fail"
