@@ -46,8 +46,12 @@ main() {
   # What the landing deployed
   changed="$(git diff --name-only "$base" HEAD -- home config bin)"
   say changed info "$(git rev-parse --short "$base")..HEAD: $(echo "$changed" | grep -c . || true) deployed files"
-  ult="$(echo "$changed" | grep '^home/\.ultimate/' || true)"
-  [[ -n $ult ]] && echo "$ult" | sed 's/^/          ~\/.ultimate: /'
+  ult="$(git diff --name-only "$base" HEAD -- home/.ultimate mise/templates/ultimate | sed 's|^mise/templates/ultimate/|home/.ultimate/|' | sort -u)"
+  # Each changed ~/.ultimate file with its commit time: the host must have loaded it after that
+  while read -r f; do
+    # shellcheck disable=SC2088 # a label, not a path
+    [[ -n $f ]] && say changed ult "~/${f#home/} committed $(git log -1 --format=%cI "$base..HEAD" -- "$f" "mise/templates/ultimate/${f#home/.ultimate/}")"
+  done <<<"$ult"
 
   # 2. Links
   out="$(mise run update:dotfiles 2>&1)"
@@ -62,19 +66,22 @@ main() {
     fail=1
   fi
 
-  # 3. Ultimate settings link (watchers miss edits to the link target)
-  link="$HOME/.ultimate/settings.json"
-  if [[ -L $link ]]; then
-    target="$(readlink "$link")"
-    rm "$link" && ln -s "$target" "$link" && say settings ok "re-linked -> $target"
-  elif [[ -e $link ]]; then
-    say settings fail "$link is a real file, not a link"
+  # 3. Ultimate settings: rendered from a template when the repo has one, else the linked source
+  settings="$HOME/.ultimate/settings.json"
+  if [[ -x mise/scripts/render-ultimate-settings ]]; then
+    if out="$(mise/scripts/render-ultimate-settings 2>&1)"; then say settings ok "${out#render-ultimate-settings: }"; else
+      say settings fail "${out#render-ultimate-settings: }"
+      fail=1
+    fi
+  elif cmp -s "$settings" home/.ultimate/settings.json; then
+    say settings ok "$settings matches home/.ultimate/settings.json"
+  else
+    say settings fail "$settings differs from home/.ultimate/settings.json"
     fail=1
   fi
 
-  # 4. Restart hints for the agent to verify
-  echo "$ult" | grep -qE '^home/\.ultimate/(settings\.json|extensions/|agents/|skills/)' &&
-    say restart check "user-level Ultimate files changed: verify they loaded on $host, restart if not; tell other hubs"
+  # 4. What the agent observes next: no restart is assumed either way
+  [[ -n $ult ]] && say observe check "$host: confirm each ~/.ultimate file above loaded after its commit time"
   return "$fail"
 }
 main "$@" </dev/null
