@@ -36,14 +36,19 @@ usually reload live, but not always: an instance gets restarted only when it sho
 User-level `~/.ultimate` files are read by every Ultimate instance on the Mac, not only this hub. For each `ult`
 line, check this hub, then every other running instance (`ultimate.projects()` entries with `running`):
 
-- **Extension** (`extensions/<name>/`): its `ultimate.extensions()` entry has `server.loadedAt` later than the
-  commit time, no load or server error, and the feature present (its tool in `server.tools`, its action in
-  `actions`, its panel or command in the UI).
+- **Extension, server side** (`server.ts`, `lib.ts` and what they import): its `ultimate.extensions()` entry has
+  `server.loadedAt` later than the commit time, no load or server error, and the feature present (its tool in
+  `server.tools`, its action in `actions`).
+- **Extension, web only** (`web.tsx` and other UI files): `server.loadedAt` does not move for these, so it proves
+  nothing. Look at the UI instead (the `browser` or `screenshot` tool on that instance): the panel, card or command
+  shows the change. A README-only change needs no check.
 - **Settings** (`extensions.enable`/`disable`, `mcpServers`, `remotes`): the extension listed with `enabled` as set,
   `ultimate.action('mcp', 'status')` showing the server connected, the remote listed.
 - **Agent overlay** (`agents/*.md`): `ultimate.agents()` shows the new instructions in that definition.
-- **AGENTS.md, skills:** the new text is in your next turn's system prompt (`project_instructions`, `available_skills`),
-  or a newly started branch's.
+- **AGENTS.md:** the new text is in your next turn's system prompt (`project_instructions`), or a newly started
+  branch's.
+- **Skill:** its name and description are in the prompt's `available_skills` (a changed description shows there);
+  its body is read from the file when used, so the deployed link resolving to the landed file is enough.
 
 For another instance on this Mac, @ultimate sends `ultimate.tell({project: <name>, text, reply: true})` (a branch
 asks @ultimate to relay): list the
@@ -52,8 +57,8 @@ is present. Do not tell it to restart.
 
 ## 3. Restart only an instance that did not reload
 
-Restart an instance only when step 2 shows it did not load a change (`loadedAt` older than the commit, the feature
-missing), or when the Ultimate clone landed changes to `server/`, `shared/`, `patches/` or `pnpm-lock.yaml`. This
+Restart an instance only when step 2 shows it did not load a change (a server-side `loadedAt` older than the commit,
+the feature missing), or when the Ultimate clone landed changes to `server/`, `shared/`, `patches/` or `pnpm-lock.yaml`. This
 hub: the `restart` tool, never `POST /api/restart`. Another instance: ask its @ultimate to restart itself. Then repeat
 step 2 for that instance.
 
