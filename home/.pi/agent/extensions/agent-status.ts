@@ -23,6 +23,12 @@
  * Only interactive tmux pis publish (ctx.hasUI + TMUX); ephemeral/subagent
  * runs stay silent. The file is removed on session_shutdown, and readers
  * must validate the pid (kill -0) to ignore crashed leftovers.
+ *
+ * In Rex (REX_BLOCK), `asking` is also reported as OSC 7501 `blocked` on the
+ * child record `ask`. pi reports its own root record (working, done, error,
+ * and blocked for dialogs that ask for it), but not ask_user_question's
+ * overlay or a prose question; a child record adds those without overwriting
+ * pi's. Any other state clears it.
  */
 
 import type { AgentMessage } from '@earendil-works/pi-agent-core';
@@ -89,6 +95,33 @@ const writeState = (state: AgentState): void => {
   }
 };
 
+/** OSC 7501 for the `ask` child record: blocked on a question, or cleared. */
+export const askReport = (asking: boolean): string =>
+  asking
+    ? `\x1b]7501;state=blocked:kind=question:id=ask:app=pi:msg=${Buffer.from('1 waiting · question').toString('base64')}\x1b\\`
+    : '\x1b]7501;state=clear:id=ask\x1b\\';
+
+let rexAsking = false;
+
+const reportRex = (state: AgentState): void => {
+  if (!process.env.REX_BLOCK || !process.stdout.isTTY) return;
+  const asking = state === 'asking';
+
+  if (asking === rexAsking) return;
+  rexAsking = asking;
+
+  try {
+    process.stdout.write(askReport(asking));
+  } catch {
+    // Non-fatal — status is advisory
+  }
+};
+
+const setState = (state: AgentState): void => {
+  writeState(state);
+  reportRex(state);
+};
+
 const removeStatus = (): void => {
   if (!statusPath) return;
 
@@ -146,31 +179,43 @@ const endedWithError = (messages: AgentMessage[] | undefined): boolean => {
 };
 
 export default function (pi: ExtensionAPI): void {
+  let interactive = false;
+
+  const set = (state: AgentState): void => {
+    if (interactive) setState(state);
+  };
+
   pi.on('session_start', (_event, ctx) => {
     if (!ctx.hasUI) return;
+    interactive = true;
     const tmux = detectTmux();
 
-    if (!tmux) return;
-    session = tmux.session;
-    statusPath = path.join(STATUS_DIR, `pi-${tmux.session}-${tmux.window}.status`);
-    writeState('idle');
+    if (tmux) {
+      session = tmux.session;
+      statusPath = path.join(STATUS_DIR, `pi-${tmux.session}-${tmux.window}.status`);
+    }
+
+    set('idle');
   });
 
-  pi.on('input', () => writeState('working'));
+  pi.on('input', () => set('working'));
 
-  pi.on('agent_start', () => writeState('working'));
+  pi.on('agent_start', () => set('working'));
 
   pi.on('tool_call', (event) => {
-    if (isAskTool(event?.toolName)) writeState('asking');
+    if (isAskTool(event?.toolName)) set('asking');
   });
 
   pi.on('tool_execution_end', (event) => {
-    if (isAskTool(event?.toolName)) writeState('working');
+    if (isAskTool(event?.toolName)) set('working');
   });
 
   pi.on('agent_end', (event) =>
-    writeState(endedWithError(event?.messages) ? 'error' : endsWithQuestion(event?.messages) ? 'asking' : 'done'),
+    set(endedWithError(event?.messages) ? 'error' : endsWithQuestion(event?.messages) ? 'asking' : 'done'),
   );
 
-  pi.on('session_shutdown', () => removeStatus());
+  pi.on('session_shutdown', () => {
+    set('idle');
+    removeStatus();
+  });
 }

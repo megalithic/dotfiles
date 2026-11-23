@@ -5,9 +5,10 @@ import { readRegistry } from '../../home/.pi/agent/lib/registry.ts';
 import { arrange, row, state, unreachable } from '../extensions/fleet/lib.ts';
 import type { Status, Target } from '../extensions/fleet/lib.ts';
 
-// rex-status's server facet imports Ultimate's package for defineExtension only; derive needs none of it.
+// rex-status's server facet imports Ultimate's packages for its host wiring only; derive needs none of it.
 mock.module('@earendil-works/pi-durable', () => ({ defineExtension: (value: unknown) => value }));
-const { derive } = await import('../../home/.ultimate/extensions/rex-status/server.ts');
+mock.module('@earendil-works/chord/context', () => ({ BACKGROUND_CONTEXT: {} }));
+const { derive, openItems, osc } = await import('../../home/.ultimate/extensions/rex-status/server.ts');
 
 const target = (root: string, machine = 'here'): Target => ({
   name: root.split('/').at(-1)!,
@@ -82,6 +83,20 @@ describe('fleet', () => {
       { busy: 2, questions: { count: 1, first: { text: 'Ship it?', conversation: 4 } } },
     ];
     for (const status of cases) expect(state(status)).toBe(derive(status).state);
+  });
+
+  test('rex-status counts open questions plus open Inbox items, as rtm needs does', () => {
+    const items = openItems({ items: [{}, { done: 5 }, { done: null }, { done: false }] });
+    expect(items).toBe(3);
+    expect(openItems(undefined)).toBe(0);
+    const asked = derive({ busy: 1, questions: { count: 1, first: { text: 'Ship\n it?' } } }, items);
+    expect(asked).toEqual({ state: 'blocked', kind: 'question', msg: '4 waiting · Ship it?' });
+    expect(osc(asked)).toBe(
+      `\x1b]7501;state=blocked:kind=question:app=ultimate:msg=${Buffer.from('4 waiting · Ship it?').toString('base64')}\x1b\\`,
+    );
+    // Items alone wait too, without claiming a question.
+    expect(derive(quiet, 2)).toEqual({ state: 'blocked', msg: '2 waiting' });
+    expect(derive({ busy: 2, questions: { count: 0 } }, 0).state).toBe('working');
   });
 
   test('a row carries the question, busy titles, failures and failing providers', () => {
