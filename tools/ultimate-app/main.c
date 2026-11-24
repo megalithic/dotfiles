@@ -30,10 +30,21 @@ static void alarmed(int sig) {
   restart_menu = 1;
 }
 
+// Only wakes sigsuspend; children are reaped in the loop.
+static void child(int sig) { (void)sig; }
+
 static pid_t spawn(const char *path) {
   pid_t pid;
   char *argv[] = {(char *)path, NULL};
-  int err = posix_spawn(&pid, path, NULL, NULL, argv, environ);
+  // Children start with no signals blocked, whatever the loop below blocks.
+  posix_spawnattr_t attr;
+  sigset_t none;
+  sigemptyset(&none);
+  posix_spawnattr_init(&attr);
+  posix_spawnattr_setsigmask(&attr, &none);
+  posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETSIGMASK);
+  int err = posix_spawn(&pid, path, NULL, &attr, argv, environ);
+  posix_spawnattr_destroy(&attr);
   if (err) {
     fprintf(stderr, "Ultimate.app: cannot start %s (errno %d)\n", path, err);
     return 0;
@@ -61,9 +72,16 @@ int main(void) {
   signal(SIGTERM, forward);
   signal(SIGINT, forward);
   signal(SIGHUP, forward);
-  // Without SA_RESTART, the alarm interrupts waitpid below.
-  struct sigaction alarm_action = {.sa_handler = alarmed};
+  struct sigaction alarm_action = {.sa_handler = alarmed}, child_action = {.sa_handler = child};
   sigaction(SIGALRM, &alarm_action, NULL);
+  sigaction(SIGCHLD, &child_action, NULL);
+  // SIGCHLD and SIGALRM stay blocked except inside sigsuspend, so neither can arrive
+  // between the checks below and the wait: no exit or restart is ever missed.
+  sigset_t waiting, open;
+  sigemptyset(&waiting);
+  sigaddset(&waiting, SIGCHLD);
+  sigaddset(&waiting, SIGALRM);
+  sigprocmask(SIG_BLOCK, &waiting, &open);
 
   hub = spawn(script);
   if (!hub) return 1;
@@ -71,21 +89,24 @@ int main(void) {
 
   for (;;) {
     int status;
-    pid_t pid = waitpid(-1, &status, 0);
-    if (pid == hub) {
-      if (menu > 0) kill(menu, SIGTERM);
-      if (WIFSIGNALED(status)) return 128 + WTERMSIG(status);
-      return WEXITSTATUS(status);
+    pid_t pid;
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+      if (pid == hub) {
+        if (menu > 0) kill(menu, SIGTERM);
+        if (WIFSIGNALED(status)) return 128 + WTERMSIG(status);
+        return WEXITSTATUS(status);
+      }
+      if (pid == menu) {
+        fprintf(stderr, "Ultimate.app: the menu bar exited (status %d); starting it again in 30 s\n", status);
+        menu = 0;
+        alarm(30);
+      }
     }
-    if (pid > 0 && pid == menu) {
-      fprintf(stderr, "Ultimate.app: the menu bar exited (status %d); starting it again in 30 s\n", status);
-      menu = 0;
-      alarm(30);
-    }
-    if (pid < 0 && errno != EINTR) return 1;
+    if (pid < 0 && errno != ECHILD && errno != EINTR) return 1;
     if (restart_menu) {
       restart_menu = 0;
       menu = spawn(menu_path);
     }
+    sigsuspend(&open);
   }
 }
