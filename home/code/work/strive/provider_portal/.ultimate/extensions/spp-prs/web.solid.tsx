@@ -174,7 +174,7 @@ function FeedbackTags(props: { row: Row }) {
             `${item.kind === 'act' ? 'act' : 'answer'}${item.by === 'model' ? '*' : ''} · ${item.author}: ${item.text}`,
         )
         .join('\n'),
-      value.items.some((item) => item.by === 'model') ? '* judged by the tiny model' : '',
+      value.items.some((item) => item.by === 'model') ? '* judged by the local model' : '',
     ]
       .filter(Boolean)
       .join('\n\n')

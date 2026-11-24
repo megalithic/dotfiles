@@ -99,21 +99,19 @@ async function readFeedback(exec: ActionContext['exec'], cwd: string) {
   return { me: data.viewer.login, pulls: new Map(data.search.nodes.map((pull) => [pull.number, pull])) };
 }
 
-/** The `tiny` family's model (the project's, else Ultimate's built-in) judges what no rule decided. */
-async function tinyModel(host: ActionContext['host']) {
-  const settings = (await host.projectSettings()) as { modelFamilies?: { families?: Record<string, { model?: string }> } };
-  const ref = settings.modelFamilies?.families?.tiny?.model ?? 'openai-codex/gpt-6-luna';
-  const slash = ref.indexOf('/');
-  return host.modelRuntime.getModel(ref.slice(0, slash), ref.slice(slash + 1));
-}
+/**
+ * Comment text is the employer's, so only the local llama.cpp router on this Mac (`~/.pi/agent/models.json`) judges
+ * what no rule decided; there is no cloud fallback. Without it, those comments stay questions.
+ */
+const LOCAL_MODEL = ['llamacpp', 'gemma4-26b'] as const;
 
 async function judge(host: ActionContext['host'], items: Open[], signal?: AbortSignal): Promise<Record<string, Kind>> {
-  const model = await tinyModel(host);
+  const model = host.modelRuntime.getModel(...LOCAL_MODEL);
   if (!model || !items.length) return {};
   const answer = await host.modelRuntime.completeSimple(
     model,
     { systemPrompt: JUDGE_SYSTEM, messages: [{ role: 'user', content: judgeInput(items), timestamp: Date.now() }] },
-    { maxTokens: Math.min(2048, model.maxTokens || 2048), reasoning: 'low', ...(signal ? { signal } : {}) },
+    { maxTokens: Math.min(2048, model.maxTokens || 2048), ...(signal ? { signal } : {}) },
   );
   if (answer.stopReason !== 'stop') return {};
   const kinds = readJudgment(items, answer.content.map((part) => part.text ?? '').join(''));
@@ -138,7 +136,7 @@ async function judged(host: ActionContext['host'], items: Open[], signal?: Abort
 
 /**
  * Read-only on GitHub: `gh pr list`, one GraphQL query for review feedback and `git worktree list`; nothing on GitHub
- * or in the checkout changes. Comments no rule decides go to the `tiny` model once each.
+ * or in the checkout changes. Comments no rule decides go to the local model once each.
  */
 async function list(_args: unknown, { exec, host, signal }: ActionContext): Promise<List> {
   let pulls: GhPull[];
