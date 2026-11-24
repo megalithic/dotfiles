@@ -862,11 +862,12 @@ stderr_path = "~/.cache/notiwatchd-stderr.log"
 
 # pidewaved: global Cmd+Ctrl+Shift+C hotkey for Tidewave Inspect. It reads
 # ~/.config/pidewaved/config.json at startup and runs bin/agents and
-# bin/pidewave, which need tmux and node from the mise shims. Helium asks for
+# bin/pidewave, which need tmux and node from the mise shims (and lsof from
+# /usr/sbin). Helium asks for
 # a one-time Automation grant.
 [bootstrap.macos.launchd.agents."io.swifties.pidewave"]
 program = "~/.local/bin/pidewaved"
-environment = { PATH = "{{ env.HOME }}/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin", TERMINAL = "rex" }
+environment = { PATH = "{{ env.HOME }}/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin", TERMINAL = "rex" }
 run_at_load = true
 keep_alive = true
 stdout_path = "~/.cache/pidewaved-stdout.log"

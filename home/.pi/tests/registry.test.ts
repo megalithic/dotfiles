@@ -208,7 +208,7 @@ test('Ultimate apps match real worktree ownership, prefer a listened PORT over s
       followers: [],
     },
   ]);
-  expect(calls.filter(([command]) => command === 'lsof')).toHaveLength(2);
+  expect(calls.filter(([command]) => command === '/usr/sbin/lsof')).toHaveLength(2);
   expect(calls).toContainEqual(['ps', '-E', '-ww', '-o', 'command=', '-p', '10']);
 });
 

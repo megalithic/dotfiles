@@ -1,11 +1,19 @@
 import { execFile } from 'node:child_process';
 
-/** Runs a command and resolves its stdout, whatever its exit code (lsof exits 1 when it finds nothing). */
+/**
+ * Runs a command and resolves its stdout, whatever its exit code (lsof exits 1 when it finds nothing).
+ * A command that cannot start (missing, not executable) or is killed (timeout) logs one line to stderr.
+ */
 export type Run = (command: string, args: string[]) => Promise<string>;
 
 export const run: Run = (command, args) =>
   new Promise((resolve) => {
-    execFile(command, args, { timeout: 5_000 }, (_error, stdout) => resolve(String(stdout ?? '')));
+    execFile(command, args, { timeout: 5_000 }, (error, stdout) => {
+      const failed = error && (error.code === 'ENOENT' || error.code === 'EACCES' || error.signal);
+
+      if (failed) process.stderr.write(`run: ${command} failed: ${error.signal ?? error.code}\n`);
+      resolve(String(stdout ?? ''));
+    });
   });
 
 /** beam.smp pids and working directories from lsof's `-Fpn` output. */

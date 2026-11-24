@@ -183,7 +183,7 @@ export const withUltimateApps = async (registry: Registry, deps: UltimateAppDeps
   if (!owners.length) return registry;
 
   const beams = await Promise.all(
-    beamCwds(await exec('lsof', ['-a', '-c', 'beam.smp', '-d', 'cwd', '-Fpn'])).map(async (beam) => {
+    beamCwds(await exec('/usr/sbin/lsof', ['-a', '-c', 'beam.smp', '-d', 'cwd', '-Fpn'])).map(async (beam) => {
       const root = await files.realpath(beam.cwd).catch(() => undefined);
       const match = root && /^ult-([a-f0-9]{6})-([1-9]\d*)$/.exec(path.basename(root));
       const owner = match && owners.find(({ hash }) => hash === match[1]);
@@ -199,7 +199,7 @@ export const withUltimateApps = async (registry: Registry, deps: UltimateAppDeps
 
   if (!matched.length) return registry;
 
-  const all = listeners(await exec('lsof', ['-iTCP', '-sTCP:LISTEN', '-P', '-n', '-Fpn']));
+  const all = listeners(await exec('/usr/sbin/lsof', ['-iTCP', '-sTCP:LISTEN', '-P', '-n', '-Fpn']));
 
   const discovered = await Promise.all(
     matched.map(async ({ pid, root, owner, conversation }): Promise<Registry['apps'][number] | undefined> => {
