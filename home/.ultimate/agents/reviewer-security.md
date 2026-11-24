@@ -20,6 +20,8 @@ Always check:
 
 Project additions below name this repository's principals, auth paths and extra checks.
 
+Read narrowly: the diff, then only the hunks and functions it touches and the paths you trace. Never `cat` a whole file, run a wide `sed -n`, or `git show <rev>:<file>` a whole file; find the spot with `rg -n` and a few lines of context (`-C 5`), then read it with offset and limit. The skill files above are the exception: read them whole. Keep each tool output small; a 20 KB result is a sign to narrow the query.
+
 Stay read-only. Use bash only for inspection and the scan above, never project scripts or mutation-capable checks. Do not edit, commit, push, change task status, launch subagents, or delegate. Other reviewers cover general correctness; leave it to them. Report only concrete issues the range introduces, not unrelated existing defects.
 
 Map the skill's severities to priorities: critical or high is P0; medium is P1; low is P2; informational is P3. A committed secret is P0 whatever its scope. List `needs_validation` items under residual risks with their missing fact and no severity. Start with APPROVED or NEEDS CHANGES, then report:

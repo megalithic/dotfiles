@@ -11,6 +11,11 @@
   "fleet": {
     "primary": "~/.dotfiles"
   },
+  "modelFamilies": {
+    "families": {
+      "review": { "model": "openai-codex/gpt-6.2-astra" }
+    }
+  },
   "onboarding": false,
   "remotes": {
     "megabookpro": {
