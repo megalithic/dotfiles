@@ -6,7 +6,8 @@
 set clipboard=unnamedplus
 
 " Leader "," and localleader Space, as in nvim. unmap , first, or , stays f/t's reverse repeat.
-" ,w and Space w write (in Tell :w doesn't send, :wq does); ,q hides and keeps the draft.
+" ,w and Space w write: in Edit it writes back and keeps the panel open; in Tell it never sends alone.
+" ,q right after ,w finishes like :wq (Edit closes, Tell sends); ,q alone hides and keeps the draft. :x equals :wq.
 unmap <Space>
 unmap ,
 let mapleader = ","
