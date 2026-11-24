@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Read-only: which process serves the hub, and is it launchd's?
+# Usage: hub [since]   since: epoch seconds taken before a restart (date +%s); the listener must start after it
+set -uo pipefail
+port="${HUB_PORT:-4749}"
+label="${HUB_LABEL:-dev.mise.com.megadots.ultimate-hub}" # mise prefixes com.megadots.ultimate-hub
+say() { printf '%-9s %-6s %s\n' "$1" "$2" "$3"; }
+fail=0
+
+listener="$(lsof -nP -iTCP:"$port" -sTCP:LISTEN -t 2>/dev/null | head -1)"
+[[ -n $listener ]] || {
+  say hub fail "nothing listens on :$port"
+  exit 1
+}
+agent="$(launchctl list | awk -v l="$label" '$3 == l {print $1}')"
+
+# Parent chain of the listener up to launchd (pid 1)
+chain="" p="$listener" from_agent=0
+while [[ -n $p && $p -gt 1 ]]; do
+  cmd="$(ps -o command= -p "$p" | cut -c1-90)"
+  chain+="$p ${cmd%% --*} <- "
+  [[ $p == "$agent" ]] && from_agent=1
+  p="$(ps -o ppid= -p "$p" | tr -d ' ')"
+done
+say chain info "${chain}launchd"
+
+if ((from_agent)) && [[ $(ps -o command= -p "$agent") == *Ultimate.app/* ]]; then
+  say owner ok "listener $listener runs under launchd $label (pid $agent, Ultimate.app)"
+elif [[ -n $agent && $agent != - ]]; then
+  say owner fail "listener $listener is not launchd's: $label (pid $agent) waits behind it"
+  fail=1
+else
+  say owner fail "listener $listener is not launchd's: $label is not running"
+  fail=1
+fi
+
+started="$(/bin/date -j -f '%a %b %d %T %Y' "$(ps -o lstart= -p "$listener" | xargs)" +%s)"
+if [[ -n ${1:-} ]]; then
+  if ((started > $1)); then say started ok "$(/bin/date -r "$started" '+%F %T'), after $(/bin/date -r "$1" '+%F %T')"; else
+    say started fail "$(/bin/date -r "$started" '+%F %T'), not after the restart at $(/bin/date -r "$1" '+%F %T')"
+    fail=1
+  fi
+else
+  say started info "$(/bin/date -r "$started" '+%F %T')"
+fi
+exit "$fail"

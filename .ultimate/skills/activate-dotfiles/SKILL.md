@@ -62,6 +62,22 @@ the feature missing), or when the Ultimate clone landed changes to `server/`, `s
 hub: the `restart` tool, never `POST /api/restart`. Another instance: ask its @ultimate to restart itself. Then repeat
 step 2 for that instance.
 
+This hub's restart is proven only by which process serves it. Before the restart, run `hub` and note `date +%s`;
+afterwards run `hub <that time>` (read-only, exit 1 on any `fail`):
+
+```bash
+~/.dotfiles/.ultimate/skills/activate-dotfiles/hub [since]
+```
+
+- **chain:** the pid listening on :4749 (`lsof -nP -iTCP:4749 -sTCP:LISTEN`) and its parents up to launchd.
+- **owner:** `ok` only when that chain runs through launchd's `com.megadots.ultimate-hub` agent
+  (`~/Applications/Ultimate.app`). A `fail` naming the agent's pid means a launcher waits behind an older listener
+  (2026-11-24: a manually started launcher, pid 26273, held :4749 while launchd's new one only waited).
+- **started:** the listener's start time, which must be later than `since`.
+
+Any `fail` after a restart means the restart is **not done**: report it with the chain, and never call the landing
+active. Do not kill the old listener yourself; ask Seth.
+
 ## 4. Health check (always, on every instance you checked)
 
 - `ultimate.agents().errors` is empty, and `projectSetup` is `trusted`.
