@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Rewrite every swifties pin and launchd app path to <version> in a hub branch, and print the diff.
+# Usage: prepare <version> [repo]   repo: the checkout to edit (default: the git toplevel of the cwd)
+# Edits config/mise/config.toml and any host overlay that pins a swifty. Refuses a version without a
+# published GitHub release. Never installs, restarts or commits.
+set -euo pipefail
+
+ver="${1:-}"
+[[ $ver =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+  echo "usage: prepare <version> [repo]   e.g. prepare 0.17.0" >&2
+  exit 2
+}
+repo="${2:-$(git rev-parse --show-toplevel)}"
+
+# Only a published release: not missing, not a draft
+state="$(gh release view "v$ver" -R megalithic/swifties --json isDraft --jq 'if .isDraft then "draft" else "published" end' 2>&1)" || {
+  echo "prepare: no release v$ver in megalithic/swifties: $state" >&2
+  exit 1
+}
+[[ $state == published ]] || {
+  echo "prepare: release v$ver is a $state, not published" >&2
+  exit 1
+}
+
+tools='aeroplay|miccheckd|notiwatchd|pidewaved|avwatchd|shade|sup'
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+changed=0
+for f in "$repo"/config/mise/config.toml "$repo"/config/mise/config.*.toml; do
+  [[ -f $f ]] || continue
+  # [tools.<swifty>] version, and the program path in [bootstrap.macos.launchd.agents."io.swifties.*"]
+  V="$ver" T="$tools" perl -pe '
+    if (/^\[/) { $t = /^\[tools\.(?:$ENV{T})\]\s*$/; $a = /^\[bootstrap\.macos\.launchd\.agents\."io\.swifties\./ }
+    s/^(version\s*=\s*")[^"]*"/$1$ENV{V}"/ if $t;
+    s{(/installs/(?:$ENV{T})/)[^/]+/}{$1$ENV{V}/} if $a && /^program\s*=/;
+  ' "$f" >"$tmp/new"
+  if ! cmp -s "$f" "$tmp/new"; then
+    diff -u --label "a/${f#"$repo"/}" --label "b/${f#"$repo"/}" "$f" "$tmp/new" || true
+    n="$(diff "$f" "$tmp/new" | grep -c '^>' || true)"
+    changed=$((changed + n))
+    cat "$tmp/new" >"$f"
+  fi
+done
+echo "prepare: $changed line(s) now at $ver; next: review the diff, then step 2 (install) of SKILL.md" >&2

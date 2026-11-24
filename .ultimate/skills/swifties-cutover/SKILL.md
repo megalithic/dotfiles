@@ -19,11 +19,19 @@ line is `config loaded: N rule(s)` with the config's rule count, not `config par
 
 ## 1. Branch: pins and paths
 
-In a hub branch, in `config/mise/config.toml`:
+In a hub branch worktree, run `prepare`. It refuses a version without a published GitHub release, rewrites
+every swifties pin and app path in `config/mise/config.toml` (and any host overlay that pins one) and prints
+the diff. It never installs, restarts or commits:
 
-- every `[tools.<swifty>] version`;
-- the in-place app paths in `[bootstrap.macos.launchd.agents."io.swifties.*"]`: miccheck, aeroplay, shade, sup
-  (`installs/<tool>/<version>/…`). avwatch, notiwatch and pidewave run `~/.local/bin` copies and need no path change;
+```bash
+~/.dotfiles/.ultimate/skills/swifties-cutover/prepare <version>   # edits the checkout you run it in
+```
+
+A bump changes 11 lines: the seven `[tools.<swifty>] version` pins and the four in-place app paths in
+`[bootstrap.macos.launchd.agents."io.swifties.*"]` (miccheck, aeroplay, shade, sup: `installs/<tool>/<version>/…`).
+avwatch, notiwatch and pidewave run `~/.local/bin` copies and need no path change. Any other count means the
+config's shape changed: read the diff before you go on. Then update by hand:
+
 - any caller that uses a new flag or config key (`bin/notify`, `config/notiwatchd/config.json`, sup's config,
   `config/hammerspoon2/lib/seams.js`), with its tests (`bin/tests/notify.test.sh`).
 
