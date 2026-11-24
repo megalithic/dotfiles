@@ -13,7 +13,7 @@
   },
   "modelFamilies": {
     "families": {
-      "review": { "model": "openai-codex/gpt-6.2-astra" }
+      "review": { "model": "openai-codex/gpt-6-astra" }
     }
   },
   "onboarding": false,
