@@ -46,3 +46,25 @@ private let json = """
     #expect(needs.hubs[2].link()?.absoluteString == "https://megabookpro.ts.net:4749/?inbox=message:9")
     #expect(needs.hubs[0].label == ".dotfiles  2")
 }
+
+@Test func pinnedAutomationsDecodeWithTheirChangesAndAnOldRtmHasNone() throws {
+    let hub = """
+    {"host":"h","project":"p","url":"http://127.0.0.1:4749","count":0,"inbox":[],"automations":[
+     {"id":"A2","name":"Dream after a pause","pinned":true,"enabled":true,"kind":"context","state":"armed","last_fire_at":0},
+     {"id":"A3","name":"Watch","pinned":true,"enabled":false,"kind":"script","state":"failed","error":"exit 1"},
+     {"id":"A5","name":"Old","pinned":false,"enabled":false,"kind":"schedule","state":"done"}]}
+    """
+    let decoded = try JSONDecoder().decode(Hub.self, from: Data(hub.utf8))
+    #expect(decoded.pinned.map(\.id) == ["A2", "A3"])
+    let dream = decoded.pinned[0], watch = decoded.pinned[1]
+    #expect(dream.toggle == ("pause", "Pause"))
+    #expect(dream.runTitle == "Run now")
+    #expect(watch.toggle == ("resume", "Start"))
+    #expect(watch.runTitle == "Restart")
+    #expect(watch.attention)
+    #expect(decoded.automations![2].toggle == ("resume", "Resume"))
+    #expect(dream.label(now: Date(timeIntervalSince1970: 7200)) == "Dream after a pause  armed · fired 2h ago")
+    #expect(watch.label() == "Watch  failed")
+    let old = try Needs.decode(Data(json.utf8))
+    #expect(old.hubs[0].automations == nil && old.hubs[0].pinned.isEmpty)
+}

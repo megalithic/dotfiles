@@ -1,6 +1,7 @@
 // UltimateMenu: Ultimate.app's menu bar count of what waits on the user across every
 // Ultimate hub. It reads `rtm needs --json` (rtm owns the count) every 15 seconds and
-// when its menu opens. Usage: UltimateMenu [--rtm <path>]; default mise's rtm shim,
+// when its menu opens, and changes hub automations through `rtm automation`.
+// Usage: UltimateMenu [--rtm <path>]; default mise's rtm shim,
 // since launchd's PATH has no mise.
 import AppKit
 
@@ -28,10 +29,28 @@ final class Poller {
         }
     }
 
+    /// `rtm automation <url> <id> <name> <operation>`: rtm refuses when the id now names another automation.
+    func act(_ hub: Hub, _ automation: Automation, _ operation: String,
+             _ done: @escaping @MainActor (Error?) -> Void) {
+        let arguments = ["automation", hub.url, automation.id, automation.name, operation]
+        queue.async { [rtm] in
+            let result = Result { try Self.rtm(rtm, arguments) }
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated {
+                    if case .failure(let error) = result { done(error) } else { done(nil) }
+                }
+            }
+        }
+    }
+
     private nonisolated static func read(_ rtm: String) throws -> Needs {
+        try Needs.decode(Self.rtm(rtm, ["needs", "--json"]))
+    }
+
+    private nonisolated static func rtm(_ rtm: String, _ arguments: [String]) throws -> Data {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = [rtm, "needs", "--json"]
+        process.arguments = [rtm] + arguments
         let out = Pipe(), err = Pipe()
         process.standardOutput = out
         process.standardError = err
@@ -43,7 +62,7 @@ final class Poller {
             throw PollError(String(decoding: message, as: UTF8.self)
                 .trimmingCharacters(in: .whitespacesAndNewlines))
         }
-        return try Needs.decode(data)
+        return data
     }
 }
 
@@ -61,7 +80,9 @@ final class App: NSObject, NSApplicationDelegate {
     init(rtm: String) { poller = Poller(rtm: rtm) }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let menuBar = MenuBar { [weak self] in self?.poll() }
+        let menuBar = MenuBar(refresh: { [weak self] in self?.poll() }) { [weak self] hub, automation, operation in
+            self?.act(hub, automation, operation)
+        }
         self.menuBar = menuBar
         poll()
         let timer = Timer(timeInterval: 15, repeats: true) { [weak self] _ in
@@ -70,6 +91,14 @@ final class App: NSObject, NSApplicationDelegate {
         // .common keeps polling while the menu is open.
         RunLoop.main.add(timer, forMode: .common)
         self.timer = timer
+    }
+
+    /// The serial queue runs the change before the next read, so the menu shows its result.
+    private func act(_ hub: Hub, _ automation: Automation, _ operation: String) {
+        poller.act(hub, automation, operation) { [weak self] error in
+            if let error { self?.menuBar?.failAction("\(automation.name): \(error)") }
+            self?.poll()
+        }
     }
 
     private func poll() {

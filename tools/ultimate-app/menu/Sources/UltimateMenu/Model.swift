@@ -17,6 +17,54 @@ struct Hub: Decodable, Equatable {
     var count: Int?
     var error: String?
     var inbox: [Entry]
+    /// Pinned first, then worst first; nil from an rtm before automations.
+    var automations: [Automation]?
+    var automations_error: String?
+}
+
+/// One hub automation, its state in the words of Ultimate's Automations panel.
+struct Automation: Decodable, Equatable {
+    var id: String
+    var name: String
+    var pinned: Bool
+    var enabled: Bool
+    /// schedule, event, context or script
+    var kind: String
+    /// failed, investigating, writing, working, watching, scheduled, armed, waiting, paused or done
+    var state: String
+    var last_fire_at: Int?
+    var error: String?
+}
+
+extension Automation {
+    /// The `rtm automation` operation that switches it: a script is started by resume too.
+    var toggle: (operation: String, title: String) {
+        enabled ? ("pause", "Pause") : ("resume", kind == "script" ? "Start" : "Resume")
+    }
+
+    /// `run` fires a trigger now, or relaunches a script from the top.
+    var runTitle: String { kind == "script" ? "Restart" : "Run now" }
+
+    var attention: Bool { state == "failed" || state == "investigating" }
+
+    /// "Dream after a pause  armed · fired 2h ago"
+    func label(now: Date = Date()) -> String {
+        var line = "\(name)  \(state)"
+        if let at = last_fire_at {
+            line += " · fired \(Self.ago(Date(timeIntervalSince1970: Double(at) / 1000), now: now))"
+        }
+        return line
+    }
+
+    static func ago(_ date: Date, now: Date) -> String {
+        let seconds = max(0, Int(now.timeIntervalSince(date)))
+        switch seconds {
+        case ..<60: return "just now"
+        case ..<3600: return "\(seconds / 60)m ago"
+        case ..<86400: return "\(seconds / 3600)h ago"
+        default: return "\(seconds / 86400)d ago"
+        }
+    }
 }
 
 struct Entry: Decodable, Equatable {
@@ -73,4 +121,6 @@ extension Hub {
         guard let count else { return "\(project)  unreachable" }
         return "\(project)  \(count)"
     }
+
+    var pinned: [Automation] { (automations ?? []).filter(\.pinned) }
 }
