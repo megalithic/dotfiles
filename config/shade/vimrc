@@ -5,25 +5,26 @@
 " Yank, delete and put share the macOS clipboard, like nvim's clipboard=unnamedplus.
 set clipboard=unnamedplus
 
-" Space is the localleader; ,w and Space w both write.
+" Leader "," and localleader Space, as in nvim. unmap , first, or , stays f/t's reverse repeat.
+" ,w and Space w write (in Tell :w doesn't send, :wq does); ,q hides and keeps the draft.
 unmap <Space>
 unmap ,
+let mapleader = ","
 imap jk <Esc>
-exmap wn write
-nmap <Space>w :wn<CR>
-nmap ,w :wn<CR>
-nmap ,q :q<CR>
+nmap <leader>w :w<CR>
+nmap <leader>q :q<CR>
+nmap <Space>w :w<CR>
 
 " Colours: circadia-forest dark, Warm Parchment light, following macOS.
 colorscheme circadia-forest
 
-" Moves over wrapped rows; H/L/0 to line ends.
+" Moves over wrapped rows; H/L to the first and last non-blank, 0 to the first.
 nmap j gj
 nmap k gk
 nnoremap H ^
-nnoremap L $
+nnoremap L g_
 vnoremap H ^
-vnoremap L $
+vnoremap L g_
 nnoremap 0 ^
 
 " Searches and page moves keep the cursor centred.
@@ -52,7 +53,7 @@ nmap <Space>O O<Esc>
 
 " Select the whole buffer.
 nnoremap gV ggVG
-nnoremap ,v ggVG
+nnoremap <leader>v ggVG
 
 " Ctrl-n hides Shade, as it toggles Shade from nvim.
 nmap <C-n> :q<CR>
