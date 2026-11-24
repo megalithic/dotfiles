@@ -61,8 +61,12 @@ Then `check` again: every `launchd` line `ok` (a `started before` line means tha
 
 ## 4. Visible checks
 
-- **Test toast** only when the `idle` line is `ok` (Seth idle five minutes or more), with harmless text:
-  `~/bin/notify -s ultimate -g swifties -t "Swifties <version>" -m "test toast"`. Confirm it in notiwatchd's log.
+- **Test toast** only when the `idle` line is `ok` (Seth idle five minutes or more), with harmless text, at normal
+  urgency: `~/bin/notify -s hub-test -u normal -g swifties -t "Swifties <version>" -m "test toast"`. Confirm it in
+  notiwatchd's log. Never test with `-s ultimate`: notiwatchd's `ultimate-time-sensitive` rule
+  (`config/notiwatchd/config.json`) matches that source and forces `critical` with `ttl: 0`, whatever `-u` says, so
+  it sticks on screen until dismissed; that source is reserved for real deadlines (`~/.ultimate/AGENTS.md`). Only
+  when the cutover changed critical toasts, add one urgent test the same way with `-u critical` (still `hub-test`).
 - When Seth is active, or a check needs his hands (hyper+Esc dismisses toasts, a Shade panel, MicCheck
   push-to-talk, AeroPlay routing, avwatch during a screen share): put each one in his Inbox as a step with what
   he should see. Never post synthetic key events.
