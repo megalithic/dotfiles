@@ -3,7 +3,8 @@
 # prompts name "Ultimate" instead of "node" (tools/ultimate-app/main.c says why).
 # TCC ties a grant to the code signature, so it is signed with Seth's Developer ID
 # (its designated requirement is bundle id + team, stable across rebuilds) and rebuilt
-# only when its source changes.
+# only when its source changes. Its second executable, UltimateMenu (tools/ultimate-app/
+# menu/), is the menu bar count of what waits on you; main.c starts it beside the hub.
 set -euo pipefail
 
 dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
@@ -11,7 +12,8 @@ src="$dotfiles/tools/ultimate-app"
 app="${ULTIMATE_APP:-$HOME/Applications/Ultimate.app}"
 identity="Developer ID Application: Seth Messer (TEAMID)"
 
-stamp="$(cat "$src/main.c" "$src/Info.plist" | shasum -a 256 | cut -d' ' -f1)"
+menu_sources=("$src"/menu/Sources/UltimateMenu/*.swift)
+stamp="$(cat "$src/main.c" "$src/Info.plist" "${menu_sources[@]}" | shasum -a 256 | cut -d' ' -f1)"
 installed="$app/Contents/Resources/source.sha256"
 if [[ -f "$installed" && "$(cat "$installed")" == "$stamp" ]] && codesign --verify --strict "$app" 2>/dev/null; then
   echo "setup-ultimate-app: $app is current"
@@ -29,7 +31,12 @@ bundle="$work/Ultimate.app"
 mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources"
 cp "$src/Info.plist" "$bundle/Contents/Info.plist"
 clang -O2 -Wall -Werror -o "$bundle/Contents/MacOS/Ultimate" "$src/main.c"
+xcrun swiftc -O -swift-version 5 -target arm64-apple-macos26.0 \
+  -module-name UltimateMenu -o "$bundle/Contents/MacOS/UltimateMenu" "${menu_sources[@]}"
 printf '%s\n' "$stamp" >"$bundle/Contents/Resources/source.sha256"
+# The nested executable first, under the bundle's identifier, then the bundle itself.
+codesign --force --options runtime --timestamp=none --identifier com.megadots.ultimate.menu \
+  --sign "$identity" "$bundle/Contents/MacOS/UltimateMenu"
 codesign --force --options runtime --timestamp=none --sign "$identity" "$bundle"
 codesign --verify --strict "$bundle"
 
