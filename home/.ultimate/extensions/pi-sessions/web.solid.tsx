@@ -16,14 +16,19 @@ import {
 import { PiPanel } from './panel.solid.tsx'
 import { Act, BatonAction, Confirm, PANEL, release } from './parts.solid.tsx'
 
+/** The baton of the shown conversation's worktree, read only once the conversation has an id. */
 function BatonBadge() {
+  const conversation = useConversation()
+  return <Show when={conversation().id}>{(id) => <Baton id={id()} />}</Show>
+}
+function Baton(props: { id: number }) {
   const conversation = useConversation()
   const now = useNow(60_000)
   const baton = useAction(
     BatonAction,
     {
       get conversation() {
-        return conversation().id ?? 0
+        return props.id
       },
     },
     { every: 30_000, focus: true, on: () => conversation().busy, onError: keepLast },
