@@ -6,6 +6,7 @@ import type { ExtensionContext } from '@earendil-works/pi-coding-agent';
 import {
   batonPath,
   batonStatus,
+  checkLand,
   guardDecision,
   readBaton,
   resolveToplevel,
@@ -54,6 +55,32 @@ afterEach(() => {
 afterAll(() => {
   process.env = originalEnv;
   fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test('/land refuses dirty, default branch and nothing ahead in a git worktree', () => {
+  const repo = path.join(directory, 'land-repo');
+  const topic = path.join(directory, 'land-topic');
+
+  const git = (cwd: string, ...args: string[]) =>
+    execFileSync(
+      'git',
+      ['-c', 'commit.gpgsign=false', '-c', 'user.name=Test', '-c', 'user.email=test@example.com', ...args],
+      { cwd, stdio: 'pipe' },
+    );
+
+  fs.mkdirSync(repo);
+  git(repo, 'init', '-b', 'main');
+  git(repo, 'commit', '--allow-empty', '-m', 'initial');
+  git(repo, 'worktree', 'add', '-b', 'topic', topic);
+  expect(() => checkLand(repo)).toThrow('default branch');
+  expect(() => checkLand(topic)).toThrow('Nothing ahead');
+  fs.writeFileSync(path.join(topic, 'change'), 'changed');
+  expect(() => checkLand(topic)).toThrow('commit first');
+  git(topic, 'add', 'change');
+  const tree = git(topic, 'write-tree').toString().trim();
+  const commit = git(topic, 'commit-tree', tree, '-p', 'HEAD', '-m', 'change').toString().trim();
+  git(topic, 'update-ref', 'HEAD', commit);
+  expect(checkLand(topic)).toBe('topic');
 });
 
 test('baton resolves git toplevel, atomically replaces a private file and leaves no temporary files', () => {
@@ -180,6 +207,8 @@ test('pickup POST uses the registry URL, Origin and session path/from, never raw
       from: { label: expect.any(String), sessionId: 'test-session', socket: expect.any(String), pid: process.pid },
     },
   });
+  await pickup(ctx, 'Land it', { land: true });
+  expect(JSON.parse(String(calls[1]!.init!.body)).args.land).toBe(true);
   // SAFETY: this stub only needs fetch’s callable shape; transport never uses Bun’s extra fetch methods.
   globalThis.fetch = (async () => Response.json({ error: 'busy' }, { status: 409 })) as typeof fetch;
   await expect(pickup(ctx)).rejects.toThrow('HTTP 409: busy');

@@ -10,6 +10,9 @@ import { bool, obj, opt, str } from '@earendil-works/pi-schema';
 import { deliver } from '../pi-bridge/lib.ts';
 import {
   branchOfUltimate,
+  checkLand,
+  landInput,
+  landedMessage,
   buildSession,
   sessionSections,
   chooseSession,
@@ -53,7 +56,25 @@ type Lineage = {
   leaveNote(to: ConversationId, text: string, source?: { from?: ConversationId }): Promise<unknown>;
 };
 type Messages = { started(tx: Tx, branch: ConversationId, by: ConversationId): Promise<void> };
+type Landing = { conversationId: ConversationId; sha: string; target: string; pushed?: string };
+const landed = {
+  name: 'workspaces.landed',
+  kind: 'event.workspaces.landed',
+  version: 1,
+  is: (event: { kind?: string }) => event?.kind === 'event.workspaces.landed',
+};
+type Workspaces = {
+  adopt(tx: Tx, id: ConversationId, path: string): Promise<unknown>;
+  get(id: ConversationId, ctx: Context): Promise<{ path: string; external?: true } | undefined>;
+};
 type Host = {
+  react(
+    name: string,
+    tokens: (typeof landed)[],
+    handler: (tx: Tx, event: { data: Landing }) => Promise<void>,
+    options: { from: 'now' },
+  ): void;
+  notice(message: string): void;
   projectRoot: string;
   harness(): Harness;
   need<S>(api: { name: string; service?: S }): S;
@@ -68,6 +89,7 @@ type Pickup = {
   sessionFile?: string;
   goal?: string;
   force?: boolean;
+  land?: boolean;
   from?: { label?: string; sessionId?: string; socket?: string; pid?: number };
 };
 const pickups = new Set<string>();
@@ -157,6 +179,7 @@ function parsePickup(args: JsonValue): Pickup {
   const input = record(args);
   const cwd = stringArg(input, 'cwd', true)!;
   if (input.force !== undefined && typeof input.force !== 'boolean') throw new Error('force must be a boolean');
+  if (input.land !== undefined && typeof input.land !== 'boolean') throw new Error('land must be a boolean');
   const from = input.from === undefined ? undefined : record(input.from);
   if (from?.pid !== undefined && (typeof from.pid !== 'number' || !Number.isSafeInteger(from.pid) || from.pid < 1))
     throw new Error('from.pid must be a positive integer');
@@ -165,6 +188,7 @@ function parsePickup(args: JsonValue): Pickup {
     sessionFile: stringArg(input, 'sessionFile'),
     goal: stringArg(input, 'goal'),
     force: input.force as boolean | undefined,
+    land: input.land as boolean | undefined,
     from: from
       ? {
           label: stringArg(from, 'label'),
@@ -186,6 +210,7 @@ async function pickup(input: Pickup, host: Host, exec: Exec, signal: AbortSignal
   if (pickups.has(worktree)) throw new Error(`A pickup is already in progress for ${worktree}`);
   pickups.add(worktree);
   try {
+    if (input.land) await checkLand(worktree, exec);
     const [rows, previous] = await Promise.all([listWorktrees(host.projectRoot, exec), readBaton(worktree)]);
     const local = rows.find((row) => row.path === worktree)?.pis ?? [];
     const working = local.find((pi) => pi.state === 'working' && pi.sessionId !== input.from?.sessionId);
@@ -211,7 +236,9 @@ async function pickup(input: Pickup, host: Host, exec: Exec, signal: AbortSignal
       // Without a goal, Seth drives the conversation: it must wait for him instead of releasing at once.
       spill(
         input.goal ||
-          'None given. Summarize where pi stopped and ask Seth what to do next; release only when he asks or the work is done.',
+          (input.land
+            ? 'Land the committed worktree.'
+            : 'None given. Summarize where pi stopped and ask Seth what to do next; release only when he asks or the work is done.'),
       ),
       currentUrl(host),
     ]);
@@ -231,7 +258,9 @@ async function pickup(input: Pickup, host: Host, exec: Exec, signal: AbortSignal
             BACKGROUND_CONTEXT,
           ),
       },
-      `${framing}\n\nPick up pi's work in ${worktree}. Goal: ${goal}`,
+      input.land
+        ? landInput(framing, worktree, goal, '')
+        : `${framing}\n\nPick up pi's work in ${worktree}. Goal: ${goal}`,
       // Until its summary names it by its work; the `pi` label marks it.
       `Pick up pi in ${basename(worktree)}`,
     );
@@ -256,9 +285,12 @@ async function pickup(input: Pickup, host: Host, exec: Exec, signal: AbortSignal
     const harness = host.harness();
     const conversation = await harness.conversation(id, BACKGROUND_CONTEXT);
     if (!conversation) throw new Error(`Created #${id}, but it is unavailable; baton names it at ${url}`);
-    const content = `${framing}\n\nYou picked up this rex worktree from pi and hold its baton (pi cannot edit/write/bash until you release). Work in ${worktree} directly; pi's uncommitted work is there. Never workspace submit or push. When the goal is done, or Seth asks, finish with release and a summary for pi. You are a branch of @ultimate: your reports and answers reach it, and it weighs in on your decisions before you ask Seth them as a reply-expected message with questions.\n\nGoal: ${goal}\n\n${brief}`;
+    const content = input.land
+      ? landInput(framing, worktree, goal, brief)
+      : `${framing}\n\nYou picked up this rex worktree from pi and hold its baton (pi cannot edit/write/bash until you release). Work in ${worktree} directly; pi's uncommitted work is there. Never workspace submit or push. When the goal is done, or Seth asks, finish with release and a summary for pi. You are a branch of @ultimate: your reports and answers reach it, and it weighs in on your decisions before you ask Seth them as a reply-expected message with questions.\n\nGoal: ${goal}\n\n${brief}`;
     await harness.commit(async (tx) => {
-      await configure(tx, id, { cwd: worktree });
+      if (input.land) await host.need<Workspaces>({ name: 'workspaces' }).adopt(tx, id, worktree);
+      else await configure(tx, id, { cwd: worktree });
       (await tx.doc(host.metadata, id)).label = 'pi';
       await messages.started(tx, id, ultimate);
       await conversation.submit(tx, { type: 'input', content, whenBusy: 'followUp' });
@@ -346,6 +378,35 @@ const output = (value: unknown) => ({
   output: [{ type: 'text' as const, text: typeof value === 'string' ? value : JSON.stringify(value) }],
 });
 export default function piSessions(host: Host) {
+  host.react(
+    'return-landed-baton',
+    [landed],
+    async (_tx, { data }) => {
+      const workspace = await host
+        .need<Workspaces>({ name: 'workspaces' })
+        .get(data.conversationId, BACKGROUND_CONTEXT);
+      if (!workspace?.external) return;
+      const baton = await readBaton(workspace.path);
+      if (baton?.holder !== 'ultimate' || baton.ultimate?.conversation !== data.conversationId) return;
+      // Queue a commit barrier, never await it in the reactor's own transaction. Delivery runs after that commit.
+      void host
+        .harness()
+        .commit(async () => undefined, BACKGROUND_CONTEXT)
+        .then(async () => {
+          const current = await readBaton(workspace.path);
+          if (current?.holder !== 'ultimate' || current.ultimate?.conversation !== data.conversationId) return;
+          const branch = (await run('git', ['-C', workspace.path, 'branch', '--show-current'])).stdout.trim();
+          await release(
+            { worktree: workspace.path, text: landedMessage(data, branch) },
+            host,
+            run,
+            data.conversationId,
+          );
+        })
+        .catch((error: unknown) => host.notice(`Landed worktree baton release failed: ${String(error)}`));
+    },
+    { from: 'now' },
+  );
   return defineExtension({
     name: 'pi-sessions',
     hooks: [

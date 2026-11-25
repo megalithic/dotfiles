@@ -9,6 +9,10 @@ import {
   chooseSession,
   extractSession,
   framePickup,
+  landInput,
+  landedMessage,
+  checkLand,
+  run,
   guardDecision,
   listWorktrees,
   nearestBaton,
@@ -70,6 +74,63 @@ const fixture = [
   .join('\n');
 
 describe('pi-sessions', () => {
+  test('land input names workspace submit and the PR path', () => {
+    const input = landInput('From pi', '/work/topic', 'Ship it', 'Brief');
+
+    for (const text of [
+      'workspace submit',
+      'git push -u origin HEAD',
+      'gh pr create',
+      'PR URL',
+      'release',
+      'Commit nothing new',
+      'Do not tell Seth "done"',
+    ])
+      expect(input).toContain(text);
+  });
+
+  test('landed message includes sha7, target, push status and prune command', () => {
+    for (const pushed of [undefined, 'origin/main']) {
+      const message = landedMessage({ sha: '123456789abcdef', target: 'main', pushed }, 'topic');
+
+      for (const text of ['1234567', 'main', pushed ? `pushed to ${pushed}` : 'not pushed', 'rwt prune topic'])
+        expect(message).toContain(text);
+    }
+  });
+
+  test('host land checks require a clean branch ahead of the main checkout', async () => {
+    await temporary(async (directory) => {
+      const repo = join(directory, 'repo');
+      const topic = join(directory, 'topic');
+      await mkdir(repo);
+
+      const git = (...args: string[]) =>
+        run('git', [
+          '-C',
+          repo,
+          '-c',
+          'commit.gpgsign=false',
+          '-c',
+          'user.name=Test',
+          '-c',
+          'user.email=test@example.com',
+          ...args,
+        ]);
+
+      await git('init', '-b', 'main');
+      await git('commit', '--allow-empty', '-m', 'initial');
+      await git('worktree', 'add', '-b', 'topic', topic);
+      await expect(checkLand(repo)).rejects.toThrow('default branch');
+      await expect(checkLand(topic)).rejects.toThrow('Nothing ahead');
+      await writeFile(join(topic, 'change'), 'change');
+      await expect(checkLand(topic)).rejects.toThrow('commit first');
+      await run('git', ['-C', topic, 'add', 'change']);
+      const tree = (await run('git', ['-C', topic, 'write-tree'])).stdout.trim();
+      const commit = (await git('commit-tree', tree, '-p', 'HEAD', '-m', 'change')).stdout.trim();
+      await run('git', ['-C', topic, 'update-ref', 'HEAD', commit]);
+      expect(await checkLand(topic)).toBe('topic');
+    });
+  });
   test('encodes pi session directories and prefers the live session over a newer subagent', async () => {
     await temporary(async (directory) => {
       expect(sessionDirectory('/work/app/.worktrees/topic', directory)).toBe(
@@ -311,7 +372,7 @@ describe('pi-sessions', () => {
     expect(calls).toEqual([]);
   });
 
-  test('reads a conversation’s cwd afresh: a pickup branch moves from the project root to pi’s worktree', async () => {
+  test('server defers landed baton release, rechecks ownership, and reads conversation cwd afresh', async () => {
     // The server facet's Ultimate imports, which only the host provides.
     mock.module('@earendil-works/pi-durable', () => ({
       configure: async () => undefined,
@@ -321,7 +382,71 @@ describe('pi-sessions', () => {
       ToolTask: {},
     }));
     mock.module('@earendil-works/chord/context', () => ({ BACKGROUND_CONTEXT: {} }));
-    const { actions } = await import('../../.ultimate/extensions/pi-sessions/server.ts');
+    const { actions, default: install } = await import('../../.ultimate/extensions/pi-sessions/server.ts');
+
+    await temporary(async (directory) => {
+      const path = await realpath(directory);
+      let handler!: Parameters<Parameters<typeof install>[0]['react']>[2];
+      let finish!: () => void;
+      let commits = 0;
+      const notices: string[] = [];
+
+      const barrier = new Promise<void>((resolve) => {
+        finish = resolve;
+      });
+
+      const baton: Baton = {
+        v: 1,
+        holder: 'ultimate',
+        worktree: path,
+        at: 'now',
+        by: 'pickup',
+        ultimate: { conversation: 61, project: path, url: 'http://localhost' },
+      };
+
+      let external = false;
+      // SAFETY: registration and the reactor only use these host methods; no live host or pi is contacted.
+      install({
+        react: (_name, _tokens, callback, options) => {
+          expect(options).toEqual({ from: 'now' });
+          handler = callback;
+        },
+        need: () => ({ get: async () => ({ path, external }) }),
+        harness: () => ({
+          commit: () => {
+            commits += 1;
+
+            return barrier;
+          },
+        }),
+        notice: (text: string) => notices.push(text),
+      } as Parameters<typeof install>[0]);
+      // SAFETY: this reactor never reads tx; only workspace service and baton reads decide the release.
+      const tx = {} as Parameters<typeof handler>[0];
+
+      // SAFETY: 61 is a positive synthetic conversation ID; all consumed landing fields are present.
+      const event = { data: { conversationId: 61, sha: '1234567890', target: 'main' } } as Parameters<
+        typeof handler
+      >[1];
+
+      await writeBaton(baton);
+      await handler(tx, event);
+      expect(commits).toBe(0);
+      external = true;
+      // SAFETY: 62 is a positive synthetic conversation ID naming a different owner.
+      await handler(tx, { data: { ...event.data, conversationId: 62 } } as Parameters<typeof handler>[1]);
+      expect(commits).toBe(0);
+      await handler(tx, event);
+      expect(commits).toBe(1);
+      expect((await readBaton(path))?.holder).toBe('ultimate');
+      // Pi takes it back before the queued transaction finishes: never overwrite its newer baton.
+      await writeBaton({ ...baton, holder: 'pi', by: 'take' });
+      finish();
+      await barrier;
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      expect((await readBaton(path))?.holder).toBe('pi');
+      expect(notices).toEqual([]);
+    });
 
     await temporary(async (directory) => {
       const project = await realpath(directory);
