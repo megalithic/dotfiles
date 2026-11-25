@@ -9,7 +9,9 @@ import type { Conversation, Target } from './lib.ts'
 // Only public host capabilities: a project extension cannot import the clone's modules.
 type Host = {
   userHome: string
-  projects(): Promise<{ name: string; root?: string; current: boolean; running?: { url: string } }[]>
+  projects(): Promise<
+    { name: string; root?: string; current: boolean; running?: { url: string } }[]
+  >
   conversations(): Conversation[]
   invoke(name: string, action: string, args: unknown, signal: AbortSignal): Promise<unknown>
 }
@@ -20,19 +22,23 @@ const TIMEOUT = 3000
 const DAY = 24 * 60 * 60_000
 
 const object = (value: unknown) =>
-  value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {}
+  value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {}
 
 /** `fleet.primary` and `remotes` from user settings, where registry.ts reads them too. */
 async function settings(userHome: string) {
   const text = await readFile(join(userHome, '.ultimate/settings.json'), 'utf8').catch(() => '{}')
   // Ultimate's settings loader reports invalid JSON; here it reads as unset.
-  const parsed = object((() => {
-    try {
-      return JSON.parse(text) as unknown
-    } catch {
-      return {}
-    }
-  })())
+  const parsed = object(
+    (() => {
+      try {
+        return JSON.parse(text) as unknown
+      } catch {
+        return {}
+      }
+    })(),
+  )
   const primary = object(parsed.fleet).primary
   return {
     primary: typeof primary === 'string' ? expandHome(primary, userHome) : undefined,
@@ -44,8 +50,25 @@ async function settings(userHome: string) {
   }
 }
 
+async function tailnetPorts(userHome: string) {
+  type Registry = { ports?: Record<string, { port?: unknown }> }
+  const registry = await readFile(join(userHome, '.ultimate', 'tailscale.json'), 'utf8')
+    .then((text) => JSON.parse(text) as Registry)
+    .catch((): Registry => ({}))
+  const ports: Record<string, number> = {}
+  for (const [root, entry] of Object.entries(registry.ports ?? {}))
+    if (typeof entry?.port === 'number') ports[root] = entry.port
+  return ports
+}
+
 /** Calls `extension/action` on another instance, admitted as its own origin. */
-async function call(url: string, extension: string, action: string, args: unknown, signal: AbortSignal) {
+async function call(
+  url: string,
+  extension: string,
+  action: string,
+  args: unknown,
+  signal: AbortSignal,
+) {
   const response = await fetch(`${url}/api/extensions/${extension}/actions/${action}`, {
     method: 'POST',
     headers: { Origin: new URL(url).origin, 'Content-Type': 'application/json' },
@@ -54,14 +77,19 @@ async function call(url: string, extension: string, action: string, args: unknow
   })
   const body = object(await response.json().catch(() => ({})))
   if (response.status === 403) throw new Error('refused: not in its tailscale.allow')
-  if (!response.ok) throw new Error(typeof body.error === 'string' ? body.error : `HTTP ${response.status}`)
+  if (!response.ok)
+    throw new Error(typeof body.error === 'string' ? body.error : `HTTP ${response.status}`)
   return body.result
 }
 
 /** The first error code down an error's causes. */
 function code(error: unknown): string | undefined {
   if (!error || typeof error !== 'object') return undefined
-  const { code: own, cause, errors } = error as { code?: unknown; cause?: unknown; errors?: unknown[] }
+  const {
+    code: own,
+    cause,
+    errors,
+  } = error as { code?: unknown; cause?: unknown; errors?: unknown[] }
   return typeof own === 'string' ? own : (code(cause) ?? code(errors?.[0]))
 }
 
@@ -69,7 +97,10 @@ function code(error: unknown): string | undefined {
 async function deadline<T>(work: Promise<T>, ms: number) {
   let timer: ReturnType<typeof setTimeout> | undefined
   const late = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(Object.assign(new Error('timeout'), { name: 'TimeoutError' })), ms)
+    timer = setTimeout(
+      () => reject(Object.assign(new Error('timeout'), { name: 'TimeoutError' })),
+      ms,
+    )
   })
   try {
     return await Promise.race([work, late])
@@ -114,13 +145,16 @@ export const actions = {
   /** Every instance's row: this machine's running projects first, then `remotes` on other machines. */
   async list(_args: unknown, { host, signal }: Context) {
     const machine = hostname().split('.')[0]!
-    const { primary, remotes } = await settings(host.userHome)
+    const [{ primary, remotes }, ports] = await Promise.all([
+      settings(host.userHome),
+      tailnetPorts(host.userHome),
+    ])
     const local: Target[] = (await host.projects()).flatMap((project) =>
       project.running || project.current
         ? [
             {
               name: project.name,
-              ...(project.root ? { root: project.root } : {}),
+              ...(project.root ? { root: project.root, tailnetPort: ports[project.root] } : {}),
               url: project.running?.url ?? '',
               machine,
               current: project.current,
@@ -131,9 +165,16 @@ export const actions = {
     // remotes is shared by every machine through dotfiles: this machine's own entries are already local.
     const remote: Target[] = remotes
       .filter((item) => item.machine !== machine)
-      .map((item) => ({ name: item.name, url: item.url.replace(/\/$/, ''), machine: item.machine, current: false }))
+      .map((item) => ({
+        name: item.name,
+        url: item.url.replace(/\/$/, ''),
+        machine: item.machine,
+        current: false,
+      }))
     const since = Date.now() - DAY
-    const rows = await Promise.all([...local, ...remote].map((target) => probe(host, target, since, signal)))
+    const rows = await Promise.all(
+      [...local, ...remote].map((target) => probe(host, target, since, signal)),
+    )
     return { machine, at: Date.now(), instances: arrange(rows, machine, primary) }
   },
 }

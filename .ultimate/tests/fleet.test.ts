@@ -1,14 +1,16 @@
-import { describe, expect, mock, test } from 'bun:test';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { readRegistry } from '../../home/.pi/agent/lib/registry.ts';
-import { arrange, row, state, unreachable } from '../extensions/fleet/lib.ts';
-import type { Status, Target } from '../extensions/fleet/lib.ts';
+import { describe, expect, mock, test } from 'bun:test'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { readRegistry } from '../../home/.pi/agent/lib/registry.ts'
+import { arrange, row, state, unreachable } from '../extensions/fleet/lib.ts'
+import type { Status, Target } from '../extensions/fleet/lib.ts'
+import { href } from '../extensions/fleet/links.ts'
 
 // rex-status's server facet imports Ultimate's packages for its host wiring only; derive needs none of it.
-mock.module('@earendil-works/pi-durable', () => ({ defineExtension: (value: unknown) => value }));
-mock.module('@earendil-works/chord/context', () => ({ BACKGROUND_CONTEXT: {} }));
-const { derive, openItems, osc } = await import('../../home/.ultimate/extensions/rex-status/server.ts');
+mock.module('@earendil-works/pi-durable', () => ({ defineExtension: (value: unknown) => value }))
+mock.module('@earendil-works/chord/context', () => ({ BACKGROUND_CONTEXT: {} }))
+const { derive, openItems, osc } =
+  await import('../../home/.ultimate/extensions/rex-status/server.ts')
 
 const target = (root: string, machine = 'here'): Target => ({
   name: root.split('/').at(-1)!,
@@ -16,12 +18,30 @@ const target = (root: string, machine = 'here'): Target => ({
   url: 'http://127.0.0.1:4747',
   machine,
   current: false,
-});
-const quiet: Status = { busy: 0, questions: { count: 0 } };
+})
+const quiet: Status = { busy: 0, questions: { count: 0 } }
 
 describe('fleet', () => {
+  test('a row carries its registered tailnet port', () => {
+    expect(row({ ...target('/code/swifties'), tailnetPort: 8443 }, quiet, []).tailnetPort).toBe(
+      8443,
+    )
+  })
+
+  test('local links use the network of the page and require a tailnet port off loopback', () => {
+    const instance = { ...target('/code/swifties'), tailnetPort: 8443 }
+    const loopback = { protocol: 'http:', hostname: 'localhost' }
+    const tailnet = { protocol: 'https:', hostname: 'workbookpro.example.ts.net' }
+    expect(href(instance, true, loopback)).toBe(instance.url)
+    expect(href(instance, true, tailnet, 7)).toBe(
+      'https://workbookpro.example.ts.net:8443/?conversation=7',
+    )
+    expect(href({ ...instance, tailnetPort: undefined }, true, tailnet)).toBeUndefined()
+    expect(href(instance, false, tailnet)).toBe(instance.url)
+  })
+
   test('hub roles and memberships match the agent registry', async () => {
-    const home = await mkdtemp('/tmp/fleet-');
+    const home = await mkdtemp('/tmp/fleet-')
     const roots = [
       '/work/strive',
       '/work/strive/portal',
@@ -29,40 +49,42 @@ describe('fleet', () => {
       '/work/strive/devops/charts',
       '/home/dotfiles',
       '/code/swifties',
-    ];
+    ]
     try {
       for (const [index, root] of roots.entries()) {
-        await mkdir(join(home, 'projects', String(index)), { recursive: true });
+        await mkdir(join(home, 'projects', String(index)), { recursive: true })
         await writeFile(
           join(home, 'projects', String(index), 'ultimate.lock'),
           JSON.stringify({ pid: process.pid, port: 4747 + index, project: root }),
-        );
+        )
       }
       // Unnormalized on purpose: both resolve it before comparing.
-      const primary = '/home/./dotfiles/';
-      await writeFile(join(home, 'settings.json'), JSON.stringify({ fleet: { primary } }));
-      const previous = { user: process.env.ULTIMATE_USER_HOME, state: process.env.PI_STATE_DIR };
-      process.env.ULTIMATE_USER_HOME = home;
-      process.env.PI_STATE_DIR = join(home, 'pi');
-      const registry = readRegistry();
-      process.env.ULTIMATE_USER_HOME = previous.user;
-      process.env.PI_STATE_DIR = previous.state;
+      const primary = '/home/./dotfiles/'
+      await writeFile(join(home, 'settings.json'), JSON.stringify({ fleet: { primary } }))
+      const previous = { user: process.env.ULTIMATE_USER_HOME, state: process.env.PI_STATE_DIR }
+      process.env.ULTIMATE_USER_HOME = home
+      process.env.PI_STATE_DIR = join(home, 'pi')
+      const registry = readRegistry()
+      process.env.ULTIMATE_USER_HOME = previous.user
+      process.env.PI_STATE_DIR = previous.state
 
       const rows = arrange(
         roots.map((root) => row(target(root), quiet, [])),
         'here',
         primary,
-      );
-      const fleetRoles = Object.fromEntries(rows.flatMap((item) => (item.role ? [[item.root, item.role]] : [])));
+      )
+      const fleetRoles = Object.fromEntries(
+        rows.flatMap((item) => (item.role ? [[item.root, item.role]] : [])),
+      )
       const registryRoles = Object.fromEntries(
         registry.ultimates.flatMap((item) => (item.hub ? [[item.project, item.hub]] : [])),
-      );
-      expect(fleetRoles).toEqual(registryRoles);
+      )
+      expect(fleetRoles).toEqual(registryRoles)
       expect(fleetRoles).toEqual({
         '/home/dotfiles': 'primary',
         '/work/strive': 'secondary',
         '/work/strive/devops': 'secondary',
-      });
+      })
       expect(Object.fromEntries(rows.map((item) => [item.root, item.hub]))).toEqual({
         '/work/strive': undefined,
         '/work/strive/portal': '/work/strive',
@@ -70,34 +92,34 @@ describe('fleet', () => {
         '/work/strive/devops/charts': '/work/strive/devops',
         '/home/dotfiles': undefined,
         '/code/swifties': undefined,
-      });
+      })
     } finally {
-      await rm(home, { recursive: true, force: true });
+      await rm(home, { recursive: true, force: true })
     }
-  });
+  })
 
   test('states match the Rex tab states', () => {
     const cases: Status[] = [
       quiet,
       { busy: 2, questions: { count: 0 } },
       { busy: 2, questions: { count: 1, first: { text: 'Ship it?', conversation: 4 } } },
-    ];
-    for (const status of cases) expect(state(status)).toBe(derive(status).state);
-  });
+    ]
+    for (const status of cases) expect(state(status)).toBe(derive(status).state)
+  })
 
   test('rex-status counts open questions plus open Inbox items, as rtm needs does', () => {
-    const items = openItems({ items: [{}, { done: 5 }, { done: null }, { done: false }] });
-    expect(items).toBe(3);
-    expect(openItems(undefined)).toBe(0);
-    const asked = derive({ busy: 1, questions: { count: 1, first: { text: 'Ship\n it?' } } }, items);
-    expect(asked).toEqual({ state: 'blocked', kind: 'question', msg: '4 waiting · Ship it?' });
+    const items = openItems({ items: [{}, { done: 5 }, { done: null }, { done: false }] })
+    expect(items).toBe(3)
+    expect(openItems(undefined)).toBe(0)
+    const asked = derive({ busy: 1, questions: { count: 1, first: { text: 'Ship\n it?' } } }, items)
+    expect(asked).toEqual({ state: 'blocked', kind: 'question', msg: '4 waiting · Ship it?' })
     expect(osc(asked)).toBe(
       `\x1b]7501;state=blocked:kind=question:app=ultimate:msg=${Buffer.from('4 waiting · Ship it?').toString('base64')}\x1b\\`,
-    );
+    )
     // Items alone wait too, without claiming a question.
-    expect(derive(quiet, 2)).toEqual({ state: 'blocked', msg: '2 waiting' });
-    expect(derive({ busy: 2, questions: { count: 0 } }, 0).state).toBe('working');
-  });
+    expect(derive(quiet, 2)).toEqual({ state: 'blocked', msg: '2 waiting' })
+    expect(derive({ busy: 2, questions: { count: 0 } }, 0).state).toBe('working')
+  })
 
   test('a row carries the question, busy titles, failures and failing providers', () => {
     const result = row(
@@ -120,7 +142,7 @@ describe('fleet', () => {
         { id: 2, title: 'idle', busy: false },
         { id: 3, busy: true },
       ],
-    );
+    )
     expect(result).toMatchObject({
       state: 'blocked',
       question: { text: 'questions 1. Ship it?', conversation: 57, more: 1 },
@@ -128,11 +150,13 @@ describe('fleet', () => {
       failures: { count: 2, last: { conversation: 42, title: 'Fix the build', error: '429' } },
       providers: ['openai-codex'],
       behind: 3,
-    });
-  });
+    })
+  })
 
   test('malformed answers from another instance never reach the UI', () => {
-    expect(() => row(target('/x'), { busy: '2', questions: {} }, [])).toThrow('answered without a status');
+    expect(() => row(target('/x'), { busy: '2', questions: {} }, [])).toThrow(
+      'answered without a status',
+    )
     const result = row(
       target('/x'),
       {
@@ -143,11 +167,16 @@ describe('fleet', () => {
         head: { behind: -1 },
       },
       [{ id: 1, title: { bad: 'object' }, busy: true }, { id: '2', title: 't', busy: true }, null],
-    );
-    expect(result).toMatchObject({ state: 'blocked', working: [], failures: { count: 0 }, providers: [] });
-    expect(result.question).toBeUndefined();
-    expect(result.behind).toBeUndefined();
-  });
+    )
+    expect(result).toMatchObject({
+      state: 'blocked',
+      working: [],
+      failures: { count: 0 },
+      providers: [],
+    })
+    expect(result.question).toBeUndefined()
+    expect(result.behind).toBeUndefined()
+  })
 
   test('remote rows get no hub, and an unreachable local instance still makes its parent a hub', () => {
     const rows = arrange(
@@ -157,11 +186,11 @@ describe('fleet', () => {
         row(target('/work/strive/devops', 'megabookpro'), quiet, []),
       ],
       'here',
-    );
+    )
     expect(rows.map((item) => [item.role, item.hub, item.state])).toEqual([
       ['secondary', undefined, 'idle'],
       [undefined, '/work/strive', 'unreachable'],
       [undefined, undefined, 'idle'],
-    ]);
-  });
-});
+    ])
+  })
+})

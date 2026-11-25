@@ -6,7 +6,14 @@
 import { join, resolve } from 'node:path'
 
 /** An instance to probe: a running project on this machine, or one named in `remotes`. */
-export type Target = { name: string; root?: string; url: string; machine: string; current: boolean }
+export type Target = {
+  name: string
+  root?: string
+  url: string
+  tailnetPort?: number
+  machine: string
+  current: boolean
+}
 
 /** The fields of the `status` action that Fleet reads. */
 export type Status = {
@@ -18,7 +25,13 @@ export type Status = {
 }
 
 /** A conversation summary as `codemode.read {op: 'conversations'}` lists it. */
-export type Conversation = { id: number; title?: string; label?: string; busy?: boolean; concluded?: boolean }
+export type Conversation = {
+  id: number
+  title?: string
+  label?: string
+  busy?: boolean
+  concluded?: boolean
+}
 
 export type State = 'blocked' | 'working' | 'idle' | 'unreachable'
 
@@ -26,6 +39,7 @@ export type Row = {
   name: string
   root?: string
   url: string
+  tailnetPort?: number
   machine: string
   current: boolean
   role?: 'primary' | 'secondary'
@@ -55,7 +69,9 @@ const count = (value: unknown) =>
   Number.isSafeInteger(value) && (value as number) >= 0 ? (value as number) : undefined
 const list = (value: unknown) => (Array.isArray(value) ? (value as unknown[]) : [])
 const record = (value: unknown) =>
-  value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {}
+  value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {}
 
 /**
  * Another instance's `status` answer, checked field by field: it is untrusted JSON, and the UI renders its strings.
@@ -75,7 +91,9 @@ export function parseStatus(value: unknown): Status {
     busy,
     questions: {
       count: open,
-      ...(question !== undefined && conversation !== undefined ? { first: { text: question, conversation } } : {}),
+      ...(question !== undefined && conversation !== undefined
+        ? { first: { text: question, conversation } }
+        : {}),
     },
     failures: list(status.failures).flatMap((item) => {
       const failure = record(item)
@@ -101,7 +119,9 @@ export function parseConversations(value: unknown): Conversation[] {
     const conversation = record(item)
     const key = id(conversation.id)
     const title = text(conversation.title)
-    return key !== undefined && title && conversation.busy === true ? [{ id: key, title, busy: true }] : []
+    return key !== undefined && title && conversation.busy === true
+      ? [{ id: key, title, busy: true }]
+      : []
   })
 }
 
@@ -151,7 +171,9 @@ export function row(target: Target, answer: unknown, listed: unknown): Omit<Row,
     working: parseConversations(listed).map(({ id, title }) => ({ id, title: title! })),
     failures: {
       count: failures.length,
-      ...(last ? { last: { conversation: last.conversation, title: last.title, error: last.error } } : {}),
+      ...(last
+        ? { last: { conversation: last.conversation, title: last.title, error: last.error } }
+        : {}),
     },
     providers: (status.providers ?? [])
       .filter((provider) => provider.state === 'failing')
@@ -162,11 +184,22 @@ export function row(target: Target, answer: unknown, listed: unknown): Omit<Row,
 
 /** A row for an instance that did not answer. */
 export function unreachable(target: Target, error: string): Omit<Row, 'role' | 'hub'> {
-  return { ...target, state: 'unreachable', error, working: [], failures: { count: 0 }, providers: [] }
+  return {
+    ...target,
+    state: 'unreachable',
+    error,
+    working: [],
+    failures: { count: 0 },
+    providers: [],
+  }
 }
 
 /** Adds hub roles and memberships to this machine's rows; remote rows stay as they are. */
-export function arrange(rows: Omit<Row, 'role' | 'hub'>[], machine: string, primary?: string): Row[] {
+export function arrange(
+  rows: Omit<Row, 'role' | 'hub'>[],
+  machine: string,
+  primary?: string,
+): Row[] {
   // Every running local instance counts, answering or not, as in registry.ts; roots compare resolved, as there.
   const local = rows.filter((item) => item.machine === machine && item.root)
   const role = roles(
