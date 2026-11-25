@@ -9,7 +9,7 @@ Review the range, worktree or branch `$1` with the light reviewer team, read-onl
 
 - Empty `$1` → ask for a range, worktree path or branch, then stop.
 - If `$1` contains `..`, resolve both ends to full SHAs: `git rev-parse --verify <base>^{commit}` and `git rev-parse --verify <head>^{commit}`, one call each. Otherwise run `review-snapshot "$1"` in one bash call; take `base`/`head` from its JSON. Either route fails → say which and stop. Never substitute another range.
-- For `dirty: true`, record `worktree` and the snapshot time from `git show -s --format=%B <head>`; label the head as a snapshot of `<worktree>` in the status and report header. Include this instruction in every reviewer/arbiter task: "The head <sha> is a snapshot commit of <worktree> taken at <time>; the worktree keeps changing, so read files at the head with `git show <head>:<path>` / `git grep <pattern> <head>`, never from the working tree."
+- For a `review-snapshot` target, include this instruction in every reviewer/arbiter task: "Read files at the head with `git show <head>:<path>` / `git grep <pattern> <head>`, never from a working tree: it may differ from <head>." For `dirty: true`, also record `worktree` and the snapshot time from `git show -s --format=%B <head>`, label the head as a snapshot of `<worktree>` taken at that time in the status, the task and the report header.
 - `git log --oneline <base>..<head>` empty → say there is nothing to review and stop. Run reviewers and arbiter with cwd = `git rev-parse --show-toplevel`.
 
 ## 2. Start the reviewers, then end the turn
