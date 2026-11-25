@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
-import type { JsonValue } from '@earendil-works/chord';
+import type { JsonValue } from '@earendil-works/chord/json';
 import { defineDoc, defineExtension, defineTool, ROOT_CONVERSATION_ID } from '@earendil-works/pi-durable';
 import type { ConversationId, Harness } from '@earendil-works/pi-durable';
 import { obj, str } from '@earendil-works/pi-schema';
