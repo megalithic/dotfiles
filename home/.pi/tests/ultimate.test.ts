@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeEach, expect, spyOn, test } from 'bun:test';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { ExtensionContext } from '@earendil-works/pi-coding-agent';
+import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
 import {
   batonPath,
   batonStatus,
@@ -13,7 +13,12 @@ import {
   writeBaton,
   type Baton,
 } from '../agent/lib/baton.ts';
-import { formatHistory, historyTarget, memoryContext, pickup } from '../agent/extensions/ultimate.ts';
+import ultimateExtension, {
+  formatHistory,
+  historyTarget,
+  memoryContext,
+  pickup,
+} from '../agent/extensions/ultimate.ts';
 import { containingUltimate, registryTargets } from '../agent/lib/tell-targets.ts';
 import type { Registry } from '../agent/lib/registry.ts';
 
@@ -187,7 +192,7 @@ test('pickup POST uses the registry URL, Origin and session path/from, never raw
 
 test('memory index comes from the containing Ultimate, and nothing without one or without memories', async () => {
   const calls: { url: unknown; init: RequestInit | undefined }[] = [];
-  let index = ['about-seth [fact] — Seth (updated 2026-11-18)'];
+  let index = ['about-user [fact] — Prefers short answers (updated 2026-11-18)'];
   // SAFETY: only fetch’s call signature is used by the transport; Bun’s extra fetch methods are irrelevant here.
   globalThis.fetch = (async (url, init) => {
     calls.push({ url, init });
@@ -204,6 +209,46 @@ test('memory index comes from the containing Ultimate, and nothing without one o
   expect(await memoryContext('/work/app', inventory)).toBeUndefined();
   expect(await memoryContext('/outside', inventory)).toBeUndefined();
   expect(calls).toHaveLength(2);
+});
+
+type Handler = (event: { systemPromptOptions?: { contextFiles: ContextFile[] } }, ctx: ExtensionContext) => void;
+
+type ContextFile = { path: string; content: string };
+
+test('a turn never waits for the memory lookup; turns after it answers get the index', async () => {
+  const instance = registerUltimate();
+  let answer: (response: Response) => void = () => {};
+
+  // SAFETY: only fetch’s call signature is used by the transport; Bun’s extra fetch methods are irrelevant here.
+  globalThis.fetch = (() => new Promise<Response>((resolve) => (answer = resolve))) as typeof fetch;
+  const handlers = new Map<string, Handler>();
+
+  const pi = {
+    on: (name: string, handler: Handler) => handlers.set(name, handler),
+    registerCommand: () => {},
+    registerTool: () => {},
+  };
+
+  // SAFETY: the extension only calls on, registerCommand and registerTool while it loads.
+  ultimateExtension(pi as ExtensionAPI);
+
+  // SAFETY: the handlers under test use only cwd and ui.setStatus.
+  const session = { ...ctx, ui: { setStatus: () => {} } } as ExtensionContext;
+
+  const turn = () => {
+    const contextFiles: ContextFile[] = [];
+
+    expect(handlers.get('before_agent_start')!({ systemPromptOptions: { contextFiles } }, session)).toBeUndefined();
+
+    return contextFiles;
+  };
+
+  handlers.get('session_start')!({}, session);
+  expect(turn()).toEqual([]);
+  answer(Response.json({ result: { root: 1, index: ['about-user [fact] — Prefers short answers'] } }));
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  expect(turn()[0]?.path).toBe(`${instance.url} project memory (root #1)`);
+  handlers.get('session_shutdown')!({}, session);
 });
 
 test('pickup without a containing Ultimate fails before any request', async () => {

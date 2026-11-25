@@ -24,13 +24,13 @@ describe('pi-bridge', () => {
 
     // Ultimate's memories carry bodies; the index never shows them.
     const memories = {
-      'web-search': { kind: 'decision', line: 'pi-web-access over MCP', updated, body: 'secret body' },
-      'about-seth': { kind: 'fact', line: 'Seth Messer', updated, body: 'secret body' },
+      'web-search': { kind: 'decision', line: 'search through MCP', updated, body: 'secret body' },
+      'about-user': { kind: 'fact', line: 'Prefers short answers', updated, body: 'secret body' },
     };
 
     expect(memoryIndex(memories)).toEqual([
-      'about-seth [fact] — Seth Messer (updated 2026-11-18)',
-      'web-search [decision] — pi-web-access over MCP (updated 2026-11-18)',
+      'about-user [fact] — Prefers short answers (updated 2026-11-18)',
+      'web-search [decision] — search through MCP (updated 2026-11-18)',
     ]);
   });
 

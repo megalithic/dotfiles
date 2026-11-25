@@ -160,7 +160,7 @@ export default function (pi: ExtensionAPI) {
   const toplevels = new Map<string, string>();
   let timer: ReturnType<typeof setInterval> | undefined;
   let current: ExtensionContext | undefined;
-  let memory: Promise<{ path: string; content: string } | undefined> | undefined;
+  let memory: { path: string; content: string } | undefined;
 
   const toplevel = (cwd: string) => {
     const cached = toplevels.get(cwd);
@@ -205,7 +205,11 @@ export default function (pi: ExtensionAPI) {
     current = ctx;
     refresh(ctx);
     // Quiet when no Ultimate runs for this repo or it is unreachable: memory is a hint, never a startup failure.
-    memory = memoryContext(ctx.cwd).catch(() => undefined);
+    memory = undefined;
+    void memoryContext(ctx.cwd).then(
+      (file) => (memory = file),
+      () => undefined,
+    );
 
     if (timer) clearInterval(timer);
     timer = setInterval(() => {
@@ -213,11 +217,10 @@ export default function (pi: ExtensionAPI) {
     }, 5000);
     timer.unref();
   });
-  pi.on('before_agent_start', async (event) => {
-    const file = await memory;
-
+  // Never waits for the lookup: a turn that starts before it answers runs without the index, later turns get it.
+  pi.on('before_agent_start', (event) => {
     // Mutate instead of returning systemPrompt so Pi can send a prompt delta (as project-guidance.ts does).
-    if (file) event.systemPromptOptions.contextFiles.push(file);
+    if (memory) event.systemPromptOptions.contextFiles.push(memory);
   });
   pi.on('agent_end', (_event, ctx) => {
     current = ctx;
