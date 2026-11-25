@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# megabookpro's screen in a browser over the tailnet (voxl, com.megadots.voxl).
+#   1. password: fnox VOXL_PASSWORD (1Password Crypt/voxl/password) -> 0600 file
+#      the LaunchAgent reads; a LaunchAgent cannot unlock 1Password itself.
+#   2. signature: re-sign the mise-built voxl with the Developer ID (bin/signcode)
+#      so its Screen Recording and Accessibility grants survive rebuilds.
+#   3. tailscale serve: HTTPS on :6902, tailnet only (never Funnel), proxied to
+#      voxl on 127.0.0.1:6901.
+# Then `mise bootstrap macos launchd-agents apply` starts it; the first start asks
+# for Screen Recording and Accessibility for voxl.
+set -euo pipefail
+
+die() {
+  echo "setup-voxl: $*" >&2
+  exit 1
+}
+
+config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/voxl"
+password_file="$config_dir/password"
+tailscale=/usr/local/bin/tailscale # the app's CLI; a stale mise shim may shadow it on PATH
+[[ -x $tailscale ]] || die "$tailscale not found (Tailscale app)"
+command -v fnox >/dev/null || die "fnox not found"
+voxl="$(cd "$HOME" && mise which voxl 2>/dev/null)" || die "voxl is not installed; run mise install"
+
+umask 077
+mkdir -p "$config_dir" "$HOME/Library/Logs/voxl"
+tmp="$(mktemp "$password_file.XXXXXX")"
+trap 'rm -f "$tmp"' EXIT
+fnox get VOXL_PASSWORD --no-daemon | tr -d '\r\n' >"$tmp" || die "fnox get VOXL_PASSWORD failed (1Password Crypt/voxl, field password)"
+(($(wc -c <"$tmp") >= 20)) || die "VOXL_PASSWORD is shorter than 20 characters"
+if [[ -f $password_file ]] && cmp -s "$tmp" "$password_file"; then
+  echo "setup-voxl: password is current"
+else
+  mv -f "$tmp" "$password_file"
+  echo "setup-voxl: installed password from fnox"
+fi
+
+"${DOTFILES_DIR:-$HOME/.dotfiles}/bin/signcode" -i com.megadots.voxl "$voxl"
+
+"$tailscale" serve --bg --https=6902 http://127.0.0.1:6901 >/dev/null
+echo "setup-voxl: tailnet https on :6902 -> 127.0.0.1:6901"

@@ -15,9 +15,11 @@ die() {
 template="${DOTFILES_DIR:-$HOME/.dotfiles}/mise/templates/ultimate/settings.json"
 target="$HOME/.ultimate/settings.json"
 [[ -f $template ]] || die "template not found: $template"
-command -v tailscale >/dev/null || die "tailscale not found"
+# The Tailscale app's CLI; a stale mise shim of the same name can sit earlier on PATH.
+tailscale=/usr/local/bin/tailscale
+[[ -x $tailscale ]] || tailscale=$(command -v tailscale) || die "tailscale not found"
 
-suffix="$(tailscale status --json 2>/dev/null | jq -r '.MagicDNSSuffix // empty')"
+suffix="$("$tailscale" status --json 2>/dev/null | jq -r '.MagicDNSSuffix // empty')"
 [[ $suffix =~ ^[a-z0-9-]+\.ts\.net$ ]] || die "no tailnet DNS suffix from 'tailscale status' (logged out or not running?)"
 
 mkdir -p "$(dirname "$target")"

@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Launchd entrypoint for com.megadots.voxl: streams this Mac's screen on 127.0.0.1:6901,
+# reached over the tailnet through `tailscale serve` (mise run setup:voxl). The password
+# comes from the 0600 file setup:voxl writes from 1Password; voxl never makes one up.
+set -euo pipefail
+
+password_file="${XDG_CONFIG_HOME:-$HOME/.config}/voxl/password"
+[[ -s $password_file ]] || {
+  echo "voxl-launchd: missing $password_file; run mise run setup:voxl" >&2
+  exit 1
+}
+mise="$(command -v mise || echo "$HOME/.local/bin/mise")"
+voxl="$(cd "$HOME" && "$mise" which voxl 2>/dev/null)" || {
+  echo "voxl-launchd: voxl is not installed; run mise install" >&2
+  exit 1
+}
+
+# tailscale serve keeps the browser's Host (this Mac's tailnet name), which voxl must be told to answer.
+suffix="$(/usr/local/bin/tailscale status --json 2>/dev/null | "$mise" exec jq -- jq -r '.MagicDNSSuffix // empty')"
+[[ $suffix =~ ^[a-z0-9-]+\.ts\.net$ ]] || {
+  echo "voxl-launchd: no tailnet DNS suffix from tailscale status" >&2
+  exit 1
+}
+
+VOXL_PASSWORD="$(<"$password_file")"
+export VOXL_PASSWORD
+exec "$voxl" --addr=127.0.0.1 --port=6901 --title="$(hostname -s)" --allowed-hosts="$(hostname -s).$suffix"

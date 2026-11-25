@@ -10,6 +10,7 @@
 [tools]
 "npm:dockerfile-language-server-nodejs" = "latest"   # docker-langserver (config/nvim/lua/langs/docker.lua)
 "npm:@microsoft/compose-language-service" = "latest" # docker-compose-langserver
+"cargo:voxl-server" = "0.4.0"                       # voxl: this screen in a browser (com.megadots.voxl); builds from source, needs x264 + esbuild below
 
 [bootstrap.packages]
 "brew:switchaudio-osx" = "latest" # SwitchAudioSource (bin/switch_audio_*)
@@ -17,3 +18,19 @@
 "brew:chafa" = "latest"           # bin/preview image fallback
 "brew:curlie" = "latest"          # bin/slck
 "brew-cask:orcaslicer" = "latest"
+"brew:x264" = "latest"            # voxl build
+"brew:esbuild" = "latest"         # voxl build (its web client)
+
+# voxl streams this Mac's screen to a browser: https://megabookpro.<tailnet>.ts.net:6902
+# (tailnet only, via tailscale serve), password from 1Password (Crypt/voxl). Set up with
+# `mise run setup:voxl`; the first start asks for Screen Recording and Accessibility.
+[bootstrap.macos.launchd.agents."com.megadots.voxl"]
+program = "~/.dotfiles/mise/scripts/voxl-launchd"
+run_at_load = true
+keep_alive = true
+stdout_path = "~/Library/Logs/voxl/stdout.log"
+stderr_path = "~/Library/Logs/voxl/stderr.log"
+
+[tasks."setup:voxl"]
+description = "voxl: password from 1Password, Developer ID signature, tailnet HTTPS on :6902"
+run = "${DOTFILES_DIR:-$HOME/.dotfiles}/mise/scripts/setup-voxl"
