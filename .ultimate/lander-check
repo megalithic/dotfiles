@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Lander check for this repo: run `mise run check:ts` only when the landing changes
+# TS/JS or its tooling. The lander sets ULTIMATE_LANDER_BASE to the target commit it
+# merged onto; by hand, the base is the merge base with main.
+set -euo pipefail
+
+base="${ULTIMATE_LANDER_BASE:-$(git merge-base HEAD main)}"
+changed="$(git diff --name-only --no-renames "$base" HEAD)"
+ts="$(grep -E '\.(ts|tsx|mjs|js)$|^(package\.json|bun\.lock|mise\.toml)$|^tools/oxlint/' <<<"$changed" || true)"
+
+if [ -z "$ts" ]; then
+  echo "check:ts skipped: no TS/JS or TS tooling changed since ${base:0:9}"
+  exit 0
+fi
+echo "check:ts: $(wc -l <<<"$ts" | tr -d ' ') TS-related files changed since ${base:0:9}"
+exec mise run check:ts
