@@ -215,7 +215,7 @@ type Handler = (event: { systemPromptOptions?: { contextFiles: ContextFile[] } }
 
 type ContextFile = { path: string; content: string };
 
-test('a turn never waits for the memory lookup; turns after it answers get the index', async () => {
+test('a turn never waits for the memory lookup; turns after it answers get it, never another session’s', async () => {
   const instance = registerUltimate();
   let answer: (response: Response) => void = () => {};
 
@@ -235,6 +235,9 @@ test('a turn never waits for the memory lookup; turns after it answers get the i
   // SAFETY: the handlers under test use only cwd and ui.setStatus.
   const session = { ...ctx, ui: { setStatus: () => {} } } as ExtensionContext;
 
+  const index = Response.json({ result: { root: 1, index: ['about-user [fact] — Prefers short answers'] } });
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 10));
+
   const turn = () => {
     const contextFiles: ContextFile[] = [];
 
@@ -245,9 +248,17 @@ test('a turn never waits for the memory lookup; turns after it answers get the i
 
   handlers.get('session_start')!({}, session);
   expect(turn()).toEqual([]);
-  answer(Response.json({ result: { root: 1, index: ['about-user [fact] — Prefers short answers'] } }));
-  await new Promise((resolve) => setTimeout(resolve, 10));
+  answer(index.clone());
+  await settle();
   expect(turn()[0]?.path).toBe(`${instance.url} project memory (root #1)`);
+
+  // Session A's lookup is still pending when session B starts outside any Ultimate; A's late answer is dropped.
+  handlers.get('session_start')!({}, session);
+  const late = answer;
+  handlers.get('session_start')!({}, { ...session, cwd: directory });
+  late(index.clone());
+  await settle();
+  expect(turn()).toEqual([]);
   handlers.get('session_shutdown')!({}, session);
 });
 

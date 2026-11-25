@@ -161,6 +161,7 @@ export default function (pi: ExtensionAPI) {
   let timer: ReturnType<typeof setInterval> | undefined;
   let current: ExtensionContext | undefined;
   let memory: { path: string; content: string } | undefined;
+  let lookups = 0;
 
   const toplevel = (cwd: string) => {
     const cached = toplevels.get(cwd);
@@ -206,8 +207,13 @@ export default function (pi: ExtensionAPI) {
     refresh(ctx);
     // Quiet when no Ultimate runs for this repo or it is unreachable: memory is a hint, never a startup failure.
     memory = undefined;
+
+    // An answer for an earlier session (another cwd) must not land in this one.
+    const lookup = ++lookups;
     void memoryContext(ctx.cwd).then(
-      (file) => (memory = file),
+      (file) => {
+        if (lookup === lookups) memory = file;
+      },
       () => undefined,
     );
 
@@ -227,6 +233,9 @@ export default function (pi: ExtensionAPI) {
     refresh(ctx);
   });
   pi.on('session_shutdown', () => {
+    lookups += 1;
+    memory = undefined;
+
     if (timer) clearInterval(timer);
     timer = undefined;
     current = undefined;
