@@ -34,6 +34,8 @@ Arguments: `{cwd, sessionFile?, goal?, force?, from?: {label?, sessionId?, socke
 
 ## Web UI
 
+The Solid facet is `web.solid.tsx`, with the panel in `panel.solid.tsx`, shared controls in `parts.solid.tsx`, and session Markdown in `brief.solid.tsx`.
+
 The **pi** panel (⌘K → "pi sessions") lists the worktrees with a state dot per pi (pulsing while working, amber while it needs input), dirty/ahead counts, session age and a baton chip (`#N holds baton` in brand, `pi holds baton` in amber). **pick up** asks for an optional goal, then opens the new conversation; it is disabled while a pi is working or Ultimate already holds the baton (force stays with agents). **release** asks for an optional summary for pi. Tapping a worktree opens its session as Markdown: goal, todos, last answer, git status, with brief and compaction folded. In a conversation inside a worktree with a baton, the header shows `you hold baton` / `#N holds baton` / `pi holds baton`; its popover explains what is blocked and releases from there. The list refreshes every 15 s while open and after every action.
 
 Registry: repo-local `bin/agents --json` (resolve the extension symlink to find the repo, fallback `~/.dotfiles`). Briefs: `sessions continue <file> --print`, PATH then the configured mise shim. Sessions: `${PI_CODING_AGENT_DIR:-~/.pi/agent}/sessions/`.
@@ -59,7 +61,7 @@ node /path/to/ultimate/scripts/check-extension.ts home/.ultimate/extensions/pi-s
 mise run check:ts
 ```
 
-The stock `check-extension.ts` currently numbers its temporary symlinks (`0-pi-sessions`, `1-pi-bridge`), so the required `../pi-bridge/lib.ts` import fails with TS2307 even when both folders are passed. To type-check the server meanwhile, use a temporary tsconfig with the clone's `tsconfig.web.json` compiler options (`composite: false`, `emitDeclarationOnly: false`, `noEmit: true`, Node types), a symlink to the clone's `node_modules`, and sibling symlinks named exactly `pi-sessions` and `pi-bridge`; include `pi-sessions/server.ts`. Run the clone's `node_modules/.bin/tsc -p <temporary directory> --pretty false`. This checks the actual sibling import without suppressing errors or changing production imports.
+The stock `check-extension.ts` currently numbers its temporary symlinks (`0-pi-sessions`, `1-pi-bridge`), so the required `../pi-bridge/lib.ts` import fails with TS2307 even when both folders are passed. To type-check the server meanwhile, use a temporary tsconfig with the clone's `tsconfig.web.json` compiler options (`composite: false`, `emitDeclarationOnly: false`, `noEmit: true`, Node types), a symlink to the clone's `node_modules`, and sibling symlinks named exactly `pi-sessions` and `pi-bridge`; include `pi-sessions/web.solid.tsx` and `pi-sessions/server.ts`. Run the clone's `node_modules/.bin/tsc -p <temporary directory> --pretty false`. This checks the actual sibling import without suppressing errors or changing production imports.
 
 Tests use temporary synthetic sessions and worktrees, never contact live pi agents or change real batons. Load the server facet in an Ultimate preview for integration verification; do not copy into a running host to test.
 
