@@ -5,16 +5,27 @@
 # is copied. Project stubs (or a project mise.local.toml) can override any
 # task by redefining its name.
 
-[preflight]
-description = "Preflight project setup"
-# Default `sh -o errexit -c`: a custom `shell = "bash -c"` drops errexit, which
-# let a failed bootstrap continue into setup.
-run = '''
-mise trust
-mise install
-mise run bootstrap
-mise run start:db
-'''
+# Worktree setup, in three steps you can also run alone (`mise run wt:db`
+# after a dropped database). Each is safe to rerun: none drops or resets a
+# database it did not just create.
+["wt:setup"]
+description = "Prepare this checkout for development: wt:init, wt:deps, wt:db"
+# rwt new runs dev:setup in each new worktree's setup tab.
+alias = ["dev:setup", "setup"]
+run = [{ task = "wt:init" }, { task = "wt:deps" }, { task = "wt:db" }]
+
+["wt:init"]
+description = "Trust and install mise tools, bootstrap Pi, install Hex and rebar when missing"
+run = 'bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/wt-init.sh"'
+
+["wt:deps"]
+description = "Fetch deps, set up assets, compile dev and test in parallel"
+run = 'bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/wt-deps.sh"'
+
+["wt:db"]
+description = "Start postgres; create, migrate and seed this checkout's databases"
+depends = ["start:db"]
+run = 'bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/db-ensure.sh"'
 
 [bootstrap]
 description = "Bootstrap local agent tooling (.pi dir: AGENTS.md + mcp.json)"
@@ -23,37 +34,6 @@ depends = ["bootstrap:pi"]
 ["bootstrap:pi"]
 description = "Generate project-local Pi guidance and the Pidewave URL in .pi/mcp.json"
 run = 'bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/bootstrap-pi.sh"'
-
-[setup]
-description = "Initial project setup + preflight"
-depends = ["preflight"]
-run = 'bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/setup.sh"'
-
-["dev:setup"]
-description = "Prepare this worktree for local development"
-shell = "bash -c"
-run = '''
-set -euo pipefail
-# A fresh worktree may not have its declared toolchain yet.
-mise install
-# Pi/MCP config is cheap, atomic, and safe to repair on every explicit ensure.
-mise run bootstrap
-marker=.local/state/setup-complete
-mkdir -p "$(dirname "$marker")"
-mise run start:db
-if [ -f "$marker" ]; then
-  # The toolchain setup ran once; the databases are ensured on every run, so
-  # a session rebuilt after a failed setup, a dropped database or new
-  # migrations still end up created, migrated and seeded.
-  echo "dev setup already complete ($(cat "$marker")); ensuring databases"
-  mix deps.get
-  bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/db-ensure.sh"
-else
-  bash "$HOME/.dotfiles/config/mise/tmpls/elixir/scripts/setup.sh"
-  date '+%F %T' >"$marker.tmp.$$"
-  mv "$marker.tmp.$$" "$marker"
-fi
-'''
 
 ["setup:db"]
 description = "Init shared postgres cluster in ./tmp/pg (idempotent)"
