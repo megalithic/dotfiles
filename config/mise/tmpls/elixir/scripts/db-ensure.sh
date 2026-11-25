@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Ensure this checkout's dev and test databases exist, are migrated, and the
 # dev ones are seeded once. Safe to rerun: it never drops or resets a database
-# it did not just create. Run by setup.sh and by every `mise run dev:setup`.
+# it did not just create. Run by `mise run wt:db` (part of wt:setup).
 set -euo pipefail
 
 case "${MIX_ENV:-dev}" in
@@ -14,6 +14,10 @@ esac
 # Every dev step (create, migrate, seed, drop) runs as dev, so an inherited
 # MIX_ENV=test never seeds or drops the test databases.
 export MIX_ENV=dev
+# Without a UTF-8 locale Erlang writes stdout as latin1. mise stops reading a
+# task's output at the first invalid UTF-8 byte, and the seed's logger then
+# blocks on the full pipe forever (seen with LANG unset).
+export LANG="${LANG:-en_US.UTF-8}"
 
 create_db() { # mix env
   local output rc

@@ -136,8 +136,11 @@ Local tooling is managed by mise (`.config/mise.toml`).
 
 ## Tasks
 
-- `mise run preflight` — trust config, install tools, bootstrap, start PostgreSQL
-- `mise run setup` — install dependencies and prepare databases without dropping them
+- `mise run wt:setup` (alias `dev:setup`, `setup`) — runs `wt:init`, `wt:deps`, `wt:db`;
+  safe to rerun, never drops a database
+- `mise run wt:init` — install tools, bootstrap Pi, install Hex/rebar when missing
+- `mise run wt:deps` — deps, assets, compile dev and test in parallel
+- `mise run wt:db` — start PostgreSQL; create, migrate and seed this checkout's databases
 - `mise run db:reset` — explicitly reset dev and test databases
 - `mise run start:server` — start Phoenix (`m s`)
 - `mise run bootstrap` — regenerate this block and `.pi/mcp.json`
