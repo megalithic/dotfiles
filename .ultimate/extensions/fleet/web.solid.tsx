@@ -84,7 +84,7 @@ function Jump(props: {
       <Button
         aria-label={`${props.kind}: ${props.row.name} #${props.conversation}`}
         class={cn(
-          'min-w-0 truncate text-left hover:underline font-normal h-auto',
+          'inline-block h-auto min-w-0 truncate text-left text-[length:inherit] font-normal hover:underline',
           props.class,
         )}
         onClick={() => switchConversation(props.conversation as ConversationId)}
@@ -305,7 +305,7 @@ function FleetStatus() {
     <Show when={data() && surface() !== 'fleet'}>
       <Button
         aria-label="Show the Fleet"
-        class="flex items-center gap-1.5 text-muted-foreground hover:text-foreground font-normal"
+        class="flex h-auto items-center gap-1.5 text-[length:inherit] font-normal text-muted-foreground hover:text-foreground"
         onClick={() => showSurface('fleet')}
         title="Show the Fleet"
         size={null}

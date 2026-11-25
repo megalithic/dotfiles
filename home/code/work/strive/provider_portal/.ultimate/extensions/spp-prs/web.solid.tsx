@@ -110,7 +110,7 @@ function ConversationLink(props: { worktrees: string[]; pr: number }) {
     <Show when={found()}>
       {(conversation) => (
         <Button
-          class="h-auto min-w-0 truncate text-left font-normal hover:text-foreground hover:underline"
+          class="inline-block h-auto min-w-0 truncate text-left text-[length:inherit] font-normal hover:text-foreground hover:underline"
           size={null}
           variant={null}
           aria-label={`Open working conversation #${conversation().id} for PR #${props.pr}`}
