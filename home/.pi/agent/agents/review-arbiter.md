@@ -1,8 +1,8 @@
 ---
 name: review-arbiter
 description: Merges several code-review reports into consensus items, verifying each against the code
-model: anthropic/claude-fable-5-1
-thinking: xhigh
+model: openai-codex/gpt-6-astra
+thinking: high
 tools: read, grep, find, ls
 system-prompt: append
 auto-exit: true

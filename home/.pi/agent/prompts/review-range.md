@@ -45,4 +45,8 @@ Residual risks:
 - None | the reviewers' residual risks, merged.
 ```
 
+## 4. Arbiter, only on a blocking disagreement
+
+When one reviewer marks a finding blocking and another reviewer's report explicitly contradicts it (says the code is correct there, or approves with reasoning that covers it), spawn `review-arbiter` once with the current working directory and only the disputed findings: the range, each finding with its path:line, and each reviewer's position verbatim. Never send it agreed findings. Ask it to read the code and answer per finding `upheld` or `rejected` with file:line evidence. Then end the turn; on its answer, put its ruling under each disputed item in `Disagreements` and recompute the verdict. Without such a dispute, never run it.
+
 Do not fix anything in this turn. Offer to fix the blocking items; the user decides.

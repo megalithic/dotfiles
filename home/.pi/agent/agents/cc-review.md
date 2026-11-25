@@ -1,8 +1,8 @@
 ---
 name: cc-review
 description: Claude Code /review recipe (8 finder angles + verify), read-only
-model: anthropic/claude-opus-5-5
-thinking: xhigh
+model: openai-codex/gpt-6-astra
+thinking: high
 tools: read, grep, find, ls
 disable-model-invocation: false
 system-prompt: append

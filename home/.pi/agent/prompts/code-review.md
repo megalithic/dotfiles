@@ -1,5 +1,5 @@
 ---
-description: Extensive code review — 3 parallel reviewers (Claude Code recipe, ponytail-review, /review rubric), arbitrated by claude-fable + Jev, rendered as one artifact
+description: Extensive code review — 3 parallel reviewers (Claude Code recipe, ponytail-review, /review rubric), arbitrated by astra + Jev when they found anything, rendered as one artifact
 argument-hint: "<pr-url|pr-number|branch|commit|uncommitted> [extra focus…]"
 ---
 
@@ -12,7 +12,7 @@ Support files (static, never regenerate them):
 - `~/.dotfiles/home/.pi/scripts/code-review/render.py` — renders the artifact HTML from the review dir
 - `~/.pi/agent/git/github.com/DietrichGebert/ponytail/skills/ponytail-review/SKILL.md` — ponytail-review skill (inline the body from `Review a change like` to the end)
 - `~/.pi/agent/extensions/review.ts` — pi `/review` extension; extract the rubric with `re.search(r'const REVIEW_RUBRIC = \`(.*?)\`;', src, re.S)`
-- Agents (global, `~/.pi/agent/agents/`): `cc-review` (claude-opus-5-5:xhigh), `ponytail-review` (gpt-6-astra:xhigh), `rubric-review` (claude-opus-5-5:xhigh), `review-arbiter` (claude-fable-5-1:xhigh). All read-only (`read, grep, find, ls`).
+- Agents (global, `~/.pi/agent/agents/`): `cc-review` (gpt-6-astra:high), `ponytail-review` (gpt-6-astra:xhigh), `rubric-review` (gpt-6.1-sol:high), `review-arbiter` (gpt-6-astra:high). Never pass a `model` override except the substitution below. All read-only (`read, grep, find, ls`).
 
 ## 1. Resolve the target (one bash call)
 
@@ -67,7 +67,9 @@ As each result arrives, save it verbatim: `report-cc.md`, `report-ponytail.md`, 
 
 ## 5. Arbiter, then Jev
 
-When all three reports are saved: instantiate `task-arbiter.md` (replace the four placeholders), spawn `review-arbiter` with `cwd: checkout`, end the turn.
+When all three reports are saved, check their JSON appendices. If every report that arrived has an empty array (the reviewers agree there is nothing to fix), skip the arbiter and Jev: write `arbiter.json` as `[]`, `arbiter-summary.md` as one line saying the reviewers found nothing, `engineer-summary.md` as `No blocking or suggested changes.`, and go to step 6. A missing report does not count as agreement.
+
+Otherwise instantiate `task-arbiter.md` (replace the four placeholders), spawn `review-arbiter` with `cwd: checkout`, end the turn.
 
 On the arbiter result, split it into three files: the markdown before `## Engineer summary` → `arbiter-summary.md`; the `## Engineer summary` section (heading excluded) → `engineer-summary.md`; the JSON array → `arbiter.json` (validate with `python3 -m json.tool`; if the JSON is broken, fix only the syntax, never the content). If the arbiter omitted the engineer summary, resume it with `subagent_message` and ask for that section only; do not write it yourself.
 

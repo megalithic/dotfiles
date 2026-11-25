@@ -1,8 +1,8 @@
 ---
 name: rubric-review
 description: pi /review extension rubric (Codex-style prioritized findings), read-only
-model: anthropic/claude-opus-5-5
-thinking: xhigh
+model: openai-codex/gpt-6.1-sol
+thinking: high
 tools: read, grep, find, ls
 system-prompt: append
 auto-exit: true

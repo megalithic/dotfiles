@@ -12,6 +12,9 @@
     "reserveTokens": 16384,
     "keepRecentTokens": 30000,
     "modelOverrides": {
+      "anthropic/claude-opus-5-5": {
+        "reserveTokens": 800000
+      },
       "llamacpp/qwen3.8-27b": {
         "reserveTokens": 32768,
         "keepRecentTokens": 16384

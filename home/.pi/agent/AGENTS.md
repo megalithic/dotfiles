@@ -65,6 +65,7 @@
 - When user says "investigate", "check", "inspect", or "audit", only investigate and report findings. Don't implement changes unless explicitly told to.
 - Delegate complex tasks through pi-interactive-subagents: scout → plan → implement → review → fix
 - Use natural language delegation: "use scout to understand X", "have worker implement Y", "run parallel reviewers"
+- Never pass `model` to `subagent` unless the user names a model: each agent's frontmatter picks it (worker runs on sol, not on your own model)
 - Run parallel reviewers after every non-trivial implementation: `/review-range <base>..<head>` for a commit range, `/code-review` for a PR
 
 ## Local development scripts
