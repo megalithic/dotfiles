@@ -1,7 +1,7 @@
 import type { ConversationId } from '@earendil-works/pi-durable'
 import type { JSX } from '@solidjs/web'
 import { For, Show } from 'solid-js'
-import { ArrowUpRightIcon, LaptopIcon, NetworkIcon } from '@lucide/solid'
+import { ArrowUpRightIcon, NetworkIcon } from '@lucide/solid'
 import { Button } from '@/components/ui/button.solid.tsx'
 import {
   Conversation,
@@ -326,21 +326,6 @@ function FleetStatus() {
     </Show>
   )
 }
-function Host() {
-  const system = useSystem()
-  const hostname = () => system()?.machine.hostname.split('.')[0]
-  return (
-    <Show when={hostname()}>
-      <span
-        class="flex h-7 min-w-0 items-center gap-1.5 px-2 font-mono text-[11.5px] text-muted-foreground"
-        title={`This Ultimate runs on ${hostname()}`}
-      >
-        <LaptopIcon class="size-3.5 shrink-0 opacity-60" />
-        <span class="truncate">{hostname()}</span>
-      </span>
-    </Show>
-  )
-}
 export default defineWebExtension({
   surfaces: [
     {
@@ -351,5 +336,5 @@ export default defineWebExtension({
       component: FleetSurface,
     },
   ],
-  slots: { 'titlebar.left': [{ component: Host, order: -10 }], 'statusline.right': [FleetStatus] },
+  slots: { 'statusline.right': [FleetStatus] },
 })
