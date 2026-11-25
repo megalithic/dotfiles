@@ -13,7 +13,7 @@ import {
   writeBaton,
   type Baton,
 } from '../agent/lib/baton.ts';
-import { formatHistory, historyTarget, pickup } from '../agent/extensions/ultimate.ts';
+import { formatHistory, historyTarget, memoryContext, pickup } from '../agent/extensions/ultimate.ts';
 import { containingUltimate, registryTargets } from '../agent/lib/tell-targets.ts';
 import type { Registry } from '../agent/lib/registry.ts';
 
@@ -183,6 +183,27 @@ test('pickup POST uses the registry URL, Origin and session path/from, never raw
   // SAFETY: this stub only needs fetch’s callable shape; transport never uses Bun’s extra fetch methods.
   globalThis.fetch = (async () => Response.json({ error: 'busy' }, { status: 409 })) as typeof fetch;
   await expect(pickup(ctx)).rejects.toThrow('HTTP 409: busy');
+});
+
+test('memory index comes from the containing Ultimate, and nothing without one or without memories', async () => {
+  const calls: { url: unknown; init: RequestInit | undefined }[] = [];
+  let index = ['about-seth [fact] — Seth (updated 2026-11-18)'];
+  // SAFETY: only fetch’s call signature is used by the transport; Bun’s extra fetch methods are irrelevant here.
+  globalThis.fetch = (async (url, init) => {
+    calls.push({ url, init });
+
+    return Response.json({ result: { root: 1, index } });
+  }) as typeof fetch;
+  const file = await memoryContext('/work/app/lib', inventory);
+  expect(calls.map((call) => call.url)).toEqual(['http://child:2/api/extensions/pi-bridge/actions/memory']);
+  expect(calls[0]!.init).toMatchObject({ method: 'POST', headers: { Origin: 'http://child:2' } });
+  expect(file?.path).toBe('http://child:2 project memory (root #1)');
+  expect(file?.content).toContain('/work/app');
+  expect(file?.content).toContain(index[0]);
+  index = [];
+  expect(await memoryContext('/work/app', inventory)).toBeUndefined();
+  expect(await memoryContext('/outside', inventory)).toBeUndefined();
+  expect(calls).toHaveLength(2);
 });
 
 test('pickup without a containing Ultimate fails before any request', async () => {

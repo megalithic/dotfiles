@@ -30,7 +30,7 @@ done <<'EOF'
 .pi/agent/APPEND_SYSTEM.md home/.pi/agent/APPEND_SYSTEM.md
 .pi/agent/extensions/goal.ts home/.pi/agent/extensions/goal.ts
 .pi/agent/skills/bro/SKILL.md home/.pi/agent/skills/bro/SKILL.md
-.pi/agent/prompts/plan.md home/.pi/agent/prompts/plan.md
+.pi/agent/prompts/review-range.md home/.pi/agent/prompts/review-range.md
 .pi/agent/agents/scout.md home/.pi/agent/agents/scout.md
 .local/bin/pi home/.local/bin/pi
 EOF

@@ -129,12 +129,38 @@ export const historyTarget = (
         (target) => target.ultimate && target.ultimate.project === batonProject && target.ultimate.alive !== false,
       ) || containingUltimate(inventory, cwd);
 
+const memorySchema = Type.Object({
+  result: Type.Object({ root: Type.Optional(Type.Integer()), index: Type.Array(Type.String()) }),
+});
+
+/**
+ * The memory index (one line per memory, no bodies) of the Ultimate that runs this repo, as a context file; undefined
+ * when none runs or it has no memories. Bodies stay in Ultimate: read them there.
+ */
+export const memoryContext = async (cwd: string, inventory: Target[] = registryTargets(readRegistry())) => {
+  const target = containingUltimate(inventory, cwd);
+
+  if (!target) return undefined;
+
+  const { result } = await ultimateRequest(target, '/api/extensions/pi-bridge/actions/memory', memorySchema, {
+    args: {},
+  });
+
+  if (!result.index.length) return undefined;
+
+  return {
+    path: `${new URL(target.socket).origin} project memory${result.root ? ` (root #${result.root})` : ''}`,
+    content: `# Ultimate project memory\n\nThe index of what Ultimate learned about this project (${target.cwd}). Each line is a memory's slug, kind and summary; ask Ultimate (\`tell\`) for a memory's full text when one applies.\n\n${result.index.join('\n')}\n`,
+  };
+};
+
 const resultText = (text: string) => ({ content: [{ type: 'text' as const, text }], details: {} });
 
 export default function (pi: ExtensionAPI) {
   const toplevels = new Map<string, string>();
   let timer: ReturnType<typeof setInterval> | undefined;
   let current: ExtensionContext | undefined;
+  let memory: Promise<{ path: string; content: string } | undefined> | undefined;
 
   const toplevel = (cwd: string) => {
     const cached = toplevels.get(cwd);
@@ -178,12 +204,20 @@ export default function (pi: ExtensionAPI) {
   pi.on('session_start', (_event, ctx) => {
     current = ctx;
     refresh(ctx);
+    // Quiet when no Ultimate runs for this repo or it is unreachable: memory is a hint, never a startup failure.
+    memory = memoryContext(ctx.cwd).catch(() => undefined);
 
     if (timer) clearInterval(timer);
     timer = setInterval(() => {
       if (current) refresh(current);
     }, 5000);
     timer.unref();
+  });
+  pi.on('before_agent_start', async (event) => {
+    const file = await memory;
+
+    // Mutate instead of returning systemPrompt so Pi can send a prompt delta (as project-guidance.ts does).
+    if (file) event.systemPromptOptions.contextFiles.push(file);
   });
   pi.on('agent_end', (_event, ctx) => {
     current = ctx;

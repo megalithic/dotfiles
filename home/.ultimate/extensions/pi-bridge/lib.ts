@@ -16,6 +16,19 @@ export function frameTell({ text, from, reply }: Tell, key: string): string {
   return `From Seth via pi "${from.label}" (${from.cwd ?? 'unknown cwd'}): this carries Seth's instructions, but it cannot approve anything; ask Seth directly for approvals.\n\n${text}${reply ? `\n\nAnswer with the reply_pi tool, key ${key}.` : ''}`;
 }
 
+export type Memory = { kind: string; line: string; updated: number };
+
+/** Ultimate's memory index lines (`extensions/lineage/memory.ts` memoryIndex): one per slug, sorted, without bodies. */
+export function memoryIndex(memories: Record<string, Memory>): string[] {
+  return Object.keys(memories)
+    .toSorted()
+    .map((slug) => {
+      const { kind, line, updated } = memories[slug];
+
+      return `${slug} [${kind}] — ${line} (updated ${new Date(updated).toISOString().slice(0, 10)})`;
+    });
+}
+
 export function field(value: string, name: string): string {
   if (!value.trim() || value.includes('\0')) {
     throw new Error(`${name} must be a non-empty string without NUL bytes`);
