@@ -18,7 +18,8 @@ Support files (static, never regenerate them):
 
 - Empty `$1` → ask what to review, then stop.
 - PR URL or number → `gh pr view <n> --json number,title,body,url,baseRefName,headRefName,headRefOid,state`; `git fetch origin <base> <head>`; base = merge base of `origin/<base>` and `origin/<head>`; head = `headRefOid`; label `PR #<n>: <title>`; slug `pr-<n>`.
-- Branch name → `git fetch origin main <branch>`; base = `git merge-base origin/main origin/<branch>`; head = `origin/<branch>`; slug = branch.
+- Worktree path, or a branch checked out in a local worktree (`git worktree list --porcelain`) → `review-snapshot <target>`; base/head from its JSON; label `<branch> (work in progress)` when dirty; slug `<branch>-wip-<short head>` when dirty (otherwise branch); checkout below = an export of the head. For a detached worktree, use the short head instead of branch. Failure → report it and stop.
+- Branch name not checked out locally → `git fetch origin main <branch>`; base = `git merge-base origin/main origin/<branch>`; head = `origin/<branch>`; slug = branch.
 - `uncommitted` → base = `HEAD`, head = working tree (`git diff HEAD` + untracked files via `git diff --no-index /dev/null <file>`); checkout = cwd; slug `uncommitted-<short-sha>`.
 - Commit sha → base = `<sha>^`, head = `<sha>`; checkout = cwd if it contains the commit; slug = short sha.
 
@@ -26,9 +27,10 @@ Model ids drift: run `pi --list-models` once and, if an agent's model is missing
 
 ## 2. Checkout + review dir
 
-- PR/branch targets need the head checked out so reviewers can read callers, callees and tests. Use `rwt new <head-branch> --no-services --no-agent --json` (timeout 1800). An existing worktree directory is enough; a failed setup (exit 4: DB, deps) does not matter for a read-only review — note it and continue. Never run raw `git worktree`. `checkout=$(rwt status <head-branch> | jq -r .worktree.path)`; confirm `git -C $checkout rev-parse HEAD` equals head.
+- For a snapshot head (any target resolved through `review-snapshot`, even if clean), set `REVIEW_DIR` as below, create `"$REVIEW_DIR/tree"`, then export `git archive <head> | tar -x -C "$REVIEW_DIR/tree"` with pipefail enabled; checkout = `REVIEW_DIR/tree`. Stop on failure. Never use `rwt new`, raw `git worktree` or the live working tree for these targets; cleanup means the exported tree only, never suggest `rwt prune` for the live target.
+- Other PR/branch targets need the head checked out so reviewers can read callers, callees and tests. Use `rwt new <head-branch> --no-services --no-agent --json` (timeout 1800). An existing worktree directory is enough; a failed setup (exit 4: DB, deps) does not matter for a read-only review — note it and continue. Never run raw `git worktree`. `checkout=$(rwt status <head-branch> | jq -r .worktree.path)`; confirm `git -C $checkout rev-parse HEAD` equals head.
 - `REVIEW_DIR=~/.local/share/pi/docs/$(basename "$(git rev-parse --show-toplevel)")/<slug>-review`. Write there:
-  - `diff.patch` — `git diff <base>...<head>` (for `uncommitted`: `git diff HEAD` plus untracked files)
+  - `diff.patch` — for snapshot targets: `git diff <base> <head>`; otherwise `git diff <base>...<head>` (for `uncommitted`: `git diff HEAD` plus untracked files)
   - `description.md` — PR title + body, or `git log <base>..<head>` for branches/commits
   - `meta.json` — `{"title":"<label> — consensus review","target":"<url or ref>","base":"<sha>","head":"<sha>","reviewers":{"A":"Claude Code /review recipe · <model>","B":"ponytail-review · <model>","C":"pi /review rubric · <model>"},"arbiter":"review-arbiter · <model>","jev_model":"<filled after step 5>"}`
 

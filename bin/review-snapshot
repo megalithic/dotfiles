@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Pin a live worktree for review without changing its index or refs.
+set -euo pipefail
+export GIT_OPTIONAL_LOCKS=0
+error() {
+  printf 'review-snapshot: %s\n' "$*" >&2
+  exit 2
+}
+[[ $# == 1 || ($# == 3 && $2 == --base) ]] || error 'usage: review-snapshot <target> [--base <ref>]'
+target=$1 base=${3:-} wt='' branch='' path='' directory='' path_wt=''
+git rev-parse --git-dir >/dev/null 2>&1 || error 'cwd is not a repository'
+if [[ -d $target ]]; then
+  directory=$(cd "$target" && pwd -P)
+fi
+while IFS= read -r -d '' record; do
+  case "$record" in
+    'worktree '*) path=${record#worktree } ;;
+    'branch '*)
+      if [[ ${record#branch refs/heads/} == "$target" ]]; then
+        wt=$path
+        branch=$target
+      fi
+      ;;
+  esac
+  if [[ -n $directory && $path == "$directory" ]]; then path_wt=$path; fi
+done < <(git worktree list --porcelain -z)
+[[ -z $path_wt ]] || wt=$path_wt
+if [[ -n $wt ]]; then
+  head=$(git -C "$wt" rev-parse --verify 'HEAD^{commit}')
+  branch=$(git -C "$wt" symbolic-ref --quiet --short HEAD || true)
+else
+  head=$(git rev-parse --verify "refs/heads/$target^{commit}" 2>/dev/null) || error "unknown target: $target"
+  branch=$target
+fi
+if [[ -n $base ]]; then
+  base=$(git rev-parse --verify "$base^{commit}")
+else
+  local_default=main
+  git show-ref --verify --quiet refs/heads/main || local_default=master
+  remote_default=$(git symbolic-ref --quiet refs/remotes/origin/HEAD || true)
+  for candidate in "refs/heads/$local_default" "$remote_default"; do
+    [[ -n $candidate ]] || continue
+    fork=$(git merge-base "$head" "$candidate" 2>/dev/null) || continue
+    if [[ -z $base ]] || git merge-base --is-ancestor "$base" "$fork"; then base=$fork; fi
+  done
+  [[ -n $base ]] || error 'no merge base with main, master or origin/HEAD; use --base'
+fi
+dirty=false
+if [[ -n $wt ]]; then
+  index=$(git -C "$wt" rev-parse --git-path index)
+  [[ $index == /* ]] || index="$wt/$index"
+  tmp=$(mktemp)
+  trap 'rm -f "$tmp"' EXIT
+  cp "$index" "$tmp"
+  GIT_INDEX_FILE=$tmp git -C "$wt" add -A
+  tree=$(GIT_INDEX_FILE=$tmp git -C "$wt" write-tree)
+  if [[ $tree != "$(git rev-parse "$head^{tree}")" ]]; then
+    head=$(git commit-tree "$tree" -p "$head" -m "review snapshot of $wt at $(date -u +%Y-%m-%dT%H:%M:%SZ)")
+    dirty=true
+  fi
+fi
+jq -n --arg wt "$wt" --arg branch "$branch" --arg base "$base" --arg head "$head" --argjson dirty "$dirty" \
+  '{worktree: (if $wt == "" then null else $wt end), branch: (if $branch == "" then null else $branch end), base: $base, head: $head, dirty: $dirty, range: ($base + ".." + $head)}'
