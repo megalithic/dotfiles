@@ -10,6 +10,7 @@ const {
   blockedPost,
   default: extension,
   harnessMentions,
+  inboxCard,
   parseReply,
   readReviews,
   reviewArgs,
@@ -43,7 +44,7 @@ const asExtensionContext = <T>(value: T): ExtensionContext => value as Extension
 
 const harness = (selected: string | undefined, confirmed = true) => {
   const on = new Map<string, Handler>();
-  const events = new Map<string, (data: Reply) => void>();
+  const events = new Map<string, (data: Reply) => Promise<void>>();
   const execs: string[][] = [];
   const bodies: string[] = [];
   const notes: string[] = [];
@@ -52,7 +53,10 @@ const harness = (selected: string | undefined, confirmed = true) => {
   extension(
     asExtensionAPI({
       on: (name: string, handler: Handler) => on.set(name, handler),
-      events: { on: (name: string, handler: (data: Reply) => void) => events.set(name, handler), emit: () => {} },
+      events: {
+        on: (name: string, handler: (data: Reply) => Promise<void>) => events.set(name, handler),
+        emit: () => {},
+      },
       registerCommand: (_name: string, options: { handler: typeof command }) => (command = options.handler),
       exec: async (cmd: string, args: string[]) => {
         execs.push([cmd, ...args]);
@@ -82,7 +86,7 @@ const seed = () => fs.writeFileSync(path.join(state, 'review-pr.json'), JSON.str
 test('a reply saves the draft and verdict; only the picked action posts, and Approve needs APPROVED plus a confirm', async () => {
   seed();
   const pi = harness('approve');
-  pi.events.get('tell:reply')?.({
+  await pi.events.get('tell:reply')?.({
     replyTo: review.key,
     text: 'Verdict: APPROVED\n\nteam report\n\nDRAFT:\nNothing blocks merge.\n\n**Good to have**\n- `lib/a.ex:3` rename x.',
   });
@@ -91,7 +95,7 @@ test('a reply saves the draft and verdict; only the picked action posts, and App
 
   // A redelivered reply never overwrites the draft Seth edited.
   fs.writeFileSync(draft, 'Edited by Seth.\n');
-  pi.events.get('tell:reply')?.({ replyTo: review.key, text: 'Verdict: APPROVED\n\nDRAFT:\nold' });
+  await pi.events.get('tell:reply')?.({ replyTo: review.key, text: 'Verdict: APPROVED\n\nDRAFT:\nold' });
   expect(fs.readFileSync(draft, 'utf8')).toBe('Edited by Seth.\n');
 
   const blocked = pi.on.get('tool_call')?.(
@@ -107,6 +111,68 @@ test('a reply saves the draft and verdict; only the picked action posts, and App
   expect(call?.slice(0, -1)).toEqual(['gh', ...reviewArgs('approve', review, '').slice(0, -1)]);
   expect(pi.bodies).toEqual(['Edited by Seth.\n']);
   expect(readReviews()).toEqual([]);
+});
+
+test('a verdict adds one artifact to the reviewing Ultimate; failure still saves the draft', async () => {
+  const requests: { route: string; method: string; origin: string | null; body: unknown }[] = [];
+  let fail = false;
+
+  const server = Bun.serve({
+    port: 0,
+    async fetch(request) {
+      requests.push({
+        route: new URL(request.url).pathname,
+        method: request.method,
+        origin: request.headers.get('Origin'),
+        body: await request.json(),
+      });
+
+      return Response.json(fail ? { error: 'unavailable' } : { result: { id: 1 } }, { status: fail ? 500 : 200 });
+    },
+  });
+
+  try {
+    const seeded = { ...review, ultimate: { socket: `${server.url}api/extensions/pi-bridge/actions/tell` } };
+    const seedTarget = () => fs.writeFileSync(path.join(state, 'review-pr.json'), JSON.stringify([seeded]));
+    seedTarget();
+    const pi = harness(undefined);
+    pi.on.get('session_start')?.({ toolName: '', input: { command: '' } }, pi.ctx);
+    const reply = { replyTo: review.key, text: 'Verdict: APPROVED\nteam report\nDRAFT:\nbody' };
+
+    await pi.events.get('tell:reply')?.(reply);
+    expect(requests).toEqual([
+      {
+        route: '/api/extensions/inbox-items/actions/add',
+        method: 'POST',
+        origin: server.url.origin,
+        body: { args: inboxCard({ ...seeded, verdict: 'APPROVED' }) },
+      },
+    ]);
+    expect(requests[0]?.body).toMatchObject({
+      args: {
+        kind: 'artifact',
+        title: 'Review draft: acme/app#228 — APPROVED',
+        text: `${review.title}\n${review.url}\nRevise it in pi or with \`/review-pr edit 228\`; post it from pi with \`/review-pr post 228\`.`,
+        path: draft,
+        url: review.url,
+        key: review.key,
+      },
+    });
+    await pi.events.get('tell:reply')?.(reply);
+    expect(requests).toHaveLength(1);
+    expect(fs.readFileSync(draft, 'utf8')).toBe('body\n');
+
+    fail = true;
+    seedTarget();
+    await pi.events.get('tell:reply')?.({ ...reply, text: 'Verdict: APPROVED\nDRAFT:\nstill saved' });
+    expect(requests).toHaveLength(2);
+    expect(fs.readFileSync(draft, 'utf8')).toBe('still saved\n');
+    expect(readReviews()[0]?.verdict).toBe('APPROVED');
+    expect(pi.notes.at(-1)).toContain('Inbox card failed: Ultimate rejected request: HTTP 500');
+    expect(pi.execs).toEqual([]);
+  } finally {
+    await server.stop(true);
+  }
 });
 
 test('declining the approval confirm posts nothing', async () => {

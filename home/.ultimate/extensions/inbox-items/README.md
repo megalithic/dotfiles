@@ -14,10 +14,11 @@ Items record the calling conversation. For a side chat, the server reads the reg
 
 ## User actions
 
+- `add {kind, title, text, url?, path?, key?}` adds an item through HTTP only (`POST /api/extensions/inbox-items/actions/add`, body `{args: …}`), recording the root conversation; validation and key deduplication match the tool. Agents keep using `inbox`.
 - `done {id}` completes the stored item.
 - `open {id}` and `reveal {id}` open an artifact or reveal it in Finder, using macOS `open` and `open -R` through `execFile`, never a shell. Only the stored path is accepted; a leading `~` expands to the user's home directory.
 
-All three are user-only actions. The pane renders Markdown with `MessageResponse`, including highlighted, copyable code blocks; links open in a new tab, artifacts offer Open, Reveal in Finder and Copy path, and every item has Done. Failures stay visible in the pane.
+All four are user-only actions. The pane renders Markdown with `MessageResponse`, including highlighted, copyable code blocks; links open in a new tab, artifacts offer Open, Reveal in Finder and Copy path, and every item has Done. Failures stay visible in the pane.
 
 ## Document and Inbox point
 

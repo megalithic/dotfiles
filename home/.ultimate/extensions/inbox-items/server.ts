@@ -39,8 +39,13 @@ async function openArtifact(args: unknown, { host, signal }: ActionContext, reve
   return { id: item.id };
 }
 
-export const userActions = ['done', 'open', 'reveal'];
+export const userActions = ['add', 'done', 'open', 'reveal'];
 export const actions = {
+  async add(args: unknown, { host }: ActionContext) {
+    return host
+      .harness()
+      .commit(async (tx) => add(await tx.doc(Items, ROOT_CONVERSATION_ID), args, ROOT_CONVERSATION_ID, Date.now()), context);
+  },
   async done(args: unknown, { host }: ActionContext) {
     return host
       .harness()

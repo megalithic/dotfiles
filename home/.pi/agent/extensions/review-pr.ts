@@ -12,7 +12,7 @@ import { Type } from 'typebox';
 import { Check } from 'typebox/value';
 import { readRegistry } from '../lib/registry.ts';
 import { containingUltimate, registryTargets } from '../lib/tell-targets.ts';
-import { originInfo, tellUltimate } from '../lib/tell-transport.ts';
+import { originInfo, tellUltimate, ultimateRequest } from '../lib/tell-transport.ts';
 
 const reviewSchema = Type.Object({
   key: Type.String(),
@@ -22,10 +22,20 @@ const reviewSchema = Type.Object({
   head: Type.String(),
   url: Type.String(),
   draft: Type.String(),
+  ultimate: Type.Optional(Type.Object({ socket: Type.String(), host: Type.Optional(Type.String()) })),
   verdict: Type.Optional(Type.Union([Type.Literal('APPROVED'), Type.Literal('NEEDS CHANGES')])),
 });
 
 export type Review = Type.Static<typeof reviewSchema>;
+
+export const inboxCard = (review: Review) => ({
+  kind: 'artifact' as const,
+  title: `Review draft: ${review.repo}#${review.number} — ${review.verdict}`.slice(0, 120),
+  text: `${review.title}\n${review.url}\nRevise it in pi or with \`/review-pr edit ${review.number}\`; post it from pi with \`/review-pr post ${review.number}\`.`,
+  path: review.draft,
+  url: review.url,
+  key: review.key,
+});
 
 const stateFile = () =>
   path.join(
@@ -306,6 +316,7 @@ export default function (pi: ExtensionAPI) {
       head: pr.headRefOid,
       url: pr.url,
       draft,
+      ultimate: { socket: target.socket, host: target.host },
     };
 
     await tellUltimate(target, requestText(review, ctx.cwd), true, originInfo(ctx), key);
@@ -362,7 +373,7 @@ export default function (pi: ExtensionAPI) {
   });
 
   // The bridge emits every reply before delivering it as a follow-up, so pi also reads and summarises it.
-  pi.events.on('tell:reply', (data) => {
+  pi.events.on('tell:reply', async (data) => {
     if (!Check(Type.Object({ replyTo: Type.String(), text: Type.String() }), data)) return;
     const reviews = readReviews();
     const review = reviews.find((item) => item.key === data.replyTo);
@@ -372,11 +383,26 @@ export default function (pi: ExtensionAPI) {
     const { verdict, draft } = parseReply(data.text);
     fs.mkdirSync(path.dirname(review.draft), { recursive: true });
     fs.writeFileSync(review.draft, `${draft ?? data.text.trim()}\n`);
-    writeReviews(
-      reviews.map((item) => (item.key === review.key ? { ...item, verdict: verdict ?? 'NEEDS CHANGES' } : item)),
-    );
+    review.verdict = verdict ?? 'NEEDS CHANGES';
+    writeReviews(reviews);
 
     if (current) showStatus(current);
+
+    if (review.ultimate) {
+      try {
+        await ultimateRequest(
+          review.ultimate,
+          '/api/extensions/inbox-items/actions/add',
+          Type.Object({ result: Type.Unknown() }),
+          { args: inboxCard(review) },
+        );
+      } catch (error) {
+        current?.ui.notify(
+          `Review draft saved at ${review.draft}, but its Inbox card failed: ${error instanceof Error ? error.message : String(error)}`,
+          'warning',
+        );
+      }
+    }
   });
 
   pi.on('before_agent_start', (event) => {
