@@ -84,7 +84,7 @@ function Jump(props: {
       <Button
         aria-label={`${props.kind}: ${props.row.name} #${props.conversation}`}
         class={cn(
-          'inline-block h-auto min-w-0 truncate text-left text-[length:inherit] font-normal hover:underline',
+          'inline-block h-auto min-w-0 shrink truncate text-left text-[length:inherit] font-normal hover:underline',
           props.class,
         )}
         onClick={() => switchConversation(props.conversation as ConversationId)}
