@@ -4,15 +4,19 @@ import path from 'node:path';
 
 const home = path.join(import.meta.dir, '../..');
 
-function hostBasics(file: string) {
+// The host rules pi and Ultimate both carry, word for word: neither can include a shared file into its AGENTS.md.
+const shared = ['Host basics', 'Time-sensitive handoffs'];
+
+function section(file: string, heading: string) {
   const text = fs.readFileSync(path.join(home, file), 'utf8');
-  const section = text.match(/^## Host basics\n[\s\S]*?(?=\n## |$)/m);
-  expect(section).not.toBeNull();
+  // Up to the next heading or the end of the file; `$` would stop at the first line end under the m flag.
+  const match = text.match(new RegExp(`^## ${heading}\\n[\\s\\S]*?(?=\\n## |(?![\\s\\S]))`, 'm'));
+  expect(match).not.toBeNull();
 
   // SAFETY: the preceding assertion verifies the match exists.
-  return section![0].trim();
+  return match![0].trim();
 }
 
-test('pi and Ultimate carry the same host basics', () => {
-  expect(hostBasics('.pi/agent/AGENTS.md')).toBe(hostBasics('.ultimate/AGENTS.md'));
+test.each(shared)('pi and Ultimate carry the same %s section', (heading) => {
+  expect(section('.pi/agent/AGENTS.md', heading)).toBe(section('.ultimate/AGENTS.md', heading));
 });

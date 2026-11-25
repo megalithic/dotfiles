@@ -5,8 +5,8 @@ import type { JsonValue } from '@earendil-works/chord/json';
 import { defineDoc, defineExtension, defineTool, ROOT_CONVERSATION_ID } from '@earendil-works/pi-durable';
 import type { ConversationId, Harness } from '@earendil-works/pi-durable';
 import { obj, str } from '@earendil-works/pi-schema';
-import { field, frameTell, sendReply } from './lib.ts';
-import type { Sender, Tell } from './lib.ts';
+import { field, frameTell, memoryIndex, sendReply } from './lib.ts';
+import type { Memory, Sender, Tell } from './lib.ts';
 
 export { frameTell, replyPayload, controlRequest, sendReply } from './lib.ts';
 
@@ -15,6 +15,7 @@ type Host = {
   projectRoot: string;
   userHome: string;
   harness(): Harness;
+  need<S>(api: { name: string; service?: S }): S;
   invoke(name: string, action: string, args: JsonValue, signal: AbortSignal): Promise<JsonValue>;
 };
 
@@ -27,6 +28,14 @@ export const Routes = defineDoc<{ senders: Record<string, Sender> }>({
   checkpointWhen: () => false,
   initial: () => ({ senders: {} }),
 });
+
+/** The part of Ultimate's core lineage service `memory` uses (`extensions/lineage/api.ts`). */
+type Lineage = {
+  memoriesOf(
+    id: ConversationId,
+    ctx: typeof BACKGROUND_CONTEXT,
+  ): Promise<{ root: ConversationId; memories: Record<string, Memory> } | undefined>;
+};
 
 export const docs = [Routes];
 
@@ -100,6 +109,13 @@ async function ultimate(host: Host, signal = new AbortController().signal): Prom
 }
 
 export const actions = {
+  /** The memory index (no bodies) of standing @ultimate's tree root; pi reads it at session start. */
+  async memory(_args: JsonValue, { host, signal }: { host: Host; signal: AbortSignal }) {
+    const lineage = host.need<Lineage>({ name: 'lineage' });
+    const found = await lineage.memoriesOf(await ultimate(host, signal), BACKGROUND_CONTEXT);
+
+    return found ? { root: found.root, index: memoryIndex(found.memories) } : { index: [] };
+  },
   async tell(args: JsonValue, { host, signal }: { host: Host; signal: AbortSignal }) {
     const input = parseTell(args);
     const key = input.id ?? randomUUID();

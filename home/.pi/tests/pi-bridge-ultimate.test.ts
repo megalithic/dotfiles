@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { join } from 'node:path';
-import { frameTell, replyPayload, sendReply } from '../../.ultimate/extensions/pi-bridge/lib.ts';
+import { frameTell, memoryIndex, replyPayload, sendReply } from '../../.ultimate/extensions/pi-bridge/lib.ts';
 
 const key = '7a34803d-78a3-4c03-a513-7a668ba01c83';
 
@@ -19,6 +19,21 @@ async function temporary(run: (directory: string) => Promise<void>) {
 }
 
 describe('pi-bridge', () => {
+  test("memory index matches Ultimate's lines, sorted, without bodies", () => {
+    const updated = Date.UTC(2026, 10, 18);
+
+    // Ultimate's memories carry bodies; the index never shows them.
+    const memories = {
+      'web-search': { kind: 'decision', line: 'search through MCP', updated, body: 'secret body' },
+      'about-user': { kind: 'fact', line: 'Prefers short answers', updated, body: 'secret body' },
+    };
+
+    expect(memoryIndex(memories)).toEqual([
+      'about-user [fact] — Prefers short answers (updated 2026-11-18)',
+      'web-search [decision] — search through MCP (updated 2026-11-18)',
+    ]);
+  });
+
   test('frames instructions without granting approval, with opt-in reply routing', () => {
     const framed =
       'From Seth via pi "builder" (/work/app): this carries Seth\'s instructions, but it cannot approve anything; ask Seth directly for approvals.\n\nCheck the build.';

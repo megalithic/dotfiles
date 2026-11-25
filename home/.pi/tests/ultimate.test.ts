@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeEach, expect, spyOn, test } from 'bun:test';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { ExtensionContext } from '@earendil-works/pi-coding-agent';
+import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
 import {
   batonPath,
   batonStatus,
@@ -13,7 +13,12 @@ import {
   writeBaton,
   type Baton,
 } from '../agent/lib/baton.ts';
-import { formatHistory, historyTarget, pickup } from '../agent/extensions/ultimate.ts';
+import ultimateExtension, {
+  formatHistory,
+  historyTarget,
+  memoryContext,
+  pickup,
+} from '../agent/extensions/ultimate.ts';
 import { containingUltimate, registryTargets } from '../agent/lib/tell-targets.ts';
 import type { Registry } from '../agent/lib/registry.ts';
 
@@ -183,6 +188,78 @@ test('pickup POST uses the registry URL, Origin and session path/from, never raw
   // SAFETY: this stub only needs fetch’s callable shape; transport never uses Bun’s extra fetch methods.
   globalThis.fetch = (async () => Response.json({ error: 'busy' }, { status: 409 })) as typeof fetch;
   await expect(pickup(ctx)).rejects.toThrow('HTTP 409: busy');
+});
+
+test('memory index comes from the containing Ultimate, and nothing without one or without memories', async () => {
+  const calls: { url: unknown; init: RequestInit | undefined }[] = [];
+  let index = ['about-user [fact] — Prefers short answers (updated 2026-11-18)'];
+  // SAFETY: only fetch’s call signature is used by the transport; Bun’s extra fetch methods are irrelevant here.
+  globalThis.fetch = (async (url, init) => {
+    calls.push({ url, init });
+
+    return Response.json({ result: { root: 1, index } });
+  }) as typeof fetch;
+  const file = await memoryContext('/work/app/lib', inventory);
+  expect(calls.map((call) => call.url)).toEqual(['http://child:2/api/extensions/pi-bridge/actions/memory']);
+  expect(calls[0]!.init).toMatchObject({ method: 'POST', headers: { Origin: 'http://child:2' } });
+  expect(file?.path).toBe('http://child:2 project memory (root #1)');
+  expect(file?.content).toContain('/work/app');
+  expect(file?.content).toContain(index[0]);
+  index = [];
+  expect(await memoryContext('/work/app', inventory)).toBeUndefined();
+  expect(await memoryContext('/outside', inventory)).toBeUndefined();
+  expect(calls).toHaveLength(2);
+});
+
+type Handler = (event: { systemPromptOptions?: { contextFiles: ContextFile[] } }, ctx: ExtensionContext) => void;
+
+type ContextFile = { path: string; content: string };
+
+test('a turn never waits for the memory lookup; turns after it answers get it, never another session’s', async () => {
+  const instance = registerUltimate();
+  let answer: (response: Response) => void = () => {};
+
+  // SAFETY: only fetch’s call signature is used by the transport; Bun’s extra fetch methods are irrelevant here.
+  globalThis.fetch = (() => new Promise<Response>((resolve) => (answer = resolve))) as typeof fetch;
+  const handlers = new Map<string, Handler>();
+
+  const pi = {
+    on: (name: string, handler: Handler) => handlers.set(name, handler),
+    registerCommand: () => {},
+    registerTool: () => {},
+  };
+
+  // SAFETY: the extension only calls on, registerCommand and registerTool while it loads.
+  ultimateExtension(pi as ExtensionAPI);
+
+  // SAFETY: the handlers under test use only cwd and ui.setStatus.
+  const session = { ...ctx, ui: { setStatus: () => {} } } as ExtensionContext;
+
+  const index = Response.json({ result: { root: 1, index: ['about-user [fact] — Prefers short answers'] } });
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 10));
+
+  const turn = () => {
+    const contextFiles: ContextFile[] = [];
+
+    expect(handlers.get('before_agent_start')!({ systemPromptOptions: { contextFiles } }, session)).toBeUndefined();
+
+    return contextFiles;
+  };
+
+  handlers.get('session_start')!({}, session);
+  expect(turn()).toEqual([]);
+  answer(index.clone());
+  await settle();
+  expect(turn()[0]?.path).toBe(`${instance.url} project memory (root #1)`);
+
+  // Session A's lookup is still pending when session B starts outside any Ultimate; A's late answer is dropped.
+  handlers.get('session_start')!({}, session);
+  const late = answer;
+  handlers.get('session_start')!({}, { ...session, cwd: directory });
+  late(index.clone());
+  await settle();
+  expect(turn()).toEqual([]);
+  handlers.get('session_shutdown')!({}, session);
 });
 
 test('pickup without a containing Ultimate fails before any request', async () => {

@@ -110,7 +110,7 @@ while IFS='|' read -r target source; do link_to "$target" "$source"; done <<'EOF
 .pi/agent/web-search.json|home/.pi/agent/web-search.json
 .pi/agent/extensions/goal.ts|home/.pi/agent/extensions/goal.ts
 .pi/agent/skills/bro/SKILL.md|home/.pi/agent/skills/bro/SKILL.md
-.pi/agent/prompts/plan.md|home/.pi/agent/prompts/plan.md
+.pi/agent/prompts/review-range.md|home/.pi/agent/prompts/review-range.md
 .pi/agent/agents/scout.md|home/.pi/agent/agents/scout.md
 Library/Application Support/MailMate/Resources/KeyBindings/megamate.plist|home/Library/Application Support/MailMate/Resources/KeyBindings/megamate.plist
 .config/starship.toml|config/starship.toml
