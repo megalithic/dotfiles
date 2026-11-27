@@ -68,6 +68,67 @@ rex.action{
   end,
 }
 
+-- `rtm inbox`, what waits on you across every Ultimate hub, in a session of
+-- its own called `inbox`, kept first so the phone app has it as a tab. rtm
+-- reports itself for Program Resume (OSC 7577); the rule lets Rex bring it
+-- back after a restart, with no arguments but `inbox`. Rex 2582 gives its
+-- terminals no OSC7577_TOKEN yet, so the action also starts rtm again in a
+-- session that has lost it. Sessions move and windows open through the rex
+-- CLI: from an action, session.move and list_blocks fail while no client is
+-- attached to that session (409 "stream is not attached").
+rex.set("resume.trust.rtm_inbox", { command = { "rtm", "inbox" } })
+
+local INBOX = "inbox"
+local TERMINAL = "com.superlogical.terminal"
+local REX = "rex"
+
+local function cli(args)
+  local argv = { REX, "--autostart=false" }
+  for _, arg in ipairs(args) do argv[#argv + 1] = arg end
+  local result, err = rex.exec(argv, { timeout = 5 })
+  if not result then error(err, 0) end
+  if not result.ok then error(result.stderr ~= "" and result.stderr or result.stdout, 0) end
+  return result.stdout
+end
+
+-- Whether some terminal in the session still runs `rtm inbox`.
+local function running(session_id)
+  local blocks = rex.json.decode(cli({ "block", "ls", "-s", session_id, "--json" }))
+  for _, block in ipairs(blocks and blocks.blocks or {}) do
+    if block.creator_name == TERMINAL then
+      local process = rex.json.decode(cli({ "block", "call", "-b", block.block_id, "process" }))
+      if process and process.foreground and process.foreground.name == "rtm" then return true end
+    end
+  end
+  return false
+end
+
+rex.action{
+  name = "rtm_inbox",
+  title = "rtm: Inbox",
+  description = "Go to the inbox session, starting it first when it isn't running.",
+  category = "Launcher",
+  run = function()
+    rex.client.queue("client.mode.exit_all")
+    local listed = rex.call("session.list")
+    local sessions = listed and listed.sessions or {}
+    local session_id
+    for _, session in ipairs(sessions) do
+      if session.label == INBOX then session_id = session.session_id end
+    end
+    if not session_id then
+      local created = rex.json.decode(cli({ "new", INBOX, "--json", "--", RTM, "inbox" }))
+      session_id = created.session_id
+    elseif not running(session_id) then
+      cli({ "window", "new", "-s", session_id, INBOX, "--", RTM, "inbox" })
+    end
+    if sessions[1] and sessions[1].session_id ~= session_id then
+      cli({ "session", "move", session_id, "--index", "1" })
+    end
+    rex.client.queue("session.select", { session_id = session_id })
+  end,
+}
+
 -- The prefix key is the best sign Rex gives of the session in front of you:
 -- it reports no "session shown" event. Kept in memory, so a key press costs
 -- nothing; rtm reads it with `rex do rtm_seen` and keeps it in its own store.

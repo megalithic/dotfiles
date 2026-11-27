@@ -87,6 +87,8 @@ rex.bind("ctrl+space", "tmux_or_rex_prefix")
 rex.mode("prefix", { exclusive = true })
 -- Launcher (rtm.lua): sessions, agents and Ultimate conversations.
 rex.bind("prefix/ctrl+space", "rtm")
+-- The inbox session (rtm inbox): what waits on you across every Ultimate hub.
+rex.bind("prefix/i", "rtm_inbox")
 rex.bind("prefix/ctrl+t", "client.tab.new")
 -- Asks `kill <session>?`; y stops its processes (rwt down) and keeps the worktree.
 rex.bind("prefix/ctrl+k", "rtm_kill")
