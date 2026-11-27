@@ -3,6 +3,7 @@ import { Type } from 'typebox';
 import {
   batonSchema,
   batonStatus,
+  checkLand,
   guardDecision,
   readBaton,
   resolveToplevel,
@@ -22,7 +23,7 @@ const pickupSchema = Type.Object({
   }),
 });
 
-export const pickup = async (ctx: ExtensionContext, goal?: string) => {
+export const pickup = async (ctx: ExtensionContext, goal?: string, options: { land?: boolean } = {}) => {
   const target = containingUltimate(registryTargets(readRegistry()), ctx.cwd);
 
   if (!target) throw new Error(`no Ultimate runs for ${ctx.cwd}`);
@@ -31,6 +32,7 @@ export const pickup = async (ctx: ExtensionContext, goal?: string) => {
   const response = await ultimateRequest(target, '/api/extensions/pi-sessions/actions/pickup', pickupSchema, {
     args: {
       cwd: ctx.cwd,
+      land: options.land,
       sessionFile: ctx.sessionManager.getSessionFile(),
       goal: goal ? spillHandoff(goal) : undefined,
       from: { label, sessionId, socket, pid: process.pid },
@@ -259,6 +261,20 @@ export default function (pi: ExtensionAPI) {
       try {
         const result = await handoff(ctx, args.trim() || undefined);
         ctx.ui.notify(`Ultimate #${result.conversation} picked up ${result.worktree}: ${result.url}`, 'info');
+      } catch (error) {
+        ctx.ui.notify(String(error), 'error');
+      }
+    },
+  });
+  pi.registerCommand('land', {
+    description: 'Land this committed worktree through Ultimate: /land [notes]',
+    async handler(args, ctx) {
+      try {
+        checkLand(ctx.cwd);
+        const result = await pickup(ctx, args.trim() || undefined, { land: true });
+        pi.events.emit('session-title:refresh', {});
+        refresh(ctx);
+        ctx.ui.notify(`Ultimate #${result.conversation} will land ${result.worktree}: ${result.url}`, 'info');
       } catch (error) {
         ctx.ui.notify(String(error), 'error');
       }

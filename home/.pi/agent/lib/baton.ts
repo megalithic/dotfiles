@@ -31,6 +31,31 @@ export const resolveToplevel = (cwd: string): string =>
     stdio: ['ignore', 'pipe', 'pipe'],
   }).trim();
 
+/** Quick local /land validation; the receiving host checks again before taking the baton. */
+export const checkLand = (cwd: string): string => {
+  const git = (...args: string[]) =>
+    execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+
+  if (git('status', '--porcelain')) throw new Error('Worktree is dirty; commit first before /land.');
+  const branch = git('branch', '--show-current');
+
+  if (!branch) throw new Error('Cannot land a detached HEAD; switch to a branch first.');
+  const main = git('worktree', 'list', '--porcelain').split('\n\n')[0];
+
+  const target = main
+    .split('\n')
+    .find((line) => line.startsWith('branch refs/heads/'))
+    ?.slice(18);
+
+  if (!target) throw new Error('Main checkout must be on a branch before landing.');
+
+  if (branch === target) throw new Error(`Cannot land the default branch (${target}).`);
+
+  if (Number(git('rev-list', '--count', `${target}..HEAD`)) < 1) throw new Error(`Nothing ahead of ${target} to land.`);
+
+  return branch;
+};
+
 export const batonPath = (worktree: string): string => path.join(worktree, '.local/state/agent-baton.json');
 
 export const readBaton = (worktree: string): Baton | undefined => {

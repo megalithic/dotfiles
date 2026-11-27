@@ -1,5 +1,8 @@
 {
   "defaultSurface": "fleet",
+  "lander": {
+    "checks": [{ "command": "bash .ultimate/lander-check", "timeout": 600 }]
+  },
   "isolates": {
     "worktree": { "path": "/Users/seth/.dotfiles/.worktrees/{name}" }
   }
