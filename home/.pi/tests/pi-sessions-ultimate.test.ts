@@ -11,6 +11,9 @@ import {
   framePickup,
   landInput,
   landedMessage,
+  drainHandoffs,
+  returnBaton,
+  withBatonLock,
   checkLand,
   run,
   guardDecision,
@@ -24,7 +27,7 @@ import {
   worktreeBaton,
   writeBaton,
 } from '../../.ultimate/extensions/pi-sessions/lib.ts';
-import type { Baton, BranchHost, Worktree } from '../../.ultimate/extensions/pi-sessions/lib.ts';
+import type { Baton, BranchHost, HandoffStore, Worktree } from '../../.ultimate/extensions/pi-sessions/lib.ts';
 
 async function temporary(run: (directory: string) => Promise<void>) {
   const directory = await mkdtemp(join(tmpdir(), 'pi-sessions-'));
@@ -74,6 +77,87 @@ const fixture = [
   .join('\n');
 
 describe('pi-sessions', () => {
+  test('handoff survives failed delivery and retries without moving the baton again', async () => {
+    const state: HandoffStore = {
+      items: {
+        'submission-1': {
+          conversationId: 61,
+          worktree: '/work/topic',
+          branch: 'topic',
+          sha: '1234567890',
+          target: 'main',
+          batonDone: false,
+        },
+      },
+    };
+
+    let attempts = 0;
+    let moves = 0;
+    const notices: string[] = [];
+
+    const deps = {
+      pending: async () => structuredClone(state.items),
+      returnBaton: async () => {
+        moves += 1;
+      },
+      batonDone: async (id: string) => {
+        state.items[id].batonDone = true;
+      },
+      deliver: async () => {
+        attempts += 1;
+
+        if (attempts === 1) throw new Error('offline');
+      },
+      remove: async (id: string) => {
+        delete state.items[id];
+      },
+      notice: (text: string) => notices.push(text),
+    };
+
+    await drainHandoffs(deps);
+    expect(state.items['submission-1'].batonDone).toBe(true);
+    expect(notices[0]).toContain('offline');
+    await drainHandoffs(deps);
+    expect(state.items).toEqual({});
+    expect(attempts).toBe(2);
+    expect(moves).toBe(1);
+  });
+
+  test('baton mutex checks ownership after a queued newer pickup writes', async () => {
+    await temporary(async (worktree) => {
+      const previous: Baton = {
+        v: 1,
+        holder: 'ultimate',
+        worktree,
+        at: 'now',
+        by: 'pickup',
+        ultimate: { url: 'http://localhost', project: worktree, conversation: 61 },
+      };
+
+      await writeBaton(previous);
+      let finish!: () => void;
+
+      const barrier = new Promise<void>((resolve) => {
+        finish = resolve;
+      });
+
+      const newer: Baton = { ...previous, ultimate: { ...previous.ultimate!, conversation: 62 } };
+
+      const pickupWrite = withBatonLock(worktree, async () => {
+        await barrier;
+        await writeBaton(newer);
+      });
+
+      const returning = returnBaton(worktree, { conversation: 61 });
+      finish();
+      await pickupWrite;
+      expect((await returning).moved).toBe(false);
+      expect(await readBaton(worktree)).toEqual(newer);
+      expect((await returnBaton(worktree, { conversation: 62 })).moved).toBe(true);
+      expect((await readBaton(worktree))?.holder).toBe('pi');
+    });
+  });
+
   test('land input names workspace submit and the PR path', () => {
     const input = landInput('From pi', '/work/topic', 'Ship it', 'Brief');
 
@@ -372,10 +456,12 @@ describe('pi-sessions', () => {
     expect(calls).toEqual([]);
   });
 
-  test('server defers landed baton release, rechecks ownership, and reads conversation cwd afresh', async () => {
+  test('server persists landed handoff before draining and preserves a newer baton owner', async () => {
     // The server facet's Ultimate imports, which only the host provides.
     mock.module('@earendil-works/pi-durable', () => ({
       configure: async () => undefined,
+      defineDoc: <Doc>(doc: Doc) => doc,
+      ROOT_CONVERSATION_ID: 1,
       defineExtension: <Extension>(extension: Extension) => extension,
       defineTool: <Tool>(tool: Tool) => tool,
       hook: () => ({}),
@@ -387,13 +473,11 @@ describe('pi-sessions', () => {
     await temporary(async (directory) => {
       const path = await realpath(directory);
       let handler!: Parameters<Parameters<typeof install>[0]['react']>[2];
-      let finish!: () => void;
       let commits = 0;
+      const state: HandoffStore = { items: {} };
       const notices: string[] = [];
 
-      const barrier = new Promise<void>((resolve) => {
-        finish = resolve;
-      });
+      const barrier = new Promise<void>(() => {});
 
       const baton: Baton = {
         v: 1,
@@ -411,7 +495,8 @@ describe('pi-sessions', () => {
           expect(options).toEqual({ from: 'now' });
           handler = callback;
         },
-        need: () => ({ get: async () => ({ path, external }) }),
+        need: () => ({ get: async () => ({ path, branch: 'topic', external }) }),
+        onOpen: () => undefined,
         harness: () => ({
           commit: () => {
             commits += 1;
@@ -421,30 +506,47 @@ describe('pi-sessions', () => {
         }),
         notice: (text: string) => notices.push(text),
       } as Parameters<typeof install>[0]);
-      // SAFETY: this reactor never reads tx; only workspace service and baton reads decide the release.
-      const tx = {} as Parameters<typeof handler>[0];
+      // SAFETY: this reactor uses tx only for its handoff document; this fixture provides that document.
+      const tx = { doc: async () => state } as Parameters<typeof handler>[0];
 
       // SAFETY: 61 is a positive synthetic conversation ID; all consumed landing fields are present.
-      const event = { data: { conversationId: 61, sha: '1234567890', target: 'main' } } as Parameters<
-        typeof handler
-      >[1];
+      const event = {
+        data: { submission: 'landing-1', conversationId: 61, sha: '1234567890', target: 'main' },
+      } as Parameters<typeof handler>[1];
 
       await writeBaton(baton);
       await handler(tx, event);
-      expect(commits).toBe(0);
+      expect(Object.keys(state.items)).toHaveLength(0);
       external = true;
       // SAFETY: 62 is a positive synthetic conversation ID naming a different owner.
       await handler(tx, { data: { ...event.data, conversationId: 62 } } as Parameters<typeof handler>[1]);
-      expect(commits).toBe(0);
+      expect(Object.keys(state.items)).toHaveLength(0);
       await handler(tx, event);
-      expect(commits).toBe(1);
+      expect(commits).toBe(3);
+      expect(state.items['landing-1']).toMatchObject({ conversationId: 61, branch: 'topic', batonDone: false });
       expect((await readBaton(path))?.holder).toBe('ultimate');
-      // Pi takes it back before the queued transaction finishes: never overwrite its newer baton.
-      await writeBaton({ ...baton, holder: 'pi', by: 'take' });
-      finish();
-      await barrier;
-      await new Promise<void>((resolve) => setImmediate(resolve));
-      expect((await readBaton(path))?.holder).toBe('pi');
+      // A newer pickup replaces ownership after the reactor's check but before its outbox drains.
+      const newer: Baton = { ...baton, ultimate: { ...baton.ultimate!, conversation: 62 } };
+      await withBatonLock(path, () => writeBaton(newer));
+      const delivered: string[] = [];
+      await drainHandoffs({
+        pending: async () => structuredClone(state.items),
+        returnBaton,
+        batonDone: async (id) => {
+          state.items[id].batonDone = true;
+        },
+        deliver: async (_item, text) => {
+          delivered.push(text);
+        },
+        remove: async (id) => {
+          delete state.items[id];
+        },
+        notice: (text) => notices.push(text),
+      });
+      expect(await readBaton(path)).toEqual(newer);
+      expect(delivered).toHaveLength(1);
+      expect(delivered[0]).toContain('Landed 1234567');
+      expect(state.items).toEqual({});
       expect(notices).toEqual([]);
     });
 

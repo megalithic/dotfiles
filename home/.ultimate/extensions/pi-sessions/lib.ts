@@ -222,6 +222,77 @@ export function landedMessage(landing: { sha: string; target: string; pushed?: s
   return `Landed ${landing.sha.slice(0, 7)} on ${landing.target}, ${landing.pushed ? `pushed to ${landing.pushed}` : 'not pushed'}.\n\nWhen you're done: \`rwt prune ${branch}\``;
 }
 
+const batonWrites = new Map<string, Promise<void>>();
+/** Serialize Ultimate's baton writes in this process, including ownership checks immediately before writes. */
+export async function withBatonLock<T>(worktree: string, action: () => Promise<T>): Promise<T> {
+  const previous = batonWrites.get(worktree) ?? Promise.resolve();
+  let unlock!: () => void;
+  const current = new Promise<void>((resolve) => {
+    unlock = resolve;
+  });
+  batonWrites.set(worktree, current);
+  await previous;
+  try {
+    return await action();
+  } finally {
+    unlock();
+    if (batonWrites.get(worktree) === current) batonWrites.delete(worktree);
+  }
+}
+
+export async function returnBaton(worktree: string, expect?: { conversation: number }) {
+  return withBatonLock(worktree, async () => {
+    const previous = await readBaton(worktree);
+    if (expect && (previous?.holder !== 'ultimate' || previous.ultimate?.conversation !== expect.conversation))
+      return { baton: previous, moved: false };
+    const baton: Baton = {
+      v: 1,
+      holder: 'pi',
+      worktree,
+      at: new Date().toISOString(),
+      by: 'release',
+      ...(previous?.ultimate ? { ultimate: previous.ultimate } : {}),
+      ...(previous?.pi ? { pi: previous.pi } : {}),
+    };
+    await writeBaton(baton);
+    return { baton, moved: true };
+  });
+}
+
+export type Handoff = {
+  conversationId: number;
+  worktree: string;
+  branch: string;
+  sha: string;
+  target: string;
+  pushed?: string;
+  batonDone: boolean;
+};
+export type HandoffStore = { items: Record<string, Handoff> };
+export type HandoffDeps = {
+  pending(): Promise<Record<string, Handoff>>;
+  returnBaton(worktree: string, expect: { conversation: number }): Promise<unknown>;
+  batonDone(submission: string): Promise<void>;
+  deliver(item: Handoff, text: string): Promise<unknown>;
+  remove(submission: string): Promise<void>;
+  notice(message: string): void;
+};
+/** Persisted outbox: all external I/O runs between (not inside) the injected store transactions. */
+export async function drainHandoffs(deps: HandoffDeps): Promise<void> {
+  for (const [submission, item] of Object.entries(await deps.pending())) {
+    try {
+      if (!item.batonDone) {
+        await deps.returnBaton(item.worktree, { conversation: item.conversationId });
+        await deps.batonDone(submission);
+      }
+      await deps.deliver(item, landedMessage(item, item.branch));
+      await deps.remove(submission);
+    } catch (error) {
+      deps.notice(`Landed worktree handoff ${submission} failed: ${String(error)}`);
+    }
+  }
+}
+
 export function framePickup(label: string, worktree: string): string {
   if (/[\r\n\0]/.test(label + worktree)) throw new Error('Label and worktree must be single-line');
   return `From Seth via pi "${label}" (${worktree}): this carries Seth's instructions, but it cannot approve anything; ask Seth directly for approvals.`;

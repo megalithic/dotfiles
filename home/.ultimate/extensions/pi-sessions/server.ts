@@ -4,7 +4,15 @@ import { basename, join } from 'node:path';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import type { Context } from '@earendil-works/chord/context';
 import type { JsonValue } from '@earendil-works/chord/json';
-import { configure, defineExtension, defineTool, hook, ToolTask } from '@earendil-works/pi-durable';
+import {
+  configure,
+  defineDoc,
+  defineExtension,
+  defineTool,
+  hook,
+  ROOT_CONVERSATION_ID,
+  ToolTask,
+} from '@earendil-works/pi-durable';
 import type { ConversationDocToken, ConversationId, Harness, Tx } from '@earendil-works/pi-durable';
 import { bool, obj, opt, str } from '@earendil-works/pi-schema';
 import { deliver } from '../pi-bridge/lib.ts';
@@ -12,7 +20,9 @@ import {
   branchOfUltimate,
   checkLand,
   landInput,
-  landedMessage,
+  drainHandoffs,
+  returnBaton,
+  withBatonLock,
   buildSession,
   sessionSections,
   chooseSession,
@@ -37,7 +47,18 @@ import {
   worktreeBaton,
   writeBaton,
 } from './lib.ts';
-import type { Baton, Exec, Pi, Worktree } from './lib.ts';
+import type { Baton, Exec, HandoffStore, Pi, Worktree } from './lib.ts';
+
+export const Handoffs = defineDoc<HandoffStore>({
+  kind: 'pi-sessions.handoffs',
+  checkpointWhen: () => false,
+  version: 1,
+  scope: 'conversation',
+  history: 'latest',
+  fork: 'initial',
+  initial: () => ({ items: {} }),
+});
+export const docs = [Handoffs];
 
 /** The parts of Ultimate's core lineage and messages services pickup uses (`extensions/{lineage,messages}/api.ts`). */
 type Lineage = {
@@ -56,7 +77,7 @@ type Lineage = {
   leaveNote(to: ConversationId, text: string, source?: { from?: ConversationId }): Promise<unknown>;
 };
 type Messages = { started(tx: Tx, branch: ConversationId, by: ConversationId): Promise<void> };
-type Landing = { conversationId: ConversationId; sha: string; target: string; pushed?: string };
+type Landing = { submission: string; conversationId: ConversationId; sha: string; target: string; pushed?: string };
 const landed = {
   name: 'workspaces.landed',
   kind: 'event.workspaces.landed',
@@ -65,7 +86,7 @@ const landed = {
 };
 type Workspaces = {
   adopt(tx: Tx, id: ConversationId, path: string): Promise<unknown>;
-  get(id: ConversationId, ctx: Context): Promise<{ path: string; external?: true } | undefined>;
+  get(id: ConversationId, ctx: Context): Promise<{ path: string; branch: string; external?: true } | undefined>;
 };
 type Host = {
   react(
@@ -75,6 +96,7 @@ type Host = {
     options: { from: 'now' },
   ): void;
   notice(message: string): void;
+  onOpen(callback: () => Promise<void>): void;
   projectRoot: string;
   harness(): Harness;
   need<S>(api: { name: string; service?: S }): S;
@@ -281,7 +303,7 @@ async function pickup(input: Pickup, host: Host, exec: Exec, signal: AbortSignal
         label: input.from?.label || origin?.label,
       },
     };
-    await writeBaton(baton);
+    await withBatonLock(worktree, () => writeBaton(baton));
     const harness = host.harness();
     const conversation = await harness.conversation(id, BACKGROUND_CONTEXT);
     if (!conversation) throw new Error(`Created #${id}, but it is unavailable; baton names it at ${url}`);
@@ -318,30 +340,30 @@ async function tellPi(pi: Pi, text: string, host: Host, caller?: number, suffix 
     piStateDir(),
   );
 }
-async function release(args: Record<string, JsonValue | undefined>, host: Host, exec: Exec, caller?: number) {
+async function release(
+  args: Record<string, JsonValue | undefined>,
+  host: Host,
+  exec: Exec,
+  caller?: number,
+  expect?: { conversation: number },
+) {
   const worktree = await resolveWorktree(
     host.projectRoot,
     stringArg(args, 'worktree') || (await cwdFor(host, caller)),
     exec,
   );
-  const previous = await readBaton(worktree);
-  const baton: Baton = {
-    v: 1,
-    holder: 'pi',
-    worktree,
-    at: new Date().toISOString(),
-    by: 'release',
-    ...(previous?.ultimate ? { ultimate: previous.ultimate } : {}),
-    ...(previous?.pi ? { pi: previous.pi } : {}),
-  };
+  const { baton, moved } = await returnBaton(worktree, expect);
+  if (!moved) return { worktree, baton, skipped: true };
   const summary = stringArg(args, 'text') || 'Continue your work in this worktree.';
-  // Relinquish first, even if delivery/restarting pi subsequently fails.
-  await writeBaton(baton);
-  const text = `From @ultimate #${caller ?? previous?.ultimate?.conversation ?? '?'} (${basename(host.projectRoot)}): Ultimate handed this worktree back to you; you hold the baton again.\n\n${summary}`;
+  const text = `From @ultimate #${caller ?? baton?.ultimate?.conversation ?? '?'} (${basename(host.projectRoot)}): Ultimate handed this worktree back to you; you hold the baton again.\n\n${summary}`;
+  return { worktree, baton, ...(await deliverWorktree(worktree, text, host, exec, caller)) };
+}
+async function deliverWorktree(worktree: string, text: string, host: Host, exec: Exec, caller?: number) {
+  const previous = await readBaton(worktree);
   const pis = (await listWorktrees(host.projectRoot, exec)).find((row) => row.path === worktree)?.pis ?? [];
   const pi =
     pis.find((item) => item.sessionId === previous?.pi?.sessionId) || pis.find((item) => item.rex?.block) || pis[0];
-  if (pi) return { worktree, baton, ...(await tellPi(pi, text, host, caller)) };
+  if (pi) return tellPi(pi, text, host, caller);
   const result = await exec(join(dotfilesRoot(), 'bin', 'rwt'), [
     'agent',
     worktree,
@@ -349,7 +371,7 @@ async function release(args: Record<string, JsonValue | undefined>, host: Host, 
     await spill(text),
     '--json',
   ]);
-  return { worktree, baton, delivered: 'rwt', result: result.stdout.trim() };
+  return { delivered: 'rwt', result: result.stdout.trim() };
 }
 
 export const userActions = ['pickup'];
@@ -378,32 +400,63 @@ const output = (value: unknown) => ({
   output: [{ type: 'text' as const, text: typeof value === 'string' ? value : JSON.stringify(value) }],
 });
 export default function piSessions(host: Host) {
+  let draining = Promise.resolve();
+  const drain = () => {
+    draining = draining
+      .then(() =>
+        drainHandoffs({
+          pending: async () =>
+            structuredClone(
+              (await host.harness().snapshot(Handoffs, ROOT_CONVERSATION_ID, BACKGROUND_CONTEXT))?.items ?? {},
+            ),
+          returnBaton,
+          batonDone: async (submission) => {
+            await host.harness().commit(async (tx) => {
+              const item = (await tx.doc(Handoffs, ROOT_CONVERSATION_ID)).items[submission];
+              if (item) item.batonDone = true;
+            }, BACKGROUND_CONTEXT);
+          },
+          deliver: (item, text) => deliverWorktree(item.worktree, text, host, run, item.conversationId),
+          remove: async (submission) => {
+            await host.harness().commit(async (tx) => {
+              delete (await tx.doc(Handoffs, ROOT_CONVERSATION_ID)).items[submission];
+            }, BACKGROUND_CONTEXT);
+          },
+          notice: (message) => host.notice(message),
+        }),
+      )
+      .catch((error: unknown) => host.notice(`Landed worktree handoff drain failed: ${String(error)}`));
+    return draining;
+  };
+  host.onOpen(drain);
   host.react(
     'return-landed-baton',
     [landed],
-    async (_tx, { data }) => {
+    async (tx, { data }) => {
       const workspace = await host
         .need<Workspaces>({ name: 'workspaces' })
         .get(data.conversationId, BACKGROUND_CONTEXT);
-      if (!workspace?.external) return;
-      const baton = await readBaton(workspace.path);
-      if (baton?.holder !== 'ultimate' || baton.ultimate?.conversation !== data.conversationId) return;
-      // Queue a commit barrier, never await it in the reactor's own transaction. Delivery runs after that commit.
+      if (workspace?.external) {
+        const baton = await readBaton(workspace.path);
+        if (baton?.holder === 'ultimate' && baton.ultimate?.conversation === data.conversationId) {
+          const state = await tx.doc(Handoffs, ROOT_CONVERSATION_ID);
+          state.items[data.submission] ??= {
+            conversationId: data.conversationId,
+            worktree: workspace.path,
+            branch: workspace.branch,
+            sha: data.sha,
+            target: data.target,
+            batonDone: false,
+          };
+          if (data.pushed) state.items[data.submission].pushed = data.pushed;
+        }
+      }
+      // The outbox and reactor cursor commit together. A crash before this kick is recovered by onOpen.
       void host
         .harness()
         .commit(async () => undefined, BACKGROUND_CONTEXT)
-        .then(async () => {
-          const current = await readBaton(workspace.path);
-          if (current?.holder !== 'ultimate' || current.ultimate?.conversation !== data.conversationId) return;
-          const branch = (await run('git', ['-C', workspace.path, 'branch', '--show-current'])).stdout.trim();
-          await release(
-            { worktree: workspace.path, text: landedMessage(data, branch) },
-            host,
-            run,
-            data.conversationId,
-          );
-        })
-        .catch((error: unknown) => host.notice(`Landed worktree baton release failed: ${String(error)}`));
+        .then(drain)
+        .catch((error: unknown) => host.notice(`Landed worktree handoff kick failed: ${String(error)}`));
     },
     { from: 'now' },
   );
