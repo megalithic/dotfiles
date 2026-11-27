@@ -497,6 +497,7 @@ describe('pi-sessions', () => {
         },
         need: () => ({ get: async () => ({ path, branch: 'topic', external }) }),
         onOpen: () => undefined,
+        resource: <T>(_key: string, create: () => T) => create(),
         harness: () => ({
           commit: () => {
             commits += 1;
@@ -575,6 +576,50 @@ describe('pi-sessions', () => {
       cwd = worktree;
       expect((await actions.baton(null, context))?.worktree).toBe(worktree);
     });
+  });
+
+  test('a reloaded facet drains after the old facet drain, never beside it', async () => {
+    const { default: install } = await import('../../.ultimate/extensions/pi-sessions/server.ts');
+    const resources = new Map<string, unknown>();
+    const opens: (() => Promise<void>)[] = [];
+    let reads = 0;
+    let unblock!: () => void;
+    const blocked = new Promise<void>((resolve) => (unblock = resolve));
+
+    const facet = () =>
+      // SAFETY: draining an empty outbox uses only resource, onOpen, notice and the harness snapshot.
+      install({
+        react: () => undefined,
+        need: () => ({}),
+        notice: () => undefined,
+        onOpen: (callback: () => Promise<void>) => opens.push(callback),
+        resource: <T>(key: string, create: () => T) => {
+          if (!resources.has(key)) resources.set(key, create());
+
+          // SAFETY: each key is created once above by the create() of that same T.
+          return resources.get(key) as T;
+        },
+        harness: () => ({
+          snapshot: async () => {
+            reads += 1;
+
+            if (reads === 1) await blocked;
+
+            return { items: {} };
+          },
+        }),
+      } as Parameters<typeof install>[0]);
+
+    facet();
+    const first = opens[0]!();
+    await Bun.sleep(5);
+    facet();
+    const second = opens[1]!();
+    await Bun.sleep(5);
+    expect(reads).toBe(1);
+    unblock();
+    await Promise.all([first, second]);
+    expect(reads).toBe(2);
   });
 
   test('spills only content larger than 32k to private handoff files', async () => {

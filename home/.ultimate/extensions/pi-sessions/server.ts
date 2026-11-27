@@ -97,6 +97,7 @@ type Host = {
   ): void;
   notice(message: string): void;
   onOpen(callback: () => Promise<void>): void;
+  resource<T>(key: string, create: () => T): T;
   projectRoot: string;
   harness(): Harness;
   need<S>(api: { name: string; service?: S }): S;
@@ -400,9 +401,10 @@ const output = (value: unknown) => ({
   output: [{ type: 'text' as const, text: typeof value === 'string' ? value : JSON.stringify(value) }],
 });
 export default function piSessions(host: Host) {
-  let draining = Promise.resolve();
+  // Reload-stable: an old facet's drain and its replacement's share one chain, so they never deliver concurrently.
+  const queue = host.resource('pi-sessions.handoff-drain', () => ({ draining: Promise.resolve() }));
   const drain = () => {
-    draining = draining
+    queue.draining = queue.draining
       .then(() =>
         drainHandoffs({
           pending: async () =>
@@ -426,7 +428,7 @@ export default function piSessions(host: Host) {
         }),
       )
       .catch((error: unknown) => host.notice(`Landed worktree handoff drain failed: ${String(error)}`));
-    return draining;
+    return queue.draining;
   };
   host.onOpen(drain);
   host.react(
