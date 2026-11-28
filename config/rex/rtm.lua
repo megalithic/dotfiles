@@ -80,10 +80,18 @@ rex.set("resume.trust.rtm_inbox", { command = { "rtm", "inbox" } })
 
 local INBOX = "inbox"
 local TERMINAL = "com.superlogical.terminal"
+-- The server's actions run with PATH=/usr/bin:/bin:/usr/sbin:/sbin, so use
+-- the running server's own binary, bundled or downloaded, as the rex CLI.
+local function rex_bin()
+  local status = rex.call("server.status")
+  local ps = status and rex.exec({ "/bin/ps", "-o", "comm=", "-p", tostring(status.pid) }, { timeout = 3 })
+  local path = ps and ps.ok and ps.stdout:gsub("%s+$", "")
+  if not path or path == "" then error("could not find the rex server's binary", 0) end
+  return path
+end
 
--- An action's rex.exec finds no bare `rex`, so env looks it up on PATH.
 local function cli(args)
-  local argv = { "/usr/bin/env", "rex", "--autostart=false" }
+  local argv = { rex_bin(), "--autostart=false" }
   for _, arg in ipairs(args) do argv[#argv + 1] = arg end
   local result, err = rex.exec(argv, { timeout = 5 })
   if not result then error(err, 0) end
