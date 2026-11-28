@@ -1,6 +1,7 @@
 {
   "extensions": {
     "enable": [
+      "reader",
       "tailscale"
     ],
     "disable": [
