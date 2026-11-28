@@ -80,10 +80,10 @@ rex.set("resume.trust.rtm_inbox", { command = { "rtm", "inbox" } })
 
 local INBOX = "inbox"
 local TERMINAL = "com.superlogical.terminal"
-local REX = "rex"
 
+-- An action's rex.exec finds no bare `rex`, so env looks it up on PATH.
 local function cli(args)
-  local argv = { REX, "--autostart=false" }
+  local argv = { "/usr/bin/env", "rex", "--autostart=false" }
   for _, arg in ipairs(args) do argv[#argv + 1] = arg end
   local result, err = rex.exec(argv, { timeout = 5 })
   if not result then error(err, 0) end
